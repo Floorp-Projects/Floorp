@@ -121,27 +121,37 @@ function convertHTMLToPlainText(html) {
   return html;
 }
 
-function getAddonsToCache(aIds) {
+async function getAddonsToCache(aIds) {
   let types = Preferences.get(PREF_GETADDONS_CACHE_TYPES) || DEFAULT_CACHE_TYPES;
 
   types = types.split(",");
 
-  return AddonManager.getAddonsByIDs(aIds).then(addons => {
-    let enabledIds = [];
-    for (let [i, addon] of addons.entries()) {
-      var preference = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%", aIds[i]);
-      // If the preference doesn't exist caching is enabled by default
-      if (!Preferences.get(preference, true))
-        continue;
+  let addons = await AddonManager.getAddonsByIDs(aIds)
+  let enabledIds = [];
 
-      // The add-ons manager may not know about this ID yet if it is a pending
-      // install. In that case we'll just cache it regardless
-      if (!addon || types.includes(addon.type))
-        enabledIds.push(aIds[i]);
+  for (let [i, addon] of addons.entries()) {
+    var preference = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%", aIds[i]);
+    // If the preference doesn't exist caching is enabled by default
+    if (!Preferences.get(preference, true))
+      continue;
+
+    // The add-ons manager may not know about this ID yet if it is a pending
+    // install. In that case we'll just cache it regardless
+
+    // Don't cache add-ons of the wrong types
+    if (addon && !types.includes(addon.type)) {
+      continue;
     }
 
-    return enabledIds;
-  });
+    // Don't cache system add-ons
+    if (addon && addon.isSystem) {
+      continue;
+    }
+
+    enabledIds.push(aIds[i]);
+  }
+
+  return enabledIds;
 }
 
 function AddonSearchResult(aId) {

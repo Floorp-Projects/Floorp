@@ -55,7 +55,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(964);
+	module.exports = __webpack_require__(801);
 
 
 /***/ },
@@ -72,6 +72,76 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = assert;
+
+/***/ },
+
+/***/ 801:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var prettyFast = __webpack_require__(802);
+	var assert = __webpack_require__(223);
+
+	function prettyPrint(_ref) {
+	  var url = _ref.url,
+	      indent = _ref.indent,
+	      source = _ref.source;
+
+	  try {
+	    var prettified = prettyFast(source, {
+	      url: url,
+	      indent: " ".repeat(indent)
+	    });
+
+	    return {
+	      code: prettified.code,
+	      mappings: prettified.map._mappings
+	    };
+	  } catch (e) {
+	    throw new Error(`${e.message}\n${e.stack}`);
+	  }
+	}
+
+	function invertMappings(mappings) {
+	  return mappings._array.map(m => {
+	    var mapping = {
+	      generated: {
+	        line: m.originalLine,
+	        column: m.originalColumn
+	      }
+	    };
+	    if (m.source) {
+	      mapping.source = m.source;
+	      mapping.original = {
+	        line: m.generatedLine,
+	        column: m.generatedColumn
+	      };
+	      mapping.name = m.name;
+	    }
+	    return mapping;
+	  });
+	}
+
+	self.onmessage = function (msg) {
+	  var _msg$data = msg.data,
+	      id = _msg$data.id,
+	      args = _msg$data.args;
+
+	  assert(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
+
+	  try {
+	    var _prettyPrint = prettyPrint(args[0]),
+	        code = _prettyPrint.code,
+	        mappings = _prettyPrint.mappings;
+
+	    self.postMessage({ id, response: {
+	        code, mappings: invertMappings(mappings)
+	      } });
+	  } catch (e) {
+	    self.postMessage({ id, error: e });
+	  }
+	};
 
 /***/ },
 
@@ -5847,80 +5917,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
-
-/***/ },
-
-/***/ 964:
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var prettyFast = __webpack_require__(802);
-	var assert = __webpack_require__(223);
-
-	function prettyPrint(_ref) {
-	  var url = _ref.url,
-	      indent = _ref.indent,
-	      source = _ref.source;
-
-	  try {
-	    var prettified = prettyFast(source, {
-	      url: url,
-	      indent: " ".repeat(indent)
-	    });
-
-	    return {
-	      code: prettified.code,
-	      mappings: prettified.map._mappings
-	    };
-	  } catch (e) {
-	    throw new Error(`${e.message}\n${e.stack}`);
-	  }
-	}
-
-	function invertMappings(mappings) {
-	  return mappings._array.map(m => {
-	    var mapping = {
-	      generated: {
-	        line: m.originalLine,
-	        column: m.originalColumn
-	      }
-	    };
-	    if (m.source) {
-	      mapping.source = m.source;
-	      mapping.original = {
-	        line: m.generatedLine,
-	        column: m.generatedColumn
-	      };
-	      mapping.name = m.name;
-	    }
-	    return mapping;
-	  });
-	}
-
-	self.onmessage = function (msg) {
-	  var _msg$data = msg.data,
-	      id = _msg$data.id,
-	      args = _msg$data.args;
-
-	  assert(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
-
-	  try {
-	    var _prettyPrint = prettyPrint(args[0]),
-	        code = _prettyPrint.code,
-	        mappings = _prettyPrint.mappings;
-
-	    self.postMessage({
-	      id,
-	      response: {
-	        code,
-	        mappings: invertMappings(mappings)
-	      }
-	    });
-	  } catch (e) {
-	    self.postMessage({ id, error: e });
-	  }
-	};
 
 /***/ }
 

@@ -86,14 +86,6 @@ function init_all() {
   });
   document.dispatchEvent(initFinished);
 
-  categories = categories.querySelectorAll("richlistitem.category");
-  for (let category of categories) {
-    let name = internalPrefCategoryNameToFriendlyName(category.value);
-    let helpSelector = `#header-${name} > .help-button`;
-    let helpButton = document.querySelector(helpSelector);
-    helpButton.setAttribute("href", getHelpLinkURL(category.getAttribute("helpTopic")));
-  }
-
   // Wait until initialization of all preferences are complete before
   // notifying observers that the UI is now ready.
   Services.obs.notifyObservers(window, "advanced-pane-loaded");
@@ -104,11 +96,25 @@ function init_dynamic_padding() {
   let categories = document.getElementById("categories");
   let catPadding = Number.parseInt(getComputedStyle(categories)
                                      .getPropertyValue("padding-top"));
-  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom;
+  let helpButton = document.querySelector(".help-button");
+  let helpButtonCS = getComputedStyle(helpButton);
+  let helpHeight = Number.parseInt(helpButtonCS.height);
+  let helpBottom = Number.parseInt(helpButtonCS.bottom);
+  // Reduce the padding to account for less space, but due
+  // to bug 1357841, the status panel will overlap the link.
+  const reducedHelpButtonBottomFactor = .75;
+  let reducedHelpButtonBottom = helpBottom * reducedHelpButtonBottomFactor;
+  let fullHelpHeight = helpHeight + reducedHelpButtonBottom;
+  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom +
+                   fullHelpHeight;
   let mediaRule = `
   @media (max-height: ${fullHeight}px) {
     #categories {
       padding-top: calc(100vh - ${fullHeight - catPadding}px);
+      padding-bottom: ${fullHelpHeight}px;
+    }
+    .help-button {
+      bottom: ${reducedHelpButtonBottom / 2}px;
     }
   }
   `;
@@ -161,6 +167,9 @@ function gotoPref(aCategory) {
     category = kDefaultCategoryInternalName;
     item = categories.querySelector(".category[value=" + category + "]");
   }
+
+  let helpButton = document.querySelector(".help-button");
+  helpButton.setAttribute("href", getHelpLinkURL(item.getAttribute("helpTopic")));
 
   try {
     init_category_if_required(category);
