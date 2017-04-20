@@ -10,6 +10,7 @@ bindgen = ["gkrust-shared/bindgen"]
 servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
 cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
+gecko_debug = ["gkrust-shared/gecko_debug"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
