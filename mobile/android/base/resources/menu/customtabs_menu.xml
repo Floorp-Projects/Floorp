@@ -16,10 +16,10 @@
         android:title="@string/forward"/>
 
     <item
-        android:id="@+id/custom_tabs_menu_reload"
-        android:icon="@drawable/ic_menu_reload"
+        android:id="@+id/custom_tabs_menu_control"
+        android:icon="@drawable/customtabs_menu_item_control"
         android:showAsAction="always"
-        android:title="@string/share"/>
+        android:title=""/>
 
     <item
         android:id="@+id/custom_tabs_menu_open_in"

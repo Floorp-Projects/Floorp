@@ -22,8 +22,8 @@ add_task(function* testDuplicateTab() {
             browser.test.assertEq("http://example.net/", tab.url);
             // Should be the second tab, next to the one duplicated.
             browser.test.assertEq(1, tab.index);
-            // Should be selected by default.
-            browser.test.assertTrue(tab.selected);
+            // Should be active by default.
+            browser.test.assertTrue(tab.active);
             browser.test.notifyPass("tabs.duplicate");
           });
         });

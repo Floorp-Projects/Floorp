@@ -39,14 +39,12 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
-import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.webapps.WebAppActivity;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -112,6 +110,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.AnchoredPopup;
+import org.mozilla.gecko.widget.ActionModePresenter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -839,6 +838,18 @@ public abstract class GeckoApp
     }
 
     /**
+     * To get a presenter which will response for text-selection. In preMarshmallow Android we want
+     * to provide different UI action when user select a text. Text-selection class will uses this
+     * presenter to trigger UI updating.
+     *
+     * @return a presenter which handle showing/hiding of action mode UI. return *null* if this
+     * activity doesn't handle any text-selection event.
+     */
+    protected ActionModePresenter getTextSelectPresenter() {
+        return null;
+    }
+
+    /**
      * @param permissions
      *        Array of JSON objects to represent site permissions.
      *        Example: { type: "offline-app", setting: "Store Offline Data", value: "Allow" }
@@ -1331,7 +1342,7 @@ public abstract class GeckoApp
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
         if (Versions.preMarshmallow) {
-            mTextSelection = new ActionBarTextSelection(this);
+            mTextSelection = new ActionBarTextSelection(this, getTextSelectPresenter());
         } else {
             mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
         }

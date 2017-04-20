@@ -23,13 +23,10 @@ SOURCES += [
 
 SharedLibrary('omxplugin')
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    pass
-else:
-    LOCAL_INCLUDES += [
-        'include/ics',
-        'include/ics/media/stagefright/openmax',
-    ]
+LOCAL_INCLUDES += [
+    'include/ics',
+    'include/ics/media/stagefright/openmax',
+]
 
 if CONFIG['GNU_CXX']:
     # Stagefright header files define many multichar constants.
@@ -38,23 +35,11 @@ if CONFIG['GNU_CXX']:
         '-Wno-shadow',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXTRA_DSO_LDOPTS += [
-        '-lutils',
-        '-lstagefright',
-        '-lmedia',
-        '-lstagefright_omx',
-        '-lbinder',
-        '-lui',
-        '-lhardware',
-        '-lcutils',
-    ]
-else:
-    USE_LIBS += [
-        '/media/omx-plugin/lib/ics/libstagefright/stagefright',
-        '/media/omx-plugin/lib/ics/libutils/utils',
-        'videoeditorplayer',
-    ]
+USE_LIBS += [
+    '/media/omx-plugin/lib/ics/libstagefright/stagefright',
+    '/media/omx-plugin/lib/ics/libutils/utils',
+    'videoeditorplayer',
+]
 
 # Don't use STL wrappers; this isn't Gecko code
 DISABLE_STL_WRAPPING = True

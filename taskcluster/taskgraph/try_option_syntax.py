@@ -121,6 +121,7 @@ UNITTEST_ALIASES = {
 # [test_platforms]} translations, This includes only the most commonly-used
 # substrings.  This is intended only for backward-compatibility.  New test
 # platforms should have their `test_platform` spelled out fully in try syntax.
+# Note that the test platforms here are only the prefix up to the `/`.
 UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Ubuntu': ['linux32', 'linux64', 'linux64-asan'],
     'x64': ['linux64', 'linux64-asan'],
@@ -386,7 +387,7 @@ class TryOptionSyntax(object):
         if test_arg is None or test_arg == 'none':
             return []
 
-        all_platforms = set(t.attributes['test_platform']
+        all_platforms = set(t.attributes['test_platform'].split('/')[0]
                             for t in full_task_graph.tasks.itervalues()
                             if 'test_platform' in t.attributes)
 
@@ -584,8 +585,10 @@ class TryOptionSyntax(object):
                     break
             else:
                 return False
-            if 'platforms' in test and attr('test_platform') not in test['platforms']:
-                return False
+            if 'platforms' in test:
+                platform = attributes.get('test_platform', '').split('/')[0]
+                if platform not in test['platforms']:
+                    return False
             if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
                 return False
             return True

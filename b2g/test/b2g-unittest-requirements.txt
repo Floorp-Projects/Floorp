@@ -1,8 +1,0 @@
-manifestparser==0.5.7
-mozprocess==0.9
-mozprofile==0.6
-mozrunner==5.15
-mozdevice==0.21
-mozcrash==0.5
-mozfile==0.3
-mozlog==1.1

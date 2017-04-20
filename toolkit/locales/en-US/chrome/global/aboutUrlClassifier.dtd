@@ -1,0 +1,29 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE the term "url-classifier" should not be translated. -->
+<!ENTITY aboutUrlClassifier.pageTitle                   "Information about the url-classifier">
+<!ENTITY aboutUrlClassifier.providerTitle               "Provider">
+<!ENTITY aboutUrlClassifier.provider                    "Provider">
+<!ENTITY aboutUrlClassifier.providerLastUpdateTime      "Last update time">
+<!ENTITY aboutUrlClassifier.providerNextUpdateTime      "Next update time">
+<!ENTITY aboutUrlClassifier.providerLastUpdateStatus    "Last update status">
+<!ENTITY aboutUrlClassifier.providerUpdateBtn           "Update">
+<!ENTITY aboutUrlClassifier.lookupTitle                 "Lookup">
+<!ENTITY aboutUrlClassifier.lookupUrl                   "Url">
+<!ENTITY aboutUrlClassifier.lookupMatch                 "Match">
+<!ENTITY aboutUrlClassifier.lookupMatchBtn              "Check Match Result">
+<!ENTITY aboutUrlClassifier.lookupLookup                "Lookup">
+<!ENTITY aboutUrlClassifier.lookupBtn                   "Check Lookup Result">
+<!ENTITY aboutUrlClassifier.cacheTitle                  "Cache">
+<!ENTITY aboutUrlClassifier.memoryTitle                 "Memory">
+<!ENTITY aboutUrlClassifier.databaseTitle               "Database">
+<!ENTITY aboutUrlClassifier.debugTitle                  "Debug">
+<!ENTITY aboutUrlClassifier.debugModuleBtn              "Set Log Modules">
+<!ENTITY aboutUrlClassifier.debugFileBtn                "Set Log File">
+<!ENTITY aboutUrlClassifier.debugJSLogChk               "Set JS Log">
+<!ENTITY aboutUrlClassifier.debugSBModules              "Safe Browsing log modules">
+<!ENTITY aboutUrlClassifier.debugModules                "Current log modules">
+<!ENTITY aboutUrlClassifier.debugSBJSModules            "Safe Browsing JS log">
+<!ENTITY aboutUrlClassifier.debugFile                   "Current log file">

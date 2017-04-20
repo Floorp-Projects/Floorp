@@ -306,6 +306,21 @@ sAllNotificationsAndReportStringIds[] =
   &sMediaDecodeWarning
 };
 
+// Create a webcompat-friendly description of a MediaResult.
+static nsString
+MediaResultDescription(const MediaResult& aResult, bool aIsError)
+{
+  nsCString name;
+  GetErrorName(aResult.Code(), name);
+  return NS_ConvertUTF8toUTF16(
+           nsPrintfCString(
+             "%s Code: %s (0x%08" PRIx32 ")%s%s",
+             aIsError ? "Error" : "Warning", name.get(),
+             static_cast<uint32_t>(aResult.Code()),
+             aResult.Message().IsEmpty() ? "" : "\nDetails: ",
+             aResult.Message().get()));
+}
+
 static void
 DispatchNotification(nsISupports* aSubject,
                      const NotificationAndReportStringId& aNotification,
@@ -380,12 +395,55 @@ ReportToConsole(nsIDocument* aDocument,
                                   aParams.Length());
 }
 
+static bool
+AllowNotification(const NotificationAndReportStringId& aNotification)
+{
+  // "media.decoder-doctor.notifications-allowed" controls which notifications
+  // may be dispatched to the front-end. It either contains:
+  // - '*' -> Allow everything.
+  // - Comma-separater list of ids -> Allow if aReportStringId (from
+  //                                  dom.properties) is one of them.
+  // - Nothing (missing or empty) -> Disable everything.
+  nsAdoptingCString filter =
+    Preferences::GetCString("media.decoder-doctor.notifications-allowed");
+  return filter.EqualsLiteral("*") ||
+         StringListContains(filter, aNotification.mReportStringId);
+}
+
+static bool
+AllowDecodeIssue(const MediaResult& aDecodeIssue, bool aDecodeIssueIsError)
+{
+  if (aDecodeIssue == NS_OK) {
+    // 'NS_OK' means we are not actually reporting a decode issue, so we
+    // allow the report.
+    return true;
+  }
+
+  // "media.decoder-doctor.decode-{errors,warnings}-allowed" controls which
+  // decode issues may be dispatched to the front-end. It either contains:
+  // - '*' -> Allow everything.
+  // - Comma-separater list of ids -> Allow if the issue name is one of them.
+  // - Nothing (missing or empty) -> Disable everything.
+  nsAdoptingCString filter =
+    Preferences::GetCString(aDecodeIssueIsError
+                            ? "media.decoder-doctor.decode-errors-allowed"
+                            : "media.decoder-doctor.decode-warnings-allowed");
+  if (filter.EqualsLiteral("*")) {
+    return true;
+  }
+
+  nsCString decodeIssueName;
+  GetErrorName(aDecodeIssue.Code(), static_cast<nsACString&>(decodeIssueName));
+  return StringListContains(filter, decodeIssueName);
+}
+
 static void
 ReportAnalysis(nsIDocument* aDocument,
                const NotificationAndReportStringId& aNotification,
                bool aIsSolved,
                const nsAString& aFormats = NS_LITERAL_STRING(""),
-               const nsAString& aDecodeIssue = NS_LITERAL_STRING(""),
+               const MediaResult& aDecodeIssue = NS_OK,
+               bool aDecodeIssueIsError = true,
                const nsACString& aDocURL = NS_LITERAL_CSTRING(""),
                const nsAString& aResourceURL = NS_LITERAL_STRING(""))
 {
@@ -393,6 +451,12 @@ ReportAnalysis(nsIDocument* aDocument,
 
   if (!aDocument) {
     return;
+  }
+
+  nsString decodeIssueDescription;
+  if (aDecodeIssue != NS_OK) {
+    decodeIssueDescription.Assign(MediaResultDescription(aDecodeIssue,
+                                                         aDecodeIssueIsError));
   }
 
   // Report non-solved issues to console.
@@ -409,7 +473,7 @@ ReportAnalysis(nsIDocument* aDocument,
         params.AppendElement(aFormats.Data());
         break;
       case ReportParam::DecodeIssue:
-        params.AppendElement(aDecodeIssue.Data());
+        params.AppendElement(decodeIssueDescription.Data());
         break;
       case ReportParam::DocURL:
         params.AppendElement(NS_ConvertUTF8toUTF16(aDocURL).Data());
@@ -425,21 +489,12 @@ ReportAnalysis(nsIDocument* aDocument,
     ReportToConsole(aDocument, aNotification.mReportStringId, params);
   }
 
-  // "media.decoder-doctor.notifications-allowed" controls which notifications
-  // may be dispatched to the front-end. It either contains:
-  // - '*' -> Allow everything.
-  // - Comma-separater list of ids -> Allow if aReportStringId (from
-  //                                  dom.properties) is one of them.
-  // - Nothing (missing or empty) -> Disable everything.
-  nsAdoptingCString filter =
-    Preferences::GetCString("media.decoder-doctor.notifications-allowed");
-  filter.StripWhitespace();
-  if (filter.EqualsLiteral("*")
-      || StringListContains(filter, aNotification.mReportStringId)) {
+  if (AllowNotification(aNotification) &&
+      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError)) {
     DispatchNotification(
       aDocument->GetInnerWindow(), aNotification, aIsSolved,
       aFormats,
-      aDecodeIssue,
+      decodeIssueDescription,
       aDocURL,
       aResourceURL);
   }
@@ -470,21 +525,6 @@ static bool
 FormatsListContains(const nsAString& aList, const nsAString& aItem)
 {
   return StringListContains(aList, CleanItemForFormatsList(aItem));
-}
-
-// Create a webcompat-friendly description of a MediaResult.
-static nsString
-MediaResultDescription(const MediaResult& aResult, bool aIsError)
-{
-  nsCString name;
-  GetErrorName(aResult.Code(), static_cast<nsACString&>(name));
-  return NS_ConvertUTF8toUTF16(
-           nsPrintfCString(
-             "%s Code: %s (0x%08" PRIx32 ")%s%s",
-             aIsError ? "Error" : "Warning", name.get(),
-             static_cast<uint32_t>(aResult.Code()),
-             aResult.Message().IsEmpty() ? "" : "\nDetails: ",
-             aResult.Message().get()));
 }
 
 void
@@ -705,7 +745,8 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
             this, mDocument, firstDecodeError->Description().get());
     ReportAnalysis(mDocument, sMediaDecodeError, false,
                    NS_LITERAL_STRING(""),
-                   MediaResultDescription(*firstDecodeError, true),
+                   *firstDecodeError,
+                   true, // aDecodeIssueIsError=true
                    mDocument->GetDocumentURI()->GetSpecOrDefault(),
                    *firstDecodeErrorMediaSrc);
     return;
@@ -716,7 +757,8 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
             this, mDocument, firstDecodeWarning->Description().get());
     ReportAnalysis(mDocument, sMediaDecodeWarning, false,
                    NS_LITERAL_STRING(""),
-                   MediaResultDescription(*firstDecodeWarning, false),
+                   *firstDecodeWarning,
+                   false, // aDecodeIssueIsError=false
                    mDocument->GetDocumentURI()->GetSpecOrDefault(),
                    *firstDecodeWarningMediaSrc);
     return;

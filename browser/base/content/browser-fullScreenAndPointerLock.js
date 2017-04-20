@@ -593,7 +593,7 @@ var FullScreen = {
 
     this._fullScrToggler.hidden = false;
 
-    if (aAnimate && gPrefService.getBoolPref("browser.fullscreen.animate")) {
+    if (aAnimate && gPrefService.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
       gNavToolbox.setAttribute("fullscreenShouldAnimate", true);
       // Hide the fullscreen toggler until the transition ends.
       let listener = () => {

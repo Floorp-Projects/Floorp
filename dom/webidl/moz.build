@@ -974,11 +974,6 @@ WEBIDL_FILES = [
     'XULElement.webidl',
 ]
 
-if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
-    WEBIDL_FILES += [
-        'AudioChannelManager.webidl',
-    ]
-
 if CONFIG['MOZ_WEBRTC']:
     WEBIDL_FILES += [
         'DataChannel.webidl',
@@ -1048,10 +1043,9 @@ if CONFIG['MOZ_SECUREELEMENT']:
          'SecureElementManager.webidl',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    WEBIDL_FILES += [
-        'InstallTrigger.webidl',
-    ]
+WEBIDL_FILES += [
+    'InstallTrigger.webidl',
+]
 
 if CONFIG['FUZZING']:
     WEBIDL_FILES += [

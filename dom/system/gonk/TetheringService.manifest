@@ -1,4 +1,0 @@
-# TetheringService.js
-component {527a4121-ee5a-4651-be9c-f46f59cf7c01} TetheringService.js
-contract @mozilla.org/tethering/service;1 {527a4121-ee5a-4651-be9c-f46f59cf7c01}
-category profile-after-change TetheringService @mozilla.org/tethering/service;1
