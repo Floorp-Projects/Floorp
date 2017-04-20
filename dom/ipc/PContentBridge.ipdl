@@ -12,11 +12,9 @@ include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
 include protocol PMemoryStream;
 include protocol PParentToChildStream;
-include protocol PIPCBlobInputStream;
 
 include DOMTypes;
 include JavaScriptTypes;
-include ProtocolTypes;
 include PTabContext;
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -45,7 +43,6 @@ nested(upto inside_cpow) sync protocol PContentBridge
     manages PChildToParentStream;
     manages PMemoryStream;
     manages PParentToChildStream;
-    manages PIPCBlobInputStream;
 
 child:
     async PParentToChildStream();
@@ -59,8 +56,6 @@ child:
     async Deactivate(PBrowser aTab);
 
     async ParentActivated(PBrowser aTab, bool aActivated);
-
-    async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,

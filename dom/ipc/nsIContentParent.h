@@ -37,7 +37,6 @@ class PFileDescriptorSetParent;
 class PChildToParentStreamParent;
 class PParentToChildStreamParent;
 class PMemoryStreamParent;
-class PIPCBlobInputStreamParent;
 }
 
 namespace dom {
@@ -71,11 +70,6 @@ public:
   MOZ_MUST_USE virtual PBlobParent*
   SendPBlobConstructor(PBlobParent* aActor,
                        const BlobConstructorParams& aParams) = 0;
-
-  virtual mozilla::ipc::PIPCBlobInputStreamParent*
-  SendPIPCBlobInputStreamConstructor(mozilla::ipc::PIPCBlobInputStreamParent* aActor,
-                                     const nsID& aID,
-                                     const uint64_t& aSize) = 0;
 
   MOZ_MUST_USE virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* actor,
@@ -134,12 +128,6 @@ protected: // IPDL methods
   AllocPMemoryStreamParent(const uint64_t& aSize);
 
   virtual bool DeallocPMemoryStreamParent(mozilla::ipc::PMemoryStreamParent* aActor);
-
-  virtual mozilla::ipc::PIPCBlobInputStreamParent*
-  AllocPIPCBlobInputStreamParent(const nsID& aID, const uint64_t& aSize);
-
-  virtual bool
-  DeallocPIPCBlobInputStreamParent(mozilla::ipc::PIPCBlobInputStreamParent* aActor);
 
   virtual mozilla::ipc::PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor& aFD);
