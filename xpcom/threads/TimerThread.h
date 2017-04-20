@@ -79,16 +79,32 @@ private:
   bool mNotified;
   bool mSleeping;
 
-  struct Entry
+  class Entry final : public nsTimerImplHolder
   {
     const TimeStamp mTimeout;
-    RefPtr<nsTimerImpl> mTimerImpl;
 
+  public:
     Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
           nsTimerImpl* aTimerImpl)
-      : mTimeout(std::max(aMinTimeout, aTimeout)),
-      mTimerImpl(aTimerImpl)
-    { }
+      : nsTimerImplHolder(aTimerImpl)
+      , mTimeout(std::max(aMinTimeout, aTimeout))
+    {
+    }
+
+    nsTimerImpl*
+    Value() const
+    {
+      return mTimerImpl;
+    }
+
+    already_AddRefed<nsTimerImpl>
+    Take()
+    {
+      if (mTimerImpl) {
+        mTimerImpl->SetHolder(nullptr);
+      }
+      return mTimerImpl.forget();
+    }
 
     static bool
     UniquePtrLessThan(UniquePtr<Entry>& aLeft, UniquePtr<Entry>& aRight)
