@@ -81,7 +81,7 @@ private:
 
   struct Entry
   {
-    TimeStamp mTimeout;
+    const TimeStamp mTimeout;
     RefPtr<nsTimerImpl> mTimerImpl;
 
     Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
@@ -90,23 +90,16 @@ private:
       mTimerImpl(aTimerImpl)
     { }
 
-    Entry(Entry&& aRight) = default;
-    Entry& operator=(Entry&& aRight) = default;
-
-    bool operator<(const Entry& aRight) const
+    static bool
+    UniquePtrLessThan(UniquePtr<Entry>& aLeft, UniquePtr<Entry>& aRight)
     {
-      // Reverse logic since we are inserting into a max heap
-      // that sorts the "largest" value to index 0.
-      return mTimeout > aRight.mTimeout;
-    }
-
-    bool operator==(const Entry& aRight) const
-    {
-      return mTimeout == aRight.mTimeout;
+      // This is reversed because std::push_heap() sorts the "largest" to
+      // the front of the heap.  We want that to be the earliest timer.
+      return aRight->mTimeout < aLeft->mTimeout;
     }
   };
 
-  nsTArray<Entry> mTimers;
+  nsTArray<UniquePtr<Entry>> mTimers;
 };
 
 struct TimerAdditionComparator
