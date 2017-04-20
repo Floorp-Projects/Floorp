@@ -143,6 +143,7 @@ public:
     mNeedsComposite = aNeedsComposite;
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
+  virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
 
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
@@ -212,6 +213,7 @@ private:
   bool mTransactionIncomplete;
 
   bool mNeedsComposite;
+  bool mIsFirstPaint;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send

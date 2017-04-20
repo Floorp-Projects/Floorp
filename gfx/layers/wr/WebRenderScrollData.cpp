@@ -74,6 +74,7 @@ WebRenderLayerScrollData::GetScrollMetadata(const WebRenderScrollData& aOwner,
 }
 
 WebRenderScrollData::WebRenderScrollData()
+  : mIsFirstPaint(false)
 {
 }
 
@@ -131,6 +132,18 @@ WebRenderScrollData::GetScrollMetadata(size_t aIndex) const
 {
   MOZ_ASSERT(aIndex < mScrollMetadatas.Length());
   return mScrollMetadatas[aIndex];
+}
+
+void
+WebRenderScrollData::SetIsFirstPaint()
+{
+  mIsFirstPaint = true;
+}
+
+bool
+WebRenderScrollData::IsFirstPaint() const
+{
+  return mIsFirstPaint;
 }
 
 } // namespace layers
