@@ -17,7 +17,6 @@ import android.widget.ListView;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
@@ -171,7 +170,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                     Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
                             TelemetryContract.Method.DIALOG, extrasId);
 
-                    new EditBookmarkDialog(browserApp).show(tab.getURL());
+                    browserApp.showEditBookmarkDialog(tab.getURL());
 
                 } else if (itemId == 1) {
                     final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_to_launcher);
