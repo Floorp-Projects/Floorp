@@ -218,7 +218,7 @@ public:
                               uint8_t aStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               uint32_t aLanguageOverride,
-                              gfxSparseBitSet* aUnicodeRanges,
+                              gfxCharacterMap* aUnicodeRanges,
                               uint8_t aFontDisplay) = 0;
 
     // creates a font face for the specified family, or returns an existing
@@ -231,7 +231,7 @@ public:
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay);
 
     // add in a font face for which we have the gfxUserFontEntry already
@@ -524,7 +524,7 @@ protected:
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
-                                   gfxSparseBitSet* aUnicodeRanges,
+                                   gfxCharacterMap* aUnicodeRanges,
                                    uint8_t aFontDisplay);
 
     // creates a new gfxUserFontFamily in mFontFamilies, or returns an existing
@@ -573,7 +573,7 @@ public:
                      uint8_t aStyle,
                      const nsTArray<gfxFontFeature>& aFeatureSettings,
                      uint32_t aLanguageOverride,
-                     gfxSparseBitSet* aUnicodeRanges,
+                     gfxCharacterMap* aUnicodeRanges,
                      uint8_t aFontDisplay);
 
     virtual ~gfxUserFontEntry();
@@ -585,7 +585,7 @@ public:
                  uint8_t aStyle,
                  const nsTArray<gfxFontFeature>& aFeatureSettings,
                  uint32_t aLanguageOverride,
-                 gfxSparseBitSet* aUnicodeRanges,
+                 gfxCharacterMap* aUnicodeRanges,
                  uint8_t aFontDisplay);
 
     virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,

@@ -115,7 +115,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              uint8_t aStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              uint32_t aLanguageOverride,
-             gfxSparseBitSet* aUnicodeRanges,
+             gfxCharacterMap* aUnicodeRanges,
              uint8_t aFontDisplay)
     : gfxFontEntry(NS_LITERAL_STRING("userfont")),
       mUserFontLoadState(STATUS_NOT_LOADED),
@@ -135,10 +135,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
     mStyle = aStyle;
     mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
-
-    if (aUnicodeRanges) {
-        mCharacterMap = new gfxCharacterMap(*aUnicodeRanges);
-    }
+    mCharacterMap = aUnicodeRanges;
 }
 
 gfxUserFontEntry::~gfxUserFontEntry()
@@ -156,7 +153,7 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           uint8_t aStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
                           uint32_t aLanguageOverride,
-                          gfxSparseBitSet* aUnicodeRanges,
+                          gfxCharacterMap* aUnicodeRanges,
                           uint8_t aFontDisplay)
 {
     return mWeight == aWeight &&
@@ -912,7 +909,7 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
     RefPtr<gfxUserFontEntry> entry;
@@ -950,7 +947,7 @@ gfxUserFontSet::CreateUserFontEntry(
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
 
@@ -970,7 +967,7 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
     MOZ_ASSERT(aWeight != 0,

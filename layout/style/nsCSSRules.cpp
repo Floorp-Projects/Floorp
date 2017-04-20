@@ -1081,6 +1081,9 @@ nsCSSFontFaceStyleDecl::SetProperty(const nsAString & propertyName,
                                     const nsAString & value,
                                     const nsAString & priority)
 {
+  // FIXME(heycam): If we are changing unicode-range, then a FontFace object
+  // representing this rule must have its mUnicodeRange value invalidated.
+
   return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
 }
 
@@ -1295,6 +1298,9 @@ nsCSSFontFaceRule::SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue)
                   "aDescID out of range in nsCSSFontFaceRule::SetDesc");
 
   // FIXME: handle dynamic changes
+
+  // FIXME(heycam): If we are changing unicode-range, then a FontFace object
+  // representing this rule must have its mUnicodeRange value invalidated.
 
   mDecl.mDescriptors.Get(aDescID) = aValue;
 }
