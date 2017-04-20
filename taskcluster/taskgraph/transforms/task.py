@@ -411,7 +411,7 @@ task_description_schema = Schema({
         }],
 
         # "Invalid" is a noop for try and other non-supported branches
-        Required('google-play-track'): Any('production', 'beta', 'alpha', 'invalid'),
+        Required('google-play-track'): Any('production', 'beta', 'alpha', 'rollout', 'invalid'),
         Required('dry-run', default=True): bool,
         Optional('rollout-percentage'): int,
     }),
