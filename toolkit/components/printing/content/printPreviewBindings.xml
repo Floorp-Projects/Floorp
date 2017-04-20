@@ -175,6 +175,16 @@
         </body>
       </method>
 
+      <method name="destroy">
+        <body>
+        <![CDATA[
+          this.mMessageManager.removeMessageListener("Printing:Preview:UpdatePageCount", this);
+          delete this.mMessageManager;
+          delete this.mPPBrowser;
+        ]]>
+        </body>
+      </method>
+
       <method name="doPageSetup">
         <body>
         <![CDATA[
