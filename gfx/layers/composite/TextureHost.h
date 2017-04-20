@@ -21,6 +21,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
@@ -386,7 +387,8 @@ public:
     const SurfaceDescriptor& aDesc,
     ISurfaceAllocator* aDeallocator,
     LayersBackend aBackend,
-    TextureFlags aFlags);
+    TextureFlags aFlags,
+    wr::MaybeExternalImageId& aExternalImageId);
 
   /**
    * Lock the texture host for compositing.
@@ -519,7 +521,8 @@ public:
                                          const SurfaceDescriptor& aSharedData,
                                          LayersBackend aLayersBackend,
                                          TextureFlags aFlags,
-                                         uint64_t aSerial);
+                                         uint64_t aSerial,
+                                         const wr::MaybeExternalImageId& aExternalImageId);
   static bool DestroyIPDLActor(PTextureParent* actor);
 
   /**

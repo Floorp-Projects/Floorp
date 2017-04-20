@@ -19,13 +19,12 @@
 namespace mozilla {
 namespace layers {
 
-uint64_t WebRenderTextureHost::sSerialCounter(0);
-
 WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
                                            TextureFlags aFlags,
-                                           TextureHost* aTexture)
+                                           TextureHost* aTexture,
+                                           wr::ExternalImageId& aExternalImageId)
   : TextureHost(aFlags)
-  , mExternalImageId(wr::ToExternalImageId(++sSerialCounter))
+  , mExternalImageId(aExternalImageId)
   , mIsWrappingNativeHandle(false)
 {
   MOZ_COUNT_CTOR(WebRenderTextureHost);

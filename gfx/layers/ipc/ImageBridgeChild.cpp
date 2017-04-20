@@ -973,7 +973,8 @@ PTextureChild*
 ImageBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                      const LayersBackend&,
                                      const TextureFlags&,
-                                     const uint64_t& aSerial)
+                                     const uint64_t& aSerial,
+                                     const wr::MaybeExternalImageId& aExternalImageId)
 {
   MOZ_ASSERT(CanSend());
   return TextureClient::CreateIPDLActor();
@@ -1044,10 +1045,11 @@ PTextureChild*
 ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                 LayersBackend aLayersBackend,
                                 TextureFlags aFlags,
-                                uint64_t aSerial)
+                                uint64_t aSerial,
+                                wr::MaybeExternalImageId& aExternalImageId)
 {
   MOZ_ASSERT(CanSend());
-  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial);
+  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial, aExternalImageId);
 }
 
 static bool
@@ -1156,7 +1158,7 @@ ImageBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
-wr::ExternalImageId
+wr::MaybeExternalImageId
 ImageBridgeChild::GetNextExternalImageId()
 {
   static uint32_t sNextID = 1;
@@ -1165,7 +1167,7 @@ ImageBridgeChild::GetNextExternalImageId()
 
   uint64_t imageId = mNamespace;
   imageId = imageId << 32 | sNextID;
-  return wr::ToExternalImageId(imageId);
+  return Some(wr::ToExternalImageId(imageId));
 }
 
 } // namespace layers

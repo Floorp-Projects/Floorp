@@ -40,7 +40,7 @@ protected:
     return static_cast<WebRenderLayerManager*>(mManager);
   }
 
-  Maybe<wr::ExternalImageId> mExternalImageId;
+  wr::MaybeExternalImageId mExternalImageId;
 
 public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override

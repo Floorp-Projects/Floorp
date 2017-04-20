@@ -25,7 +25,8 @@ class WebRenderTextureHost : public TextureHost
 public:
   WebRenderTextureHost(const SurfaceDescriptor& aDesc,
                        TextureFlags aFlags,
-                       TextureHost* aTexture);
+                       TextureHost* aTexture,
+                       wr::ExternalImageId& aExternalImageId);
   virtual ~WebRenderTextureHost();
 
   virtual void DeallocateDeviceData() override {}
@@ -71,8 +72,6 @@ protected:
   wr::ExternalImageId mExternalImageId;
 
   bool mIsWrappingNativeHandle;
-
-  static uint64_t sSerialCounter;
 };
 
 } // namespace layers
