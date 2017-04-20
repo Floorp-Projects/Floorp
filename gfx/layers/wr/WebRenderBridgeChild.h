@@ -60,7 +60,9 @@ public:
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize,
+             bool aIsSync, uint64_t aTransactionId,
+             const WebRenderScrollData& aScrollData);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 

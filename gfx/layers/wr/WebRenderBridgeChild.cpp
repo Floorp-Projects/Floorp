@@ -90,7 +90,11 @@ WebRenderBridgeChild::ClearReadLocks()
 }
 
 void
-WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId)
+WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
+                            const gfx::IntSize& aSize,
+                            bool aIsSync,
+                            uint64_t aTransactionId,
+                            const WebRenderScrollData& aScrollData)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -101,10 +105,10 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        dlData, dl.dl_desc, auxData, dl.aux_desc);
+                        dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    dlData, dl.dl_desc, auxData, dl.aux_desc);
+                    dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
   }
 
   mParentCommands.Clear();
