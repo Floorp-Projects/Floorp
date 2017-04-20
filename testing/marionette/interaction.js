@@ -178,8 +178,8 @@ function* webdriverClickElement (el, a11y) {
   yield interaction.flushEventLoop(win);
 
   // step 10
-  // TODO(ato): if the click causes navigation,
-  // run post-navigation checks
+  // if the click causes navigation, the post-navigation checks are
+  // handled by the load listener in listener.js
 }
 
 function* chromeClick (el, a11y) {
@@ -291,20 +291,19 @@ interaction.selectOption = function (el) {
  *     |win| has closed or been unloaded before the queue can be flushed.
  */
 interaction.flushEventLoop = function* (win) {
-  let unloadEv;
+  return new Promise(resolve => {
+    let handleEvent = event => {
+      win.removeEventListener("beforeunload", this);
+      resolve();
+    };
 
-  return new Promise((resolve, reject) => {
     if (win.closed) {
-      reject();
+      resolve();
       return;
     }
 
-    unloadEv = reject;
-    win.addEventListener("unload", unloadEv, {once: true});
-
-    win.requestAnimationFrame(resolve);
-  }).then(() => {
-    win.removeEventListener("unload", unloadEv);
+    win.addEventListener("beforeunload", handleEvent);
+    win.requestAnimationFrame(handleEvent);
   });
 };
 
