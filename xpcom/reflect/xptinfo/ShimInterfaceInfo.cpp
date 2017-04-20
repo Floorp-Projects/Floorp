@@ -26,7 +26,6 @@
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSValueList.h"
 #include "nsIDOMCustomEvent.h"
-#include "nsIDOMDataContainerEvent.h"
 #ifdef MOZ_WEBRTC
 #include "nsIDOMDataChannel.h"
 #endif
@@ -158,7 +157,6 @@
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/DataChannelBinding.h"
 #endif
-#include "mozilla/dom/DataContainerEventBinding.h"
 #include "mozilla/dom/DataTransferBinding.h"
 #include "mozilla/dom/DOMCursorBinding.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -346,7 +344,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM(DataChannel),
 #endif
-  DEFINE_SHIM(DataContainerEvent),
   DEFINE_SHIM(DataTransfer),
   DEFINE_SHIM(DOMCursor),
   DEFINE_SHIM(DOMException),

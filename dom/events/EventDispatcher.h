@@ -8,6 +8,7 @@
 #ifndef mozilla_EventDispatcher_h_
 #define mozilla_EventDispatcher_h_
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -286,7 +287,9 @@ public:
   static already_AddRefed<dom::Event> CreateEvent(dom::EventTarget* aOwner,
                                                   nsPresContext* aPresContext,
                                                   WidgetEvent* aEvent,
-                                                  const nsAString& aEventType);
+                                                  const nsAString& aEventType,
+                                                  dom::CallerType aCallerType =
+                                                    dom::CallerType::System);
 
   /**
    * Called at shutting down.

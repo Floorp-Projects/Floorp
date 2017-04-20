@@ -188,7 +188,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CloseEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "CommandEvent",
+    {name: "CommandEvent", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Comment",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -849,7 +849,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SharedWorker",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "SimpleGestureEvent",
+    {name: "SimpleGestureEvent", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SimpleTest", xbl: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!

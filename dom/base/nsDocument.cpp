@@ -8008,12 +8008,14 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   ErrorResult rv;
-  *aReturn = nsIDocument::CreateEvent(aEventType, rv).take();
+  *aReturn = nsIDocument::CreateEvent(aEventType, CallerType::System,
+                                      rv).take();
   return rv.StealNSResult();
 }
 
 already_AddRefed<Event>
-nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
+nsIDocument::CreateEvent(const nsAString& aEventType, CallerType aCallerType,
+                         ErrorResult& rv) const
 {
   nsIPresShell *shell = GetShell();
 
@@ -8027,7 +8029,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
   // Create event even without presContext.
   RefPtr<Event> ev =
     EventDispatcher::CreateEvent(const_cast<nsIDocument*>(this), presContext,
-                                 nullptr, aEventType);
+                                 nullptr, aEventType, aCallerType);
   if (!ev) {
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
