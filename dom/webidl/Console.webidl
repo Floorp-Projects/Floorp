@@ -14,7 +14,7 @@
 namespace console {
   // Logging
   void assert(optional boolean condition = false, any... data);
-  void clear(any... data); // TODO: fix in the following patch
+  void clear();
   void count(any... data); // Bug 1346326 already covers this
   void debug(any... data);
   void error(any... data);

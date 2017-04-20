@@ -110,7 +110,7 @@ public:
   Count(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
-  Clear(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  Clear(const GlobalObject& aGlobal);
 
   static void
   NoopMethod(const GlobalObject& aGlobal);
