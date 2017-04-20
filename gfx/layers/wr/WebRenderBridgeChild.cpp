@@ -115,7 +115,9 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
 wr::ExternalImageId
 WebRenderBridgeChild::GetNextExternalImageId()
 {
-  return GetCompositorBridgeChild()->GetNextExternalImageId();
+  wr::MaybeExternalImageId id = GetCompositorBridgeChild()->GetNextExternalImageId();
+  MOZ_RELEASE_ASSERT(id.isSome());
+  return id.value();
 }
 
 wr::ExternalImageId

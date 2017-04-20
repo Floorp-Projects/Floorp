@@ -42,7 +42,7 @@ private:
   nsTArray<WebRenderParentCommand> mParentCommands;
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
-  Maybe<wr::ExternalImageId> mExternalImageId;
+  wr::MaybeExternalImageId mExternalImageId;
   Maybe<wr::ImageKey> mKey;
 };
 
