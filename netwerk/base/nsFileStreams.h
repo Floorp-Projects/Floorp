@@ -9,6 +9,7 @@
 #include "nsAutoPtr.h"
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
+#include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISafeOutputStream.h"
@@ -113,16 +114,21 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsFileInputStream : public nsFileStreamBase,
-                          public nsIFileInputStream,
-                          public nsILineInputStream,
-                          public nsIIPCSerializableInputStream
+// nsFileInputStream is cloneable only on the parent process because only there
+// it can open the same file multiple times.
+
+class nsFileInputStream : public nsFileStreamBase
+                        , public nsIFileInputStream
+                        , public nsILineInputStream
+                        , public nsIIPCSerializableInputStream
+                        , public nsICloneableInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+    NS_DECL_NSICLONEABLEINPUTSTREAM
 
     NS_IMETHOD Close() override;
     NS_IMETHOD Tell(int64_t *aResult) override;
@@ -183,6 +189,8 @@ protected:
      * Init() analogues.
      */
     nsresult Open(nsIFile* file, int32_t ioFlags, int32_t perm);
+
+    bool IsCloneable() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
