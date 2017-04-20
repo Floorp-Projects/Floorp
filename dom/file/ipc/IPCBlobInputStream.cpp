@@ -64,7 +64,6 @@ NS_IMPL_RELEASE(IPCBlobInputStream);
 NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
@@ -221,9 +220,12 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     mCallbackEventTarget = aEventTarget;
     return NS_OK;
 
-  // We have the remote inputStream, let's check if we can execute the callback.
+  // We have the remote inputStream, let's execute the callback immediately.
   case eRunning:
-    return MaybeExecuteCallback(aCallback, aEventTarget);
+    if (aCallback) {
+      CallbackRunnable::Execute(aCallback, aEventTarget, this);
+    }
+    return NS_OK;
 
   // Stream is closed.
   default:
@@ -247,84 +249,18 @@ IPCBlobInputStream::StreamReady(nsIInputStream* aInputStream)
   // stream is not available anymore. We keep the state as pending just to block
   // any additional operation.
 
-  nsCOMPtr<nsIInputStreamCallback> callback;
-  callback.swap(mCallback);
-
-  nsCOMPtr<nsIEventTarget> callbackEventTarget;
-  callbackEventTarget.swap(mCallbackEventTarget);
-
-  if (aInputStream && callback) {
+  if (aInputStream && mCallback) {
     MOZ_ASSERT(mState == ePending);
+    MOZ_ASSERT(mCallback);
 
     mRemoteStream = aInputStream;
     mState = eRunning;
 
-    MaybeExecuteCallback(callback, callbackEventTarget);
+    CallbackRunnable::Execute(mCallback, mCallbackEventTarget, this);
   }
-}
-
-nsresult
-IPCBlobInputStream::MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
-                                         nsIEventTarget* aCallbackEventTarget)
-{
-  MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mRemoteStream);
-
-  // If the stream supports nsIAsyncInputStream, we need to call its AsyncWait
-  // and wait for OnInputStreamReady.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mRemoteStream);
-  if (asyncStream) {
-    // If the callback has been already set, we return an error.
-    if (mCallback && aCallback) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mCallback = aCallback;
-    mCallbackEventTarget = aCallbackEventTarget;
-
-    if (!mCallback) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIEventTarget> target = NS_GetCurrentThread();
-    return asyncStream->AsyncWait(this, 0, 0, target);
-  }
-
-  MOZ_ASSERT(!mCallback);
-  MOZ_ASSERT(!mCallbackEventTarget);
-
-  if (!aCallback) {
-    return NS_OK;
-  }
-
-  CallbackRunnable::Execute(aCallback, aCallbackEventTarget, this);
-  return NS_OK;
-}
-
-// nsIInputStreamCallback
-
-NS_IMETHODIMP
-IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
-{
-  // We have been closed in the meantime.
-  if (mState == eClosed) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mRemoteStream == aStream);
-
-  // The callback has been canceled in the meantime.
-  if (!mCallback) {
-    return NS_OK;
-  }
-
-  CallbackRunnable::Execute(mCallback, mCallbackEventTarget, this);
 
   mCallback = nullptr;
   mCallbackEventTarget = nullptr;
-
-  return NS_OK;
 }
 
 // nsIIPCSerializableInputStream
