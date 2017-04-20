@@ -14,4 +14,7 @@ if CONFIG['MOZ_STYLO']:
 if CONFIG['MOZ_BUILD_WEBRENDER']:
     features += ['quantum_render']
 
+if CONFIG['MOZ_DEBUG']:
+    features += ['gecko_debug']
+
 RustLibrary('gkrust-gtest', features, '../..')
