@@ -88,7 +88,7 @@ fails == mfenced-10.html mfenced-10.html
 == stretchy-largeop-1.html stretchy-largeop-1.html
 fails == stretchy-largeop-2.html stretchy-largeop-2.html
 == stretchy-largeop-3.html stretchy-largeop-3.html
-== table-width-1.xhtml table-width-1.xhtml
+fails == table-width-1.xhtml table-width-1.xhtml
 == table-width-2.html table-width-2.html
 fails == table-width-3.html table-width-3.html
 == table-width-4.html table-width-4.html
@@ -127,7 +127,7 @@ fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\
 == mathbackground-3.xml mathbackground-3.xml
 == mathbackground-4.xml mathbackground-4.xml
 == mstyle-1.xhtml mstyle-1.xhtml
-== mstyle-2.xhtml mstyle-2.xhtml
+fails == mstyle-2.xhtml mstyle-2.xhtml
 == mstyle-3.xhtml mstyle-3.xhtml
 == mstyle-4.xhtml mstyle-4.xhtml
 == mstyle-5.xhtml mstyle-5.xhtml
