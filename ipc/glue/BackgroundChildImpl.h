@@ -82,6 +82,13 @@ protected:
   virtual bool
   DeallocPMemoryStreamChild(PMemoryStreamChild* aActor) override;
 
+  virtual PIPCBlobInputStreamChild*
+  AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActor) override;
+
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const FileDescriptor& aFileDescriptor)
                                override;

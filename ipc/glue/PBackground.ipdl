@@ -15,6 +15,7 @@ include protocol PFileDescriptorSet;
 include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
+include protocol PIPCBlobInputStream;
 include protocol PMemoryStream;
 include protocol PMessagePort;
 include protocol PCameras;
@@ -60,6 +61,7 @@ sync protocol PBackground
   manages PFileSystemRequest;
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
+  manages PIPCBlobInputStream;
   manages PMemoryStream;
   manages PMessagePort;
   manages PCameras;
@@ -119,6 +121,8 @@ child:
   async PCacheStreamControl();
 
   async PParentToChildStream();
+
+  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
 both:
   async PBlob(BlobConstructorParams params);

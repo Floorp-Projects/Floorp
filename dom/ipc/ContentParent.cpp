@@ -2838,6 +2838,19 @@ ContentParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
   return nsIContentParent::DeallocPMemoryStreamParent(aActor);
 }
 
+PIPCBlobInputStreamParent*
+ContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                              const uint64_t& aSize)
+{
+  return nsIContentParent::AllocPIPCBlobInputStreamParent(aID, aSize);
+}
+
+bool
+ContentParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPIPCBlobInputStreamParent(aActor);
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvPBlobConstructor(PBlobParent* aActor,
                                     const BlobConstructorParams& aParams)
@@ -3833,6 +3846,14 @@ ContentParent::SendPBlobConstructor(PBlobParent* aActor,
                                     const BlobConstructorParams& aParams)
 {
   return PContentParent::SendPBlobConstructor(aActor, aParams);
+}
+
+PIPCBlobInputStreamParent*
+ContentParent::SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                                  const nsID& aID,
+                                                  const uint64_t& aSize)
+{
+  return PContentParent::SendPIPCBlobInputStreamConstructor(aActor, aID, aSize);
 }
 
 PBrowserParent*

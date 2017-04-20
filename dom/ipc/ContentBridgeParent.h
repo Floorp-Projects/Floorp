@@ -143,6 +143,18 @@ protected:
 
   virtual bool DeallocPMemoryStreamParent(PMemoryStreamParent*) override;
 
+  virtual PIPCBlobInputStreamParent*
+  SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                     const nsID& aID,
+                                     const uint64_t& aSize) override;
+
+  virtual PIPCBlobInputStreamParent*
+  AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                 const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent*) override;
+
   virtual PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
 
   virtual bool
