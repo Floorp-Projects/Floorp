@@ -284,20 +284,20 @@ public:
     return lhs.index_ < rhs.index_;
   }
 
-  constexpr friend bool operator<=(const span_iterator& lhs,
-                                   const span_iterator& rhs)
+  MOZ_SPAN_GCC_CONSTEXPR friend bool operator<=(const span_iterator& lhs,
+                                                const span_iterator& rhs)
   {
     return !(rhs < lhs);
   }
 
-  constexpr friend bool operator>(const span_iterator& lhs,
-                                  const span_iterator& rhs)
+  MOZ_SPAN_GCC_CONSTEXPR friend bool operator>(const span_iterator& lhs,
+                                               const span_iterator& rhs)
   {
     return rhs < lhs;
   }
 
-  constexpr friend bool operator>=(const span_iterator& lhs,
-                                   const span_iterator& rhs)
+  MOZ_SPAN_GCC_CONSTEXPR friend bool operator>=(const span_iterator& lhs,
+                                                const span_iterator& rhs)
   {
     return !(rhs > lhs);
   }
