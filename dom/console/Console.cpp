@@ -963,7 +963,13 @@ METHOD(Error, "error")
 METHOD(Exception, "exception")
 METHOD(Debug, "debug")
 METHOD(Table, "table")
-METHOD(Clear, "clear")
+
+/* static */ void
+Console::Clear(const GlobalObject& aGlobal)
+{
+  const Sequence<JS::Value> data;
+  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
+}
 
 /* static */ void
 Console::Trace(const GlobalObject& aGlobal)
