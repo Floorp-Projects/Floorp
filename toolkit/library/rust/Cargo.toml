@@ -9,7 +9,6 @@ description = "Rust code for libxul"
 bindgen = ["gkrust-shared/bindgen"]
 servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
-gecko_debug = ["gkrust-shared/gecko_debug"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
