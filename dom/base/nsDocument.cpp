@@ -1376,8 +1376,6 @@ nsIDocument::nsIDocument()
     mUserHasInteracted(false)
 {
   SetIsInDocument();
-
-  PR_INIT_CLIST(&mDOMMediaQueryLists);
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -1457,7 +1455,7 @@ nsDocument::ClearAllBoxObjects()
 
 nsIDocument::~nsIDocument()
 {
-  MOZ_ASSERT(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
+  MOZ_ASSERT(mDOMMediaQueryLists.isEmpty(),
              "must not have media query lists left");
 
   if (mNodeInfoManager) {
@@ -1858,9 +1856,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // We own only the items in mDOMMediaQueryLists that have listeners;
   // this reference is managed by their AddListener and RemoveListener
   // methods.
-  for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
-       l != &tmp->mDOMMediaQueryLists; l = PR_NEXT_LINK(l)) {
-    MediaQueryList *mql = static_cast<MediaQueryList*>(l);
+  for (auto mql : tmp->mDOMMediaQueryLists) {
     if (mql->HasListeners()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDOMMediaQueryLists item");
       cb.NoteXPCOMChild(mql);
@@ -1974,12 +1970,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // We own only the items in mDOMMediaQueryLists that have listeners;
   // this reference is managed by their AddListener and RemoveListener
   // methods.
-  for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
-       l != &tmp->mDOMMediaQueryLists; ) {
-    PRCList *next = PR_NEXT_LINK(l);
-    MediaQueryList *mql = static_cast<MediaQueryList*>(l);
+  for (MediaQueryList* mql = tmp->mDOMMediaQueryLists.getFirst(); mql;) {
+    MediaQueryList* next = mql->getNext();
     mql->Disconnect();
-    l = next;
+    mql = next;
   }
 
   tmp->mInUnlinkOrDeletion = false;
@@ -7182,8 +7176,7 @@ nsIDocument::MatchMedia(const nsAString& aMediaQueryList)
 {
   RefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
 
-  // Insert the new item at the end of the linked list.
-  PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
+  mDOMMediaQueryLists.insertBack(result);
 
   return result.forget();
 }
