@@ -4853,7 +4853,13 @@ nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   if (mBorderImageRenderer) {
     CreateBorderImageWebRenderCommands(aBuilder, aParentCommands, aLayer);
   } else if (mBorderRenderer) {
-    mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
+    gfx::Rect clip(0, 0, 0, 0);
+    if (GetClip().HasClip()) {
+      int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+      clip = NSRectToRect(GetClip().GetClipRect(), appUnitsPerDevPixel);
+    }
+
+    mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer, clip);
   }
 }
 
