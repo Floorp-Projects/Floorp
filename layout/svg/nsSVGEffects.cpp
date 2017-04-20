@@ -910,24 +910,13 @@ nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFla
   }
 }
 
-static already_AddRefed<nsIURI>
-ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
+already_AddRefed<nsIURI>
+nsSVGEffects::GetBaseURLForLocalRef(nsIContent* content, nsIURI* aDocURI)
 {
-  MOZ_ASSERT(aFrame);
-
-  if (!aURL) {
-    return nullptr;
-  }
-
-  // Non-local-reference URL.
-  if (!aURL->IsLocalRef()) {
-    nsCOMPtr<nsIURI> result = aURL->GetURI();
-    return result.forget();
-  }
+  MOZ_ASSERT(content);
 
   // For a local-reference URL, resolve that fragment against the current
   // document that relative URLs are resolved against.
-  nsIContent* content = aFrame->GetContent();
   nsCOMPtr<nsIURI> baseURI = content->OwnerDoc()->GetDocumentURI();
 
   if (content->IsInAnonymousSubtree()) {
@@ -955,11 +944,36 @@ ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
         }
       }
 
-      if (originalURI && aURL->EqualsExceptRef(originalURI)) {
-        baseURI = originalURI;
+      if (originalURI) {
+        bool isEqualsExceptRef = false;
+        aDocURI->EqualsExceptRef(originalURI, &isEqualsExceptRef);
+        if (isEqualsExceptRef) {
+          baseURI = originalURI;
+        }
       }
     }
   }
+
+  return baseURI.forget();
+}
+
+static already_AddRefed<nsIURI>
+ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aURL) {
+    return nullptr;
+  }
+
+  // Non-local-reference URL.
+  if (!aURL->IsLocalRef()) {
+    nsCOMPtr<nsIURI> result = aURL->GetURI();
+    return result.forget();
+  }
+
+  nsCOMPtr<nsIURI> baseURI =
+    nsSVGEffects::GetBaseURLForLocalRef(aFrame->GetContent(), aURL->GetURI());
 
   return aURL->ResolveLocalRef(baseURI);
 }
