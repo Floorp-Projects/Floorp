@@ -22,6 +22,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
                                   "resource://gre/modules/ProfileAge.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
+                                  "resource://testing-common/ExtensionXPCShellUtils.jsm");
+
 // The webserver hosting the addons.
 var gHttpServer = null;
 // The URL of the webserver root.
@@ -672,6 +675,7 @@ function checkActiveAddon(data) {
     updateDay: "number",
     signedState,
     isSystem: "boolean",
+    isWebExtension: "boolean",
   };
 
   for (let f in EXPECTED_ADDON_FIELDS_TYPES) {
@@ -1126,6 +1130,7 @@ add_task(function* test_addonsAndPlugins() {
     updateDay: ADDON_INSTALL_DATE,
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
     isSystem: false,
+    isWebExtension: false,
   };
   const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
   const EXPECTED_SYSTEM_ADDON_DATA = {
@@ -1143,6 +1148,27 @@ add_task(function* test_addonsAndPlugins() {
     updateDay: truncateToDays(SYSTEM_ADDON_INSTALL_DATE),
     signedState: undefined,
     isSystem: true,
+    isWebExtension: false,
+  };
+
+  const WEBEXTENSION_ADDON_ID = "tel-webextension-xpi@tests.mozilla.org";
+  const WEBEXTENSION_ADDON_INSTALL_DATE = truncateToDays(Date.now());
+  const EXPECTED_WEBEXTENSION_ADDON_DATA = {
+    blocklisted: false,
+    description: "A webextension addon.",
+    name: "XPI Telemetry WebExtension Add-on Test",
+    userDisabled: false,
+    appDisabled: false,
+    version: "1.0",
+    scope: 1,
+    type: "extension",
+    foreignInstall: false,
+    hasBinaryComponents: false,
+    installDay: WEBEXTENSION_ADDON_INSTALL_DATE,
+    updateDay: WEBEXTENSION_ADDON_INSTALL_DATE,
+    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    isSystem: false,
+    isWebExtension: true,
   };
 
   const EXPECTED_PLUGIN_DATA = {
@@ -1154,8 +1180,37 @@ add_task(function* test_addonsAndPlugins() {
     clicktoplay: true,
   };
 
-  // Install an addon so we have some data.
+  let deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("test_WebExtension",
+    (reason, data) => {
+      Assert.equal(reason, "addons-changed");
+      deferred.resolve();
+    }
+  );
+
+  // Install an add-on so we have some data.
   yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
+
+  // Install a webextension as well.
+  ExtensionTestUtils.init(this);
+
+  let webextension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      "name": "XPI Telemetry WebExtension Add-on Test",
+      "description": "A webextension addon.",
+      "version": "1.0",
+      "applications": {
+        "gecko": {
+          "id": WEBEXTENSION_ADDON_ID,
+        },
+      },
+    },
+  });
+
+  yield webextension.startup();
+  yield deferred.promise;
+  TelemetryEnvironment.unregisterChangeListener("test_WebExtension");
 
   let data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
@@ -1173,6 +1228,15 @@ add_task(function* test_addonsAndPlugins() {
   for (let f in EXPECTED_SYSTEM_ADDON_DATA) {
     Assert.equal(targetSystemAddon[f], EXPECTED_SYSTEM_ADDON_DATA[f], f + " must have the correct value.");
   }
+
+  // Check webextension add-on data.
+  Assert.ok(WEBEXTENSION_ADDON_ID in data.addons.activeAddons, "We must have one active webextension addon.");
+  let targetWebExtensionAddon = data.addons.activeAddons[WEBEXTENSION_ADDON_ID];
+  for (let f in EXPECTED_WEBEXTENSION_ADDON_DATA) {
+    Assert.equal(targetWebExtensionAddon[f], EXPECTED_WEBEXTENSION_ADDON_DATA[f], f + " must have the correct value.");
+  }
+
+  yield webextension.unload();
 
   // Check theme data.
   let theme = data.addons.theme;

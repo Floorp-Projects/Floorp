@@ -3117,7 +3117,7 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
 
 dnl ========================================================
 dnl = ANGLE OpenGL->D3D translator for WebGL
-dnl = * only applies to win32
+dnl = * only applies to win32 (and then, not MINGW)
 dnl ========================================================
 
 MOZ_ANGLE_RENDERER=
@@ -3129,7 +3129,9 @@ MOZ_D3DCOMPILER_VISTA_DLL_PATH=
 if test "$COMPILE_ENVIRONMENT" ; then
 case "$target_os" in
 *mingw*)
-    MOZ_ANGLE_RENDERER=1
+    if test "$OS_ARCH" = "$HOST_OS_ARCH"; then
+      MOZ_ANGLE_RENDERER=1
+    fi
     ;;
 esac
 

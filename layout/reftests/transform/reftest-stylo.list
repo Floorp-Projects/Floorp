@@ -2,11 +2,11 @@
 # Transforms specifying singular matrices shouldn't display at all.
 # NOTE: Regressions might manifest themselves as reftest timeouts on
 # this test.
-fails == singular-1a.html singular-1a.html
+== singular-1a.html singular-1a.html
 # Multiple transforms should act identically to nested divs.
-fails == compound-1a.html compound-1a.html # Bug 1341785
-fails == compound-1a.html compound-1a.html # Bug 1341785
-fails == dynamic-inherit-1.html dynamic-inherit-1.html # Bug 1341785
+== compound-1a.html compound-1a.html # Bug 1341785
+== compound-1a.html compound-1a.html # Bug 1341785
+== dynamic-inherit-1.html dynamic-inherit-1.html # Bug 1341785
 == dynamic-addremove-1a.html dynamic-addremove-1a.html
 == dynamic-addremove-1b.html dynamic-addremove-1b.html
 == dynamic-addremove-1c.html dynamic-addremove-1c.html
@@ -19,14 +19,14 @@ fails == translatex-1d.html translatex-1d.html
 fails == translatex-1e.html translatex-1e.html
 fails == translatex-1a.html translatex-1a.html # Bug 1341785
 # translatey should act like position: relative
-fails == translatey-1a.html translatey-1a.html
-fails == translatey-1b.html translatey-1b.html
-fails == translatey-1c.html translatey-1c.html
-fails == translatey-1d.html translatey-1d.html
-fails == translatey-1e.html translatey-1e.html
+== translatey-1a.html translatey-1a.html
+== translatey-1b.html translatey-1b.html
+== translatey-1c.html translatey-1c.html
+== translatey-1d.html translatey-1d.html
+== translatey-1e.html translatey-1e.html
 # matrices defined to be translations should act like position: relative
 fails == translatex-2.html translatex-2.html
-fails == translatey-2.html translatey-2.html
+== translatey-2.html translatey-2.html
 # translate should act like position: relative
 fails == translate-1a.html translate-1a.html
 fails == translate-1b.html translate-1b.html
@@ -45,85 +45,85 @@ random == rotate-1e.html rotate-1e.html
 random == rotate-1f.html rotate-1f.html
 # rotate: 90deg rotations should be indistinguishable from objects constructed
 # to look the same.
-fails == rotate-2a.html rotate-2a.html
-fails == rotate-2b.html rotate-2b.html
+== rotate-2a.html rotate-2a.html
+== rotate-2b.html rotate-2b.html
 # -transform-origin: We should NOT get the same images when using different
 # -transform-origins.
-fails == origin-1a.html origin-1a.html
-fails == origin-1b.html origin-1b.html
+== origin-1a.html origin-1a.html
+== origin-1b.html origin-1b.html
 # -transform-origin: We should get the same images when using equivalent
 # -transform-origins.
-fails == origin-2a.html origin-2a.html
-fails == origin-2b.html origin-2b.html
-fails == origin-2c.html origin-2c.html
+== origin-2a.html origin-2a.html
+== origin-2b.html origin-2b.html
+== origin-2c.html origin-2c.html
 # "Translate" with percentages should be indistinguishable from translate with
 # equivalent values.
-fails == percent-1a.html percent-1a.html
-fails == percent-1b.html percent-1b.html
-fails == percent-1c.html percent-1c.html
-fails == percent-1d.html percent-1d.html
-fails == percent-1e.html percent-1e.html
-fails == percent-1f.html percent-1f.html
-fails == percent-1g.html percent-1g.html
+== percent-1a.html percent-1a.html
+== percent-1b.html percent-1b.html
+== percent-1c.html percent-1c.html
+== percent-1d.html percent-1d.html
+== percent-1e.html percent-1e.html
+== percent-1f.html percent-1f.html
+== percent-1g.html percent-1g.html
 # Transformed elements are abs-pos and fixed-pos containing blocks.
-fails == abspos-1a.html abspos-1a.html
-fails == abspos-1b.html abspos-1b.html
-fails == abspos-1c.html abspos-1c.html
-fails == abspos-1d.html abspos-1d.html
-fails == abspos-1e.html abspos-1e.html
-fails == abspos-1f.html abspos-1f.html
-fails == abspos-1g.html abspos-1g.html
+== abspos-1a.html abspos-1a.html
+== abspos-1b.html abspos-1b.html
+== abspos-1c.html abspos-1c.html
+== abspos-1d.html abspos-1d.html
+== abspos-1e.html abspos-1e.html
+== abspos-1f.html abspos-1f.html
+== abspos-1g.html abspos-1g.html
 # Origin can use "top" "right" etc.
-fails == origin-name-1a.html origin-name-1a.html
-fails == origin-name-1b.html origin-name-1b.html
-fails == origin-name-2a.html origin-name-2a.html
-fails == origin-name-2b.html origin-name-2b.html
-fails == origin-name-2c.html origin-name-2c.html
-fails == origin-name-3a.html origin-name-3a.html
-fails == origin-name-3b.html origin-name-3b.html
+== origin-name-1a.html origin-name-1a.html
+== origin-name-1b.html origin-name-1b.html
+== origin-name-2a.html origin-name-2a.html
+== origin-name-2b.html origin-name-2b.html
+== origin-name-2c.html origin-name-2c.html
+== origin-name-3a.html origin-name-3a.html
+== origin-name-3b.html origin-name-3b.html
 # Snapping still applies after 90 degree rotations.
 == snapping-1.html snapping-1.html
 # SVG effects should work on transforms.
-fails == transform-svg-1a.xhtml transform-svg-1a.xhtml
-fails == transform-svg-2a.xhtml transform-svg-2a.xhtml
-fails == transform-svg-2a.xhtml transform-svg-2a.xhtml
+== transform-svg-1a.xhtml transform-svg-1a.xhtml
+== transform-svg-2a.xhtml transform-svg-2a.xhtml
+== transform-svg-2a.xhtml transform-svg-2a.xhtml
 # skew should allow a mix of one and two parameters.
-fails == skew-1a.html skew-1a.html
-fails == skew-1b.html skew-1b.html
-fails == skew-2a.html skew-2a.html
+== skew-1a.html skew-1a.html
+== skew-1b.html skew-1b.html
+== skew-2a.html skew-2a.html
 # matrix with values equal to other transforms should behave indistinguishably
-fails == matrix-1a.html matrix-1a.html
-fails == matrix-2a.html matrix-2a.html
-fails == matrix-3a.html matrix-3a.html
-fails == matrix-4a.html matrix-4a.html
-fails == matrix-5a.html matrix-5a.html
-fails == matrix-6a.html matrix-6a.html
-fails == matrix-7a.html matrix-7a.html
+== matrix-1a.html matrix-1a.html
+== matrix-2a.html matrix-2a.html
+== matrix-3a.html matrix-3a.html
+== matrix-4a.html matrix-4a.html
+== matrix-5a.html matrix-5a.html
+== matrix-6a.html matrix-6a.html
+== matrix-7a.html matrix-7a.html
 # ensure matrix 3d does not break us - should do nothing
 == matrix3d-1.html matrix3d-1.html
 # Test that complex transform can be reversed
 == stresstest-1.html stresstest-1.html
 # Test scale transforms
-fails == scalex-1.html scalex-1.html
-fails == scaley-1.html scaley-1.html
-fails == scale-1a.html scale-1a.html
-fails == scale-1b.html scale-1b.html
+== scalex-1.html scalex-1.html
+== scaley-1.html scaley-1.html
+== scale-1a.html scale-1a.html
+== scale-1b.html scale-1b.html
 == scale-percent-1.html scale-percent-1.html
 # Some simple checks that it obeys selector operations
-fails == descendant-1.html descendant-1.html
-fails == propagate-inherit-boolean.html propagate-inherit-boolean.html
+== descendant-1.html descendant-1.html
+== propagate-inherit-boolean.html propagate-inherit-boolean.html
 # Ensure you can't move outside an iframe
-fails == iframe-1.html iframe-1.html
+== iframe-1.html iframe-1.html
 # Bugs
 fails == 601894-1.html 601894-1.html
 fails == 601894-2.html 601894-2.html
 == 830299-1.html 830299-1.html
 # Bug 722777
-fails == table-1a.html table-1a.html
-fails == table-1b.html table-1b.html
-fails == table-1c.html table-1c.html
-fails == table-2a.html table-2a.html
-fails == table-2b.html table-2b.html
+== table-1a.html table-1a.html
+== table-1b.html table-1b.html
+== table-1c.html table-1c.html
+== table-2a.html table-2a.html
+== table-2b.html table-2b.html
 # Bug 722463
 == inline-1a.html inline-1a.html
 pref(svg.transform-box.enabled,true) == transform-box-svg-1a.svg transform-box-svg-1a.svg

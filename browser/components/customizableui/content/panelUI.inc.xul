@@ -146,7 +146,7 @@
             </vbox>
             <!-- Sync is ready to Sync but the "tabs" engine isn't enabled-->
             <hbox id="PanelUI-remotetabs-tabsdisabledpane" pack="center" flex="1">
-              <vbox class="PanelUI-remotetabs-instruction-box">
+              <vbox class="PanelUI-remotetabs-instruction-box" align="center">
                 <hbox pack="center">
                   <html:img class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
                 </hbox>

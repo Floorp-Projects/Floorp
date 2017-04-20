@@ -28,7 +28,7 @@ if CONFIG['OS_TARGET'] != 'WINNT':
         ]
 
 
-for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
+for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG'):
     DEFINES[var] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
@@ -37,8 +37,6 @@ if CONFIG['OS_TARGET'] == 'Android':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/android/include',
     ]
-else:
-    DEFINES['INET6'] = True
 
 if CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['LINUX'] = True
