@@ -5500,12 +5500,20 @@ nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 nsRegion
 nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) {
-  *aSnap = false;
   nsRegion result;
   if (mList.IsOpaque()) {
     // Everything within GetBounds that's visible is opaque.
     result = GetBounds(aBuilder, aSnap);
+  } else if (aBuilder->HitTestShouldStopAtFirstOpaque()) {
+    // If we care about an accurate opaque region, iterate the display list
+    // and build up a region of opaque bounds.
+    nsDisplayItem* item = mList.GetBottom();
+    while (item) {
+      result.OrWith(item->GetOpaqueRegion(aBuilder, aSnap));
+      item = item->GetAbove();
+    }
   }
+  *aSnap = false;
   return result;
 }
 
