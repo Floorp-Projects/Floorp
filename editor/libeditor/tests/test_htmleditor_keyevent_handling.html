@@ -32,6 +32,7 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.
 function runTests()
 {
   document.execCommand("stylewithcss", false, "true");
+  document.execCommand("defaultParagraphSeparator", false, "div");
 
   var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
     getService(SpecialPowers.Ci.nsIFocusManager);
