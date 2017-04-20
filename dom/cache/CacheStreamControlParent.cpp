@@ -62,8 +62,8 @@ CacheStreamControlParent::SerializeStream(CacheReadStream* aReadStreamOut,
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
-  bool ok = autoStream->Serialize(aStream, Manager());
-  MOZ_DIAGNOSTIC_ASSERT(ok);
+  DebugOnly<bool> ok = autoStream->Serialize(aStream, Manager());
+  MOZ_ASSERT(ok);
 
   aStreamCleanupList.AppendElement(Move(autoStream));
 }

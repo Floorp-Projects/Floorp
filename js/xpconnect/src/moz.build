@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'XPCException.cpp',
     'XPCJSContext.cpp',
     'XPCJSID.cpp',
+    'XPCJSRuntime.cpp',
     'XPCJSWeakReference.cpp',
     'XPCLocale.cpp',
     'XPCLog.cpp',

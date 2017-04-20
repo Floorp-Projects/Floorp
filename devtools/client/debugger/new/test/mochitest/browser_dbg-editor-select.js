@@ -50,5 +50,5 @@ add_task(function* () {
   invokeInTab("testModel");
   yield waitForPaused(dbg);
   assertPausedLocation(dbg, longSrc, 66);
-  // ok(isElementVisible(dbg, "breakpoint"), "Breakpoint is visible");
+  ok(isElementVisible(dbg, "breakpoint"), "Breakpoint is visible");
 });

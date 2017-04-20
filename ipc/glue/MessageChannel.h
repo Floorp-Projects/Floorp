@@ -467,6 +467,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // Tell the IO thread to close the channel and wait for it to ACK.
     void SynchronouslyClose();
 
+    // Returns true if ShouldDeferMessage(aMsg) is guaranteed to return true.
+    // Otherwise, the result of ShouldDeferMessage(aMsg) may be true or false,
+    // depending on context.
+    static bool IsAlwaysDeferred(const Message& aMsg);
+
     bool WasTransactionCanceled(int transaction);
     bool ShouldDeferMessage(const Message& aMsg);
     void OnMessageReceivedFromLink(Message&& aMsg);
@@ -627,6 +632,12 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     bool DispatchingSyncMessage() const;
     int DispatchingSyncMessageNestedLevel() const;
 
+#ifdef DEBUG
+    void AssertMaybeDeferredCountCorrect();
+#else
+    void AssertMaybeDeferredCountCorrect() {}
+#endif
+
     // If a sync message times out, we store its sequence number here. Any
     // future sync messages will fail immediately. Once the reply for original
     // sync message is received, we allow sync messages again.
@@ -678,6 +689,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // another blocking message, because it's blocked on a reply from us.
     //
     MessageQueue mPending;
+
+    // The number of messages in mPending for which IsAlwaysDeferred is false
+    // (i.e., the number of messages that might not be deferred, depending on
+    // context).
+    size_t mMaybeDeferredPendingCount;
 
     // Stack of all the out-calls on which this channel is awaiting responses.
     // Each stack refers to a different protocol and the stacks are mutually
