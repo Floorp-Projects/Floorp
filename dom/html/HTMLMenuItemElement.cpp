@@ -336,15 +336,8 @@ HTMLMenuItemElement::ParseAttribute(int32_t aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
-      bool success = aResult.ParseEnumValue(aValue, kMenuItemTypeTable,
-                                              false);
-      if (success) {
-        mType = aResult.GetEnumValue();
-      } else {
-        mType = kMenuItemDefaultType->value;
-      }
-
-      return success;
+      return aResult.ParseEnumValue(aValue, kMenuItemTypeTable, false,
+                                    kMenuItemDefaultType);
     }
 
     if (aAttribute == nsGkAtoms::radiogroup) {
@@ -383,6 +376,16 @@ HTMLMenuItemElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                   const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
+    // Handle type changes first, since some of the later conditions in this
+    // method look at mType and want to see the new value.
+    if (aName == nsGkAtoms::type) {
+      if (aValue) {
+        mType = aValue->GetEnumValue();
+      } else {
+        mType = kMenuItemDefaultType->value;
+      }
+    }
+
     if ((aName == nsGkAtoms::radiogroup || aName == nsGkAtoms::type) &&
         mType == CMD_TYPE_RADIO &&
         !mParserCreating) {
