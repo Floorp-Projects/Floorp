@@ -48,7 +48,7 @@ fails-if(stylo) == scoped-style-import.html scoped-style-import-ref.html
 fails-if(stylo) == scoped-style-media.html scoped-style-media-ref.html
 fails-if(stylo) == scoped-style-namespace.html scoped-style-namespace-ref.html
 fails-if(stylo) == scoped-style-charset.html scoped-style-charset-ref.html
-fails-if(stylo) == scoped-style-document.html scoped-style-document-ref.html
+== scoped-style-document.html scoped-style-document-ref.html
 fails-if(stylo) HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
 fails-if(stylo) == scoped-style-keyframes.html scoped-style-keyframes-ref.html
 fails-if(stylo) == scoped-style-supports.html scoped-style-supports-ref.html
