@@ -203,8 +203,8 @@ public:
 
   // Actor-varying methods to convert the structured clone stored in this holder
   // by a previous call to Write() into ClonedMessageData IPC representation.
-  // (Blobs are represented in IPC by PBlob actors, so we need the parent to be
-  // able to create them.)
+  // (Blobs are represented in IPC by IPCBlob actors, so we need the parent to
+  // be able to create them.)
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
