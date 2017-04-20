@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.TransitionDrawable;
@@ -208,12 +209,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         };
     }
 
+    private boolean isStartedFromExternalApp() {
+        final Activity activity = getActivity();
+        if (activity == null) {
+            return false;
+        }
+
+        final Intent intent = activity.getIntent();
+        return intent != null && Intent.ACTION_VIEW.equals(intent.getAction());
+    }
 
     public boolean onBackPressed() {
         if (canGoBack()) {
+            // Go back in web history
             goBack();
         } else {
-            eraseAndShowHomeScreen();
+            if (isStartedFromExternalApp()) {
+                // We have been started from a VIEW intent. Go back to the previous app immediately (No erase).
+                getActivity().finish();
+            } else {
+                // Just go back to the home screen.
+                eraseAndShowHomeScreen();
+            }
 
             TelemetryWrapper.eraseBackEvent();
         }

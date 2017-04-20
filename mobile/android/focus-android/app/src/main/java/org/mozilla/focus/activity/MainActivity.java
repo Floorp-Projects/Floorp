@@ -98,6 +98,9 @@ public class MainActivity extends AppCompatActivity {
             // We can't update our fragment right now because we need to wait until the activity is
             // resumed. So just remember this URL and load it in onResume().
             pendingUrl = intent.getDataString();
+
+            // We do not care about the previous intent anymore. But let's remember this one.
+            setIntent(intent);
         }
     }
 
