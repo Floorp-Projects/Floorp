@@ -1933,7 +1933,13 @@ CacheIRCompiler::emitLoadDenseElementExistsResult()
     // Hole check.
     BaseObjectElementIndex element(scratch, index);
     masm.branchTestMagic(Assembler::Equal, element, failure->label());
-    masm.moveValue(BooleanValue(true), output.valueReg());
+
+    if (output.hasValue()) {
+        masm.moveValue(BooleanValue(true), output.valueReg());
+    } else {
+        MOZ_ASSERT(output.type() == JSVAL_TYPE_BOOLEAN);
+        masm.movePtr(ImmWord(true), output.typedReg().gpr());
+    }
     return true;
 }
 

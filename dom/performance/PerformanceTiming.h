@@ -240,6 +240,8 @@ private:
   bool IsInitialized() const;
   void InitializeTimingInfo(nsITimedChannel* aChannel);
 
+  bool IsTopLevelContentDocument() const;
+
   RefPtr<Performance> mPerformance;
   DOMHighResTimeStamp mFetchStart;
 

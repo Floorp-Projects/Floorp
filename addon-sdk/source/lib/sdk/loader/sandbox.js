@@ -63,7 +63,9 @@ function load(sandbox, uri) {
 
     return evaluate(sandbox, decodeURIComponent(source), '1.8', uri, 0);
   } else {
-    return scriptLoader.loadSubScript(uri, sandbox, 'UTF-8');
+    return scriptLoader.loadSubScriptWithOptions(uri, {target: sandbox,
+                                                       charset: 'UTF-8',
+                                                       wantReturnValue: true});
   }
 }
 exports.load = load;

@@ -8526,14 +8526,12 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC")
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
-#if defined(JS_CODEGEN_ARM)
         || !op.addStringOption('\0', "arm-hwcap", "[features]",
                                "Specify ARM code generation features, or 'help' to list all features.")
         || !op.addIntOption('\0', "arm-asm-nop-fill", "SIZE",
                             "Insert the given number of NOP instructions at all possible pool locations.", 0)
         || !op.addIntOption('\0', "asm-pool-max-offset", "OFFSET",
                             "The maximum pc relative OFFSET permitted in pool reference instructions.", 1024)
-#endif
 #if defined(JS_SIMULATOR_ARM)
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
                              "simulator.")
