@@ -157,19 +157,6 @@ static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.
 # define SINGLESTEP_PROFILING
 #endif
 
-using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
-
-struct ShellAsyncTasks
-{
-    explicit ShellAsyncTasks(JSContext* cx)
-      : outstanding(0),
-        finished(cx)
-    {}
-
-    size_t outstanding;
-    Vector<JS::AsyncTask*> finished;
-};
-
 enum class ScriptKind
 {
     Script,
@@ -318,9 +305,6 @@ struct ShellContext
     bool lastWarningEnabled;
     JS::PersistentRootedValue lastWarning;
     JS::PersistentRootedValue promiseRejectionTrackerCallback;
-    JS::PersistentRooted<JobQueue> jobQueue;
-    ExclusiveData<ShellAsyncTasks> asyncTasks;
-    bool drainingJobQueue;
 #ifdef SINGLESTEP_PROFILING
     Vector<StackChars, 0, SystemAllocPolicy> stacks;
 #endif
@@ -488,8 +472,6 @@ ShellContext::ShellContext(JSContext* cx)
     lastWarningEnabled(false),
     lastWarning(cx, NullValue()),
     promiseRejectionTrackerCallback(cx, NullValue()),
-    asyncTasks(mutexid::ShellAsyncTasks, cx),
-    drainingJobQueue(false),
     watchdogLock(mutexid::ShellContextWatchdog),
     exitCode(0),
     quitting(false),
@@ -816,115 +798,13 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     return JS_CallFunction(cx, loaderObj, importFun, args, &value);
 }
 
-static JSObject*
-ShellGetIncumbentGlobalCallback(JSContext* cx)
-{
-    return JS::CurrentGlobalOrNull(cx);
-}
-
-static bool
-ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, JS::HandleObject allocationSite,
-                               JS::HandleObject incumbentGlobal, void* data)
-{
-    ShellContext* sc = GetShellContext(cx);
-    MOZ_ASSERT(job);
-    return sc->jobQueue.append(job);
-}
-
-static bool
-ShellStartAsyncTaskCallback(JSContext* cx, JS::AsyncTask* task)
-{
-    ShellContext* sc = GetShellContext(cx);
-    task->user = sc;
-
-    ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-    asyncTasks->outstanding++;
-    return true;
-}
-
-static bool
-ShellFinishAsyncTaskCallback(JS::AsyncTask* task)
-{
-    ShellContext* sc = (ShellContext*)task->user;
-
-    ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-    MOZ_ASSERT(asyncTasks->outstanding > 0);
-    asyncTasks->outstanding--;
-    return asyncTasks->finished.append(task);
-}
-
-static void
-DrainJobQueue(JSContext* cx)
-{
-    ShellContext* sc = GetShellContext(cx);
-    if (sc->quitting || sc->drainingJobQueue)
-        return;
-
-    while (true) {
-        // Wait for any outstanding async tasks to finish so that the
-        // finishedAsyncTasks list is fixed.
-        while (true) {
-            AutoLockHelperThreadState lock;
-            if (!sc->asyncTasks.lock()->outstanding)
-                break;
-            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
-        }
-
-        // Lock the whole time while copying back the asyncTasks finished queue
-        // so that any new tasks created during finish() cannot racily join the
-        // job queue.  Call finish() only thereafter, to avoid a circular mutex
-        // dependency (see also bug 1297901).
-        Vector<JS::AsyncTask*> finished(cx);
-        {
-            ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-            finished = Move(asyncTasks->finished);
-            asyncTasks->finished.clear();
-        }
-
-        for (JS::AsyncTask* task : finished)
-            task->finish(cx);
-
-        // It doesn't make sense for job queue draining to be reentrant. At the
-        // same time we don't want to assert against it, because that'd make
-        // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this,
-        // so we simply ignore nested calls of drainJobQueue.
-        sc->drainingJobQueue = true;
-
-        RootedObject job(cx);
-        JS::HandleValueArray args(JS::HandleValueArray::empty());
-        RootedValue rval(cx);
-
-        // Execute jobs in a loop until we've reached the end of the queue.
-        // Since executing a job can trigger enqueuing of additional jobs,
-        // it's crucial to re-check the queue length during each iteration.
-        for (size_t i = 0; i < sc->jobQueue.length(); i++) {
-            job = sc->jobQueue[i];
-            AutoCompartment ac(cx, job);
-            {
-                AutoReportException are(cx);
-                JS::Call(cx, UndefinedHandleValue, job, args, &rval);
-            }
-            sc->jobQueue[i].set(nullptr);
-        }
-        sc->jobQueue.clear();
-        sc->drainingJobQueue = false;
-
-        // It's possible a job added an async task, and it's also possible
-        // that task has already finished.
-        {
-            ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-            if (asyncTasks->outstanding == 0 && asyncTasks->finished.length() == 0)
-                break;
-        }
-    }
-}
-
 static bool
 DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    DrainJobQueue(cx);
+    MOZ_ASSERT(!GetShellContext(cx)->quitting);
+    js::RunJobs(cx);
 
     args.rval().setUndefined();
     return true;
@@ -1107,7 +987,8 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
                   stderr);
         }
 
-        DrainJobQueue(cx);
+        if (!GetShellContext(cx)->quitting)
+            js::RunJobs(cx);
 
     } while (!hitEOF && !sc->quitting);
 
@@ -3586,9 +3467,7 @@ WorkerMain(void* arg)
     if (input->parentRuntime)
         sc->isWorker = true;
     JS_SetContextPrivate(cx, sc.get());
-    JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
     SetWorkerContextOptions(cx);
-    sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
 
     Maybe<EnvironmentPreparer> environmentPreparer;
     if (input->parentRuntime) {
@@ -3597,12 +3476,10 @@ WorkerMain(void* arg)
         js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
         JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
+        js::UseInternalJobQueues(cx);
+
         if (!JS::InitSelfHostedCode(cx))
             return;
-
-        JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
-        JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
-        JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
 
         environmentPreparer.emplace(cx);
     } else {
@@ -3634,13 +3511,6 @@ WorkerMain(void* arg)
         RootedValue result(cx);
         JS_ExecuteScript(cx, script, &result);
     } while (0);
-
-    if (input->parentRuntime) {
-        JS::SetGetIncumbentGlobalCallback(cx, nullptr);
-        JS::SetEnqueuePromiseJobCallback(cx, nullptr);
-    }
-
-    sc->jobQueue.reset();
 
     KillWatchdog(cx);
     JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
@@ -8290,7 +8160,8 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
      * tasks before the main thread JSRuntime is torn down. Drain after
      * uncaught exceptions have been reported since draining runs callbacks.
      */
-    DrainJobQueue(cx);
+    if (!GetShellContext(cx)->quitting)
+        js::RunJobs(cx);
 
     if (sc->exitCode)
         result = sc->exitCode;
@@ -8647,13 +8518,10 @@ main(int argc, char** argv, char** envp)
 
     JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
 
+    js::UseInternalJobQueues(cx);
+
     if (!JS::InitSelfHostedCode(cx))
         return 1;
-
-    sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
-    JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
-    JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
-    JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
 
     EnvironmentPreparer environmentPreparer(cx);
 
@@ -8686,13 +8554,10 @@ main(int argc, char** argv, char** envp)
         printf("OOM max count: %" PRIu64 "\n", js::oom::counter);
 #endif
 
-    JS::SetGetIncumbentGlobalCallback(cx, nullptr);
-    JS::SetEnqueuePromiseJobCallback(cx, nullptr);
     JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
 
     // Must clear out some of sc's pointer containers before JS_DestroyContext.
     sc->markObservers.reset();
-    sc->jobQueue.reset();
 
     KillWatchdog(cx);
 

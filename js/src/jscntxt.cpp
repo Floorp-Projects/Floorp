@@ -208,6 +208,20 @@ js::ResumeCooperativeContext(JSContext* cx)
     cx->runtime()->setActiveContext(cx);
 }
 
+static void
+FreeJobQueueHandling(JSContext* cx)
+{
+    if (!cx->jobQueue)
+        return;
+
+    cx->jobQueue->reset();
+    FreeOp* fop = cx->defaultFreeOp();
+    fop->delete_(cx->jobQueue.ref());
+    cx->getIncumbentGlobalCallback = nullptr;
+    cx->enqueuePromiseJobCallback = nullptr;
+    cx->enqueuePromiseJobCallbackData = nullptr;
+}
+
 void
 js::DestroyContext(JSContext* cx)
 {
@@ -223,6 +237,8 @@ js::DestroyContext(JSContext* cx)
     // cooperative contexts which they have read off the owner context of a
     // zone group. See HelperThread::handleIonWorkload.
     CancelOffThreadIonCompile(cx->runtime());
+
+    FreeJobQueueHandling(cx);
 
     if (cx->runtime()->cooperatingContexts().length() == 1) {
         // Destroy the runtime along with its last context.
@@ -1094,6 +1110,154 @@ JSContext::recoverFromOutOfMemory()
     }
 }
 
+static bool
+InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job,
+                                  JS::HandleObject allocationSite,
+                                  JS::HandleObject incumbentGlobal, void* data)
+{
+    MOZ_ASSERT(job);
+    return cx->jobQueue->append(job);
+}
+
+static bool
+InternalStartAsyncTaskCallback(JSContext* cx, JS::AsyncTask* task)
+{
+    task->user = cx;
+
+    ExclusiveData<InternalAsyncTasks>::Guard asyncTasks = cx->asyncTasks.lock();
+    asyncTasks->outstanding++;
+    return true;
+}
+
+static bool
+InternalFinishAsyncTaskCallback(JS::AsyncTask* task)
+{
+    JSContext* cx = (JSContext*)task->user;
+
+    ExclusiveData<InternalAsyncTasks>::Guard asyncTasks = cx->asyncTasks.lock();
+    MOZ_ASSERT(asyncTasks->outstanding > 0);
+    asyncTasks->outstanding--;
+    return asyncTasks->finished.append(task);
+}
+
+namespace {
+class MOZ_STACK_CLASS ReportExceptionClosure : public ScriptEnvironmentPreparer::Closure
+{
+  public:
+    explicit ReportExceptionClosure(HandleValue exn)
+        : exn_(exn)
+    {
+    }
+
+    bool operator()(JSContext* cx) override
+    {
+        cx->setPendingException(exn_);
+        return false;
+    }
+
+  private:
+    HandleValue exn_;
+};
+} // anonymous namespace
+
+JS_FRIEND_API(bool)
+js::UseInternalJobQueues(JSContext* cx)
+{
+    // Internal job queue handling must be set up very early. Self-hosting
+    // initialization is as good a marker for that as any.
+    MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
+                       "js::UseInternalJobQueues must be called early during runtime startup.");
+    MOZ_ASSERT(!cx->jobQueue);
+    auto* queue = cx->new_<PersistentRooted<JobQueue>>(cx, JobQueue(SystemAllocPolicy()));
+    if (!queue)
+        return false;
+
+    cx->jobQueue = queue;
+
+    JS::SetEnqueuePromiseJobCallback(cx, InternalEnqueuePromiseJobCallback);
+    JS::SetAsyncTaskCallbacks(cx, InternalStartAsyncTaskCallback, InternalFinishAsyncTaskCallback);
+
+    return true;
+}
+
+JS_FRIEND_API(void)
+js::RunJobs(JSContext* cx)
+{
+    MOZ_ASSERT(cx->jobQueue);
+
+    if (cx->drainingJobQueue)
+        return;
+
+    while (true) {
+        // Wait for any outstanding async tasks to finish so that the
+        // finishedAsyncTasks list is fixed.
+        while (true) {
+            AutoLockHelperThreadState lock;
+            if (!cx->asyncTasks.lock()->outstanding)
+                break;
+            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+        }
+
+        // Lock the whole time while copying back the asyncTasks finished queue
+        // so that any new tasks created during finish() cannot racily join the
+        // job queue.  Call finish() only thereafter, to avoid a circular mutex
+        // dependency (see also bug 1297901).
+        Vector<JS::AsyncTask*, 0, SystemAllocPolicy> finished;
+        {
+            ExclusiveData<InternalAsyncTasks>::Guard asyncTasks = cx->asyncTasks.lock();
+            finished = Move(asyncTasks->finished);
+            asyncTasks->finished.clear();
+        }
+
+        for (JS::AsyncTask* task : finished)
+            task->finish(cx);
+
+        // It doesn't make sense for job queue draining to be reentrant. At the
+        // same time we don't want to assert against it, because that'd make
+        // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this,
+        // so we simply ignore nested calls of drainJobQueue.
+        cx->drainingJobQueue = true;
+
+        RootedObject job(cx);
+        JS::HandleValueArray args(JS::HandleValueArray::empty());
+        RootedValue rval(cx);
+
+        // Execute jobs in a loop until we've reached the end of the queue.
+        // Since executing a job can trigger enqueuing of additional jobs,
+        // it's crucial to re-check the queue length during each iteration.
+        for (size_t i = 0; i < cx->jobQueue->length(); i++) {
+            job = cx->jobQueue->get()[i];
+            AutoCompartment ac(cx, job);
+            {
+                if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval)) {
+                    RootedValue exn(cx);
+                    if (cx->getPendingException(&exn)) {
+                        /*
+                         * Clear the exception, because
+                         * PrepareScriptEnvironmentAndInvoke will assert that we don't
+                         * have one.
+                         */
+                        cx->clearPendingException();
+                        ReportExceptionClosure reportExn(exn);
+                        PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
+                    }
+                }
+            }
+            cx->jobQueue->get()[i] = nullptr;
+        }
+        cx->jobQueue->clear();
+        cx->drainingJobQueue = false;
+
+        // It's possible a job added an async task, and it's also possible
+        // that task has already finished.
+        {
+            ExclusiveData<InternalAsyncTasks>::Guard asyncTasks = cx->asyncTasks.lock();
+            if (asyncTasks->outstanding == 0 && asyncTasks->finished.length() == 0)
+                break;
+        }
+    }
+}
+
 JS::Error JSContext::reportedError;
 JS::OOM JSContext::reportedOOM;
 
@@ -1205,6 +1369,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     getIncumbentGlobalCallback(nullptr),
     enqueuePromiseJobCallback(nullptr),
     enqueuePromiseJobCallbackData(nullptr),
+    jobQueue(nullptr),
+    drainingJobQueue(false),
+    asyncTasks(mutexid::InternalAsyncTasks),
     promiseRejectionTrackerCallback(nullptr),
     promiseRejectionTrackerCallbackData(nullptr)
 {
