@@ -109,11 +109,13 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.3.2"
+
     androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.7.0'
 }
 
 task buildBlocklists(type:Exec) {
