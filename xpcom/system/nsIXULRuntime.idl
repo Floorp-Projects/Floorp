@@ -12,6 +12,7 @@ namespace mozilla {
 // conditions in which e10s support is not great yet, and should
 // therefore be disabled. Bug 1065561 tracks its removal.
 bool BrowserTabsRemoteAutostart();
+uint32_t GetMaxWebProcessCount();
 }
 
 %}
@@ -102,6 +103,21 @@ interface nsIXULRuntime : nsISupports
    * from the main browser UI.
    */
   readonly attribute boolean browserTabsRemoteAutostart;
+
+  /**
+   * Returns the number of content processes to use for normal web pages. If
+   * this value is > 1, then e10s-multi should be considered to be "on".
+   *
+   * NB: If browserTabsRemoteAutostart is false, then this value has no
+   * meaning and e10s should be considered to be "off"!
+   */
+  readonly attribute uint32_t maxWebProcessCount;
+
+  /**
+   * The current e10s-multi experiment number. Set dom.ipc.multiOptOut to (at
+   * least) this to disable it until the next experiment.
+   */
+  const uint32_t E10S_MULTI_EXPERIMENT = 1;
 
   /**
    * A numeric value indicating whether multiprocess might be blocked.
