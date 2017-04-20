@@ -20,6 +20,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 
+#include <algorithm>
+
 namespace mozilla {
 class TimeStamp;
 } // namespace mozilla
@@ -65,6 +67,7 @@ private:
   // list, or -1 if it failed.
   int32_t AddTimerInternal(nsTimerImpl* aTimer);
   bool    RemoveTimerInternal(nsTimerImpl* aTimer);
+  void    RemoveLeadingCanceledTimersInternal();
 
   already_AddRefed<nsTimerImpl> PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef);
 
@@ -76,7 +79,29 @@ private:
   bool mNotified;
   bool mSleeping;
 
-  nsTArray<RefPtr<nsTimerImpl>> mTimers;
+  struct Entry
+  {
+    const TimeStamp mTimeout;
+    RefPtr<nsTimerImpl> mTimerImpl;
+
+    Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
+          nsTimerImpl* aTimerImpl)
+      : mTimeout(std::max(aMinTimeout, aTimeout)),
+      mTimerImpl(aTimerImpl)
+    { }
+
+    bool operator<(const Entry& aRight) const
+    {
+      return mTimeout < aRight.mTimeout;
+    }
+
+    bool operator==(const Entry& aRight) const
+    {
+      return mTimeout == aRight.mTimeout;
+    }
+  };
+
+  nsTArray<Entry> mTimers;
 };
 
 struct TimerAdditionComparator
