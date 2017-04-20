@@ -6,64 +6,15 @@
 
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
-#include "nsIAsyncInputStream.h"
-#include "mozilla/SystemGroup.h"
 
 namespace mozilla {
 namespace dom {
-
-namespace {
-
-class CallbackRunnable final : public CancelableRunnable
-{
-public:
-  static void
-  Execute(nsIInputStreamCallback* aCallback,
-          nsIEventTarget* aEventTarget,
-          IPCBlobInputStream* aStream)
-  {
-    RefPtr<CallbackRunnable> runnable =
-      new CallbackRunnable(aCallback, aStream);
-
-    nsCOMPtr<nsIEventTarget> target = aEventTarget;
-    if (!target) {
-      target = SystemGroup::EventTargetFor(TaskCategory::Other);
-    }
-
-    target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    mCallback->OnInputStreamReady(mStream);
-    mCallback = nullptr;
-    mStream = nullptr;
-    return NS_OK;
-  }
-
-private:
-  CallbackRunnable(nsIInputStreamCallback* aCallback,
-                   IPCBlobInputStream* aStream)
-    : mCallback(aCallback)
-    , mStream(aStream)
-  {
-    MOZ_ASSERT(mCallback);
-    MOZ_ASSERT(mStream);
-  }
-
-  nsCOMPtr<nsIInputStreamCallback> mCallback;
-  RefPtr<IPCBlobInputStream> mStream;
-};
-
-} // anonymous
 
 NS_IMPL_ADDREF(IPCBlobInputStream);
 NS_IMPL_RELEASE(IPCBlobInputStream);
 
 NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
@@ -71,7 +22,6 @@ NS_INTERFACE_MAP_END
 
 IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
   : mActor(aActor)
-  , mState(eInit)
 {
   MOZ_ASSERT(aActor);
 }
@@ -86,59 +36,31 @@ IPCBlobInputStream::~IPCBlobInputStream()
 NS_IMETHODIMP
 IPCBlobInputStream::Available(uint64_t* aLength)
 {
-  // We don't have a remoteStream yet. Let's return the full known size.
-  if (mState == eInit || mState == ePending) {
-    *aLength = mActor->Size();
-    return NS_OK;
+  if (!mActor) {
+    return NS_BASE_STREAM_CLOSED;
   }
 
-  if (mState == eRunning) {
-    MOZ_ASSERT(mRemoteStream);
-    return mRemoteStream->Available(aLength);
-  }
-
-  MOZ_ASSERT(mState == eClosed);
-  return NS_BASE_STREAM_CLOSED;
+  *aLength = mActor->Size();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IPCBlobInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
 {
-  // Read is not available is we don't have a remoteStream.
-  if (mState == eInit || mState == ePending) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
-
-  if (mState == eRunning) {
-    return mRemoteStream->Read(aBuffer, aCount, aReadCount);
-  }
-
-  MOZ_ASSERT(mState == eClosed);
-  return NS_BASE_STREAM_CLOSED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 IPCBlobInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                                  uint32_t aCount, uint32_t *aResult)
 {
-  // ReadSegments is not available is we don't have a remoteStream.
-  if (mState == eInit || mState == ePending) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
-
-  if (mState == eRunning) {
-    return mRemoteStream->ReadSegments(aWriter, aClosure, aCount, aResult);
-  }
-
-  MOZ_ASSERT(mState == eClosed);
-  return NS_BASE_STREAM_CLOSED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 IPCBlobInputStream::IsNonBlocking(bool* aNonBlocking)
 {
-  *aNonBlocking = true;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -149,14 +71,6 @@ IPCBlobInputStream::Close()
     mActor = nullptr;
   }
 
-  if (mRemoteStream) {
-    mRemoteStream->Close();
-    mRemoteStream = nullptr;
-  }
-
-  mCallback = nullptr;
-
-  mState = eClosed;
   return NS_OK;
 }
 
@@ -165,102 +79,20 @@ IPCBlobInputStream::Close()
 NS_IMETHODIMP
 IPCBlobInputStream::GetCloneable(bool* aCloneable)
 {
-  *aCloneable = mState != eClosed;
+  *aCloneable = !!mActor;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 IPCBlobInputStream::Clone(nsIInputStream** aResult)
 {
-  if (mState == eClosed) {
-    return NS_BASE_STREAM_CLOSED;
+  if (!mActor) {
+    return NS_ERROR_FAILURE;
   }
-
-  MOZ_ASSERT(mActor);
 
   nsCOMPtr<nsIInputStream> stream = mActor->CreateStream();
   stream.forget(aResult);
   return NS_OK;
-}
-
-// nsIAsyncInputStream interface
-
-NS_IMETHODIMP
-IPCBlobInputStream::CloseWithStatus(nsresult aStatus)
-{
-  return Close();
-}
-
-NS_IMETHODIMP
-IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
-                              uint32_t aFlags, uint32_t aRequestedCount,
-                              nsIEventTarget* aEventTarget)
-{
-  // See IPCBlobInputStream.h for more information about this state machine.
-
-  switch (mState) {
-  // First call, we need to retrieve the stream from the parent actor.
-  case eInit:
-    MOZ_ASSERT(mActor);
-
-    mCallback = aCallback;
-    mCallbackEventTarget = aEventTarget;
-    mState = ePending;
-
-    mActor->StreamNeeded(this);
-    return NS_OK;
-
-  // We are still waiting for the remote inputStream
-  case ePending:
-    if (mCallback && aCallback) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mCallback = aCallback;
-    mCallbackEventTarget = aEventTarget;
-    return NS_OK;
-
-  // We have the remote inputStream, let's execute the callback immediately.
-  case eRunning:
-    if (aCallback) {
-      CallbackRunnable::Execute(aCallback, aEventTarget, this);
-    }
-    return NS_OK;
-
-  // Stream is closed.
-  default:
-    MOZ_ASSERT(mState == eClosed);
-    return NS_BASE_STREAM_CLOSED;
-  }
-}
-
-void
-IPCBlobInputStream::StreamReady(nsIInputStream* aInputStream)
-{
-  // We have been closed in the meantime.
-  if (mState == eClosed) {
-    if (aInputStream) {
-      aInputStream->Close();
-    }
-    return;
-  }
-
-  // If aInputStream is null, it means that the serialization went wrong or the
-  // stream is not available anymore. We keep the state as pending just to block
-  // any additional operation.
-
-  if (aInputStream && mCallback) {
-    MOZ_ASSERT(mState == ePending);
-    MOZ_ASSERT(mCallback);
-
-    mRemoteStream = aInputStream;
-    mState = eRunning;
-
-    CallbackRunnable::Execute(mCallback, mCallbackEventTarget, this);
-  }
-
-  mCallback = nullptr;
-  mCallbackEventTarget = nullptr;
 }
 
 // nsIIPCSerializableInputStream
