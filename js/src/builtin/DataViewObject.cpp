@@ -237,12 +237,6 @@ DataViewObject::constructSameCompartment(JSContext* cx, HandleObject bufobj, con
 // A's DataView.prototype. So even though we're creating the DataView in B,
 // its [[Prototype]] must be (a cross-compartment wrapper for) the
 // DataView.prototype in A.
-//
-// As if this were not confusing enough, the way we actually do this is also
-// tricky. We call compartment A's createDataViewForThis method, passing it
-// bufobj as `this`. That calls ArrayBufferObject::createDataViewForThis(),
-// which uses CallNonGenericMethod to switch to compartment B so that
-// the new DataView is created there.
 bool
 DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallArgs& args)
 {

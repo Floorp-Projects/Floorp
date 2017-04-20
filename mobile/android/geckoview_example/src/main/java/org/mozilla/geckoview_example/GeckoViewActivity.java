@@ -51,18 +51,18 @@ public class GeckoViewActivity extends Activity {
     }
 
     @Override
-    protected void onNewIntent(Intent externalIntent) {
-        Log.d(LOGTAG, "SNORP: onNewIntent: " + externalIntent.getData().toString());
-        loadFromIntent(externalIntent);
+    protected void onNewIntent(final Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (intent.getData() != null) {
+            loadFromIntent(intent);
+        }
     }
 
-    private void loadFromIntent(Intent intent) {
-        Uri u = intent.getData();
-        if (u != null) {
-            mGeckoView.loadUri(u.toString());
-        } else {
-            mGeckoView.loadUri(DEFAULT_URL);
-        }
+    private void loadFromIntent(final Intent intent) {
+        final Uri uri = intent.getData();
+        mGeckoView.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
     }
 
     @Override

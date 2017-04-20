@@ -33,7 +33,6 @@
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
 #include "GfxTexturesReporter.h"
-#include "TextureGarbageBin.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -946,8 +945,6 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         mCaps.color = true;
         mCaps.alpha = false;
     }
-
-    mTexGarbageBin = new TextureGarbageBin(this);
 
     MOZ_ASSERT(IsCurrent());
 
@@ -2106,9 +2103,7 @@ GLContext::MarkDestroyed()
     mBlitHelper = nullptr;
     mReadTexImageHelper = nullptr;
 
-    if (MakeCurrent()) {
-        mTexGarbageBin->GLContextTeardown();
-    } else {
+    if (!MakeCurrent()) {
         NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
     }
 
@@ -2386,12 +2381,6 @@ GLContext::CleanDirtyScreen()
     BeforeGLReadCall();
     // no-op; we just want to make sure the Read FBO is updated if it needs to be
     AfterGLReadCall();
-}
-
-void
-GLContext::EmptyTexGarbageBin()
-{
-    TexGarbageBin()->EmptyGarbage();
 }
 
 bool

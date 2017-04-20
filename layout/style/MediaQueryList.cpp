@@ -28,17 +28,11 @@ MediaQueryList::MediaQueryList(nsIDocument* aDocument,
   mMediaList =
     MediaList::Create(aDocument->GetStyleBackendType(), aMediaQueryList);
 
-  PR_INIT_CLIST(this);
-
   KeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }
 
 MediaQueryList::~MediaQueryList()
-{
-  if (mDocument) {
-    PR_REMOVE_LINK(this);
-  }
-}
+{}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaQueryList)
 
@@ -50,7 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaQueryList,
                                                 DOMEventTargetHelper)
   if (tmp->mDocument) {
-    PR_REMOVE_LINK(tmp);
+    tmp->remove();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   }
   tmp->Disconnect();

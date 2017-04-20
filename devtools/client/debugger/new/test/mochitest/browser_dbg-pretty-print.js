@@ -3,7 +3,7 @@
 
 // Tests basic pretty-printing functionality.
 
-add_task(function*() {
+add_task(function* () {
   const dbg = yield initDebugger("doc-minified.html");
 
   yield selectSource(dbg, "math.min.js");

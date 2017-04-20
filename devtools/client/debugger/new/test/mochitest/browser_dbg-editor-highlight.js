@@ -18,9 +18,7 @@ add_task(function* () {
   // Wait for the source text to load and make sure we're in the right
   // place.
   yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
-
-  // TODO: revisit highlighting lines when the debugger opens
-  //assertHighlightLocation(dbg, "long.js", 66);
+  assertHighlightLocation(dbg, "long.js", 66);
 
   // Jump to line 16 and make sure the editor scrolled.
   yield selectSource(dbg, "long.js", 16);
