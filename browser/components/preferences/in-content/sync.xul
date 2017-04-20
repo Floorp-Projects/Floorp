@@ -33,7 +33,6 @@
       hidden="true"
       data-category="paneSync">
   <label class="header-name" flex="1">&paneSync1.title;</label>
-  <html:a class="help-button text-link" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
