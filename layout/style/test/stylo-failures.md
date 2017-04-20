@@ -223,8 +223,6 @@ to mochitest command.
   * test_rule_insertion.html [5]
 * @-moz-document support bug 1355408
   * test_rule_serialization.html [2]
-  * test_moz_document_rules.html [13]
-  * test_bug511909.html `@-moz-document` [4]
   * test_condition_text.html: also \@supports [11]
 * getComputedStyle style doesn't contain custom properties bug 1336891
   * test_variable_serialization_computed.html [35]
