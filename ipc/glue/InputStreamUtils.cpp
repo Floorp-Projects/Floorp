@@ -12,6 +12,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/ipc/IPCBlobInputStream.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"
@@ -65,6 +67,14 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
 {
   nsCOMPtr<nsIInputStream> stream;
   nsCOMPtr<nsIIPCSerializableInputStream> serializable;
+
+  // IPCBlobInputStreams are not deserializable on the parent side.
+  if (aParams.type() == InputStreamParams::TIPCBlobInputStreamParams) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    IPCBlobInputStreamStorage::Get()->GetStream(aParams.get_IPCBlobInputStreamParams().id(),
+                                                getter_AddRefs(stream));
+    return stream.forget();
+  }
 
   switch (aParams.type()) {
     case InputStreamParams::TStringInputStreamParams:
