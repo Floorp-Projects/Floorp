@@ -21,7 +21,7 @@ namespace console {
   void info(any... data);
   void log(any... data);
   void table(any... data); // FIXME: The spec is still unclear about this.
-  void trace(); // TODO fix in the following patch
+  void trace(any... data);
   void warn(any... data);
   void dir(any... data); // FIXME: This doesn't follow the spec yet.
   void dirxml(any... data);
