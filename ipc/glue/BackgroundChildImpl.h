@@ -202,6 +202,12 @@ protected:
   virtual void
   OnChannelReceivedMessage(const Message& aMsg) override;
 #endif
+
+  virtual PWebAuthnTransactionChild*
+  AllocPWebAuthnTransactionChild() override;
+
+  virtual bool
+  DeallocPWebAuthnTransactionChild(PWebAuthnTransactionChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final
