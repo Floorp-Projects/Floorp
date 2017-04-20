@@ -357,11 +357,8 @@ function getNodeBounds(boundaryWindow, node) {
 
   // And add the potential frame offset if the node is nested
   let [xOffset, yOffset] = getFrameOffsets(boundaryWindow, node);
-  xOffset += offsetLeft + scrollX;
-  yOffset += offsetTop + scrollY;
-
-  xOffset *= scale;
-  yOffset *= scale;
+  xOffset += (offsetLeft + scrollX) * scale;
+  yOffset += (offsetTop + scrollY) * scale;
 
   // Get the width and height
   let width = node.offsetWidth * scale;
@@ -371,7 +368,13 @@ function getNodeBounds(boundaryWindow, node) {
     p1: {x: xOffset, y: yOffset},
     p2: {x: xOffset + width, y: yOffset},
     p3: {x: xOffset + width, y: yOffset + height},
-    p4: {x: xOffset, y: yOffset + height}
+    p4: {x: xOffset, y: yOffset + height},
+    top: yOffset,
+    right: xOffset + width,
+    bottom: yOffset + height,
+    left: xOffset,
+    width,
+    height
   };
 }
 exports.getNodeBounds = getNodeBounds;
