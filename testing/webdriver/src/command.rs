@@ -4,6 +4,7 @@ use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use httpapi::{Route, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
 use regex::Captures;
+use rustc_serialize::json;
 use rustc_serialize::json::{ToJson, Json};
 use std::collections::BTreeMap;
 use std::default::Default;
@@ -87,28 +88,24 @@ pub struct WebDriverMessage <U: WebDriverExtensionRoute=VoidWebDriverExtensionRo
     pub command: WebDriverCommand<U::Command>,
 }
 
-impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
-    pub fn new(session_id: Option<String>, command: WebDriverCommand<U::Command>) -> WebDriverMessage<U> {
+impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
+    pub fn new(session_id: Option<String>,
+               command: WebDriverCommand<U::Command>)
+               -> WebDriverMessage<U> {
         WebDriverMessage {
             session_id: session_id,
             command: command,
         }
     }
 
-    pub fn from_http(match_type: Route<U>, params: &Captures, body: &str, requires_body: bool) -> WebDriverResult<WebDriverMessage<U>> {
+    pub fn from_http(match_type: Route<U>,
+                     params: &Captures,
+                     raw_body: &str,
+                     requires_body: bool)
+                     -> WebDriverResult<WebDriverMessage<U>> {
         let session_id = WebDriverMessage::<U>::get_session_id(params);
-        let body_data = if requires_body {
-            debug!("Got request body {}", body);
-            match Json::from_str(body) {
-                Ok(x @ Json::Object(_)) => x,
-                Ok(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                        "Body was not a json object")),
-                Err(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                         format!("Failed to decode request body as json: {}", body)))
-            }
-        } else {
-            Json::Null
-        };
+        let body_data = try!(WebDriverMessage::<U>::decode_body(raw_body, requires_body));
+
         let command = match match_type {
             Route::NewSession => {
                 let parameters: NewSessionParameters = try!(Parameters::from_json(&body_data));
@@ -342,6 +339,29 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
 
     fn get_session_id(params: &Captures) -> Option<String> {
         params.name("sessionId").map(|x| x.as_str().into())
+    }
+
+    fn decode_body(body: &str, requires_body: bool) -> WebDriverResult<Json> {
+        if requires_body {
+            match Json::from_str(body) {
+                Ok(x @ Json::Object(_)) => Ok(x),
+                Ok(_) => {
+                    Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                            "Body was not a JSON Object"))
+                }
+                Err(json::ParserError::SyntaxError(_, line, col)) => {
+                    let msg = format!("Failed to decode request as JSON: {}", body);
+                    let stack = format!("Syntax error at :{}:{}", line, col);
+                    Err(WebDriverError::new_with_stack(ErrorStatus::InvalidArgument, msg, stack))
+                }
+                Err(json::ParserError::IoError(e)) => {
+                    Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                            format!("I/O error whilst decoding body: {}", e)))
+                }
+            }
+        } else {
+            Ok(Json::Null)
+        }
     }
 }
 
