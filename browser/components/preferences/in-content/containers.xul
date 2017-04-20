@@ -26,8 +26,6 @@
       hidden="true"
       data-category="paneContainers">
   <label class="header-name" flex="1">&paneContainers.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
 </hbox>
 
 <!-- Containers -->

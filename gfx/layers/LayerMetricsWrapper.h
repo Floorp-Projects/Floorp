@@ -354,18 +354,6 @@ public:
     return nullptr;
   }
 
-  LayerIntRegion GetVisibleRegion() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    if (AtBottomLayer()) {
-      return mLayer->GetVisibleRegion();
-    }
-    LayerIntRegion region = mLayer->GetVisibleRegion();
-    region.Transform(mLayer->GetTransform());
-    return region;
-  }
-
   Maybe<ParentLayerIntRect> GetClipRect() const
   {
     MOZ_ASSERT(IsValid());
@@ -464,34 +452,6 @@ public:
   bool operator!=(const LayerMetricsWrapper& aOther) const
   {
     return !(*this == aOther);
-  }
-
-  static const FrameMetrics& TopmostScrollableMetrics(Layer* aLayer)
-  {
-    for (uint32_t i = aLayer->GetScrollMetadataCount(); i > 0; i--) {
-      if (aLayer->GetFrameMetrics(i - 1).IsScrollable()) {
-        return aLayer->GetFrameMetrics(i - 1);
-      }
-    }
-    return ScrollMetadata::sNullMetadata->GetMetrics();
-  }
-
-  static const FrameMetrics& BottommostScrollableMetrics(Layer* aLayer)
-  {
-    for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
-      if (aLayer->GetFrameMetrics(i).IsScrollable()) {
-        return aLayer->GetFrameMetrics(i);
-      }
-    }
-    return ScrollMetadata::sNullMetadata->GetMetrics();
-  }
-
-  static const FrameMetrics& BottommostMetrics(Layer* aLayer)
-  {
-    if (aLayer->GetScrollMetadataCount() > 0) {
-      return aLayer->GetFrameMetrics(0);
-    }
-    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
 private:

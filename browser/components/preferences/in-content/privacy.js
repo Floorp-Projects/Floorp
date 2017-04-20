@@ -959,6 +959,27 @@ var gPrivacyPane = {
     this._initMasterPasswordUI();
   },
 
+  /**
+   * Displays the "remove master password" dialog to allow the user to remove
+   * the current master password.  When the dialog is dismissed, master password
+   * UI is automatically updated.
+   */
+  _removeMasterPassword() {
+    var secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                   getService(Ci.nsIPKCS11ModuleDB);
+    if (secmodDB.isFIPSEnabled) {
+      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                          getService(Ci.nsIPromptService);
+      var bundle = document.getElementById("bundlePreferences");
+      promptService.alert(window,
+                          bundle.getString("pw_change_failed_title"),
+                          bundle.getString("pw_change2empty_in_fips_mode"));
+      this._initMasterPasswordUI();
+    } else {
+      gSubDialog.open("chrome://mozapps/content/preferences/removemp.xul",
+                      null, null, this._initMasterPasswordUI.bind(this));
+    }
+  },
 
   /**
    * Displays a dialog in which the master password may be changed.

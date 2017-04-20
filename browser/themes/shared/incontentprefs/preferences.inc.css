@@ -101,6 +101,9 @@ treecol {
   .category-name {
     display: none;
   }
+  .help-button {
+    font-size: 0 !important;
+  }
 }
 
 /* header */
@@ -563,4 +566,30 @@ description > html|a {
   .fxaFirefoxLogo {
     list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);
   }
+}
+
+.help-button {
+  position: fixed;
+  left: 0;
+  /* Needs to have enough gap from the bottom to not
+     get behind the status panel (bug 1357841). */
+  bottom: 2rem;
+  font-size: 13px;
+  line-height: 13px;
+  height: 14px;
+  background-position: 15px;
+  padding-inline-start: 35px;
+  white-space: nowrap;
+}
+
+.help-button:-moz-locale-dir(rtl) {
+  left: auto;
+  right: 0;
+  background-position: right 15px top 0;
+}
+
+.help-button:link,
+.help-button:visited {
+  color: var(--in-content-category-text);
+  text-decoration: none;
 }

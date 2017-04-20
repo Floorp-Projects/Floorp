@@ -168,6 +168,8 @@
       <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
     </keyset>
 
+    <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>
+
     <vbox class="main-content" flex="1">
       <hbox pack="end">
         <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"/>
