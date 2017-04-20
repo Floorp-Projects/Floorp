@@ -668,12 +668,12 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
   RefPtr<IMFSample> inputSample;
   HRESULT hr = mDecoder->CreateInputSample(aSample->Data(),
                                            uint32_t(aSample->Size()),
-                                           aSample->mTime,
+                                           aSample->mTime.ToMicroseconds(),
                                            &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
   mLastDuration = aSample->mDuration.ToMicroseconds();
-  mLastTime = aSample->mTime;
+  mLastTime = aSample->mTime.ToMicroseconds();
   mSamplesCount++;
 
   // Forward sample data to the decoder.
@@ -1032,7 +1032,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
 
   aOutData = frame;
   // Set the potentially corrected pts and duration.
-  aOutData->mTime = pts.ToMicroseconds();
+  aOutData->mTime = pts;
   aOutData->mDuration = duration;
 
   if (mNullOutputCount) {

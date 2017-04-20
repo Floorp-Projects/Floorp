@@ -47,7 +47,7 @@ public:
     MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
-    MOZ_ASSERT(aItem->GetEndTime().ToMicroseconds() >= aItem->mTime);
+    MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
     nsDeque::Push(aItem);
     mPushEvent.Notify(RefPtr<T>(aItem));
   }
@@ -104,7 +104,7 @@ public:
     }
     T* last = static_cast<T*>(nsDeque::Peek());
     T* first = static_cast<T*>(nsDeque::PeekFront());
-    return last->GetEndTime().ToMicroseconds() - first->mTime;
+    return (last->GetEndTime() - first->mTime).ToMicroseconds();
   }
 
   void LockedForEach(nsDequeFunctor& aFunctor) const {

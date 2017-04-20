@@ -27,12 +27,15 @@
     "ini-parser": "^0.0.2",
     "sax": "^1.2.2"
   },
+  "devDependencies": {
+    "mocha": "3.2.0"
+  },
   "engines": {
     "node": ">=6.9.1"
   },
   "scripts": {
     "prepublishOnly": "node scripts/createExports.js",
-    "test": "node tests/test-run-all.js",
+    "test": "mocha -R dot tests",
     "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json"
   },
   "license": "MPL-2.0"

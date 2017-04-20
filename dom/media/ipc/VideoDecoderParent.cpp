@@ -137,8 +137,8 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
     return IPC_OK();
   }
   data->mOffset = aData.base().offset();
-  data->mTime = aData.base().time();
-  data->mTimecode = aData.base().timecode();
+  data->mTime = media::TimeUnit::FromMicroseconds(aData.base().time());
+  data->mTimecode = media::TimeUnit::FromMicroseconds(aData.base().timecode());
   data->mDuration = media::TimeUnit::FromMicroseconds(aData.base().duration());
   data->mKeyframe = aData.base().keyframe();
 
@@ -191,7 +191,8 @@ VideoDecoderParent::ProcessDecodedData(
     }
 
     VideoDataIPDL output(
-      MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+      MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
+                    data->mTimecode.ToMicroseconds(),
                     data->mDuration.ToMicroseconds(),
                     data->mFrames, data->mKeyframe),
       video->mDisplay,

@@ -197,7 +197,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
       int size;
       int len = mLib->av_parser_parse2(
         mCodecParser, mCodecContext, &data, &size, inputData, inputSize,
-        aSample->mTime, aSample->mTimecode, aSample->mOffset);
+        aSample->mTime.ToMicroseconds(), aSample->mTimecode.ToMicroseconds(),
+        aSample->mOffset);
       if (size_t(len) > inputSize) {
         return NS_ERROR_DOM_MEDIA_DECODE_ERR;
       }
@@ -231,8 +232,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   packet.data = aData;
   packet.size = aSize;
-  packet.dts = mLastInputDts = aSample->mTimecode;
-  packet.pts = aSample->mTime;
+  packet.dts = mLastInputDts = aSample->mTimecode.ToMicroseconds();
+  packet.pts = aSample->mTime.ToMicroseconds();
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 
@@ -241,7 +242,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   // As such we instead use a map using the dts as key that we will retrieve
   // later.
   // The map will have a typical size of 16 entry.
-  mDurationMap.Insert(aSample->mTimecode, aSample->mDuration.ToMicroseconds());
+  mDurationMap.Insert(
+    aSample->mTimecode.ToMicroseconds(), aSample->mDuration.ToMicroseconds());
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
@@ -362,7 +364,7 @@ RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
   RefPtr<MediaRawData> empty(new MediaRawData());
-  empty->mTimecode = mLastInputDts;
+  empty->mTimecode = media::TimeUnit::FromMicroseconds(mLastInputDts);
   bool gotFrame = false;
   DecodedData results;
   while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) && gotFrame) {

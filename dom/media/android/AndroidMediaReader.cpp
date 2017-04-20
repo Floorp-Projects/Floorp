@@ -141,7 +141,8 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
       if (mLastVideoFrame) {
         int64_t durationUs;
         mPlugin->GetDuration(mPlugin, &durationUs);
-        durationUs = std::max<int64_t>(durationUs - mLastVideoFrame->mTime, 0);
+        durationUs = std::max<int64_t>(
+          durationUs - mLastVideoFrame->mTime.ToMicroseconds(), 0);
         mLastVideoFrame->UpdateDuration(TimeUnit::FromMicroseconds(durationUs));
         mVideoQueue.Push(mLastVideoFrame);
         mLastVideoFrame = nullptr;
@@ -247,8 +248,8 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
     // Calculate the duration as the timestamp of the current frame minus the
     // timestamp of the previous frame. We can then return the previously
     // decoded frame, and it will have a valid timestamp.
-    int64_t duration = v->mTime - mLastVideoFrame->mTime;
-    mLastVideoFrame->UpdateDuration(TimeUnit::FromMicroseconds(duration));
+    auto duration = v->mTime - mLastVideoFrame->mTime;
+    mLastVideoFrame->UpdateDuration(duration);
 
     // We have the start time of the next frame, so we can push the previous
     // frame into the queue, except if the end time is below the threshold,
@@ -320,7 +321,7 @@ AndroidMediaReader::Seek(const SeekTarget& aTarget)
     RefPtr<AndroidMediaReader> self = this;
     DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
       self->mSeekRequest.Complete();
-      self->mAudioSeekTimeUs = v->mTime;
+      self->mAudioSeekTimeUs = v->mTime.ToMicroseconds();
       self->mSeekPromise.Resolve(media::TimeUnit::FromMicroseconds(self->mAudioSeekTimeUs), __func__);
     }, [self, aTarget] () {
       self->mSeekRequest.Complete();

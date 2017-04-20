@@ -102,11 +102,6 @@
 #include "Latency.h"
 #include "WebAudioUtils.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsVolumeService.h"
-using namespace mozilla::system;
-#endif
-
 #include "nsError.h"
 
 #include "nsJSEnvironment.h"
@@ -401,10 +396,6 @@ nsLayoutStatics::Shutdown()
   CubebUtils::ShutdownLibrary();
   AsyncLatencyLogger::ShutdownLogger();
   WebAudioUtils::Shutdown();
-
-#ifdef MOZ_WIDGET_GONK
-  nsVolumeService::Shutdown();
-#endif
 
 #ifdef MOZ_WEBSPEECH
   nsSynthVoiceRegistry::Shutdown();

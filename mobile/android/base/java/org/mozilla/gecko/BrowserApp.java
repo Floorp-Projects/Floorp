@@ -234,7 +234,7 @@ public class BrowserApp extends GeckoApp
     public ActionModeCompatView mActionBar;
     private VideoPlayer mVideoPlayer;
     private BrowserToolbar mBrowserToolbar;
-    private View doorhangerOverlay;
+    private View mDoorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
     private TabStripInterface mTabStrip;
     private ToolbarProgressView mProgressView;
@@ -256,8 +256,9 @@ public class BrowserApp extends GeckoApp
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
 
     private static class MenuItemInfo {
-        public int id;
+        public String id;
         public String label;
+        public int position;
         public boolean checkable;
         public boolean checked;
         public boolean enabled = true;
@@ -291,6 +292,9 @@ public class BrowserApp extends GeckoApp
 
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight;
+
+    // The ID to use for the next addon menu item.
+    private int mNextAddonMenuId = 0;
 
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
@@ -730,7 +734,7 @@ public class BrowserApp extends GeckoApp
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
-        doorhangerOverlay = findViewById(R.id.doorhanger_overlay);
+        mDoorhangerOverlay = findViewById(R.id.doorhanger_overlay);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Search:Keyword",
@@ -1793,8 +1797,7 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Menu:Update":
-                updateAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET,
-                                    message.getBundle("options"));
+                updateAddonMenuItem(message.getString("id"), message.getBundle("options"));
                 break;
 
             case "Menu:Add":
@@ -1804,7 +1807,8 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "Invalid menu item name");
                     return;
                 }
-                info.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                info.id = message.getString("id");
+                info.position = ADDON_MENU_OFFSET + mNextAddonMenuId;
                 info.checked = message.getBoolean("checked", false);
                 info.enabled = message.getBoolean("enabled", true);
                 info.visible = message.getBoolean("visible", true);
@@ -1812,10 +1816,11 @@ public class BrowserApp extends GeckoApp
                 final int parent = message.getInt("parent", 0);
                 info.parent = parent <= 0 ? parent : parent + ADDON_MENU_OFFSET;
                 addAddonMenuItem(info);
+                mNextAddonMenuId++;
                 break;
 
             case "Menu:Remove":
-                removeAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET);
+                removeAddonMenuItem(message.getString("id"));
                 break;
 
             case "LightweightTheme:Update":
@@ -3086,13 +3091,13 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        final MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
+        final MenuItem item = destination.add(Menu.NONE, info.position, Menu.NONE, info.label);
 
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 final GeckoBundle data = new GeckoBundle(1);
-                data.putInt("item", info.id - ADDON_MENU_OFFSET);
+                data.putString("item", info.id);
                 EventDispatcher.getInstance().dispatch("Menu:Clicked", data);
                 return true;
             }
@@ -3122,30 +3127,38 @@ public class BrowserApp extends GeckoApp
         addAddonMenuItemToMenu(mMenu, info);
     }
 
-    private void removeAddonMenuItem(int id) {
+    private void removeAddonMenuItem(String id) {
+        int position = -1;
+
         // Remove add-on menu item from cache, if available.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                 if (item.id == id) {
-                     mAddonMenuItemsCache.remove(item);
-                     break;
-                 }
+                if (item.id.equals(id)) {
+                    position = item.position;
+                    mAddonMenuItemsCache.remove(item);
+                    break;
+                }
             }
         }
 
-        if (mMenu == null)
+        if (mMenu == null || position == -1)
             return;
 
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null)
-            mMenu.removeItem(id);
+        final MenuItem menuItem = mMenu.findItem(position);
+        if (menuItem != null) {
+            mNextAddonMenuId--;
+            mMenu.removeItem(position);
+        }
     }
 
-    private void updateAddonMenuItem(int id, final GeckoBundle options) {
+    private void updateAddonMenuItem(String id, final GeckoBundle options) {
+        int position = -1;
+
         // Set attribute for the menu item in cache, if available
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
                 if (item.id == id) {
+                    position = item.position;
                     item.label = options.getString("name", item.label);
                     item.checkable = options.getBoolean("checkable", item.checkable);
                     item.checked = options.getBoolean("checked", item.checked);
@@ -3157,11 +3170,11 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        if (mMenu == null) {
+        if (mMenu == null || position == -1) {
             return;
         }
 
-        final MenuItem menuItem = mMenu.findItem(id);
+        final MenuItem menuItem = mMenu.findItem(position);
         if (menuItem != null) {
             menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
             menuItem.setCheckable(options.getBoolean("checkable", menuItem.isCheckable()));
@@ -4009,7 +4022,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public View getDoorhangerOverlay() {
-        return doorhangerOverlay;
+        return mDoorhangerOverlay;
     }
 
     public SearchEngineManager getSearchEngineManager() {

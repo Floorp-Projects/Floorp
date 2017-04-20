@@ -880,8 +880,7 @@ nsAttrAndChildArray::AddAttrSlot()
   }
 
   SetAttrSlotCount(slotCount + 1);
-  offset[0] = nullptr;
-  offset[1] = nullptr;
+  memset(static_cast<void*>(offset), 0, sizeof(InternalAttr));
 
   return true;
 }

@@ -19,6 +19,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 
 class nsIFile;
 

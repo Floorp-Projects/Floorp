@@ -137,7 +137,7 @@ FFmpegAudioDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
   }
 
   int64_t samplePosition = aSample->mOffset;
-  media::TimeUnit pts = media::TimeUnit::FromMicroseconds(aSample->mTime);
+  media::TimeUnit pts = aSample->mTime;
 
   DecodedData results;
   while (packet.size > 0) {
