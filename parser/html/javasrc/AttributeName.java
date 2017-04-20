@@ -270,7 +270,7 @@ public final class AttributeName
      *            whether to check ncnameness
      * @return an <code>AttributeName</code> corresponding to the argument data
      */
-    static AttributeName nameByBuffer(@NoLength char[] buf, int offset,
+    @Inline static AttributeName nameByBuffer(@NoLength char[] buf, int offset,
             int length
             , Interner interner) {
         // XXX deal with offset
@@ -280,7 +280,7 @@ public final class AttributeName
             return null;
         }
         AttributeName attributeName = AttributeName.ATTRIBUTE_NAMES[index];
-        @Local String name = attributeName.getLocal(AttributeName.HTML);
+        @Local String name = attributeName.getLocal(0);
         if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
             return null;
         }
@@ -416,11 +416,11 @@ public final class AttributeName
     // CPPONLY:     this.custom = true;
     // CPPONLY: }
     // CPPONLY:
-    // CPPONLY: public boolean isInterned() {
+    // CPPONLY: @Inline public boolean isInterned() {
     // CPPONLY:     return !custom;
     // CPPONLY: }
     // CPPONLY:
-    // CPPONLY: public void setNameForNonInterned(@Local String name) {
+    // CPPONLY: @Inline public void setNameForNonInterned(@Local String name) {
     // CPPONLY:     assert custom;
     // CPPONLY:     local[0] = name;
     // CPPONLY:     local[1] = name;

@@ -173,7 +173,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
               type,
               crossOrigin,
               integrity,
-              mode == NS_HTML5TREE_BUILDER_IN_HEAD);
+              mode == nsHtml5TreeBuilder::IN_HEAD);
             mCurrentHtmlScriptIsAsyncOrDefer =
               aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
               aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER);
@@ -279,7 +279,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
               type,
               crossOrigin,
               integrity,
-              mode == NS_HTML5TREE_BUILDER_IN_HEAD);
+              mode == nsHtml5TreeBuilder::IN_HEAD);
           }
         } else if (nsHtml5Atoms::style == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
