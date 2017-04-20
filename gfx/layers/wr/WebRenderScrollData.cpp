@@ -32,6 +32,24 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     mScrollIds.AppendElement(aOwner.AddMetadata(aLayer->GetScrollMetadata(i)));
   }
+
+  mIsScrollInfoLayer = aLayer->AsContainerLayer() && !aLayer->GetFirstChild();
+  mTransform = aLayer->GetTransform();
+  mTransformIsPerspective = aLayer->GetTransformIsPerspective();
+  mEventRegions = aLayer->GetEventRegions();
+  mReferentId = aLayer->AsRefLayer()
+      ? Some(aLayer->AsRefLayer()->GetReferentId())
+      : Nothing();
+  mEventRegionsOverride = aLayer->AsContainerLayer()
+      ? aLayer->AsContainerLayer()->GetEventRegionsOverride()
+      : EventRegionsOverride::NoOverride;
+  mScrollbarDirection = aLayer->GetScrollbarDirection();
+  mScrollbarTargetContainerId = aLayer->GetScrollbarTargetContainerId();
+  mScrollThumbLength = mScrollbarDirection == ScrollDirection::VERTICAL
+      ? aLayer->GetVisibleRegion().GetBounds().height
+      : aLayer->GetVisibleRegion().GetBounds().width;
+  mIsScrollbarContainer = aLayer->IsScrollbarContainer();
+  mFixedPosScrollContainerId = aLayer->GetFixedPositionScrollContainerId();
 }
 
 int32_t
