@@ -599,8 +599,8 @@ nsAppShell::Observe(nsISupports* aSubject,
                         java::GeckoThread::State::PROFILE_READY(),
                         java::GeckoThread::State::RUNNING());
             }
+            removeObserver = true;
         }
-        removeObserver = true;
 
     } else if (!strcmp(aTopic, "quit-application-granted")) {
         if (jni::IsAvailable()) {
