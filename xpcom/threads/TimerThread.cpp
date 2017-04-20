@@ -459,7 +459,7 @@ TimerThread::Run()
           // for TimerThread::mMonitor, under nsTimerImpl::Release.
 
           RefPtr<nsTimerImpl> timerRef(timer);
-          mTimers.RemoveElementAt(0);
+          RemoveFirstTimerInternal();
           timer = nullptr;
 
           MOZ_LOG(GetTimerLog(), LogLevel::Debug,
@@ -573,13 +573,12 @@ TimerThread::AddTimer(nsTimerImpl* aTimer)
   }
 
   // Add the timer to our list.
-  int32_t i = AddTimerInternal(aTimer);
-  if (i < 0) {
+  if(!AddTimerInternal(aTimer)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Awaken the timer thread.
-  if (mWaiting && i == 0) {
+  if (mWaiting && mTimers[0].mTimerImpl == aTimer) {
     mNotified = true;
     mMonitor.Notify();
   }
@@ -609,22 +608,23 @@ TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 }
 
 // This function must be called from within a lock
-int32_t
+bool
 TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
 {
   mMonitor.AssertCurrentThreadOwns();
   if (mShutdown) {
-    return -1;
+    return false;
   }
 
   TimeStamp now = TimeStamp::Now();
 
-  Entry* insertSlot = mTimers.InsertElementSorted(
-    Entry(now, aTimer->mTimeout, aTimer));
-
-  if (!insertSlot) {
-    return -1;
+  Entry* entry = mTimers.AppendElement(Entry(now, aTimer->mTimeout, aTimer),
+                                       mozilla::fallible);
+  if (!entry) {
+    return false;
   }
+
+  std::push_heap(mTimers.begin(), mTimers.end());
 
 #ifdef MOZ_TASK_TRACER
   // Caller of AddTimer is the parent task of its timer event, so we store the
@@ -632,7 +632,7 @@ TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
   aTimer->GetTLSTraceInfo();
 #endif
 
-  return insertSlot - mTimers.Elements();
+  return true;
 }
 
 bool
@@ -653,16 +653,36 @@ TimerThread::RemoveLeadingCanceledTimersInternal()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  uint32_t firstActive = 0;
-  while (firstActive < mTimers.Length() && !mTimers[firstActive].mTimerImpl) {
-    firstActive += 1;
+  // Move all canceled timers from the front of the list to
+  // the back of the list using std::pop_heap().  We do this
+  // without actually removing them from the list so we can
+  // modify the nsTArray in a single bulk operation.
+  auto sortedEnd = mTimers.end();
+  while (sortedEnd != mTimers.begin() && !mTimers[0].mTimerImpl) {
+    std::pop_heap(mTimers.begin(), sortedEnd);
+    --sortedEnd;
   }
 
-  if (firstActive == 0) {
+  // If there were no canceled timers then we are done.
+  if (sortedEnd == mTimers.end()) {
     return;
   }
 
-  mTimers.RemoveElementsAt(0, firstActive);
+  // Finally, remove the canceled timers from the back of the
+  // nsTArray.  Note, since std::pop_heap() uses iterators
+  // we must convert to nsTArray indices and number of
+  // elements here.
+  mTimers.RemoveElementsAt(sortedEnd - mTimers.begin(),
+                           mTimers.end() - sortedEnd);
+}
+
+void
+TimerThread::RemoveFirstTimerInternal()
+{
+  mMonitor.AssertCurrentThreadOwns();
+  MOZ_ASSERT(!mTimers.IsEmpty());
+  std::pop_heap(mTimers.begin(), mTimers.end());
+  mTimers.RemoveElementAt(mTimers.Length() - 1);
 }
 
 already_AddRefed<nsTimerImpl>
