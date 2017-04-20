@@ -213,12 +213,12 @@ APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-void
-APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
-                                      Layer* aRoot,
-                                      bool aIsFirstPaint,
-                                      uint64_t aOriginatingLayersId,
-                                      uint32_t aPaintSequenceNumber)
+template<class ScrollNode> void // ScrollNode is a LayerMetricsWrapper
+APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
+                                          const ScrollNode& aRoot,
+                                          bool aIsFirstPaint,
+                                          uint64_t aOriginatingLayersId,
+                                          uint32_t aPaintSequenceNumber)
 {
   APZThreadUtils::AssertOnCompositorThread();
 
@@ -268,11 +268,10 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
     ancestorTransforms.push(Matrix4x4());
 
     mApzcTreeLog << "[start]\n";
-    LayerMetricsWrapper root(aRoot);
     mTreeLock.AssertCurrentThreadOwns();
 
-    ForEachNode<ReverseIterator>(root,
-        [&](LayerMetricsWrapper aLayerMetrics)
+    ForEachNode<ReverseIterator>(aRoot,
+        [&](ScrollNode aLayerMetrics)
         {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
@@ -308,7 +307,7 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
           layersId = (aLayerMetrics.AsRefLayer() ? aLayerMetrics.AsRefLayer()->GetReferentId() : layersId);
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
         },
-        [&](LayerMetricsWrapper aLayerMetrics)
+        [&](ScrollNode aLayerMetrics)
         {
           next = parent;
           parent = parent->GetParent();
@@ -337,11 +336,23 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 #endif
 }
 
+void
+APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+                                      Layer* aRoot,
+                                      bool aIsFirstPaint,
+                                      uint64_t aOriginatingLayersId,
+                                      uint32_t aPaintSequenceNumber)
+{
+  LayerMetricsWrapper root(aRoot);
+  UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
+                           aOriginatingLayersId, aPaintSequenceNumber);
+}
+
 // Compute the clip region to be used for a layer with an APZC. This function
 // is only called for layers which actually have scrollable metrics and an APZC.
-static ParentLayerIntRegion
+template<class ScrollNode> static ParentLayerIntRegion
 ComputeClipRegion(GeckoContentController* aController,
-                  const LayerMetricsWrapper& aLayer)
+                  const ScrollNode& aLayer)
 {
   ParentLayerIntRegion clipRegion;
   if (aLayer.GetClipRect()) {
@@ -357,8 +368,8 @@ ComputeClipRegion(GeckoContentController* aController,
   return clipRegion;
 }
 
-void
-APZCTreeManager::PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
+template<class ScrollNode> void
+APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
                                const AsyncPanZoomController* apzc)
 {
   const FrameMetrics& metrics = aLayer.Metrics();
@@ -386,8 +397,8 @@ APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
   }
 }
 
-static EventRegions
-GetEventRegions(const LayerMetricsWrapper& aLayer)
+template<class ScrollNode> static EventRegions
+GetEventRegions(const ScrollNode& aLayer)
 {
   if (aLayer.IsScrollInfoLayer()) {
     ParentLayerIntRect compositionBounds(RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
@@ -419,9 +430,9 @@ APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
   return node.forget();
 }
 
-static EventRegionsOverride
+template<class ScrollNode> static EventRegionsOverride
 GetEventRegionsOverride(HitTestingTreeNode* aParent,
-                       const LayerMetricsWrapper& aLayer)
+                       const ScrollNode& aLayer)
 {
   // Make it so that if the flag is set on the layer tree, it automatically
   // propagates to all the nodes in the corresponding subtree rooted at that
@@ -457,8 +468,8 @@ APZCTreeManager::NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) c
   state->mController->NotifyAsyncScrollbarDragRejected(aGuid.mScrollId);
 }
 
-HitTestingTreeNode*
-APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
+template<class ScrollNode> HitTestingTreeNode*
+APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
                                      const FrameMetrics& aMetrics,
                                      uint64_t aLayersId,
                                      const gfx::Matrix4x4& aAncestorTransform,
