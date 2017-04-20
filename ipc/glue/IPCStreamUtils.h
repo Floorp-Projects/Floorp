@@ -126,7 +126,6 @@ class AutoIPCStream final
   IPCStream* mValue;
   OptionalIPCStream* mOptionalValue;
   bool mTaken;
-  bool mDelayedStart;
 
   bool
   IsSet() const;
@@ -134,17 +133,16 @@ class AutoIPCStream final
 public:
   // Implicitly create an OptionalIPCStream value.  Either
   // TakeValue() or TakeOptionalValue() can be used.
-  explicit AutoIPCStream(bool aDelayedStart = false);
+  AutoIPCStream();
 
   // Wrap an existing IPCStream.  Only TakeValue() may be
   // used.  If a nullptr nsIInputStream is passed to SerializeOrSend() then
   // a crash will be forced.
-  explicit AutoIPCStream(IPCStream& aTarget, bool aDelayedStart = false);
+  explicit AutoIPCStream(IPCStream& aTarget);
 
   // Wrap an existing OptionalIPCStream.  Either TakeValue()
   // or TakeOptionalValue can be used.
-  explicit AutoIPCStream(OptionalIPCStream& aTarget,
-                         bool aDelayedStart = false);
+  explicit AutoIPCStream(OptionalIPCStream& aTarget);
 
   ~AutoIPCStream();
 

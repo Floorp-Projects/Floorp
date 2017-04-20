@@ -46,13 +46,6 @@ public:
   }
 
   IPCResult
-  RecvStartReading() override
-  {
-    Start();
-    return IPC_OK();
-  }
-
-  IPCResult
   RecvRequestClose(const nsresult& aRv) override
   {
     OnEnd(aRv);
@@ -173,13 +166,6 @@ private:
   }
 
   // IPCStreamDestination methods
-
-  void
-  StartReading() override
-  {
-    MOZ_ASSERT(HasDelayedStart());
-    Unused << SendStartReading();
-  }
 
   void
   RequestClose(nsresult aRv) override
