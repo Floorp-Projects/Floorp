@@ -706,6 +706,8 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
   GMP_LOG("ChromiumCDMParent::ActorDestroy(this=%p, reason=%d)", this, aWhy);
   MOZ_ASSERT(!mActorDestroyed);
   mActorDestroyed = true;
+  // Shutdown() will clear mProxy, so let's keep a reference for later use.
+  RefPtr<ChromiumCDMProxy> proxy = mProxy;
   if (!mIsShutdown) {
     // Plugin crash.
     MOZ_ASSERT(aWhy == AbnormalShutdown);
@@ -718,9 +720,9 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
     mContentParent = nullptr;
   }
   bool abnormalShutdown = (aWhy == AbnormalShutdown);
-  if (abnormalShutdown && mProxy) {
+  if (abnormalShutdown && proxy) {
     RefPtr<Runnable> task =
-      NewRunnableMethod(mProxy, &ChromiumCDMProxy::Terminated);
+      NewRunnableMethod(proxy, &ChromiumCDMProxy::Terminated);
     NS_DispatchToMainThread(task);
   }
   MaybeDisconnect(abnormalShutdown);
@@ -945,6 +947,11 @@ ChromiumCDMParent::Shutdown()
     return;
   }
   mIsShutdown = true;
+
+  // We may be called from a task holding the last reference to the proxy, so
+  // let's clear our local weak pointer to ensure it will not be used afterward
+  // (including from an already-queued task, e.g.: ActorDestroy).
+  mProxy = nullptr;
 
   for (RefPtr<DecryptJob>& decrypt : mDecrypts) {
     decrypt->PostResult(AbortedErr);
