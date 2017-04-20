@@ -28,11 +28,11 @@
         // Notify DateTimePickerHelper.jsm that binding is ready.
         this.dispatchEvent(new CustomEvent("DateTimePickerBindingReady"));
       ]]></constructor>
-      <method name="loadPicker">
+      <method name="openPicker">
         <parameter name="type"/>
+        <parameter name="anchor"/>
         <parameter name="detail"/>
         <body><![CDATA[
-          this.hidden = false;
           this.type = type;
           this.pickerState = {};
           // TODO: Resize picker according to content zoom level
@@ -55,17 +55,20 @@
               break;
             }
           }
+          this.hidden = false;
+          this.openPopup(anchor, "after_start", 0, 0);
         ]]></body>
       </method>
       <method name="closePicker">
         <body><![CDATA[
-          this.hidden = true;
           this.setInputBoxValue(true);
           this.pickerState = {};
           this.type = undefined;
           this.dateTimePopupFrame.removeEventListener("load", this, true);
           this.dateTimePopupFrame.contentDocument.removeEventListener("message", this);
           this.dateTimePopupFrame.setAttribute("src", "");
+          this.hidePopup();
+          this.hidden = true;
         ]]></body>
       </method>
       <method name="setPopupValue">
@@ -310,12 +313,5 @@
       </method>
 
     </implementation>
-    <handlers>
-      <handler event="popuphiding">
-        <![CDATA[
-          this.closePicker();
-        ]]>
-      </handler>
-    </handlers>
   </binding>
 </bindings>
