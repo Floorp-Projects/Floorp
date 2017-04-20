@@ -10,17 +10,12 @@ const STRINGS_URI = "chrome://global/locale/security/security.properties";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
 XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
-XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
-  return this.devtools.require("devtools/server/actors/utils/webconsole-utils").WebConsoleUtils;
-});
 
 /*
  * A module that provides utility functions for form security.
@@ -39,8 +34,21 @@ XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
  */
 this.InsecurePasswordUtils = {
   _formRootsWarned: new WeakMap(),
+
+  /**
+   * Gets the ID of the inner window of this DOM window.
+   *
+   * @param nsIDOMWindow window
+   * @return integer
+   *         Inner ID for the given window.
+   */
+  _getInnerWindowId(window) {
+      return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+  },
+
   _sendWebConsoleMessage(messageTag, domDoc) {
-    let windowId = WebConsoleUtils.getInnerWindowId(domDoc.defaultView);
+    let windowId = this._getInnerWindowId(domDoc.defaultView);
     let category = "Insecure Password Field";
     // All web console messages are warnings for now.
     let flag = Ci.nsIScriptError.warningFlag;
