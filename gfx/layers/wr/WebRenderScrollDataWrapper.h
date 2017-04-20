@@ -7,6 +7,8 @@
 #define GFX_WEBRENDERSCROLLDATAWRAPPER_H
 
 #include "FrameMetrics.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 
 namespace mozilla {
@@ -157,6 +159,19 @@ public:
       size_t subtreeLastIndex = std::min(mContainingSubtreeLastIndex, prevSiblingIndex);
       return WebRenderScrollDataWrapper(mData, mLayerIndex + 1, subtreeLastIndex);
     }
+
+    // We've run out of descendants. But! If the original layer was a RefLayer,
+    // then it connects to another layer tree and we need to traverse that too.
+    // So return a WebRenderScrollDataWrapper for the root of the child layer
+    // tree.
+    if (mLayer->GetReferentId()) {
+      CompositorBridgeParent::LayerTreeState* lts =
+          CompositorBridgeParent::GetIndirectShadowTree(mLayer->GetReferentId().value());
+      if (lts && lts->mWrBridge) {
+        return WebRenderScrollDataWrapper(&(lts->mWrBridge->GetScrollData()));
+      }
+    }
+
     return WebRenderScrollDataWrapper();
   }
 
