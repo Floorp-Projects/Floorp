@@ -9,14 +9,13 @@
 
 "use strict"
 
-Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-var {OS: {File, Path, Constants}} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {OS: {File, Path, Constants}} = Cu.import("resource://gre/modules/osfile.jsm", {});
 
 // We increment TelemetryStorage's MAX_PING_FILE_AGE and
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed

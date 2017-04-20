@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <memory>
 #include "cubeb/cubeb.h"
 #include "common.h"
 
@@ -53,13 +54,13 @@ void state_cb_record(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 
   switch (state) {
   case CUBEB_STATE_STARTED:
-    printf("stream started\n"); break;
+    fprintf(stderr, "stream started\n"); break;
   case CUBEB_STATE_STOPPED:
-    printf("stream stopped\n"); break;
+    fprintf(stderr, "stream stopped\n"); break;
   case CUBEB_STATE_DRAINED:
-    printf("stream drained\n"); break;
+    fprintf(stderr, "stream drained\n"); break;
   default:
-    printf("unknown stream state %d\n", state);
+    fprintf(stderr, "unknown stream state %d\n", state);
   }
 
   return;
@@ -68,7 +69,7 @@ void state_cb_record(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 TEST(cubeb, record)
 {
   if (cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr /*print_log*/) != CUBEB_OK) {
-    printf("Set log callback failed\n");
+    fprintf(stderr, "Set log callback failed\n");
   }
   cubeb *ctx;
   cubeb_stream *stream;
@@ -77,10 +78,10 @@ TEST(cubeb, record)
   user_state_record stream_state = { false };
 
   r = cubeb_init(&ctx, "Cubeb record example", NULL);
-  if (r != CUBEB_OK) {
-    fprintf(stderr, "Error initializing cubeb library\n");
-    ASSERT_EQ(r, CUBEB_OK);
-  }
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
 
   /* This test needs an available input device, skip it if this host does not
    * have one. */
@@ -95,21 +96,18 @@ TEST(cubeb, record)
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb record (mono)", NULL, &params, NULL, nullptr,
                         4096, data_cb_record, state_cb_record, &stream_state);
-  if (r != CUBEB_OK) {
-    fprintf(stderr, "Error initializing cubeb stream\n");
-    ASSERT_EQ(r, CUBEB_OK);
-  }
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
+
+  std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
+    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   cubeb_stream_start(stream);
   delay(500);
   cubeb_stream_stop(stream);
 
-  cubeb_stream_destroy(stream);
-  cubeb_destroy(ctx);
-
 #ifdef __linux__
   // user callback does not arrive in Linux, silence the error
-  printf("Check is disabled in Linux\n");
+  fprintf(stderr, "Check is disabled in Linux\n");
 #else
   ASSERT_TRUE(stream_state.seen_audio);
 #endif

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <memory>
 #include <string.h>
 #include "cubeb/cubeb.h"
 #include "common.h"
@@ -75,20 +76,6 @@ long data_cb(cubeb_stream * /*stream*/, void * user, const void * /*inputbuffer*
   return nframes;
 }
 
-struct CubebCleaner
-{
-  CubebCleaner(cubeb* ctx_) : ctx(ctx_) {}
-  ~CubebCleaner() { cubeb_destroy(ctx); }
-  cubeb* ctx;
-};
-
-struct CubebStreamCleaner
-{
-  CubebStreamCleaner(cubeb_stream* ctx_) : ctx(ctx_) {}
-  ~CubebStreamCleaner() { cubeb_stream_destroy(ctx); }
-  cubeb_stream* ctx;
-};
-
 void state_cb_audio(cubeb_stream * /*stream*/, void * /*user*/, cubeb_state /*state*/)
 {
 }
@@ -98,12 +85,6 @@ int supports_float32(string backend_id)
 {
   return backend_id != "opensl"
     && backend_id != "audiotrack";
-}
-
-/* The WASAPI backend only supports float. */
-int supports_int16(string backend_id)
-{
-  return backend_id != "wasapi";
 }
 
 /* Some backends don't have code to deal with more than mono or stereo. */
@@ -124,12 +105,12 @@ int run_test(int num_channels, layout_info layout, int sampling_rate, int is_flo
     fprintf(stderr, "Error initializing cubeb library\n");
     return r;
   }
-  CubebCleaner cleanup_cubeb_at_exit(ctx);
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
 
   const char * backend_id = cubeb_get_backend_id(ctx);
 
   if ((is_float && !supports_float32(backend_id)) ||
-      (!is_float && !supports_int16(backend_id)) ||
       !supports_channel_count(backend_id, num_channels)) {
     /* don't treat this as a test failure. */
     return CUBEB_OK;
@@ -153,7 +134,8 @@ int run_test(int num_channels, layout_info layout, int sampling_rate, int is_flo
     return r;
   }
 
-  CubebStreamCleaner cleanup_stream_at_exit(stream);
+  std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
+    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   cubeb_stream_start(stream);
   delay(200);
@@ -174,12 +156,12 @@ int run_panning_volume_test(int is_float)
     return r;
   }
 
-  CubebCleaner cleanup_cubeb_at_exit(ctx);
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
 
   const char * backend_id = cubeb_get_backend_id(ctx);
 
-  if ((is_float && !supports_float32(backend_id)) ||
-      (!is_float && !supports_int16(backend_id))) {
+  if ((is_float && !supports_float32(backend_id))) {
     /* don't treat this as a test failure. */
     return CUBEB_OK;
   }
@@ -201,7 +183,8 @@ int run_panning_volume_test(int is_float)
     return r;
   }
 
-  CubebStreamCleaner cleanup_stream_at_exit(stream);
+  std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
+    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   fprintf(stderr, "Testing: volume\n");
   for(int i=0;i <= 4; ++i)

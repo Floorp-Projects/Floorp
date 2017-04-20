@@ -12,16 +12,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <memory>
 #include <atomic>
 #include "cubeb/cubeb.h"
 #include "common.h"
 
 #define SAMPLE_FREQUENCY 48000
-#if (defined(_WIN32) || defined(__WIN32__))
-#define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
-#else
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
-#endif
 
 std::atomic<bool> load_callback{ false };
 
@@ -64,6 +61,9 @@ TEST(cubeb, overload_callback)
   r = cubeb_init(&ctx, "Cubeb callback overload", NULL);
   ASSERT_EQ(r, CUBEB_OK);
 
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+
   output_params.format = STREAM_FORMAT;
   output_params.rate = 48000;
   output_params.channels = 2;
@@ -77,13 +77,13 @@ TEST(cubeb, overload_callback)
                         latency_frames, data_cb, state_cb, NULL);
   ASSERT_EQ(r, CUBEB_OK);
 
+  std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
+    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
+
   cubeb_stream_start(stream);
   delay(500);
   // This causes the callback to sleep for a large number of seconds.
   load_callback = true;
   delay(500);
   cubeb_stream_stop(stream);
-
-  cubeb_stream_destroy(stream);
-  cubeb_destroy(ctx);
 }

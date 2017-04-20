@@ -549,7 +549,7 @@ nsTableEncoderSupport::nsTableEncoderSupport(uScanClassID aScanClass,
 : nsEncoderSupport(aMaxLengthFactor)
 {
   mScanClass = aScanClass;
-  mShiftOutTable = aShiftOutTable,
+  mShiftOutTable = aShiftOutTable;
   mMappingTable = aMappingTable;
 }
 
