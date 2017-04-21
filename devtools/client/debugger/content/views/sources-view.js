@@ -95,7 +95,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._preferredSourceURL = null;
     this._unnamedSourceIndex = 0;
     this.emptyText = L10N.getStr("noSourcesText");
-    this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
+    this._blackBoxCheckboxTooltip = L10N.getStr("blackboxCheckboxTooltip2");
 
     this._commandset = document.getElementById("debuggerCommands");
     this._popupset = document.getElementById("debuggerPopupset");

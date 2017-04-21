@@ -97,11 +97,13 @@
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
   <string name="bookmark_options">&bookmark_options;</string>
+  <string name="bookmark_save">&bookmark_save;</string>
   <string name="screenshot_added_to_bookmarks">&screenshot_added_to_bookmarks;</string>
   <string name="screenshot_folder_label_in_bookmarks">&screenshot_folder_label_in_bookmarks;</string>
   <string name="readinglist_smartfolder_label_in_bookmarks">&readinglist_smartfolder_label_in_bookmarks;</string>
   <string name="bookmark_folder_items">&bookmark_folder_items;</string>
   <string name="bookmark_folder_one_item">&bookmark_folder_one_item;</string>
+  <string name="bookmark_parent_folder">&bookmark_parent_folder;</string>
 
   <string name="reader_saved_offline">&reader_saved_offline;</string>
   <string name="reader_switch_to_bookmarks">&reader_switch_to_bookmarks;</string>
@@ -421,9 +423,6 @@
   <string name="doorhanger_login_select_action_text">&doorhanger_login_select_action_text;</string>
   <string name="doorhanger_login_select_title">&doorhanger_login_select_title;</string>
 
-  <string name="pref_magnifying_glass_enabled">&pref_magnifying_glass_enabled;</string>
-  <string name="pref_magnifying_glass_enabled_summary">&pref_magnifying_glass_enabled_summary2;</string>
-
   <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
   <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary2;</string>
 
@@ -600,8 +599,6 @@
   <string name="ellipsis">&ellipsis;</string>
 
   <string name="colon">&colon;</string>
-
-  <string name="percent">&percent;</string>
 
   <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 

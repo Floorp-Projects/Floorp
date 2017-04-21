@@ -59,14 +59,14 @@ consoleApi.set("console.group('bar')", {
   keys: ["console.group('bar')", "console.groupEnd('bar')"],
   code: `
 console.group("bar");
-console.groupEnd("bar");
+console.groupEnd();
 `});
 
 consoleApi.set("console.groupCollapsed('foo')", {
   keys: ["console.groupCollapsed('foo')", "console.groupEnd('foo')"],
   code: `
 console.groupCollapsed("foo");
-console.groupEnd("foo");
+console.groupEnd();
 `});
 
 consoleApi.set("console.group()", {

@@ -178,6 +178,7 @@ EXPORTS.mozilla.layers += [
     'ipc/SynchronousTask.h',
     'ipc/TextureForwarder.h',
     'ipc/UiCompositorControllerChild.h',
+    'ipc/UiCompositorControllerMessageTypes.h',
     'ipc/UiCompositorControllerParent.h',
     'ipc/VideoBridgeChild.h',
     'ipc/VideoBridgeParent.h',
@@ -248,6 +249,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'apz/src/AndroidAPZ.cpp',
+        'apz/src/AndroidDynamicToolbarAnimator.cpp',
+    ]
+    EXPORTS.mozilla.layers += [
+        'apz/src/AndroidDynamicToolbarAnimator.h',
     ]
 
 UNIFIED_SOURCES += [

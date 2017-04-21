@@ -180,6 +180,9 @@ APZCTreeManager::APZCTreeManager()
   }));
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
+#if defined(MOZ_WIDGET_ANDROID)
+  mToolbarAnimator = new AndroidDynamicToolbarAnimator();
+#endif // (MOZ_WIDGET_ANDROID)
 }
 
 APZCTreeManager::~APZCTreeManager()
@@ -744,6 +747,16 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   APZThreadUtils::AssertOnControllerThread();
+
+#if defined(MOZ_WIDGET_ANDROID)
+  MOZ_ASSERT(mToolbarAnimator);
+  nsEventStatus isConsumed = mToolbarAnimator->ReceiveInputEvent(aEvent);
+  // Check if the mToolbarAnimator consumed the event.
+  if (isConsumed == nsEventStatus_eConsumeNoDefault) {
+    APZCTM_LOG("Dynamic toolbar consumed event");
+    return isConsumed;
+  }
+#endif // (MOZ_WIDGET_ANDROID)
 
   // Initialize aOutInputBlockId to a sane value, and then later we overwrite
   // it if the input event goes into a block.
@@ -2145,6 +2158,21 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
   }
   return ancestor.forget();
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+void
+APZCTreeManager::InitializeDynamicToolbarAnimator(const int64_t& aRootLayerTreeId)
+{
+  MOZ_ASSERT(mToolbarAnimator);
+  mToolbarAnimator->Initialize(aRootLayerTreeId);
+}
+
+AndroidDynamicToolbarAnimator*
+APZCTreeManager::GetAndroidDynamicToolbarAnimator()
+{
+  return mToolbarAnimator;
+}
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 } // namespace layers
 } // namespace mozilla

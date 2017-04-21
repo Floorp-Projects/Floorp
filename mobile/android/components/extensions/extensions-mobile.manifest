@@ -1,4 +1,4 @@
-# scripts
+# modules
 category webextension-scripts android chrome://browser/content/ext-android.js
 category webextension-scripts utils chrome://browser/content/ext-utils.js
 category webextension-scripts-addon android chrome://browser/content/ext-c-android.js

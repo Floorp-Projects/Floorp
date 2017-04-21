@@ -80,6 +80,12 @@ InProcessCompositorSession::Shutdown()
   mCompositorBridgeChild = nullptr;
   mCompositorBridgeParent = nullptr;
   mCompositorWidget = nullptr;
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mUiCompositorControllerChild) {
+    mUiCompositorControllerChild->Destroy();
+    mUiCompositorControllerChild = nullptr;
+  }
+#endif //defined(MOZ_WIDGET_ANDROID)
 }
 
 } // namespace layers

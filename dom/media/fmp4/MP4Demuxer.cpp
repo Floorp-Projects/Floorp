@@ -411,10 +411,10 @@ MP4TrackDemuxer::EnsureUpToDateIndex()
 RefPtr<MP4TrackDemuxer::SeekPromise>
 MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
-  int64_t seekTime = aTime.ToMicroseconds();
+  auto seekTime = aTime;
   mQueuedSample = nullptr;
 
-  mIterator->Seek(seekTime);
+  mIterator->Seek(seekTime.ToMicroseconds());
 
   // Check what time we actually seeked to.
   RefPtr<MediaRawData> sample;
@@ -436,8 +436,7 @@ MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
 
   SetNextKeyFrameTime();
 
-  return SeekPromise::CreateAndResolve(
-    media::TimeUnit::FromMicroseconds(seekTime), __func__);
+  return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
 
 already_AddRefed<MediaRawData>
@@ -461,9 +460,10 @@ MP4TrackDemuxer::GetNextSample()
             NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe "
                                        "@ pts:%" PRId64 " dur:%" PRId64
                                        " dts:%" PRId64,
-                                       keyframe ? "" : "non-", sample->mTime,
+                                       keyframe ? "" : "non-",
+                                       sample->mTime.ToMicroseconds(),
                                        sample->mDuration.ToMicroseconds(),
-                                       sample->mTimecode)
+                                       sample->mTimecode.ToMicroseconds())
                          .get());
             sample->mKeyframe = keyframe;
           }
@@ -473,8 +473,9 @@ MP4TrackDemuxer::GetNextSample()
           NS_WARNING(
             nsPrintfCString("Invalid H264 frame @ pts:%" PRId64 " dur:%" PRId64
                             " dts:%" PRId64,
-                            sample->mTime, sample->mDuration.ToMicroseconds(),
-                            sample->mTimecode)
+                            sample->mTime.ToMicroseconds(),
+                            sample->mDuration.ToMicroseconds(),
+                            sample->mTimecode.ToMicroseconds())
               .get());
           // We could reject the sample now, however demuxer errors are fatal.
           // So we keep the invalid frame, relying on the H264 decoder to
@@ -540,7 +541,7 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (mNextKeyframeTime.isNothing()
       || samples->mSamples.LastElement()->mTime
-      >= mNextKeyframeTime.value().ToMicroseconds()) {
+      >= mNextKeyframeTime.value()) {
     SetNextKeyFrameTime();
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);
@@ -571,8 +572,7 @@ MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 {
   if (mNextKeyframeTime.isNothing()) {
     // There's no next key frame.
-    *aTime =
-      media::TimeUnit::FromMicroseconds(std::numeric_limits<int64_t>::max());
+    *aTime = media::TimeUnit::FromInfinity();
   } else {
     *aTime = mNextKeyframeTime.value();
   }
@@ -590,7 +590,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
   RefPtr<MediaRawData> sample;
   while (!found && (sample = GetNextSample())) {
     parsed++;
-    if (sample->mKeyframe && sample->mTime >= aTimeThreshold.ToMicroseconds()) {
+    if (sample->mKeyframe && sample->mTime >= aTimeThreshold) {
       found = true;
       mQueuedSample = sample;
     }

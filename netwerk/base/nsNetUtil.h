@@ -190,6 +190,8 @@ NS_NewChannel(nsIChannel           **outChannel,
               nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
               nsIIOService          *aIoService = nullptr);
 
+nsresult NS_GetIsDocumentChannel(nsIChannel * aChannel, bool *aIsDocument);
+
 nsresult NS_MakeAbsoluteURI(nsACString       &result,
                             const nsACString &spec,
                             nsIURI           *baseURI);

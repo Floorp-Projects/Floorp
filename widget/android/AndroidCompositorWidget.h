@@ -29,19 +29,6 @@ public:
 
     AndroidCompositorWidget* AsAndroid() override { return this; }
 
-    void SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                               const CSSToLayerScale& aZoom,
-                               const CSSRect& aCssPageRect);
-
-    void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                          const CSSToParentLayerScale& aZoom,
-                          const CSSRect& aCssPageRect,
-                          const CSSRect& aDisplayPort,
-                          const CSSToLayerScale& aPaintedResolution,
-                          bool aLayersUpdated,
-                          int32_t aPaintSyncId,
-                          ScreenMargin& aFixedLayerMargins);
-
     EGLNativeWindowType GetEGLNativeWindow();
 
     EGLSurface GetPresentationEGLSurface();

@@ -8,6 +8,9 @@
 // ------------------------------------------------------------------------------
 
 var rule = require("../lib/rules/no-single-arg-cu-import");
+var RuleTester = require("eslint/lib/testers/rule-tester");
+
+const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -18,14 +21,12 @@ const ExpectedError = {
   type: "CallExpression"
 };
 
-exports.runTest = function(ruleTester) {
-  ruleTester.run("no-single-arg-cu-import", rule, {
-    valid: [
-      "Cu.import('fake', {});"
-    ],
-    invalid: [{
-      code: "Cu.import('fake');",
-      errors: [ExpectedError]
-    }]
-  });
-};
+ruleTester.run("no-single-arg-cu-import", rule, {
+  valid: [
+    "Cu.import('fake', {});"
+  ],
+  invalid: [{
+    code: "Cu.import('fake');",
+    errors: [ExpectedError]
+  }]
+});

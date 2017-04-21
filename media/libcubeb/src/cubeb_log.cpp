@@ -15,8 +15,8 @@
 #include <time.h>
 #endif
 
-cubeb_log_level g_log_level;
-cubeb_log_callback g_log_callback;
+cubeb_log_level g_cubeb_log_level;
+cubeb_log_callback g_cubeb_log_callback;
 
 /** The maximum size of a log message, after having been formatted. */
 const size_t CUBEB_LOG_MESSAGE_MAX_SIZE = 256;
@@ -115,7 +115,7 @@ private:
 
 void cubeb_async_log(char const * fmt, ...)
 {
-  if (!g_log_callback) {
+  if (!g_cubeb_log_callback) {
     return;
   }
   // This is going to copy a 256 bytes array around, which is fine.

@@ -243,8 +243,10 @@ void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBo
     PMRect paperRect;
     ::PMGetAdjustedPaperRect(mPageFormat, &paperRect);
 
-    *aTop = paperRect.top, *aLeft = paperRect.left;
-    *aBottom = paperRect.bottom, *aRight = paperRect.right;
+    *aTop = paperRect.top;
+    *aLeft = paperRect.left;
+    *aBottom = paperRect.bottom;
+    *aRight = paperRect.right;
 
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }

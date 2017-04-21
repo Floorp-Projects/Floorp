@@ -24,10 +24,6 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
-#if defined(MOZ_WIDGET_ANDROID)
-# include "mozilla/widget/AndroidCompositorWidget.h"
-#endif
-
 bool is_in_main_thread()
 {
   return NS_IsMainThread();
@@ -145,10 +141,11 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
 #ifdef MOZ_WIDGET_ANDROID
   // XXX temporary hack.
   // XXX Remove it when APZ is supported.
-  widget::AndroidCompositorWidget* widget = mWidget->AsAndroid();
-  if (widget) {
-    widget->SetFirstPaintViewport(LayerIntPoint(0, 0), CSSToLayerScale(), CSSRect(0, 0, aSize.width, aSize.height));
-  }
+  // XXX Broken by Dynamic Toolbar v3. See: Bug 1335895
+//  RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(/* Root Layer Tree ID */);
+//  if (uiController) {
+//    uiController->ToolbarAnimatorMessageFromCompositor(/*FIRST_PAINT*/ 5);
+//  }
 #endif
 
   return IPC_OK();

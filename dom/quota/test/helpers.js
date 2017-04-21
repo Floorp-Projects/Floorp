@@ -40,6 +40,19 @@ function* testHarnessSteps()
 
   yield undefined;
 
+  info("Pushing preferences");
+
+  SpecialPowers.pushPrefEnv(
+    {
+      "set": [
+        ["dom.storageManager.enabled", true],
+        ["dom.storageManager.prompt.testing", true],
+      ]
+    },
+    nextTestHarnessStep
+  );
+  yield undefined;
+
   info("Clearing old databases");
 
   clearAllDatabases(nextTestHarnessStep);

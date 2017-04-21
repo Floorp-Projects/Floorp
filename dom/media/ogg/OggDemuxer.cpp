@@ -188,7 +188,7 @@ OggDemuxer::HaveStartTime(TrackInfo::TrackType aType)
 int64_t
 OggDemuxer::StartTime(TrackInfo::TrackType aType)
 {
-  return OggState(aType).mStartTime.refOr(TimeUnit::FromMicroseconds(0)).ToMicroseconds();
+  return OggState(aType).mStartTime.refOr(TimeUnit::Zero()).ToMicroseconds();
 }
 
 RefPtr<OggDemuxer::InitPromise>
@@ -1317,7 +1317,7 @@ OggTrackDemuxer::Seek(const TimeUnit& aTime)
 
     // Check what time we actually seeked to.
     if (sample != nullptr) {
-      seekTime = TimeUnit::FromMicroseconds(sample->mTime);
+      seekTime = sample->mTime;
       OGG_DEBUG("%p seeked to time %" PRId64, this, seekTime.ToMicroseconds());
     }
     mQueuedSample = sample;
@@ -1403,15 +1403,14 @@ OggTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold)
   OGG_DEBUG("TimeThreshold: %f", aTimeThreshold.ToSeconds());
   while (!found && (sample = NextSample())) {
     parsed++;
-    if (sample->mKeyframe && sample->mTime >= aTimeThreshold.ToMicroseconds()) {
+    if (sample->mKeyframe && sample->mTime >= aTimeThreshold) {
       found = true;
       mQueuedSample = sample;
     }
   }
   if (found) {
     OGG_DEBUG("next sample: %f (parsed: %d)",
-               TimeUnit::FromMicroseconds(sample->mTime).ToSeconds(),
-               parsed);
+               sample->mTime.ToSeconds(), parsed);
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
     SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);

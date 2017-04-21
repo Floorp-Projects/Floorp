@@ -78,7 +78,7 @@ AppleVTDecoder::Decode(MediaRawData* aSample)
 {
   LOG("mp4 input sample %p pts %lld duration %lld us%s %" PRIuSIZE " bytes",
       aSample,
-      aSample->mTime,
+      aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(),
       aSample->mKeyframe ? " keyframe" : "",
       aSample->Size());
@@ -132,9 +132,9 @@ TimingInfoFromSample(MediaRawData* aSample)
   timestamp.duration = CMTimeMake(
     aSample->mDuration.ToMicroseconds(), USECS_PER_S);
   timestamp.presentationTimeStamp =
-    CMTimeMake(aSample->mTime, USECS_PER_S);
+    CMTimeMake(aSample->mTime.ToMicroseconds(), USECS_PER_S);
   timestamp.decodeTimeStamp =
-    CMTimeMake(aSample->mTimecode, USECS_PER_S);
+    CMTimeMake(aSample->mTimecode.ToMicroseconds(), USECS_PER_S);
 
   return timestamp;
 }

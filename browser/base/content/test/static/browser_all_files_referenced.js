@@ -254,8 +254,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/addons/AddonLogging.jsm"},
   // Bug 1351637
   {file: "resource://gre/modules/sdk/bootstrap.js"},
-  // Bug 1351657
-  {file: "resource://gre/res/langGroups.properties", platforms: ["macosx"]},
 
 ].filter(item =>
   ("isFromDevTools" in item) == isDevtools &&

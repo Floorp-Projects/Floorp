@@ -17,8 +17,11 @@ Test String rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, StringRep } = REPS;
+  const {
+    REPS,
+    getRep,
+   } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { StringRep } = REPS;
 
   const test_cases = [{
     name: "testMultiline",
@@ -75,12 +78,20 @@ window.onload = Task.async(function* () {
       useQuotes: true
     },
     result: "\"\ud83d\udeec\""
+  }, {
+    name: "testNoEscapeWhitespace",
+    props: {
+      object: "line 1\r\nline 2\n\tline 3",
+      useQuotes: true,
+      escapeWhitespace: false,
+    },
+    result: "\"line 1\r\nline 2\n\tline 3\""
   }];
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, test_cases[0].props);
-    is(renderedRep.type, StringRep.rep, `Rep correctly selects ${StringRep.rep.displayName}`);
+    is(getRep(test_cases[0].props.object), StringRep.rep,
+      "Rep correctly selects String Rep");
 
     // Test rendering
     for (let test of test_cases) {

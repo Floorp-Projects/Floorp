@@ -90,7 +90,7 @@ var PdfjsChromeUtils = {
       this._mmg.addMessageListener("PDFJS:Parent:removeEventListener", this);
       this._mmg.addMessageListener("PDFJS:Parent:updateControlState", this);
 
-      // observer to handle shutdown
+      // Observer to handle shutdown.
       Services.obs.addObserver(this, "quit-application");
     }
   },

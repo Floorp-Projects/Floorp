@@ -642,10 +642,13 @@ static nsresult ResolveSymlink(const char *path)
   int32_t length = PR_Read(fIn, (void*)buf, PATH_MAX);
   PR_Close(fIn);
 
-  if ( (length <= 0)
-    || ((buf[length] = 0, PR_Delete(path)) != 0)
-    || (symlink(buf, path) != 0))
-  {
+  if (length <= 0) {
+    return NS_ERROR_FILE_DISK_FULL;
+  }
+
+  buf[length] = '\0';
+
+  if (PR_Delete(path) != 0 || symlink(buf, path) != 0) {
      return NS_ERROR_FILE_DISK_FULL;
   }
   return NS_OK;

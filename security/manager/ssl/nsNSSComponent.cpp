@@ -1839,6 +1839,10 @@ nsNSSComponent::ShutdownNSS()
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to evaporate resources"));
       return;
     }
+    // Release the default CertVerifier. This will cause any held NSS resources
+    // to be released (it's not an nsNSSShutDownObject, so we have to do this
+    // manually).
+    mDefaultCertVerifier = nullptr;
     UnloadLoadableRoots();
     if (SECSuccess != ::NSS_Shutdown()) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("NSS SHUTDOWN FAILURE"));

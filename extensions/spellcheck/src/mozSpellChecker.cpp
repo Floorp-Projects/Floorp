@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "mozSpellChecker.h"
 #include "nsIServiceManager.h"
 #include "mozISpellI18NManager.h"
@@ -552,7 +551,8 @@ mozSpellChecker::GetEngineList(nsCOMArray<mozISpellCheckingEngine>* aSpellChecki
   if (NS_FAILED(rv))
     return rv;
 
-  while (catEntries->HasMoreElements(&hasMoreEngines), hasMoreEngines){
+  while (NS_SUCCEEDED(catEntries->HasMoreElements(&hasMoreEngines)) &&
+         hasMoreEngines) {
     nsCOMPtr<nsISupports> elem;
     rv = catEntries->GetNext(getter_AddRefs(elem));
 

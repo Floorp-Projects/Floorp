@@ -564,6 +564,11 @@ this.BrowserTestUtils = {
     if (winType == "navigator:browser") {
       let finalMsgsPromise = new Promise((resolve) => {
         let browserSet = new Set(win.gBrowser.browsers);
+        // Ensure all browsers have been inserted or we won't get
+        // messages back from them.
+        browserSet.forEach((browser) => {
+          win.gBrowser._insertBrowser(win.gBrowser.getTabForBrowser(browser));
+        })
         let mm = win.getGroupMessageManager("browsers");
 
         mm.addMessageListener("SessionStore:update", function onMessage(msg) {

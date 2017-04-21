@@ -19,16 +19,12 @@
 #define STREAM_LATENCY 100 * STREAM_RATE / 1000
 #define STREAM_CHANNELS 1
 #define STREAM_LAYOUT CUBEB_LAYOUT_MONO
-#if (defined(_WIN32) || defined(__WIN32__))
-#define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
-#else
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
-#endif
 
 int is_windows_7()
 {
 #ifdef __MINGW32__
-  printf("Warning: this test was built with MinGW.\n"
+  fprintf(stderr, "Warning: this test was built with MinGW.\n"
          "MinGW does not contain necessary version checking infrastructure. Claiming to be Windows 7, even if we're not.\n");
   return 1;
 #endif
@@ -61,11 +57,7 @@ test_data_callback(cubeb_stream * stm, void * user_ptr, const void * /*inputbuff
 {
   EXPECT_TRUE(stm && user_ptr == &dummy && outputbuffer && nframes > 0);
   assert(outputbuffer);
-#if (defined(_WIN32) || defined(__WIN32__))
-  memset(outputbuffer, 0, nframes * sizeof(float));
-#else
   memset(outputbuffer, 0, nframes * sizeof(short));
-#endif
 
   total_frames_written += nframes;
   if (delay_callback) {
@@ -545,11 +537,7 @@ test_drain_data_callback(cubeb_stream * stm, void * user_ptr, const void * /*inp
   }
   /* once drain has started, callback must never be called again */
   EXPECT_TRUE(do_drain != 2);
-#if (defined(_WIN32) || defined(__WIN32__))
-  memset(outputbuffer, 0, nframes * sizeof(float));
-#else
   memset(outputbuffer, 0, nframes * sizeof(short));
-#endif
   total_frames_written += nframes;
   return nframes;
 }

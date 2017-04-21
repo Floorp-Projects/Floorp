@@ -446,6 +446,12 @@ cubeb_should_downmix(cubeb_stream_params const * stream, cubeb_stream_params con
            mixer->layout == CUBEB_LAYOUT_3F1_LFE));
 }
 
+bool
+cubeb_should_mix(cubeb_stream_params const * stream, cubeb_stream_params const * mixer)
+{
+  return cubeb_should_upmix(stream, mixer) || cubeb_should_downmix(stream, mixer);
+}
+
 void
 cubeb_downmix_float(float * const in, long inframes, float * out,
                     unsigned int in_channels, unsigned int out_channels,
@@ -460,6 +466,14 @@ cubeb_downmix_short(short * const in, long inframes, short * out,
                     cubeb_channel_layout in_layout, cubeb_channel_layout out_layout)
 {
   cubeb_downmix(in, inframes, out, in_channels, out_channels, in_layout, out_layout);
+}
+
+
+void
+cubeb_upmix_short(short * const in, long inframes, short * out,
+                  unsigned int in_channels, unsigned int out_channels)
+{
+  cubeb_upmix(in, inframes, out, in_channels, out_channels);
 }
 
 void

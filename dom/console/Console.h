@@ -70,7 +70,7 @@ public:
   Table(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
-  Trace(const GlobalObject& aGlobal);
+  Trace(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
   Dir(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
@@ -85,13 +85,13 @@ public:
   GroupCollapsed(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
-  GroupEnd(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  GroupEnd(const GlobalObject& aGlobal);
 
   static void
-  Time(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
+  Time(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
-  TimeEnd(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
+  TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
   TimeStamp(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aData);
@@ -107,10 +107,10 @@ public:
          const Sequence<JS::Value>& aData);
 
   static void
-  Count(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  Count(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
-  Clear(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  Clear(const GlobalObject& aGlobal);
 
   static void
   NoopMethod(const GlobalObject& aGlobal);
@@ -178,7 +178,11 @@ private:
 
   void
   MethodInternal(JSContext* aCx, MethodName aName,
-         const nsAString& aString, const Sequence<JS::Value>& aData);
+                 const nsAString& aString, const Sequence<JS::Value>& aData);
+
+  static void
+  StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+               MethodName aMethodName, const nsAString& aMethodString);
 
   // This method must receive aCx and aArguments in the same JSCompartment.
   void
@@ -200,7 +204,7 @@ private:
   void
   NotifyHandler(JSContext* aCx,
                 const Sequence<JS::Value>& aArguments,
-                ConsoleCallData* aData) const;
+                ConsoleCallData* aData);
 
   // PopulateConsoleNotificationInTheTargetScope receives aCx and aArguments in
   // the same JS compartment and populates the ConsoleEvent object (aValue) in
@@ -218,7 +222,7 @@ private:
                                               const Sequence<JS::Value>& aArguments,
                                               JSObject* aTargetScope,
                                               JS::MutableHandle<JS::Value> aValue,
-                                              ConsoleCallData* aData) const;
+                                              ConsoleCallData* aData);
 
   // If the first JS::Value of the array is a string, this method uses it to
   // format a string. The supported sequences are:
@@ -248,10 +252,15 @@ private:
                    char aCh) const;
 
   // Stringify and Concat all the JS::Value in a single string using ' ' as
-  // separator.
+  // separator. The new group name will be stored in mGroupStack array.
   void
-  ComposeGroupName(JSContext* aCx, const Sequence<JS::Value>& aData,
-                   nsAString& aName) const;
+  ComposeAndStoreGroupName(JSContext* aCx, const Sequence<JS::Value>& aData,
+                           nsAString& aName);
+
+  // Remove the last group name and return that name. It returns false if
+  // mGroupStack is empty.
+  bool
+  UnstoreGroupName(nsAString& aName);
 
   // StartTimer is called on the owning thread and populates aTimerLabel and
   // aTimerValue. It returns false if a JS exception is thrown or if
@@ -317,15 +326,16 @@ private:
 
   // This method follows the same pattern as StartTimer: its runs on the owning
   // thread and populate aCountLabel, used by CreateCounterValue. Returns
-  // MAX_PAGE_COUNTERS in case of error, otherwise the incremented counter
-  // value.
+  // 3 possible values:
+  // * MAX_PAGE_COUNTERS in case of error that has to be reported;
+  // * 0 in case of a CX exception. The operation cannot continue;
+  // * the incremented counter value.
+  // Params:
   // * aCx - the JSContext rooting aData.
-  // * aFrame - the first frame of ConsoleCallData.
   // * aData - the arguments received by the console.count() method.
   // * aCountLabel - the label that will be populated by this method.
   uint32_t
-  IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
-                  const Sequence<JS::Value>& aData,
+  IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aData,
                   nsAString& aCountLabel);
 
   // This method generates a ConsoleCounter dictionary as JS::Value. If
@@ -374,6 +384,9 @@ private:
   nsTArray<RefPtr<ConsoleCallData>> mCallDataStoragePending;
 
   RefPtr<AnyCallback> mConsoleEventNotifier;
+
+  // This is the stack for groupping.
+  nsTArray<nsString> mGroupStack;
 
 #ifdef DEBUG
   PRThread* mOwningThread;

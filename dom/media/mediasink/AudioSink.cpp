@@ -285,7 +285,8 @@ AudioSink::PopFrames(uint32_t aFrames)
   auto framesToPop = std::min(aFrames, mCursor->Available());
 
   SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
-             mCurrentData->mTime, mCurrentData->mFrames - mCursor->Available(), framesToPop);
+             mCurrentData->mTime.ToMicroseconds(),
+             mCurrentData->mFrames - mCursor->Available(), framesToPop);
 
   UniquePtr<AudioStream::Chunk> chunk =
     MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
@@ -406,8 +407,8 @@ AudioSink::NotifyAudioNeeded()
     // audio hardware, so we can play across the gap.
     // Calculate the timestamp of the next chunk of audio in numbers of
     // samples.
-    CheckedInt64 sampleTime = TimeUnitToFrames(
-      TimeUnit::FromMicroseconds(data->mTime) - mStartTime, data->mRate);
+    CheckedInt64 sampleTime =
+      TimeUnitToFrames(data->mTime - mStartTime, data->mRate);
     // Calculate the number of frames that have been pushed onto the audio hardware.
     CheckedInt64 missingFrames = sampleTime - mFramesParsed;
 
@@ -501,7 +502,7 @@ AudioSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
   }
   RefPtr<AudioData> data =
     new AudioData(aReference->mOffset,
-                  aReference->mTime,
+                  aReference->mTime.ToMicroseconds(),
                   duration.value(),
                   frames,
                   Move(aBuffer),

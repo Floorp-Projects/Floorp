@@ -86,7 +86,7 @@ NS_IMPL_ISUPPORTS(nsCertOverrideService,
                   nsISupportsWeakReference)
 
 nsCertOverrideService::nsCertOverrideService()
-  : monitor("nsCertOverrideService.monitor")
+  : mMutex("nsCertOverrideService.mutex")
 {
 }
 
@@ -141,7 +141,7 @@ nsCertOverrideService::Observe(nsISupports     *,
     // Now read from the new profile location.
     // we also need to update the cached file location
 
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
 
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSettingsFile));
     if (NS_SUCCEEDED(rv)) {
@@ -149,8 +149,8 @@ nsCertOverrideService::Observe(nsISupports     *,
     } else {
       mSettingsFile = nullptr;
     }
-    Read();
-    CountPermanentOverrideTelemetry();
+    Read(lock);
+    CountPermanentOverrideTelemetry(lock);
   }
 
   return NS_OK;
@@ -159,14 +159,14 @@ nsCertOverrideService::Observe(nsISupports     *,
 void
 nsCertOverrideService::RemoveAllFromMemory()
 {
-  ReentrantMonitorAutoEnter lock(monitor);
+  MutexAutoLock lock(mMutex);
   mSettingsTable.Clear();
 }
 
 void
 nsCertOverrideService::RemoveAllTemporaryOverrides()
 {
-  ReentrantMonitorAutoEnter lock(monitor);
+  MutexAutoLock lock(mMutex);
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     nsCertOverrideEntry *entry = iter.Get();
     if (entry->mSettings.mIsTemporary) {
@@ -178,10 +178,8 @@ nsCertOverrideService::RemoveAllTemporaryOverrides()
 }
 
 nsresult
-nsCertOverrideService::Read()
+nsCertOverrideService::Read(const MutexAutoLock& aProofOfLock)
 {
-  ReentrantMonitorAutoEnter lock(monitor);
-
   // If we don't have a profile, then we won't try to read any settings file.
   if (!mSettingsFile)
     return NS_OK;
@@ -256,17 +254,15 @@ nsCertOverrideService::Read()
     AddEntryToList(host, port,
                    nullptr, // don't have the cert
                    false, // not temporary
-                   algo_string, fingerprint, bits, db_key);
+                   algo_string, fingerprint, bits, db_key, aProofOfLock);
   }
 
   return NS_OK;
 }
 
 nsresult
-nsCertOverrideService::Write()
+nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock)
 {
-  ReentrantMonitorAutoEnter lock(monitor);
-
   // If we don't have any profile, then we won't try to write any file
   if (!mSettingsFile) {
     return NS_OK;
@@ -401,16 +397,16 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   }
 
   {
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
     AddEntryToList(aHostName, aPort,
                    aTemporary ? aCert : nullptr,
                      // keep a reference to the cert for temporary overrides
                    aTemporary,
                    mDottedOidForStoringNewHashes, fpStr,
                    (nsCertOverride::OverrideBits)aOverrideBits,
-                   dbkey);
+                   dbkey, lock);
     if (!aTemporary) {
-      Write();
+      Write(lock);
     }
   }
 
@@ -428,14 +424,15 @@ nsCertOverrideService::RememberTemporaryValidityOverrideUsingFingerprint(
     return NS_ERROR_INVALID_ARG;
   }
 
-  ReentrantMonitorAutoEnter lock(monitor);
+  MutexAutoLock lock(mMutex);
   AddEntryToList(aHostName, aPort,
                  nullptr, // No cert to keep alive
                  true, // temporary
                  mDottedOidForStoringNewHashes,
                  aCertFingerprint,
                  (nsCertOverride::OverrideBits)aOverrideBits,
-                 EmptyCString());  // dbkey
+                 EmptyCString(),  // dbkey
+                 lock);
 
   return NS_OK;
 }
@@ -464,7 +461,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
   nsCertOverride settings;
 
   {
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
     nsCertOverrideEntry *entry = mSettingsTable.GetEntry(hostPort.get());
 
     if (!entry)
@@ -514,7 +511,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, int32_t
   nsCertOverride settings;
 
   {
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
     nsCertOverrideEntry *entry = mSettingsTable.GetEntry(hostPort.get());
 
     if (entry) {
@@ -540,34 +537,32 @@ nsCertOverrideService::AddEntryToList(const nsACString &aHostName, int32_t aPort
                                       const nsACString &fingerprintAlgOID,
                                       const nsACString &fingerprint,
                                       nsCertOverride::OverrideBits ob,
-                                      const nsACString &dbKey)
+                                      const nsACString &dbKey,
+                                      const MutexAutoLock& aProofOfLock)
 {
   nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
 
-  {
-    ReentrantMonitorAutoEnter lock(monitor);
-    nsCertOverrideEntry *entry = mSettingsTable.PutEntry(hostPort.get());
+  nsCertOverrideEntry *entry = mSettingsTable.PutEntry(hostPort.get());
 
-    if (!entry) {
-      NS_ERROR("can't insert a null entry!");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    entry->mHostWithPort = hostPort;
-
-    nsCertOverride &settings = entry->mSettings;
-    settings.mAsciiHost = aHostName;
-    settings.mPort = aPort;
-    settings.mIsTemporary = aIsTemporary;
-    settings.mFingerprintAlgOID = fingerprintAlgOID;
-    settings.mFingerprint = fingerprint;
-    settings.mOverrideBits = ob;
-    settings.mDBKey = dbKey;
-    // remove whitespace from stored dbKey for backwards compatibility
-    settings.mDBKey.StripWhitespace();
-    settings.mCert = aCert;
+  if (!entry) {
+    NS_ERROR("can't insert a null entry!");
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  entry->mHostWithPort = hostPort;
+
+  nsCertOverride &settings = entry->mSettings;
+  settings.mAsciiHost = aHostName;
+  settings.mPort = aPort;
+  settings.mIsTemporary = aIsTemporary;
+  settings.mFingerprintAlgOID = fingerprintAlgOID;
+  settings.mFingerprint = fingerprint;
+  settings.mOverrideBits = ob;
+  settings.mDBKey = dbKey;
+  // remove whitespace from stored dbKey for backwards compatibility
+  settings.mDBKey.StripWhitespace();
+  settings.mCert = aCert;
 
   return NS_OK;
 }
@@ -586,9 +581,9 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
   nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
   {
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
     mSettingsTable.RemoveEntry(hostPort.get());
-    Write();
+    Write(lock);
   }
 
   nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
@@ -602,9 +597,8 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
 }
 
 void
-nsCertOverrideService::CountPermanentOverrideTelemetry()
+nsCertOverrideService::CountPermanentOverrideTelemetry(const MutexAutoLock& aProofOfLock)
 {
-  ReentrantMonitorAutoEnter lock(monitor);
   uint32_t overrideCount = 0;
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     if (!iter.Get()->mSettings.mIsTemporary) {
@@ -637,7 +631,7 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert,
 
   uint32_t counter = 0;
   {
-    ReentrantMonitorAutoEnter lock(monitor);
+    MutexAutoLock lock(mMutex);
     for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
       const nsCertOverride &settings = iter.Get()->mSettings;
 
@@ -669,7 +663,7 @@ nsCertOverrideService::EnumerateCertOverrides(nsIX509Cert *aCert,
                          CertOverrideEnumerator aEnumerator,
                          void *aUserData)
 {
-  ReentrantMonitorAutoEnter lock(monitor);
+  MutexAutoLock lock(mMutex);
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     const nsCertOverride &settings = iter.Get()->mSettings;
 

@@ -20,8 +20,12 @@ Test ArrayRep rep
 /* import-globals-from head.js */
 
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, ArrayRep } = REPS;
+  const {
+    REPS,
+    MODE,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { ArrayRep } = REPS;
 
   let componentUnderTest = ArrayRep;
   const maxLength = {
@@ -52,9 +56,7 @@ window.onload = Task.async(function* () {
   function testBasic() {
     // Test that correct rep is chosen
     const stub = [];
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ArrayRep.rep,
-       `Rep correctly selects ${ArrayRep.rep.displayName}`);
+    is(getRep(stub), ArrayRep.rep, "Rep correctly selects Array Rep");
 
 
     // Test rendering

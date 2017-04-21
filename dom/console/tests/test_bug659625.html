@@ -54,6 +54,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=659625
     "2 new console events registered for 2 count calls");
   clearAndCheckStorage();
 
+  // For bug 1346326.
+  console.count("default");
+  console.count();
+  console.count(undefined);
+  let events = storage.getEvents();
+  // Drop the event from the previous "clear".
+  events.splice(0, 1);
+  is(events.length, 3,
+    "3 new console events registered for 3 'default' count calls");
+  for (let i = 0; i < events.length; ++i) {
+      is(events[i].counter.count, i + 1, "check counter for event " + i);
+      is(events[i].counter.label, "default", "check label for event " + i);
+  }
+  clearAndCheckStorage();
+
   console.group("group-label")
   console.log("group-log");
   ok(storage.getEvents().length === 3,

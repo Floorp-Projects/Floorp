@@ -768,10 +768,11 @@ function _computeKeyCodeFromChar(aChar)
  *             .keyCode value is initialized with this value.
  *
  * aWindow is optional, and defaults to the current window object.
+ * aCallback is optional, use the callback for receiving notifications of TIP.
  */
-function synthesizeKey(aKey, aEvent, aWindow = window)
+function synthesizeKey(aKey, aEvent, aWindow = window, aCallback)
 {
-  var TIP = _getTIP(aWindow);
+  var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
     return;
   }

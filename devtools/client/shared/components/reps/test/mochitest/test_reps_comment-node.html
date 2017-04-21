@@ -20,8 +20,12 @@ Test comment-node rep
 
 window.onload = Task.async(function* () {
   try {
-    const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, CommentNode } = REPS;
+    const {
+      REPS,
+      MODE,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { CommentNode } = REPS;
 
     let gripStub = {
       "type": "object",
@@ -40,9 +44,7 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, CommentNode.rep,
-      `Rep correctly selects ${CommentNode.rep.displayName}`);
+    is(getRep(gripStub), CommentNode.rep, "Rep correctly selects CommentNode Rep");
 
     // Test rendering.
     const renderedComponent = renderComponent(CommentNode.rep, { object: gripStub });

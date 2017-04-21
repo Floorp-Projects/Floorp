@@ -1613,6 +1613,9 @@ pref("browser.formautofill.experimental", false);
 pref("browser.formautofill.enabled", false);
 pref("browser.formautofill.loglevel", "Warn");
 
+// Whether or not to restore a session with lazy-browser tabs.
+pref("browser.sessionstore.restore_tabs_lazily", true);
+
 // Enable safebrowsing v4 tables (suffixed by "-proto") update.
 #ifdef NIGHTLY_BUILD
 pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,goog-malware-proto,goog-unwanted-proto,test-malware-simple,test-unwanted-simple");

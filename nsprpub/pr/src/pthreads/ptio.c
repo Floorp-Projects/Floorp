@@ -164,6 +164,9 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #ifndef TCP_CORK
 #define TCP_CORK 3
 #endif
+#ifndef MSG_FASTOPEN
+#define MSG_FASTOPEN    0x20000000
+#endif
 #endif
 
 #ifdef _PR_IPV6_V6ONLY_PROBE
@@ -2053,6 +2056,99 @@ static PRInt32 pt_SendTo(
     return bytes;
 }  /* pt_SendTo */
 
+// Linux uses SendTo to send data during TCP Fast Open. OSX uses connectx, but
+// we will make it imitate the Linux's interface.
+static PRInt32 pt_TCP_SendTo(
+    PRFileDesc *fd, const void *buf,
+    PRInt32 amount, PRIntn flags, const PRNetAddr *addr,
+    PRIntervalTime timeout)
+{
+#if !defined(DARWIN) || HAS_CONNECTX
+    PRInt32 syserrno, bytes = -1;
+    PRBool fNeedContinue = PR_FALSE;
+    pt_SockLen addr_len;
+    const PRNetAddr *addrp = addr;
+#if defined(_PR_HAVE_SOCKADDR_LEN) || defined(_PR_INET6)
+    PRNetAddr addrCopy;
+#endif
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRUint16 md_af = addr->raw.family;
+#endif
+
+    if (pt_TestAbort()) return bytes;
+
+    PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+    addr_len = PR_NETADDR_SIZE(addr);
+#if defined(_PR_INET6)
+    if (addr->raw.family == PR_AF_INET6) {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        md_af = AF_INET6;
+#else
+        // If _PR_INET6 is defined and it is PR_AF_INET6 we set family
+        // to AF_INET6.
+        addrCopy = *addr;
+        addrCopy.raw.family = AF_INET6;
+        addrp = &addrCopy;
+#endif
+    }
+#endif
+
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    // if _PR_HAVE_SOCKADDR_LEN is defined and it is PR_AF_INET6 we set family
+    // to AF_INET6 and we set address length.
+    addrCopy = *addr;
+    ((struct sockaddr*)&addrCopy)->sa_len = addr_len;
+    ((struct sockaddr*)&addrCopy)->sa_family = md_af;
+    addrp = &addrCopy;
+#endif
+
+#ifndef HAS_CONNECTX
+    bytes = sendto(
+        fd->secret->md.osfd, buf, amount, MSG_FASTOPEN,
+        (struct sockaddr*)addrp, addr_len);
+#else
+    sa_endpoints_t endpoints;
+    endpoints.sae_srcif = 0;
+    endpoints.sae_srcaddr = NULL;
+    endpoints.sae_srcaddrlen = 0;
+    endpoints.sae_dstaddr = (struct sockaddr *)addrp;
+    endpoints.sae_dstaddrlen = addr_len;
+    struct iovec iov[1];
+    iov[0].iov_base = buf;
+    iov[0].iov_len = amount;
+    PRInt32 rv = connectx(fd->secret->md.osfd, &endpoints, SAE_ASSOCID_ANY,
+                         CONNECT_DATA_IDEMPOTENT, iov, 1, &bytes, NULL);
+#endif
+    syserrno = errno;
+    if ( (bytes == -1) && (syserrno == EWOULDBLOCK || syserrno == EAGAIN)
+        && (!fd->secret->nonblocking) ) {
+        if (PR_INTERVAL_NO_WAIT == timeout) syserrno = ETIMEDOUT;
+        else fNeedContinue = PR_TRUE;
+    }
+    if (fNeedContinue == PR_TRUE) {
+        pt_Continuation op;
+        op.arg1.osfd = fd->secret->md.osfd;
+        op.arg2.buffer = (void*)buf;
+        op.arg3.amount = amount;
+        op.arg4.flags = flags;
+        op.arg5.addr = (PRNetAddr*)addrp;
+        op.timeout = timeout;
+        op.result.code = 0;  /* initialize the number sent */
+        op.function = pt_sendto_cont;
+        op.event = POLLOUT | POLLPRI;
+        bytes = pt_Continue(&op);
+        syserrno = op.syserrno;
+    }
+    if (bytes < 0) {
+        pt_MapError(_PR_MD_MAP_SENDTO_ERROR, syserrno);
+    }
+    return bytes;
+#else
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+#endif
+}  /* pt_TCP_SendTo */
+
 static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRIntn flags, PRNetAddr *addr, PRIntervalTime timeout)
 {
@@ -3164,7 +3260,7 @@ static PRIOMethods _pr_tcp_methods = {
     pt_Recv,
     pt_Send,
     (PRRecvfromFN)_PR_InvalidInt,
-    (PRSendtoFN)_PR_InvalidInt,
+    pt_TCP_SendTo, // This is for TCP Fast Open. Linux uses SendTo function for this. OSX uses connectx, but we imitate Linux.
     pt_Poll,
     pt_AcceptRead,
     pt_TransmitFile,

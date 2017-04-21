@@ -56,8 +56,6 @@ child:
 
   async UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent);
 
-  async SetScrollingRootContent(bool aIsRootContent);
-
   async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
 
   async NotifyAPZStateChange(ScrollableLayerGuid aGuid, APZStateChange aChange, int aArg);

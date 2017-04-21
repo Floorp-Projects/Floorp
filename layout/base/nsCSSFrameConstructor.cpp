@@ -3698,8 +3698,8 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
                                  nsCSSAnonBoxes::buttonContent) },
     // TODO: this is temporary until a frame is written: bug 635240.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewNumberControlFrame),
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-    // On Android/B2G, date/time input appears as a normal text box.
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Android, date/time input appears as a normal text box.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewTextControlFrame),
 #else
@@ -3730,10 +3730,10 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
 
   auto controlType = control->ControlType();
 
-  // Note that Android/Gonk widgets don't have theming support and thus
+  // Note that Android widgets don't have theming support and thus
   // appearance:none is the same as any other appearance value.
   // So this chunk doesn't apply there:
-#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if !defined(MOZ_WIDGET_ANDROID)
   // radio and checkbox inputs with appearance:none should be constructed
   // by display type.  (Note that we're not checking that appearance is
   // not (respectively) NS_THEME_RADIO and NS_THEME_CHECKBOX.)

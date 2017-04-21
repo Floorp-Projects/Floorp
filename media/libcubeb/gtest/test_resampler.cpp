@@ -410,7 +410,7 @@ TEST(cubeb, resampler_one_way)
     for (uint32_t source_rate = 0; source_rate < array_size(sample_rates); source_rate++) {
       for (uint32_t dest_rate = 0; dest_rate < array_size(sample_rates); dest_rate++) {
         for (uint32_t chunk_duration = min_chunks; chunk_duration < max_chunks; chunk_duration+=chunk_increment) {
-          printf("one_way: channels: %d, source_rate: %d, dest_rate: %d, chunk_duration: %d\n",
+          fprintf(stderr, "one_way: channels: %d, source_rate: %d, dest_rate: %d, chunk_duration: %d\n",
                   channels, sample_rates[source_rate], sample_rates[dest_rate], chunk_duration);
           test_resampler_one_way<float>(channels, sample_rates[source_rate],
                                         sample_rates[dest_rate], chunk_duration);
@@ -428,7 +428,7 @@ TEST(cubeb, DISABLED_resampler_duplex)
         for (uint32_t source_rate_output = 0; source_rate_output < array_size(sample_rates); source_rate_output++) {
           for (uint32_t dest_rate = 0; dest_rate < array_size(sample_rates); dest_rate++) {
             for (uint32_t chunk_duration = min_chunks; chunk_duration < max_chunks; chunk_duration+=chunk_increment) {
-              printf("input channels:%d output_channels:%d input_rate:%d "
+              fprintf(stderr, "input channels:%d output_channels:%d input_rate:%d "
                      "output_rate:%d target_rate:%d chunk_ms:%d\n",
                      input_channels, output_channels,
                      sample_rates[source_rate_input],
@@ -453,7 +453,7 @@ TEST(cubeb, resampler_delay_line)
   for (uint32_t channel = 1; channel <= 2; channel++) {
     for (uint32_t delay_frames = 4; delay_frames <= 40; delay_frames+=chunk_increment) {
       for (uint32_t chunk_size = 10; chunk_size <= 30; chunk_size++) {
-       printf("channel: %d, delay_frames: %d, chunk_size: %d\n",
+       fprintf(stderr, "channel: %d, delay_frames: %d, chunk_size: %d\n",
               channel, delay_frames, chunk_size);
         test_delay_lines(delay_frames, channel, chunk_size);
       }

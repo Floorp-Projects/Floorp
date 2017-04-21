@@ -536,6 +536,12 @@ HttpBaseChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_GetIsDocumentChannel(this, aIsDocument);
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
   *aCallbacks = mCallbacks;

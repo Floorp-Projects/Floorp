@@ -504,6 +504,13 @@ set_config('HAVE_64BIT_BUILD', have_64_bit)
 set_define('HAVE_64BIT_BUILD', have_64_bit)
 add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
 
+@depends(host)
+def host_os_kernel_major_version(host):
+    versions = host.raw_os.split('.')
+    version = ''.join(x for x in versions[0] if x.isdigit())
+    return version
+
+set_config('HOST_MAJOR_VERSION', host_os_kernel_major_version)
 
 # Autoconf needs these set
 @depends(host)

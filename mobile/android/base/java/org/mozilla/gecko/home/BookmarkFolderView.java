@@ -63,6 +63,7 @@ public class BookmarkFolderView extends LinearLayout {
     private final TextView mSubtitle;
 
     private final ImageView mIcon;
+    private final ImageView mIndicator;
 
     public BookmarkFolderView(Context context) {
         this(context, null);
@@ -76,6 +77,7 @@ public class BookmarkFolderView extends LinearLayout {
         mTitle = (TextView) findViewById(R.id.title);
         mSubtitle = (TextView) findViewById(R.id.subtitle);
         mIcon =  (ImageView) findViewById(R.id.icon);
+        mIndicator = (ImageView) findViewById(R.id.indicator);
     }
 
     public void update(String title, int folderID) {
@@ -143,5 +145,11 @@ public class BookmarkFolderView extends LinearLayout {
 
     public void setState(@NonNull FolderState state) {
         mIcon.setImageResource(state.image);
+
+        if (state == FolderState.PARENT) {
+            mIndicator.setVisibility(View.GONE);
+        } else {
+            mIndicator.setVisibility(View.VISIBLE);
+        }
     }
 }

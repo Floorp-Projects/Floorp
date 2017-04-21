@@ -350,7 +350,7 @@ TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput)
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
 {
-  // Simulate B2G preference.
+  // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
     MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling);
   MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = false;
@@ -534,7 +534,7 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenLogicallyVisible)
 {
-  // Simulate B2G preference.
+  // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
     MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling);
   MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = false;
@@ -599,7 +599,7 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenLogicallyVisible)
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenHidden)
 {
-  // Simulate B2G preference.
+  // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
     MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling);
   MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = false;
@@ -658,7 +658,7 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenHidden)
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeOnEmptyContent)
 {
-  // Simulate B2G preference.
+  // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
     MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling);
   MockAccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = false;

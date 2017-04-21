@@ -63,6 +63,21 @@ function isnot(aLeft, aRight, aMessage)
   window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
+function todo(aCondition, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.todo(aCondition, aMessage);
+}
+
+function todo_is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.todo_is(aLeft, aRight, aMessage);
+}
+
+function todo_isnot(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.todo_isnot(aLeft, aRight, aMessage);
+}
+
 function isSimilarTo(aLeft, aRight, aAllowedDifference, aMessage)
 {
   if (Math.abs(aLeft - aRight) <= aAllowedDifference) {
@@ -5552,7 +5567,7 @@ function runNestedSettingValue()
 
 }
 
-function runAsyncForceCommitTest(aNextTest)
+function runAsyncForceCommitTest()
 {
   var events;
   function eventHandler(aEvent)
@@ -5586,7 +5601,7 @@ function runAsyncForceCommitTest(aNextTest)
       window.removeEventListener("input", eventHandler, true);
       window.removeEventListener("text", eventHandler, true);
 
-      SimpleTest.executeSoon(aNextTest);
+      SimpleTest.executeSoon(continueTest);
     }, 1);
     return true;
   };
@@ -6212,7 +6227,7 @@ function runControlCharTest()
   textarea.removeEventListener("compositionend", handler, true);
 }
 
-function runRemoveContentTest(aCallback)
+function runRemoveContentTest()
 {
   var events = [];
   function eventHandler(aEvent)
@@ -6303,7 +6318,7 @@ function runRemoveContentTest(aCallback)
       textarea.removeEventListener("input", eventHandler, true);
       textarea.removeEventListener("text", eventHandler, true);
 
-      SimpleTest.executeSoon(aCallback);
+      SimpleTest.executeSoon(continueTest);
     }, 50);
   }, 50);
 }
@@ -6444,7 +6459,7 @@ function onPanelHidden(aEvent)
 {
   panel.hidden = true;
   ok(gIsPanelHiding, "runPanelTest: the panel is hidden unexpectedly");
-  finish();
+  SimpleTest.executeSoon(continueTest);
 }
 
 function runPanelTest()
@@ -6769,9 +6784,9 @@ function runMaxLengthTest()
   }
 }
 
-function runEditorReframeTests(aCallback)
+function* runEditorReframeTests()
 {
-  function runEditorReframeTest(aEditor, aWindow, aEventType, aNextTest)
+  function runEditorReframeTest(aEditor, aWindow, aEventType)
   {
     function getValue()
     {
@@ -7045,46 +7060,924 @@ function runEditorReframeTests(aCallback)
       if (tests.length <= index) {
         aEditor.style.overflow = "auto";
         aEditor.removeEventListener(aEventType, doReframe);
-        requestAnimationFrame(function() { setTimeout(aNextTest); });
+        requestAnimationFrame(function() { SimpleTest.executeSoon(continueTest); });
         return;
       }
       tests[index].test();
       hitEventLoop(function () {
         tests[index].check();
         index++;
-        setTimeout(doNext, 0);
+        SimpleTest.executeSoon(doNext);
       }, 20);
     }
     doNext();
   }
 
   input.value = "";
-  runEditorReframeTest(input, window, "input", function () {
-    input.value = "";
-    runEditorReframeTest(input, window, "compositionupdate", function () {
-      textarea.value = "";
-      runEditorReframeTest(textarea, window, "input", function () {
-        textarea.value = "";
-        runEditorReframeTest(textarea, window, "compositionupdate", function () {
-          contenteditable.innerHTML = "";
-          runEditorReframeTest(contenteditable, windowOfContenteditable, "input", function () {
-            contenteditable.innerHTML = "";
-            runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate", function () {
-              aCallback();
-            });
-          });
-        });
-      });
-    });
-  });
+  yield runEditorReframeTest(input, window, "input");
+  input.value = "";
+  yield runEditorReframeTest(input, window, "compositionupdate");
+  textarea.value = "";
+  yield runEditorReframeTest(textarea, window, "input");
+  textarea.value = "";
+  yield runEditorReframeTest(textarea, window, "compositionupdate");
+  contenteditable.innerHTML = "";
+  yield runEditorReframeTest(contenteditable, windowOfContenteditable, "input");
+  contenteditable.innerHTML = "";
+  yield runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate");
 }
 
-function runTest()
+function* runIMEContentObserverTest()
 {
-  contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
-  windowOfContenteditable = document.getElementById("iframe4").contentWindow;
-  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+  var notifications = [];
+  var callContinueTest = false;
+  function callback(aTIP, aNotification)
+  {
+    if (aNotification.type != "notify-end-input-transaction") {
+      notifications.push(aNotification);
+    }
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+    }
+    if (callContinueTest) {
+      callContinueTest = false;
+      SimpleTest.executeSoon(continueTest);
+    }
+    return true;
+  }
 
+  function dumpUnexpectedNotifications(aDescription, aExpectedCount)
+  {
+    if (notifications.length <= aExpectedCount) {
+      return;
+    }
+    for (var i = aExpectedCount; i < notifications.length; i++) {
+      ok(false,
+         aDescription + " caused unexpected notification: " + notifications[i].type);
+    }
+  }
+
+  function waitUntilNotificationsReceived()
+  {
+    if (notifications.length > 0) {
+      SimpleTest.executeSoon(continueTest);
+    } else {
+      callContinueTest = true;
+    }
+  }
+
+  function flushNotifications()
+  {
+    // FYI: Dispatching non-op keyboard events causes forcibly flushing pending
+    //      notifications.
+    synthesizeKey("KEY_Unidentified", { code: "" });
+    SimpleTest.executeSoon(()=>{
+      notifications = [];
+      continueTest();
+    });
+  }
+
+  function ensureToRemovePrecedingPositionChangeNotification(aDescription)
+  {
+    if (!notifications.length) {
+      return;
+    }
+    if (notifications[0].type != "notify-position-change") {
+      return;
+    }
+    // Sometimes, notify-position-change is notified first separately if
+    // the operation causes scroll or something.  Tests can ignore this.
+    ok(true, "notify-position-change", aDescription + "Unnecessary notify-position-change occurred, ignoring it");
+    notifications.shift();
+  }
+
+  function getNativeText(aXPText)
+  {
+    if (kLF == "\n") {
+      return aXPText;
+    }
+    return aXPText.replace(/\n/g, kLF);
+  }
+
+  function checkPositionChangeNotification(aNotification, aDescription)
+  {
+    is(!aNotification || aNotification.type, "notify-position-change",
+       aDescription + " should cause position change notification");
+  }
+
+  function checkSelectionChangeNotification(aNotification, aDescription, aExpected)
+  {
+    is(!aNotification || aNotification.type, "notify-selection-change",
+       aDescription + " should cause selection change notification");
+    if (!aNotification || (aNotification.type != "notify-selection-change")) {
+      return;
+    }
+    is(aNotification.offset, aExpected.offset,
+       aDescription + " should cause selection change notification whose offset is " + aExpected.offset);
+    is(aNotification.text, aExpected.text,
+       aDescription + " should cause selection change notification whose text is '" + aExpected.text + "'");
+    is(aNotification.collapsed, aExpected.text.length == 0,
+       aDescription + " should cause selection change notification whose collapsed is " + (aExpected.text.length == 0));
+    is(aNotification.length, aExpected.text.length,
+       aDescription + " should cause selection change notification whose length is " + aExpected.text.length);
+    is(aNotification.reversed, aExpected.reversed || false,
+       aDescription + " should cause selection change notification whose reversed is " + (aExpected.reversed || false));
+    is(aNotification.writingMode, aExpected.writingMode || "horizontal-tb",
+       aDescription + " should cause selection change notification whose writingMode is '" + (aExpected.writingMode || "horizontal-tb"));
+  }
+
+  function checkTextChangeNotification(aNotification, aDescription, aExpected)
+  {
+    is(!aNotification || aNotification.type, "notify-text-change",
+       aDescription + " should cause text change notification");
+    if (!aNotification || aNotification.type != "notify-text-change") {
+      return;
+    }
+    is(aNotification.offset, aExpected.offset,
+       aDescription + " should cause text change notification whose offset is " + aExpected.offset);
+    is(aNotification.removedLength, aExpected.removedLength,
+       aDescription + " should cause text change notification whose removedLength is " + aExpected.removedLength);
+    is(aNotification.addedLength, aExpected.addedLength,
+       aDescription + " should cause text change notification whose addedLength is " + aExpected.addedLength);
+  }
+
+  function getAsInnerHTML(aElement)
+  {
+    if (aElement.tagName.toLowerCase() == "input" || aElement.tagName.toLowerCase() == "textarea") {
+      return aElement.value;
+    }
+    return aElement.innerHTML;
+  }
+
+  function* testWithPlaintextEditor(aDescription, aElement, aTestLineBreaker)
+  {
+    aElement.value = "";
+    aElement.blur();
+    var doc = aElement.ownerDocument;
+    var win = doc.defaultView;
+    aElement.focus();
+    yield flushNotifications();
+
+    // "a[]"
+    var description = aDescription + "typing 'a'";
+    notifications = [];
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 0, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "ab[]"
+    description = aDescription + "typing 'b'";
+    notifications = [];
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 0, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "abc[]"
+    description = aDescription + "typing 'c'";
+    notifications = [];
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 3, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "ab[c]"
+    description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 2, text: "c", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "a[bc]"
+    description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: "bc", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[abc]"
+    description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "abc", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[]abc"
+    description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[a]bc"
+    description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
+    notifications = [];
+    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "a" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[ab]c"
+    description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
+    notifications = [];
+    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "ab" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[]c"
+    description = aDescription + "deleting 'ab' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "[]"
+    description = aDescription + "deleting following 'c' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 1, addedLength: 0 });
+    checkPositionChangeNotification(notifications[1], description);
+    dumpUnexpectedNotifications(description, 2);
+
+    // "abc[]"
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    yield flushNotifications();
+
+    // "ab[]"
+    description = aDescription + "deleting 'c' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 1, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "[ab]"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "[]"
+    description = aDescription + "deleting 'ab' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "abcd[]"
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("d", { code: "KeyD" }, win, callback);
+    yield flushNotifications();
+
+    // "a[bc]d"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "a[]d"
+    description = aDescription + "deleting 'bc' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "a[bc]d"
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "aB[]d"
+    description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
+    notifications = [];
+    synthesizeKey("B", { code: "KeyB", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    if (!aTestLineBreaker) {
+      return;
+    }
+
+    // "aB\n[]d"
+    description = aDescription + "inserting a line break after 'B' with pressing Enter";
+    notifications = [];
+    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: kLFLen });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("aB\n").length, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "aB[]d"
+    description = aDescription + "removing a line break after 'B' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: kLFLen, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "a[B]d"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "a\n[]d"
+    description = aDescription + "replacing 'B' with a line break with pressing Enter";
+    notifications = [];
+    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 1, addedLength: kLFLen });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("a\n").length, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "a[\n]d"
+    description = aDescription + "selecting '\n' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: kLF, reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "a[]d"
+    description = aDescription + "removing selected '\n' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: kLFLen, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // ab\ncd\nef\ngh\n[]
+    description = aDescription + "setting the value property to 'ab\ncd\nef\ngh\n'";
+    notifications = [];
+    aElement.value = "ab\ncd\nef\ngh\n";
+    yield waitUntilNotificationsReceived();
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: getNativeText("ab\ncd\nef\ngh\n").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("ab\ncd\nef\ngh\n").length, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // []
+    description = aDescription + "setting the value property to ''";
+    notifications = [];
+    aElement.value = "";
+    yield waitUntilNotificationsReceived();
+    // XXX Removing invisible <br> or something? The removed length is a line breaker length longer.
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: getNativeText("ab\ncd\nef\ngh\n").length + kLFLen, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+  }
+
+  function* testWithHTMLEditor(aDescription, aElement, aDefaultParagraphSeparator)
+  {
+    var doc = aElement.ownerDocument;
+    var win = doc.defaultView;
+    var sel = doc.getSelection();
+    var inDesignMode = doc.designMode == "on";
+    var offsetAtStart = 0;
+    var offsetAtContainer = 0;
+    var isDefaultParagraphSeparatorBlock = aDefaultParagraphSeparator != "br";
+    doc.execCommand("defaultParagraphSeparator", false, aDefaultParagraphSeparator);
+
+    // "[]", "<p>[]</p>" or "<div>[]</div>"
+    switch (aDefaultParagraphSeparator) {
+      case "br":
+        aElement.innerHTML = "";
+        break;
+      case "p":
+      case "div":
+        aElement.innerHTML = "<" + aDefaultParagraphSeparator + "></" + aDefaultParagraphSeparator + ">";
+        sel.collapse(aElement.firstChild, 0);
+        offsetAtContainer = offsetAtStart + kLFLen;
+        break;
+      default:
+        ok(false, aDescription + "aDefaultParagraphSeparator is illegal value");
+        yield flushPendingNotifications();
+        return;
+    }
+
+    if (inDesignMode) {
+      win.focus();
+    } else {
+      aElement.focus();
+    }
+    yield flushNotifications();
+
+    // "a[]"
+    var description = aDescription + "typing 'a'";
+    notifications = [];
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // XXX This must detect a bug.  The offset of inserting "a" into the first block should be
+      //     after the line breaker caused by the first block.
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: 0, addedLength: 1 });
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 0, addedLength: 1 });
+    }
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "ab[]"
+    description = aDescription + "typing 'b'";
+    notifications = [];
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 0, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "abc[]"
+    description = aDescription + "typing 'c'";
+    notifications = [];
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 0, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 3 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "ab[c]"
+    description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, text: "c", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "a[bc]"
+    description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: "bc", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[abc]"
+    description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "abc", reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[]abc"
+    description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[a]bc"
+    description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
+    notifications = [];
+    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "a" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[ab]c"
+    description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
+    notifications = [];
+    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "ab" });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "[]c"
+    description = aDescription + "deleting 'ab' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "[]"
+    description = aDescription + "deleting following 'c' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // XXX Making a block empty causes removing the block once.
+      //     However, after that, new block is inserted with <br>.
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\nc").length, addedLength: kLFLen * 2 });
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
+    }
+    checkPositionChangeNotification(notifications[1], description);
+    dumpUnexpectedNotifications(description, 2);
+
+    // "abc[]"
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    yield flushNotifications();
+
+    // "ab[]"
+    description = aDescription + "deleting 'c' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 1, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "[ab]"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "[]"
+    description = aDescription + "deleting 'ab' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "abcd[]"
+    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("d", { code: "KeyD" }, win, callback);
+    yield flushNotifications();
+
+    // "a[bc]d"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "a[]d"
+    description = aDescription + "deleting 'bc' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "a[bc]d"
+    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "aB[]d"
+    description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
+    notifications = [];
+    synthesizeKey("B", { code: "KeyB", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "aB<br>[]d" or "<block>ab</block><block>[]d</block>"
+    description = aDescription + "inserting a line break after 'B' with pressing Enter";
+    notifications = [];
+    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\naB").length, addedLength: getNativeText("\naB\n").length });
+    } else {
+      // Oddly, inserting <br> causes removing "aB" and inserting "ab<br>".
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: getNativeText("ab\n").length });
+    }
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("aB\n").length + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "aB[]d"
+    description = aDescription + "removing a line break after 'B' with pressing Backspace";
+    notifications = [];
+    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // Joining two blocks causes removing both block elements and inserting new block element.
+      checkTextChangeNotification(notifications[0], description, { offset: offsetAtContainer - kLFLen, removedLength: getNativeText("\naB\nd").length, addedLength: getNativeText("\naBd").length });
+      checkSelectionChangeNotification(notifications[1], description, { offset: 2 + offsetAtContainer, text: "" });
+      checkPositionChangeNotification(notifications[2], description);
+      dumpUnexpectedNotifications(description, 3);
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
+      todo_is(notifications.length, 3, description + " should cause 3 notifications");
+      todo_is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
+      todo_is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
+    }
+
+    // "a[B]d"
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield flushNotifications();
+
+    // "a<br>[]d" or "<block>a</block><block>[]d</block>"
+    description = aDescription + "replacing 'B' with a line break with pressing Enter";
+    notifications = [];
+    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // Splitting current block causes removing "<block>aB" and inserting "<block>aB</block><block>".
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\naB").length, addedLength: getNativeText("\na\n").length });
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
+    }
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("a\n").length + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "a[<br>]d" or "<block>a[</block><block>]d</block>"
+    description = aDescription + "selecting '\\n' with pressing Shift+ArrowLeft";
+    notifications = [];
+    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: kLF, reversed: true });
+    dumpUnexpectedNotifications(description, 1);
+
+    // "a[]d"
+    description = aDescription + "removing selected '\\n' with pressing Delete";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    if (isDefaultParagraphSeparatorBlock) {
+      // Joining the blocks causes removing "<block>a</block><block>d</block>" and inserting "<block>ad</block>".
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\na\nd").length, addedLength: getNativeText("\nad").length });
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
+    }
+    checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>"
+    description = aDescription + "inserting HTML which has nested block elements";
+    notifications = [];
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    // There is <br> after the end of the line.  Therefore, removed length includes a line breaker length.
+    if (isDefaultParagraphSeparatorBlock) {
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\nad\n").length, addedLength: getNativeText("\n1\n2\n345").length });
+    } else {
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2 + kLFLen, addedLength: getNativeText("\n1\n2\n345").length });
+    }
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1[<div>2<div>3</div>4</div>]5</div>" and removing selection
+    sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(2), 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>15</div>", description + " should remove '<div>2<div>3</div>4</div>'");
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1").length + offsetAtStart, removedLength: getNativeText("\n2\n34").length, addedLength: 0 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1[<div>2<div>3</div>]4</div>5</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
+    sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(1).childNodes.item(2), 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (partially #1) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>145</div>", description + " should remove '<div>2<div>3</div></div>'");
+    // It causes removing '<div>2<div>3</div>4</div>' and inserting '4'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1").length + offsetAtStart, removedLength: getNativeText("\n2\n34").length, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1[<div>2<div>]3</div>4</div>5</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
+    sel.setBaseAndExtent(aElement.firstChild.firstChild, 1, aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (partially #2) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>13<div>4</div>5</div>", description + " should remove '<div>2</div>'");
+    // It causes removing '1<div>2<div>3</div></div>' and inserting '13<div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: kLFLen + offsetAtStart, removedLength: getNativeText("1\n2\n3").length, addedLength: getNativeText("13\n").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2<div>3[</div>4</div>]5</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(2), 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (partially #3) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>2<div>35</div></div></div>", description + " should remove '4'");
+    // It causes removing '45' and inserting '5'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, removedLength: 2, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>"
+    description = aDescription + "inserting HTML which has a pair of nested block elements";
+    notifications = [];
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtStart, removedLength: getNativeText("\n1\n2\n35").length, addedLength: getNativeText("\n1\n2\n345\n6\n789").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2<div>3[</div>4</div>5<div>6<div>]7</div>8</div>9</div>" and removing selection
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).childNodes.item(1).firstChild, 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (between same level descendants) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>2<div>37</div></div><div>8</div>9</div>", description + " should remove '456<div>7'");
+    // It causes removing '<div>3</div>4</div>5<div>6<div>7</div>' and inserting '<div>37</div><div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1\n2").length + offsetAtStart, removedLength: getNativeText("\n345\n6\n7").length, addedLength: getNativeText("\n37\n").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2[<div>3</div>4</div>5<div>6<div>]7</div>8</div>9</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).childNodes.item(1).firstChild, 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (between different level descendants #1) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>27</div><div>8</div>9</div>", description + " should remove '<div>2<div>3</div>4</div>5<div>6<div>7</div>'");
+    // It causes removing '<div>2<div>3</div>4</div>5<div>6<div>7</div>' and inserting '<div>27</div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1").length + offsetAtStart, removedLength: getNativeText("\n2\n345\n6\n7").length, addedLength: getNativeText("\n27\n").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2[<div>3</div>4</div>5<div>6<div>7</div>8</div>]9</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(4), 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (between different level descendants #2) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>29</div></div>", description + " should remove '<div>3</div>4</div>5<div>6<div>7</div>8</div>'");
+    // It causes removing '<div>3</div>4</div>5</div>6<div>7</div>8</div>9' and inserting '9</div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1\n2").length + offsetAtStart, removedLength: getNativeText("\n345\n6\n789").length, addedLength: 1 });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2<div>3[</div>4</div>5<div>]6<div>7</div>8</div>9</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(3).firstChild, 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (between different level descendants #3) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>2<div>36<div>7</div>8</div></div>9</div>", description + " should remove '<div>36<div>7</div>8</div>'");
+    // It causes removing '<div>3</div>4</div>5<div>6<div>7</div>8</div>' and inserting '<div>36<div>7</div>8</div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1\n2").length + offsetAtStart, removedLength: getNativeText("\n345\n6\n78").length, addedLength: getNativeText("\n36\n78").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+
+    // "<div>1<div>2<div>3[</div>4</div>5<div>6<div>7</div>8</div>]9</div>" and removing selection
+    aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5<div>6<div>7</div>8</div>9</div>";
+    sel.setBaseAndExtent(aElement.firstChild.childNodes.item(1).childNodes.item(1).firstChild, 1, aElement.firstChild.childNodes.item(4), 0);
+    yield flushNotifications();
+    description = aDescription + "deleting child nodes (between different level descendants #4) with pressing Delete key";
+    notifications = [];
+    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    yield waitUntilNotificationsReceived();
+    ensureToRemovePrecedingPositionChangeNotification();
+    is(aElement.innerHTML, "<div>1<div>2<div>39</div></div></div>", description + " should remove '</div>4</div>5<div>6<div>7</div>8</div>'");
+    // It causes removing '</div>4</div>5<div>6<div>7</div>8</div>' and inserting '<div>36<div>7</div>8</div>'.
+    checkTextChangeNotification(notifications[0], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, removedLength: getNativeText("45\n6\n789").length, addedLength: getNativeText("9").length });
+    checkSelectionChangeNotification(notifications[1], description, { offset: getNativeText("\n1\n2\n3").length + offsetAtStart, text: "" });
+    checkPositionChangeNotification(notifications[2], description);
+    dumpUnexpectedNotifications(description, 3);
+  }
+
+  yield* testWithPlaintextEditor("runIMEContentObserverTest with input element: ", input, false);
+  yield* testWithPlaintextEditor("runIMEContentObserverTest with textarea element: ", textarea, true);
+  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is br): ", contenteditable, "br");
+  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is p): ", contenteditable, "p");
+  yield* testWithHTMLEditor("runIMEContentObserverTest with contenteditable (defaultParagraphSeparator is div): ", contenteditable, "div");
+  // XXX Due to the difference of HTML editor behavior between designMode and contenteditable,
+  //     testWithHTMLEditor() gets some unexpected behavior.  However, IMEContentObserveri is
+  //     not depend on editor's detail.  So, we should investigate this issue later.  It's not
+  //     so important for now.
+  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is br): ", iframe2.contentDocument.body, "br");
+  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is p): ", iframe2.contentDocument.body, "p");
+  // yield* testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
+}
+
+var gTestContinuation = null;
+
+function continueTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    finish();
+  }
+}
+
+function* testBody()
+{
   runUndoRedoTest();
   runCompositionCommitAsIsTest();
   runCompositionCommitTest();
@@ -7097,6 +7990,7 @@ function runTest()
   runQueryTextContentEventTest();
   runQueryIMESelectionTest();
   runQueryContentEventRelativeToInsertionPoint();
+  yield* runIMEContentObserverTest();
   runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();
@@ -7107,15 +8001,20 @@ function runTest()
   runNotRedundantChangeTest();
   runNativeLineBreakerTest();
   runControlCharTest();
-  runEditorReframeTests(function () {
-    runAsyncForceCommitTest(function () {
-      runRemoveContentTest(function () {
-        runFrameTest();
-        runPanelTest();
-        runMaxLengthTest();
-      });
-    });
-  });
+  yield* runEditorReframeTests();
+  yield runAsyncForceCommitTest();
+  yield runRemoveContentTest();
+  runFrameTest();
+  yield runPanelTest();
+  runMaxLengthTest();
+}
+
+function runTest()
+{
+  contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
+  windowOfContenteditable = document.getElementById("iframe4").contentWindow;
+  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+  continueTest();
 }
 
 ]]>

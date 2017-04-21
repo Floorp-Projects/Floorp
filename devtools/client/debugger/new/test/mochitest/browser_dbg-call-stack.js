@@ -54,6 +54,6 @@ add_task(function* () {
 
   button = toggleButton(dbg);
   frames = findAllElements(dbg, "frames");
-  is(button.innerText, "Collapse Rows", "toggle button should be collapse");
+  is(button.innerText, "Collapse Rows", "toggle button should be collapsed");
   is(frames.length, 22, "All of the frames should be shown");
 });

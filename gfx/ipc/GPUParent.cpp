@@ -234,9 +234,9 @@ GPUParent::RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 mozilla::ipc::IPCResult
-GPUParent::RecvInitUiCompositorController(Endpoint<PUiCompositorControllerParent>&& aEndpoint)
+GPUParent::RecvInitUiCompositorController(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
 {
-  UiCompositorControllerParent::Start(Move(aEndpoint));
+  UiCompositorControllerParent::Start(aRootLayerTreeId, Move(aEndpoint));
   return IPC_OK();
 }
 

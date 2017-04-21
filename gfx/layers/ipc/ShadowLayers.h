@@ -367,8 +367,6 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
-  void SetPaintSyncId(int32_t aSyncId) { mPaintSyncId = aSyncId; }
-
   void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
 
   static void PlatformSyncBeforeUpdate();
@@ -442,7 +440,6 @@ private:
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   bool mWindowOverlayChanged;
-  int32_t mPaintSyncId;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
   uint64_t mNextLayerHandle;

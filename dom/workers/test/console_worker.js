@@ -58,7 +58,7 @@ onmessage = function(event) {
   function testGroups() {
     console.groupCollapsed("a", "group");
     console.group("b", "group");
-    console.groupEnd("b", "group");
+    console.groupEnd();
   }
 
   foobar585956a('omg');

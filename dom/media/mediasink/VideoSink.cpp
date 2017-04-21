@@ -365,8 +365,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
       continue;
     }
 
-    int64_t frameTime = frame->mTime;
-    if (frameTime < 0) {
+    if (frame->mTime.IsNegative()) {
       // Frame times before the start time are invalid; drop such frames
       continue;
     }
@@ -374,7 +373,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
     TimeStamp t;
     if (aMaxFrames > 1) {
       MOZ_ASSERT(!aClockTimeStamp.IsNull());
-      int64_t delta = frame->mTime - aClockTime;
+      int64_t delta = frame->mTime.ToMicroseconds() - aClockTime;
       t = aClockTimeStamp +
           TimeDuration::FromMicroseconds(delta / params.mPlaybackRate);
       if (!lastFrameTime.IsNull() && t <= lastFrameTime) {
@@ -394,7 +393,8 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
     img->mProducerID = mProducerID;
 
     VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%" PRIuSIZE ")",
-                frame->mTime, frame->mFrameID, VideoQueue().GetSize());
+                frame->mTime.ToMicroseconds(), frame->mFrameID,
+                VideoQueue().GetSize());
   }
 
   if (images.Length() > 0) {
@@ -424,7 +424,7 @@ VideoSink::UpdateRenderedVideoFrames()
     } else {
       mFrameStats.NotifyDecodedFrames({ 0, 0, 1 });
       VSINK_LOG_V("discarding video frame mTime=%" PRId64 " clock_time=%" PRId64,
-                  frame->mTime, clockTime.ToMicroseconds());
+                  frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
     }
   }
 
@@ -450,7 +450,7 @@ VideoSink::UpdateRenderedVideoFrames()
     return;
   }
 
-  int64_t nextFrameTime = frames[1]->mTime;
+  int64_t nextFrameTime = frames[1]->mTime.ToMicroseconds();
   int64_t delta = std::max(
     nextFrameTime - clockTime.ToMicroseconds(), MIN_UPDATE_INTERVAL_US);
   TimeStamp target = nowTime + TimeDuration::FromMicroseconds(

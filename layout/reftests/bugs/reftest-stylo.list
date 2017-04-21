@@ -461,7 +461,7 @@ fails == 345267-1a.html 345267-1a.html
 fails == 345267-1b.html 345267-1b.html
 fails == 345267-1c.html 345267-1c.html
 fails == 345267-1d.html 345267-1d.html
-fails == 345563-sub.xhtml 345563-sub.xhtml
+== 345563-sub.xhtml 345563-sub.xhtml
 == 346189-1.xul 346189-1.xul
 fails == 346774-1a.html 346774-1a.html
 fails == 346774-1b.html 346774-1b.html
@@ -981,7 +981,7 @@ fails == 412352-2.html 412352-2.html
 fails == 413840-pushed-line-bullet.html 413840-pushed-line-bullet.html
 == 413840-bullet-first-line.html 413840-bullet-first-line.html
 == 413982.html 413982.html
-fails == 414123.xhtml 414123.xhtml
+== 414123.xhtml 414123.xhtml
 == 414638.html 414638.html
 fails == 414851-1.html 414851-1.html
 fails == 416106-1.xhtml 416106-1.xhtml
