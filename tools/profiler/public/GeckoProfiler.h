@@ -289,8 +289,8 @@ PROFILER_FUNC(bool profiler_thread_is_sleeping(), false)
 // not.
 PROFILER_FUNC_VOID(profiler_js_interrupt_callback())
 
-// Gets the time since the last profiler_init() or profiler_start() call.
-// Operates the same whether the profiler is active or inactive.
+// The number of milliseconds since the process started. Operates the same
+// whether the profiler is active or inactive.
 PROFILER_FUNC(double profiler_time(), 0)
 
 PROFILER_FUNC_VOID(profiler_log(const char *str))
