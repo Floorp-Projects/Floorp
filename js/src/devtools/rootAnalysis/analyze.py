@@ -108,7 +108,7 @@ def generate_hazards(config, outfilename):
         subprocess.call(command, stdout=output)
 
 JOBS = { 'dbs':
-             (('%(ANALYSIS_SCRIPTDIR)s/run_complete',
+             (('%(analysis_scriptdir)s/run_complete',
                '--foreground',
                '--no-logs',
                '--build-root=%(objdir)s',
@@ -205,9 +205,9 @@ def run_job(name, config):
                 print("Error renaming %s -> %s" % (temp, final))
                 raise
 
-config = { 'ANALYSIS_SCRIPTDIR': os.path.dirname(__file__) }
+config = { 'analysis_scriptdir': os.path.dirname(__file__) }
 
-defaults = [ '%s/defaults.py' % config['ANALYSIS_SCRIPTDIR'],
+defaults = [ '%s/defaults.py' % config['analysis_scriptdir'],
              '%s/defaults.py' % os.getcwd() ]
 
 parser = argparse.ArgumentParser(description='Statically analyze build tree for rooting hazards.')
@@ -270,9 +270,14 @@ if 'ANALYZED_OBJDIR' in os.environ:
 
 if 'SOURCE' in os.environ:
     data['source'] = os.environ['SOURCE']
-if not data.get('source') and data.get('sixgill_bin'):
-    path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp']).decode()
-    data['source'] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
+
+if data.get('sixgill_bin'):
+    if not data.get('source'):
+        path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp']).decode()
+        data['source'] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
+    if not data.get('objdir'):
+        path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.h']).decode()
+        data['objdir'] = path.replace("\n", "").replace("/jsapi.h", "")
 
 steps = [ 'dbs',
           'gcTypes',
