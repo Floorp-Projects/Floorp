@@ -893,7 +893,8 @@ imgCacheEntry::imgCacheEntry(imgLoader* loader, imgRequest* request,
    // will set this to false.
    mEvicted(true),
    mHasNoProxies(true),
-   mForcePrincipalCheck(forcePrincipalCheck)
+   mForcePrincipalCheck(forcePrincipalCheck),
+   mInUse(false)
 { }
 
 imgCacheEntry::~imgCacheEntry()
@@ -1914,6 +1915,10 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 
   RefPtr<imgCacheEntry> entry;
   if (cache.Get(aKey, getter_AddRefs(entry)) && entry) {
+    if (MOZ_UNLIKELY(entry->GetInUse())) {
+      gfxCriticalNoteOnce << "RemoveFromCache(key) removing inuse cache entry";
+    }
+
     cache.Remove(aKey);
 
     MOZ_ASSERT(!entry->Evicted(), "Evicting an already-evicted cache entry!");
@@ -1953,6 +1958,10 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
     LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                                "imgLoader::RemoveFromCache", "entry's uri",
                                key.Spec());
+
+    if (MOZ_UNLIKELY(entry->GetInUse())) {
+      gfxCriticalNoteOnce << "RemoveFromCache(entry) removing inuse cache entry";
+    }
 
     cache.Remove(key);
 
@@ -2183,6 +2192,7 @@ imgLoader::LoadImage(nsIURI* aURI,
   imgCacheTable& cache = GetCache(key);
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+    entry->SetInUse(true);
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
                       aReferrerPolicy, aLoadGroup, aObserver, aLoadingDocument,
                       requestFlags, aContentPolicyType, true, _retval,
@@ -2220,7 +2230,11 @@ imgLoader::LoadImage(nsIURI* aURI,
 
       entry->Touch();
 
+      entry->SetInUse(false);
+
     } else {
+      entry->SetInUse(false);
+
       // We can't use this entry. We'll try to load it off the network, and if
       // successful, overwrite the old entry in the cache with a new one.
       entry = nullptr;
@@ -2426,6 +2440,8 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // of post data.
     imgCacheTable& cache = GetCache(key);
     if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+      entry->SetInUse(true);
+
       // We don't want to kick off another network load. So we ask
       // ValidateEntry to only do validation without creating a new proxy. If
       // it says that the entry isn't valid any more, we'll only use the entry
@@ -2460,6 +2476,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
         }
 
         if (!bUseCacheCopy) {
+          entry->SetInUse(false);
           entry = nullptr;
         } else {
           request = entry->GetRequest();
@@ -2481,6 +2498,9 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
             mCacheTracker->MarkUsed(entry);
           }
         }
+      }
+      if (entry) {
+        entry->SetInUse(false);
       }
     }
   }
