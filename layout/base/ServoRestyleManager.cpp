@@ -55,6 +55,10 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
+  if (aRestyleHint & ~eRestyle_AllHintsWithAnimations) {
+    mHaveNonAnimationRestyles = true;
+  }
+
   Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
 }
 
@@ -70,6 +74,8 @@ ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
   StyleSet()->RebuildData();
+
+  mHaveNonAnimationRestyles = true;
 
   // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems
   // not to be needed in my testing.
@@ -387,6 +393,9 @@ ServoRestyleManager::ProcessPendingRestyles()
   // in a loop because certain rare paths in the frame constructor (like
   // uninstalling XBL bindings) can trigger additional style validations.
   mInStyleRefresh = true;
+  if (mHaveNonAnimationRestyles) {
+    ++mAnimationGeneration;
+  }
   while (styleSet->StyleDocument()) {
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
@@ -419,6 +428,7 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   FlushOverflowChangedTracker();
 
+  mHaveNonAnimationRestyles = false;
   mInStyleRefresh = false;
   styleSet->AssertTreeIsClean();
 
