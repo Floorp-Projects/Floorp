@@ -505,9 +505,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
         // When loading from the bytecode cache, we get the CompileOption from
         // the document, which specify the version to use. If the version does
-        // not match, then we should fail.
+        // not match, then we should fail. This only applies to the top-level,
+        // and not its inner functions.
         mozilla::Maybe<CompileOptions> options;
-        if (xdr->hasOptions()) {
+        if (xdr->hasOptions() && (scriptBits & (1 << OwnSource))) {
             options.emplace(xdr->cx(), xdr->options());
             if (options->version != version_ ||
                 options->noScriptRval != !!(scriptBits & (1 << NoScriptRval)) ||
@@ -516,9 +517,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                 return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
             }
         } else {
-            options.emplace(xdr->cx());
-            (*options).setVersion(version_)
-                      .setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
+            options.emplace(xdr->cx(), version_);
+            (*options).setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
                       .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
         }
 
