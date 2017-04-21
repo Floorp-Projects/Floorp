@@ -5350,20 +5350,29 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
+  bool addedScrollingBackgroundColor = false;
   if (!aFrame->GetParent()) {
     nsIScrollableFrame* sf =
       aFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
-        if (AddCanvasBackgroundColor(aList, canvasFrame, bgcolor, mHasCSSBackgroundColor))
-          return;
+        addedScrollingBackgroundColor =
+          AddCanvasBackgroundColor(aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
     }
   }
 
-  aList.AppendNewToBottom(
-    new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+  if (!addedScrollingBackgroundColor ||
+      (nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255)) {
+    // With async scrolling, we'd like to have two instances of the background
+    // color: one that scrolls with the content (for the reasons stated above),
+    // and one underneath which does not scroll with the content, but which can
+    // be shown during checkerboarding and overscroll.
+    // We can only do that if the color is opaque.
+    aList.AppendNewToBottom(
+      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+  }
 }
 
 static bool IsTransparentContainerElement(nsPresContext* aPresContext)

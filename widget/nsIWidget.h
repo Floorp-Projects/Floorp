@@ -42,6 +42,11 @@ class   nsIRunnable;
 class   nsIKeyEventInPluginCallback;
 
 namespace mozilla {
+#if defined(MOZ_WIDGET_ANDROID)
+namespace ipc {
+class Shmem;
+}
+#endif // defined(MOZ_WIDGET_ANDROID)
 namespace dom {
 class TabChild;
 } // namespace dom
@@ -358,6 +363,9 @@ class nsIWidget : public nsISupports
     typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
     typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
     typedef mozilla::ScreenIntPoint ScreenIntPoint;
+    typedef mozilla::ScreenIntSize ScreenIntSize;
+    typedef mozilla::ScreenPoint ScreenPoint;
+    typedef mozilla::CSSToScreenScale CSSToScreenScale;
     typedef mozilla::DesktopIntRect DesktopIntRect;
     typedef mozilla::CSSRect CSSRect;
 
@@ -2009,6 +2017,32 @@ public:
                    const bool aIsVertical,
                    const LayoutDeviceIntPoint& aPoint)
     { }
+
+#if defined(MOZ_WIDGET_ANDROID)
+    /**
+     * RecvToolbarAnimatorMessageFromCompositor receive message from compositor thread.
+     *
+     * @param aMessage message being sent to Android UI thread.
+     */
+    virtual void RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage) = 0;
+
+    /**
+     * UpdateRootFrameMetrics steady state frame metrics send from compositor thread
+     *
+     * @param aScrollOffset  page scroll offset value in screen pixels.
+     * @param aZoom          current page zoom.
+     * @param aPage          bounds of the page in CSS coordinates.
+     */
+    virtual void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage) = 0;
+
+    /**
+     * RecvScreenPixels Buffer containing the pixel from the frame buffer. Used for android robocop tests.
+     *
+     * @param aMem  shared memory containing the frame buffer pixels.
+     * @param aSize size of the buffer in screen pixels.
+     */
+    virtual void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize) = 0;
+#endif
 
 protected:
     /**

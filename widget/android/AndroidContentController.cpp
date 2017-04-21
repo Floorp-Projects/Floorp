@@ -26,64 +26,6 @@ AndroidContentController::Destroy()
 }
 
 void
-AndroidContentController::DispatchSingleTapToObservers(const LayoutDevicePoint& aPoint,
-                                                       const ScrollableLayerGuid& aGuid) const
-{
-    nsIContent* content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
-    nsPresContext* context = content
-        ? mozilla::layers::APZCCallbackHelper::GetPresContextForContent(content)
-        : nullptr;
-
-    if (!context) {
-      return;
-    }
-
-    CSSPoint point = mozilla::layers::APZCCallbackHelper::ApplyCallbackTransform(
-        aPoint / context->CSSToDevPixelScale(), aGuid);
-
-    nsPresContext* rcdContext = context->GetToplevelContentDocumentPresContext();
-    if (rcdContext && rcdContext->PresShell()->ScaleToResolution()) {
-        // We need to convert from the root document to the root content document,
-        // by unapplying the resolution that's on the content document.
-        const float resolution = rcdContext->PresShell()->GetResolution();
-        point.x /= resolution;
-        point.y /= resolution;
-    }
-
-    CSSIntPoint rounded = RoundedToInt(point);
-    nsAppShell::PostEvent([rounded] {
-        nsCOMPtr<nsIObserverService> obsServ =
-            mozilla::services::GetObserverService();
-        if (!obsServ) {
-            return;
-        }
-
-        nsPrintfCString data("{\"x\":%d,\"y\":%d}", rounded.x, rounded.y);
-        obsServ->NotifyObservers(nullptr, "Gesture:SingleTap",
-                                 NS_ConvertASCIItoUTF16(data).get());
-    });
-}
-
-void
-AndroidContentController::HandleTap(TapType aType, const LayoutDevicePoint& aPoint,
-                                    Modifiers aModifiers,
-                                    const ScrollableLayerGuid& aGuid,
-                                    uint64_t aInputBlockId)
-{
-    // This function will get invoked first on the Java UI thread, and then
-    // again on the main thread (because of the code in ChromeProcessController::
-    // HandleTap). We want to post the SingleTap message once; it can be
-    // done from either thread but we need access to the callback transform
-    // so we do it from the main thread.
-    if (NS_IsMainThread() &&
-        (aType == TapType::eSingleTap || aType == TapType::eSecondTap)) {
-        DispatchSingleTapToObservers(aPoint, aGuid);
-    }
-
-    ChromeProcessController::HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
-}
-
-void
 AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY, const bool aIsRootContent)
 {
   if (aIsRootContent && mAndroidWindow) {
@@ -96,14 +38,6 @@ AndroidContentController::UpdateOverscrollOffset(const float aX, const float aY,
 {
   if (aIsRootContent && mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
-  }
-}
-
-void
-AndroidContentController::SetScrollingRootContent(const bool isRootContent)
-{
-  if (mAndroidWindow) {
-    mAndroidWindow->SetScrollingRootContent(isRootContent);
   }
 }
 

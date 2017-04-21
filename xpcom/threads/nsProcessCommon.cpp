@@ -241,7 +241,7 @@ nsProcess::Monitor(void* aArg)
   RefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
 
   if (!process->mBlocking) {
-    PR_SetCurrentThreadName("RunProcess");
+    NS_SetCurrentThreadName("RunProcess");
     profiler_register_thread("RunProcess", &stackBaseGuess);
   }
 

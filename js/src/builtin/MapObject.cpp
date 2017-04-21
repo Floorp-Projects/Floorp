@@ -783,7 +783,10 @@ MapObject::iterator(JSContext* cx, IteratorKind kind,
 {
     ValueMap& map = extract(obj);
     Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, obj, &map, kind));
-    return iterobj && (iter.setObject(*iterobj), true);
+    if (!iterobj)
+        return false;
+    iter.setObject(*iterobj);
+    return true;
 }
 
 bool
@@ -1368,7 +1371,10 @@ SetObject::iterator(JSContext *cx, IteratorKind kind,
     MOZ_ASSERT(SetObject::is(obj));
     ValueSet &set = extract(obj);
     Rooted<JSObject*> iterobj(cx, SetIteratorObject::create(cx, obj, &set, kind));
-    return iterobj && (iter.setObject(*iterobj), true);
+    if (!iterobj)
+        return false;
+    iter.setObject(*iterobj);
+    return true;
 }
 
 bool

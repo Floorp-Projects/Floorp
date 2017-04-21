@@ -388,8 +388,6 @@ var BrowserApp = {
 
     BrowserEventHandler.init();
 
-    ViewportHandler.init();
-
     Services.androidBridge.browserApp = this;
 
     GlobalEventDispatcher.registerListener(this, [
@@ -559,7 +557,6 @@ var BrowserApp = {
       // We do this at startup because we want to move away from "gather-telemetry" (bug 1127907)
       InitLater(() => {
         Telemetry.addData("FENNEC_TRACKING_PROTECTION_STATE", parseInt(BrowserApp.getTrackingProtectionState()));
-        Telemetry.addData("ZOOMED_VIEW_ENABLED", Services.prefs.getBoolPref("ui.zoomedview.enabled"));
       });
 
       InitLater(() => LightWeightThemeWebInstaller.init());
@@ -4511,8 +4508,6 @@ Tab.prototype = {
 
     GlobalEventDispatcher.sendRequest(message);
 
-    BrowserEventHandler.closeZoomedView();
-
     notifyManifestStatus(this.browser);
 
     if (!sameDocument) {
@@ -4732,10 +4727,6 @@ Tab.prototype = {
 
 var BrowserEventHandler = {
   init: function init() {
-    this._clickInZoomedView = false;
-    Services.obs.addObserver(this, "Gesture:SingleTap");
-    Services.obs.addObserver(this, "Gesture:ClickInZoomedView");
-
     BrowserApp.deck.addEventListener("touchend", this, true);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport);
@@ -4811,73 +4802,6 @@ var BrowserEventHandler = {
       } catch (e) {}
     }
     return null;
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    // the remaining events are all dependent on the browser content document being the
-    // same as the browser displayed document. if they are not the same, we should ignore
-    // the event.
-    if (BrowserApp.isBrowserContentDocumentDisplayed()) {
-      this.handleUserEvent(aTopic, aData);
-    }
-  },
-
-  handleUserEvent: function(aTopic, aData) {
-    switch (aTopic) {
-
-      case "Gesture:ClickInZoomedView":
-        this._clickInZoomedView = true;
-        break;
-
-      case "Gesture:SingleTap": {
-        let focusedElement = BrowserApp.getFocusedInput(BrowserApp.selectedBrowser);
-        let data = JSON.parse(aData);
-        let {x, y} = data;
-
-        if (this._inCluster && this._clickInZoomedView != true) {
-          // If there is a focused element, the display of the zoomed view won't remove the focus.
-          // In this case, the form assistant linked to the focused element will never be closed.
-          // To avoid this situation, the focus is moved and the form assistant is closed.
-          if (focusedElement) {
-            try {
-              Services.focus.moveFocus(BrowserApp.selectedBrowser.contentWindow, null, Services.focus.MOVEFOCUS_ROOT, 0);
-            } catch(e) {
-              Cu.reportError(e);
-            }
-            WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
-          }
-          this._clusterClicked(x, y);
-        } else {
-          if (this._clickInZoomedView != true) {
-            this.closeZoomedView(/* animate */ true);
-          }
-        }
-        this._clickInZoomedView = false;
-        this._cancelTapHighlight();
-        break;
-      }
-
-      default:
-        dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
-        break;
-    }
-  },
-
-  closeZoomedView: function(aAnimate) {
-    WindowEventDispatcher.sendRequest({
-      type: "Gesture:CloseZoomedView",
-      animate: !!aAnimate,
-    });
-  },
-
-  _clusterClicked: function(aX, aY) {
-    WindowEventDispatcher.sendRequest({
-      type: "Gesture:ClusteredLinksClicked",
-      clickPosition: {
-        x: aX,
-        y: aY
-      }
-    });
   },
 
   _highlightElement: null,
@@ -5651,19 +5575,6 @@ var XPInstallObserver = {
 
   hideRestartPrompt: function() {
     NativeWindow.doorhanger.hide("addon-app-restart", BrowserApp.selectedTab.id);
-  }
-};
-
-var ViewportHandler = {
-  init: function init() {
-    GlobalEventDispatcher.registerListener(this, "Window:Resize");
-  },
-
-  onEvent: function (event, data, callback) {
-    if (event == "Window:Resize" && data) {
-      let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      windowUtils.setNextPaintSyncId(data.id);
-    }
   }
 };
 

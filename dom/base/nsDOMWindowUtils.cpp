@@ -4152,21 +4152,6 @@ nsDOMWindowUtils::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetNextPaintSyncId(int32_t aSyncId)
-{
-  if (nsIWidget* widget = GetWidget()) {
-    RefPtr<LayerManager> lm = widget->GetLayerManager();
-    if (lm && lm->AsClientLayerManager()) {
-      lm->AsClientLayerManager()->SetNextPaintSyncId(aSyncId);
-      return NS_OK;
-    }
-  }
-
-  NS_WARNING("Paint sync id could not be set on the ClientLayerManager");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::RespectDisplayPortSuppression(bool aEnabled)
 {
   nsCOMPtr<nsIPresShell> shell(GetPresShell());

@@ -1085,14 +1085,6 @@ auto GeckoLayerClient::ContentDocumentChanged() const -> void
     return mozilla::jni::Method<ContentDocumentChanged_t>::Call(GeckoLayerClient::mCtx, nullptr);
 }
 
-constexpr char GeckoLayerClient::CreateFrame_t::name[];
-constexpr char GeckoLayerClient::CreateFrame_t::signature[];
-
-auto GeckoLayerClient::CreateFrame() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<CreateFrame_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::name[];
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::signature[];
 
@@ -1107,22 +1099,6 @@ constexpr char GeckoLayerClient::OnGeckoReady_t::signature[];
 auto GeckoLayerClient::OnGeckoReady() const -> void
 {
     return mozilla::jni::Method<OnGeckoReady_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
-constexpr char GeckoLayerClient::SetFirstPaintViewport_t::name[];
-constexpr char GeckoLayerClient::SetFirstPaintViewport_t::signature[];
-
-auto GeckoLayerClient::SetFirstPaintViewport(float a0, float a1, float a2, float a3, float a4, float a5, float a6) const -> void
-{
-    return mozilla::jni::Method<SetFirstPaintViewport_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
-}
-
-constexpr char GeckoLayerClient::SyncFrameMetrics_t::name[];
-constexpr char GeckoLayerClient::SyncFrameMetrics_t::signature[];
-
-auto GeckoLayerClient::SyncFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, float a11, bool a12, int32_t a13) const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<SyncFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
 }
 
 constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::name[];
@@ -1141,17 +1117,12 @@ auto GeckoLayerClient::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_
     return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
 }
 
-constexpr char GeckoLayerClient::ClearColor_t::name[];
-constexpr char GeckoLayerClient::ClearColor_t::signature[];
+constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::name[];
+constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::signature[];
 
-auto GeckoLayerClient::ClearColor() const -> int32_t
+auto GeckoLayerClient::UpdateRootFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6) const -> void
 {
-    return mozilla::jni::Field<ClearColor_t>::Get(GeckoLayerClient::mCtx, nullptr);
-}
-
-auto GeckoLayerClient::ClearColor(int32_t a0) const -> void
-{
-    return mozilla::jni::Field<ClearColor_t>::Set(GeckoLayerClient::mCtx, nullptr, a0);
+    return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
 const char ImmutableViewportMetrics::name[] =
@@ -1165,28 +1136,6 @@ auto ImmutableViewportMetrics::New(float a0, float a1, float a2, float a3, float
     return mozilla::jni::Constructor<New_t>::Call(ImmutableViewportMetrics::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
 }
 
-const char LayerRenderer::name[] =
-        "org/mozilla/gecko/gfx/LayerRenderer";
-
-const char LayerRenderer::Frame::name[] =
-        "org/mozilla/gecko/gfx/LayerRenderer$Frame";
-
-constexpr char LayerRenderer::Frame::BeginDrawing_t::name[];
-constexpr char LayerRenderer::Frame::BeginDrawing_t::signature[];
-
-auto LayerRenderer::Frame::BeginDrawing() const -> void
-{
-    return mozilla::jni::Method<BeginDrawing_t>::Call(Frame::mCtx, nullptr);
-}
-
-constexpr char LayerRenderer::Frame::EndDrawing_t::name[];
-constexpr char LayerRenderer::Frame::EndDrawing_t::signature[];
-
-auto LayerRenderer::Frame::EndDrawing() const -> void
-{
-    return mozilla::jni::Method<EndDrawing_t>::Call(Frame::mCtx, nullptr);
-}
-
 const char LayerView::name[] =
         "org/mozilla/gecko/gfx/LayerView";
 
@@ -1196,14 +1145,6 @@ constexpr char LayerView::GetCompositor_t::signature[];
 auto LayerView::GetCompositor() const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<GetCompositor_t>::Call(LayerView::mCtx, nullptr);
-}
-
-constexpr char LayerView::UpdateZoomedView_t::name[];
-constexpr char LayerView::UpdateZoomedView_t::signature[];
-
-auto LayerView::UpdateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
-{
-    return mozilla::jni::Method<UpdateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
 }
 
 constexpr char LayerView::CompositorCreated_t::name[];
@@ -1239,6 +1180,9 @@ auto LayerView::Compositor::Destroy() const -> void
 constexpr char LayerView::Compositor::DisposeNative_t::name[];
 constexpr char LayerView::Compositor::DisposeNative_t::signature[];
 
+constexpr char LayerView::Compositor::EnableLayerUpdateNotifications_t::name[];
+constexpr char LayerView::Compositor::EnableLayerUpdateNotifications_t::signature[];
+
 constexpr char LayerView::Compositor::OnSizeChanged_t::name[];
 constexpr char LayerView::Compositor::OnSizeChanged_t::signature[];
 
@@ -1249,6 +1193,40 @@ auto LayerView::Compositor::Reattach() const -> void
 {
     return mozilla::jni::Method<Reattach_t>::Call(Compositor::mCtx, nullptr);
 }
+
+constexpr char LayerView::Compositor::RecvScreenPixels_t::name[];
+constexpr char LayerView::Compositor::RecvScreenPixels_t::signature[];
+
+auto LayerView::Compositor::RecvScreenPixels(int32_t a0, int32_t a1, mozilla::jni::IntArray::Param a2) const -> void
+{
+    return mozilla::jni::Method<RecvScreenPixels_t>::Call(Compositor::mCtx, nullptr, a0, a1, a2);
+}
+
+constexpr char LayerView::Compositor::RecvToolbarAnimatorMessage_t::name[];
+constexpr char LayerView::Compositor::RecvToolbarAnimatorMessage_t::signature[];
+
+auto LayerView::Compositor::RecvToolbarAnimatorMessage(int32_t a0) const -> void
+{
+    return mozilla::jni::Method<RecvToolbarAnimatorMessage_t>::Call(Compositor::mCtx, nullptr, a0);
+}
+
+constexpr char LayerView::Compositor::RequestScreenPixels_t::name[];
+constexpr char LayerView::Compositor::RequestScreenPixels_t::signature[];
+
+constexpr char LayerView::Compositor::SendToolbarAnimatorMessage_t::name[];
+constexpr char LayerView::Compositor::SendToolbarAnimatorMessage_t::signature[];
+
+constexpr char LayerView::Compositor::SendToolbarPixelsToCompositor_t::name[];
+constexpr char LayerView::Compositor::SendToolbarPixelsToCompositor_t::signature[];
+
+constexpr char LayerView::Compositor::SetDefaultClearColor_t::name[];
+constexpr char LayerView::Compositor::SetDefaultClearColor_t::signature[];
+
+constexpr char LayerView::Compositor::SetMaxToolbarHeight_t::name[];
+constexpr char LayerView::Compositor::SetMaxToolbarHeight_t::signature[];
+
+constexpr char LayerView::Compositor::SetPinned_t::name[];
+constexpr char LayerView::Compositor::SetPinned_t::signature[];
 
 constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::name[];
 constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::signature[];
@@ -1261,9 +1239,6 @@ constexpr char LayerView::Compositor::SyncResumeResizeCompositor_t::signature[];
 
 const char NativePanZoomController::name[] =
         "org/mozilla/gecko/gfx/NativePanZoomController";
-
-constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::name[];
-constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::signature[];
 
 constexpr char NativePanZoomController::Destroy_t::name[];
 constexpr char NativePanZoomController::Destroy_t::signature[];
@@ -1278,9 +1253,6 @@ constexpr char NativePanZoomController::DisposeNative_t::signature[];
 
 constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
-
-constexpr char NativePanZoomController::HandleMotionEventVelocity_t::name[];
-constexpr char NativePanZoomController::HandleMotionEventVelocity_t::signature[];
 
 constexpr char NativePanZoomController::HandleMouseEvent_t::name[];
 constexpr char NativePanZoomController::HandleMouseEvent_t::signature[];
@@ -1297,14 +1269,6 @@ constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
 auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
 {
     return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
-}
-
-constexpr char NativePanZoomController::SetScrollingRootContent_t::name[];
-constexpr char NativePanZoomController::SetScrollingRootContent_t::signature[];
-
-auto NativePanZoomController::SetScrollingRootContent(bool a0) const -> void
-{
-    return mozilla::jni::Method<SetScrollingRootContent_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
 }
 
 constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];

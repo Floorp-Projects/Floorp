@@ -2414,7 +2414,7 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
                 double upperIndex = double(last) + args.length();
                 RootedValue value(cx);
                 do {
-                    --last, --upperIndex;
+                    --last; --upperIndex;
                     if (!CheckForInterrupt(cx))
                         return false;
                     bool hole;

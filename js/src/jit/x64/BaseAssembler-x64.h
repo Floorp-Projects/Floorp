@@ -621,7 +621,7 @@ class BaseAssemblerX64 : public BaseAssembler
 
     void leaq_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
     {
-        spew("leaq       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg64Name(dst)),
+        spew("leaq       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg64Name(dst));
         m_formatter.oneByteOp64(OP_LEA, offset, base, index, scale, dst);
     }
 

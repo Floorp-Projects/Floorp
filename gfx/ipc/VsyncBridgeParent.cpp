@@ -25,6 +25,7 @@ VsyncBridgeParent::VsyncBridgeParent()
  : mOpen(false)
 {
   MOZ_COUNT_CTOR(VsyncBridgeParent);
+  mCompositorThreadRef = CompositorThreadHolder::GetSingleton();
 }
 
 VsyncBridgeParent::~VsyncBridgeParent()
@@ -75,6 +76,7 @@ void
 VsyncBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   mOpen = false;
+  mCompositorThreadRef = nullptr;
 }
 
 void
