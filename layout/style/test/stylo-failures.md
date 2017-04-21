@@ -155,7 +155,6 @@ to mochitest command.
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
-    * test_property_syntax_errors.html `place-` [0]
     * test_align_shorthand_serialization.html [8]
     * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
@@ -244,9 +243,6 @@ to mochitest command.
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
-    * test_priority_preservation.html `border-radius` [0]
-    * test_value_storage.html `border-radius:` [0]
-    * test_shorthand_property_getters.html `should condense to shortest possible` [0]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
