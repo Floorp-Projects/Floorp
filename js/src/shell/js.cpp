@@ -4205,13 +4205,12 @@ StackDump(JSContext* cx, unsigned argc, Value* vp)
     bool showLocals = ToBoolean(args.get(1));
     bool showThisProps = ToBoolean(args.get(2));
 
-    char* buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf) {
         fputs("Failed to format JavaScript stack for dump\n", gOutFile->fp);
         JS_ClearPendingException(cx);
     } else {
-        fputs(buf, gOutFile->fp);
-        JS_smprintf_free(buf);
+        fputs(buf.get(), gOutFile->fp);
     }
 
     args.rval().setUndefined();
