@@ -7783,8 +7783,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.appearance.enabled")) {
     domProp: "appearance",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "none" ],
+    initial_values: [ "none" ],
+    other_values: [ "auto" ],
     invalid_values: [ "button" ]
   };
   gCSSProperties["-webkit-appearance"] = {
