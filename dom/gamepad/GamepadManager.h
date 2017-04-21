@@ -57,29 +57,6 @@ class GamepadManager final : public nsIObserver,
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType);
 
-  // Update the state of |aButton| for the gamepad at |aIndex| for all
-  // windows that are listening and visible, and fire one of
-  // a gamepadbutton{up,down} event at them as well.
-  // aPressed is used for digital buttons, aValue is for analog buttons.
-  void NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType, uint32_t aButton,
-                      bool aPressed, bool aTouched, double aValue);
-
-  // Update the state of |aAxis| for the gamepad at |aIndex| for all
-  // windows that are listening and visible, and fire a gamepadaxismove
-  // event at them as well.
-  void NewAxisMoveEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                        uint32_t aAxis, double aValue);
-
-  // Update the state of |aState| for the gamepad at |aIndex| for all
-  // windows that are listening and visible.
-  void NewPoseEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                    const GamepadPoseState& aState);
-
-  // Update the hand of |aHand| for the gamepad at |aIndex| for all
-  // windows that are listening and visible.
-  void NewHandChangeEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                          GamepadHand aHand);
-
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
   void SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad);
 
@@ -140,6 +117,11 @@ class GamepadManager final : public nsIObserver,
  private:
 
   nsresult Init();
+
+  void MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& aEvent,
+                                             nsGlobalWindow* aWindow);
+
+  bool SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindow* aWindow = nullptr);
 
   bool MaybeWindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aIndex);
   // Returns true if we have already sent data from this gamepad
