@@ -95,6 +95,7 @@ DMDBridge::GetDMDFuncs()
   return &gDMDFuncs;
 }
 
+MOZ_FORMAT_PRINTF(1, 2)
 inline void
 StatusMsg(const char* aFmt, ...)
 {
@@ -1585,7 +1586,7 @@ Init(const malloc_table_t* aMallocTable)
   if (e) {
     StatusMsg("$DMD = '%s'\n", e);
   } else {
-    StatusMsg("$DMD is undefined\n", e);
+    StatusMsg("$DMD is undefined\n");
   }
 
   // Parse $DMD env var.
