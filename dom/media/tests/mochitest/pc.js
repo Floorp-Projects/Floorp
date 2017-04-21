@@ -818,6 +818,23 @@ function PeerConnectionWrapper(label, configuration) {
 }
 
 PeerConnectionWrapper.prototype = {
+  /**
+   * Returns the senders
+   *
+   * @returns {sequence<RTCRtpSender>} the senders
+   */
+  getSenders: function() {
+    return this._pc.getSenders();
+  },
+
+  /**
+   * Returns the getters
+   *
+   * @returns {sequence<RTCRtpReceiver>} the receivers
+   */
+  getReceivers: function() {
+    return this._pc.getReceivers();
+  },
 
   /**
    * Returns the local description.
@@ -1479,6 +1496,47 @@ PeerConnectionWrapper.prototype = {
           .map(e => this.waitForMediaElementFlow(e)),
       this._pc.getSenders().map(sender => this.waitForRtpFlow(sender.track)),
       this._pc.getReceivers().map(receiver => this.waitForRtpFlow(receiver.track))));
+  },
+
+  async waitForSyncedRtcp() {
+    // Ensures that RTCP is present
+    let ensureSyncedRtcp = async () => {
+      let report = await this._pc.getStats();
+      for (let [k, v] of report) {
+        if (v.type.endsWith("bound-rtp") && !v.remoteId) {
+          info(v.id + " is missing remoteId: " + JSON.stringify(v));
+          return null;
+        }
+        if (v.type == "inbound-rtp" && v.isRemote == true
+            && v.roundTripTime === undefined) {
+          info(v.id + " is missing roundTripTime: " + JSON.stringify(v));
+          return null;
+        }
+      }
+      return report;
+    }
+    let attempts = 0;
+    // Time-units are MS
+    const waitPeriod = 500;
+    const maxTime = 15000;
+    for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
+      try {
+        let syncedStats = await ensureSyncedRtcp();
+        if (syncedStats) {
+          return syncedStats;
+        }
+      } catch (e) {
+          info(e);
+          info(e.stack);
+          throw e;
+      }
+      attempts += 1;
+      info("waitForSyncedRtcp: no synced RTCP on attempt" + attempts
+           + ", retrying.\n");
+      await wait(waitPeriod);
+    }
+    throw Error("Waiting for synced RTCP timed out after at least "
+                + maxTime + "ms");
   },
 
   /**
