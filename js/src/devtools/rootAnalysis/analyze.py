@@ -16,6 +16,16 @@ import argparse
 import sys
 import re
 
+# Python 2/3 version independence polyfills
+
+anystring_t = str if sys.version_info[0] > 2 else basestring
+
+try:
+    execfile
+except:
+    def execfile(thefile, globals):
+        exec(compile(open(thefile).read(), filename=thefile, mode="exec"), globals)
+
 def env(config):
     e = dict(os.environ)
     e['PATH'] = ':'.join(p for p in (config.get('gcc_bin'), config.get('sixgill_bin'), e['PATH']) if p)
@@ -61,7 +71,7 @@ def print_command(command, outfile=None, env=None):
                     outputs.append("%s='%s'" % (key, value))
             output = ' '.join(outputs) + " " + output
 
-    print output
+    print(output)
 
 def generate_hazards(config, outfilename):
     jobs = []
@@ -160,7 +170,7 @@ def run_job(name, config):
     else:
         temp_map = {}
         cmdspec = fill(cmdspec, config)
-        if isinstance(outfiles, basestring):
+        if isinstance(outfiles, anystring_t):
             stdout_filename = '%s.tmp' % name
             temp_map[stdout_filename] = outfiles
             if config['verbose']:
@@ -261,7 +271,7 @@ if 'ANALYZED_OBJDIR' in os.environ:
 if 'SOURCE' in os.environ:
     data['source'] = os.environ['SOURCE']
 if not data.get('source') and data.get('sixgill_bin'):
-    path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp'])
+    path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp']).decode()
     data['source'] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
 
 steps = [ 'dbs',
@@ -284,7 +294,7 @@ if args.list:
 
 for step in steps:
     command, outfiles = JOBS[step]
-    if isinstance(outfiles, basestring):
+    if isinstance(outfiles, anystring_t):
         data[step] = outfiles
     else:
         outfile = 0
