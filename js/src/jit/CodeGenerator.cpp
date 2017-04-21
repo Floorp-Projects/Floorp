@@ -9178,16 +9178,20 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
     {
         Address groupAddr(temp2, offsetof(ReceiverGuard, group));
         Address shapeAddr(temp2, offsetof(ReceiverGuard, shape));
-        Label guardDone, shapeMismatch, noExpando;
+        Label guardDone, unboxedObject, noExpando;
+        // This is a guard for an unboxed object.
+        masm.branchPtr(Assembler::NotEqual, groupAddr, ImmWord(0), &unboxedObject);
+
+        // Guard for a normal object, make sure the shape matches.
         masm.loadObjShape(obj, temp1);
-        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, &shapeMismatch);
+        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, ool->entry());
 
         // Ensure the object does not have any elements. The presence of dense
         // elements is not captured by the shape tests above.
         branchIfNotEmptyObjectElements(obj, ool->entry());
         masm.jump(&guardDone);
 
-        masm.bind(&shapeMismatch);
+        masm.bind(&unboxedObject);
         masm.loadObjGroup(obj, temp1);
         masm.branchPtr(Assembler::NotEqual, groupAddr, temp1, ool->entry());
         masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), temp1);
