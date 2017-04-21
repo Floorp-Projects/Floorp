@@ -141,8 +141,15 @@ nsScriptLoadRequest::MaybeCancelOffThreadScript()
   }
 
   JSContext* cx = danger::GetJSContext();
-  MOZ_ASSERT(IsSource());
-  JS::CancelOffThreadScript(cx, mOffThreadToken);
+  // Follow the same conditions as nsScriptLoader::AttemptAsyncScriptCompile
+  if (IsModuleRequest()) {
+    JS::CancelOffThreadModule(cx, mOffThreadToken);
+  } else if (IsSource()) {
+    JS::CancelOffThreadScript(cx, mOffThreadToken);
+  } else {
+    MOZ_ASSERT(IsBytecode());
+    JS::CancelOffThreadScriptDecoder(cx, mOffThreadToken);
+  }
   mOffThreadToken = nullptr;
 }
 
@@ -1976,7 +1983,10 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
     return rv;
   }
 
-  if (!JS::CanCompileOffThread(cx, options, aRequest->mScriptText.length())) {
+  size_t len = aRequest->IsSource()
+    ? aRequest->mScriptText.length()
+    : aRequest->mScriptBytecode.length();
+  if (!JS::CanCompileOffThread(cx, options, len)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1984,6 +1994,7 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
     new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
 
   if (aRequest->IsModuleRequest()) {
+    MOZ_ASSERT(aRequest->IsSource());
     if (!JS::CompileOffThreadModule(cx, options,
                                     aRequest->mScriptText.begin(),
                                     aRequest->mScriptText.length(),
@@ -1991,12 +2002,21 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
                                     static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  } else {
+  } else if (aRequest->IsSource()) {
     if (!JS::CompileOffThread(cx, options,
                               aRequest->mScriptText.begin(),
                               aRequest->mScriptText.length(),
                               OffThreadScriptLoaderCallback,
                               static_cast<void*>(runnable))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    MOZ_ASSERT(aRequest->IsBytecode());
+    if (!JS::DecodeOffThreadScript(cx, options,
+                                   aRequest->mScriptBytecode,
+                                   aRequest->mBytecodeOffset,
+                                   OffThreadScriptLoaderCallback,
+                                   static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2313,6 +2333,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
       // When a module is already loaded, it is not feched a second time and the
       // mDataType of the request might remain set to DataType::Unknown.
       MOZ_ASSERT(!aRequest->IsBytecode());
+      LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
       nsModuleLoadRequest* request = aRequest->AsModuleRequest();
       MOZ_ASSERT(request->mModuleScript);
       MOZ_ASSERT(!request->mOffThreadToken);
@@ -2332,18 +2353,34 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        {
+        if (aRequest->IsBytecode()) {
+          nsJSUtils::ExecutionContext exec(aes.cx(), global);
+          if (aRequest->mOffThreadToken) {
+            LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute", aRequest));
+            rv = exec.DecodeJoinAndExec(&aRequest->mOffThreadToken);
+          } else {
+            LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute", aRequest));
+            rv = exec.DecodeAndExec(options, aRequest->mScriptBytecode,
+                                    aRequest->mBytecodeOffset);
+          }
+        } else {
           nsJSUtils::ExecutionContext exec(aes.cx(), global);
           MOZ_ASSERT(aRequest->IsSource());
           if (aRequest->mOffThreadToken) {
+            // Off-main-thread parsing.
+            LOG(("ScriptLoadRequest (%p): Join (off-thread parsing) and Execute",
+                 aRequest));
             JS::Rooted<JSScript*> script(aes.cx());
             rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
           } else {
+            // Main thread parsing (inline and small scripts)
+            LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
             nsAutoString inlineData;
             SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
             rv = exec.CompileAndExec(options, srcBuf);
           }
         }
+
       }
     }
   }
@@ -2899,6 +2936,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                "aRequest should be pending!");
 
   if (aRequest->IsModuleRequest()) {
+    MOZ_ASSERT(aRequest->IsSource());
     nsModuleLoadRequest* request = aRequest->AsModuleRequest();
 
     // When loading a module, only responses with a JavaScript MIME type are
@@ -2926,7 +2964,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   aRequest->SetReady();
 
   // If this is currently blocking the parser, attempt to compile it off-main-thread.
-  if (aRequest == mParserBlockingRequest && (NumberOfProcessors() > 1)) {
+  if (aRequest == mParserBlockingRequest && NumberOfProcessors() > 1) {
     MOZ_ASSERT(!aRequest->IsModuleRequest());
     nsresult rv = AttemptAsyncScriptCompile(aRequest);
     if (rv == NS_OK) {
