@@ -652,10 +652,6 @@ public:
    */
   void UpdateCommonClipCount(const DisplayItemClip& aCurrentClip);
   /**
-   * The union of all the bounds of the display items in this layer.
-   */
-  nsIntRect mBounds;
-  /**
    * The region of visible content above the layer and below the
    * next PaintedLayerData currently in the stack, if any.
    * This is a conservative approximation: it contains the true region.
@@ -3267,10 +3263,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion);
   }
 
-  nsIntRect layerBounds = data->mBounds;
-  layerBounds.MoveBy(-GetTranslationForPaintedLayer(data->mLayer));
-  layer->SetLayerBounds(layerBounds);
-
 #ifdef MOZ_DUMP_PAINTING
   if (!data->mLog.IsEmpty()) {
     if (PaintedLayerData* containingPld = mLayerBuilder->GetContainingPaintedLayerData()) {
@@ -3466,10 +3458,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                             LayerState aLayerState)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
-
-  bool snap;
-  nsRect itemBounds = aItem->GetBounds(aState->mBuilder, &snap);
-  mBounds = mBounds.Union(aState->ScaleToOutsidePixels(itemBounds, snap));
 
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
@@ -3792,7 +3780,7 @@ ContainerState::GetDisplayPortForAnimatedGeometryRoot(AnimatedGeometryRoot* aAni
   mLastDisplayPortAGR = aAnimatedGeometryRoot;
 
   nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(*aAnimatedGeometryRoot);
-  if (sf == nullptr) {
+  if (sf == nullptr || nsLayoutUtils::UsesAsyncScrolling(*aAnimatedGeometryRoot)) {
     mLastDisplayPortRect = nsRect();
     return mLastDisplayPortRect;
   }

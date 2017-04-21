@@ -576,8 +576,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     return currentClip;
   }
 
-  if (GetLocalVisibleRegion().IsEmpty() &&
-      !(AsHostLayer() && AsHostLayer()->NeedToDrawCheckerboarding())) {
+  if (GetLocalVisibleRegion().IsEmpty()) {
     // When our visible region is empty, our parent may not have created the
     // intermediate surface that we would require for correct clipping; however,
     // this does not matter since we are invisible.
@@ -1838,9 +1837,6 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetTransformIsPerspective()) {
     aStream << " [perspective]";
-  }
-  if (!GetLayerBounds().IsEmpty()) {
-    AppendToString(aStream, GetLayerBounds(), " [bounds=", "]");
   }
   if (!mVisibleRegion.IsEmpty()) {
     AppendToString(aStream, mVisibleRegion.ToUnknownRegion(), " [visible=", "]");
