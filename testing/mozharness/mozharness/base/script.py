@@ -36,7 +36,6 @@ import zipfile
 import httplib
 import urlparse
 import hashlib
-import zlib
 if os.name == 'nt':
     try:
         import win32file
@@ -59,7 +58,7 @@ from mozharness.base.log import SimpleFileLogger, MultiFileLogger, \
     LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL
 
 
-class ContentLengthMismatch(Exception):
+class FetchedIncorrectFilesize(Exception):
     pass
 
 
@@ -356,8 +355,8 @@ class ScriptMixin(PlatformMixin):
 
         Raises:
             IOError: When the url points to a file on disk and cannot be found
-            ContentLengthMismatch: When the length of the retrieved content does not match the
-                                   Content-Length response header.
+            FetchedIncorrectFilesize: When the size of the fetched file does not match the
+                                      expected file size.
             ValueError: When the scheme of a url is not what is expected.
 
         Returns:
@@ -370,7 +369,7 @@ class ScriptMixin(PlatformMixin):
             if not os.path.isfile(url):
                 raise IOError('Could not find file to extract: {}'.format(url))
 
-            content_length = os.stat(url.replace('file://', '')).st_size
+            expected_file_size = os.stat(url.replace('file://', '')).st_size
 
             # In case we're referrencing a file without file://
             if parsed_url.scheme == '':
@@ -393,25 +392,18 @@ class ScriptMixin(PlatformMixin):
         response = urllib2.urlopen(request, timeout=30)
 
         if parsed_url.scheme in ('http', 'https'):
-            content_length = int(response.headers.get('Content-Length'))
+            expected_file_size = int(response.headers.get('Content-Length'))
 
-        response_body = response.read()
-        response_body_size = len(response_body)
+        file_contents = response.read()
+        obtained_file_size = len(file_contents)
+        self.info('Expected file size: {}'.format(expected_file_size))
+        self.info('Obtained file size: {}'.format(obtained_file_size))
 
-        self.info('Content-Length response header: {}'.format(content_length))
-        self.info('Bytes received: {}'.format(response_body_size))
-
-        if response_body_size != content_length:
-            raise ContentLengthMismatch(
-                'The retrieved Content-Length header declares a body length of {} bytes, while we actually retrieved {} bytes'.format(
-                    content_length, response_body_size)
+        if obtained_file_size != expected_file_size:
+            raise FetchedIncorrectFilesize(
+                'The expected file size is {} while we got instead {}'.format(
+                    expected_file_size, obtained_file_size)
             )
-
-        if response.info().get('Content-Encoding') == 'gzip':
-            self.info('Content-Encoding is "gzip", so decompressing response body')
-            file_contents = zlib.decompress(response_body)
-        else:
-            file_contents = response_body
 
         # Use BytesIO instead of StringIO
         # http://stackoverflow.com/questions/34162017/unzip-buffer-with-python/34162395#34162395
@@ -419,7 +411,7 @@ class ScriptMixin(PlatformMixin):
 
 
     def _download_file(self, url, file_name):
-        """ Helper function for download_file()
+        """ Helper script for download_file()
         Additionaly this function logs all exceptions as warnings before
         re-raising them
 
@@ -451,14 +443,7 @@ class ScriptMixin(PlatformMixin):
             if f.info().get('content-length') is not None:
                 f_length = int(f.info()['content-length'])
                 got_length = 0
-            if f.info().get('Content-Encoding') == 'gzip':
-                # Note, we'll download the full compressed content into its own
-                # file, since that allows the gzip library to seek through it.
-                # Once downloaded, we'll decompress it into the real target
-                # file, and delete the compressed version.
-                local_file = open(file_name + '.gz', 'wb')
-            else:
-                local_file = open(file_name, 'wb')
+            local_file = open(file_name, 'wb')
             while True:
                 block = f.read(1024 ** 2)
                 if not block:
@@ -469,11 +454,6 @@ class ScriptMixin(PlatformMixin):
                 if f_length is not None:
                     got_length += len(block)
             local_file.close()
-            if f.info().get('Content-Encoding') == 'gzip':
-                # Decompress file into target location, then remove compressed version
-                with gzip.open(file_name + '.gz', 'rb') as f_in, open(file_name, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-                os.remove(file_name + '.gz')
             return file_name
         except urllib2.HTTPError, e:
             self.warning("Server returned status %s %s for %s" % (str(e.code), str(e), url))
@@ -686,7 +666,7 @@ class ScriptMixin(PlatformMixin):
                 httplib.BadStatusLine,
                 socket.timeout,
                 socket.error,
-                ContentLengthMismatch,
+                FetchedIncorrectFilesize,
             ),
             sleeptime=30,
             attempts=5,
