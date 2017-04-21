@@ -194,9 +194,6 @@ template<> struct RegTypeOf<MIRType::Double> {
     static constexpr RegTypeName value = RegTypeName::Float64;
 };
 
-static constexpr int32_t TlsSlotSize = sizeof(void*);
-static constexpr int32_t TlsSlotOffset = TlsSlotSize;
-
 BaseLocalIter::BaseLocalIter(const ValTypeVector& locals,
                              size_t argsLength,
                              bool debugEnabled)
