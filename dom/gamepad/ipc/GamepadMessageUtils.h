@@ -62,6 +62,8 @@ struct ParamTraits<mozilla::dom::GamepadPoseState>
     WriteParam(aMsg, aParam.linearAcceleration[0]);
     WriteParam(aMsg, aParam.linearAcceleration[1]);
     WriteParam(aMsg, aParam.linearAcceleration[2]);
+    WriteParam(aMsg, aParam.isPositionValid);
+    WriteParam(aMsg, aParam.isOrientationValid);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -85,7 +87,9 @@ struct ParamTraits<mozilla::dom::GamepadPoseState>
         !ReadParam(aMsg, aIter, &(aResult->linearVelocity[2])) ||
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[0])) ||
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2]))) {
+        !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2])) ||
+        !ReadParam(aMsg, aIter, &(aResult->isPositionValid)) ||
+        !ReadParam(aMsg, aIter, &(aResult->isOrientationValid))) {
       return false;
     }
     return true;

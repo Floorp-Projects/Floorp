@@ -42,6 +42,8 @@ struct GamepadPoseState
   float angularAcceleration[3];
   float linearVelocity[3];
   float linearAcceleration[3];
+  bool isPositionValid;
+  bool isOrientationValid;
 
   GamepadPoseState()
   {
@@ -69,7 +71,9 @@ struct GamepadPoseState
            && linearVelocity[2] == aPose.linearVelocity[2]
            && linearAcceleration[0] == aPose.linearAcceleration[0]
            && linearAcceleration[1] == aPose.linearAcceleration[1]
-           && linearAcceleration[2] == aPose.linearAcceleration[2];
+           && linearAcceleration[2] == aPose.linearAcceleration[2]
+           && isPositionValid == aPose.isPositionValid
+           && isOrientationValid == aPose.isOrientationValid;
   }
 
   bool operator!=(const GamepadPoseState& aPose) const
