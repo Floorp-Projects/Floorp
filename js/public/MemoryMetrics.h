@@ -650,6 +650,7 @@ struct ZoneStats
     macro(Other,   MallocHeap,  regExpSharedsMallocHeap) \
     macro(Other,   MallocHeap,  typePool) \
     macro(Other,   MallocHeap,  baselineStubsOptimized) \
+    macro(Other,   MallocHeap,  cachedCFG) \
     macro(Other,   MallocHeap,  uniqueIdMap) \
     macro(Other,   MallocHeap,  shapeTables)
 
