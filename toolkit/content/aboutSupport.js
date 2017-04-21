@@ -302,20 +302,24 @@ var snapshotFormatters = {
       delete data.info;
     }
 
-    if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION) {
-      let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils);
-      let gpuProcessPid = windowUtils.gpuProcessPid;
+    let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    let gpuProcessPid = windowUtils.gpuProcessPid;
 
-      if (gpuProcessPid != -1) {
-        let gpuProcessKillButton = $.new("button");
+    if (gpuProcessPid != -1) {
+      let gpuProcessKillButton = null;
+      if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION) {
+        gpuProcessKillButton = $.new("button");
 
         gpuProcessKillButton.addEventListener("click", function() {
           windowUtils.terminateGPUProcess();
         });
 
         gpuProcessKillButton.textContent = strings.GetStringFromName("gpuProcessKillButton");
-        addRow("diagnostics", "GPUProcessPid", gpuProcessPid);
+      }
+
+      addRow("diagnostics", "GPUProcessPid", gpuProcessPid);
+      if (gpuProcessKillButton) {
         addRow("diagnostics", "GPUProcess", [gpuProcessKillButton]);
       }
     }
