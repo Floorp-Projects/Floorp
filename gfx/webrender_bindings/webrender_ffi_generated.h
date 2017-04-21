@@ -546,7 +546,8 @@ WR_INLINE void
 wr_api_add_raw_font(WrAPI* api,
     WrFontKey key,
     uint8_t* font_buffer,
-    size_t buffer_size)
+    size_t buffer_size,
+    uint32_t index)
 WR_FUNC;
 
 WR_INLINE void
