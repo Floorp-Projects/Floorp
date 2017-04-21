@@ -34,6 +34,7 @@ this.SpecialPowersObserver = function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
   this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
                          getService(Ci.nsIMessageBroadcaster);
+  this._processCount = 1;
 }
 
 
@@ -57,6 +58,15 @@ SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
         this._sendAsyncMessage("specialpowers-http-notify-request", { uri: uri });
       }
       break;
+
+    case "nsPref:changed": {
+      let newProcessCount = Services.appinfo.maxWebProcessCount;
+      if (this._processCount > newProcessCount) {
+        Services.ppmm.releaseCachedProcesses();
+      }
+      this._processCount = newProcessCount;
+      break;
+    }
 
     default:
       this._observe(aSubject, aTopic, aData);
@@ -125,6 +135,9 @@ SpecialPowersObserver.prototype.init = function()
 
   obs.addObserver(this, "http-on-modify-request");
 
+  this._processCount = Services.appinfo.maxWebProcessCount;
+  Services.prefs.addObserver("dom.ipc.processCount", this);
+
   this._loadFrameScript();
 };
 
@@ -136,6 +149,7 @@ SpecialPowersObserver.prototype.uninit = function()
   this._registerObservers._topics.forEach(function(element) {
     obs.removeObserver(this._registerObservers, element);
   });
+  Services.prefs.removeObserver("dom.ipc.processCount", this);
   this._removeProcessCrashObservers();
 
   if (this._isFrameScriptLoaded) {
