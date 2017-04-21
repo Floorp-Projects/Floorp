@@ -88,6 +88,7 @@ label {
 
 input {
   -moz-appearance: textfield;
+  appearance: auto;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
@@ -151,6 +152,7 @@ textarea {
   resize: both;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield-multiline;
+  appearance: auto;
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
@@ -259,6 +261,7 @@ select {
   box-sizing: border-box;
   -moz-user-select: none;
   -moz-appearance: menulist;
+  appearance: auto;
   border-width: 2px;
   border-style: inset;
   text-indent: 0;
@@ -285,6 +288,7 @@ select[size][multiple] {
   padding-inline-start: 0;
   padding-inline-end: 0;
   -moz-appearance: listbox;
+  appearance: auto;
 }
 
 select[size="0"],
@@ -295,6 +299,7 @@ select[size="1"] {
   vertical-align: baseline;
   padding: 0;
   -moz-appearance: menulist;
+  appearance: auto;
 }
 
 select > button {
@@ -305,6 +310,7 @@ select > button {
   background-repeat: no-repeat !important;
   background-position: center !important;
   -moz-appearance: menulist-button;
+  appearance: auto;
 
   /* Make sure to size correctly if the combobox has a non-auto height. */
   block-size: 100% ! important;
@@ -557,6 +563,7 @@ input[type="file"]:dir(rtl) > xul|label {
 input[type="radio"] {
   display: inline-block;
   -moz-appearance: radio;
+  appearance: auto;
   margin-block-start: 3px;
   margin-block-end: 0px;
   margin-inline-start: 5px;
@@ -567,6 +574,7 @@ input[type="radio"] {
 input[type="checkbox"] {
   display: inline-block;
   -moz-appearance: checkbox;
+  appearance: auto;
   margin-block-start: 3px;
   margin-block-end: 3px;
   margin-inline-start: 4px;
@@ -706,6 +714,7 @@ input[type="reset"],
 input[type="button"],
 input[type="submit"] {
   -moz-appearance: button;
+  appearance: auto;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.
      Note -moz-focus-inner padding does not affect button size. */
@@ -930,6 +939,7 @@ output:-moz-ui-invalid {
 
 progress {
   -moz-appearance: progressbar;
+  appearance: auto;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -952,6 +962,7 @@ progress {
   box-sizing: border-box ! important;
 
   -moz-appearance: progresschunk;
+  appearance: auto;
   height: 100%;
   width: 100%;
 
@@ -961,6 +972,7 @@ progress {
 
 meter {
   -moz-appearance: meterbar;
+  appearance: auto;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -975,6 +987,7 @@ meter {
   overflow: visible ! important;
 
   -moz-appearance: meterchunk;
+  appearance: auto;
   height: 100%;
   width: 100%;
 }
@@ -994,6 +1007,7 @@ meter {
 
 input[type=range] {
   -moz-appearance: range;
+  appearance: auto;
   display: inline-block;
   inline-size: 12em;
   block-size: 1.3em;
@@ -1111,6 +1125,7 @@ input[type=range]::-moz-range-thumb {
    * to get rid of it. The thumb's -moz-appearance is fixed.
    */
   -moz-appearance: range-thumb !important;
+  appearance: auto !important;
   /* Prevent styling that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;
@@ -1183,6 +1198,7 @@ input[type=number]::-moz-number-spin-box {
 input[type=number]::-moz-number-spin-up {
   writing-mode: horizontal-tb;
   -moz-appearance: spinner-upbutton;
+  appearance: auto;
   display: block; /* bug 926670 */
   flex: none;
   cursor: default;
@@ -1201,6 +1217,7 @@ input[type=number]::-moz-number-spin-up {
 input[type=number]::-moz-number-spin-down {
   writing-mode: horizontal-tb;
   -moz-appearance: spinner-downbutton;
+  appearance: auto;
   display: block; /* bug 926670 */
   flex: none;
   cursor: default;
