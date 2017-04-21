@@ -392,6 +392,13 @@ var invalidGradientAndElementValues = [
   "-moz-linear-gradient(top left 0, red, blue)",
   "-moz-linear-gradient(5px 5px 0, red, blue)",
   "linear-gradient(0, red, blue)",
+  /* There must be a comma between gradient-line (e.g. <angle>) and colors */
+  "-moz-linear-gradient(30deg red, blue)",
+  "-moz-linear-gradient(5px 5px 30deg red, blue)",
+  "-moz-linear-gradient(5px 5px red, blue)",
+  "-moz-linear-gradient(top left 30deg red, blue)",
+  "linear-gradient(to top left red, blue)",
+  "linear-gradient(to right red, blue)",
   /* Invalid color, calc() or -moz-image-rect() function */
   "linear-gradient(red, rgb(0, rubbish, 0) 50%, red)",
   "linear-gradient(red, red calc(50% + rubbish), red)",
@@ -707,12 +714,12 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
 
     // Angled linear-gradients (valid when prefixed or unprefixed):
     "-webkit-linear-gradient(135deg, red, blue)",
+    "-webkit-linear-gradient( 135deg  , red  , blue )",
     "-webkit-linear-gradient(280deg, red 60%, blue)",
 
     // Linear-gradient with unitless-0 <angle> (normally invalid for <angle>
     // but accepted here for better webkit emulation):
     "-webkit-linear-gradient(0, red, blue)",
-    "-webkit-linear-gradient(0 red, blue)",
 
     // Basic radial-gradient syntax (valid when prefixed or unprefixed):
     "-webkit-radial-gradient(circle, white, black)",
@@ -857,6 +864,12 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-radial-gradient()",
     "-webkit-repeating-linear-gradient()",
     "-webkit-repeating-radial-gradient()",
+
+    // * missing comma between <legacy-gradient-line> and color list:
+    "-webkit-linear-gradient(0 red, blue)",
+    "-webkit-linear-gradient(30deg red, blue)",
+    "-webkit-linear-gradient(top right red, blue)",
+    "-webkit-linear-gradient(bottom red, blue)",
 
     // Linear syntax that's invalid for both -webkit & unprefixed, but valid
     // for -moz:
