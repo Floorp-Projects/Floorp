@@ -900,22 +900,6 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * The union of the bounds of all the display item that got flattened
-   * into this layer. This is intended to be an approximation to the
-   * size of the layer if the nearest scrollable ancestor had an infinitely
-   * large displayport. Computing this more exactly is too expensive,
-   * but this approximation is sufficient for what we need to use it for.
-   */
-  virtual void SetLayerBounds(const gfx::IntRect& aLayerBounds)
-  {
-    if (mSimpleAttrs.SetLayerBounds(aLayerBounds)) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) LayerBounds", this));
-      MutatedSimple();
-    }
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
    * Tell this layer which region will be visible. The visible region
    * is a region which contains all the contents of the layer that can
    * actually affect the rendering of the window. It can exclude areas
@@ -1340,7 +1324,6 @@ public:
   const Maybe<LayerClip>& GetScrolledClip() const { return mSimpleAttrs.ScrolledClip(); }
   Maybe<ParentLayerIntRect> GetScrolledClipRect() const;
   uint32_t GetContentFlags() { return mSimpleAttrs.ContentFlags(); }
-  const gfx::IntRect& GetLayerBounds() const { return mSimpleAttrs.LayerBounds(); }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const ScrollMetadata& GetScrollMetadata(uint32_t aIndex) const;
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
