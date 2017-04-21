@@ -124,7 +124,7 @@ MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 // Other from the lock protection, this class is essentially a thin wrapper and
 // contains very little "smarts" itself.
 //
-class ProfilerState
+class PS
 {
 public:
   // Shorter names for local use.
@@ -137,7 +137,7 @@ public:
 
   typedef std::vector<ThreadInfo*> ThreadVector;
 
-  ProfilerState()
+  PS()
     : mEntries(0)
     , mInterval(0)
     , mFeatureDisplayListDump(false)
@@ -330,14 +330,14 @@ private:
   int mLatestRecordedFrameNumber;
 };
 
-// A shorter name for use within this compilation unit.
-typedef ProfilerState PS;
-
 uint32_t PS::sActivityGeneration = 0;
 uint32_t PS::sNextActivityGeneration = 1;
 
-// The profiler state. Set by profiler_init(), cleared by profiler_shutdown().
-PS* gPS = nullptr;
+// The core profiler state. Null at process startup, it is set to a non-null
+// value in profiler_init() and stays that way until profiler_shutdown() is
+// called. Therefore it can be checked to determine if the profiler has been
+// initialized but not yet shut down.
+static PS* gPS = nullptr;
 
 // The mutex that guards accesses to gPS.
 static PS::Mutex gPSMutex;
@@ -759,7 +759,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // Update the JS context with the current profile sample buffer generation.
   //
   // Do not do this for synchronous samples, which use their own
-  // ProfileBuffers instead of the global one in ProfilerState.
+  // ProfileBuffers instead of the global one in PS.
   if (!aSample.mIsSynchronous && pseudoStack->mContext) {
     MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
     uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
@@ -1798,8 +1798,8 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   MOZ_COLLECT_REPORT(
     "explicit/profiler/profiler-state", KIND_HEAP, UNITS_BYTES, profSize,
-    "Memory used by the Gecko Profiler's ProfilerState object (excluding "
-    "memory used by LUL).");
+    "Memory used by the Gecko Profiler's global state (excluding memory used "
+    "by LUL).");
 
 #if defined(USE_LUL_STACKWALK)
   MOZ_COLLECT_REPORT(
