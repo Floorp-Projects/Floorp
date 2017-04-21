@@ -11,22 +11,25 @@ const IMAGE_TOOLTIP_REQUESTS = 1;
  */
 add_task(function* test() {
   let { tab, monitor } = yield initNetMonitor(IMAGE_TOOLTIP_URL);
-  const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { NetMonitorController } =
     windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
+  let {
+    ACTIVITY_TYPE,
+    EVENTS,
+  } = windowRequire("devtools/client/netmonitor/src/constants");
   let toolboxDoc = monitor.panelWin.parent.document;
 
   gStore.dispatch(Actions.batchEnable(false));
 
   let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
+  let onThumbnail = monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
   yield performRequests();
   yield onEvents;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
+  yield onThumbnail;
 
   info("Checking the image thumbnail after a few requests were made...");
   yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
@@ -38,12 +41,13 @@ add_task(function* test() {
 
   // +1 extra document reload
   onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
+  onThumbnail = monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
   info("Reloading the debuggee and performing all requests again...");
   yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
   yield performRequests();
   yield onEvents;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
+  yield onThumbnail;
 
   info("Checking the image thumbnail after a reload.");
   yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[1]);
