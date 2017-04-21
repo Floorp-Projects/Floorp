@@ -172,12 +172,8 @@ pub struct mp4parse_track_audio_info {
     pub bit_depth: u16,
     pub sample_rate: u32,
     pub profile: u16,
-    // TODO:
-    //  codec_specific_data is AudioInfo.mCodecSpecificConfig,
-    //  codec_specific_config is AudioInfo.mExtraData.
-    //  It'd be better to change name same as AudioInfo.
-    pub codec_specific_data: mp4parse_byte_data,
     pub codec_specific_config: mp4parse_byte_data,
+    pub extra_data: mp4parse_byte_data,
     pub protected_data: mp4parse_sinf_info,
 }
 
@@ -523,10 +519,10 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             if v.codec_esds.len() > std::u32::MAX as usize {
                 return mp4parse_status::INVALID;
             }
-            (*info).codec_specific_config.length = v.codec_esds.len() as u32;
-            (*info).codec_specific_config.data = v.codec_esds.as_ptr();
-            (*info).codec_specific_data.length = v.decoder_specific_data.len() as u32;
-            (*info).codec_specific_data.data = v.decoder_specific_data.as_ptr();
+            (*info).extra_data.length = v.codec_esds.len() as u32;
+            (*info).extra_data.data = v.codec_esds.as_ptr();
+            (*info).codec_specific_config.length = v.decoder_specific_data.len() as u32;
+            (*info).codec_specific_config.data = v.decoder_specific_data.as_ptr();
             if let Some(rate) = v.audio_sample_rate {
                 (*info).sample_rate = rate;
             }
@@ -543,8 +539,8 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             if streaminfo.block_type != 0 || streaminfo.data.len() != 34 {
                 return mp4parse_status::INVALID;
             }
-            (*info).codec_specific_config.length = streaminfo.data.len() as u32;
-            (*info).codec_specific_config.data = streaminfo.data.as_ptr();
+            (*info).extra_data.length = streaminfo.data.len() as u32;
+            (*info).extra_data.data = streaminfo.data.as_ptr();
         }
         AudioCodecSpecific::OpusSpecificBox(ref opus) => {
             let mut v = Vec::new();
@@ -559,8 +555,8 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
                         if v.len() > std::u32::MAX as usize {
                             return mp4parse_status::INVALID;
                         }
-                        (*info).codec_specific_config.length = v.len() as u32;
-                        (*info).codec_specific_config.data = v.as_ptr();
+                        (*info).extra_data.length = v.len() as u32;
+                        (*info).extra_data.data = v.as_ptr();
                     }
                 }
             }

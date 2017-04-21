@@ -78,8 +78,8 @@ typedef struct mp4parse_track_audio_info {
 	uint16_t bit_depth;
 	uint32_t sample_rate;
 	uint16_t profile;
-	mp4parse_byte_data codec_specific_data;
 	mp4parse_byte_data codec_specific_config;
+	mp4parse_byte_data extra_data;
 	mp4parse_sinf_info protected_data;
 } mp4parse_track_audio_info;
 
