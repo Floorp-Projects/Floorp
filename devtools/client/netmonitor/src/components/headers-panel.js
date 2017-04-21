@@ -24,7 +24,7 @@ const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const MDNLink = createFactory(require("./mdn-link"));
 const PropertiesView = createFactory(require("./properties-view"));
 
-const Rep = createFactory(REPS.Rep);
+const { Rep } = REPS;
 const { button, div, input, textarea } = DOM;
 
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");

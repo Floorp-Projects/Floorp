@@ -14,7 +14,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = createFactory(REPS.Rep);
+const { Rep } = REPS;
 
 const { FILTER_SEARCH_DELAY } = require("../constants");
 
