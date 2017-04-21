@@ -173,7 +173,8 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override
   {
-    if (ForceActiveLayers() || gfxPrefs::LayersAllowCanvasBackgroundColorLayers()) {
+    if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowCanvasBackgroundColorLayers) ||
+        ForceActiveLayers()) {
       return mozilla::LAYER_ACTIVE;
     }
     return mozilla::LAYER_NONE;
