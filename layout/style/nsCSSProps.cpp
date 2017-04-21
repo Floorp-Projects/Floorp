@@ -742,8 +742,8 @@ const KTableEntry nsCSSProps::kAnimationPlayStateKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kAppearanceKTable[] = {
-  { eCSSKeyword_auto,    NS_THEME_AUTO },
   { eCSSKeyword_none,    NS_THEME_NONE },
+  { eCSSKeyword_auto,    NS_THEME_AUTO },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
