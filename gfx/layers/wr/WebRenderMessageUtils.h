@@ -179,12 +179,16 @@ struct ParamTraits<WrBuiltDisplayListDescriptor>
   Write(Message* aMsg, const WrBuiltDisplayListDescriptor& aParam)
   {
     WriteParam(aMsg, aParam.display_list_items_size);
+    WriteParam(aMsg, aParam.serialization_start_time);
+    WriteParam(aMsg, aParam.serialization_end_time);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, WrBuiltDisplayListDescriptor* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->display_list_items_size);
+    return ReadParam(aMsg, aIter, &aResult->display_list_items_size)
+        && ReadParam(aMsg, aIter, &aResult->serialization_start_time)
+        && ReadParam(aMsg, aIter, &aResult->serialization_end_time);
   }
 };
 
