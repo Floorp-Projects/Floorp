@@ -12,6 +12,11 @@ this.EXPORTED_SYMBOLS = ["FormAutofillHeuristics"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
