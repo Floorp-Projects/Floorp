@@ -129,7 +129,7 @@ def write_histogram_static_asserts(output, histograms):
 
     for histogram in histograms:
         kind = histogram.kind()
-        if not kind in table:
+        if kind not in table:
             raise Exception('Unknown kind "%s" for histogram "%s".' % (kind, histogram.name()))
         fn = table[kind]
         fn(output, histogram)

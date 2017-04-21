@@ -11,6 +11,7 @@ import re
 import sys
 
 from shared_telemetry_utils import ParserError
+from collections import OrderedDict
 
 # Constants.
 MAX_LABEL_LENGTH = 20
@@ -32,8 +33,6 @@ except ImportError:
     # running this script knows we need the usecounters module and has
     # ensured it's in our sys.path.
     pass
-
-from collections import OrderedDict
 
 
 def linear_buckets(dmin, dmax, n_buckets):
@@ -178,7 +177,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'exponential': exponential_buckets,
         }
 
-        if not self._kind in bucket_fns:
+        if self._kind not in bucket_fns:
             raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
 
         fn = bucket_fns[self._kind]
@@ -195,7 +194,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'exponential': Histogram.exponential_bucket_parameters,
         }
 
-        if not self._kind in bucket_fns:
+        if self._kind not in bucket_fns:
             raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
 
         fn = bucket_fns[self._kind]
@@ -220,7 +219,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             table['exponential'].append('extended_statistics_ok')
 
         kind = definition['kind']
-        if not kind in table:
+        if kind not in table:
             raise ParserError('Unknown kind "%s" for histogram "%s".' % (kind, name))
         allowed_keys = table[kind]
 
@@ -275,11 +274,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         invalid = filter(lambda l: len(l) > MAX_LABEL_LENGTH, labels)
         if len(invalid) > 0:
             raise ParserError('Label values for "%s" exceed length limit of %d: %s' %
-                             (name, MAX_LABEL_LENGTH, ', '.join(invalid)))
+                              (name, MAX_LABEL_LENGTH, ', '.join(invalid)))
 
         if len(labels) > MAX_LABEL_COUNT:
             raise ParserError('Label count for "%s" exceeds limit of %d' %
-                             (name, MAX_LABEL_COUNT))
+                              (name, MAX_LABEL_COUNT))
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the label values to a strict pattern.
@@ -287,7 +286,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         invalid = filter(lambda l: not re.match(pattern, l, re.IGNORECASE), labels)
         if len(invalid) > 0:
             raise ParserError('Label values for %s are not matching pattern "%s": %s' %
-                             (name, pattern, ', '.join(invalid)))
+                              (name, pattern, ', '.join(invalid)))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
@@ -382,14 +381,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 continue
             if not isinstance(definition[key], key_type):
                 raise ParserError('Value for key "{0}" in histogram "{1}" should be {2}.'
-                                 .format(key, name, nice_type_name(key_type)))
+                                  .format(key, name, nice_type_name(key_type)))
 
         for key, key_type in type_checked_list_fields.iteritems():
             if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
                 raise ParserError('All values for list "{0}" in histogram "{1}" should be of type {2}.'
-                                 .format(key, name, nice_type_name(key_type)))
+                                  .format(key, name, nice_type_name(key_type)))
 
     def check_keys(self, name, definition, allowed_keys):
         for key in definition.iterkeys():
@@ -451,7 +450,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'exponential': 'EXPONENTIAL',
         }
 
-        if not self._kind in types:
+        if self._kind not in types:
             raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
 
         self._nsITelemetry_kind = "nsITelemetry::HISTOGRAM_%s" % types[self._kind]
