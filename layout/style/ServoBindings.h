@@ -434,6 +434,8 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
+void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
+                                        RawGeckoPresContextBorrowed pres_context);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
 
 struct GeckoFontMetrics
