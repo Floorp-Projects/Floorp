@@ -1450,6 +1450,7 @@ public class LocalBrowserDB extends BrowserDB {
      * Returns null if the provided list of URLs is empty or null.
      */
     @Override
+    @Nullable
     public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
         final int urlCount = urls.size();
         if (urlCount == 0) {
@@ -1793,6 +1794,7 @@ public class LocalBrowserDB extends BrowserDB {
 
     @Override
     @RobocopTarget
+    @Nullable
     public Cursor getBookmarkForUrl(ContentResolver cr, String url) {
         Cursor c = cr.query(bookmarksUriWithLimit(1),
                             new String[] { Bookmarks._ID,
@@ -1815,6 +1817,7 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
+    @Nullable
     public Cursor getBookmarkById(ContentResolver cr, long id) {
         final Cursor c = cr.query(mBookmarksUriWithProfile,
                                   new String[] { Bookmarks._ID,
@@ -1837,6 +1840,30 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
+    @Nullable
+    public Cursor getAllBookmarkFolders(ContentResolver cr) {
+        final Cursor cursor = cr.query(mBookmarksUriWithProfile,
+                                       DEFAULT_BOOKMARK_COLUMNS,
+                                       Bookmarks.TYPE + " = ? AND " +
+                                       Bookmarks.GUID + " NOT IN (?, ?, ?, ?, ?) AND " +
+                                       Bookmarks.IS_DELETED + " = 0",
+                                       new String[] { String.valueOf(Bookmarks.TYPE_FOLDER),
+                                                      Bookmarks.SCREENSHOT_FOLDER_GUID,
+                                                      Bookmarks.FAKE_READINGLIST_SMARTFOLDER_GUID,
+                                                      Bookmarks.TAGS_FOLDER_GUID,
+                                                      Bookmarks.PLACES_FOLDER_GUID,
+                                                      Bookmarks.PINNED_FOLDER_GUID },
+                                       null);
+        if (desktopBookmarksExist(cr)) {
+            final Cursor desktopCursor = getSpecialFolderCursor(Bookmarks.FAKE_DESKTOP_FOLDER_ID,
+                                                                Bookmarks.FAKE_DESKTOP_FOLDER_GUID);
+            return new MergeCursor(new Cursor[] { cursor, desktopCursor });
+        }
+        return cursor;
+    }
+
+    @Override
+    @Nullable
     public Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl) {
         Cursor c = cr.query(mBookmarksUriWithProfile,
                 new String[] { Bookmarks.GUID, Bookmarks._ID, Bookmarks.URL },
