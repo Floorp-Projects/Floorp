@@ -9,6 +9,7 @@ description = "Rust code for libxul"
 bindgen = ["gkrust-shared/bindgen"]
 servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
+cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

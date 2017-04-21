@@ -351,7 +351,7 @@ template<class Impl>
 class LayerView::Compositor::Natives : public mozilla::jni::NativeImpl<Compositor, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[14];
 };
 
 template<class Impl>
@@ -369,9 +369,37 @@ const JNINativeMethod LayerView::Compositor::Natives<Impl>::methods[] = {
             mozilla::jni::NativeStub<LayerView::Compositor::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
 
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::EnableLayerUpdateNotifications_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::EnableLayerUpdateNotifications_t, Impl>
+            ::template Wrap<&Impl::EnableLayerUpdateNotifications>),
+
     mozilla::jni::MakeNativeMethod<LayerView::Compositor::OnSizeChanged_t>(
             mozilla::jni::NativeStub<LayerView::Compositor::OnSizeChanged_t, Impl>
             ::template Wrap<&Impl::OnSizeChanged>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::RequestScreenPixels_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::RequestScreenPixels_t, Impl>
+            ::template Wrap<&Impl::RequestScreenPixels>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SendToolbarAnimatorMessage_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SendToolbarAnimatorMessage_t, Impl>
+            ::template Wrap<&Impl::SendToolbarAnimatorMessage>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SendToolbarPixelsToCompositor_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SendToolbarPixelsToCompositor_t, Impl>
+            ::template Wrap<&Impl::SendToolbarPixelsToCompositor>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SetDefaultClearColor_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SetDefaultClearColor_t, Impl>
+            ::template Wrap<&Impl::SetDefaultClearColor>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SetMaxToolbarHeight_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SetMaxToolbarHeight_t, Impl>
+            ::template Wrap<&Impl::SetMaxToolbarHeight>),
+
+    mozilla::jni::MakeNativeMethod<LayerView::Compositor::SetPinned_t>(
+            mozilla::jni::NativeStub<LayerView::Compositor::SetPinned_t, Impl>
+            ::template Wrap<&Impl::SetPinned>),
 
     mozilla::jni::MakeNativeMethod<LayerView::Compositor::SyncInvalidateAndScheduleComposite_t>(
             mozilla::jni::NativeStub<LayerView::Compositor::SyncInvalidateAndScheduleComposite_t, Impl>
@@ -390,15 +418,11 @@ template<class Impl>
 class NativePanZoomController::Natives : public mozilla::jni::NativeImpl<NativePanZoomController, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[5];
 };
 
 template<class Impl>
 const JNINativeMethod NativePanZoomController::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::AdjustScrollForSurfaceShift_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::AdjustScrollForSurfaceShift_t, Impl>
-            ::template Wrap<&Impl::AdjustScrollForSurfaceShift>),
 
     mozilla::jni::MakeNativeMethod<NativePanZoomController::DisposeNative_t>(
             mozilla::jni::NativeStub<NativePanZoomController::DisposeNative_t, Impl>
@@ -407,10 +431,6 @@ const JNINativeMethod NativePanZoomController::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEvent_t>(
             mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
             ::template Wrap<&Impl::HandleMotionEvent>),
-
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEventVelocity_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEventVelocity_t, Impl>
-            ::template Wrap<&Impl::HandleMotionEventVelocity>),
 
     mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMouseEvent_t>(
             mozilla::jni::NativeStub<NativePanZoomController::HandleMouseEvent_t, Impl>

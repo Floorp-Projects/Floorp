@@ -23,6 +23,7 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "jsfriendapi.h"
+#include "ThreadAnnotation.h"
 
 #ifdef XP_WIN
 #include "mozilla/TlsAllocationTracker.h"
@@ -1184,6 +1185,19 @@ bool MinidumpCallback(
       WriteLiteral(apiData, "ContainsMemoryReport=1\n");
       WriteLiteral(eventFile, "ContainsMemoryReport=1\n");
     }
+
+    std::function<void(const char*)> getThreadAnnotationCB =
+      [&] (const char * aAnnotation) -> void {
+      if (aAnnotation) {
+        WriteLiteral(apiData, "ThreadIdNameMapping=");
+        WriteLiteral(eventFile, "ThreadIdNameMapping=");
+        WriteString(apiData, aAnnotation);
+        WriteString(eventFile, aAnnotation);
+        WriteLiteral(apiData, "\n");
+        WriteLiteral(eventFile, "\n");
+      }
+    };
+    GetFlatThreadAnnotation(getThreadAnnotationCB);
   }
 
   if (!doReport) {
@@ -1413,6 +1427,16 @@ PrepareChildExceptionTimeAnnotations()
     WriteAnnotation(apiData, "TlsAllocations", tlsAllocations);
   }
 #endif
+
+  std::function<void(const char*)> getThreadAnnotationCB =
+    [&] (const char * aAnnotation) -> void {
+    if (aAnnotation) {
+      WriteLiteral(apiData, "ThreadIdNameMapping=");
+      WriteString(apiData, aAnnotation);
+      WriteLiteral(apiData, "\n");
+    }
+  };
+  GetFlatThreadAnnotation(getThreadAnnotationCB);
 }
 
 #ifdef XP_WIN
@@ -1832,6 +1856,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
+  InitThreadAnnotation();
+
   return NS_OK;
 }
 
@@ -2201,6 +2227,8 @@ nsresult UnsetExceptionHandler()
     free(memoryReportPath);
     memoryReportPath = nullptr;
   }
+
+  ShutdownThreadAnnotation();
 
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;

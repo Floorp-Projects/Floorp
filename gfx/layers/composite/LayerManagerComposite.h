@@ -63,6 +63,7 @@ class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
 class PaintCounter;
+class UiCompositorControllerParent;
 
 static const int kVisualWarningDuration = 150; // ms
 
@@ -213,6 +214,13 @@ protected:
   // change its rendering at this time. In order not to miss it, we composite
   // on every vsync until this time occurs (this is the latest such time).
   TimeStamp mCompositeUntilTime;
+#if defined(MOZ_WIDGET_ANDROID)
+public:
+  // Used by UiCompositorControllerParent to set itself as the target for the
+  // contents of the frame buffer after a composite.
+  // Implemented in LayerManagerComposite
+  virtual void RequestScreenPixels(UiCompositorControllerParent* aController) {}
+#endif // defined(MOZ_WIDGET_ANDROID)
 };
 
 // A layer manager implementation that uses the Compositor API
@@ -429,6 +437,10 @@ private:
   void Render(const nsIntRegion& aInvalidRegion, const nsIntRegion& aOpaqueRegion);
 #if defined(MOZ_WIDGET_ANDROID)
   void RenderToPresentationSurface();
+  // Returns the height of the toolbar in screen pixels.
+  int32_t RenderToolbar();
+  // Used by robocop tests to get a snapshot of the frame buffer.
+  void HandlePixelsTarget();
 #endif
 
   /**
@@ -482,6 +494,15 @@ private:
   void DrawPaintTimes(Compositor* aCompositor);
   RefPtr<PaintCounter> mPaintCounter;
 #endif
+#if defined(MOZ_WIDGET_ANDROID)
+public:
+  virtual void RequestScreenPixels(UiCompositorControllerParent* aController)
+  {
+    mScreenPixelsTarget = aController;
+  }
+private:
+  UiCompositorControllerParent* mScreenPixelsTarget;
+#endif // defined(MOZ_WIDGET_ANDROID)
 };
 
 /**
@@ -567,12 +588,6 @@ public:
   gfx::Matrix4x4 GetShadowTransform();
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool GetShadowOpacitySetByAnimation() { return mShadowOpacitySetByAnimation; }
-
-  /**
-   * Return true if a checkerboarding background color needs to be drawn
-   * for this layer.
-   */
-  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr) { return false; }
 
 protected:
   HostLayerManager* mCompositorManager;
@@ -672,8 +687,6 @@ public:
    * a subset of the shadow visible region.
    */
   virtual nsIntRegion GetFullyRenderedRegion();
-
-  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr);
 
 protected:
   LayerManagerComposite* mCompositeManager;

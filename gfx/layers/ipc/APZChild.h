@@ -31,8 +31,6 @@ public:
 
   mozilla::ipc::IPCResult RecvUpdateOverscrollOffset(const float& aX, const float& aY, const bool& aIsRootContent) override;
 
-  mozilla::ipc::IPCResult RecvSetScrollingRootContent(const bool& aIsRootContent) override;
-
   mozilla::ipc::IPCResult RecvNotifyMozMouseScrollEvent(const ViewID& aScrollId,
                                                         const nsString& aEvent) override;
 

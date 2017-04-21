@@ -78,7 +78,7 @@ public:
    * be called by the widget code when it loses its viewport information
    * (or for whatever reason wants to refresh the viewport information).
    * The information refresh happens because the compositor will call
-   * SetFirstPaintViewport on the next frame of composition.
+   * AndroidDynamicToolbarAnimator::FirstPaint() on the next frame of composition.
    */
   void ForceIsFirstPaint() { mIsFirstPaint = true; }
 
@@ -94,15 +94,11 @@ public:
   void ComputeRotation();
 
   // Call after updating our layer tree.
-  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig,
-               int32_t aPaintSyncId)
+  void Updated(bool isFirstPaint, const TargetConfig& aTargetConfig)
   {
     mIsFirstPaint |= isFirstPaint;
     mLayersUpdated = true;
     mTargetConfig = aTargetConfig;
-    if (aPaintSyncId) {
-      mPaintSyncId = aPaintSyncId;
-    }
   }
 
   bool RequiresReorientation(mozilla::dom::ScreenOrientationInternal aOrientation) const
@@ -148,18 +144,6 @@ private:
    * so that it stays in sync with the content that is being scrolled by APZ.
    */
   void ApplyAsyncTransformToScrollbar(Layer* aLayer);
-
-  void SetFirstPaintViewport(const LayerIntPoint& aOffset,
-                             const CSSToLayerScale& aZoom,
-                             const CSSRect& aCssPageRect);
-  void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                        const CSSToParentLayerScale& aZoom,
-                        const CSSRect& aCssPageRect,
-                        const CSSRect& aDisplayPort,
-                        const CSSToLayerScale& aPaintedResolution,
-                        bool aLayersUpdated,
-                        int32_t aPaintSyncId,
-                        ScreenMargin& aFixedLayerMargins);
 
   /**
    * Adds a translation to the transform of any fixed position (whose parent
@@ -231,8 +215,6 @@ private:
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
 
-  int32_t mPaintSyncId;
-
   bool mReadyForCompose;
 
   gfx::Matrix mWorldTransform;
@@ -244,6 +226,9 @@ private:
   CompositorBridgeParent* mCompositorBridge;
 
 #ifdef MOZ_WIDGET_ANDROID
+public:
+  void SetFixedLayerMarginsBottom(ScreenIntCoord aBottom);
+private:
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the
   // dynamic toolbar shifting content around.

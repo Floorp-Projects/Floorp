@@ -10,6 +10,10 @@
 #include "mozilla/gfx/PVsyncBridgeParent.h"
 
 namespace mozilla {
+namespace layers {
+class CompositorThreadHolder;
+} // namespace layers
+
 namespace gfx {
 
 class VsyncBridgeParent final : public PVsyncBridgeParent
@@ -34,6 +38,7 @@ private:
 
 private:
   bool mOpen;
+  RefPtr<layers::CompositorThreadHolder> mCompositorThreadRef;
 };
 
 } // namespace gfx

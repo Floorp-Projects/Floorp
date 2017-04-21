@@ -42,8 +42,7 @@ public class PhoneTabsButton extends ShapedButton {
 
         mPath.moveTo(nodes[0].x, nodes[0].y);
         TabCurve.drawFromTop(mPath, nodes[1].x, nodes[1].y, directionalCurve);
-        mPath.lineTo(nodes[2].x, nodes[2].y);
-        mPath.lineTo(nodes[3].x, nodes[3].y);
+        mPath.lineTo(nodes[1].x, nodes[1].y);
         mPath.lineTo(nodes[0].x, nodes[0].y);
     }
 
@@ -63,16 +62,13 @@ public class PhoneTabsButton extends ShapedButton {
             nodes = new Point[] {
                     new Point(width, 0)
                     , new Point(width, height)
-                    , new Point(0, height)
-                    , new Point(0, 0)
             };
         } else {
             nodes = new Point[]{
                     new Point(0, 0)
                     , new Point(0, height)
-                    , new Point(width, height)
-                    , new Point(width, 0)
             };
+
         }
         return nodes;
     }

@@ -1,0 +1,11 @@
+[package]
+name = "pulse-ffi"
+version = "0.1.0"
+authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
+description = "FFI for libpulse.so supporting static linking and dynamic loading."
+
+[features]
+dlopen = []
+
+[dependencies]
+libc = "^0.2.20"
