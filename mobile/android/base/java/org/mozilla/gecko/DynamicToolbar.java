@@ -149,36 +149,6 @@ public class DynamicToolbar {
         }
     }
 
-    public void setTemporarilyVisible(boolean visible, VisibilityTransition transition) {
-        ThreadUtils.assertOnUiThread();
-
-        if (layerView == null) {
-            return;
-        }
-
-        if (visible == temporarilyVisible) {
-            // nothing to do
-            return;
-        }
-
-        temporarilyVisible = visible;
-        final boolean isImmediate = transition == VisibilityTransition.IMMEDIATE;
-        if (visible) {
-            layerView.getDynamicToolbarAnimator().showToolbar(isImmediate);
-        } else {
-            layerView.getDynamicToolbarAnimator().hideToolbar(isImmediate);
-        }
-    }
-
-    public void persistTemporaryVisibility() {
-        ThreadUtils.assertOnUiThread();
-
-        if (temporarilyVisible) {
-            temporarilyVisible = false;
-            setVisible(true, VisibilityTransition.IMMEDIATE);
-        }
-    }
-
     public void setPinned(boolean pinned, PinReason reason) {
         ThreadUtils.assertOnUiThread();
         if (layerView == null) {
