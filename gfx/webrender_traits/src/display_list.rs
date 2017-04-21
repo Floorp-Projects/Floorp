@@ -5,6 +5,7 @@
 use app_units::Au;
 use std::mem;
 use std::slice;
+use time::precise_time_ns;
 use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShadowDisplayItem};
 use {ClipDisplayItem, ClipId, ClipRegion, ColorF, ComplexClipRegion, DisplayItem, ExtendMode};
 use {FilterOp, FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
@@ -51,6 +52,10 @@ pub struct BuiltDisplayList {
 pub struct BuiltDisplayListDescriptor {
     /// The size in bytes of the display list items in this display list.
     display_list_items_size: usize,
+    /// The first IPC time stamp: before any work has been done
+    serialization_start_time: u64,
+    /// The second IPC time stamp: after serialization
+    serialization_end_time: u64,
 }
 
 impl BuiltDisplayListDescriptor {
@@ -91,6 +96,9 @@ impl BuiltDisplayList {
         }
     }
 
+    pub fn serialization_times(&self) -> (u64, u64) {
+      (self.descriptor.serialization_start_time, self.descriptor.serialization_end_time)
+    }
 }
 
 #[derive(Clone)]
@@ -542,17 +550,23 @@ impl DisplayListBuilder {
 
     pub fn finalize(self) -> (PipelineId, BuiltDisplayList, AuxiliaryLists) {
         unsafe {
+            let serialization_start_time = precise_time_ns();
+
             let blob = convert_vec_pod_to_blob(self.list);
-            let display_list_items_size = blob.len();
+            let aux_list = self.auxiliary_lists_builder.finalize();
+
+            let serialization_end_time = precise_time_ns();
 
             (self.pipeline_id,
              BuiltDisplayList {
                  descriptor: BuiltDisplayListDescriptor {
-                     display_list_items_size: display_list_items_size,
+                    display_list_items_size: blob.len(),
+                    serialization_start_time: serialization_start_time,
+                    serialization_end_time: serialization_end_time,
                  },
                  data: blob,
              },
-             self.auxiliary_lists_builder.finalize())
+             aux_list)
         }
     }
 }

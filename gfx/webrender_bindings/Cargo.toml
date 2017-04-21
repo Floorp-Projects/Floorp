@@ -5,12 +5,12 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-webrender_traits = {path = "../webrender_traits", version = "0.33.0"}
+webrender_traits = {path = "../webrender_traits", version = "0.35.0"}
 euclid = "0.11"
 app_units = "0.4"
 gleam = "0.4"
 
 [dependencies.webrender]
 path = "../webrender"
-version = "0.32.0"
+version = "0.35.0"
 default-features = false

@@ -791,7 +791,8 @@ impl TextureCache {
                     ImageData::External(ext_image) => {
                         match ext_image.image_type {
                             ExternalImageType::Texture2DHandle |
-                            ExternalImageType::TextureRectHandle => {
+                            ExternalImageType::TextureRectHandle |
+                            ExternalImageType::TextureExternalHandle => {
                                 panic!("External texture handle should not go through texture_cache.");
                             }
                             ExternalImageType::ExternalBuffer => {
@@ -800,6 +801,7 @@ impl TextureCache {
                                     op: TextureUpdateOp::UpdateForExternalBuffer {
                                         rect: result.item.allocated_rect,
                                         id: ext_image.id,
+                                        channel_index: ext_image.channel_index,
                                         stride: stride,
                                     },
                                 };
@@ -834,7 +836,8 @@ impl TextureCache {
                     ImageData::External(ext_image) => {
                         match ext_image.image_type {
                             ExternalImageType::Texture2DHandle |
-                            ExternalImageType::TextureRectHandle => {
+                            ExternalImageType::TextureRectHandle |
+                            ExternalImageType::TextureExternalHandle => {
                                 panic!("External texture handle should not go through texture_cache.");
                             }
                             ExternalImageType::ExternalBuffer => {

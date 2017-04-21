@@ -180,9 +180,13 @@ struct WrState;
 
 struct WrBuiltDisplayListDescriptor {
   size_t display_list_items_size;
+  uint64_t serialization_start_time;
+  uint64_t serialization_end_time;
 
   bool operator==(const WrBuiltDisplayListDescriptor& aOther) const {
-    return display_list_items_size == aOther.display_list_items_size;
+    return display_list_items_size == aOther.display_list_items_size &&
+      serialization_start_time == aOther.serialization_start_time &&
+      serialization_end_time == aOther.serialization_end_time;
   }
 };
 
@@ -478,19 +482,15 @@ typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
 
 typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
 
-typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageId);
-
 struct WrExternalImageHandler {
   void* external_image_obj;
   LockExternalImageCallback lock_func;
   UnlockExternalImageCallback unlock_func;
-  ReleaseExternalImageCallback release_func;
 
   bool operator==(const WrExternalImageHandler& aOther) const {
     return external_image_obj == aOther.external_image_obj &&
       lock_func == aOther.lock_func &&
-      unlock_func == aOther.unlock_func &&
-      release_func == aOther.release_func;
+      unlock_func == aOther.unlock_func;
   }
 };
 

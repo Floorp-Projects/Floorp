@@ -539,19 +539,18 @@ struct WrExternalImage {
 
 type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId) -> WrExternalImage;
 type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId);
-type ReleaseExternalImageCallback = fn(*mut c_void, WrExternalImageId);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
     external_image_obj: *mut c_void,
     lock_func: LockExternalImageCallback,
     unlock_func: UnlockExternalImageCallback,
-    release_func: ReleaseExternalImageCallback,
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
     fn lock(&mut self,
-            id: ExternalImageId)
+            id: ExternalImageId,
+            _channel_index: u8)
             -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id.into());
 
@@ -578,13 +577,9 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 
     fn unlock(&mut self,
-              id: ExternalImageId) {
+              id: ExternalImageId,
+              _channel_index: u8) {
         (self.unlock_func)(self.external_image_obj, id.into());
-    }
-
-    fn release(&mut self,
-               id: ExternalImageId) {
-        (self.release_func)(self.external_image_obj, id.into());
     }
 }
 
@@ -739,7 +734,6 @@ pub extern "C" fn wr_renderer_set_external_image_handler(renderer: &mut WrRender
                                                                  (*external_image_handler).external_image_obj,
                                                              lock_func: (*external_image_handler).lock_func,
                                                              unlock_func: (*external_image_handler).unlock_func,
-                                                             release_func: (*external_image_handler).release_func,
                                                          }
                                                      }));
     }
@@ -941,6 +935,7 @@ pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
                                           id: external_image_id.into(),
+                                          channel_index: 0,
                                           image_type: ExternalImageType::Texture2DHandle,
                                       }),
                   None);
@@ -956,6 +951,7 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut WrAPI,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
                                           id: external_image_id.into(),
+                                          channel_index: 0,
                                           image_type: ExternalImageType::ExternalBuffer,
                                       }),
                   None);
@@ -1110,7 +1106,7 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut WrAPI,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    api.add_raw_font(key, font_vector);
+    api.add_raw_font(key, font_vector, 0);
 }
 
 #[no_mangle]

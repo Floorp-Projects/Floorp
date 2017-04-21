@@ -59,6 +59,17 @@ float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
     return dot(normalize(perp_dir), dir_to_p0);
 }
 
+float distance_to_ellipse(vec2 p, vec2 radii) {
+    // sdEllipse fails on exact circles, so handle equal
+    // radii here. The branch coherency should make this
+    // a performance win for the circle case too.
+    if (radii.x == radii.y) {
+        return length(p) - radii.x;
+    } else {
+        return sdEllipse(p, radii);
+    }
+}
+
 void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
@@ -78,32 +89,11 @@ void main(void) {
     // necessary for correctness when the border width is greater
     // than the border radius.
     if (all(lessThan(local_pos * vClipSign, vClipCenter * vClipSign))) {
-        float d0, d1;
+        vec2 p = local_pos - vClipCenter;
 
-        // sdEllipse fails on exact circles, so handle equal
-        // radii here. The branch coherency should make this
-        // a performance win for the circle case too.
-        if (vOuterRadii.x == vOuterRadii.y) {
-            // Get the distances to the inner and outer radii.
-            d0 = distance(vClipCenter, local_pos) - vOuterRadii.x;
-        } else {
-            // Get the distance to the outer ellipse.
-            vec2 p = local_pos - vClipCenter;
-            d0 = sdEllipse(p, vOuterRadii);
-        }
-
-        if (vInnerRadii.x == vInnerRadii.y) {
-            d1 = distance(vClipCenter, local_pos) - vInnerRadii.x;
-        } else {
-            // Get distance to inner ellipse. Skip if the inner
-            // radius is <= 0.0 to avoid FP errors.
-            if (vInnerRadii.x <= 0.0 || vInnerRadii.y <= 0.0) {
-                d1 = -d0;
-            } else {
-                vec2 p = local_pos - vClipCenter;
-                d1 = sdEllipse(p, vInnerRadii);
-            }
-        }
+        // Get signed distance from the inner/outer clips.
+        float d0 = distance_to_ellipse(p, vOuterRadii);
+        float d1 = distance_to_ellipse(p, vInnerRadii);
 
         // Signed distance field subtract
         float d = max(d0, 0.5 * afwidth - d1);

@@ -45,8 +45,8 @@ impl Payload {
     }
 
     /// Deserializes the given payload from a raw byte vector.
-    pub fn from_data(data: Vec<u8>) -> Payload {
-        let mut payload_reader = Cursor::new(&data[..]);
+    pub fn from_data(data: &[u8]) -> Payload {
+        let mut payload_reader = Cursor::new(data);
         let epoch = Epoch(payload_reader.read_u32::<LittleEndian>().unwrap());
         let pipeline_id = PipelineId(payload_reader.read_u32::<LittleEndian>().unwrap(),
                                      payload_reader.read_u32::<LittleEndian>().unwrap());
@@ -58,6 +58,8 @@ impl Payload {
         let aux_size = payload_reader.read_u64::<LittleEndian>().unwrap() as usize;
         let mut auxiliary_lists_data = vec![0; aux_size];
         payload_reader.read_exact(&mut auxiliary_lists_data[..]).unwrap();
+
+        assert_eq!(payload_reader.position(), data.len() as u64);
 
         Payload {
             epoch: epoch,

@@ -20,6 +20,10 @@ extern crate offscreen_gl_context;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate time;
+
+#[cfg(target_os = "macos")]
+extern crate core_foundation;
 
 #[cfg(target_os = "macos")]
 extern crate core_graphics;

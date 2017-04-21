@@ -50,10 +50,6 @@ void UnlockExternalImage(void* aObj, WrExternalImageId aId)
   texture->Unlock();
 }
 
-void ReleaseExternalImage(void* aObj, WrExternalImageId aId)
-{
-}
-
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
@@ -88,7 +84,6 @@ RendererOGL::GetExternalImageHandler()
     this,
     LockExternalImage,
     UnlockExternalImage,
-    ReleaseExternalImage,
   };
 }
 

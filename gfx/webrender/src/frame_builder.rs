@@ -202,7 +202,7 @@ impl FrameBuilder {
             stacking_context_index: stacking_context_index,
             clip_id: clip_id,
             packed_layer_index: packed_layer_index,
-            xf_rect: None,
+            screen_bounding_rect: None,
          });
 
         ClipScrollGroupIndex(self.clip_scroll_group_store.len() - 1, clip_id)
@@ -1178,7 +1178,7 @@ impl FrameBuilder {
                     let stacking_context_index = *sc_stack.last().unwrap();
                     let group_index = self.stacking_context_store[stacking_context_index.0]
                                           .clip_scroll_group(clip_id);
-                    if self.clip_scroll_group_store[group_index.0].xf_rect.is_none() {
+                    if self.clip_scroll_group_store[group_index.0].screen_bounding_rect.is_none() {
                         continue
                     }
 
@@ -1402,9 +1402,9 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             let local_viewport_rect =
                 node.combined_local_viewport_rect.translate(&-node.local_viewport_rect.origin);
 
-            node_clip_info.xf_rect = packed_layer.set_rect(&local_viewport_rect,
-                                                           self.screen_rect,
-                                                           self.device_pixel_ratio);
+            node_clip_info.screen_bounding_rect = packed_layer.set_rect(&local_viewport_rect,
+                                                                        self.screen_rect,
+                                                                        self.device_pixel_ratio);
 
             let mask_info = match node_clip_info.mask_cache_info {
                 Some(ref mut mask_info) => mask_info,
@@ -1457,9 +1457,9 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 &node.combined_local_viewport_rect
                      .translate(&-stacking_context.reference_frame_offset)
                      .translate(&-node.scrolling.offset);
-            group.xf_rect = packed_layer.set_rect(viewport_rect,
-                                                  self.screen_rect,
-                                                  self.device_pixel_ratio);
+            group.screen_bounding_rect = packed_layer.set_rect(viewport_rect,
+                                                               self.screen_rect,
+                                                               self.device_pixel_ratio);
         }
     }
 
@@ -1535,9 +1535,10 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             };
 
             if bounding_rect.is_none() {
-                bounding_rect =
-                    Some(clip_info.xf_rect.as_ref().map_or_else(DeviceIntRect::zero,
-                                                                |x| x.bounding_rect))
+                bounding_rect = Some(match clip_info.screen_bounding_rect {
+                    Some((_kind, rect)) => rect,
+                    None => DeviceIntRect::zero(),
+                });
             }
             self.current_clip_stack.push((clip_info.packed_layer_index,
                                           clip_info.mask_cache_info.clone().unwrap()))

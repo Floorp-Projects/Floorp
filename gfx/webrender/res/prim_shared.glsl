@@ -90,7 +90,8 @@ RectWithEndpoint intersect_rect(RectWithEndpoint a, RectWithEndpoint b) {
 }
 
 
-flat varying RectWithEndpoint vClipMaskUvBounds;
+// TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
+flat varying vec4 vClipMaskUvBounds;
 varying vec3 vClipMaskUv;
 
 #ifdef WR_VERTEX_SHADER
@@ -744,8 +745,7 @@ BoxShadow fetch_boxshadow(int index) {
 void write_clip(vec2 global_pos, ClipArea area) {
     vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
     vec2 uv = global_pos + area.task_bounds.xy - area.screen_origin_target_index.xy;
-    vClipMaskUvBounds = RectWithEndpoint(area.task_bounds.xy / texture_size,
-                                         area.task_bounds.zw / texture_size);
+    vClipMaskUvBounds = area.task_bounds / texture_size.xyxy;
     vClipMaskUv = vec3(uv / texture_size, area.screen_origin_target_index.z);
 }
 #endif //WR_VERTEX_SHADER
@@ -787,10 +787,10 @@ vec2 init_transform_fs(vec3 local_pos, RectWithSize local_rect, out float fragme
 float do_clip() {
     // anything outside of the mask is considered transparent
     bvec4 inside = lessThanEqual(
-        vec4(vClipMaskUvBounds.p0, vClipMaskUv.xy),
-        vec4(vClipMaskUv.xy, vClipMaskUvBounds.p1));
+        vec4(vClipMaskUvBounds.xy, vClipMaskUv.xy),
+        vec4(vClipMaskUv.xy, vClipMaskUvBounds.zw));
     // check for the dummy bounds, which are given to the opaque objects
-    return vClipMaskUvBounds.p0 == vClipMaskUvBounds.p1 ? 1.0:
+    return vClipMaskUvBounds.xy == vClipMaskUvBounds.zw ? 1.0:
         all(inside) ? textureLod(sCacheA8, vClipMaskUv, 0.0).r : 0.0;
 }
 

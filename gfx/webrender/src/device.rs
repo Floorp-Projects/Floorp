@@ -52,6 +52,7 @@ pub enum TextureTarget {
     Default,
     Array,
     Rect,
+    External,
 }
 
 impl TextureTarget {
@@ -60,6 +61,7 @@ impl TextureTarget {
             TextureTarget::Default => gl::TEXTURE_2D,
             TextureTarget::Array => gl::TEXTURE_2D_ARRAY,
             TextureTarget::Rect => gl::TEXTURE_RECTANGLE,
+            TextureTarget::External => gl::TEXTURE_EXTERNAL_OES,
         }
     }
 }
@@ -1557,11 +1559,6 @@ impl Device {
         if u_noise != -1 {
             self.gl.uniform_1i(u_noise, TextureSampler::Dither as i32);
         }
-        let u_mask = self.gl.get_uniform_location(program.id, "sMask");
-        if u_mask != -1 {
-            self.gl.uniform_1i(u_mask, TextureSampler::Mask as i32);
-        }
-
         let u_cache_a8 = self.gl.get_uniform_location(program.id, "sCacheA8");
         if u_cache_a8 != -1 {
             self.gl.uniform_1i(u_cache_a8, TextureSampler::CacheA8 as i32);

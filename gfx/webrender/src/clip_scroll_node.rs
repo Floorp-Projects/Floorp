@@ -9,11 +9,11 @@ use prim_store::GpuBlock32;
 use renderer::VertexDataStore;
 use spring::{DAMPING, STIFFNESS, Spring};
 use tiling::PackedLayerIndex;
-use util::TransformedRect;
+use util::TransformedRectKind;
 use webrender_traits::{ClipId, ClipRegion, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use webrender_traits::{LayerToScrollTransform, LayerToWorldTransform, PipelineId};
 use webrender_traits::{ScrollEventPhase, ScrollLayerRect, ScrollLocation, WorldPoint};
-use webrender_traits::WorldPoint4D;
+use webrender_traits::{DeviceIntRect, WorldPoint4D};
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
@@ -37,7 +37,7 @@ pub struct ClipInfo {
     /// The final transformed rectangle of this clipping region for this node,
     /// which depends on the screen rectangle and the transformation of all of
     /// the parents.
-    pub xf_rect: Option<TransformedRect>,
+    pub screen_bounding_rect: Option<(TransformedRectKind, DeviceIntRect)>,
 }
 
 impl ClipInfo {
@@ -52,7 +52,7 @@ impl ClipInfo {
             mask_cache_info: MaskCacheInfo::new(&clip_sources, clip_store),
             clip_sources: clip_sources,
             packed_layer_index: packed_layer_index,
-            xf_rect: None,
+            screen_bounding_rect: None,
         }
     }
 

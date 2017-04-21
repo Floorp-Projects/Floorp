@@ -19,7 +19,11 @@ fn main() {
           .unwrap();
 
     // GLES 2.0 bindings
-    let gles_extensions = ["GL_EXT_texture_format_BGRA8888", "GL_OES_EGL_image"];
+    let gles_extensions = [
+        "GL_EXT_texture_format_BGRA8888",
+        "GL_OES_EGL_image",
+        "GL_OES_EGL_image_external",
+    ];
     let gles_reg = Registry::new(Api::Gles2, (3, 0), Profile::Core, Fallbacks::All, gles_extensions);
     gles_reg.write_bindings(gl_generator::StructGenerator, &mut file_gles)
             .unwrap();
