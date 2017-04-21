@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+#x { }
+    </style>
+  </head>
+  <body onload="getComputedStyle(document.getElementById('x')).color;
+                document.styleSheets[0].cssRules[0].style.color = 'orange';
+                document.documentElement.removeAttribute('class');">
+    <div id="x"><span>I should be orange</span></div>
+  </body>
+</html>
