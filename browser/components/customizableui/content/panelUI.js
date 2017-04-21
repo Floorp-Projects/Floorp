@@ -57,6 +57,7 @@ const PanelUI = {
     Services.obs.addObserver(this, "panelUI-notification-dismissed");
 
     window.addEventListener("fullscreen", this);
+    window.addEventListener("activate", this);
     window.matchMedia("(-moz-overlay-scrollbars)").addListener(this._overlayScrollListenerBoundFn);
     CustomizableUI.addListener(this);
 
@@ -138,6 +139,7 @@ const PanelUI = {
     Services.obs.removeObserver(this, "panelUI-notification-dismissed");
 
     window.removeEventListener("fullscreen", this);
+    window.removeEventListener("activate", this);
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
     window.matchMedia("(-moz-overlay-scrollbars)").removeListener(this._overlayScrollListenerBoundFn);
@@ -351,6 +353,7 @@ const PanelUI = {
         this.toggle(aEvent);
         break;
       case "fullscreen":
+      case "activate":
         this._updateNotifications();
         break;
     }
@@ -749,7 +752,8 @@ const PanelUI = {
         this._showBannerItem(this.notifications[0]);
       }
     } else if (doorhangers.length > 0) {
-      if (window.fullScreen) {
+      // Only show the doorhanger if the window is focused and not fullscreen
+      if (window.fullScreen || Services.focus.activeWindow !== window) {
         this._hidePopup();
         this._showBadge(doorhangers[0]);
         this._showBannerItem(doorhangers[0]);

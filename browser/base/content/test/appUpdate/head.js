@@ -194,7 +194,12 @@ function runUpdateProcessingTest(updates, steps) {
   });
 }
 
-function processStep({notificationId, button, beforeClick, cleanup}) {
+function processStep(step) {
+  if (typeof(step) == "function") {
+    return Task.spawn(step);
+  }
+
+  const {notificationId, button, beforeClick, cleanup} = step;
   return Task.spawn(function*() {
 
     yield BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
@@ -208,13 +213,11 @@ function processStep({notificationId, button, beforeClick, cleanup}) {
       return;
     }
 
-    let notification = document.getElementById(`appMenu-${notificationId}-notification`);
-    is(notification.hidden, false, `${notificationId} notification is showing`);
+    let buttonEl = getNotificationButton(window, notificationId, button);
     if (beforeClick) {
-      yield Task.spawn(beforeClick);
+      yield beforeClick();
     }
 
-    let buttonEl = document.getAnonymousElementByAttribute(notification, "anonid", button);
 
     buttonEl.click();
 
@@ -242,6 +245,22 @@ function waitForEvent(topic, status = null) {
       }
     }
   }, topic))
+}
+
+/**
+ * Gets the specified button for the notification.
+ *
+ * @param  window
+ *         The window to get the notification button for.
+ * @param  notificationId
+ *         The ID of the notification to get the button for.
+ * @param  button
+ *         The anonid of the button to get.
+ */
+function getNotificationButton(win, notificationId, button) {
+  let notification = win.document.getElementById(`appMenu-${notificationId}-notification`);
+  is(notification.hidden, false, `${notificationId} notification is showing`);
+  return win.document.getAnonymousElementByAttribute(notification, "anonid", button);
 }
 
 /**
