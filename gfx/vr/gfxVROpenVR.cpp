@@ -728,9 +728,15 @@ VRSystemManagerOpenVR::HandleInput()
 
       // Start to process pose
       const ::vr::TrackedDevicePose_t& pose = poses[trackedIndex];
+      GamepadPoseState poseState;
 
-      if (pose.bDeviceIsConnected && pose.bPoseIsValid &&
-        pose.eTrackingResult == ::vr::TrackingResult_Running_OK) {
+      if (pose.bDeviceIsConnected) {
+        poseState.flags |= (GamepadCapabilityFlags::Cap_Orientation |
+                            GamepadCapabilityFlags::Cap_Position);
+      }
+
+      if (pose.bPoseIsValid &&
+          pose.eTrackingResult == ::vr::TrackingResult_Running_OK) {
         gfx::Matrix4x4 m;
 
         // NOTE! mDeviceToAbsoluteTracking is a 3x4 matrix, not 4x4.  But
@@ -744,8 +750,6 @@ VRSystemManagerOpenVR::HandleInput()
         rot.SetFromRotationMatrix(m);
         rot.Invert();
 
-        GamepadPoseState poseState;
-        poseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
         poseState.orientation[0] = rot.x;
         poseState.orientation[1] = rot.y;
         poseState.orientation[2] = rot.z;
@@ -753,16 +757,17 @@ VRSystemManagerOpenVR::HandleInput()
         poseState.angularVelocity[0] = pose.vAngularVelocity.v[0];
         poseState.angularVelocity[1] = pose.vAngularVelocity.v[1];
         poseState.angularVelocity[2] = pose.vAngularVelocity.v[2];
+        poseState.isOrientationValid = true;
 
-        poseState.flags |= GamepadCapabilityFlags::Cap_Position;
         poseState.position[0] = m._41;
         poseState.position[1] = m._42;
         poseState.position[2] = m._43;
         poseState.linearVelocity[0] = pose.vVelocity.v[0];
         poseState.linearVelocity[1] = pose.vVelocity.v[1];
         poseState.linearVelocity[2] = pose.vVelocity.v[2];
-        HandlePoseTracking(i, poseState, controller);
+        poseState.isPositionValid = true;
       }
+      HandlePoseTracking(i, poseState, controller);
     }
   }
 }
