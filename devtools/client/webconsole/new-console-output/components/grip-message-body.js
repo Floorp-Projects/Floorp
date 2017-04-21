@@ -61,9 +61,11 @@ function GripMessageBody(props) {
 
   let onDOMNodeMouseOver;
   let onDOMNodeMouseOut;
+  let onInspectIconClick;
   if (serviceContainer) {
     onDOMNodeMouseOver = (object) => serviceContainer.highlightDomElement(object);
     onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
+    onInspectIconClick = (object) => serviceContainer.openNodeInInspector(object);
   }
 
   return (
@@ -81,6 +83,7 @@ function GripMessageBody(props) {
         objectLink: VariablesViewLink,
         onDOMNodeMouseOver,
         onDOMNodeMouseOut,
+        onInspectIconClick,
         defaultRep: Grip,
         mode: props.mode,
       })
