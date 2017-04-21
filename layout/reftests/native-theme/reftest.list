@@ -78,7 +78,7 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 # animated progress bars.
 # Nothing shows up on Android, presumably because that appearance type is
 # not implemented.
-pref(layout.css.moz-appearance.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
-pref(layout.css.moz-appearance.enabled,true) fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
+pref(layout.css.moz-appearance.enabled,true) pref(layout.css.appearance.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
+pref(layout.css.moz-appearance.enabled,true) pref(layout.css.appearance.enabled,true) fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
 
 == 676387-1.xul 676387-1-ref.xul
