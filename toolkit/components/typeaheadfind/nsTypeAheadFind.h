@@ -95,7 +95,7 @@ protected:
   // If we destroy mSoundInterface before sound has played, it won't play
   nsCOMPtr<nsISound> mSoundInterface;
   bool mIsSoundInitialized;
-
+  
   // where selection was when user started the find
   nsCOMPtr<nsIDOMRange> mStartFindRange;
   nsCOMPtr<nsIDOMRange> mSearchRange;
