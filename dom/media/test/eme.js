@@ -239,6 +239,7 @@ function LoadTest(test, elem, token, loadParams)
 
   var ms = new MediaSource();
   elem.src = URL.createObjectURL(ms);
+  elem.crossOrigin = test.crossOrigin || false;
 
   return new Promise(function (resolve, reject) {
     ms.addEventListener("sourceopen", function () {
@@ -282,7 +283,6 @@ function EMEPromiseAll(v, token, promises) {
 function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
-  v.crossOrigin = test.crossOrigin || false;
   v.sessions = [];
 
   v.closeSessions = function() {
