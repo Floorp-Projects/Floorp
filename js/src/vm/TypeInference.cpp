@@ -1494,6 +1494,15 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
                 succeeded = false;
         }
 
+        // Add this compilation to the inlinedCompilations list of each inlined
+        // script, so we can invalidate it on changes to stack type sets.
+        if (entry.script != script) {
+            if (!entry.script->types()->addInlinedCompilation(*precompileInfo)) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+
         // If necessary, add constraints to trigger invalidation on the script
         // after any future changes to the stack type sets.
         if (entry.script->hasFreezeConstraints())
@@ -1900,37 +1909,6 @@ ObjectGroup::initialHeap(CompilerConstraintList* constraints)
 
 namespace {
 
-// Constraint which triggers recompilation on any type change in an inlined
-// script. The freeze constraints added to stack type sets will only directly
-// invalidate the script containing those stack type sets. To invalidate code
-// for scripts into which the base script was inlined, ObjectStateChange is used.
-class ConstraintDataFreezeObjectForInlinedCall
-{
-  public:
-    ConstraintDataFreezeObjectForInlinedCall()
-    {}
-
-    const char* kind() { return "freezeObjectForInlinedCall"; }
-
-    bool invalidateOnNewType(TypeSet::Type type) { return false; }
-    bool invalidateOnNewPropertyState(TypeSet* property) { return false; }
-    bool invalidateOnNewObjectState(ObjectGroup* group) {
-        // We don't keep track of the exact dependencies the caller has on its
-        // inlined scripts' type sets, so always invalidate the caller.
-        return true;
-    }
-
-    bool constraintHolds(JSContext* cx,
-                         const HeapTypeSetKey& property, TemporaryTypeSet* expected)
-    {
-        return true;
-    }
-
-    bool shouldSweep() { return false; }
-
-    JSCompartment* maybeCompartment() { return nullptr; }
-};
-
 // Constraint which triggers recompilation when a typed array's data becomes
 // invalid.
 class ConstraintDataFreezeObjectForTypedArrayData
@@ -2003,16 +1981,6 @@ class ConstraintDataFreezeObjectForUnboxedConvertedToNative
 };
 
 } /* anonymous namespace */
-
-void
-TypeSet::ObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList* constraints)
-{
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    LifoAlloc* alloc = constraints->alloc();
-
-    typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForInlinedCall> T;
-    constraints->add(alloc->new_<T>(alloc, objectProperty, ConstraintDataFreezeObjectForInlinedCall()));
-}
 
 void
 TypeSet::ObjectKey::watchStateChangeForTypedArrayData(CompilerConstraintList* constraints)
@@ -2609,11 +2577,12 @@ TypeZone::addPendingRecompile(JSContext* cx, JSScript* script)
     if (script->hasIonScript())
         addPendingRecompile(cx, script->ionScript()->recompileInfo());
 
-    // When one script is inlined into another the caller listens to state
-    // changes on the callee's script, so trigger these to force recompilation
-    // of any such callers.
-    if (script->functionNonDelazifying() && !script->functionNonDelazifying()->hasLazyGroup())
-        ObjectStateChange(cx, script->functionNonDelazifying()->group(), false);
+    // Trigger recompilation of any callers inlining this script.
+    if (TypeScript* types = script->types()) {
+        for (RecompileInfo info : types->inlinedCompilations())
+            addPendingRecompile(cx, info);
+        types->inlinedCompilations().clearAndFree();
+    }
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS
@@ -4437,6 +4406,19 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
 
     TypeZone& types = zone()->types;
 
+    // Sweep the inlinedCompilations Vector.
+    {
+        RecompileInfoVector& inlinedCompilations = types_->inlinedCompilations();
+        size_t dest = 0;
+        for (size_t i = 0; i < inlinedCompilations.length(); i++) {
+            if (inlinedCompilations[i].shouldSweep(types))
+                continue;
+            inlinedCompilations[dest] = inlinedCompilations[i];
+            dest++;
+        }
+        inlinedCompilations.shrinkTo(dest);
+    }
+
     // Destroy all type information attached to the script if desired. We can
     // only do this if nothing has been compiled for the script, which will be
     // the case unless the script has been compiled since we started sweeping.
@@ -4475,7 +4457,7 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
 void
 TypeScript::destroy()
 {
-    js_free(this);
+    js_delete(this);
 }
 
 void
