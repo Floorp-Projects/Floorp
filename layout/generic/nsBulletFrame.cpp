@@ -601,7 +601,7 @@ nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
                                LayerManager* aManager,
                                const ContainerLayerParameters& aParameters)
 {
-  if (!gfxPrefs::LayersAllowBulletLayers()) {
+  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBulletLayers)) {
     return LAYER_NONE;
   }
 

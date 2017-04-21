@@ -2679,6 +2679,17 @@ nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder, const ActiveScr
   }
 }
 
+bool
+nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc)
+{
+  if (!gfxPrefs::LayersAdvancedBasicLayerEnabled() &&
+      aManager && aManager->GetBackendType() == layers::LayersBackend::LAYERS_BASIC) {
+    return false;
+  }
+
+  return aFunc();
+}
+
 static const DisplayItemClipChain*
 FindCommonAncestorClipForIntersection(const DisplayItemClipChain* aOne,
                                       const DisplayItemClipChain* aTwo)
@@ -2767,7 +2778,7 @@ nsDisplaySolidColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters)
 {
-  if (ForceActiveLayers() || gfxPrefs::LayersAllowSolidColorLayers()) {
+  if (ForceActiveLayers() || ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowSolidColorLayers)) {
     return LAYER_ACTIVE;
   }
   return LAYER_NONE;
@@ -3334,7 +3345,8 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowBackgroundImage() && CanBuildWebRenderDisplayItems()) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage) &&
+      CanBuildWebRenderDisplayItems()) {
     return LAYER_ACTIVE;
   }
 
@@ -3385,7 +3397,7 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowBackgroundImage()) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage)) {
     return BuildDisplayItemLayer(aBuilder, aManager, aParameters);
   }
 
@@ -3983,7 +3995,7 @@ nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[0].mClip;
-  if ((ForceActiveLayers() || gfxPrefs::LayersAllowBackgroundColorLayers()) &&
+  if ((ForceActiveLayers() || ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundColorLayers)) &&
       clip != StyleGeometryBox::Text) {
     return LAYER_ACTIVE;
   }
@@ -4167,7 +4179,7 @@ nsDisplayOutline::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerLayerParameters& aParameters)
 {
-  if (!gfxPrefs::LayersAllowOutlineLayers()) {
+  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOutlineLayers)) {
     return LAYER_NONE;
   }
 
@@ -4523,7 +4535,7 @@ nsDisplayCaret::GetLayerState(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowCaretLayers()) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowCaretLayers)) {
     return LAYER_ACTIVE;
   }
 
@@ -4600,7 +4612,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                LayerManager* aManager,
                                const ContainerLayerParameters& aParameters)
 {
-  if (!gfxPrefs::LayersAllowBorderLayers()) {
+  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
     return LAYER_NONE;
   }
 
@@ -4712,7 +4724,7 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
     return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
   } else {
     RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
@@ -5035,7 +5047,7 @@ nsDisplayBoxShadowOuter::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowOuterBoxShadow() &&
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOuterBoxShadow) &&
       CanBuildWebRenderDisplayItems()) {
     return LAYER_ACTIVE;
   }
@@ -5293,7 +5305,7 @@ nsDisplayBoxShadowInner::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowInsetBoxShadow() &&
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowInsetBoxShadow) &&
       CanCreateWebRenderCommands(aBuilder, mFrame, ToReferenceFrame())) {
     return LAYER_ACTIVE;
   }
