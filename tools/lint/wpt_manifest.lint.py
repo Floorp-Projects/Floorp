@@ -5,13 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import imp
-import json
 import os
-import sys
-
-from mozprocess import ProcessHandler
-
-from mozlint import result
 
 
 def lint(files, logger, **kwargs):

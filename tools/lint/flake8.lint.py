@@ -114,7 +114,7 @@ def _run_pip(*args):
     """
     try:
         subprocess.check_output(['pip'] + list(args),
-                                      stderr=subprocess.STDOUT)
+                                stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError as e:
         print(e.output)
