@@ -564,6 +564,13 @@ private:
   nsresult StartLoad(nsScriptLoadRequest *aRequest);
 
   /**
+   * Abort the current stream, and re-start with a new load request from scratch
+   * without requesting any alternate data. Returns NS_BINDING_RETARGETED on
+   * success, as this error code is used to abort the input stream.
+   */
+  nsresult RestartLoad(nsScriptLoadRequest *aRequest);
+
+  /**
    * Process any pending requests asynchronously (i.e. off an event) if there
    * are any. Note that this is a no-op if there aren't any currently pending
    * requests.
@@ -732,6 +739,9 @@ private:
   bool EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
                      const uint8_t* aData, uint32_t aDataLength,
                      bool aEndOfStream, nsCString& oCharset);
+
+  // Query the channel to find the data type associated with the input stream.
+  nsresult EnsureKnownDataType(nsIIncrementalStreamLoader *aLoader);
 
   // ScriptLoader which will handle the parsed script.
   RefPtr<nsScriptLoader>        mScriptLoader;
