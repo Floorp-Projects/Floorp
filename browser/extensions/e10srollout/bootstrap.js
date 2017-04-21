@@ -127,6 +127,7 @@ function defineCohort() {
     setCohort("optedOut");
   } else if (userOptedIn.e10s) {
     setCohort("optedIn");
+    inMultiExperiment = true;
   } else if (temporaryDisqualification != "") {
     // Users who are disqualified by the backend (from multiprocessBlockPolicy)
     // can be put into either the test or control groups, because e10s will
@@ -185,7 +186,7 @@ function defineCohort() {
   let multiUserSample = getUserSample(true);
   for (let sampleName of Object.getOwnPropertyNames(BUCKETS)) {
     if (multiUserSample < BUCKETS[sampleName]) {
-      setCohort(`${cohortPrefix}multiBucket${sampleName}`);
+      setCohort(`multiBucket${sampleName}`);
       Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", sampleName);
       break;
     }

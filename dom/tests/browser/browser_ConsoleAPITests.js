@@ -348,8 +348,6 @@ function testConsoleGroup(aMessageObject) {
     is(aMessageObject.arguments[1], "group", "group arguments[1] matches");
   }
   else if (aMessageObject.level == "groupEnd") {
-    let groupName = Array.prototype.join.call(aMessageObject.arguments, " ");
-    is(groupName,"b group", "groupEnd arguments matches");
     is(aMessageObject.groupName, "b group", "groupEnd groupName matches");
   }
 
@@ -503,8 +501,9 @@ function testEmptyTimer(aMessageObject) {
 
   ok(aMessageObject.level == "time" || aMessageObject.level == "timeEnd",
      "expected level received");
-  is(aMessageObject.arguments.length, 0, "we don't have arguments");
-  ok(!aMessageObject.timer, "we don't have a timer");
+  is(aMessageObject.arguments.length, 1, "we have the default argument");
+  is(aMessageObject.arguments[0], "default", "we have the default argument");
+  ok(aMessageObject.timer, "we have a timer");
 
   is(aMessageObject.functionName, "namelessTimer", "functionName matches");
   ok(aMessageObject.lineNumber == 31 || aMessageObject.lineNumber == 32,

@@ -54,11 +54,10 @@ TEST(IntervalSet, Constructors)
 media::TimeInterval CreateTimeInterval(int32_t aStart, int32_t aEnd)
 {
   // Copy constructor test
-  media::Microseconds startus(aStart);
-  media::TimeUnit start(startus);
+  media::TimeUnit start = media::TimeUnit::FromMicroseconds(aStart);
   media::TimeUnit end;
   // operator=  test
-  end = media::Microseconds(aEnd);
+  end = media::TimeUnit::FromMicroseconds(aEnd);
   media::TimeInterval ti(start, end);
   return ti;
 }
@@ -72,22 +71,24 @@ media::TimeIntervals CreateTimeIntervals(int32_t aStart, int32_t aEnd)
 
 TEST(IntervalSet, TimeIntervalsConstructors)
 {
-  const media::Microseconds start(1);
-  const media::Microseconds end(2);
-  const media::Microseconds fuzz;
+  const auto start = media::TimeUnit::FromMicroseconds(1);
+  const auto end = media::TimeUnit::FromMicroseconds(2);
+  const media::TimeUnit fuzz;
 
   // Compiler exercise.
   media::TimeInterval test1(start, end);
   media::TimeInterval test2(test1);
   media::TimeInterval test3(start, end, fuzz);
   media::TimeInterval test4(test3);
-  media::TimeInterval test5 = CreateTimeInterval(start.mValue, end.mValue);
+  media::TimeInterval test5 =
+    CreateTimeInterval(start.ToMicroseconds(), end.ToMicroseconds());
 
   media::TimeIntervals blah1(test1);
   media::TimeIntervals blah2(blah1);
   media::TimeIntervals blah3 = blah1 + test1;
   media::TimeIntervals blah4 = test1 + blah1;
-  media::TimeIntervals blah5 = CreateTimeIntervals(start.mValue, end.mValue);
+  media::TimeIntervals blah5 =
+    CreateTimeIntervals(start.ToMicroseconds(), end.ToMicroseconds());
   (void)test1; (void)test2; (void)test3; (void)test4; (void)test5;
   (void)blah1; (void)blah2; (void)blah3; (void)blah4; (void)blah5;
 
@@ -593,21 +594,15 @@ TEST(IntervalSet, TimeRangesMicroseconds)
 {
   media::TimeIntervals i0;
 
-  // Test media::Microseconds and TimeUnit interchangeability (compilation only)
-  media::TimeUnit time1{media::Microseconds(5)};
-  media::Microseconds microseconds(5);
-  media::TimeUnit time2 = media::TimeUnit(microseconds);
-  EXPECT_EQ(time1, time2);
-
-  i0 += media::TimeInterval(media::Microseconds(20), media::Microseconds(25));
-  i0 += media::TimeInterval(media::Microseconds(40), media::Microseconds(60));
-  i0 += media::TimeInterval(media::Microseconds(5), media::Microseconds(10));
+  i0 += media::TimeInterval(media::TimeUnit::FromMicroseconds(20), media::TimeUnit::FromMicroseconds(25));
+  i0 += media::TimeInterval(media::TimeUnit::FromMicroseconds(40), media::TimeUnit::FromMicroseconds(60));
+  i0 += media::TimeInterval(media::TimeUnit::FromMicroseconds(5), media::TimeUnit::FromMicroseconds(10));
 
   media::TimeIntervals i1;
-  i1.Add(media::TimeInterval(media::Microseconds(16), media::Microseconds(27)));
-  i1.Add(media::TimeInterval(media::Microseconds(7), media::Microseconds(15)));
-  i1.Add(media::TimeInterval(media::Microseconds(53), media::Microseconds(57)));
-  i1.Add(media::TimeInterval(media::Microseconds(45), media::Microseconds(50)));
+  i1.Add(media::TimeInterval(media::TimeUnit::FromMicroseconds(16), media::TimeUnit::FromMicroseconds(27)));
+  i1.Add(media::TimeInterval(media::TimeUnit::FromMicroseconds(7), media::TimeUnit::FromMicroseconds(15)));
+  i1.Add(media::TimeInterval(media::TimeUnit::FromMicroseconds(53), media::TimeUnit::FromMicroseconds(57)));
+  i1.Add(media::TimeInterval(media::TimeUnit::FromMicroseconds(45), media::TimeUnit::FromMicroseconds(50)));
 
   media::TimeIntervals i(i0 + i1);
   RefPtr<dom::TimeRanges> tr = new dom::TimeRanges();

@@ -395,38 +395,38 @@ GetDifferentField(const mozilla::TrackInfo& info,
                   const mozilla::TrackInfo& infoRust)
 {
   if (infoRust.mId != info.mId) { return "Id"; }
-  if (infoRust.mKind == info.mKind) { return "Kind"; }
-  if (infoRust.mLabel == info.mLabel) { return "Label"; }
-  if (infoRust.mLanguage == info.mLanguage) { return "Language"; }
-  if (infoRust.mEnabled == info.mEnabled) { return "Enabled"; }
-  if (infoRust.mTrackId == info.mTrackId) { return "TrackId"; }
-  if (infoRust.mMimeType == info.mMimeType) { return "MimeType"; }
-  if (infoRust.mDuration == info.mDuration) { return "Duration"; }
-  if (infoRust.mMediaTime == info.mMediaTime) { return "MediaTime"; }
-  if (infoRust.mCrypto.mValid == info.mCrypto.mValid) { return "Crypto-Valid"; }
-  if (infoRust.mCrypto.mMode == info.mCrypto.mMode) { return "Crypto-Mode"; }
-  if (infoRust.mCrypto.mIVSize == info.mCrypto.mIVSize) { return "Crypto-IVSize"; }
-  if (infoRust.mCrypto.mKeyId == info.mCrypto.mKeyId) { return "Crypto-KeyId"; }
+  if (infoRust.mKind != info.mKind) { return "Kind"; }
+  if (infoRust.mLabel != info.mLabel) { return "Label"; }
+  if (infoRust.mLanguage != info.mLanguage) { return "Language"; }
+  if (infoRust.mEnabled != info.mEnabled) { return "Enabled"; }
+  if (infoRust.mTrackId != info.mTrackId) { return "TrackId"; }
+  if (infoRust.mMimeType != info.mMimeType) { return "MimeType"; }
+  if (infoRust.mDuration != info.mDuration) { return "Duration"; }
+  if (infoRust.mMediaTime != info.mMediaTime) { return "MediaTime"; }
+  if (infoRust.mCrypto.mValid != info.mCrypto.mValid) { return "Crypto-Valid"; }
+  if (infoRust.mCrypto.mMode != info.mCrypto.mMode) { return "Crypto-Mode"; }
+  if (infoRust.mCrypto.mIVSize != info.mCrypto.mIVSize) { return "Crypto-IVSize"; }
+  if (infoRust.mCrypto.mKeyId != info.mCrypto.mKeyId) { return "Crypto-KeyId"; }
   switch (info.GetType()) {
   case mozilla::TrackInfo::kAudioTrack: {
     const AudioInfo *audioRust = infoRust.GetAsAudioInfo();
     const AudioInfo *audio = info.GetAsAudioInfo();
-    if (audioRust->mRate == audio->mRate) { return "Rate"; }
-    if (audioRust->mChannels == audio->mChannels) { return "Channels"; }
-    if (audioRust->mBitDepth == audio->mBitDepth) { return "BitDepth"; }
-    if (audioRust->mProfile == audio->mProfile) { return "Profile"; }
-    if (audioRust->mExtendedProfile == audio->mExtendedProfile) { return "ExtendedProfile"; }
+    if (audioRust->mRate != audio->mRate) { return "Rate"; }
+    if (audioRust->mChannels != audio->mChannels) { return "Channels"; }
+    if (audioRust->mBitDepth != audio->mBitDepth) { return "BitDepth"; }
+    if (audioRust->mProfile != audio->mProfile) { return "Profile"; }
+    if (audioRust->mExtendedProfile != audio->mExtendedProfile) { return "ExtendedProfile"; }
     break;
   }
   case mozilla::TrackInfo::kVideoTrack: {
     const VideoInfo *videoRust = infoRust.GetAsVideoInfo();
     const VideoInfo *video = info.GetAsVideoInfo();
-    if (videoRust->mDisplay == video->mDisplay) { return "Display"; }
-    if (videoRust->mImage == video->mImage) { return "Image"; }
-    if (*videoRust->mExtraData == *video->mExtraData) { return "ExtraData"; }
+    if (videoRust->mDisplay != video->mDisplay) { return "Display"; }
+    if (videoRust->mImage != video->mImage) { return "Image"; }
+    if (*videoRust->mExtraData != *video->mExtraData) { return "ExtraData"; }
     // mCodecSpecificConfig is for video/mp4-es, not video/avc. Since video/mp4-es
     // is supported on b2g only, it could be removed from TrackInfo.
-    if (*videoRust->mCodecSpecificConfig == *video->mCodecSpecificConfig) { return "CodecSpecificConfig"; }
+    if (*videoRust->mCodecSpecificConfig != *video->mCodecSpecificConfig) { return "CodecSpecificConfig"; }
     break;
   }
   default:

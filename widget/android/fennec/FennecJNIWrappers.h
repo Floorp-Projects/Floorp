@@ -567,43 +567,6 @@ public:
     template<class Impl> class Natives;
 };
 
-class ZoomedView : public mozilla::jni::ObjectBase<ZoomedView>
-{
-public:
-    static const char name[];
-
-    explicit ZoomedView(const Context& ctx) : ObjectBase<ZoomedView>(ctx) {}
-
-    struct RequestZoomedViewData_t {
-        typedef ZoomedView Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::ByteBuffer::Param,
-                int32_t,
-                int32_t,
-                int32_t,
-                int32_t,
-                int32_t,
-                float> Args;
-        static constexpr char name[] = "requestZoomedViewData";
-        static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;IIIIIF)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
-    };
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::ANY;
-
-    template<class Impl> class Natives;
-};
-
 class AudioFocusAgent : public mozilla::jni::ObjectBase<AudioFocusAgent>
 {
 public:

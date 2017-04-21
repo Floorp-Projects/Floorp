@@ -403,7 +403,10 @@ Sync11Service.prototype = {
       // Ideally this observer should be in the SyncScheduler, but it would require
       // some work to know about the sync specific engines. We should move this there once it does.
       case "sync:collection_changed":
-        if (data.includes("clients")) {
+        // We check if we're running TPS here to avoid TPS failing because it
+        // couldn't get to get the sync lock, due to us currently syncing the
+        // clients engine.
+        if (data.includes("clients") && !Svc.Prefs.get("testing.tps", false)) {
           this.sync([]); // [] = clients collection only
         }
         break;

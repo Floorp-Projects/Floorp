@@ -6,8 +6,8 @@ random-if(gtkWidget) == dir-3.html dir-3.html
 == dir-5.html dir-5.html
 fails == dir-6.html dir-6.html
 fails == dir-6a.html dir-6a.html
-fails == dir-7.html dir-7.html
-fails == dir-8.html dir-8.html
+== dir-7.html dir-7.html
+== dir-8.html dir-8.html
 == dir-9.html dir-9.html
 == dir-10.html dir-10.html
 == dir-11.html dir-11.html
@@ -15,8 +15,8 @@ fails == dir-8.html dir-8.html
 fails pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1.html # bug 1339711
 fails pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1.xhtml # bug 1339711
 fails == displaystyle-1.html displaystyle-1.html
-fails == displaystyle-2.html displaystyle-2.html
-fails == displaystyle-3.html displaystyle-3.html
+== displaystyle-2.html displaystyle-2.html
+== displaystyle-3.html displaystyle-3.html
 fails == displaystyle-4.html displaystyle-4.html
 == mirror-op-1.html mirror-op-1.html
 == mirror-op-2.html mirror-op-2.html
@@ -24,7 +24,7 @@ fails == displaystyle-4.html displaystyle-4.html
 == mirror-op-4.html mirror-op-4.html
 == dynamic-mi.xhtml dynamic-mi.xhtml
 == mphantom-1.html mphantom-1.html
-fails == mphantom-2.html mphantom-2.html
+== mphantom-2.html mphantom-2.html
 == mfenced-1.xhtml mfenced-1.xhtml
 == mfenced-2a.xhtml mfenced-2a.xhtml
 == mfenced-2b.xhtml mfenced-2b.xhtml
@@ -52,39 +52,39 @@ fails == mfenced-10.html mfenced-10.html
 == overbar-width-1.xhtml overbar-width-1.xhtml
 == quotes-1.xhtml quotes-1.xhtml
 == stretchy-underbar-1.xhtml stretchy-underbar-1.xhtml
-fails == stretchy-munderover-1a.html stretchy-munderover-1a.html
-fails == stretchy-munderover-1b.html stretchy-munderover-1b.html
-fails == stretchy-munderover-1c.html stretchy-munderover-1c.html
-fails == stretchy-munderover-1d.html stretchy-munderover-1d.html
-fails == stretchy-munderover-1e.html stretchy-munderover-1e.html
-fails == stretchy-munderover-2a.html stretchy-munderover-2a.html
-fails == stretchy-munderover-2b.html stretchy-munderover-2b.html
-fails == stretchy-munderover-2c.html stretchy-munderover-2c.html
-fails == stretchy-munderover-2d.html stretchy-munderover-2d.html
-fails == stretchy-munderover-2e.html stretchy-munderover-2e.html
-fails == stretchy-munderover-2f.html stretchy-munderover-2f.html
-fails == stretchy-munderover-2g.html stretchy-munderover-2g.html
-fails == stretchy-munderover-3a.html stretchy-munderover-3a.html
-fails == stretchy-munderover-3b.html stretchy-munderover-3b.html
-fails == stretchy-munderover-3c.html stretchy-munderover-3c.html
-fails == stretchy-munderover-3d.html stretchy-munderover-3d.html
-fails == stretchy-msup-1a.html stretchy-msup-1a.html
-fails == stretchy-msup-1b.html stretchy-msup-1b.html
-fails == stretchy-msup-1c.html stretchy-msup-1c.html
-fails == stretchy-msup-1d.html stretchy-msup-1d.html
-fails == stretchy-mfenced-1a.html stretchy-mfenced-1a.html
-fails == stretchy-mfenced-1b.html stretchy-mfenced-1b.html
-fails == stretchy-mfenced-2a.html stretchy-mfenced-2a.html
-fails == stretchy-mfenced-2b.html stretchy-mfenced-2b.html
-fails == stretchy-mfenced-3a.html stretchy-mfenced-3a.html
-fails == stretchy-mfenced-3b.html stretchy-mfenced-3b.html
-fails == stretchy-mfenced-4a.html stretchy-mfenced-4a.html
-fails == stretchy-mfenced-4b.html stretchy-mfenced-4b.html
-fails == stretchy-mover-1a.html stretchy-mover-1a.html
-fails == stretchy-mover-1b.html stretchy-mover-1b.html
-fails == stretchy-mover-2a.html stretchy-mover-2a.html
-fails == stretchy-mover-2b.html stretchy-mover-2b.html
-fails == stretchy-mover-3.html stretchy-mover-3.html
+== stretchy-munderover-1a.html stretchy-munderover-1a.html
+== stretchy-munderover-1b.html stretchy-munderover-1b.html
+== stretchy-munderover-1c.html stretchy-munderover-1c.html
+== stretchy-munderover-1d.html stretchy-munderover-1d.html
+== stretchy-munderover-1e.html stretchy-munderover-1e.html
+== stretchy-munderover-2a.html stretchy-munderover-2a.html
+== stretchy-munderover-2b.html stretchy-munderover-2b.html
+== stretchy-munderover-2c.html stretchy-munderover-2c.html
+== stretchy-munderover-2d.html stretchy-munderover-2d.html
+== stretchy-munderover-2e.html stretchy-munderover-2e.html
+== stretchy-munderover-2f.html stretchy-munderover-2f.html
+== stretchy-munderover-2g.html stretchy-munderover-2g.html
+== stretchy-munderover-3a.html stretchy-munderover-3a.html
+== stretchy-munderover-3b.html stretchy-munderover-3b.html
+== stretchy-munderover-3c.html stretchy-munderover-3c.html
+== stretchy-munderover-3d.html stretchy-munderover-3d.html
+== stretchy-msup-1a.html stretchy-msup-1a.html
+== stretchy-msup-1b.html stretchy-msup-1b.html
+== stretchy-msup-1c.html stretchy-msup-1c.html
+== stretchy-msup-1d.html stretchy-msup-1d.html
+== stretchy-mfenced-1a.html stretchy-mfenced-1a.html
+== stretchy-mfenced-1b.html stretchy-mfenced-1b.html
+== stretchy-mfenced-2a.html stretchy-mfenced-2a.html
+== stretchy-mfenced-2b.html stretchy-mfenced-2b.html
+== stretchy-mfenced-3a.html stretchy-mfenced-3a.html
+== stretchy-mfenced-3b.html stretchy-mfenced-3b.html
+== stretchy-mfenced-4a.html stretchy-mfenced-4a.html
+== stretchy-mfenced-4b.html stretchy-mfenced-4b.html
+== stretchy-mover-1a.html stretchy-mover-1a.html
+== stretchy-mover-1b.html stretchy-mover-1b.html
+== stretchy-mover-2a.html stretchy-mover-2a.html
+== stretchy-mover-2b.html stretchy-mover-2b.html
+== stretchy-mover-3.html stretchy-mover-3.html
 == stretchy-largeop-1.html stretchy-largeop-1.html
 fails == stretchy-largeop-2.html stretchy-largeop-2.html
 == stretchy-largeop-3.html stretchy-largeop-3.html
@@ -126,9 +126,9 @@ fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\
 == mathbackground-2.xml mathbackground-2.xml
 == mathbackground-3.xml mathbackground-3.xml
 == mathbackground-4.xml mathbackground-4.xml
-fails == mstyle-1.xhtml mstyle-1.xhtml
+== mstyle-1.xhtml mstyle-1.xhtml
 fails == mstyle-2.xhtml mstyle-2.xhtml
-fails == mstyle-3.xhtml mstyle-3.xhtml
+== mstyle-3.xhtml mstyle-3.xhtml
 == mstyle-4.xhtml mstyle-4.xhtml
 == mstyle-5.xhtml mstyle-5.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1.xhtml
@@ -148,20 +148,20 @@ fails == stretchy-1.html stretchy-1.html
 random-if(gtkWidget) == mpadded-7.html mpadded-7.html
 random-if(gtkWidget) == mpadded-8.html mpadded-8.html
 random-if(gtkWidget) == mpadded-9.html mpadded-9.html
-fails == math-display.html math-display.html
+== math-display.html math-display.html
 fails == scriptlevel-1.html scriptlevel-1.html
-fails == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1.html
+== scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1.html
 == munderover-align-accent-false.html munderover-align-accent-false.html
 == munderover-align-accent-true.html munderover-align-accent-true.html
 == munder-mover-align-accent-true.html munder-mover-align-accent-true.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false.html
-fails == mfrac-linethickness-1.xhtml mfrac-linethickness-1.xhtml
-fails == mfrac-linethickness-2.xhtml mfrac-linethickness-2.xhtml
-fails == mfrac-linethickness-3.xhtml mfrac-linethickness-3.xhtml
+== mfrac-linethickness-1.xhtml mfrac-linethickness-1.xhtml
+== mfrac-linethickness-2.xhtml mfrac-linethickness-2.xhtml
+== mfrac-linethickness-3.xhtml mfrac-linethickness-3.xhtml
 == mathml-negativespace.html mathml-negativespace.html
 == negative-mspace-1.html negative-mspace-1.html
 == link-1.xhtml link-1.xhtml
-fails == munderover-empty-scripts.html munderover-empty-scripts.html
+== munderover-empty-scripts.html munderover-empty-scripts.html
 == positive-namedspace.html positive-namedspace.html
 fails == mtable-align-whitespace.html mtable-align-whitespace.html
 == mtable-width.html mtable-width.html
@@ -183,17 +183,17 @@ fails == mtable-columnalign-multi-mtr.html mtable-columnalign-multi-mtr.html
 fails == mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-mtr-dynamic.html
 fails == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-mtable.html
 fails == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-mtable-dynamic.html
-fails == maction-selection.html maction-selection.html
+== maction-selection.html maction-selection.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op.html
 == maction-dynamic-1.html maction-dynamic-1.html
 == maction-dynamic-2.html maction-dynamic-2.html
 == mo-lspace-rspace.html mo-lspace-rspace.html
 fails == mo-lspace-rspace-2.html mo-lspace-rspace-2.html
 == mo-lspace-rspace-3.html mo-lspace-rspace-3.html
-fails == mo-lspace-rspace-4.html mo-lspace-rspace-4.html
+== mo-lspace-rspace-4.html mo-lspace-rspace-4.html
 == mo-invisibleoperators.html mo-invisibleoperators.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2.html
-fails == mo-glyph-size.html mo-glyph-size.html
+== mo-glyph-size.html mo-glyph-size.html
 == maction-dynamic-3.html maction-dynamic-3.html
 == whitespace-trim-1.html whitespace-trim-1.html
 == whitespace-trim-2.html whitespace-trim-2.html
@@ -203,9 +203,9 @@ fails == mo-glyph-size.html mo-glyph-size.html
 == opentype-stretchy.html opentype-stretchy.html
 == opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness.html
 == operator-1.xhtml operator-1.xhtml
-fails == scriptshift-1.xhtml scriptshift-1.xhtml
+== scriptshift-1.xhtml scriptshift-1.xhtml
 == number-size-1.xhtml number-size-1.xhtml
-fails == multiscripts-1.html multiscripts-1.html
+== multiscripts-1.html multiscripts-1.html
 == mathml-mmultiscript-base.html mathml-mmultiscript-base.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript.html
 == menclose-1a.html menclose-1a.html
@@ -302,10 +302,10 @@ fails == ssty-3.html ssty-3.html
 fails == ssty-4.html ssty-4.html
 fails == mathscript-1.html mathscript-1.html
 fails == mathscript-2.html mathscript-2.html
-fails == mo-accent-dynamic.html mo-accent-dynamic.html
-fails == mo-movablelimits-dynamic.html mo-movablelimits-dynamic.html
-fails == munderover-accent-dynamic.html munderover-accent-dynamic.html
-fails == munderover-accentunder-dynamic.html munderover-accentunder-dynamic.html
+== mo-accent-dynamic.html mo-accent-dynamic.html
+== mo-movablelimits-dynamic.html mo-movablelimits-dynamic.html
+== munderover-accent-dynamic.html munderover-accent-dynamic.html
+== munderover-accentunder-dynamic.html munderover-accentunder-dynamic.html
 fails == columnlines-1a.html columnlines-1a.html
 fails == columnlines-1b.html columnlines-1b.html
 fails == columnlines-1c.html columnlines-1c.html
@@ -333,41 +333,41 @@ fails == tablespacing-7.html tablespacing-7.html
 == op-dict-1.html op-dict-1.html
 == op-dict-2.html op-dict-2.html
 == op-dict-3.html op-dict-3.html
-fails == op-dict-4.html op-dict-4.html
-fails == op-dict-5.html op-dict-5.html
+== op-dict-4.html op-dict-4.html
+== op-dict-5.html op-dict-5.html
 == op-dict-6.html op-dict-6.html
 == op-dict-7.html op-dict-7.html
 == op-dict-8.html op-dict-8.html
 == op-dict-9.html op-dict-9.html
-fails == op-dict-10.html op-dict-10.html
+== op-dict-10.html op-dict-10.html
 fails == op-dict-11.html op-dict-11.html
-fails == op-dict-12.html op-dict-12.html
-fails == op-dict-13.html op-dict-13.html
-fails == mfrac-A-1.html mfrac-A-1.html
+== op-dict-12.html op-dict-12.html
+== op-dict-13.html op-dict-13.html
+== mfrac-A-1.html mfrac-A-1.html
 == mfrac-A-2.html mfrac-A-2.html
 == mfrac-A-3.html mfrac-A-3.html
 == mfrac-A-4.html mfrac-A-4.html
-fails == mfrac-A-5.html mfrac-A-5.html
+== mfrac-A-5.html mfrac-A-5.html
 == mfrac-A-6.html mfrac-A-6.html
 == mfrac-A-7.html mfrac-A-7.html
 == mfrac-A-8.html mfrac-A-8.html
 == mfrac-B-1.html mfrac-B-1.html
-fails == mfrac-B-2.html mfrac-B-2.html
-fails == mfrac-B-3.html mfrac-B-3.html
+== mfrac-B-2.html mfrac-B-2.html
+== mfrac-B-3.html mfrac-B-3.html
 fails == mfrac-B-4.html mfrac-B-4.html
 fails == mfrac-B-5.html mfrac-B-5.html
 fails == mfrac-B-6.html mfrac-B-6.html
 fails == mfrac-B-7.html mfrac-B-7.html
-fails == mfrac-C-1.html mfrac-C-1.html
-fails == mfrac-C-2.html mfrac-C-2.html
+== mfrac-C-1.html mfrac-C-1.html
+== mfrac-C-2.html mfrac-C-2.html
 fails == mfrac-C-3.html mfrac-C-3.html
 fails == mfrac-C-4.html mfrac-C-4.html
-fails == mfrac-D-1.html mfrac-D-1.html
-fails == mfrac-D-2.html mfrac-D-2.html
+== mfrac-D-1.html mfrac-D-1.html
+== mfrac-D-2.html mfrac-D-2.html
 fails == mfrac-D-3.html mfrac-D-3.html
 fails == mfrac-D-4.html mfrac-D-4.html
-fails == mfrac-E-1.html mfrac-E-1.html
-fails pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
+== mfrac-E-1.html mfrac-E-1.html
+pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1.html
 fails pref(font.minimum-size.x-math,40) == default-font.html default-font.html
 == radicalbar-1.html radicalbar-1.html

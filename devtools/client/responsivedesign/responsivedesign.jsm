@@ -14,6 +14,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyImporter(this, "SystemAppProxy",
                     "resource://gre/modules/SystemAppProxy.jsm");
+loader.lazyImporter(this, "BrowserUtils",
+                    "resource://gre/modules/BrowserUtils.jsm");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "showDoorhanger",
                          "devtools/client/shared/doorhanger", true);
@@ -27,8 +29,11 @@ loader.lazyRequireGetter(this, "DebuggerClient",
                          "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
                          "devtools/server/main", true);
+loader.lazyRequireGetter(this, "system", "devtools/shared/system");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
+
+const NEW_RDM_ENABLED = "devtools.responsive.html.enabled";
 
 const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
@@ -136,7 +141,7 @@ EventEmitter.decorate(Manager);
 // the new HTML RDM UI to function), delegate the ResponsiveUIManager API over to that
 // tool instead.  Performing this delegation here allows us to contain the pref check to a
 // single place.
-if (Services.prefs.getBoolPref("devtools.responsive.html.enabled") &&
+if (Services.prefs.getBoolPref(NEW_RDM_ENABLED) &&
     Services.appinfo.browserTabsRemoteAutostart) {
   let { ResponsiveUIManager } =
     require("devtools/client/responsive.html/manager");
@@ -265,6 +270,8 @@ ResponsiveUI.prototype = {
       type: "deveditionpromo",
       anchor: this.chromeDoc.querySelector("#content")
     });
+
+    this.showNewUINotification();
 
     // Notify that responsive mode is on.
     this._telemetry.toolOpened("responsive");
@@ -399,11 +406,13 @@ ResponsiveUI.prototype = {
 
     this._telemetry.toolClosed("responsive");
 
-    if (this.tab.linkedBrowser.messageManager) {
+    if (this.tab.linkedBrowser && this.tab.linkedBrowser.messageManager) {
       let stopped = this.waitForMessage("ResponsiveMode:Stop:Done");
       this.tab.linkedBrowser.messageManager.sendAsyncMessage("ResponsiveMode:Stop");
       yield stopped;
     }
+
+    this.hideNewUINotification();
 
     this.inited = null;
     ResponsiveUIManager.emit("off", { tab: this.tab });
@@ -681,6 +690,69 @@ ResponsiveUI.prototype = {
     bottomToolbar.appendChild(homeButton);
     this.bottomToolbar = bottomToolbar;
     this.container.appendChild(bottomToolbar);
+  },
+
+  showNewUINotification() {
+    let nbox = this.mainWindow.gBrowser.getNotificationBox(this.browser);
+
+    // One reason we might be using old RDM is that the user explcitly disabled new RDM.
+    // We should encourage them to use the new one, since the old one will be removed.
+    if (Services.prefs.prefHasUserValue(NEW_RDM_ENABLED) &&
+        !Services.prefs.getBoolPref(NEW_RDM_ENABLED)) {
+      let buttons = [{
+        label: this.strings.GetStringFromName("responsiveUI.newVersionEnableAndRestart"),
+        callback: () => {
+          Services.prefs.setBoolPref(NEW_RDM_ENABLED, true);
+          BrowserUtils.restartApplication();
+        },
+      }];
+      nbox.appendNotification(
+        this.strings.GetStringFromName("responsiveUI.newVersionUserDisabled"),
+        "responsive-ui-new-version-user-disabled",
+        null,
+        nbox.PRIORITY_INFO_LOW,
+        buttons
+      );
+      return;
+    }
+
+    // Only show a notification about the new RDM UI on channels where there is an e10s
+    // switch in the preferences UI (Dev. Ed, Nightly).  On other channels, it is less
+    // clear how a user would proceed here, so don't show a message.
+    if (!system.constants.E10S_TESTING_ONLY) {
+      return;
+    }
+
+    let buttons = [{
+      label: this.strings.GetStringFromName("responsiveUI.newVersionEnableAndRestart"),
+      callback: () => {
+        Services.prefs.setBoolPref("browser.tabs.remote.autostart", true);
+        Services.prefs.setBoolPref("browser.tabs.remote.autostart.2", true);
+        BrowserUtils.restartApplication();
+      },
+    }];
+    nbox.appendNotification(
+      this.strings.GetStringFromName("responsiveUI.newVersionE10sDisabled"),
+      "responsive-ui-new-version-e10s-disabled",
+      null,
+      nbox.PRIORITY_INFO_LOW,
+      buttons
+    );
+  },
+
+  hideNewUINotification() {
+    if (!this.mainWindow.gBrowser || !this.mainWindow.gBrowser.getNotificationBox) {
+      return;
+    }
+    let nbox = this.mainWindow.gBrowser.getNotificationBox(this.browser);
+    let n = nbox.getNotificationWithValue("responsive-ui-new-version-user-disabled");
+    if (n) {
+      n.close();
+    }
+    n = nbox.getNotificationWithValue("responsive-ui-new-version-e10s-disabled");
+    if (n) {
+      n.close();
+    }
   },
 
   /**

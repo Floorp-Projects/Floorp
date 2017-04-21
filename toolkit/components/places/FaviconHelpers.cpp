@@ -159,6 +159,7 @@ SetIconInfo(const RefPtr<Database>& aDB,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aIcon.payloads.Length() > 0);
   MOZ_ASSERT(!aIcon.spec.IsEmpty());
+  MOZ_ASSERT(aIcon.expiration > 0);
 
   // There are multiple cases possible at this point:
   //   1. We must insert some payloads and no payloads exist in the table. This
@@ -519,8 +520,7 @@ AsyncFetchAndSetIconForPage::Run()
   nsresult rv = FetchIconInfo(DB, 0, mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isInvalidIcon = !mIcon.payloads.Length() ||
-                       (mIcon.expiration && PR_Now() > mIcon.expiration);
+  bool isInvalidIcon = !mIcon.payloads.Length() || PR_Now() > mIcon.expiration;
   bool fetchIconFromNetwork = mIcon.fetchMode == FETCH_ALWAYS ||
                               (mIcon.fetchMode == FETCH_IF_MISSING && isInvalidIcon);
 
@@ -856,12 +856,13 @@ AsyncAssociateIconToPage::Run()
     if (mPage.id != 0)  {
       nsCOMPtr<mozIStorageStatement> stmt;
       stmt = DB->GetStatement(
-        "DELETE FROM moz_icons_to_pages WHERE icon_id IN ( "
+        "DELETE FROM moz_icons_to_pages "
+        "WHERE icon_id IN ( "
           "SELECT icon_id FROM moz_icons_to_pages "
           "JOIN moz_icons i ON icon_id = i.id "
           "WHERE page_id = :page_id "
             "AND expire_ms < strftime('%s','now','localtime','start of day','-7 days','utc') * 1000 "
-        ") "
+        ") AND page_id = :page_id "
       );
       NS_ENSURE_STATE(stmt);
       mozStorageStatementScoper scoper(stmt);

@@ -6,6 +6,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // Test that the various copy items in the context menu works correctly.
 
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
+const SELECTOR_UNIQUE = "devtools.copy.unique.css.selector.opened";
+const SELECTOR_FULL = "devtools.copy.full.css.selector.opened";
 const COPY_ITEMS_TEST_DATA = [
   {
     desc: "copy inner html",
@@ -26,7 +28,7 @@ const COPY_ITEMS_TEST_DATA = [
     text: "body > div:nth-child(1) > p:nth-child(2)",
   },
   {
-    desc: "copy css path",
+    desc: "copy CSS path",
     id: "node-menu-copycsspath",
     selector: "[data-id=\"copy\"]",
     text: "html body div p",
@@ -41,7 +43,9 @@ const COPY_ITEMS_TEST_DATA = [
 ];
 
 add_task(function* () {
+  let Telemetry = loadTelemetryAndRecordLogs();
   let { inspector } = yield openInspectorForURL(TEST_URL);
+
   for (let {desc, id, selector, text} of COPY_ITEMS_TEST_DATA) {
     info("Testing " + desc);
     yield selectNode(selector, inspector);
@@ -52,4 +56,32 @@ add_task(function* () {
 
     yield waitForClipboardPromise(() => item.click(), text);
   }
+
+  checkTelemetryResults(Telemetry);
+  stopRecordingTelemetryLogs(Telemetry);
 });
+
+function checkTelemetryResults(Telemetry) {
+  let data = Telemetry.prototype.telemetryInfo;
+  let results = new Map();
+
+  for (let key in data) {
+    if (key.toLowerCase() === key) {
+      let pings = data[key].length;
+
+      results.set(key, pings);
+    }
+  }
+
+  is(results.size, 2, "The correct number of scalars were logged");
+
+  let pings = checkPings(SELECTOR_UNIQUE, results);
+  is(pings, 1, `${SELECTOR_UNIQUE} has just 1 ping`);
+
+  pings = checkPings(SELECTOR_FULL, results);
+  is(pings, 1, `${SELECTOR_FULL} has just 1 ping`);
+}
+
+function checkPings(scalarId, results) {
+  return results.get(scalarId);
+}

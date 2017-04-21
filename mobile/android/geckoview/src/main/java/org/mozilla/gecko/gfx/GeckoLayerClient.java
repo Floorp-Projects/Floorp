@@ -9,7 +9,6 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 
@@ -25,30 +24,14 @@ import android.view.InputDevice;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
-import java.util.List;
 
-class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
+class GeckoLayerClient implements LayerView.Listener
 {
     private static final String LOGTAG = "GeckoLayerClient";
-    private static int sPaintSyncId = 1;
-
-    private LayerRenderer mLayerRenderer;
-    private boolean mLayerRendererInitialized;
 
     private final Context mContext;
     private IntSize mScreenSize;
     private IntSize mWindowSize;
-
-    /*
-     * The viewport metrics being used to draw the current frame. This is only
-     * accessed by the compositor thread, and so needs no synchronisation.
-     */
-    private ImmutableViewportMetrics mFrameMetrics;
-
-    private final List<DrawListener> mDrawListeners;
-
-    /* Used as temporaries by syncViewportInfo */
-    private final ViewTransform mCurrentViewTransform;
 
     private boolean mForceRedraw;
 
@@ -83,27 +66,20 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private SynthesizedEventState mPointerState;
 
-    @WrapForJNI(stubName = "ClearColor")
-    private volatile int mClearColor = Color.WHITE;
-
     public GeckoLayerClient(Context context, LayerView view) {
         // we can fill these in with dummy values because they are always written
         // to before being read
         mContext = context;
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
-        mCurrentViewTransform = new ViewTransform(0, 0, 1);
 
         mForceRedraw = true;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         mViewportMetrics = new ImmutableViewportMetrics(displayMetrics)
                            .setViewportSize(view.getWidth(), view.getHeight());
 
-        mFrameMetrics = mViewportMetrics;
-
-        mDrawListeners = new ArrayList<DrawListener>();
         mToolbarAnimator = new DynamicToolbarAnimator(this);
-        mPanZoomController = PanZoomController.Factory.create(this, view);
+        mPanZoomController = PanZoomController.Factory.create(view);
         mView = view;
         mView.setListener(this);
         mContentDocumentIsDisplayed = true;
@@ -117,7 +93,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mGeckoIsReady = ready;
     }
 
-    @Override // PanZoomTarget
     public boolean isGeckoReady() {
         return mGeckoIsReady;
     }
@@ -127,9 +102,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private void onGeckoReady() {
         mGeckoIsReady = true;
 
-        mLayerRenderer = mView.getRenderer();
-
-        sendResizeEventIfNecessary(true, null);
+        sendResizeEventIfNecessary(true);
 
         // Gecko being ready is one of the two conditions (along with having an available
         // surface) that cause us to create the compositor. So here, now that we know gecko
@@ -147,8 +120,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     public void destroy() {
         mPanZoomController.destroy();
-        mToolbarAnimator.destroy();
-        mDrawListeners.clear();
         mGeckoIsReady = false;
     }
 
@@ -168,22 +139,18 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * to the layer client. That way, the layer client won't be tempted to call this, which might
      * result in an infinite loop.
      */
-    boolean setViewportSize(int width, int height, PointF scrollChange) {
+    boolean setViewportSize(int width, int height) {
         if (mViewportMetrics.viewportRectWidth == width &&
-            mViewportMetrics.viewportRectHeight == height &&
-            (scrollChange == null || (scrollChange.x == 0 && scrollChange.y == 0))) {
+            mViewportMetrics.viewportRectHeight == height) {
             return false;
         }
         mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
-        if (scrollChange != null) {
-            mViewportMetrics = mPanZoomController.adjustScrollForSurfaceShift(mViewportMetrics, scrollChange);
-        }
 
         if (mGeckoIsReady) {
             // here we send gecko a resize message. The code in browser.js is responsible for
             // picking up on that resize event, modifying the viewport as necessary, and informing
             // us of the new viewport.
-            sendResizeEventIfNecessary(true, scrollChange);
+            sendResizeEventIfNecessary(true);
 
             // the following call also sends gecko a message, which will be processed after the resize
             // message above has updated the viewport. this message ensures that if we have just put
@@ -202,7 +169,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /* Informs Gecko that the screen size has changed. */
-    private void sendResizeEventIfNecessary(boolean force, PointF scrollChange) {
+    private void sendResizeEventIfNecessary(boolean force) {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
 
         IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
@@ -231,33 +198,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             mView.notifySizeChanged(mWindowSize.width, mWindowSize.height,
                                     mScreenSize.width, mScreenSize.height);
         }
-
-        final GeckoBundle data;
-        if (scrollChange != null) {
-            int id = ++sPaintSyncId;
-            if (id == 0) {
-                // never use 0 as that is the default value for "this is not
-                // a special transaction"
-                id = ++sPaintSyncId;
-            }
-            data = new GeckoBundle(3);
-            data.putDouble("x", scrollChange.x / mViewportMetrics.zoomFactor);
-            data.putDouble("y", scrollChange.y / mViewportMetrics.zoomFactor);
-            data.putInt("id", id);
-        } else {
-            data = null;
-        }
-        EventDispatcher.getInstance().dispatch("Window:Resize", data);
-    }
-
-    /**
-     * The different types of Viewport messages handled. All viewport events
-     * expect a display-port to be returned, but can handle one not being
-     * returned.
-     */
-    private enum ViewportMessageType {
-        UPDATE,       // The viewport has changed and should be entirely updated
-        PAGE_SIZE     // The viewport's page-size has changed
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -275,83 +215,16 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * information we have in Java is no longer valid and needs to be replaced with the new
       * viewport information provided.
       */
-    @WrapForJNI
-    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom,
+    @WrapForJNI(calledFrom = "ui")
+    public void updateRootFrameMetrics(float scrollX, float scrollY, float zoom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
-        synchronized (getLock()) {
-            ImmutableViewportMetrics currentMetrics = getViewportMetrics();
-
-            RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
-            RectF pageRect = RectUtils.scaleAndRound(cssPageRect, zoom);
-
-            final ImmutableViewportMetrics newMetrics = currentMetrics
-                .setViewportOrigin(offsetX, offsetY)
-                .setZoomFactor(zoom)
-                .setPageRect(pageRect, cssPageRect);
-            // Since we have switched to displaying a different document, we need to update any
-            // viewport-related state we have lying around (i.e. mViewportMetrics).
-            // Usually this information is updated via handleViewportMessage
-            // while we remain on the same document.
-            setViewportMetrics(newMetrics, true);
-
-            // Indicate that the document is about to be composited so the
-            // LayerView background can be removed.
-            if (mView.getPaintState() == LayerView.PAINT_START) {
-                mView.setPaintState(LayerView.PAINT_BEFORE_FIRST);
-            }
-        }
-
-        mContentDocumentIsDisplayed = true;
-    }
-
-    /** The compositor invokes this function on every frame to figure out what part of the
-      * page to display, and to inform Java of the current display port. Since it is called
-      * on every frame, it needs to be ultra-fast.
-      * It avoids taking any locks or allocating any objects. We keep around a
-      * mCurrentViewTransform so we don't need to allocate a new ViewTransform
-      * every time we're called. NOTE: we might be able to return a ImmutableViewportMetrics
-      * which would avoid the copy into mCurrentViewTransform.
-      */
-    private ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated,
-                                          int paintSyncId) {
-        // getViewportMetrics is thread safe so we don't need to synchronize.
-        // We save the viewport metrics here, so we later use it later in
-        // createFrame (which will be called by nsWindow::DrawWindowUnderlay on
-        // the native side, by the compositor). The viewport
-        // metrics can change between here and there, as it's accessed outside
-        // of the compositor thread.
-        mFrameMetrics = getViewportMetrics();
-
-        if (paintSyncId == sPaintSyncId) {
-            mToolbarAnimator.scrollChangeResizeCompleted();
-        }
-        mToolbarAnimator.populateViewTransform(mCurrentViewTransform, mFrameMetrics);
-
-        if (layersUpdated) {
-            for (DrawListener listener : mDrawListeners) {
-                listener.drawFinished();
-            }
-        }
-
-        return mCurrentViewTransform;
-    }
-
-    @WrapForJNI
-    public ViewTransform syncFrameMetrics(float scrollX, float scrollY, float zoom,
-                float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
-                int dpX, int dpY, int dpWidth, int dpHeight, float paintedResolution,
-                boolean layersUpdated, int paintSyncId)
-    {
-        // TODO: optimize this so it doesn't create so much garbage - it's a
-        // hot path
         RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
-        synchronized (getLock()) {
-            mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY)
-                .setZoomFactor(zoom)
-                .setPageRect(RectUtils.scale(cssPageRect, zoom), cssPageRect);
-        }
-        return syncViewportInfo(dpX, dpY, dpWidth, dpHeight, paintedResolution,
-                    layersUpdated, paintSyncId);
+        mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY)
+            .setZoomFactor(zoom)
+            .setPageRect(RectUtils.scale(cssPageRect, zoom), cssPageRect);
+
+        mToolbarAnimator.onMetricsChanged(mViewportMetrics);
+        mContentDocumentIsDisplayed = true;
     }
 
     class PointerInfo {
@@ -509,6 +382,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         PointerInfo info = mPointerState.pointers.get(pointerIndex);
         info.screenX = screenX;
         info.screenY = screenY;
+        if (mView != null) {
+            info.screenY += mView.getCurrentToolbarHeight();
+        }
         info.pressure = pressure;
         info.orientation = orientation;
 
@@ -567,89 +443,15 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             eventType, screenX, screenY, 0, 0);
     }
 
-    @WrapForJNI
-    public LayerRenderer.Frame createFrame() {
-        // Create the shaders and textures if necessary.
-        if (!mLayerRendererInitialized) {
-            if (mLayerRenderer == null) {
-                return null;
-            }
-            mLayerRenderer.createDefaultProgram();
-            mLayerRendererInitialized = true;
-        }
-
-        try {
-            return mLayerRenderer.createFrame(mFrameMetrics);
-        } catch (Exception e) {
-            Log.w(LOGTAG, e);
-            return null;
-        }
-    }
-
-    private void geometryChanged() {
-        /* Let Gecko know if the screensize has changed */
-        sendResizeEventIfNecessary(false, null);
-    }
-
     /** Implementation of LayerView.Listener */
     @Override
-    public void surfaceChanged(int width, int height) {
+    public void surfaceChanged() {
         IntSize viewportSize = mToolbarAnimator.getViewportSize();
-        setViewportSize(viewportSize.width, viewportSize.height, null);
+        setViewportSize(viewportSize.width, viewportSize.height);
     }
 
     ImmutableViewportMetrics getViewportMetrics() {
         return mViewportMetrics;
-    }
-
-    /*
-     * You must hold the monitor while calling this.
-     */
-    private void setViewportMetrics(ImmutableViewportMetrics metrics, boolean notifyGecko) {
-        // This class owns the viewport size and the fixed layer margins; don't let other pieces
-        // of code clobber either of them. The only place the viewport size should ever be
-        // updated is in GeckoLayerClient.setViewportSize, and the only place the margins should
-        // ever be updated is in GeckoLayerClient.setFixedLayerMargins; both of these assign to
-        // mViewportMetrics directly.
-        metrics = metrics.setViewportSize(mViewportMetrics.viewportRectWidth, mViewportMetrics.viewportRectHeight);
-        mViewportMetrics = metrics;
-
-        viewportMetricsChanged(notifyGecko);
-    }
-
-    /*
-     * You must hold the monitor while calling this.
-     */
-    private void viewportMetricsChanged(boolean notifyGecko) {
-        mToolbarAnimator.onMetricsChanged(mViewportMetrics);
-
-        mView.requestRender();
-        if (notifyGecko && mGeckoIsReady) {
-            geometryChanged();
-        }
-    }
-
-    /*
-     * Updates the viewport metrics, overriding the viewport size and margins
-     * which are normally retained when calling setViewportMetrics.
-     * You must hold the monitor while calling this.
-     */
-    void forceViewportMetrics(ImmutableViewportMetrics metrics, boolean notifyGecko, boolean forceRedraw) {
-        if (forceRedraw) {
-            mForceRedraw = true;
-        }
-        mViewportMetrics = metrics;
-        viewportMetricsChanged(notifyGecko);
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public void panZoomStopped() {
-        mToolbarAnimator.onPanZoomStopped();
-    }
-
-    Object getLock() {
-        return this;
     }
 
     Matrix getMatrixForLayerRectToViewRect() {
@@ -669,22 +471,5 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         matrix.postScale(zoom, zoom);
         matrix.postTranslate(-origin.x, -origin.y);
         return matrix;
-    }
-
-    @Override
-    public void setScrollingRootContent(boolean isRootContent) {
-        mToolbarAnimator.setScrollingRootContent(isRootContent);
-    }
-
-    public void addDrawListener(DrawListener listener) {
-        mDrawListeners.add(listener);
-    }
-
-    public void removeDrawListener(DrawListener listener) {
-        mDrawListeners.remove(listener);
-    }
-
-    public void setClearColor(int color) {
-        mClearColor = color;
     }
 }

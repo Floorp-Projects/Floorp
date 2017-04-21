@@ -17,8 +17,11 @@ Test Document rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, Document } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { Document } = REPS;
 
   try {
     testBasic();
@@ -31,12 +34,11 @@ window.onload = Task.async(function* () {
 
   function testBasic() {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: getStub() });
-    is(renderedRep.type, Document.rep, `Rep correctly selects ${Document.rep.displayName}`);
+    is(getRep(getStub()), Document.rep, "Rep correctly selects Document Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(Document.rep, { object: getStub() });
-    is(renderedComponent.textContent, "https://www.mozilla.org/en-US/firefox/new/",
+    is(renderedComponent.textContent, "HTMLDocument https://www.mozilla.org/en-US/firefox/new/",
       "Document rep has expected text content");
   }
 

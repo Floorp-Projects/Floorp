@@ -21,6 +21,7 @@ DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
+    'BrowserActions.jsm',
     'dbg-browser-actors.js',
     'DelayedInit.jsm',
     'DownloadNotifications.jsm',

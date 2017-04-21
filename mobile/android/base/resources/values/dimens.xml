@@ -56,7 +56,7 @@
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_bg">32dp</dimen>
-    <dimen name="favicon_corner_radius">4dp</dimen>
+    <dimen name="favicon_corner_radius">2dp</dimen>
     <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
          this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
          redesign sometime after this is written) you should increase this value to the largest
@@ -64,6 +64,8 @@
          database. The largest available size is always stored in the database, regardless of this
          value.-->
     <dimen name="favicon_largest_interesting_size">32dp</dimen>
+    <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel and CombinedHistoryPanel) -->
+    <dimen name="favicon_small_size">25dp</dimen>
 
     <dimen name="firstrun_content_width">300dp</dimen>
     <dimen name="firstrun_min_height">120dp</dimen>
@@ -92,7 +94,7 @@
     <dimen name="page_row_edge_padding">16dp</dimen>
 
     <!-- Regular page row on about:home -->
-    <dimen name="page_row_height">64dp</dimen>
+    <dimen name="page_row_height">56dp</dimen>
 
     <!-- Group/heading page row on about:home -->
     <dimen name="page_group_height">56dp</dimen>
@@ -201,10 +203,6 @@
     <dimen name="tab_history_bg_width">2dp</dimen>
     <dimen name="tab_history_border_padding">2dp</dimen>
 
-    <!-- ZoomedView dimensions. -->
-    <dimen name="zoomed_view_toolbar_height">44dp</dimen>
-    <dimen name="drawable_dropshadow_size">3dp</dimen>
-
     <!-- Find-In-Page dialog dimensions. -->
     <dimen name="find_in_page_text_margin_start">5dip</dimen>
     <dimen name="find_in_page_text_margin_end">12dip</dimen>
@@ -212,7 +210,6 @@
     <dimen name="find_in_page_text_padding_end">10dip</dimen>
     <dimen name="find_in_page_status_margin_end">10dip</dimen>
     <dimen name="find_in_page_control_margin_top">2dip</dimen>
-    <dimen name="progress_bar_scroll_offset">1.5dp</dimen>
 
     <!-- Matches the built-in divider height. fwiw, in the framework
          I suspect this is a drawable rather than a dimen.  -->

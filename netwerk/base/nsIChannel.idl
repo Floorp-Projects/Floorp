@@ -208,6 +208,9 @@ interface nsIChannel : nsIRequest
     /**
      * Set (e.g., by the docshell) to indicate whether or not the channel
      * corresponds to a document URI.
+     * While setting this flag is sufficient to mark a channel as a document
+     * load, _checking_ whether the channel is a document load requires the use
+     * of the new channel.isDocument
      */
     const unsigned long LOAD_DOCUMENT_URI = 1 << 16;
 
@@ -344,7 +347,26 @@ interface nsIChannel : nsIRequest
      */
     attribute nsILoadInfo loadInfo;
 
+    /**
+     * Returns true if the channel is used to create a document.
+     * It returns true if the loadFlags have LOAD_DOCUMENT_URI set, or if
+     * LOAD_HTML_OBJECT_DATA is set and the channel has the appropriate
+     * MIME type.
+     * Note: May have the wrong value if called before OnStartRequest as we
+     * don't know the MIME type yet.
+     */
+    readonly attribute bool isDocument;
+
 %{ C++
+  inline bool IsDocument()
+  {
+    bool isDocument = false;
+    if (NS_SUCCEEDED(GetIsDocument(&isDocument)) && isDocument) {
+      return true;
+    }
+    return false;
+  }
+
   inline already_AddRefed<nsILoadInfo> GetLoadInfo()
   {
     nsCOMPtr<nsILoadInfo> result;

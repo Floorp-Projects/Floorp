@@ -263,7 +263,8 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (isCustomElementName || aIs) {
+  if (CustomElementRegistry::IsCustomElementEnabled() &&
+      (isCustomElementName || aIs)) {
     nsContentUtils::SetupCustomElement(*aResult, aIs);
   }
 

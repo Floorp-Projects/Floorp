@@ -445,7 +445,7 @@ OmxDataDecoder::FillAndEmptyBuffers()
     inbuf->mBuffer->nOffset = 0;
     inbuf->mBuffer->nFlags = inbuf->mBuffer->nAllocLen > data->Size() ?
                              OMX_BUFFERFLAG_ENDOFFRAME : 0;
-    inbuf->mBuffer->nTimeStamp = data->mTime;
+    inbuf->mBuffer->nTimeStamp = data->mTime.ToMicroseconds();
     if (data->Size()) {
       inbuf->mRawData = mMediaRawDatas[0];
     } else {

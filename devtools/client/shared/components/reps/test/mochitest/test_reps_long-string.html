@@ -17,14 +17,16 @@ Test LongString rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, LongStringRep } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { LongStringRep } = REPS;
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testMultiline") });
-    is(renderedRep.type, LongStringRep.rep,
-      `Rep correctly selects ${LongStringRep.rep.displayName}`);
+    is(getRep(getGripStub("testMultiline")), LongStringRep.rep,
+      "Rep correctly selects LongString Rep");
 
     // Test rendering
     yield testMultiline();

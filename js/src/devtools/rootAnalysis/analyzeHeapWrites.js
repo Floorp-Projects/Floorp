@@ -207,6 +207,10 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_ClearWillChange", "aDisplay", null],
         ["Gecko_AppendWillChange", "aDisplay", null],
         ["Gecko_CopyWillChangeFrom", "aDest", null],
+        ["Gecko_InitializeImageCropRect", "aImage", null],
+        ["Gecko_CopyShapeSourceFrom", "aDst", null],
+        ["Gecko_DestroyShapeSource", "aShape", null],
+        ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);

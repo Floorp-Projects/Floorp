@@ -1723,7 +1723,7 @@ nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
     mWidgetListener->WindowMoved(this, aX, aY);
   }
 
-  if (mIMEHasFocus && GetIMENotificationRequests().WantPositionChanged()) {
+  if (mIMEHasFocus && IMENotificationRequestsRef().WantPositionChanged()) {
     NotifyIME(IMENotification(IMEMessage::NOTIFY_IME_OF_POSITION_CHANGE));
   }
 }
@@ -1797,18 +1797,6 @@ nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
       return rv2 == NS_ERROR_NOT_IMPLEMENTED ? rv : rv2;
     }
   }
-}
-
-IMENotificationRequests
-nsBaseWidget::GetIMENotificationRequests()
-{
-  RefPtr<TextEventDispatcherListener> listener =
-    GetNativeTextEventDispatcherListener();
-  if (!listener) {
-    // Default is to not send additional change notifications to NotifyIME.
-    return IMENotificationRequests();
-  }
-  return listener->GetIMENotificationRequests();
 }
 
 void
@@ -2304,6 +2292,13 @@ nsIWidget::NativeIMEContext
 nsIWidget::GetNativeIMEContext()
 {
   return NativeIMEContext(this);
+}
+
+const IMENotificationRequests&
+nsIWidget::IMENotificationRequestsRef()
+{
+  TextEventDispatcher* dispatcher = GetTextEventDispatcher();
+  return dispatcher->IMENotificationRequestsRef();
 }
 
 nsresult

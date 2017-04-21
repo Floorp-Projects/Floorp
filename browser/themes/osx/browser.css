@@ -726,7 +726,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   -moz-box-align: center;
 }
 
-%include ../shared/toolbarbuttons.inc.css
+%include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
 @media not all and (min-resolution: 1.1dppx) {

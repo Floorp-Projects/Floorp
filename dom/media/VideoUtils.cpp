@@ -34,6 +34,7 @@ NS_NAMED_LITERAL_CSTRING(kEMEKeySystemClearkey, "org.w3.clearkey");
 NS_NAMED_LITERAL_CSTRING(kEMEKeySystemWidevine, "com.widevine.alpha");
 
 using layers::PlanarYCbCrImage;
+using media::TimeUnit;
 
 CheckedInt64 SaferMultDiv(int64_t aValue, uint32_t aMul, uint32_t aDiv) {
   int64_t major = aValue / aDiv;
@@ -47,11 +48,11 @@ CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate) {
   return SaferMultDiv(aFrames, USECS_PER_S, aRate);
 }
 
-media::TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate) {
+TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate) {
   int64_t major = aFrames / aRate;
   int64_t remainder = aFrames % aRate;
-  return media::TimeUnit::FromMicroseconds(major) * USECS_PER_S +
-    (media::TimeUnit::FromMicroseconds(remainder) * USECS_PER_S) / aRate;
+  return TimeUnit::FromMicroseconds(major) * USECS_PER_S +
+    (TimeUnit::FromMicroseconds(remainder) * USECS_PER_S) / aRate;
 }
 
 // Converts from microseconds to number of audio frames, given the specified
@@ -61,7 +62,7 @@ CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {
 }
 
 // Format TimeUnit as number of frames at given rate.
-CheckedInt64 TimeUnitToFrames(const media::TimeUnit& aTime, uint32_t aRate) {
+CheckedInt64 TimeUnitToFrames(const TimeUnit& aTime, uint32_t aRate) {
   return UsecsToFrames(aTime.ToMicroseconds(), aRate);
 }
 
@@ -111,8 +112,8 @@ media::TimeIntervals GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStr
   // Special case completely cached files.  This also handles local files.
   if (aStream->IsDataCachedToEndOfResource(0)) {
     buffered +=
-      media::TimeInterval(media::TimeUnit::FromMicroseconds(0),
-                          media::TimeUnit::FromMicroseconds(aDurationUsecs));
+      media::TimeInterval(TimeUnit::Zero(),
+                          TimeUnit::FromMicroseconds(aDurationUsecs));
     return buffered;
   }
 
@@ -135,9 +136,8 @@ media::TimeIntervals GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStr
     int64_t endUs = BytesToTime(endOffset, totalBytes, aDurationUsecs);
     if (startUs != endUs) {
       buffered +=
-        media::TimeInterval(media::TimeUnit::FromMicroseconds(startUs),
-
-                              media::TimeUnit::FromMicroseconds(endUs));
+        media::TimeInterval(TimeUnit::FromMicroseconds(startUs),
+                            TimeUnit::FromMicroseconds(endUs));
     }
     startOffset = aStream->GetNextCachedData(endOffset);
   }

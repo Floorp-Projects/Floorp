@@ -1624,6 +1624,10 @@ protected:
   // True if a same-origin check has been done for the media element and resource.
   bool mMediaSecurityVerified;
 
+  // True if we should set nsIClassOfService::UrgentStart to the channel to
+  // get the response ASAP for better user responsiveness.
+  bool mUseUrgentStartForChannel = false;
+
   // The CORS mode when loading the media element
   CORSMode mCORSMode;
 

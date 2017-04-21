@@ -28,7 +28,6 @@ namespace mozilla {
 
 class ThumbnailHelper final
     : public java::ThumbnailHelper::Natives<ThumbnailHelper>
-    , public java::ZoomedView::Natives<ThumbnailHelper>
 {
     ThumbnailHelper() = delete;
 
@@ -190,7 +189,6 @@ public:
     static void Init()
     {
         java::ThumbnailHelper::Natives<ThumbnailHelper>::Init();
-        java::ZoomedView::Natives<ThumbnailHelper>::Init();
     }
 
     template<class Functor>
@@ -260,40 +258,6 @@ public:
         const bool store = success ? ShouldStoreThumbnail(docShell) : false;
 
         java::ThumbnailHelper::NotifyThumbnail(aData, aTab, success, store);
-    }
-
-    static void
-    RequestZoomedViewData(jni::ByteBuffer::Param aData, int32_t aTabId,
-                          int32_t aX, int32_t aY,
-                          int32_t aWidth, int32_t aHeight, float aScale)
-    {
-        nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
-        if (!window || !aData) {
-            return;
-        }
-
-        nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
-        nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
-        RefPtr<nsPresContext> presContext;
-
-        if (!docShell || NS_FAILED(docShell->GetPresContext(
-                getter_AddRefs(presContext))) || !presContext) {
-            return;
-        }
-
-        nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-        LayoutDeviceRect rect = LayoutDeviceRect(aX, aY, aWidth, aHeight);
-        const float resolution = presShell->GetCumulativeResolution();
-        rect.Scale(1.0f / LayoutDeviceToLayerScale(resolution).scale);
-
-        docShell = GetThumbnailAndDocShell(
-                window, aData, aWidth, aHeight, CSSRect::FromAppUnits(
-                rect.ToAppUnits(rect, presContext->AppUnitsPerDevPixel())),
-                aScale);
-
-        if (docShell) {
-            java::LayerView::UpdateZoomedView(aData);
-        }
     }
 };
 

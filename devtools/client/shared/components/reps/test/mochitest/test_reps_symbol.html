@@ -20,8 +20,11 @@ Test Symbol rep
 /* import-globals-from head.js */
 
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, SymbolRep } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { SymbolRep } = REPS;
 
   let gripStubs = new Map();
   gripStubs.set("testSymbolFoo", {
@@ -34,13 +37,8 @@ window.onload = Task.async(function* () {
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(
-      Rep,
-      { object: gripStubs.get("testSymbolFoo")}
-    );
-
-    is(renderedRep.type, SymbolRep.rep,
-      `Rep correctly selects ${SymbolRep.rep.displayName}`);
+    is(getRep(gripStubs.get("testSymbolFoo")), SymbolRep.rep,
+      "Rep correctly selects SymbolRep Rep");
 
     // Test rendering
     yield testSymbol();

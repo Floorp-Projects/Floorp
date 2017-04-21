@@ -355,7 +355,8 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
   } else if (typeof tabId == "number") {
     // Tabs OOP
     for (let browser of this._getBrowsers()) {
-      if (browser.frameLoader.tabParent &&
+      if (browser.frameLoader &&
+          browser.frameLoader.tabParent &&
           browser.frameLoader.tabParent.tabId === tabId) {
         return this._getActorForBrowser(browser);
       }

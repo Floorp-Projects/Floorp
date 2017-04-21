@@ -47,6 +47,15 @@ extensions.on("page-shutdown", (type, context) => {
 
 
 extensions.registerModules({
+  browserAction: {
+    url: "chrome://browser/content/ext-browserAction.js",
+    schema: "chrome://browser/content/schemas/browser_action.json",
+    scopes: ["addon_parent"],
+    manifest: ["browser_action"],
+    paths: [
+      ["browserAction"],
+    ],
+  },
   pageAction: {
     url: "chrome://browser/content/ext-pageAction.js",
     schema: "chrome://browser/content/schemas/page_action.json",

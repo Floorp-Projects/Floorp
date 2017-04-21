@@ -286,7 +286,6 @@ public:
                             void* aCallbackData) override { return false; }
   bool                    ComputeShouldAccelerate();
   virtual bool            WidgetTypeSupportsAcceleration() { return true; }
-  virtual IMENotificationRequests GetIMENotificationRequests() override;
   virtual MOZ_MUST_USE nsresult OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual already_AddRefed<nsIWidget>
   CreateChild(const LayoutDeviceIntRect& aRect,
@@ -404,6 +403,12 @@ public:
   // displayport during the live resize to avoid unneccessary overpainting.
   void NotifyLiveResizeStarted();
   void NotifyLiveResizeStopped();
+
+#if defined(MOZ_WIDGET_ANDROID)
+  void RecvToolbarAnimatorMessageFromCompositor(int32_t) override {};
+  void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage) override {};
+  void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize) override {};
+#endif
 
 protected:
   // These are methods for CompositorWidgetWrapper, and should only be

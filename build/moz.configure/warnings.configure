@@ -61,6 +61,9 @@ check_and_add_gcc_warning('-Wc++14-compat', cxx_compiler)
 check_and_add_gcc_warning('-Wc++14-compat-pedantic', cxx_compiler)
 check_and_add_gcc_warning('-Wc++1z-compat', cxx_compiler)
 
+# catches possible misuse of the comma operator
+check_and_add_gcc_warning('-Wcomma', cxx_compiler)
+
 # catches unintentional switch case fallthroughs
 check_and_add_gcc_warning('-Wimplicit-fallthrough', cxx_compiler)
 

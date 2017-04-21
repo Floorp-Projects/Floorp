@@ -503,7 +503,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     void initFromLazyFunction();
     void initStandaloneFunction(Scope* enclosingScope);
     void initWithEnclosingParseContext(ParseContext* enclosing, FunctionSyntaxKind kind);
-    void resetForAbortedSyntaxParse(ParseContext* enclosing, FunctionSyntaxKind kind);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }

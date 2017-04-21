@@ -158,7 +158,7 @@ onmessage = function(message) {
   expectedTestCount++;
 
   r = new FileReader();
-  r.onload = getLoadHandler(convertToDataURL(""), 0, "empt binary string reading");
+  r.onload = getLoadHandler(convertToDataURL(""), 0, "empty binary string reading");
   r.readAsDataURL(emptyFile);
   expectedTestCount++;
 

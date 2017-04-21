@@ -1384,6 +1384,11 @@ case "$target" in
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
     AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+    changequote(,)
+    HOST_DARWIN_MAJOR=`echo "$build_os" | sed -E -e 's/^darwin([0-9]+).*$/\1/'`
+    changequote([,])
+    if test "$HOST_DARWIN_MAJOR" -ge 15 ; then
+        AC_DEFINE(HAS_CONNECTX)
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in

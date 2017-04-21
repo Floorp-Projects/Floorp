@@ -553,7 +553,7 @@ menuitem.bookmark-item {
 
 /* Menu panel buttons */
 
-%include ../shared/toolbarbuttons.inc.css
+%include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,

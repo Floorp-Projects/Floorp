@@ -18,8 +18,11 @@ Test ObjectWithText rep
 <script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, ObjectWithText } = REPS;
+    const {
+      REPS,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { ObjectWithText } = REPS;
 
     let gripStub = {
       "type": "object",
@@ -36,8 +39,7 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, ObjectWithText.rep, `Rep correctly selects ${ObjectWithText.rep.displayName}`);
+    is(getRep(gripStub), ObjectWithText.rep, "Rep correctly selects ObjectWithText Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(ObjectWithText.rep, { object: gripStub });

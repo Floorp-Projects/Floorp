@@ -818,7 +818,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             matches = (glob.glob(os.path.join(upload_target, glob_name)) +
                        glob.glob(os.path.join(upload_target, 'update', glob_name)) +
                        glob.glob(os.path.join(upload_target, '*', 'xpi', glob_name)))
-            targets_exts = ["tar.bz2", "langpack.xpi", "complete.mar", "checksums"]
+            targets_exts = ["tar.bz2", "dmg", "langpack.xpi",
+                            "complete.mar", "checksums"]
             targets = ["target.%s" % ext for ext in targets_exts]
             for f in matches:
                 target_file = next(target_file for target_file in targets

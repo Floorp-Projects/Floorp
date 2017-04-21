@@ -869,12 +869,6 @@ ClientLayerManager::AsyncPanZoomEnabled() const
 }
 
 void
-ClientLayerManager::SetNextPaintSyncId(int32_t aSyncId)
-{
-  mForwarder->SetPaintSyncId(aSyncId);
-}
-
-void
 ClientLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 {
   mForwarder->SetLayerObserverEpoch(aLayerObserverEpoch);

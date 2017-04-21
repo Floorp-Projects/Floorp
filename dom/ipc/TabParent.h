@@ -119,11 +119,6 @@ public:
   void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   /**
-   * Get the mozapptype attribute from this TabParent's owner DOM element.
-   */
-  void GetAppType(nsAString& aOut);
-
-  /**
    * Returns true iff this TabParent's nsIFrameLoader is visible.
    *
    * The frameloader's visibility can be independent of e.g. its docshell's

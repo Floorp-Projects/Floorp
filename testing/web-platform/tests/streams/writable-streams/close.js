@@ -62,6 +62,23 @@ promise_test(t => {
 
 promise_test(t => {
   const ws = new WritableStream({
+    close() {
+      throw error1;
+    }
+  });
+
+  const writer = ws.getWriter();
+
+  return Promise.all([
+    writer.write('y'),
+    promise_rejects(t, error1, writer.close(), 'close() must reject with the error'),
+    promise_rejects(t, error1, writer.closed, 'closed must reject with the error')
+  ]);
+}, 'when the sink throws during close, and the close is requested while a write is still in-flight, the stream should ' +
+   'become errored during the close');
+
+promise_test(() => {
+  const ws = new WritableStream({
     write(chunk, controller) {
       controller.error(error1);
       return new Promise(() => {});
@@ -76,7 +93,7 @@ promise_test(t => {
   });
 }, 'releaseLock on a stream with a pending write in which the stream has been errored');
 
-promise_test(t => {
+promise_test(() => {
   const ws = new WritableStream({
     close(controller) {
       controller.error(error1);
@@ -295,12 +312,11 @@ promise_test(t => {
       abortPromise.then(() => {
         events.push('abortPromise');
       }),
-      promise_rejects(t, new TypeError(), writer.closed, 'writer.closed must reject with an error indicating abort')
-      .then(() => {
+      writer.closed.then(() => {
         events.push('closed');
       })
     ]).then(() => {
-      assert_array_equals(events, ['closePromise', 'abortPromise', 'closed'],
+      assert_array_equals(events, ['closePromise', 'closed', 'abortPromise'],
                           'promises must fulfill/reject in the expected order');
     });
   });
@@ -338,7 +354,7 @@ promise_test(t => {
         events.push('closed');
       })
     ]).then(() => {
-      assert_array_equals(events, ['closePromise', 'abortPromise', 'closed'],
+      assert_array_equals(events, ['closePromise', 'closed', 'abortPromise'],
                           'promises must fulfill/reject in the expected order');
     });
   });

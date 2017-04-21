@@ -329,18 +329,6 @@ TabParent::RemoveWindowListeners()
   }
 }
 
-void
-TabParent::GetAppType(nsAString& aOut)
-{
-  aOut.Truncate();
-  nsCOMPtr<Element> elem = do_QueryInterface(mFrameElement);
-  if (!elem) {
-    return;
-  }
-
-  elem->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, aOut);
-}
-
 bool
 TabParent::IsVisible() const
 {
@@ -1754,7 +1742,7 @@ TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
   IMEStateManager::NotifyIME(aIMENotification, widget, true);
 
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
-    *aRequests = widget->GetIMENotificationRequests();
+    *aRequests = widget->IMENotificationRequestsRef();
   }
   return IPC_OK();
 }
@@ -1769,7 +1757,8 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
   }
 
 #ifdef DEBUG
-  IMENotificationRequests requests = widget->GetIMENotificationRequests();
+  const IMENotificationRequests& requests =
+    widget->IMENotificationRequestsRef();
   NS_ASSERTION(requests.WantTextChange(),
     "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
 #endif
@@ -2956,6 +2945,7 @@ public:
   NS_IMETHOD SetLoadGroup(nsILoadGroup*) NO_IMPL
   NS_IMETHOD SetLoadFlags(nsLoadFlags) NO_IMPL
   NS_IMETHOD GetLoadFlags(nsLoadFlags*) NO_IMPL
+  NS_IMETHOD GetIsDocument(bool *) NO_IMPL
   NS_IMETHOD GetOriginalURI(nsIURI**) NO_IMPL
   NS_IMETHOD SetOriginalURI(nsIURI*) NO_IMPL
   NS_IMETHOD GetURI(nsIURI** aUri) override

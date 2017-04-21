@@ -95,6 +95,13 @@ class WebPlatformTestsUpdater(MozbuildObject):
         if kwargs["product"] is None:
             kwargs["product"] = "firefox"
 
+        if kwargs["sync"]:
+            if not kwargs["exclude"]:
+                kwargs["exclude"] = ["css/*"]
+            if not kwargs["include"]:
+                kwargs["include"] = ["css/css-timing-1/*", "css/css-animations-1/*", "css/css-transitions-1/*"]
+
+
         updatecommandline.check_args(kwargs)
         logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 
@@ -244,7 +251,6 @@ class WPTManifestUpdater(MozbuildObject):
     def run_update(self, check_clean=False, **kwargs):
         import manifestupdate
         from wptrunner import wptlogging
-
         logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
         wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
         manifestupdate.update(logger, wpt_dir, check_clean)

@@ -19,8 +19,12 @@ Test Error rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, ErrorRep } = REPS;
+  const {
+    REPS,
+    MODE,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { ErrorRep } = REPS;
 
   try {
     // Test errors with different properties
@@ -47,9 +51,7 @@ window.onload = Task.async(function* () {
   function testSimpleError() {
     // Test object = `new Error("Error message")`
     const stub = getGripStub("testSimpleError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+    is(getRep(stub), ErrorRep.rep, "Rep correctly selects Error Rep for Error object");
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -77,9 +79,8 @@ window.onload = Task.async(function* () {
      *   errorFoo();`
      */
     const stub = getGripStub("testMultilineStackError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for Error object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -99,9 +100,8 @@ window.onload = Task.async(function* () {
 
   function testErrorWithoutStacktrace() {
     const stub = getGripStub("testErrorWithoutStacktrace");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for Error object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -118,9 +118,8 @@ window.onload = Task.async(function* () {
   function testEvalError() {
     // Test object = `new EvalError("EvalError message")`
     const stub = getGripStub("testEvalError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for EvalError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for EvalError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -139,9 +138,8 @@ window.onload = Task.async(function* () {
   function testInternalError() {
     // Test object = `new InternalError("InternalError message")`
     const stub = getGripStub("testInternalError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for InternalError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for InternalError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -160,9 +158,8 @@ window.onload = Task.async(function* () {
   function testRangeError() {
     // Test object = `new RangeError("RangeError message")`
     const stub = getGripStub("testRangeError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for RangeError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for RangeError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -181,9 +178,8 @@ window.onload = Task.async(function* () {
   function testReferenceError() {
     // Test object = `new ReferenceError("ReferenceError message"`
     const stub = getGripStub("testReferenceError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for ReferenceError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for ReferenceError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -202,9 +198,8 @@ window.onload = Task.async(function* () {
   function testSyntaxError() {
     // Test object = `new SyntaxError("SyntaxError message"`
     const stub = getGripStub("testSyntaxError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for SyntaxError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for SyntaxError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -223,9 +218,8 @@ window.onload = Task.async(function* () {
   function testTypeError() {
     // Test object = `new TypeError("TypeError message"`
     const stub = getGripStub("testTypeError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for TypeError`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for TypeError`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,
@@ -244,9 +238,8 @@ window.onload = Task.async(function* () {
   function testURIError() {
     // Test object = `new URIError("URIError message")`
     const stub = getGripStub("testURIError");
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, ErrorRep.rep,
-      `Rep correctly selects ${ErrorRep.rep.displayName} for URIError object`);
+    is(getRep(stub), ErrorRep.rep,
+      `Rep correctly selects Error Rep for URIError object`);
 
     const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
     is(renderedComponent.textContent,

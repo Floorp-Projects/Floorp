@@ -162,6 +162,34 @@ CTLogVerifier::Init(Input subjectPublicKeyInfo,
     return rv;
   }
 
+  if (mSignatureAlgorithm == DigitallySigned::SignatureAlgorithm::ECDSA) {
+    SECItem spkiSECItem = {
+      siBuffer,
+      mSubjectPublicKeyInfo.begin(),
+      static_cast<unsigned int>(mSubjectPublicKeyInfo.length())
+    };
+    UniqueCERTSubjectPublicKeyInfo spki(
+      SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiSECItem));
+    if (!spki) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    mPublicECKey.reset(SECKEY_ExtractPublicKey(spki.get()));
+    if (!mPublicECKey) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    UniquePK11SlotInfo slot(PK11_GetInternalSlot());
+    if (!slot) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    CK_OBJECT_HANDLE handle = PK11_ImportPublicKey(slot.get(),
+                                                   mPublicECKey.get(), false);
+    if (handle == CK_INVALID_HANDLE) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+  } else {
+    mPublicECKey.reset(nullptr);
+  }
+
   if (!mKeyId.resizeUninitialized(SHA256_LENGTH)) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
@@ -240,6 +268,38 @@ CTLogVerifier::SignatureParametersMatch(const DigitallySigned& signature)
     DigitallySigned::HashAlgorithm::SHA256, mSignatureAlgorithm);
 }
 
+static Result
+FasterVerifyECDSASignedDigestNSS(const SignedDigest& sd,
+                                 UniqueSECKEYPublicKey& pubkey)
+{
+  MOZ_ASSERT(pubkey);
+  if (!pubkey) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  // The signature is encoded as a DER SEQUENCE of two INTEGERs. PK11_Verify
+  // expects the signature as only the two integers r and s (so no encoding -
+  // just two series of bytes each half as long as SECKEY_SignatureLen(pubkey)).
+  // DSAU_DecodeDerSigToLen converts from the former format to the latter.
+  SECItem derSignatureSECItem(UnsafeMapInputToSECItem(sd.signature));
+  size_t signatureLen = SECKEY_SignatureLen(pubkey.get());
+  if (signatureLen == 0) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  UniqueSECItem signatureSECItem(DSAU_DecodeDerSigToLen(&derSignatureSECItem,
+                                                        signatureLen));
+  if (!signatureSECItem) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  SECItem digestSECItem(UnsafeMapInputToSECItem(sd.digest));
+  SECStatus srv = PK11_Verify(pubkey.get(), signatureSECItem.get(),
+                              &digestSECItem, nullptr);
+  if (srv != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+
+  return Success;
+}
+
 Result
 CTLogVerifier::VerifySignature(Input data, Input signature)
 {
@@ -272,7 +332,7 @@ CTLogVerifier::VerifySignature(Input data, Input signature)
       rv = VerifyRSAPKCS1SignedDigestNSS(signedDigest, spki, nullptr);
       break;
     case DigitallySigned::SignatureAlgorithm::ECDSA:
-      rv = VerifyECDSASignedDigestNSS(signedDigest, spki, nullptr);
+      rv = FasterVerifyECDSASignedDigestNSS(signedDigest, mPublicECKey);
       break;
     // We do not expect new values added to this enum any time soon,
     // so just listing all the available ones seems to be the easiest way
