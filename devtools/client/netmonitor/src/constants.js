@@ -93,6 +93,18 @@ const EVENTS = {
   UPDATING_RESPONSE_CONTENT: "NetMonitor:NetworkEventUpdating:ResponseContent",
   RECEIVED_RESPONSE_CONTENT: "NetMonitor:NetworkEventUpdated:ResponseContent",
 
+  // When the request post params are displayed in the UI.
+  REQUEST_POST_PARAMS_DISPLAYED: "NetMonitor:RequestPostParamsAvailable",
+
+  // When the image response thumbnail is displayed in the UI.
+  RESPONSE_IMAGE_THUMBNAIL_DISPLAYED:
+    "NetMonitor:ResponseImageThumbnailAvailable",
+
+  // Fired when charts have been displayed in the PerformanceStatisticsView.
+  PLACEHOLDER_CHARTS_DISPLAYED: "NetMonitor:PlaceholderChartsDisplayed",
+  PRIMED_CACHE_CHART_DISPLAYED: "NetMonitor:PrimedChartsDisplayed",
+  EMPTY_CACHE_CHART_DISPLAYED: "NetMonitor:EmptyChartsDisplayed",
+
   // Fired once the NetMonitorController establishes a connection to the debug
   // target.
   CONNECTED: "connected",

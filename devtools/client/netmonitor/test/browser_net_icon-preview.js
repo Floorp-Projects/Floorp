@@ -9,21 +9,22 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
-  const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { NetMonitorController } =
     windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
+  let {
+    ACTIVITY_TYPE,
+    EVENTS,
+  } = windowRequire("devtools/client/netmonitor/src/constants");
 
   gStore.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
+  let wait = waitForEvents();
   yield performRequests();
   yield wait;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
 
   info("Checking the image thumbnail when all items are shown.");
   checkImageThumbnail();
@@ -37,15 +38,21 @@ add_task(function* () {
   checkImageThumbnail();
 
   info("Reloading the debuggee and performing all requests again...");
-  wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
+  wait = waitForEvents();
   yield reloadAndPerformRequests();
   yield wait;
-  yield waitUntil(() => !!document.querySelector(SELECTOR));
 
   info("Checking the image thumbnail after a reload.");
   checkImageThumbnail();
 
   yield teardown(monitor);
+
+  function waitForEvents() {
+    return promise.all([
+      waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS),
+      monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED)
+    ]);
+  }
 
   function performRequests() {
     return ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -59,11 +66,12 @@ add_task(function* () {
   }
 
   function checkImageThumbnail() {
-    is(document.querySelectorAll(SELECTOR).length, 1,
+    is(document.querySelectorAll(".requests-list-icon[data-type=thumbnail]").length, 1,
       "There should be only one image request with a thumbnail displayed.");
-    is(document.querySelector(SELECTOR).src, TEST_IMAGE_DATA_URI,
+    is(document.querySelector(".requests-list-icon[data-type=thumbnail]").src,
+      TEST_IMAGE_DATA_URI,
       "The image requests-list-icon thumbnail is displayed correctly.");
-    is(document.querySelector(SELECTOR).hidden, false,
+    is(document.querySelector(".requests-list-icon[data-type=thumbnail]").hidden, false,
       "The image requests-list-icon thumbnail should not be hidden.");
   }
 });
