@@ -750,6 +750,9 @@
 #ifdef MOZ_DATA_REPORTING
 #ifdef MOZ_CRASHREPORTER
 <groupbox id="crashReporterGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+#ifndef MOZ_TELEMETRY_REPORTING
+<caption><label>&reports.label;</label></caption>
+#endif
   <hbox align="center">
     <checkbox id="automaticallySubmitCrashesBox"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"
