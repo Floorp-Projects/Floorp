@@ -6,10 +6,10 @@
 <org.mozilla.gecko.home.BookmarkFolderView xmlns:android="http://schemas.android.com/apk/res/android"
                                            style="@style/Widget.FolderView"
                                            android:layout_width="match_parent"
-                                           android:paddingLeft="0dp"
-                                           android:paddingStart="0dp"
+                                           android:layout_height="wrap_content"
+                                           android:minHeight="@dimen/page_row_height"
+                                           android:paddingLeft="16dp"
+                                           android:paddingStart="16dp"
                                            android:paddingRight="16dp"
                                            android:paddingEnd="16dp"
-                                           android:paddingTop="0dp"
-                                           android:paddingBottom="0dp"
-                                           android:gravity="center_vertical"/>
+                                           android:gravity="center_vertical" />

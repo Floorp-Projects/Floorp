@@ -36,7 +36,6 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
-import org.mozilla.gecko.db.BrowserContract.Highlights;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
@@ -1121,20 +1120,6 @@ public class LocalBrowserDB extends BrowserDB {
         }
     }
 
-    /**
-     * Find parents of records that match the provided criteria, and bump their
-     * modified timestamp.
-     */
-    protected void bumpParents(ContentResolver cr, String param, String value) {
-        ContentValues values = new ContentValues();
-        values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
-
-        String where  = param + " = ?";
-        String[] args = new String[] { value };
-        int updated  = cr.update(mParentsUriWithProfile, values, where, args);
-        debug("Updated " + updated + " rows to new modified time.");
-    }
-
     private void addBookmarkItem(ContentResolver cr, String title, String uri, long folderId) {
         final long now = System.currentTimeMillis();
         ContentValues values = new ContentValues();
@@ -1175,16 +1160,7 @@ public class LocalBrowserDB extends BrowserDB {
                   Bookmarks.PARENT + " = " + folderId,
                   new String[] { uri });
 
-        // Bump parent modified time using its ID.
-        debug("Bumping parent modified time for addition to: " + folderId);
-        final String where  = Bookmarks._ID + " = ?";
-        final String[] args = new String[] { String.valueOf(folderId) };
-
-        ContentValues bumped = new ContentValues();
-        bumped.put(Bookmarks.DATE_MODIFIED, now);
-
-        final int updated = cr.update(mBookmarksUriWithProfile, bumped, where, args);
-        debug("Updated " + updated + " rows to new modified time.");
+        // BrowserProvider will handle updating parent's lastModified timestamp, nothing else to do.
     }
 
     @Override
@@ -1200,7 +1176,6 @@ public class LocalBrowserDB extends BrowserDB {
         addBookmarkItem(cr, title, uri, folderId);
         return true;
     }
-
     private boolean isBookmarkForUrlInFolder(ContentResolver cr, String uri, long folderId) {
         final Cursor c = cr.query(bookmarksUriWithLimit(1),
                                   new String[] { Bookmarks._ID },
@@ -1220,17 +1195,35 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
+    public Uri addBookmarkFolder(ContentResolver cr, String title, long parentId) {
+        final ContentValues values = new ContentValues();
+        final long now = System.currentTimeMillis();
+        values.put(Bookmarks.DATE_CREATED, now);
+        values.put(Bookmarks.DATE_MODIFIED, now);
+        values.put(Bookmarks.GUID, Utils.generateGuid());
+        values.put(Bookmarks.PARENT, parentId);
+        values.put(Bookmarks.TITLE, title);
+        values.put(Bookmarks.TYPE, Bookmarks.TYPE_FOLDER);
+
+        // BrowserProvider will bump parent's lastModified timestamp after successful insertion.
+        return cr.insert(mBookmarksUriWithProfile, values);
+    }
+
+    @Override
     @RobocopTarget
     public void removeBookmarksWithURL(ContentResolver cr, String uri) {
-        Uri contentUri = mBookmarksUriWithProfile;
+        // BrowserProvider will bump parent's lastModified timestamp after successful deletion.
+        cr.delete(mBookmarksUriWithProfile,
+                  Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " != ? ",
+                  new String[] { uri, String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
+    }
 
-        // Do this now so that the items still exist!
-        bumpParents(cr, Bookmarks.URL, uri);
-
-        final String[] urlArgs = new String[] { uri, String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) };
-        final String urlEquals = Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " != ? ";
-
-        cr.delete(contentUri, urlEquals, urlArgs);
+    @Override
+    public void removeBookmarkWithId(ContentResolver cr, long id) {
+        // BrowserProvider will bump parent's lastModified timestamp after successful deletion.
+        cr.delete(mBookmarksUriWithProfile,
+                  Bookmarks._ID + " = ? AND " + Bookmarks.PARENT + " != ? ",
+                  new String[] { String.valueOf(id), String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
     }
 
     @Override
@@ -1240,7 +1233,7 @@ public class LocalBrowserDB extends BrowserDB {
 
     @Override
     @RobocopTarget
-    public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
+    public void updateBookmark(ContentResolver cr, long id, String uri, String title, String keyword) {
         ContentValues values = new ContentValues();
         values.put(Bookmarks.TITLE, title);
         values.put(Bookmarks.URL, uri);
@@ -1248,6 +1241,26 @@ public class LocalBrowserDB extends BrowserDB {
         values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
 
         cr.update(mBookmarksUriWithProfile,
+                  values,
+                  Bookmarks._ID + " = ?",
+                  new String[] { String.valueOf(id) });
+    }
+
+    @Override
+    public void updateBookmark(ContentResolver cr, long id, String uri, String title, String keyword,
+                               long newParentId, long oldParentId) {
+        final ContentValues values = new ContentValues();
+        values.put(Bookmarks.TITLE, title);
+        values.put(Bookmarks.URL, uri);
+        values.put(Bookmarks.KEYWORD, keyword);
+        values.put(Bookmarks.PARENT, newParentId);
+        values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
+
+        final Uri contentUri = mBookmarksUriWithProfile.buildUpon()
+                                .appendQueryParameter(BrowserContract.PARAM_OLD_BOOKMARK_PARENT,
+                                                      String.valueOf(oldParentId))
+                                .build();
+        cr.update(contentUri,
                   values,
                   Bookmarks._ID + " = ?",
                   new String[] { String.valueOf(id) });
@@ -1785,6 +1798,9 @@ public class LocalBrowserDB extends BrowserDB {
                             new String[] { Bookmarks._ID,
                                            Bookmarks.URL,
                                            Bookmarks.TITLE,
+                                           Bookmarks.TYPE,
+                                           Bookmarks.PARENT,
+                                           Bookmarks.GUID,
                                            Bookmarks.KEYWORD },
                             Bookmarks.URL + " = ?",
                             new String[] { url },
@@ -1793,6 +1809,28 @@ public class LocalBrowserDB extends BrowserDB {
         if (c != null && c.getCount() == 0) {
             c.close();
             c = null;
+        }
+
+        return c;
+    }
+
+    @Override
+    public Cursor getBookmarkById(ContentResolver cr, long id) {
+        final Cursor c = cr.query(mBookmarksUriWithProfile,
+                                  new String[] { Bookmarks._ID,
+                                                 Bookmarks.URL,
+                                                 Bookmarks.TITLE,
+                                                 Bookmarks.TYPE,
+                                                 Bookmarks.PARENT,
+                                                 Bookmarks.GUID,
+                                                 Bookmarks.KEYWORD },
+                                  Bookmarks._ID + " = ?",
+                                  new String[] { String.valueOf(id) },
+                                  null);
+
+        if (c != null && c.getCount() == 0) {
+            c.close();
+            return null;
         }
 
         return c;

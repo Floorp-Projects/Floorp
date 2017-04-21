@@ -137,4 +137,18 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
+    <!-- Bookmark full-page dialog theme -->
+    <style name="Bookmark" parent="Theme.AppCompat.Light.DialogWhenLarge"/>
+    <style name="Bookmark.Gecko" parent="Gecko">
+        <item name="toolbarStyle">@style/BookmarkToolbarStyle</item>
+        <item name="colorAccent">@color/fennec_ui_orange</item>
+        <item name="colorControlNormal">@color/disabled_grey</item>
+
+        <item name="android:textColorHint">@color/tabs_tray_icon_grey</item>
+    </style>
+    <style name="BookmarkToolbarStyle" parent="@style/Widget.AppCompat.Toolbar">
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:paddingEnd">5dp</item>
+    </style>
+
 </resources>

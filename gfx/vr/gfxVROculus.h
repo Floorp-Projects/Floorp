@@ -169,10 +169,8 @@ private:
   void HandlePoseTracking(uint32_t aControllerIdx,
                           const dom::GamepadPoseState& aPose,
                           VRControllerHost* aController);
-  void HandleIndexTriggerPress(uint32_t aControllerIdx, uint32_t aButton,
-                               uint64_t aTouchMask, float aValue, uint64_t aButtonTouched);
-  void HandleHandTriggerPress(uint32_t aControllerIdx, uint32_t aButton,
-                              float aValue);
+  void HandleIndexTriggerPress(uint32_t aControllerIdx, uint32_t aButton, float aValue);
+  void HandleHandTriggerPress(uint32_t aControllerIdx, uint32_t aButton, float aValue);
   void HandleTouchEvent(uint32_t aControllerIdx, uint32_t aButton,
                         uint64_t aTouchMask, uint64_t aTouched);
   PRLibrary* mOvrLib;

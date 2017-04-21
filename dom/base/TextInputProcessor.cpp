@@ -10,6 +10,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextInputProcessor.h"
+#include "mozilla/widget/IMEData.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsIWidget.h"
@@ -27,10 +28,33 @@ namespace mozilla {
 class TextInputProcessorNotification final :
         public nsITextInputProcessorNotification
 {
+  typedef IMENotification::SelectionChangeData SelectionChangeData;
+  typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
+  typedef IMENotification::TextChangeData TextChangeData;
+  typedef IMENotification::TextChangeDataBase TextChangeDataBase;
+
 public:
   explicit TextInputProcessorNotification(const char* aType)
     : mType(aType)
   {
+  }
+
+  explicit TextInputProcessorNotification(
+             const TextChangeDataBase& aTextChangeData)
+    : mType("notify-text-change")
+    , mTextChangeData(aTextChangeData)
+  {
+  }
+
+  explicit TextInputProcessorNotification(
+             const SelectionChangeDataBase& aSelectionChangeData)
+    : mType("notify-selection-change")
+    , mSelectionChangeData(aSelectionChangeData)
+  {
+    // SelectionChangeDataBase::mString still refers nsString instance owned
+    // by aSelectionChangeData.  So, this needs to copy the instance.
+    nsString* string = new nsString(aSelectionChangeData.String());
+    mSelectionChangeData.mString = string;
   }
 
   NS_DECL_ISUPPORTS
@@ -41,11 +65,216 @@ public:
     return NS_OK;
   }
 
+  // "notify-text-change" and "notify-selection-change"
+  NS_IMETHOD GetOffset(uint32_t* aOffset) override final
+  {
+    if (NS_WARN_IF(!aOffset)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aOffset = mSelectionChangeData.mOffset;
+      return NS_OK;
+    }
+    if (IsTextChange()) {
+      *aOffset = mTextChangeData.mStartOffset;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // "notify-selection-change"
+  NS_IMETHOD GetText(nsAString& aText) override final
+  {
+    if (IsSelectionChange()) {
+      aText = mSelectionChangeData.String();
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetCollapsed(bool* aCollapsed) override final
+  {
+    if (NS_WARN_IF(!aCollapsed)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aCollapsed = mSelectionChangeData.IsCollapsed();
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetLength(uint32_t* aLength) override final
+  {
+    if (NS_WARN_IF(!aLength)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aLength = mSelectionChangeData.Length();
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetReversed(bool* aReversed) override final
+  {
+    if (NS_WARN_IF(!aReversed)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aReversed = mSelectionChangeData.mReversed;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetWritingMode(nsACString& aWritingMode) override final
+  {
+    if (IsSelectionChange()) {
+      WritingMode writingMode = mSelectionChangeData.GetWritingMode();
+      if (!writingMode.IsVertical()) {
+        aWritingMode.AssignLiteral("horizontal-tb");
+      } else if (writingMode.IsVerticalLR()) {
+        aWritingMode.AssignLiteral("vertical-lr");
+      } else {
+        aWritingMode.AssignLiteral("vertical-rl");
+      }
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetCausedByComposition(bool* aCausedByComposition) override final
+  {
+    if (NS_WARN_IF(!aCausedByComposition)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aCausedByComposition = mSelectionChangeData.mCausedByComposition;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetCausedBySelectionEvent(
+               bool* aCausedBySelectionEvent) override final
+  {
+    if (NS_WARN_IF(!aCausedBySelectionEvent)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aCausedBySelectionEvent = mSelectionChangeData.mCausedBySelectionEvent;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetOccurredDuringComposition(
+               bool* aOccurredDuringComposition) override final
+  {
+    if (NS_WARN_IF(!aOccurredDuringComposition)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsSelectionChange()) {
+      *aOccurredDuringComposition =
+        mSelectionChangeData.mOccurredDuringComposition;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // "notify-text-change"
+  NS_IMETHOD GetRemovedLength(uint32_t* aLength) override final
+  {
+    if (NS_WARN_IF(!aLength)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsTextChange()) {
+      *aLength = mTextChangeData.OldLength();
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetAddedLength(uint32_t* aLength) override final
+  {
+    if (NS_WARN_IF(!aLength)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsTextChange()) {
+      *aLength = mTextChangeData.NewLength();
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetCausedOnlyByComposition(
+               bool* aCausedOnlyByComposition) override final
+  {
+    if (NS_WARN_IF(!aCausedOnlyByComposition)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsTextChange()) {
+      *aCausedOnlyByComposition = mTextChangeData.mCausedOnlyByComposition;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetIncludingChangesDuringComposition(
+               bool* aIncludingChangesDuringComposition) override final
+  {
+    if (NS_WARN_IF(!aIncludingChangesDuringComposition)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsTextChange()) {
+      *aIncludingChangesDuringComposition =
+        mTextChangeData.mIncludingChangesDuringComposition;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_IMETHOD GetIncludingChangesWithoutComposition(
+               bool* aIncludingChangesWithoutComposition) override final
+  {
+    if (NS_WARN_IF(!aIncludingChangesWithoutComposition)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (IsTextChange()) {
+      *aIncludingChangesWithoutComposition =
+        mTextChangeData.mIncludingChangesWithoutComposition;
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
 protected:
-  ~TextInputProcessorNotification() { }
+  virtual ~TextInputProcessorNotification()
+  {
+    if (IsSelectionChange()) {
+      delete mSelectionChangeData.mString;
+      mSelectionChangeData.mString = nullptr;
+    }
+  }
+
+  bool IsTextChange() const
+  {
+    return mType.EqualsLiteral("notify-text-change");
+  }
+
+  bool IsSelectionChange() const
+  {
+    return mType.EqualsLiteral("notify-selection-change");
+  }
 
 private:
   nsAutoCString mType;
+  union
+  {
+    TextChangeDataBase mTextChangeData;
+    SelectionChangeDataBase mSelectionChangeData;
+  };
 
   TextInputProcessorNotification() { }
 };
@@ -668,6 +897,18 @@ TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
       case NOTIFY_IME_OF_BLUR:
         notification = new TextInputProcessorNotification("notify-blur");
         break;
+      case NOTIFY_IME_OF_TEXT_CHANGE:
+        notification = new TextInputProcessorNotification(
+                             aNotification.mTextChangeData);
+        break;
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        notification = new TextInputProcessorNotification(
+                             aNotification.mSelectionChangeData);
+        break;
+      case NOTIFY_IME_OF_POSITION_CHANGE:
+        notification = new TextInputProcessorNotification(
+                             "notify-position-change");
+        break;
       default:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -701,8 +942,10 @@ TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
 NS_IMETHODIMP_(IMENotificationRequests)
 TextInputProcessor::GetIMENotificationRequests()
 {
-  // TextInputProcessor::NotifyIME does not require extra change notifications.
-  return IMENotificationRequests();
+  // TextInputProcessor should support all change notifications.
+  return IMENotificationRequests(
+           IMENotificationRequests::NOTIFY_TEXT_CHANGE |
+           IMENotificationRequests::NOTIFY_POSITION_CHANGE);
 }
 
 NS_IMETHODIMP_(void)

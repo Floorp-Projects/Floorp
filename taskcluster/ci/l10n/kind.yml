@@ -28,6 +28,11 @@ job-template:
       by-build-platform:
          default: browser/locales/all-locales
          android-api-15-l10n: mobile/locales/l10n-changesets.json
+   ignore-locales:
+      by-build-platform:
+         # OSX has a special locale for japanese
+         macosx64.*: [ja]
+         default: [ja-JP-mac]
    run-time:
       by-build-platform:
          default: 36000
@@ -36,6 +41,7 @@ job-template:
       by-build-platform:
          default: public
          android-api-15-l10n: internal
+         macosx64-nightly: internal
    index:
       type: l10n
       product:
@@ -61,7 +67,7 @@ job-template:
          by-build-platform:
             linux64-l10n: linux64/opt
             linux-l10n: linux32/opt
-            macosx64: macosx64/opt
+            macosx64: osx-10-7/opt
             android-api-15-l10n: android-4-0-armv7-api15/opt
    mozharness:
       config:

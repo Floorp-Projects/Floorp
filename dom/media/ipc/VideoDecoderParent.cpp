@@ -20,6 +20,7 @@ namespace mozilla {
 namespace dom {
 
 using base::Thread;
+using media::TimeUnit;
 using namespace ipc;
 using namespace layers;
 using namespace gfx;
@@ -137,9 +138,9 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
     return IPC_OK();
   }
   data->mOffset = aData.base().offset();
-  data->mTime = media::TimeUnit::FromMicroseconds(aData.base().time());
-  data->mTimecode = media::TimeUnit::FromMicroseconds(aData.base().timecode());
-  data->mDuration = media::TimeUnit::FromMicroseconds(aData.base().duration());
+  data->mTime = TimeUnit::FromMicroseconds(aData.base().time());
+  data->mTimecode = TimeUnit::FromMicroseconds(aData.base().timecode());
+  data->mDuration = TimeUnit::FromMicroseconds(aData.base().duration());
   data->mKeyframe = aData.base().keyframe();
 
   DeallocShmem(aData.buffer());
@@ -257,7 +258,7 @@ VideoDecoderParent::RecvSetSeekThreshold(const int64_t& aTime)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
-  mDecoder->SetSeekThreshold(media::TimeUnit::FromMicroseconds(aTime));
+  mDecoder->SetSeekThreshold(TimeUnit::FromMicroseconds(aTime));
   return IPC_OK();
 }
 

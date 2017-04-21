@@ -47,6 +47,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -1061,13 +1062,15 @@ nsCSSRuleProcessor::Startup()
                                true);
 }
 
-static bool
-InitSystemMetrics()
+/* static */ void
+nsCSSRuleProcessor::InitSystemMetrics()
 {
-  NS_ASSERTION(!sSystemMetrics, "already initialized");
+  if (sSystemMetrics)
+    return;
+
+  MOZ_ASSERT(NS_IsMainThread());
 
   sSystemMetrics = new nsTArray< nsCOMPtr<nsIAtom> >;
-  NS_ENSURE_TRUE(sSystemMetrics, false);
 
   /***************************************************************************
    * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES IN         *
@@ -1193,8 +1196,6 @@ InitSystemMetrics()
     }
   }
 #endif
-
-  return true;
 }
 
 /* static */ void
@@ -1213,9 +1214,7 @@ nsCSSRuleProcessor::Shutdown()
 /* static */ bool
 nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
 {
-  if (!sSystemMetrics && !InitSystemMetrics()) {
-    return false;
-  }
+  nsCSSRuleProcessor::InitSystemMetrics();
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
 
@@ -1223,8 +1222,7 @@ nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
 /* static */ uint8_t
 nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 {
-  if (!sSystemMetrics)
-    InitSystemMetrics();
+  nsCSSRuleProcessor::InitSystemMetrics();
   return sWinThemeId;
 }
 #endif
@@ -1639,17 +1637,16 @@ StateSelectorMatches(Element* aElement,
 static inline bool
 IsSignificantChildMaybeThreadSafe(const nsIContent* aContent,
                                   bool aTextIsSignificant,
-                                  bool aWhitespaceIsSignificant,
-                                  bool aIsGecko)
+                                  bool aWhitespaceIsSignificant)
 {
-  if (aIsGecko) {
-    auto content = const_cast<nsIContent*>(aContent);
-    return IsSignificantChild(content, aTextIsSignificant, aWhitespaceIsSignificant);
-  } else {
+  if (ServoStyleSet::IsInServoTraversal()) {
     // See bug 1349100 for optimizing this
     return nsStyleUtil::ThreadSafeIsSignificantChild(aContent,
                                                      aTextIsSignificant,
                                                      aWhitespaceIsSignificant);
+  } else {
+    auto content = const_cast<nsIContent*>(aContent);
+    return IsSignificantChild(content, aTextIsSignificant, aWhitespaceIsSignificant);
   }
 }
 
@@ -1660,7 +1657,6 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         const nsIDocument* aDocument,
                                         bool aForStyling,
                                         EventStates aStateMask,
-                                        bool aIsGecko,
                                         bool* aSetSlowSelectorFlag,
                                         bool* const aDependence)
 {
@@ -1670,13 +1666,13 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
     case CSSPseudoClassType::mozLocaleDir:
       {
         bool docIsRTL;
-        if (aIsGecko) {
+        if (ServoStyleSet::IsInServoTraversal()) {
+          docIsRTL = aDocument->ThreadSafeGetDocumentState()
+                              .HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
+        } else {
           auto doc = const_cast<nsIDocument*>(aDocument);
           docIsRTL = doc->GetDocumentState()
                         .HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
-        } else {
-          docIsRTL = aDocument->ThreadSafeGetDocumentState()
-                              .HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
         }
 
         nsDependentString dirString(aString);
@@ -1722,7 +1718,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
         do {
           child = aElement->GetChildAt(++index);
         } while (child &&
-                  (!IsSignificantChildMaybeThreadSafe(child, true, false, aIsGecko) ||
+                  (!IsSignificantChildMaybeThreadSafe(child, true, false) ||
                   (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
                     child->NodeInfo()->NameAtom()->Equals(nsDependentString(aString)))));
         if (child) {
@@ -2168,7 +2164,6 @@ static bool SelectorMatches(Element* aElement,
                                                                aTreeMatchContext.mDocument,
                                                                aTreeMatchContext.mForStyling,
                                                                aNodeMatchContext.mStateMask,
-                                                               true,
                                                                &setSlowSelectorFlag,
                                                                aDependence);
         if (setSlowSelectorFlag) {

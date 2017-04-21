@@ -22,12 +22,14 @@
 
 namespace mozilla {
 
+using media::TimeUnit;
+
 /*
  * A container class to make it easier to pass the playback info all the
  * way to DecodedStreamGraphListener from DecodedStream.
  */
 struct PlaybackInfoInit {
-  media::TimeUnit mStartTime;
+  TimeUnit mStartTime;
   MediaInfo mInfo;
 };
 
@@ -144,8 +146,8 @@ public:
   // mNextVideoTime is the end timestamp for the last packet sent to the stream.
   // Therefore video packets starting at or after this time need to be copied
   // to the output stream.
-  media::TimeUnit mNextVideoTime;
-  media::TimeUnit mNextAudioTime;
+  TimeUnit mNextVideoTime;
+  TimeUnit mNextAudioTime;
   // The last video image sent to the stream. Useful if we need to replicate
   // the image.
   RefPtr<layers::Image> mLastVideoImage;
@@ -294,13 +296,13 @@ DecodedStream::OnEnded(TrackType aType)
 }
 
 void
-DecodedStream::Start(const media::TimeUnit& aStartTime, const MediaInfo& aInfo)
+DecodedStream::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
   mStartTime.emplace(aStartTime);
-  mLastOutputTime = media::TimeUnit::Zero();
+  mLastOutputTime = TimeUnit::Zero();
   mInfo = aInfo;
   mPlaying = true;
   ConnectListener();
@@ -448,7 +450,7 @@ DecodedStream::SetPreservesPitch(bool aPreservesPitch)
 }
 
 static void
-SendStreamAudio(DecodedStreamData* aStream, const media::TimeUnit& aStartTime,
+SendStreamAudio(DecodedStreamData* aStream, const TimeUnit& aStartTime,
                 AudioData* aData, AudioSegment* aOutput, uint32_t aRate,
                 const PrincipalHandle& aPrincipalHandle)
 {
@@ -541,8 +543,8 @@ DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin,
 static void
 WriteVideoToMediaStream(MediaStream* aStream,
                         layers::Image* aImage,
-                        const media::TimeUnit& aEnd,
-                        const media::TimeUnit& aStart,
+                        const TimeUnit& aEnd,
+                        const TimeUnit& aStart,
                         const mozilla::gfx::IntSize& aIntrinsicSize,
                         const TimeStamp& aTimeStamp,
                         VideoSegment* aOutput,
@@ -711,7 +713,7 @@ DecodedStream::SendData()
   }
 }
 
-media::TimeUnit
+TimeUnit
 DecodedStream::GetEndTime(TrackType aType) const
 {
   AssertOwnerThread();
@@ -724,10 +726,10 @@ DecodedStream::GetEndTime(TrackType aType) const
   } else if (aType == TrackInfo::kVideoTrack && mData) {
     return mData->mNextVideoTime;
   }
-  return media::TimeUnit::Zero();
+  return TimeUnit::Zero();
 }
 
-media::TimeUnit
+TimeUnit
 DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
