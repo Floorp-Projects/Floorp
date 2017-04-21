@@ -155,7 +155,7 @@ to mochitest command.
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
-    * test_property_syntax_errors.html `place-` [30]
+    * test_property_syntax_errors.html `place-` [0]
     * test_align_shorthand_serialization.html [8]
     * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
