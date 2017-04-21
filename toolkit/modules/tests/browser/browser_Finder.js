@@ -30,8 +30,7 @@ add_task(function* () {
   let promiseFind = waitForFind("onHighlightFinished");
   finder.highlight(true, "content");
   let findResult = yield promiseFind;
-  // Disable this check until Highlight All is fixed for iframe content.
-  // Assert.ok(findResult.found, "should find string");
+  Assert.ok(findResult.found, "should find string");
 
   promiseFind = waitForFind("onHighlightFinished");
   finder.highlight(true, "Bla");
