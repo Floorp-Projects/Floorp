@@ -178,7 +178,7 @@ public:
 
   Vector<std::string>& Features(PSLockRef) { return mFeatures; }
 
-  Vector<std::string>& ThreadNameFilters(PSLockRef) { return mThreadNameFilters; }
+  Vector<std::string>& Filters(PSLockRef) { return mFilters; }
 
   GET_AND_SET(bool, FeatureDisplayListDump)
   GET_AND_SET(bool, FeatureGPU)
@@ -247,7 +247,7 @@ private:
 
   // Substrings of names of threads we want to profile. Cleared when the
   // profiler is inactive
-  Vector<std::string> mThreadNameFilters;
+  Vector<std::string> mFilters;
 
   // Configuration flags derived from mFeatures. Cleared when the profiler is
   // inactive.
@@ -1786,7 +1786,7 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       // Measurement of the following things may be added later if DMD finds it
       // is worthwhile:
       // - gPS->mFeatures
-      // - gPS->mThreadNameFilters
+      // - gPS->mFilters
       // - gPS->mLiveThreads itself (its elements' children are measured above)
       // - gPS->mDeadThreads itself (ditto)
       // - gPS->mInterposeObserver
@@ -1821,17 +1821,17 @@ ThreadSelected(PSLockRef aLock, const char* aThreadName)
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  const Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(aLock);
+  const Vector<std::string>& filters = gPS->Filters(aLock);
 
-  if (threadNameFilters.empty()) {
+  if (filters.empty()) {
     return true;
   }
 
   std::string name = aThreadName;
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-  for (uint32_t i = 0; i < threadNameFilters.length(); ++i) {
-    std::string filter = threadNameFilters[i];
+  for (uint32_t i = 0; i < filters.length(); ++i) {
+    std::string filter = filters[i];
     std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
 
     // Crude, non UTF-8 compatible, case insensitive substring search
@@ -1910,7 +1910,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 static void
 NotifyProfilerStarted(const int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
-                      const char** aThreadNameFilters, uint32_t aFilterCount)
+                      const char** aFilters, uint32_t aFilterCount)
 {
   if (!CanNotifyObservers()) {
     return;
@@ -1926,14 +1926,13 @@ NotifyProfilerStarted(const int aEntries, double aInterval,
     featuresArray.AppendElement(aFeatures[i]);
   }
 
-  nsTArray<nsCString> threadNameFiltersArray;
+  nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
-    threadNameFiltersArray.AppendElement(aThreadNameFilters[i]);
+    filtersArray.AppendElement(aFilters[i]);
   }
 
   nsCOMPtr<nsIProfilerStartParams> params =
-    new nsProfilerStartParams(aEntries, aInterval, featuresArray,
-                              threadNameFiltersArray);
+    new nsProfilerStartParams(aEntries, aInterval, featuresArray, filtersArray);
 
   os->NotifyObservers(params, "profiler-started", nullptr);
 }
@@ -1956,7 +1955,7 @@ NotifyObservers(const char* aTopic)
 static void
 locked_profiler_start(PSLockRef aLock, const int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
-                      const char** aThreadNameFilters, uint32_t aFilterCount);
+                      const char** aFilters, uint32_t aFilterCount);
 
 void
 profiler_init(void* aStackTop)
@@ -2175,10 +2174,10 @@ profiler_get_start_params(int* aEntries, double* aInterval,
     (*aFeatures)[i] = features[i].c_str();
   }
 
-  const Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(lock);
-  MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilters.length()));
-  for (uint32_t i = 0; i < threadNameFilters.length(); ++i) {
-    (*aFilters)[i] = threadNameFilters[i].c_str();
+  const Vector<std::string>& filters = gPS->Filters(lock);
+  MOZ_ALWAYS_TRUE(aFilters->resize(filters.length()));
+  for (uint32_t i = 0; i < filters.length(); ++i) {
+    (*aFilters)[i] = filters[i].c_str();
   }
 }
 
@@ -2306,7 +2305,7 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 static void
 locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
-                      const char** aThreadNameFilters, uint32_t aFilterCount)
+                      const char** aFilters, uint32_t aFilterCount)
 {
   if (LOG_TEST) {
     LOG("locked_profiler_start");
@@ -2316,7 +2315,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
       LOG("- feature  = %s", aFeatures[i]);
     }
     for (uint32_t i = 0; i < aFilterCount; i++) {
-      LOG("- threads  = %s", aThreadNameFilters[i]);
+      LOG("- threads  = %s", aFilters[i]);
     }
   }
 
@@ -2338,12 +2337,11 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     features[i] = aFeatures[i];
   }
 
-  // Deep copy aThreadNameFilters. Must precede the ShouldProfileThread() call
-  // below.
-  Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(aLock);
-  MOZ_ALWAYS_TRUE(threadNameFilters.resize(aFilterCount));
+  // Deep copy aFilters. Must precede the ShouldProfileThread() call below.
+  Vector<std::string>& filters = gPS->Filters(aLock);
+  MOZ_ALWAYS_TRUE(filters.resize(aFilterCount));
   for (uint32_t i = 0; i < aFilterCount; ++i) {
-    threadNameFilters[i] = aThreadNameFilters[i];
+    filters[i] = aFilters[i];
   }
 
 #define HAS_FEATURE(feature) hasFeature(aFeatures, aFeatureCount, feature)
@@ -2442,7 +2440,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 void
 profiler_start(int aEntries, double aInterval,
                const char** aFeatures, uint32_t aFeatureCount,
-               const char** aThreadNameFilters, uint32_t aFilterCount)
+               const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_start");
 
@@ -2463,7 +2461,7 @@ profiler_start(int aEntries, double aInterval,
     }
 
     locked_profiler_start(lock, aEntries, aInterval, aFeatures, aFeatureCount,
-                          aThreadNameFilters, aFilterCount);
+                          aFilters, aFilterCount);
   }
 
   // We do these operations with gPSMutex unlocked. The comments in
@@ -2473,7 +2471,7 @@ profiler_start(int aEntries, double aInterval,
     delete samplerThread;
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
-                        aThreadNameFilters, aFilterCount);
+                        aFilters, aFilterCount);
 }
 
 static MOZ_MUST_USE SamplerThread*
@@ -2555,7 +2553,7 @@ locked_profiler_stop(PSLockRef aLock)
   gPS->SetFeatureTaskTracer(aLock, false);
   gPS->SetFeatureThreads(aLock, false);
 
-  gPS->ThreadNameFilters(aLock).clear();
+  gPS->Filters(aLock).clear();
 
   gPS->Features(aLock).clear();
 
