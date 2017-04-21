@@ -66,6 +66,7 @@ pub enum WebGLCommand {
     GetParameter(u32, MsgSender<WebGLResult<WebGLParameter>>),
     GetProgramParameter(WebGLProgramId, u32, MsgSender<WebGLResult<WebGLParameter>>),
     GetShaderParameter(WebGLShaderId, u32, MsgSender<WebGLResult<WebGLParameter>>),
+    GetShaderPrecisionFormat(u32, u32, MsgSender<WebGLResult<(i32, i32, i32)>>),
     GetActiveAttrib(WebGLProgramId, u32, MsgSender<WebGLResult<(i32, u32, String)>>),
     GetActiveUniform(WebGLProgramId, u32, MsgSender<WebGLResult<(i32, u32, String)>>),
     GetAttribLocation(WebGLProgramId, String, MsgSender<Option<i32>>),
@@ -223,6 +224,10 @@ define_resource_id!(WebGLShaderId);
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct WebGLContextId(pub usize);
 
+impl ::heapsize::HeapSizeOf for WebGLContextId {
+    fn heap_size_of_children(&self) -> usize { 0 }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum WebGLError {
     InvalidEnum,
@@ -315,6 +320,7 @@ impl fmt::Debug for WebGLCommand {
             GetParameter(..) => "GetParameter",
             GetProgramParameter(..) => "GetProgramParameter",
             GetShaderParameter(..) => "GetShaderParameter",
+            GetShaderPrecisionFormat(..) => "GetShaderPrecisionFormat",
             GetActiveAttrib(..) => "GetActiveAttrib",
             GetActiveUniform(..) => "GetActiveUniform",
             GetAttribLocation(..) => "GetAttribLocation",
@@ -492,6 +498,8 @@ impl WebGLCommand {
                 Self::program_parameter(ctx.gl(), program_id, param_id, chan),
             WebGLCommand::GetShaderParameter(shader_id, param_id, chan) =>
                 Self::shader_parameter(ctx.gl(), shader_id, param_id, chan),
+            WebGLCommand::GetShaderPrecisionFormat(shader_type, precision_type, chan) =>
+                Self::shader_precision_format(ctx.gl(), shader_type, precision_type, chan),
             WebGLCommand::GetUniformLocation(program_id, name, chan) =>
                 Self::uniform_location(ctx.gl(), program_id, name, chan),
             WebGLCommand::GetShaderInfoLog(shader_id, chan) =>
@@ -851,6 +859,28 @@ impl WebGLCommand {
             gl::COMPILE_STATUS =>
                 Ok(WebGLParameter::Bool(gl.get_shader_iv(shader_id.get(), param_id) != 0)),
             _ => Err(WebGLError::InvalidEnum),
+        };
+
+        chan.send(result).unwrap();
+    }
+
+    fn shader_precision_format(gl: &gl::Gl,
+                               shader_type: u32,
+                               precision_type: u32,
+                               chan: MsgSender<WebGLResult<(i32, i32, i32)>>) {
+       
+        let result = match precision_type {
+            gl::LOW_FLOAT |
+            gl::MEDIUM_FLOAT |
+            gl::HIGH_FLOAT |
+            gl::LOW_INT |
+            gl::MEDIUM_INT |
+            gl::HIGH_INT => {
+                Ok(gl.get_shader_precision_format(shader_type, precision_type))
+            },
+            _=> {
+                Err(WebGLError::InvalidEnum)
+            }
         };
 
         chan.send(result).unwrap();

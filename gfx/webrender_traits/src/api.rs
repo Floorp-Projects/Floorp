@@ -19,7 +19,7 @@ pub type TileSize = u16;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ApiMsg {
-    AddRawFont(FontKey, Vec<u8>),
+    AddRawFont(FontKey, Vec<u8>, u32),
     AddNativeFont(FontKey, NativeFontHandle),
     DeleteFont(FontKey),
     /// Gets the glyph dimensions
@@ -198,8 +198,8 @@ impl RenderApi {
         FontKey::new(new_id.0, new_id.1)
     }
 
-    pub fn add_raw_font(&self, key: FontKey, bytes: Vec<u8>) {
-        let msg = ApiMsg::AddRawFont(key, bytes);
+    pub fn add_raw_font(&self, key: FontKey, bytes: Vec<u8>, index: u32) {
+        let msg = ApiMsg::AddRawFont(key, bytes, index);
         self.api_sender.send(msg).unwrap();
     }
 
