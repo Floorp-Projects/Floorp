@@ -60,6 +60,12 @@ class ThreadStackHelper
 public:
   typedef Telemetry::HangStack Stack;
 
+  // When a native stack is gathered, this vector holds the raw program counter
+  // values that FramePointerStackWalk will return to us after it walks the
+  // stack. When gathering the Telemetry payload, Telemetry will take care of
+  // mapping these program counters to proper addresses within modules.
+  typedef Telemetry::NativeHangStack NativeStack;
+
 private:
   Stack* mStackToFill;
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
@@ -99,18 +105,31 @@ public:
    *
    * @param aStack Stack instance to be filled.
    */
-  void GetStack(Stack& aStack);
+  void GetPseudoStack(Stack& aStack);
 
   /**
    * Retrieve the current native stack of the thread associated
    * with this ThreadStackHelper.
    *
-   * @param aNativeStack Stack instance to be filled.
+   * @param aNativeStack NativeStack instance to be filled.
    */
-  void GetNativeStack(Stack& aStack);
+  void GetNativeStack(NativeStack& aNativeStack);
+
+  /**
+   * Retrieve the current pseudostack and native stack of the thread associated
+   * with this ThreadStackHelper. This method only pauses the target thread once
+   * to get both stacks.
+   *
+   * @param aStack        Stack instance to be filled with the pseudostack.
+   * @param aNativeStack  NativeStack instance to be filled with the native stack.
+   */
+  void GetPseudoAndNativeStack(Stack& aStack, NativeStack& aNativeStack);
 
 private:
-  void GetStackInternal(Stack& aStack, bool aAppendNativeStack);
+  // Fill in the passed aStack and aNativeStack datastructures with backtraces.
+  // If only aStack needs to be collected, nullptr may be passed for
+  // aNativeStack, and vice versa.
+  void GetStacksInternal(Stack* aStack, NativeStack* aNativeStack);
 #if defined(XP_LINUX)
 private:
   static int sInitialized;
