@@ -370,6 +370,9 @@ static const struct PRIOMethods TransportLayerMethods = {
 };
 
 TransportLayerDtls::~TransportLayerDtls() {
+  // Destroy the NSS instance first so it can still send out an alert before
+  // we disable the nspr_io_adapter_.
+  ssl_fd_ = nullptr;
   nspr_io_adapter_->SetEnabled(false);
   if (timer_) {
     timer_->Cancel();
