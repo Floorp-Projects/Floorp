@@ -280,6 +280,137 @@ function EMEPromiseAll(v, token, promises) {
   });
 }
 
+/*
+ * Create a new MediaKeys object.
+ * Return a promise which will be resolved with a new MediaKeys object,
+ * or will be rejected with a string that describes the failure.
+ */
+function CreateMediaKeys(v, test, token) {
+  let p = new EMEPromise;
+
+  function streamType(type) {
+    var x = test.tracks.find(o => o.name == type);
+    return x ? x.type : undefined;
+  }
+
+  function onencrypted(ev) {
+    var options = { initDataTypes: [ev.initDataType] };
+    if (streamType("video")) {
+      options.videoCapabilities = [{contentType: streamType("video")}];
+    }
+    if (streamType("audio")) {
+      options.audioCapabilities = [{contentType: streamType("audio")}];
+    }
+    navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, [options])
+    .then(keySystemAccess => {
+      keySystemAccess.createMediaKeys().then(
+        p.resolve,
+        () => p.reject(`${token} Failed to create MediaKeys object.`)
+      );
+    }, () => p.reject(`${token} Failed to request key system access.`));
+  }
+
+  v.addEventListener("encrypted", onencrypted, {once: true});
+  return p.promise;
+}
+
+/*
+ * Create a new MediaKeys object and provide it to the media element.
+ * Return a promise which will be resolved if succeeded, or will be rejected
+ * with a string that describes the failure.
+ */
+function CreateAndSetMediaKeys(v, test, token) {
+  let p = new EMEPromise;
+
+  CreateMediaKeys(v, test, token).then(mediaKeys => {
+    v.setMediaKeys(mediaKeys).then(
+      p.resolve,
+      () => p.reject(`${token} Failed to set MediaKeys on <video> element.`)
+    );
+  }, p.reject)
+
+  return p.promise;
+}
+
+/*
+ * Collect the init data from 'encrypted' events.
+ * Return a promise which will be resolved with the init data when collection
+ * is completed (specified by test.sessionCount).
+ */
+function LoadInitData(v, test, token) {
+  let p = new EMEPromise;
+  let initDataQueue = [];
+
+  function onencrypted(ev) {
+    initDataQueue.push(ev);
+    Log(token, `got encrypted(${ev.initDataType}, ` +
+        `${StringToHex(ArrayBufferToString(ev.initData))}) event.`);
+    if (test.sessionCount == initDataQueue.length) {
+      p.resolve(initDataQueue);
+    }
+  }
+
+  v.addEventListener("encrypted", onencrypted);
+  return p.promise;
+}
+
+/*
+ * Generate a license request and update the session.
+ * Return a promsise which will be resolved with the updated session
+ * or rejected with a string that describes the failure.
+ */
+function MakeRequest(test, token, ev, session, sessionType) {
+  sessionType = sessionType || "temporary";
+  let p = new EMEPromise;
+  let str = `session[${session.sessionId}].generateRequest(` +
+    `${ev.initDataType}, ${StringToHex(ArrayBufferToString(ev.initData))})`;
+
+  session.addEventListener("message",
+    UpdateSessionFunc(test, token, sessionType, p.resolve, p.reject));
+
+  Log(token, str);
+  session.generateRequest(ev.initDataType, ev.initData)
+  .catch(reason => {
+    // Reject the promise if generateRequest() failed.
+    // Otherwise it will be resolved in UpdateSessionFunc().
+    p.reject(`${token}: ${str} failed; ${reason}`);
+  });
+
+  return p.promise;
+}
+
+/*
+ * Process the init data by calling MakeRequest().
+ * Return a promise which will be resolved with the updated sessions
+ * when all init data are processed or rejected if any failure.
+ */
+function ProcessInitData(v, test, token, initData, sessionType) {
+  return Promise.all(
+    initData.map(ev => {
+      let session = v.mediaKeys.createSession(sessionType);
+      return MakeRequest(test, token, ev, session, sessionType);
+    })
+  );
+}
+
+/*
+ * Clean up the |v| element.
+ */
+function CleanUpMedia(v) {
+  v.setMediaKeys(null);
+  v.remove();
+  v.onerror = null;
+  v.src = null;
+}
+
+/*
+ * Close all sessions and clean up the |v| element.
+ */
+function CloseSessions(v, sessions) {
+  return Promise.all(sessions.map(s => s.close()))
+  .then(CleanUpMedia(v));
+}
+
 function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
