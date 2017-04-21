@@ -62,7 +62,6 @@ def install(filename, target):
     subprocess.check_call(['tar', 'xf', filename])
     basename = filename.split('.tar')[0]
     # Work around bad tarball naming in 1.15+ cargo packages.
-    basename = basename.replace('cargo-beta', 'cargo-nightly')
     basename = re.sub(r'cargo-0\.[\d\.]+', 'cargo-nightly', basename)
     log('Installing %s...' % basename)
     install_cmd = [os.path.join(basename, 'install.sh')]
@@ -109,21 +108,34 @@ def tar_for_host(host):
     return tar_options, tar_ext
 
 
-def repack(host, targets, channel='stable', suffix=''):
-    log("Repacking rust for %s..." % host)
+def fetch_manifest(channel='stable'):
     url = 'https://static.rust-lang.org/dist/channel-rust-' + channel + '.toml'
     req = requests.get(url)
     req.raise_for_status()
     manifest = toml.loads(req.content)
     if manifest['manifest-version'] != '2':
-        log('ERROR: unrecognized manifest version %s.' %
-            manifest['manifest-version'])
-        return
+        raise NotImplementedError('Unrecognized manifest version %s.' %
+                                  manifest['manifest-version'])
+    return manifest
+
+
+def repack(host, targets, channel='stable', suffix='', cargo_channel=None):
+    log("Repacking rust for %s..." % host)
+
+    manifest = fetch_manifest(channel)
     log('Using manifest for rust %s as of %s.' % (channel, manifest['date']))
+    if cargo_channel == channel:
+        cargo_manifest = manifest
+    else:
+        cargo_manifest = fetch_manifest(cargo_channel)
+        log('Using manifest for cargo %s as of %s.' %
+            (cargo_channel, cargo_manifest['date']))
+
     log('Fetching packages...')
     rustc = fetch_package(manifest, 'rustc', host)
-    cargo = fetch_package(manifest, 'cargo', host)
+    cargo = fetch_package(cargo_manifest, 'cargo', host)
     stds = fetch_std(manifest, targets)
+
     log('Installing packages...')
     tar_basename = 'rustc-' + host
     if suffix:
@@ -136,6 +148,7 @@ def repack(host, targets, channel='stable', suffix=''):
     for std in stds:
         install(os.path.basename(std['url']), install_dir)
         pass
+
     log('Tarring %s...' % tar_basename)
     tar_options, tar_ext = tar_for_host(host)
     subprocess.check_call(
@@ -189,6 +202,7 @@ def repack_cargo(host, channel='nightly'):
 # rust platform triples
 android = "armv7-linux-androideabi"
 android_x86 = "i686-linux-android"
+android_aarch64 = "aarch64-linux-android"
 linux64 = "x86_64-unknown-linux-gnu"
 linux32 = "i686-unknown-linux-gnu"
 mac64 = "x86_64-apple-darwin"
@@ -200,21 +214,26 @@ win32 = "i686-pc-windows-msvc"
 def args():
     '''Read command line arguments and return options.'''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--channel', help='Release channel to use: '
-                                          'stable, beta, or nightly')
+    parser.add_argument('--channel',
+                        help='Release channel to use: '
+                             'stable, beta, or nightly',
+                        default='stable')
+    parser.add_argument('--cargo-channel',
+                        help='Release channel to use for cargo: '
+                             'stable, beta, or nightly.'
+                             'Defaults to the same as --channel.')
     args = parser.parse_args()
-    if args.channel:
-        return args.channel
-    else:
-        return 'stable'
+    if not args.cargo_channel:
+        args.cargo_channel = args.channel
+    return args
+
 
 if __name__ == '__main__':
-    channel = args()
-    repack(mac64, [mac64, mac32], channel=channel)
-    repack(win32, [win32], channel=channel)
-    repack(win64, [win64], channel=channel)
-    repack(linux64, [linux64, linux32], channel=channel)
-    repack(linux64, [linux64, mac64, mac32],
-           channel=channel, suffix='mac-cross')
-    repack(linux64, [linux64, android, android_x86],
-           channel=channel, suffix='android-cross')
+    args = vars(args())
+    repack(mac64, [mac64], **args)
+    repack(win32, [win32], **args)
+    repack(win64, [win64], **args)
+    repack(linux64, [linux64, linux32], **args)
+    repack(linux64, [linux64, mac64], suffix='mac-cross', **args)
+    repack(linux64, [linux64, android, android_x86, android_aarch64],
+           suffix='android-cross', **args)
