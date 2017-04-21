@@ -117,7 +117,7 @@ JSCompartment::~JSCompartment()
     js_delete(debugEnvs);
     js_delete(objectMetadataTable);
     js_delete(lazyArrayBuffers);
-    js_delete(nonSyntacticLexicalEnvironments_),
+    js_delete(nonSyntacticLexicalEnvironments_);
     js_free(enumerators);
 
 #ifdef DEBUG
@@ -1450,4 +1450,3 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
         cx_->compartment()->objectMetadataState = prevState_;
     }
 }
-

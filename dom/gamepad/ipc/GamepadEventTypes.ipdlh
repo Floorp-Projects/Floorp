@@ -49,12 +49,19 @@ struct GamepadPoseInformation {
   GamepadPoseState pose_state;
 };
 
+struct GamepadHandInformation {
+  uint32_t index;
+  GamepadServiceType service_type;
+  GamepadHand hand;
+};
+
 union GamepadChangeEvent {
   GamepadAdded;
   GamepadRemoved;
   GamepadAxisInformation;
   GamepadButtonInformation;
   GamepadPoseInformation;
+  GamepadHandInformation;
 };
 
 } // namespace dom

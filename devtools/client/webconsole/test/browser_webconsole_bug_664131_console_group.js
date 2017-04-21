@@ -40,7 +40,7 @@ add_task(function* () {
     }],
   });
 
-  yield jsterm.execute('console.groupEnd("bug664131a")');
+  yield jsterm.execute('console.groupEnd()');
   yield jsterm.execute('console.log("bug664131-outside")');
 
   yield waitForMessages({

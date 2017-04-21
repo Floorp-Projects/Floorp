@@ -200,10 +200,6 @@
 #include "mozilla/dom/ImageTracker.h"
 #include "nsIDocShellTreeOwner.h"
 
-#ifdef MOZ_B2G
-#include "nsIHardwareKeyHandler.h"
-#endif
-
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 using namespace mozilla::tasktracer;
@@ -5354,20 +5350,29 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
+  bool addedScrollingBackgroundColor = false;
   if (!aFrame->GetParent()) {
     nsIScrollableFrame* sf =
       aFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
-        if (AddCanvasBackgroundColor(aList, canvasFrame, bgcolor, mHasCSSBackgroundColor))
-          return;
+        addedScrollingBackgroundColor =
+          AddCanvasBackgroundColor(aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
     }
   }
 
-  aList.AppendNewToBottom(
-    new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+  if (!addedScrollingBackgroundColor ||
+      (nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255)) {
+    // With async scrolling, we'd like to have two instances of the background
+    // color: one that scrolls with the content (for the reasons stated above),
+    // and one underneath which does not scroll with the content, but which can
+    // be shown during checkerboarding and overscroll.
+    // We can only do that if the color is opaque.
+    aList.AppendNewToBottom(
+      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+  }
 }
 
 static bool IsTransparentContainerElement(nsPresContext* aPresContext)
@@ -6376,7 +6381,7 @@ PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
 }
 
 void
-PresShell::Paint(nsView*        aViewToPaint,
+PresShell::Paint(nsView*         aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
@@ -6425,11 +6430,10 @@ PresShell::Paint(nsView*        aViewToPaint,
 
   nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
 
-  // Whether or not we should set first paint when painting is
-  // suppressed is debatable. For now we'll do it because
-  // B2G relies on first paint to configure the viewport and
-  // we only want to do that when we have real content to paint.
-  // See Bug 798245
+  // Whether or not we should set first paint when painting is suppressed
+  // is debatable. For now we'll do it because B2G relied on first paint
+  // to configure the viewport and we only want to do that when we have
+  // real content to paint. See Bug 798245
   if (mIsFirstPaint && !mPaintingSuppressed) {
     layerManager->SetIsFirstPaint();
     mIsFirstPaint = false;

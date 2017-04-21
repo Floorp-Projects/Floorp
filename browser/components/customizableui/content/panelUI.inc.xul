@@ -377,13 +377,17 @@
        role="group"
        type="arrow"
        noautofocus="true"
-       context="toolbar-context-menu"
        position="bottomcenter topright"
        hidden="true">
-  <vbox id="widget-overflow-scroller">
-    <vbox id="widget-overflow-list" class="widget-overflow-list"
-          overflowfortoolbar="nav-bar"/>
-  </vbox>
+  <panelmultiview mainViewId="widget-overflow-mainView">
+    <panelview id="widget-overflow-mainView"
+               context="toolbar-context-menu">
+      <vbox id="widget-overflow-scroller">
+        <vbox id="widget-overflow-list" class="widget-overflow-list"
+              overflowfortoolbar="nav-bar"/>
+      </vbox>
+    </panelview>
+  </panelmultiview>
 </panel>
 
 <panel id="customization-tipPanel"

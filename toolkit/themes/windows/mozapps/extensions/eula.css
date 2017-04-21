@@ -38,10 +38,6 @@
   color: -moz-FieldText;
   background-color: -moz-Field;
   margin: 1em;
-  border: 1px solid;
-  -moz-border-top-colors: ActiveBorder;
-  -moz-border-right-colors: ActiveBorder;
-  -moz-border-bottom-colors: ActiveBorder;
-  -moz-border-left-colors: ActiveBorder;
+  border: 1px solid ActiveBorder;
 }
 

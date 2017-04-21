@@ -11,6 +11,8 @@ extern crate nserror;
 extern crate rust_url_capi;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
+#[cfg(feature = "cubeb_pulse_rust")]
+extern crate cubeb_pulse;
 
 use std::boxed::Box;
 use std::ffi::CStr;

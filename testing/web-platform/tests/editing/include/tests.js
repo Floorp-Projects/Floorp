@@ -5532,7 +5532,26 @@ function normalizeSerializedStyle(wrapper) {
 //@}
 
 /**
- * Input is the same format as output of generateTest in gentest.html.
+ * Input is in the following format:
+ *   [input HTML,
+ *    array of commands,
+ *    expected output HTML,
+ *    array of expected execCommand() return values,
+ *    object of expected indeterm/state/value].
+ * The array of commands is [[command, value, optionalDesc], [command, value,
+ * optionalDesc], ...].  optionalDesc is appended to the description of the
+ * test in the generated test name.
+ *
+ * The
+ * array of expected execCommand() return values is [true|false, true|false,
+ * ...], where the indices match those in the array of commands.  The
+ * indeterm/state/value object is of the form
+ *   {command: [expected indeterm before, expected state before,
+ *     expected value before, expected indeterm after,
+ *     expected state after, expected value after],
+ *   command: ... }
+ * null for any of the last six entries means an INVALID_ACCESS_ERR must be
+ * raised.
  */
 function runConformanceTest(browserTest) {
 //@{

@@ -173,16 +173,8 @@ HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
-      // XXX ARG!! This is major evilness. ParseAttribute
-      // shouldn't set members. Override SetAttr instead
-      bool success = aResult.ParseEnumValue(aValue, kButtonTypeTable, false);
-      if (success) {
-        mType = aResult.GetEnumValue();
-      } else {
-        mType = kButtonDefaultType->value;
-      }
-
-      return success;
+      return aResult.ParseEnumValue(aValue, kButtonTypeTable, false,
+                                    kButtonDefaultType);
     }
 
     if (aAttribute == nsGkAtoms::formmethod) {
@@ -440,7 +432,9 @@ HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::type) {
-      if (!aValue) {
+      if (aValue) {
+        mType = aValue->GetEnumValue();
+      } else {
         mType = kButtonDefaultType->value;
       }
     }

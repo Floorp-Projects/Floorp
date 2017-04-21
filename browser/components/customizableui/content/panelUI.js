@@ -431,8 +431,9 @@ const PanelUI = {
       return;
     }
 
-    if (aPlacementArea == CustomizableUI.AREA_PANEL) {
-      this.multiView.showSubView(aViewId, aAnchor);
+    let container = aAnchor.closest("panelmultiview");
+    if (container) {
+      container.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
 

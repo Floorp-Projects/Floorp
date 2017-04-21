@@ -18,8 +18,11 @@ Test Stylesheet rep
 <script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, StyleSheet } = REPS;
+    const {
+      REPS,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { StyleSheet } = REPS;
 
     let gripStub = {
       "type": "object",
@@ -36,8 +39,7 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, StyleSheet.rep, `Rep correctly selects ${StyleSheet.rep.displayName}`);
+    is(getRep(gripStub), StyleSheet.rep, "Rep correctly selects StyleSheet Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(StyleSheet.rep, { object: gripStub });

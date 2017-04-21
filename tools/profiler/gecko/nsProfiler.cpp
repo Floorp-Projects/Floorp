@@ -37,6 +37,12 @@ NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 nsProfiler::nsProfiler()
   : mLockedForPrivateBrowsing(false)
 {
+  // If MOZ_PROFILER_STARTUP is set, the profiler will already be running. We
+  // need to create a ProfileGatherer in that case.
+  // XXX: this is probably not the best approach. See bug 1356694 for details.
+  if (profiler_is_active()) {
+    mGatherer = new ProfileGatherer();
+  }
 }
 
 nsProfiler::~nsProfiler()

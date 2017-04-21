@@ -27,6 +27,7 @@
 
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StackWalk_windows.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
@@ -703,7 +704,13 @@ continue_loading:
   printf_stderr("LdrLoadDll: continuing load... ('%S')\n", moduleFileName->Buffer);
 #endif
 
-  return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
+  // Prevent the stack walker from suspending this thread when LdrLoadDll
+  // holds the RtlLookupFunctionEntry lock.
+  AcquireStackWalkWorkaroundLock();
+  NTSTATUS ret = stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
+  ReleaseStackWalkWorkaroundLock();
+
+  return ret;
 }
 
 WindowsDllInterceptor NtDllIntercept;

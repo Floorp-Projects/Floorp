@@ -207,11 +207,11 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
       v = VideoData::CreateAndCopyData(mInfo,
                                        mImageContainer,
                                        aSample->mOffset,
-                                       aSample->mTime,
+                                       aSample->mTime.ToMicroseconds(),
                                        aSample->mDuration,
                                        b,
                                        aSample->mKeyframe,
-                                       aSample->mTimecode,
+                                       aSample->mTimecode.ToMicroseconds(),
                                        mInfo.ScaledImageRect(img->d_w,
                                                              img->d_h));
     } else {
@@ -224,12 +224,12 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
       v = VideoData::CreateAndCopyData(mInfo,
                                        mImageContainer,
                                        aSample->mOffset,
-                                       aSample->mTime,
+                                       aSample->mTime.ToMicroseconds(),
                                        aSample->mDuration,
                                        b,
                                        alpha_plane,
                                        aSample->mKeyframe,
-                                       aSample->mTimecode,
+                                       aSample->mTimecode.ToMicroseconds(),
                                        mInfo.ScaledImageRect(img->d_w,
                                                              img->d_h));
 

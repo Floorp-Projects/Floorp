@@ -27,7 +27,7 @@ Structure:
 .. code-block:: js
 
     {
-      "v": 7, // ping format version
+      "v": 9, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -158,6 +158,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
+* v9: changed ``arch`` to contain device arch rather than the one we built against
 * v8: added ``flashUsage``
 * v7: added ``sessionCount`` & ``sessionDuration``
 * v6: added ``searches``

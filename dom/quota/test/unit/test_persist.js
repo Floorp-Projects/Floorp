@@ -7,23 +7,15 @@ var testGenerator = testSteps();
 
 function* testSteps()
 {
-  const origins = [
-    {
-      url: "http://default.test.persist",
-      path: "storage/default/http+++default.test.persist",
-      persistence: "default"
-    },
-
-    {
-      url: "ftp://ftp.invalid.origin",
-      path: "storage/default/ftp+++ftp.invalid.origin",
-      persistence: "default"
-    },
-  ];
+  const origin = {
+    url: "http://default.test.persist",
+    path: "storage/default/http+++default.test.persist",
+    persistence: "default"
+  };
 
   const metadataFileName = ".metadata-v2";
 
-  let principal = getPrincipal(origins[0].url);
+  let principal = getPrincipal(origin.url);
 
   info("Persisting an uninitialized origin");
 
@@ -42,7 +34,7 @@ function* testSteps()
 
   ok(request.resultCode === NS_OK, "Persist() succeeded");
 
-  let originDir = getRelativeFile(origins[0].path);
+  let originDir = getRelativeFile(origin.path);
   let exists = originDir.exists();
   ok(exists, "Origin directory does exist");
 
@@ -74,12 +66,12 @@ function* testSteps()
 
   // Clear the origin since we'll test the same directory again under different
   // circumstances.
-  clearOrigin(principal, origins[0].persistence, continueToNextStepSync);
+  clearOrigin(principal, origin.persistence, continueToNextStepSync);
   yield undefined;
 
   info("Persisting an already initialized origin");
 
-  initOrigin(principal, origins[0].persistence, continueToNextStepSync);
+  initOrigin(principal, origin.persistence, continueToNextStepSync);
   yield undefined;
 
   info("Reading out contents of metadata file");
@@ -124,28 +116,6 @@ function* testSteps()
 
   ok(request.resultCode === NS_OK, "Persisted() succeeded");
   ok(request.result === originPersisted, "Persisted() concurs with metadata");
-
-  info("Persisting an invalid origin");
-
-  let invalidPrincipal = getPrincipal(origins[1].url);
-
-  request = persist(invalidPrincipal, continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode === NS_ERROR_FAILURE,
-     "Persist() failed because of the invalid origin");
-  ok(request.result === null, "The request result is null");
-
-  originDir = getRelativeFile(origins[1].path);
-  exists = originDir.exists();
-  ok(!exists, "Directory for invalid origin doesn't exist");
-
-  request = persisted(invalidPrincipal, continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode === NS_OK, "Persisted() succeeded");
-  ok(!request.result,
-     "The origin isn't persisted since the operation failed");
 
   finishTest();
 }

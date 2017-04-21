@@ -548,7 +548,7 @@ FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing, FunctionSynt
         if (kind == ClassConstructor || kind == DerivedClassConstructor) {
             auto stmt = enclosing->findInnermostStatement<ParseContext::ClassStatement>();
             MOZ_ASSERT(stmt);
-            stmt->setConstructorBox(this);
+            stmt->constructorBox = this;
 
             if (kind == DerivedClassConstructor) {
                 setDerivedClassConstructor();
@@ -571,16 +571,6 @@ FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing, FunctionSynt
         };
 
         inWith_ = enclosing->findInnermostStatement(isWith);
-    }
-}
-
-void
-FunctionBox::resetForAbortedSyntaxParse(ParseContext* enclosing, FunctionSyntaxKind kind)
-{
-    if (kind == ClassConstructor || kind == DerivedClassConstructor) {
-        auto stmt = enclosing->findInnermostStatement<ParseContext::ClassStatement>();
-        MOZ_ASSERT(stmt);
-        stmt->clearConstructorBoxForAbortedSyntaxParse(this);
     }
 }
 
@@ -3455,7 +3445,6 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
                 // correctness.
                 parser->clearAbortedSyntaxParse();
                 usedNames.rewind(token);
-                funbox->resetForAbortedSyntaxParse(pc, kind);
                 MOZ_ASSERT_IF(!parser->context->helperThread(),
                               !parser->context->isExceptionPending());
                 break;
@@ -7168,7 +7157,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
                 errorAt(nameOffset, JSMSG_BAD_METHOD_DEF);
                 return null();
             }
-            if (classStmt.constructorBox()) {
+            if (classStmt.constructorBox) {
                 errorAt(nameOffset, JSMSG_DUPLICATE_PROPERTY, "constructor");
                 return null();
             }
@@ -7215,7 +7204,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
     // Amend the toStringEnd offset for the constructor now that we've
     // finished parsing the class.
     uint32_t classEndOffset = pos().end;
-    if (FunctionBox* ctorbox = classStmt.constructorBox()) {
+    if (FunctionBox* ctorbox = classStmt.constructorBox) {
         if (ctorbox->function()->isInterpretedLazy())
             ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
         ctorbox->toStringEnd = classEndOffset;
@@ -9936,7 +9925,6 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         if (!expr)
             return null();
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        handler.setEndPosition(expr, pos().end);
         return handler.parenthesize(expr);
       }
 

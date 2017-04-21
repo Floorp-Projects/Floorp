@@ -11,7 +11,7 @@
 interface CSSGroupingRule : CSSRule {
   [SameObject] readonly attribute CSSRuleList cssRules;
   [Throws]
-  unsigned long insertRule(DOMString rule, unsigned long index);
+  unsigned long insertRule(DOMString rule, optional unsigned long index = 0);
   [Throws]
   void deleteRule(unsigned long index);
 };

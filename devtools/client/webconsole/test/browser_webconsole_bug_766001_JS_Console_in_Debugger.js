@@ -81,7 +81,7 @@ function test() {
 
     let toolbox = yield gDevTools.getToolbox(hud.target);
     let dbg = toolbox.getPanel("jsdebugger");
-    is(dbg._selectors().getSelectedSource(dbg._getState()).get("url"),
+    is(dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
        url,
        "expected source url");
   }

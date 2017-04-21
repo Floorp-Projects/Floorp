@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
 #include "nsIFragmentContentSink.h"
@@ -224,7 +225,7 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
   if (mPreventScriptExecution &&
-      (aContent->IsHTMLElement(nsGkAtoms::script),
+      (aContent->IsHTMLElement(nsGkAtoms::script) ||
        aContent->IsSVGElement(nsGkAtoms::script))) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
     if (sele) {

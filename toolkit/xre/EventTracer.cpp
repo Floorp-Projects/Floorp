@@ -65,8 +65,8 @@
 #include <prthread.h>
 #include <prtime.h>
 
-#ifdef MOZ_WIDGET_GONK
 #include "nsThreadUtils.h"
+#ifdef MOZ_WIDGET_GONK
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #endif
@@ -123,7 +123,7 @@ class EventLoopLagDispatcher : public Runnable
 void TracerThread(void *arg)
 {
   AutoProfilerRegister registerThread("Event Tracer");
-  PR_SetCurrentThreadName("Event Tracer");
+  NS_SetCurrentThreadName("Event Tracer");
 
   TracerStartClosure* threadArgs = static_cast<TracerStartClosure*>(arg);
 

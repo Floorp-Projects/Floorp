@@ -315,9 +315,18 @@ function getVisibleElements(scrollEl, views, sortByVisibility) {
 function noContextMenuHandler(e) {
   e.preventDefault();
 }
-function getPDFFileNameFromURL(url, defaultFilename) {
-  if (typeof defaultFilename === 'undefined') {
-    defaultFilename = 'document.pdf';
+function isDataSchema(url) {
+  var i = 0,
+      ii = url.length;
+  while (i < ii && url[i].trim() === '') {
+    i++;
+  }
+  return url.substr(i, 5).toLowerCase() === 'data:';
+}
+function getPDFFileNameFromURL(url, defaultFilename = 'document.pdf') {
+  if (isDataSchema(url)) {
+    console.warn('getPDFFileNameFromURL: ' + 'ignoring "data:" URL for performance reasons.');
+    return defaultFilename;
   }
   var reURI = /^(?:(?:[^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
   var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
@@ -3869,11 +3878,14 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
       });
       this._renderedCapability.resolve();
     },
-    _bindPdfLink: function PDFAttachmentViewer_bindPdfLink(button, content, filename) {
+    _bindPdfLink(button, content, filename) {
+      if (_pdfjs.PDFJS.disableCreateObjectURL) {
+        throw new Error('bindPdfLink: ' + 'Unsupported "PDFJS.disableCreateObjectURL" value.');
+      }
       var blobUrl;
       button.onclick = function () {
         if (!blobUrl) {
-          blobUrl = (0, _pdfjs.createObjectURL)(content, 'application/pdf', _pdfjs.PDFJS.disableCreateObjectURL);
+          blobUrl = (0, _pdfjs.createObjectURL)(content, 'application/pdf');
         }
         var viewerUrl;
         viewerUrl = blobUrl + '?' + encodeURIComponent(filename);
@@ -3911,7 +3923,7 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
         div.className = 'attachmentsItem';
         var button = document.createElement('button');
         button.textContent = filename;
-        if (/\.pdf$/i.test(filename)) {
+        if (/\.pdf$/i.test(filename) && !_pdfjs.PDFJS.disableCreateObjectURL) {
           this._bindPdfLink(button, item.content, filename);
         } else {
           this._bindLink(button, item.content, filename);
@@ -7630,7 +7642,7 @@ var pdfjsWebApp;
   pdfjsWebApp = __webpack_require__(4);
 }
 {
-  window.FirefoxCom = __webpack_require__(10).FirefoxCom;
+  __webpack_require__(10);
   __webpack_require__(9);
 }
 ;

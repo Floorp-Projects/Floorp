@@ -341,6 +341,7 @@ private:
   DECL_GFX_PREF(Live, "apz.zoom_animation_duration_ms",        APZZoomAnimationDuration, int32_t, 250);
   DECL_GFX_PREF(Live, "apz.scale_repaint_delay_ms",            APZScaleRepaintDelay, int32_t, 500);
 
+  DECL_GFX_PREF(Live, "browser.ui.scroll-toolbar-threshold",   ToolbarScrollThreshold, int32_t, 10);
   DECL_GFX_PREF(Live, "browser.ui.zoom.force-user-scalable",   ForceUserScalable, bool, false);
   DECL_GFX_PREF(Live, "browser.viewport.desktopWidth",         DesktopViewportWidth, int32_t, 980);
 
@@ -348,6 +349,7 @@ private:
   DECL_GFX_PREF(Live, "dom.meta-viewport.enabled",             MetaViewportEnabled, bool, false);
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, bool, false);
+  DECL_GFX_PREF(Live, "dom.vr.controller_trigger_threshold",   VRControllerTriggerThreshold, float, 0.1f);
   DECL_GFX_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, int32_t, 1000);
   DECL_GFX_PREF(Once, "dom.vr.oculus.enabled",                 VROculusEnabled, bool, true);
   DECL_GFX_PREF(Once, "dom.vr.openvr.enabled",                 VROpenVREnabled, bool, false);

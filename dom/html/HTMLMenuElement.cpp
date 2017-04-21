@@ -113,6 +113,21 @@ HTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
   BuildSubmenu(EmptyString(), this, aBuilder);
 }
 
+nsresult
+HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                              const nsAttrValue* aValue, bool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::type) {
+    if (aValue) {
+      mType = aValue->GetEnumValue();
+    } else {
+      mType = kMenuDefaultType->value;
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
+}
 
 bool
 HTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
@@ -121,15 +136,8 @@ HTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
                                 nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
-    bool success = aResult.ParseEnumValue(aValue, kMenuTypeTable,
-                                            false);
-    if (success) {
-      mType = aResult.GetEnumValue();
-    } else {
-      mType = kMenuDefaultType->value;
-    }
-
-    return success;
+    return aResult.ParseEnumValue(aValue, kMenuTypeTable, false,
+                                  kMenuDefaultType);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

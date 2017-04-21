@@ -3709,7 +3709,7 @@ js_strcmp(const char16_t* lhs, const char16_t* rhs)
             return int32_t(*lhs) - int32_t(*rhs);
         if (*lhs == 0)
             return 0;
-        ++lhs, ++rhs;
+        ++lhs; ++rhs;
     }
 }
 

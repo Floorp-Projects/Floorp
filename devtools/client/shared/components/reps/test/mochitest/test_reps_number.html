@@ -17,8 +17,11 @@ Test Number rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, Number } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { Number } = REPS;
 
   try {
     yield testInt();
@@ -33,16 +36,14 @@ window.onload = Task.async(function* () {
 
 
   function testInt() {
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testInt") });
-    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for integer value`);
+    is(getRep(getGripStub("testInt")), Number.rep, "Rep correctly selects Number Rep");
 
     const renderedComponent = renderComponent(Number.rep, { object: getGripStub("testInt") });
     is(renderedComponent.textContent, "5", "Number rep has expected text content for integer");
   }
 
   function testBoolean() {
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testTrue") });
-    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for boolean value`);
+    is(getRep(getGripStub("testTrue")), Number.rep, "Rep correctly selects Number Rep for boolean value");
 
     let renderedComponent = renderComponent(Number.rep, { object: getGripStub("testTrue") });
     is(renderedComponent.textContent, "true", "Number rep has expected text content for boolean true");
@@ -52,8 +53,7 @@ window.onload = Task.async(function* () {
   }
 
   function testNegativeZero() {
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testNegZeroGrip") });
-    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for negative zero value`);
+    is(getRep(getGripStub("testNegZeroGrip")), Number.rep, "Rep correctly selects Number Rep for negative zero value");
 
     let renderedComponent = renderComponent(Number.rep, { object: getGripStub("testNegZeroGrip") });
     is(renderedComponent.textContent, "-0", "Number rep has expected text content for negative zero grip");

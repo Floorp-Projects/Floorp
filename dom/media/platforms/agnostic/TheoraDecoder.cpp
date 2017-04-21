@@ -133,7 +133,8 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
 
   bool bos = mPacketCount == 0;
   ogg_packet pkt = InitTheoraPacket(
-    aData, aLength, bos, false, aSample->mTimecode, mPacketCount++);
+    aData, aLength, bos, false,
+    aSample->mTimecode.ToMicroseconds(), mPacketCount++);
 
   int ret = th_decode_packetin(mTheoraDecoderContext, &pkt, nullptr);
   if (ret == 0 || ret == TH_DUPFRAME) {
@@ -171,11 +172,11 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
       VideoData::CreateAndCopyData(info,
                                    mImageContainer,
                                    aSample->mOffset,
-                                   aSample->mTime,
+                                   aSample->mTime.ToMicroseconds(),
                                    aSample->mDuration,
                                    b,
                                    aSample->mKeyframe,
-                                   aSample->mTimecode,
+                                   aSample->mTimecode.ToMicroseconds(),
                                    mInfo.ScaledImageRect(mTheoraInfo.frame_width,
                                                          mTheoraInfo.frame_height));
     if (!v) {

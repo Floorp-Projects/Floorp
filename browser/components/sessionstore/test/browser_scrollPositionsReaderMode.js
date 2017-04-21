@@ -47,7 +47,6 @@ add_task(function* test_scroll_background_about_reader_tabs() {
 
   // The second tab should be the one we loaded URL at still
   tab = newWin.gBrowser.tabs[1];
-  yield promiseTabRestoring(tab);
 
   ok(tab.hasAttribute("pending"), "Tab should be pending");
   browser = tab.linkedBrowser;

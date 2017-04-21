@@ -614,16 +614,11 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
 static void opensl_destroy(cubeb * ctx);
 
 #if defined(__ANDROID__)
-
-// The bionic header file on B2G contains the required
-// declarations on all releases.
-#ifndef MOZ_WIDGET_GONK
-
 #if (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
 typedef int (system_property_get)(const char*, char*);
 
 static int
-__system_property_get(const char* name, char* value)
+wrap_system_property_get(const char* name, char* value)
 {
   void* libc = dlopen("libc.so", RTLD_LAZY);
   if (!libc) {
@@ -640,7 +635,6 @@ __system_property_get(const char* name, char* value)
   return ret;
 }
 #endif
-#endif
 
 static int
 get_android_version(void)
@@ -649,7 +643,11 @@ get_android_version(void)
 
   memset(version_string, 0, PROP_VALUE_MAX);
 
+#if (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
+  int len = wrap_system_property_get("ro.build.version.sdk", version_string);
+#else
   int len = __system_property_get("ro.build.version.sdk", version_string);
+#endif
   if (len <= 0) {
     LOG("Failed to get Android version!\n");
     return len;

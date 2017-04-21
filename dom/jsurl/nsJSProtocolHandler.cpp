@@ -442,6 +442,12 @@ nsresult nsJSChannel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     return rv;
 }
 
+NS_IMETHODIMP
+nsJSChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_GetIsDocumentChannel(this, aIsDocument);
+}
+
 //
 // nsISupports implementation...
 //

@@ -162,8 +162,8 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
     if ((aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK ||
          (aStateFlags & nsIWebProgressListener::STATE_IS_REQUEST &&
           mFinishedRequests == mTotalRequests &&
-          (aWebProgress->GetIsLoadingDocument(&isLoadingDocument),
-           !isLoadingDocument)))) {
+          NS_SUCCEEDED(aWebProgress->GetIsLoadingDocument(&isLoadingDocument)) &&
+          !isLoadingDocument))) {
         if (mTimer && (aStateFlags & nsIWebProgressListener::STATE_STOP)) {
             mTimer->Cancel();
             ProcessTimeout();

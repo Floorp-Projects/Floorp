@@ -19,6 +19,7 @@ only-for-build-platforms:
     - android-api-15/opt
     - android-api-15-nightly/opt
     - android-x86-nightly/opt
+    - macosx64-nightly/opt
 
 job-template:
    label: # see transforms
