@@ -93,7 +93,6 @@ public:
 
   void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                         ScrollDirection aDir,
-                        int32_t aScrollThumbLength,
                         bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   LayerIntCoord GetScrollThumbLength() const;
@@ -135,7 +134,6 @@ private:
 
   // This is set for scroll thumb Container layers only.
   ScrollDirection mScrollDir;
-  int32_t mScrollThumbLength;
 
   // This is set for scroll track Container layers only.
   bool mIsScrollbarContainer;
