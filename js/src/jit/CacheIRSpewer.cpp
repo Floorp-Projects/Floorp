@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef JS_JITSPEW
+#ifdef JS_CACHEIR_SPEW
 
 #include "jit/CacheIRSpewer.h"
 
@@ -30,13 +30,7 @@
 using namespace js;
 using namespace js::jit;
 
-CacheIRSpewer cacheIRspewer;
-
-CacheIRSpewer&
-jit::GetCacheIRSpewerSingleton()
-{
-    return cacheIRspewer;
-}
+CacheIRSpewer CacheIRSpewer::cacheIRspewer;
 
 CacheIRSpewer::CacheIRSpewer()
   : outputLock(mutexid::CacheIRSpewer)
@@ -174,4 +168,4 @@ CacheIRSpewer::endCache(LockGuard<Mutex>&)
     json.ref().endObject();
 }
 
-#endif /* JS_JITSPEW */
+#endif /* JS_CACHEIR_SPEW */
