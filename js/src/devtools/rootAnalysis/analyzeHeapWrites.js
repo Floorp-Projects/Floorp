@@ -324,10 +324,13 @@ function ignoreCallEdge(entry, callee)
     }
 
     // We manually lock here
-    if (/nsRuleNode::ComputeSystemFont/.test(callee) &&
-        "Gecko_nsFont_InitSystem" == name)
+    if ("Gecko_nsFont_InitSystem" == name)
     {
-        return true;
+        if (/nsRuleNode::ComputeSystemFont/.test(callee) ||
+            /nsFont::/.test(callee)) {
+            return true;
+        }
+        
     }
 
     return false;
