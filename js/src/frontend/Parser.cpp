@@ -3705,6 +3705,7 @@ Parser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling inHandli
     // Whereas the |yield| in the function body is always parsed as a name.
     // The same goes when parsing |await| in arrow functions.
     YieldHandling bodyYieldHandling = GetYieldHandling(pc->generatorKind());
+    bool inheritedStrict = pc->sc()->strict();
     Node body;
     {
         AutoAwaitIsKeyword<Parser> awaitIsKeyword(this, funbox->isAsync());
@@ -3713,8 +3714,14 @@ Parser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling inHandli
             return false;
     }
 
-    if ((kind == Statement || kind == Expression) && fun->explicitName()) {
-        RootedPropertyName propertyName(context, fun->explicitName()->asPropertyName());
+    // Revalidate the function name when we transitioned to strict mode.
+    if ((kind == Statement || kind == Expression) && fun->explicitName()
+        && !inheritedStrict && pc->sc()->strict())
+    {
+        MOZ_ASSERT(pc->sc()->hasExplicitUseStrict(),
+                   "strict mode should only change when a 'use strict' directive is present");
+
+        PropertyName* propertyName = fun->explicitName()->asPropertyName();
         YieldHandling nameYieldHandling;
         if (kind == Expression) {
             // Named lambda has binding inside it.
