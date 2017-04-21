@@ -285,6 +285,15 @@ class TabBase {
   }
 
   /**
+   * @property {nsIFrameLoader} browser
+   *        Returns the frameloader for the given tab.
+   *        @readonly
+   */
+  get frameLoader() {
+    return this.browser.frameLoader;
+  }
+
+  /**
    * @property {string} cookieStoreId
    *        Returns the cookie store identifier for the given tab.
    *        @readonly
@@ -454,9 +463,12 @@ class TabBase {
    * of its properties which the extension is permitted to access, in the format
    * requried to be returned by WebExtension APIs.
    *
+   * @param {Tab} [fallbackTab]
+   *        A tab to retrieve geometry data from if the lazy geometry data for
+   *        this tab hasn't been initialized yet.
    * @returns {object}
    */
-  convert() {
+  convert(fallbackTab = null) {
     let result = {
       id: this.id,
       index: this.index,
@@ -471,6 +483,13 @@ class TabBase {
       audible: this.audible,
       mutedInfo: this.mutedInfo,
     };
+
+    // If the tab has not been fully layed-out yet, fallback to the geometry
+    // from a different tab (usually the currently active tab).
+    if (fallbackTab && (!result.width || !result.height)) {
+      result.width = fallbackTab.width;
+      result.height = fallbackTab.height;
+    }
 
     if (this.extension.hasPermission("cookies")) {
       result.cookieStoreId = this.cookieStoreId;
@@ -1632,11 +1651,15 @@ class TabManagerBase {
    *
    * @param {NativeTab} nativeTab
    *        The native tab to convert.
+   * @param {NativeTab} [fallbackTab]
+   *        A tab to retrieve geometry data from if the lazy geometry data for
+   *        this tab hasn't been initialized yet.
    *
    * @returns {Object}
    */
-  convert(nativeTab) {
-    return this.getWrapper(nativeTab).convert();
+  convert(nativeTab, fallbackTab = null) {
+    return this.getWrapper(nativeTab)
+               .convert(fallbackTab && this.getWrapper(fallbackTab));
   }
 
   // The JSDoc validator does not support @returns tags in abstract functions or
