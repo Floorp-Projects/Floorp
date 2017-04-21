@@ -853,14 +853,27 @@ public:
         static_assert(sizeof(ElementType) == sizeof(JNIElemType),
                       "Size of native type must match size of JNI type");
 
-        const jsize len = size_t(Base::Env()->GetArrayLength(Base::Instance()));
+        const size_t len = size_t(Base::Env()->GetArrayLength(Base::Instance()));
 
-        nsTArray<ElementType> array((size_t(len)));
-        array.SetLength(size_t(len));
-        (Base::Env()->*detail::TypeAdapter<ElementType>::GetArray)(
-                Base::Instance(), 0, len,
-                reinterpret_cast<JNIElemType*>(array.Elements()));
+        nsTArray<ElementType> array(len);
+        array.SetLength(len);
+        CopyTo(array.Elements(), len);
         return array;
+    }
+
+    // returns number of elements copied
+    size_t CopyTo(ElementType* buffer, size_t size) const
+    {
+        using JNIElemType = typename detail::TypeAdapter<ElementType>::JNIType;
+        static_assert(sizeof(ElementType) == sizeof(JNIElemType),
+                      "Size of native type must match size of JNI type");
+
+        const size_t len = size_t(Base::Env()->GetArrayLength(Base::Instance()));
+        const size_t amountToCopy = (len > size ? size : len);
+        (Base::Env()->*detail::TypeAdapter<ElementType>::GetArray)(
+                Base::Instance(), 0, jsize(amountToCopy),
+                reinterpret_cast<JNIElemType*>(buffer));
+        return amountToCopy;
     }
 
     ElementType operator[](size_t index) const

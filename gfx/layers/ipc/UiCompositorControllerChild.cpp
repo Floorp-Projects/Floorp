@@ -4,220 +4,233 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UiCompositorControllerChild.h"
-#include "UiCompositorControllerParent.h"
+#include "mozilla/layers/UiCompositorControllerChild.h"
+
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/StaticPtr.h"
-#include "nsThreadUtils.h"
+#include "mozilla/layers/UiCompositorControllerMessageTypes.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/StaticPtr.h"
+#include "nsBaseWidget.h"
+#include "nsThreadUtils.h"
+
+#if defined(MOZ_WIDGET_ANDROID)
+#include "mozilla/widget/AndroidUiThread.h"
+
+static RefPtr<nsThread>
+GetUiThread()
+{
+  return mozilla::GetAndroidUiThread();
+}
+#else
+static RefPtr<nsThread>
+GetUiThread()
+{
+  MOZ_CRASH("Platform does not support UiCompositorController");
+  return nullptr;
+}
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+static bool
+IsOnUiThread()
+{
+  return NS_GetCurrentThread() == GetUiThread();
+}
 
 namespace mozilla {
 namespace layers {
-using namespace gfx;
 
-static bool sInitialized = false;
-static StaticRefPtr<UiCompositorControllerChild> sChild;
-static StaticRefPtr<UiCompositorControllerParent> sParent;
 
-namespace {
-
-struct SurfaceResizeCache {
-  int32_t mSurfaceWidth;
-  int32_t mSurfaceHeight;
-
-  SurfaceResizeCache(int32_t aWidth, int32_t aHeight) :
-    mSurfaceWidth(aWidth),
-    mSurfaceHeight(aHeight) {}
-
-  SurfaceResizeCache(const SurfaceResizeCache& value)
-  {
-    *this = value;
-  }
-
-  SurfaceResizeCache& operator=(const SurfaceResizeCache& value)
-  {
-    mSurfaceWidth = value.mSurfaceWidth;
-    mSurfaceHeight = value.mSurfaceHeight;
-    return *this;
-  }
-
-  SurfaceResizeCache() :
-    mSurfaceWidth(0),
-    mSurfaceHeight(0) {}
-};
-
-static std::map<int64_t, SurfaceResizeCache> sResizeCache;
-
-static void
-DoCachedResize()
+// public:
+/* static */ RefPtr<UiCompositorControllerChild>
+UiCompositorControllerChild::CreateForSameProcess(const int64_t& aRootLayerTreeId)
 {
-  MOZ_ASSERT(sChild);
-  MOZ_ASSERT(sChild->IsOnUiThread());
-
-  for (auto& cache : sResizeCache) {
-    sChild->SendResumeAndResize(cache.first, cache.second.mSurfaceWidth, cache.second.mSurfaceHeight);
-  }
-
-  sResizeCache.clear();
+  RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(0);
+  child->mParent = new UiCompositorControllerParent(aRootLayerTreeId);
+  GetUiThread()->Dispatch(NewRunnableMethod(child, &UiCompositorControllerChild::OpenForSameProcess), nsIThread::DISPATCH_NORMAL);
+  return child;
 }
 
-} // namespace
-
-UiCompositorControllerChild::UiCompositorControllerChild(RefPtr<nsThread> aThread, const uint64_t& aProcessToken)
- : mUiThread(aThread),
-   mProcessToken(aProcessToken)
+/* static */ RefPtr<UiCompositorControllerChild>
+UiCompositorControllerChild::CreateForGPUProcess(const uint64_t& aProcessToken,
+                                                 Endpoint<PUiCompositorControllerChild>&& aEndpoint)
 {
-}
-
-UiCompositorControllerChild::~UiCompositorControllerChild()
-{
-}
-
-/* static */ UiCompositorControllerChild*
-UiCompositorControllerChild::Get()
-{
-  return sChild;
-}
-
-/* static */ bool
-UiCompositorControllerChild::IsInitialized()
-{
-  return sInitialized;
-}
-
-/* static */ void
-UiCompositorControllerChild::Shutdown()
-{
-  RefPtr<UiCompositorControllerChild> child = sChild;
-  if (child) {
-    child->Close();
-    sInitialized = false;
-  }
-}
-
-/* static */ void
-UiCompositorControllerChild::InitSameProcess(RefPtr<nsThread> aThread)
-{
-  MOZ_ASSERT(!sChild);
-  MOZ_ASSERT(!sParent);
-  MOZ_ASSERT(aThread);
-  MOZ_ASSERT(!sInitialized);
-
-  sInitialized = true;
-  RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(aThread, 0);
-  sParent = new UiCompositorControllerParent();
-  aThread->Dispatch(NewRunnableMethod(child, &UiCompositorControllerChild::OpenForSameProcess), nsIThread::DISPATCH_NORMAL);
-}
-
-/* static */ void
-UiCompositorControllerChild::InitWithGPUProcess(RefPtr<nsThread> aThread,
-                                                const uint64_t& aProcessToken,
-                                                Endpoint<PUiCompositorControllerChild>&& aEndpoint)
-{
-  MOZ_ASSERT(!sChild);
-  MOZ_ASSERT(!sParent);
-  MOZ_ASSERT(aThread);
-  MOZ_ASSERT(!sInitialized);
-
-  sInitialized = true;
-  RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(aThread, aProcessToken);
+  RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(aProcessToken);
 
   RefPtr<nsIRunnable> task = NewRunnableMethod<Endpoint<PUiCompositorControllerChild>&&>(
     child, &UiCompositorControllerChild::OpenForGPUProcess, Move(aEndpoint));
 
-  aThread->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
+  GetUiThread()->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
+  return child;
 }
 
-/* static */ void
-UiCompositorControllerChild::CacheSurfaceResize(int64_t aId, int32_t aWidth, int32_t aHeight)
+bool
+UiCompositorControllerChild::Pause()
 {
-  // This should only be called if the sChild has not been set yet.
-  // It should also only be called from the UI thread but since the sChild hasn't been set
-  // yet, there isn't a good way to verify this.
-  MOZ_ASSERT(!sChild);
-  sResizeCache[aId] = SurfaceResizeCache{aWidth, aHeight};
+  if (!mIsOpen) {
+    return false;
+  }
+  return SendPause();
 }
 
-void
-UiCompositorControllerChild::OpenForSameProcess()
+bool
+UiCompositorControllerChild::Resume()
 {
-  MOZ_ASSERT(sParent);
-  MOZ_ASSERT(!sChild);
-  MOZ_ASSERT(IsOnUiThread());
+  if (!mIsOpen) {
+    return false;
+  }
+  return SendResume();
+}
 
-  if (!Open(sParent->GetIPCChannel(),
-           mozilla::layers::CompositorThreadHolder::Loop(),
-           mozilla::ipc::ChildSide)) {
-    sParent = nullptr;
-    return;
+bool
+UiCompositorControllerChild::ResumeAndResize(const int32_t& aWidth, const int32_t& aHeight)
+{
+  if (!mIsOpen) {
+    mResize = Some(gfx::IntSize(aWidth, aHeight));
+    // Since we are caching these values, pretend the call succeeded.
+    return true;
+  }
+  return SendResumeAndResize(aWidth, aHeight);
+}
+
+bool
+UiCompositorControllerChild::InvalidateAndRender()
+{
+  if (!mIsOpen) {
+    return false;
+  }
+  return SendInvalidateAndRender();
+}
+
+bool
+UiCompositorControllerChild::SetMaxToolbarHeight(const int32_t& aHeight)
+{
+  if (!mIsOpen) {
+    mMaxToolbarHeight = Some(aHeight);
+    // Since we are caching this value, pretend the call succeeded.
+    return true;
+  }
+  return SendMaxToolbarHeight(aHeight);
+}
+
+bool
+UiCompositorControllerChild::SetPinned(const bool& aPinned, const int32_t& aReason)
+{
+  if (!mIsOpen) {
+    return false;
+  }
+  return SendPinned(aPinned, aReason);
+}
+
+bool
+UiCompositorControllerChild::ToolbarAnimatorMessageFromUI(const int32_t& aMessage)
+{
+  if (!mIsOpen) {
+    return false;
   }
 
-  AddRef();
-  sChild = this;
-  DoCachedResize();
+  return SendToolbarAnimatorMessageFromUI(aMessage);
 }
 
-void
-UiCompositorControllerChild::OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint)
+bool
+UiCompositorControllerChild::SetDefaultClearColor(const uint32_t& aColor)
 {
-  MOZ_ASSERT(!sChild);
-  MOZ_ASSERT(IsOnUiThread());
-
-  if (!aEndpoint.Bind(this)) {
-    // The GPU Process Manager might be gone if we receive ActorDestroy very
-    // late in shutdown.
-    if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
-      gpm->NotifyRemoteActorDestroyed(mProcessToken);
-    }
-    return;
+  if (!mIsOpen) {
+    mDefaultClearColor = Some(aColor);
+    // Since we are caching this value, pretend the call succeeded.
+    return true;
   }
 
-  AddRef();
-  sChild = this;
-  DoCachedResize();
+  return SendDefaultClearColor(aColor);
+}
+
+bool
+UiCompositorControllerChild::RequestScreenPixels()
+{
+  if (!mIsOpen) {
+    return false;
+  }
+
+  return SendRequestScreenPixels();
+}
+
+bool
+UiCompositorControllerChild::EnableLayerUpdateNotifications(const bool& aEnable)
+{
+  if (!mIsOpen) {
+    mLayerUpdateEnabled = Some(aEnable);
+    // Since we are caching this value, pretend the call succeeded.
+    return true;
+  }
+
+  return SendEnableLayerUpdateNotifications(aEnable);
+}
+
+bool
+UiCompositorControllerChild::ToolbarPixelsToCompositor(Shmem& aMem, const ScreenIntSize& aSize)
+{
+  if (!mIsOpen) {
+    return false;
+  }
+
+  return SendToolbarPixelsToCompositor(aMem, aSize);
 }
 
 void
-UiCompositorControllerChild::Close()
+UiCompositorControllerChild::Destroy()
 {
   if (!IsOnUiThread()) {
-    mUiThread->Dispatch(NewRunnableMethod(this, &UiCompositorControllerChild::Close), nsIThread::DISPATCH_NORMAL);
+    GetUiThread()->Dispatch(NewRunnableMethod(this, &UiCompositorControllerChild::Destroy), nsIThread::DISPATCH_NORMAL);
     return;
   }
 
-  // We clear mProcessToken when the channel is closed.
-  if (!mProcessToken) {
-    return;
+  if (mIsOpen) {
+    // Close the underlying IPC channel.
+    PUiCompositorControllerChild::Close();
+    mIsOpen = false;
   }
-
-  // Clear the process token so we don't notify the GPUProcessManager. It already
-  // knows we're closed since it manually called Close, and in fact the GPM could
-  // have already been destroyed during shutdown.
-  mProcessToken = 0;
-  if (this == sChild) {
-    sChild = nullptr;
-  }
-
-  // Close the underlying IPC channel.
-  PUiCompositorControllerChild::Close();
 }
 
+void
+UiCompositorControllerChild::SetBaseWidget(nsBaseWidget* aWidget)
+{
+  mWidget = aWidget;
+}
+
+bool
+UiCompositorControllerChild::AllocPixelBuffer(const int32_t aSize, Shmem* aMem)
+{
+  MOZ_ASSERT(aSize > 0);
+  return AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, aMem);
+}
+
+bool
+UiCompositorControllerChild::DeallocPixelBuffer(Shmem& aMem)
+{
+  return DeallocShmem(aMem);
+}
+
+// protected:
 void
 UiCompositorControllerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
+  mIsOpen = false;
+  mParent = nullptr;
+
   if (mProcessToken) {
-    GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
+    gfx::GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
     mProcessToken = 0;
-    sParent = nullptr;
   }
 }
 
 void
 UiCompositorControllerChild::DeallocPUiCompositorControllerChild()
 {
+  if (mParent) {
+    mParent = nullptr;
+  }
   Release();
-  sInitialized = false;
 }
 
 void
@@ -232,10 +245,117 @@ UiCompositorControllerChild::HandleFatalError(const char* aName, const char* aMs
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
-bool
-UiCompositorControllerChild::IsOnUiThread() const
+mozilla::ipc::IPCResult
+UiCompositorControllerChild::RecvToolbarAnimatorMessageFromCompositor(const int32_t& aMessage)
 {
-  return NS_GetCurrentThread() == mUiThread;
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mWidget) {
+    mWidget->RecvToolbarAnimatorMessageFromCompositor(aMessage);
+  }
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+UiCompositorControllerChild::RecvRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage)
+{
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mWidget) {
+    mWidget->UpdateRootFrameMetrics(aScrollOffset, aZoom, aPage);
+  }
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+UiCompositorControllerChild::RecvScreenPixels(ipc::Shmem&& aMem, const ScreenIntSize& aSize)
+{
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mWidget) {
+    mWidget->RecvScreenPixels(Move(aMem), aSize);
+  }
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  return IPC_OK();
+}
+
+// private:
+UiCompositorControllerChild::UiCompositorControllerChild(const uint64_t& aProcessToken)
+ : mIsOpen(false)
+ , mProcessToken(aProcessToken)
+ , mWidget(nullptr)
+{
+}
+
+UiCompositorControllerChild::~UiCompositorControllerChild()
+{
+}
+
+void
+UiCompositorControllerChild::OpenForSameProcess()
+{
+  MOZ_ASSERT(IsOnUiThread());
+
+  mIsOpen = Open(mParent->GetIPCChannel(),
+                 mozilla::layers::CompositorThreadHolder::Loop(),
+                 mozilla::ipc::ChildSide);
+
+  if (!mIsOpen) {
+    mParent = nullptr;
+    return;
+  }
+
+  mParent->InitializeForSameProcess();
+  AddRef();
+  SendCachedValues();
+  // Let Ui thread know the connection is open;
+  RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
+}
+
+void
+UiCompositorControllerChild::OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint)
+{
+  MOZ_ASSERT(IsOnUiThread());
+
+  mIsOpen = aEndpoint.Bind(this);
+
+  if (!mIsOpen) {
+    // The GPU Process Manager might be gone if we receive ActorDestroy very
+    // late in shutdown.
+    if (gfx::GPUProcessManager* gpm = gfx::GPUProcessManager::Get()) {
+      gpm->NotifyRemoteActorDestroyed(mProcessToken);
+    }
+    return;
+  }
+
+  AddRef();
+  SendCachedValues();
+  // Let Ui thread know the connection is open;
+  RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
+}
+
+void
+UiCompositorControllerChild::SendCachedValues()
+{
+  MOZ_ASSERT(mIsOpen);
+  if (mResize) {
+    SendResumeAndResize(mResize.ref().width, mResize.ref().height);
+    mResize.reset();
+  }
+  if (mMaxToolbarHeight) {
+    SendMaxToolbarHeight(mMaxToolbarHeight.ref());
+    mMaxToolbarHeight.reset();
+  }
+  if (mDefaultClearColor) {
+    SendDefaultClearColor(mDefaultClearColor.ref());
+    mDefaultClearColor.reset();
+  }
+  if (mLayerUpdateEnabled) {
+    SendEnableLayerUpdateNotifications(mLayerUpdateEnabled.ref());
+    mLayerUpdateEnabled.reset();
+  }
 }
 
 } // namespace layers

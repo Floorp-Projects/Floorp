@@ -8,8 +8,6 @@ import argparse
 import os
 import sys
 
-import mozfile
-
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
@@ -50,9 +48,11 @@ class MachCommands(MachCommandBase):
 
         parser = setup_awsy_argument_parser()
 
+        awsy_source_dir = os.path.join(self.topsrcdir, 'testing', 'awsy')
         if not tests:
-            tests = [os.path.join(self.topsrcdir,
-                                  'testing/awsy/awsy/test_memory_usage.py')]
+            tests = [os.path.join(awsy_source_dir,
+                                  'awsy',
+                                  'test_memory_usage.py')]
 
         args = argparse.Namespace(tests=tests)
 
@@ -85,8 +85,8 @@ class MachCommands(MachCommandBase):
         if not os.path.isdir(page_load_test_dir):
             os.makedirs(page_load_test_dir)
 
-        if not os.path.isdir(runtime_testvars["resultsDir"]):
-            os.makedirs(runtime_testvars["resultsDir"])
+        if not os.path.isdir(runtime_testvars['resultsDir']):
+            os.makedirs(runtime_testvars['resultsDir'])
 
         runtime_testvars_path = os.path.join(awsy_tests_dir, 'runtime-testvars.json')
         if kwargs['testvars']:
@@ -98,34 +98,41 @@ class MachCommands(MachCommandBase):
         runtime_testvars_file.write(json.dumps(runtime_testvars, indent=2))
         runtime_testvars_file.close()
 
-        if not kwargs['webRootDir']:
-            # Populate the Awsy webroot if not specified by the user.
-            manifest_file = os.path.join(self.topsrcdir,
-                                         'testing',
-                                         'awsy',
-                                         'tp5n-pageset.manifest')
-            tooltool_args = {"args": [
-                os.path.join(self.topsrcdir, "python/mozbuild/mozbuild/action/tooltool.py"),
-                "--manifest=%s" % manifest_file,
-                "--unpack",
-                "--cache-folder=%s" % os.path.join(self.topsrcdir, "tooltool-cache"),
-                "fetch"
-            ]}
-
-            self.run_process(cwd=page_load_test_dir, **tooltool_args)
-            tp5nzip = os.path.join(page_load_test_dir, 'tp5n.zip')
-            tp5nmanifest = os.path.join(page_load_test_dir, 'tp5n', 'tp5n.manifest')
-            if not os.path.exists(tp5nmanifest):
-                files = mozfile.extract_zip(tp5nzip, page_load_test_dir)
+        manifest_file = os.path.join(awsy_source_dir,
+                                     'tp5n-pageset.manifest')
+        tooltool_args = {'args': [
+            sys.executable,
+            os.path.join(self.topsrcdir,
+                         'python',
+                         'mozbuild',
+                         'mozbuild',
+                         'action',
+                         'tooltool.py'),
+            '--manifest=%s' % manifest_file,
+            '--cache-folder=%s' % os.path.join(self.topsrcdir, 'tooltool-cache'),
+            'fetch'
+        ]}
+        self.run_process(cwd=page_load_test_dir, **tooltool_args)
+        tp5nzip = os.path.join(page_load_test_dir, 'tp5n.zip')
+        tp5nmanifest = os.path.join(page_load_test_dir, 'tp5n', 'tp5n.manifest')
+        if not os.path.exists(tp5nmanifest):
+            unzip_args = {'args': [
+                'unzip',
+                '-q',
+                '-o',
+                tp5nzip,
+                '-d',
+                page_load_test_dir]}
+            self.run_process(**unzip_args)
 
         for k, v in kwargs.iteritems():
             setattr(args, k, v)
 
         parser.verify_usage(args)
 
-        args.logger = commandline.setup_logging("Are We Slim Yet Tests",
+        args.logger = commandline.setup_logging('Are We Slim Yet Tests',
                                                 args,
-                                                {"mach": sys.stdout})
+                                                {'mach': sys.stdout})
         failed = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
         if failed > 0:
             return 1
@@ -145,7 +152,7 @@ class MachCommands(MachCommandBase):
                      dest='pageManifest',
                      help='Path to page manifest text file containing a list '
                      'of urls to test. The urls must be served from localhost. If not '
-                     'specified, defaults to page_load_test/tp5b/tp5n.manifest under '
+                     'specified, defaults to page_load_test/tp5n/tp5n.manifest under '
                      'the web root.')
     @CommandArgument('--results', group='AWSY', action='store', type=str,
                      dest='resultsDir',
@@ -195,6 +202,16 @@ class MachCommands(MachCommandBase):
         The results of the test will be placed in the results
         directory specified by the --results argument.
 
+        On Windows, you may experience problems due to path length
+        errors when extracting the tp5n.zip file containing the
+        test pages or when attempting to write checkpoints to the
+        results directory. In that case, you should specify both
+        the --web-root and --results arguments pointing to a location
+        with a short path. For example:
+
+        --web-root=c:\\\\tmp\\\\html --results=c:\\\\tmp\\\\results
+
+        Note that the double backslashes are required.
         """
         kwargs['logger_name'] = 'Awsy Tests'
         if 'test_objects' in kwargs:

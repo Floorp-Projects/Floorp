@@ -15,10 +15,6 @@
                       android:title="@string/pref_zoom_force_enabled"
                       android:summary="@string/pref_zoom_force_enabled_summary" />
 
-    <SwitchPreference android:key="ui.zoomedview.enabled"
-                      android:title="@string/pref_magnifying_glass_enabled"
-                      android:summary="@string/pref_magnifying_glass_enabled_summary" />
-
     <SwitchPreference android:key="android.not_a_preference.voice_input_enabled"
                       android:title="@string/pref_voice_input"
                       android:summary="@string/pref_voice_input_summary"

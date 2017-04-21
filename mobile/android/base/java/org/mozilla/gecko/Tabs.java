@@ -803,7 +803,6 @@ public class Tabs implements BundleEventListener {
             case SELECTED:
                 if (mLayerView != null) {
                     mLayerView.setSurfaceBackgroundColor(getTabColor(tab));
-                    mLayerView.setPaintState(LayerView.PAINT_START);
                 }
                 queuePersistAllTabs();
             case UNSELECTED:

@@ -14,4 +14,7 @@ if CONFIG['MOZ_STYLO']:
 if CONFIG['MOZ_BUILD_WEBRENDER']:
     features += ['quantum_render']
 
+if CONFIG['MOZ_PULSEAUDIO']:
+    features += ['cubeb_pulse_rust']
+
 RustLibrary('gkrust-gtest', features, '../..')

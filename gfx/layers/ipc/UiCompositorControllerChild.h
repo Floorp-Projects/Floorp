@@ -7,43 +7,70 @@
 #define include_gfx_ipc_UiCompositorControllerChild_h
 
 #include "mozilla/layers/PUiCompositorControllerChild.h"
+
+#include "mozilla/gfx/2D.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/RefPtr.h"
-#include <nsThread.h>
+#include "nsThread.h"
+
+class nsBaseWidget;
 
 namespace mozilla {
 namespace layers {
 
-class UiCompositorControllerChild final : public PUiCompositorControllerChild
+class UiCompositorControllerChild final : protected PUiCompositorControllerChild
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerChild)
 
-  static bool IsInitialized();
-  static void Shutdown();
-  static UiCompositorControllerChild* Get();
-  static void InitSameProcess(RefPtr<nsThread> aThread);
-  static void InitWithGPUProcess(RefPtr<nsThread> aThread,
-                                 const uint64_t& aProcessToken,
-                                 Endpoint<PUiCompositorControllerChild>&& aEndpoint);
+  static RefPtr<UiCompositorControllerChild> CreateForSameProcess(const int64_t& aRootLayerTreeId);
+  static RefPtr<UiCompositorControllerChild> CreateForGPUProcess(const uint64_t& aProcessToken,
+                                                                 Endpoint<PUiCompositorControllerChild>&& aEndpoint);
 
-  static void CacheSurfaceResize(int64_t aId, int32_t aWidth, int32_t aHeight);
-  void Close();
+  bool Pause();
+  bool Resume();
+  bool ResumeAndResize(const int32_t& aHeight, const int32_t& aWidth);
+  bool InvalidateAndRender();
+  bool SetMaxToolbarHeight(const int32_t& aHeight);
+  bool SetPinned(const bool& aPinned, const int32_t& aReason);
+  bool ToolbarAnimatorMessageFromUI(const int32_t& aMessage);
+  bool SetDefaultClearColor(const uint32_t& aColor);
+  bool RequestScreenPixels();
+  bool EnableLayerUpdateNotifications(const bool& aEnable);
+  bool ToolbarPixelsToCompositor(Shmem& aMem, const ScreenIntSize& aSize);
 
+  void Destroy();
+
+  void SetBaseWidget(nsBaseWidget* aWidget);
+  bool AllocPixelBuffer(const int32_t aSize, Shmem* aMem);
+  bool DeallocPixelBuffer(Shmem& aMem);
+
+protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPUiCompositorControllerChild() override;
   void ProcessingError(Result aCode, const char* aReason) override;
-
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
-
-  bool IsOnUiThread() const;
+  mozilla::ipc::IPCResult RecvToolbarAnimatorMessageFromCompositor(const int32_t& aMessage) override;
+  mozilla::ipc::IPCResult RecvRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage) override;
+  mozilla::ipc::IPCResult RecvScreenPixels(ipc::Shmem&& aMem, const ScreenIntSize& aSize) override;
 private:
-  UiCompositorControllerChild(RefPtr<nsThread> aThread, const uint64_t& aProcessToken);
+  explicit UiCompositorControllerChild(const uint64_t& aProcessToken);
   ~UiCompositorControllerChild();
   void OpenForSameProcess();
   void OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint);
+  void SendCachedValues();
 
-  RefPtr<nsThread> mUiThread;
+  bool mIsOpen;
   uint64_t mProcessToken;
+  Maybe<gfx::IntSize> mResize;
+  Maybe<int32_t> mMaxToolbarHeight;
+  Maybe<uint32_t> mDefaultClearColor;
+  Maybe<bool> mLayerUpdateEnabled;
+  nsBaseWidget* mWidget;
+  // Should only be set when compositor is in process.
+  RefPtr<UiCompositorControllerParent> mParent;
 };
 
 } // namespace layers
