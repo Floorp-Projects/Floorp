@@ -76,6 +76,7 @@ public:
       mElement(aElement),
       mScriptFromHead(false),
       mProgress(Progress::Loading),
+      mDataType(DataType::Unknown),
       mIsInline(true),
       mHasSourceMapURL(false),
       mIsDefer(false),
@@ -143,21 +144,44 @@ public:
     mIsTracking = true;
   }
 
-  enum class Progress {
-    Loading,
+  enum class Progress : uint8_t {
+    Loading,        // Request either source or bytecode
+    Loading_Source, // Explicitly Request source stream
     Compiling,
     FetchingImports,
     Ready
   };
+
   bool IsReadyToRun() const {
     return mProgress == Progress::Ready;
   }
   bool IsLoading() const {
-    return mProgress == Progress::Loading;
+    return mProgress == Progress::Loading ||
+           mProgress == Progress::Loading_Source;
+  }
+  bool IsLoadingSource() const {
+    return mProgress == Progress::Loading_Source;
   }
   bool InCompilingStage() const {
     return mProgress == Progress::Compiling ||
            (IsReadyToRun() && mWasCompiledOMT);
+  }
+
+  // Type of data provided by the nsChannel.
+  enum class DataType : uint8_t {
+    Unknown,
+    Source,
+    Bytecode
+  };
+
+  bool IsUnknownDataType() const {
+    return mDataType == DataType::Unknown;
+  }
+  bool IsSource() const {
+    return mDataType == DataType::Source;
+  }
+  bool IsBytecode() const {
+    return mDataType == DataType::Bytecode;
   }
 
   void MaybeCancelOffThreadScript();
@@ -169,6 +193,7 @@ public:
   nsCOMPtr<nsIScriptElement> mElement;
   bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
+  DataType mDataType;     // Does this contain Source or Bytecode?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mIsDefer;          // True if we live in mDeferRequests.

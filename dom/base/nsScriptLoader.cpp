@@ -133,6 +133,7 @@ nsScriptLoadRequest::MaybeCancelOffThreadScript()
   }
 
   JSContext* cx = danger::GetJSContext();
+  MOZ_ASSERT(IsSource());
   JS::CancelOffThreadScript(cx, mOffThreadToken);
   mOffThreadToken = nullptr;
 }
@@ -1204,6 +1205,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest)
 {
   MOZ_ASSERT(aRequest->IsLoading());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
+  aRequest->mDataType = nsScriptLoadRequest::DataType::Unknown;
 
   // If this document is sandboxed without 'allow-scripts', abort.
   if (mDocument->HasScriptsBlockedBySandbox()) {
@@ -1713,6 +1715,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   request->mIsInline = true;
   request->mURI = mDocument->GetDocumentURI();
   request->mLineNo = aElement->GetScriptLineNumber();
+  request->mProgress = nsScriptLoadRequest::Progress::Loading_Source;
+  request->mDataType = nsScriptLoadRequest::DataType::Source;
 
   if (request->IsModuleRequest()) {
     nsModuleLoadRequest* modReq = request->AsModuleRequest();
@@ -2242,6 +2246,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
     }
 
     if (aRequest->IsModuleRequest()) {
+      // When a module is already loaded, it is not feched a second time and the
+      // mDataType of the request might remain set to DataType::Unknown.
+      MOZ_ASSERT(!aRequest->IsBytecode());
       nsModuleLoadRequest* request = aRequest->AsModuleRequest();
       MOZ_ASSERT(request->mModuleScript);
       MOZ_ASSERT(!request->mOffThreadToken);
@@ -2263,6 +2270,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
       if (NS_SUCCEEDED(rv)) {
         {
           nsJSUtils::ExecutionContext exec(aes.cx(), global);
+          MOZ_ASSERT(aRequest->IsSource());
           if (aRequest->mOffThreadToken) {
             JS::Rooted<JSScript*> script(aes.cx());
             rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
@@ -2943,6 +2951,7 @@ nsScriptLoadHandler::nsScriptLoadHandler(nsScriptLoader *aScriptLoader,
     mSRIStatus(NS_OK),
     mDecoder()
 {
+  MOZ_ASSERT(mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
 }
 
@@ -2964,6 +2973,7 @@ nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     return NS_OK;
   }
 
+  mRequest->mDataType = nsScriptLoadRequest::DataType::Source;
   if (!EnsureDecoder(aLoader, aData, aDataLength,
                      /* aEndOfStream = */ false)) {
     return NS_OK;
@@ -3131,6 +3141,7 @@ nsScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                       const uint8_t* aData)
 {
   if (!mRequest->IsCanceled()) {
+    mRequest->mDataType = nsScriptLoadRequest::DataType::Source;
     DebugOnly<bool> encoderSet =
       EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
     MOZ_ASSERT(encoderSet);
