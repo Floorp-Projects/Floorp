@@ -30,6 +30,7 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/workers/Workers.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"
 
@@ -254,6 +255,13 @@ FetchDriver::HttpFetch()
   }
 #endif
   chan->SetNotificationCallbacks(this);
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(chan));
+  // Mark channel as urgent-start if the Fetch is triggered by user input
+  // events.
+  if (cos && EventStateManager::IsHandlingUserInput()) {
+    cos->AddClassFlags(nsIClassOfService::UrgentStart);
+  }
 
   // Step 3.5 begins "HTTP network or cache fetch".
   // HTTP network or cache fetch
