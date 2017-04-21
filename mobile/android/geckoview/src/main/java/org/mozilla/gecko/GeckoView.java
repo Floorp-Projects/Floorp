@@ -257,6 +257,13 @@ public class GeckoView extends LayerView
         super(context);
 
         final GeckoViewSettings newSettings = new GeckoViewSettings(settings, getEventDispatcher());
+        init(context, settings);
+    }
+
+    public GeckoView(Context context, AttributeSet attrs, final GeckoViewSettings settings) {
+        super(context, attrs);
+
+        final GeckoViewSettings newSettings = new GeckoViewSettings(settings, getEventDispatcher());
         init(context, newSettings);
     }
 
