@@ -2265,7 +2265,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
           nsJSUtils::ExecutionContext exec(aes.cx(), global);
           if (aRequest->mOffThreadToken) {
             JS::Rooted<JSScript*> script(aes.cx());
-            rv = exec.SyncAndExec(&aRequest->mOffThreadToken, &script);
+            rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
           } else {
             nsAutoString inlineData;
             SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
