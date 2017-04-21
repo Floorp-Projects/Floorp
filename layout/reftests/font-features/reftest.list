@@ -54,7 +54,7 @@ fails-if(stylo) HTTP(..) == font-features-order-5.html font-features-hlig.html
 fails-if(stylo) HTTP(..) == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-fails-if(stylo) HTTP(..) == annotations.html annotations-ref.html
+HTTP(..) == annotations.html annotations-ref.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
