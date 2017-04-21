@@ -19,7 +19,7 @@ on [supported platforms](#supported-firefoxen).
 ## Supported clients
 
 [Selenium](http://docs.seleniumhq.org/) users
-must update to [version 3.3.1](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.3.1)
+must update to [version 3.4](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.4.0)
 or later to use geckodriver.
 Other clients that follow the [W3C WebDriver specification](https://w3c.github.io/webdriver/webdriver-spec.html) are also supported.
 
