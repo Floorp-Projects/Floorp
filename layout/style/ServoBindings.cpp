@@ -1793,6 +1793,17 @@ Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
 }
 
 void
+Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
+                                   RawGeckoPresContextBorrowed aPresContext)
+{
+  const nsFont* defaultVariableFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                 aFont->mLanguage);
+  nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
+                               aFont->mGenericID, defaultVariableFont);
+}
+
+void
 FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs)
 {
   mDefaultVariableSize = prefs.mDefaultVariableFont.size;
