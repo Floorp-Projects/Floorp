@@ -19,12 +19,16 @@ import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
 import org.mozilla.focus.fragment.HomeFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
+import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String ACTION_ERASE = "erase";
+    public static final String EXTRA_FINISH = "finish";
+
     private String pendingUrl;
 
     @Override
@@ -41,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
-
 
         if (savedInstanceState == null) {
             WebViewProvider.performCleanup(this);
@@ -71,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        BrowsingNotificationService.foreground(this);
+
         TelemetryWrapper.startSession();
     }
 
@@ -81,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         super.onPause();
+
+        BrowsingNotificationService.background(this);
 
         TelemetryWrapper.stopSession();
     }
@@ -96,17 +103,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             // We can't update our fragment right now because we need to wait until the activity is
-            // resumed. So just remember this URL and load it in onResume().
+            // resumed. So just remember this URL and load it in onResumeFragments().
             pendingUrl = intent.getDataString();
-
-            // We do not care about the previous intent anymore. But let's remember this one.
-            setIntent(intent);
         }
+
+        // We do not care about the previous intent anymore. But let's remember this one.
+        setIntent(intent);
     }
 
     @Override
     protected void onResumeFragments() {
         super.onResumeFragments();
+
+        final Intent intent = getIntent();
+
+        if (ACTION_ERASE.equals(intent.getAction())) {
+            eraseFromNotification(intent.getBooleanExtra(EXTRA_FINISH, false));
+        }
 
         if (pendingUrl != null && !new Settings(this).shouldShowFirstrun()) {
             // We have received an URL in onNewIntent(). Let's load it now.
@@ -114,6 +127,29 @@ public class MainActivity extends AppCompatActivity {
             // firstrun is dismissed.
             showBrowserScreen(pendingUrl);
             pendingUrl = null;
+        }
+    }
+
+    private void eraseFromNotification(boolean finishActivity) {
+        final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager()
+                .findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
+
+        if (browserFragment != null) {
+            // We are currently displaying a browser fragment. Let the fragment handle the erase and
+            // play its animation.
+            browserFragment.eraseAndShowHomeScreen();
+        } else {
+            // There's no fragment available currently. Let's delete manually and notify the service
+            // that the session should have ended (normally the fragment would do both).
+            WebViewProvider.performCleanup(this);
+            BrowsingNotificationService.stop(this);
+        }
+
+        // The service will track the foreground/background state of our activity. If we are erasing
+        // while the activity is in the background then we want to finish it immediately again.
+        if (finishActivity) {
+            finish();
+            overridePendingTransition(0, 0); // This activity should be visible - avoid any animations.
         }
     }
 

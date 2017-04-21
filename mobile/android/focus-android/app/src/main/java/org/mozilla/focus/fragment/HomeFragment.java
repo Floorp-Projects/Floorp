@@ -5,7 +5,6 @@
 
 package org.mozilla.focus.fragment;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -40,7 +39,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
         super.onAttach(context);
 
         final FragmentActivity activity = getActivity();
-        if (activity != null) {
+        if (activity != null && Intent.ACTION_VIEW.equals(activity.getIntent().getAction())) {
             // If this activity was launched from a ACTION_VIEW intent then pressing back will send
             // the user back to the previous application (finishing this activity). However if the
             // user presses "erase" we will send the user back to the home screen. Pressing back

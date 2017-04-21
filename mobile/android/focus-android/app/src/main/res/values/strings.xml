@@ -42,6 +42,12 @@
          sharing an URL. -->
     <string name="share_dialog_title">Share via</string>
 
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Erase browsing history</string>
+
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[
