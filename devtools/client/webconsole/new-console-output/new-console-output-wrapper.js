@@ -101,8 +101,26 @@ NewConsoleOutputWrapper.prototype = {
             ? this.toolbox.highlighterUtils.unhighlight(forceHide)
             : null;
         },
+        openNodeInInspector: async (grip) => {
+          if (!this.toolbox) {
+            return Promise.reject("no toolbox");
+          }
+
+          let onSelectInspector = this.toolbox.selectTool("inspector");
+          let onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
+          let [
+            front,
+            inspector
+          ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
+
+          let onInspectorUpdated = inspector.once("inspector-updated");
+          let onNodeFrontSet = this.toolbox.selection.setNodeFront(front, "console");
+
+          return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+        }
       }
     });
+
     let filterBar = FilterBar({
       serviceContainer: {
         attachRefToHud
