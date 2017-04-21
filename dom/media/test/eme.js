@@ -131,7 +131,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
           "k":HexToBase64(key)
         });
       } else {
-        bail(token + " couldn't find key for key id " + idHex)("No such key");
+        reject(`${token} couldn't find key for key id ${idHex}`);
       }
     }
 
@@ -145,8 +145,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
       Log(token, "MediaKeySession update ok!");
       resolve(ev.target);
     }).catch(function(reason) {
-      bail(token + " MediaKeySession update failed")(reason);
-      reject();
+      reject(`${token} MediaKeySession update failed: ${reason}`);
     });
   }
 }
