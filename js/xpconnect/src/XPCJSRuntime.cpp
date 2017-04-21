@@ -1537,6 +1537,10 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.baselineStubsOptimized,
         "The Baseline JIT's optimized IC stubs (excluding code).");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-cached-cfg"),
+        zStats.cachedCFG,
+        "The cached CFG to construct Ion code out of it.");
+
     size_t stringsNotableAboutMemoryGCHeap = 0;
     size_t stringsNotableAboutMemoryMallocHeap = 0;
 
