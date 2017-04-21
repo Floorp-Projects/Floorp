@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'findbugs'
+apply plugin: 'jacoco'
+apply plugin: 'jacoco-android'
 
 
 android {
@@ -37,6 +39,14 @@ android {
         }
         debug {
             applicationIdSuffix ".debug"
+            testCoverageEnabled true
+        }
+    }
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
         }
     }
 
@@ -98,6 +108,12 @@ android {
             java.srcDir 'src/klarRelease/java'
         }
     }
+}
+
+jacocoAndroidUnitTestReport {
+    csv.enabled false
+    html.enabled true
+    xml.enabled true
 }
 
 repositories {
