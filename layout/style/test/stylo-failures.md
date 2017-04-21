@@ -199,7 +199,6 @@ to mochitest command.
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
     * ... `-webkit-linear-gradient` [5]
-    * ... `-webkit-repeating-linear-gradient` [0]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
