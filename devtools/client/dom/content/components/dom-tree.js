@@ -13,7 +13,7 @@ const TreeView = React.createFactory(require("devtools/client/shared/components/
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = React.createFactory(REPS.Rep);
+const { Rep } = REPS;
 const Grip = REPS.Grip;
 
 // DOM Panel
