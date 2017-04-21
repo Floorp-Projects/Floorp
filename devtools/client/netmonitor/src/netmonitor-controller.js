@@ -304,6 +304,8 @@ function NetworkEventsHandler() {
   this._onRequestPostData = this._onRequestPostData.bind(this);
   this._onResponseHeaders = this._onResponseHeaders.bind(this);
   this._onResponseCookies = this._onResponseCookies.bind(this);
+  this._onSecurityInfo = this._onSecurityInfo.bind(this);
+  this._onEventTimings = this._onEventTimings.bind(this);
 }
 
 NetworkEventsHandler.prototype = {
@@ -586,12 +588,12 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_REQUEST_POST_DATA, actor);
         break;
       case "securityInfo":
-        this.webConsoleClient.getSecurityInfo(actor,
-          this._onSecurityInfo.bind(this, {
-            securityState: networkInfo.securityInfo,
-          })
-        );
-        window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
+        this.updateRequest(actor, {
+          securityState: networkInfo.securityInfo,
+        }).then(() => {
+          this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
+          window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
+        });
         break;
       case "responseHeaders":
         this.webConsoleClient.getResponseHeaders(actor,
@@ -625,12 +627,12 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
         break;
       case "eventTimings":
-        this.webConsoleClient.getEventTimings(actor,
-          this._onEventTimings.bind(this, {
-            totalTime: networkInfo.totalTime
-          })
-        );
-        window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
+        this.updateRequest(actor, {
+          totalTime: networkInfo.totalTime
+        }).then(() => {
+          this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
+          window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
+        });
         break;
     }
   },
@@ -680,16 +682,13 @@ NetworkEventsHandler.prototype = {
   /**
    * Handles additional information received for a "securityInfo" packet.
    *
-   * @param object data
-   *        The message received from the server event.
    * @param object response
    *        The message received from the server.
    */
-  _onSecurityInfo: function (data, response) {
-    let payload = Object.assign({
+  _onSecurityInfo: function (response) {
+    this.updateRequest(response.from, {
       securityInfo: response.securityInfo
-    }, data);
-    this.updateRequest(response.from, payload).then(() => {
+    }).then(() => {
       window.emit(EVENTS.RECEIVED_SECURITY_INFO, response.from);
     });
   },
@@ -740,14 +739,13 @@ NetworkEventsHandler.prototype = {
   /**
    * Handles additional information received for a "eventTimings" packet.
    *
-   * @param object data
-   *        The message received from the server event.
    * @param object response
    *        The message received from the server.
    */
-  _onEventTimings: function (data, response) {
-    let payload = Object.assign({ eventTimings: response }, data);
-    this.updateRequest(response.from, payload).then(() => {
+  _onEventTimings: function (response) {
+    this.updateRequest(response.from, {
+      eventTimings: response
+    }).then(() => {
       window.emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
     });
   }
