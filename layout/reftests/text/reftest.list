@@ -59,7 +59,7 @@ HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
 fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 fuzzy-if(Android,231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
-fails-if(stylo) == swash-1.html swash-1-ref.html
+== swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 # Tests for text-align-last
@@ -155,7 +155,7 @@ fails-if(stylo) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
-fails-if(stylo) == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
+== 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
 # Test for bug 575695, 'kern' table support
@@ -173,7 +173,7 @@ fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallbac
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
 fails-if(!cocoaWidget&&!Android&&!stylo) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
-fails-if(stylo) == arabic-marks-1.html arabic-marks-1-ref.html
+== arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
 HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html

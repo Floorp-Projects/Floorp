@@ -915,7 +915,7 @@ fuzzy-if(Android,8,50) fails-if(stylo) == 404553-1.html 404553-1-ref.html  # ass
 == 406568-1.html 406568-1-ref.html
 fails-if(stylo) == 407016-1-a.html 407016-1-ref.html
 fails-if(stylo) == 407016-1-b.html 407016-1-ref.html
-fails-if(stylo) == 407078-1.html 407078-1-ref.html
+== 407078-1.html 407078-1-ref.html
 == 407095-1.html 407095-1-ref.html
 fuzzy-if(Android,13,9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
 == 407227-1.html 407227-1-ref.html
@@ -1504,7 +1504,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkia
 == 556661-1.html 556661-1-ref.html
 fuzzy-if(skiaContent,4,5) fails-if(stylo) == 557087-1.html 557087-ref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,2,5) fails-if(stylo) == 557087-2.html 557087-ref.html
-fails-if(stylo) == 557736-1.html 557736-1-ref.html
+== 557736-1.html 557736-1-ref.html
 != 558011-1.xul 558011-1-ref.xul
 == 559284-1.html 559284-1-ref.html
 fails-if(Android) == 560455-1.xul 560455-1-ref.xul

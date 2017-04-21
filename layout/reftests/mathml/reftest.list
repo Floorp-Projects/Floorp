@@ -297,8 +297,8 @@ fails-if(stylo) == dtls-1.html dtls-1-ref.html
 fails-if(stylo) == dtls-2.html dtls-2-ref.html
 fails-if(stylo) == dtls-3.html dtls-3-ref.html
 fails-if(stylo) == ssty-1.html ssty-1-ref.html
-fails-if(stylo) == ssty-2.html ssty-2-ref.html
-fails-if(stylo) == ssty-3.html ssty-3-ref.html
+== ssty-2.html ssty-2-ref.html
+== ssty-3.html ssty-3-ref.html
 fails-if(stylo) == ssty-4.html ssty-4-ref.html
 fails-if(stylo) == mathscript-1.html mathscript-1-ref.html
 fails-if(stylo) == mathscript-2.html mathscript-2-ref.html
