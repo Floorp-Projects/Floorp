@@ -800,6 +800,17 @@ a.learn-more-link.webconsole-learn-more-link {
   display: none;
 }
 
+/*
+ * Open DOMNode in inspector button. Style need to be reset in the new
+ * console since its style is already defined in reps.css .
+ */
+.webconsole-output-wrapper .open-inspector {
+  background: unset;
+  padding-left: unset;
+  margin-left: unset;
+  cursor: unset;
+}
+
 /* console.table() */
 .new-consoletable {
   width: 100%;
