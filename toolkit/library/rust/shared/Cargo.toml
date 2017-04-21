@@ -12,12 +12,14 @@ nsstring = { path = "../../../../xpcom/rust/nsstring" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
+cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
 
 [features]
 default = []
 bindgen = ["geckoservo/bindgen"]
 servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
+cubeb_pulse_rust = ["cubeb-pulse"]
 
 [lib]
 path = "lib.rs"

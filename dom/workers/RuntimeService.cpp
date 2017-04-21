@@ -2825,7 +2825,7 @@ WorkerThreadPrimaryRunnable::Run()
 
   char stackBaseGuess;
 
-  PR_SetCurrentThreadName("DOM Worker");
+  NS_SetCurrentThreadName("DOM Worker");
 
   nsAutoCString threadName;
   threadName.AssignLiteral("DOM Worker '");

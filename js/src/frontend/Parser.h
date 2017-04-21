@@ -87,29 +87,14 @@ class ParseContext : public Nestable<ParseContext>
         }
     };
 
-    class ClassStatement : public Statement
+    struct ClassStatement : public Statement
     {
-        FunctionBox* constructorBox_;
+        FunctionBox* constructorBox;
 
-      public:
         explicit ClassStatement(ParseContext* pc)
           : Statement(pc, StatementKind::Class),
-            constructorBox_(nullptr)
+            constructorBox(nullptr)
         { }
-
-        void clearConstructorBoxForAbortedSyntaxParse(FunctionBox* funbox) {
-            MOZ_ASSERT(constructorBox_ == funbox);
-            constructorBox_ = nullptr;
-        }
-
-        void setConstructorBox(FunctionBox* funbox) {
-            MOZ_ASSERT(!constructorBox_);
-            constructorBox_ = funbox;
-        }
-
-        FunctionBox* constructorBox() const {
-            return constructorBox_;
-        }
     };
 
     // The intra-function scope stack.

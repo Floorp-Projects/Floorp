@@ -341,7 +341,7 @@ void
 StorageDBThread::ThreadFunc(void* aArg)
 {
   AutoProfilerRegister registerThread("localStorage DB");
-  PR_SetCurrentThreadName("localStorage DB");
+  NS_SetCurrentThreadName("localStorage DB");
   mozilla::IOInterposer::RegisterCurrentThread();
 
   StorageDBThread* thread = static_cast<StorageDBThread*>(aArg);

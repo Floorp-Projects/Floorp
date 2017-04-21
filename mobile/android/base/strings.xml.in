@@ -423,9 +423,6 @@
   <string name="doorhanger_login_select_action_text">&doorhanger_login_select_action_text;</string>
   <string name="doorhanger_login_select_title">&doorhanger_login_select_title;</string>
 
-  <string name="pref_magnifying_glass_enabled">&pref_magnifying_glass_enabled;</string>
-  <string name="pref_magnifying_glass_enabled_summary">&pref_magnifying_glass_enabled_summary2;</string>
-
   <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
   <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary2;</string>
 
@@ -602,8 +599,6 @@
   <string name="ellipsis">&ellipsis;</string>
 
   <string name="colon">&colon;</string>
-
-  <string name="percent">&percent;</string>
 
   <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 

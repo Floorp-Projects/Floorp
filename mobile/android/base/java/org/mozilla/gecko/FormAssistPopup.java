@@ -277,7 +277,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
         // These values correspond to the input box for which we want to
         // display the FormAssistPopup.
         int left = (int) (mX * zoom - aMetrics.viewportRectLeft);
-        int top = (int) (mY * zoom - aMetrics.viewportRectTop + GeckoAppShell.getLayerView().getSurfaceTranslation());
+        int top = (int) (mY * zoom - aMetrics.viewportRectTop + GeckoAppShell.getLayerView().getCurrentToolbarHeight());
         int width = (int) (mW * zoom);
         int height = (int) (mH * zoom);
 

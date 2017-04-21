@@ -17,6 +17,7 @@
 #include "mozJSComponentLoader.h"
 #include "nsAutoPtr.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
@@ -379,7 +380,7 @@ static void
 WatchdogMain(void* arg)
 {
     mozilla::AutoProfilerRegister registerThread("JS Watchdog");
-    PR_SetCurrentThreadName("JS Watchdog");
+    NS_SetCurrentThreadName("JS Watchdog");
 
     Watchdog* self = static_cast<Watchdog*>(arg);
     WatchdogManager* manager = self->Manager();
