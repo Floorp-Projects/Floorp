@@ -47,8 +47,8 @@ class AtomicTypeChecker:
     def check(self, identifier, key, value):
         if not isinstance(value, self.instance_type):
             raise ParserError("%s: Failed type check for %s - expected %s, got %s." %
-                             (identifier, key, nice_type_name(self.instance_type),
-                              nice_type_name(type(value))))
+                              (identifier, key, nice_type_name(self.instance_type),
+                               nice_type_name(type(value))))
 
 
 class MultiTypeChecker:
@@ -61,9 +61,9 @@ class MultiTypeChecker:
     def check(self, identifier, key, value):
         if not any(isinstance(value, i) for i in self.instance_types):
             raise ParserError("%s: Failed type check for %s - got %s, expected one of:\n%s" %
-                             (identifier, key,
-                              nice_type_name(type(value)),
-                              " or ".join(map(nice_type_name, self.instance_types))))
+                              (identifier, key,
+                               nice_type_name(type(value)),
+                               " or ".join(map(nice_type_name, self.instance_types))))
 
 
 class ListTypeChecker:
@@ -74,13 +74,13 @@ class ListTypeChecker:
     def check(self, identifier, key, value):
         if len(value) < 1:
             raise ParserError("%s: Failed check for %s - list should not be empty." %
-                             (identifier, key))
+                              (identifier, key))
 
         for x in value:
             if not isinstance(x, self.instance_type):
                 raise ParserError("%s: Failed type check for %s - expected list value type %s, got"
-                                 " %s." % (identifier, key, nice_type_name(self.instance_type),
-                                          nice_type_name(type(x))))
+                                  " %s." % (identifier, key, nice_type_name(self.instance_type),
+                                            nice_type_name(type(x))))
 
 
 class DictTypeChecker:
@@ -92,21 +92,21 @@ class DictTypeChecker:
     def check(self, identifier, key, value):
         if len(value.keys()) < 1:
             raise ParserError("%s: Failed check for %s - dict should not be empty." %
-                             (identifier, key))
+                              (identifier, key))
         for x in value.iterkeys():
             if not isinstance(x, self.keys_instance_type):
                 raise ParserError("%s: Failed dict type check for %s - expected key type %s, got "
-                                 "%s." %
-                                 (identifier, key,
-                                  nice_type_name(self.keys_instance_type),
-                                  nice_type_name(type(x))))
+                                  "%s." %
+                                  (identifier, key,
+                                   nice_type_name(self.keys_instance_type),
+                                   nice_type_name(type(x))))
         for k, v in value.iteritems():
             if not isinstance(v, self.values_instance_type):
                 raise ParserError("%s: Failed dict type check for %s - "
-                                 "expected value type %s for key %s, got %s." %
-                                 (identifier, key,
-                                  nice_type_name(self.values_instance_type),
-                                  k, nice_type_name(type(v))))
+                                  "expected value type %s for key %s, got %s." %
+                                  (identifier, key,
+                                   nice_type_name(self.values_instance_type),
+                                   k, nice_type_name(type(v))))
 
 
 def type_check_event_fields(identifier, name, definition):
@@ -147,14 +147,14 @@ def string_check(identifier, field, value, min_length=1, max_length=None, regex=
     # Length check.
     if len(value) < min_length:
         raise ParserError("%s: Value '%s' for field %s is less than minimum length of %d." %
-                         (identifier, value, field, min_length))
+                          (identifier, value, field, min_length))
     if max_length and len(value) > max_length:
         raise ParserError("%s: Value '%s' for field %s is greater than maximum length of %d." %
-                         (identifier, value, field, max_length))
+                          (identifier, value, field, max_length))
     # Regex check.
     if regex and not re.match(regex, value):
         raise ParserError('%s: String value "%s" for %s is not matching pattern "%s".' %
-                         (identifier, value, field, regex))
+                          (identifier, value, field, regex))
 
 
 class EventData:
@@ -183,7 +183,7 @@ class EventData:
         allowed_rcc = ["opt-in", "opt-out"]
         if rcc not in allowed_rcc:
             raise ParserError("%s: Value for %s should be one of: %s" %
-                             (self.identifier, rcc_key, ", ".join(allowed_rcc)))
+                              (self.identifier, rcc_key, ", ".join(allowed_rcc)))
 
         # Check record_in_processes.
         record_in_processes = definition.get('record_in_processes')
@@ -195,7 +195,7 @@ class EventData:
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
             raise ParserError("%s: Number of extra_keys exceeds limit %d." %
-                             (self.identifier, MAX_EXTRA_KEYS_COUNT))
+                              (self.identifier, MAX_EXTRA_KEYS_COUNT))
         for key in extra_keys.iterkeys():
             string_check(self.identifier, field='extra_keys', value=key,
                          min_length=1, max_length=MAX_EXTRA_KEY_NAME_LENGTH,
@@ -204,12 +204,12 @@ class EventData:
         # Check expiry.
         if 'expiry_version' not in definition and 'expiry_date' not in definition:
             raise ParserError("%s: event is missing an expiration - either expiry_version or expiry_date is required" %
-                           (self.identifier))
+                              (self.identifier))
         expiry_date = definition.get('expiry_date')
         if expiry_date and isinstance(expiry_date, basestring) and expiry_date != 'never':
             if not re.match(DATE_PATTERN, expiry_date):
                 raise ParserError("%s: Event has invalid expiry_date, it should be either 'never' or match this format: %s" %
-                                 (self.identifier, DATE_PATTERN))
+                                  (self.identifier, DATE_PATTERN))
             # Parse into date.
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
