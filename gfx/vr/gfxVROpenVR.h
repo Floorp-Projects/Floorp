@@ -132,10 +132,7 @@ private:
                          uint64_t aButtonTouched);
   void HandleTriggerPress(uint32_t aControllerIdx,
                           uint32_t aButton,
-                          uint64_t aButtonMask,
-                          float aValue,
-                          uint64_t aButtonPressed,
-                          uint64_t aButtonTouched);
+                          float aValue);
   void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                       float aValue);
   void HandlePoseTracking(uint32_t aControllerIdx,

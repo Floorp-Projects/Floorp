@@ -22,6 +22,9 @@ import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.bookmarks.BookmarkEditFragment;
+import org.mozilla.gecko.bookmarks.BookmarkUtils;
+import org.mozilla.gecko.bookmarks.EditBookmarkTask;
 import org.mozilla.gecko.cleanup.FileCleanupController;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -166,8 +169,6 @@ import android.widget.RelativeLayout;
 import android.widget.ViewFlipper;
 import org.mozilla.gecko.switchboard.AsyncConfigLoader;
 import org.mozilla.gecko.switchboard.SwitchBoard;
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -195,7 +196,8 @@ public class BrowserApp extends GeckoApp
                                    OnUrlOpenInBackgroundListener,
                                    AnchoredPopup.OnVisibilityChangeListener,
                                    ActionModePresenter,
-                                   LayoutInflater.Factory {
+                                   LayoutInflater.Factory,
+                                   BookmarkEditFragment.Callbacks {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -4115,5 +4117,23 @@ public class BrowserApp extends GeckoApp
         } else if (Restrictions.isRestrictedProfile(this)) {
             Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH, method, "restricted");
         }
+    }
+
+    /**
+     * Launch edit bookmark dialog. The {@link BookmarkEditFragment} needs to be started by an activity
+     * that implements the interface({@link BookmarkEditFragment.Callbacks}) for handling callback method.
+     */
+    public void showEditBookmarkDialog(String pageUrl) {
+        if (BookmarkUtils.isEnabled(this)) {
+            BookmarkEditFragment dialog = BookmarkEditFragment.newInstance(pageUrl);
+            dialog.show(getSupportFragmentManager(), "edit-bookmark");
+        } else {
+            new EditBookmarkDialog(this).show(pageUrl);
+        }
+    }
+
+    @Override
+    public void onEditBookmark(@NonNull Bundle bundle) {
+        new EditBookmarkTask(this, bundle).execute();
     }
 }

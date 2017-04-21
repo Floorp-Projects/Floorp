@@ -24,6 +24,8 @@ DEFINE_GUID(CLSID_CMSAACDecMFT, 0x32D186A7, 0x218F, 0x4C75, 0x88, 0x76, 0xDD, 0x
 
 namespace mozilla {
 
+using media::TimeUnit;
+
 HRESULT
 HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
 {
@@ -65,23 +67,23 @@ MFOffsetToInt32(const MFOffset& aOffset)
   return int32_t(aOffset.value + (aOffset.fract / 65536.0f));
 }
 
-media::TimeUnit
+TimeUnit
 GetSampleDuration(IMFSample* aSample)
 {
-  NS_ENSURE_TRUE(aSample, media::TimeUnit::Invalid());
+  NS_ENSURE_TRUE(aSample, TimeUnit::Invalid());
   int64_t duration = 0;
   aSample->GetSampleDuration(&duration);
-  return media::TimeUnit::FromMicroseconds(HNsToUsecs(duration));
+  return TimeUnit::FromMicroseconds(HNsToUsecs(duration));
 }
 
-media::TimeUnit
+TimeUnit
 GetSampleTime(IMFSample* aSample)
 {
-  NS_ENSURE_TRUE(aSample, media::TimeUnit::Invalid());
+  NS_ENSURE_TRUE(aSample, TimeUnit::Invalid());
   LONGLONG timestampHns = 0;
   HRESULT hr = aSample->GetSampleTime(&timestampHns);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), media::TimeUnit::Invalid());
-  return media::TimeUnit::FromMicroseconds(HNsToUsecs(timestampHns));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), TimeUnit::Invalid());
+  return TimeUnit::FromMicroseconds(HNsToUsecs(timestampHns));
 }
 
 // Gets the sub-region of the video frame that should be displayed.

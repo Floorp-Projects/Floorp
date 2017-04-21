@@ -1859,7 +1859,7 @@ BrowserGlue.prototype = {
 
       Services.prefs.clearUserPref("browser.tabs.animate");
       Services.prefs.clearUserPref("browser.fullscreen.animate");
-      Services.prefs.clearUserPref("browser.tabs.animate");
+      Services.prefs.clearUserPref("alerts.disableSlidingEffect");
     }
 
     // Update the migration version.

@@ -650,7 +650,7 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
   EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
   return nsCSSRuleProcessor::StringPseudoMatches(aElement, aType, aIdent,
                                                  aElement->OwnerDoc(), true,
-                                                 dummyMask, false, aSetSlowSelectorFlag, nullptr);
+                                                 dummyMask, aSetSlowSelectorFlag, nullptr);
 }
 
 nsIAtom*
@@ -1809,6 +1809,12 @@ void
 Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* aRule,
                                  nsAString* aResult)
 {
+  // GetCSSText serializes nsCSSValues, which have a heap write
+  // hazard when dealing with color values (nsCSSKeywords::AddRefTable)
+  // We only serialize on the main thread; assert to convince the analysis
+  // and prevent accidentally calling this elsewhere
+  MOZ_ASSERT(NS_IsMainThread());
+
   aRule->GetCssText(*aResult);
 }
 

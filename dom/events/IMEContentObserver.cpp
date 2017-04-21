@@ -135,8 +135,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartOfRemovingTextRangeCache.mContainerNode)
 
-  tmp->mIMENotificationRequests.mWantUpdates =
-    IMENotificationRequests::NOTIFY_NOTHING;
+  tmp->mIMENotificationRequests = nullptr;
   tmp->mESM = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -168,6 +167,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
+  , mIMENotificationRequests(nullptr)
   , mSuppressNotifications(0)
   , mPreCharacterDataChangeLength(-1)
   , mSendingNotification(NOTIFY_IME_OF_NOTHING)
@@ -209,6 +209,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   mESM->OnStartToObserveContent(this);
 
   mWidget = aWidget;
+  mIMENotificationRequests = &mWidget->IMENotificationRequestsRef();
 
   if (aWidget->GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN) {
     if (!InitWithPlugin(aPresContext, aContent)) {
@@ -418,7 +419,7 @@ IMEContentObserver::ObserveEditableNode()
 
   // If this is called before sending NOTIFY_IME_OF_FOCUS (it's possible when
   // the editor is reframed before sending NOTIFY_IME_OF_FOCUS asynchronously),
-  // the update preference of mWidget may be different from after the widget
+  // the notification requests of mWidget may be different from after the widget
   // receives NOTIFY_IME_OF_FOCUS.   So, this should be called again by
   // OnIMEReceivedFocus() which is called after sending NOTIFY_IME_OF_FOCUS.
   if (!mIMEHasFocus) {
@@ -433,7 +434,6 @@ IMEContentObserver::ObserveEditableNode()
     mEditor->AddEditorObserver(this);
   }
 
-  mIMENotificationRequests = mWidget->GetIMENotificationRequests();
   if (!WasInitializedWithPlugin()) {
     // Add selection change listener only when this starts to observe
     // non-plugin content since we cannot detect selection changes in
@@ -442,16 +442,15 @@ IMEContentObserver::ObserveEditableNode()
     NS_ENSURE_TRUE_VOID(selPrivate);
     nsresult rv = selPrivate->AddSelectionListener(this);
     NS_ENSURE_SUCCESS_VOID(rv);
-  }
-
-  if (mIMENotificationRequests.WantTextChange()) {
-    // add text change observer
+    // Add text change observer only when this starts to observe
+    // non-plugin content since we cannot detect text changes in
+    // plugins.
     mRootContent->AddMutationObserver(this);
   }
 
-  if (mIMENotificationRequests.WantPositionChanged() && mDocShell) {
-    // Add scroll position listener and reflow observer to detect position and
-    // size changes
+  if (mDocShell) {
+    // Add scroll position listener and reflow observer to detect position
+    // and size changes
     mDocShell->AddWeakScrollObserver(this);
     mDocShell->AddWeakReflowObserver(this);
   }
@@ -463,6 +462,7 @@ IMEContentObserver::NotifyIMEOfBlur()
   // Prevent any notifications to be sent IME.
   nsCOMPtr<nsIWidget> widget;
   mWidget.swap(widget);
+  mIMENotificationRequests = nullptr;
 
   // If we hasn't been set focus, we shouldn't send blur notification to IME.
   if (!mIMEHasFocus) {
@@ -515,11 +515,11 @@ IMEContentObserver::UnregisterObservers()
     mFocusedWidget = nullptr;
   }
 
-  if (mIMENotificationRequests.WantTextChange() && mRootContent) {
+  if (mRootContent) {
     mRootContent->RemoveMutationObserver(this);
   }
 
-  if (mIMENotificationRequests.WantPositionChanged() && mDocShell) {
+  if (mDocShell) {
     mDocShell->RemoveWeakScrollObserver(this);
     mDocShell->RemoveWeakReflowObserver(this);
   }
@@ -541,8 +541,7 @@ IMEContentObserver::Destroy()
   Clear();
 
   mWidget = nullptr;
-  mIMENotificationRequests.mWantUpdates =
-    IMENotificationRequests::NOTIFY_NOTHING;
+  mIMENotificationRequests = nullptr;
 
   if (mESM) {
     mESM->OnStopObservingContent(this);
@@ -690,6 +689,10 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 void
 IMEContentObserver::ScrollPositionChanged()
 {
+  if (!NeedsPositionChangeNotification()) {
+    return;
+  }
+
   MaybeNotifyIMEOfPositionChange();
 }
 
@@ -697,6 +700,10 @@ NS_IMETHODIMP
 IMEContentObserver::Reflow(DOMHighResTimeStamp aStart,
                            DOMHighResTimeStamp aEnd)
 {
+  if (!NeedsPositionChangeNotification()) {
+    return NS_OK;
+  }
+
   MaybeNotifyIMEOfPositionChange();
   return NS_OK;
 }
@@ -705,6 +712,10 @@ NS_IMETHODIMP
 IMEContentObserver::ReflowInterruptible(DOMHighResTimeStamp aStart,
                                         DOMHighResTimeStamp aEnd)
 {
+  if (!NeedsPositionChangeNotification()) {
+    return NS_OK;
+  }
+
   MaybeNotifyIMEOfPositionChange();
   return NS_OK;
 }
@@ -786,7 +797,8 @@ bool
 IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
                                        WidgetMouseEvent* aMouseEvent)
 {
-  if (!mIMENotificationRequests.WantMouseButtonEventOnChar()) {
+  if (!mIMENotificationRequests ||
+      !mIMENotificationRequests->WantMouseButtonEventOnChar()) {
     return false;
   }
   if (!aMouseEvent->IsTrusted() ||
@@ -873,6 +885,10 @@ IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
              "CharacterDataChanged() should've reset "
              "mPreCharacterDataChangeLength");
 
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
+
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
   mPreCharacterDataChangeLength =
@@ -890,6 +906,10 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "character data changed for non-text node");
+
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
 
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
@@ -931,6 +951,10 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
                                        int32_t aStartIndex,
                                        int32_t aEndIndex)
 {
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
+
   mStartOfRemovingTextRangeCache.Clear();
 
   uint32_t offset = 0;
@@ -1003,6 +1027,10 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
                                    int32_t aIndexInContainer,
                                    nsIContent* aPreviousSibling)
 {
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
+
   mEndOfAddedTextCache.Clear();
 
   nsINode* containerNode = NODE_FROM(aContainer, aDocument);
@@ -1061,6 +1089,10 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
                                         int32_t aModType,
                                         const nsAttrValue* aNewValue)
 {
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
+
   mPreAttrChangeLength =
     ContentEventHandler::GetNativeTextLengthBefore(aElement, mRootContent);
 }
@@ -1073,6 +1105,10 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
                                      int32_t aModType,
                                      const nsAttrValue* aOldValue)
 {
+  if (!NeedsTextChangeNotification()) {
+    return;
+  }
+
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
 
@@ -1215,6 +1251,15 @@ IMEContentObserver::MaybeNotifyIMEOfTextChange(
 }
 
 void
+IMEContentObserver::CancelNotifyingIMEOfTextChange()
+{
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+    ("0x%p IMEContentObserver::CancelNotifyingIMEOfTextChange()", this));
+  mTextChangeData.Clear();
+  mNeedsToNotifyIMEOfTextChange = false;
+}
+
+void
 IMEContentObserver::MaybeNotifyIMEOfSelectionChange(
                       bool aCausedByComposition,
                       bool aCausedBySelectionEvent,
@@ -1252,6 +1297,14 @@ IMEContentObserver::MaybeNotifyIMEOfPositionChange()
   }
   PostPositionChangeNotification();
   FlushMergeableNotifications();
+}
+
+void
+IMEContentObserver::CancelNotifyingIMEOfPositionChange()
+{
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+    ("0x%p IMEContentObserver::CancelNotifyIMEOfPositionChange()", this));
+  mNeedsToNotifyIMEOfPositionChange = false;
 }
 
 void
@@ -1394,6 +1447,15 @@ IMEContentObserver::FlushMergeableNotifications()
       ("0x%p   IMEContentObserver::FlushMergeableNotifications(), "
        "FAILED, due to already flushing pending notifications", this));
     return;
+  }
+
+  // If text change notification and/or position change notification becomes
+  // unnecessary, let's cancel them.
+  if (mNeedsToNotifyIMEOfTextChange && !NeedsTextChangeNotification()) {
+    CancelNotifyingIMEOfTextChange();
+  }
+  if (mNeedsToNotifyIMEOfPositionChange && !NeedsPositionChangeNotification()) {
+    CancelNotifyingIMEOfPositionChange();
   }
 
   if (!NeedsToNotifyIMEOfSomething()) {
@@ -1780,6 +1842,16 @@ IMEContentObserver::IMENotificationSender::SendTextChange()
     return;
   }
 
+  // If text change notification is unnecessary anymore, just cancel it.
+  if (!mIMEContentObserver->NeedsTextChangeNotification()) {
+    MOZ_LOG(sIMECOLog, LogLevel::Warning,
+      ("0x%p   IMEContentObserver::IMENotificationSender::"
+       "SendTextChange(), canceling sending NOTIFY_IME_OF_TEXT_CHANGE",
+       this));
+    mIMEContentObserver->CancelNotifyingIMEOfTextChange();
+    return;
+  }
+
   MOZ_LOG(sIMECOLog, LogLevel::Info,
     ("0x%p IMEContentObserver::IMENotificationSender::"
      "SendTextChange(), sending NOTIFY_IME_OF_TEXT_CHANGE... "
@@ -1818,6 +1890,16 @@ IMEContentObserver::IMENotificationSender::SendPositionChange()
        "SendPositionChange(), retrying to send "
        "NOTIFY_IME_OF_POSITION_CHANGE...", this));
     mIMEContentObserver->PostPositionChangeNotification();
+    return;
+  }
+
+  // If position change notification is unnecessary anymore, just cancel it.
+  if (!mIMEContentObserver->NeedsPositionChangeNotification()) {
+    MOZ_LOG(sIMECOLog, LogLevel::Warning,
+      ("0x%p   IMEContentObserver::IMENotificationSender::"
+       "SendPositionChange(), canceling sending NOTIFY_IME_OF_POSITION_CHANGE",
+       this));
+    mIMEContentObserver->CancelNotifyingIMEOfPositionChange();
     return;
   }
 

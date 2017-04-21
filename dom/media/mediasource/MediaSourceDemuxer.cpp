@@ -29,10 +29,7 @@ MediaSourceDemuxer::MediaSourceDemuxer(AbstractThread* aAbstractMainThread)
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-// Due to inaccuracies in determining buffer end
-// frames (Bug 1065207). This value is based on videos seen in the wild.
-const TimeUnit MediaSourceDemuxer::EOS_FUZZ =
-  media::TimeUnit::FromMicroseconds(500000);
+constexpr TimeUnit MediaSourceDemuxer::EOS_FUZZ;
 
 RefPtr<MediaSourceDemuxer::InitPromise>
 MediaSourceDemuxer::Init()
@@ -321,10 +318,10 @@ MediaSourceTrackDemuxer::GetInfo() const
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
-MediaSourceTrackDemuxer::Seek(const media::TimeUnit& aTime)
+MediaSourceTrackDemuxer::Seek(const TimeUnit& aTime)
 {
   MOZ_ASSERT(mParent, "Called after BreackCycle()");
-  return InvokeAsync<media::TimeUnit&&>(
+  return InvokeAsync<TimeUnit&&>(
            mParent->GetTaskQueue(), this, __func__,
            &MediaSourceTrackDemuxer::DoSeek, aTime);
 }
@@ -346,7 +343,7 @@ MediaSourceTrackDemuxer::Reset()
     NS_NewRunnableFunction([self] () {
       self->mNextSample.reset();
       self->mReset = true;
-      self->mManager->Seek(self->mType, TimeUnit(), TimeUnit());
+      self->mManager->Seek(self->mType, TimeUnit::Zero(), TimeUnit::Zero());
       {
         MonitorAutoLock mon(self->mMonitor);
         self->mNextRandomAccessPoint = self->mManager->GetNextRandomAccessPoint(
@@ -357,7 +354,7 @@ MediaSourceTrackDemuxer::Reset()
 }
 
 nsresult
-MediaSourceTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
+MediaSourceTrackDemuxer::GetNextRandomAccessPoint(TimeUnit* aTime)
 {
   MonitorAutoLock mon(mMonitor);
   *aTime = mNextRandomAccessPoint;
@@ -366,9 +363,9 @@ MediaSourceTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(
-  const media::TimeUnit& aTimeThreshold)
+  const TimeUnit& aTimeThreshold)
 {
-  return InvokeAsync<media::TimeUnit&&>(
+  return InvokeAsync<TimeUnit&&>(
            mParent->GetTaskQueue(), this, __func__,
            &MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint,
            aTimeThreshold);
@@ -393,20 +390,19 @@ MediaSourceTrackDemuxer::BreakCycles()
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
-MediaSourceTrackDemuxer::DoSeek(const media::TimeUnit& aTime)
+MediaSourceTrackDemuxer::DoSeek(const TimeUnit& aTime)
 {
   TimeIntervals buffered = mManager->Buffered(mType);
   // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
   // to be twice as big as the fuzz value. We only want to allow EOS_FUZZ gap.
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
-  TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::FromMicroseconds(0));
+  TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::Zero());
 
   if (mManager->IsEnded() && seekTime >= buffered.GetEnd()) {
     // We're attempting to seek past the end time. Cap seekTime so that we seek
     // to the last sample instead.
     seekTime =
-      std::max(mManager->HighestStartTime(mType) - mPreRoll,
-               TimeUnit::FromMicroseconds(0));
+      std::max(mManager->HighestStartTime(mType) - mPreRoll, TimeUnit::Zero());
   }
   if (!buffered.ContainsWithStrictEnd(seekTime)) {
     if (!buffered.ContainsWithStrictEnd(aTime)) {
@@ -427,7 +423,7 @@ MediaSourceTrackDemuxer::DoSeek(const media::TimeUnit& aTime)
   MediaResult result = NS_OK;
   RefPtr<MediaRawData> sample =
     mManager->GetSample(mType,
-                        media::TimeUnit(),
+                        TimeUnit::Zero(),
                         result);
   MOZ_ASSERT(NS_SUCCEEDED(result) && sample);
   mNextSample = Some(sample);
@@ -453,7 +449,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
       return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                              __func__);
     }
-    if (!buffered.ContainsWithStrictEnd(TimeUnit::FromMicroseconds(0))) {
+    if (!buffered.ContainsWithStrictEnd(TimeUnit::Zero())) {
       return SamplesPromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
     }
@@ -489,7 +485,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(
-  const media::TimeUnit& aTimeThreadshold)
+  const TimeUnit& aTimeThreadshold)
 {
   uint32_t parsed = 0;
   // Ensure that the data we are about to skip to is still available.

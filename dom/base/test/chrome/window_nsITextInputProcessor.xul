@@ -59,6 +59,8 @@ function onunload()
   SimpleTest.finish();
 }
 
+const kIsMac = (navigator.platform.indexOf("Mac") == 0);
+
 var iframe = document.getElementById("iframe");
 var childWindow = iframe.contentWindow;
 var textareaInFrame;
@@ -3786,7 +3788,7 @@ function runCommitCompositionTests()
      description + "doCommitWithNullCheck(undefined) should commit the composition with empty string");
 }
 
-function runUnloadTests1(aNextTest)
+function runUnloadTests1()
 {
   var description = "runUnloadTests1(): ";
 
@@ -3808,7 +3810,7 @@ function runUnloadTests1(aNextTest)
       iframe.removeEventListener("load", arguments.callee, true);
       childWindow = iframe.contentWindow;
       textareaInFrame = iframe.contentDocument.getElementById("textarea");
-      setTimeout(aNextTest, 0);
+      SimpleTest.executeSoon(continueTest);
     }, true);
 
     // The composition should be committed internally.  So, another TIP should
@@ -3848,7 +3850,7 @@ function runUnloadTests1(aNextTest)
   iframe.src = "data:text/html,<body>dummy page</body>";
 }
 
-function runUnloadTests2(aNextTest)
+function runUnloadTests2()
 {
   var description = "runUnloadTests2(): ";
 
@@ -3870,7 +3872,7 @@ function runUnloadTests2(aNextTest)
       iframe.removeEventListener("load", arguments.callee, true);
       childWindow = iframe.contentWindow;
       textareaInFrame = iframe.contentDocument.getElementById("textarea");
-      setTimeout(aNextTest, 0);
+      SimpleTest.executeSoon(continueTest);
     }, true);
 
     input.focus();
@@ -3911,7 +3913,7 @@ function runUnloadTests2(aNextTest)
   iframe.src = "data:text/html,<body>dummy page</body>";
 }
 
-function runCallbackTests(aForTests)
+function* runCallbackTests(aForTests)
 {
   var description = "runCallbackTests(aForTests=" + aForTests + "): ";
 
@@ -3921,8 +3923,12 @@ function runCallbackTests(aForTests)
 
   var TIP = createTIP();
   var notifications = [];
+  var callContinueTest = false;
   function callback(aTIP, aNotification)
   {
+    if (aTIP == TIP) {
+      notifications.push(aNotification);
+    }
     switch (aNotification.type) {
       case "request-to-commit":
         aTIP.commitComposition();
@@ -3931,8 +3937,9 @@ function runCallbackTests(aForTests)
         aTIP.cancelComposition();
         break;
     }
-    if (aTIP == TIP) {
-      notifications.push(aNotification);
+    if (callContinueTest) {
+      callContinueTest = false;
+      SimpleTest.executeSoon(continueTest);
     }
     return true;
   }
@@ -3946,6 +3953,69 @@ function runCallbackTests(aForTests)
       ok(false,
          description + "Unexpected notification: " + notifications[i].type);
     }
+  }
+
+  function waitUntilNotificationsReceived()
+  {
+    if (notifications.length > 0) {
+      SimpleTest.executeSoon(continueTest);
+    } else {
+      callContinueTest = true;
+    }
+  }
+
+  function checkPositionChangeNotification(aNotification, aDescription)
+  {
+    is(!aNotification || aNotification.type, "notify-position-change",
+       aDescription + " should cause position change notification");
+  }
+
+  function checkSelectionChangeNotification(aNotification, aDescription, aExpected)
+  {
+    is(aNotification.type, "notify-selection-change",
+       aDescription + " should cause selection change notification");
+    if (aNotification.type != "notify-selection-change") {
+      return;
+    }
+    is(aNotification.offset, aExpected.offset,
+       aDescription + " should cause selection change notification whose offset is " + aExpected.offset);
+    is(aNotification.text, aExpected.text,
+       aDescription + " should cause selection change notification whose text is '" + aExpected.text + "'");
+    is(aNotification.collapsed, aExpected.text.length == 0,
+       aDescription + " should cause selection change notification whose collapsed is " + (aExpected.text.length == 0));
+    is(aNotification.length, aExpected.text.length,
+       aDescription + " should cause selection change notification whose length is " + aExpected.text.length);
+    is(aNotification.reversed, aExpected.reversed || false,
+       aDescription + " should cause selection change notification whose reversed is " + (aExpected.reversed || false));
+    is(aNotification.writingMode, aExpected.writingMode || "horizontal-tb",
+       aDescription + " should cause selection change notification whose writingMode is '" + (aExpected.writingMode || "horizontal-tb"));
+    is(aNotification.causedByComposition, aExpected.causedByComposition || false,
+       aDescription + " should cause selection change notification whose causedByComposition is " + (aExpected.causedByComposition || false));
+    is(aNotification.causedBySelectionEvent, aExpected.causedBySelectionEvent || false,
+       aDescription + " should cause selection change notification whose causedBySelectionEvent is " + (aExpected.causedBySelectionEvent || false));
+    is(aNotification.occurredDuringComposition, aExpected.occurredDuringComposition || false,
+       aDescription + " should cause cause selection change notification whose occurredDuringComposition is " + (aExpected.occurredDuringComposition || false));
+  }
+
+  function checkTextChangeNotification(aNotification, aDescription, aExpected)
+  {
+    is(aNotification.type, "notify-text-change",
+       aDescription + " should cause text change notification");
+    if (aNotification.type != "notify-text-change") {
+      return;
+    }
+    is(aNotification.offset, aExpected.offset,
+       aDescription + " should cause text change notification whose offset is " + aExpected.offset);
+    is(aNotification.removedLength, aExpected.removedLength,
+       aDescription + " should cause text change notification whose removedLength is " + aExpected.removedLength);
+    is(aNotification.addedLength, aExpected.addedLength,
+       aDescription + " should cause text change notification whose addedLength is " + aExpected.addedLength);
+    is(aNotification.causedOnlyByComposition, aExpected.causedOnlyByComposition || false,
+       aDescription + " should cause text change notification whose causedOnlyByComposition is " + (aExpected.causedOnlyByComposition || false));
+    is(aNotification.includingChangesDuringComposition, aExpected.includingChangesDuringComposition || false,
+       aDescription + " should cause text change notification whose includingChangesDuringComposition is " + (aExpected.includingChangesDuringComposition || false));
+    is(aNotification.includingChangesWithoutComposition, typeof aExpected.includingChangesWithoutComposition === "boolean" ? aExpected.includingChangesWithoutComposition : true,
+       aDescription + " should cause text change notification whose includingChangesWithoutComposition is " + (typeof aExpected.includingChangesWithoutComposition === "boolean" ? aExpected.includingChangesWithoutComposition : true));
   }
 
   if (aForTests) {
@@ -3971,15 +4041,94 @@ function runCallbackTests(aForTests)
   dumpUnexpectedNotifications(1);
 
   input.focus();
+  notifications = [];
   TIP.setPendingCompositionString("foo");
   TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
   TIP.flushPendingComposition();
+  is(notifications.length, 3,
+     description + "creating composition string 'foo' should cause 3 notifications");
+  checkTextChangeNotification(notifications[0], description + "creating composition string 'foo'",
+                              { offset: 0, removedLength: 0, addedLength: 3,
+                                causedOnlyByComposition: true, includingChangesDuringComposition: false, includingChangesWithoutComposition: false});
+  checkSelectionChangeNotification(notifications[1], description + "creating composition string 'foo'",
+                                   { offset: 3, text: "", causedByComposition: true, occurredDuringComposition: true });
+  checkPositionChangeNotification(notifications[2], description + "creating composition string 'foo'");
+  dumpUnexpectedNotifications(3);
+
   notifications = [];
   synthesizeMouseAtCenter(input, {});
-  is(notifications.length, 1,
-     description + "synthesizeMouseAtCenter(input, {}) during composition should cause a notification");
+  is(notifications.length, 3,
+     description + "synthesizeMouseAtCenter(input, {}) during composition should cause 3 notifications");
   is(notifications[0].type, "request-to-commit",
      description + "synthesizeMouseAtCenter(input, {}) during composition should cause \"request-to-commit\"");
+  checkTextChangeNotification(notifications[1], description + "synthesizeMouseAtCenter(input, {}) during composition",
+                              { offset: 0, removedLength: 3, addedLength: 3,
+                                causedOnlyByComposition: true, includingChangesDuringComposition: false, includingChangesWithoutComposition: false});
+  checkPositionChangeNotification(notifications[2], description + "synthesizeMouseAtCenter(input, {}) during composition");
+  dumpUnexpectedNotifications(3);
+
+  // XXX On macOS, window.moveBy() doesn't cause notify-position-change.
+  //     Investigate this later (although, we cannot notify position change to
+  //     native IME on macOS).
+  if (!kIsMac) {
+    input.focus();
+    notifications = [];
+    window.moveBy(0, 10);
+    yield waitUntilNotificationsReceived();
+    is(notifications.length, 1,
+       description + "window.moveBy(0, 10) should cause a notification");
+    checkPositionChangeNotification(notifications[0], description + "window.moveBy(0, 10)");
+    dumpUnexpectedNotifications(1);
+
+    input.focus();
+    notifications = [];
+    window.moveBy(10, 0);
+    yield waitUntilNotificationsReceived();
+    is(notifications.length, 1,
+       description + "window.moveBy(10, 0) should cause a notification");
+    checkPositionChangeNotification(notifications[0], description + "window.moveBy(10, 0)");
+    dumpUnexpectedNotifications(1);
+  }
+
+  input.focus();
+  input.value = "abc"
+  notifications = [];
+  input.selectionStart = input.selectionEnd = 0;
+  yield waitUntilNotificationsReceived();
+  notifications = [];
+  var rightArrowKeyEvent =
+    new KeyboardEvent("", { key: "ArrowRight", code: "ArrowRight", keyCode: KeyboardEvent.DOM_VK_RIGHT });
+  TIP.keydown(rightArrowKeyEvent);
+  TIP.keyup(rightArrowKeyEvent);
+  is(notifications.length, 1,
+     description + "ArrowRight key press should cause a notification");
+  checkSelectionChangeNotification(notifications[0], description + "ArrowRight key press", { offset: 1, text: "" });
+  dumpUnexpectedNotifications(1);
+
+  notifications = [];
+  var shiftKeyEvent =
+    new KeyboardEvent("", { key: "Shift", code: "ShiftLeft", keyCode: KeyboardEvent.DOM_VK_SHIFT });
+  var leftArrowKeyEvent =
+    new KeyboardEvent("", { key: "ArrowLeft", code: "ArrowLeft", keyCode: KeyboardEvent.DOM_VK_LEFT });
+  TIP.keydown(shiftKeyEvent);
+  TIP.keydown(leftArrowKeyEvent);
+  TIP.keyup(leftArrowKeyEvent);
+  TIP.keyup(shiftKeyEvent);
+  is(notifications.length, 1,
+     description + "ArrowLeft key press with Shift should cause a notification");
+  checkSelectionChangeNotification(notifications[0], description + "ArrowLeft key press with Shift", { offset: 0, text: "a", reversed: true });
+  dumpUnexpectedNotifications(1);
+
+  TIP.keydown(rightArrowKeyEvent);
+  TIP.keyup(rightArrowKeyEvent);
+  notifications = [];
+  TIP.keydown(shiftKeyEvent);
+  TIP.keydown(rightArrowKeyEvent);
+  TIP.keyup(rightArrowKeyEvent);
+  TIP.keyup(shiftKeyEvent);
+  is(notifications.length, 1,
+     description + "ArrowRight key press with Shift should cause a notification");
+  checkSelectionChangeNotification(notifications[0], description + "ArrowRight key press with Shift", { offset: 1, text: "b" });
   dumpUnexpectedNotifications(1);
 
   notifications = [];
@@ -3996,10 +4145,21 @@ function runCallbackTests(aForTests)
   dumpUnexpectedNotifications(1);
 }
 
-function runTests()
-{
-  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+var gTestContinuation = null;
 
+function continueTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    finish();
+  }
+}
+
+function* testBody()
+{
   runBeginInputTransactionMethodTests();
   runReleaseTests();
   runCompositionTests();
@@ -4008,13 +4168,16 @@ function runTests()
   runKeyTests();
   runErrorTests();
   runCommitCompositionTests();
-  runCallbackTests(false);
-  runCallbackTests(true);
-  runUnloadTests1(function () {
-    runUnloadTests2(function () {
-      finish();
-    });
-  });
+  yield* runCallbackTests(false);
+  yield* runCallbackTests(true);
+  yield runUnloadTests1();
+  yield runUnloadTests2();
+}
+
+function runTests()
+{
+  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+  continueTest();
 }
 
 ]]>

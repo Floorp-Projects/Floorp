@@ -84,6 +84,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -1660,7 +1661,7 @@ public class GeckoAppShell
     }
 
     public interface GeckoInterface {
-        public EventDispatcher getAppEventDispatcher();
+        public @NonNull EventDispatcher getAppEventDispatcher();
         public GeckoProfile getProfile();
         public Activity getActivity();
         public String getDefaultUAString();

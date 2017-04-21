@@ -78,7 +78,6 @@ LOCAL_INCLUDES += [
 ]
 
 RESOURCE_FILES += [
-    'langGroups.properties',
     'language.properties',
 ]
 

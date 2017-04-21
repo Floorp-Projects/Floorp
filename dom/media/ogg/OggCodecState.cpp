@@ -36,6 +36,8 @@ namespace mozilla {
 extern LazyLogModule gMediaDecoderLog;
 #define LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
+using media::TimeUnit;
+
 /** Decoder base class for Ogg-encapsulated streams. */
 OggCodecState*
 OggCodecState::Create(ogg_page* aPage)
@@ -259,9 +261,9 @@ OggCodecState::PacketOutAsMediaRawData()
   int64_t duration = PacketDuration(packet.get());
   NS_ASSERTION(duration >= 0, "duration invalid");
 
-  sample->mTimecode = media::TimeUnit::FromMicroseconds(packet->granulepos);
-  sample->mTime = media::TimeUnit::FromMicroseconds(end_tstamp - duration);
-  sample->mDuration = media::TimeUnit::FromMicroseconds(duration);
+  sample->mTimecode = TimeUnit::FromMicroseconds(packet->granulepos);
+  sample->mTime = TimeUnit::FromMicroseconds(end_tstamp - duration);
+  sample->mDuration = TimeUnit::FromMicroseconds(duration);
   sample->mKeyframe = IsKeyframe(packet.get());
   sample->mEOS = packet->e_o_s;
 

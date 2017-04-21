@@ -1883,14 +1883,18 @@ public abstract class GeckoApp
     }
 
     @RobocopTarget
-    public static EventDispatcher getEventDispatcher() {
+    public static @NonNull EventDispatcher getEventDispatcher() {
         final GeckoApp geckoApp = (GeckoApp) GeckoAppShell.getGeckoInterface();
         return geckoApp.getAppEventDispatcher();
     }
 
     @Override
-    public EventDispatcher getAppEventDispatcher() {
-        return mLayerView != null ? mLayerView.getEventDispatcher() : null;
+    public @NonNull EventDispatcher getAppEventDispatcher() {
+        if (mLayerView == null) {
+            throw new IllegalStateException("Must not call getAppEventDispatcher() until after onCreate()");
+        }
+
+        return mLayerView.getEventDispatcher();
     }
 
     @Override
