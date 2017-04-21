@@ -14,60 +14,18 @@ var manager = new MediaTestManager;
 
 function startTest(test, token)
 {
-  // Test if the appropriate preconditions are met such that we can start
-  // prcoessing delayed sessions.
-  function TestIfDoneDelaying()
-  {
-    var got = "Got:";
-    if (loaded) { got += " loaded,"; }
-    got += " " + gotEncrypted + "/" + test.sessionCount + " sessions,";
-    got += " " + gotWaitingForKey + " waiting for key events"
-    if (loaded && gotEncrypted == test.sessionCount && gotWaitingForKey > 0) {
-      Log(token, got + " -> Update sessions with keys");
-      params.ProcessSessions();
-    } else {
-      Log(token, got + " -> Wait for more...");
-    }
-  }
-
   manager.started(token);
 
-  var updatedSessionsCount = 0;
-  var loaded = false;
-
-  var params = {
-    // params will be populated with a ProcessSessions() callback, that can be
-    // called to process delayed sessions.
-    delaySessions: true,
-    // Function to be called once we start processing and updating sessions.
-    // This should only be called once the preconditions in TestIfDoneDealying
-    // are met.
-    onsessionupdated: function(session) {
-      updatedSessionsCount += 1;
-      if (updatedSessionsCount == test.sessionCount) {
-          info(TimeStamp(token) + " Updated all sessions, loading complete -> Play");
-          v.play();
-      } else {
-         info(TimeStamp(token) + " Updated " + updatedSessionsCount + "/" + test.sessionCount + " sessions so far");
-      }
-    },
-  };
-  var v = SetupEME(test, token, params);
-
+  let v = document.createElement("video");
   document.body.appendChild(v);
 
-  var gotEncrypted = 0;
   var gotWaitingForKey = 0;
   var gotOnwaitingforkey = 0;
 
-  v.addEventListener("encrypted", function() {
-    gotEncrypted += 1;
-    TestIfDoneDelaying();
-  });
-
+  let waitForKey = new EMEPromise;
   v.addEventListener("waitingforkey", function() {
     gotWaitingForKey += 1;
-    TestIfDoneDelaying()
+    waitForKey.resolve();
   });
 
   v.onwaitingforkey = function() {
@@ -80,6 +38,7 @@ function startTest(test, token)
     is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
   });
 
+  let finish = new EMEPromise;
   v.addEventListener("ended", function() {
     ok(true, TimeStamp(token) + " got ended event");
     // We expect only one waitingForKey as we delay until all sessions are ready.
@@ -88,17 +47,26 @@ function startTest(test, token)
     ok(gotWaitingForKey == 1,  "Expected number 1 wait, got: " + gotWaitingForKey);
     ok(gotOnwaitingforkey == gotWaitingForKey, "Should have as many event listener calls as event handler calls, got: " + gotOnwaitingforkey);
 
-    v.closeSessions().then(() => manager.finished(token));
+    finish.resolve();
   });
 
-  LoadTest(test, v, token)
-  .then(function() {
-    loaded = true;
-    TestIfDoneDelaying();
-  }).catch(function() {
-    ok(false, token + " failed to load");
-    manager.finished(token);
-  });
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token),
+    waitForKey.promise])
+  .then(values => {
+    let initData = values[0];
+    return ProcessInitData(v, test, token, initData);
+  })
+  .then(sessions => {
+    Log(token, "Updated all sessions, loading complete -> Play");
+    v.play();
+    finish.promise.then(() => CloseSessions(v, sessions));
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+  .then(() => manager.finished(token));
 }
 
 function beginTest() {
