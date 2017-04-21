@@ -261,6 +261,7 @@ class TypeSet
         bool unknownProperties();
         bool hasFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
         bool hasStableClassAndProto(CompilerConstraintList* constraints);
+        void watchStateChangeForInlinedCall(CompilerConstraintList* constraints);
         void watchStateChangeForTypedArrayData(CompilerConstraintList* constraints);
         void watchStateChangeForUnboxedConvertedToNative(CompilerConstraintList* constraints);
         HeapTypeSetKey property(jsid id);
@@ -1084,123 +1085,15 @@ inline bool isInlinableCall(jsbytecode* pc);
 bool
 ClassCanHaveExtraProperties(const Class* clasp);
 
-/*
- * Information about the result of the compilation of a script.  This structure
- * stored in the TypeCompartment is indexed by the RecompileInfo. This
- * indirection enables the invalidation of all constraints related to the same
- * compilation.
- */
-class CompilerOutput
-{
-    // If this compilation has not been invalidated, the associated script and
-    // kind of compilation being performed.
-    JSScript* script_;
-
-    // Whether this compilation is about to be invalidated.
-    bool pendingInvalidation_ : 1;
-
-    // During sweeping, the list of compiler outputs is compacted and invalidated
-    // outputs are removed. This gives the new index for a valid compiler output.
-    uint32_t sweepIndex_ : 31;
-
-  public:
-    static const uint32_t INVALID_SWEEP_INDEX = static_cast<uint32_t>(1 << 31) - 1;
-
-    CompilerOutput()
-      : script_(nullptr),
-        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
-    {}
-
-    explicit CompilerOutput(JSScript* script)
-      : script_(script),
-        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
-    {}
-
-    JSScript* script() const { return script_; }
-
-    inline jit::IonScript* ion() const;
-
-    bool isValid() const {
-        return script_ != nullptr;
-    }
-    void invalidate() {
-        script_ = nullptr;
-    }
-
-    void setPendingInvalidation() {
-        pendingInvalidation_ = true;
-    }
-    bool pendingInvalidation() {
-        return pendingInvalidation_;
-    }
-
-    void setSweepIndex(uint32_t index) {
-        if (index >= INVALID_SWEEP_INDEX)
-            MOZ_CRASH();
-        sweepIndex_ = index;
-    }
-    uint32_t sweepIndex() {
-        MOZ_ASSERT(sweepIndex_ != INVALID_SWEEP_INDEX);
-        return sweepIndex_;
-    }
-};
-
-class RecompileInfo
-{
-    // Index in the TypeZone's compilerOutputs or sweepCompilerOutputs arrays,
-    // depending on the generation value.
-    uint32_t outputIndex : 31;
-
-    // If out of sync with the TypeZone's generation, this index is for the
-    // zone's sweepCompilerOutputs rather than compilerOutputs.
-    uint32_t generation : 1;
-
-  public:
-    RecompileInfo(uint32_t outputIndex, uint32_t generation)
-      : outputIndex(outputIndex), generation(generation)
-    {}
-
-    RecompileInfo()
-      : outputIndex(JS_BITMASK(31)), generation(0)
-    {}
-
-    bool operator==(const RecompileInfo& other) const {
-        return outputIndex == other.outputIndex && generation == other.generation;
-    }
-
-    CompilerOutput* compilerOutput(TypeZone& types) const;
-    CompilerOutput* compilerOutput(JSContext* cx) const;
-    bool shouldSweep(TypeZone& types);
-};
-
-// The RecompileInfoVector has a MinInlineCapacity of one so that invalidating a
-// single IonScript doesn't require an allocation.
-typedef Vector<RecompileInfo, 1, SystemAllocPolicy> RecompileInfoVector;
-
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
 {
     friend class ::JSScript;
 
-    // The freeze constraints added to stack type sets will only directly
-    // invalidate the script containing those stack type sets. This Vector
-    // contains compilations that inlined this script, so we can invalidate
-    // them as well.
-    RecompileInfoVector inlinedCompilations_;
-
     // Variable-size array
     StackTypeSet typeArray_[1];
 
   public:
-    RecompileInfoVector& inlinedCompilations() {
-        return inlinedCompilations_;
-    }
-    MOZ_MUST_USE bool addInlinedCompilation(RecompileInfo info) {
-        if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info)
-            return true;
-        return inlinedCompilations_.append(info);
-    }
-
     /* Array of type sets for variables and JOF_TYPESET ops. */
     StackTypeSet* typeArray() const {
         // Ensure typeArray_ is the last data member of TypeScript.
@@ -1342,6 +1235,95 @@ class HeapTypeSetKey
     bool constant(CompilerConstraintList* constraints, Value* valOut);
     bool couldBeConstant(CompilerConstraintList* constraints);
 };
+
+/*
+ * Information about the result of the compilation of a script.  This structure
+ * stored in the TypeCompartment is indexed by the RecompileInfo. This
+ * indirection enables the invalidation of all constraints related to the same
+ * compilation.
+ */
+class CompilerOutput
+{
+    // If this compilation has not been invalidated, the associated script and
+    // kind of compilation being performed.
+    JSScript* script_;
+
+    // Whether this compilation is about to be invalidated.
+    bool pendingInvalidation_ : 1;
+
+    // During sweeping, the list of compiler outputs is compacted and invalidated
+    // outputs are removed. This gives the new index for a valid compiler output.
+    uint32_t sweepIndex_ : 31;
+
+  public:
+    static const uint32_t INVALID_SWEEP_INDEX = static_cast<uint32_t>(1 << 31) - 1;
+
+    CompilerOutput()
+      : script_(nullptr),
+        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
+    {}
+
+    explicit CompilerOutput(JSScript* script)
+      : script_(script),
+        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
+    {}
+
+    JSScript* script() const { return script_; }
+
+    inline jit::IonScript* ion() const;
+
+    bool isValid() const {
+        return script_ != nullptr;
+    }
+    void invalidate() {
+        script_ = nullptr;
+    }
+
+    void setPendingInvalidation() {
+        pendingInvalidation_ = true;
+    }
+    bool pendingInvalidation() {
+        return pendingInvalidation_;
+    }
+
+    void setSweepIndex(uint32_t index) {
+        if (index >= INVALID_SWEEP_INDEX)
+            MOZ_CRASH();
+        sweepIndex_ = index;
+    }
+    uint32_t sweepIndex() {
+        MOZ_ASSERT(sweepIndex_ != INVALID_SWEEP_INDEX);
+        return sweepIndex_;
+    }
+};
+
+class RecompileInfo
+{
+    // Index in the TypeZone's compilerOutputs or sweepCompilerOutputs arrays,
+    // depending on the generation value.
+    uint32_t outputIndex : 31;
+
+    // If out of sync with the TypeZone's generation, this index is for the
+    // zone's sweepCompilerOutputs rather than compilerOutputs.
+    uint32_t generation : 1;
+
+  public:
+    RecompileInfo(uint32_t outputIndex, uint32_t generation)
+      : outputIndex(outputIndex), generation(generation)
+    {}
+
+    RecompileInfo()
+      : outputIndex(JS_BITMASK(31)), generation(0)
+    {}
+
+    CompilerOutput* compilerOutput(TypeZone& types) const;
+    CompilerOutput* compilerOutput(JSContext* cx) const;
+    bool shouldSweep(TypeZone& types);
+};
+
+// The RecompileInfoVector has a MinInlineCapacity of one so that invalidating a
+// single IonScript doesn't require an allocation.
+typedef Vector<RecompileInfo, 1, SystemAllocPolicy> RecompileInfoVector;
 
 struct AutoEnterAnalysis;
 
