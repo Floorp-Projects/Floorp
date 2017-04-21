@@ -411,178 +411,29 @@ function CloseSessions(v, sessions) {
   .then(CleanUpMedia(v));
 }
 
-function SetupEME(test, token, params)
-{
-  var v = document.createElement("video");
-  v.sessions = [];
+/*
+ * Set up media keys and source buffers for the media element.
+ * Return a promise resolved when all key sessions are updated or rejected
+ * if any failure.
+ */
+function SetupEME(v, test, token, loadParams) {
+  let p = new EMEPromise;
 
-  v.closeSessions = function() {
-    return Promise.all(v.sessions.map(s => s.close().then(() => s.closed))).then(
-      () => {
-        v.setMediaKeys(null);
-        if (v.parentNode) {
-          v.remove();
-        }
-        v.onerror = null;
-        v.src = null;
-      });
-  };
-
-  // Log events dispatched to make debugging easier...
-  [ "canplay", "canplaythrough", "ended", "error", "loadeddata",
-    "loadedmetadata", "loadstart", "pause", "play", "playing", "progress",
-    "stalled", "suspend", "waiting", "waitingforkey",
-  ].forEach(function (e) {
-    v.addEventListener(e, function(event) {
-      Log(token, "" + e);
-    });
-  });
-
-  // Finish the test when error is encountered.
-  v.onerror = bail(token + " got error event");
-
-  var onSetKeysFail = (params && params.onSetKeysFail)
-    ? params.onSetKeysFail
-    : bail(token + " Failed to set MediaKeys on <video> element");
-
-  // null: No session management in progress, just go ahead and update the session.
-  // [...]: Session management in progress, add {initDataType, initData} to
-  //        this queue to get it processed when possible.
-  var initDataQueue = [];
-  function pushInitData(ev)
-  {
-    if (initDataQueue === null) {
-      initDataQueue = [];
-    }
-    initDataQueue.push(ev);
-    if (params && params.onInitDataQueued) {
-      params.onInitDataQueued(ev, ev.initDataType, StringToHex(ArrayBufferToString(ev.initData)));
-    }
+  v.onerror = function() {
+    p.reject(`${token} got an error event.`);
   }
 
-  function processInitDataQueue()
-  {
-    function maybeResolveInitDataPromise() {
-      if (params && params.initDataPromise) {
-        params.initDataPromise.resolve();
-      }
-    }
-    if (initDataQueue === null) {
-      maybeResolveInitDataPromise();
-      return;
-    }
-    // If we're processed all our init data null the queue to indicate encrypted event handled.
-    if (initDataQueue.length === 0) {
-      initDataQueue = null;
-      maybeResolveInitDataPromise();
-      return;
-    }
-    var ev = initDataQueue.shift();
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token, loadParams)])
+  .then(values => {
+    let initData = values[0];
+    return ProcessInitData(v, test, token, initData);
+  })
+  .then(p.resolve, p.reject);
 
-    var sessionType = (params && params.sessionType) ? params.sessionType : "temporary";
-    Log(token, "createSession(" + sessionType + ") for (" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ")");
-    var session = v.mediaKeys.createSession(sessionType);
-    if (params && params.onsessioncreated) {
-      params.onsessioncreated(session);
-    }
-    v.sessions.push(session);
-
-    return new Promise(function (resolve, reject) {
-      session.addEventListener("message", UpdateSessionFunc(test, token, sessionType, resolve, reject));
-      Log(token, "session[" + session.sessionId + "].generateRequest(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ")");
-      session.generateRequest(ev.initDataType, ev.initData).catch(function(reason) {
-        // Reject the promise if generateRequest() failed. Otherwise it will
-        // be resolve in UpdateSessionFunc().
-        bail(token + ": session[" + session.sessionId + "].generateRequest(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ") failed")(reason);
-        reject();
-      });
-    })
-
-    .then(function(aSession) {
-      Log(token, "session[" + session.sessionId + "].generateRequest(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ") succeeded");
-      if (params && params.onsessionupdated) {
-        params.onsessionupdated(aSession);
-      }
-      processInitDataQueue();
-    });
-  }
-
-  function streamType(type) {
-    var x = test.tracks.find(o => o.name == type);
-    return x ? x.type : undefined;
-  }
-
-  // If sessions are to be delayed we won't peform any processing until the
-  // callback the assigned here is called by the test.
-  if (params && params.delaySessions) {
-    params.ProcessSessions = processInitDataQueue;
-  }
-
-  // Is this the first piece of init data we're processing?
-  var firstInitData = true;
-  v.addEventListener("encrypted", function(ev) {
-    if (firstInitData) {
-      Log(token, "got first encrypted(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + "), setup session");
-      firstInitData = false;
-      pushInitData(ev);
-
-      function chain(promise, onReject) {
-        return promise.then(function(value) {
-          return Promise.resolve(value);
-        }).catch(function(reason) {
-          onReject(reason);
-          return Promise.reject();
-        })
-      }
-
-      var options = { initDataTypes: [ev.initDataType] };
-      if (streamType("video")) {
-        options.videoCapabilities = [{contentType: streamType("video")}];
-      }
-      if (streamType("audio")) {
-        options.audioCapabilities = [{contentType: streamType("audio")}];
-      }
-
-      var p = navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, [options]);
-      var r = bail(token + " Failed to request key system access.");
-      chain(p, r)
-      .then(function(keySystemAccess) {
-        var p = keySystemAccess.createMediaKeys();
-        var r = bail(token +  " Failed to create MediaKeys object");
-        return chain(p, r);
-      })
-
-      .then(function(mediaKeys) {
-        Log(token, "created MediaKeys object ok");
-        mediaKeys.sessions = [];
-        var p = v.setMediaKeys(mediaKeys);
-        return chain(p, onSetKeysFail);
-      })
-
-      .then(function() {
-        Log(token, "set MediaKeys on <video> element ok");
-        if (params && params.onMediaKeysSet) {
-          params.onMediaKeysSet();
-        }
-        if (!(params && params.delaySessions)) {
-          processInitDataQueue();
-        }
-      })
-    } else {
-      if (params && params.delaySessions) {
-        Log(token, "got encrypted(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ") event, queue it in because we're delaying sessions");
-        pushInitData(ev);
-      } else if (initDataQueue !== null) {
-        Log(token, "got encrypted(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ") event, queue it for later session update");
-        pushInitData(ev);
-      } else {
-        Log(token, "got encrypted(" + ev.initDataType + ", " + StringToHex(ArrayBufferToString(ev.initData)) + ") event, update session now");
-        pushInitData(ev);
-        processInitDataQueue();
-      }
-    }
-  });
-  return v;
+  return p.promise;
 }
 
 function SetupEMEPref(callback) {
