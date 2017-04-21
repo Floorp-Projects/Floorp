@@ -79,7 +79,7 @@ function CtypesKernelHelpers() {
 
     this._functions.FileTimeToSystemTime =
       this._libs.kernel32.declare("FileTimeToSystemTime",
-                                  ctypes.default_abi,
+                                  ctypes.winapi_abi,
                                   wintypes.BOOL,
                                   this._structs.FILETIME.ptr,
                                   this._structs.SYSTEMTIME.ptr);
