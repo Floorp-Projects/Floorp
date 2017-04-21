@@ -79,6 +79,42 @@ function getTempFile(leafName) {
   return file;
 }
 
+function runHeuristicsTest(patterns, fixturePathPrefix) {
+  // TODO: "select" and "textarea" will be included eventually.
+  const QUERY_STRING = ["input"];
+  patterns.forEach(testPattern => {
+    add_task(function* () {
+      do_print("Starting test fixture: " + testPattern.fixturePath);
+      let file = do_get_file(fixturePathPrefix + testPattern.fixturePath);
+      let doc = MockDocument.createTestDocumentFromFile("http://localhost:8080/test/", file);
+
+      let forms = [];
+
+      for (let query of QUERY_STRING) {
+        for (let field of doc.querySelectorAll(query)) {
+          let formLike = FormLikeFactory.createFromField(field);
+          if (!forms.some(form => form.rootElement === formLike.rootElement)) {
+            forms.push(formLike);
+          }
+        }
+      }
+
+      Assert.equal(forms.length, testPattern.expectedResult.length, "Expected form count.");
+
+      forms.forEach((form, formIndex) => {
+        let formInfo = FormAutofillHeuristics.getFormInfo(form);
+        // TODO: This line should be uncommented to make sure every field are verified.
+        // Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
+        formInfo.forEach((field, fieldIndex) => {
+          let expectedField = testPattern.expectedResult[formIndex][fieldIndex];
+          expectedField.elementWeakRef = field.elementWeakRef;
+          Assert.deepEqual(field, expectedField);
+        });
+      });
+    });
+  });
+}
+
 add_task(function* head_initialize() {
   Services.prefs.setBoolPref("browser.formautofill.experimental", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
