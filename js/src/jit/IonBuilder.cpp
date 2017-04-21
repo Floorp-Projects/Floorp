@@ -502,6 +502,12 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
         return DontInline(inlineScript, "Script is debuggee");
     }
 
+    TypeSet::ObjectKey* targetKey = TypeSet::ObjectKey::get(target);
+    if (targetKey->unknownProperties()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineUnknownProps);
+        return DontInline(inlineScript, "Target type has unknown properties");
+    }
+
     return InliningDecision_Inline;
 }
 
@@ -3993,6 +3999,10 @@ IonBuilder::makeInliningDecision(JSObject* targetArg, CallInfo& callInfo)
         outerBaseline->setMaxInliningDepth(scriptInlineDepth);
 
     // End of heuristics, we will inline this function.
+
+    // TI calls ObjectStateChange to trigger invalidation of the caller.
+    TypeSet::ObjectKey* targetKey = TypeSet::ObjectKey::get(target);
+    targetKey->watchStateChangeForInlinedCall(constraints());
 
     outerBuilder->inlinedBytecodeLength_ += targetScript->length();
 
