@@ -522,7 +522,6 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     styles = {
       position: "absolute",
       textAlign: cue.align,
-      font: styleOptions.font,
     };
 
     this.div = window.document.createElement("div");
@@ -533,24 +532,17 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     // Calculate the distance from the reference edge of the viewport to the text
     // position of the cue box. The reference edge will be resolved later when
     // the box orientation styles are applied.
-    function convertCuePostionToPercentage(cuePosition) {
-      if (cuePosition === "auto") {
-        return 50;
-      }
-      return cuePosition;
-    }
     var textPos = 0;
-    let postionPercentage = convertCuePostionToPercentage(cue.position);
     switch (cue.computedPositionAlign) {
       // TODO : modify these fomula to follow the spec, see bug 1277437.
       case "line-left":
-        textPos = postionPercentage;
+        textPos = cue.position;
         break;
       case "center":
-        textPos = postionPercentage - (cue.size / 2);
+        textPos = cue.position - (cue.size / 2);
         break;
       case "line-right":
-        textPos = postionPercentage - cue.size;
+        textPos = cue.position - cue.size;
         break;
     }
 
@@ -901,6 +893,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
   var FONT_SIZE_PERCENT = 0.05;
   var FONT_STYLE = "sans-serif";
+  var CUE_BACKGROUND_PADDING = "1.5%";
 
   // Runs the processing model over the cues and regions passed to it.
   // @param overlay A block level element (usually a div) that the computed cues
@@ -926,13 +919,14 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       controlBarShown = controlBar ? !!controlBar.clientHeight : false;
     }
 
-    var rootOfCues = window.document.createElement("div");
-    rootOfCues.style.position = "absolute";
-    rootOfCues.style.left = "0";
-    rootOfCues.style.right = "0";
-    rootOfCues.style.top = "0";
-    rootOfCues.style.bottom = "0";
-    overlay.appendChild(rootOfCues);
+    var paddedOverlay = window.document.createElement("div");
+    paddedOverlay.style.position = "absolute";
+    paddedOverlay.style.left = "0";
+    paddedOverlay.style.right = "0";
+    paddedOverlay.style.top = "0";
+    paddedOverlay.style.bottom = "0";
+    paddedOverlay.style.margin = CUE_BACKGROUND_PADDING;
+    overlay.appendChild(paddedOverlay);
 
     // Determine if we need to compute the display states of the cues. This could
     // be the case if a cue's state has been changed since the last computation or
@@ -953,13 +947,13 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     // We don't need to recompute the cues' display states. Just reuse them.
     if (!shouldCompute(cues)) {
       for (var i = 0; i < cues.length; i++) {
-        rootOfCues.appendChild(cues[i].displayState);
+        paddedOverlay.appendChild(cues[i].displayState);
       }
       return;
     }
 
     var boxPositions = [],
-        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues),
+        containerBox = BoxPosition.getSimpleBoxPosition(paddedOverlay),
         fontSize = Math.round(containerBox.height * FONT_SIZE_PERCENT * 100) / 100;
     var styleOptions = {
       font: fontSize + "px " + FONT_STYLE
@@ -979,7 +973,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         // Compute the intial position and styles of the cue div.
         styleBox = new CueStyleBox(window, cue, styleOptions);
         styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
-        rootOfCues.appendChild(styleBox.div);
+        paddedOverlay.appendChild(styleBox.div);
 
         // Move the cue div to it's correct line position.
         moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
