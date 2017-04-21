@@ -4464,14 +4464,18 @@ void
 Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* typePool,
                              size_t* baselineStubsOptimized,
+                             size_t* cachedCFG,
                              size_t* uniqueIdMap,
                              size_t* shapeTables,
                              size_t* atomsMarkBitmaps)
 {
     *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
     if (jitZone()) {
+        // These functions return pointers to struct that are embedded within
+        // JitZone, which is why we use sizeOfExcludingThis().
         *baselineStubsOptimized +=
             jitZone()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf);
+        *cachedCFG += jitZone()->cfgSpace()->sizeOfExcludingThis(mallocSizeOf);
     }
     *uniqueIdMap += uniqueIds().sizeOfExcludingThis(mallocSizeOf);
     *shapeTables += baseShapes().sizeOfExcludingThis(mallocSizeOf)

@@ -322,6 +322,7 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
     zone->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
                                  &zStats.typePool,
                                  &zStats.baselineStubsOptimized,
+                                 &zStats.cachedCFG,
                                  &zStats.uniqueIdMap,
                                  &zStats.shapeTables,
                                  &rtStats->runtime.atomsMarkBitmaps);
