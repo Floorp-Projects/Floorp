@@ -193,7 +193,7 @@ function test() {
       );
     });
 
-    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
+    monitor.panelWin.once(EVENTS.UPDATING_RESPONSE_CONTENT, () => {
       let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(requestItem.transferredSize, "12",
@@ -202,6 +202,24 @@ function test() {
         "The contentSize data has an incorrect value.");
       is(requestItem.mimeType, "text/plain; charset=utf-8",
         "The mimeType data has an incorrect value.");
+
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+        }
+      );
+    });
+
+    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.responseContent,
         "There should be a responseContent data available.");
