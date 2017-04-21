@@ -21,10 +21,9 @@ const {
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const { createFactories } = require("devtools/client/shared/react-utils");
-const Rep = createFactory(REPS.Rep);
+const Rep = REPS.Rep;
 const Grip = REPS.Grip;
-const StringRep = createFactories(REPS.StringRep).rep;
+const StringRep = REPS.StringRep.rep;
 
 GripMessageBody.displayName = "GripMessageBody";
 
