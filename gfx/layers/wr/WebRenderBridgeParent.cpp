@@ -220,7 +220,7 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
   }
   MOZ_ASSERT(mApi);
   auto slice = aBuffer.AsSlice();
-  mApi->AddRawFont(aFontKey, slice);
+  mApi->AddRawFont(aFontKey, slice, aFontIndex);
 
   return IPC_OK();
 }

@@ -87,7 +87,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes);
+  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
 
   void DeleteFont(wr::FontKey aKey);
 

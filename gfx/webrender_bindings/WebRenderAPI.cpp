@@ -450,9 +450,9 @@ WebRenderAPI::DeleteImage(ImageKey aKey)
 }
 
 void
-WebRenderAPI::AddRawFont(wr::FontKey key, Range<uint8_t> aBytes)
+WebRenderAPI::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
 {
-  wr_api_add_raw_font(mWrApi, key, &aBytes[0], aBytes.length());
+  wr_api_add_raw_font(mWrApi, aKey, &aBytes[0], aBytes.length(), aIndex);
 }
 
 void
