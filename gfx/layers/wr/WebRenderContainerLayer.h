@@ -6,6 +6,7 @@
 #ifndef GFX_WEBRENDERCONTAINERLAYER_H
 #define GFX_WEBRENDERCONTAINERLAYER_H
 
+#include "gfxPrefs.h"
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
 
