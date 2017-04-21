@@ -1218,7 +1218,7 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
     GetCompositorSideCompositionBounds(scrollAncestor,
                                        aPaintData->mTransformToCompBounds,
                                        viewTransform,
-                                       LayerRect(mPaintedLayer.GetVisibleRegion().GetBounds()));
+                                       ViewAs<LayerPixel>(Rect(mPaintedLayer.GetLayerBounds())));
 
   if (!transformedCompositionBounds) {
     aPaintData->mPaintFinished = true;
