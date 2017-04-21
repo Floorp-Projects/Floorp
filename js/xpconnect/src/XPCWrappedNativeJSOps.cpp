@@ -313,7 +313,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
             if (JSID_IS_STRING(id) &&
                 name.encodeLatin1(ccx, JSID_TO_STRING(id)) &&
-                (iface2 = XPCNativeInterface::GetNewOrUsed(name.ptr()), iface2) &&
+                (iface2 = XPCNativeInterface::GetNewOrUsed(name.ptr())) &&
                 nullptr != (to = wrapperToReflectInterfaceNames->
                            FindTearOff(iface2, true, &rv)) &&
                 nullptr != (jso = to->GetJSObject()))

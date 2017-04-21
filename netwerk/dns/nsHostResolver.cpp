@@ -1461,7 +1461,7 @@ nsHostResolver::ThreadFunc(void *arg)
     static nsThreadPoolNaming naming;
     nsCString name = naming.GetNextThreadName("DNS Resolver");
 
-    PR_SetCurrentThreadName(name.BeginReading());
+    NS_SetCurrentThreadName(name.BeginReading());
     profiler_register_thread(name.BeginReading(), &stackTop);
 
 #if defined(RES_RETRY_ON_FAILURE)

@@ -139,6 +139,7 @@ nsTimer::Release(void)
 }
 
 nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
+  mHolder(nullptr),
   mGeneration(0),
   mDelay(0),
   mITimer(aTimer),
@@ -688,6 +689,12 @@ nsTimerImpl::GetName(nsACString& aName)
       aName.AssignLiteral("Canceled_timer");
       break;
   }
+}
+
+void
+nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder)
+{
+  mHolder = aHolder;
 }
 
 nsTimer::~nsTimer()

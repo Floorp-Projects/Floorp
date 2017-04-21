@@ -161,7 +161,6 @@ public:
 
   virtual void UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent) {}
   virtual void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) {}
-  virtual void SetScrollingRootContent(bool isRootContent) {}
 
   GeckoContentController() {}
 

@@ -5,6 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using CSSRect from "Units.h";
+using CSSToScreenScale from "Units.h";
+using ScreenIntSize from "Units.h";
+using ScreenPoint from "Units.h";
+
 namespace mozilla {
 namespace layers {
 
@@ -19,10 +24,22 @@ sync protocol PUiCompositorController
 parent:
   // Pause/resume the compositor. These are intended to be used on mobile, when
   // the compositor needs to pause/resume in lockstep with the application.
-  sync Pause(uint64_t layersId);
-  sync Resume(uint64_t layersId);
-  sync ResumeAndResize(uint64_t layersId, int32_t height, int32_t width);
-  async InvalidateAndRender(uint64_t layersId);
+  sync Pause();
+  sync Resume();
+  sync ResumeAndResize(int32_t aWidth, int32_t aHeight);
+
+  async InvalidateAndRender();
+  async MaxToolbarHeight(int32_t aHeight);
+  async Pinned(bool aPinned, int32_t aReason);
+  async ToolbarAnimatorMessageFromUI(int32_t aMessage);
+  async DefaultClearColor(uint32_t aColor);
+  async RequestScreenPixels();
+  async EnableLayerUpdateNotifications(bool aEnable);
+  async ToolbarPixelsToCompositor(Shmem aMem, ScreenIntSize aSize);
+child:
+  async ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
+  async RootFrameMetrics(ScreenPoint aScrollOffset, CSSToScreenScale aZoom, CSSRect aPage);
+  async ScreenPixels(Shmem aMem, ScreenIntSize aSize);
 };
 
 } // layers

@@ -135,21 +135,6 @@ const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
             ::template Wrap<&Impl::RequestThumbnail>)
 };
 
-template<class Impl>
-class ZoomedView::Natives : public mozilla::jni::NativeImpl<ZoomedView, Impl>
-{
-public:
-    static const JNINativeMethod methods[1];
-};
-
-template<class Impl>
-const JNINativeMethod ZoomedView::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<ZoomedView::RequestZoomedViewData_t>(
-            mozilla::jni::NativeStub<ZoomedView::RequestZoomedViewData_t, Impl>
-            ::template Wrap<&Impl::RequestZoomedViewData>)
-};
-
 } /* java */
 } /* mozilla */
 #endif // FennecJNINatives_h

@@ -181,6 +181,17 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
                                          1.0f));
 }
 
+void
+MultiTouchInput::Translate(const ScreenPoint& aTranslation)
+{
+  const int32_t xTranslation = (int32_t)(aTranslation.x + 0.5f);
+  const int32_t yTranslation = (int32_t)(aTranslation.y + 0.5f);
+
+  for (auto iter = mTouches.begin(); iter != mTouches.end(); iter++) {
+    iter->mScreenPoint.MoveBy(xTranslation, yTranslation);
+  }
+}
+
 WidgetTouchEvent
 MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
 {
