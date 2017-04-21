@@ -57,4 +57,12 @@
     <Bug pattern="VO_VOLATILE_INCREMENT" />
   </Match>
 
+    <!-- FindBugs doesn't like the resource classes provided by both ourselves, and the android
+         support libraries. -->
+    <Match>
+        <Class name="~.*\.R\$.*"/>
+    </Match>
+    <Match>
+        <Class name="~.*\.Manifest\$.*"/>
+    </Match>
 </FindBugsFilter>
