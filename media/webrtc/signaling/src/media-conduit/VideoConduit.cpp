@@ -578,8 +578,10 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     video_stream.height = height >> idx;
     video_stream.max_framerate = mSendingFramerate;
     auto& simulcastEncoding = codecConfig->mSimulcastEncodings[idx];
-    // leave vector temporal_layer_thresholds_bps empty
-    video_stream.temporal_layer_thresholds_bps.clear();
+    // The underlying code (as of 49 and 57) actually ignores the values in
+    // the array, and uses the size of the array + 1.  Chrome uses 3 for
+    // temporal layers when simulcast is in use (see simulcast.cc)
+    video_stream.temporal_layer_thresholds_bps.resize(streamCount > 1 ? 3 : 1);
     // Calculate these first
     video_stream.max_bitrate_bps = MinIgnoreZero(simulcastEncoding.constraints.maxBr,
                                                  kDefaultMaxBitrate_bps);
