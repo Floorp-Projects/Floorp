@@ -71,7 +71,7 @@ def from_linter(lintobj, **kwargs):
     Convenience method that pulls defaults from a LINTER
     definition and forwards them.
 
-    :param lintobj: LINTER obj as defined in a .lint file
+    :param lintobj: LINTER obj as defined in a .lint.py file
     :param kwargs: same as :class:`~result.ResultContainer`
     :returns: :class:`~result.ResultContainer` object
     """
