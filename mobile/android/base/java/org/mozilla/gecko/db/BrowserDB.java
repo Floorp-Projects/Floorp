@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.db;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -23,6 +22,7 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 
 /**
@@ -108,9 +108,10 @@ public abstract class BrowserDB {
     public abstract boolean isBookmark(ContentResolver cr, String uri);
     public abstract boolean addBookmark(ContentResolver cr, String title, String uri);
     public abstract Uri addBookmarkFolder(ContentResolver cr, String title, long parentId);
-    public abstract Cursor getBookmarkForUrl(ContentResolver cr, String url);
-    public abstract Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl);
-    public abstract Cursor getBookmarkById(ContentResolver cr, long id);
+    @Nullable public abstract Cursor getBookmarkForUrl(ContentResolver cr, String url);
+    @Nullable public abstract Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl);
+    @Nullable public abstract Cursor getBookmarkById(ContentResolver cr, long id);
+    @Nullable public abstract Cursor getAllBookmarkFolders(ContentResolver cr);
     public abstract void removeBookmarksWithURL(ContentResolver cr, String uri);
     public abstract void removeBookmarkWithId(ContentResolver cr, long id);
     public abstract void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
@@ -123,7 +124,7 @@ public abstract class BrowserDB {
     /**
      * Can return <code>null</code>.
      */
-    public abstract Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
+    @Nullable public abstract Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
 
     public abstract int getBookmarkCountForFolder(ContentResolver cr, long folderId);
 
@@ -151,7 +152,7 @@ public abstract class BrowserDB {
      *
      * Returns null if the provided list of URLs is empty or null.
      */
-    public abstract Cursor getThumbnailsForUrls(ContentResolver cr,
+    @Nullable public abstract Cursor getThumbnailsForUrls(ContentResolver cr,
             List<String> urls);
 
     public abstract void removeThumbnails(ContentResolver cr);
@@ -190,7 +191,7 @@ public abstract class BrowserDB {
      * @param contentResolver to load the cursor.
      * @param limit Maximum number of results to return.
      */
-    public abstract Cursor getHighlightCandidates(ContentResolver contentResolver, int limit);
+    @Nullable public abstract Cursor getHighlightCandidates(ContentResolver contentResolver, int limit);
 
     /**
      * Block a page from the highlights list.
