@@ -45,13 +45,19 @@ public:
   void Add(PRIntervalTime aTime);
 };
 
+/* A native stack is a simple list of pointers, so rather than building a
+   wrapper type, we typdef the type here. */
+typedef std::vector<uintptr_t> NativeHangStack;
+
 /* HangStack stores an array of const char pointers,
    with optional internal storage for strings. */
 class HangStack
 {
 public:
   static const size_t sMaxInlineStorage = 8;
+
   // The maximum depth for the native stack frames that we might collect.
+  // XXX: Consider moving this to a different object?
   static const size_t sMaxNativeFrames = 25;
 
 private:
@@ -61,11 +67,6 @@ private:
   // Stack entries can either be a static const char*
   // or a pointer to within this buffer.
   mozilla::Vector<char, 0> mBuffer;
-  // When a native stack is gathered, this vector holds the raw program counter
-  // values that MozStackWalk will return to us after it walks the stack.
-  // When gathering the Telemetry payload, Telemetry will take care of mapping
-  // these program counters to proper addresses within modules.
-  std::vector<uintptr_t> mNativeFrames;
 
 public:
   HangStack() {}
@@ -73,14 +74,12 @@ public:
   HangStack(HangStack&& aOther)
     : mImpl(mozilla::Move(aOther.mImpl))
     , mBuffer(mozilla::Move(aOther.mBuffer))
-    , mNativeFrames(mozilla::Move(aOther.mNativeFrames))
   {
   }
 
   HangStack& operator=(HangStack&& aOther) {
     mImpl = mozilla::Move(aOther.mImpl);
     mBuffer = mozilla::Move(aOther.mBuffer);
-    mNativeFrames = mozilla::Move(aOther.mNativeFrames);
     return *this;
   }
 
@@ -126,7 +125,6 @@ public:
   void clear() {
     mImpl.clear();
     mBuffer.clear();
-    mNativeFrames.clear();
   }
 
   bool IsInBuffer(const char* aEntry) const {
@@ -152,21 +150,6 @@ public:
 
   const char* InfallibleAppendViaBuffer(const char* aText, size_t aLength);
   const char* AppendViaBuffer(const char* aText, size_t aLength);
-
-  void EnsureNativeFrameCapacity(size_t aCapacity) {
-    mNativeFrames.reserve(aCapacity);
-  }
-
-  void AppendNativeFrame(uintptr_t aPc) {
-    MOZ_ASSERT(mNativeFrames.size() <= sMaxNativeFrames);
-    if (mNativeFrames.size() < sMaxNativeFrames) {
-      mNativeFrames.push_back(aPc);
-    }
-  }
-
-  const std::vector<uintptr_t>& GetNativeFrames() const {
-    return mNativeFrames;
-  }
 };
 
 /* A hang histogram consists of a stack associated with the
@@ -178,7 +161,7 @@ private:
 
   HangStack mStack;
   // Native stack that corresponds to the pseudostack in mStack
-  HangStack mNativeStack;
+  NativeHangStack mNativeStack;
   // Use a hash to speed comparisons
   const uint32_t mHash;
   // Annotations attributed to this stack
@@ -190,6 +173,15 @@ public:
     , mHash(GetHash(mStack))
   {
   }
+
+  explicit HangHistogram(HangStack&& aStack,
+                         NativeHangStack&& aNativeStack)
+    : mStack(mozilla::Move(aStack))
+    , mNativeStack(mozilla::Move(aNativeStack))
+    , mHash(GetHash(mStack))
+  {
+  }
+
   HangHistogram(HangHistogram&& aOther)
     : TimeHistogram(mozilla::Move(aOther))
     , mStack(mozilla::Move(aOther.mStack))
@@ -206,10 +198,10 @@ public:
   const HangStack& GetStack() const {
     return mStack;
   }
-  HangStack& GetNativeStack() {
+  NativeHangStack& GetNativeStack() {
     return mNativeStack;
   }
-  const HangStack& GetNativeStack() const {
+  const NativeHangStack& GetNativeStack() const {
     return mNativeStack;
   }
   const HangMonitor::HangAnnotationsVector& GetAnnotations() const {

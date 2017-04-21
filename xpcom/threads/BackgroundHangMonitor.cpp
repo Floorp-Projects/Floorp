@@ -191,7 +191,7 @@ public:
   // Stack of current hang
   Telemetry::HangStack mHangStack;
   // Native stack of current hang
-  Telemetry::HangStack mNativeHangStack;
+  Telemetry::NativeHangStack mNativeHangStack;
   // Statistics for telemetry
   Telemetry::ThreadHangStats mStats;
   // Annotations for the current hang
@@ -344,21 +344,23 @@ BackgroundHangManager::RunMonitorThread()
       if (MOZ_LIKELY(!currentThread->mHanging)) {
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
           // A hang started
-          currentThread->mStackHelper.GetStack(currentThread->mHangStack);
+#ifdef NIGHTLY_BUILD
+          if (currentThread->mStats.mNativeStackCnt < kMaximumNativeHangStacks) {
+            // NOTE: In nightly builds of firefox we want to collect native stacks
+            // for all hangs, not just permahangs.
+            currentThread->mStats.mNativeStackCnt += 1;
+            currentThread->mStackHelper.GetPseudoAndNativeStack(
+              currentThread->mHangStack, currentThread->mNativeHangStack);
+          } else {
+            currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+          }
+#else
+          currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+#endif
           currentThread->mHangStart = interval;
           currentThread->mHanging = true;
           currentThread->mAnnotations =
             currentThread->mAnnotators.GatherAnnotations();
-
-#ifdef NIGHTLY_BUILD
-          // NOTE: In nightly builds of firefox we want to collect native stacks
-          // for all hangs, not just permahangs.
-          currentThread->mStats.mNativeStackCnt += 1;
-          if (currentThread->mStats.mNativeStackCnt <= kMaximumNativeHangStacks) {
-            currentThread->mStackHelper.GetNativeStack(
-              currentThread->mNativeHangStack);
-          }
-#endif
         }
       } else {
         if (MOZ_LIKELY(interval != currentThread->mHangStart)) {
@@ -473,8 +475,7 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
-  Telemetry::HangHistogram newHistogram(Move(mHangStack));
-  newHistogram.GetNativeStack() = Move(mNativeHangStack);
+  Telemetry::HangHistogram newHistogram(Move(mHangStack), Move(mNativeHangStack));
   for (Telemetry::HangHistogram* oldHistogram = mStats.mHangs.begin();
        oldHistogram != mStats.mHangs.end(); oldHistogram++) {
     if (newHistogram == *oldHistogram) {
@@ -498,7 +499,7 @@ BackgroundHangThread::ReportPermaHang()
   // mManager->mLock IS locked
 
   Telemetry::HangHistogram& hang = ReportHang(mMaxTimeout);
-  Telemetry::HangStack& stack = hang.GetNativeStack();
+  Telemetry::NativeHangStack& stack = hang.GetNativeStack();
   if (stack.empty()) {
     mStats.mNativeStackCnt += 1;
     if (mStats.mNativeStackCnt <= kMaximumNativeHangStacks) {
