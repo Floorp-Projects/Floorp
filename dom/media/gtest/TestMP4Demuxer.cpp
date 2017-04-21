@@ -16,6 +16,7 @@
 
 using namespace mozilla;
 using namespace mp4_demuxer;
+using media::TimeUnit;
 
 class AutoTaskQueue;
 
@@ -63,7 +64,7 @@ public:
     RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
     RefPtr<MP4DemuxerBinding> binding = this;
 
-    auto time = media::TimeUnit::Invalid();
+    auto time = TimeUnit::Invalid();
     while (mIndex < mSamples.Length()) {
       uint32_t i = mIndex++;
       if (mSamples[i]->mKeyframe) {
@@ -415,14 +416,14 @@ TEST(MP4Demuxer, GetNextKeyframe)
 
     // gizmp-frag has two keyframes; one at dts=cts=0, and another at
     // dts=cts=1000000. Verify we get expected results.
-    media::TimeUnit time;
+    TimeUnit time;
     binding->mVideoTrack = binding->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
     binding->mVideoTrack->Reset();
     binding->mVideoTrack->GetNextRandomAccessPoint(&time);
     EXPECT_EQ(time.ToMicroseconds(), 0);
     binding->mVideoTrack->GetSamples()->Then(binding->mTaskQueue, __func__,
       [binding] () {
-        media::TimeUnit time;
+        TimeUnit time;
         binding->mVideoTrack->GetNextRandomAccessPoint(&time);
         EXPECT_EQ(time.ToMicroseconds(), 1000000);
         binding->mTaskQueue->BeginShutdown();

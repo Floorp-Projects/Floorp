@@ -48,7 +48,7 @@ fails == transform-floating-point-invalidation.html transform-floating-point-inv
 fails == transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
 fails == nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
 fails == nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
-== clipped-animated-transform-1.html clipped-animated-transform-1.html
+skip-if(stylo) == clipped-animated-transform-1.html clipped-animated-transform-1.html # bug 1334036
 fails == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
 fails == paintedlayer-recycling-2.html paintedlayer-recycling-2.html
 fails pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html

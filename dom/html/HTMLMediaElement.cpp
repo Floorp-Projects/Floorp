@@ -22,6 +22,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsPresContext.h"
+#include "nsIClassOfService.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
@@ -1157,6 +1158,12 @@ public:
       // Notify load error so the element will try next resource candidate.
       aElement->NotifyLoadError();
       return;
+    }
+
+    nsCOMPtr<nsIClassOfService> cos;
+    if (aElement->mUseUrgentStartForChannel &&
+        (cos = do_QueryInterface(channel))) {
+      cos->AddClassFlags(nsIClassOfService::UrgentStart);
     }
 
     // The listener holds a strong reference to us.  This creates a
@@ -3890,6 +3897,14 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
 
   // Play was not blocked so assume user interacted with the element.
   mHasUserInteraction = true;
+
+  if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE) {
+    // The media load algorithm will be initiated by a user interaction.
+    // We want to boost the channel priority for better responsiveness.
+    // Note this must be done before UpdatePreloadAction() which will
+    // update |mPreloadAction|.
+    mUseUrgentStartForChannel = true;
+  }
 
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);

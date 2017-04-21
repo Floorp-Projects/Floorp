@@ -28,6 +28,7 @@ import sys
 import buildconfig
 
 from mozbuild import preprocessor
+from mozbuild.android_version_code import android_version_code
 
 
 def _defines():
@@ -45,6 +46,7 @@ def _defines():
                 'MOZ_ANDROID_GCM',
                 'MOZ_ANDROID_MLS_STUMBLER',
                 'MOZ_ANDROID_SEARCH_ACTIVITY',
+                'MOZ_CRASHREPORTER',
                 'MOZ_DEBUG',
                 'MOZ_INSTALL_TRACKING',
                 'MOZ_LOCALE_SWITCHER',
@@ -62,6 +64,7 @@ def _defines():
     for var in ('ANDROID_CPU_ARCH',
                 'ANDROID_PACKAGE_NAME',
                 'GRE_MILESTONE',
+                'MOZ_ANDROID_SHARED_ID',
                 'MOZ_ANDROID_APPLICATION_CLASS',
                 'MOZ_ANDROID_BROWSER_INTENT_CLASS',
                 'MOZ_ANDROID_SEARCH_INTENT_CLASS',
@@ -73,7 +76,6 @@ def _defines():
                 'MOZ_APP_VENDOR',
                 'MOZ_APP_VERSION',
                 'MOZ_CHILD_PROCESS_NAME',
-                'MOZ_CRASHREPORTER',
                 'MOZ_MOZILLA_API_KEY',
                 'MOZ_UPDATE_CHANNEL',
                 'OMNIJAR_NAME',
@@ -101,6 +103,19 @@ def _defines():
 
     DEFINES['MOZ_BUILDID'] = open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 
+    # Set the appropriate version code if not set by MOZ_APP_ANDROID_VERSION_CODE.
+    if CONFIG.get('MOZ_APP_ANDROID_VERSION_CODE'):
+        DEFINES['ANDROID_VERSION_CODE'] = \
+            CONFIG.get('MOZ_APP_ANDROID_VERSION_CODE')
+    else:
+        min_sdk = int(CONFIG.get('MOZ_ANDROID_MIN_SDK_VERSION') or '0') or None
+        max_sdk = int(CONFIG.get('MOZ_ANDROID_MAX_SDK_VERSION') or '0') or None
+        DEFINES['ANDROID_VERSION_CODE'] = android_version_code(
+            buildid=DEFINES['MOZ_BUILDID'],
+            cpu_arch=CONFIG['ANDROID_CPU_ARCH'],
+            min_sdk=min_sdk,
+            max_sdk=max_sdk)
+
     return DEFINES
 
 
@@ -108,6 +123,15 @@ def generate_java(output_file, input_filename):
     includes = preprocessor.preprocess(includes=[input_filename],
                                    defines=_defines(),
                                    output=output_file,
-                                   marker="//#")
+                                   marker='//#')
+    includes.add(os.path.join(buildconfig.topobjdir, 'buildid.h'))
+    return includes
+
+
+def generate_android_manifest(output_file, input_filename):
+    includes = preprocessor.preprocess(includes=[input_filename],
+                                       defines=_defines(),
+                                       output=output_file,
+                                       marker='#')
     includes.add(os.path.join(buildconfig.topobjdir, 'buildid.h'))
     return includes

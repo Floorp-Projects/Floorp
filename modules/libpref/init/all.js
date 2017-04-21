@@ -5056,6 +5056,8 @@ pref("dom.vr.enabled", false);
 // presentation due to the high sensitivity of the proximity sensor in some
 // headsets, so it is off by default.
 pref("dom.vr.autoactivate.enabled", false);
+// The threshold value of trigger inputs for VR controllers
+pref("dom.vr.controller_trigger_threshold", "0.1");
 // Maximum number of milliseconds the browser will wait for content to call
 // VRDisplay.requestPresent after emitting vrdisplayactivate during VR
 // link traversal.  This prevents a long running event handler for

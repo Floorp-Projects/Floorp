@@ -309,13 +309,13 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
                  nullDuration));
       // Adapt to the time before the first frame. This extends the first frame
       // from [start, end] to [0, end], but it'll do for now.
-      CheckedInt64 diff = FramesToUsecs(nullDuration, mTrackRate);
-      if (!diff.isValid()) {
+      auto diff = FramesToTimeUnit(nullDuration, mTrackRate);
+      if (!diff.IsValid()) {
         NS_ERROR("null duration overflow");
         return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
       }
 
-      mLastChunk.mTimeStamp -= TimeDuration::FromMicroseconds(diff.value());
+      mLastChunk.mTimeStamp -= diff.ToTimeDuration();
       mLastChunk.mDuration += nullDuration;
     }
 

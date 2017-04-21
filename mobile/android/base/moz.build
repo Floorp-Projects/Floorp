@@ -119,6 +119,7 @@ DIRS += ['locales']
 
 GENERATED_FILES += [
     '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
+    'AndroidManifest.xml',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
@@ -131,6 +132,9 @@ x.inputs += ['AdjustConstants.java.in']
 y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AppConstants.java']
 y.script = 'generate_build_config.py:generate_java'
 y.inputs += ['AppConstants.java.in']
+z = GENERATED_FILES['AndroidManifest.xml']
+z.script = 'generate_build_config.py:generate_android_manifest'
+z.inputs += ['AndroidManifest.xml.in']
 
 include('android-services.mozbuild')
 
@@ -476,6 +480,9 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'animation/Rotate3DAnimation.java',
     'animation/ViewHelper.java',
     'ANRReporter.java',
+    'bookmarks/BookmarkEditFragment.java',
+    'bookmarks/BookmarkUtils.java',
+    'bookmarks/EditBookmarkTask.java',
     'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
@@ -1226,45 +1233,6 @@ if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
             '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
         ]
 
-# We do not expose MOZ_ADJUST_SDK_KEY here because that # would leak the value
-# to build logs.  Instead we expose the token quietly where appropriate in
-# Makefile.in.
-for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_DEBUG',
-            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
-            'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
-            'MOZ_ANDROID_GCM', 'MOZ_ANDROID_EXCLUDE_FONTS', 'MOZ_LOCALE_SWITCHER',
-            'MOZ_ANDROID_BEAM', 'MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
-            'MOZ_SWITCHBOARD', 'MOZ_ANDROID_CUSTOM_TABS',
-            'MOZ_ANDROID_ACTIVITY_STREAM'):
-    if CONFIG[var]:
-        DEFINES[var] = 1
-
-for var in ('MOZ_UPDATER', 'MOZ_PKG_SPECIAL', 'MOZ_ANDROID_GCM_SENDERID'):
-    if CONFIG[var]:
-        DEFINES[var] = CONFIG[var]
-
-for var in ('ANDROID_PACKAGE_NAME', 'ANDROID_CPU_ARCH',
-            'GRE_MILESTONE', 'MOZ_APP_BASENAME', 'MOZ_MOZILLA_API_KEY',
-            'MOZ_APP_DISPLAYNAME', 'MOZ_APP_UA_NAME', 'MOZ_APP_ID', 'MOZ_APP_NAME',
-            'MOZ_APP_VENDOR', 'MOZ_APP_VERSION', 'MOZ_CHILD_PROCESS_NAME',
-            'MOZ_ANDROID_APPLICATION_CLASS', 'MOZ_ANDROID_BROWSER_INTENT_CLASS', 'MOZ_ANDROID_SEARCH_INTENT_CLASS',
-            'MOZ_CRASHREPORTER', 'MOZ_UPDATE_CHANNEL', 'OMNIJAR_NAME',
-            'OS_TARGET', 'TARGET_XPCOM_ABI'):
-    DEFINES[var] = CONFIG[var]
-
-# Mangle our package name to avoid Bug 750548.
-DEFINES['MANGLED_ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME'].replace('fennec', 'f3nn3c')
-DEFINES['MOZ_APP_ABI'] = CONFIG['TARGET_XPCOM_ABI']
-if not CONFIG['COMPILE_ENVIRONMENT']:
-    # These should really come from the included binaries, but that's not easy.
-    DEFINES['MOZ_APP_ABI'] = 'arm-eabi-gcc3' # Observe quote differences here ...
-    DEFINES['TARGET_XPCOM_ABI'] = '"arm-eabi-gcc3"' # ... and here.
-
-if '-march=armv7' in CONFIG['OS_CFLAGS']:
-    DEFINES['MOZ_MIN_CPU_VERSION'] = 7
-else:
-    DEFINES['MOZ_MIN_CPU_VERSION'] = 5
-
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     # The Search Activity is mostly independent of Fennec proper, but
     # it does depend on Geckoview.  Therefore, we build it as a jar
@@ -1288,14 +1256,8 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-view.jar',
     ]
 
+DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 FINAL_TARGET_PP_FILES += ['package-name.txt.in']
-
-DEFINES['OBJDIR'] = OBJDIR
-DEFINES['TOPOBJDIR'] = TOPOBJDIR
-
-OBJDIR_PP_FILES.mobile.android.base += [
-    'AndroidManifest.xml.in',
-]
 
 gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'IGeckoEditableChild.java',

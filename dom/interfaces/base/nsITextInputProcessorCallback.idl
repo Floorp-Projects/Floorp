@@ -44,8 +44,143 @@ interface nsITextInputProcessorNotification : nsISupports
    * "notify-blur" (optional)
    *   This is notified when an editable editor loses focus and Gecko stops
    *   observing the changes in the content.
+   *
+   * "notify-text-change" (optional)
+   *   This is notified when text in the focused editor is modified.
+   *   Some attributes below are available to retrieve the detail.
+   *   IME shouldn't change DOM tree, focus nor something when this is notified.
+   *   Note that when there is no chance to notify you of some text changes
+   *   safely, this represents all changes as a change.
+   *
+   * "notify-selection-change" (optional)
+   *   This is notified when selection in the focused editor is changed.
+   *   Some attributes below are available to retrieve the detail.
+   *   IME shouldn't change DOM tree, focus nor something when this is notified.
+   *   Note that when there was no chance to notify you of this safely, this
+   *   represents the latest selection change.
+   *
+   * "notify-position-change" (optional)
+   *   This is notified when layout is changed in the editor or the window
+   *   is moved.
+   *   IME shouldn't change DOM tree, focus nor something when this is notified.
+   *   Note that when there was no chance to notify you of this safely, this
+   *   represents the latest layout change.
    */
   readonly attribute ACString type;
+
+  /**
+   * Be careful, line breakers in the editor are treated as native line
+   * breakers.  I.e., on Windows, a line breaker is "\r\n" (CRLF).  On the
+   * others, it is "\n" (LF).  If you want TextInputProcessor to treat line
+   * breakers on Windows as XP line breakers (LF), please file a bug with
+   * the reason why you need the behavior.
+   */
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change" or
+   * "notify-selection-change".
+   * This is offset of the start of modified text range if type is
+   * "notify-text-change".  Or offset of start of selection if type is
+   * "notify-selection-change".
+   */
+  readonly attribute unsigned long offset;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * This is selected text.  I.e., the length is selected length and
+   * it's empty if the selection is collapsed.
+   */
+  readonly attribute AString text;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * This is set to true when the selection is collapsed.  Otherwise, false.
+   */
+  readonly attribute boolean collapsed;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * This is selected length.  I.e., if this is 0, collapsed is set to true.
+   */
+  readonly attribute uint32_t length;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * When selection is created from latter point to former point, this is
+   * set to true.  Otherwise, false.
+   * I.e., if this is true, offset + length is the anchor of selection.
+   */
+  readonly attribute boolean reversed;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * This indicates the start of the selection's writing mode.
+   * The value can be "horizontal-tb", "vertical-rl" or "vertical-lr".
+   */
+  readonly attribute ACString writingMode;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * If the selection change was caused by composition, this is set to true.
+   * Otherwise, false.
+   */
+  readonly attribute boolean causedByComposition;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * If the selection change was caused by selection event, this is set to true.
+   * Otherwise, false.
+   */
+  readonly attribute boolean causedBySelectionEvent;
+
+  /**
+   * This attribute has a valid value when type is "notify-selection-change".
+   * If the selection change occurred during composition, this is set to true.
+   * Otherwise, false.
+   */
+  readonly attribute boolean occurredDuringComposition;
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change".
+   * This is removed text length by the change(s).  If this is empty, new text
+   * was just inserted.  Otherwise, the text is replaced with new text.
+   */
+  readonly attribute unsigned long removedLength;
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change".
+   * This is added text length by the change(s).  If this is empty, old text
+   * was just deleted.  Otherwise, the text replaces the old text.
+   */
+  readonly attribute unsigned long addedLength;
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change".
+   * If the text change(s) was caused only by composition, this is set to true.
+   * Otherwise, false.  I.e., if one of text changes are caused by JS or
+   * modifying without composition, this is set to false.
+   */
+  readonly attribute boolean causedOnlyByComposition;
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change".
+   * If at least one text change not caused by composition occurred during
+   * composition, this is set to true.  Otherwise, false.
+   * Note that this is set to false when new change is caused by neither
+   * composition nor occurred during composition because it's outdated for
+   * new composition.
+   * In other words, when text changes not caused by composition occurred
+   * during composition and it may cause committing composition, this is
+   * set to true.
+   */
+  readonly attribute boolean includingChangesDuringComposition;
+
+  /**
+   * This attribute has a valid value when type is "notify-text-change".
+   * If at least one text change occurred when there was no composition, this
+   * is set to true.  Otherwise, false.
+   */
+  readonly attribute boolean includingChangesWithoutComposition;
 };
 
 /**

@@ -27,11 +27,19 @@ job-template:
       by-build-platform:
          default: browser/locales/all-locales
          android-api-15-nightly: mobile/locales/l10n-changesets.json
-   chunks: 6
+   chunks:
+      by-build-platform:
+         macosx64-nightly: 8
+         default: 6
    run-on-projects:
      - mozilla-central
      - mozilla-aurora
      - mozilla-beta
+   ignore-locales:
+      by-build-platform:
+         # OSX has a special locale for japanese
+         macosx64.*: [ja]
+         default: [ja-JP-mac]
    run-time:
       by-build-platform:
          default: 36000
@@ -40,6 +48,7 @@ job-template:
       by-build-platform:
          default: public
          android-api-15-nightly: internal
+         macosx64-nightly: internal
    index:
       type: l10n
       product:
@@ -67,7 +76,7 @@ job-template:
          by-build-platform:
             linux64-nightly: linux64/opt
             linux-nightly: linux32/opt
-            macosx64-nightly: macosx64/opt
+            macosx64-nightly: osx-10-7/opt
             android-api-15-nightly: android-4-0-armv7-api15/opt
    env:
       by-build-platform:

@@ -98,8 +98,7 @@ let customizationListener = {
 };
 customizationListener.onWidgetAdded =
 customizationListener.onWidgetRemoved =
-customizationListener.onWidgetMoved =
-customizationListener.onWidgetInstanceRemoved = function(aWidgetId) {
+customizationListener.onWidgetMoved = function(aWidgetId) {
   if (aWidgetId == "zoom-controls") {
     for (let window of CustomizableUI.windows) {
       updateZoomUI(window.gBrowser.selectedBrowser);

@@ -275,6 +275,13 @@ class BuildOutputManager(LoggingMixin):
                     self.handler.release()
 
 
+class StoreDebugParamsAndWarnAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        sys.stderr.write('The --debugparams argument is deprecated. Please ' +
+                         'use --debugger-args instead.\n\n')
+        setattr(namespace, self.dest, values)
+
+
 @CommandProvider
 class Build(MachCommandBase):
     """Interface to build the tree."""
@@ -1123,9 +1130,12 @@ class RunProgram(MachCommandBase):
         help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
         help='Name of debugger to use.')
-    @CommandArgument('--debugparams', default=None, metavar='params', type=str,
+    @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
         group='debugging',
         help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+    @CommandArgument('--debugparams', action=StoreDebugParamsAndWarnAction,
+        default=None, type=str, dest='debugger_args', group='debugging',
+        help=argparse.SUPPRESS)
 
     @CommandArgumentGroup('DMD')
     @CommandArgument('--dmd', action='store_true', group='DMD',
@@ -1137,7 +1147,7 @@ class RunProgram(MachCommandBase):
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, disable_e10s,
-        enable_crash_reporter, debug, debugger, debugparams,
+        enable_crash_reporter, debug, debugger, debugger_args,
         dmd, mode, stacks, show_dump_stats):
 
         if conditions.is_android(self):
@@ -1146,7 +1156,7 @@ class RunProgram(MachCommandBase):
                 print("DMD is not supported for Firefox for Android")
                 return 1
             from mozrunner.devices.android_device import verify_android_device, run_firefox_for_android
-            if not (debug or debugger or debugparams):
+            if not (debug or debugger or debugger_args):
                 verify_android_device(self, install=True)
                 return run_firefox_for_android(self, params)
             verify_android_device(self, install=True, debugger=True)
@@ -1192,7 +1202,7 @@ class RunProgram(MachCommandBase):
         if disable_e10s:
             extra_env['MOZ_FORCE_DISABLE_E10S'] = '1'
 
-        if debug or debugger or debugparams:
+        if debug or debugger or debugger_args:
             if 'INSIDE_EMACS' in os.environ:
                 self.log_manager.terminal_handler.setLevel(logging.WARNING)
 
@@ -1203,19 +1213,19 @@ class RunProgram(MachCommandBase):
                 debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
 
             if debugger:
-                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugparams)
+                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
                 if not self.debuggerInfo:
                     print("Could not find a suitable debugger in your PATH.")
                     return 1
 
             # Parameters come from the CLI. We need to convert them before
             # their use.
-            if debugparams:
+            if debugger_args:
                 from mozbuild import shellutil
                 try:
-                    debugparams = shellutil.split(debugparams)
+                    debugger_args = shellutil.split(debugger_args)
                 except shellutil.MetaCharacterException as e:
-                    print("The --debugparams you passed require a real shell to parse them.")
+                    print("The --debugger-args you passed require a real shell to parse them.")
                     print("(We can't handle the %r character.)" % e.char)
                     return 1
 

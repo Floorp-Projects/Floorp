@@ -11,6 +11,7 @@
 #include "pkix/Input.h"
 #include "pkix/pkix.h"
 #include "pkix/Result.h"
+#include "ScopedNSSTypes.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"
 
@@ -72,6 +73,11 @@ private:
   pkix::Result VerifySignature(pkix::Input data, pkix::Input signature);
   pkix::Result VerifySignature(const Buffer& data, const Buffer& signature);
 
+  // mPublicECKey works around an architectural deficiency in NSS. In the case
+  // of EC, if we don't create, import, and cache this key, NSS will import and
+  // verify it every signature verification, which is slow. For RSA, this is
+  // unused and will be null.
+  UniqueSECKEYPublicKey mPublicECKey;
   Buffer mSubjectPublicKeyInfo;
   Buffer mKeyId;
   DigitallySigned::SignatureAlgorithm mSignatureAlgorithm;

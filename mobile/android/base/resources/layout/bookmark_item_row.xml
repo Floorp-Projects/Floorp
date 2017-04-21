@@ -6,5 +6,6 @@
 <org.mozilla.gecko.home.TwoLinePageRow xmlns:android="http://schemas.android.com/apk/res/android"
                                        style="@style/Widget.BookmarkItemView"
                                        android:layout_width="match_parent"
-                                       android:layout_height="@dimen/page_row_height"
-                                       android:minHeight="@dimen/page_row_height"/>
+                                       android:layout_height="wrap_content"
+                                       android:minHeight="@dimen/page_row_height"
+                                       android:gravity="center_vertical" />

@@ -9,8 +9,8 @@
        tools:context=".BrowserApp">
 
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
-                                          android:layout_width="@dimen/favicon_bg"
-                                          android:layout_height="@dimen/favicon_bg"
+                                          android:layout_width="@dimen/favicon_small_size"
+                                          android:layout_height="@dimen/favicon_small_size"
                                           android:layout_margin="16dp"
                                           tools:background="@drawable/favicon_globe"/>
 
