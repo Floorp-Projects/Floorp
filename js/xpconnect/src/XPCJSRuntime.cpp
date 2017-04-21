@@ -2463,6 +2463,8 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         return;
     }
 
+    JS::CollectTraceLoggerStateStats(&rtStats);
+
     size_t xpcJSRuntimeSize = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
 
     size_t wrappedJSSize = xpcrt->GetMultiCompartmentWrappedJSMap()->SizeOfWrappedJS(JSMallocSizeOf);
@@ -2498,6 +2500,11 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/runtime"),
         KIND_OTHER, rtTotal,
         "The sum of all measurements under 'explicit/js-non-window/runtime/'.");
+
+    // Report the numbers for memory used by tracelogger.
+    REPORT_BYTES(NS_LITERAL_CSTRING("tracelogger"),
+        KIND_OTHER, rtStats.runtime.tracelogger,
+        "The memory used for the tracelogger, including the graph and events.");
 
     // Report the numbers for memory outside of compartments.
 
