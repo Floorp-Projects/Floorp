@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>
+Test for interaction between prefixed and non-prefixed @keyframes rules with
+the same name
+</title>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<div id='log'></div>
+<script>
+/**
+ * Appends a style element to the document head.
+ *
+ * @param t  The testharness.js Test object. If provided, this will be used
+ *           to register a cleanup callback to remove the style element
+ *           when the test finishes.
+ *
+ * @param rules  A dictionary object with selector names and rules to set on
+ *               the style sheet.
+ */
+function addStyle(t, rules) {
+  var extraStyle = document.createElement('style');
+  document.head.appendChild(extraStyle);
+  if (rules) {
+    var sheet = extraStyle.sheet;
+    for (var selector in rules) {
+      sheet.insertRule(selector + '{' + rules[selector] + '}',
+                       sheet.cssRules.length);
+    }
+  }
+
+  if (t && typeof t.add_cleanup === 'function') {
+    t.add_cleanup(function() {
+      extraStyle.remove();
+    });
+  }
+}
+
+/**
+ * Appends a div to the document body.
+ *
+ * @param t  The testharness.js Test object. If provided, this will be used
+ *           to register a cleanup callback to remove the div when the test
+ *           finishes.
+ *
+ * @param attrs  A dictionary object with attribute names and values to set on
+ *               the div.
+ */
+function addDiv(t, attrs) {
+  var div = document.createElement('div');
+  if (attrs) {
+    for (var attrName in attrs) {
+      div.setAttribute(attrName, attrs[attrName]);
+    }
+  }
+  document.body.appendChild(div);
+  if (t && typeof t.add_cleanup === 'function') {
+    t.add_cleanup(function() {
+      div.remove();
+    });
+  }
+  return div;
+}
+
+var isStylo = false;
+// 'layout.css.servo.enabled' is not yet defined on gecko, so we need a try
+// block.
+try {
+  isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+} catch(e) {
+}
+
+test(function(t) {
+  addStyle(t,
+    { 'dummy': '', // XXX bug 1336863 hackaround: a single insertRule is broken
+                   // on stylo.
+      '@-webkit-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-webkit- prefix keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
+      '@-moz-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-moz- prefix keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
+      '@-WEBKIT-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-WEBKIT- prefix keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
+      '@-MOZ-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-MOZ- prefix keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
+      '@-webkit-KEYFRAMES anim': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-webkit- prefix KEYFRAMES');
+
+test(function(t) {
+  if (!isStylo) {
+    // FIXME: Bug 1312918: later prefixed rule incorrectly overrides earlier
+    // non-prefixed on gecko.
+    return;
+  }
+
+  addStyle(t,
+    { '@keyframes anim':         'from,to { color: rgb(0, 255, 0); }',
+      '@-webkit-keyframes anim': 'from,to { color: rgb(255, 0, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-webkit-keyframes should not override earlier non-prefix keyframes');
+
+test(function(t) {
+  if (!isStylo) {
+    // FIXME: Bug 1312918: later prefixed rule incorrectly overrides earlier
+    // non-prefixed on gecko.
+    return;
+  }
+
+  addStyle(t,
+    { '@keyframes anim':      'from,to { color: rgb(0, 255, 0); }',
+      '@-moz-keyframes anim': 'from,to { color: rgb(255, 0, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, '-moz-keyframes should not override earlier non-prefix keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { '@-moz-keyframes anim': 'from,to { color: rgb(255, 0, 0); }',
+      '@keyframes anim':      'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, 'non-prefix keyframes should override earlier -moz-keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { '@-webkit-keyframes anim': 'from,to { color: rgb(255, 0, 0); }',
+      '@keyframes anim':         'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, 'non-prefix keyframes should override earlier -webkit-keyframes');
+
+test(function(t) {
+  addStyle(t,
+    { '@-webkit-keyframes anim': 'from,to { color: rgb(255, 0, 0); }',
+      '@-moz-keyframes anim':    'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+
+  addStyle(t,
+    { '@-moz-keyframes anim2':    'from,to { color: rgb(255, 0, 0); }',
+      '@-webkit-keyframes anim2': 'from,to { color: rgb(0, 255, 0); }' });
+
+  var div = addDiv(t, { style: 'animation: anim2 100s' });
+
+  assert_equals(getComputedStyle(div).color, 'rgb(0, 255, 0)');
+}, 'last prefixed keyframes should override earlier prefixed keyframes');
+</script>
