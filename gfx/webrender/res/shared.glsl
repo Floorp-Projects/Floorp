@@ -43,7 +43,6 @@ uniform sampler2DRect sColor1;
 uniform sampler2DRect sColor2;
 #endif
 uniform sampler2D sDither;
-uniform sampler2D sMask;
 
 //======================================================================================
 // Interpolator definitions

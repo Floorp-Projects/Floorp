@@ -543,4 +543,23 @@ impl ClipId {
             _ => None,
         }
     }
+
+    pub fn is_root_scroll_node(&self) -> bool {
+        match *self {
+            ClipId::Clip(id, _) if id == 0 => true,
+            _ => false,
+        }
+    }
 }
+
+macro_rules! define_empty_heap_size_of {
+    ($name:ident) => {
+        impl ::heapsize::HeapSizeOf for $name {
+            fn heap_size_of_children(&self) -> usize { 0 }
+        }
+    }
+}
+
+define_empty_heap_size_of!(ClipId);
+define_empty_heap_size_of!(RepeatMode);
+define_empty_heap_size_of!(ImageKey);

@@ -42,7 +42,6 @@ class RendererOGL
 {
   friend WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId);
   friend void UnlockExternalImage(void* aObj, WrExternalImageId aId);
-  friend void ReleaseExternalImage(void* aObj, WrExternalImageId aId);
 
 public:
   WrExternalImageHandler GetExternalImageHandler();

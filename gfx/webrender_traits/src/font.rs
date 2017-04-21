@@ -3,15 +3,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::Point2D;
-use {ColorU, ColorF};
+use {ColorU, ColorF, LayoutPoint};
 
+#[cfg(target_os = "macos")] use core_foundation::string::CFString;
 #[cfg(target_os = "macos")] use core_graphics::font::CGFont;
+#[cfg(target_os = "macos")] use serde::de::{self, Deserialize, Deserializer};
+#[cfg(target_os = "macos")] use serde::ser::{Serialize, Serializer};
 #[cfg(target_os = "windows")] use dwrote::FontDescriptor;
 
 
 #[cfg(target_os = "macos")]
-pub type NativeFontHandle = CGFont;
+#[derive(Clone)]
+pub struct NativeFontHandle(pub CGFont);
+
+#[cfg(target_os = "macos")]
+impl Serialize for NativeFontHandle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let postscript_name = self.0.postscript_name().to_string();
+        postscript_name.serialize(serializer)
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Deserialize for NativeFontHandle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer {
+        let postscript_name: String = try!(Deserialize::deserialize(deserializer));
+
+        match CGFont::from_name(&CFString::new(&*postscript_name)) {
+            Ok(font) => Ok(NativeFontHandle(font)),
+            _ => Err(de::Error::custom("Couldn't find a font with that PostScript name!")),
+        }
+    }
+}
 
 /// Native fonts are not used on Linux; all fonts are raw.
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -107,7 +130,7 @@ pub struct SubpixelPoint {
 }
 
 impl SubpixelPoint {
-    pub fn new(point: Point2D<f32>,
+    pub fn new(point: LayoutPoint,
                render_mode: FontRenderMode) -> SubpixelPoint {
         SubpixelPoint {
             x: render_mode.subpixel_quantize_offset(point.x),
@@ -119,7 +142,7 @@ impl SubpixelPoint {
         (self.x.into(), self.y.into())
     }
 
-    pub fn set_offset(&mut self, point: Point2D<f32>, render_mode: FontRenderMode) {
+    pub fn set_offset(&mut self, point: LayoutPoint, render_mode: FontRenderMode) {
         self.x = render_mode.subpixel_quantize_offset(point.x);
         self.y = render_mode.subpixel_quantize_offset(point.y);
     }
@@ -144,7 +167,7 @@ impl GlyphKey {
                size: Au,
                color: ColorF,
                index: u32,
-               point: Point2D<f32>,
+               point: LayoutPoint,
                render_mode: FontRenderMode) -> GlyphKey {
         GlyphKey {
             font_key: font_key,
@@ -160,5 +183,5 @@ impl GlyphKey {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GlyphInstance {
     pub index: u32,
-    pub point: Point2D<f32>,
+    pub point: LayoutPoint,
 }

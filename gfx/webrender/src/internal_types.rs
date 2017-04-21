@@ -56,7 +56,7 @@ pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
 
 #[derive(Clone)]
 pub enum FontTemplate {
-    Raw(Arc<Vec<u8>>),
+    Raw(Arc<Vec<u8>>, u32),
     Native(NativeFontHandle),
 }
 
@@ -65,7 +65,6 @@ pub enum TextureSampler {
     Color0,
     Color1,
     Color2,
-    Mask,
     CacheA8,
     CacheRGBA8,
     Data16,
@@ -284,6 +283,7 @@ pub enum TextureUpdateOp {
     UpdateForExternalBuffer {
         rect: DeviceUintRect,
         id: ExternalImageId,
+        channel_index: u8,
         stride: Option<u32>,
     },
     Grow {
@@ -295,8 +295,6 @@ pub enum TextureUpdateOp {
     },
     Free,
 }
-
-pub type ExternalImageUpdateList = Vec<ExternalImageId>;
 
 pub struct TextureUpdate {
     pub id: CacheTextureId,
@@ -347,7 +345,7 @@ impl RendererFrame {
 
 pub enum ResultMsg {
     RefreshShader(PathBuf),
-    NewFrame(RendererFrame, TextureUpdateList, ExternalImageUpdateList, BackendProfileCounters),
+    NewFrame(RendererFrame, TextureUpdateList, BackendProfileCounters),
 }
 
 #[repr(u32)]

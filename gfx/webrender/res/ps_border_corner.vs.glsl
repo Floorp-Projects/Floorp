@@ -4,9 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void set_radii(vec2 border_radius,
-               vec2 border_width,
-               vec2 outer_corner,
-               vec2 gradient_sign) {
+               vec2 border_width) {
     if (border_radius.x > 0.0 && border_radius.y > 0.0) {
         // Set inner/outer radius on valid border radius.
         vOuterRadii = border_radius;
@@ -15,12 +13,16 @@ void set_radii(vec2 border_radius,
         vOuterRadii = vec2(2.0 * border_width);
     }
 
-    if (border_radius.x > border_width.x && border_radius.y > border_width.y) {
-        vInnerRadii = max(vec2(0.0), border_radius - border_width);
+    if (all(greaterThan(border_radius, border_width))) {
+        vInnerRadii = border_radius - border_width;
     } else {
         vInnerRadii = vec2(0.0);
     }
+}
 
+void set_edge_line(vec2 border_width,
+                   vec2 outer_corner,
+                   vec2 gradient_sign) {
     vec2 gradient = border_width * gradient_sign;
     vColorEdgeLine = vec4(outer_corner, vec2(-gradient.y, gradient.x));
 }
@@ -41,9 +43,10 @@ void main(void) {
             vClipCenter = corners.tl_outer + border.radii[0].xy;
             vClipSign = vec2(1.0);
             set_radii(border.radii[0].xy,
-                      border.widths.xy,
-                      corners.tl_outer,
-                      vec2(1.0, 1.0));
+                      border.widths.xy);
+            set_edge_line(border.widths.xy,
+                          corners.tl_outer,
+                          vec2(1.0, 1.0));
             break;
         }
         case 1: {
@@ -55,9 +58,10 @@ void main(void) {
             vClipCenter = corners.tr_outer + vec2(-border.radii[0].z, border.radii[0].w);
             vClipSign = vec2(-1.0, 1.0);
             set_radii(border.radii[0].zw,
-                      border.widths.zy,
-                      corners.tr_outer,
-                      vec2(-1.0, 1.0));
+                      border.widths.zy);
+            set_edge_line(border.widths.zy,
+                          corners.tr_outer,
+                          vec2(-1.0, 1.0));
             break;
         }
         case 2: {
@@ -68,9 +72,10 @@ void main(void) {
             vClipCenter = corners.br_outer - border.radii[1].xy;
             vClipSign = vec2(-1.0, -1.0);
             set_radii(border.radii[1].xy,
-                      border.widths.zw,
-                      corners.br_outer,
-                      vec2(-1.0, -1.0));
+                      border.widths.zw);
+            set_edge_line(border.widths.zw,
+                          corners.br_outer,
+                          vec2(-1.0, -1.0));
             break;
         }
         case 3: {
@@ -82,9 +87,10 @@ void main(void) {
             vClipCenter = corners.bl_outer + vec2(border.radii[1].z, -border.radii[1].w);
             vClipSign = vec2(1.0, -1.0);
             set_radii(border.radii[1].zw,
-                      border.widths.xw,
-                      corners.bl_outer,
-                      vec2(1.0, -1.0));
+                      border.widths.xw);
+            set_edge_line(border.widths.xw,
+                          corners.bl_outer,
+                          vec2(1.0, -1.0));
             break;
         }
     }
