@@ -1099,14 +1099,15 @@ pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI,
 pub extern "C" fn wr_api_add_raw_font(api: &mut WrAPI,
                                       key: WrFontKey,
                                       font_buffer: *mut u8,
-                                      buffer_size: usize) {
+                                      buffer_size: usize,
+                                      index: u32) {
     assert!(unsafe { is_in_compositor_thread() });
 
     let font_slice = unsafe { slice::from_raw_parts(font_buffer, buffer_size as usize) };
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    api.add_raw_font(key, font_vector, 0);
+    api.add_raw_font(key, font_vector, index);
 }
 
 #[no_mangle]
