@@ -45,7 +45,7 @@ void
 StreamControl::CloseReadStreams(const nsID& aId)
 {
   AssertOwningThread();
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA) || defined(EARLY_BETA_OR_EARLIER)
   uint32_t closedCount = 0;
 #endif
 
@@ -54,7 +54,7 @@ StreamControl::CloseReadStreams(const nsID& aId)
     RefPtr<ReadStream::Controllable> stream = iter.GetNext();
     if (stream->MatchId(aId)) {
       stream->CloseStream();
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA) || defined(EARLY_BETA_OR_EARLIER)
       closedCount += 1;
 #endif
     }
