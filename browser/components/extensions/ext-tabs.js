@@ -158,7 +158,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
       onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
         let listener = (eventName, event) => {
-          fire.async(tabManager.convert(event.nativeTab));
+          fire.async(tabManager.convert(event.nativeTab, event.currentTab));
         };
 
         tabTracker.on("tab-created", listener);
@@ -402,6 +402,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           options.disallowInheritPrincipal = true;
 
           tabListener.initTabReady();
+          let currentTab = window.gBrowser.selectedTab;
           let nativeTab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 
           let active = true;
@@ -436,7 +437,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             tabListener.initializingTabs.add(nativeTab);
           }
 
-          return tabManager.convert(nativeTab);
+          return tabManager.convert(nativeTab, currentTab);
         });
       },
 
