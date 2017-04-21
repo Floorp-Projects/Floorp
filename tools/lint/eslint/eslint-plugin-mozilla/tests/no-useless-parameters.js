@@ -44,81 +44,103 @@ ruleTester.run("no-useless-parameters", rule, {
   invalid: [
     {
       code: "Services.prefs.clearUserPref('browser.search.custom', false);",
+      output: "Services.prefs.clearUserPref('browser.search.custom');",
+      errors: callError("clearUserPref takes only 1 parameter.")
+    },
+    {
+      code: "Services.prefs.clearUserPref('browser.search.custom',\n   false);",
+      output: "Services.prefs.clearUserPref('browser.search.custom');",
       errors: callError("clearUserPref takes only 1 parameter.")
     },
     {
       code: "Services.removeObserver('notification name', {}, false);",
+      output: "Services.removeObserver('notification name', {});",
       errors: callError("removeObserver only takes 2 parameters.")
     },
     {
       code: "Services.removeObserver('notification name', {}, true);",
+      output: "Services.removeObserver('notification name', {});",
       errors: callError("removeObserver only takes 2 parameters.")
     },
     {
       code: "Services.io.newURI('http://example.com', null, null);",
+      output: "Services.io.newURI('http://example.com');",
       errors: callError("newURI's last parameters are optional.")
     },
     {
       code: "Services.io.newURI('http://example.com', 'utf8', null);",
+      output: "Services.io.newURI('http://example.com', 'utf8');",
       errors: callError("newURI's last parameters are optional.")
     },
     {
       code: "Services.io.newURI('http://example.com', null);",
+      output: "Services.io.newURI('http://example.com');",
       errors: callError("newURI's last parameters are optional.")
     },
     {
       code: "Services.io.newURI('http://example.com', '', '');",
+      output: "Services.io.newURI('http://example.com');",
       errors: callError("newURI's last parameters are optional.")
     },
     {
       code: "Services.io.newURI('http://example.com', '');",
+      output: "Services.io.newURI('http://example.com');",
       errors: callError("newURI's last parameters are optional.")
     },
     {
       code: "elt.addEventListener('click', handler, false);",
+      output: "elt.addEventListener('click', handler);",
       errors: callError(
         "addEventListener's third parameter can be omitted when it's false.")
     },
     {
       code: "elt.removeEventListener('click', handler, false);",
+      output: "elt.removeEventListener('click', handler);",
       errors: callError(
         "removeEventListener's third parameter can be omitted when it's" +
         " false.")
     },
     {
       code: "Services.obs.addObserver(this, 'topic', false);",
+      output: "Services.obs.addObserver(this, 'topic');",
       errors: callError(
         "addObserver's third parameter can be omitted when it's" +
         " false.")
     },
     {
       code: "Services.prefs.addObserver('branch', this, false);",
+      output: "Services.prefs.addObserver('branch', this);",
       errors: callError(
         "addObserver's third parameter can be omitted when it's" +
         " false.")
     },
     {
       code: "array.appendElement(elt, false);",
+      output: "array.appendElement(elt);",
       errors: callError(
         "appendElement's second parameter can be omitted when it's" +
         " false.")
     },
     {
       code: "Services.obs.notifyObservers(obj, 'topic', null);",
+      output: "Services.obs.notifyObservers(obj, 'topic');",
       errors: callError(
         "notifyObservers's third parameter can be omitted.")
     },
     {
       code: "Services.obs.notifyObservers(obj, 'topic', '');",
+      output: "Services.obs.notifyObservers(obj, 'topic');",
       errors: callError(
         "notifyObservers's third parameter can be omitted.")
     },
     {
       code: "window.getComputedStyle(elt, null);",
+      output: "window.getComputedStyle(elt);",
       errors: callError("getComputedStyle's second parameter can be omitted.")
     },
     {
       code: "window.getComputedStyle(elt, '');",
+      output: "window.getComputedStyle(elt);",
       errors: callError("getComputedStyle's second parameter can be omitted.")
     }
   ]
