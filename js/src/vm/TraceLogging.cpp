@@ -7,6 +7,7 @@
 #include "vm/TraceLogging.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
 
 #include <string.h>
@@ -101,6 +102,12 @@ EnsureTraceLoggerState()
     }
 
     return true;
+}
+
+size_t
+js::SizeOfTraceLogState(mozilla::MallocSizeOf mallocSizeOf)
+{
+    return traceLoggerState ? traceLoggerState->sizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
 void
@@ -216,6 +223,25 @@ TraceLoggerThread::silentFail(const char* error)
     enabled_ = 0;
 }
 
+size_t
+TraceLoggerThread::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t size = 0;
+#ifdef DEBUG
+    size += graphStack.sizeOfExcludingThis(mallocSizeOf);
+#endif
+    size += events.sizeOfExcludingThis(mallocSizeOf);
+    if (graph.get())
+        size += graph->sizeOfIncludingThis(mallocSizeOf);
+    return size;
+}
+
+size_t
+TraceLoggerThread::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+}
+
 bool
 TraceLoggerThread::enable(JSContext* cx)
 {
@@ -310,6 +336,23 @@ TraceLoggerThreadState::maybeEventText(uint32_t id)
         return nullptr;
 
     return p->value()->string();
+}
+
+size_t
+TraceLoggerThreadState::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
+{
+    LockGuard<Mutex> guard(lock);
+
+    // Do not count threadLoggers since they are counted by JSContext::traceLogger.
+
+    size_t size = 0;
+    size += pointerMap.sizeOfExcludingThis(mallocSizeOf);
+    if (textIdPayloads.initialized()) {
+        size += textIdPayloads.sizeOfExcludingThis(mallocSizeOf);
+        for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
+            r.front().value()->sizeOfIncludingThis(mallocSizeOf);
+    }
+    return size;
 }
 
 bool

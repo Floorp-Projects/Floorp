@@ -515,7 +515,8 @@ struct RuntimeSizes
     macro(_, MallocHeap, sharedImmutableStringsCache) \
     macro(_, MallocHeap, sharedIntlData) \
     macro(_, MallocHeap, uncompressedSourceCache) \
-    macro(_, MallocHeap, scriptData)
+    macro(_, MallocHeap, scriptData) \
+    macro(_, MallocHeap, tracelogger)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -961,7 +962,10 @@ AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSi
 
 extern JS_PUBLIC_API(bool)
 AddServoSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf,
-               ObjectPrivateVisitor *opv, ServoSizes *sizes);
+               ObjectPrivateVisitor* opv, ServoSizes* sizes);
+
+extern JS_PUBLIC_API(void)
+CollectTraceLoggerStateStats(RuntimeStats* rtStats);
 
 } // namespace JS
 

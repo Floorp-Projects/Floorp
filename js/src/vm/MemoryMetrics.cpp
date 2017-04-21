@@ -877,6 +877,15 @@ JS::PeakSizeOfTemporary(const JSContext* cx)
     return cx->tempLifoAlloc().peakSizeOfExcludingThis();
 }
 
+JS_PUBLIC_API(void)
+JS::CollectTraceLoggerStateStats(RuntimeStats* rtStats)
+{
+#ifdef JS_TRACE_LOGGING
+    rtStats->runtime.tracelogger += SizeOfTraceLogState(rtStats->mallocSizeOf_);
+    rtStats->runtime.tracelogger += SizeOfTraceLogGraphState(rtStats->mallocSizeOf_);
+#endif
+}
+
 namespace JS {
 
 class SimpleJSRuntimeStats : public JS::RuntimeStats
@@ -936,8 +945,8 @@ AddSizeOfTab(JSContext* cx, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
 }
 
 JS_PUBLIC_API(bool)
-AddServoSizeOf(JSContext* cx, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
-               ServoSizes *sizes)
+AddServoSizeOf(JSContext* cx, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor* opv,
+               ServoSizes* sizes)
 {
     SimpleJSRuntimeStats rtStats(mallocSizeOf);
 
