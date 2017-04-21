@@ -1157,7 +1157,7 @@
       <property name="EVENTS" readonly="true">
         <getter>
         <![CDATA[
-          return ["click", "focus", "blur", "copy", "cut", "paste"];
+          return ["click", "focus", "blur", "copy", "cut", "paste", "mousedown"];
         ]]>
         </getter>
       </property>
@@ -1550,6 +1550,12 @@
             }
             case "blur": {
               this.onBlur(aEvent);
+              break;
+            }
+            case "mousedown": {
+              if (aEvent.originalTarget == this.mResetButton) {
+                aEvent.preventDefault();
+              }
               break;
             }
             case "copy":
