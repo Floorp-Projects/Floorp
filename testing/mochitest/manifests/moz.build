@@ -5,7 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_HARNESS_FILES.testing.mochitest.manifests += [
-    'autophone-media.ini',
-    'autophone-webrtc.ini',
     'emulator-jb.ini',
 ]

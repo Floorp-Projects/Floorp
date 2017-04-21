@@ -40,7 +40,7 @@ public class ShapedButton extends ThemedImageButton
         paint.setAntiAlias(true);
         paint.setColor(ContextCompat.getColor(context, R.color.canvas_delegate_paint));
         paint.setStrokeWidth(0.0f);
-        mCanvasDelegate = new CanvasDelegate(this, Mode.DST_IN, paint);
+        mCanvasDelegate = new CanvasDelegate(this, Mode.DST_OUT, paint);
 
         setWillNotDraw(false);
     }

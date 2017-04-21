@@ -76,7 +76,7 @@ protected:
 NS_IMETHODIMP
 nsSoundPlayer::Run()
 {
-  PR_SetCurrentThreadName("Play Sound");
+  NS_SetCurrentThreadName("Play Sound");
 
   NS_PRECONDITION(!mSoundName.IsEmpty(), "Sound name should not be empty");
   ::PlaySoundW(mSoundName.get(), nullptr,

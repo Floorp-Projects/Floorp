@@ -124,11 +124,12 @@ public class OverscrollEdgeEffect implements Overscroll {
         }
 
         PointF visibleEnd = mView.getDynamicToolbarAnimator().getVisibleEndOfLayerView();
+        float toolbarEnd = (float)mView.getDynamicToolbarAnimator().getCurrentToolbarHeight();
 
         // If we're pulling an edge, or fading it out, draw!
         boolean invalidate = false;
         if (!mEdges[TOP].isFinished()) {
-            invalidate |= draw(mEdges[TOP], canvas, 0, 0, 0);
+            invalidate |= draw(mEdges[TOP], canvas, 0, toolbarEnd, 0);
         }
 
         if (!mEdges[BOTTOM].isFinished()) {

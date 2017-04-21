@@ -34,19 +34,13 @@ public:
 
     // ChromeProcessController methods
     virtual void Destroy() override;
-    void HandleTap(TapType aType, const LayoutDevicePoint& aPoint, Modifiers aModifiers,
-                   const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) override;
     void UpdateOverscrollVelocity(const float aX, const float aY, const bool aIsRootContent) override;
     void UpdateOverscrollOffset(const float aX, const float aY, const bool aIsRootContent) override;
-    void SetScrollingRootContent(const bool isRootContent) override;
     void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                               APZStateChange aChange,
                               int aArg) override;
 private:
     nsWindow* mAndroidWindow;
-
-    void DispatchSingleTapToObservers(const LayoutDevicePoint& aPoint,
-                                      const ScrollableLayerGuid& aGuid) const;
 };
 
 } // namespace widget
