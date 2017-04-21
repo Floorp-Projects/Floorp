@@ -243,7 +243,7 @@ class NodeBuilder
     typedef AutoValueArray<AST_LIMIT> CallbackArray;
 
     JSContext*  cx;
-    TokenStream* tokenStream;
+    TokenStreamAnyChars* tokenStream;
     bool        saveLoc;               /* save source location information?     */
     char const* src;                  /* source filename or null               */
     RootedValue srcval;                /* source filename JS value or null      */
@@ -302,7 +302,7 @@ class NodeBuilder
         return true;
     }
 
-    void setTokenStream(TokenStream* ts) {
+    void setTokenStream(TokenStreamAnyChars* ts) {
         tokenStream = ts;
     }
 
