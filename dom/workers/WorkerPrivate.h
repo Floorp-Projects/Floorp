@@ -652,7 +652,7 @@ public:
   nsresult
   SetPrincipalFromChannel(nsIChannel* aChannel);
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA) || defined(EARLY_BETA_OR_EARLIER)
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
   bool
   FinalChannelPrincipalIsValid(nsIChannel* aChannel);
 
