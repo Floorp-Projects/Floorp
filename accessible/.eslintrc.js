@@ -13,5 +13,9 @@ module.exports = {
     "dump": true,
     "Services": true,
     "XPCOMUtils": true
+  },
+  "rules": {
+    // Maximum depth callbacks can be nested.
+    "max-nested-callbacks": ["error", 10],
   }
 };
