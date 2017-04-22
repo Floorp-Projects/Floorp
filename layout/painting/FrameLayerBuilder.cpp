@@ -1951,7 +1951,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
     if (t) {
       PaintedDisplayItemLayerUserData* paintedData =
           static_cast<PaintedDisplayItemLayerUserData*>(t->GetUserData(&gPaintedDisplayItemLayerUserData));
-      if (paintedData) {
+      if (paintedData && data->mGeometry) {
         nsRegion old = data->mGeometry->ComputeInvalidationRegion();
         nsIntRegion rgn = old.ScaleToOutsidePixels(paintedData->mXScale, paintedData->mYScale, paintedData->mAppUnitsPerDevPixel);
         rgn.MoveBy(-GetTranslationForPaintedLayer(t));
@@ -1992,6 +1992,7 @@ FrameLayerBuilder::StoreOptimizedLayerForFrame(nsDisplayItem* aItem, Layer* aLay
   DisplayItemData* data = GetDisplayItemDataForManager(aItem, aLayer->Manager());
   NS_ASSERTION(data, "Must have already stored data for this item!");
   data->mOptLayer = aLayer;
+  data->mItem = nullptr;
 }
 
 void
@@ -3143,7 +3144,6 @@ ContainerState::PrepareImageLayer(PaintedLayerData* aData)
     imageLayer->SetClipRect(Nothing());
   }
 
-  mLayerBuilder->StoreOptimizedLayerForFrame(aData->mImage, imageLayer);
   FLB_LOG_PAINTED_LAYER_DECISION(aData,
                                  "  Selected image layer=%p\n", imageLayer.get());
 
@@ -3248,6 +3248,10 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       data->mLayer->SetVisibleRegion(LayerIntRegion());
       data->mLayer->InvalidateRegion(data->mLayer->GetValidRegion().GetBounds());
       data->mLayer->SetEventRegions(EventRegions());
+
+      for (auto& item : data->mAssignedDisplayItems) {
+        mLayerBuilder->StoreOptimizedLayerForFrame(item.mItem, layer);
+      }
     }
   }
 
@@ -4541,7 +4545,9 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
 {
   nsDisplayItem *item = aData->mItem;
   PaintedLayer* paintedLayer = aData->mLayer->AsPaintedLayer();
-  if (!item || !paintedLayer) {
+  // If aData->mOptLayer is presence, means this item has been optimized to the separate
+  // layer. Thus, skip geometry change calculation.
+  if (aData->mOptLayer || !item || !paintedLayer) {
     aData->EndUpdate();
     return;
   }

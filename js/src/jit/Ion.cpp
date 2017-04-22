@@ -22,6 +22,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CacheIRSpewer.h"
 #include "jit/CodeGenerator.h"
 #include "jit/EagerSimdUnbox.h"
 #include "jit/EdgeCaseAnalysis.h"
@@ -174,7 +175,15 @@ jit::InitializeIon()
 {
     if (!TlsJitContext.init())
         return false;
+
     CheckLogging();
+
+#ifdef JS_CACHEIR_SPEW
+    const char* env = getenv("CACHEIR_LOGS");
+    if (env && env[0])
+        CacheIRSpewer::singleton().init();
+#endif
+
 #if defined(JS_CODEGEN_ARM)
     InitARMFlags();
 #endif

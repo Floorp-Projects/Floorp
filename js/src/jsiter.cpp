@@ -559,6 +559,10 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
 
         PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
+        // CodeGenerator::visitIteratorStartO assumes the iterator object is not
+        // inside the nursery when deciding whether a barrier is necessary.
+        MOZ_ASSERT(!js::gc::IsInsideNursery(res));
+
         MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
         return res;
     }

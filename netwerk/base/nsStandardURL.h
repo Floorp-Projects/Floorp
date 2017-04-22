@@ -16,8 +16,8 @@
 #include "nsURLHelper.h"
 #include "nsIClassInfo.h"
 #include "nsISizeOf.h"
-#include "prclist.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIIPCSerializableURI.h"
 #include "nsISensitiveInfoHiddenURI.h"
@@ -48,6 +48,9 @@ class nsStandardURL : public nsIFileURL
                     , public nsISizeOf
                     , public nsIIPCSerializableURI
                     , public nsISensitiveInfoHiddenURI
+#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
+                    , public LinkedListElement<nsStandardURL>
+#endif
 {
 protected:
     virtual ~nsStandardURL();
@@ -304,7 +307,6 @@ private:
 
 public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PRCList mDebugCList;
     void PrintSpec() const { printf("  %s\n", mSpec.get()); }
 #endif
 
