@@ -457,7 +457,6 @@ ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
                                           nsIAtom* aPseudoTag)
 {
   PreTraverseSync();
-
   return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
