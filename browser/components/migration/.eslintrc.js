@@ -19,7 +19,6 @@ module.exports = {
     "no-eval": "error",
     "no-extend-native": "error",
     "no-fallthrough": ["error", { "commentPattern": ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*" }],
-    "no-mixed-spaces-and-tabs": "error",
     "no-multi-str": "error",
     "no-return-assign": "error",
     "no-sequences": "error",
