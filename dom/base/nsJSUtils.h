@@ -140,11 +140,11 @@ public:
     ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue);
 
     // After getting a notification that an off-thread compilation terminated,
-    // this function will synchronize the result by moving it to the main thread
-    // before starting the execution of the script.
+    // this function will take the result of the parser by moving it to the main
+    // thread before starting the execution of the script.
     //
     // The compiled script would be returned in the |aScript| out-param.
-    MOZ_MUST_USE nsresult SyncAndExec(void **aOffThreadToken,
+    MOZ_MUST_USE nsresult JoinAndExec(void **aOffThreadToken,
                                       JS::MutableHandle<JSScript*> aScript);
 
     // Compile a script contained in a SourceBuffer, and execute it.
@@ -154,6 +154,22 @@ public:
     // Compile a script contained in a string, and execute it.
     nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
                             const nsAString& aScript);
+
+    // Decode a script contained in a buffer, and execute it.
+    MOZ_MUST_USE nsresult DecodeAndExec(JS::CompileOptions& aCompileOptions,
+                                        mozilla::Vector<uint8_t>& aBytecodeBuf,
+                                        size_t aBytecodeIndex);
+
+    // After getting a notification that an off-thread decoding terminated, this
+    // function will get the result of the decoder by moving it to the main
+    // thread before starting the execution of the script.
+    MOZ_MUST_USE nsresult DecodeJoinAndExec(void **aOffThreadToken);
+
+    // Similar to JoinAndExec, except that in addition to fecthing the source,
+    // we register the fact that we plan to encode its bytecode later.
+    MOZ_MUST_USE nsresult JoinEncodeAndExec(void **aOffThreadToken,
+                                            mozilla::Vector<uint8_t>& aBytecodeBuf,
+                                            JS::MutableHandle<JSScript*> aScript);
   };
 
   static nsresult CompileModule(JSContext* aCx,
