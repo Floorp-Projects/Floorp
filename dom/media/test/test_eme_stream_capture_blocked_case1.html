@@ -48,7 +48,7 @@ function startTest(test, token)
   manager.started(case1token);
 
   Promise.all([
-    LoadTest(test, v1, case1token, { noEndOfStream:false }),
+    LoadTest(test, v1, case1token),
     setMediaKeys()])
   .catch(reason => ok(false, reason))
   .then(() => {

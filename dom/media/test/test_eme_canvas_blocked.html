@@ -37,7 +37,7 @@ function startTest(test, token)
     p1.resolve();
   });
 
-  let p2 = SetupEME(v, test, token, { noEndOfStream:false });
+  let p2 = SetupEME(v, test, token);
 
   Promise.all([p1.promise, p2])
   .catch(reason => ok(false, reason))
