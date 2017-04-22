@@ -21,10 +21,9 @@ const {
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const { createFactories } = require("devtools/client/shared/react-utils");
-const Rep = createFactory(REPS.Rep);
+const Rep = REPS.Rep;
 const Grip = REPS.Grip;
-const StringRep = createFactories(REPS.StringRep).rep;
+const StringRep = REPS.StringRep.rep;
 
 GripMessageBody.displayName = "GripMessageBody";
 
@@ -39,6 +38,7 @@ GripMessageBody.propTypes = {
   }),
   userProvidedStyle: PropTypes.string,
   useQuotes: PropTypes.bool,
+  escapeWhitespace: PropTypes.bool,
 };
 
 GripMessageBody.defaultProps = {
@@ -46,7 +46,13 @@ GripMessageBody.defaultProps = {
 };
 
 function GripMessageBody(props) {
-  const { grip, userProvidedStyle, serviceContainer, useQuotes } = props;
+  const {
+    grip,
+    userProvidedStyle,
+    serviceContainer,
+    useQuotes,
+    escapeWhitespace
+  } = props;
 
   let styleObject;
   if (userProvidedStyle && userProvidedStyle !== "") {
@@ -66,6 +72,7 @@ function GripMessageBody(props) {
       ? StringRep({
         object: grip,
         useQuotes: useQuotes,
+        escapeWhitespace: escapeWhitespace,
         mode: props.mode,
         style: styleObject
       })

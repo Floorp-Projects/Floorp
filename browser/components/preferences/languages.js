@@ -19,7 +19,9 @@ var gLanguagesDialog = {
   // see bug 1194346.
   forceReflow() {
     this._activeLanguages.style.fontKerning = "none";
-    setTimeout("gLanguagesDialog._activeLanguages.style.removeProperty('font-kerning')", 0);
+    setTimeout(() => {
+      this._activeLanguages.style.removeProperty("font-kerning")
+    }, 0);
   },
 
   get _activeLanguages() {

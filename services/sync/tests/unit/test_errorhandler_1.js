@@ -120,7 +120,7 @@ add_task(async function test_credentials_changed_logout() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  EHTestsCommon.generateCredentialsChangedFailure();
+  await EHTestsCommon.generateCredentialsChangedFailure();
 
   let ping = await sync_and_validate_telem(true);
   equal(ping.status.sync, CREDENTIALS_CHANGED);
@@ -397,7 +397,7 @@ add_task(async function test_sync_syncAndReportErrors_non_network_error() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  EHTestsCommon.generateCredentialsChangedFailure();
+  await EHTestsCommon.generateCredentialsChangedFailure();
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
 
@@ -450,7 +450,7 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_non_network_erro
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  EHTestsCommon.generateCredentialsChangedFailure();
+  await EHTestsCommon.generateCredentialsChangedFailure();
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
 
@@ -579,7 +579,7 @@ add_task(async function test_sync_prolonged_non_network_error() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  EHTestsCommon.generateCredentialsChangedFailure();
+  await EHTestsCommon.generateCredentialsChangedFailure();
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
 
@@ -668,7 +668,7 @@ add_task(async function test_sync_non_network_error() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  EHTestsCommon.generateCredentialsChangedFailure();
+  await EHTestsCommon.generateCredentialsChangedFailure();
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
 

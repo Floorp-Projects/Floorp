@@ -146,6 +146,7 @@ TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
+bool IMEStateManager::sInputModeSupported = false;
 bool IMEStateManager::sRemoteHasFocus = false;
 
 // static
@@ -155,6 +156,11 @@ IMEStateManager::Init()
   Preferences::AddBoolVarCache(
     &sCheckForIMEUnawareWebApps,
     "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",
+    false);
+
+  Preferences::AddBoolVarCache(
+    &sInputModeSupported,
+    "dom.forms.inputmode",
     false);
 }
 
@@ -1000,7 +1006,7 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
     }
 
-    if (Preferences::GetBool("dom.forms.inputmode", false) ||
+    if (sInputModeSupported ||
         nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
                         context.mHTMLInputInputmode);

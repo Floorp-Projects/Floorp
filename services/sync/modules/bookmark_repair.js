@@ -639,7 +639,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     let itemSource = engine.itemSource();
     itemSource.ids = repairable.map(item => item.syncId);
     log.trace(`checking the server for items`, itemSource.ids);
-    let itemsResponse = itemSource.get();
+    let itemsResponse = await itemSource.get();
     // If the response failed, don't bother trying to parse the output.
     // Throwing here means we abort the repair, which isn't ideal for transient
     // errors (eg, no network, 500 service outage etc), but we don't currently

@@ -72,7 +72,8 @@ const {
   isNativeAnonymous,
   isXBLAnonymous,
   isShadowAnonymous,
-  getFrameElement
+  getFrameElement,
+  loadSheet
 } = require("devtools/shared/layout/utils");
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/reflow");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
@@ -127,7 +128,7 @@ const PSEUDO_SELECTORS = [
   ["::selection", 0]
 ];
 
-var HELPER_SHEET = `
+var HELPER_SHEET = `data:text/css;charset=utf-8,
   .__fx-devtools-hide-shortcut__ {
     visibility: hidden !important;
   }
@@ -1865,15 +1866,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   _installHelperSheet: function (node) {
     if (!this.installedHelpers) {
-      this.installedHelpers = new WeakMap();
+      this.installedHelpers = new WeakSet();
     }
     let win = node.rawNode.ownerGlobal;
     if (!this.installedHelpers.has(win)) {
-      let { Style } = require("sdk/stylesheet/style");
-      let { attach } = require("sdk/content/mod");
-      let style = Style({source: HELPER_SHEET, type: "agent" });
-      attach(style, win);
-      this.installedHelpers.set(win, style);
+      loadSheet(win, HELPER_SHEET, "agent");
+      this.installedHelpers.add(win);
     }
   },
 

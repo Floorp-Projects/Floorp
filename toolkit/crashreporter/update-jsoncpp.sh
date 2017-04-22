@@ -18,7 +18,7 @@ rm -rf ${crashreporter_dir}/jsoncpp
 
 jsoncpp_repo=$1
 rev=${2-HEAD}
-(cd $jsoncpp_repo; git archive --prefix=toolkit/crashreporter/jsoncpp/ $rev) | (cd $repo; tar xf -)
+(cd $jsoncpp_repo; git archive --prefix=toolkit/components/jsoncpp/ $rev) | (cd $repo; tar xf -)
 
 # remove some extraneous bits
 rm -rf \

@@ -50,7 +50,7 @@ def rust_compiler(rustc_info, cargo_info):
         die(dedent('''\
         Rust compiler not found.
         To compile rust language sources, you must have 'rustc' in your path.
-        See https//www.rust-lang.org/ for more information.
+        See https://www.rust-lang.org/ for more information.
 
         You can install rust by running './mach bootstrap'
         or by directly running the installer from https://rustup.rs/

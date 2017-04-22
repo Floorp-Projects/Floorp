@@ -63,7 +63,7 @@ async function setUp(server) {
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
-  let result = serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
+  let result = (await serverKeys.upload(Service.resource(Service.cryptoKeysURL))).success;
   return result;
 }
 

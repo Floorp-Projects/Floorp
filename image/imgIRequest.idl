@@ -208,5 +208,23 @@ interface imgIRequest : nsIRequest
    * underlying call.
    */
   void decrementAnimationConsumers();
+
+  /**
+   * Request loading priority boost to requested category, each category
+   * of request increases priority only one time..
+   *
+   * CATEGORY_FRAME_INIT: increase priority when the imgRequest is associated
+   * with an nsImageFrame.
+   *
+   * CATEGORY_SIZE_QUERY: increase priority when size decoding is necessary to
+   * determine the layout size of the associated nsImageFrame.
+   *
+   * CATEGORY_DISPLAY: increase priority when the image is about to be displayed
+   * in the viewport.
+   */
+  const uint32_t CATEGORY_FRAME_INIT = 1 << 0;
+  const uint32_t CATEGORY_SIZE_QUERY = 1 << 1;
+  const uint32_t CATEGORY_DISPLAY    = 1 << 2;
+  void boostPriority(in uint32_t aCategory);
 };
 

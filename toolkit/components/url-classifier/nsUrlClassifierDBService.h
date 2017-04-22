@@ -41,6 +41,26 @@
 // The hash length of a complete hash entry.
 #define COMPLETE_LENGTH 32
 
+// Prefs for implementing nsIURIClassifier to block page loads
+#define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
+#define CHECK_MALWARE_DEFAULT   false
+
+#define CHECK_PHISHING_PREF     "browser.safebrowsing.phishing.enabled"
+#define CHECK_PHISHING_DEFAULT  false
+
+#define CHECK_BLOCKED_PREF      "browser.safebrowsing.blockedURIs.enabled"
+#define CHECK_BLOCKED_DEFAULT   false
+
+// Comma-separated lists
+#define MALWARE_TABLE_PREF              "urlclassifier.malwareTable"
+#define PHISH_TABLE_PREF                "urlclassifier.phishTable"
+#define TRACKING_TABLE_PREF             "urlclassifier.trackingTable"
+#define TRACKING_WHITELIST_TABLE_PREF   "urlclassifier.trackingWhitelistTable"
+#define BLOCKED_TABLE_PREF              "urlclassifier.blockedTable"
+#define DOWNLOAD_BLOCK_TABLE_PREF       "urlclassifier.downloadBlockTable"
+#define DOWNLOAD_ALLOW_TABLE_PREF       "urlclassifier.downloadAllowTable"
+#define DISALLOW_COMPLETION_TABLE_PREF  "urlclassifier.disallow_completions"
+
 using namespace mozilla::safebrowsing;
 
 class nsUrlClassifierDBServiceWorker;
@@ -90,6 +110,21 @@ public:
   static bool ShutdownHasStarted();
 
 private:
+
+  const nsTArray<nsCString> kObservedPrefs = {
+    NS_LITERAL_CSTRING(CHECK_MALWARE_PREF),
+    NS_LITERAL_CSTRING(CHECK_PHISHING_PREF),
+    NS_LITERAL_CSTRING(CHECK_BLOCKED_PREF),
+    NS_LITERAL_CSTRING(MALWARE_TABLE_PREF),
+    NS_LITERAL_CSTRING(PHISH_TABLE_PREF),
+    NS_LITERAL_CSTRING(TRACKING_TABLE_PREF),
+    NS_LITERAL_CSTRING(TRACKING_WHITELIST_TABLE_PREF),
+    NS_LITERAL_CSTRING(BLOCKED_TABLE_PREF),
+    NS_LITERAL_CSTRING(DOWNLOAD_BLOCK_TABLE_PREF),
+    NS_LITERAL_CSTRING(DOWNLOAD_ALLOW_TABLE_PREF),
+    NS_LITERAL_CSTRING(DISALLOW_COMPLETION_TABLE_PREF)
+  };
+
   // No subclassing
   ~nsUrlClassifierDBService();
 
@@ -108,11 +143,7 @@ private:
   nsresult CheckClean(const nsACString &lookupKey,
                       bool *clean);
 
-  // Read everything into mGethashTables and mDisallowCompletionTables
   nsresult ReadTablesFromPrefs();
-
-  // Build a comma-separated list of tables to check
-  void BuildTables(bool trackingProtectionEnabled, nsCString& tables);
 
   RefPtr<nsUrlClassifierDBServiceWorker> mWorker;
   RefPtr<UrlClassifierDBServiceWorkerProxy> mWorkerProxy;
@@ -142,6 +173,10 @@ private:
 
   // The list of tables that should never be hash completed.
   nsTArray<nsCString> mDisallowCompletionsTables;
+
+  // Comma-separated list of tables to use in lookups.
+  nsCString mTrackingProtectionTables;
+  nsCString mBaseTables;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
