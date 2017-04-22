@@ -11318,12 +11318,12 @@
     "description": "Measures the number of milliseconds we spend waiting for sync message manager IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
   },
   "DISPLAY_ITEM_USAGE_COUNT": {
-    "alert_emails": ["mchang@mozilla.com"],
+    "alert_emails": ["mchang@mozilla.com", "gfx-telemetry@mozilla.com"],
     "bug_numbers": [1353521],
-    "expires_in_version": "70",
+    "expires_in_version": "56",
     "kind": "enumerated",
     "n_values": 99,
-    "description": "Count of which display items are being used by type id"
+    "description": "Count of which layout display items are being created. Display items are created by layout to determine what content to render. A full description is above the class definition for nsDisplayItem. The list of types is kept in nsDisplayItemTypes.h."
   },
   "TIME_TO_DOM_LOADING_MS": {
     "alert_emails": ["wpan@mozilla.com"],

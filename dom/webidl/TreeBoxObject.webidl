@@ -204,4 +204,10 @@ interface TreeBoxObject : BoxObject {
    * Called on a theme switch to flush out the tree's style and image caches.
    */
   void clearStyleAndImageCaches();
+
+  /**
+   * Remove an image source from the image cache to allow its invalidation.
+   */
+  [Throws]
+  void removeImageCacheEntry(long row, TreeColumn col);
 };

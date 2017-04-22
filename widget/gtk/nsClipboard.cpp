@@ -9,6 +9,7 @@
 
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
+#include "HeadlessClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -20,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/TimeStamp.h"
 
 #include "imgIContainer.h"
@@ -37,6 +39,8 @@
 
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsIUnicodeDecoder.h"
+
+#include "gfxPlatform.h"
 
 using mozilla::dom::EncodingUtils;
 using namespace mozilla;
@@ -78,6 +82,34 @@ static GdkFilterReturn
 selection_request_filter   (GdkXEvent *gdk_xevent,
                             GdkEvent *event,
                             gpointer data);
+
+namespace mozilla {
+namespace clipboard {
+StaticRefPtr<nsIClipboard> sInstance;
+}
+}
+/* static */ already_AddRefed<nsIClipboard>
+nsClipboard::GetInstance()
+{
+    using namespace mozilla::clipboard;
+
+    if (!sInstance) {
+        if (gfxPlatform::IsHeadless()) {
+            sInstance = new widget::HeadlessClipboard();
+        } else {
+            RefPtr<nsClipboard> clipboard = new nsClipboard();
+            nsresult rv = clipboard->Init();
+            if (NS_FAILED(rv)) {
+                return nullptr;
+            }
+            sInstance = clipboard.forget();
+        }
+        ClearOnShutdown(&sInstance);
+    }
+
+    RefPtr<nsIClipboard> service = sInstance.get();
+    return service.forget();
+}
 
 nsClipboard::nsClipboard()
 {

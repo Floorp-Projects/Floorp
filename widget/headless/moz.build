@@ -12,9 +12,12 @@ DIRS += ['tests']
 LOCAL_INCLUDES += [
     '/widget',
     '/widget/gtk',
+    '/widget/headless',
 ]
 
 UNIFIED_SOURCES += [
+    'HeadlessClipboard.cpp',
+    'HeadlessClipboardData.cpp',
     'HeadlessLookAndFeel.cpp',
     'HeadlessWidget.cpp',
 ]
