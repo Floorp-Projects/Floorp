@@ -2,17 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#PopupSearchAutoComplete {
-  /* JS code forces the panel to have the width of the searchbar rather than
-   * the width of the textfield. Alignment of the panel with the searchbar is
-   * obtained with negative margins here: margin-inline-start when the text
-   * field is in the same direction as the rest of the UI, margin-inline-end
-   * when the textfield's direction has been reversed.
-   * (eg. using ctrl+shift+X) */
-  margin-inline-start: -25px;
-  margin-inline-end: -18px;
-}
-
 .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
