@@ -340,17 +340,6 @@ class ParseContext : public Nestable<ParseContext>
     // pointer may be nullptr.
     Directives* newDirectives;
 
-    // Set when parsing a declaration-like destructuring pattern.  This flag
-    // causes PrimaryExpr to create PN_NAME parse nodes for variable references
-    // which are not hooked into any definition's use chain, added to any tree
-    // context's AtomList, etc. etc.  checkDestructuring will do that work
-    // later.
-    //
-    // The comments atop checkDestructuring explain the distinction between
-    // assignment-like and declaration-like destructuring patterns, and why
-    // they need to be treated differently.
-    mozilla::Maybe<DeclarationKind> inDestructuringDecl;
-
     // Set when parsing a function and it has 'return <expr>;'
     bool funHasReturnExpr;
 
@@ -1518,15 +1507,17 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     Node finishLexicalScope(ParseContext::Scope& scope, Node body);
 
-    Node propertyName(YieldHandling yieldHandling, Node propList,
+    Node propertyName(YieldHandling yieldHandling,
+                      const mozilla::Maybe<DeclarationKind>& maybeDecl, Node propList,
                       PropertyType* propType, MutableHandleAtom propAtom);
-    Node computedPropertyName(YieldHandling yieldHandling, Node literal);
+    Node computedPropertyName(YieldHandling yieldHandling,
+                              const mozilla::Maybe<DeclarationKind>& maybeDecl, Node literal);
     Node arrayInitializer(YieldHandling yieldHandling, PossibleError* possibleError);
     Node newRegExp();
 
     Node objectLiteral(YieldHandling yieldHandling, PossibleError* possibleError);
 
-    Node bindingInitializer(Node lhs, YieldHandling yieldHandling);
+    Node bindingInitializer(Node lhs, DeclarationKind kind, YieldHandling yieldHandling);
     Node bindingIdentifier(DeclarationKind kind, YieldHandling yieldHandling);
     Node bindingIdentifierOrPattern(DeclarationKind kind, YieldHandling yieldHandling,
                                     TokenKind tt);
