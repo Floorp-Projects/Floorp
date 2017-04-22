@@ -71,7 +71,7 @@ add_task(async function test_locally_changed_keys() {
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION};
-    m.upload(Service.resource(Service.metaURL));
+    await m.upload(Service.resource(Service.metaURL));
 
     _("New meta/global: " + JSON.stringify(johndoe.collection("meta").wbo("global")));
 
@@ -79,7 +79,7 @@ add_task(async function test_locally_changed_keys() {
     generateNewKeys(Service.collectionKeys);
     let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Service.identity.syncKeyBundle);
-    do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
+    do_check_true((await serverKeys.upload(Service.resource(Service.cryptoKeysURL))).success);
 
     // Check that login works.
     do_check_true(Service.login());
@@ -123,7 +123,7 @@ add_task(async function test_locally_changed_keys() {
 
     // Check that we can decrypt one.
     let rec = new CryptoWrapper("history", "record-no--0");
-    rec.fetch(Service.resource(Service.storageURL + "history/record-no--0"));
+    await rec.fetch(Service.resource(Service.storageURL + "history/record-no--0"));
     _(JSON.stringify(rec));
     do_check_true(!!rec.decrypt(liveKeys));
 

@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const Rep = createFactory(REPS.Rep);
+  const { Rep } = REPS;
 
   const { SearchBox } = createFactories(require("./search-box"));
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));

@@ -114,6 +114,9 @@ module.exports = {
     // Disallow unnecessary calls to .bind()
     "no-extra-bind": "error",
 
+    // Disallow eval and setInteral/setTimeout with strings
+    "no-implied-eval": "error",
+
     // No labels
     "no-labels": "error",
 

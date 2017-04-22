@@ -80,7 +80,13 @@ add_task(function* test_removePagesByTimeframe() {
   Assert.equal(rows.length, 0, "There should be no relation entry");
 
   PlacesUtils.history.removePagesByTimeframe(0, PlacesUtils.toPRTime(new Date()));
+  yield PlacesTestUtils.promiseAsyncUpdates();
   rows = yield db.execute("SELECT * FROM moz_icons");
+  // Debug logging for possible intermittent failure (bug 1358368).
+  if (rows.length != 0) {
+    dump_table("moz_icons");
+    dump_table("moz_hosts");
+  }
   Assert.equal(rows.length, 0, "There should be no icon entry");
 });
 

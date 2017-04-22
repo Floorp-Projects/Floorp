@@ -15,7 +15,7 @@ const BoxModelEditable = createFactory(require("./BoxModelEditable"));
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = createFactory(REPS.Rep);
+const { Rep } = REPS;
 
 const Types = require("../types");
 

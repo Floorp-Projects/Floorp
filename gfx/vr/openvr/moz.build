@@ -23,7 +23,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 #   POSIX
 
 LOCAL_INCLUDES += [
-    '/toolkit/crashreporter/jsoncpp/include',
+    '/toolkit/components/jsoncpp/include',
 ]
 
 USE_LIBS += [

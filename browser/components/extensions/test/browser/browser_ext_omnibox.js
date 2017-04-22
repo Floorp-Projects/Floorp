@@ -100,6 +100,11 @@ add_task(function* () {
     yield expectEvent("on-input-started-fired");
     EventUtils.synthesizeKey("t", {});
     yield expectEvent("on-input-changed-fired", {text: "t"});
+    // Wait for the autocomplete search. Note that we cannot wait for the search
+    // to be complete, since the add-on doesn't communicate when it's done, so
+    // just check matches count.
+    yield BrowserTestUtils.waitForCondition(() => gURLBar.controller.matchCount >= 2,
+                                            "waiting urlbar search to complete");
     return "t";
   }
 
@@ -267,7 +272,6 @@ add_task(function* () {
   });
 
   // Start monitoring the console.
-  SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [{
       message: new RegExp(`The keyword provided is already registered: "${keyword}"`),

@@ -239,6 +239,7 @@ inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call, const SourceMan
         Begin->compare_lower(StringRef("google-breakpad")) == 0 ||
         Begin->compare_lower(StringRef("gflags")) == 0 ||
         Begin->compare_lower(StringRef("harfbuzz")) == 0 ||
+        Begin->compare_lower(StringRef("jsoncpp")) == 0 ||
         Begin->compare_lower(StringRef("libstagefright")) == 0 ||
         Begin->compare_lower(StringRef("mtransport")) == 0 ||
         Begin->compare_lower(StringRef("protobuf")) == 0 ||

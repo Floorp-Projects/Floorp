@@ -753,7 +753,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                                                 ValueUsage valueUsage = ValueUsage::WantValue);
 
     bool isRestParameter(ParseNode* pn);
-    MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted);
 
     MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue);
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);
