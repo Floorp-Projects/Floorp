@@ -11563,7 +11563,14 @@ nsGlobalWindow::ShowSlowScriptDialog()
   // Check if we should offer the option to debug
   JS::AutoFilename filename;
   unsigned lineno;
-  bool hasFrame = JS::DescribeScriptedCaller(cx, &filename, &lineno);
+  // Computing the line number can be very expensive (see bug 1330231 for
+  // example), and we don't use the line number anywhere except than in the
+  // parent process, so we avoid computing it elsewhere.  This gives us most of
+  // the wins we are interested in, since the source of the slowness here is
+  // minified scripts which is more common in Web content that is loaded in the
+  // content process.
+  unsigned* linenop = XRE_IsParentProcess() ? &lineno : nullptr;
+  bool hasFrame = JS::DescribeScriptedCaller(cx, &filename, linenop);
 
   // Record the slow script event if we haven't done so already for this inner window
   // (which represents a particular page to the user).
