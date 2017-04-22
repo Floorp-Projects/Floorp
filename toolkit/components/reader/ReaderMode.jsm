@@ -226,14 +226,12 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   parseDocument: Task.async(function* (doc) {
-    let documentURI = Services.io.newURI(doc.documentURI);
-    let baseURI = Services.io.newURI(doc.baseURI);
-    if (!this._shouldCheckUri(documentURI) || !this._shouldCheckUri(baseURI, true)) {
+    if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return yield this._readerParse(baseURI, doc);
+    return yield this._readerParse(doc);
   }),
 
   /**
@@ -245,13 +243,12 @@ this.ReaderMode = {
    */
   downloadAndParseDocument: Task.async(function* (url) {
     let doc = yield this._downloadDocument(url);
-    let uri = Services.io.newURI(doc.baseURI);
-    if (!this._shouldCheckUri(uri, true)) {
+    if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return yield this._readerParse(uri, doc);
+    return yield this._readerParse(doc);
   }),
 
   _downloadDocument(url) {
@@ -434,12 +431,11 @@ this.ReaderMode = {
    * Attempts to parse a document into an article. Heavy lifting happens
    * in readerWorker.js.
    *
-   * @param uri The base URI of the article.
    * @param doc The document to parse.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  _readerParse: Task.async(function* (uri, doc) {
+  _readerParse: Task.async(function* (doc) {
     let histogram = Services.telemetry.getHistogramById("READER_MODE_PARSE_RESULT");
     if (this.parseNodeLimit) {
       let numTags = doc.getElementsByTagName("*").length;
@@ -451,11 +447,11 @@ this.ReaderMode = {
     }
 
     let uriParam = {
-      spec: uri.spec,
-      host: uri.host,
-      prePath: uri.prePath,
-      scheme: uri.scheme,
-      pathBase: Services.io.newURI(".", null, uri).spec
+      spec: doc.baseURIObject.spec,
+      host: doc.baseURIObject.host,
+      prePath: doc.baseURIObject.prePath,
+      scheme: doc.baseURIObject.scheme,
+      pathBase: Services.io.newURI(".", null, doc.baseURIObject).spec
     };
 
     let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
@@ -476,8 +472,10 @@ this.ReaderMode = {
       return null;
     }
 
-    // Readability returns a URI object, but we only care about the URL.
-    article.url = article.uri.spec;
+    // Readability returns a URI object based on the baseURI, but we only care
+    // about the original document's URL from now on. This also avoids spoofing
+    // attempts where the baseURI doesn't match the domain of the documentURI
+    article.url = doc.documentURI;
     delete article.uri;
 
     let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
