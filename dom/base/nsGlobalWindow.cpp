@@ -11579,8 +11579,7 @@ nsGlobalWindow::ShowSlowScriptDialog()
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
     action = monitor->NotifySlowScript(child,
-                                       filename.get(),
-                                       lineno);
+                                       filename.get());
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
     }
