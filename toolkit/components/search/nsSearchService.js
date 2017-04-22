@@ -140,21 +140,19 @@ const URLTYPE_OPENSEARCH   = "application/opensearchdescription+xml";
 const BROWSER_SEARCH_PREF = "browser.search.";
 const LOCALE_PREF = "general.useragent.locale";
 
-const USER_DEFINED = "{searchTerms}";
+const USER_DEFINED = "searchTerms";
 
 // Custom search parameters
-const MOZ_OFFICIAL = AppConstants.MOZ_OFFICIAL_BRANDING ? "official" : "unofficial";
-
-const MOZ_PARAM_LOCALE         = /\{moz:locale\}/g;
-const MOZ_PARAM_DIST_ID        = /\{moz:distributionID\}/g;
-const MOZ_PARAM_OFFICIAL       = /\{moz:official\}/g;
+const MOZ_PARAM_LOCALE         = "moz:locale";
+const MOZ_PARAM_DIST_ID        = "moz:distributionID"
+const MOZ_PARAM_OFFICIAL       = "moz:official";
 
 // Supported OpenSearch parameters
 // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
-const OS_PARAM_USER_DEFINED    = /\{searchTerms\??\}/g;
-const OS_PARAM_INPUT_ENCODING  = /\{inputEncoding\??\}/g;
-const OS_PARAM_LANGUAGE        = /\{language\??\}/g;
-const OS_PARAM_OUTPUT_ENCODING = /\{outputEncoding\??\}/g;
+const OS_PARAM_USER_DEFINED    = "searchTerms";
+const OS_PARAM_INPUT_ENCODING  = "inputEncoding";
+const OS_PARAM_LANGUAGE        = "language";
+const OS_PARAM_OUTPUT_ENCODING = "outputEncoding";
 
 // Default values
 const OS_PARAM_LANGUAGE_DEF         = "*";
@@ -164,17 +162,14 @@ const OS_PARAM_INPUT_ENCODING_DEF   = "UTF-8";
 // "Unsupported" OpenSearch parameters. For example, we don't support
 // page-based results, so if the engine requires that we send the "page index"
 // parameter, we'll always send "1".
-const OS_PARAM_COUNT        = /\{count\??\}/g;
-const OS_PARAM_START_INDEX  = /\{startIndex\??\}/g;
-const OS_PARAM_START_PAGE   = /\{startPage\??\}/g;
+const OS_PARAM_COUNT        = "count";
+const OS_PARAM_START_INDEX  = "startIndex";
+const OS_PARAM_START_PAGE   = "startPage";
 
 // Default values
 const OS_PARAM_COUNT_DEF        = "20"; // 20 results
 const OS_PARAM_START_INDEX_DEF  = "1";  // start at 1st result
 const OS_PARAM_START_PAGE_DEF   = "1";  // 1st page
-
-// Optional parameter
-const OS_PARAM_OPTIONAL     = /\{(?:\w+:)?\w+\?\}/g;
 
 // A array of arrays containing parameters that we don't fully support, and
 // their default values. We will only send values for these parameters if
@@ -989,44 +984,53 @@ function QueryParameter(aName, aValue, aPurpose) {
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  */
 function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
-  var value = aParamValue;
+  const PARAM_REGEXP = /\{((?:\w+:)?\w+)(\??)\}/g;
+  return aParamValue.replace(PARAM_REGEXP, function(match, name, optional) {
+    // {searchTerms} is by far the most common param so handle it first.
+    if (name == USER_DEFINED)
+      return aSearchTerms;
 
-  var distributionID =
-    Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID",
-                               Services.appinfo.distributionID || "");
+    // {inputEncoding} is the second most common param.
+    if (name == OS_PARAM_INPUT_ENCODING)
+      return aEngine.queryCharset;
 
-  var official;
-  if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official", MOZ_OFFICIAL))
-    official = "official";
-  else
-    official = "unofficial";
+    // moz: parameters are only available for default search engines.
+    if (name.startsWith("moz:") && aEngine._isDefault) {
+      // {moz:locale} and {moz:distributionID} are common
+      if (name == MOZ_PARAM_LOCALE)
+        return getLocale();
+      if (name == MOZ_PARAM_DIST_ID) {
+        return Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID",
+                                          Services.appinfo.distributionID || "");
+      }
+      // {moz:official} seems to have little use.
+      if (name == MOZ_PARAM_OFFICIAL) {
+        if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official",
+                                       AppConstants.MOZ_OFFICIAL_BRANDING))
+          return "official";
+        return "unofficial";
+      }
+    }
 
-  // Custom search parameters. These are only available to default search
-  // engines.
-  if (aEngine._isDefault) {
-    value = value.replace(MOZ_PARAM_LOCALE, getLocale());
-    value = value.replace(MOZ_PARAM_DIST_ID, distributionID);
-    value = value.replace(MOZ_PARAM_OFFICIAL, official);
-  }
+    // Handle the less common OpenSearch parameters we're confident about.
+    if (name == OS_PARAM_LANGUAGE)
+      return getLocale() || OS_PARAM_LANGUAGE_DEF;
+    if (name == OS_PARAM_OUTPUT_ENCODING)
+      return OS_PARAM_OUTPUT_ENCODING_DEF;
 
-  // Insert the OpenSearch parameters we're confident about
-  value = value.replace(OS_PARAM_USER_DEFINED, aSearchTerms);
-  value = value.replace(OS_PARAM_INPUT_ENCODING, aEngine.queryCharset);
-  value = value.replace(OS_PARAM_LANGUAGE,
-                        getLocale() || OS_PARAM_LANGUAGE_DEF);
-  value = value.replace(OS_PARAM_OUTPUT_ENCODING,
-                        OS_PARAM_OUTPUT_ENCODING_DEF);
+    // At this point, if a parameter is optional, just omit it.
+    if (optional)
+      return "";
 
-  // Replace any optional parameters
-  value = value.replace(OS_PARAM_OPTIONAL, "");
+    // Replace unsupported parameters that only have hardcoded default values.
+    for (let param of OS_UNSUPPORTED_PARAMS) {
+      if (name == param[0])
+        return param[1];
+    }
 
-  // Insert any remaining required params with our default values
-  for (var i = 0; i < OS_UNSUPPORTED_PARAMS.length; ++i) {
-    value = value.replace(OS_UNSUPPORTED_PARAMS[i][0],
-                          OS_UNSUPPORTED_PARAMS[i][1]);
-  }
-
-  return value;
+    // Don't replace unknown non-optional parameters.
+    return match;
+  });
 }
 
 /**
@@ -1148,11 +1152,11 @@ EngineURL.prototype = {
       postData.setData(stringStream);
     }
 
-    return new Submission(makeURI(url), postData);
+    return new Submission(Services.io.newURI(url), postData);
   },
 
   _getTermsParameterName: function SRCH_EURL__getTermsParameterName() {
-    let queryParam = this.params.find(p => p.value == USER_DEFINED);
+    let queryParam = this.params.find(p => p.value == "{" + USER_DEFINED + "}");
     return queryParam ? queryParam.name : "";
   },
 
@@ -1495,9 +1499,9 @@ Engine.prototype = {
    * @param aRel [optional] only return URLs that with this rel value
    */
   _getURLOfType: function SRCH_ENG__getURLOfType(aType, aRel) {
-    for (var i = 0; i < this._urls.length; ++i) {
-      if (this._urls[i].type == aType && (!aRel || this._urls[i]._hasRelation(aRel)))
-        return this._urls[i];
+    for (let url of this._urls) {
+      if (url.type == aType && (!aRel || url._hasRelation(aRel)))
+        return url;
     }
 
     return null;

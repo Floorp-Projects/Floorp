@@ -296,6 +296,17 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
       return NS_ERROR_FAILURE;
     }
 
+    // We can already have mInnerView if our instance owner went away and then
+    // came back. So clear the old one before creating a new one.
+    if (mInnerView) {
+      if (mInnerView->GetWidget()) {
+        // The widget listener should have already been cleared by
+        // SetInstanceOwner (with a null instance owner).
+        MOZ_RELEASE_ASSERT(mInnerView->GetWidget()->GetWidgetListener() == nullptr);
+      }
+      mInnerView->Destroy();
+      mInnerView = nullptr;
+    }
     mInnerView = viewMan->CreateView(GetContentRectRelativeToSelf(), view);
     if (!mInnerView) {
       NS_ERROR("Could not create inner view");
