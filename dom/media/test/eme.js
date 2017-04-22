@@ -159,7 +159,7 @@ function MaybeCrossOriginURI(test, uri)
   }
 }
 
-function AppendTrack(test, ms, track, token, loadParams)
+function AppendTrack(test, ms, track, token)
 {
   return new Promise(function(resolve, reject) {
     var sb;
@@ -167,10 +167,6 @@ function AppendTrack(test, ms, track, token, loadParams)
     var resolved = false;
     var fragments = track.fragments;
     var fragmentFile;
-
-    if (loadParams && loadParams.onlyLoadFirstFragments) {
-      fragments = fragments.slice(0, loadParams.onlyLoadFirstFragments);
-    }
 
     function addNextFragment() {
       if (curFragment >= fragments.length) {
@@ -230,7 +226,7 @@ function AppendTrack(test, ms, track, token, loadParams)
 
 //Returns a promise that is resolved when the media element is ready to have
 //its play() function called; when it's loaded MSE fragments.
-function LoadTest(test, elem, token, loadParams)
+function LoadTest(test, elem, token)
 {
   if (!test.tracks) {
     ok(false, token + " test does not have a tracks list");
@@ -245,14 +241,10 @@ function LoadTest(test, elem, token, loadParams)
     ms.addEventListener("sourceopen", function () {
       Log(token, "sourceopen");
       Promise.all(test.tracks.map(function(track) {
-        return AppendTrack(test, ms, track, token, loadParams);
+        return AppendTrack(test, ms, track, token);
       })).then(function() {
-        if (loadParams && loadParams.noEndOfStream) {
-          Log(token, "Tracks loaded");
-        } else {
-          Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
-          ms.endOfStream();
-        }
+        Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
+        ms.endOfStream();
         resolve();
       }).catch(reject);
     }, {once: true});
@@ -264,19 +256,6 @@ function EMEPromise() {
   self.promise = new Promise(function(resolve, reject) {
     self.resolve = resolve;
     self.reject = reject;
-  });
-}
-
-// Finish |token| when all promises are resolved or any one promise is
-// rejected. It also clean up the media element to release resources.
-function EMEPromiseAll(v, token, promises) {
-  Promise.all(promises).then(values => {
-    removeNodeAndSource(v);
-    manager.finished(token);
-  }, reason => {
-    ok(false, TimeStamp(token) + " - Error during load: " + reason);
-    removeNodeAndSource(v);
-    manager.finished(token);
   });
 }
 
@@ -416,7 +395,7 @@ function CloseSessions(v, sessions) {
  * Return a promise resolved when all key sessions are updated or rejected
  * if any failure.
  */
-function SetupEME(v, test, token, loadParams) {
+function SetupEME(v, test, token) {
   let p = new EMEPromise;
 
   v.onerror = function() {
@@ -426,7 +405,7 @@ function SetupEME(v, test, token, loadParams) {
   Promise.all([
     LoadInitData(v, test, token),
     CreateAndSetMediaKeys(v, test, token),
-    LoadTest(test, v, token, loadParams)])
+    LoadTest(test, v, token)])
   .then(values => {
     let initData = values[0];
     return ProcessInitData(v, test, token, initData);
