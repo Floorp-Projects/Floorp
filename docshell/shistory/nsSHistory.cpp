@@ -20,12 +20,12 @@
 #include "nsIURI.h"
 #include "nsIContentViewer.h"
 #include "nsIObserverService.h"
-#include "prclist.h"
 #include "mozilla/Services.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsDocShell.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
 #include "nsISHEntry.h"
 #include "nsISHTransaction.h"
 #include "nsISHistoryListener.h"
@@ -49,7 +49,7 @@ static const char* kObservedPrefs[] = {
 
 static int32_t gHistoryMaxSize = 50;
 // List of all SHistory objects, used for content viewer cache eviction
-static PRCList gSHistoryList;
+static LinkedList<nsSHistory> gSHistoryList;
 // Max viewers allowed total, across all SHistory objects - negative default
 // means we will calculate how many viewers to cache based on total memory
 int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
@@ -239,13 +239,11 @@ nsSHistory::nsSHistory()
   , mRootDocShell(nullptr)
 {
   // Add this new SHistory object to the list
-  PR_APPEND_LINK(this, &gSHistoryList);
+  gSHistoryList.insertBack(this);
 }
 
 nsSHistory::~nsSHistory()
 {
-  // Remove this SHistory object from the list
-  PR_REMOVE_LINK(this);
 }
 
 NS_IMPL_ADDREF(nsSHistory)
@@ -357,8 +355,6 @@ nsSHistory::Startup()
     }
   }
 
-  // Initialize the global list of all SHistory objects
-  PR_INIT_CLIST(&gSHistoryList);
   return NS_OK;
 }
 
@@ -1186,9 +1182,7 @@ nsSHistory::GloballyEvictContentViewers()
 
   nsTArray<TransactionAndDistance> transactions;
 
-  PRCList* listEntry = PR_LIST_HEAD(&gSHistoryList);
-  while (listEntry != &gSHistoryList) {
-    nsSHistory* shist = static_cast<nsSHistory*>(listEntry);
+  for (auto shist : gSHistoryList) {
 
     // Maintain a list of the transactions which have viewers and belong to
     // this particular shist object.  We'll add this list to the global list,
@@ -1249,7 +1243,6 @@ nsSHistory::GloballyEvictContentViewers()
     // We've found all the transactions belonging to shist which have viewers.
     // Add those transactions to our global list and move on.
     transactions.AppendElements(shTransactions);
-    listEntry = PR_NEXT_LINK(shist);
   }
 
   // We now have collected all cached content viewers.  First check that we
