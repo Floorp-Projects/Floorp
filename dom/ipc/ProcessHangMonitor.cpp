@@ -160,7 +160,6 @@ public:
   NS_IMETHOD GetHangType(uint32_t* aHangType) override;
   NS_IMETHOD GetScriptBrowser(nsIDOMElement** aBrowser) override;
   NS_IMETHOD GetScriptFileName(nsACString& aFileName) override;
-  NS_IMETHOD GetScriptLineNo(uint32_t* aLineNo) override;
 
   NS_IMETHOD GetPluginName(nsACString& aPluginName) override;
 
@@ -959,18 +958,6 @@ HangMonitoredProcess::GetScriptFileName(nsACString& aFileName)
   }
 
   aFileName = mHangData.get_SlowScriptData().filename();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HangMonitoredProcess::GetScriptLineNo(uint32_t* aLineNo)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *aLineNo = mHangData.get_SlowScriptData().lineno();
   return NS_OK;
 }
 
