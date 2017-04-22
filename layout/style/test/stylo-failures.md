@@ -168,14 +168,6 @@ to mochitest command.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Properties implemented but not in geckolib:
-  * contain longhand property bug 1354998
-    * test_contain_formatting_context.html [1]
-    * test_compute_data_with_start_struct.html `contain` [2]
-    * test_inherit_computation.html `contain` [2]
-    * test_inherit_storage.html `contain` [2]
-    * test_initial_computation.html `contain` [4]
-    * test_initial_storage.html `contain` [4]
-    * test_value_storage.html `'contain'` [30]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
