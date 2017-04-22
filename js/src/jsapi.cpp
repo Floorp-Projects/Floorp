@@ -4839,23 +4839,23 @@ JS_ResetInterruptCallback(JSContext* cx, bool enable)
 JS_PUBLIC_API(void)
 JS::SetGetIncumbentGlobalCallback(JSContext* cx, JSGetIncumbentGlobalCallback callback)
 {
-    cx->runtime()->getIncumbentGlobalCallback = callback;
+    cx->getIncumbentGlobalCallback = callback;
 }
 
 JS_PUBLIC_API(void)
 JS::SetEnqueuePromiseJobCallback(JSContext* cx, JSEnqueuePromiseJobCallback callback,
                                  void* data /* = nullptr */)
 {
-    cx->runtime()->enqueuePromiseJobCallback = callback;
-    cx->runtime()->enqueuePromiseJobCallbackData = data;
+    cx->enqueuePromiseJobCallback = callback;
+    cx->enqueuePromiseJobCallbackData = data;
 }
 
 extern JS_PUBLIC_API(void)
 JS::SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerCallback callback,
                                        void* data /* = nullptr */)
 {
-    cx->runtime()->promiseRejectionTrackerCallback = callback;
-    cx->runtime()->promiseRejectionTrackerCallbackData = data;
+    cx->promiseRejectionTrackerCallback = callback;
+    cx->promiseRejectionTrackerCallbackData = data;
 }
 
 JS_PUBLIC_API(JSObject*)
