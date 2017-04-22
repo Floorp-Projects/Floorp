@@ -1526,17 +1526,25 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     Node objectLiteral(YieldHandling yieldHandling, PossibleError* possibleError);
 
-    // Top-level entrypoint into destructuring pattern checking/name-analyzing.
-    bool checkDestructuringPattern(Node pattern, const mozilla::Maybe<DeclarationKind>& maybeDecl,
-                                   PossibleError* possibleError = nullptr);
+    Node bindingInitializer(Node lhs, YieldHandling yieldHandling);
+    Node bindingIdentifier(DeclarationKind kind, YieldHandling yieldHandling);
+    Node bindingIdentifierOrPattern(DeclarationKind kind, YieldHandling yieldHandling,
+                                    TokenKind tt);
+    Node objectBindingPattern(DeclarationKind kind, YieldHandling yieldHandling);
+    Node arrayBindingPattern(DeclarationKind kind, YieldHandling yieldHandling);
 
-    // Recursive methods for checking/name-analyzing subcomponents of a
-    // destructuring pattern.  The array/object methods *must* be passed arrays
-    // or objects.  The name method may be passed anything but will report an
-    // error if not passed a name.
-    bool checkDestructuringArray(Node arrayPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
-    bool checkDestructuringObject(Node objectPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
-    bool checkDestructuringName(Node expr, const mozilla::Maybe<DeclarationKind>& maybeDecl);
+    // Top-level entrypoint into destructuring assignment pattern checking and
+    // name-analyzing.
+    bool checkDestructuringAssignmentPattern(Node pattern,
+                                             PossibleError* possibleError = nullptr);
+
+    // Recursive methods for checking/name-analyzing subcomponents of an
+    // destructuring assignment pattern.  The array/object methods *must* be
+    // passed arrays or objects.  The name method may be passed anything but
+    // will report an error if not passed a name.
+    bool checkDestructuringAssignmentArray(Node arrayPattern);
+    bool checkDestructuringAssignmentObject(Node objectPattern);
+    bool checkDestructuringAssignmentName(Node expr);
 
     Node newNumber(const Token& tok) {
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
