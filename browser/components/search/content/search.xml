@@ -1078,22 +1078,23 @@
 
     <handlers>
       <handler event="popupshowing"><![CDATA[
-        if (!this._computedMinWidth) {
-          // The panel width only spans to the textbox size, but we also want it
-          // to include the magnifier icon's width.
-          let ltr = getComputedStyle(this).direction == "ltr";
-          let magnifierWidth = parseInt(getComputedStyle(this)[
-                                 ltr ? "marginLeft" : "marginRight"
-                               ]) * -1;
-          // Ensure the panel is wide enough to fit at least 3 engines.
-          let minWidth = Math.max(
-            parseInt(this.width) + magnifierWidth,
-            this.oneOffButtons.buttonWidth * 3
-          );
-          this.style.minWidth = minWidth + "px";
+        // Force the panel to have the width of the searchbar rather than
+        // the width of the textfield.
+        let DOMUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+        let textboxRect = DOMUtils.getBoundsWithoutFlushing(this.mInput);
+        let inputRect = DOMUtils.getBoundsWithoutFlushing(this.mInput.inputField);
 
-          this._computedMinWidth = true;
-        }
+        // Ensure the panel is wide enough to fit at least 3 engines.
+        let minWidth = Math.max(textboxRect.width,
+                                this.oneOffButtons.buttonWidth * 3);
+        this.style.minWidth = minWidth + "px";
+        // Alignment of the panel with the searchbar is obtained with negative
+        // margins.
+        this.style.marginLeft = (textboxRect.left - inputRect.left) + "px";
+        // This second margin is needed when the direction is reversed,
+        // eg. when using command+shift+X.
+        this.style.marginRight = (inputRect.right - textboxRect.right) + "px";
 
         // First handle deciding if we are showing the reduced version of the
         // popup containing only the preferences button. We do this if the

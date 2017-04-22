@@ -511,6 +511,8 @@ PlacesViewBase.prototype = {
     if (elt.localName == "menupopup") {
       elt = elt.parentNode;
     }
+    // We must remove and reset the attribute to force an update.
+    elt.removeAttribute("image");
     elt.setAttribute("image", aPlacesNode.icon);
   },
 
