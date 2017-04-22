@@ -85,11 +85,9 @@ class HangMonitorChild
 
   typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
-                                    const char* aFileName,
-                                    unsigned aLineNo);
+                                    const char* aFileName);
   void NotifySlowScriptAsync(TabId aTabId,
-                             const nsCString& aFileName,
-                             unsigned aLineNo);
+                             const nsCString& aFileName);
 
   bool IsDebuggerStartupComplete();
 
@@ -457,18 +455,16 @@ HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint)
 
 void
 HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
-                                        const nsCString& aFileName,
-                                        unsigned aLineNo)
+                                        const nsCString& aFileName)
 {
   if (mIPCOpen) {
-    Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName, aLineNo));
+    Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName));
   }
 }
 
 HangMonitorChild::SlowScriptAction
 HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
-                                   const char* aFileName,
-                                   unsigned aLineNo)
+                                   const char* aFileName)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -496,9 +492,9 @@ HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
   nsAutoCString filename(aFileName);
 
   MonitorLoop()->PostTask(NewNonOwningRunnableMethod
-                          <TabId, nsCString, unsigned>(this,
-                                                       &HangMonitorChild::NotifySlowScriptAsync,
-                                                       id, filename, aLineNo));
+                          <TabId, nsCString>(this,
+                                             &HangMonitorChild::NotifySlowScriptAsync,
+                                             id, filename));
   return SlowScriptAction::Continue;
 }
 
@@ -1169,11 +1165,10 @@ ProcessHangMonitor::Observe(nsISupports* aSubject, const char* aTopic, const cha
 
 ProcessHangMonitor::SlowScriptAction
 ProcessHangMonitor::NotifySlowScript(nsITabChild* aTabChild,
-                                     const char* aFileName,
-                                     unsigned aLineNo)
+                                     const char* aFileName)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName, aLineNo);
+  return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName);
 }
 
 bool
