@@ -166,6 +166,24 @@ this.ReaderMode = {
     return originalUrl;
   },
 
+  getOriginalUrlObjectForDisplay(url) {
+    let originalUrl = this.getOriginalUrl(url);
+    if (originalUrl) {
+      let uriObj;
+      try {
+        uriObj = Services.uriFixup.createFixupURI(originalUrl, Services.uriFixup.FIXUP_FLAG_NONE);
+      } catch (ex) {
+        return null;
+      }
+      try {
+        return Services.uriFixup.createExposableURI(uriObj);
+      } catch (ex) {
+        return null;
+      }
+    }
+    return null;
+  },
+
   /**
    * Decides whether or not a document is reader-able without parsing the whole thing.
    *
