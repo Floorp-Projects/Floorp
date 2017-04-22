@@ -20,8 +20,6 @@ const PREF_PORT = "marionette.port";
 const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
 const PREF_LOG_LEVEL = "marionette.log.level";
 const PREF_LOG_LEVEL_FALLBACK = "marionette.logging";
-const PREF_FORCE_LOCAL = "marionette.forcelocal";
-const PREF_FORCE_LOCAL_FALLBACK = "marionette.force-local";
 
 const DEFAULT_PORT = 2828;
 const DEFAULT_LOG_LEVEL = "info";
@@ -87,10 +85,6 @@ const prefs = {
   get logLevel () {
     let s = getPref(PREF_LOG_LEVEL, PREF_LOG_LEVEL_FALLBACK);
     return LOG_LEVELS.get(s);
-  },
-
-  get forceLocal () {
-    return getPref(PREF_FORCE_LOCAL, PREF_FORCE_LOCAL_FALLBACK);
   },
 
   readFromEnvironment (key) {
@@ -280,21 +274,10 @@ MarionetteComponent.prototype.init = function () {
     return;
   }
 
-  if (!prefs.forceLocal) {
-    // See bug 800138.  Because the first socket that opens with
-    // force-local=false fails, we open a dummy socket that will fail.
-    // keepWhenOffline=true so that it still work when offline (local).
-    // This allows the following attempt by Marionette to open a socket
-    // to succeed.
-    let insaneSacrificialGoat =
-        new ServerSocket(0, Ci.nsIServerSocket.KeepWhenOffline, 4);
-    insaneSacrificialGoat.asyncListen(this);
-  }
-
   let s;
   try {
     Cu.import("chrome://marionette/content/server.js");
-    s = new server.TCPListener(prefs.port, prefs.forceLocal);
+    s = new server.TCPListener(prefs.port);
     s.start();
     this.logger.info(`Listening on port ${s.port}`);
   } finally {

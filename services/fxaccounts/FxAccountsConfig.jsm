@@ -25,6 +25,7 @@ const CONFIG_PREFS = [
   "identity.sync.tokenserver.uri",
   "identity.fxaccounts.remote.webchannel.uri",
   "identity.fxaccounts.settings.uri",
+  "identity.fxaccounts.settings.devices.uri",
   "identity.fxaccounts.remote.signup.uri",
   "identity.fxaccounts.remote.signin.uri",
   "identity.fxaccounts.remote.force_auth.uri",
@@ -153,6 +154,7 @@ this.FxAccountsConfig = {
 
       Services.prefs.setCharPref("identity.fxaccounts.remote.webchannel.uri", rootURL);
       Services.prefs.setCharPref("identity.fxaccounts.settings.uri", rootURL + "/settings?service=sync&context=" + contextParam);
+      Services.prefs.setCharPref("identity.fxaccounts.settings.devices.uri", rootURL + "/settings/clients?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", rootURL + "/signup?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.signin.uri", rootURL + "/signin?service=sync&context=" + contextParam);
       Services.prefs.setCharPref("identity.fxaccounts.remote.force_auth.uri", rootURL + "/force_auth?service=sync&context=" + contextParam);

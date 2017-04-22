@@ -99,7 +99,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     // Confirm initial environment
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
-    let metaGlobal = Service.recordManager.get(engine.metaURL);
+    let metaGlobal = await Service.recordManager.get(engine.metaURL);
     do_check_eq(metaGlobal.payload.engines, undefined);
     do_check_true(!!collection.payload("flying"));
     do_check_true(!!collection.payload("scotsman"));

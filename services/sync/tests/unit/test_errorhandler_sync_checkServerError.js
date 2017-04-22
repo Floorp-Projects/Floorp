@@ -57,12 +57,12 @@ async function setUp(server) {
   new FakeCryptoService();
 }
 
-function generateAndUploadKeys(server) {
+async function generateAndUploadKeys(server) {
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
   let res = Service.resource(server.baseURI + "/1.1/johndoe/storage/crypto/keys");
-  return serverKeys.upload(res).success;
+  return (await serverKeys.upload(res)).success;
 }
 
 
@@ -81,7 +81,7 @@ add_task(async function test_backoff500() {
     do_check_false(Status.enforceBackoff);
 
     // Forcibly create and upload keys here -- otherwise we don't get to the 500!
-    do_check_true(generateAndUploadKeys(server));
+    do_check_true(await generateAndUploadKeys(server));
 
     Service.login();
     Service.sync();
@@ -116,7 +116,7 @@ add_task(async function test_backoff503() {
   try {
     do_check_false(Status.enforceBackoff);
 
-    do_check_true(generateAndUploadKeys(server));
+    do_check_true(await generateAndUploadKeys(server));
 
     Service.login();
     Service.sync();
@@ -150,7 +150,7 @@ add_task(async function test_overQuota() {
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-    do_check_true(generateAndUploadKeys(server));
+    do_check_true(await generateAndUploadKeys(server));
 
     Service.login();
     Service.sync();
@@ -230,7 +230,7 @@ add_task(async function test_engine_networkError() {
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-    do_check_true(generateAndUploadKeys(server));
+    do_check_true(await generateAndUploadKeys(server));
 
     Service.login();
     Service.sync();
@@ -259,7 +259,7 @@ add_task(async function test_resource_timeout() {
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-    do_check_true(generateAndUploadKeys(server));
+    do_check_true(await generateAndUploadKeys(server));
 
     Service.login();
     Service.sync();

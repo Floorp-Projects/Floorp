@@ -43,7 +43,6 @@ elif CONFIG['OS_ARCH'] == 'Linux':
 
 DIRS += [
     'client',
-    'jsoncpp/src/lib_json',
     'minidump-analyzer',
 ]
 

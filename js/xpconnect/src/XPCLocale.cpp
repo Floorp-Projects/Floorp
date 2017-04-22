@@ -236,7 +236,14 @@ private:
 bool
 xpc_LocalizeContext(JSContext* cx)
 {
-  JS_SetLocaleCallbacks(cx, new XPCLocaleCallbacks());
+  // We want to assign the locale callbacks only the first time we
+  // localize the context.
+  // All consequent calls to this function are result of language changes
+  // and should not assign it again.
+  const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(cx);
+  if (!lc) {
+    JS_SetLocaleCallbacks(cx, new XPCLocaleCallbacks());
+  }
 
   // Set the default locale.
 

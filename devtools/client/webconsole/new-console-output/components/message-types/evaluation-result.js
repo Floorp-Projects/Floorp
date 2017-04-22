@@ -43,7 +43,12 @@ function EvaluationResult(props) {
   if (message.messageText) {
     messageBody = message.messageText;
   } else {
-    messageBody = GripMessageBody({grip: parameters, serviceContainer, useQuotes: true});
+    messageBody = GripMessageBody({
+      grip: parameters,
+      serviceContainer,
+      useQuotes: true,
+      escapeWhitespace: false,
+    });
   }
 
   const topLevelClasses = ["cm-s-mozilla"];

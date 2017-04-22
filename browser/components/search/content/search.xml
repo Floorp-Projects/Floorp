@@ -1243,10 +1243,6 @@
           return this._popup;
         ]]></getter>
         <setter><![CDATA[
-          if (this._popup == val) {
-            return val;
-          }
-
           let events = [
             "popupshowing",
             "popuphidden",
@@ -1285,9 +1281,6 @@
           return this._textbox;
         ]]></getter>
         <setter><![CDATA[
-          if (this._textbox == val) {
-            return val;
-          }
           if (this._textbox) {
             this._textbox.removeEventListener("input", this);
           }

@@ -7,16 +7,44 @@ We use telemetry to get metrics of usage of the different features and panels in
 The process to add metrics to a tool roughly consists in:
 
 1. Adding the probe to Firefox
-2. Using the probe in DevTools code
-3. Getting approval from the data team
+2. Using Histograms.json probes in DevTools code
+3. Using Scalars.yaml probes in DevTools code
+4. Getting approval from the data team
 
 ### 1. Adding the probe to Firefox
 
-The first step involves creating entries for the probe in the file that contains declarations for all data that Firefox might report to Mozilla.
+The first step involves creating entries for the probe in one of the files that contain declarations for all data that Firefox might report to Mozilla.
 
-This file is at `toolkit/components/telemetry/Histograms.json`.
+These files are:
+- `toolkit/components/telemetry/Histograms.json`
+- `toolkit/components/telemetry/Scalars.yaml`
 
-If it's the first time you add one of these, it's advised to follow the style of existing entries. Our entries are prepended with `DEVTOOLS_`. For example:
+
+Scalars allow collection of simple values, like counts, booleans and strings and are to be used whenever possible instead of histograms.
+
+Histograms allow collection of multiple different values, but aggregate them into a number of buckets. Each bucket has a value range and a count of how many values we recorded.
+
+Both scalars & histograms allow recording by keys. This allows for more flexible, two-level data collection.
+
+#### Why the different file formats?
+
+The data team chose YAML for `Scalars.yaml` because it is easy to write and provides a number of features not available in JSON including comments, extensible data types, relational anchors, strings without quotation marks, and mapping types preserving key order.
+
+While we previously used JSON for similar purposes in histograms.json, we have used YAML here because it allows for comments and is generally easier to write.
+
+When the YAML format is proven the data team are considering moving the histograms over to YAML format at some point.
+
+If it's the first time you add one of these, it's advised to follow the style of existing entries.
+
+New data types have been added over the years, so it's quite feasible that some of our probes are not the most suitable nowadays.
+
+There's more information about types (and telemetry in general) on [this page](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe) and [this other page](https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/collection/index.html).
+
+And of course, in case of doubt, ask!
+
+### Adding probes to `Histograms.json`
+
+Our entries are prefixed with `DEVTOOLS_`. For example:
 
 ```javascript
   "DEVTOOLS_DOM_OPENED_COUNT": {
@@ -40,13 +68,41 @@ If it's the first time you add one of these, it's advised to follow the style of
 
 There are different types of probes you can use. These are specified by the `kind` field. Normally we use `count` for counting how many times the tools are opened, and `exponential` for how many times a panel is active.
 
-New data types have been added over the years, so it's quite feasible that some of our probes are not the most suitable nowadays.
+### Adding probes to `Scalars.yaml`
 
-There's more information about types (and telemetry in general) on [this page](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe) and [this other page](https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/collection/index.html).
+Our entries are prefixed with `devtools.`. For example:
 
-And of course, in case of doubt, ask!
+```javascript
+devtools.toolbar.eyedropper:
+  opened:
+    bug_numbers:
+      - 1247985
+      - 1352115
+    description: Number of times the DevTools Eyedropper has been opened via the inspector toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
-### 2. Using the probe in DevTools code
+devtools.copy.unique.css.selector:
+  opened:
+    bug_numbers:
+      - 1323700
+      - 1352115
+    description: Number of times the DevTools copy unique CSS selector has been used.
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+```
+
+### 2. Using Histograms.json probes in DevTools code
 
 Once the probe has been declared in the `Histograms.json` file, you'll need to actually use it in our code.
 
@@ -67,7 +123,7 @@ Then, include that module on each tool that requires telemetry:
 let Telemetry = require("devtools/client/shared/telemetry");
 ```
 
-Create telemetry instance on the tool constructor:
+Create a telemetry instance on the tool constructor:
 
 ```javascript
 this._telemetry = new Telemetry();
@@ -86,6 +142,48 @@ this._telemetry.toolClosed("mytoolname");
 ```
 
 Note that `mytoolname` is the id we declared in the `telemetry.js` module.
+
+### 3. Using Scalars.yaml probes in DevTools code
+
+Once the probe has been declared in the `Scalars.yaml` file, you'll need to actually use it in our code.
+
+First, you need to give it an id in `devtools/client/shared/telemetry.js`. You will want to follow the style of existing lowercase histogram entries. For example:
+
+```javascript
+toolbareyedropper: {
+  scalar: "devtools.toolbar.eyedropper.opened", // Note that the scalar is lowercase
+},
+copyuniquecssselector: {
+  scalar: "devtools.copy.unique.css.selector.opened",
+},
+```
+
+... would correspond to the probes we declared in the previous section.
+
+Then, include that module on each tool that requires telemetry:
+
+```javascript
+let Telemetry = require("devtools/client/shared/telemetry");
+```
+
+Create a telemetry instance on the tool constructor:
+
+```javascript
+this._telemetry = new Telemetry();
+```
+
+And use the instance to report e.g. tool opening...
+
+```javascript
+this._telemetry.toolOpened("mytoolname");
+```
+
+Notes:
+
+  - `mytoolname` is the id we declared in the `Scalars.yaml` module.
+  - Because we are not logging tool's time opened in `Scalars.yaml` we don't care
+about toolClosed. Of course, if there was an accompanying `timerHistogram` field defined
+in `telemetry.js` and `histograms.json` then `toolClosed` should also be added.
 
 #### Note on top level panels
 
@@ -116,7 +214,7 @@ So watch out for errors.
 
 #### Compile it!
 
-It's strongly recommended that you do a full Firefox build if you have edited `Histograms.json`, as it is processed at build time, and various checks will be run on it to guarantee it is valid.
+It's strongly recommended that you do a full Firefox build if you have edited either `Histograms.json` or `Scalars.yaml`, as they are processed at build time, and various checks will be run on it to guarantee it is valid.
 
 ```
 ./mach build
@@ -126,7 +224,7 @@ If you use `mach build faster` or artifact builds, the checks will not be perfor
 
 Save yourself some time and run the checks locally.
 
-### 3. Getting approval from the data team
+### 4. Getting approval from the data team
 
 This is required before the changes make their way into `mozilla-central`.
 
@@ -162,4 +260,3 @@ It's also recommended to take small steps and run the queries often to detect er
 Slow queries will be interrupted by the system, so don't worry about "fetching too much data" or "using too many resources". There's built-in protection to avoid your code eating up the Telemetry database.
 
 Funnily, if you're based in Europe, you might be in luck, as the website tends to be more responsive during European working hours than it is at Pacific working hours, as seemingly there's less people in Europe interacting with it.
-
