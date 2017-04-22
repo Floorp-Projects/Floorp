@@ -10,6 +10,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIInputStream.h"
 #include "nsITraceableChannel.h"
 #include "nsProxyRelease.h"
 #include "nsStringStream.h"
@@ -29,12 +31,18 @@ StreamFilterParent::StreamFilterParent(uint64_t aChannelId, const nsAString& aAd
   , mBufferMutex("StreamFilter buffer mutex")
   , mReceivedStop(false)
   , mSentStop(false)
+  , mContext(nullptr)
+  , mOffset(0)
   , mState(State::Uninitialized)
 {
 }
 
 StreamFilterParent::~StreamFilterParent()
 {
+  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mOrigListener",
+                                    mOrigListener.forget());
+  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mContext",
+                                    mContext.forget());
 }
 
 void
@@ -77,6 +85,26 @@ StreamFilterParent::DoInit(already_AddRefed<nsIContentParent>&& aContentParent)
 
   nsCOMPtr<nsITraceableChannel> traceable = do_QueryInterface(mChannel);
   MOZ_RELEASE_ASSERT(traceable);
+
+  nsresult rv = traceable->SetNewListener(this, getter_AddRefs(mOrigListener));
+  success = NS_SUCCEEDED(rv);
+}
+
+/*****************************************************************************
+ * nsIThreadRetargetableStreamListener
+ *****************************************************************************/
+
+NS_IMETHODIMP
+StreamFilterParent::CheckListenerChain()
+{
+  AssertIsMainThread();
+
+  nsCOMPtr<nsIThreadRetargetableStreamListener> trsl =
+    do_QueryInterface(mOrigListener);
+  if (trsl) {
+    return trsl->CheckListenerChain();
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /*****************************************************************************
@@ -240,7 +268,73 @@ StreamFilterParent::Write(Data& aData)
 {
   AssertIsIOThread();
 
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                                      reinterpret_cast<char*>(aData.Elements()),
+                                      aData.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mOrigListener->OnDataAvailable(mChannel, mContext, stream,
+                                      mOffset, aData.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mOffset += aData.Length();
   return NS_OK;
+}
+
+/*****************************************************************************
+ * nsIStreamListener
+ *****************************************************************************/
+
+NS_IMETHODIMP
+StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+{
+  AssertIsMainThread();
+
+  mContext = aContext;
+
+  if (mState != State::Disconnected) {
+    RefPtr<StreamFilterParent> self(this);
+    RunOnPBackgroundThread(FUNC, [=] {
+      if (self->IPCActive()) {
+        self->mState = State::TransferringData;
+        self->CheckResult(self->SendStartRequest());
+      }
+    });
+  }
+
+  return mOrigListener->OnStartRequest(aRequest, aContext);
+}
+
+NS_IMETHODIMP
+StreamFilterParent::OnStopRequest(nsIRequest* aRequest,
+                                  nsISupports* aContext,
+                                  nsresult aStatusCode)
+{
+  AssertIsMainThread();
+
+  mReceivedStop = true;
+  if (mState == State::Disconnected) {
+    return EmitStopRequest(aStatusCode);
+  }
+
+  RefPtr<StreamFilterParent> self(this);
+  RunOnPBackgroundThread(FUNC, [=] {
+    if (self->IPCActive()) {
+      self->CheckResult(self->SendStopRequest(aStatusCode));
+    }
+  });
+  return NS_OK;
+}
+
+nsresult
+StreamFilterParent::EmitStopRequest(nsresult aStatusCode)
+{
+  AssertIsMainThread();
+  MOZ_ASSERT(!mSentStop);
+
+  mSentStop = true;
+  return mOrigListener->OnStopRequest(mChannel, mContext, aStatusCode);
 }
 
 /*****************************************************************************
@@ -253,7 +347,61 @@ StreamFilterParent::DoSendData(Data&& aData)
   AssertIsPBackgroundThread();
 
   if (mState == State::TransferringData) {
+    CheckResult(SendData(aData));
   }
+}
+
+NS_IMETHODIMP
+StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
+                                    nsISupports* aContext,
+                                    nsIInputStream* aInputStream,
+                                    uint64_t aOffset,
+                                    uint32_t aCount)
+{
+  // Note: No AssertIsIOThread here. Whatever thread we're on now is, by
+  // definition, the IO thread.
+  mIOThread = NS_GetCurrentThread();
+
+  if (mState == State::Disconnected) {
+    // If we're offloading data in a thread pool, it's possible that we'll
+    // have buffered some additional data while waiting for the buffer to
+    // flush. So, if there's any buffered data left, flush that before we
+    // flush this incoming data.
+    //
+    // Note: When in the eDisconnected state, the buffer list is guaranteed
+    // never to be accessed by another thread during an OnDataAvailable call.
+    if (!mBufferedData.isEmpty()) {
+      FlushBufferedData();
+    }
+
+    mOffset += aCount;
+    return mOrigListener->OnDataAvailable(aRequest, aContext, aInputStream,
+                                          mOffset - aCount, aCount);
+  }
+
+  Data data;
+  data.SetLength(aCount);
+
+  uint32_t count;
+  nsresult rv = aInputStream->Read(reinterpret_cast<char*>(data.Elements()),
+                                   aCount, &count);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(count == aCount, NS_ERROR_UNEXPECTED);
+
+  if (mState == State::Disconnecting) {
+    MutexAutoLock al(mBufferMutex);
+    BufferData(Move(data));
+  } else if (mState == State::Closed) {
+    return NS_ERROR_FAILURE;
+  } else {
+    mPBackgroundThread->Dispatch(
+      NewRunnableMethod<Data&&>("StreamFilterParent::DoSendData",
+                                this,
+                                &StreamFilterParent::DoSendData,
+                                Move(data)),
+      NS_DISPATCH_NORMAL);
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -274,6 +422,13 @@ StreamFilterParent::FlushBufferedData()
   }
 
   if (mReceivedStop && !mSentStop) {
+    RefPtr<StreamFilterParent> self(this);
+    RunOnMainThread(FUNC, [=] {
+      if (!mSentStop) {
+        nsresult rv = self->EmitStopRequest(NS_OK);
+        Unused << NS_WARN_IF(NS_FAILED(rv));
+      }
+    });
   }
 
   return NS_OK;
@@ -293,7 +448,7 @@ StreamFilterParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-NS_IMPL_ISUPPORTS0(StreamFilterParent)
+NS_IMPL_ISUPPORTS(StreamFilterParent, nsIStreamListener, nsIRequestObserver, nsIThreadRetargetableStreamListener)
 
 } // namespace extensions
 } // namespace mozilla

@@ -14,7 +14,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/WebRequestService.h"
+#include "nsIStreamListener.h"
 #include "nsIThread.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsThreadUtils.h"
 
 #if defined(_MSC_VER)
@@ -35,11 +37,15 @@ using mozilla::ipc::IPCResult;
 
 class StreamFilterParent final
   : public PStreamFilterParent
-  , public nsISupports
+  , public nsIStreamListener
+  , public nsIThreadRetargetableStreamListener
   , public StreamFilterBase
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   explicit StreamFilterParent(uint64_t aChannelId, const nsAString& aAddonId);
 
@@ -103,6 +109,8 @@ private:
 
   void DoSendData(Data&& aData);
 
+  nsresult EmitStopRequest(nsresult aStatusCode);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void Broken();
@@ -161,6 +169,7 @@ private:
   const nsCOMPtr<nsIAtom> mAddonId;
 
   nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIStreamListener> mOrigListener;
 
   nsCOMPtr<nsIThread> mPBackgroundThread;
   nsCOMPtr<nsIThread> mIOThread;
@@ -169,6 +178,9 @@ private:
 
   bool mReceivedStop;
   bool mSentStop;
+
+  nsCOMPtr<nsISupports> mContext;
+  uint64_t mOffset;
 
   volatile State mState;
 };
