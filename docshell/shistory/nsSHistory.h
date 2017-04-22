@@ -16,7 +16,7 @@
 #include "nsWeakPtr.h"
 #include "nsIPartialSHistoryListener.h"
 
-#include "prclist.h"
+#include "mozilla/LinkedList.h"
 
 class nsIDocShell;
 class nsSHEnumerator;
@@ -24,7 +24,7 @@ class nsSHistoryObserver;
 class nsISHEntry;
 class nsISHTransaction;
 
-class nsSHistory final : public PRCList,
+class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                          public nsISHistory,
                          public nsISHistoryInternal,
                          public nsIWebNavigation

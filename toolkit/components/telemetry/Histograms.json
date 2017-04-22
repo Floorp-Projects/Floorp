@@ -10729,13 +10729,6 @@
     "bug_numbers": [1238433],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
   },
-  "REMOTE_JAR_PROTOCOL_USED": {
-    "alert_emails": ["dev-platform@lists.mozilla.org"],
-    "expires_in_version": "55",
-    "bug_numbers": [1255934],
-    "kind": "count",
-    "description": "Remote JAR protocol usage"
-  },
   "MEDIA_DECODER_BACKEND_USED": {
     "alert_emails": ["danderson@mozilla.com"],
     "bug_numbers": [1259695],
