@@ -37,7 +37,7 @@ function startTest(test, token)
   });
 
   manager.started(case3token);
-  let p2 = SetupEME(v3, test, case3token, { noEndOfStream:false });
+  let p2 = SetupEME(v3, test, case3token);
 
   Promise.all([p1.promise, p2])
   .catch(reason => ok(false, reason))
