@@ -1726,7 +1726,7 @@ namespace {
 class ASTSerializer
 {
     JSContext*          cx;
-    Parser<FullParseHandler>* parser;
+    Parser<FullParseHandler, char16_t>* parser;
     NodeBuilder         builder;
     DebugOnly<uint32_t> lineno;
 
@@ -1832,7 +1832,7 @@ class ASTSerializer
         return builder.init(userobj);
     }
 
-    void setParser(Parser<FullParseHandler>* p) {
+    void setParser(Parser<FullParseHandler, char16_t>* p) {
         parser = p;
         builder.setTokenStream(&p->tokenStream);
     }
@@ -3707,9 +3707,10 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
-    Parser<FullParseHandler> parser(cx, cx->tempLifoAlloc(), options, chars.begin().get(),
-                                    chars.length(), /* foldConstants = */ false, usedNames,
-                                    nullptr, nullptr);
+    Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options,
+                                              chars.begin().get(), chars.length(),
+                                              /* foldConstants = */ false, usedNames, nullptr,
+                                              nullptr);
     if (!parser.checkOptions())
         return false;
 

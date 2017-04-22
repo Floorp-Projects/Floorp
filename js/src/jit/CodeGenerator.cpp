@@ -9178,16 +9178,20 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
     {
         Address groupAddr(temp2, offsetof(ReceiverGuard, group));
         Address shapeAddr(temp2, offsetof(ReceiverGuard, shape));
-        Label guardDone, shapeMismatch, noExpando;
+        Label guardDone, unboxedObject, noExpando;
+        // This is a guard for an unboxed object.
+        masm.branchPtr(Assembler::NotEqual, groupAddr, ImmWord(0), &unboxedObject);
+
+        // Guard for a normal object, make sure the shape matches.
         masm.loadObjShape(obj, temp1);
-        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, &shapeMismatch);
+        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, ool->entry());
 
         // Ensure the object does not have any elements. The presence of dense
         // elements is not captured by the shape tests above.
         branchIfNotEmptyObjectElements(obj, ool->entry());
         masm.jump(&guardDone);
 
-        masm.bind(&shapeMismatch);
+        masm.bind(&unboxedObject);
         masm.loadObjGroup(obj, temp1);
         masm.branchPtr(Assembler::NotEqual, groupAddr, temp1, ool->entry());
         masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), temp1);
@@ -9215,14 +9219,20 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
 
-    // Write barrier for stores to the iterator. We only need to take a write
-    // barrier if NativeIterator::obj is actually going to change.
+    // Write barrier for stores to the iterator. The iterator JSObject is never
+    // nursery allocated. Put this in the whole cell buffer when writing a
+    // nursery pointer into it.
     {
-        // Bug 867815: Unconditionally take this out- of-line so that we do not
-        // have to post-barrier the store to NativeIter::obj. This just needs
-        // JIT support for the Cell* buffer.
-        Address objAddr(niTemp, offsetof(NativeIterator, obj));
-        masm.branchPtr(Assembler::NotEqual, objAddr, obj, ool->entry());
+        Label skipBarrier;
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, obj, temp1, &skipBarrier);
+
+        LiveRegisterSet temps;
+        temps.add(temp1);
+        temps.add(temp2);
+        saveVolatile(temps);
+        emitPostWriteBarrier(output);
+        restoreVolatile(temps);
+        masm.bind(&skipBarrier);
     }
 
     // Mark iterator as active.
