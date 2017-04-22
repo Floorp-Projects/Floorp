@@ -519,10 +519,11 @@ Boolish(ParseNode* pn)
 }
 
 static bool
-Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda);
+Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler, char16_t>& parser,
+     bool inGenexpLambda);
 
 static bool
-FoldCondition(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldCondition(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
               bool inGenexpLambda)
 {
     // Conditions fold like any other expression...
@@ -553,7 +554,7 @@ FoldCondition(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& pars
 }
 
 static bool
-FoldTypeOfExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldTypeOfExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_TYPEOFEXPR));
@@ -589,7 +590,7 @@ FoldTypeOfExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldDeleteExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldDeleteExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_DELETEEXPR));
@@ -612,7 +613,7 @@ FoldDeleteExpr(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldDeleteElement(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldDeleteElement(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                   bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_DELETEELEM));
@@ -637,7 +638,7 @@ FoldDeleteElement(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& pars
 }
 
 static bool
-FoldDeleteProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldDeleteProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                    bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_DELETEPROP));
@@ -659,7 +660,7 @@ FoldDeleteProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& par
 }
 
 static bool
-FoldNot(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldNot(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
         bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_NOT));
@@ -694,7 +695,7 @@ FoldNot(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldUnaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldUnaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                     bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_BITNOT) || node->isKind(PNK_POS) || node->isKind(PNK_NEG),
@@ -728,7 +729,7 @@ FoldUnaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& pa
 }
 
 static bool
-FoldIncrementDecrement(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldIncrementDecrement(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                        bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_PREINCREMENT) ||
@@ -738,18 +739,18 @@ FoldIncrementDecrement(JSContext* cx, ParseNode* node, Parser<FullParseHandler>&
     MOZ_ASSERT(node->isArity(PN_UNARY));
 
     ParseNode*& target = node->pn_kid;
-    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler>::PermitAssignmentToFunctionCalls));
+    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler, char16_t>::PermitAssignmentToFunctionCalls));
 
     if (!Fold(cx, &target, parser, inGenexpLambda))
         return false;
 
-    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler>::PermitAssignmentToFunctionCalls));
+    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler, char16_t>::PermitAssignmentToFunctionCalls));
 
     return true;
 }
 
 static bool
-FoldAndOr(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldAndOr(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
           bool inGenexpLambda)
 {
     ParseNode* node = *nodePtr;
@@ -832,7 +833,7 @@ FoldAndOr(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldConditional(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldConditional(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
                 bool inGenexpLambda)
 {
     ParseNode** nextNode = nodePtr;
@@ -902,7 +903,7 @@ FoldConditional(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& pa
 }
 
 static bool
-FoldIf(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldIf(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
        bool inGenexpLambda)
 {
     ParseNode** nextNode = nodePtr;
@@ -1006,7 +1007,7 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldFunction(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldFunction(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
              bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_FUNCTION));
@@ -1069,7 +1070,7 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
 }
 
 static bool
-FoldModule(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser)
+FoldModule(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser)
 {
     MOZ_ASSERT(node->isKind(PNK_MODULE));
     MOZ_ASSERT(node->isArity(PN_CODE));
@@ -1080,7 +1081,7 @@ FoldModule(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser)
 }
 
 static bool
-FoldBinaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldBinaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                      bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_SUB) ||
@@ -1152,7 +1153,7 @@ FoldBinaryArithmetic(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& p
 }
 
 static bool
-FoldExponentiation(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldExponentiation(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                    bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_POW));
@@ -1196,7 +1197,7 @@ FoldExponentiation(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& par
 }
 
 static bool
-FoldList(JSContext* cx, ParseNode* list, Parser<FullParseHandler>& parser,
+FoldList(JSContext* cx, ParseNode* list, Parser<FullParseHandler, char16_t>& parser,
          bool inGenexpLambda)
 {
     MOZ_ASSERT(list->isArity(PN_LIST));
@@ -1216,7 +1217,7 @@ FoldList(JSContext* cx, ParseNode* list, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldReturn(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldReturn(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
            bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_RETURN));
@@ -1231,7 +1232,7 @@ FoldReturn(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldTry(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldTry(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
         bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_TRY));
@@ -1255,7 +1256,7 @@ FoldTry(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldCatch(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldCatch(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
           bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_CATCH));
@@ -1279,7 +1280,7 @@ FoldCatch(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldClass(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldClass(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
           bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_CLASS));
@@ -1300,7 +1301,7 @@ FoldClass(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldElement(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldElement(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
             bool inGenexpLambda)
 {
     ParseNode* node = *nodePtr;
@@ -1376,7 +1377,7 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser
 }
 
 static bool
-FoldAdd(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+FoldAdd(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_t>& parser,
         bool inGenexpLambda)
 {
     ParseNode* node = *nodePtr;
@@ -1527,7 +1528,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldCall(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldCall(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
          bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_CALL) || node->isKind(PNK_SUPERCALL) ||
@@ -1562,7 +1563,7 @@ FoldCall(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldForInOrOf(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldForInOrOf(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
               bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_FORIN) || node->isKind(PNK_FOROF));
@@ -1574,7 +1575,7 @@ FoldForInOrOf(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldForHead(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldForHead(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
             bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_FORHEAD));
@@ -1604,7 +1605,7 @@ FoldForHead(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 static bool
-FoldDottedProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldDottedProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
                    bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_DOT));
@@ -1622,7 +1623,7 @@ FoldDottedProperty(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& par
 }
 
 static bool
-FoldName(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+FoldName(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser,
          bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_NAME));
@@ -1635,7 +1636,8 @@ FoldName(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 }
 
 bool
-Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda)
+Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler, char16_t>& parser,
+     bool inGenexpLambda)
 {
     if (!CheckRecursionLimit(cx))
         return false;
@@ -1925,8 +1927,9 @@ Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGe
     return false;
 }
 
+template<typename CharT>
 bool
-frontend::FoldConstants(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>* parser)
+frontend::FoldConstants(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler, CharT>* parser)
 {
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
@@ -1936,3 +1939,7 @@ frontend::FoldConstants(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>
     AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx), TraceLogger_BytecodeFoldConstants);
     return Fold(cx, pnp, *parser, false);
 }
+
+template bool
+frontend::FoldConstants(JSContext* cx, ParseNode** pnp,
+                        Parser<FullParseHandler, char16_t>* parser);
