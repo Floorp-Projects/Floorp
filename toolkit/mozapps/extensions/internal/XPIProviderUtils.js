@@ -67,6 +67,7 @@ const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
 const KEY_APP_GLOBAL                  = "app-global";
+const KEY_APP_TEMPORARY               = "app-temporary";
 
 // Properties that only exist in the database
 const DB_METADATA        = ["syncGUID",
@@ -491,7 +492,8 @@ this.XPIDatabase = {
 
     let toSave = {
       schemaVersion: DB_SCHEMA,
-      addons: [...this.addonDB.values()]
+      addons: Array.from(this.addonDB.values())
+                   .filter(addon => addon.location != KEY_APP_TEMPORARY),
     };
     return toSave;
   },
@@ -1308,6 +1310,35 @@ this.XPIDatabase = {
     }
     aAddon.visible = true;
     this.saveChanges();
+  },
+
+  /**
+   * Synchronously marks a given add-on ID visible in a given location,
+   * instances with the same ID as not visible.
+   *
+   * @param  aAddon
+   *         The DBAddonInternal to make visible
+   */
+  makeAddonLocationVisible(aId, aLocation) {
+    logger.debug(`Make addon ${aId} visible in location ${aLocation}`);
+    let result;
+    for (let [, addon] of this.addonDB) {
+      if (addon.id != aId) {
+        continue;
+      }
+      if (addon.location == aLocation) {
+        logger.debug("Reveal addon " + addon._key);
+        addon.visible = true;
+        addon.active = true;
+        result = addon;
+      } else {
+        logger.debug("Hide addon " + addon._key);
+        addon.visible = false;
+        addon.active = false;
+      }
+    }
+    this.saveChanges();
+    return result;
   },
 
   /**

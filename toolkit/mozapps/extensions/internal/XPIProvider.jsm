@@ -98,6 +98,12 @@ Cu.importGlobalProperties(["URL"]);
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
+function getFile(descriptor) {
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.persistentDescriptor = descriptor;
+  return file;
+}
+
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_INSTALL_CACHE              = "extensions.installCache";
 const PREF_XPI_STATE                  = "extensions.xpiState";
@@ -2263,8 +2269,8 @@ XPIState.prototype = {
 
 // Constructor for an ES6 Map that knows how to convert itself into a
 // regular object for toJSON().
-function SerializableMap() {
-  let m = new Map();
+function SerializableMap(arg) {
+  let m = new Map(arg);
   m.toJSON = function() {
     let out = {}
     for (let [key, val] of m) {
@@ -2450,7 +2456,10 @@ this.XPIStates = {
    * XXX this *totally* should be a .json file using DeferredSave...
    */
   save() {
-    let cache = JSON.stringify(this.db);
+    let db = new SerializableMap(this.db);
+    db.delete(TemporaryInstallLocation.name);
+
+    let cache = JSON.stringify(db);
     Services.prefs.setCharPref(PREF_XPI_STATE, cache);
   },
 
@@ -2913,8 +2922,7 @@ this.XPIProvider = {
 
         for (let addon of this.sortBootstrappedAddons()) {
           try {
-            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-            file.persistentDescriptor = addon.descriptor;
+            let file = getFile(addon.descriptor);
             let reason = BOOTSTRAP_REASONS.APP_STARTUP;
             // Eventually set INSTALLED reason when a bootstrap addon
             // is dropped in profile folder and automatically installed
@@ -2946,8 +2954,7 @@ this.XPIProvider = {
             if (!XPIProvider.activeAddons.has(addon.id))
               continue;
 
-            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-            file.persistentDescriptor = addon.descriptor;
+            let file = getFile(addon.descriptor);
             let addonDetails = createAddonDetails(addon.id, addon);
 
             // If the add-on was pending disable then shut it down and remove it
@@ -3001,6 +3008,33 @@ this.XPIProvider = {
 
     // Stop anything we were doing asynchronously
     this.cancelAll();
+
+    // Uninstall any temporary add-ons.
+    let tempLocation = XPIStates.getLocation(TemporaryInstallLocation.name);
+    if (tempLocation) {
+      for (let [id, addon] of tempLocation.entries()) {
+        tempLocation.delete(id);
+
+        let file = getFile(addon.descriptor);
+
+        this.callBootstrapMethod(createAddonDetails(id, this.bootstrappedAddons[id]),
+                                 file, "uninstall",
+                                 BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+        this.unloadBootstrapScope(id);
+        TemporaryInstallLocation.uninstallAddon(id);
+
+        let [locationName, ] = XPIStates.findAddon(id);
+        if (locationName) {
+          let newAddon = XPIDatabase.makeAddonLocationVisible(id, locationName);
+
+          let file = getFile(newAddon.descriptor);
+
+          this.callBootstrapMethod(createAddonDetails(id, newAddon),
+                                   file, "install",
+                                   BOOTSTRAP_REASONS.ADDON_INSTALL);
+        }
+      }
+    }
 
     this.bootstrappedAddons = {};
     this.activeAddons.clear();
@@ -3516,8 +3550,7 @@ this.XPIProvider = {
         logger.debug("Processing install of " + id + " in " + location.name);
         if (existingAddonID in this.bootstrappedAddons) {
           try {
-            var existingAddon = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-            existingAddon.persistentDescriptor = this.bootstrappedAddons[existingAddonID].descriptor;
+            var existingAddon = getFile(this.bootstrappedAddons[existingAddonID].descriptor);
             if (existingAddon.exists()) {
               oldBootstrap = this.bootstrappedAddons[existingAddonID];
 
