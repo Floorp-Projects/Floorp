@@ -10,6 +10,8 @@ using CSSToScreenScale from "Units.h";
 using ScreenIntSize from "Units.h";
 using ScreenPoint from "Units.h";
 
+include "mozilla/GfxMessageUtils.h";
+
 namespace mozilla {
 namespace layers {
 
