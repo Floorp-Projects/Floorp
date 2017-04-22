@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint max-nested-callbacks: ["warn", 17] */
+
 /**
  * This file tests setAndFetchFaviconForPage when it is called with invalid
  * arguments, and when no favicon is stored for the given arguments.

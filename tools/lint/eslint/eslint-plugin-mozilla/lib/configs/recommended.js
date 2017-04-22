@@ -87,6 +87,9 @@ module.exports = {
     // rule is a better rule to check this.
     "max-depth": "off",
 
+    // Maximum depth callbacks can be nested.
+    "max-nested-callbacks": ["error", 10],
+
     // Always require parenthesis for new calls
     // "new-parens": "error",
 
@@ -135,7 +138,7 @@ module.exports = {
     // Disallow empty destructuring
     "no-empty-pattern": "error",
 
-    // No assiging to exception variable
+    // No assigning to exception variable
     "no-ex-assign": "error",
 
     // No using !! where casting to boolean is already happening
