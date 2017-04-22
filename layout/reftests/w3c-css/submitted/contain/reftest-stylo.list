@@ -1,12 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(layout.css.contain.enabled,true)
 
-fails == contain-paint-clip-001.html contain-paint-clip-001.html
-fails == contain-paint-clip-002.html contain-paint-clip-002.html
-fails == contain-paint-clip-003.html contain-paint-clip-003.html
-fails == contain-paint-clip-004.html contain-paint-clip-004.html
-fails == contain-paint-clip-005.html contain-paint-clip-005.html
-fails == contain-paint-containing-block-absolute-001.html contain-paint-containing-block-absolute-001.html
-fails == contain-paint-containing-block-fixed-001.html contain-paint-containing-block-fixed-001.html
-fails == contain-paint-formatting-context-float-001.html contain-paint-formatting-context-float-001.html
-fails == contain-paint-formatting-context-margin-001.html contain-paint-formatting-context-margin-001.html
+== contain-paint-clip-001.html contain-paint-clip-001.html
+== contain-paint-clip-002.html contain-paint-clip-002.html
+asserts(0-2) == contain-paint-clip-003.html contain-paint-clip-003.html
+asserts(0-2) == contain-paint-clip-004.html contain-paint-clip-004.html
+asserts(0-2) == contain-paint-clip-005.html contain-paint-clip-005.html
+== contain-paint-containing-block-absolute-001.html contain-paint-containing-block-absolute-001.html
+== contain-paint-containing-block-fixed-001.html contain-paint-containing-block-fixed-001.html
+== contain-paint-formatting-context-float-001.html contain-paint-formatting-context-float-001.html
+== contain-paint-formatting-context-margin-001.html contain-paint-formatting-context-margin-001.html
