@@ -9804,6 +9804,9 @@ Parser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
 
             handler.checkAndSetIsDirectRHSAnonFunction(propExpr);
 
+            if (possibleError)
+                checkDestructuringAssignmentElement(propExpr, exprPos, possibleError);
+
             if (foldConstants && !FoldConstants(context, &propExpr, this))
                 return null();
 
@@ -9836,9 +9839,6 @@ Parser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                 if (!handler.addPropertyDefinition(literal, propName, propExpr))
                     return null();
             }
-
-            if (possibleError)
-                checkDestructuringAssignmentElement(propExpr, exprPos, possibleError);
         } else if (propType == PropertyType::Shorthand) {
             /*
              * Support, e.g., |({x, y} = o)| as destructuring shorthand
