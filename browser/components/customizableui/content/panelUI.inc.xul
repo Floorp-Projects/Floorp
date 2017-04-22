@@ -383,6 +383,8 @@
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
       <vbox id="widget-overflow-scroller">
+        <vbox id="widget-overflow-fixed-list" class="widget-overflow-list" hidden="true"/>
+        <toolbarseparator id="widget-overflow-fixed-separator" hidden="true"/>
         <vbox id="widget-overflow-list" class="widget-overflow-list"
               overflowfortoolbar="nav-bar"/>
       </vbox>
