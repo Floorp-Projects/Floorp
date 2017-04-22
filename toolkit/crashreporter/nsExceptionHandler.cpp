@@ -372,6 +372,7 @@ patched_SetUnhandledExceptionFilter (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExce
   return nullptr;
 }
 
+#ifdef _WIN64
 static LPTOP_LEVEL_EXCEPTION_FILTER sUnhandledExceptionFilter = nullptr;
 
 static long
@@ -383,6 +384,15 @@ JitExceptionHandler(void *exceptionRecord, void *context)
     };
     return sUnhandledExceptionFilter(&pointers);
 }
+
+static void
+SetJitExceptionHandler()
+{
+  sUnhandledExceptionFilter = GetUnhandledExceptionFilter();
+  if (sUnhandledExceptionFilter)
+      js::SetJitExceptionHandler(JitExceptionHandler);
+}
+#endif
 
 /**
  * Reserve some VM space. In the event that we crash because VM space is
@@ -1789,9 +1799,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
 #ifdef _WIN64
   // Tell JS about the new filter before we disable SetUnhandledExceptionFilter
-  sUnhandledExceptionFilter = GetUnhandledExceptionFilter();
-  if (sUnhandledExceptionFilter)
-      js::SetJitExceptionHandler(JitExceptionHandler);
+  SetJitExceptionHandler();
 #endif
 
   // protect the crash reporter from being unloaded
@@ -3767,6 +3775,10 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      NS_ConvertASCIItoUTF16(crashPipe).get(),
                      nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
+
+#ifdef _WIN64
+  SetJitExceptionHandler();
+#endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
