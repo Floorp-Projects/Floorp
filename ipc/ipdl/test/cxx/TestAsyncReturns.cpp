@@ -2,6 +2,8 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 
+#include "mozilla/Unused.h"
+
 namespace mozilla {
 namespace _ipdltest {
 
@@ -79,7 +81,7 @@ mozilla::ipc::IPCResult
 TestAsyncReturnsChild::RecvNoReturn(RefPtr<NoReturnPromise>&& aPromise)
 {
   // Leak the promise intentionally
-  aPromise->AddRef();
+  Unused << do_AddRef(aPromise);
   return IPC_OK();
 }
 
