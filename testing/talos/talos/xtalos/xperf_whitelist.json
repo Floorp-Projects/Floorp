@@ -17,6 +17,7 @@
  "{firefox}\\browser\\features\\webcompat-reporter@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\shield-recipe-client@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\activity-stream@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
+ "{firefox}\\browser\\features\\screenshots@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{talos}\\talos\\tests\\tp5n\\tp5n.manifest": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},
  "{talos}\\talos\\tests\\tp5n\\tp5n.manifest.develop": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},
  "{profile}\\localstore.rdf": {"mincount": 2, "maxcount": 2, "minbytes": 8192, "maxbytes": 8192},
