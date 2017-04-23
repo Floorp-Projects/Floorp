@@ -1047,9 +1047,12 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
 
   nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
 
+  nsPoint firstTile = nsPoint(FindTileStart(aFillArea.x, aDest.x, aRepeatSize.width),
+                              FindTileStart(aFillArea.y, aDest.y, aRepeatSize.height));
+
   // Translate the parameters into device coordinates
   LayoutDeviceRect clipBounds = LayoutDevicePixel::FromAppUnits(aFillArea, appUnitsPerDevPixel);
-  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(aDest, appUnitsPerDevPixel);
+  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(nsRect(firstTile, aDest.Size()), appUnitsPerDevPixel);
   LayoutDeviceSize tileRepeat = LayoutDevicePixel::FromAppUnits(aRepeatSize, appUnitsPerDevPixel);
 
   // Calculate the bounds of the gradient display item, which starts at the first
