@@ -8,6 +8,28 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .NOTPARALLEL:
 endif
 
+MOZ_BUILDID := $(shell awk '{print $$3}' $(DEPTH)/buildid.h)
+
+# Set the appropriate version code, based on the existance of the
+# MOZ_APP_ANDROID_VERSION_CODE variable.
+ifdef MOZ_APP_ANDROID_VERSION_CODE
+    ANDROID_VERSION_CODE:=$(MOZ_APP_ANDROID_VERSION_CODE)
+else
+    ANDROID_VERSION_CODE:=$(shell $(PYTHON) \
+      $(topsrcdir)/python/mozbuild/mozbuild/android_version_code.py \
+        --verbose \
+        --with-android-cpu-arch=$(ANDROID_CPU_ARCH) \
+        $(if $(MOZ_ANDROID_MIN_SDK_VERSION),--with-android-min-sdk=$(MOZ_ANDROID_MIN_SDK_VERSION)) \
+        $(if $(MOZ_ANDROID_MAX_SDK_VERSION),--with-android-max-sdk=$(MOZ_ANDROID_MAX_SDK_VERSION)) \
+        $(MOZ_BUILDID))
+endif
+
+DEFINES += \
+  -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
+  -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
+  -DMOZ_BUILDID=$(MOZ_BUILDID) \
+  $(NULL)
+
 GARBAGE += \
   classes.dex  \
   gecko.ap_  \
