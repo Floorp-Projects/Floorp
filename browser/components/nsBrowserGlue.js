@@ -55,7 +55,7 @@ let initializedModules = {};
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["ContentClick", "resource:///modules/ContentClick.jsm"],
   ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm"],
-  ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
+  ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["DateTimePickerHelper", "resource://gre/modules/DateTimePickerHelper.jsm"],
   ["DirectoryLinksProvider", "resource:///modules/DirectoryLinksProvider.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
@@ -134,6 +134,7 @@ const listeners = {
   mm: {
     "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
     "AboutHome:RequestUpdate": ["AboutHome"],
+    "ContentSearch": ["ContentSearch"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],
@@ -582,7 +583,6 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
-    ContentSearch.init();
     FormValidationHandler.init();
 
     ContentClick.init();
