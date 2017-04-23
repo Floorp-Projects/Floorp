@@ -1530,6 +1530,12 @@ MediaCache::AllocateAndWriteBlock(
       bo->mStream = stream;
     }
 
+    if (block->mOwners.IsEmpty()) {
+      // This happens when all streams with the resource id are closed. We can
+      // just return here now and discard the data.
+      return;
+    }
+
     // Tell each stream using this resource about the new block.
     for (auto& bo : block->mOwners) {
       bo.mStreamBlock = streamBlockIndex;
