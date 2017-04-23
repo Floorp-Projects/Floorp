@@ -42,8 +42,8 @@ if (typeof Mozilla == "undefined") {
     var event = new CustomEvent("mozUITour", {
       bubbles: true,
       detail: {
-	action,
-	data: data || {}
+        action,
+        data: data || {}
       }
     });
 
@@ -746,7 +746,9 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * @param {String} pane - Pane to open/switch the preferences to.
-   * Valid values match fragments on about:preferences and are subject to change e.g.:<ul>
+   * Valid values match fragments on about:preferences and are subject to change e.g.:
+   * <ul>
+   * For the old Preferences
    * <li>general
    * <li>search
    * <li>content
@@ -756,6 +758,22 @@ if (typeof Mozilla == "undefined") {
    * <li>sync
    * <li>advanced
    * </ul>
+   *
+   * <ul>
+   * For the new Preferences
+   * <li>general
+   * <li>applications
+   * <li>sync
+   * <li>privacy
+   * <li>advanced
+   * </ul>
+   *
+   * The mapping between the old and the new Preferences:
+   * To open to the options of sending telemetry, health report, crach reports,
+   * that is, the advanced pane > dataChoicesTab on the old and the privcacy pane > reports on the new.
+   * Please call `Mozilla.UITour.openPreferences("privacy-reports")`.
+   * UITour would do route mapping automatically.
+   *
    * @since 42
    */
   Mozilla.UITour.openPreferences = function(pane) {
