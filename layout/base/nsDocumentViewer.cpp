@@ -18,7 +18,7 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
-#include "nsIDOMBeforeUnloadEvent.h"
+#include "mozilla/dom/BeforeUnloadEvent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -1185,12 +1185,13 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
 
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-  nsCOMPtr<nsIDOMEvent> event;
-  domDoc->CreateEvent(NS_LITERAL_STRING("beforeunloadevent"),
-                      getter_AddRefs(event));
-  nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(event);
-  NS_ENSURE_STATE(beforeUnload);
+  nsIPresShell* shell = mDocument->GetShell();
+  nsPresContext* presContext = nullptr;
+  if (shell) {
+    presContext = shell->GetPresContext();
+  }
+  RefPtr<BeforeUnloadEvent> event =
+    new BeforeUnloadEvent(mDocument, presContext, nullptr);
   event->InitEvent(NS_LITERAL_STRING("beforeunload"), false, true);
 
   // Dispatching to |window|, but using |document| as the target.
@@ -1222,7 +1223,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
 
   nsCOMPtr<nsIDocShell> docShell(mContainer);
   nsAutoString text;
-  beforeUnload->GetReturnValue(text);
+  event->GetReturnValue(text);
 
   // NB: we nullcheck mDocument because it might now be dead as a result of
   // the event being dispatched.
