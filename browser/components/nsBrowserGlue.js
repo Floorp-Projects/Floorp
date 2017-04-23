@@ -44,7 +44,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 let initializedModules = {};
 
 [
-  ["AboutHome", "resource:///modules/AboutHome.jsm"],
+  ["AboutHome", "resource:///modules/AboutHome.jsm", "init"],
   ["AboutNewTab", "resource:///modules/AboutNewTab.jsm"],
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
@@ -132,6 +132,8 @@ const listeners = {
   },
 
   mm: {
+    "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
+    "AboutHome:RequestUpdate": ["AboutHome"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],
@@ -571,8 +573,6 @@ BrowserGlue.prototype = {
     listeners.init();
 
     PageThumbs.init();
-
-    AboutHome.init();
 
     DirectoryLinksProvider.init();
     NewTabUtils.init();
