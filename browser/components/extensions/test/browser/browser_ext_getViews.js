@@ -131,6 +131,7 @@ add_task(async function() {
   }
 
   await checkViews("background", 0, 0, 0);
+  await checkViewsWithFilter({windowId: -1}, 1);
   await checkViewsWithFilter({tabId: -1}, 1);
 
   let tabId1 = await openTab(winId1);
