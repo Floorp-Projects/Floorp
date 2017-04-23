@@ -153,6 +153,7 @@ class ExtensionBaseContextChild extends BaseContext {
       let globalView = ExtensionPageChild.contentGlobals.get(this.messageManager);
       return globalView ? globalView.windowId : -1;
     }
+    return -1;
   }
 
   get tabId() {
