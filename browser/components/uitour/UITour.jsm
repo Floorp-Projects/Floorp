@@ -536,7 +536,21 @@ this.UITour = {
           return false;
         }
 
-        window.openPreferences(data.pane, { origin: "UITour" });
+        let paneID = data.pane;
+        let extraArgs = { origin: "UITour" };
+        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization", true)) {
+          // We are heading to the old Preferences so
+          // let's map the new one to the old one if the `paneID` was for the new Preferences.
+          // Currently only the old advanced pane > dataChoicesTab has the mapping need,
+          // so here only do mapping for it right now.
+          // We could add another mapping when there is need.
+          if (paneID == "privacy-reports") {
+            paneID = "advanced";
+            extraArgs.advancedTab = "dataChoicesTab";
+          }
+        }
+
+        window.openPreferences(paneID, extraArgs);
         break;
       }
 
