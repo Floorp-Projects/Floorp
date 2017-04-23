@@ -48,7 +48,8 @@ function genericChecker() {
       let count = browser.extension.getViews(filter).length;
       browser.test.sendMessage("getViews-count", count);
     } else if (msg == kind + "-open-tab") {
-      browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("tab.html")});
+      browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("tab.html")})
+        .then((tab) => browser.test.sendMessage("opened-tab", tab.id));
     } else if (msg == kind + "-close-tab") {
       browser.tabs.query({
         windowId: args[0],
@@ -111,6 +112,7 @@ add_task(async function() {
   async function openTab(winId) {
     extension.sendMessage("background-open-tab", winId);
     await extension.awaitMessage("tab-ready");
+    return extension.awaitMessage("opened-tab");
   }
 
   async function checkViews(kind, tabCount, popupCount, kindCount) {
@@ -129,17 +131,20 @@ add_task(async function() {
   }
 
   await checkViews("background", 0, 0, 0);
+  await checkViewsWithFilter({tabId: -1}, 1);
 
-  await openTab(winId1);
+  let tabId1 = await openTab(winId1);
 
   await checkViews("background", 1, 0, 0);
   await checkViews("tab", 1, 0, 1);
   await checkViewsWithFilter({windowId: winId1}, 1);
+  await checkViewsWithFilter({tabId: tabId1}, 1);
 
-  await openTab(winId2);
+  let tabId2 = await openTab(winId2);
 
   await checkViews("background", 2, 0, 0);
   await checkViewsWithFilter({windowId: winId2}, 1);
+  await checkViewsWithFilter({tabId: tabId2}, 1);
 
   async function triggerPopup(win, callback) {
     await clickBrowserAction(extension, win);
@@ -162,18 +167,21 @@ add_task(async function() {
     await checkViews("background", 2, 1, 0);
     await checkViews("popup", 2, 1, 1);
     await checkViewsWithFilter({windowId: winId1}, 2);
+    await checkViewsWithFilter({type: "popup", tabId: -1}, 1);
   });
 
   await triggerPopup(win2, async function() {
     await checkViews("background", 2, 1, 0);
     await checkViews("popup", 2, 1, 1);
     await checkViewsWithFilter({windowId: winId2}, 2);
+    await checkViewsWithFilter({type: "popup", tabId: -1}, 1);
   });
 
   info("checking counts after popups");
 
   await checkViews("background", 2, 0, 0);
   await checkViewsWithFilter({windowId: winId1}, 1);
+  await checkViewsWithFilter({tabId: -1}, 1);
 
   info("closing one tab");
 
