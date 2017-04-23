@@ -72,6 +72,11 @@
                 "type": "integer",
                 "optional": true,
                 "description": "The window to restrict the search to. If omitted, returns all views."
+              },
+              "tabId": {
+                "type": "integer",
+                "optional":true,
+                "description": "Find a view according to a tab id. If this field is omitted, returns all views."
               }
             }
           }
