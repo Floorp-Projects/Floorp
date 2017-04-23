@@ -612,8 +612,7 @@ SafeInstallOperation.prototype = {
       if (aCopy) {
         newFile.copyTo(aTargetDirectory, null);
         // copyTo does not update the nsIFile with the new.
-        newFile = aTargetDirectory.clone();
-        newFile.append(aFile.leafName);
+        newFile = getFile(aFile.leafName, aTargetDirectory);
         // Windows roaming profiles won't properly sync directories if a new file
         // has an older lastModifiedTime than a previous file, so update.
         newFile.lastModifiedTime = Date.now();
@@ -635,8 +634,7 @@ SafeInstallOperation.prototype = {
       throw err;
     }
 
-    let newDir = aTargetDirectory.clone();
-    newDir.append(aDirectory.leafName);
+    let newDir = getFile(aDirectory.leafName, aTargetDirectory);
     try {
       newDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     } catch (e) {
@@ -777,8 +775,7 @@ SafeInstallOperation.prototype = {
       if (move.isMoveTo) {
         move.newFile.moveTo(move.oldDir.parent, move.oldDir.leafName);
       } else if (move.newFile.isDirectory() && !move.newFile.isSymlink()) {
-        let oldDir = move.oldFile.parent.clone();
-        oldDir.append(move.oldFile.leafName);
+        let oldDir = getFile(move.oldFile.leafName, move.oldFile.parent);
         oldDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
       } else if (!move.oldFile) {
         // No old file means this was a copied file
@@ -990,8 +987,7 @@ function getExternalType(aType) {
 }
 
 function getManifestFileForDir(aDir) {
-  let file = aDir.clone();
-  file.append(FILE_RDF_MANIFEST);
+  let file = getFile(FILE_RDF_MANIFEST, aDir);
   if (file.exists() && file.isFile())
     return file;
   file.leafName = FILE_WEB_MANIFEST;
@@ -1565,23 +1561,20 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
       fis.close();
     }
 
-    let iconFile = aDir.clone();
-    iconFile.append("icon.png");
+    let iconFile = getFile("icon.png", aDir);
 
     if (iconFile.exists()) {
       addon.icons[32] = "icon.png";
       addon.icons[48] = "icon.png";
     }
 
-    let icon64File = aDir.clone();
-    icon64File.append("icon64.png");
+    let icon64File = getFile("icon64.png", aDir);
 
     if (icon64File.exists()) {
       addon.icons[64] = "icon64.png";
     }
 
-    let file = aDir.clone();
-    file.append("chrome.manifest");
+    let file = getFile("chrome.manifest", aDir);
     let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
     addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
                                                              "binary-component");
@@ -3832,8 +3825,7 @@ this.XPIProvider = {
         aManifests[location.name][id] = null;
         let existingAddonID = id;
 
-        let jsonfile = stagingDir.clone();
-        jsonfile.append(id + ".json");
+        let jsonfile = getFile(`${id}.json`, stagingDir);
         // Assume this was a foreign install if there is no cached metadata file
         let foreignInstall = !jsonfile.exists();
         let addon;
@@ -5571,8 +5563,7 @@ this.XPIProvider = {
       // automatically uninstalled on shutdown anyway so there is no need to
       // do this for them.
       if (aAddon._installLocation.name != KEY_APP_TEMPORARY) {
-        let stage = aAddon._installLocation.getStagingDir();
-        stage.append(aAddon.id);
+        let stage = getFile(aAddon.id, aAddon._installLocation.getStagingDir());
         if (!stage.exists())
           stage.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
       }
@@ -5852,8 +5843,7 @@ class AddonInstall {
       break;
     case AddonManager.STATE_INSTALLED:
       logger.debug("Cancelling install of " + this.addon.id);
-      let xpi = this.installLocation.getStagingDir();
-      xpi.append(this.addon.id + ".xpi");
+      let xpi = getFile(`${this.addon.id}.xpi`, this.installLocation.getStagingDir());
       flushJarCache(xpi);
       this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi",
                                             this.addon.id + ".json"]);
@@ -6174,8 +6164,7 @@ class AddonInstall {
       // remove any previously staged files
       yield this.unstageInstall(stagedAddon);
 
-      stagedAddon.append(this.addon.id);
-      stagedAddon.leafName = this.addon.id + ".xpi";
+      stagedAddon.append(`${this.addon.id}.xpi`);
 
       installedUnpacked = yield this.stageInstall(requiresRestart, stagedAddon, isUpgrade);
 
@@ -6347,22 +6336,15 @@ class AddonInstall {
   /**
    * Removes any previously staged upgrade.
    */
-  unstageInstall(stagedAddon) {
-    return Task.spawn((function*() {
-      let stagedJSON = stagedAddon.clone();
-      let removedAddon = stagedAddon.clone();
+  async unstageInstall(stagedAddon) {
+    let stagedJSON = getFile(`${this.addon.id}.json`, stagedAddon);
+    if (stagedJSON.exists()) {
+      stagedJSON.remove(true);
+    }
 
-      stagedJSON.append(this.addon.id + ".json");
+    await removeAsync(getFile(this.addon.id, stagedAddon));
 
-      if (stagedJSON.exists()) {
-        stagedJSON.remove(true);
-      }
-
-      removedAddon.append(this.addon.id);
-      yield removeAsync(removedAddon);
-      removedAddon.leafName = this.addon.id + ".xpi";
-      yield removeAsync(removedAddon);
-    }).bind(this));
+    await removeAsync(getFile(`${this.addon.id}.xpi`, stagedAddon));
   }
 
   /**
@@ -6371,49 +6353,45 @@ class AddonInstall {
     * @param {Function} resumeFn - a function for the add-on to run
     *                                    when resuming.
     */
-  postpone(resumeFn) {
-    return Task.spawn((function*() {
-      this.state = AddonManager.STATE_POSTPONED;
+  async postpone(resumeFn) {
+    this.state = AddonManager.STATE_POSTPONED;
 
-      let stagingDir = this.installLocation.getStagingDir();
-      let stagedAddon = stagingDir.clone();
+    let stagingDir = this.installLocation.getStagingDir();
 
-      yield this.installLocation.requestStagingDir();
-      yield this.unstageInstall(stagedAddon);
+    await this.installLocation.requestStagingDir();
+    await this.unstageInstall(stagingDir);
 
-      stagedAddon.append(this.addon.id);
-      stagedAddon.leafName = this.addon.id + ".xpi";
+    let stagedAddon = getFile(`${this.addon.id}.xpi`, stagingDir);
 
-      yield this.stageInstall(true, stagedAddon, true);
+    await this.stageInstall(true, stagedAddon, true);
 
-      AddonManagerPrivate.callInstallListeners("onInstallPostponed",
-                                               this.listeners, this.wrapper)
+    AddonManagerPrivate.callInstallListeners("onInstallPostponed",
+                                             this.listeners, this.wrapper)
 
-      // upgrade has been staged for restart, provide a way for it to call the
-      // resume function.
-      let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
-      if (callback) {
-        callback({
-          version: this.version,
-          install: () => {
-            switch (this.state) {
-            case AddonManager.STATE_POSTPONED:
-              if (resumeFn) {
-                resumeFn();
-              }
-              break;
-            default:
-              logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
-              break;
+    // upgrade has been staged for restart, provide a way for it to call the
+    // resume function.
+    let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
+    if (callback) {
+      callback({
+        version: this.version,
+        install: () => {
+          switch (this.state) {
+          case AddonManager.STATE_POSTPONED:
+            if (resumeFn) {
+              resumeFn();
             }
-          },
-        });
-      }
-      // Release the staging directory lock, but since the staging dir is populated
-      // it will not be removed until resumed or installed by restart.
-      // See also cleanStagingDir()
-      this.installLocation.releaseStagingDir();
-    }).bind(this));
+            break;
+          default:
+            logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
+            break;
+          }
+        },
+      });
+    }
+    // Release the staging directory lock, but since the staging dir is populated
+    // it will not be removed until resumed or installed by restart.
+    // See also cleanStagingDir()
+    this.installLocation.releaseStagingDir();
   }
 }
 
@@ -8576,9 +8554,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
    * @return an nsIFile
    */
   getStagingDir() {
-    let dir = this._directory.clone();
-    dir.append(DIR_STAGE);
-    return dir;
+    return getFile(DIR_STAGE, this._directory);
   }
 
   requestStagingDir() {
@@ -8620,8 +8596,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
     let dir = this.getStagingDir();
 
     for (let name of aLeafNames) {
-      let file = dir.clone();
-      file.append(name);
+      let file = getFile(name, dir);
       recursiveRemove(file);
     }
 
@@ -8654,8 +8629,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
    * @return an nsIFile
    */
   getTrashDir() {
-    let trashDir = this._directory.clone();
-    trashDir.append(DIR_TRASH);
+    let trashDir = getFile(DIR_TRASH, this._directory);
     let trashDirExists = trashDir.exists();
     try {
       if (trashDirExists)
@@ -8696,14 +8670,11 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
     let transaction = new SafeInstallOperation();
 
     let moveOldAddon = aId => {
-      let file = this._directory.clone();
-      file.append(aId);
-
+      let file = getFile(aId, this._directory);
       if (file.exists())
         transaction.moveUnder(file, trashDir);
 
-      file = this._directory.clone();
-      file.append(aId + ".xpi");
+      file = getFile(`${aId}.xpi`, this._directory);
       if (file.exists()) {
         flushJarCache(file);
         transaction.moveUnder(file, trashDir);
@@ -8732,8 +8703,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
               KEY_PROFILEDIR, ["extension-data", id], false, true
             );
             if (newDataDir.exists()) {
-              let trashData = trashDir.clone();
-              trashData.append("data-directory");
+              let trashData = getFile("data-directory", trashDir);
               transaction.moveUnder(newDataDir, trashData);
             }
 
@@ -8804,8 +8774,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
       return;
     }
 
-    file = this._directory.clone();
-    file.append(aId);
+    file = getFile(aId, this._directory);
     if (!file.exists())
       file.leafName += ".xpi";
 
@@ -8869,8 +8838,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     // Therefore, this is looked up before calling the
     // constructor on the superclass.
     if (addonSet.directory) {
-      directory = aDirectory.clone();
-      directory.append(addonSet.directory);
+      directory = getFile(addonSet.directory, aDirectory);
       logger.info("SystemAddonInstallLocation scanning directory " + directory.path);
     } else {
       logger.info("SystemAddonInstallLocation directory is missing");
@@ -8902,10 +8870,8 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     this._addonSet = SystemAddonInstallLocation._loadAddonSet();
     let dir = null;
     if (this._addonSet.directory) {
-      this._directory = this._baseDir.clone();
-      this._directory.append(this._addonSet.directory);
-      dir = this._directory.clone();
-      dir.append(DIR_STAGE);
+      this._directory = getFile(this._addonSet.directory, this._baseDir);
+      dir = getFile(DIR_STAGE, this._directory);
     } else {
       logger.info("SystemAddonInstallLocation directory is missing");
     }
@@ -8916,8 +8882,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   requestStagingDir() {
     this._addonSet = SystemAddonInstallLocation._loadAddonSet();
     if (this._addonSet.directory) {
-      this._directory = this._baseDir.clone();
-      this._directory.append(this._addonSet.directory);
+      this._directory = getFile(this._addonSet.directory, this._baseDir);
     }
     return super.requestStagingDir();
   }
@@ -9243,8 +9208,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
    * @return an nsIFile
    */
   getTrashDir() {
-    let trashDir = this._directory.clone();
-    trashDir.append(DIR_TRASH);
+    let trashDir = getFile(DIR_TRASH, this._directory);
     let trashDirExists = trashDir.exists();
     try {
       if (trashDirExists)
@@ -9290,8 +9254,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
       }
     }
 
-    let newFile = this._directory.clone();
-    newFile.append(source.leafName);
+    let newFile = getFile(source.leafName, this._directory);
 
     try {
       newFile.lastModifiedTime = Date.now();
