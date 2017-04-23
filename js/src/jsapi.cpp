@@ -4868,11 +4868,14 @@ JS_PUBLIC_API(JSObject*)
 JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(IsCallable(executor));
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, executor, proto);
 
+    if (!executor)
+        return PromiseObject::createSkippingExecutor(cx);
+
+    MOZ_ASSERT(IsCallable(executor));
     return PromiseObject::create(cx, executor, proto);
 }
 

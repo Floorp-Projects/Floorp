@@ -1643,8 +1643,11 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
 {
     // The absence of a resolve/reject function can mean that, as an
     // optimization, those weren't created. In that case, a flag is set on
-    // the Promise object. There are also reactions where the Promise
-    // itself is missing. For those, there's nothing left to do here.
+    // the Promise object. (It's also possible to not have a resolution
+    // function without that flag being set. This can occur if a Promise
+    // subclass constructor passes null/undefined to `super()`.)
+    // There are also reactions where the Promise itself is missing. For
+    // those, there's nothing left to do here.
     assertSameCompartment(cx, resolutionFun);
     assertSameCompartment(cx, result);
     assertSameCompartment(cx, promiseObj);
@@ -3052,7 +3055,7 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
         return true;
 
     if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_REJECT_FUNCTION))
-        return RejectMaybeWrappedPromise(cx, promise, rejectionValue);
+        return ResolvePromise(cx, promise, rejectionValue, JS::PromiseState::Rejected);
 
     RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
     MOZ_ASSERT(IsCallable(funVal));
