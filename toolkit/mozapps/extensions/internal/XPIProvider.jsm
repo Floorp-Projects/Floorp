@@ -2472,8 +2472,6 @@ this.XPIStates = {
   },
 };
 
-const hasOwnProperty = Function.call.bind({}.hasOwnProperty);
-
 this.XPIProvider = {
   get name() {
     return "XPIProvider";
@@ -2521,23 +2519,6 @@ this.XPIProvider = {
   _toolboxProcessLoaded: false,
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
-
-  /**
-   * Returns true if the add-on with the given ID is currently active,
-   * without forcing the add-ons database to load.
-   *
-   * @param {string} addonId
-   *        The ID of the add-on to check.
-   * @returns {boolean}
-   */
-  addonIsActive(addonId) {
-    if (hasOwnProperty(this.bootstrappedAddons, addonId)) {
-      return true;
-    }
-
-    let [, state] = XPIStates.findAddon(addonId);
-    return state && state.enabled;
-  },
 
   /**
    * Returns an array of the add-on values in `bootstrappedAddons`,
