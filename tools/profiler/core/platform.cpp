@@ -2406,6 +2406,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
                    aFilters, aFilterCount);
 
   // Set up profiling for each registered thread, if appropriate.
+  Thread::tid_t tid = Thread::GetCurrentId();
   const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
   for (uint32_t i = 0; i < liveThreads.size(); i++) {
     ThreadInfo* info = liveThreads.at(i);
@@ -2414,6 +2415,11 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
       info->StartProfiling();
       if (ActivePS::FeatureJS(aLock)) {
         info->Stack()->startJSSampling();
+        if (info->ThreadId() == tid) {
+          // We can manually poll the current thread so it starts sampling
+          // immediately.
+          info->Stack()->pollJSSampling();
+        }
       }
     }
   }
@@ -2422,14 +2428,6 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   // aren't saved when the profiler is inactive. Therefore the dead threads
   // vector should be empty here.
   MOZ_RELEASE_ASSERT(CorePS::DeadThreads(aLock).empty());
-
-  if (ActivePS::FeatureJS(aLock)) {
-    // We just called startJSSampling() on all relevant threads. We can also
-    // manually poll the current thread so it starts sampling immediately.
-    if (PseudoStack* pseudoStack = tlsPseudoStack.get()) {
-      pseudoStack->pollJSSampling();
-    }
-  }
 
 #ifdef MOZ_TASK_TRACER
   if (featureTaskTracer) {
@@ -2501,12 +2499,18 @@ locked_profiler_stop(PSLockRef aLock)
 #endif
 
   // Stop sampling live threads.
+  Thread::tid_t tid = Thread::GetCurrentId();
   CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
   for (uint32_t i = 0; i < liveThreads.size(); i++) {
     ThreadInfo* info = liveThreads.at(i);
     if (info->IsBeingProfiled()) {
       if (ActivePS::FeatureJS(aLock)) {
         info->Stack()->stopJSSampling();
+        if (info->ThreadId() == tid) {
+          // We can manually poll the current thread so it stops profiling
+          // immediately.
+          info->Stack()->pollJSSampling();
+        }
       }
       info->StopProfiling();
     }
@@ -2517,15 +2521,6 @@ locked_profiler_stop(PSLockRef aLock)
   while (deadThreads.size() > 0) {
     delete deadThreads.back();
     deadThreads.pop_back();
-  }
-
-  if (ActivePS::FeatureJS(aLock)) {
-    // We just called stopJSSampling() (through ThreadInfo::StopProfiling) on
-    // all relevant threads. We can also manually poll the current thread so
-    // it stops profiling immediately.
-    if (PseudoStack* stack = tlsPseudoStack.get()) {
-      stack->pollJSSampling();
-    }
   }
 
   // The Stop() call doesn't actually stop Run(); that happens in this
