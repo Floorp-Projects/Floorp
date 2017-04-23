@@ -342,6 +342,122 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
+(function test_bug_1241623() {
+  // Test that -webkit-gradient() styles are approximated the way we expect:
+
+  // For compactness, we'll pull out the common prefix & suffix from all of the
+  // specified & expected styles, and construct the full expression on the fly:
+  const specPrefix = "-webkit-gradient(linear, ";
+  const specSuffix = ", from(blue), to(lime))";
+
+  const expPrefix = "linear-gradient(";
+  const expSuffix = "rgb(0, 0, 255) 0%, rgb(0, 255, 0) 100%)";
+
+  let testcases = [
+    //
+    // [ legacyDirection,
+    //   modernDirection, // (empty string means use default direction)
+    //   descriptionOfTestcase ],
+
+    // If start & end are at same point, we just produce a gradient with
+    // the default direction.
+    [ "left top, left top",
+      "",
+      "start & end point are the same" ],
+    [ "40 40, 40 40",
+      "",
+      "start & end point are the same" ],
+    [ "center center, center center",
+      "",
+      "start & end point are the same" ],
+
+    // If start & end use different units in the same coordinate, we generally
+    // can't extract a direction (because we can't know whether arbitrary
+    // percent values are larger or smaller than arbitrary pixel values). So
+    // we produce a gradient in the default direction.
+    [ "left top, 30 100%",  // (Note: keywords like "left" are really % vals.)
+      "",
+      "start & end point have different units" ],
+    [ "100% 15, right bottom",
+      "",
+      "start & end point have different units" ],
+    [ "0 0%, 20 20",
+      "",
+      "start & end point have different units" ],
+    [ "0 0, 100% 20",
+      "",
+      "start & end point have different units" ],
+    [ "5% 30, 20 50%",
+      "",
+      "start & end point have different units" ],
+    [ "5% 6%, 20 30",
+      "",
+      "start & end point have different units" ],
+
+    // Gradient starting/ending somewhere arbitrary in middle:
+    [ "center center, right top",
+      "to top right",
+      "from center to top right" ],
+    [ "left top, center center",
+      "to bottom right",
+      "from left top to center" ],
+    [ "10 15, 5 20",
+      "to bottom left",
+      "from arbitrary point to another point in lower-left direction" ],
+
+    // Gradient using negative coordinates:
+    [ "-10 -15, 0 0",
+      "to bottom right",
+      "from negative point to origin" ],
+    [ "-100 10, 20 30",
+      "to bottom right",
+      "from negative-x point to another point in lower-right direction" ],
+    [ "10 -100, 5 10",
+      "to bottom left",
+      "from negative-y point to another point in lower-left direction" ],
+
+    // Diagonal gradient between sides/corners:
+    [ "center top, left center",
+      "to bottom left",
+      "left/bottom-wards, using edge keywords" ],
+    [ "left center, center top",
+      "to top right",
+      "top/right-wards, using edge keywords" ],
+    [ "right center, center top",
+      "to top left",
+      "top/left-wards, using edge keywords" ],
+    [ "right top, center bottom",
+      "to bottom left",
+      "bottom/left-wards, using edge keywords" ],
+    [ "left top, right bottom",
+      "to bottom right",
+      "bottom/right-wards, using edge keywords" ],
+    [ "left bottom, right top",
+      "to top right",
+      "top/right-wards, using edge keywords" ],
+  ];
+
+  let p = document.createElement("p");
+  let cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (let test of testcases) {
+    let specifiedStyle = specPrefix + test[0] + specSuffix;
+    let expectedStyle = expPrefix;
+    if (test[1] != "") {
+      expectedStyle += test[1] + ", ";
+    }
+    expectedStyle += expSuffix;
+
+    p.style.backgroundImage = specifiedStyle;
+    is(cs.backgroundImage, expectedStyle,
+       "computed value of -webkit-gradient expression (" + test[2] + ")");
+    p.style.backgroundImage = "";
+  }
+
+  p.remove();
+})();
+
 (function test_bug_1293164() {
 
   var p = document.createElement("p");
