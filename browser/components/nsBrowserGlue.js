@@ -134,6 +134,7 @@ const listeners = {
   mm: {
     "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
     "AboutHome:RequestUpdate": ["AboutHome"],
+    "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
     "FormValidation:ShowPopup": ["FormValidationHandler"],
     "FormValidation:HidePopup": ["FormValidationHandler"],
@@ -586,7 +587,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
 
-    ContentClick.init();
     RemotePrompt.init();
     Feeds.init();
     ContentPrefServiceParent.init();
