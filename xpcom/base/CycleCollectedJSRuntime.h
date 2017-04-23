@@ -110,7 +110,7 @@ protected:
   CycleCollectedJSRuntime(JSContext* aMainContext);
   virtual ~CycleCollectedJSRuntime();
 
-  virtual void Shutdown();
+  virtual void Shutdown(JSContext* cx);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
@@ -274,14 +274,6 @@ public:
   // whichever was most recent. If there were no such zones, prepare for a
   // full GC.
   void PrepareWaitingZonesForGC();
-
-  // The main context is the first one created in the runtime and the last one
-  // destroyed.
-  JSContext* MainContext() const
-  {
-    MOZ_ASSERT(mJSContext);
-    return mJSContext;
-  }
 
   // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
   // isn't one.
