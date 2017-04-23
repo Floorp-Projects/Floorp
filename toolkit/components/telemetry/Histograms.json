@@ -377,9 +377,9 @@
   "CREATE_EVENT_BEFOREUNLOADEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"beforeunloadevent\") ever called",
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "count",
-    "bug_numbers": [1295588, 1251198]
+    "bug_numbers": [1295588, 1251198, 1358893]
   },
   "CREATE_EVENT_COMPOSITIONEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
