@@ -828,11 +828,17 @@ namespace {
 
 void
 CopyComplete(void* aClosure, nsresult aStatus) {
+#ifdef DEBUG
   // Called on the STS thread by NS_AsyncCopy
+  nsCOMPtr<nsIEventTarget> sts =
+    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  bool result = false;
+  sts->IsOnCurrentThread(&result);
+  MOZ_ASSERT(result, "Should only be called on the STS thread.");
+#endif
+
   auto channel = static_cast<HttpBaseChannel*>(aClosure);
-  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
-    channel, &HttpBaseChannel::EnsureUploadStreamIsCloneableComplete, aStatus);
-  NS_DispatchToMainThread(runnable.forget());
+  channel->OnCopyComplete(aStatus);
 }
 
 } // anonymous namespace
@@ -898,6 +904,18 @@ HttpBaseChannel::EnsureUploadStreamIsCloneable(nsIRunnable* aCallback)
   AddRef();
 
   return NS_OK;
+}
+
+void
+HttpBaseChannel::OnCopyComplete(nsresult aStatus)
+{
+  // Assert in parent process because we don't have to label the runnable
+  // in parent process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
+    this, &HttpBaseChannel::EnsureUploadStreamIsCloneableComplete, aStatus);
+  NS_DispatchToMainThread(runnable.forget());
 }
 
 void
