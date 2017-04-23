@@ -547,6 +547,7 @@
 <!ENTITY bookmark_edit_name "Name">
 <!ENTITY bookmark_edit_location "Location">
 <!ENTITY bookmark_edit_keyword "Keyword">
+<!ENTITY bookmark_select_folder "Select folder">
 
 <!-- Localization note (site_settings_*) : These strings are used in the "Site Settings"
      dialog that appears after selecting the "Edit Site Settings" context menu item. -->

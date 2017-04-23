@@ -435,6 +435,7 @@
   <string name="bookmark_edit_name">&bookmark_edit_name;</string>
   <string name="bookmark_edit_location">&bookmark_edit_location;</string>
   <string name="bookmark_edit_keyword">&bookmark_edit_keyword;</string>
+  <string name="bookmark_select_folder">&bookmark_select_folder;</string>
 
   <string name="pref_use_master_password">&pref_use_master_password;</string>
   <string name="masterpassword_create_title">&masterpassword_create_title;</string>
