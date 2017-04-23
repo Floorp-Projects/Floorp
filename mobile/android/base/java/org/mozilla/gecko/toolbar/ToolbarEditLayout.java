@@ -203,6 +203,10 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         }
     }
 
+    public void refresh() {
+        mEditText.setHint(getResources().getString(R.string.url_bar_default_text));
+    }
+
     void setToolbarPrefs(final ToolbarPrefs prefs) {
         mEditText.setToolbarPrefs(prefs);
     }
