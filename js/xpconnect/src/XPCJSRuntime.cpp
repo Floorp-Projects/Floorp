@@ -673,7 +673,8 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
     for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(MainContext(), JSGC_NUMBER),
+    JSContext* cx = XPCJSContext::Get()->Context();
+    dom::TraceBlackJS(trc, JS_GetGCParameter(cx, JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
@@ -1075,8 +1076,7 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 static void
 ReloadPrefsCallback(const char* pref, void* data)
 {
-    XPCJSRuntime* xpcrt = reinterpret_cast<XPCJSRuntime*>(data);
-    JSContext* cx = xpcrt->MainContext();
+    JSContext* cx = XPCJSContext::Get()->Context();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -1168,21 +1168,17 @@ ReloadPrefsCallback(const char* pref, void* data)
 }
 
 void
-XPCJSRuntime::Shutdown()
+XPCJSRuntime::Shutdown(JSContext* cx)
 {
-    // Elsewhere we abort immediately if XPCJSRuntime initialization fails.
-    // Therefore the context must be non-null.
-    MOZ_ASSERT(MainContext());
-
     // This destructor runs before ~CycleCollectedJSContext, which does the
     // actual JS_DestroyContext() call. But destroying the context triggers
     // one final GC, which can call back into the context with various
     // callbacks if we aren't careful. Null out the relevant callbacks.
-    JS_RemoveFinalizeCallback(MainContext(), FinalizeCallback);
-    JS_RemoveWeakPointerZonesCallback(MainContext(), WeakPointerZonesCallback);
-    JS_RemoveWeakPointerCompartmentCallback(MainContext(), WeakPointerCompartmentCallback);
+    JS_RemoveFinalizeCallback(cx, FinalizeCallback);
+    JS_RemoveWeakPointerZonesCallback(cx, WeakPointerZonesCallback);
+    JS_RemoveWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback);
 
-    JS::SetGCSliceCallback(MainContext(), mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
 
     // We don't want to track wrapped JS roots after this point since we're
     // making them !IsValid anyway through SystemIsBeingShutDown.
@@ -1212,10 +1208,10 @@ XPCJSRuntime::Shutdown()
     mDyingWrappedNativeProtoMap = nullptr;
 
     Preferences::UnregisterPrefixCallback(ReloadPrefsCallback,
-                                          JS_OPTIONS_DOT_STR, this);
+                                          JS_OPTIONS_DOT_STR);
 
 #ifdef FUZZING
-    Preferences::UnregisterCallback(ReloadPrefsCallback, "fuzzing.enabled", this);
+    Preferences::UnregisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
 #endif
 }
 
@@ -2472,7 +2468,8 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations,
                               anonymize);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->MainContext(), &rtStats, &orphanReporter,
+    JSContext* cx = XPCJSContext::Get()->Context();
+    if (!JS::CollectRuntimeStats(cx, &rtStats, &orphanReporter,
                                  anonymize))
     {
         return;
@@ -2961,11 +2958,8 @@ XPCJSRuntime::Get()
 }
 
 void
-XPCJSRuntime::Initialize()
+XPCJSRuntime::Initialize(JSContext* cx)
 {
-    MOZ_ASSERT(MainContext());
-    JSContext* cx = MainContext();
-
     mUnprivilegedJunkScope.init(cx, nullptr);
     mPrivilegedJunkScope.init(cx, nullptr);
     mCompilationScope.init(cx, nullptr);
@@ -3025,12 +3019,12 @@ XPCJSRuntime::Initialize()
     mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
 
     // Watch for the JS boolean options.
-    ReloadPrefsCallback(nullptr, this);
+    ReloadPrefsCallback(nullptr, nullptr);
     Preferences::RegisterPrefixCallback(ReloadPrefsCallback,
-                                        JS_OPTIONS_DOT_STR, this);
+                                        JS_OPTIONS_DOT_STR);
 
 #ifdef FUZZING
-    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled", this);
+    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
 #endif
 }
 
@@ -3108,7 +3102,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     depth--;
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %p", this));
         XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mJSContext @ %p", MainContext()));
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %p with %d wrapperclasses(s)",
                         mWrappedJSClassMap, mWrappedJSClassMap->Count()));
@@ -3213,7 +3206,7 @@ void
 XPCJSRuntime::InitSingletonScopes()
 {
     // This all happens very early, so we don't bother with cx pushing.
-    JSContext* cx = MainContext();
+    JSContext* cx = XPCJSContext::Get()->Context();
     JSAutoRequest ar(cx);
     RootedValue v(cx);
     nsresult rv;
