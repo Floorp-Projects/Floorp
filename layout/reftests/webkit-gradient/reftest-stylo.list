@@ -3,10 +3,9 @@
 # They require webkit prefix support to be enabled.
 default-preferences pref(layout.css.prefixes.webkit,true)
 
-# Tests where we don't render a "-webkit-gradient" exactly correctly.
-# (These just ensure that our approximate/do-something rendering does not
+# In this test, we don't render a "-webkit-gradient" exactly correctly.
+# (It's just here to ensure that our approximate/do-something rendering doesn't
 # change unexpectedly.)
-fails == webkit-gradient-approx-linear-1.html webkit-gradient-approx-linear-1.html
 fails == webkit-gradient-approx-radial-1.html webkit-gradient-approx-radial-1.html
 
 # Tests for -webkit-gradient(linear, ...)
