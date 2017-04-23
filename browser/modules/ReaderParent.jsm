@@ -20,19 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.js
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 var ReaderParent = {
-  MESSAGES: [
-    "Reader:ArticleGet",
-    "Reader:FaviconRequest",
-    "Reader:UpdateReaderButton",
-  ],
-
-  init() {
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-    for (let msg of this.MESSAGES) {
-      mm.addMessageListener(msg, this);
-    }
-  },
-
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(message) {
     switch (message.name) {
       case "Reader:ArticleGet":
