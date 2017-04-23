@@ -504,6 +504,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'bookmarks/BookmarkEditFragment.java',
     'bookmarks/BookmarkUtils.java',
     'bookmarks/EditBookmarkTask.java',
+    'bookmarks/SelectFolderCallback.java',
+    'bookmarks/SelectFolderFragment.java',
     'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
