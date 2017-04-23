@@ -247,12 +247,6 @@ public:
   }
 
   void push(const char* aName, js::ProfileEntry::Category aCategory,
-            uint32_t line)
-  {
-    push(aName, aCategory, nullptr, false, line, nullptr);
-  }
-
-  void push(const char* aName, js::ProfileEntry::Category aCategory,
             void* aStackAddress, bool aCopy, uint32_t line,
             const char* aDynamicString)
   {
