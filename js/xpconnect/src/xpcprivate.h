@@ -642,8 +642,8 @@ private:
     explicit XPCJSRuntime(JSContext* aCx);
 
     MOZ_IS_CLASS_INIT
-    void Initialize();
-    void Shutdown() override;
+    void Initialize(JSContext* cx);
+    void Shutdown(JSContext* cx) override;
 
     void ReleaseIncrementally(nsTArray<nsISupports*>& array);
 
