@@ -724,8 +724,13 @@ function openPreferences(paneID, extraArgs) {
   }
   function switchToAdvancedSubPane(doc) {
     if (extraArgs && extraArgs["advancedTab"]) {
+      // After the Preferences reorg works in Bug 1335907, no more advancedPrefs element.
+      // The old Preference is pref-off behind `browser.preferences.useOldOrganization` on Nightly.
+      // During the transition between the old and new Preferences, should do checking before proceeding.
       let advancedPaneTabs = doc.getElementById("advancedPrefs");
-      advancedPaneTabs.selectedTab = doc.getElementById(extraArgs["advancedTab"]);
+      if (advancedPaneTabs) {
+        advancedPaneTabs.selectedTab = doc.getElementById(extraArgs["advancedTab"]);
+      }
     }
   }
 
