@@ -1347,12 +1347,12 @@ talos-tp5o:
 talos-perf-reftest:
     description: "Talos perf-reftest"
     suite: talos
-    talos-try-name: perfref
+    talos-try-name: perf-reftest
     treeherder-symbol: tc-T(p)
     run-on-projects:
         by-test-platform:
-            linux64-stylo/.*: ['try']
-            default: ['try']
+            linux64-stylo/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
