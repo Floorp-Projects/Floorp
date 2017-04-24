@@ -678,11 +678,16 @@ XPCJSContext::CreateRuntime(JSContext* aCx)
 }
 
 nsresult
-XPCJSContext::Initialize()
+XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
 {
-    nsresult rv = CycleCollectedJSContext::Initialize(nullptr,
-                                                      JS::DefaultHeapMaxBytes,
-                                                      JS::DefaultNurseryBytes);
+    nsresult rv;
+    if (aPrimaryContext) {
+        rv = CycleCollectedJSContext::InitializeNonPrimary(aPrimaryContext);
+    } else {
+        rv = CycleCollectedJSContext::Initialize(nullptr,
+                                                 JS::DefaultHeapMaxBytes,
+                                                 JS::DefaultNurseryBytes);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -790,19 +795,26 @@ XPCJSContext::Initialize()
     if (!xpc_LocalizeContext(cx))
         NS_RUNTIMEABORT("xpc_LocalizeContext failed.");
 
-    Runtime()->Initialize(cx);
+    if (!aPrimaryContext) {
+        Runtime()->Initialize(cx);
+    }
 
     return NS_OK;
 }
 
 // static
-XPCJSContext*
-XPCJSContext::newXPCJSContext()
+void
+XPCJSContext::InitTLS()
 {
     MOZ_RELEASE_ASSERT(gTlsContext.init());
+}
 
+// static
+XPCJSContext*
+XPCJSContext::NewXPCJSContext(XPCJSContext* aPrimaryContext)
+{
     XPCJSContext* self = new XPCJSContext();
-    nsresult rv = self->Initialize();
+    nsresult rv = self->Initialize(aPrimaryContext);
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
         delete self;

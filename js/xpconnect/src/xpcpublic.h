@@ -618,6 +618,20 @@ IsInAutomation()
         AreNonLocalConnectionsDisabled();
 }
 
+void
+CreateCooperativeContext();
+
+void
+DestroyCooperativeContext();
+
+// Please see JS_YieldCooperativeContext in jsapi.h.
+void
+YieldCooperativeContext();
+
+// Please see JS_ResumeCooperativeContext in jsapi.h.
+void
+ResumeCooperativeContext();
+
 } // namespace xpc
 
 namespace mozilla {

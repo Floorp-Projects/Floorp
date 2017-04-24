@@ -62,18 +62,27 @@ const char XPC_XPCONNECT_CONTRACTID[]     = "@mozilla.org/js/xpc/XPConnect;1";
 
 /***************************************************************************/
 
+// This global should be used very sparingly: only to create and destroy
+// nsXPConnect and when creating a new cooperative (non-primary) XPCJSContext.
+static XPCJSContext* gPrimaryContext;
+
 nsXPConnect::nsXPConnect()
     : mShuttingDown(false)
 {
-    XPCJSContext* xpccx = XPCJSContext::newXPCJSContext();
+    XPCJSContext::InitTLS();
+
+    XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext(nullptr);
     if (!xpccx) {
         NS_RUNTIMEABORT("Couldn't create XPCJSContext.");
     }
+    gPrimaryContext = xpccx;
     mRuntime = xpccx->Runtime();
 }
 
 nsXPConnect::~nsXPConnect()
 {
+    MOZ_ASSERT(XPCJSContext::Get() == gPrimaryContext);
+
     mRuntime->DeleteSingletonScopes();
 
     // In order to clean up everything properly, we need to GC twice: once now,
@@ -99,7 +108,7 @@ nsXPConnect::~nsXPConnect()
     // shutdown the logging system
     XPC_LOG_FINISH();
 
-    delete XPCJSContext::Get();
+    delete gPrimaryContext;
 
     gSelf = nullptr;
     gOnceAliveNowDead = true;
@@ -1399,3 +1408,29 @@ ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj)
 
 } // namespace dom
 } // namespace mozilla
+
+void
+xpc::CreateCooperativeContext()
+{
+    MOZ_ASSERT(gPrimaryContext);
+    XPCJSContext::NewXPCJSContext(gPrimaryContext);
+}
+
+void
+xpc::DestroyCooperativeContext()
+{
+    MOZ_ASSERT(XPCJSContext::Get() != gPrimaryContext);
+    delete XPCJSContext::Get();
+}
+
+void
+xpc::YieldCooperativeContext()
+{
+    JS_YieldCooperativeContext(XPCJSContext::Get()->Context());
+}
+
+void
+xpc::ResumeCooperativeContext()
+{
+    JS_ResumeCooperativeContext(XPCJSContext::Get()->Context());
+}
