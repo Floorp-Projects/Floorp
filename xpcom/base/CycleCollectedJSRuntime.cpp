@@ -562,6 +562,18 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   MOZ_ASSERT(!mDeferredFinalizerTable.Count());
 }
 
+void
+CycleCollectedJSRuntime::AddContext(CycleCollectedJSContext* aContext)
+{
+  mContexts.insertBack(aContext);
+}
+
+void
+CycleCollectedJSRuntime::RemoveContext(CycleCollectedJSContext* aContext)
+{
+  aContext->removeFrom(mContexts);
+}
+
 size_t
 CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {

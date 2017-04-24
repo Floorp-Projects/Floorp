@@ -11,6 +11,7 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SegmentedVector.h"
@@ -121,6 +122,11 @@ protected:
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual void CustomOutOfMemoryCallback() {}
+
+  LinkedList<CycleCollectedJSContext>& Contexts()
+  {
+    return mContexts;
+  }
 
 private:
   void
@@ -279,7 +285,12 @@ public:
   // isn't one.
   static CycleCollectedJSRuntime* Get();
 
+  void AddContext(CycleCollectedJSContext* aContext);
+  void RemoveContext(CycleCollectedJSContext* aContext);
+
 private:
+  LinkedList<CycleCollectedJSContext> mContexts;
+
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
