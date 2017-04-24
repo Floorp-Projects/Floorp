@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStreamParent.h"
+#include "IPCBlobInputStreamStorage.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -23,7 +24,7 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
     return nullptr;
   }
 
-  // TODO: register to a service.
+  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id);
 
   return new IPCBlobInputStreamParent(id, aSize);
 }
@@ -37,7 +38,7 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
 void
 IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
 {
-  // TODO: unregister
+  IPCBlobInputStreamStorage::Get()->ForgetStream(mID);
 }
 
 } // namespace dom
