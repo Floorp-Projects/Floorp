@@ -22,31 +22,32 @@
  * to the list of trusted certificates.
  *
  * The NSS_BUILTINS_LIBRARY_VERSION_MINOR macro needs to be bumped
- * for each NSS minor release AND whenever we change the list of
- * trusted certificates.  10 minor versions are allocated for each
- * NSS 3.x branch as follows, allowing us to change the list of
- * trusted certificates up to 9 times on each branch.
- *   - NSS 3.5 branch:  3-9
- *   - NSS 3.6 branch:  10-19
- *   - NSS 3.7 branch:  20-29
- *   - NSS 3.8 branch:  30-39
- *   - NSS 3.9 branch:  40-49
- *   - NSS 3.10 branch: 50-59
- *   - NSS 3.11 branch: 60-69
- *     ...
- *   - NSS 3.12 branch: 70-89
- *   - NSS 3.13 branch: 90-99
- *   - NSS 3.14 branch: 100-109
- *     ...
- *   - NSS 3.29 branch: 250-255
+ * whenever we change the list of trusted certificates.
+ *
+ * Please use the following rules when increasing the version number:
+ *
+ * - starting with version 2.14, NSS_BUILTINS_LIBRARY_VERSION_MINOR
+ *   must always be an EVEN number (e.g. 16, 18, 20 etc.)
+ *
+ * - whenever possible, if older branches require a modification to the
+ *   list, these changes should be made on the main line of development (trunk),
+ *   and the older branches should update to the most recent list.
+ * 
+ * - ODD minor version numbers are reserved to indicate a snapshot that has
+ *   deviated from the main line of development, e.g. if it was necessary
+ *   to modify the list on a stable branch.
+ *   Once the version has been changed to an odd number (e.g. 2.13) on a branch,
+ *   it should remain unchanged on that branch, even if further changes are
+ *   made on that branch.
  *
  * NSS_BUILTINS_LIBRARY_VERSION_MINOR is a CK_BYTE.  It's not clear
  * whether we may use its full range (0-255) or only 0-99 because
  * of the comment in the CK_VERSION type definition.
+ * It's recommend to switch back to 0 after having reached version 98/99.
  */
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 2
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 11
-#define NSS_BUILTINS_LIBRARY_VERSION "2.11"
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 14
+#define NSS_BUILTINS_LIBRARY_VERSION "2.14"
 
 /* These version numbers detail the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
