@@ -447,10 +447,10 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
             self.marionette.go_back()
         self.marionette.timeout.reset()
 
-        Wait(self.marionette, self.marionette.timeout.page_load).until(
-            lambda mn: urls[0] == mn.get_url(),
-            message="'{}' has been successfully loaded after going back".format(urls[0]))
-        self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "3")
+        delay = Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            expected.element_present(By.ID, "delay"),
+            message="Target element 'delay' has not been found after timeout in 'back'")
+        self.assertEqual(delay.text, "3")
 
         self.marionette.go_forward()
         self.assertEqual(urls[1], self.marionette.get_url())
@@ -461,10 +461,10 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
             self.marionette.go_forward()
         self.marionette.timeout.reset()
 
-        Wait(self.marionette, self.marionette.timeout.page_load).until(
-            lambda mn: urls[2] == mn.get_url(),
-            message="'{}' has been successfully loaded after going back".format(urls[2]))
-        self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "4")
+        delay = Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            expected.element_present(By.ID, "delay"),
+            message="Target element 'delay' has not been found after timeout in 'forward'")
+        self.assertEqual(delay.text, "4")
 
     def test_certificate_error(self):
         test_pages = [
