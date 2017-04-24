@@ -2445,11 +2445,14 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
     flags |= eDoAnimation;
   }
 
-  if (aElement && aElement->IsRootOfAnonymousSubtree()) {
+  if ((aElement && aElement->IsRootOfAnonymousSubtree()) ||
+      (aStyleContext->IsAnonBox() &&
+       nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(
+         aStyleContext->GetPseudo()))) {
     // For anonymous subtree roots, don't tweak "display" value based on whether
     // or not the parent is styled as a flex/grid container. (If the parent
     // has anonymous-subtree kids, then we know it's not actually going to get
-    // a flex/grid container frame, anyway.)
+    // a flex/grid container frame, anyway.)  Same for certain anonymous boxes.
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
