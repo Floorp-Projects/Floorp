@@ -679,7 +679,8 @@ def make_job_description(config, tests):
         attributes.update({
             'build_platform': attr_build_platform,
             'build_type': attr_build_type,
-            'test_platform': test['test-platform'],
+            # only keep the first portion of the test platform
+            'test_platform': test['test-platform'].split('/')[0],
             'test_chunk': str(test['this-chunk']),
             'unittest_suite': suite,
             'unittest_flavor': flavor,
