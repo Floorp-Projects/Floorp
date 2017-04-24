@@ -55,19 +55,20 @@ nsAndroidHandlerApp::SetDetailedDescription(const nsAString & aDescription)
   return NS_OK;
 }
 
-// XXX Workaround for bug 986975 to maintain the existing broken semantics
-template<>
-struct nsISharingHandlerApp::COMTypeInfo<nsAndroidHandlerApp, void> {
-  static const nsIID kIID;
-};
-const nsIID nsISharingHandlerApp::COMTypeInfo<nsAndroidHandlerApp, void>::kIID = NS_IHANDLERAPP_IID;
-
 NS_IMETHODIMP
 nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *aRetval)
 {
-  nsCOMPtr<nsAndroidHandlerApp> aApp = do_QueryInterface(aHandlerApp);
-  *aRetval = aApp && aApp->mName.Equals(mName) &&
-    aApp->mDescription.Equals(mDescription);
+  *aRetval = false;
+  if (!aHandlerApp) {
+    return NS_OK;
+  }
+
+  nsAutoString name;
+  nsAutoString detailedDescription;
+  aHandlerApp->GetName(name);
+  aHandlerApp->GetDetailedDescription(detailedDescription);
+
+  *aRetval = name.Equals(mName) && detailedDescription.Equals(mDescription);
   return NS_OK;
 }
 
