@@ -900,6 +900,17 @@ limitations under the License.
         }, 0);
       });
 
+
+      it('uses the viewport when no root is specified', function(done) {
+        window.onmessage = function (e) {
+          expect(e.data).to.be.ok();
+          win.close();
+          done();
+        };
+
+        var win = window.open("intersectionobserver_window.html");
+      });
+
       it('triggers only once if observed multiple times (and does not crash when collected)', function(done) {
         var spy = sinon.spy();
         io = new IntersectionObserver(spy, {root: rootEl});
