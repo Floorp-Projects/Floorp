@@ -776,7 +776,9 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
 
         for attr in cpu_attrs:
             value = getattr(cpu_times, attr)
-            percent = value / cpu_total * 100.0
+            # cpu_total can be 0.0. Guard against division by 0.
+            percent = value / cpu_total * 100.0 if cpu_total else 0.0
+
             if percent > 1.00:
                 self._tinderbox_print('CPU {}<br/>{:,.1f} ({:,.1f}%)'.format(
                                       attr, value, percent))
