@@ -4,7 +4,10 @@
 
 function notifyStoragePressure(usage = 100) {
   let notifyPromise = TestUtils.topicObserved("QuotaManager::StoragePressure", () => true);
-  Services.obs.notifyObservers(null, "QuotaManager::StoragePressure", usage);
+  let usageWrapper = Cc["@mozilla.org/supports-PRUint64;1"]
+                     .createInstance(Ci.nsISupportsPRUint64);
+  usageWrapper.data = usage;
+  Services.obs.notifyObservers(usageWrapper, "QuotaManager::StoragePressure");
   return notifyPromise;
 }
 
