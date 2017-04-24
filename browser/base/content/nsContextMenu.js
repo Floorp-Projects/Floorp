@@ -215,15 +215,15 @@ nsContextMenu.prototype = {
   initNavigationItems: function CM_initNavigationItems() {
     var shouldShow = !(this.isContentSelected || this.onLink || this.onImage ||
                        this.onCanvas || this.onVideo || this.onAudio ||
-                       this.onTextInput) && this.inTabBrowser;
+                       this.onTextInput || this.onSocial);
     this.showItem("context-navigation", shouldShow);
     this.showItem("context-sep-navigation", shouldShow);
 
     let stopped = XULBrowserWindow.stopCommand.getAttribute("disabled") == "true";
 
     let stopReloadItem = "";
-    if (shouldShow || !this.inTabBrowser) {
-      stopReloadItem = (stopped || !this.inTabBrowser) ? "reload" : "stop";
+    if (shouldShow || this.onSocial) {
+      stopReloadItem = (stopped || this.onSocial) ? "reload" : "stop";
     }
 
     this.showItem("context-reload", stopReloadItem == "reload");
@@ -290,12 +290,9 @@ nsContextMenu.prototype = {
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
-    var showInspect = this.inTabBrowser && gPrefService.getBoolPref("devtools.inspector.enabled");
+    var showInspect = !this.onSocial && gPrefService.getBoolPref("devtools.inspector.enabled");
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
-    // The page info is broken for WebExtension popups, as the browser is
-    // destroyed when the popup is closed.
-    this.setItemAttr("context-viewinfo", "disabled", this.webExtBrowserType === "popup");
     this.showItem("inspect-separator", showInspect);
     this.showItem("context-inspect", showInspect);
 
@@ -344,9 +341,6 @@ nsContextMenu.prototype = {
             .disabled = !this.hasBGImage;
 
     this.showItem("context-viewimageinfo", this.onImage);
-    // The image info popup is broken for WebExtension popups, since the browser
-    // is destroyed when the popup is closed.
-    this.setItemAttr("context-viewimageinfo", "disabled", this.webExtBrowserType === "popup");
     this.showItem("context-viewimagedesc", this.onImage && this.imageDescURL !== "");
   },
 
@@ -356,12 +350,11 @@ nsContextMenu.prototype = {
     this.showItem(bookmarkPage,
                   !(this.isContentSelected || this.onTextInput || this.onLink ||
                     this.onImage || this.onVideo || this.onAudio || this.onSocial ||
-                    this.onCanvas || this.inWebExtBrowser));
+                    this.onCanvas));
     bookmarkPage.setAttribute("tooltiptext", bookmarkPage.getAttribute("buttontooltiptext"));
 
     this.showItem("context-bookmarklink", (this.onLink && !this.onMailtoLink &&
-                                           !this.onSocial && !this.onMozExtLink) ||
-                                          this.onPlainTextLink);
+                                           !this.onSocial) || this.onPlainTextLink);
     this.showItem("context-keywordfield",
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
@@ -405,14 +398,13 @@ nsContextMenu.prototype = {
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
     let pageShare = shareEnabled && !(this.isContentSelected ||
                             this.onTextInput || this.onLink || this.onImage ||
-                            this.onVideo || this.onAudio || this.onCanvas ||
-                            this.inWebExtBrowser);
+                            this.onVideo || this.onAudio || this.onCanvas);
     this.showItem("context-sharepage", pageShare);
     this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
-    this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink && !this.onMozExtLink);
+    this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
     this.showItem("context-shareimage", shareEnabled && this.onImage);
     this.showItem("context-sharevideo", shareEnabled && this.onVideo);
-    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL || this.mediaURL.startsWith("blob:") || this.mediaURL.startsWith("moz-extension:"));
+    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL || this.mediaURL.startsWith("blob:"));
   },
 
   initSpellingItems() {
@@ -685,10 +677,6 @@ nsContextMenu.prototype = {
     this.onCTPPlugin       = false;
     this.canSpellCheck     = false;
     this.onPassword        = false;
-    this.webExtBrowserType = "";
-    this.inWebExtBrowser   = false;
-    this.inTabBrowser      = true;
-    this.onMozExtLink      = false;
 
     if (this.isRemote) {
       this.selectionInfo = gContextMenuContentData.selectionInfo;
@@ -725,10 +713,6 @@ nsContextMenu.prototype = {
       this.frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
     }
     this.onSocial = !!this.browser.getAttribute("origin");
-    this.webExtBrowserType = this.browser.getAttribute("webextension-view-type");
-    this.inWebExtBrowser = !!this.webExtBrowserType;
-    this.inTabBrowser = this.browser.ownerGlobal.gBrowser ?
-      !!this.browser.ownerGlobal.gBrowser.getTabForBrowser(this.browser) : false;
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
     this.inSyntheticDoc = ownerDoc.mozSyntheticDocument;
@@ -885,7 +869,6 @@ nsContextMenu.prototype = {
           this.linkTextStr = this.getLinkText();
           this.linkProtocol = this.getLinkProtocol();
           this.onMailtoLink = (this.linkProtocol == "mailto");
-          this.onMozExtLink = (this.linkProtocol == "moz-extension");
           this.onSaveableLink = this.isLinkSaveable( this.link );
           this.linkHasNoReferrer = BrowserUtils.linkHasNoReferrer(elem);
           try {
@@ -1928,7 +1911,7 @@ nsContextMenu.prototype = {
   _getTelemetryPageContextInfo() {
     let rv = [];
     for (let k of ["isContentSelected", "onLink", "onImage", "onCanvas", "onVideo", "onAudio",
-                   "onTextInput", "onSocial", "inWebExtBrowser", "inTabBrowser"]) {
+                   "onTextInput", "onSocial"]) {
       if (this[k]) {
         rv.push(k.replace(/^(?:is|on)(.)/, (match, firstLetter) => firstLetter.toLowerCase()));
       }
