@@ -9,6 +9,8 @@
 .boxmodel-container {
   overflow: auto;
   padding-bottom: 4px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* Header */
@@ -324,6 +326,12 @@
   display: inline-block;
 }
 
+.boxmodel-properties-wrapper {
+  column-width: 250px;
+  column-gap: 20px;
+  column-rule: 1px solid var(--theme-splitter-color);
+}
+
 .boxmodel-properties-wrapper .property-view {
   padding-inline-start: 17px;
 }
@@ -334,6 +342,28 @@
 
 .boxmodel-properties-wrapper .property-value-container {
   flex: 1;
+  display: block;
+}
+
+.boxmodel-container .reference-element {
+  margin-inline-start: 14px;
+  margin-block-start: 4px;
+  display: block;
+}
+
+/* Tag displayed next to DOM Node previews (used to display reference elements) */
+
+.boxmodel-container .reference-element-type {
+  background: var(--theme-highlight-purple);
+  color: white;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-size: 9px;
+  margin-inline-end: 5px;
+}
+
+.theme-dark .boxmodel-container .reference-element-type {
+  color: black;
 }
 
 /* Box Model Main - Offset Parent */
