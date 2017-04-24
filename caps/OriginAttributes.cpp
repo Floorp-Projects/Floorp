@@ -10,6 +10,7 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
+#include "nsIURIWithPrincipal.h"
 
 namespace mozilla {
 
@@ -52,16 +53,29 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 
   nsAutoCString baseDomain;
   nsresult rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
-  if (NS_FAILED(rv)) {
-    nsAutoCString scheme;
-    rv = aURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS_VOID(rv);
-    if (scheme.EqualsLiteral("about")) {
-      baseDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
-    }
+  if (NS_SUCCEEDED(rv)) {
+    mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+    return;
   }
 
-  mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+  nsAutoCString scheme;
+  rv = aURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (scheme.EqualsLiteral("about")) {
+    mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
+  } else if (scheme.EqualsLiteral("blob")) {
+    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
+    if (uriPrinc) {
+      nsCOMPtr<nsIPrincipal> principal;
+      rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS_VOID(rv);
+
+      MOZ_ASSERT(principal, "blob URI but no principal.");
+      if (principal) {
+        mFirstPartyDomain = principal->OriginAttributesRef().mFirstPartyDomain;
+      }
+    }
+  }
 }
 
 void

@@ -193,8 +193,9 @@ public:
   nsresult
   Start();
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
+  NS_DECL_CYCLE_COLLECTION_CLASS(PersistentStoragePermissionRequest)
 
 private:
   ~PersistentStoragePermissionRequest()
@@ -698,8 +699,15 @@ PersistentStoragePermissionRequest::Start()
   return nsContentPermissionUtils::AskPermission(this, mWindow);
 }
 
-NS_IMPL_ISUPPORTS(PersistentStoragePermissionRequest,
-                  nsIContentPermissionRequest)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PersistentStoragePermissionRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PersistentStoragePermissionRequest)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PersistentStoragePermissionRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(PersistentStoragePermissionRequest, mWindow, mPromise)
 
 NS_IMETHODIMP
 PersistentStoragePermissionRequest::GetPrincipal(nsIPrincipal** aPrincipal)

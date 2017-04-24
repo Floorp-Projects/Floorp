@@ -709,12 +709,7 @@ HandlerService.prototype = {
 
     var handler = aHandlerInfo.preferredApplicationHandler;
 
-    if (handler) {
-      // If the handlerApp is an unknown type, ignore it.
-      // Android default application handler is the case.
-      if (this._handlerAppIsUnknownType(handler)) {
-        return;
-      }
+    if (handler && !this._handlerAppIsUnknownType(handler)) {
       this._storeHandlerApp(handlerID, handler);
 
       // Make this app be the preferred app for the handler info.
@@ -728,8 +723,9 @@ HandlerService.prototype = {
       this._setResource(infoID, NC_PREFERRED_APP, handlerID);
     }
     else {
-      // There isn't a preferred handler.  Remove the existing record for it,
-      // if any.
+      // There isn't a preferred handler or the handler cannot be serialized,
+      // for example the Android default application handler. Remove the
+      // existing record for it, if any.
       this._removeTarget(infoID, NC_PREFERRED_APP);
       this._removeAssertions(handlerID);
     }
