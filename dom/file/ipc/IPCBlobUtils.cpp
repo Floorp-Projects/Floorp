@@ -5,6 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobUtils.h"
+#include "IPCBlobInputStream.h"
+#include "IPCBlobInputStreamChild.h"
+#include "IPCBlobInputStreamParent.h"
+#include "IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "prtime.h"
 
@@ -15,8 +19,33 @@ namespace IPCBlobUtils {
 already_AddRefed<BlobImpl>
 Deserialize(const IPCBlob& aIPCBlob)
 {
-  nsCOMPtr<nsIInputStream> inputStream =
-    DeserializeIPCStream(aIPCBlob.inputStream());
+  nsCOMPtr<nsIInputStream> inputStream;
+
+  const IPCBlobStream& stream = aIPCBlob.inputStream();
+  switch (stream.type()) {
+
+  // Parent to child: when an nsIInputStream is sent from parent to child, the
+  // child receives a IPCBlobInputStream actor.
+  case IPCBlobStream::TPIPCBlobInputStreamChild: {
+    IPCBlobInputStreamChild* actor =
+      static_cast<IPCBlobInputStreamChild*>(stream.get_PIPCBlobInputStreamChild());
+    inputStream = actor->CreateStream();
+    break;
+  }
+
+  // Child to Parent: when a blob is created on the content process send it's
+  // sent to the parent, we have an IPCStream object.
+  case IPCBlobStream::TIPCStream:
+    MOZ_ASSERT(XRE_IsParentProcess());
+    inputStream = DeserializeIPCStream(stream.get_IPCStream());
+    break;
+
+  default:
+    MOZ_CRASH("Unknown type.");
+    break;
+  }
+
+  MOZ_ASSERT(inputStream);
 
   RefPtr<BlobImpl> blobImpl;
 
@@ -35,6 +64,73 @@ Deserialize(const IPCBlob& aIPCBlob)
   }
 
   return blobImpl.forget();
+}
+
+template<typename M>
+nsresult
+SerializeInputStreamParent(nsIInputStream* aInputStream, uint64_t aSize,
+                           IPCBlob& aIPCBlob, M* aManager)
+{
+  // Parent to Child we always send a IPCBlobInputStream.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsresult rv;
+  IPCBlobInputStreamParent* parentActor =
+    IPCBlobInputStreamParent::Create(aInputStream, aSize, &rv);
+  if (!parentActor) {
+    return rv;
+  }
+
+  if (!aManager->SendPIPCBlobInputStreamConstructor(parentActor,
+                                                    parentActor->ID(),
+                                                    parentActor->Size())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aIPCBlob.inputStream() = parentActor;
+  return NS_OK;
+}
+
+template<typename M>
+nsresult
+SerializeInputStreamChild(nsIInputStream* aInputStream, IPCBlob& aIPCBlob,
+                          M* aManager)
+{
+  AutoIPCStream ipcStream(true /* delayed start */);
+  if (!ipcStream.Serialize(aInputStream, aManager)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aIPCBlob.inputStream() = ipcStream.TakeValue();
+  return NS_OK;
+}
+
+nsresult
+SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
+                     IPCBlob& aIPCBlob, nsIContentParent* aManager)
+{
+  return SerializeInputStreamParent(aInputStream, aSize, aIPCBlob, aManager);
+}
+
+nsresult
+SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
+                     IPCBlob& aIPCBlob, PBackgroundParent* aManager)
+{
+  return SerializeInputStreamParent(aInputStream, aSize, aIPCBlob, aManager);
+}
+
+nsresult
+SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
+                     IPCBlob& aIPCBlob, nsIContentChild* aManager)
+{
+  return SerializeInputStreamChild(aInputStream, aIPCBlob, aManager);
+}
+
+nsresult
+SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
+                     IPCBlob& aIPCBlob, PBackgroundChild* aManager)
+{
+  return SerializeInputStreamChild(aInputStream, aIPCBlob, aManager);
 }
 
 template<typename M>
@@ -72,20 +168,17 @@ SerializeInternal(BlobImpl* aBlobImpl, M* aManager, IPCBlob& aIPCBlob)
     aIPCBlob.file() = file;
   }
 
-  ErrorResult error;
   nsCOMPtr<nsIInputStream> inputStream;
-  aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  AutoIPCStream ipcStream(true /* delayStart */);
-
-  if (!ipcStream.Serialize(inputStream, aManager)) {
-    return NS_ERROR_FAILURE;
+  rv = SerializeInputStream(inputStream, aIPCBlob.size(), aIPCBlob, aManager);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  aIPCBlob.inputStream() = ipcStream.TakeValue();
   return NS_OK;
 }
 
