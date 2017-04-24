@@ -1109,6 +1109,9 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                CSSPseudoElementType aPseudoType,
                                                nsStyleContext* aNewStyleContext)
 {
+  MOZ_ASSERT(!aElement->IsGeneratedContentContainerForBefore() &&
+             !aElement->IsGeneratedContentContainerForAfter());
+
   CSSTransitionCollection* collection =
     CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
   if (!collection) {
