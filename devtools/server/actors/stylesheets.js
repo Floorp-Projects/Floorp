@@ -17,7 +17,7 @@ const {listenOnce} = require("devtools/shared/async-utils");
 const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
-const { installHelperSheet,
+const {
   addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic"));
