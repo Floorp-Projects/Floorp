@@ -5,6 +5,7 @@
 import ConfigParser
 import os
 import re
+import sys
 
 import mozinfo
 
@@ -359,15 +360,14 @@ class SoftwareUpdate(BaseLib):
 
         :param update_url: URL to the update snippet
         """
-        snippet = None
         try:
             import urllib2
             response = urllib2.urlopen(update_url)
-            snippet = response.read()
+            return response.read()
         except Exception:
-            pass
+            exc, val, tb = sys.exc_info()
 
-        return snippet
+            raise exc, "Failed to retrieve update snippet: {}".format(val.reason), tb
 
     def get_formatted_update_url(self, force=False):
         """Retrieve the formatted AUS update URL the update snippet is retrieved from.

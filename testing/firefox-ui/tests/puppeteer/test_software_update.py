@@ -32,16 +32,24 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
         self.assertTrue(self.software_update.allowed)
 
     def test_build_info(self):
-        build_info = self.software_update.build_info
-        self.assertEqual(build_info['disabled_addons'], None)
-        self.assertIn('Mozilla/', build_info['user_agent'])
-        self.assertEqual(build_info['mar_channels'], set(['expected', 'channels']))
-        self.assertTrue(build_info['version'])
-        self.assertTrue(build_info['buildid'].isdigit())
-        self.assertTrue(build_info['locale'])
-        self.assertIn('force=1', build_info['update_url'])
-        self.assertIn('xml', build_info['update_snippet'])
-        self.assertEqual(build_info['channel'], self.software_update.update_channel)
+        self.software_update.update_url = self.marionette.absolute_url(
+            'update/snippet_empty.xml?product=%PRODUCT%&version=%VERSION%&'
+            'buildid=%BUILD_ID%&locale=%LOCALE%&channel=%CHANNEL%')
+
+        try:
+            build_info = self.software_update.build_info
+            self.assertEqual(build_info['disabled_addons'], None)
+            self.assertIn('Mozilla/', build_info['user_agent'])
+            self.assertEqual(build_info['mar_channels'], set(['expected', 'channels']))
+            self.assertTrue(build_info['version'])
+            self.assertTrue(build_info['buildid'].isdigit())
+            self.assertTrue(build_info['locale'])
+            self.assertIn('force=1', build_info['update_url'])
+            self.assertIn('xml', build_info['update_snippet'])
+            self.assertEqual(build_info['channel'], self.software_update.update_channel)
+        finally:
+            # Restart Firefox to reset the custom update url
+            self.restart(clean=True)
 
     def test_force_fallback(self):
         status_file = os.path.join(self.software_update.staging_directory, 'update.status')
@@ -95,6 +103,7 @@ class TestUpdateChannel(PuppeteerMixin, MarionetteTestCase):
             # Firefox to dump the logs to the console.
             self.restart(clean=True)
             self.assertEqual(self.software_update.update_channel, 'expected_channel')
+            self.assertEqual(self.software_update.patch_info['channel'], 'expected_channel')
         finally:
             self.software_update.update_channel = self.saved_channel
             self.restart(clean=True)
