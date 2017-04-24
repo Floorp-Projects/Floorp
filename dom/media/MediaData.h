@@ -289,14 +289,14 @@ public:
 
   MediaData(Type aType,
             int64_t aOffset,
-            int64_t aTimestamp,
-            int64_t aDuration,
+            const media::TimeUnit& aTimestamp,
+            const media::TimeUnit& aDuration,
             uint32_t aFrames)
     : mType(aType)
     , mOffset(aOffset)
-    , mTime(media::TimeUnit::FromMicroseconds(aTimestamp))
-    , mTimecode(media::TimeUnit::FromMicroseconds(aTimestamp))
-    , mDuration(media::TimeUnit::FromMicroseconds(aDuration))
+    , mTime(aTimestamp)
+    , mTimecode(aTimestamp)
+    , mDuration(aDuration)
     , mFrames(aFrames)
     , mKeyframe(false)
   {
@@ -366,7 +366,9 @@ protected:
 class NullData : public MediaData
 {
 public:
-  NullData(int64_t aOffset, int64_t aTime, int64_t aDuration)
+  NullData(int64_t aOffset,
+           const media::TimeUnit& aTime,
+           const media::TimeUnit& aDuration)
     : MediaData(NULL_DATA, aOffset, aTime, aDuration, 0)
   {
   }
@@ -380,8 +382,8 @@ class AudioData : public MediaData
 public:
 
   AudioData(int64_t aOffset,
-            int64_t aTime,
-            int64_t aDuration,
+            const media::TimeUnit& aTime,
+            const media::TimeUnit& aDuration,
             uint32_t aFrames,
             AlignedAudioBuffer&& aData,
             uint32_t aChannels,
@@ -402,8 +404,8 @@ public:
   // After such call, the original aOther is unusable.
   static already_AddRefed<AudioData>
   TransferAndUpdateTimestampAndDuration(AudioData* aOther,
-                                        int64_t aTimestamp,
-                                        int64_t aDuration);
+                                        const media::TimeUnit& aTimestamp,
+                                        const media::TimeUnit& aDuration);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -489,43 +491,43 @@ public:
     const VideoInfo& aInfo,
     ImageContainer* aContainer,
     int64_t aOffset,
-    int64_t aTime,
+    const media::TimeUnit& aTime,
     const media::TimeUnit& aDuration,
     const YCbCrBuffer& aBuffer,
     bool aKeyframe,
-    int64_t aTimecode,
+    const media::TimeUnit& aTimecode,
     const IntRect& aPicture);
 
   static already_AddRefed<VideoData> CreateAndCopyData(
     const VideoInfo& aInfo,
     ImageContainer* aContainer,
     int64_t aOffset,
-    int64_t aTime,
+    const media::TimeUnit& aTime,
     const media::TimeUnit& aDuration,
     const YCbCrBuffer& aBuffer,
     const YCbCrBuffer::Plane& aAlphaPlane,
     bool aKeyframe,
-    int64_t aTimecode,
+    const media::TimeUnit& aTimecode,
     const IntRect& aPicture);
 
   static already_AddRefed<VideoData> CreateAndCopyIntoTextureClient(
     const VideoInfo& aInfo,
     int64_t aOffset,
-    int64_t aTime,
+    const media::TimeUnit& aTime,
     const media::TimeUnit& aDuration,
     layers::TextureClient* aBuffer,
     bool aKeyframe,
-    int64_t aTimecode,
+    const media::TimeUnit& aTimecode,
     const IntRect& aPicture);
 
   static already_AddRefed<VideoData> CreateFromImage(
     const IntSize& aDisplay,
     int64_t aOffset,
-    int64_t aTime,
+    const media::TimeUnit& aTime,
     const media::TimeUnit& aDuration,
     const RefPtr<Image>& aImage,
     bool aKeyframe,
-    int64_t aTimecode);
+    const media::TimeUnit& aTimecode);
 
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
@@ -548,10 +550,10 @@ public:
   int32_t mFrameID;
 
   VideoData(int64_t aOffset,
-            int64_t aTime,
-            int64_t aDuration,
+            const media::TimeUnit& aTime,
+            const media::TimeUnit& aDuration,
             bool aKeyframe,
-            int64_t aTimecode,
+            const media::TimeUnit& aTimecode,
             IntSize aDisplay,
             uint32_t aFrameID);
 

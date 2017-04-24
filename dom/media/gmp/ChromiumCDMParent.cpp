@@ -640,11 +640,11 @@ ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
     mVideoInfo,
     mImageContainer,
     mLastStreamOffset,
-    aFrame.mTimestamp(),
+    media::TimeUnit::FromMicroseconds(aFrame.mTimestamp()),
     media::TimeUnit::FromMicroseconds(aFrame.mDuration()),
     b,
     false,
-    -1,
+    media::TimeUnit::FromMicroseconds(-1),
     pictureRegion);
 
   // Return the shmem to the CDM so the shmem can be reused to send us

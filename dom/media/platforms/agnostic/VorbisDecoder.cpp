@@ -141,7 +141,7 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
-  int64_t aTstampUsecs = aSample->mTime.ToMicroseconds();
+  auto aTstampUsecs = aSample->mTime;
   int64_t aTotalFrames = 0;
 
   MOZ_ASSERT(mPacketCount >= 3);
@@ -195,23 +195,23 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
       }
     }
 
-    CheckedInt64 duration = FramesToUsecs(frames, rate);
-    if (!duration.isValid()) {
+    auto duration = FramesToTimeUnit(frames, rate);
+    if (!duration.IsValid()) {
       return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                     RESULT_DETAIL("Overflow converting audio duration")),
         __func__);
     }
-    CheckedInt64 total_duration = FramesToUsecs(mFrames, rate);
-    if (!total_duration.isValid()) {
+    auto total_duration = FramesToTimeUnit(mFrames, rate);
+    if (!total_duration.IsValid()) {
       return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                     RESULT_DETAIL("Overflow converting audio total_duration")),
         __func__);
     }
 
-    CheckedInt64 time = total_duration + aTstampUsecs;
-    if (!time.isValid()) {
+    auto time = total_duration + aTstampUsecs;
+    if (!time.IsValid()) {
       return DecodePromise::CreateAndReject(
         MediaResult(
           NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
@@ -237,7 +237,7 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 
     aTotalFrames += frames;
 
-    results.AppendElement(new AudioData(aOffset, time.value(), duration.value(),
+    results.AppendElement(new AudioData(aOffset, time, duration,
                                         frames, data.Forget(), channels, rate));
     mFrames += frames;
     err = vorbis_synthesis_read(&mVorbisDsp, frames);
