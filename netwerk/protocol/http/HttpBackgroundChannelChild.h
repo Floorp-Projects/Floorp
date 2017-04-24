@@ -15,12 +15,26 @@ using mozilla::ipc::IPCResult;
 namespace mozilla {
 namespace net {
 
+class HttpChannelChild;
+
 class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild
 {
+  friend class BackgroundChannelCreateCallback;
 public:
   explicit HttpBackgroundChannelChild();
 
-  virtual ~HttpBackgroundChannelChild();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HttpBackgroundChannelChild)
+
+  // Associate this background channel with a HttpChannelChild and
+  // initiate the createion of the PBackground IPC channel.
+  nsresult Init(HttpChannelChild* aChannelChild);
+
+  // Callback while the associated HttpChannelChild is not going to
+  // handle any incoming messages over background channel.
+  void OnChannelClosed();
+
+  // Callback while failed to create PBackground IPC channel.
+  void OnBackgroundChannelCreationFailed();
 
 protected:
   IPCResult RecvOnTransportAndData(const nsresult& aChannelStatus,
@@ -44,6 +58,19 @@ protected:
   IPCResult RecvOnStartRequestSent() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
+private:
+  virtual ~HttpBackgroundChannelChild();
+
+  // Initiate the creation of the PBckground IPC channel.
+  // Return false if failed.
+  bool CreateBackgroundChannel();
+
+  // Associated HttpChannelChild for handling the channel events.
+  // Will be removed while failed to create background channel,
+  // destruction of the background channel, or explicitly dissociation
+  // via OnChannelClosed callback.
+  RefPtr<HttpChannelChild> mChannelChild;
 };
 
 } // namespace net

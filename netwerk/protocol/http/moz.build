@@ -8,6 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Networking: HTTP')
 
 XPIDL_SOURCES += [
+    'nsIBackgroundChannelRegistrar.idl',
     'nsIHstsPrimingCallback.idl',
     'nsIHttpActivityObserver.idl',
     'nsIHttpAuthenticableChannel.idl',
@@ -60,6 +61,7 @@ UNIFIED_SOURCES += [
     'AltDataOutputStreamParent.cpp',
     'AlternateServices.cpp',
     'ASpdySession.cpp',
+    'BackgroundChannelRegistrar.cpp',
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
     'HSTSPrimerListener.cpp',
