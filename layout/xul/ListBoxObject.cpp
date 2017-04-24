@@ -76,6 +76,16 @@ ListBoxObject::GetRowCount()
 }
 
 int32_t
+ListBoxObject::GetRowHeight()
+{
+  nsListBoxBodyFrame* body = GetListBoxBody(true);
+  if (body) {
+    return body->GetRowHeightPixels();
+  }
+  return 0;
+}
+
+int32_t
 ListBoxObject::GetNumberOfVisibleRows()
 {
   nsListBoxBodyFrame* body = GetListBoxBody(true);
