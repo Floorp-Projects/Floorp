@@ -43,7 +43,9 @@
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
             </intent-filter>
-        </activity>
+
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity>"
 
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"

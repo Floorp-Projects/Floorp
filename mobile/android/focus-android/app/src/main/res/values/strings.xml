@@ -48,6 +48,14 @@
          button in the application. -->
     <string name="notification_erase_text">Erase browsing history</string>
 
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+     This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Erase</string>
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+          instead of the short title when it has enough space. Android recommends a maximum length
+           of 25 characters. -->
+    <string name="shortcut_erase_long_label">Erase browsing history</string>
+
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[

@@ -123,6 +123,48 @@ dependencies {
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.7.0'
 }
 
+// -------------------------------------------------------------------------------------------------
+// Replace placeholders in shortcuts.xml (Android requires a hard-coded package name. But we use
+// different packages based on flavor.
+// Code based on workaround (comment 16): https://issuetracker.google.com/issues/37124066
+// -------------------------------------------------------------------------------------------------
+
+def replacePlaceholdersInFile(basePath, fileName, placeholders) {
+    def file = new File(basePath, fileName);
+
+    if (!file.exists()) {
+        throw new GradleException("Unable to replace placeholders in " + file.toString() + ". File cannot be found.")
+    }
+
+    logger.debug("Replacing placeholders in " + file.toString())
+    logger.debug("Placeholders: " + placeholders.toString())
+
+    def content = file.getText('UTF-8')
+
+    placeholders.each { entry ->
+        content = content.replaceAll("\\\$\\{${entry.key}\\}", entry.value)
+    }
+
+    file.write(content, 'UTF-8')
+}
+
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.processResources.doFirst {
+                // prepare placeholder map from manifestPlaceholders including applicationId placeholder
+                def placeholders = variant.mergedFlavor.manifestPlaceholders + [applicationId: variant.applicationId]
+
+                replacePlaceholdersInFile(resDir, 'xml-v25/shortcuts.xml', placeholders)
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Generate blocklists
+// -------------------------------------------------------------------------------------------------
+
 task buildBlocklists(type:Exec) {
     workingDir '..'
 
