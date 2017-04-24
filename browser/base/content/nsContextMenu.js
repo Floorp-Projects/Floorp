@@ -958,9 +958,7 @@ nsContextMenu.prototype = {
     }
 
     if (!this.isRemote) {
-      params.frameOuterWindowID = this.target.ownerGlobal
-                                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      params.frameOuterWindowID = this.frameOuterWindowID;
     }
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.
