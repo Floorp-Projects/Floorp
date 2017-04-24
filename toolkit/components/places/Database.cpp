@@ -74,10 +74,19 @@
 //   on URI lengths above 255 bytes
 #define PREF_HISTORY_MAXURLLEN_DEFAULT 2000
 
-// Maximum size for the WAL file.  It should be small enough since in case of
-// crashes we could lose all the transactions in the file.  But a too small
-// file could hurt performance.
-#define DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES 512
+// Maximum size for the WAL file.
+// For performance reasons this should be as large as possible, so that more
+// transactions can fit into it, and the checkpoint cost is paid less often.
+// At the same time, since we use synchronous = NORMAL, an fsync happens only
+// at checkpoint time, so we don't want the WAL to grow too much and risk to
+// lose all the contained transactions on a crash.
+#define DATABASE_MAX_WAL_BYTES 2048000
+
+// Since exceeding the journal limit will cause a truncate, we allow a slightly
+// larger limit than DATABASE_MAX_WAL_BYTES to reduce the number of truncates.
+// This is the number of bytes the journal can grow over the maximum wal size
+// before being truncated.
+#define DATABASE_JOURNAL_OVERHEAD_BYTES 2048000
 
 #define BYTES_PER_KIBIBYTE 1024
 
@@ -328,12 +337,10 @@ SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn, int32_t aDBPageSize) {
     // Be sure to set journal mode after page_size.  WAL would prevent the change
     // otherwise.
     if (JOURNAL_WAL == SetJournalMode(aDBConn, JOURNAL_WAL)) {
-      // Set the WAL journal size limit.  We want it to be small, since in
-      // synchronous = NORMAL mode a crash could cause loss of all the
-      // transactions in the journal.  For added safety we will also force
-      // checkpointing at strategic moments.
+      // Set the WAL journal size limit.
+      // For added safety we will also force checkpointing at strategic moments.
       int32_t checkpointPages =
-        static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / aDBPageSize);
+        static_cast<int32_t>(DATABASE_MAX_WAL_BYTES / aDBPageSize);
       nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
       checkpointPragma.AppendInt(checkpointPages);
       rv = aDBConn->ExecuteSimpleSQL(checkpointPragma);
@@ -354,13 +361,9 @@ SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn, int32_t aDBPageSize) {
   }
 
   // The journal is usually free to grow for performance reasons, but it never
-  // shrinks back.  Since the space taken may be problematic, especially on
-  // mobile devices, limit its size.
-  // Since exceeding the limit will cause a truncate, allow a slightly
-  // larger limit than DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES to reduce the number
-  // of times it is needed.
+  // shrinks back.  Since the space taken may be problematic, limit its size.
   nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
-  journalSizePragma.AppendInt(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 3);
+  journalSizePragma.AppendInt(DATABASE_MAX_WAL_BYTES + DATABASE_JOURNAL_OVERHEAD_BYTES);
   (void)aDBConn->ExecuteSimpleSQL(journalSizePragma);
 
   // Grow places in |growthIncrementKiB| increments to limit fragmentation on disk.
@@ -391,6 +394,11 @@ AttachFaviconsDatabase(nsCOMPtr<mozIStorageConnection>& aDBConn) {
 
   rv = aDBConn->ExecuteSimpleSQL(CREATE_ICONS_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // The journal limit must be set apart for each database.
+  nsAutoCString journalSizePragma("PRAGMA favicons.journal_size_limit = ");
+  journalSizePragma.AppendInt(DATABASE_MAX_WAL_BYTES + DATABASE_JOURNAL_OVERHEAD_BYTES);
+  Unused << aDBConn->ExecuteSimpleSQL(journalSizePragma);
 
   return NS_OK;
 }

@@ -13,6 +13,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   document.querySelector("div").focus();
   document.execCommand("stylewithcss", false, true);
+  document.execCommand("defaultParagraphSeparator", false, "div");
   sendKey("RETURN");
   sendChar("x");
   is(document.querySelector("div").innerHTML,

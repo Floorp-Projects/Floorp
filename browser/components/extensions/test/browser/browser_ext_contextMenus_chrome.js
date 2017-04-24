@@ -18,7 +18,7 @@ add_task(function* test_actionContextMenus() {
     await browser.contextMenus.create({parentId, title: "click B"});
 
     for (let i = 1; i < 9; i++) {
-      await browser.contextMenus.create({contexts, title: `click ${i}`});
+      await browser.contextMenus.create({contexts, id: `${i}`, title: `click ${i}`});
     }
 
     browser.contextMenus.onClicked.addListener((info, tab) => {
@@ -47,10 +47,14 @@ add_task(function* test_actionContextMenus() {
     is(popup, submenu.firstChild, "Correct submenu opened");
     is(popup.children.length, 2, "Correct number of submenu items");
 
+    let idPrefix = `${makeWidgetId(extension.id)}_`;
+
     is(second.tagName, "menuitem", "Second menu item type is correct");
     is(second.label, "click 1", "Second menu item title is correct");
+    is(second.id, `${idPrefix}1`, "Second menu item id is correct");
 
     is(last.label, "click 5", "Last menu item title is correct");
+    is(last.id, `${idPrefix}5`, "Last menu item id is correct");
     is(separator.tagName, "menuseparator", "Separator after last menu item");
 
     yield closeActionContextMenu(popup.firstChild);
