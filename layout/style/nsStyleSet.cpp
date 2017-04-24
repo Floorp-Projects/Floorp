@@ -2083,8 +2083,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                               nsStyleContext* aParentContext,
-                                               uint32_t aFlags)
+                                               nsStyleContext* aParentContext)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -2123,9 +2122,14 @@ nsStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
     }
   }
 
+  uint32_t flags = eNoFlags;
+  if (nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(aPseudoTag)) {
+    flags |= eSkipParentDisplayBasedStyleFixup;
+  }
+
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
                     aPseudoTag, CSSPseudoElementType::InheritingAnonBox,
-                    nullptr, aFlags);
+                    nullptr, flags);
 }
 
 already_AddRefed<nsStyleContext>
