@@ -11,9 +11,10 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
@@ -122,7 +123,8 @@ GetFilesTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue
 
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemFileResponse& data = r.data()[i];
-    RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(data.blob());
+    RefPtr<BlobImpl> blobImpl =
+      static_cast<BlobChild*>(data.blobChild())->GetBlobImpl();
     MOZ_ASSERT(blobImpl);
 
     mTargetData[i] = File::Create(mFileSystem->GetParentObject(), blobImpl);
@@ -191,6 +193,8 @@ GetFilesTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   AssertIsOnBackgroundThread();
 
+  InfallibleTArray<PBlobParent*> blobs;
+
   FallibleTArray<FileSystemFileResponse> inputs;
   if (!inputs.SetLength(mTargetBlobImplArray.Length(), mozilla::fallible_t())) {
     FileSystemFilesResponse response;
@@ -199,15 +203,10 @@ GetFilesTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
   }
 
   for (unsigned i = 0; i < mTargetBlobImplArray.Length(); i++) {
-    IPCBlob ipcBlob;
-    aRv = IPCBlobUtils::Serialize(mTargetBlobImplArray[i],
-                                  mRequestParent->Manager(), ipcBlob);
-    if (NS_WARN_IF(aRv.Failed())) {
-      FileSystemFilesResponse response;
-      return response;
-    }
-
-    inputs[i] = FileSystemFileResponse(ipcBlob);
+    BlobParent* blobParent =
+      BlobParent::GetOrCreate(mRequestParent->Manager(),
+                              mTargetBlobImplArray[i]);
+    inputs[i] = FileSystemFileResponse(blobParent, nullptr);
   }
 
   FileSystemFilesResponse response;
