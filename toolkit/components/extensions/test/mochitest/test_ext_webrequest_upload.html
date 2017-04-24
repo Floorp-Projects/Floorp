@@ -111,12 +111,25 @@ function background() {
 
   browser.webRequest.onBeforeRequest.addListener(
     onBeforeRequest, FILTERS, ["requestBody"]);
+
+  let tab;
+  browser.tabs.onCreated.addListener(newTab => {
+    tab = newTab;
+  });
+
+  browser.test.onMessage.addListener(msg => {
+    if (msg === "close-tab") {
+      browser.tabs.remove(tab.id);
+      browser.test.sendMessage("tab-closed");
+    }
+  });
 }
 
 add_task(function* test_xhr_forms() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
+        "tabs",
         "webRequest",
         "webRequestBlocking",
         "<all_urls>",
@@ -126,6 +139,13 @@ add_task(function* test_xhr_forms() {
   });
 
   yield extension.startup();
+
+  function* doneAndTabClosed() {
+    yield extension.awaitMessage("done");
+    let closed = extension.awaitMessage("tab-closed");
+    extension.sendMessage("close-tab");
+    yield closed;
+  }
 
   for (let form of document.forms) {
     if (file.name in form.elements) {
@@ -147,7 +167,7 @@ add_task(function* test_xhr_forms() {
 
     form.action = action;
     form.submit();
-    yield extension.awaitMessage("done");
+    yield doneAndTabClosed();
 
     if (form.enctype !== "multipart/form-data") {
       continue;
@@ -159,7 +179,7 @@ add_task(function* test_xhr_forms() {
       xhr.open("POST", action.href);
       xhr.send(data);
       action.searchParams.delete("xhr");
-      return extension.awaitMessage("done");
+      return doneAndTabClosed();
     };
 
     formData.append(blob.name, blob.content, blob.fileName);
