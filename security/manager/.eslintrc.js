@@ -26,17 +26,8 @@ module.exports = {
     // Require `foo.bar` dot notation instead of `foo["bar"]` notation.
     "dot-notation": "error",
 
-    // Always require a trailing EOL
-    "eol-last": "error",
-
-    // No spaces between function name and parentheses.
-    "func-call-spacing": ["error", "never"],
-
     // Require function* name()
     "generator-star-spacing": ["error", {"before": false, "after": true}],
-
-    // Space after colon not before in property declarations
-    "key-spacing": ["error", { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
 
     // Always require parenthesis for new calls
     "new-parens": "error",
@@ -85,9 +76,6 @@ module.exports = {
     // No reassigning native JS objects or read only globals.
     "no-global-assign": "error",
 
-    // Disallow implied eval().
-    "no-implied-eval": "error",
-
     // Disallow primitive wrapper instances like `new Boolean(false)`, which
     // seem like they should act like primitives but don't.
     "no-new-wrappers": "error",
@@ -110,9 +98,6 @@ module.exports = {
     // Disallow throwing literals (eg. |throw "error"| instead of
     // |throw new Error("error")|)
     "no-throw-literal": "error",
-
-    // No using undeclared variables
-    "no-undef": "error",
 
     // Disallow unmodified loop conditions.
     "no-unmodified-loop-condition": "error",
@@ -149,9 +134,6 @@ module.exports = {
     // No space padding in parentheses
     "space-in-parens": ["error", "never"],
 
-    // Require spaces around operators
-    "space-infix-ops": "error",
-
     // ++ and -- should not need spacing
     "space-unary-ops": ["error", { "words": true, "nonwords": false }],
 
@@ -167,10 +149,5 @@ module.exports = {
 
     // Disallow Yoda conditions.
     "yoda": ["error", "never"],
-  },
-
-  "globals": {
-    "Components": false,
-    "dump": false
   }
 };
