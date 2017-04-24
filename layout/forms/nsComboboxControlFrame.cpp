@@ -1292,6 +1292,13 @@ public:
   // depends on the available inline size.
   virtual nsIAtom* GetType() const override;
 
+#ifdef DEBUG_FRAME_DUMP
+  nsresult GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("ComboboxDisplay"), aResult);
+  }
+#endif
+
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
