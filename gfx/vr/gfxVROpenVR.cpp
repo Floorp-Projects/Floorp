@@ -345,6 +345,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
                                        uint32_t aNumAxes, ::vr::ETrackedDeviceClass aDeviceType)
   : VRControllerHost(VRDeviceType::OpenVR)
   , mTrigger(0)
+  , mAxisMove(aNumAxes)
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
 {
@@ -362,6 +363,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
       break;
   }
 
+  mAxisMove.SetLengthAndRetainStorage(aNumAxes);
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = aNumButtons;
@@ -389,6 +391,18 @@ uint32_t
 VRControllerOpenVR::GetTrackedIndex()
 {
   return mTrackedIndex;
+}
+
+float
+VRControllerOpenVR::GetAxisMove(uint32_t aAxis)
+{
+  return mAxisMove[aAxis];
+}
+
+void
+VRControllerOpenVR::SetAxisMove(uint32_t aAxis, float aValue)
+{
+  mAxisMove[aAxis] = aValue;
 }
 
 void
@@ -811,8 +825,12 @@ void
 VRSystemManagerOpenVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                                       float aValue)
 {
-  if (aValue != 0.0f) {
+  RefPtr<impl::VRControllerOpenVR> controller(mOpenVRController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+
+  if (controller->GetAxisMove(aAxis) != aValue) {
     NewAxisMove(aControllerIdx, aAxis, aValue);
+    controller->SetAxisMove(aAxis, aValue);
   }
 }
 
