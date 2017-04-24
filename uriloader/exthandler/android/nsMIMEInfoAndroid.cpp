@@ -380,11 +380,13 @@ nsMIMEInfoAndroid::nsMIMEInfoAndroid(const nsACString& aMIMEType) :
   mHandlerApps->AppendElement(mPrefApp, false);
 }
 
+#define SYSTEMCHOOSER_NAME u"Android chooser"
+#define SYSTEMCHOOSER_DESCRIPTION u"Android's default handler application chooser"
+
 NS_IMPL_ISUPPORTS(nsMIMEInfoAndroid::SystemChooser, nsIHandlerApp)
 
-
 nsresult nsMIMEInfoAndroid::SystemChooser::GetName(nsAString & aName) {
-  aName.AssignLiteral(u"Android chooser");
+  aName.AssignLiteral(SYSTEMCHOOSER_NAME);
   return NS_OK;
 }
 
@@ -395,7 +397,7 @@ nsMIMEInfoAndroid::SystemChooser::SetName(const nsAString&) {
 
 nsresult
 nsMIMEInfoAndroid::SystemChooser::GetDetailedDescription(nsAString & aDesc) {
-  aDesc.AssignLiteral(u"Android's default handler application chooser");
+  aDesc.AssignLiteral(SYSTEMCHOOSER_DESCRIPTION);
   return NS_OK;
 }
 
@@ -404,19 +406,20 @@ nsMIMEInfoAndroid::SystemChooser::SetDetailedDescription(const nsAString&) {
   return NS_OK;
 }
 
-// XXX Workaround for bug 986975 to maintain the existing broken semantics
-template<>
-struct nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void> {
-  static const nsIID kIID;
-};
-const nsIID nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void>::kIID = NS_IHANDLERAPP_IID;
-
 nsresult
 nsMIMEInfoAndroid::SystemChooser::Equals(nsIHandlerApp *aHandlerApp, bool *aRetVal) {
-  nsCOMPtr<nsMIMEInfoAndroid::SystemChooser> info = do_QueryInterface(aHandlerApp);
-  if (info)
-    return mOuter->Equals(info->mOuter, aRetVal);
   *aRetVal = false;
+  if (!aHandlerApp) {
+    return NS_OK;
+  }
+
+  nsAutoString name;
+  nsAutoString detailedDescription;
+  aHandlerApp->GetName(name);
+  aHandlerApp->GetDetailedDescription(detailedDescription);
+
+  *aRetVal = name.Equals(SYSTEMCHOOSER_NAME) &&
+             detailedDescription.Equals(SYSTEMCHOOSER_DESCRIPTION);
   return NS_OK;
 }
 

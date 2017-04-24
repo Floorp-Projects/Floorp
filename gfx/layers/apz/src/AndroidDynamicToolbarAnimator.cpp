@@ -330,6 +330,8 @@ AndroidDynamicToolbarAnimator::UpdateAnimation(const TimeStamp& aCurrentFrame)
 
   if (!continueAnimating) {
     NotifyControllerAnimationStopped(mCompositorToolbarHeight);
+  } else {
+    UpdateControllerToolbarHeight(mCompositorToolbarHeight);
   }
 
   return continueAnimating;
@@ -736,7 +738,10 @@ AndroidDynamicToolbarAnimator::StopCompositorAnimation()
     return;
   }
 
-  mToolbarState = eToolbarUnlocked;
+  if (mToolbarState == eToolbarAnimating) {
+    mToolbarState = eToolbarUnlocked;
+  }
+
   NotifyControllerAnimationStopped(mCompositorToolbarHeight);
 }
 

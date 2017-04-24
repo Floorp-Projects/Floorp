@@ -7,8 +7,9 @@
 #include "BroadcastChannelParent.h"
 #include "BroadcastChannelService.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/Unused.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -71,31 +72,6 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
     // released too.
     mService->UnregisterActor(this, mOriginChannelKey);
   }
-}
-
-void
-BroadcastChannelParent::Deliver(const ClonedMessageData& aData)
-{
-  AssertIsOnBackgroundThread();
-
-  // Duplicate the data for this parent.
-  ClonedMessageData newData(aData);
-
-  // Create new BlobParent objects for this message.
-  for (uint32_t i = 0, len = newData.blobsParent().Length(); i < len; ++i) {
-    RefPtr<BlobImpl> impl =
-      static_cast<BlobParent*>(newData.blobsParent()[i])->GetBlobImpl();
-
-    PBlobParent* blobParent =
-      BackgroundParent::GetOrCreateActorForBlobImpl(Manager(), impl);
-    if (!blobParent) {
-      return;
-    }
-
-    newData.blobsParent()[i] = blobParent;
-  }
-
-  Unused << SendNotify(newData);
 }
 
 } // namespace dom

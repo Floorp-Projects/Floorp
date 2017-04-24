@@ -75,6 +75,13 @@ protected:
   virtual bool
   DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
 
+  virtual PIPCBlobInputStreamParent*
+  AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                 const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor) override;
+
   virtual mozilla::ipc::IPCResult
   RecvPBlobConstructor(PBlobParent* aActor,
                        const BlobConstructorParams& params) override;
