@@ -152,122 +152,12 @@ function test_getAnimationType() {
 }
 
 function test_getUnanimatedComputedStyle() {
-  [
-    {
-      property: "opacity",
-      keyframes: [1, 0],
-      expectedInitialStyle: "1",
-      expectedDuringTransitionStyle: "0",
-      isDiscrete: false,
-    },
-    {
-      property: "clear",
-      keyframes: ["left", "inline-end"],
-      expectedInitialStyle: "none",
-      expectedDuringTransitionStyle: "inline-end",
-      isDiscrete: true,
-    },
-  ].forEach(testcase => {
-    const { property, keyframes, expectedInitialStyle,
-            expectedDuringTransitionStyle, isDiscrete } = testcase;
-
-    [null, "unset", "initial", "inherit"].forEach(initialStyle => {
-      const scriptAnimation = target => {
-        return target.animate({ [property]: keyframes }, 1000);
-      }
-      checkUnanimatedComputedStyle(property, initialStyle, null,
-                                   expectedInitialStyle, expectedInitialStyle,
-                                   scriptAnimation, "script animation");
-
-      const cssAnimationStyle = `@keyframes cssanimation {`
-                                + ` from { ${property}: ${ keyframes[0] }; }`
-                                + ` to { ${property}: ${ keyframes[1] }; } }`;
-      document.styleSheets[0].insertRule(cssAnimationStyle, 0);
-      const cssAnimation = target => {
-        target.style.animation = "cssanimation 1s";
-        return target.getAnimations()[0];
-      }
-      checkUnanimatedComputedStyle(property, initialStyle, null,
-                                   expectedInitialStyle, expectedInitialStyle,
-                                   cssAnimation, "CSS Animations");
-      document.styleSheets[0].deleteRule(0);
-
-      // We don't support discrete animations for CSS Transitions yet.
-      // (bug 1320854)
-      if (!isDiscrete) {
-        const cssTransition = target => {
-          target.style[property] = keyframes[0];
-          target.style.transition =
-            `${ property } 1s`;
-          window.getComputedStyle(target)[property];
-          target.style[property] = keyframes[1];
-          return target.getAnimations()[0];
-        }
-        checkUnanimatedComputedStyle(property, initialStyle, null,
-                                     expectedInitialStyle,
-                                     expectedDuringTransitionStyle,
-                                     cssTransition, "CSS Transitions");
-      }
-
-      document.styleSheets[0].insertRule(cssAnimationStyle, 0);
-      document.styleSheets[0].insertRule(
-        ".pseudo::before { animation: cssanimation 1s; }", 0);
-      const pseudoAnimation = target => {
-        target.classList.add("pseudo");
-        return target.getAnimations({ subtree: true })[0];
-      }
-      checkUnanimatedComputedStyle(property, initialStyle, "::before",
-                                   expectedInitialStyle, expectedInitialStyle,
-                                   pseudoAnimation, "Animation at pseudo");
-      document.styleSheets[0].deleteRule(0);
-      document.styleSheets[0].deleteRule(0);
-    });
-  });
-
-  SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(div, null, "background"),
-    "NS_ERROR_INVALID_ARG",
-    "Shorthand property should throw");
-
-  SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(div, null, "invalid"),
-    "NS_ERROR_INVALID_ARG",
-    "Invalid property should throw");
-
-  SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(null, null, "opacity"),
-    "NS_ERROR_INVALID_ARG",
-    "Null element should throw");
-
-  next();
-}
-
-function checkUnanimatedComputedStyle(property, initialStyle, pseudoType,
-                                      expectedBeforeAnimation,
-                                      expectedDuringAnimation,
-                                      animate, animationType) {
-  const div = document.createElement("div");
-  document.body.appendChild(div);
-
-  if (initialStyle) {
-    div.style[property] = initialStyle;
-  }
-
-  is(utils.getUnanimatedComputedStyle(div, pseudoType, property),
-     expectedBeforeAnimation,
-     `'${ property }' property with '${ initialStyle }' style `
-     + `should be '${ expectedBeforeAnimation }' `
-     + `before animating by ${ animationType }`);
-
-  const animation = animate(div);
-  animation.currentTime = 500;
-  is(utils.getUnanimatedComputedStyle(div, pseudoType, property),
-     expectedDuringAnimation,
-     `'${ property }' property with '${ initialStyle }' style `
-     + `should be '${ expectedDuringAnimation }' `
-     + `even while animating by ${ animationType }`);
-
-  div.remove();
+  SpecialPowers.pushPrefEnv(
+    { set: [["dom.animations-api.core.enabled", true]] },
+    () => {
+      window.open("file_domwindowutils_animation.html");
+    }
+  );
 }
 
 var tests = [
