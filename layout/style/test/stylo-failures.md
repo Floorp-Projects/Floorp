@@ -190,7 +190,6 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
-    * ... `-webkit-linear-gradient` [5]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -251,7 +250,7 @@ to mochitest command.
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
-    * test_selectors.html `:dir` [8]
+    * test_selectors.html `:dir` [18]
 * issues arround font shorthand bug 1349417
   * test_value_storage.html `'font'` [128]
   * test_shorthand_property_getters.html `font shorthand` [1]
