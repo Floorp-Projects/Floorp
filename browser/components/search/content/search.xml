@@ -828,10 +828,8 @@
           if (aEvent.getModifierState("Accel"))
             return;
 
-          let suggestions =
-            document.getAnonymousElementByAttribute(popup, "anonid", "tree");
           let suggestionsHidden =
-            suggestions.getAttribute("collapsed") == "true";
+            popup.tree.getAttribute("collapsed") == "true";
           let numItems = suggestionsHidden ? 0 : this.popup.view.rowCount;
           this.popup.oneOffButtons.handleKeyPress(aEvent, numItems, true);
         ]]></body>
@@ -1100,22 +1098,20 @@
         // popup containing only the preferences button. We do this if the
         // glass icon has been clicked if the text field is empty.
         let searchbar = document.getElementById("searchbar");
-        let tree = document.getAnonymousElementByAttribute(this, "anonid",
-                                                           "tree")
         if (searchbar.hasAttribute("showonlysettings")) {
           searchbar.removeAttribute("showonlysettings");
           this.setAttribute("showonlysettings", "true");
 
           // Setting this with an xbl-inherited attribute gets overridden the
           // second time the user clicks the glass icon for some reason...
-          tree.collapsed = true;
+          this.tree.collapsed = true;
         } else {
           this.removeAttribute("showonlysettings");
           // Uncollapse as long as we have a tree with a view which has >= 1 row.
           // The autocomplete binding itself will take care of uncollapsing later,
           // if we currently have no rows but end up having some in the future
           // when the search string changes
-          tree.collapsed = !tree.view || !tree.view.rowCount;
+          this.tree.collapsed = !this.tree.view || !this.tree.view.rowCount;
         }
 
         // Show the current default engine in the top header of the panel.
@@ -1372,12 +1368,21 @@
         ]]></getter>
       </property>
 
-      <property name="settingsButton" readonly="true">
-        <getter><![CDATA[
-          let id = this.compact ? "search-settings-compact" : "search-settings";
-          return document.getAnonymousElementByAttribute(this, "anonid", id);
-        ]]></getter>
-      </property>
+      <field name="buttons" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "search-panel-one-offs");
+      </field>
+      <field name="header" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "search-panel-one-offs-header");
+      </field>
+      <field name="addEngines" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "add-engines");
+      </field>
+      <field name="settingsButton" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "search-settings");
+      </field>
+      <field name="settingsButtonCompact" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "search-settings-compact");
+      </field>
 
       <field name="_bundle">null</field>
 
@@ -1468,11 +1473,6 @@
           let headerSearchText =
             document.getAnonymousElementByAttribute(this, "anonid",
                                                     "searchbar-oneoffheader-searchtext");
-          let headerPanel =
-            document.getAnonymousElementByAttribute(this, "anonid",
-                                                    "search-panel-one-offs-header");
-          let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                             "search-panel-one-offs");
           headerSearchText.setAttribute("value", this.query);
           let groupText;
           let isOneOffSelected =
@@ -1487,16 +1487,16 @@
                         '"' + headerSearchText.value + '"' +
                         headerSearchText.nextSibling.value;
             if (!isOneOffSelected)
-              headerPanel.selectedIndex = 1;
+              this.header.selectedIndex = 1;
           } else {
             let noSearchHeader =
               document.getAnonymousElementByAttribute(this, "anonid",
                                                       "searchbar-oneoffheader-search");
             groupText = noSearchHeader.value;
             if (!isOneOffSelected)
-              headerPanel.selectedIndex = 0;
+              this.header.selectedIndex = 0;
           }
-          list.setAttribute("aria-label", groupText);
+          this.buttons.setAttribute("aria-label", groupText);
         ]]></body>
       </method>
 
@@ -1552,26 +1552,19 @@
             this._textboxWidth = textboxWidth;
           }
 
-          let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                             "search-panel-one-offs");
-          let settingsButton =
-            document.getAnonymousElementByAttribute(this, "anonid",
-                                                    "search-settings-compact");
           // Finally, build the list of one-off buttons.
-          while (list.firstChild != settingsButton)
-            list.firstChild.remove();
+          while (this.buttons.firstChild != this.settingsButtonCompact)
+            this.buttons.firstChild.remove();
           // Remove the trailing empty text node introduced by the binding's
           // content markup above.
-          if (settingsButton.nextSibling)
-            settingsButton.nextSibling.remove();
+          if (this.settingsButtonCompact.nextSibling)
+            this.settingsButtonCompact.nextSibling.remove();
 
           let engines = this.engines;
           let oneOffCount = engines.length;
 
-          let header = document.getAnonymousElementByAttribute(this, "anonid",
-                                                               "search-panel-one-offs-header")
           // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
-          header.hidden = list.collapsed = !oneOffCount;
+          this.header.hidden = this.buttons.collapsed = !oneOffCount;
 
           if (!oneOffCount)
             return;
@@ -1591,14 +1584,12 @@
             ++oneOffCount;
           let rowCount = Math.ceil(oneOffCount / enginesPerRow);
           let height = rowCount * 33; // 32px per row, 1px border.
-          list.setAttribute("height", height + "px");
+          this.buttons.setAttribute("height", height + "px");
 
           // Ensure we can refer to the settings buttons by ID:
-          let settingsEl = document.getAnonymousElementByAttribute(this, "anonid", "search-settings");
-          settingsEl.id = this.telemetryOrigin + "-anon-search-settings";
-          let compactSettingsEl = document.getAnonymousElementByAttribute(this, "anonid", "search-settings-compact");
-          compactSettingsEl.id = this.telemetryOrigin +
-                                 "-anon-search-settings-compact";
+          let origin = this.telemetryOrigin;
+          this.settingsButton.id = origin + "-anon-search-settings";
+          this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
           const kXULNS =
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1627,7 +1618,7 @@
             if (i >= oneOffCount + dummyItems - enginesPerRow)
               button.classList.add("last-row");
 
-            list.insertBefore(button, settingsButton);
+            this.buttons.insertBefore(button, this.settingsButtonCompact);
           }
 
           let hasDummyItems = !!dummyItems;
@@ -1639,11 +1630,11 @@
             if (!--dummyItems)
               button.classList.add("last-of-row");
 
-            list.insertBefore(button, settingsButton);
+            this.buttons.insertBefore(button, this.settingsButtonCompact);
           }
 
           if (this.compact) {
-            this.settingsButton.setAttribute("width", buttonWidth);
+            this.settingsButtonCompact.setAttribute("width", buttonWidth);
             if (rowCount == 1 && hasDummyItems) {
               // When there's only one row, make the compact settings button
               // hug the right edge of the panel.  It may not due to the panel's
@@ -1665,7 +1656,7 @@
                 remainder--;
               }
               let width = remainder + buttonWidth;
-              let lastDummyItem = this.settingsButton.previousSibling;
+              let lastDummyItem = this.settingsButtonCompact.previousSibling;
               lastDummyItem.setAttribute("width", width);
             }
           }
@@ -1679,8 +1670,7 @@
 
       <method name="_rebuildAddEngineList">
         <body><![CDATA[
-        let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                           "add-engines");
+        let list = this.addEngines;
         while (list.firstChild) {
           list.firstChild.remove();
         }
@@ -1806,9 +1796,6 @@
         <parameter name="mousedOverButton"/>
         <body><![CDATA[
           let button = mousedOverButton;
-          let header =
-            document.getAnonymousElementByAttribute(this, "anonid",
-                                                    "search-panel-one-offs-header");
 
           // Ignore dummy buttons.
           if (button && button.classList.contains("dummy")) {
@@ -1820,7 +1807,7 @@
           button = button || this.selectedButton;
 
           if (!button) {
-            header.selectedIndex = this.query ? 1 : 0;
+            this.header.selectedIndex = this.query ? 1 : 0;
             if (this.textbox) {
               this.textbox.removeAttribute("aria-activedescendant");
             }
@@ -1832,10 +1819,10 @@
             let headerEngineText =
               document.getAnonymousElementByAttribute(this, "anonid",
                                                       "searchbar-oneoffheader-engine");
-            header.selectedIndex = 2;
+            this.header.selectedIndex = 2;
             headerEngineText.value = button.engine.name;
           } else {
-            header.selectedIndex = this.query ? 1 : 0;
+            this.header.selectedIndex = this.query ? 1 : 0;
           }
           if (this.textbox) {
             this.textbox.setAttribute("aria-activedescendant", button.id);
@@ -1847,9 +1834,7 @@
         <parameter name="aIncludeNonEngineButtons"/>
         <body><![CDATA[
           let buttons = [];
-          let oneOff = document.getAnonymousElementByAttribute(this, "anonid",
-                                                               "search-panel-one-offs");
-          for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
+          for (let oneOff = this.buttons.firstChild; oneOff; oneOff = oneOff.nextSibling) {
             // oneOff may be a text node since the list xul:description contains
             // whitespace and the compact settings button.  See the markup
             // above.  _rebuild removes text nodes, but it may not have been
@@ -1862,15 +1847,13 @@
             }
           }
 
-          if (!aIncludeNonEngineButtons)
-            return buttons;
+          if (aIncludeNonEngineButtons) {
+            for (let addEngine = this.addEngines.firstChild; addEngine; addEngine = addEngine.nextSibling) {
+              buttons.push(addEngine);
+            }
+            buttons.push(this.compact ? this.settingsButtonCompact : this.settingsButton);
+          }
 
-          let addEngine =
-            document.getAnonymousElementByAttribute(this, "anonid", "add-engines");
-          for (addEngine = addEngine.firstChild; addEngine; addEngine = addEngine.nextSibling)
-            buttons.push(addEngine);
-
-          buttons.push(this.settingsButton);
           return buttons;
         ]]></body>
       </method>

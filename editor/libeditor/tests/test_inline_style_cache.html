@@ -21,6 +21,8 @@ SimpleTest.waitForFocus(function() {
   var editor = document.getElementById("editor");
   editor.focus();
 
+  document.execCommand("defaultParagraphSeparator", false, "div");
+
   var selection = window.getSelection();
 
   // #01-01 Typing something after setting some styles should insert some nodes to insert text.
