@@ -1188,8 +1188,7 @@ var ThreadHangStats = {
       let hangDiv = Histogram.render(
         div, hangName, hang.histogram, {exponential: true}, true);
       let stackDiv = document.createElement("div");
-      let stack = hang.nativeStack || hang.stack;
-      stack.forEach((frame) => {
+      hang.stack.forEach((frame) => {
         stackDiv.appendChild(document.createTextNode(frame));
         // Leave an extra <br> at the end of the stack listing
         stackDiv.appendChild(document.createElement("br"));
