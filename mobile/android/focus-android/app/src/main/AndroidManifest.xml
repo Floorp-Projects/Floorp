@@ -47,6 +47,16 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>"
 
+        <activity android:name=".activity.TextActionActivity"
+            android:label="@string/text_selection_search_action"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"
             android:label="@string/menu_settings" />
