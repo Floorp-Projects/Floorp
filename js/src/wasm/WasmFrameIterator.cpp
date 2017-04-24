@@ -541,7 +541,7 @@ ProfilingFrameIterator::initFromExitFP()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::BuiltinNativeExit:
+      case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -577,26 +577,23 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         return;
     }
 
-    code_ = activation_->compartment()->wasm.lookupCode(state.pc);
+    uint8_t* fp = (uint8_t*)state.fp;
+    uint8_t* pc = (uint8_t*)state.pc;
+    void** sp = (void**)state.sp;
 
-    const CodeRange* codeRange = nullptr;
-    uint8_t* codeBase = nullptr;
-    if (!code_) {
-        // Optimized builtin exits (see MaybeGetMatchingBuiltin in
-        // WasmInstance.cpp) are outside module's code.
-        AutoNoteSingleThreadedRegion anstr;
-        if (BuiltinThunk* thunk = activation_->cx()->runtime()->wasm().lookupBuiltin(state.pc)) {
-            codeRange = &thunk->codeRange;
-            codeBase = (uint8_t*) thunk->base;
-        } else {
-            // If pc isn't in any wasm code or builtin exit, we must be between
-            // pushing the WasmActivation and entering wasm code.
-            MOZ_ASSERT(done());
-            return;
-        }
-    } else {
-        codeRange = code_->lookupRange(state.pc);
+    // Get the CodeRange describing pc and the base address to which the
+    // CodeRange is relative. If the pc is not in a wasm module or a builtin
+    // thunk, then execution must be entering from or leaving to the C++ caller
+    // that pushed the WasmActivation.
+    const CodeRange* codeRange;
+    uint8_t* codeBase;
+    code_ = activation_->compartment()->wasm.lookupCode(pc);
+    if (code_) {
+        codeRange = code_->lookupRange(pc);
         codeBase = code_->segment().base();
+    } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
+        MOZ_ASSERT(done());
+        return;
     }
 
     // When the pc is inside the prologue/epilogue, the innermost call's Frame
@@ -605,10 +602,6 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     // while pc is in the prologue/epilogue would skip the second-to-innermost
     // call. To avoid this problem, we use the static structure of the code in
     // the prologue and epilogue to do the Right Thing.
-    uint8_t* fp = (uint8_t*)state.fp;
-    uint8_t* pc = (uint8_t*)state.pc;
-    void** sp = (void**)state.sp;
-
     uint32_t offsetInCode = pc - codeBase;
     MOZ_ASSERT(offsetInCode >= codeRange->begin());
     MOZ_ASSERT(offsetInCode < codeRange->end());
@@ -633,7 +626,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::BuiltinNativeExit:
+      case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
@@ -743,7 +736,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::BuiltinNativeExit:
+      case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -908,7 +901,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::Function:          return code_->profilingLabel(codeRange_->funcIndex());
       case CodeRange::Entry:             return "entry trampoline (in wasm)";
       case CodeRange::ImportJitExit:     return importJitDescription;
-      case CodeRange::BuiltinNativeExit: return builtinNativeDescription;
+      case CodeRange::BuiltinThunk:      return builtinNativeDescription;
       case CodeRange::ImportInterpExit:  return importInterpDescription;
       case CodeRange::TrapExit:          return trapDescription;
       case CodeRange::DebugTrap:         return debugTrapDescription;

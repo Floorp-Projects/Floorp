@@ -49,8 +49,8 @@ extern CallableOffsets
 GenerateImportJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
 
 extern CallableOffsets
-GenerateBuiltinNativeExit(jit::MacroAssembler& masm, jit::ABIFunctionType abiType,
-                          ExitReason exitReason, void* func);
+GenerateBuiltinThunk(jit::MacroAssembler& masm, jit::ABIFunctionType abiType, ExitReason exitReason,
+                     void* func);
 
 extern CallableOffsets
 GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);

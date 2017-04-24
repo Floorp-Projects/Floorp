@@ -95,7 +95,7 @@ AllocateCodeSegment(JSContext* cx, uint32_t codeLength)
 }
 
 static bool
-StaticallyLink(JSContext* cx, CodeSegment& cs, const LinkData& linkData)
+StaticallyLink(CodeSegment& cs, const LinkData& linkData)
 {
     for (LinkData::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = cs.base() + link.patchAtOffset;
@@ -106,15 +106,15 @@ StaticallyLink(JSContext* cx, CodeSegment& cs, const LinkData& linkData)
             Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
+    if (!EnsureBuiltinThunksInitialized())
+        return false;
+
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
         const Uint32Vector& offsets = linkData.symbolicLinks[imm];
         if (offsets.empty())
             continue;
 
-        void* target = nullptr;
-        if (!cx->runtime()->wasm().getBuiltinThunk(cx, imm, &target))
-            return false;
-
+        void* target = SymbolicAddressTarget(imm);
         for (uint32_t offset : offsets) {
             uint8_t* patchAt = cs.base() + offset;
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
@@ -211,7 +211,7 @@ CodeSegment::create(JSContext* cx,
         AutoFlushICache::setRange(uintptr_t(codeBase), cs->length());
 
         memcpy(codeBase, bytecode.begin(), bytecode.length());
-        if (!StaticallyLink(cx, *cs, linkData))
+        if (!StaticallyLink(*cs, linkData))
             return nullptr;
     }
 
@@ -553,15 +553,8 @@ Code::lookupCallSite(void* returnAddress) const
 const CodeRange*
 Code::lookupRange(void* pc) const
 {
-    CodeRange::PC target((uint8_t*)pc - segment_->base());
-    size_t lowerBound = 0;
-    size_t upperBound = metadata_->codeRanges.length();
-
-    size_t match;
-    if (!BinarySearch(metadata_->codeRanges, lowerBound, upperBound, target, &match))
-        return nullptr;
-
-    return &metadata_->codeRanges[match];
+    CodeRange::OffsetInCode target((uint8_t*)pc - segment_->base());
+    return LookupInSorted(metadata_->codeRanges, target);
 }
 
 struct MemoryAccessOffset

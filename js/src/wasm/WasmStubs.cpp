@@ -899,8 +899,8 @@ struct ABIFunctionArgs
 };
 
 CallableOffsets
-wasm::GenerateBuiltinNativeExit(MacroAssembler& masm, ABIFunctionType abiType,
-                                ExitReason exitReason, void* func)
+wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType, ExitReason exitReason,
+                           void* funcPtr)
 {
     masm.setFramePushed(0);
 
@@ -936,7 +936,7 @@ wasm::GenerateBuiltinNativeExit(MacroAssembler& masm, ABIFunctionType abiType,
     }
 
     AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(ImmPtr(func, ImmPtr::NoCheckToken()));
+    masm.call(ImmPtr(funcPtr, ImmPtr::NoCheckToken()));
 
 #if defined(JS_CODEGEN_X86)
     // x86 passes the return value on the x87 FP stack.
