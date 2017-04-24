@@ -318,6 +318,10 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'top', 'bottom' ] ] }
     ]
   },
+  'caret-color': {
+    // https://drafts.csswg.org/css-ui/#propdef-caret-color
+    types: [ 'color' ]
+  },
   'clear': {
     // https://drafts.csswg.org/css-page-floats/#propdef-clear
     types: [
