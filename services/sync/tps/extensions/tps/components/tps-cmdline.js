@@ -25,23 +25,23 @@ function TPSCmdLineHandler() {}
 
 TPSCmdLineHandler.prototype = {
   classDescription: "TPSCmdLineHandler",
-  classID         : TPS_CMDLINE_CLSID,
-  contractID      : TPS_CMDLINE_CONTRACTID,
+  classID: TPS_CMDLINE_CLSID,
+  contractID: TPS_CMDLINE_CONTRACTID,
 
   QueryInterface: XPCOMUtils.generateQI([nsISupports,
                                          nsICommandLineHandler,
                                          nsICmdLineHandler]),   /* nsISupports */
 
   /* nsICmdLineHandler */
-  commandLineArgument : "-tps",
-  prefNameForStartup : "general.startup.tps",
-  helpText : "Run TPS tests with the given test file.",
-  handlesArgs : true,
-  defaultArgs : "",
-  openWindowWithArgs : true,
+  commandLineArgument: "-tps",
+  prefNameForStartup: "general.startup.tps",
+  helpText: "Run TPS tests with the given test file.",
+  handlesArgs: true,
+  defaultArgs: "",
+  openWindowWithArgs: true,
 
   /* nsICommandLineHandler */
-  handle : function handler_handle(cmdLine) {
+  handle: function handler_handle(cmdLine) {
     let options = {};
 
     let uristr = cmdLine.handleFlagWithParam("tps", false);
@@ -72,10 +72,10 @@ TPSCmdLineHandler.prototype = {
     // cmdLine.preventDefault = true;
   },
 
-  helpInfo : "  --tps <file>              Run TPS tests with the given test file.\n" +
-             "  --tpsphase <phase>        Run the specified phase in the TPS test.\n" +
-             "  --tpslogfile <file>       Logfile for TPS output.\n" +
-             "  --ignore-unused-engines   Don't load engines not used in tests.\n",
+  helpInfo: "  --tps <file>              Run TPS tests with the given test file.\n" +
+            "  --tpsphase <phase>        Run the specified phase in the TPS test.\n" +
+            "  --tpslogfile <file>       Logfile for TPS output.\n" +
+            "  --ignore-unused-engines   Don't load engines not used in tests.\n",
 };
 
 
