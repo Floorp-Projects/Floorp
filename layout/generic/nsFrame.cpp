@@ -6098,9 +6098,9 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const
   return offset;
 }
 
-nsIntRect nsIFrame::GetScreenRect() const
+CSSIntRect nsIFrame::GetScreenRect() const
 {
-  return GetScreenRectInAppUnits().ToNearestPixels(PresContext()->AppUnitsPerCSSPixel());
+  return CSSIntRect::FromAppUnitsToNearest(GetScreenRectInAppUnits());
 }
 
 nsRect nsIFrame::GetScreenRectInAppUnits() const

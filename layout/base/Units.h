@@ -240,6 +240,10 @@ struct CSSPixel {
                       NSAppUnitsToIntPixels(aRect.height, float(AppUnitsPerCSSPixel())));
   }
 
+  static CSSIntRect FromAppUnitsToNearest(const nsRect& aRect) {
+    return CSSIntRect::FromUnknownRect(aRect.ToNearestPixels(AppUnitsPerCSSPixel()));
+  }
+
   // Conversions to app units
 
   static nscoord ToAppUnits(CSSCoord aCoord) {
