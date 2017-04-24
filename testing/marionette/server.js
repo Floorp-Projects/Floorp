@@ -32,6 +32,7 @@ this.server = {};
 const PROTOCOL_VERSION = 3;
 
 const PREF_CONTENT_LISTENER = "marionette.contentListener";
+const PREF_PORT = "marionette.port";
 const PREF_RECOMMENDED = "marionette.prefs.recommended";
 
 // Marionette sets preferences recommended for automation when it starts,
@@ -273,6 +274,7 @@ server.TCPListener = class {
    */
   constructor (port) {
     this.port = port;
+    this.socket = null;
     this.conns = new Set();
     this.nextConnID = 0;
     this.alive = false;
@@ -283,7 +285,7 @@ server.TCPListener = class {
   /**
    * Function produces a GeckoDriver.
    *
-   * Determines application nameto initialise the driver with.
+   * Determines application name to initialise the driver with.
    *
    * @return {GeckoDriver}
    *     A driver instance.
@@ -303,6 +305,13 @@ server.TCPListener = class {
     this._acceptConnections = value;
   }
 
+  /**
+   * Bind this listener to |port| and start accepting incoming socket
+   * connections on |onSocketAccepted|.
+   *
+   * The marionette.port preference will be populated with the value
+   * of |this.port|.
+   */
   start () {
     if (this.alive) {
       return;
@@ -321,8 +330,10 @@ server.TCPListener = class {
 
     const flags = KeepWhenOffline | LoopbackOnly;
     const backlog = 1;
-    this.listener = new ServerSocket(this.port, flags, backlog);
-    this.listener.asyncListen(this);
+    this.socket = new ServerSocket(this.port, flags, backlog);
+    this.socket.asyncListen(this);
+    this.port = this.socket.port;
+    Preferences.set(PREF_PORT, this.port);
 
     this.alive = true;
     this._acceptConnections = true;
@@ -333,20 +344,18 @@ server.TCPListener = class {
       return;
     }
 
+    this._acceptConnections = false;
+
+    this.socket.close();
+    this.socket = null;
+
     for (let k of this.alteredPrefs) {
       logger.debug(`Resetting recommended pref ${k}`);
       Preferences.reset(k);
     }
-    this.closeListener();
 
     this.alteredPrefs.clear();
     this.alive = false;
-    this._acceptConnections = false;
-  }
-
-  closeListener () {
-    this.listener.close();
-    this.listener = null;
   }
 
   onSocketAccepted (serverSocket, clientSocket) {

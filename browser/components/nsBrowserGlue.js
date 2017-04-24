@@ -780,24 +780,10 @@ BrowserGlue.prototype = {
   },
 
   _firstWindowTelemetry(aWindow) {
-    let SCALING_PROBE_NAME = "";
-    switch (AppConstants.platform) {
-      case "win":
-        SCALING_PROBE_NAME = "DISPLAY_SCALING_MSWIN";
-        break;
-      case "macosx":
-        SCALING_PROBE_NAME = "DISPLAY_SCALING_OSX";
-        break;
-      case "linux":
-        SCALING_PROBE_NAME = "DISPLAY_SCALING_LINUX";
-        break;
-    }
-    if (SCALING_PROBE_NAME) {
-      let scaling = aWindow.devicePixelRatio * 100;
-      try {
-        Services.telemetry.getHistogramById(SCALING_PROBE_NAME).add(scaling);
-      } catch (ex) {}
-    }
+    let scaling = aWindow.devicePixelRatio * 100;
+    try {
+      Services.telemetry.getHistogramById("DISPLAY_SCALING").add(scaling);
+    } catch (ex) {}
   },
 
   // the first browser window has finished initializing
