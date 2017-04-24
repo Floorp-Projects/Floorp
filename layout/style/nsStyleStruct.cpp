@@ -366,13 +366,8 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
   if (aSrc.mBorderColors) {
-    EnsureBorderColors();
-    for (int32_t i = 0; i < 4; i++) {
-      if (aSrc.mBorderColors[i]) {
-        mBorderColors[i] = aSrc.mBorderColors[i]->Clone();
-      } else {
-        mBorderColors[i] = nullptr;
-      }
+    NS_FOR_CSS_SIDES(side) {
+      CopyBorderColorsFrom(aSrc.mBorderColors[side], side);
     }
   }
 
