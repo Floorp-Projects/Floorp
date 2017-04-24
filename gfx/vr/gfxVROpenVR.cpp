@@ -924,7 +924,6 @@ VRSystemManagerOpenVR::ScanForControllers()
 
   ::vr::TrackedDeviceIndex_t trackedIndexArray[::vr::k_unMaxTrackedDeviceCount];
   uint32_t newControllerCount = 0;
-  ::vr::ETrackedDeviceClass deviceType;
   // Basically, we would have HMDs in the tracked devices,
   // but we are just interested in the controllers.
   for (::vr::TrackedDeviceIndex_t trackedDevice = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
@@ -934,7 +933,8 @@ VRSystemManagerOpenVR::ScanForControllers()
       continue;
     }
 
-    deviceType = mVRSystem->GetTrackedDeviceClass(trackedDevice);
+    const ::vr::ETrackedDeviceClass deviceType = mVRSystem->
+                                                 GetTrackedDeviceClass(trackedDevice);
     if (deviceType != ::vr::TrackedDeviceClass_Controller
         && deviceType != ::vr::TrackedDeviceClass_GenericTracker) {
       continue;
@@ -955,13 +955,14 @@ VRSystemManagerOpenVR::ScanForControllers()
     // Re-adding controllers to VRControllerManager.
     for (::vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
       const ::vr::TrackedDeviceIndex_t trackedDevice = trackedIndexArray[i];
+      const ::vr::ETrackedDeviceClass deviceType = mVRSystem->
+                                                   GetTrackedDeviceClass(trackedDevice);
       const ::vr::ETrackedControllerRole role = mVRSystem->
-                                               GetControllerRoleForTrackedDeviceIndex(
-                                               trackedDevice);
-
+                                                GetControllerRoleForTrackedDeviceIndex(
+                                                trackedDevice);
+      const GamepadHand hand = GetGamepadHandFromControllerRole(role);
       uint32_t numButtons = 0;
       uint32_t numAxes = 0;
-      const GamepadHand hand = GetGamepadHandFromControllerRole(role);
 
       // Scan the axes that the controllers support
       for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
