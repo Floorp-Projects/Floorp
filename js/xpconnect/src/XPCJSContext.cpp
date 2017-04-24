@@ -844,7 +844,7 @@ XPCJSContext::BeforeProcessTask(bool aMightBlock)
 
     // As we may be entering a nested event loop, we need to
     // cancel any ongoing performance measurement.
-    js::ResetPerformanceMonitoring(Get()->Context());
+    js::ResetPerformanceMonitoring(Context());
 
     CycleCollectedJSContext::BeforeProcessTask(aMightBlock);
 }
@@ -864,7 +864,7 @@ XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth)
 
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
-    js::FlushPerformanceMonitoring(Get()->Context());
+    js::FlushPerformanceMonitoring(Context());
 
     mozilla::jsipc::AfterProcessTask();
 }
