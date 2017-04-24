@@ -6,7 +6,6 @@
 #include "MediaEngineTabVideoSource.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -304,8 +303,8 @@ MediaEngineTabVideoSource::Draw() {
     }
   }
 
-  uint32_t stride = StrideForFormatAndWidth(SurfaceFormat::X8R8G8B8_UINT32,
-                                            size.width);
+  gfxImageFormat format = SurfaceFormat::X8R8G8B8_UINT32;
+  uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
 
   if (mDataSize < static_cast<size_t>(stride * size.height)) {
     mDataSize = stride * size.height;
