@@ -46,7 +46,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FileSystemSecurity.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/GeolocationBinding.h"
@@ -5300,17 +5299,13 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
 
   MOZ_ASSERT(blobImpl);
 
-  IPCBlob ipcBlob;
-  rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendFileCreationResponse(aID, FileCreationErrorResult(rv))) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-
-    return IPC_OK();
+  BlobParent* blobParent = BlobParent::GetOrCreate(this, blobImpl);
+  if (NS_WARN_IF(!blobParent)) {
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  if (!SendFileCreationResponse(aID, FileCreationSuccessResult(ipcBlob))) {
+  if (!SendFileCreationResponse(aID,
+                                FileCreationSuccessResult(blobParent, nullptr))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
