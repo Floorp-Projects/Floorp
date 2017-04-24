@@ -23,6 +23,7 @@ class nsIPrincipal;
 namespace mozilla {
 class BlobURLsReporter;
 class DOMMediaStream;
+
 namespace dom {
 class BlobImpl;
 class BlobURLRegistrationData;
