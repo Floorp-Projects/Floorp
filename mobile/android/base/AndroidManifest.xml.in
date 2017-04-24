@@ -40,7 +40,7 @@
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
 
-        <meta-data android:name="android.max_aspect" android:value="2.0"/>
+        <meta-data android:name="android.max_aspect" android:value="2.1"/>
 
 #ifdef MOZ_NATIVE_DEVICES
         <!-- This resources comes from Google Play Services. Required for casting support. -->
