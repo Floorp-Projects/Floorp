@@ -932,12 +932,12 @@ add_task(function* test_checkSubsessionData() {
   }
 
   // Keep track of the active ticks count if the session recorder is available.
-  let sessionRecorder = TelemetryController.getSessionRecorder();
-  let activeTicksAtSubsessionStart = sessionRecorder.activeTicks;
+  let getActiveTicks = () => TelemetrySession.getPayload().simpleMeasurements.activeTicks;
+  let activeTicksAtSubsessionStart = getActiveTicks();
   let expectedActiveTicks = activeTicksAtSubsessionStart;
 
   let incrementActiveTicks = () => {
-    sessionRecorder.incrementActiveTicks();
+    TelemetrySession.observe(null, "user-interaction-active");
     ++expectedActiveTicks;
   }
 
@@ -954,7 +954,7 @@ add_task(function* test_checkSubsessionData() {
 
   // Start a new subsession and check that the active ticks are correctly reported.
   incrementActiveTicks();
-  activeTicksAtSubsessionStart = sessionRecorder.activeTicks;
+  activeTicksAtSubsessionStart = getActiveTicks();
   classic = TelemetrySession.getPayload();
   subsession = TelemetrySession.getPayload("environment-change", true);
   Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
