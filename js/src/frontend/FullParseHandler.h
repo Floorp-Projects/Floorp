@@ -277,10 +277,9 @@ class FullParseHandlerBase
     }
 
     MOZ_MUST_USE bool addSpreadElement(ParseNode* literal, uint32_t begin, ParseNode* inner) {
-        TokenPos pos(begin, inner->pn_pos.end);
-        ParseNode* spread = new_<UnaryNode>(PNK_SPREAD, JSOP_NOP, pos, inner);
+        ParseNode* spread = newSpread(begin, inner);
         if (!spread)
-            return null();
+            return false;
         literal->append(spread);
         literal->pn_xflags |= PNX_ARRAYHOLESPREAD | PNX_NONCONST;
         return true;

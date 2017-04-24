@@ -4406,84 +4406,89 @@ Parser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
     RootedAtom propAtom(context);
     for (;;) {
         TokenKind tt;
-        if (!tokenStream.getToken(&tt))
+        if (!tokenStream.peekToken(&tt))
             return null();
         if (tt == TOK_RC)
             break;
 
-        TokenPos namePos = pos();
-
-        tokenStream.ungetToken();
-
-        PropertyType propType;
-        Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
-        if (!propName)
+        if (tt == TOK_TRIPLEDOT) {
+            // TODO: rest-binding property
+            error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(tt));
             return null();
-
-        if (propType == PropertyType::Normal) {
-            // Handle e.g., |var {p: x} = o| and |var {p: x=0} = o|.
-
-            if (!tokenStream.getToken(&tt, TokenStream::Operand))
-                return null();
-
-            Node binding = bindingIdentifierOrPattern(kind, yieldHandling, tt);
-            if (!binding)
-                return null();
-
-            bool hasInitializer;
-            if (!tokenStream.matchToken(&hasInitializer, TOK_ASSIGN))
-                return null();
-
-            Node bindingExpr = hasInitializer
-                               ? bindingInitializer(binding, kind, yieldHandling)
-                               : binding;
-            if (!bindingExpr)
-                return null();
-
-            if (!handler.addPropertyDefinition(literal, propName, bindingExpr))
-                return null();
-        } else if (propType == PropertyType::Shorthand) {
-            // Handle e.g., |var {x, y} = o| as destructuring shorthand
-            // for |var {x: x, y: y} = o|.
-            MOZ_ASSERT(TokenKindIsPossibleIdentifierName(tt));
-
-            Node binding = bindingIdentifier(kind, yieldHandling);
-            if (!binding)
-                return null();
-
-            if (!handler.addShorthand(literal, propName, binding))
-                return null();
-        } else if (propType == PropertyType::CoverInitializedName) {
-            // Handle e.g., |var {x=1, y=2} = o| as destructuring shorthand
-            // with default values.
-            MOZ_ASSERT(TokenKindIsPossibleIdentifierName(tt));
-
-            Node binding = bindingIdentifier(kind, yieldHandling);
-            if (!binding)
-                return null();
-
-            tokenStream.consumeKnownToken(TOK_ASSIGN);
-
-            Node bindingExpr = bindingInitializer(binding, kind, yieldHandling);
-            if (!bindingExpr)
-                return null();
-
-            if (!handler.addPropertyDefinition(literal, propName, bindingExpr))
-                return null();
         } else {
-            errorAt(namePos.begin, JSMSG_NO_VARIABLE_NAME);
-            return null();
+            TokenPos namePos = tokenStream.nextToken().pos;
+
+            PropertyType propType;
+            Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
+            if (!propName)
+                return null();
+
+            if (propType == PropertyType::Normal) {
+                // Handle e.g., |var {p: x} = o| and |var {p: x=0} = o|.
+
+                if (!tokenStream.getToken(&tt, TokenStream::Operand))
+                    return null();
+
+                Node binding = bindingIdentifierOrPattern(kind, yieldHandling, tt);
+                if (!binding)
+                    return null();
+
+                bool hasInitializer;
+                if (!tokenStream.matchToken(&hasInitializer, TOK_ASSIGN))
+                    return null();
+
+                Node bindingExpr = hasInitializer
+                                   ? bindingInitializer(binding, kind, yieldHandling)
+                                   : binding;
+                if (!bindingExpr)
+                    return null();
+
+                if (!handler.addPropertyDefinition(literal, propName, bindingExpr))
+                    return null();
+            } else if (propType == PropertyType::Shorthand) {
+                // Handle e.g., |var {x, y} = o| as destructuring shorthand
+                // for |var {x: x, y: y} = o|.
+                MOZ_ASSERT(TokenKindIsPossibleIdentifierName(tt));
+
+                Node binding = bindingIdentifier(kind, yieldHandling);
+                if (!binding)
+                    return null();
+
+                if (!handler.addShorthand(literal, propName, binding))
+                    return null();
+            } else if (propType == PropertyType::CoverInitializedName) {
+                // Handle e.g., |var {x=1, y=2} = o| as destructuring
+                // shorthand with default values.
+                MOZ_ASSERT(TokenKindIsPossibleIdentifierName(tt));
+
+                Node binding = bindingIdentifier(kind, yieldHandling);
+                if (!binding)
+                    return null();
+
+                tokenStream.consumeKnownToken(TOK_ASSIGN);
+
+                Node bindingExpr = bindingInitializer(binding, kind, yieldHandling);
+                if (!bindingExpr)
+                    return null();
+
+                if (!handler.addPropertyDefinition(literal, propName, bindingExpr))
+                    return null();
+            } else {
+                errorAt(namePos.begin, JSMSG_NO_VARIABLE_NAME);
+                return null();
+            }
         }
 
-        if (!tokenStream.getToken(&tt))
+        bool matched;
+        if (!tokenStream.matchToken(&matched, TOK_COMMA))
             return null();
-        if (tt == TOK_RC)
+        if (!matched)
             break;
-        if (tt != TOK_COMMA) {
-            reportMissingClosing(JSMSG_CURLY_AFTER_LIST, JSMSG_CURLY_OPENED, begin);
-            return null();
-        }
     }
+
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::None,
+                                     reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                                          JSMSG_CURLY_OPENED, begin));
 
     handler.setEndPosition(literal, pos().end);
     return literal;
@@ -9778,173 +9783,183 @@ Parser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
     RootedAtom propAtom(context);
     for (;;) {
         TokenKind tt;
-        if (!tokenStream.getToken(&tt))
+        if (!tokenStream.peekToken(&tt))
             return null();
         if (tt == TOK_RC)
             break;
 
-        TokenPos namePos = pos();
-
-        tokenStream.ungetToken();
-
-        PropertyType propType;
-        Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
-        if (!propName)
+        if (tt == TOK_TRIPLEDOT) {
+            // TODO: object spread
+            error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(tt));
             return null();
+        } else {
+            TokenPos namePos = tokenStream.nextToken().pos;
 
-        if (propType == PropertyType::Normal) {
-            TokenPos exprPos;
-            if (!tokenStream.peekTokenPos(&exprPos, TokenStream::Operand))
+            PropertyType propType;
+            Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
+            if (!propName)
                 return null();
 
-            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                                       possibleError);
-            if (!propExpr)
-                return null();
+            if (propType == PropertyType::Normal) {
+                TokenPos exprPos;
+                if (!tokenStream.peekTokenPos(&exprPos, TokenStream::Operand))
+                    return null();
 
-            handler.checkAndSetIsDirectRHSAnonFunction(propExpr);
+                Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                           possibleError);
+                if (!propExpr)
+                    return null();
 
-            if (possibleError)
-                checkDestructuringAssignmentElement(propExpr, exprPos, possibleError);
+                handler.checkAndSetIsDirectRHSAnonFunction(propExpr);
 
-            if (foldConstants && !FoldConstants(context, &propExpr, this))
-                return null();
+                if (possibleError)
+                    checkDestructuringAssignmentElement(propExpr, exprPos, possibleError);
 
-            if (propAtom == context->names().proto) {
-                if (seenPrototypeMutation) {
-                    // Directly report the error when we're not in a
-                    // destructuring context.
+                if (foldConstants && !FoldConstants(context, &propExpr, this))
+                    return null();
+
+                if (propAtom == context->names().proto) {
+                    if (seenPrototypeMutation) {
+                        // Directly report the error when we're not in a
+                        // destructuring context.
+                        if (!possibleError) {
+                            errorAt(namePos.begin, JSMSG_DUPLICATE_PROTO_PROPERTY);
+                            return null();
+                        }
+
+                        // Otherwise delay error reporting until we've
+                        // determined whether or not we're destructuring.
+                        possibleError->setPendingExpressionErrorAt(namePos,
+                                                                   JSMSG_DUPLICATE_PROTO_PROPERTY);
+                    }
+                    seenPrototypeMutation = true;
+
+                    // Note: this occurs *only* if we observe TOK_COLON!  Only
+                    // __proto__: v mutates [[Prototype]].  Getters, setters,
+                    // method/generator definitions, computed property name
+                    // versions of all of these, and shorthands do not.
+                    if (!handler.addPrototypeMutation(literal, namePos.begin, propExpr))
+                        return null();
+                } else {
+                    if (!handler.isConstant(propExpr))
+                        handler.setListFlag(literal, PNX_NONCONST);
+
+                    if (!handler.addPropertyDefinition(literal, propName, propExpr))
+                        return null();
+                }
+            } else if (propType == PropertyType::Shorthand) {
+                /*
+                 * Support, e.g., |({x, y} = o)| as destructuring shorthand
+                 * for |({x: x, y: y} = o)|, and |var o = {x, y}| as
+                 * initializer shorthand for |var o = {x: x, y: y}|.
+                 */
+                Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+                if (!name)
+                    return null();
+
+                Node nameExpr = identifierReference(name);
+                if (!nameExpr)
+                    return null();
+
+                if (possibleError)
+                    checkDestructuringAssignmentTarget(nameExpr, namePos, possibleError);
+
+                if (!handler.addShorthand(literal, propName, nameExpr))
+                    return null();
+            } else if (propType == PropertyType::CoverInitializedName) {
+                /*
+                 * Support, e.g., |({x=1, y=2} = o)| as destructuring
+                 * shorthand with default values, as per ES6 12.14.5
+                 */
+                Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+                if (!name)
+                    return null();
+
+                Node lhs = identifierReference(name);
+                if (!lhs)
+                    return null();
+
+                tokenStream.consumeKnownToken(TOK_ASSIGN);
+
+                if (!seenCoverInitializedName) {
+                    // "shorthand default" or "CoverInitializedName" syntax is
+                    // only valid in the case of destructuring.
+                    seenCoverInitializedName = true;
+
                     if (!possibleError) {
-                        errorAt(namePos.begin, JSMSG_DUPLICATE_PROTO_PROPERTY);
+                        // Destructuring defaults are definitely not allowed
+                        // in this object literal, because of something the
+                        // caller knows about the preceding code. For example,
+                        // maybe the preceding token is an operator:
+                        // |x + {y=z}|.
+                        error(JSMSG_COLON_AFTER_ID);
                         return null();
                     }
 
-                    // Otherwise delay error reporting until we've determined
-                    // whether or not we're destructuring.
-                    possibleError->setPendingExpressionErrorAt(namePos,
-                                                               JSMSG_DUPLICATE_PROTO_PROPERTY);
+                    // Here we set a pending error so that later in the parse,
+                    // once we've determined whether or not we're
+                    // destructuring, the error can be reported or ignored
+                    // appropriately.
+                    possibleError->setPendingExpressionErrorAt(pos(), JSMSG_COLON_AFTER_ID);
                 }
-                seenPrototypeMutation = true;
 
-                // Note: this occurs *only* if we observe TOK_COLON!  Only
-                // __proto__: v mutates [[Prototype]].  Getters, setters,
-                // method/generator definitions, computed property name
-                // versions of all of these, and shorthands do not.
-                if (!handler.addPrototypeMutation(literal, namePos.begin, propExpr))
+                if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(lhs, context)) {
+                    // |chars| is "arguments" or "eval" here.
+                    if (!strictModeErrorAt(namePos.begin, JSMSG_BAD_STRICT_ASSIGN, chars))
+                        return null();
+                }
+
+                Node rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                if (!rhs)
                     return null();
-            } else {
-                if (!handler.isConstant(propExpr))
-                    handler.setListFlag(literal, PNX_NONCONST);
+
+                handler.checkAndSetIsDirectRHSAnonFunction(rhs);
+
+                Node propExpr = handler.newAssignment(PNK_ASSIGN, lhs, rhs, JSOP_NOP);
+                if (!propExpr)
+                    return null();
 
                 if (!handler.addPropertyDefinition(literal, propName, propExpr))
                     return null();
-            }
-        } else if (propType == PropertyType::Shorthand) {
-            /*
-             * Support, e.g., |({x, y} = o)| as destructuring shorthand
-             * for |({x: x, y: y} = o)|, and |var o = {x, y}| as initializer
-             * shorthand for |var o = {x: x, y: y}|.
-             */
-            Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
-            if (!name)
-                return null();
+            } else {
+                RootedAtom funName(context);
+                if (!tokenStream.isCurrentTokenType(TOK_RB)) {
+                    funName = propAtom;
 
-            Node nameExpr = identifierReference(name);
-            if (!nameExpr)
-                return null();
-
-            if (possibleError)
-                checkDestructuringAssignmentTarget(nameExpr, namePos, possibleError);
-
-            if (!handler.addShorthand(literal, propName, nameExpr))
-                return null();
-        } else if (propType == PropertyType::CoverInitializedName) {
-            /*
-             * Support, e.g., |({x=1, y=2} = o)| as destructuring shorthand
-             * with default values, as per ES6 12.14.5
-             */
-            Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
-            if (!name)
-                return null();
-
-            Node lhs = identifierReference(name);
-            if (!lhs)
-                return null();
-
-            tokenStream.consumeKnownToken(TOK_ASSIGN);
-
-            if (!seenCoverInitializedName) {
-                // "shorthand default" or "CoverInitializedName" syntax is only
-                // valid in the case of destructuring.
-                seenCoverInitializedName = true;
-
-                if (!possibleError) {
-                    // Destructuring defaults are definitely not allowed in this object literal,
-                    // because of something the caller knows about the preceding code.
-                    // For example, maybe the preceding token is an operator: `x + {y=z}`.
-                    error(JSMSG_COLON_AFTER_ID);
-                    return null();
+                    if (propType == PropertyType::Getter || propType == PropertyType::Setter) {
+                        funName = prefixAccessorName(propType, propAtom);
+                        if (!funName)
+                            return null();
+                    }
                 }
 
-                // Here we set a pending error so that later in the parse, once we've
-                // determined whether or not we're destructuring, the error can be
-                // reported or ignored appropriately.
-                possibleError->setPendingExpressionErrorAt(pos(), JSMSG_COLON_AFTER_ID);
-            }
-
-            if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(lhs, context)) {
-                // |chars| is "arguments" or "eval" here.
-                if (!strictModeErrorAt(namePos.begin, JSMSG_BAD_STRICT_ASSIGN, chars))
+                Node fn = methodDefinition(namePos.begin, propType, funName);
+                if (!fn)
                     return null();
-            }
 
-            Node rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-            if (!rhs)
-                return null();
+                handler.checkAndSetIsDirectRHSAnonFunction(fn);
 
-            handler.checkAndSetIsDirectRHSAnonFunction(rhs);
+                JSOp op = JSOpFromPropertyType(propType);
+                if (!handler.addObjectMethodDefinition(literal, propName, fn, op))
+                    return null();
 
-            Node propExpr = handler.newAssignment(PNK_ASSIGN, lhs, rhs, JSOP_NOP);
-            if (!propExpr)
-                return null();
-
-            if (!handler.addPropertyDefinition(literal, propName, propExpr))
-                return null();
-        } else {
-            RootedAtom funName(context);
-            if (!tokenStream.isCurrentTokenType(TOK_RB)) {
-                funName = propAtom;
-
-                if (propType == PropertyType::Getter || propType == PropertyType::Setter) {
-                    funName = prefixAccessorName(propType, propAtom);
-                    if (!funName)
-                        return null();
+                if (possibleError) {
+                    possibleError->setPendingDestructuringErrorAt(namePos,
+                                                                  JSMSG_BAD_DESTRUCT_TARGET);
                 }
             }
-
-            Node fn = methodDefinition(namePos.begin, propType, funName);
-            if (!fn)
-                return null();
-
-            handler.checkAndSetIsDirectRHSAnonFunction(fn);
-
-            JSOp op = JSOpFromPropertyType(propType);
-            if (!handler.addObjectMethodDefinition(literal, propName, fn, op))
-                return null();
-
-            if (possibleError)
-                possibleError->setPendingDestructuringErrorAt(namePos, JSMSG_BAD_DESTRUCT_TARGET);
         }
 
-        if (!tokenStream.getToken(&tt))
+        bool matched;
+        if (!tokenStream.matchToken(&matched, TOK_COMMA))
             return null();
-        if (tt == TOK_RC)
+        if (!matched)
             break;
-        if (tt != TOK_COMMA) {
-            reportMissingClosing(JSMSG_CURLY_AFTER_LIST, JSMSG_CURLY_OPENED, openedPos);
-            return null();
-        }
     }
+
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::None,
+                                     reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                                          JSMSG_CURLY_OPENED, openedPos));
 
     handler.setEndPosition(literal, pos().end);
     return literal;
