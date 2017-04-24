@@ -19,6 +19,7 @@ include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
+include protocol PIPCBlobInputStream;
 include protocol PMedia;
 include protocol PMemoryStream;
 include protocol PNecko;
@@ -287,6 +288,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PHal;
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
+    manages PIPCBlobInputStream;
     manages PMedia;
     manages PMemoryStream;
     manages PNecko;
@@ -608,6 +610,8 @@ child:
     async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
 
     async RefreshScreens(ScreenDetails[] aScreens);
+
+    async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
