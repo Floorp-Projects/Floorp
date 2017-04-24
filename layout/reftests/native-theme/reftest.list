@@ -71,7 +71,7 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 
 == border-radius.html border-radius-ref.html
 
-fails-if(stylo) == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
+== checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
 
 # These tests have been written to test the overflow of the window widget
 # (bug 568825) but we can't test it on Windows and Cocoa because they have

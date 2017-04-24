@@ -114,29 +114,16 @@
     //   expected serialization,
     //   descriptionOfTestcase ],
     // Linear gradient with legacy-gradient-line (needs prefixed syntax):
-    [ "-moz-linear-gradient(10deg, red, blue)",
-      "-moz-linear-gradient(10deg, red, blue)",
-      "-moz-linear-gradient with angled legacy-gradient-line" ],
     [ "-webkit-linear-gradient(10deg, red, blue)",
       "-webkit-linear-gradient(10deg, red, blue)",
       "-webkit-linear-gradient with angled legacy-gradient-line" ],
 
     // Linear gradient with box corner (needs prefixed syntax):
-    [ "-moz-linear-gradient(top left, red, blue)",
-      "-moz-linear-gradient(left top , red, blue)",
-      //                            ^
-      // (NOTE: our -moz-linear-gradient serialization inserts an extra space
-      // before the first comma in some cases. This is ugly but fine,
-      // particularly given bug 1337655).
-      "-moz-linear-gradient with box corner" ],
     [ "-webkit-linear-gradient(top left, red, blue)",
       "-webkit-linear-gradient(left top, red, blue)",
       "-webkit-linear-gradient with box corner" ],
 
     // Radial gradients (should be serialized using modern unprefixed style):
-    [ "-moz-radial-gradient(contain, red, blue)",
-      "radial-gradient(closest-side, red, blue)",
-      "-moz-radial-gradient with legacy 'contain' keyword" ],
     [ "-webkit-radial-gradient(contain, red, blue)",
       "radial-gradient(closest-side, red, blue)",
       "-webkit-radial-gradient with legacy 'contain' keyword" ],
