@@ -171,9 +171,7 @@ jobs:
               - "mobile/android/**/*.png"
               - "mobile/android/**/*.svg"
               - "mobile/android/**/*.xml" # Manifest & android resources
-              - "mobile/android/**/*.gradle"
-              - "mobile/android/**/Makefile.in"
-              - "mobile/android/**/moz.build"
+              - "mobile/android/**/build.gradle"
 
     android-checkstyle:
         description: "Android checkstyle"
@@ -222,10 +220,8 @@ jobs:
         optimizations:
           - - files-changed
             - - "mobile/android/**/checkstyle.xml"
-              - "mobile/android/**/*.java"
               - "mobile/android/**/*.gradle"
-              - "mobile/android/**/Makefile.in"
-              - "mobile/android/**/moz.build"
+              - "mobile/android/**/*.java"
 
     android-findbugs:
         description: "Android findbugs"
@@ -273,7 +269,5 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
           - - files-changed
-            - - "mobile/android/**/*.java"
-              - "mobile/android/**/*.gradle"
-              - "mobile/android/**/Makefile.in"
-              - "mobile/android/**/moz.build"
+            - - "mobile/android/**/*.gradle"
+              - "mobile/android/**/*.java"
