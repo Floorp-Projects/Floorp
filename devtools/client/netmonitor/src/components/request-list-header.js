@@ -11,17 +11,14 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
+const { HEADERS, REQUESTS_WATERFALL } = require("../constants");
 const { getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
-const { HEADERS } = require("../constants");
 const { L10N } = require("../utils/l10n");
 const WaterfallBackground = require("../waterfall-background");
 const RequestListHeaderContextMenu = require("../request-list-header-context-menu");
 
 const { div, button } = DOM;
-
-const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
-const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
 
 /**
  * Render the request list header with sorting arrows for columns.
@@ -33,19 +30,20 @@ const RequestListHeader = createClass({
 
   propTypes: {
     columns: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired,
-    sort: PropTypes.object,
-    scale: PropTypes.number,
-    waterfallWidth: PropTypes.number,
-    onHeaderClick: PropTypes.func.isRequired,
+    resetColumns: PropTypes.func.isRequired,
     resizeWaterfall: PropTypes.func.isRequired,
+    scale: PropTypes.number,
+    sort: PropTypes.object,
+    sortBy: PropTypes.func.isRequired,
+    toggleColumn: PropTypes.func.isRequired,
+    waterfallWidth: PropTypes.number,
   },
 
   componentWillMount() {
-    const { dispatch } = this.props;
+    const { resetColumns, toggleColumn } = this.props;
     this.contextMenu = new RequestListHeaderContextMenu({
-      toggleColumn: (column) => dispatch(Actions.toggleColumn(column)),
-      resetColumns: () => dispatch(Actions.resetColumns()),
+      resetColumns,
+      toggleColumn,
     });
   },
 
@@ -73,27 +71,28 @@ const RequestListHeader = createClass({
   },
 
   resizeWaterfall() {
-    // Measure its width and update the 'waterfallWidth' property in the store.
-    // The 'waterfallWidth' will be further updated on every window resize.
-    setTimeout(() => {
-      let { width } = this.refs.header.getBoundingClientRect();
-      this.props.resizeWaterfall(width);
-    }, 50);
+    let waterfallHeader = this.refs.waterfallHeader;
+    if (waterfallHeader) {
+      // Measure its width and update the 'waterfallWidth' property in the store.
+      // The 'waterfallWidth' will be further updated on every window resize.
+      setTimeout(() => {
+        this.props.resizeWaterfall(waterfallHeader.getBoundingClientRect().width);
+      }, 500);
+    }
   },
 
   render() {
-    const { sort, scale, waterfallWidth, onHeaderClick, columns } = this.props;
+    let { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
-    return div(
-      { className: "devtools-toolbar requests-list-toolbar" },
-      div({ className: "toolbar-labels" },
-        HEADERS.filter(h => columns.get(h.name)).map(header => {
-          const name = header.name;
-          const boxName = header.boxName || name;
-          const label = L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
-
+    return (
+      div({ className: "devtools-toolbar requests-list-headers" },
+        HEADERS.filter((header) => columns.get(header.name)).map((header) => {
+          let name = header.name;
+          let boxName = header.boxName || name;
+          let label = L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
           let sorted, sortedTitle;
-          const active = sort.type == name ? true : undefined;
+          let active = sort.type == name ? true : undefined;
+
           if (active) {
             sorted = sort.ascending ? "ascending" : "descending";
             sortedTitle = L10N.getStr(sort.ascending
@@ -101,27 +100,28 @@ const RequestListHeader = createClass({
               : "networkMenu.sortedDesc");
           }
 
-          return div(
-            {
+          return (
+            div({
               id: `requests-list-${boxName}-header-box`,
-              className: `requests-list-header requests-list-${boxName}`,
+              className: `requests-list-column requests-list-${boxName}`,
               key: name,
-              ref: "header",
+              ref: `${name}Header`,
               // Used to style the next column.
               "data-active": active,
               onContextMenu: this.onContextMenu,
             },
-            button(
-              {
+              button({
                 id: `requests-list-${name}-button`,
-                className: `requests-list-header-button requests-list-${name}`,
+                className: `requests-list-header-button`,
                 "data-sorted": sorted,
                 title: sortedTitle,
-                onClick: () => onHeaderClick(name),
+                onClick: () => sortBy(name),
               },
-              name == "waterfall" ? WaterfallLabel(waterfallWidth, scale, label)
-                                  : div({ className: "button-text" }, label),
-              div({ className: "button-icon" })
+                name === "waterfall"
+                  ? WaterfallLabel(waterfallWidth, scale, label)
+                  : div({ className: "button-text" }, label),
+                div({ className: "button-icon" })
+              )
             )
           );
         })
@@ -137,11 +137,11 @@ function waterfallDivisionLabels(waterfallWidth, scale) {
   let labels = [];
 
   // Build new millisecond tick labels...
-  let timingStep = REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE;
+  let timingStep = REQUESTS_WATERFALL.HEADER_TICKS_MULTIPLE;
   let scaledStep = scale * timingStep;
 
   // Ignore any divisions that would end up being too close to each other.
-  while (scaledStep < REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN) {
+  while (scaledStep < REQUESTS_WATERFALL.HEADER_TICKS_SPACING_MIN) {
     scaledStep *= 2;
   }
 
@@ -185,7 +185,7 @@ function waterfallDivisionLabels(waterfallWidth, scale) {
 function WaterfallLabel(waterfallWidth, scale, label) {
   let className = "button-text requests-list-waterfall-label-wrapper";
 
-  if (waterfallWidth != null && scale != null) {
+  if (waterfallWidth !== null && scale !== null) {
     label = waterfallDivisionLabels(waterfallWidth, scale);
     className += " requests-list-waterfall-visible";
   }
@@ -194,17 +194,18 @@ function WaterfallLabel(waterfallWidth, scale, label) {
 }
 
 module.exports = connect(
-  state => ({
+  (state) => ({
     columns: state.ui.columns,
-    sort: state.sort,
-    scale: getWaterfallScale(state),
-    waterfallWidth: state.ui.waterfallWidth,
     firstRequestStartedMillis: state.requests.firstStartedMillis,
+    scale: getWaterfallScale(state),
+    sort: state.sort,
     timingMarkers: state.timingMarkers,
+    waterfallWidth: state.ui.waterfallWidth,
   }),
-  dispatch => ({
-    dispatch,
-    onHeaderClick: type => dispatch(Actions.sortBy(type)),
-    resizeWaterfall: width => dispatch(Actions.resizeWaterfall(width)),
+  (dispatch) => ({
+    resetColumns: () => dispatch(Actions.resetColumns()),
+    resizeWaterfall: (width) => dispatch(Actions.resizeWaterfall(width)),
+    sortBy: (type) => dispatch(Actions.sortBy(type)),
+    toggleColumn: (column) => dispatch(Actions.toggleColumn(column)),
   })
 )(RequestListHeader);
