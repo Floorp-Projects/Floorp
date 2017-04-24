@@ -10800,13 +10800,17 @@ IsWebkitGradientCoordLarger(const nsCSSValue& aStartCoord,
 //
 // Note: linear gradients progress along a line between two points.  The
 // -webkit-gradient(linear, ...) syntax lets the author precisely specify the
-// starting and ending point. However, our internal gradient structures
-// only store one point, and the other point is implicitly its reflection
-// across the painted area's center. (The legacy -moz-linear-gradient syntax
-// also lets us store an angle.)
+// starting and ending point. However, our internal gradient structures only
+// store ONE point (which for modern linear-gradient() expressions is a side or
+// corner & represents the ending point of the gradient -- and the starting
+// point is implicitly the opposite side/corner).
 //
-// In this function, we try to go from the two-point representation to an
-// equivalent or approximately-equivalent one-point representation.
+// In this function, we analyze the start & end points from a
+// -webkit-gradient(linear, ...) expression, and we choose an appropriate
+// target point to produce a modern linear-gradient() representation that has
+// the same rough trajectory.  If we can't determine a target point for some
+// reason, we just fall back to the default top-to-bottom linear-gradient()
+// directionality.
 void
 CSSParserImpl::FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
                                             const nsCSSValuePair& aStartPoint,
@@ -10814,51 +10818,53 @@ CSSParserImpl::FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
 {
   MOZ_ASSERT(!aGradient->mIsRadial, "passed-in gradient must be linear");
 
-  // If the start & end points have the same Y-coordinate, then we can treat
-  // this as a horizontal gradient progressing towards the center of the left
-  // or right side.
-  if (aStartPoint.mYValue == aEndPoint.mYValue) {
-    aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_CENTER,
+  if (aStartPoint == aEndPoint ||
+      aStartPoint.mXValue.GetUnit() != aEndPoint.mXValue.GetUnit() ||
+      aStartPoint.mYValue.GetUnit() != aEndPoint.mYValue.GetUnit()) {
+    // Start point & end point are the same, OR they use different units for at
+    // least one coordinate.  Either way, this isn't something we can represent
+    // using an unprefixed linear-gradient expression, so instead we'll just
+    // arbitrarily pretend this is a top-to-bottom gradient (which is the
+    // default for modern linear-gradient if a direction is unspecified).
+    aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_BOTTOM,
                                           eCSSUnit_Enumerated);
-    if (IsWebkitGradientCoordLarger(aStartPoint.mXValue, aEndPoint.mXValue)) {
-      aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_LEFT,
-                                            eCSSUnit_Enumerated);
-    } else {
-      aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_RIGHT,
-                                            eCSSUnit_Enumerated);
-    }
-    return;
-  }
-
-  // If the start & end points have the same X-coordinate, then we can treat
-  // this as a horizontal gradient progressing towards the center of the top
-  // or bottom side.
-  if (aStartPoint.mXValue == aEndPoint.mXValue) {
     aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_CENTER,
                                           eCSSUnit_Enumerated);
-    if (IsWebkitGradientCoordLarger(aStartPoint.mYValue, aEndPoint.mYValue)) {
-      aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_TOP,
-                                            eCSSUnit_Enumerated);
-    } else {
-      aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_IMAGELAYER_POSITION_BOTTOM,
-                                            eCSSUnit_Enumerated);
-    }
     return;
   }
 
-  // OK, the gradient is angled, which means we likely can't represent it
-  // exactly in |aGradient|, without doing analysis on the two points to
-  // extract an angle (which we might not be able to do depending on the units
-  // used).  For now, we'll just do something really basic -- just use the
-  // first point as if it were the starting point in a legacy
-  // -moz-linear-gradient() expression. That way, the rendered gradient will
-  // progress from this first point, towards the center of the covered element,
-  // to a reflected end point on the far side. Note that we have to use
-  // mIsLegacySyntax=true for this to work, because standardized (non-legacy)
-  // gradients place some restrictions on the reference point [namely, that it
-  // use percent units & be on the border of the element].
-  aGradient->mIsLegacySyntax = true;
-  aGradient->mBgPos = aStartPoint;
+  // Set the target point to one of the box's corners (or the center of an
+  // edge), by comparing aStartPoint and aEndPoint to extract a general
+  // direction.
+
+  int32_t targetX;
+  if (aStartPoint.mXValue == aEndPoint.mXValue) {
+    targetX = NS_STYLE_IMAGELAYER_POSITION_CENTER;
+  } else if (IsWebkitGradientCoordLarger(aStartPoint.mXValue,
+                                         aEndPoint.mXValue)) {
+    targetX = NS_STYLE_IMAGELAYER_POSITION_LEFT;
+  } else {
+    MOZ_ASSERT(IsWebkitGradientCoordLarger(aEndPoint.mXValue,
+                                           aStartPoint.mXValue),
+               "IsWebkitGradientCoordLarger returning inconsistent results?");
+    targetX = NS_STYLE_IMAGELAYER_POSITION_RIGHT;
+  }
+
+  int32_t targetY;
+  if (aStartPoint.mYValue == aEndPoint.mYValue) {
+    targetY = NS_STYLE_IMAGELAYER_POSITION_CENTER;
+  } else if (IsWebkitGradientCoordLarger(aStartPoint.mYValue,
+                                         aEndPoint.mYValue)) {
+    targetY = NS_STYLE_IMAGELAYER_POSITION_TOP;
+  } else {
+    MOZ_ASSERT(IsWebkitGradientCoordLarger(aEndPoint.mYValue,
+                                           aStartPoint.mYValue),
+               "IsWebkitGradientCoordLarger returning inconsistent results?");
+    targetY = NS_STYLE_IMAGELAYER_POSITION_BOTTOM;
+  }
+
+  aGradient->mBgPos.mXValue.SetIntValue(targetX, eCSSUnit_Enumerated);
+  aGradient->mBgPos.mYValue.SetIntValue(targetY, eCSSUnit_Enumerated);
 }
 
 // Finalize our internal representation of a -webkit-gradient(radial, ...)

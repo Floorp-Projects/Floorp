@@ -12,7 +12,7 @@ const {
 const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const UPDATED_STATUS_PROPS = [
   "fromCache",
@@ -33,8 +33,7 @@ const RequestListColumnStatus = createClass({
   },
 
   render() {
-    const { status, statusText, fromCache, fromServiceWorker } = this.props.item;
-
+    let { fromCache, fromServiceWorker, status, statusText } = this.props.item;
     let code, title;
 
     if (status) {
@@ -64,9 +63,9 @@ const RequestListColumnStatus = createClass({
     }
 
     return (
-        div({ className: "requests-list-subitem requests-list-status", title },
+      div({ className: "requests-list-column requests-list-status", title },
         div({ className: "requests-list-status-icon", "data-code": code }),
-        span({ className: "subitem-label requests-list-status-code" }, status)
+        div({ className: "requests-list-status-code" }, status)
       )
     );
   }
