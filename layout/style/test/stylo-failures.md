@@ -75,8 +75,6 @@ to mochitest command.
 * Transition support:
   * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [10]
-  * test_transitions_computed_value_combinations.html [145]
-  * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
