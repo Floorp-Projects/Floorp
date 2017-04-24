@@ -2927,6 +2927,13 @@ public:
   static bool
   SkipCursorMoveForSameValueSet() { return sSkipCursorMoveForSameValueSet; }
 
+  /**
+   * Determine whether or not the user is currently interacting with the web
+   * browser. This method is safe to call from off of the main thread.
+   */
+  static bool
+  GetUserIsInteracting();
+
 private:
   static bool InitializeEventTable();
 
@@ -3058,6 +3065,9 @@ private:
 
   static int32_t sPrivacyMaxInnerWidth;
   static int32_t sPrivacyMaxInnerHeight;
+
+  class UserInteractionObserver;
+  static UserInteractionObserver* sUserInteractionObserver;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
