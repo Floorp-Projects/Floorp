@@ -235,7 +235,7 @@ public:
     // non-interface implementation
 public:
     // These get non-addref'd pointers
-    static nsXPConnect*  XPConnect()
+    static nsXPConnect* XPConnect()
     {
         // Do a release-mode assert that we're not doing anything significant in
         // XPConnect off the main thread. If you're an extension developer hitting
@@ -247,7 +247,6 @@ public:
     }
 
     static XPCJSRuntime* GetRuntimeInstance();
-    XPCJSContext* GetContext() {return mContext;}
 
     static bool IsISupportsDescendant(nsIInterfaceInfo* info);
 
@@ -298,7 +297,6 @@ private:
     static nsXPConnect*             gSelf;
     static bool                     gOnceAliveNowDead;
 
-    XPCJSContext*                   mContext;
     XPCJSRuntime*                   mRuntime;
     bool                            mShuttingDown;
 
