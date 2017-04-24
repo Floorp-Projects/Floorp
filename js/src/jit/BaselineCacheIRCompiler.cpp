@@ -1944,12 +1944,12 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         break;
     }
 
-    JitCompartment* jitCompartment = cx->compartment()->jitCompartment();
+    JitZone* jitZone = cx->zone()->jitZone();
 
     // Check if we already have JitCode for this stub.
     CacheIRStubInfo* stubInfo;
     CacheIRStubKey::Lookup lookup(kind, engine, writer.codeStart(), writer.codeLength());
-    JitCode* code = jitCompartment->getCacheIRStubCode(lookup, &stubInfo);
+    JitCode* code = jitZone->getBaselineCacheIRStubCode(lookup, &stubInfo);
     if (!code) {
         // We have to generate stub code.
         JitContext jctx(cx, nullptr);
@@ -1961,16 +1961,17 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         if (!code)
             return nullptr;
 
-        // Allocate the shared CacheIRStubInfo. Note that the putCacheIRStubCode
-        // call below will transfer ownership to the stub code HashMap, so we
-        // don't have to worry about freeing it below.
+        // Allocate the shared CacheIRStubInfo. Note that the
+        // putBaselineCacheIRStubCode call below will transfer ownership
+        // to the stub code HashMap, so we don't have to worry about freeing
+        // it below.
         MOZ_ASSERT(!stubInfo);
         stubInfo = CacheIRStubInfo::New(kind, engine, comp.makesGCCalls(), stubDataOffset, writer);
         if (!stubInfo)
             return nullptr;
 
         CacheIRStubKey key(stubInfo);
-        if (!jitCompartment->putCacheIRStubCode(lookup, key, code))
+        if (!jitZone->putBaselineCacheIRStubCode(lookup, key, code))
             return nullptr;
     }
 
