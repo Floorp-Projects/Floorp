@@ -581,7 +581,7 @@ public:
                        const GetFilesResponseResult& aResult) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvBlobURLRegistration(const nsCString& aURI, const IPCBlob& aBlob,
+  RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
                           const IPC::Principal& aPrincipal) override;
 
   virtual mozilla::ipc::IPCResult

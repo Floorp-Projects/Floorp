@@ -584,7 +584,7 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
-                                           const IPCBlob& aBlob,
+                                           PBlobParent* aBlobParent,
                                            const Principal& aPrincipal) override;
 
   virtual mozilla::ipc::IPCResult

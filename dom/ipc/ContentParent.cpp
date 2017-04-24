@@ -4854,13 +4854,10 @@ ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
 
   for (auto* cp : AllProcesses(eLive)) {
     if (cp != aIgnoreThisCP) {
-      IPCBlob ipcBlob;
-      nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, cp, ipcBlob);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        break;
+      PBlobParent* blobParent = cp->GetOrCreateActorForBlobImpl(aBlobImpl);
+      if (blobParent) {
+        Unused << cp->SendBlobURLRegistration(uri, blobParent, principal);
       }
-
-      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, principal);
     }
   }
 }
@@ -4880,10 +4877,11 @@ ContentParent::BroadcastBlobURLUnregistration(const nsACString& aURI,
 
 mozilla::ipc::IPCResult
 ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
-                                                        const IPCBlob& aBlob,
+                                                        PBlobParent* aBlobParent,
                                                         const Principal& aPrincipal)
 {
-  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
+  RefPtr<BlobImpl> blobImpl =
+    static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
   if (NS_WARN_IF(!blobImpl)) {
     return IPC_FAIL_NO_REASON(this);
   }
