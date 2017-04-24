@@ -251,7 +251,7 @@ public final class CodecProxy {
     @WrapForJNI
     public boolean release() {
         mCallbacks.setCodecProxyReleased();
-        synchronized(this) {
+        synchronized (this) {
             if (mRemote == null) {
                 Log.w(LOGTAG, "codec already ended");
                 return true;

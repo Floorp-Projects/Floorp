@@ -261,7 +261,7 @@ dependencies {
 task checkstyle(type: Checkstyle) {
     configFile file("checkstyle.xml")
     // TODO: should use sourceSets from project instead of hard-coded str.
-    source '../base/java/'
+    source = ['../base/java/','../geckoview/src/main/java/']
     // TODO: This ignores our pre-processed resources.
     include '**/*.java'
     // TODO: classpath should probably be something.
