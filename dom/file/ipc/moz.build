@@ -12,13 +12,19 @@ EXPORTS.mozilla.dom.ipc += [
     'nsIRemoteBlob.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'IPCBlobUtils.h',
+]
+
 UNIFIED_SOURCES += [
     'Blob.cpp',
+    'IPCBlobUtils.cpp',
     'MemoryStreamParent.cpp',
 ]
 
 IPDL_SOURCES += [
     'BlobTypes.ipdlh',
+    'IPCBlob.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',
     'PMemoryStream.ipdl',
