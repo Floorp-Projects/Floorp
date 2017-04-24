@@ -284,7 +284,7 @@ private:
 
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
-  JSContext* mJSContext;
+  JSRuntime* mJSRuntime;
 
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;
