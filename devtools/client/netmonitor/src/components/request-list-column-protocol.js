@@ -10,7 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const RequestListColumnProtocol = createClass({
   displayName: "RequestListColumnProtocol",
@@ -24,10 +24,13 @@ const RequestListColumnProtocol = createClass({
   },
 
   render() {
-    const { httpVersion } = this.props.item;
+    let { httpVersion = "" } = this.props.item;
     return (
-      div({ className: "requests-list-subitem requests-list-protocol" },
-        span({ className: "subitem-label", title: httpVersion }, httpVersion),
+      div({
+        className: "requests-list-column requests-list-protocol",
+        title: httpVersion,
+      },
+        httpVersion
       )
     );
   }

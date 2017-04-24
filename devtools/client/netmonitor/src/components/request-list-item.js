@@ -11,7 +11,6 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const I = require("devtools/client/shared/vendor/immutable");
-
 const { propertiesEqual } = require("../utils/request-utils");
 
 // Components
@@ -55,9 +54,10 @@ const UPDATED_REQ_ITEM_PROPS = [
 ];
 
 const UPDATED_REQ_PROPS = [
+  "firstRequestStartedMillis",
   "index",
   "isSelected",
-  "firstRequestStartedMillis",
+  "waterfallWidth",
 ];
 
 /**
@@ -78,11 +78,12 @@ const RequestListItem = createClass({
     onFocusedNodeChange: PropTypes.func,
     onMouseDown: PropTypes.func.isRequired,
     onSecurityIconClick: PropTypes.func.isRequired,
+    waterfallWidth: PropTypes.number,
   },
 
   componentDidMount() {
     if (this.props.isSelected) {
-      this.refs.el.focus();
+      this.refs.listItem.focus();
     }
   },
 
@@ -94,7 +95,7 @@ const RequestListItem = createClass({
 
   componentDidUpdate(prevProps) {
     if (!prevProps.isSelected && this.props.isSelected) {
-      this.refs.el.focus();
+      this.refs.listItem.focus();
       if (this.props.onFocusedNodeChange) {
         this.props.onFocusedNodeChange();
       }
@@ -102,7 +103,7 @@ const RequestListItem = createClass({
   },
 
   render() {
-    const {
+    let {
       columns,
       item,
       index,
@@ -112,23 +113,16 @@ const RequestListItem = createClass({
       onContextMenu,
       onMouseDown,
       onCauseBadgeClick,
-      onSecurityIconClick
+      onSecurityIconClick,
     } = this.props;
 
-    let classList = ["request-list-item"];
-    if (isSelected) {
-      classList.push("selected");
-    }
-
-    if (fromCache) {
-      classList.push("fromCache");
-    }
-
-    classList.push(index % 2 ? "odd" : "even");
+    let classList = ["request-list-item", index % 2 ? "odd" : "even"];
+    isSelected && classList.push("selected");
+    fromCache && classList.push("fromCache");
 
     return (
       div({
-        ref: "el",
+        ref: "listItem",
         className: classList.join(" "),
         "data-id": item.id,
         tabIndex: 0,

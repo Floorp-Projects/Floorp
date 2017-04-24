@@ -151,6 +151,8 @@ private:
 
     // Header cannot be merged: only one value possible
     bool    IsSingletonHeader(nsHttpAtom header);
+    // Header cannot be merged, and subsequent values should be ignored
+    bool    IsIgnoreMultipleHeader(nsHttpAtom header);
     // For some headers we want to track empty values to prevent them being
     // combined with non-empty ones as a CRLF attack vector
     bool    TrackEmptyHeader(nsHttpAtom header);
@@ -222,7 +224,22 @@ nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
            header == nsHttp::If_Unmodified_Since         ||
            header == nsHttp::From                        ||
            header == nsHttp::Location                    ||
-           header == nsHttp::Max_Forwards;
+           header == nsHttp::Max_Forwards                ||
+           // Ignore-multiple-headers are singletons in the sense that they
+           // shouldn't be merged.
+           IsIgnoreMultipleHeader(header);
+}
+
+// These are headers for which, in the presence of multiple values, we only
+// consider the first.
+inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(nsHttpAtom header)
+{
+    // https://tools.ietf.org/html/rfc6797#section-8:
+    //
+    //     If a UA receives more than one STS header field in an HTTP
+    //     response message over secure transport, then the UA MUST process
+    //     only the first such header field.
+    return header == nsHttp::Strict_Transport_Security;
 }
 
 inline bool

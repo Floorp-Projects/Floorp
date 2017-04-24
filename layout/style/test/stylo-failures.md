@@ -78,7 +78,7 @@ to mochitest command.
   * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
-* test_computed_style.html `gradient`: -moz-prefixed radient value [9]
+* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [30]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
