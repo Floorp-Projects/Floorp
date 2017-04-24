@@ -19,6 +19,7 @@
 #include "mozilla/widget/WidgetMessageUtils.h"
 
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "qcms.h"
 
 #ifdef DEBUG
@@ -820,6 +821,8 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
   }
 
   if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
+    MOZ_ASSERT(NS_IsMainThread());
+    gfxPrefs::GetSingleton();
     if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
          !IsSpecialColor(aID, aResult)) {
       qcms_transform *transform = gfxPlatform::GetCMSInverseRGBTransform();
