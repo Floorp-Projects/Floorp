@@ -1466,7 +1466,7 @@ random == 536061.html 536061-ref.html # fixedpoint division in blur code makes t
 == 537471-1.html 537471-1-ref.html
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
-fails-if(stylo) == 538909-1.html 538909-1-ref.html
+== 538909-1.html 538909-1-ref.html
 == 538935-1.html 538935-1-ref.html
 == 539226-1.html about:blank
 == 539323-1.html 539323-1-ref.html
@@ -1616,7 +1616,7 @@ fuzzy-if(Android,8,20) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
-fails-if(stylo) == 605138-1.html 605138-1-ref.html
+== 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
 == 608636-1.html 608636-1-ref.html
