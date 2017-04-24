@@ -149,32 +149,41 @@ function runTests() {
   // -----------------------------------------------------------------------
   test2.focus();
 
-  // bullet list
-  try2split(test2.querySelector("ul li"), CARET_END);
-  is(test2.querySelectorAll("ul").length, 2,
-    "The <ul> list should have been splitted.");
-  is(test2.querySelectorAll("ul li").length, 3,
-    "No new <li> element should have been created.");
-  is(test2.querySelectorAll("ul+div").length, 1,
-    "A new div should have been created in the <ul>.");
+  function testNewParagraph(expected) {
+    // bullet list
+    try2split(test2.querySelector("ul li"), CARET_END);
+    is(test2.querySelectorAll("ul").length, 2,
+      "The <ul> list should have been splitted.");
+    is(test2.querySelectorAll("ul li").length, 3,
+      "No new <li> element should have been created.");
+    is(test2.querySelectorAll("ul+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <ul>.");
 
-  // ordered list
-  try2split(test2.querySelector("ol li"), CARET_END);
-  is(test2.querySelectorAll("ol").length, 2,
-    "The <ol> list should have been splitted.");
-  is(test2.querySelectorAll("ol li").length, 3,
-    "No new <li> element should have been created.");
-  is(test2.querySelectorAll("ol+div").length, 1,
-    "A new div should have been created in the <ol>.");
+    // ordered list
+    try2split(test2.querySelector("ol li"), CARET_END);
+    is(test2.querySelectorAll("ol").length, 2,
+      "The <ol> list should have been splitted.");
+    is(test2.querySelectorAll("ol li").length, 3,
+      "No new <li> element should have been created.");
+    is(test2.querySelectorAll("ol+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <ol>.");
 
-  // definition list
-  try2split(test2.querySelector("dl dd"), CARET_END);
-  is(test2.querySelectorAll("dl").length, 2,
-    "The <dl> list should have been splitted.");
-  is(test2.querySelectorAll("dt").length, 3,
-    "No new <dt> element should have been created.");
-  is(test2.querySelectorAll("dl+div").length, 1,
-    "A new div should have been created in the <dl>.");
+    // definition list
+    try2split(test2.querySelector("dl dd"), CARET_END);
+    is(test2.querySelectorAll("dl").length, 2,
+      "The <dl> list should have been splitted.");
+    is(test2.querySelectorAll("dt").length, 3,
+      "No new <dt> element should have been created.");
+    is(test2.querySelectorAll("dl+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <dl>.");
+  }
+
+  document.execCommand("defaultParagraphSeparator", false, "div");
+  testNewParagraph("div");
+  document.execCommand("defaultParagraphSeparator", false, "p");
+  testNewParagraph("p");
+  document.execCommand("defaultParagraphSeparator", false, "br");
+  testNewParagraph("p");
 
   // done
   SimpleTest.finish();

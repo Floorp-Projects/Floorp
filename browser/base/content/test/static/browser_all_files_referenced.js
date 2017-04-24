@@ -245,8 +245,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/Sntp.jsm"},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
-  // Bug 1351099
-  {file: "resource://gre/modules/addons/AddonLogging.jsm"},
   // Bug 1351637
   {file: "resource://gre/modules/sdk/bootstrap.js"},
 
