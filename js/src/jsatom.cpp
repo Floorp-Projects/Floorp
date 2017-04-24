@@ -36,6 +36,8 @@ using namespace js::gc;
 
 using mozilla::ArrayEnd;
 using mozilla::ArrayLength;
+using mozilla::Maybe;
+using mozilla::Nothing;
 using mozilla::RangedPtr;
 
 const char*
@@ -302,7 +304,8 @@ AtomIsPinnedInRuntime(JSRuntime* rt, JSAtom* atom)
 template <typename CharT>
 MOZ_ALWAYS_INLINE
 static JSAtom*
-AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin)
+AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
+                    const Maybe<uint32_t>& indexValue)
 {
     if (JSAtom* s = cx->staticStrings().lookup(tbchars, length))
         return s;
@@ -374,6 +377,9 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
         atom = flat->morphAtomizedStringIntoAtom(lookup.hash);
         MOZ_ASSERT(atom->hash() == lookup.hash);
 
+        if (indexValue)
+            atom->maybeInitializeIndex(*indexValue, true);
+
         // We have held the lock since looking up p, and the operations we've done
         // since then can't GC; therefore the atoms table has not been modified and
         // p is still valid.
@@ -390,10 +396,12 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
 }
 
 template JSAtom*
-AtomizeAndCopyChars(JSContext* cx, const char16_t* tbchars, size_t length, PinningBehavior pin);
+AtomizeAndCopyChars(JSContext* cx, const char16_t* tbchars, size_t length, PinningBehavior pin,
+                    const Maybe<uint32_t>& indexValue);
 
 template JSAtom*
-AtomizeAndCopyChars(JSContext* cx, const Latin1Char* tbchars, size_t length, PinningBehavior pin);
+AtomizeAndCopyChars(JSContext* cx, const Latin1Char* tbchars, size_t length, PinningBehavior pin,
+                    const Maybe<uint32_t>& indexValue);
 
 JSAtom*
 js::AtomizeString(JSContext* cx, JSString* str,
@@ -427,19 +435,24 @@ js::AtomizeString(JSContext* cx, JSString* str,
     if (!linear)
         return nullptr;
 
+    Maybe<uint32_t> indexValue;
+    if (str->hasIndexValue())
+        indexValue.emplace(str->getIndexValue());
+
     JS::AutoCheckCannotGC nogc;
     return linear->hasLatin1Chars()
-           ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc), linear->length(), pin)
-           : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc), linear->length(), pin);
+           ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc), linear->length(), pin, indexValue)
+           : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc), linear->length(), pin, indexValue);
 }
 
 JSAtom*
-js::Atomize(JSContext* cx, const char* bytes, size_t length, PinningBehavior pin)
+js::Atomize(JSContext* cx, const char* bytes, size_t length, PinningBehavior pin,
+            const Maybe<uint32_t>& indexValue)
 {
     CHECK_REQUEST(cx);
 
     const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
-    return AtomizeAndCopyChars(cx, chars, length, pin);
+    return AtomizeAndCopyChars(cx, chars, length, pin, indexValue);
 }
 
 template <typename CharT>
@@ -447,7 +460,7 @@ JSAtom*
 js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin)
 {
     CHECK_REQUEST(cx);
-    return AtomizeAndCopyChars(cx, chars, length, pin);
+    return AtomizeAndCopyChars(cx, chars, length, pin, Nothing());
 }
 
 template JSAtom*
