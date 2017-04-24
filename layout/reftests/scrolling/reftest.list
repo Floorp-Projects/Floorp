@@ -9,7 +9,7 @@ HTTP == fixed-text-2.html fixed-text-2.html?ref
 random-if(Android) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,12) == iframe-border-radius.html iframe-border-radius-ref.html # bug 760269
 random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
-random-if(cocoaWidget) fails-if(stylo) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
+random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833
