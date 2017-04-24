@@ -1287,7 +1287,7 @@ CallMethodHelper::Call()
 {
     mCallContext.SetRetVal(JS::UndefinedValue());
 
-    XPCJSContext::Get()->SetPendingException(nullptr);
+    mCallContext.GetContext()->SetPendingException(nullptr);
 
     if (mVTableIndex == 0) {
         return QueryInterfaceFastPath();
