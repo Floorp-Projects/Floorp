@@ -1457,6 +1457,8 @@ pref("browser.translation.engine", "bing");
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
 pref("toolkit.telemetry.archive.enabled", true);
+// Enables sending the shutdown ping when Firefox shuts down.
+pref("toolkit.telemetry.shutdownPingSender.enabled", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);
