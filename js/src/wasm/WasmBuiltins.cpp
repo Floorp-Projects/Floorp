@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmRuntime.h"
+#include "wasm/WasmBuiltins.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/BinarySearch.h"
 
 #include "fdlibm.h"
-
 #include "jslibmath.h"
 
+#include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
-
+#include "threading/Mutex.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 
@@ -36,11 +37,17 @@ using namespace js;
 using namespace jit;
 using namespace wasm;
 
+using mozilla::Atomic;
 using mozilla::BinarySearchIf;
+using mozilla::HashGeneric;
 using mozilla::IsNaN;
+using mozilla::MakeEnumeratedRange;
 
-static const unsigned BUILTIN_THUNK_LIFO_SIZE = 128;
-static const CodeKind BUILTIN_THUNK_CODEKIND = CodeKind::OTHER_CODE;
+static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
+
+// ============================================================================
+// WebAssembly builtin C++ functions called from wasm code to implement internal
+// wasm operations.
 
 #if defined(JS_CODEGEN_ARM)
 extern "C" {
@@ -557,102 +564,12 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
     MOZ_CRASH("Bad SymbolicAddress");
 }
 
-static bool
-GenerateBuiltinThunk(JSContext* cx, void* func, ABIFunctionType abiType, ExitReason exitReason,
-                     UniqueBuiltinThunk* thunk)
-{
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
-        return false;
-
-    LifoAlloc lifo(BUILTIN_THUNK_LIFO_SIZE);
-    TempAllocator tempAlloc(&lifo);
-    MacroAssembler masm(MacroAssembler::WasmToken(), tempAlloc);
-
-    CallableOffsets offsets = GenerateBuiltinNativeExit(masm, abiType, exitReason, func);
-
-    masm.finish();
-    if (masm.oom())
-        return false;
-
-    // The executable allocator operates on pointer-aligned sizes.
-    uint32_t codeLength = AlignBytes(masm.bytesNeeded(), sizeof(void*));
-
-    ExecutablePool* pool = nullptr;
-    ExecutableAllocator& allocator = cx->runtime()->jitRuntime()->execAlloc();
-    uint8_t* codeBase = (uint8_t*) allocator.alloc(cx, codeLength, &pool, BUILTIN_THUNK_CODEKIND);
-    if (!codeBase)
-        return false;
-
-    {
-        AutoWritableJitCode awjc(cx->runtime(), codeBase, codeLength);
-        AutoFlushICache afc("GenerateBuiltinThunk");
-
-        masm.executableCopy(codeBase);
-        masm.processCodeLabels(codeBase);
-        memset(codeBase + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
-
-#ifdef DEBUG
-        if (!masm.oom()) {
-            MOZ_ASSERT(masm.callSites().empty());
-            MOZ_ASSERT(masm.callFarJumps().empty());
-            MOZ_ASSERT(masm.trapSites().empty());
-            MOZ_ASSERT(masm.trapFarJumps().empty());
-            MOZ_ASSERT(masm.extractMemoryAccesses().empty());
-            MOZ_ASSERT(!masm.numSymbolicAccesses());
-        }
-#endif
-    }
-
-    *thunk = js::MakeUnique<BuiltinThunk>(codeBase, codeLength, pool, offsets);
-    return !!*thunk;
-}
-
-struct BuiltinMatcher
-{
-    const uint8_t* address;
-    explicit BuiltinMatcher(const uint8_t* address) : address(address) {}
-    int operator()(const UniqueBuiltinThunk& thunk) const {
-        if (address < thunk->base)
-            return -1;
-        if (uintptr_t(address) >= uintptr_t(thunk->base) + thunk->size)
-            return 1;
-        return 0;
-    }
-};
-
 bool
-wasm::Runtime::getBuiltinThunk(JSContext* cx, void* funcPtr, ABIFunctionType abiType,
-                               ExitReason exitReason, void** thunkPtr)
-{
-    TypedFuncPtr lookup(funcPtr, abiType);
-    auto ptr = builtinThunkMap_.lookupForAdd(lookup);
-    if (ptr) {
-        *thunkPtr = ptr->value();
-        return true;
-    }
-
-    UniqueBuiltinThunk thunk;
-    if (!GenerateBuiltinThunk(cx, funcPtr, abiType, exitReason, &thunk))
-        return false;
-
-    // Maintain sorted order of thunk addresses.
-    size_t i;
-    size_t size = builtinThunkVector_.length();
-    if (BinarySearchIf(builtinThunkVector_, 0, size, BuiltinMatcher(thunk->base), &i))
-        MOZ_CRASH("clobbering memory");
-
-    *thunkPtr = thunk->base + thunk->codeRange.begin();
-
-    return builtinThunkVector_.insert(builtinThunkVector_.begin() + i, Move(thunk)) &&
-           builtinThunkMap_.add(ptr, lookup, *thunkPtr);
-}
-
-bool
-wasm::NeedsBuiltinThunk(SymbolicAddress func)
+wasm::NeedsBuiltinThunk(SymbolicAddress sym)
 {
     // Some functions don't want to a thunk, because they already have one or
     // they don't have frame info.
-    switch (func) {
+    switch (sym) {
       case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
@@ -717,18 +634,274 @@ wasm::NeedsBuiltinThunk(SymbolicAddress func)
     MOZ_CRASH("unexpected symbolic address");
 }
 
-bool
-wasm::Runtime::getBuiltinThunk(JSContext* cx, SymbolicAddress func, void** thunkPtr)
-{
-    ABIFunctionType abiType;
-    void* funcPtr = AddressOf(func, &abiType);
+// ============================================================================
+// JS builtins that can be imported by wasm modules and called efficiently
+// through thunks. These thunks conform to the internal wasm ABI and thus can be
+// patched in for import calls. Calling a JS builtin through a thunk is much
+// faster than calling out through the generic import call trampoline which will
+// end up in the slowest C++ Instance::callImport path.
+//
+// Each JS builtin can have several overloads. These must all be enumerated in
+// PopulateTypedNatives() so they can be included in the process-wide thunk set.
 
-    if (!NeedsBuiltinThunk(func)) {
-        *thunkPtr = funcPtr;
-        return true;
+#define FOR_EACH_UNARY_NATIVE(_)   \
+    _(math_sin, MathSin)           \
+    _(math_tan, MathTan)           \
+    _(math_cos, MathCos)           \
+    _(math_exp, MathExp)           \
+    _(math_log, MathLog)           \
+    _(math_asin, MathASin)         \
+    _(math_atan, MathATan)         \
+    _(math_acos, MathACos)         \
+    _(math_log10, MathLog10)       \
+    _(math_log2, MathLog2)         \
+    _(math_log1p, MathLog1P)       \
+    _(math_expm1, MathExpM1)       \
+    _(math_sinh, MathSinH)         \
+    _(math_tanh, MathTanH)         \
+    _(math_cosh, MathCosH)         \
+    _(math_asinh, MathASinH)       \
+    _(math_atanh, MathATanH)       \
+    _(math_acosh, MathACosH)       \
+    _(math_sign, MathSign)         \
+    _(math_trunc, MathTrunc)       \
+    _(math_cbrt, MathCbrt)
+
+#define FOR_EACH_BINARY_NATIVE(_)  \
+    _(ecmaAtan2, MathATan2)        \
+    _(ecmaHypot, MathHypot)        \
+    _(ecmaPow, MathPow)            \
+
+#define DEFINE_UNARY_FLOAT_WRAPPER(func, _)        \
+    static float func##_uncached_f32(float x) {    \
+        return float(func##_uncached(double(x)));  \
     }
 
-    return getBuiltinThunk(cx, funcPtr, abiType, ExitReason(func), thunkPtr);
+#define DEFINE_BINARY_FLOAT_WRAPPER(func, _)       \
+    static float func##_f32(float x, float y) {    \
+        return float(func(double(x), double(y)));  \
+    }
+
+FOR_EACH_UNARY_NATIVE(DEFINE_UNARY_FLOAT_WRAPPER)
+FOR_EACH_BINARY_NATIVE(DEFINE_BINARY_FLOAT_WRAPPER)
+
+#undef DEFINE_UNARY_FLOAT_WRAPPER
+#undef DEFINE_BINARY_FLOAT_WRAPPER
+
+struct TypedNative
+{
+    InlinableNative native;
+    ABIFunctionType abiType;
+
+    TypedNative(InlinableNative native, ABIFunctionType abiType)
+      : native(native),
+        abiType(abiType)
+    {}
+
+    typedef TypedNative Lookup;
+    static HashNumber hash(const Lookup& l) {
+        return HashGeneric(uint32_t(l.native), uint32_t(l.abiType));
+    }
+    static bool match(const TypedNative& lhs, const Lookup& rhs) {
+        return lhs.native == rhs.native && lhs.abiType == rhs.abiType;
+    }
+};
+
+using TypedNativeToFuncPtrMap =
+    HashMap<TypedNative, void*, TypedNative, SystemAllocPolicy>;
+
+static bool
+PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives)
+{
+    if (!typedNatives->init())
+        return false;
+
+#define ADD_OVERLOAD(funcName, native, abiType)                                           \
+    if (!typedNatives->putNew(TypedNative(InlinableNative::native, abiType),              \
+                              FuncCast(funcName, abiType)))                               \
+        return false;
+
+#define ADD_UNARY_OVERLOADS(funcName, native)                                             \
+    ADD_OVERLOAD(funcName##_uncached, native, Args_Double_Double)                         \
+    ADD_OVERLOAD(funcName##_uncached_f32, native, Args_Float32_Float32)
+
+#define ADD_BINARY_OVERLOADS(funcName, native)                                            \
+    ADD_OVERLOAD(funcName, native, Args_Double_DoubleDouble)                              \
+    ADD_OVERLOAD(funcName##_f32, native, Args_Float32_Float32Float32)
+
+    FOR_EACH_UNARY_NATIVE(ADD_UNARY_OVERLOADS)
+    FOR_EACH_BINARY_NATIVE(ADD_BINARY_OVERLOADS)
+
+#undef ADD_UNARY_OVERLOADS
+#undef ADD_BINARY_OVERLOADS
+
+    return true;
+}
+
+#undef FOR_EACH_UNARY_NATIVE
+#undef FOR_EACH_BINARY_NATIVE
+
+// ============================================================================
+// Process-wide builtin thunk set
+//
+// Thunks are inserted between wasm calls and the C++ callee and achieve two
+// things:
+//  - bridging the few differences between the internal wasm ABI and the external
+//    native ABI (viz. float returns on x86 and soft-fp ARM)
+//  - executing an exit prologue/epilogue which in turn allows any asynchronous
+//    interrupt to see the full stack up to the wasm operation that called out
+//
+// Thunks are created for two kinds of C++ callees, enumerated above:
+//  - SymbolicAddress: for statically compiled calls in the wasm module
+//  - Imported JS builtins: optimized calls to imports
+//
+// All thunks are created up front, lazily, when the first wasm module is
+// compiled in the process. Thunks are kept alive until the JS engine shuts down
+// in the process. No thunks are created at runtime after initialization. This
+// simple scheme allows several simplifications:
+//  - no reference counting to keep thunks alive
+//  - no problems toggling W^X permissions which, because of multiple executing
+//    threads, would require each thunk allocation to be on its own page
+// The cost for creating all thunks at once is relatively low since all thunks
+// fit within the smallest executable quanta (64k).
+
+using TypedNativeToCodeRangeMap =
+    HashMap<TypedNative, uint32_t, TypedNative, SystemAllocPolicy>;
+
+using SymbolicAddressToCodeRangeArray =
+    EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, uint32_t>;
+
+struct BuiltinThunks
+{
+    uint8_t* codeBase;
+    size_t codeSize;
+    CodeRangeVector codeRanges;
+    TypedNativeToCodeRangeMap typedNativeToCodeRange;
+    SymbolicAddressToCodeRangeArray symbolicAddressToCodeRange;
+
+    BuiltinThunks()
+      : codeBase(nullptr), codeSize(0)
+    {}
+
+    ~BuiltinThunks() {
+        if (codeBase)
+            DeallocateExecutableMemory(codeBase, codeSize);
+    }
+};
+
+Mutex initBuiltinThunks(mutexid::WasmInitBuiltinThunks);
+Atomic<const BuiltinThunks*> builtinThunks;
+
+bool
+wasm::EnsureBuiltinThunksInitialized()
+{
+    LockGuard<Mutex> guard(initBuiltinThunks);
+    if (builtinThunks)
+        return true;
+
+    auto thunks = MakeUnique<BuiltinThunks>();
+    if (!thunks)
+        return false;
+
+    LifoAlloc lifo(BUILTIN_THUNK_LIFO_SIZE);
+    TempAllocator tempAlloc(&lifo);
+    MacroAssembler masm(MacroAssembler::WasmToken(), tempAlloc);
+
+    for (auto sym : MakeEnumeratedRange(SymbolicAddress::Limit)) {
+        if (!NeedsBuiltinThunk(sym)) {
+            thunks->symbolicAddressToCodeRange[sym] = UINT32_MAX;
+            continue;
+        }
+
+        uint32_t codeRangeIndex = thunks->codeRanges.length();
+        thunks->symbolicAddressToCodeRange[sym] = codeRangeIndex;
+
+        ABIFunctionType abiType;
+        void* funcPtr = AddressOf(sym, &abiType);
+        ExitReason exitReason(sym);
+        CallableOffsets offset = GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr);
+        if (masm.oom() || !thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offset))
+            return false;
+    }
+
+    TypedNativeToFuncPtrMap typedNatives;
+    if (!PopulateTypedNatives(&typedNatives))
+        return false;
+
+    if (!thunks->typedNativeToCodeRange.init())
+        return false;
+
+    for (TypedNativeToFuncPtrMap::Range r = typedNatives.all(); !r.empty(); r.popFront()) {
+        TypedNative typedNative = r.front().key();
+
+        uint32_t codeRangeIndex = thunks->codeRanges.length();
+        if (!thunks->typedNativeToCodeRange.putNew(typedNative, codeRangeIndex))
+            return false;
+
+        ABIFunctionType abiType = typedNative.abiType;
+        void* funcPtr = r.front().value();
+        ExitReason exitReason = ExitReason::Fixed::BuiltinNative;
+        CallableOffsets offset = GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr);
+        if (masm.oom() || !thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offset))
+            return false;
+    }
+
+    masm.finish();
+    if (masm.oom())
+        return false;
+
+    size_t allocSize = AlignBytes(masm.bytesNeeded(), ExecutableCodePageSize);
+
+    thunks->codeSize = allocSize;
+    thunks->codeBase = (uint8_t*)AllocateExecutableMemory(allocSize, ProtectionSetting::Writable);
+    if (!thunks->codeBase)
+        return false;
+
+    masm.executableCopy(thunks->codeBase, /* flushICache = */ false);
+    memset(thunks->codeBase + masm.bytesNeeded(), 0, allocSize - masm.bytesNeeded());
+
+    masm.processCodeLabels(thunks->codeBase);
+#ifdef DEBUG
+    MOZ_ASSERT(masm.callSites().empty());
+    MOZ_ASSERT(masm.callFarJumps().empty());
+    MOZ_ASSERT(masm.trapSites().empty());
+    MOZ_ASSERT(masm.trapFarJumps().empty());
+    MOZ_ASSERT(masm.extractMemoryAccesses().empty());
+    MOZ_ASSERT(!masm.numSymbolicAccesses());
+#endif
+
+    ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);
+    if (!ExecutableAllocator::makeExecutable(thunks->codeBase, thunks->codeSize))
+        return false;
+
+    builtinThunks = thunks.release();
+    return true;
+}
+
+void
+wasm::ReleaseBuiltinThunks()
+{
+    if (builtinThunks) {
+        const BuiltinThunks* ptr = builtinThunks;
+        js_delete(const_cast<BuiltinThunks*>(ptr));
+        builtinThunks = nullptr;
+    }
+}
+
+void*
+wasm::SymbolicAddressTarget(SymbolicAddress sym)
+{
+    MOZ_ASSERT(builtinThunks);
+
+    ABIFunctionType abiType;
+    void* funcPtr = AddressOf(sym, &abiType);
+
+    if (!NeedsBuiltinThunk(sym))
+        return funcPtr;
+
+    const BuiltinThunks& thunks = *builtinThunks;
+    uint32_t codeRangeIndex = thunks.symbolicAddressToCodeRange[sym];
+    return thunks.codeBase + thunks.codeRanges[codeRangeIndex].begin();
 }
 
 static ABIFunctionType
@@ -755,36 +928,40 @@ ToABIFunctionType(const Sig& sig)
     return ABIFunctionType(abiType);
 }
 
-bool
-wasm::Runtime::getBuiltinThunk(JSContext* cx, void* funcPtr, const Sig& sig, void** thunkPtr)
+void*
+wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig, JSContext* cx)
 {
-    ABIFunctionType abiType = ToABIFunctionType(sig);
-#ifdef JS_SIMULATOR
-    funcPtr = Simulator::RedirectNativeFunction(funcPtr, abiType);
-#endif
-    ExitReason nativeExitReason(ExitReason::Fixed::BuiltinNative);
-    return getBuiltinThunk(cx, funcPtr, abiType, nativeExitReason, thunkPtr);
-}
+    MOZ_ASSERT(builtinThunks);
 
-BuiltinThunk*
-wasm::Runtime::lookupBuiltin(void* pc)
-{
-    size_t index;
-    size_t length = builtinThunkVector_.length();
-    if (!BinarySearchIf(builtinThunkVector_, 0, length, BuiltinMatcher((uint8_t*)pc), &index))
+    if (!f->isNative() || !f->jitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
         return nullptr;
-    return builtinThunkVector_[index].get();
+
+    InlinableNative native = f->jitInfo()->inlinableNative;
+    ABIFunctionType abiType = ToABIFunctionType(sig);
+    TypedNative typedNative(native, abiType);
+
+    const BuiltinThunks& thunks = *builtinThunks;
+    auto p = thunks.typedNativeToCodeRange.readonlyThreadsafeLookup(typedNative);
+    if (!p)
+        return nullptr;
+
+    return thunks.codeBase + thunks.codeRanges[p->value()].begin();
 }
 
-void
-wasm::Runtime::destroy()
+bool
+wasm::LookupBuiltinThunk(void* pc, const CodeRange** codeRange, uint8_t** codeBase)
 {
-    builtinThunkVector_.clear();
-    if (builtinThunkMap_.initialized())
-        builtinThunkMap_.clear();
-}
+    if (!builtinThunks)
+        return false;
 
-BuiltinThunk::~BuiltinThunk()
-{
-    executablePool->release(size, BUILTIN_THUNK_CODEKIND);
+    const BuiltinThunks& thunks = *builtinThunks;
+    if (pc < thunks.codeBase || pc >= thunks.codeBase + thunks.codeSize)
+        return false;
+
+    *codeBase = thunks.codeBase;
+
+    CodeRange::OffsetInCode target((uint8_t*)pc - thunks.codeBase);
+    *codeRange = LookupInSorted(thunks.codeRanges, target);
+
+    return !!*codeRange;
 }

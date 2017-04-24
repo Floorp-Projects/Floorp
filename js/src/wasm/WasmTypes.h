@@ -831,7 +831,7 @@ class CodeRange
         Entry,             // calls into wasm from C++
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
-        BuiltinNativeExit, // fast-path calling from wasm into a C++ native
+        BuiltinThunk,      // fast-path calling from wasm into a C++ native
         TrapExit,          // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
@@ -875,7 +875,7 @@ class CodeRange
         return kind() == Function;
     }
     bool isImportExit() const {
-        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinNativeExit;
+        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinThunk;
     }
     bool isTrapExit() const {
         return kind() == TrapExit;
@@ -917,11 +917,12 @@ class CodeRange
         return funcLineOrBytecode_;
     }
 
-    // A sorted array of CodeRanges can be looked up via BinarySearch and PC.
+    // A sorted array of CodeRanges can be looked up via BinarySearch and
+    // OffsetInCode.
 
-    struct PC {
+    struct OffsetInCode {
         size_t offset;
-        explicit PC(size_t offset) : offset(offset) {}
+        explicit OffsetInCode(size_t offset) : offset(offset) {}
         bool operator==(const CodeRange& rhs) const {
             return offset >= rhs.begin() && offset < rhs.end();
         }
@@ -932,6 +933,9 @@ class CodeRange
 };
 
 WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
+
+extern const CodeRange*
+LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target);
 
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
