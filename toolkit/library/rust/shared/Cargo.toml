@@ -20,6 +20,7 @@ bindgen = ["geckoservo/bindgen"]
 servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
 cubeb_pulse_rust = ["cubeb-pulse"]
+gecko_debug = ["geckoservo/gecko_debug"]
 
 [lib]
 path = "lib.rs"

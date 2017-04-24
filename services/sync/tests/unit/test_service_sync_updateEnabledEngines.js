@@ -265,7 +265,7 @@ add_task(async function test_enabledRemotely() {
     _("Upload some keys to avoid a fresh start.");
     let wbo = Service.collectionKeys.generateNewKeysWBO();
     wbo.encrypt(Service.identity.syncKeyBundle);
-    do_check_eq(200, wbo.upload(Service.resource(Service.cryptoKeysURL)).status);
+    do_check_eq(200, (await wbo.upload(Service.resource(Service.cryptoKeysURL))).status);
 
     _("Engine is disabled.");
     do_check_false(engine.enabled);

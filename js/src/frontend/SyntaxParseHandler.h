@@ -7,17 +7,20 @@
 #ifndef frontend_SyntaxParseHandler_h
 #define frontend_SyntaxParseHandler_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include <string.h>
 
+#include "jscntxt.h"
+
 #include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
 
 namespace js {
+
 namespace frontend {
 
-template <typename ParseHandler>
+template <template <typename CharT> class ParseHandler, typename CharT>
 class Parser;
 
 // Parse handler used when processing the syntax in a block of code, to generate
@@ -30,12 +33,11 @@ class Parser;
 // several times faster than doing a full parse/emit, and lazy parsing improves
 // both performance and memory usage significantly when pages contain large
 // amounts of code that never executes (which happens often).
-class SyntaxParseHandler
+class SyntaxParseHandlerBase
 {
     // Remember the last encountered name or string literal during syntax parses.
     JSAtom* lastAtom;
     TokenPos lastStringPos;
-    TokenStream& tokenStream;
 
   public:
     enum Node {
@@ -170,11 +172,8 @@ class SyntaxParseHandler
     }
 
   public:
-    SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                       TokenStream& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
-                       LazyScript* lazyOuterFunction)
-      : lastAtom(nullptr),
-        tokenStream(tokenStream)
+    SyntaxParseHandlerBase(JSContext* cx, LifoAlloc& alloc, LazyScript* lazyOuterFunction)
+      : lastAtom(nullptr)
     {}
 
     static Node null() { return NodeFailure; }
@@ -403,9 +402,13 @@ class SyntaxParseHandler
     void setEndPosition(Node pn, Node oth) {}
     void setEndPosition(Node pn, uint32_t end) {}
 
-    void setPosition(Node pn, const TokenPos& pos) {}
-    TokenPos getPosition(Node pn) {
-        return tokenStream.currentToken().pos;
+    uint32_t getFunctionNameOffset(Node func, TokenStreamBase& ts) {
+        // XXX This offset isn't relevant to the offending function name.  But
+        //     we may not *have* that function name around, because of how lazy
+        //     parsing works -- the actual name could be outside
+        //     |tokenStream.userbuf|'s observed region.  So the current offset
+        //     is the best we can do.
+        return ts.currentToken().pos.begin;
     }
 
     Node newList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
@@ -618,13 +621,33 @@ class SyntaxParseHandler
         return false;
     }
     JSAtom* nextLazyClosedOverBinding() {
-        MOZ_CRASH("SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
+        MOZ_CRASH("SyntaxParseHandlerBase::canSkipLazyClosedOverBindings must return false");
     }
 
     void adjustGetToSet(Node node) {}
 
     void disableSyntaxParser() {
     }
+};
+
+template<typename CharT>
+class SyntaxParseHandler : public SyntaxParseHandlerBase
+{
+  public:
+    // Using frontend::SyntaxParseHandler versus SyntaxParseHandler shouldn't
+    // be necessary per C++11 [temp.local]p1: in template argument lists inside
+    // a template class, the template class name refers to the template (i.e.
+    // SyntaxParseHandler) and not to the particular instantiation of the
+    // template class (i.e. SyntaxParseHandler<CharT>).
+    //
+    // Unfortunately, some versions of clang and MSVC are buggy in this regard.
+    // So we refer to SyntaxParseHandler with a qualified name.
+    SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
+                       Parser<frontend::SyntaxParseHandler, CharT>* syntaxParser,
+                       LazyScript* lazyOuterFunction)
+      : SyntaxParseHandlerBase(cx, alloc, lazyOuterFunction)
+    {}
+
 };
 
 } // namespace frontend

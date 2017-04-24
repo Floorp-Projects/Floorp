@@ -113,11 +113,11 @@ add_task(async function v4_upgrade() {
     let serverResp;
 
 
-    function retrieve_server_default() {
+    async function retrieve_server_default() {
       serverKeys = serverResp = serverDecrypted = null;
 
       serverKeys = new CryptoWrapper("crypto", "keys");
-      serverResp = serverKeys.fetch(Service.resource(Service.cryptoKeysURL)).response;
+      serverResp = (await serverKeys.fetch(Service.resource(Service.cryptoKeysURL))).response;
       do_check_true(serverResp.success);
 
       serverDecrypted = serverKeys.decrypt(Service.identity.syncKeyBundle);
@@ -127,8 +127,8 @@ add_task(async function v4_upgrade() {
       return serverDecrypted.default;
     }
 
-    function retrieve_and_compare_default(should_succeed) {
-      let serverDefault = retrieve_server_default();
+    async function retrieve_and_compare_default(should_succeed) {
+      let serverDefault = await retrieve_server_default();
       let localDefault = Service.collectionKeys.keyForCollection().keyPairB64;
 
       _("Retrieved keyBundle: " + JSON.stringify(serverDefault));
@@ -141,26 +141,26 @@ add_task(async function v4_upgrade() {
     }
 
     // Uses the objects set above.
-    function set_server_keys(pair) {
+    async function set_server_keys(pair) {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
       serverKeys.encrypt(Service.identity.syncKeyBundle);
-      serverKeys.upload(Service.resource(Service.cryptoKeysURL));
+      await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
     }
 
     _("Checking we have the latest keys.");
-    retrieve_and_compare_default(true);
+    await retrieve_and_compare_default(true);
 
     _("Update keys on server.");
-    set_server_keys(["KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
-                     "aaaaaaaaaaaapxMO6TEWtLIOv9dj6kBAJdzhWDkkkis="]);
+    await set_server_keys(["KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
+                           "aaaaaaaaaaaapxMO6TEWtLIOv9dj6kBAJdzhWDkkkis="]);
 
     _("Checking that we no longer have the latest keys.");
-    retrieve_and_compare_default(false);
+    await retrieve_and_compare_default(false);
 
     _("Indeed, they're what we set them to...");
     do_check_eq("KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
-                retrieve_server_default()[0]);
+                (await retrieve_server_default())[0]);
 
     _("Sync. Should download changed keys automatically.");
     let oldClientsModified = collections.clients;
@@ -175,7 +175,7 @@ add_task(async function v4_upgrade() {
     do_check_true(collections.tabs > oldTabsModified);
 
     _("... and keys will now match.");
-    retrieve_and_compare_default(true);
+    await retrieve_and_compare_default(true);
 
     // Clean up.
     Service.startOver();
@@ -237,12 +237,12 @@ add_task(async function v5_upgrade() {
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.
     _("Testing v4 -> v5 (or similar) upgrade.");
-    function update_server_keys(syncKeyBundle, wboName, collWBO) {
+    async function update_server_keys(syncKeyBundle, wboName, collWBO) {
       generateNewKeys(Service.collectionKeys);
       let serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
-      do_check_true(serverKeys.upload(res).success);
+      do_check_true((await serverKeys.upload(res)).success);
     }
 
     _("Bumping version.");
@@ -250,14 +250,14 @@ add_task(async function v5_upgrade() {
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION + 1};
-    m.upload(Service.resource(Service.metaURL));
+    await m.upload(Service.resource(Service.metaURL));
 
     _("New meta/global: " + JSON.stringify(meta_global));
 
     // Fill the keys with bad data.
     let badKeys = new SyncKeyBundle("foobar", "aaaaaaaaaaaaaaaaaaaaaaaaaa");
-    update_server_keys(badKeys, "keys", "crypto/keys");  // v4
-    update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
+    await update_server_keys(badKeys, "keys", "crypto/keys");  // v4
+    await update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
 
     _("Generating new keys.");
     generateNewKeys(Service.collectionKeys);

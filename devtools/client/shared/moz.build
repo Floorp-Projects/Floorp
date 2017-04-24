@@ -38,6 +38,7 @@ DevToolsModules(
     'Jsbeautify.jsm',
     'key-shortcuts.js',
     'keycodes.js',
+    'natural-sort.js',
     'network-throttling-profiles.js',
     'node-attribute-parser.js',
     'options-view.js',

@@ -22,7 +22,7 @@ function makePostQueue(config, lastModTime, responseGenerator) {
       thisPost.headers = headers;
     }
     stats.posts.push(thisPost);
-    return responseGenerator.next().value;
+    return Promise.resolve(responseGenerator.next().value);
   }
 
   let done = () => {}

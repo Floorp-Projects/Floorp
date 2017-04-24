@@ -24,7 +24,6 @@ use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
 use selector_parser::{SelectorImpl, PseudoElement, Snapshot};
 use selectors::Element;
 use selectors::bloom::BloomFilter;
-use selectors::matching::{AFFECTED_BY_ANIMATIONS, AFFECTED_BY_TRANSITIONS};
 use selectors::matching::{AFFECTED_BY_STYLE_ATTRIBUTE, AFFECTED_BY_PRESENTATIONAL_HINTS};
 use selectors::matching::{ElementSelectorFlags, StyleRelations, matches_selector};
 use selectors::parser::{Component, Selector, SelectorInner, LocalName as LocalNameSelector};
@@ -324,12 +323,11 @@ impl Stylist {
                             self.element_map.borrow_for_origin(&stylesheet.origin)
                         };
 
-                        map.insert(Rule {
-                            selector: selector.inner.clone(),
-                            style_rule: locked.clone(),
-                            specificity: selector.specificity,
-                            source_order: self.rules_source_order,
-                        });
+                        map.insert(Rule::new(guard,
+                                             selector.inner.clone(),
+                                             locked.clone(),
+                                             self.rules_source_order,
+                                             selector.specificity));
                     }
                     self.rules_source_order += 1;
 
@@ -348,10 +346,17 @@ impl Stylist {
                 CssRule::Keyframes(ref keyframes_rule) => {
                     let keyframes_rule = keyframes_rule.read_with(guard);
                     debug!("Found valid keyframes rule: {:?}", *keyframes_rule);
-                    let animation = KeyframesAnimation::from_keyframes(
-                        &keyframes_rule.keyframes, guard);
-                    debug!("Found valid keyframe animation: {:?}", animation);
-                    self.animations.insert(keyframes_rule.name.clone(), animation);
+
+                    // Don't let a prefixed keyframes animation override a non-prefixed one.
+                    let needs_insertion = keyframes_rule.vendor_prefix.is_none() ||
+                        self.animations.get(&keyframes_rule.name).map_or(true, |rule|
+                            rule.vendor_prefix.is_some());
+                    if needs_insertion {
+                        let animation = KeyframesAnimation::from_keyframes(
+                            &keyframes_rule.keyframes, keyframes_rule.vendor_prefix.clone(), guard);
+                        debug!("Found valid keyframe animation: {:?}", animation);
+                        self.animations.insert(keyframes_rule.name.clone(), animation);
+                    }
                 }
                 CssRule::FontFace(ref rule) => {
                     extra_data.add_font_face(&rule, stylesheet.origin);
@@ -654,7 +659,6 @@ impl Stylist {
         // Step 1: Normal user-agent rules.
         map.user_agent.get_all_matching_rules(element,
                                               parent_bf,
-                                              guards.ua_or_user,
                                               applicable_declarations,
                                               &mut relations,
                                               flags_setter,
@@ -681,7 +685,6 @@ impl Stylist {
             // Step 3: User and author normal rules.
             map.user.get_all_matching_rules(element,
                                             parent_bf,
-                                            guards.ua_or_user,
                                             applicable_declarations,
                                             &mut relations,
                                             flags_setter,
@@ -689,7 +692,6 @@ impl Stylist {
             debug!("user normal: {:?}", relations);
             map.author.get_all_matching_rules(element,
                                               parent_bf,
-                                              guards.author,
                                               applicable_declarations,
                                               &mut relations,
                                               flags_setter,
@@ -713,7 +715,6 @@ impl Stylist {
             // The animations sheet (CSS animations, script-generated animations,
             // and CSS transitions that are no longer tied to CSS markup)
             if let Some(anim) = animation_rules.0 {
-                relations |= AFFECTED_BY_ANIMATIONS;
                 Push::push(
                     applicable_declarations,
                     ApplicableDeclarationBlock::from_declarations(anim.clone(),
@@ -724,7 +725,6 @@ impl Stylist {
             // Step 6: Author-supplied `!important` rules.
             map.author.get_all_matching_rules(element,
                                               parent_bf,
-                                              guards.author,
                                               applicable_declarations,
                                               &mut relations,
                                               flags_setter,
@@ -748,7 +748,6 @@ impl Stylist {
             // Step 8: User `!important` rules.
             map.user.get_all_matching_rules(element,
                                             parent_bf,
-                                            guards.ua_or_user,
                                             applicable_declarations,
                                             &mut relations,
                                             flags_setter,
@@ -762,7 +761,6 @@ impl Stylist {
         // Step 9: UA `!important` rules.
         map.user_agent.get_all_matching_rules(element,
                                               parent_bf,
-                                              guards.ua_or_user,
                                               applicable_declarations,
                                               &mut relations,
                                               flags_setter,
@@ -773,7 +771,6 @@ impl Stylist {
         // Step 10: Transitions.
         // The transitions sheet (CSS transitions that are tied to CSS markup)
         if let Some(anim) = animation_rules.1 {
-            relations |= AFFECTED_BY_TRANSITIONS;
             Push::push(
                 applicable_declarations,
                 ApplicableDeclarationBlock::from_declarations(anim.clone(), CascadeLevel::Transitions));
@@ -983,7 +980,6 @@ impl SelectorMap {
     pub fn get_all_matching_rules<E, V, F>(&self,
                                            element: &E,
                                            parent_bf: Option<&BloomFilter>,
-                                           guard: &SharedRwLockReadGuard,
                                            matching_rules_list: &mut V,
                                            relations: &mut StyleRelations,
                                            flags_setter: &mut F,
@@ -1003,7 +999,6 @@ impl SelectorMap {
                                                       parent_bf,
                                                       &self.id_hash,
                                                       &id,
-                                                      guard,
                                                       matching_rules_list,
                                                       relations,
                                                       flags_setter,
@@ -1015,7 +1010,6 @@ impl SelectorMap {
                                                       parent_bf,
                                                       &self.class_hash,
                                                       class,
-                                                      guard,
                                                       matching_rules_list,
                                                       relations,
                                                       flags_setter,
@@ -1031,7 +1025,6 @@ impl SelectorMap {
                                                   parent_bf,
                                                   local_name_hash,
                                                   element.get_local_name(),
-                                                  guard,
                                                   matching_rules_list,
                                                   relations,
                                                   flags_setter,
@@ -1040,7 +1033,6 @@ impl SelectorMap {
         SelectorMap::get_matching_rules(element,
                                         parent_bf,
                                         &self.other_rules,
-                                        guard,
                                         matching_rules_list,
                                         relations,
                                         flags_setter,
@@ -1100,7 +1092,6 @@ impl SelectorMap {
         parent_bf: Option<&BloomFilter>,
         hash: &FnvHashMap<Str, Vec<Rule>>,
         key: &BorrowedStr,
-        guard: &SharedRwLockReadGuard,
         matching_rules: &mut Vector,
         relations: &mut StyleRelations,
         flags_setter: &mut F,
@@ -1115,7 +1106,6 @@ impl SelectorMap {
             SelectorMap::get_matching_rules(element,
                                             parent_bf,
                                             rules,
-                                            guard,
                                             matching_rules,
                                             relations,
                                             flags_setter,
@@ -1127,7 +1117,6 @@ impl SelectorMap {
     fn get_matching_rules<E, V, F>(element: &E,
                                    parent_bf: Option<&BloomFilter>,
                                    rules: &[Rule],
-                                   guard: &SharedRwLockReadGuard,
                                    matching_rules: &mut V,
                                    relations: &mut StyleRelations,
                                    flags_setter: &mut F,
@@ -1137,12 +1126,10 @@ impl SelectorMap {
               F: FnMut(&E, ElementSelectorFlags),
     {
         for rule in rules.iter() {
-            let style_rule = rule.style_rule.read_with(guard);
-            let block = style_rule.block.read_with(guard);
             let any_declaration_for_importance = if cascade_level.is_important() {
-                block.any_important()
+                rule.any_important_declarations()
             } else {
-                block.any_normal()
+                rule.any_normal_declarations()
             };
             if any_declaration_for_importance &&
                matches_selector(&rule.selector, element, parent_bf,
@@ -1223,15 +1210,10 @@ impl SelectorMap {
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[derive(Clone, Debug)]
 pub struct Rule {
-    /// The selector this struct represents.
-    /// This is an Arc because Rule will essentially be cloned for every element
-    /// that it matches. Selector contains an owned vector (through
-    /// ComplexSelector) and we want to avoid the allocation.
-    ///
-    /// FIXME(emilio): We should be able to get rid of it and just use the style
-    /// rule? This predates the time where the rule was in `selectors`, and the
-    /// style rule was a generic parameter to it. It's not trivial though, due
-    /// to the specificity.
+    /// The selector this struct represents. We store this and the
+    /// any_{important,normal} booleans inline in the Rule to avoid
+    /// pointer-chasing when gathering applicable declarations, which
+    /// can ruin performance when there are a lot of rules.
     #[cfg_attr(feature = "servo", ignore_heap_size_of = "Arc")]
     pub selector: SelectorInner<SelectorImpl>,
     /// The actual style rule.
@@ -1239,17 +1221,66 @@ pub struct Rule {
     pub style_rule: Arc<Locked<StyleRule>>,
     /// The source order this style rule appears in.
     pub source_order: usize,
-    /// The specificity of the rule this selector represents.
-    pub specificity: u32,
+    /// Bottom 30 bits: The specificity of the rule this selector represents.
+    /// 31st bit: Whether the rule's declaration block has any important declarations.
+    /// 32nd bit: Whether the rule's declaration block has any normal declarations.
+    specificity_and_bits: u32,
 }
 
+/// Masks for specificity_and_bits.
+const SPECIFICITY_MASK: u32 = 0x3fffffff;
+const ANY_IMPORTANT_DECLARATIONS_BIT: u32 = 1 << 30;
+const ANY_NORMAL_DECLARATIONS_BIT: u32 = 1 << 31;
+
 impl Rule {
+    /// Returns the specificity of the rule.
+    pub fn specificity(&self) -> u32 {
+        self.specificity_and_bits & SPECIFICITY_MASK
+    }
+
+    fn any_important_declarations(&self) -> bool {
+        (self.specificity_and_bits & ANY_IMPORTANT_DECLARATIONS_BIT) != 0
+    }
+
+    fn any_normal_declarations(&self) -> bool {
+        (self.specificity_and_bits & ANY_NORMAL_DECLARATIONS_BIT) != 0
+    }
+
     fn to_applicable_declaration_block(&self, level: CascadeLevel) -> ApplicableDeclarationBlock {
         ApplicableDeclarationBlock {
             source: StyleSource::Style(self.style_rule.clone()),
             level: level,
             source_order: self.source_order,
-            specificity: self.specificity,
+            specificity: self.specificity(),
+        }
+    }
+
+    /// Creates a new Rule.
+    pub fn new(guard: &SharedRwLockReadGuard,
+               selector: SelectorInner<SelectorImpl>,
+               style_rule: Arc<Locked<StyleRule>>,
+               source_order: usize,
+               specificity: u32)
+               -> Self
+    {
+        let (any_important, any_normal) = {
+            let block = style_rule.read_with(guard).block.read_with(guard);
+            (block.any_important(), block.any_normal())
+        };
+        debug_assert!(specificity & (ANY_IMPORTANT_DECLARATIONS_BIT | ANY_NORMAL_DECLARATIONS_BIT) == 0);
+        let mut specificity_and_bits = specificity;
+        if any_important {
+            specificity_and_bits |= ANY_IMPORTANT_DECLARATIONS_BIT;
+        }
+        if any_normal {
+            specificity_and_bits |= ANY_NORMAL_DECLARATIONS_BIT;
+        }
+
+        Rule {
+            selector: selector,
+            style_rule: style_rule,
+            source_order: source_order,
+            specificity_and_bits: specificity_and_bits,
         }
     }
 }

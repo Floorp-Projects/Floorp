@@ -70,6 +70,9 @@ using namespace mozilla::dom;
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
 
+
+static Mutex* sServoFontMetricsLock = nullptr;
+
 uint32_t
 Gecko_ChildrenCount(RawGeckoNodeBorrowed aNode)
 {
@@ -904,6 +907,12 @@ Gecko_Atomize(const char* aString, uint32_t aLength)
   return NS_Atomize(nsDependentCSubstring(aString, aLength)).take();
 }
 
+nsIAtom*
+Gecko_Atomize16(const nsAString* aString)
+{
+  return NS_Atomize(*aString).take();
+}
+
 void
 Gecko_AddRefAtom(nsIAtom* aAtom)
 {
@@ -976,6 +985,35 @@ Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src)
 {
   dst->fontlist = src->fontlist;
 }
+
+void
+Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
+                        const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
+{
+  MutexAutoLock lock(*sServoFontMetricsLock);
+  const nsFont* defaultVariableFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                 aFont->mLanguage);
+
+  // We have passed uninitialized memory to this function,
+  // initialize it. We can't simply return an nsFont because then
+  // we need to know its size beforehand. Servo cannot initialize nsFont
+  // itself, so this will do.
+  nsFont* system = new (aDest) nsFont(*defaultVariableFont);
+
+  MOZ_RELEASE_ASSERT(system);
+
+  *aDest = *defaultVariableFont;
+  LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
+  nsRuleNode::ComputeSystemFont(aDest, fontID, aPresContext, defaultVariableFont);
+}
+
+void
+Gecko_nsFont_Destroy(nsFont* aDest)
+{
+  aDest->~nsFont();
+}
+
 
 void
 Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
@@ -1699,8 +1737,6 @@ Gecko_GetBaseSize(nsIAtom* aLanguage)
   return sizes;
 }
 
-static Mutex* sServoFontMetricsLock = nullptr;
-
 void
 InitializeServo()
 {
@@ -1724,6 +1760,9 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                      nscoord aFontSize,
                      bool aUseUserFontSet)
 {
+  // This function is still unsafe due to frobbing DOM and network
+  // off main thread. We currently disable it in Servo, see bug 1356105
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(*sServoFontMetricsLock);
   GeckoFontMetrics ret;
   // Safe because we are locked, and this function is only

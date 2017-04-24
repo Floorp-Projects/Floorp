@@ -118,6 +118,7 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
+  nsresult RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol);
 
   void CancelImageRequests();
 

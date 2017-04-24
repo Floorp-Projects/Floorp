@@ -145,25 +145,27 @@ add_task(function* () {
   let sidebar = document.getElementById("sidebar");
 
   let loadPromise = BrowserTestUtils.waitForEvent(sidebar, "load", true);
+  let focusPromise = BrowserTestUtils.waitForEvent(sidebar, "focus", true);
   SidebarUI.toggle("viewBookmarksSidebar");
   yield loadPromise;
-
+  yield focusPromise;
 
   gURLBar.focus();
+
+  yield* expectFocusOnF6(false, "html1", "html1",
+                                true, "focus with sidebar open content");
   yield* expectFocusOnF6(false, "bookmarksPanel",
                                 sidebar.contentDocument.getElementById("search-box").inputField,
                                 false, "focus with sidebar open sidebar");
-  yield* expectFocusOnF6(false, "html1", "html1",
-                                true, "focus with sidebar open content");
   yield* expectFocusOnF6(false, "main-window", gURLBar.inputField,
                                 false, "focus with sidebar urlbar");
 
   // Now go backwards
-  yield* expectFocusOnF6(true, "html1", "html1",
-                               true, "back focus with sidebar open content");
   yield* expectFocusOnF6(true, "bookmarksPanel",
                                sidebar.contentDocument.getElementById("search-box").inputField,
                                false, "back focus with sidebar open sidebar");
+  yield* expectFocusOnF6(true, "html1", "html1",
+                               true, "back focus with sidebar open content");
   yield* expectFocusOnF6(true, "main-window", gURLBar.inputField,
                                false, "back focus with sidebar urlbar");
 

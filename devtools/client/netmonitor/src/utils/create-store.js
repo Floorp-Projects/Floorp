@@ -17,15 +17,22 @@ const { TimingMarkers } = require("../reducers/timing-markers");
 const { UI, Columns } = require("../reducers/ui");
 
 function configureStore() {
+  const getPref = (pref) => {
+    try {
+      return JSON.parse(Services.prefs.getCharPref(pref));
+    } catch (_) {
+      return [];
+    }
+  };
+
   let activeFilters = {};
-  let filters = JSON.parse(Services.prefs.getCharPref("devtools.netmonitor.filters"));
+  let filters = getPref("devtools.netmonitor.filters");
   filters.forEach((filter) => {
     activeFilters[filter] = true;
   });
 
   let columns = new Columns();
-  let hiddenColumns =
-    JSON.parse(Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns"));
+  let hiddenColumns = getPref("devtools.netmonitor.hiddenColumns");
 
   for (let [col] of columns) {
     columns = columns.withMutations((state) => {

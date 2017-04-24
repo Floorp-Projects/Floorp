@@ -60,7 +60,7 @@ fails == spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-t
 needs-focus == caret_on_focus.html caret_on_focus.html
 fails needs-focus == caret_on_textarea_lastline.html caret_on_textarea_lastline.html
 fails needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe.html
-fails needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe.html
+needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe.html
 fails needs-focus == caret_after_reframe.html caret_after_reframe.html
 == nobogusnode-1.html nobogusnode-1.html
 == nobogusnode-2.html nobogusnode-2.html

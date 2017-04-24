@@ -18,6 +18,7 @@ public class BackButton extends NavButton {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
         mPath.reset();
+        mPath.setFillType(Path.FillType.INVERSE_EVEN_ODD);
         mPath.addCircle(width / 2, height / 2, width / 2, Path.Direction.CW);
 
         mBorderPath.reset();

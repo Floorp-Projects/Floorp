@@ -233,6 +233,8 @@ module.exports = {
     "no-fallthrough": "error",
     // Allow the use of leading or trailing decimal points in numeric literals.
     "no-floating-decimal": "off",
+    // disallow use of eval()-like methods
+    "no-implied-eval": "error",
     // Allow comments inline after code.
     "no-inline-comments": "off",
     // Disallow if as the only statement in an else block.
@@ -427,8 +429,6 @@ module.exports = {
     "no-eq-null": "off",
     // disallow overwriting functions written as function declarations
     "no-func-assign": "off",
-    // disallow use of eval()-like methods
-    "no-implied-eval": "off",
     // disallow function or variable declarations in nested blocks
     "no-inner-declarations": "off",
     // disallow invalid regular expression strings in the RegExp constructor

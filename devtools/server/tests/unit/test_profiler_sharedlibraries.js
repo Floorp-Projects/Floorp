@@ -21,7 +21,8 @@ function run_test() {
 }
 
 function test_sharedlibraries(client, actor, callback) {
-  client.request({ to: actor, type: "sharedLibraries" }, libs => {
+  client.request({ to: actor, type: "sharedLibraries" }, response => {
+    const libs = response.sharedLibraries;
     do_check_eq(typeof libs, "object");
     do_check_true(Array.isArray(libs));
     do_check_eq(typeof libs, "object");

@@ -283,7 +283,7 @@ nsSegmentEncoder::InitUnicodeEncoder()
 //----------------------------------------------------------------------------
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-static PRCList gAllURLs;
+static LinkedList<nsStandardURL> gAllURLs;
 #endif
 
 nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
@@ -307,12 +307,9 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    memset(&mDebugCList, 0, sizeof(mDebugCList));
     if (NS_IsMainThread()) {
         if (aTrackURL) {
-            PR_APPEND_LINK(&mDebugCList, &gAllURLs);
-        } else {
-            PR_INIT_CLIST(&mDebugCList);
+            gAllURLs.insertBack(this);
         }
     }
 #endif
@@ -331,13 +328,6 @@ nsStandardURL::~nsStandardURL()
     if (mHostA) {
         free(mHostA);
     }
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    if (NS_IsMainThread()) {
-        if (!PR_CLIST_IS_EMPTY(&mDebugCList)) {
-            PR_REMOVE_LINK(&mDebugCList);
-        }
-    }
-#endif
 }
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -349,12 +339,12 @@ struct DumpLeakedURLs {
 DumpLeakedURLs::~DumpLeakedURLs()
 {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!PR_CLIST_IS_EMPTY(&gAllURLs)) {
+    if (!gAllURLs.isEmpty()) {
         printf("Leaked URLs:\n");
-        for (PRCList *l = PR_LIST_HEAD(&gAllURLs); l != &gAllURLs; l = PR_NEXT_LINK(l)) {
-            nsStandardURL *url = reinterpret_cast<nsStandardURL*>(reinterpret_cast<char*>(l) - offsetof(nsStandardURL, mDebugCList));
+        for (auto url : gAllURLs) {
             url->PrintSpec();
         }
+        gAllURLs.clear();
     }
 }
 #endif
@@ -370,10 +360,6 @@ nsStandardURL::InitGlobalObjects()
 #endif
         PrefsChanged(prefBranch, nullptr);
     }
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_INIT_CLIST(&gAllURLs);
-#endif
 }
 
 void

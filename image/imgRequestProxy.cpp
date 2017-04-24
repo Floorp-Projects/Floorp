@@ -718,6 +718,14 @@ imgRequestProxy::GetCORSMode(int32_t* aCorsMode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+imgRequestProxy::BoostPriority(uint32_t aCategory)
+{
+  NS_ENSURE_STATE(GetOwner() && !mCanceled);
+  GetOwner()->BoostPriority(aCategory);
+  return NS_OK;
+}
+
 /** nsISupportsPriority methods **/
 
 NS_IMETHODIMP

@@ -234,6 +234,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   { "idmcchandler7.dll", ALL_VERSIONS },
   { "idmcchandler7_64.dll", ALL_VERSIONS },
 
+  // Nahimic 2 breaks applicaton update (bug 1356637)
+  { "nahimic2devprops.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 

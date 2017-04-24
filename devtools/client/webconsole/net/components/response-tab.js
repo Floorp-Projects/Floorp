@@ -8,7 +8,7 @@ const React = require("devtools/client/shared/vendor/react");
 // Reps
 const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = React.createFactory(REPS.Rep);
+const { Rep } = REPS;
 
 // Network
 const SizeLimit = React.createFactory(require("./size-limit"));

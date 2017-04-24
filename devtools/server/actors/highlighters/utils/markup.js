@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
-  getRootBindingParent } = require("devtools/shared/layout/utils");
+  getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
 const { on, emit } = require("sdk/event/core");
 
 const lazyContainer = {};
@@ -104,17 +104,14 @@ exports.isXUL = isXUL;
 /**
  * Inject a helper stylesheet in the window.
  */
-var installedHelperSheets = new WeakMap();
+var installedHelperSheets = new WeakSet();
 
-function installHelperSheet(win, source, type = "agent") {
+function installHelperSheet(win, url = STYLESHEET_URI, type = "agent") {
   if (installedHelperSheets.has(win.document)) {
     return;
   }
-  let {Style} = require("sdk/stylesheet/style");
-  let {attach} = require("sdk/content/mod");
-  let style = Style({source, type});
-  attach(style, win);
-  installedHelperSheets.set(win.document, style);
+  loadSheet(win, url, type);
+  installedHelperSheets.add(win.document);
 }
 exports.installHelperSheet = installHelperSheet;
 
@@ -278,15 +275,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).
     // If it did, highlighters.css would be injected as an anonymous content
     // node using CanvasFrameAnonymousContentHelper instead.
-    if (!installedHelperSheets.has(doc)) {
-      installedHelperSheets.set(doc, true);
-      let source = "@import url('" + STYLESHEET_URI + "');";
-      let url = "data:text/css;charset=utf-8," + encodeURIComponent(source);
-      let winUtils = this.highlighterEnv.window
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
-      winUtils.loadSheetUsingURIString(url, winUtils.AGENT_SHEET);
-    }
+    installHelperSheet(this.highlighterEnv.window);
 
     let node = this.nodeBuilder();
 

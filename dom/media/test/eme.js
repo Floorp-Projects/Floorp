@@ -131,7 +131,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
           "k":HexToBase64(key)
         });
       } else {
-        bail(token + " couldn't find key for key id " + idHex)("No such key");
+        reject(`${token} couldn't find key for key id ${idHex}`);
       }
     }
 
@@ -145,8 +145,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
       Log(token, "MediaKeySession update ok!");
       resolve(ev.target);
     }).catch(function(reason) {
-      bail(token + " MediaKeySession update failed")(reason);
-      reject();
+      reject(`${token} MediaKeySession update failed: ${reason}`);
     });
   }
 }
@@ -192,8 +191,12 @@ function AppendTrack(test, ms, track, token, loadParams)
         sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
-      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
+      req.addEventListener("error", function() {
+        reject(`${token} - ${track.name}: error fetching ${fragmentFile}`);
+      });
+      req.addEventListener("abort", function() {
+        reject(`${token} - ${track.name}: aborted fetching ${fragmentFile}`);
+      });
 
       Log(token, track.name + ": addNextFragment() fetching next fragment " + fragmentFile);
       req.send(null);
@@ -238,16 +241,9 @@ function LoadTest(test, elem, token, loadParams)
   elem.src = URL.createObjectURL(ms);
 
   return new Promise(function (resolve, reject) {
-    var firstOpen = true;
     ms.addEventListener("sourceopen", function () {
-      if (!firstOpen) {
-        Log(token, "sourceopen again?");
-        return;
-      }
-
-      firstOpen = false;
       Log(token, "sourceopen");
-      return Promise.all(test.tracks.map(function(track) {
+      Promise.all(test.tracks.map(function(track) {
         return AppendTrack(test, ms, track, token, loadParams);
       })).then(function() {
         if (loadParams && loadParams.noEndOfStream) {
@@ -257,10 +253,8 @@ function LoadTest(test, elem, token, loadParams)
           ms.endOfStream();
         }
         resolve();
-      }).catch(function() {
-        Log(token, "error while loading tracks");
-      });
-    })
+      }).catch(reject);
+    }, {once: true});
   });
 }
 

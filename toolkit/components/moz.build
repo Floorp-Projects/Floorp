@@ -34,6 +34,7 @@ DIRS += [
     'formautofill',
     'find',
     'jsdownloads',
+    'jsoncpp/src/lib_json',
     'lz4',
     'mediasniffer',
     'microformats',

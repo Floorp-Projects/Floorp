@@ -124,6 +124,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.removeEventListener("mouseout", this);
         this.inputField.removeEventListener("overflow", this);
         this.inputField.removeEventListener("underflow", this);
+
+        // Null out the one-offs' popup and textbox so that it cleans up its
+        // internal state for both.  Most importantly, it removes the event
+        // listeners that it added to both.
+        this.popup.oneOffSearchButtons.popup = null;
+        this.popup.oneOffSearchButtons.textbox = null;
       ]]></destructor>
 
       <field name="_value">""</field>

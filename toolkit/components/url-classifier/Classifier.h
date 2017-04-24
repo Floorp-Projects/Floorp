@@ -26,9 +26,6 @@ namespace safebrowsing {
  */
 class Classifier {
 public:
-  typedef nsClassHashtable<nsCStringHashKey, nsCString> ProviderDictType;
-
-public:
   Classifier();
   ~Classifier();
 
