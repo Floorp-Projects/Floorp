@@ -3,6 +3,9 @@ gUseRealCertChecks = true;
 // Disable update security
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
+const {REQUIRE_SIGNING} = AM_Cu.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+const PREF_XPI_SIGNATURES_DEV_ROOT = "xpinstall.signatures.dev-root";
+
 const DATA = "data/signing_checks/";
 const ADDONS = {
   bootstrap: {
@@ -10,6 +13,7 @@ const ADDONS = {
     badid: "signed_bootstrap_badid_2.xpi",
     preliminary: "preliminary_bootstrap_2.xpi",
     signed: "signed_bootstrap_2.xpi",
+    privileged: "privileged_bootstrap_2.xpi",
   },
 };
 const WORKING = "signed_bootstrap_1.xpi";
@@ -217,6 +221,18 @@ add_task(function*() {
 add_task(function*() {
   let file = do_get_file(DATA + ADDONS.bootstrap.signed);
   yield test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
+});
+
+// Try to install an add-on with the "Mozilla Extensions" OU
+add_task(function*() {
+  // Remove the REQUIRE_SIGNING and DEV_ROOT stuff when bug 1357948 is fixed.
+  if (REQUIRE_SIGNING) {
+    return;
+  }
+  Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, true);
+  let file = do_get_file(DATA + ADDONS.bootstrap.privileged);
+  yield test_install_working(file, AddonManager.SIGNEDSTATE_PRIVILEGED);
+  Services.prefs.clearUserPref(PREF_XPI_SIGNATURES_DEV_ROOT);
 });
 
 // Try to update to a broken add-on

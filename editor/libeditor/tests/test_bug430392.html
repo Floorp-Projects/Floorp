@@ -39,7 +39,9 @@ function test() {
     synthesizeKey("VK_RETURN", {});
     synthesizeKey("VK_BACK_SPACE", {});
     synthesizeKey("VK_BACK_SPACE", {});
-  }, " A; B ; C "],
+  // For some reason this test fails if the separator is not "br"
+  }, () => document.queryCommandValue("defaultParagraphSeparator") == "br"
+           ?  undefined : " A; B ; C "],
   ["adding shift-returns", () => {
     getSelection().collapse(edit.firstChild, 0);
     synthesizeKey("VK_RIGHT", {});
@@ -85,20 +87,28 @@ function test() {
   tests.push(["indent", () => { document.execCommand("indent") },
               "  ;  ;  ABC"]);
   tests.forEach(arr => {
-    edit.innerHTML = html;
-    edit.focus();
-    getSelection().selectAllChildren(edit);
-    arr[1]();
-    if (2 < arr.length) {
-      todo_is(edit.textContent, expectedText,
-              arr[0] + " should not change text");
-      if (edit.textContent !== expectedText && edit.textContent !== arr[2]) {
-        is(edit.textContent, arr[2],
-           arr[0] + " changed to different failure");
+    ["div", "br", "p"].forEach(sep => {
+      document.execCommand("defaultParagraphSeparator", false, sep);
+
+      var expectedFailText = typeof arr[2] == "function" ? arr[2]() : arr[2];
+
+      edit.innerHTML = html;
+      edit.focus();
+      getSelection().selectAllChildren(edit);
+      arr[1]();
+      if (typeof expectedFailText != "undefined") {
+        todo_is(edit.textContent, expectedText,
+                arr[0] + " should not change text (" + sep + ")");
+        if (edit.textContent !== expectedText &&
+            edit.textContent !== expectedFailText) {
+          is(edit.textContent, expectedFailText,
+             arr[0] + " changed to different failure (" + sep + ")");
+        }
+      } else {
+        is(edit.textContent, expectedText,
+           arr[0] + " should not change text (" + sep + ")");
       }
-    } else {
-      is(edit.textContent, expectedText, arr[0] + " should not change text");
-    }
+    });
   });
 
   SimpleTest.finish();
