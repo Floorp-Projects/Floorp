@@ -39,7 +39,8 @@ HandlerService.prototype = {
   get _store() {
     if (!this.__store) {
       this.__store = new JSONFile({
-        path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
+        path: OS.Path.join(OS.Constants.Path.profileDir,
+                           "handlers.json"),
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
       this.__store.ensureDataReady();
@@ -49,26 +50,21 @@ HandlerService.prototype = {
   },
 
   _dataPostProcessor(data) {
-    return data.defaultHandlersVersion ? data : {
-      defaultHandlersVersion: {},
-      mimeTypes: {},
-      schemes: {},
-    };
+    return data.schemes ? data : { version: {}, mimetypes: {}, schemes: {} };
   },
 
   _updateDB() {
     try {
+
       let locale = Services.locale.getAppLocaleAsLangTag();
       let prefsDefaultHandlersVersion = Number(Services.prefs.getComplexValue(
         "gecko.handlerService.defaultHandlersVersion",
         Ci.nsIPrefLocalizedString).data);
 
-      let defaultHandlersVersion =
-          this._store.data.defaultHandlersVersion[locale] || 0;
-      if (defaultHandlersVersion < prefsDefaultHandlersVersion) {
+      let defaultHandlersVersion = this._store.data.version[locale] || 0;
+      if (defaultHandlersVersion < prefsDefaultHandlersVersion ) {
         this._injectNewDefaults();
-        this._store.data.defaultHandlersVersion[locale] =
-          prefsDefaultHandlersVersion;
+        this._store.data.version[locale] = prefsDefaultHandlersVersion;
       }
     } catch (ex) {
       Cu.reportError(ex);
@@ -125,13 +121,24 @@ HandlerService.prototype = {
 
       for (let handlerNumber of Object.keys(schemes[scheme])) {
         let handlerApp = this.handlerAppFromSerializable(schemes[scheme][handlerNumber]);
-        // If there is already a handler registered with the same template
-        // URL, the newly added one will be ignored when saving.
-        possibleHandlers.appendElement(handlerApp, false);
+        if (!this._isInHandlerArray(possibleHandlers, handlerApp)) {
+          possibleHandlers.appendElement(handlerApp);
+        }
       }
 
       this.store(protoInfo);
     }
+  },
+
+  _isInHandlerArray(array, handler) {
+    let enumerator = array.enumerate();
+    while (enumerator.hasMoreElements()) {
+      let handlerApp = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
+      if (handlerApp.equals(handler)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   _onDBChange() {
@@ -156,9 +163,9 @@ HandlerService.prototype = {
 
   // nsIHandlerService
   enumerate() {
-    let handlers = Cc["@mozilla.org/array;1"]
-                     .createInstance(Ci.nsIMutableArray);
-    for (let type of Object.keys(this._store.data.mimeTypes)) {
+    let handlers = Cc["@mozilla.org/array;1"].
+                     createInstance(Ci.nsIMutableArray);
+    for (let type of Object.keys(this._store.data.mimetypes)) {
       let handler = gMIMEService.getFromTypeAndExtension(type, null);
       handlers.appendElement(handler);
     }
@@ -171,76 +178,46 @@ HandlerService.prototype = {
 
   // nsIHandlerService
   store(handlerInfo) {
-    let handlerList = this._getHandlerListByHandlerInfoType(handlerInfo);
+    let handlerObj = {
+      action: handlerInfo.preferredAction,
+      askBeforeHandling: handlerInfo.alwaysAskBeforeHandling,
+    };
 
-    // Retrieve an existing entry if present, instead of creating a new one, so
-    // that we preserve unknown properties for forward compatibility.
-    let storedHandlerInfo = handlerList[handlerInfo.type];
-    if (!storedHandlerInfo) {
-      storedHandlerInfo = {};
-      handlerList[handlerInfo.type] = storedHandlerInfo;
-    }
-
-    // Only a limited number of preferredAction values is allowed.
-    if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
-        handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
-        handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally) {
-      storedHandlerInfo.action = handlerInfo.preferredAction;
-    } else {
-      storedHandlerInfo.action = Ci.nsIHandlerInfo.useHelperApp;
-    }
-
-    if (handlerInfo.alwaysAskBeforeHandling) {
-      storedHandlerInfo.ask = true;
-    } else {
-      delete storedHandlerInfo.ask;
-    }
-
-    // Build a list of unique nsIHandlerInfo instances to process later.
-    let handlers = [];
-    if (handlerInfo.preferredApplicationHandler) {
-      handlers.push(handlerInfo.preferredApplicationHandler);
-    }
-    let enumerator = handlerInfo.possibleApplicationHandlers.enumerate();
-    while (enumerator.hasMoreElements()) {
-      let handler = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
-      // If the caller stored duplicate handlers, we save them only once.
-      if (!handlers.some(h => h.equals(handler))) {
-        handlers.push(handler);
+    let preferredHandler = handlerInfo.preferredApplicationHandler;
+    if (preferredHandler) {
+      let serializable = this.handlerAppToSerializable(preferredHandler);
+      if (serializable) {
+        handlerObj.preferredHandler = serializable;
       }
     }
 
-    // If any of the nsIHandlerInfo instances cannot be serialized, it is not
-    // included in the final list. The first element is always the preferred
-    // handler, or null if there is none.
-    let serializableHandlers =
-        handlers.map(h => this.handlerAppToSerializable(h)).filter(h => h);
-    if (serializableHandlers.length) {
-      if (!handlerInfo.preferredApplicationHandler) {
-        serializableHandlers.unshift(null);
+    let apps = handlerInfo.possibleApplicationHandlers.enumerate();
+    let possibleHandlers = [];
+    while (apps.hasMoreElements()) {
+      let handler = apps.getNext().QueryInterface(Ci.nsIHandlerApp);
+      let serializable = this.handlerAppToSerializable(handler);
+      if (serializable) {
+        possibleHandlers.push(serializable);
       }
-      storedHandlerInfo.handlers = serializableHandlers;
-    } else {
-      delete storedHandlerInfo.handlers;
+    }
+    if (possibleHandlers.length) {
+      handlerObj.possibleHandlers = possibleHandlers;
     }
 
     if (this._isMIMEInfo(handlerInfo)) {
       let extEnumerator = handlerInfo.getFileExtensions();
-      let extensions = storedHandlerInfo.extensions || [];
+      let extensions = [];
       while (extEnumerator.hasMore()) {
-        let extension = extEnumerator.getNext().toLowerCase();
-        // If the caller stored duplicate extensions, we save them only once.
+        let extension = extEnumerator.getNext();
         if (!extensions.includes(extension)) {
           extensions.push(extension);
         }
       }
       if (extensions.length) {
-        storedHandlerInfo.extensions = extensions;
-      } else {
-        delete storedHandlerInfo.extensions;
+        handlerObj.fileExtensions = extensions;
       }
     }
-
+    this._getHandlerListByHandlerInfoType(handlerInfo)[handlerInfo.type] = handlerObj;
     this._store.saveSoon();
   },
 
@@ -253,26 +230,42 @@ HandlerService.prototype = {
                                      Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
-    handlerInfo.preferredAction = storedHandlerInfo.action;
-    handlerInfo.alwaysAskBeforeHandling = !!storedHandlerInfo.ask;
+    // logic from _retrievePreferredAction of nsHandlerService.js
+    if (storedHandlerInfo.action == Ci.nsIHandlerInfo.saveToDisk ||
+        storedHandlerInfo.action == Ci.nsIHandlerInfo.useSystemDefault ||
+        storedHandlerInfo.action == Ci.nsIHandlerInfo.handleInternally) {
+      handlerInfo.preferredAction = storedHandlerInfo.action;
+    } else {
+      handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
+    }
 
-    // If the first item is not null, it is also the preferred handler. Since
-    // we cannot modify the stored array, use a boolean to keep track of this.
-    let isFirstItem = true;
-    for (let handler of storedHandlerInfo.handlers || [null]) {
-      let handlerApp = this.handlerAppFromSerializable(handler || {});
-      if (isFirstItem) {
-        isFirstItem = false;
-        handlerInfo.preferredApplicationHandler = handlerApp;
-      }
-      if (handlerApp) {
-        handlerInfo.possibleApplicationHandlers.appendElement(handlerApp);
+    let preferHandler = null;
+    if (storedHandlerInfo.preferredHandler) {
+      preferHandler = this.handlerAppFromSerializable(storedHandlerInfo.preferredHandler);
+    }
+    handlerInfo.preferredApplicationHandler = preferHandler;
+    if (preferHandler) {
+      handlerInfo.possibleApplicationHandlers.appendElement(preferHandler);
+    }
+
+    if (storedHandlerInfo.possibleHandlers) {
+      for (let handler of storedHandlerInfo.possibleHandlers) {
+        let possibleHandler = this.handlerAppFromSerializable(handler);
+        if (possibleHandler && (!preferHandler ||
+                                !possibleHandler.equals(preferHandler))) {
+          handlerInfo.possibleApplicationHandlers.appendElement(possibleHandler);
+        }
       }
     }
 
-    if (this._isMIMEInfo(handlerInfo) && storedHandlerInfo.extensions) {
-      for (let extension of storedHandlerInfo.extensions) {
-        handlerInfo.appendExtension(extension);
+    // We always store "askBeforeHandling" in the JSON file. Just use this value.
+    handlerInfo.alwaysAskBeforeHandling = storedHandlerInfo.askBeforeHandling;
+
+    if (this._isMIMEInfo(handlerInfo)) {
+      if (storedHandlerInfo.fileExtensions) {
+        for (let extension of storedHandlerInfo.fileExtensions) {
+          handlerInfo.appendExtension(extension);
+        }
       }
     }
   },
@@ -320,19 +313,19 @@ HandlerService.prototype = {
         if (!file.exists()) {
           return null;
         }
-        handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
-                       .createInstance(Ci.nsILocalHandlerApp);
+        handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                   createInstance(Ci.nsILocalHandlerApp);
         handlerApp.executable = file;
       } catch (ex) {
         return null;
       }
     } else if ("uriTemplate" in handlerObj) {
-      handlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"]
-                     .createInstance(Ci.nsIWebHandlerApp);
+      handlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                   createInstance(Ci.nsIWebHandlerApp);
       handlerApp.uriTemplate = handlerObj.uriTemplate;
     } else if ("service" in handlerObj) {
-      handlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"]
-                     .createInstance(Ci.nsIDBusHandlerApp);
+      handlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"].
+                   createInstance(Ci.nsIDBusHandlerApp);
       handlerApp.service = handlerObj.service;
       handlerApp.method = handlerObj.method;
       handlerApp.objectPath = handlerObj.objectPath;
@@ -346,11 +339,11 @@ HandlerService.prototype = {
   },
 
   /**
-   * The function returns a reference to the "mimeTypes" or "schemes" object
+   * The function return a reference to the "mimetypes" or "schemes" object
    * based on which type of handlerInfo is provided.
    */
   _getHandlerListByHandlerInfoType(handlerInfo) {
-    return this._isMIMEInfo(handlerInfo) ? this._store.data.mimeTypes
+    return this._isMIMEInfo(handlerInfo) ? this._store.data.mimetypes
                                          : this._store.data.schemes;
   },
 
@@ -379,15 +372,16 @@ HandlerService.prototype = {
   // nsIHandlerService
   getTypeFromExtension(fileExtension) {
     let extension = fileExtension.toLowerCase();
-    let mimeTypes = this._store.data.mimeTypes;
+    let mimeTypes = this._store.data.mimetypes;
     for (let type of Object.keys(mimeTypes)) {
-      if (mimeTypes[type].extensions &&
-          mimeTypes[type].extensions.includes(extension)) {
-        return type;
+      if (mimeTypes[type].fileExtensions &&
+          mimeTypes[type].fileExtensions.includes(extension)) {
+          return type;
       }
     }
     return "";
   },
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HandlerService]);

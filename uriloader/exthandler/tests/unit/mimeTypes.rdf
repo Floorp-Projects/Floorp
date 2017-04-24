@@ -1,105 +1,83 @@
 <?xml version="1.0"?>
 <RDF:RDF xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mimetype:externalApplication:example/type.usehelperapp"
-                   NC:prettyName="Example Default Handler"
-                   NC:uriTemplate="https://www.example.com/?url=%s" />
-  <RDF:Description RDF:about="urn:scheme:examplescheme.usesystemdefault"
-                   NC:value="examplescheme.usesystemdefault">
-    <NC:handlerProp RDF:resource="urn:scheme:handler:examplescheme.usesystemdefault"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:scheme:handler:examplescheme.usehelperapp"
-                   NC:alwaysAsk="true">
-    <NC:externalApplication RDF:resource="urn:scheme:externalApplication:examplescheme.usehelperapp"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:https://www.example.com/?url=%s"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?id=1&amp;url=%s"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?id=2&amp;url=%s"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:handler:web:http://www.example.com/?url=%s"
-                   NC:prettyName="Example Possible Handler"
-                   NC:uriTemplate="http://www.example.com/?url=%s" />
-  <RDF:Description RDF:about="urn:scheme:handler:examplescheme.usesystemdefault"
-                   NC:useSystemDefault="true"
-                   NC:alwaysAsk="false">
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?url=%s"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:mimetype:example/type.savetodisk"
-                   NC:value="example/type.savetodisk">
-    <NC:handlerProp RDF:resource="urn:mimetype:handler:example/type.savetodisk"/>
-    <NC:fileExtensions>example_two</NC:fileExtensions>
-    <NC:fileExtensions>example_three</NC:fileExtensions>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:mimetype:example/type.usesystemdefault"
-                   NC:value="example/type.usesystemdefault">
-    <NC:handlerProp RDF:resource="urn:mimetype:handler:example/type.usesystemdefault"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:mimetype:handler:example/type.savetodisk"
-                   NC:saveToDisk="true"
-                   NC:alwaysAsk="true">
-    <NC:externalApplication RDF:resource="urn:mimetype:externalApplication:example/type.savetodisk"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:https://www.example.com/?url=%s"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:handler:web:http://www.example.com/?id=1&amp;url=%s"
-                   NC:prettyName="Example Possible Handler One"
-                   NC:uriTemplate="http://www.example.com/?id=1&amp;url=%s" />
-  <RDF:Description RDF:about="urn:mimetype:example/type.handleinternally"
-                   NC:value="example/type.handleinternally"
-                   NC:fileExtensions="example_one">
-    <NC:handlerProp RDF:resource="urn:mimetype:handler:example/type.handleinternally"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:root"
-                   NC:en-US_defaultHandlersVersion="999" />
-  <RDF:Description RDF:about="urn:mimetype:handler:example/type.usesystemdefault"
-                   NC:useSystemDefault="true"
-                   NC:alwaysAsk="false">
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?url=%s"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:scheme:externalApplication:examplescheme.usehelperapp"
-                   NC:prettyName="Example Default Handler"
-                   NC:uriTemplate="https://www.example.com/?url=%s" />
-  <RDF:Seq RDF:about="urn:mimetypes:root">
-    <RDF:li RDF:resource="urn:mimetype:example/type.handleinternally"/>
-    <RDF:li RDF:resource="urn:mimetype:example/type.savetodisk"/>
-    <RDF:li RDF:resource="urn:mimetype:example/type.usehelperapp"/>
-    <RDF:li RDF:resource="urn:mimetype:example/type.usesystemdefault"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mimetype:handler:example/type.usehelperapp"
-                   NC:alwaysAsk="true">
-    <NC:externalApplication RDF:resource="urn:mimetype:externalApplication:example/type.usehelperapp"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:https://www.example.com/?url=%s"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?id=1&amp;url=%s"/>
-    <NC:possibleApplication RDF:resource="urn:handler:web:http://www.example.com/?id=2&amp;url=%s"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:scheme:examplescheme.usehelperapp"
-                   NC:value="examplescheme.usehelperapp">
-    <NC:handlerProp RDF:resource="urn:scheme:handler:examplescheme.usehelperapp"/>
-  </RDF:Description>
-  <RDF:Seq RDF:about="urn:schemes:root">
-    <RDF:li RDF:resource="urn:scheme:examplescheme.usehelperapp"/>
-    <RDF:li RDF:resource="urn:scheme:examplescheme.usesystemdefault"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:handler:web:https://www.example.com/?url=%s"
-                   NC:prettyName="Example Default Handler"
-                   NC:uriTemplate="https://www.example.com/?url=%s" />
-  <RDF:Description RDF:about="urn:mimetype:externalApplication:example/type.savetodisk"
-                   NC:prettyName="Example Default Handler"
-                   NC:uriTemplate="https://www.example.com/?url=%s" />
-  <RDF:Description RDF:about="urn:mimetypes">
-    <NC:MIME-types RDF:resource="urn:mimetypes:root"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="urn:handler:web:http://www.example.com/?id=2&amp;url=%s"
-                   NC:prettyName="Example Possible Handler Two"
-                   NC:uriTemplate="http://www.example.com/?id=2&amp;url=%s" />
   <RDF:Description RDF:about="urn:schemes">
     <NC:Protocol-Schemes RDF:resource="urn:schemes:root"/>
   </RDF:Description>
-  <RDF:Description RDF:about="urn:mimetype:handler:example/type.handleinternally"
+  <RDF:Seq RDF:about="urn:mimetypes:root">
+    <RDF:li RDF:resource="urn:mimetype:nonexistent/type"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mimetype:handler:nonexistent/type"
                    NC:handleInternal="true"
                    NC:alwaysAsk="false" />
-  <RDF:Description RDF:about="urn:mimetype:example/type.usehelperapp"
-                   NC:value="example/type.usehelperapp">
-    <NC:handlerProp RDF:resource="urn:mimetype:handler:example/type.usehelperapp"/>
-    <NC:fileExtensions>example_two</NC:fileExtensions>
-    <NC:fileExtensions>example_three</NC:fileExtensions>
+  <RDF:Description RDF:about="urn:scheme:irc"
+                   NC:value="irc">
+    <NC:handlerProp RDF:resource="urn:scheme:handler:irc"/>
   </RDF:Description>
+  <RDF:Description RDF:about="urn:scheme:externalApplication:webcal"
+                   NC:prettyName="30 Boxes"
+                   NC:uriTemplate="http://30boxes.com/external/widget?refer=ff&amp;url=%s" />
+  <RDF:Description RDF:about="urn:scheme:handler:ircs"
+                   NC:alwaysAsk="true">
+    <NC:possibleApplication RDF:resource="urn:handler:web:https://www.mibbit.com/?url=%s"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:scheme:handler:mailto"
+                   NC:useSystemDefault="true"
+                   NC:alwaysAsk="false">
+    <NC:possibleApplication RDF:resource="urn:handler:web:https://compose.mail.yahoo.com/?To=%s"/>
+    <NC:possibleApplication RDF:resource="urn:handler:web:https://mail.google.com/mail/?extsrc=mailto&amp;url=%s"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:scheme:ircs"
+                   NC:value="ircs">
+    <NC:handlerProp RDF:resource="urn:scheme:handler:ircs"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:handler:web:https://www.mibbit.com/?url=%s"
+                   NC:prettyName="Mibbit"
+                   NC:uriTemplate="https://www.mibbit.com/?url=%s" />
+  <RDF:Description RDF:about="urn:mimetype:nonexistent/type"
+                   NC:value="nonexistent/type"
+                   NC:fileExtensions="pdf">
+    <NC:handlerProp RDF:resource="urn:mimetype:handler:nonexistent/type"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:handler:web:https://compose.mail.yahoo.com/?To=%s"
+                   NC:prettyName="Yahoo! Mail"
+                   NC:uriTemplate="https://compose.mail.yahoo.com/?To=%s" />
+  <RDF:Description RDF:about="urn:handler:web:https://mail.google.com/mail/?extsrc=mailto&amp;url=%s"
+                   NC:prettyName="Gmail"
+                   NC:uriTemplate="https://mail.google.com/mail/?extsrc=mailto&amp;url=%s" />
+  <RDF:Description RDF:about="urn:scheme:webcal"
+                   NC:value="webcal">
+    <NC:handlerProp RDF:resource="urn:scheme:handler:webcal"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:root"
+                   NC:en-US_defaultHandlersVersion="999" />
+  <RDF:Description RDF:about="urn:scheme:mailto"
+                   NC:value="mailto">
+    <NC:handlerProp RDF:resource="urn:scheme:handler:mailto"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:scheme:handler:irc"
+                   NC:alwaysAsk="true">
+    <NC:possibleApplication RDF:resource="urn:handler:web:https://www.mibbit.com/?url=%s"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:scheme:handler:webcal"
+                   NC:alwaysAsk="true">
+    <NC:externalApplication RDF:resource="urn:scheme:externalApplication:webcal"/>
+    <NC:possibleApplication RDF:resource="urn:handler:web:http://30boxes.com/external/widget?refer=ff&amp;url=%s"/>
+    <NC:possibleApplication RDF:resource="urn:handler:web:https://30boxes.com/external/widget?refer=ff&amp;url=%s"/>
+  </RDF:Description>
+  <RDF:Seq RDF:about="urn:schemes:root">
+    <RDF:li RDF:resource="urn:scheme:irc"/>
+    <RDF:li RDF:resource="urn:scheme:ircs"/>
+    <RDF:li RDF:resource="urn:scheme:mailto"/>
+    <RDF:li RDF:resource="urn:scheme:webcal"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mimetypes">
+    <NC:MIME-types RDF:resource="urn:mimetypes:root"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:handler:web:http://30boxes.com/external/widget?refer=ff&amp;url=%s"
+                   NC:prettyName="30 Boxes"
+                   NC:uriTemplate="http://30boxes.com/external/widget?refer=ff&amp;url=%s" />
+  <RDF:Description RDF:about="urn:handler:web:https://30boxes.com/external/widget?refer=ff&amp;url=%s"
+                   NC:prettyName="30 Boxes"
+                   NC:uriTemplate="https://30boxes.com/external/widget?refer=ff&amp;url=%s" />
 </RDF:RDF>
