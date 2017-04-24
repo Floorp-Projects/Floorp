@@ -1004,7 +1004,8 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
-  nsContainerFrame* scrollFrame = GetScrollbar()->GetParent();
+  nsIFrame* scrollbarBox = GetScrollbar();
+  nsContainerFrame* scrollFrame = scrollbarBox->GetParent();
   if (!scrollFrame) {
     return;
   }
@@ -1025,6 +1026,20 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
+  nsScrollbarFrame* scrollbarFrame = do_QueryFrame(scrollbarBox);
+  if (!scrollbarFrame) {
+    return;
+  }
+  if (nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator()) {
+    nsIScrollableFrame* scrollFrame = do_QueryFrame(mediator);
+    // The scrollbar mediator is not the scroll frame.
+    // That means this scroll frame has a custom scrollbar mediator.
+    // That's not supported in the APZ codepath.
+    if (!scrollFrame) {
+      return;
+    }
+  }
+
   mozilla::layers::FrameMetrics::ViewID scrollTargetId;
   bool hasID = nsLayoutUtils::FindIDFor(scrollableContent, &scrollTargetId);
   bool hasAPZView = hasID && (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
@@ -1033,7 +1048,6 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
-  nsIFrame* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
 
   nsRect sliderTrack;

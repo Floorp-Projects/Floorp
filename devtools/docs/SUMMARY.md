@@ -30,3 +30,9 @@
     * [Actor Best Practices](backend/actor-best-practices.md)
 * [Files and directories](files/README.md)
   * [Adding New Files](files/adding-files.md)
+* [Automated tests](tests/README.md)
+  * Running tests
+    * [`xpcshell`](tests/xpcshell.md)
+    * [Chrome mochitests](tests/mochitest-chrome.md)
+    * [DevTools mochitests](tests/mochitest-devtools.md)
+  * [Writing tests](tests/writing-tests.md)
