@@ -504,7 +504,7 @@ private:
   DECL_OVERRIDE_PREF(Live, "layers.advanced.displaybuttonborder-layers", LayersAllowDisplayButtonBorder, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.outline-layers",   LayersAllowOutlineLayers, gfxPrefs::OverrideBase_WebRender());
-  DECL_GFX_PREF(Live, "layers.advanced.solid-color",           LayersAllowSolidColorLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.solid-color",      LayersAllowSolidColorLayers, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.text-layers",           LayersAllowTextLayers, bool, false);
   DECL_GFX_PREF(Once, "layers.amd-switchable-gfx.enabled",     LayersAMDSwitchableGfxEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.enabled",         AsyncPanZoomEnabledDoNotUseDirectly, bool, true);
