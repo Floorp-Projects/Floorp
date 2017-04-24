@@ -403,8 +403,8 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext
 {
 public:
     static XPCJSContext* newXPCJSContext();
-    static XPCJSContext* Get() { return nsXPConnect::XPConnect()->GetContext(); }
-    static XPCJSContext* GetOnly() { return nsXPConnect::XPConnect()->GetContext(); }
+    static XPCJSContext* Get();
+    static XPCJSContext* GetOnly() { return XPCJSContext::Get(); }
 
     XPCJSRuntime* Runtime() const;
 

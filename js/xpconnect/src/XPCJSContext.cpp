@@ -73,6 +73,8 @@
 #include <windows.h>
 #endif
 
+static MOZ_THREAD_LOCAL(XPCJSContext*) gTlsContext;
+
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
@@ -604,6 +606,8 @@ XPCJSContext::~XPCJSContext()
 #ifdef MOZ_GECKO_PROFILER
     profiler_clear_js_context();
 #endif
+
+    gTlsContext.set(nullptr);
 }
 
 XPCJSContext::XPCJSContext()
@@ -616,6 +620,14 @@ XPCJSContext::XPCJSContext()
    mTimeoutAccumulated(false),
    mPendingResult(NS_OK)
 {
+    MOZ_RELEASE_ASSERT(!gTlsContext.get());
+    gTlsContext.set(this);
+}
+
+/* static */ XPCJSContext*
+XPCJSContext::Get()
+{
+    return gTlsContext.get();
 }
 
 #ifdef XP_WIN
@@ -787,6 +799,8 @@ XPCJSContext::Initialize()
 XPCJSContext*
 XPCJSContext::newXPCJSContext()
 {
+    MOZ_RELEASE_ASSERT(gTlsContext.init());
+
     XPCJSContext* self = new XPCJSContext();
     nsresult rv = self->Initialize();
     if (NS_FAILED(rv)) {
