@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from filecmp import dircmp
 import json
 import os
 import platform
@@ -132,26 +133,57 @@ def expected_eslint_modules():
     with open(expected_modules_path, "r") as f:
         expected_modules = json.load(f)["dependencies"]
 
-    # Also read the in-tree ESLint plugin mozilla version
+    # Also read the in-tree ESLint plugin mozilla information.
     mozilla_json_path = os.path.join(get_eslint_module_path(),
                                      "eslint-plugin-mozilla", "package.json")
     with open(mozilla_json_path, "r") as f:
-        expected_modules["eslint-plugin-mozilla"] = json.load(f)["version"]
+        expected_modules["eslint-plugin-mozilla"] = json.load(f)
 
-    # Also read the in-tree ESLint plugin spidermonkey version
+    # Also read the in-tree ESLint plugin spidermonkey information.
     mozilla_json_path = os.path.join(get_eslint_module_path(),
                                      "eslint-plugin-spidermonkey-js", "package.json")
     with open(mozilla_json_path, "r") as f:
-        expected_modules["eslint-plugin-spidermonkey-js"] = json.load(f)["version"]
+        expected_modules["eslint-plugin-spidermonkey-js"] = json.load(f)
 
     return expected_modules
+
+
+def check_eslint_files(node_modules_path, name):
+    def check_file_diffs(dcmp):
+        # Diff files only looks at files that are different. Not for files
+        # that are only present on one side. This should be generally OK as
+        # new files will need to be added in the index.js for the package.
+        if dcmp.diff_files and dcmp.diff_files != ['package.json']:
+            return True
+
+        result = False
+
+        # Again, we only look at common sub directories for the same reason
+        # as above.
+        for sub_dcmp in dcmp.subdirs.values():
+            result = result or check_file_diffs(sub_dcmp)
+
+        return result
+
+    dcmp = dircmp(os.path.join(node_modules_path, name),
+                  os.path.join(get_eslint_module_path(), name))
+
+    return check_file_diffs(dcmp)
 
 
 def eslint_module_has_issues():
     has_issues = False
     node_modules_path = os.path.join(get_project_root(), "node_modules")
 
-    for name, version_range in expected_eslint_modules().iteritems():
+    for name, expected_data in expected_eslint_modules().iteritems():
+        # expected_eslint_modules returns a string for the version number of
+        # dependencies for installation of eslint generally, and an object
+        # for our in-tree plugins (which contains the entire module info).
+        if "version" in expected_data:
+            version_range = expected_data["version"]
+        else:
+            version_range = expected_data
+
         path = os.path.join(node_modules_path, name, "package.json")
 
         if not os.path.exists(path):
@@ -164,6 +196,21 @@ def eslint_module_has_issues():
         if not version_in_range(data["version"], version_range):
             print("%s v%s should be v%s." % (name, data["version"], version_range))
             has_issues = True
+            continue
+
+        if name == "eslint-plugin-mozilla" or name == "eslint-plugin-spidermonkey-js":
+            # For our in-tree modules, check that package.json has the same dependencies.
+            if (cmp(data["dependencies"], expected_data["dependencies"]) != 0 or
+                cmp(data["devDependencies"], expected_data["devDependencies"]) != 0):
+                print("Dependencies of %s differ." % (name))
+                has_issues = True
+                continue
+
+            # We also need to check the files themselves in case one changed without
+            # the version number being updated.
+            if check_eslint_files(node_modules_path, name):
+                print("%s has out of-date files." % (name))
+                has_issues = True
 
     return has_issues
 
