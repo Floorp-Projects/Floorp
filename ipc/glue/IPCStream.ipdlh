@@ -27,6 +27,12 @@ union IPCRemoteStreamType
 
 struct IPCRemoteStream
 {
+  // If this is true, the stream will send data only when the first operation
+  // is done on the destination side. The benefit of this is that we do not
+  // send data if not needed. On the other hand, it could have a performance
+  // issue.
+  bool delayedStart;
+
   IPCRemoteStreamType stream;
 };
 

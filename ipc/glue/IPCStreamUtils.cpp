@@ -131,7 +131,8 @@ SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
 
 template<typename M>
 bool
-SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager)
+SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
+                     bool aDelayedStart)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
@@ -165,6 +166,7 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager)
   MOZ_ASSERT(asyncStream);
 
   IPCRemoteStream remoteStream;
+  remoteStream.delayedStart() = aDelayedStart;
   remoteStream.stream() = IPCStreamSource::Create(asyncStream, aManager);
   aValue = remoteStream;
 
@@ -175,7 +177,8 @@ template<typename M>
 bool
 SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
                           IPCStream* aValue,
-                          OptionalIPCStream* aOptionalValue)
+                          OptionalIPCStream* aOptionalValue,
+                          bool aDelayedStart)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
@@ -202,17 +205,18 @@ SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
   }
 
   if (aValue) {
-    return SerializeInputStream(aStream, *aValue, aManager);
+    return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager);
+  return SerializeInputStream(aStream, *aOptionalValue, aManager, aDelayedStart);
 }
 
 template<typename M>
 bool
 SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
                            IPCStream* aValue,
-                           OptionalIPCStream* aOptionalValue)
+                           OptionalIPCStream* aOptionalValue,
+                           bool aDelayedStart)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
@@ -236,14 +240,14 @@ SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
   }
 
   if (aValue) {
-    return SerializeInputStream(aStream, *aValue, aManager);
+    return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager);
+  return SerializeInputStream(aStream, *aOptionalValue, aManager, aDelayedStart);
 }
 
 void
-CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC)
+CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
 {
   if (aValue.type() == IPCStream::T__None) {
     return;
@@ -309,24 +313,29 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC)
 
   MOZ_ASSERT(source);
 
+  // If the source stream has not been taken to be sent to the other side, we
+  // can destroy it.
   if (!aConsumedByIPC) {
     source->StartDestroy();
     return;
   }
 
-  // If the source stream was taken to be sent to the other side, then we need
-  // to start it before forgetting about it.
-  source->Start();
+  if (!aDelayedStart) {
+    // If we don't need to do a delayedStart, we start it now. Otherwise, the
+    // Start() will be called at the first use by the
+    // IPCStreamDestination::DelayedStartInputStream.
+    source->Start();
+  }
 }
 
 void
-CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC)
+CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
 {
   if (aValue.type() == OptionalIPCStream::Tvoid_t) {
     return;
   }
 
-  CleanupIPCStream(aValue.get_IPCStream(), aConsumedByIPC);
+  CleanupIPCStream(aValue.get_IPCStream(), aConsumedByIPC, aDelayedStart);
 }
 
 // Returns false if the serialization should not proceed. This means that the
@@ -356,19 +365,21 @@ already_AddRefed<nsIInputStream>
 DeserializeIPCStream(const IPCStream& aValue)
 {
   if (aValue.type() == IPCStream::TIPCRemoteStream) {
-    const IPCRemoteStreamType& remoteInputStream =
-      aValue.get_IPCRemoteStream().stream();
-    if (remoteInputStream.type() == IPCRemoteStreamType::TPChildToParentStreamParent) {
-      auto sendStream =
-        IPCStreamDestination::Cast(remoteInputStream.get_PChildToParentStreamParent());
-      return sendStream->TakeReader();
+    const IPCRemoteStream& remoteStream = aValue.get_IPCRemoteStream();
+    const IPCRemoteStreamType& remoteStreamType = remoteStream.stream();
+    IPCStreamDestination* destinationStream;
+
+    if (remoteStreamType.type() == IPCRemoteStreamType::TPChildToParentStreamParent) {
+      destinationStream =
+        IPCStreamDestination::Cast(remoteStreamType.get_PChildToParentStreamParent());
+    } else {
+      MOZ_ASSERT(remoteStreamType.type() == IPCRemoteStreamType::TPParentToChildStreamChild);
+      destinationStream =
+        IPCStreamDestination::Cast(remoteStreamType.get_PParentToChildStreamChild());
     }
 
-    MOZ_ASSERT(remoteInputStream.type() == IPCRemoteStreamType::TPParentToChildStreamChild);
-
-    auto sendStream =
-      IPCStreamDestination::Cast(remoteInputStream.get_PParentToChildStreamChild());
-    return sendStream->TakeReader();
+    destinationStream->SetDelayedStart(remoteStream.delayedStart());
+    return destinationStream->TakeReader();
   }
 
   // Note, we explicitly do not support deserializing the PChildToParentStream actor on
@@ -419,27 +430,30 @@ DeserializeIPCStream(const OptionalIPCStream& aValue)
   return DeserializeIPCStream(aValue.get_IPCStream());
 }
 
-AutoIPCStream::AutoIPCStream()
+AutoIPCStream::AutoIPCStream(bool aDelayedStart)
   : mInlineValue(void_t())
   , mValue(nullptr)
   , mOptionalValue(&mInlineValue)
   , mTaken(false)
+  , mDelayedStart(aDelayedStart)
 {
 }
 
-AutoIPCStream::AutoIPCStream(IPCStream& aTarget)
+AutoIPCStream::AutoIPCStream(IPCStream& aTarget, bool aDelayedStart)
   : mInlineValue(void_t())
   , mValue(&aTarget)
   , mOptionalValue(nullptr)
   , mTaken(false)
+  , mDelayedStart(aDelayedStart)
 {
 }
 
-AutoIPCStream::AutoIPCStream(OptionalIPCStream& aTarget)
+AutoIPCStream::AutoIPCStream(OptionalIPCStream& aTarget, bool aDelayedStart)
   : mInlineValue(void_t())
   , mValue(nullptr)
   , mOptionalValue(&aTarget)
   , mTaken(false)
+  , mDelayedStart(aDelayedStart)
 {
   *mOptionalValue = void_t();
 }
@@ -448,9 +462,9 @@ AutoIPCStream::~AutoIPCStream()
 {
   MOZ_ASSERT(mValue || mOptionalValue);
   if (mValue && IsSet()) {
-    CleanupIPCStream(*mValue, mTaken);
+    CleanupIPCStream(*mValue, mTaken, mDelayedStart);
   } else {
-    CleanupIPCStream(*mOptionalValue, mTaken);
+    CleanupIPCStream(*mOptionalValue, mTaken, mDelayedStart);
   }
 }
 
@@ -468,7 +482,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager
     return true;
   }
 
-  if (!SerializeInputStreamChild(aStream, aManager, mValue, mOptionalValue)) {
+  if (!SerializeInputStreamChild(aStream, aManager, mValue, mOptionalValue,
+                                 mDelayedStart)) {
     MOZ_CRASH("IPCStream creation failed!");
   }
 
@@ -495,7 +510,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundChild* aManager)
     return true;
   }
 
-  if (!SerializeInputStreamChild(aStream, aManager, mValue, mOptionalValue)) {
+  if (!SerializeInputStreamChild(aStream, aManager, mValue, mOptionalValue,
+                                 mDelayedStart)) {
     MOZ_CRASH("IPCStream creation failed!");
   }
 
@@ -523,7 +539,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream,
     return true;
   }
 
-  if (!SerializeInputStreamParent(aStream, aManager, mValue, mOptionalValue)) {
+  if (!SerializeInputStreamParent(aStream, aManager, mValue, mOptionalValue,
+                                  mDelayedStart)) {
     return false;
   }
 
@@ -550,7 +567,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundParent* aManager)
     return true;
   }
 
-  if (!SerializeInputStreamParent(aStream, aManager, mValue, mOptionalValue)) {
+  if (!SerializeInputStreamParent(aStream, aManager, mValue, mOptionalValue,
+                                  mDelayedStart)) {
     return false;
   }
 
