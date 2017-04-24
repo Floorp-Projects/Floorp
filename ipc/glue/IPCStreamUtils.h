@@ -180,6 +180,11 @@ public:
   // is being, or has already been, sent to the other side.
   OptionalIPCStream&
   TakeOptionalValue();
+
+private:
+  AutoIPCStream(const AutoIPCStream& aOther) = delete;
+  AutoIPCStream& operator=(const AutoIPCStream& aOther) = delete;
+  AutoIPCStream& operator=(const AutoIPCStream&& aOther) = delete;
 };
 
 } // namespace ipc
