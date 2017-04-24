@@ -1441,6 +1441,16 @@ ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static size_t
+CountCompartments(JSContext* cx)
+{
+    size_t count = 0;
+    ZoneGroup* group = cx->compartment()->zone()->group();
+    for (auto zone : group->zones())
+        count += zone->compartments().length();
+    return count;
+}
+
 static bool
 OOMTest(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1503,6 +1513,8 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(!cx->isExceptionPending());
     cx->runtime()->hadOutOfMemory = false;
 
+    size_t compartmentCount = CountCompartments(cx);
+
     JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
 
     for (unsigned thread = threadStart; thread < threadEnd; thread++) {
@@ -1549,6 +1561,16 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
             cx->clearPendingException();
             cx->runtime()->hadOutOfMemory = false;
+
+            // Some tests create a new compartment or zone on every
+            // iteration. Our GC is triggered by GC allocations and not by
+            // number of copmartments or zones, so these won't normally get
+            // cleaned up. The check here stops some tests running out of
+            // memory.
+            if (CountCompartments(cx) > compartmentCount + 100) {
+                JS_GC(cx);
+                compartmentCount = CountCompartments(cx);
+            }
 
 #ifdef JS_TRACE_LOGGING
             // Reset the TraceLogger state if enabled.
