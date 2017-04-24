@@ -39,7 +39,7 @@ testThrow(`
 
 testThrow(`
 ({...a)=>
-`, 2);
+`, 6);
 
 testThrow(`
 function f([... ...a)=>
@@ -47,7 +47,7 @@ function f([... ...a)=>
 
 testThrow(`
 function f({...a)=>
-`, 12);
+`, 16);
 
 // arrow
 
@@ -67,7 +67,7 @@ var [... ...a)=>
 
 testThrow(`
 var {...a)=>
-`, 5);
+`, 9);
 
 // initializer
 
