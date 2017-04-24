@@ -1588,9 +1588,9 @@ done:
             STRING_TO_SECITEM(CA##_NAME_CONSTRAINTS) \
     }
 
-/* Agence Nationale de la Securite des Systemes d'Information (ANSSI) */
-
 /* clang-format off */
+
+/* Agence Nationale de la Securite des Systemes d'Information (ANSSI) */
 
 #define ANSSI_SUBJECT_DN                                                       \
     "\x30\x81\x85"                                                             \
@@ -1619,10 +1619,39 @@ done:
     "\x30\x05\x82\x03" ".nc"                                                   \
     "\x30\x05\x82\x03" ".tf"
 
+/* TUBITAK Kamu SM SSL Kok Sertifikasi - Surum 1 */
+
+#define TUBITAK1_SUBJECT_DN                                                    \
+    "\x30\x81\xd2"                                                             \
+    "\x31\x0b\x30\x09\x06\x03\x55\x04\x06\x13\x02"                             \
+    /* C */ "TR"                                                               \
+    "\x31\x18\x30\x16\x06\x03\x55\x04\x07\x13\x0f"                             \
+    /* L */ "Gebze - Kocaeli"                                                  \
+    "\x31\x42\x30\x40\x06\x03\x55\x04\x0a\x13\x39"                             \
+    /* O */ "Turkiye Bilimsel ve Teknolojik Arastirma Kurumu - TUBITAK"        \
+    "\x31\x2d\x30\x2b\x06\x03\x55\x04\x0b\x13\x24"                             \
+    /* OU */ "Kamu Sertifikasyon Merkezi - Kamu SM"                            \
+    "\x31\x36\x30\x34\x06\x03\x55\x04\x03\x13\x2d"                             \
+    /* CN */ "TUBITAK Kamu SM SSL Kok Sertifikasi - Surum 1"
+
+#define TUBITAK1_NAME_CONSTRAINTS                                              \
+    "\x30\x65\xa0\x63"                                                         \
+    "\x30\x09\x82\x07" ".gov.tr"                                               \
+    "\x30\x09\x82\x07" ".k12.tr"                                               \
+    "\x30\x09\x82\x07" ".pol.tr"                                               \
+    "\x30\x09\x82\x07" ".mil.tr"                                               \
+    "\x30\x09\x82\x07" ".tsk.tr"                                               \
+    "\x30\x09\x82\x07" ".kep.tr"                                               \
+    "\x30\x09\x82\x07" ".bel.tr"                                               \
+    "\x30\x09\x82\x07" ".edu.tr"                                               \
+    "\x30\x09\x82\x07" ".org.tr"
+
 /* clang-format on */
 
-static const SECItem builtInNameConstraints[][2] = { NAME_CONSTRAINTS_ENTRY(
-    ANSSI) };
+static const SECItem builtInNameConstraints[][2] = {
+    NAME_CONSTRAINTS_ENTRY(ANSSI),
+    NAME_CONSTRAINTS_ENTRY(TUBITAK1)
+};
 
 SECStatus
 CERT_GetImposedNameConstraints(const SECItem *derSubject, SECItem *extensions)
