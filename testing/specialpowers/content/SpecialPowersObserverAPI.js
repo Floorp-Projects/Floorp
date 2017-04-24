@@ -570,7 +570,7 @@ SpecialPowersObserverAPI.prototype = {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         extension.on("startup", () => {
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [extension.id, extension.uuid]});
+          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [extension.id]});
         });
 
         // Make sure the extension passes the packaging checks when
