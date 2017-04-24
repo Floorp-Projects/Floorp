@@ -1050,8 +1050,11 @@ nsContextMenu.prototype = {
     }
 
     if (!this.isRemote) {
-      params.frameOuterWindowID = WebNavigationFrames.getFrameId(this.target.ownerGlobal);
+      // Propagate the frameOuterWindowID value saved when
+      // the context menu has been opened.
+      params.frameOuterWindowID = this.frameOuterWindowID;
     }
+
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.
     if ("userContextId" in params &&
