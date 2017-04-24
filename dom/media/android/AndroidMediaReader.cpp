@@ -176,11 +176,11 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
     if (currentImage) {
       v = VideoData::CreateFromImage(mInfo.mVideo.mDisplay,
                                      pos,
-                                     frame.mTimeUs,
+                                     TimeUnit::FromMicroseconds(frame.mTimeUs),
                                      TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                      currentImage,
                                      frame.mKeyFrame,
-                                     -1);
+                                     TimeUnit::FromMicroseconds(-1));
     } else {
       // Assume YUV
       VideoData::YCbCrBuffer b;
@@ -221,11 +221,11 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
       v = VideoData::CreateAndCopyData(mInfo.mVideo,
                                        mDecoder->GetImageContainer(),
                                        pos,
-                                       frame.mTimeUs,
+                                       TimeUnit::FromMicroseconds(frame.mTimeUs),
                                        TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                        b,
                                        frame.mKeyFrame,
-                                       -1,
+                                       TimeUnit::FromMicroseconds(-1),
                                        picture);
     }
 

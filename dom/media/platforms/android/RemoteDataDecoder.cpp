@@ -138,10 +138,11 @@ public:
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          inputInfo.mDisplaySize, offset, presentationTimeUs,
+          inputInfo.mDisplaySize, offset,
+          TimeUnit::FromMicroseconds(presentationTimeUs),
           TimeUnit::FromMicroseconds(inputInfo.mDurationUs),
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
-          presentationTimeUs);
+          TimeUnit::FromMicroseconds(presentationTimeUs));
 
         v->SetListener(Move(releaseSample));
         mDecoder->UpdateOutputStatus(v);
@@ -344,8 +345,8 @@ private:
         aSample->WriteToByteBuffer(dest);
 
         RefPtr<AudioData> data = new AudioData(
-          0, presentationTimeUs,
-          FramesToUsecs(numFrames, mOutputSampleRate).value(), numFrames,
+          0, TimeUnit::FromMicroseconds(presentationTimeUs),
+          FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
           Move(audio), mOutputChannels, mOutputSampleRate);
 
         mDecoder->UpdateOutputStatus(data);

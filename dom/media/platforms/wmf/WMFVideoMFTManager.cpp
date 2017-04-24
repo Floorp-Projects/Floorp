@@ -839,11 +839,11 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
       VideoData::CreateAndCopyData(mVideoInfo,
                                    mImageContainer,
                                    aStreamOffset,
-                                   pts.ToMicroseconds(),
+                                   pts,
                                    duration,
                                    b,
                                    false,
-                                   -1,
+                                   TimeUnit::FromMicroseconds(-1),
                                    pictureRegion);
     if (twoDBuffer) {
       twoDBuffer->Unlock2D();
@@ -866,11 +866,11 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   RefPtr<VideoData> v =
     VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                aStreamOffset,
-                               pts.ToMicroseconds(),
+                               pts,
                                duration,
                                image.forget(),
                                false,
-                               -1);
+                               TimeUnit::FromMicroseconds(-1));
 
   v.forget(aOutVideoData);
   return S_OK;
@@ -904,11 +904,11 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
   RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                                    aStreamOffset,
-                                                   pts.ToMicroseconds(),
+                                                   pts,
                                                    duration,
                                                    image.forget(),
                                                    false,
-                                                   -1);
+                                                   TimeUnit::FromMicroseconds(-1));
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);
