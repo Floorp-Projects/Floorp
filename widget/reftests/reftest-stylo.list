@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 skip-if(!cocoaWidget) == 507947.html 507947.html
-fails == progressbar-fallback-default-style.html progressbar-fallback-default-style.html
+== progressbar-fallback-default-style.html progressbar-fallback-default-style.html
 == meter-native-style.html meter-native-style.html
 fails == meter-vertical-native-style.html meter-vertical-native-style.html
 fails == meter-fallback-default-style.html meter-fallback-default-style.html
