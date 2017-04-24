@@ -19,7 +19,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -3126,9 +3126,9 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
         variant->SetAsISupports(flavorDataProvider);
       } else if (item.data().type() == IPCDataTransferData::TnsString) {
         variant->SetAsAString(item.data().get_nsString());
-      } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
-        RefPtr<BlobImpl> impl =
-          IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
+      } else if (item.data().type() == IPCDataTransferData::TPBlobParent) {
+        auto* parent = static_cast<BlobParent*>(item.data().get_PBlobParent());
+        RefPtr<BlobImpl> impl = parent->GetBlobImpl();
         variant->SetAsISupports(impl);
       } else if (item.data().type() == IPCDataTransferData::TShmem) {
         if (nsContentUtils::IsFlavorImage(item.flavor())) {
