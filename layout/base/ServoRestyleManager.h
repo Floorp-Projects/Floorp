@@ -148,6 +148,13 @@ private:
   // Only non-null while processing change hints. See the comment in
   // ProcessPendingRestyles.
   ReentrantChangeList* mReentrantChanges;
+
+  // We use this flag to track if the current restyle contains any non-animation
+  // update, which triggers a normal restyle, and so there might be any new
+  // transition created later. Therefore, if this flag is true, we need to
+  // increase mAnimationGeneration before creating new transitions, so their
+  // creation sequence will be correct.
+  bool mHaveNonAnimationRestyles = false;
 };
 
 } // namespace mozilla
