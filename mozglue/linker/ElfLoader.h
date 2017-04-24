@@ -106,7 +106,6 @@ public:
   LibHandle(const char *path)
   : directRefCnt(0), path(path ? strdup(path) : nullptr), mappable(nullptr)
   {
-    pthread_mutex_init(&mutex, nullptr);
   }
 
   /**
@@ -154,9 +153,8 @@ public:
    */
   void AddDirectRef()
   {
-    AutoLock lock(&mutex);
-    ++directRefCnt;
     mozilla::external::AtomicRefCounted<LibHandle>::AddRef();
+    ++directRefCnt;
   }
 
   /**
@@ -165,16 +163,12 @@ public:
    */
   bool ReleaseDirectRef()
   {
-    AutoLock lock(&mutex);
-    bool ret = false;
-    if (directRefCnt) {
-      MOZ_ASSERT(directRefCnt <=
-                 mozilla::external::AtomicRefCounted<LibHandle>::refCount());
-      if (--directRefCnt)
-        ret = true;
-      mozilla::external::AtomicRefCounted<LibHandle>::Release();
-    }
-    return ret;
+    const MozRefCountType count = --directRefCnt;
+    mozilla::external::AtomicRefCounted<LibHandle>::Release();
+    MOZ_ASSERT(count + 1 > 0);
+    MOZ_ASSERT(count <=
+               mozilla::external::AtomicRefCounted<LibHandle>::refCount());
+    return !!count;
   }
 
   /**
@@ -236,13 +230,11 @@ protected:
   virtual SystemElf *AsSystemElf() { return nullptr; }
 
 private:
-  MozRefCountType directRefCnt;
+  mozilla::Atomic<MozRefCountType> directRefCnt;
   char *path;
 
   /* Mappable object keeping the result of GetMappable() */
   mutable RefPtr<Mappable> mappable;
-
-  mutable pthread_mutex_t mutex;
 };
 
 /**
