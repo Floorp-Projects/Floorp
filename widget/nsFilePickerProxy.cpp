@@ -10,7 +10,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/BlobChild.h"
 
 using namespace mozilla::dom;
 
@@ -154,9 +154,10 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
                                   const int16_t& aResult)
 {
   if (aData.type() == MaybeInputData::TInputBlobs) {
-    const InfallibleTArray<IPCBlob>& blobs = aData.get_InputBlobs().blobs();
+    const InfallibleTArray<PBlobChild*>& blobs = aData.get_InputBlobs().blobsChild();
     for (uint32_t i = 0; i < blobs.Length(); ++i) {
-      RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(blobs[i]);
+      BlobChild* actor = static_cast<BlobChild*>(blobs[i]);
+      RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
       NS_ENSURE_TRUE(blobImpl, IPC_OK());
 
       if (!blobImpl->IsFile()) {

@@ -17,7 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 
 using mozilla::Unused;
 using namespace mozilla::dom;
@@ -44,6 +44,11 @@ FilePickerParent::~FilePickerParent()
 {
 }
 
+// Before sending a blob to the child, we need to get its size and modification
+// date. Otherwise it will be sent as a "mystery blob" by
+// GetOrCreateActorForBlob, which will cause problems for the child
+// process. This runnable stat()s the file off the main thread.
+//
 // We run code in three places:
 // 1. The main thread calls Dispatch() to start the runnable.
 // 2. The stream transport thread stat()s the file in Run() and then dispatches
@@ -164,23 +169,18 @@ FilePickerParent::SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData
     return;
   }
 
-  InfallibleTArray<IPCBlob> ipcBlobs;
+  InfallibleTArray<PBlobParent*> blobs;
 
   for (unsigned i = 0; i < aData.Length(); i++) {
-    IPCBlob ipcBlob;
-
     MOZ_ASSERT(aData[i].mType == BlobImplOrString::eBlobImpl);
-    nsresult rv = IPCBlobUtils::Serialize(aData[i].mBlobImpl, parent, ipcBlob);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
+    BlobParent* blobParent = parent->GetOrCreateActorForBlobImpl(aData[i].mBlobImpl);
+    if (blobParent) {
+      blobs.AppendElement(blobParent);
     }
-
-    ipcBlobs.AppendElement(ipcBlob);
   }
 
   InputBlobs inblobs;
-  inblobs.blobs().SwapElements(ipcBlobs);
-
+  inblobs.blobsParent().SwapElements(blobs);
   Unused << Send__delete__(this, inblobs, mResult);
 }
 
