@@ -12,8 +12,6 @@ const { getStack } = require("devtools/shared/platform/stack");
 
 // A symbol used to hold onto the frame loader from the outer browser while tunneling.
 const FRAME_LOADER = Symbol("devtools/responsive/frame-loader");
-// Export for use in tests.
-exports.OUTER_FRAME_LOADER_SYMBOL = FRAME_LOADER;
 
 function debug(msg) {
   // console.log(msg);
