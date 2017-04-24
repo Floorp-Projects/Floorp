@@ -8,34 +8,38 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<div id="target" style="width: 50px; height: 50px; background: green"></div>
 <script>
-
 SimpleTest.waitForExplicitFinish();
 
-var target = document.getElementById("target");
-target.addEventListener("pointerdown", () => {
-  target.requestFullscreen();
-  target.addEventListener("pointerdown", () => {
-    document.exitFullscreen();
-  }, {once: true});
-}, {once: true});
-
-document.addEventListener("fullscreenchange", () => {
-  if (document.fullscreenElement) {
-    ok(document.fullscreenElement, target, "fullscreenElement should be the div element");
-    // synthesize mouse events to generate pointer events and leave full screen.
-    synthesizeMouseAtCenter(target, { type: "mousedown" });
-    synthesizeMouseAtCenter(target, { type: "mouseup" });
-  } else {
-    SimpleTest.finish();
-  }
-});
-
 function startTest() {
-  // synthesize mouse events to generate pointer events and enter full screen.
-  synthesizeMouseAtCenter(target, { type: "mousedown" });
-  synthesizeMouseAtCenter(target, { type: "mouseup" });
+  let win = window.open("data:text/html,<body><div id='target' style='width: 50px; height: 50px; background: green'></div></body>", "_blank");
+  win.addEventListener("load", () => {
+    let target = win.document.getElementById("target");
+    target.addEventListener("pointerdown", () => {
+      target.requestFullscreen();
+      target.addEventListener("pointerdown", () => {
+        win.document.exitFullscreen();
+      }, {once: true});
+    }, {once: true});
+
+    win.document.addEventListener("fullscreenchange", () => {
+      if (win.document.fullscreenElement) {
+        ok(win.document.fullscreenElement, target, "fullscreenElement should be the div element");
+        // synthesize mouse events to generate pointer events and leave full screen.
+        synthesizeMouseAtCenter(target, { type: "mousedown" }, win);
+        synthesizeMouseAtCenter(target, { type: "mouseup" }, win);
+      } else {
+        win.close();
+        SimpleTest.finish();
+      }
+    });
+    // Make sure our window is focused before starting the test
+    SimpleTest.waitForFocus(() => {
+      // synthesize mouse events to generate pointer events and enter full screen.
+      synthesizeMouseAtCenter(target, { type: "mousedown" }, win);
+      synthesizeMouseAtCenter(target, { type: "mouseup" }, win);
+    }, win);
+  });
 }
 
 SimpleTest.waitForFocus(() => {
@@ -47,7 +51,6 @@ SimpleTest.waitForFocus(() => {
     ]
   }, startTest);
 });
-
 </script>
 </body>
 </html>

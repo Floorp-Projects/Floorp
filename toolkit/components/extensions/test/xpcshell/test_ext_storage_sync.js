@@ -1114,6 +1114,75 @@ add_task(function* test_storage_sync_pushes_changes() {
   });
 });
 
+add_task(function* test_storage_sync_pulls_conflicts() {
+  const extensionId = uuid();
+  const extension = {id: extensionId};
+  yield* withContextAndServer(function* (context, server) {
+    yield* withSignedInUser(loggedInUser, function* (extensionStorageSync, fxaService) {
+      const cryptoCollection = new CryptoCollection(fxaService);
+      let transformer = new CollectionKeyEncryptionRemoteTransformer(cryptoCollection, extensionId);
+      server.installCollection("storage-sync-crypto");
+
+      yield extensionStorageSync.ensureCanSync([extensionId]);
+      const collectionId = yield cryptoCollection.extensionIdToCollectionId(extensionId);
+      yield server.encryptAndAddRecord(transformer, {
+        collectionId,
+        data: {
+          "id": "key-remote_2D_key",
+          "key": "remote-key",
+          "data": 6,
+        },
+        predicate: appearsAt(850),
+      });
+      server.etag = 900;
+
+      yield extensionStorageSync.set(extension, {"remote-key": 8}, context);
+
+      let calls = [];
+      yield extensionStorageSync.addOnChangedListener(extension, function() {
+        calls.push(arguments);
+      }, context);
+
+      yield extensionStorageSync.syncAll();
+      const remoteValue = (yield extensionStorageSync.get(extension, "remote-key", context))["remote-key"];
+      equal(remoteValue, 8,
+            "locally set value overrides remote value");
+
+      equal(calls.length, 1,
+            "conflicts manifest in on-changed listener");
+      deepEqual(calls[0][0], {"remote-key": {newValue: 8}});
+      calls = [];
+
+      // Syncing again doesn't do anything
+      yield extensionStorageSync.syncAll();
+
+      equal(calls.length, 0,
+            "syncing again shouldn't call on-changed listener");
+
+      // Updating the server causes us to pull down the new value
+      server.etag = 1000;
+      yield server.encryptAndAddRecord(transformer, {
+        collectionId,
+        data: {
+          "id": "key-remote_2D_key",
+          "key": "remote-key",
+          "data": 7,
+        },
+        predicate: appearsAt(950),
+      });
+
+      yield extensionStorageSync.syncAll();
+      const remoteValue2 = (yield extensionStorageSync.get(extension, "remote-key", context))["remote-key"];
+      equal(remoteValue2, 7,
+            "conflicts do not prevent retrieval of new values");
+
+      equal(calls.length, 1,
+            "syncing calls on-changed listener on update");
+      deepEqual(calls[0][0], {"remote-key": {oldValue: 8, newValue: 7}});
+    });
+  });
+});
+
 add_task(function* test_storage_sync_pulls_deletes() {
   const extension = defaultExtension;
   yield* withContextAndServer(function* (context, server) {

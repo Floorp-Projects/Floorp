@@ -251,7 +251,7 @@ to mochitest command.
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
-    * test_selectors.html `:dir` [18]
+    * test_selectors.html `:dir` [8]
 * issues arround font shorthand bug 1349417
   * test_value_storage.html `'font'` [128]
   * test_shorthand_property_getters.html `font shorthand` [1]

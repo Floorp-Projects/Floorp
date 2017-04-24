@@ -398,7 +398,9 @@ this.ExtensionsUI = {
         label: strings.acceptText,
         accessKey: strings.acceptKey,
         callback: () => {
-          this.histogram.add(histkey + "Accepted");
+          if (histkey) {
+            this.histogram.add(histkey + "Accepted");
+          }
           resolve(true);
         },
       };
@@ -407,7 +409,9 @@ this.ExtensionsUI = {
           label: strings.cancelText,
           accessKey: strings.cancelKey,
           callback: () => {
-            this.histogram.add(histkey + "Rejected");
+            if (histkey) {
+              this.histogram.add(histkey + "Rejected");
+            }
             resolve(false);
           },
         },

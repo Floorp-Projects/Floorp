@@ -201,8 +201,8 @@ var tests = [
         });
 
         notification.remove();
-        goNext();
       });
+      goNext();
     },
   },
 ];
