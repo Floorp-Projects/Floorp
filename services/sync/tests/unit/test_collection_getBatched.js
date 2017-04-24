@@ -26,7 +26,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
   let requests = [];
   let responses = [];
   let sawRecord = false;
-  coll.get = function() {
+  coll.get = async function() {
     ok(!sawRecord); // make sure we call record handler after all requests.
     let limit = +this.limit;
     let offset = 0;
@@ -76,7 +76,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
   return { records, responses, requests, coll };
 }
 
-add_test(function test_success() {
+add_task(async function test_success() {
   const totalRecords = 11;
   const batchSize = 2;
   const lastModified = "111111";
@@ -85,7 +85,7 @@ add_test(function test_success() {
     batchSize,
     lastModified,
   });
-  let response = coll.getBatched(batchSize);
+  let response = await coll.getBatched(batchSize);
 
   equal(requests.length, Math.ceil(totalRecords / batchSize));
 
@@ -116,11 +116,9 @@ add_test(function test_success() {
   ok(!coll._headers["x-if-unmodified-since"]);
   ok(!coll.offset);
   ok(!coll.limit || (coll.limit == Infinity));
-
-  run_next_test();
 });
 
-add_test(function test_total_limit() {
+add_task(async function test_total_limit() {
   _("getBatched respects the (initial) value of the limit property");
   const totalRecords = 100;
   const recordLimit = 11;
@@ -132,7 +130,7 @@ add_test(function test_total_limit() {
     lastModified,
   });
   coll.limit = recordLimit;
-  coll.getBatched(batchSize);
+  await coll.getBatched(batchSize);
 
   equal(requests.length, Math.ceil(recordLimit / batchSize));
   equal(records.length, recordLimit);
@@ -147,11 +145,9 @@ add_test(function test_total_limit() {
   }
 
   equal(coll._limit, recordLimit);
-
-  run_next_test();
 });
 
-add_test(function test_412() {
+add_task(async function test_412() {
   _("We shouldn't record records if we get a 412 in the middle of a batch");
   const totalRecords = 11;
   const batchSize = 2;
@@ -162,7 +158,7 @@ add_test(function test_412() {
     lastModified,
     interruptedAfter: 3
   });
-  let response = coll.getBatched(batchSize);
+  let response = await coll.getBatched(batchSize);
 
   equal(requests.length, 3);
   equal(records.length, 0); // record handler shouldn't be called for anything
@@ -172,10 +168,9 @@ add_test(function test_412() {
 
   ok(!response.success);
   equal(response.status, 412);
-  run_next_test();
 });
 
-add_test(function test_get_throws() {
+add_task(async function test_get_throws() {
   _("We shouldn't record records if get() throws for some reason");
   const totalRecords = 11;
   const batchSize = 2;
@@ -187,9 +182,8 @@ add_test(function test_get_throws() {
     throwAfter: 3
   });
 
-  throws(() => coll.getBatched(batchSize), "Some Network Error");
+  await Assert.rejects(coll.getBatched(batchSize), "Some Network Error");
 
   equal(requests.length, 3);
   equal(records.length, 0);
-  run_next_test();
 });

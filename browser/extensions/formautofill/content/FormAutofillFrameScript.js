@@ -49,12 +49,12 @@ var FormAutofillFrameScript = {
     }
   },
 
-  receiveMessage(aMessage) {
+  receiveMessage(message) {
     if (!Services.prefs.getBoolPref("browser.formautofill.enabled")) {
       return;
     }
 
-    switch (aMessage.name) {
+    switch (message.name) {
       case "FormAutofill:PreviewProfile":
       case "FormAutoComplete:PopupClosed":
         FormAutofillContent._previewProfile(content.document);

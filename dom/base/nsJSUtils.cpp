@@ -193,7 +193,7 @@ nsJSUtils::ExecutionContext::SetScopeChain(
 }
 
 nsresult
-nsJSUtils::ExecutionContext::SyncAndExec(void **aOffThreadToken,
+nsJSUtils::ExecutionContext::JoinAndExec(void **aOffThreadToken,
                                          JS::MutableHandle<JSScript*> aScript)
 {
   if (mSkip) {
@@ -250,6 +250,88 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   JS::SourceBufferHolder srcBuf(flatScript.get(), aScript.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
   return CompileAndExec(aCompileOptions, srcBuf);
+}
+
+nsresult
+nsJSUtils::ExecutionContext::DecodeAndExec(JS::CompileOptions& aCompileOptions,
+                                           mozilla::Vector<uint8_t>& aBytecodeBuf,
+                                           size_t aBytecodeIndex)
+{
+  if (mSkip) {
+    return mRv;
+  }
+
+  MOZ_ASSERT(!mWantsReturnValue);
+  JS::Rooted<JSScript*> script(mCx);
+  JS::TranscodeResult tr = JS::DecodeScript(mCx, aBytecodeBuf, &script, aBytecodeIndex);
+  // These errors are external parameters which should be handled before the
+  // decoding phase, and which are the only reasons why you might want to
+  // fallback on decoding failures.
+  MOZ_ASSERT(tr != JS::TranscodeResult_Failure_BadBuildId &&
+             tr != JS::TranscodeResult_Failure_WrongCompileOption);
+  if (tr != JS::TranscodeResult_Ok) {
+    mSkip = true;
+    mRv = NS_ERROR_DOM_JS_DECODING_ERROR;
+    return mRv;
+  }
+
+  if (!JS_ExecuteScript(mCx, mScopeChain, script)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  return mRv;
+}
+
+nsresult
+nsJSUtils::ExecutionContext::DecodeJoinAndExec(void **aOffThreadToken)
+{
+  if (mSkip) {
+    return mRv;
+  }
+
+  MOZ_ASSERT(!mWantsReturnValue);
+  MOZ_ASSERT(!mExpectScopeChain);
+  JS::Rooted<JSScript*> script(mCx);
+  script.set(JS::FinishOffThreadScriptDecoder(mCx, *aOffThreadToken));
+  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+  if (!script || !JS_ExecuteScript(mCx, mScopeChain, script)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsJSUtils::ExecutionContext::JoinEncodeAndExec(void **aOffThreadToken,
+                                               mozilla::Vector<uint8_t>& aBytecodeBuf,
+                                               JS::MutableHandle<JSScript*> aScript)
+{
+  MOZ_ASSERT_IF(aOffThreadToken, !mWantsReturnValue);
+  aScript.set(JS::FinishOffThreadScript(mCx, *aOffThreadToken));
+  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+  if (!aScript) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (!StartIncrementalEncoding(mCx, aBytecodeBuf, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (!JS_ExecuteScript(mCx, mScopeChain, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  return mRv;
 }
 
 nsresult

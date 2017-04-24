@@ -85,7 +85,7 @@ add_task(async function run_test() {
 
     Service.login();
     _("Checking that remoteSetup returns true when credentials have changed.");
-    Service.recordManager.get(Service.metaURL).payload.syncID = "foobar";
+    (await Service.recordManager.get(Service.metaURL)).payload.syncID = "foobar";
     do_check_true(Service._remoteSetup());
 
     let returnStatusCode = (method, code) => (oldMethod) => (req, res) => {

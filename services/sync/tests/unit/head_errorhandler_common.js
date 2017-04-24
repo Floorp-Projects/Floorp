@@ -100,7 +100,7 @@ const EHTestsCommon = {
     let newSyncKeyBundle = new SyncKeyBundle("johndoe", "23456234562345623456234562");
     let keys = Service.collectionKeys.asWBO();
     keys.encrypt(newSyncKeyBundle);
-    keys.upload(Service.resource(Service.cryptoKeysURL));
+    return keys.upload(Service.resource(Service.cryptoKeysURL));
   },
 
   async setUp(server) {
@@ -108,10 +108,11 @@ const EHTestsCommon = {
     return EHTestsCommon.generateAndUploadKeys()
   },
 
-  generateAndUploadKeys() {
+  async generateAndUploadKeys() {
     generateNewKeys(Service.collectionKeys);
     let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Service.identity.syncKeyBundle);
-    return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
+    let response = await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
+    return response.success;
   }
 };

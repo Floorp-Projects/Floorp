@@ -813,7 +813,7 @@ class BookmarkValidator {
     return inspectionInfo;
   }
 
-  _getServerState(engine) {
+  async _getServerState(engine) {
 // XXXXX - todo - we need to capture last-modified of the server here and
 // ensure the repairer only applys with if-unmodified-since that date.
     let collection = engine.itemSource();
@@ -824,7 +824,7 @@ class BookmarkValidator {
       item.decrypt(collectionKey);
       items.push(item.cleartext);
     };
-    let resp = collection.getBatched();
+    let resp = await collection.getBatched();
     if (!resp.success) {
       throw resp;
     }
@@ -836,7 +836,7 @@ class BookmarkValidator {
     let clientTree = await PlacesUtils.promiseBookmarksTree("", {
       includeItemIds: true
     });
-    let serverState = this._getServerState(engine);
+    let serverState = await this._getServerState(engine);
     let serverRecordCount = serverState.length;
     let result = await this.compareServerWithClient(serverState, clientTree);
     let end = Date.now();

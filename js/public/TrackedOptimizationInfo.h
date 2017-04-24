@@ -197,7 +197,6 @@ namespace JS {
     _(CantInlineTooManyArgs)                                            \
     _(CantInlineNeedsArgsObj)                                           \
     _(CantInlineDebuggee)                                               \
-    _(CantInlineUnknownProps)                                           \
     _(CantInlineExceededDepth)                                          \
     _(CantInlineExceededTotalBytecodeLength)                            \
     _(CantInlineBigCaller)                                              \

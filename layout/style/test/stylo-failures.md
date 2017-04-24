@@ -75,10 +75,9 @@ to mochitest command.
   * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [10]
   * test_transitions_computed_value_combinations.html [145]
-  * test_value_storage.html `transition` [596]
+  * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
-* test_property_syntax_errors.html `radial-gradient` [30]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
@@ -155,7 +154,6 @@ to mochitest command.
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
-    * test_property_syntax_errors.html `place-` [30]
     * test_align_shorthand_serialization.html [8]
     * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
@@ -170,14 +168,6 @@ to mochitest command.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Properties implemented but not in geckolib:
-  * contain longhand property bug 1354998
-    * test_contain_formatting_context.html [1]
-    * test_compute_data_with_start_struct.html `contain` [2]
-    * test_inherit_computation.html `contain` [2]
-    * test_inherit_storage.html `contain` [2]
-    * test_initial_computation.html `contain` [4]
-    * test_initial_storage.html `contain` [4]
-    * test_value_storage.html `'contain'` [30]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -200,8 +190,7 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
-    * ... `-webkit-linear-gradient` [10]
-    * ... `-webkit-repeating-linear-gradient` [5]
+    * ... `-webkit-linear-gradient` [5]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -233,20 +222,12 @@ to mochitest command.
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
-  * border shorthands do not reset border-image servo/servo#15202
-    * test_shorthand_property_getters.html `border-image` [1]
-    * test_inherit_storage.html `for property 'border-image-` [5]
-    * test_initial_storage.html `for property 'border-image-` [10]
-    * test_value_storage.html `(for 'border-image-` [60]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
-    * test_priority_preservation.html `border-radius` [0]
-    * test_value_storage.html `border-radius:` [0]
-    * test_shorthand_property_getters.html `should condense to shortest possible` [0]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
@@ -272,10 +253,9 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [18]
 * issues arround font shorthand bug 1349417
-  * test_bug377947.html [1]
-  * test_value_storage.html `'font'` [160]
+  * test_value_storage.html `'font'` [128]
   * test_shorthand_property_getters.html `font shorthand` [1]
-  * test_system_font_serialization.html [10]
+  * test_system_font_serialization.html [5]
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]

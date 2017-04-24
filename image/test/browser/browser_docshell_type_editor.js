@@ -4,13 +4,30 @@
 const Ci = Components.interfaces;
 const SIMPLE_HTML = "data:text/html,<html><head></head><body></body></html>";
 
+/**
+ * Returns the directory where the chrome.manifest file for the test can be found.
+ *
+ * @return nsILocalFile of the manifest directory
+ */
+function getManifestDir() {
+  let path = getTestFilePath("browser_docshell_type_editor");
+  let file = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
+  file.initWithPath(path);
+  return file;
+}
+
 // The following URI is *not* accessible to content, hence loading that URI
 // from an unprivileged site should be blocked. If docshell is of appType
 // APP_TYPE_EDITOR however the load should be allowed.
-// >> chrome://devtools/content/framework/dev-edition-promo/dev-edition-logo.png
+// >> chrome://test1/skin/privileged.png
 
 add_task(function* () {
   info("docshell of appType APP_TYPE_EDITOR can access privileged images.");
+
+  // Load a temporary manifest adding a route to a privileged image
+  let manifestDir = getManifestDir();
+  Components.manager.addBootstrappedManifestLocation(manifestDir);
 
   yield BrowserTestUtils.withNewTab({
     gBrowser,
@@ -28,6 +45,7 @@ add_task(function* () {
       is(rootDocShell.appType, Ci.nsIDocShell.APP_TYPE_EDITOR,
         "sanity check: appType after update should be type editor");
 
+
       return new Promise(resolve => {
         let doc = content.document;
         let image = doc.createElement("img");
@@ -44,14 +62,20 @@ add_task(function* () {
           resolve();
         }
         doc.body.appendChild(image);
-        image.src = "chrome://devtools/content/framework/dev-edition-promo/dev-edition-logo.png";
+        image.src = "chrome://test1/skin/privileged.png";
       });
     });
   });
+
+  Components.manager.removeBootstrappedManifestLocation(manifestDir);
 });
 
 add_task(function* () {
   info("docshell of appType APP_TYPE_UNKNOWN can *not* access privileged images.");
+
+  // Load a temporary manifest adding a route to a privileged image
+  let manifestDir = getManifestDir();
+  Components.manager.addBootstrappedManifestLocation(manifestDir);
 
   yield BrowserTestUtils.withNewTab({
     gBrowser,
@@ -85,8 +109,10 @@ add_task(function* () {
           resolve();
         }
         doc.body.appendChild(image);
-        image.src = "chrome://devtools/content/framework/dev-edition-promo/dev-edition-logo.png";
+        image.src = "chrome://test1/skin/privileged.png";
       });
     });
   });
+
+  Components.manager.removeBootstrappedManifestLocation(manifestDir);
 });

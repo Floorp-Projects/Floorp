@@ -912,9 +912,9 @@ FlowAliasAnalysis::computeBlockStores(MBasicBlock* block)
     if (!blockInfo)
         return false;
 
-    // First block depends on the first instruction.
-    if (block->id() == 0) {
-        MDefinition* firstIns = *graph_.entryBlock()->begin();
+    // First and osr block depends on the first instruction.
+    if (block == graph_.entryBlock() || block == graph_.osrBlock()) {
+        MDefinition* firstIns = *block->begin();
         if (!blockInfo->append(firstIns))
             return false;
         return true;

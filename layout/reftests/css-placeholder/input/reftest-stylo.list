@@ -21,7 +21,7 @@ fails == placeholder-value-unset.html placeholder-value-unset.html
 fails == placeholder-value-reset.html placeholder-value-reset.html
 fails == placeholder-type-change-1.html placeholder-type-change-1.html
 fails == placeholder-type-change-2.html placeholder-type-change-2.html
-fails == placeholdershown.html placeholdershown.html
+== placeholdershown.html placeholdershown.html
 fails == css-display.html css-display.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.

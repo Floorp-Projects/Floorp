@@ -1283,6 +1283,15 @@
               );
               this._warningLink.hidden = true;
               this._warningBtn.hidden = true;
+            } else if (!isUpgrade && !this.mAddon.multiprocessCompatible &&
+                       !Services.prefs.getBoolPref("extensions.allow-non-mpc-extensions", true)) {
+              this.setAttribute("notification", "error");
+              this._error.textContent = gStrings.ext.formatStringFromName(
+                "notification.nonMpcDisabled", [this.mAddon.name], 1
+              );
+              this._errorLink.value = gStrings.ext.GetStringFromName("notification.nonMpcDisabled.link");
+              this._errorLink.href = "https://wiki.mozilla.org/Add-ons/ShimsNightly";
+              this._errorLink.hidden = false;
             } else if (!isUpgrade && !isCorrectlySigned(this.mAddon)) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(

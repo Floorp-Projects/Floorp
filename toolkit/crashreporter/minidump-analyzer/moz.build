@@ -20,7 +20,7 @@ if CONFIG['OS_TARGET'] != 'Android':
     ]
 
     LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/jsoncpp/include',
+        '/toolkit/components/jsoncpp/include',
     ]
 
 

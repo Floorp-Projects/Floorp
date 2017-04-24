@@ -106,8 +106,12 @@ ObjectActor.prototype = {
       // to lazily display them when there is a bunch.
       // Throws on some MouseEvent object in tests.
       try {
-        // Bug 1163520: Assert on internal functions
-        if (!["Function", "Proxy"].includes(g.class)) {
+        if (TYPED_ARRAY_CLASSES.indexOf(g.class) != -1) {
+          // Bug 1348761: getOwnPropertyNames is unecessary slow on TypedArrays
+          let length = DevToolsUtils.getProperty(this.obj, "length");
+          g.ownPropertyLength = length;
+        } else if (!["Function", "Proxy"].includes(g.class)) {
+          // Bug 1163520: Assert on internal functions
           g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
         }
       } catch (e) {}

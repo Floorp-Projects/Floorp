@@ -11,12 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.mozilla.gecko.BaseGeckoInterface;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
-
-import static org.mozilla.gecko.GeckoView.setGeckoInterface;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
@@ -30,8 +25,6 @@ public class GeckoViewActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setGeckoInterface(new BaseGeckoInterface(this));
-
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
@@ -41,11 +34,6 @@ public class GeckoViewActivity extends Activity {
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
         prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
         mGeckoView.setPromptDelegate(prompt);
-
-        final GeckoProfile profile = GeckoProfile.get(this);
-
-        GeckoThread.initMainProcess(profile, /* args */ null, /* debugging */ false);
-        GeckoThread.launch();
 
         loadFromIntent(getIntent());
     }

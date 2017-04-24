@@ -93,7 +93,8 @@
     % endif
 
     ${helpers.gecko_keyword_conversion(Keyword('display', ' '.join(values),
-                                               gecko_enum_prefix='StyleDisplay'))}
+                                               gecko_enum_prefix='StyleDisplay',
+                                               gecko_strip_moz_prefix=False))}
 
 </%helpers:longhand>
 
@@ -352,6 +353,7 @@ ${helpers.single_keyword("overflow-clip-box", "padding-box content-box",
 
 // FIXME(pcwalton, #2742): Implement scrolling for `scroll` and `auto`.
 ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
+                         extra_gecko_values="clip",
                          need_clone=True, animation_type="none",
                          gecko_constant_prefix="NS_STYLE_OVERFLOW",
                          spec="https://drafts.csswg.org/css-overflow/#propdef-overflow-x")}
@@ -746,6 +748,10 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
 
     pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
         SpecifiedValue::parse(input)
+    }
+
+    pub fn get_initial_specified_value() -> SpecifiedValue {
+        TransitionProperty::All
     }
 
     use values::HasViewportPercentage;
@@ -2197,7 +2203,7 @@ ${helpers.single_keyword("transform-style",
     use values::specified::{NoCalcLength, LengthOrPercentage, Percentage};
 
     pub mod computed_value {
-        use properties::animated_properties::Interpolate;
+        use properties::animated_properties::{ComputeDistance, Interpolate};
         use values::computed::{Length, LengthOrPercentage};
 
         #[derive(Clone, Copy, Debug, PartialEq)]
@@ -2209,12 +2215,27 @@ ${helpers.single_keyword("transform-style",
         }
 
         impl Interpolate for T {
+            #[inline]
             fn interpolate(&self, other: &Self, time: f64) -> Result<Self, ()> {
                 Ok(T {
                     horizontal: try!(self.horizontal.interpolate(&other.horizontal, time)),
                     vertical: try!(self.vertical.interpolate(&other.vertical, time)),
                     depth: try!(self.depth.interpolate(&other.depth, time)),
                 })
+            }
+        }
+
+        impl ComputeDistance for T {
+            #[inline]
+            fn compute_distance(&self, other: &Self) -> Result<f64, ()> {
+                self.compute_squared_distance(other).map(|sd| sd.sqrt())
+            }
+
+            #[inline]
+            fn compute_squared_distance(&self, other: &Self) -> Result<f64, ()> {
+                Ok(try!(self.horizontal.compute_squared_distance(&other.horizontal)) +
+                   try!(self.vertical.compute_squared_distance(&other.vertical)) +
+                   try!(self.depth.compute_squared_distance(&other.depth)))
             }
         }
     }
@@ -2296,7 +2317,10 @@ ${helpers.single_keyword("transform-style",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="contain" animation_type="none" products="none"
+// FIXME: `size` and `content` values are not implemented and `strict` is implemented
+// like `content`(layout style paint) in gecko. We should implement `size` and `content`,
+// also update the glue once they are implemented in gecko.
+<%helpers:longhand name="contain" animation_type="none" products="gecko" need_clone="True"
                    spec="https://drafts.csswg.org/css-contain/#contain-property">
     use std::fmt;
     use style_traits::ToCss;
@@ -2313,12 +2337,11 @@ ${helpers.single_keyword("transform-style",
     bitflags! {
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub flags SpecifiedValue: u8 {
-            const SIZE = 0x01,
-            const LAYOUT = 0x02,
-            const STYLE = 0x04,
-            const PAINT = 0x08,
-            const STRICT = SIZE.bits | LAYOUT.bits | STYLE.bits | PAINT.bits,
-            const CONTENT = LAYOUT.bits | STYLE.bits | PAINT.bits,
+            const LAYOUT = 0x01,
+            const STYLE = 0x02,
+            const PAINT = 0x04,
+            const STRICT = 0x8,
+            const STRICT_BITS = LAYOUT.bits | STYLE.bits | PAINT.bits,
         }
     }
 
@@ -2329,9 +2352,6 @@ ${helpers.single_keyword("transform-style",
             }
             if self.contains(STRICT) {
                 return dest.write_str("strict")
-            }
-            if self.contains(CONTENT) {
-                return dest.write_str("content")
             }
 
             let mut has_any = false;
@@ -2346,7 +2366,6 @@ ${helpers.single_keyword("transform-style",
                     }
                 }
             }
-            maybe_write_value!(SIZE => "size");
             maybe_write_value!(LAYOUT => "layout");
             maybe_write_value!(STYLE => "style");
             maybe_write_value!(PAINT => "paint");
@@ -2369,17 +2388,12 @@ ${helpers.single_keyword("transform-style",
             return Ok(result)
         }
         if input.try(|input| input.expect_ident_matching("strict")).is_ok() {
-            result.insert(STRICT);
-            return Ok(result)
-        }
-        if input.try(|input| input.expect_ident_matching("content")).is_ok() {
-            result.insert(CONTENT);
+            result.insert(STRICT | STRICT_BITS);
             return Ok(result)
         }
 
         while let Ok(name) = input.try(|input| input.expect_ident()) {
             let flag = match_ignore_ascii_case! { &name,
-                "size" => SIZE,
                 "layout" => LAYOUT,
                 "style" => STYLE,
                 "paint" => PAINT,

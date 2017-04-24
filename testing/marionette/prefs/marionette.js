@@ -15,9 +15,6 @@ pref("marionette.enabled", false);
 // Port to start Marionette server on.
 pref("marionette.port", 2828);
 
-// Forces client connections to come from a loopback device.
-pref("marionette.forcelocal", true);
-
 // Marionette logging verbosity.  Allowed values are "fatal", "error",
 // "warn", "info", "config", "debug", and "trace".
 pref("marionette.log.level", "info");

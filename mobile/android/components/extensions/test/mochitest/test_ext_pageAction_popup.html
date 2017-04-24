@@ -17,14 +17,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-var {PageActions} = Cu.import("resource://gre/modules/PageActions.jsm", {});
-
 let dataURI = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQBSADQtDAwsHC1tUhUxqfL67lk2tdn+OJg0ODU0rLByqgqINBY6tmlbn7LMTJ5FaFVVBk1G0oUGjG2jT2Y7jxmmcbU/6iJ+f36fz+e5sGP9riCGm9hB37RG+scd4Yo/wsDXCZyIE2xuXsce4bY+wXkAsQtzYmExrfFgvkJkRbkzo1ehoxx5iXcgI/9iYUGt8WH9MqDXEcmNChmEYrRCf2SHWeYgQx3x0tLNRIeKQLTtEFyJEep4NTuhk8BC+yMrwEE3+iozo42d8gK7FAOkMsRiiN8QhW2ttSK5QTfRRV4QoymVeJMvPvDp7gCZigD613MN6yRFA3SWarow9QB9LCfG+NeF9qCtjAKOSQjCqVKhfVsiHEQ+grgx/lRGqUihAc1uL8EFD+KCRO+GrF4J61phcoRoPoEzkYhZYpykh5sMb7kOdIeY+jHKur4QI4Feh4AFX1nVeLxrAvQchGsBz5ls6wa2QdwcvIcE2863bTH79KOvsz/uUYJsp+J0pSzNlDckVqqVGUAF+n6uS7txcOl6wot4JVy70ufDLy4pWLUQVPE81pRI0mGe9oxLMHSeohHvMs/STUNaUK6vDPCvOyxMFDx4achehRDJmHnydnkPww5OFfLxrGIZBFDyYl4LpMzlTQFIP6AQx86w2UeYBccFpJrcKv5L9eGDtUAU6RIELqsB74uynjy/UBRF1gS5BTFxwQT1wTiXoUg9MH7m/3NZRRoi5IJytUbMgzv4Wc832+oQkiKgEehmyMkkpKsFkQV11QsRJL5rJYBLItQgRaUZEmnoZXsomz3vGiWw+I9KMF9SVFOqZEemZekli1jN3U/UOqhHHvC6oWWGElhfSpGdOk6+O9prdwvtLj5BjRsQxdRnot+Zeifpy/2/0stktKTRNLmbk0mwXyl8253fyojj+8rxOHNAhjjm5n0/5OOCGOKBzkrMO0Z75lvSAzKlrF32Z/3z8BqLAn+yMV7VhAAAAAElFTkSuQmCC";
 
 let image = atob(dataURI);
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-add_task(function* test_pageAction_withPopup() {
+add_task(function* test_contentscript() {
   function background() {
     // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
     let tabId = 1;
@@ -58,7 +56,12 @@ add_task(function* test_pageAction_withPopup() {
       browser.test.sendMessage("page-action-onClicked-fired");
     });
 
-    browser.test.sendMessage("ready");
+    let extensionInfo = {
+      // Extract the assigned uuid from the background page url.
+      uuid: `{${window.location.hostname}}`,
+    };
+
+    browser.test.sendMessage("ready", extensionInfo);
   }
 
   function popupScript() {
@@ -128,7 +131,7 @@ add_task(function* test_pageAction_withPopup() {
       extension.sendMessage("page-action-enable-onClicked-listener");
       yield extension.awaitMessage("page-action-onClicked-listener-enabled");
 
-      PageActions.synthesizeClick(uuid);
+      clickPageAction(uuid);
       yield extension.awaitMessage("page-action-onClicked-fired");
 
       extension.sendMessage("page-action-disable-onClicked-listener");
@@ -136,7 +139,7 @@ add_task(function* test_pageAction_withPopup() {
     } else {
       ok(url.includes(name), "Calling pageAction.getPopup should return the correct popup URL when the popup is set.");
 
-      PageActions.synthesizeClick(uuid);
+      clickPageAction(uuid);
       let location = yield extension.awaitMessage("page-action-from-popup");
       ok(location.includes(name), "The popup with the correct URL should be shown.");
 
@@ -148,12 +151,11 @@ add_task(function* test_pageAction_withPopup() {
   }
 
   yield extension.startup();
-  yield extension.awaitMessage("ready");
-  const uuid = `{${extension.uuid}}`;
+  let {uuid} = yield extension.awaitMessage("ready");
 
   extension.sendMessage("page-action-show");
   yield extension.awaitMessage("page-action-shown");
-  ok(PageActions.isShown(uuid), "The PageAction should be shown.");
+  ok(isPageActionShown(uuid), "The PageAction should be shown.");
 
   yield testPopup("default.html", uuid);
   yield testPopup("a.html", uuid);
@@ -161,7 +163,7 @@ add_task(function* test_pageAction_withPopup() {
   yield testPopup("b.html", uuid);
 
   yield extension.unload();
-  ok(!PageActions.isShown(uuid), "The PageAction should be removed after unload.");
+  ok(!isPageActionShown(uuid), "The PageAction should be removed after unload.");
 });
 </script>
 
