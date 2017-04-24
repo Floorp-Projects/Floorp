@@ -51,6 +51,12 @@ MatchResultToUint(const MatchResult& aResult);
 MatchThreatType
 TableNameToThreatType(bool aIsV2, const nsACString& aTable);
 
+enum UpdateTimeout {
+  eNoTimeout = 0,
+  eResponseTimeout = 1,
+  eDownloadTimeout = 2,
+};
+
 } // namespace safebrowsing
 } // namespace mozilla
 
