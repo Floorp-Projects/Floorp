@@ -1,0 +1,63 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+namespace net {
+class HttpBackgroundChannelParent;
+class HttpChannelParent;
+}
+}
+%}
+
+[ptr] native HttpChannelParent(mozilla::net::HttpChannelParent);
+[ptr] native HttpBackgroundChannelParent(mozilla::net::HttpBackgroundChannelParent);
+
+/*
+ * Registrar for pairing HttpChannelParent and HttpBackgroundChannelParent via
+ * channel Id. HttpChannelParent::OnBackgroundParentReady and
+ * HttpBackgroundChannelParent::LinkToChannel will be invoked to notify the
+ * existence of associated channel object.
+ */
+[builtinclass, uuid(8acaa9b1-f0c4-4ade-baeb-39b0d4b96e5b)]
+interface nsIBackgroundChannelRegistrar : nsISupports
+{
+  /*
+   * Link the provided channel parent actor with the given channel Id.
+   * callbacks will be invoked immediately when the HttpBackgroundChannelParent
+   * associated with the same channel Id is found. Store the HttpChannelParent
+   * until a matched linkBackgroundChannel is invoked.
+   *
+   * @param aKey the channel Id
+   * @param aChannel the channel parent actor to be paired
+   */
+  [noscript,notxpcom,nostdcall] void linkHttpChannel(in uint64_t aKey,
+                                                     in HttpChannelParent aChannel);
+
+  /*
+   * Link the provided background channel with the given channel Id.
+   * callbacks will be invoked immediately when the HttpChannelParent associated
+   * with the same channel Id is found. Store the HttpBackgroundChannelParent
+   * until a matched linkHttpChannel is invoked.
+   *
+   * @param aKey the channel Id
+   * @param aBgChannel the background channel to be paired
+   */
+  [noscript,notxpcom,nostdcall] void linkBackgroundChannel(in uint64_t aKey,
+                                                           in HttpBackgroundChannelParent aBgChannel);
+
+  /*
+   * Delete previous stored HttpChannelParent or HttpBackgroundChannelParent
+   * if no need to wait for the paired channel object, e.g. background channel
+   * is destroyed before pairing is completed.
+   *
+   * @param aKey the channel Id
+   */
+  [noscript,notxpcom,nostdcall] void deleteChannel(in uint64_t aKey);
+
+};

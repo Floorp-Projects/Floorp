@@ -21,6 +21,7 @@
 #include "mozilla/net/HttpChannelChild.h"
 
 #include "AltDataOutputStreamChild.h"
+#include "HttpBackgroundChannelChild.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsChannelClassifier.h"
@@ -270,6 +271,26 @@ HttpChannelChild::ReleaseIPDLReference()
   MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   Release();
+}
+
+void
+HttpChannelChild::OnBackgroundChildReady(HttpBackgroundChannelChild* aBgChild)
+{
+  LOG(("HttpChannelChild::OnBackgroundChildReady [this=%p, bgChild=%p]\n",
+       this, aBgChild));
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBgChild);
+
+  MOZ_ASSERT(mBgChild == aBgChild);
+}
+
+void
+HttpChannelChild::OnBackgroundChildDestroyed()
+{
+  LOG(("HttpChannelChild::OnBackgroundChildDestroyed [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mBgChild = nullptr;
 }
 
 class AssociateApplicationCacheEvent : public ChannelEvent
@@ -1030,6 +1051,8 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     // DoOnStopRequest() calls ReleaseListeners()
   }
 
+  CleanupBackgroundChannel();
+
   // DocumentChannelCleanup actually nulls out mCacheEntry in the parent, which
   // we might need later to open the Alt-Data output stream, so just return here
   if (!mPreferredCachedAltDataType.IsEmpty()) {
@@ -1252,6 +1275,9 @@ void
 HttpChannelChild::HandleAsyncAbort()
 {
   HttpAsyncAborter<HttpChannelChild>::HandleAsyncAbort();
+
+  // Ignore all the messages from background channel after channel aborted.
+  CleanupBackgroundChannel();
 }
 
 void
@@ -1259,6 +1285,14 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
 {
   LOG(("HttpChannelChild::FailedAsyncOpen [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(status)));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Might be called twice in race condition in theory.
+  // (one by RecvFailedAsyncOpen, another by
+  // HttpBackgroundChannelChild::ActorFailed)
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    return;
+  }
 
   mStatus = status;
 
@@ -1267,6 +1301,27 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
 
   if (mIPCOpen) {
     TrySendDeletingChannel();
+  }
+}
+
+void
+HttpChannelChild::CleanupBackgroundChannel()
+{
+  LOG(("HttpChannelChild::CleanupBackgroundChannel [this=%p]\n", this));
+
+  if (!mBgChild) {
+    return;
+  }
+
+  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild.forget();
+
+  if (!NS_IsMainThread()) {
+    SystemGroup::Dispatch(
+      "HttpChannelChild::CleanupBackgroundChannel",
+      TaskCategory::Other,
+      NewRunnableMethod(bgChild, &HttpBackgroundChannelChild::OnChannelClosed));
+  } else {
+    bgChild->OnChannelClosed();
   }
 }
 
@@ -1833,6 +1888,20 @@ HttpChannelChild::ConnectParent(uint32_t registrarId)
                                     IPC::SerializedLoadContext(this),
                                     connectArgs)) {
     return NS_ERROR_FAILURE;
+  }
+
+  {
+    MOZ_ASSERT(!mBgChild);
+
+    RefPtr<HttpBackgroundChannelChild> bgChild =
+      new HttpBackgroundChannelChild();
+
+    nsresult rv = bgChild->Init(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mBgChild = bgChild.forget();
   }
 
   return NS_OK;
@@ -2461,6 +2530,26 @@ HttpChannelChild::ContinueAsyncOpen()
                                                 IPC::SerializedLoadContext(this),
                                                 openArgs)) {
     return NS_ERROR_FAILURE;
+  }
+
+  {
+    // Service worker might use the same HttpChannelChild to do async open
+    // twice. Need to disconnect with previous background channel before
+    // creating the new one.
+    if (mBgChild) {
+      RefPtr<HttpBackgroundChannelChild> prevBgChild = mBgChild.forget();
+      prevBgChild->OnChannelClosed();
+    }
+
+    RefPtr<HttpBackgroundChannelChild> bgChild =
+      new HttpBackgroundChannelChild();
+
+    rv = bgChild->Init(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mBgChild = bgChild.forget();
   }
 
   return NS_OK;
