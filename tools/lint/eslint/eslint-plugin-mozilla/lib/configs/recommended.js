@@ -45,7 +45,7 @@ module.exports = {
 
     // Warn about cyclomatic complexity in functions.
     // XXX Get this down to 20?
-    "complexity": ["error", {"max": 35}],
+    "complexity": ["error", 32],
 
     // Don't require spaces around computed properties
     "computed-property-spacing": ["error", "never"],
