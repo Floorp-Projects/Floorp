@@ -13,34 +13,24 @@ from ..taskgraph import TaskGraph
 from ..task import Task
 from mozunit import main
 
+# an empty graph, for things that don't look at it
+empty_graph = TaskGraph({}, Graph(set(), set()))
 
-def unittest_task(n, tp, bt='opt'):
+
+def unittest_task(n, tp):
     return (n, Task('test', n, {
         'unittest_try_name': n,
         'test_platform': tp,
-        'build_type': bt,
     }, {}))
 
 
-def talos_task(n, tp, bt='opt'):
+def talos_task(n, tp):
     return (n, Task('test', n, {
         'talos_try_name': n,
         'test_platform': tp,
-        'build_type': bt,
     }, {}))
 
-
 tasks = {k: v for k, v in [
-    unittest_task('mochitest-browser-chrome', 'linux'),
-    unittest_task('mochitest-browser-chrome-e10s', 'linux64'),
-    unittest_task('mochitest-chrome', 'linux'),
-    unittest_task('mochitest-webgl', 'linux'),
-    unittest_task('extra1', 'linux', 'debug'),
-    unittest_task('extra2', 'win32'),
-    unittest_task('crashtest-e10s', 'linux'),
-    unittest_task('gtest', 'linux64'),
-    unittest_task('l10n-thing', 'linux-l10n'),
-    talos_task('dromaeojs', 'linux64'),
     unittest_task('mochitest-browser-chrome', 'linux/opt'),
     unittest_task('mochitest-browser-chrome-e10s', 'linux64/debug'),
     unittest_task('mochitest-chrome', 'linux/this'),
@@ -49,12 +39,6 @@ tasks = {k: v for k, v in [
     unittest_task('gtest', 'linux64/asan'),
     talos_task('dromaeojs', 'linux64/psan'),
 ]}
-
-for r in RIDEALONG_BUILDS.values():
-    tasks.update({k: v for k, v in [
-        unittest_task(n + '-test', n) for n in r
-    ]})
-
 unittest_tasks = {k: v for k, v in tasks.iteritems()
                   if 'unittest_try_name' in v.attributes}
 talos_tasks = {k: v for k, v in tasks.iteritems()
@@ -66,7 +50,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_empty_message(self):
         "Given an empty message, it should return an empty value"
-        tos = TryOptionSyntax('', graph_with_jobs)
+        tos = TryOptionSyntax('', empty_graph)
         self.assertEqual(tos.build_types, [])
         self.assertEqual(tos.jobs, [])
         self.assertEqual(tos.unittests, [])
@@ -81,7 +65,7 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_message_without_try(self):
         "Given a non-try message, it should return an empty value"
-        tos = TryOptionSyntax('Bug 1234: frobnicte the foo', graph_with_jobs)
+        tos = TryOptionSyntax('Bug 1234: frobnicte the foo', empty_graph)
         self.assertEqual(tos.build_types, [])
         self.assertEqual(tos.jobs, [])
         self.assertEqual(tos.unittests, [])
@@ -96,74 +80,74 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_unknown_args(self):
         "unknown arguments are ignored"
-        tos = TryOptionSyntax('try: --doubledash -z extra', graph_with_jobs)
+        tos = TryOptionSyntax('try: --doubledash -z extra', empty_graph)
         # equilvant to "try:"..
         self.assertEqual(tos.build_types, [])
         self.assertEqual(tos.jobs, None)
 
     def test_b_do(self):
         "-b do should produce both build_types"
-        tos = TryOptionSyntax('try: -b do', graph_with_jobs)
+        tos = TryOptionSyntax('try: -b do', empty_graph)
         self.assertEqual(sorted(tos.build_types), ['debug', 'opt'])
 
     def test_b_d(self):
         "-b d should produce build_types=['debug']"
-        tos = TryOptionSyntax('try: -b d', graph_with_jobs)
+        tos = TryOptionSyntax('try: -b d', empty_graph)
         self.assertEqual(sorted(tos.build_types), ['debug'])
 
     def test_b_o(self):
         "-b o should produce build_types=['opt']"
-        tos = TryOptionSyntax('try: -b o', graph_with_jobs)
+        tos = TryOptionSyntax('try: -b o', empty_graph)
         self.assertEqual(sorted(tos.build_types), ['opt'])
 
     def test_build_o(self):
         "--build o should produce build_types=['opt']"
-        tos = TryOptionSyntax('try: --build o', graph_with_jobs)
+        tos = TryOptionSyntax('try: --build o', empty_graph)
         self.assertEqual(sorted(tos.build_types), ['opt'])
 
     def test_b_dx(self):
         "-b dx should produce build_types=['debug'], silently ignoring the x"
-        tos = TryOptionSyntax('try: -b dx', graph_with_jobs)
+        tos = TryOptionSyntax('try: -b dx', empty_graph)
         self.assertEqual(sorted(tos.build_types), ['debug'])
 
     def test_j_job(self):
         "-j somejob sets jobs=['somejob']"
-        tos = TryOptionSyntax('try: -j somejob', graph_with_jobs)
+        tos = TryOptionSyntax('try: -j somejob', empty_graph)
         self.assertEqual(sorted(tos.jobs), ['somejob'])
 
     def test_j_jobs(self):
         "-j job1,job2 sets jobs=['job1', 'job2']"
-        tos = TryOptionSyntax('try: -j job1,job2', graph_with_jobs)
+        tos = TryOptionSyntax('try: -j job1,job2', empty_graph)
         self.assertEqual(sorted(tos.jobs), ['job1', 'job2'])
 
     def test_j_all(self):
         "-j all sets jobs=None"
-        tos = TryOptionSyntax('try: -j all', graph_with_jobs)
+        tos = TryOptionSyntax('try: -j all', empty_graph)
         self.assertEqual(tos.jobs, None)
 
     def test_j_twice(self):
         "-j job1 -j job2 sets jobs=job1, job2"
-        tos = TryOptionSyntax('try: -j job1 -j job2', graph_with_jobs)
+        tos = TryOptionSyntax('try: -j job1 -j job2', empty_graph)
         self.assertEqual(sorted(tos.jobs), sorted(['job1', 'job2']))
 
     def test_p_all(self):
         "-p all sets platforms=None"
-        tos = TryOptionSyntax('try: -p all', graph_with_jobs)
+        tos = TryOptionSyntax('try: -p all', empty_graph)
         self.assertEqual(tos.platforms, None)
 
     def test_p_linux(self):
         "-p linux sets platforms=['linux', 'linux-l10n']"
-        tos = TryOptionSyntax('try: -p linux', graph_with_jobs)
+        tos = TryOptionSyntax('try: -p linux', empty_graph)
         self.assertEqual(tos.platforms, ['linux', 'linux-l10n'])
 
     def test_p_linux_win32(self):
         "-p linux,win32 sets platforms=['linux', 'linux-l10n', 'win32']"
-        tos = TryOptionSyntax('try: -p linux,win32', graph_with_jobs)
+        tos = TryOptionSyntax('try: -p linux,win32', empty_graph)
         self.assertEqual(sorted(tos.platforms), ['linux', 'linux-l10n', 'win32'])
 
     def test_p_expands_ridealongs(self):
         "-p linux,linux64 includes the RIDEALONG_BUILDS"
-        tos = TryOptionSyntax('try: -p linux,linux64', graph_with_jobs)
+        tos = TryOptionSyntax('try: -p linux,linux64', empty_graph)
         platforms = set(['linux'] + RIDEALONG_BUILDS['linux'])
         platforms |= set(['linux64'] + RIDEALONG_BUILDS['linux64'])
         self.assertEqual(sorted(tos.platforms), sorted(platforms))
@@ -234,10 +218,9 @@ class TestTryOptionSyntax(unittest.TestCase):
     def test_u_platforms_negated(self):
         "-u gtest[-linux] selects all platforms but linux for gtest"
         tos = TryOptionSyntax('try: -u gtest[-linux]', graph_with_jobs)
-        all_platforms = set([x.attributes['test_platform'] for x in unittest_tasks.values()])
-        self.assertEqual(sorted(tos.unittests[0]['platforms']), sorted(
-            [x for x in all_platforms if x != 'linux']
-        ))
+        self.assertEqual(sorted(tos.unittests), sorted([
+            {'test': 'gtest', 'platforms': ['linux64']},
+        ]))
 
     def test_u_platforms_negated_pretty(self):
         "-u gtest[Ubuntu,-x64] selects just linux for gtest"
@@ -272,52 +255,52 @@ class TestTryOptionSyntax(unittest.TestCase):
 
     def test_trigger_tests(self):
         "--rebuild 10 sets trigger_tests"
-        tos = TryOptionSyntax('try: --rebuild 10', graph_with_jobs)
+        tos = TryOptionSyntax('try: --rebuild 10', empty_graph)
         self.assertEqual(tos.trigger_tests, 10)
 
     def test_talos_trigger_tests(self):
         "--rebuild-talos 10 sets talos_trigger_tests"
-        tos = TryOptionSyntax('try: --rebuild-talos 10', graph_with_jobs)
+        tos = TryOptionSyntax('try: --rebuild-talos 10', empty_graph)
         self.assertEqual(tos.talos_trigger_tests, 10)
 
     def test_interactive(self):
         "--interactive sets interactive"
-        tos = TryOptionSyntax('try: --interactive', graph_with_jobs)
+        tos = TryOptionSyntax('try: --interactive', empty_graph)
         self.assertEqual(tos.interactive, True)
 
     def test_all_email(self):
         "--all-emails sets notifications"
-        tos = TryOptionSyntax('try: --all-emails', graph_with_jobs)
+        tos = TryOptionSyntax('try: --all-emails', empty_graph)
         self.assertEqual(tos.notifications, 'all')
 
     def test_fail_email(self):
         "--failure-emails sets notifications"
-        tos = TryOptionSyntax('try: --failure-emails', graph_with_jobs)
+        tos = TryOptionSyntax('try: --failure-emails', empty_graph)
         self.assertEqual(tos.notifications, 'failure')
 
     def test_no_email(self):
         "no email settings don't set notifications"
-        tos = TryOptionSyntax('try:', graph_with_jobs)
+        tos = TryOptionSyntax('try:', empty_graph)
         self.assertEqual(tos.notifications, None)
 
     def test_setenv(self):
         "--setenv VAR=value adds a environment variables setting to env"
-        tos = TryOptionSyntax('try: --setenv VAR1=value1 --setenv VAR2=value2', graph_with_jobs)
+        tos = TryOptionSyntax('try: --setenv VAR1=value1 --setenv VAR2=value2', empty_graph)
         self.assertEqual(tos.env, ['VAR1=value1', 'VAR2=value2'])
 
     def test_profile(self):
         "--geckoProfile sets profile to true"
-        tos = TryOptionSyntax('try: --geckoProfile', graph_with_jobs)
+        tos = TryOptionSyntax('try: --geckoProfile', empty_graph)
         self.assertTrue(tos.profile)
 
     def test_tag(self):
         "--tag TAG sets tag to TAG value"
-        tos = TryOptionSyntax('try: --tag tagName', graph_with_jobs)
+        tos = TryOptionSyntax('try: --tag tagName', empty_graph)
         self.assertEqual(tos.tag, 'tagName')
 
     def test_no_retry(self):
         "--no-retry sets no_retry to true"
-        tos = TryOptionSyntax('try: --no-retry', graph_with_jobs)
+        tos = TryOptionSyntax('try: --no-retry', empty_graph)
         self.assertTrue(tos.no_retry)
 
 if __name__ == '__main__':
