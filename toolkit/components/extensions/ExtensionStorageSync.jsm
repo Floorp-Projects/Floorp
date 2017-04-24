@@ -808,13 +808,18 @@ class ExtensionStorageSync {
       };
     }
     for (const conflict of syncResults.resolved) {
-      // FIXME: Should we even send a notification? If so, what
-      // best values for "old" and "new"? This might violate
-      // client code's assumptions, since from their perspective,
-      // we were in state L, but this diff is from R -> L.
-      changes[conflict.remote.key] = {
-        oldValue: conflict.local.data,
-        newValue: conflict.remote.data,
+      // FIXME: We can't send a "changed" notification because
+      // kinto.js only provides the newly-resolved value. But should
+      // we even send a notification? We use CLIENT_WINS so nothing
+      // has really "changed" on this end. (The change will come on
+      // the other end when it pulls down the update, which is handled
+      // by the "updated" case above.) If we are going to send a
+      // notification, what best values for "old" and "new"?  This
+      // might violate client code's assumptions, since from their
+      // perspective, we were in state L, but this diff is from R ->
+      // L.
+      changes[conflict.key] = {
+        newValue: conflict.data,
       };
     }
     if (Object.keys(changes).length > 0) {

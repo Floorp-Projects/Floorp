@@ -52,6 +52,7 @@ public:
     return mElement;
   }
 
+  void RemoveDuplicates(const nsAttrValue* aAttr);
   uint32_t Length();
   void Item(uint32_t aIndex, nsAString& aResult)
   {
@@ -87,6 +88,8 @@ protected:
 
   nsresult CheckToken(const nsAString& aStr);
   nsresult CheckTokens(const nsTArray<nsString>& aStr);
+  void RemoveDuplicatesInternal(nsTArray<nsCOMPtr<nsIAtom>>* aArray,
+                                uint32_t aStart);
   void AddInternal(const nsAttrValue* aAttr,
                    const nsTArray<nsString>& aTokens);
   void RemoveInternal(const nsAttrValue* aAttr,

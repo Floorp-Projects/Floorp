@@ -52,6 +52,7 @@ import static org.mozilla.gecko.Tab.TabType;
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
+    private static final String PRIVATE_TAB_INTENT_EXTRA = "private_tab";
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
     private volatile CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
 
@@ -971,7 +972,7 @@ public class Tabs implements BundleEventListener {
         // delayLoad implies background tab
         boolean background = delayLoad || (flags & LOADURL_BACKGROUND) != 0;
 
-        boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
+        boolean isPrivate = (flags & LOADURL_PRIVATE) != 0 || (intent != null && intent.getBooleanExtra(PRIVATE_TAB_INTENT_EXTRA, false));
         boolean userEntered = (flags & LOADURL_USER_ENTERED) != 0;
         boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
         boolean external = (flags & LOADURL_EXTERNAL) != 0;

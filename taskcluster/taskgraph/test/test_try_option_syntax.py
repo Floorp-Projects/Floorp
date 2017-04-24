@@ -31,13 +31,13 @@ def talos_task(n, tp):
     }, {}))
 
 tasks = {k: v for k, v in [
-    unittest_task('mochitest-browser-chrome', 'linux'),
-    unittest_task('mochitest-browser-chrome-e10s', 'linux64'),
-    unittest_task('mochitest-chrome', 'linux'),
-    unittest_task('mochitest-webgl', 'linux'),
-    unittest_task('crashtest-e10s', 'linux'),
-    unittest_task('gtest', 'linux64'),
-    talos_task('dromaeojs', 'linux64'),
+    unittest_task('mochitest-browser-chrome', 'linux/opt'),
+    unittest_task('mochitest-browser-chrome-e10s', 'linux64/debug'),
+    unittest_task('mochitest-chrome', 'linux/this'),
+    unittest_task('mochitest-webgl', 'linux/that'),
+    unittest_task('crashtest-e10s', 'linux/other'),
+    unittest_task('gtest', 'linux64/asan'),
+    talos_task('dromaeojs', 'linux64/psan'),
 ]}
 unittest_tasks = {k: v for k, v in tasks.iteritems()
                   if 'unittest_try_name' in v.attributes}
