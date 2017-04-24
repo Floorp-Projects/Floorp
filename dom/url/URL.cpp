@@ -10,8 +10,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/dom/URLBinding.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
@@ -766,30 +764,6 @@ public:
     using namespace mozilla::ipc;
 
     AssertIsOnMainThread();
-
-    RefPtr<BlobImpl> newBlobImplHolder;
-
-    if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(mBlobImpl)) {
-      if (BlobChild* blobChild = remoteBlob->GetBlobChild()) {
-        if (PBackgroundChild* blobManager = blobChild->GetBackgroundManager()) {
-          PBackgroundChild* backgroundManager =
-            BackgroundChild::GetForCurrentThread();
-          MOZ_ASSERT(backgroundManager);
-
-          if (blobManager != backgroundManager) {
-            // Always make sure we have a blob from an actor we can use on this
-            // thread.
-            blobChild = BlobChild::GetOrCreate(backgroundManager, mBlobImpl);
-            MOZ_ASSERT(blobChild);
-
-            newBlobImplHolder = blobChild->GetBlobImpl();
-            MOZ_ASSERT(newBlobImplHolder);
-
-            mBlobImpl = newBlobImplHolder;
-          }
-        }
-      }
-    }
 
     DebugOnly<bool> isMutable;
     MOZ_ASSERT(NS_SUCCEEDED(mBlobImpl->GetMutable(&isMutable)));
