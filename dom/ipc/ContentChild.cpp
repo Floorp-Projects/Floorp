@@ -31,7 +31,6 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/GetFilesHelper.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
@@ -3153,12 +3152,12 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
   } else {
     MOZ_ASSERT(aResult.type() == GetFilesResponseResult::TGetFilesResponseSuccess);
 
-    const nsTArray<IPCBlob>& ipcBlobs =
-      aResult.get_GetFilesResponseSuccess().blobs();
+    const nsTArray<PBlobChild*>& blobs =
+      aResult.get_GetFilesResponseSuccess().blobsChild();
 
     bool succeeded = true;
-    for (uint32_t i = 0; succeeded && i < ipcBlobs.Length(); ++i) {
-      RefPtr<BlobImpl> impl = IPCBlobUtils::Deserialize(ipcBlobs[i]);
+    for (uint32_t i = 0; succeeded && i < blobs.Length(); ++i) {
+      RefPtr<BlobImpl> impl = static_cast<BlobChild*>(blobs[i])->GetBlobImpl();
       succeeded = child->AppendBlobImpl(impl);
     }
 
