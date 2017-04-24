@@ -425,6 +425,14 @@ js::num_parseInt(JSContext* cx, unsigned argc, Value* vp)
                 return true;
             }
         }
+
+        if (args[0].isString()) {
+            JSString* str = args[0].toString();
+            if (str->hasIndexValue()) {
+                args.rval().setNumber(str->getIndexValue());
+                return true;
+            }
+        }
     }
 
     /* Step 1. */
@@ -631,6 +639,8 @@ js::Int32ToString(JSContext* cx, int32_t si)
     JSInlineString* str = NewInlineString<allowGC>(cx, chars);
     if (!str)
         return nullptr;
+    if (si >= 0)
+        str->maybeInitializeIndex(si);
 
     CacheNumber(cx, si, str);
     return str;
@@ -652,7 +662,11 @@ js::Int32ToAtom(JSContext* cx, int32_t si)
     size_t length;
     char* start = BackfillInt32InBuffer(si, buffer, JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
 
-    JSAtom* atom = Atomize(cx, start, length);
+    Maybe<uint32_t> indexValue;
+    if (si >= 0)
+        indexValue.emplace(si);
+
+    JSAtom* atom = Atomize(cx, start, length, js::DoNotPinAtom, indexValue);
     if (!atom)
         return nullptr;
 
@@ -1350,8 +1364,10 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
     JSCompartment* comp = cx->compartment();
 
     int32_t i;
+    bool isBase10Int = false;
     if (mozilla::NumberIsInt32(d, &i)) {
-        if (base == 10 && StaticStrings::hasInt(i))
+        isBase10Int = (base == 10);
+        if (isBase10Int && StaticStrings::hasInt(i))
             return cx->staticStrings().getInt(i);
         if (unsigned(i) < unsigned(base)) {
             if (i < 10)
@@ -1383,6 +1399,11 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
     }
 
     JSFlatString* s = NewStringCopyZ<allowGC>(cx, numStr);
+    if (!s)
+        return nullptr;
+
+    if (isBase10Int && i >= 0)
+        s->maybeInitializeIndex(i);
 
     comp->dtoaCache.cache(base, d, s);
     return s;
@@ -1565,6 +1586,11 @@ js::StringToNumber(JSContext* cx, JSString* str, double* result)
     JSLinearString* linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
+
+    if (str->hasIndexValue()) {
+        *result = str->getIndexValue();
+        return true;
+    }
 
     return linearStr->hasLatin1Chars()
            ? CharsToNumber(cx, linearStr->latin1Chars(nogc), str->length(), result)
