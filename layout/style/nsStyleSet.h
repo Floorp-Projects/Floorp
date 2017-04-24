@@ -260,8 +260,7 @@ class nsStyleSet final
                           mozilla::dom::Element* aPseudoElement = nullptr);
 
   /**
-   * Bit-flags that can be passed to ResolveInheritingAnonymousBoxStyle and
-   * GetContext in their parameter 'aFlags'.
+   * Bit-flags that can be passed to GetContext in its parameter 'aFlags'.
    */
   enum {
     eNoFlags =          0,
@@ -279,12 +278,10 @@ class nsStyleSet final
 
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
-  // inherits style from the given aParentContext.  aFlags will be forwarded to
-  // a GetContext call internally.
+  // inherits style from the given aParentContext.
   already_AddRefed<nsStyleContext>
   ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                     nsStyleContext* aParentContext,
-                                     uint32_t aFlags = eNoFlags);
+                                     nsStyleContext* aParentContext);
 
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It

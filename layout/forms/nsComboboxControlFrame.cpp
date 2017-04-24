@@ -1372,8 +1372,7 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
   RefPtr<nsStyleContext> styleContext;
   styleContext = styleSet->
     ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
-                                       mStyleContext,
-                                       nsStyleSet::eSkipParentDisplayBasedStyleFixup);
+                                       mStyleContext);
 
   RefPtr<nsStyleContext> textStyleContext;
   textStyleContext =
