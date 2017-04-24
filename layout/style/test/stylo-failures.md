@@ -75,7 +75,7 @@ to mochitest command.
   * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [10]
   * test_transitions_computed_value_combinations.html [145]
-  * test_value_storage.html `transition` [596]
+  * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
@@ -168,14 +168,6 @@ to mochitest command.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Properties implemented but not in geckolib:
-  * contain longhand property bug 1354998
-    * test_contain_formatting_context.html [1]
-    * test_compute_data_with_start_struct.html `contain` [2]
-    * test_inherit_computation.html `contain` [2]
-    * test_inherit_storage.html `contain` [2]
-    * test_initial_computation.html `contain` [4]
-    * test_initial_storage.html `contain` [4]
-    * test_value_storage.html `'contain'` [30]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -230,11 +222,6 @@ to mochitest command.
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
-  * border shorthands do not reset border-image servo/servo#15202
-    * test_shorthand_property_getters.html `border-image` [1]
-    * test_inherit_storage.html `for property 'border-image-` [5]
-    * test_initial_storage.html `for property 'border-image-` [10]
-    * test_value_storage.html `(for 'border-image-` [60]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
   * mask shorthand servo/servo#15772

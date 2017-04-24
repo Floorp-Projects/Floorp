@@ -6,7 +6,7 @@
 fails == 543681-1.html 543681-1.html
 fails-if(stylo&&!browserIsRemote) == 1243409-1.html 1243409-1.html
 skip-if(stylo) == test-image-layers.html test-image-layers.html
-== test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
+skip-if(stylo) == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers.html
 skip-if(stylo) == test-animated-image-layers-background.html test-animated-image-layers-background.html
 == box-shadow-border-radius.html box-shadow-border-radius.html

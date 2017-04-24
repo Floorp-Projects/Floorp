@@ -1898,8 +1898,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                                      &pseudoStyleContext);
       } else {
         aState.mPresContext->TransitionManager()->
-          PruneCompletedTransitions(container, aPseudoElement,
-                                    pseudoStyleContext);
+          PruneCompletedTransitions(aParentContent->AsElement(),
+                                    aPseudoElement, pseudoStyleContext);
       }
     }
   }

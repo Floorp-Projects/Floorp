@@ -191,7 +191,7 @@ public class AppConstants {
 //#endif
 
     public static final boolean MOZ_CRASHREPORTER =
-//#ifdef MOZ_CRASHREPORTER
+//#if MOZ_CRASHREPORTER
     true;
 //#else
     false;

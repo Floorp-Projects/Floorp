@@ -4841,16 +4841,20 @@ AccumulateIntegerDelta(NSEvent* aEvent)
 static gfx::IntPoint
 GetIntegerDeltaForEvent(NSEvent* aEvent)
 {
-  if (nsCocoaFeatures::OnSierraOrLater()) {
+  if (nsCocoaFeatures::OnSierraOrLater() && [aEvent hasPreciseScrollingDeltas]) {
+    // Pixel scroll events (events with hasPreciseScrollingDeltas == YES)
+    // carry pixel deltas in the scrollingDeltaX/Y fields and line scroll
+    // information in the deltaX/Y fields.
+    // Prior to 10.12, these line scroll fields would be zero for most pixel
+    // scroll events and non-zero for some, whenever at least a full line
+    // worth of pixel scrolling had accumulated. That's the behavior we want.
+    // Starting with 10.12 however, pixel scroll events no longer accumulate
+    // deltaX and deltaY; they just report floating point values for every
+    // single event. So we need to do our own accumulation.
     return AccumulateIntegerDelta(aEvent);
   }
 
-  // Pre-10.12, deltaX/deltaY had the accumulation behavior that we want, and
-  // it worked more reliably than doing it on our own, so use it on pre-10.12
-  // versions. For example, with a traditional USB mouse, the first wheel
-  // "tick" would always senda line scroll of at least one line, but with our
-  // own accumulation you sometimes need to do multiple wheel ticks before one
-  // line has been accumulated.
+  // For line scrolls, or pre-10.12, just use the rounded up value of deltaX / deltaY.
   return gfx::IntPoint(RoundUp([aEvent deltaX]), RoundUp([aEvent deltaY]));
 }
 
