@@ -5,8 +5,9 @@
 /*
  * Implements an interface of the storage of Form Autofill.
  *
- * The data is stored in JSON format, without indentation, using UTF-8 encoding.
- * With indentation applied, the file would look like this:
+ * The data is stored in JSON format, without indentation and the computed
+ * fields, using UTF-8 encoding. With indentation and computed fields applied,
+ * the schema would look like this:
  *
  * {
  *   version: 1,
@@ -19,13 +20,19 @@
  *       additional-name,
  *       family-name,
  *       organization,     // Company
- *       street-address,    // (Multiline)
- *       address-level2,    // City/Town
- *       address-level1,    // Province (Standardized code if possible)
+ *       street-address,   // (Multiline)
+ *       address-level2,   // City/Town
+ *       address-level1,   // Province (Standardized code if possible)
  *       postal-code,
  *       country,          // ISO 3166
  *       tel,
  *       email,
+ *
+ *       // computed fields (These fields are not stored in the file as they are
+ *       // generated at runtime.)
+ *       address-line1,
+ *       address-line2,
+ *       address-line3,
  *
  *       // metadata
  *       timeCreated,      // in ms
@@ -66,7 +73,6 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const SCHEMA_VERSION = 1;
 
-// Name-related fields will be handled in follow-up bugs due to the complexity.
 const VALID_FIELDS = [
   "given-name",
   "additional-name",
@@ -128,7 +134,8 @@ ProfileStorage.prototype = {
     log.debug("add:", profile);
     this._store.ensureDataReady();
 
-    let profileToSave = this._normalizeProfile(profile);
+    let profileToSave = this._clone(profile);
+    this._normalizeProfile(profileToSave);
 
     profileToSave.guid = gUUIDGenerator.generateUUID().toString()
                                        .replace(/[{}-]/g, "").substring(0, 12);
@@ -163,7 +170,9 @@ ProfileStorage.prototype = {
       throw new Error("No matching profile.");
     }
 
-    let profileToUpdate = this._normalizeProfile(profile);
+    let profileToUpdate = this._clone(profile);
+    this._normalizeProfile(profileToUpdate);
+
     for (let field of VALID_FIELDS) {
       if (profileToUpdate[field] !== undefined) {
         profileFound[field] = profileToUpdate[field];
@@ -234,7 +243,9 @@ ProfileStorage.prototype = {
     }
 
     // Profile is cloned to avoid accidental modifications from outside.
-    return this._clone(profileFound);
+    let clonedProfile = this._clone(profileFound);
+    this._computeFields(clonedProfile);
+    return clonedProfile;
   },
 
   /**
@@ -248,7 +259,9 @@ ProfileStorage.prototype = {
     this._store.ensureDataReady();
 
     // Profiles are cloned to avoid accidental modifications from outside.
-    return this._store.data.profiles.map(this._clone);
+    let clonedProfiles = this._store.data.profiles.map(this._clone);
+    clonedProfiles.forEach(this._computeFields);
+    return clonedProfiles;
   },
 
   /**
@@ -259,10 +272,21 @@ ProfileStorage.prototype = {
    */
   getByFilter({info, searchString}) {
     log.debug("getByFilter:", info, searchString);
-    this._store.ensureDataReady();
 
-    // Profiles are cloned to avoid accidental modifications from outside.
-    let result = this._findByFilter({info, searchString}).map(this._clone);
+    let lcSearchString = searchString.toLowerCase();
+    let result = this.getAll().filter(profile => {
+      // Return true if string is not provided and field exists.
+      // TODO: We'll need to check if the address is for billing or shipping.
+      //       (Bug 1358941)
+      let name = profile[info.fieldName];
+
+      if (!searchString) {
+        return !!name;
+      }
+
+      return name.toLowerCase().startsWith(lcSearchString);
+    });
+
     log.debug("getByFilter: Returning", result.length, "result(s)");
     return result;
   },
@@ -275,25 +299,47 @@ ProfileStorage.prototype = {
     return this._store.data.profiles.find(profile => profile.guid == guid);
   },
 
-  _findByFilter({info, searchString}) {
-    let profiles = this._store.data.profiles;
-    let lcSearchString = searchString.toLowerCase();
+  _computeFields(profile) {
+    if (profile["street-address"]) {
+      let streetAddress = profile["street-address"].split("\n");
+      // TODO: we should prevent the dataloss by concatenating the rest of lines
+      //       with a locale-specific character in the future (bug 1360114).
+      for (let i = 0; i < 3; i++) {
+        if (streetAddress[i]) {
+          profile["address-line" + (i + 1)] = streetAddress[i];
+        }
+      }
+    }
+  },
 
-    return profiles.filter(profile => {
-      // Return true if string is not provided and field exists.
-      // TODO: We'll need to check if the address is for billing or shipping.
-      let name = profile[info.fieldName];
-
-      if (!searchString) {
-        return !!name;
+  _normalizeAddress(profile) {
+    if (profile["address-line1"] || profile["address-line2"] ||
+        profile["address-line3"]) {
+      // Treat "street-address" as "address-line1" if it contains only one line
+      // and "address-line1" is omitted.
+      if (!profile["address-line1"] && profile["street-address"] &&
+          !profile["street-address"].includes("\n")) {
+        profile["address-line1"] = profile["street-address"];
+        delete profile["street-address"];
       }
 
-      return name.toLowerCase().startsWith(lcSearchString);
-    });
+      // Remove "address-line*" but keep the values.
+      let addressLines = [1, 2, 3].map(i => {
+        let value = profile["address-line" + i];
+        delete profile["address-line" + i];
+        return value;
+      });
+
+      // Concatenate "address-line*" if "street-address" is omitted.
+      if (!profile["street-address"]) {
+        profile["street-address"] = addressLines.join("\n");
+      }
+    }
   },
 
   _normalizeProfile(profile) {
-    let result = {};
+    this._normalizeAddress(profile);
+
     for (let key in profile) {
       if (!VALID_FIELDS.includes(key)) {
         throw new Error(`"${key}" is not a valid field.`);
@@ -302,10 +348,7 @@ ProfileStorage.prototype = {
           typeof profile[key] !== "number") {
         throw new Error(`"${key}" contains invalid data type.`);
       }
-
-      result[key] = profile[key];
     }
-    return result;
   },
 
   _dataPostProcessor(data) {
