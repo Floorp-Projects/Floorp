@@ -34,7 +34,8 @@ public:
   enum Codec: uint8_t
   {
     VP8 = 1 << 0,
-    VP9 = 1 << 1
+    VP9 = 1 << 1,
+    Unknown = 1 << 7,
   };
 
   // Return true if aMimeType is a one of the strings used by our demuxers to
@@ -60,7 +61,7 @@ private:
 
   const VideoInfo& mInfo;
 
-  const int mCodec;
+  const Codec mCodec;
 };
 
 } // namespace mozilla
