@@ -116,6 +116,7 @@ windows7-32-vm/opt:
         - external-media-tests
         - external-media-tests-slow
         - awsy
+        - desktop-screenshot-capture
 
 # win32 gpu
 windows7-32/debug:
@@ -126,30 +127,33 @@ windows7-32/opt:
     build-platform: win32/opt
     test-sets:
         - windows-gpu-tests
+        - desktop-screenshot-capture
 
 # win64 vm
 windows10-64-vm/debug:
     build-platform: win64/debug
     test-sets:
-#        - windows-vm-tests
+        - windows-vm-tests
         - external-media-tests
 windows10-64-vm/opt:
     build-platform: win64/opt
     test-sets:
-#        - windows-vm-tests
+        - windows-vm-tests
         - external-media-tests
         - external-media-tests-slow
         - awsy
+        - desktop-screenshot-capture
 
 # win64 gpu
-#windows10-64/debug:
-#    build-platform: win64/debug
-#    test-sets:
-#        - windows-gpu-tests
-#windows10-64/opt:
-#    build-platform: win64/opt
-#    test-sets:
-#        - windows-gpu-tests
+windows10-64/debug:
+    build-platform: win64/debug
+    test-sets:
+        - windows-gpu-tests
+windows10-64/opt:
+    build-platform: win64/opt
+    test-sets:
+        - windows-gpu-tests
+        - desktop-screenshot-capture
 
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
