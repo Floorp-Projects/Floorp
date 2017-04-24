@@ -98,7 +98,7 @@ ThreadEntry(void* aArg)
   return 0;
 }
 
-SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
+SamplerThread::SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
                              double aIntervalMilliseconds)
     : mActivityGeneration(aActivityGeneration)
     , mIntervalMicroseconds(
@@ -139,7 +139,7 @@ SamplerThread::~SamplerThread()
 }
 
 void
-SamplerThread::Stop(PSLockRef aLock)
+SamplerThread::Stop(PS::LockRef aLock)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -157,7 +157,7 @@ SamplerThread::Stop(PSLockRef aLock)
 }
 
 void
-SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
+SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample& aSample)
 {
   HANDLE profiled_thread = aSample.mPlatformData->ProfiledThread();
@@ -229,7 +229,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 ////////////////////////////////////////////////////////////////////////
 
 static void
-PlatformInit(PSLockRef aLock)
+PlatformInit(PS::LockRef aLock)
 {
 }
 
