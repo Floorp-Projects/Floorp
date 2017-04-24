@@ -324,13 +324,13 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
-    /* Occasionally print header lines for profiling information. */
+    // Occasionally print header lines for profiling information.
     void maybePrintProfileHeaders();
 
-    /* Print header line for profile times. */
+    // Print header line for profile times.
     void printProfileHeader();
 
-    /* Print total profile times on shutdown. */
+    // Print total profile times on shutdown.
     void printTotalProfileTimes();
 
   private:
