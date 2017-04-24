@@ -3305,11 +3305,8 @@ ContentChild::RecvFileCreationResponse(const nsID& aUUID,
   } else {
     MOZ_ASSERT(aResult.type() == FileCreationResult::TFileCreationSuccessResult);
 
-    PBlobChild* blobChild =
-      aResult.get_FileCreationSuccessResult().blobChild();
-    MOZ_ASSERT(blobChild);
-
-    RefPtr<BlobImpl> impl = static_cast<BlobChild*>(blobChild)->GetBlobImpl();
+    RefPtr<BlobImpl> impl =
+      IPCBlobUtils::Deserialize(aResult.get_FileCreationSuccessResult().blob());
     helper->ResponseReceived(impl, NS_OK);
   }
 
