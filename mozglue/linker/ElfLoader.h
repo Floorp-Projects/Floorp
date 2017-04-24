@@ -460,7 +460,11 @@ protected:
   const char *lastError;
 
 private:
-  ElfLoader() : expect_shutdown(true) {}
+  ElfLoader() : expect_shutdown(true)
+  {
+    pthread_mutex_init(&handlesMutex, nullptr);
+  }
+
   ~ElfLoader();
 
   /* Initialization code that can't run during static initialization. */
@@ -481,6 +485,8 @@ private:
   /* Bookkeeping */
   typedef std::vector<LibHandle *> LibHandleList;
   LibHandleList handles;
+
+  pthread_mutex_t handlesMutex;
 
 protected:
   friend class CustomElf;
