@@ -7,20 +7,35 @@
 EXPORTS.mozilla.dom.ipc += [
     'BlobChild.h',
     'BlobParent.h',
+    'IPCBlobInputStream.h',
+    'IPCBlobInputStreamChild.h',
+    'IPCBlobInputStreamParent.h',
+    'IPCBlobInputStreamStorage.h',
     'MemoryStreamChild.h',
     'MemoryStreamParent.h',
     'nsIRemoteBlob.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'IPCBlobUtils.h',
+]
+
 UNIFIED_SOURCES += [
     'Blob.cpp',
+    'IPCBlobInputStream.cpp',
+    'IPCBlobInputStreamChild.cpp',
+    'IPCBlobInputStreamParent.cpp',
+    'IPCBlobInputStreamStorage.cpp',
+    'IPCBlobUtils.cpp',
     'MemoryStreamParent.cpp',
 ]
 
 IPDL_SOURCES += [
     'BlobTypes.ipdlh',
+    'IPCBlob.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',
+    'PIPCBlobInputStream.ipdl',
     'PMemoryStream.ipdl',
 ]
 
@@ -38,3 +53,5 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']

@@ -393,6 +393,14 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
     }
 };
 
+template<typename Key>
+struct IcStubCodeMapGCPolicy
+{
+    static bool needsSweep(Key*, ReadBarrieredJitCode* value) {
+        return IsAboutToBeFinalized(value);
+    }
+};
+
 class JitZone
 {
     // Allocated space for optimized baseline stubs.
@@ -404,12 +412,48 @@ class JitZone
     using IonCacheIRStubInfoSet = HashSet<CacheIRStubKey, CacheIRStubKey, SystemAllocPolicy>;
     IonCacheIRStubInfoSet ionCacheIRStubInfoSet_;
 
+    // Map CacheIRStubKey to shared JitCode objects.
+    using BaselineCacheIRStubCodeMap = GCHashMap<CacheIRStubKey,
+                                                 ReadBarrieredJitCode,
+                                                 CacheIRStubKey,
+                                                 SystemAllocPolicy,
+                                                 IcStubCodeMapGCPolicy<CacheIRStubKey>>;
+    BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
+
   public:
+    MOZ_MUST_USE bool init(JSContext* cx);
+    void toggleBarriers(bool enabled);
+    void sweep(FreeOp* fop);
+
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* jitZone,
+                                size_t* baselineStubsOptimized,
+                                size_t* cachedCFG) const;
+
     OptimizedICStubSpace* optimizedStubSpace() {
         return &optimizedStubSpace_;
     }
     CFGSpace* cfgSpace() {
         return &cfgSpace_;
+    }
+
+    JitCode* getBaselineCacheIRStubCode(const CacheIRStubKey::Lookup& key,
+                                        CacheIRStubInfo** stubInfo) {
+        auto p = baselineCacheIRStubCodes_.lookup(key);
+        if (p) {
+            *stubInfo = p->key().stubInfo.get();
+            return p->value();
+        }
+        *stubInfo = nullptr;
+        return nullptr;
+    }
+    MOZ_MUST_USE bool putBaselineCacheIRStubCode(const CacheIRStubKey::Lookup& lookup,
+                                                 CacheIRStubKey& key,
+                                                 JitCode* stubCode)
+    {
+        auto p = baselineCacheIRStubCodes_.lookupForAdd(lookup);
+        MOZ_ASSERT(!p);
+        return baselineCacheIRStubCodes_.add(p, Move(key), stubCode);
     }
 
     CacheIRStubInfo* getIonCacheIRStubInfo(const CacheIRStubKey::Lookup& key) {
@@ -444,13 +488,6 @@ class JitCompartment
 {
     friend class JitActivation;
 
-    template<typename Key>
-    struct IcStubCodeMapGCPolicy {
-        static bool needsSweep(Key*, ReadBarrieredJitCode* value) {
-            return IsAboutToBeFinalized(value);
-        }
-    };
-
     // Map ICStub keys to ICStub shared code objects.
     using ICStubCodeMap = GCHashMap<uint32_t,
                                     ReadBarrieredJitCode,
@@ -458,14 +495,6 @@ class JitCompartment
                                     RuntimeAllocPolicy,
                                     IcStubCodeMapGCPolicy<uint32_t>>;
     ICStubCodeMap* stubCodes_;
-
-    // Map ICStub keys to ICStub shared code objects.
-    using CacheIRStubCodeMap = GCHashMap<CacheIRStubKey,
-                                         ReadBarrieredJitCode,
-                                         CacheIRStubKey,
-                                         RuntimeAllocPolicy,
-                                         IcStubCodeMapGCPolicy<CacheIRStubKey>>;
-    CacheIRStubCodeMap* cacheIRStubCodes_;
 
     // Keep track of offset into various baseline stubs' code at return
     // point from called script.
@@ -538,22 +567,6 @@ class JitCompartment
         }
         return true;
     }
-    JitCode* getCacheIRStubCode(const CacheIRStubKey::Lookup& key, CacheIRStubInfo** stubInfo) {
-        CacheIRStubCodeMap::Ptr p = cacheIRStubCodes_->lookup(key);
-        if (p) {
-            *stubInfo = p->key().stubInfo.get();
-            return p->value();
-        }
-        *stubInfo = nullptr;
-        return nullptr;
-    }
-    MOZ_MUST_USE bool putCacheIRStubCode(const CacheIRStubKey::Lookup& lookup, CacheIRStubKey& key,
-                                         JitCode* stubCode)
-    {
-        CacheIRStubCodeMap::AddPtr p = cacheIRStubCodes_->lookupForAdd(lookup);
-        MOZ_ASSERT(!p);
-        return cacheIRStubCodes_->add(p, Move(key), stubCode);
-    }
     void initBailoutReturnAddr(void* addr, uint32_t key, BailoutReturnStub kind) {
         MOZ_ASSERT(bailoutReturnStubInfo_[kind].addr == nullptr);
         bailoutReturnStubInfo_[kind] = BailoutReturnStubInfo { addr, key };
@@ -565,7 +578,6 @@ class JitCompartment
 
     void toggleBarriers(bool enabled);
 
-  public:
     JitCompartment();
     ~JitCompartment();
 

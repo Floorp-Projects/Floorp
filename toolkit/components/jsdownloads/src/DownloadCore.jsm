@@ -1976,6 +1976,12 @@ this.DownloadCopySaver.prototype = {
             channel.referrer = NetUtil.newURI(download.source.referrer);
           }
 
+          // This makes the channel be corretly throttled during page loads
+          // and also prevents its caching.
+          if (channel instanceof Ci.nsIHttpChannelInternal) {
+            channel.channelIsForDownload = true;
+          }
+
           // If we have data that we can use to resume the download from where
           // it stopped, try to use it.
           let resumeAttempted = false;
@@ -2405,6 +2411,10 @@ this.DownloadLegacySaver.prototype = {
    *        are never added to history even if this parameter is false.
    */
   onTransferStarted(aRequest, aAlreadyAddedToHistory) {
+    // Store a reference to the request, used in some cases when handling
+    // completion, and also checked during the download by unit tests.
+    this.request = aRequest;
+
     // Store the entity ID to use for resuming if required.
     if (this.download.tryToKeepPartialData &&
         aRequest instanceof Ci.nsIResumableChannel) {
@@ -2432,15 +2442,10 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Called by the nsITransfer implementation when the request has finished.
    *
-   * @param aRequest
-   *        nsIRequest associated to the status update.
    * @param aStatus
    *        Status code received by the nsITransfer implementation.
    */
-  onTransferFinished: function DLS_onTransferFinished(aRequest, aStatus) {
-    // Store a reference to the request, used when handling completion.
-    this.request = aRequest;
-
+  onTransferFinished: function DLS_onTransferFinished(aStatus) {
     if (Components.isSuccessCode(aStatus)) {
       this.deferExecuted.resolve();
     } else {

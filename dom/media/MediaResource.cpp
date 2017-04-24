@@ -1518,14 +1518,35 @@ MediaResource::Create(MediaResourceCallback* aCallback,
     return nullptr;
   }
 
-  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   RefPtr<MediaResource> resource;
-  if (fc || IsBlobURI(uri)) {
+
+  // Let's try to create a FileMediaResource in case the channel is a nsIFile
+  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
+  if (fc) {
     resource = new FileMediaResource(aCallback, aChannel, uri, *containerType);
-  } else {
-    resource = new ChannelMediaResource(
-      aCallback, aChannel, uri, *containerType, aIsPrivateBrowsing);
   }
+
+  // If the URL is blobURL with a seekable inputStream, we can still use a
+  // FileMediaResource. This basically means that the blobURL and its Blob have
+  // been created in the current process.
+
+  if (!resource) {
+    nsCOMPtr<nsIInputStream> stream;
+    nsCOMPtr<nsISeekableStream> seekableStream;
+    if (IsBlobURI(uri) &&
+        NS_SUCCEEDED(NS_GetStreamForBlobURI(uri, getter_AddRefs(stream))) &&
+        (seekableStream = do_QueryInterface(stream))) {
+      resource =
+        new FileMediaResource(aCallback, aChannel, uri, *containerType);
+    }
+  }
+
+  if (!resource) {
+    resource =
+      new ChannelMediaResource(aCallback, aChannel, uri, *containerType,
+                               aIsPrivateBrowsing);
+  }
+
   return resource.forget();
 }
 
