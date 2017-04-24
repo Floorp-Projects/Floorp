@@ -68,7 +68,6 @@ module.exports = {
     "no-sequences": "error",
     "no-shadow": "warn",
     "no-shadow-restricted-names": "error",
-    "no-spaced-func": "warn",
     "no-throw-literal": "error",
     "no-trailing-spaces": "error",
     "no-undef": "error",
