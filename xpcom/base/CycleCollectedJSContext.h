@@ -78,6 +78,10 @@ protected:
                       uint32_t aMaxBytes,
                       uint32_t aMaxNurseryBytes);
 
+  // See explanation in mIsPrimaryContext.
+  MOZ_IS_CLASS_INIT
+  nsresult InitializeNonPrimary(CycleCollectedJSContext* aPrimaryContext);
+
   virtual CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) = 0;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -86,6 +90,9 @@ protected:
   std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
 
 private:
+  MOZ_IS_CLASS_INIT
+  void InitializeCommon();
+
   static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);
   static bool EnqueuePromiseJobCallback(JSContext* aCx,
                                         JS::HandleObject aJob,
@@ -247,6 +254,12 @@ public:
   nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
 
 private:
+  // A primary context owns the mRuntime. Non-main-thread contexts should always
+  // be primary. On the main thread, the primary context should be the first one
+  // created and the last one destroyed. Non-primary contexts are used for
+  // cooperatively scheduled threads.
+  bool mIsPrimaryContext;
+
   CycleCollectedJSRuntime* mRuntime;
 
   JSContext* mJSContext;

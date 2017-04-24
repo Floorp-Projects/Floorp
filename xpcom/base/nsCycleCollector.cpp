@@ -4056,6 +4056,8 @@ nsCycleCollector_init()
   return sCollectorData.init();
 }
 
+static nsCycleCollector* gMainThreadCollector;
+
 void
 nsCycleCollector_startup()
 {
@@ -4068,6 +4070,44 @@ nsCycleCollector_startup()
   data->mContext = nullptr;
 
   sCollectorData.set(data);
+
+  if (NS_IsMainThread()) {
+    MOZ_ASSERT(!gMainThreadCollector);
+    gMainThreadCollector = data->mCollector;
+  }
+}
+
+void
+nsCycleCollector_registerNonPrimaryContext(CycleCollectedJSContext* aCx)
+{
+  if (sCollectorData.get()) {
+    MOZ_CRASH();
+  }
+
+  MOZ_ASSERT(gMainThreadCollector);
+
+  CollectorData* data = new CollectorData;
+
+  data->mCollector = gMainThreadCollector;
+  data->mContext = aCx;
+
+  sCollectorData.set(data);
+}
+
+void
+nsCycleCollector_forgetNonPrimaryContext()
+{
+  CollectorData* data = sCollectorData.get();
+
+  // We should have started the cycle collector by now.
+  MOZ_ASSERT(data);
+  // And we shouldn't have already forgotten our context.
+  MOZ_ASSERT(data->mContext);
+  // We should not have shut down the cycle collector yet.
+  MOZ_ASSERT(data->mCollector);
+
+  delete data;
+  sCollectorData.set(nullptr);
 }
 
 void
@@ -4212,6 +4252,9 @@ nsCycleCollector_shutdown(bool aDoCollect)
     PROFILER_LABEL("nsCycleCollector", "shutdown",
                    js::ProfileEntry::Category::CC);
 
+    if (gMainThreadCollector == data->mCollector) {
+      gMainThreadCollector = nullptr;
+    }
     data->mCollector->Shutdown(aDoCollect);
     data->mCollector = nullptr;
     if (data->mContext) {

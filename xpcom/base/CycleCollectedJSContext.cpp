@@ -51,7 +51,8 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 CycleCollectedJSContext::CycleCollectedJSContext()
-  : mRuntime(nullptr)
+  : mIsPrimaryContext(true)
+  , mRuntime(nullptr)
   , mJSContext(nullptr)
   , mDoingStableStates(false)
   , mDisableMicroTaskCheckpoint(false)
@@ -68,7 +69,9 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
     return;
   }
 
-  mRuntime->Shutdown(mJSContext);
+  if (mIsPrimaryContext) {
+    mRuntime->Shutdown(mJSContext);
+  }
 
   // Last chance to process any events.
   ProcessMetastableStateQueue(mBaseRecursionDepth);
@@ -88,35 +91,30 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
 
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
-  nsCycleCollector_forgetJSContext();
+
+  if (mIsPrimaryContext) {
+    nsCycleCollector_forgetJSContext();
+  } else {
+    nsCycleCollector_forgetNonPrimaryContext();
+  }
 
   mozilla::dom::DestroyScriptSettings();
 
   mOwningThread->SetScriptObserver(nullptr);
   NS_RELEASE(mOwningThread);
 
-  delete mRuntime;
+  if (mIsPrimaryContext) {
+    delete mRuntime;
+  }
   mRuntime = nullptr;
 }
 
-nsresult
-CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
-                                    uint32_t aMaxBytes,
-                                    uint32_t aMaxNurseryBytes)
+void
+CycleCollectedJSContext::InitializeCommon()
 {
-  MOZ_ASSERT(!mJSContext);
-
   mOwningThread->SetScriptObserver(this);
   // The main thread has a base recursion depth of 0, workers of 1.
   mBaseRecursionDepth = RecursionDepth();
-
-  mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
-  if (!mJSContext) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mRuntime = CreateRuntime(mJSContext);
 
   NS_GetCurrentThread()->SetCanInvokeJS(true);
 
@@ -126,8 +124,48 @@ CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
   JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
+}
+
+nsresult
+CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
+                                    uint32_t aMaxBytes,
+                                    uint32_t aMaxNurseryBytes)
+{
+  MOZ_ASSERT(!mJSContext);
+
+  mozilla::dom::InitScriptSettings();
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
+  if (!mJSContext) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mRuntime = CreateRuntime(mJSContext);
+
+  InitializeCommon();
 
   nsCycleCollector_registerJSContext(this);
+
+  return NS_OK;
+}
+
+nsresult
+CycleCollectedJSContext::InitializeNonPrimary(CycleCollectedJSContext* aPrimaryContext)
+{
+  MOZ_ASSERT(!mJSContext);
+
+  mIsPrimaryContext = false;
+
+  mozilla::dom::InitScriptSettings();
+  mJSContext = JS_NewCooperativeContext(aPrimaryContext->mJSContext);
+  if (!mJSContext) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mRuntime = aPrimaryContext->mRuntime;
+
+  InitializeCommon();
+
+  nsCycleCollector_registerNonPrimaryContext(this);
 
   return NS_OK;
 }
