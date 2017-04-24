@@ -28,14 +28,14 @@ this.WeaveCrypto = function WeaveCrypto() {
 };
 
 WeaveCrypto.prototype = {
-    prefBranch : null,
-    debug      : true,  // services.sync.log.cryptoDebug
+    prefBranch: null,
+    debug: true,  // services.sync.log.cryptoDebug
 
-    observer : {
-        _self : null,
+    observer: {
+        _self: null,
 
-        QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
-                                                Ci.nsISupportsWeakReference]),
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                               Ci.nsISupportsWeakReference]),
 
         observe(subject, topic, data) {
             let self = this._self;

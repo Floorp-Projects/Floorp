@@ -513,22 +513,22 @@ add_task(async function test_mismatched_types() {
 
   let oldRecord = {
     "id": "l1nZZXfB8nC7",
-    "type":"folder",
-    "parentName":"Bookmarks Toolbar",
-    "title":"Innerst i Sneglehode",
-    "description":null,
+    "type": "folder",
+    "parentName": "Bookmarks Toolbar",
+    "title": "Innerst i Sneglehode",
+    "description": null,
     "parentid": "toolbar"
   };
   oldRecord.cleartext = oldRecord;
 
   let newRecord = {
     "id": "l1nZZXfB8nC7",
-    "type":"livemark",
-    "siteUri":"http://sneglehode.wordpress.com/",
-    "feedUri":"http://sneglehode.wordpress.com/feed/",
-    "parentName":"Bookmarks Toolbar",
-    "title":"Innerst i Sneglehode",
-    "description":null,
+    "type": "livemark",
+    "siteUri": "http://sneglehode.wordpress.com/",
+    "feedUri": "http://sneglehode.wordpress.com/feed/",
+    "parentName": "Bookmarks Toolbar",
+    "title": "Innerst i Sneglehode",
+    "description": null,
     "children":
       ["HCRq40Rnxhrd", "YeyWCV1RVsYw", "GCceVZMhvMbP", "sYi2hevdArlF",
        "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
