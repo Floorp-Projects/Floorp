@@ -43,7 +43,7 @@ function test_collection_operations() {
   add_task(function* test_kinto_create_new_get_existing() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let record = {id:"test-id", foo:"bar"};
+    let record = {id: "test-id", foo: "bar"};
     yield adapter.execute((transaction) => transaction.create(record));
     let newRecord = yield adapter.get("test-id");
     // ensure the record is the same as when it was added
@@ -56,7 +56,7 @@ function test_collection_operations() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     // create a second record
-    let record = {id:"test-id-2", foo:"baz"};
+    let record = {id: "test-id-2", foo: "baz"};
     yield adapter.execute((transaction) => transaction.create(record));
     let newRecord = yield adapter.get("test-id-2");
     deepEqual(record, newRecord);
@@ -86,8 +86,8 @@ function test_collection_operations() {
   add_task(function* test_kinto_update_get_existing() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let originalRecord = {id:"test-id", foo:"bar"};
-    let updatedRecord = {id:"test-id", foo:"baz"};
+    let originalRecord = {id: "test-id", foo: "bar"};
+    let updatedRecord = {id: "test-id", foo: "baz"};
     yield adapter.clear();
     yield adapter.execute((transaction) => transaction.create(originalRecord));
     yield adapter.execute((transaction) => transaction.update(updatedRecord));
@@ -102,7 +102,7 @@ function test_collection_operations() {
   add_task(function* test_kinto_list() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    let originalRecord = {id:"test-id-1", foo:"bar"};
+    let originalRecord = {id: "test-id-1", foo: "bar"};
     let records = yield adapter.list();
     do_check_eq(records.length, 1);
     yield adapter.execute((transaction) => transaction.create(originalRecord));

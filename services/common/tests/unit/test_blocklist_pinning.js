@@ -218,7 +218,16 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({
+        "settings": {
+          "batch_max_requests": 25
+        },
+        "url": `http://localhost:${port}/v1/`,
+        "documentation": "https://kinto.readthedocs.org/",
+        "version": "1.5.1",
+        "commit": "cbc6f58",
+        "hello": "kinto"
+      })
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified": {
       "sampleHeaders": [
@@ -229,16 +238,16 @@ function getSampleResponse(req, port) {
         "Etag: \"3000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "pinType": "KeyPin",
         "hostName": "one.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "pins" : ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
+        "pins": ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
-        "versions" : [appInfo.version],
-        "id":"78cf8900-fdea-4ce5-f8fb-b78710617718",
-        "last_modified":3000
+        "versions": [appInfo.version],
+        "id": "78cf8900-fdea-4ce5-f8fb-b78710617718",
+        "last_modified": 3000
       }]})
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=3000": {
@@ -250,44 +259,44 @@ function getSampleResponse(req, port) {
         "Etag: \"4000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "pinType": "KeyPin",
         "hostName": "two.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "pins" : ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
+        "pins": ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
-        "versions" : [appInfo.version],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02c",
-        "last_modified":4000
+        "versions": [appInfo.version],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02c",
+        "last_modified": 4000
       }, {
         "pinType": "KeyPin",
         "hostName": "three.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "pins" : ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
+        "pins": ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
-        "versions" : [appInfo.version, "some other version that won't match"],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02d",
-        "last_modified":4000
+        "versions": [appInfo.version, "some other version that won't match"],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02d",
+        "last_modified": 4000
       }, {
         "pinType": "KeyPin",
         "hostName": "four.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "pins" : ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
+        "pins": ["cUPcTAZWKaASuYWhhneDttWpY3oBAkE3h2+soZS7sWs=",
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
-        "versions" : ["some version that won't match"],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02e",
-        "last_modified":4000
+        "versions": ["some version that won't match"],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02e",
+        "last_modified": 4000
       }, {
         "pinType": "STSPin",
         "hostName": "five.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "versions" : [appInfo.version, "some version that won't match"],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc032",
-        "last_modified":4000
+        "versions": [appInfo.version, "some version that won't match"],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc032",
+        "last_modified": 4000
       }]})
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=4000": {
@@ -299,37 +308,37 @@ function getSampleResponse(req, port) {
         "Etag: \"5000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
-        "irrelevant":"this entry looks nothing whatsoever like a pin preload",
+      "responseBody": JSON.stringify({"data": [{
+        "irrelevant": "this entry looks nothing whatsoever like a pin preload",
         "pinType": "KeyPin",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02f",
-        "last_modified":5000
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02f",
+        "last_modified": 5000
       }, {
-        "irrelevant":"this entry has data of the wrong type",
+        "irrelevant": "this entry has data of the wrong type",
         "pinType": "KeyPin",
         "hostName": 3,
         "includeSubdomains": "nonsense",
         "expires": "more nonsense",
-        "pins" : [1, 2, 3, 4],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc030",
-        "last_modified":5000
+        "pins": [1, 2, 3, 4],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc030",
+        "last_modified": 5000
       }, {
-        "irrelevant":"this entry is missing the actual pins",
+        "irrelevant": "this entry is missing the actual pins",
         "pinType": "KeyPin",
         "hostName": "missingpins.example.com",
         "includeSubdomains": false,
         "expires": new Date().getTime() + 1000000,
-        "versions" : [appInfo.version],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc031",
-        "last_modified":5000
+        "versions": [appInfo.version],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc031",
+        "last_modified": 5000
       }, {
         "pinType": "STSPin",
         "hostName": "five.example.com",
         "includeSubdomains": true,
         "expires": new Date().getTime() + 1000000,
-        "versions" : [appInfo.version, "some version that won't match"],
-        "id":"dabafde9-df4a-ddba-2548-748da04cc032",
-        "last_modified":5000
+        "versions": [appInfo.version, "some version that won't match"],
+        "id": "dabafde9-df4a-ddba-2548-748da04cc032",
+        "last_modified": 5000
       }]})
     }
   };
