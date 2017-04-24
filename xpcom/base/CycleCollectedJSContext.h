@@ -10,6 +10,7 @@
 #include <queue>
 
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
 #include "jsapi.h"
@@ -66,6 +67,7 @@ struct CycleCollectorResults
 };
 
 class CycleCollectedJSContext
+  : public LinkedListElement<CycleCollectedJSContext>
 {
   friend class CycleCollectedJSRuntime;
 
