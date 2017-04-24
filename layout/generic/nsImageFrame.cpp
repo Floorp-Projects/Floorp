@@ -283,9 +283,10 @@ nsImageFrame::Init(nsIContent*       aContent,
   nsCOMPtr<imgIRequest> currentRequest;
   imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                           getter_AddRefs(currentRequest));
-  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
-  if (p)
-    p->AdjustPriority(-1);
+
+  if (currentRequest) {
+    currentRequest->BoostPriority(imgIRequest::CATEGORY_FRAME_INIT);
+  }
 }
 
 bool

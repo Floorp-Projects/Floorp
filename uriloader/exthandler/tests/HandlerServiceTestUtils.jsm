@@ -95,6 +95,14 @@ this.HandlerServiceTestUtils = {
       // that may have been imported from the default nsIHandlerService instance
       // and is not overwritten by fillHandlerInfo later.
       let handlerInfo = gMIMEService.getFromTypeAndExtension(type, null);
+      if (AppConstants.platform == "android") {
+        // On Android, the first handler application is always the internal one.
+        while (handlerInfo.possibleApplicationHandlers.length > 1) {
+          handlerInfo.possibleApplicationHandlers.removeElementAt(1);
+        }
+      } else {
+        handlerInfo.possibleApplicationHandlers.clear();
+      }
       handlerInfo.setFileExtensions("");
       // Populate the object from the handler service instance under testing.
       if (this.handlerService.exists(handlerInfo)) {
@@ -173,9 +181,12 @@ this.HandlerServiceTestUtils = {
                                                         : Ci.nsIHandlerInfo;
     Assert.ok(handlerInfo instanceof expectedInterface);
     Assert.equal(handlerInfo.type, expected.type);
-    Assert.equal(handlerInfo.preferredAction, expected.preferredAction);
-    Assert.equal(handlerInfo.alwaysAskBeforeHandling,
-                 expected.alwaysAskBeforeHandling);
+
+    if (!expected.preferredActionOSDependent) {
+      Assert.equal(handlerInfo.preferredAction, expected.preferredAction);
+      Assert.equal(handlerInfo.alwaysAskBeforeHandling,
+                   expected.alwaysAskBeforeHandling);
+    }
 
     if (expectedInterface == Ci.nsIMIMEInfo) {
       let fileExtensionsEnumerator = handlerInfo.getFileExtensions();

@@ -1072,6 +1072,17 @@
   <deck id="content-deck" flex="1">
     <hbox flex="1" id="browser">
       <vbox id="browser-border-start" hidden="true" layer="true"/>
+      <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
+        <sidebarheader id="sidebar-header" align="center">
+          <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <image id="sidebar-throbber"/>
+          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
+        </sidebarheader>
+        <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+                  style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
+      </vbox>
+
+      <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
       <vbox id="appcontent" flex="1">
         <notificationbox id="high-priority-global-notificationbox" notificationside="top"/>
         <tabbrowser id="content"
@@ -1081,16 +1092,6 @@
                     autocompletepopup="PopupAutoComplete"
                     selectmenulist="ContentSelectDropdown"
                     datetimepicker="DateTimePickerPanel"/>
-      </vbox>
-      <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
-      <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
-        <sidebarheader id="sidebar-header" align="center">
-          <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
-          <image id="sidebar-throbber"/>
-          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
-        </sidebarheader>
-        <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
-                  style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>

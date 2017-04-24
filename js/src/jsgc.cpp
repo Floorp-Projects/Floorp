@@ -2184,6 +2184,9 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
     for (auto* cache : zone->weakCaches())
         cache->sweep();
 
+    if (jit::JitZone* jitZone = zone->jitZone())
+        jitZone->sweep(fop);
+
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
         c->objectGroups.sweep(fop);
         c->sweepRegExps();
@@ -5215,8 +5218,11 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
                 c->sweepTemplateObjects();
             }
 
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
                 zone->sweepWeakMaps();
+                if (jit::JitZone* jitZone = zone->jitZone())
+                    jitZone->sweep(&fop);
+            }
 
             // Bug 1071218: the following two methods have not yet been
             // refactored to work on a single zone-group at once.

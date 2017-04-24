@@ -36,6 +36,7 @@
 #include "nsString.h"
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
+#include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "nsTransitionManager.h"
 

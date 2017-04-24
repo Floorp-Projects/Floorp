@@ -773,6 +773,8 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
   } else {
     RefPtr<HttpChannelChild> self = this;
     nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+    MOZ_ASSERT(neckoTarget);
+
     DebugOnly<nsresult> rv =
       neckoTarget->Dispatch(
         NS_NewRunnableFunction([self, transportStatus, progress, progressMax]() {
@@ -1371,7 +1373,12 @@ HttpChannelChild::RecvFinishInterceptedRedirect()
 
   // The IPDL connection was torn down by a interception logic in
   // CompleteRedirectSetup, and we need to call FinishInterceptedRedirect.
-  NS_DispatchToMainThread(NewRunnableMethod(this, &HttpChannelChild::FinishInterceptedRedirect));
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
+ Unused << neckoTarget->Dispatch(
+    NewRunnableMethod(this, &HttpChannelChild::FinishInterceptedRedirect),
+                      NS_DISPATCH_NORMAL);
 
   return IPC_OK();
 }
@@ -1949,9 +1956,14 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     RefPtr<InterceptStreamListener> streamListener =
         new InterceptStreamListener(redirectedChannel, mListenerContext);
 
-    NS_DispatchToMainThread(new OverrideRunnable(this, redirectedChannel,
-                                                 streamListener, mSynthesizedInput,
-                                                 mResponseHead));
+    nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+    MOZ_ASSERT(neckoTarget);
+
+    Unused << neckoTarget->Dispatch(
+      new OverrideRunnable(this, redirectedChannel, streamListener,
+                           mSynthesizedInput, mResponseHead),
+      NS_DISPATCH_NORMAL);
+
     return NS_OK;
   }
 
@@ -3112,10 +3124,45 @@ HttpChannelChild::TrySendDeletingChannel()
     return;
   }
 
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
   DebugOnly<nsresult> rv =
-    NS_DispatchToMainThread(
-      NewNonOwningRunnableMethod(this, &HttpChannelChild::TrySendDeletingChannel));
+    neckoTarget->Dispatch(
+      NewNonOwningRunnableMethod(this, &HttpChannelChild::TrySendDeletingChannel),
+      NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+}
+
+void
+HttpChannelChild::OnCopyComplete(nsresult aStatus)
+{
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
+    this, &HttpChannelChild::EnsureUploadStreamIsCloneableComplete, aStatus);
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
+  Unused << neckoTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
+nsresult
+HttpChannelChild::AsyncCall(void (HttpChannelChild::*funcPtr)(),
+                            nsRunnableMethod<HttpChannelChild> **retval)
+{
+  nsresult rv;
+
+  RefPtr<nsRunnableMethod<HttpChannelChild>> event =
+    NewRunnableMethod(this, funcPtr);
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
+  rv = neckoTarget->Dispatch(event, NS_DISPATCH_NORMAL);
+
+  if (NS_SUCCEEDED(rv) && retval) {
+    *retval = event;
+  }
+
+  return rv;
 }
 
 class CancelEvent final : public ChannelEvent

@@ -397,6 +397,7 @@ NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, IsCloneable())
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
 NS_IMPL_CI_INTERFACE_GETTER(nsFileInputStream,
@@ -680,6 +681,27 @@ Maybe<uint64_t>
 nsFileInputStream::ExpectedSerializedLength()
 {
     return Nothing();
+}
+
+bool
+nsFileInputStream::IsCloneable() const
+{
+    return XRE_IsParentProcess();
+}
+
+NS_IMETHODIMP
+nsFileInputStream::GetCloneable(bool* aCloneable)
+{
+    *aCloneable = IsCloneable();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::Clone(nsIInputStream** aResult)
+{
+    MOZ_ASSERT(IsCloneable());
+    return NS_NewLocalFileInputStream(aResult, mFile, mIOFlags, mPerm,
+                                      mBehaviorFlags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
