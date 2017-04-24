@@ -625,6 +625,7 @@ var gRepoShutdownState = "";
 var gShutdownInProgress = false;
 var gPluginPageListener = null;
 var gBrowserUpdated = null;
+var gNonMpcDisabled = false;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -3248,6 +3249,10 @@ this.AddonManagerPrivate = {
     return AddonManagerInternal._getProviderByName("XPIProvider")
                                .isTemporaryInstallID(extensionId);
   },
+
+  set nonMpcDisabled(val) {
+    gNonMpcDisabled = val;
+  },
 };
 
 /**
@@ -3471,6 +3476,8 @@ this.AddonManager = {
   SIGNEDSTATE_SIGNED: 2,
   // Add-on is system add-on.
   SIGNEDSTATE_SYSTEM: 3,
+  // Add-on is signed with a "Mozilla Extensions" certificate
+  SIGNEDSTATE_PRIVILEGED: 4,
 
   // Constants for the Addon.userDisabled property
   // Indicates that the userDisabled state of this add-on is currently
@@ -3744,6 +3751,10 @@ this.AddonManager = {
 
   get webAPI() {
     return AddonManagerInternal.webAPI;
+  },
+
+  get nonMpcDisabled() {
+    return gNonMpcDisabled;
   },
 
   get shutdown() {

@@ -74,7 +74,7 @@ use style::parser::{LengthParsingMode, ParserContext};
 use style::properties::{CascadeFlags, ComputedValues, Importance, ParsedDeclaration};
 use style::properties::{PropertyDeclarationBlock, PropertyId};
 use style::properties::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
-use style::properties::animated_properties::{AnimationValue, Interpolate, TransitionProperty};
+use style::properties::animated_properties::{AnimationValue, ComputeDistance, Interpolate, TransitionProperty};
 use style::properties::parse_one_declaration;
 use style::restyle_hints::{self, RestyleHint};
 use style::rule_tree::StyleSource;
@@ -266,6 +266,15 @@ pub extern "C" fn Servo_AnimationValues_IsInterpolable(from: RawServoAnimationVa
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_AnimationValues_ComputeDistance(from: RawServoAnimationValueBorrowed,
+                                                        to: RawServoAnimationValueBorrowed)
+                                                        -> f64 {
+    let from_value = AnimationValue::as_arc(&from);
+    let to_value = AnimationValue::as_arc(&to);
+    from_value.compute_distance(to_value).unwrap_or(0.0)
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_AnimationValueMap_Push(value_map: RawServoAnimationValueMapBorrowed,
                                                property: nsCSSPropertyID,
                                                value: RawServoAnimationValueBorrowed)
@@ -445,10 +454,17 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(raw_data: RawSe
         Some(PseudoElement::from_atom_unchecked(atom, /* anon_box = */ false))
     };
     let pseudos = &styles.pseudos;
-    let pseudo_style = pseudo.as_ref().map(|p| (p, pseudos.get(p).unwrap()));
+    let pseudo_style = match pseudo {
+        Some(ref p) => {
+            let style = pseudos.get(p);
+            debug_assert!(style.is_some());
+            style
+        }
+        None => None,
+    };
 
     let provider = get_metrics_provider_for_product();
-    element.get_base_style(shared_context, &provider, &styles.primary, &pseudo_style)
+    element.get_base_style(shared_context, &provider, &styles.primary, pseudo_style)
            .into_strong()
 }
 
@@ -1384,7 +1400,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(declarations:
             // We rely on Gecko passing in font-size values (0...7) here.
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
         },
-        FontStyle => longhands::font_style::SpecifiedValue::from_gecko_keyword(value),
+        FontStyle => longhands::font_style::computed_value::T::from_gecko_keyword(value).into(),
         FontWeight => longhands::font_weight::SpecifiedValue::from_gecko_keyword(value),
         ListStyleType => longhands::list_style_type::SpecifiedValue::from_gecko_keyword(value),
         MozMathVariant => longhands::_moz_math_variant::SpecifiedValue::from_gecko_keyword(value),
@@ -1622,7 +1638,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetFontFamily(declarations:
     let mut parser = Parser::new(&string);
     if let Ok(family) = FontFamily::parse(&mut parser) {
         if parser.is_exhausted() {
-            let decl = PropertyDeclaration::FontFamily(family);
+            let decl = PropertyDeclaration::FontFamily(Box::new(family));
             write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
                 decls.push(decl, Importance::Normal);
             })
@@ -1919,7 +1935,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
     let default_values = data.default_computed_values();
     let metrics = get_metrics_provider_for_product();
 
-    let context = Context {
+    let mut context = Context {
         is_root_element: false,
         device: &data.stylist.device,
         inherited_style: parent_style.unwrap_or(default_values),
@@ -1947,7 +1963,8 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
                             .filter_map(|&(ref decl, imp)| {
                                 if imp == Importance::Normal {
                                     let property = TransitionProperty::from_declaration(decl);
-                                    let animation = AnimationValue::from_declaration(decl, &context, default_values);
+                                    let animation = AnimationValue::from_declaration(decl, &mut context,
+                                                                                     default_values);
                                     debug_assert!(property.is_none() == animation.is_none(),
                                                   "The failure condition of TransitionProperty::from_declaration \
                                                    and AnimationValue::from_declaration should be the same");
@@ -1982,7 +1999,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
 
 #[no_mangle]
 pub extern "C" fn Servo_AssertTreeIsClean(root: RawGeckoElementBorrowed) {
-    if !cfg!(debug_assertions) {
+    if !cfg!(feature = "gecko_debug") {
         panic!("Calling Servo_AssertTreeIsClean in release build");
     }
 

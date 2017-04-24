@@ -113,11 +113,11 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
-nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext):
-  nsBoxFrame(aContext, true)
+nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, true)
+  , mPopupSetFrame(nullptr)
+  , mDefaultTooltip(nullptr)
 {
-  mPopupSetFrame = nullptr;
-
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);
   SetXULLayoutManager(layout);

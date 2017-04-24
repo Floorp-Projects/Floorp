@@ -23,10 +23,10 @@
 namespace js {
 namespace frontend {
 
-class FullParseHandler;
+template <typename CharT> class FullParseHandler;
 class ObjectBox;
 class ParseNode;
-template <typename ParseHandler> class Parser;
+template <template <typename CharT> class ParseHandler, typename CharT> class Parser;
 class SharedContext;
 class TokenStream;
 
@@ -206,7 +206,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     };
     EmitSection prologue, main, *current;
 
-    Parser<FullParseHandler>* const parser;
+    Parser<FullParseHandler, char16_t>* const parser;
 
     PooledMapPtr<AtomIndexMap> atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
@@ -280,14 +280,14 @@ struct MOZ_STACK_CLASS BytecodeEmitter
      * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
      * destruction.
      */
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler>* parser, SharedContext* sc,
-                    HandleScript script, Handle<LazyScript*> lazyScript, uint32_t lineNum,
-                    EmitterMode emitterMode = Normal);
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, char16_t>* parser,
+                    SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
+                    uint32_t lineNum, EmitterMode emitterMode = Normal);
 
     // An alternate constructor that uses a TokenPos for the starting
     // line and that sets functionBodyEndPos as well.
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler>* parser, SharedContext* sc,
-                    HandleScript script, Handle<LazyScript*> lazyScript,
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, char16_t>* parser,
+                    SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
                     TokenPos bodyPosition, EmitterMode emitterMode = Normal);
 
     MOZ_MUST_USE bool init();
@@ -753,7 +753,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                                                 ValueUsage valueUsage = ValueUsage::WantValue);
 
     bool isRestParameter(ParseNode* pn);
-    MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted);
 
     MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue);
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);

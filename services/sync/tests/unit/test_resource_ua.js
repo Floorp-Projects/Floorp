@@ -57,39 +57,33 @@ add_test(function test_fetchInfo() {
   run_next_test();
 });
 
-add_test(function test_desktop_post() {
+add_task(async function test_desktop_post() {
   _("Testing direct Resource POST.");
   let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
-  r.post("foo=bar", function(error, content) {
-    _("User-Agent: " + ua);
-    do_check_eq(ua, expectedUA + ".desktop");
-    ua = "";
-    run_next_test();
-  });
+  await r.post("foo=bar");
+  _("User-Agent: " + ua);
+  do_check_eq(ua, expectedUA + ".desktop");
+  ua = "";
 });
 
-add_test(function test_desktop_get() {
+add_task(async function test_desktop_get() {
   _("Testing async.");
   Svc.Prefs.set("client.type", "desktop");
   let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
-  r.get(function(error, content) {
-    _("User-Agent: " + ua);
-    do_check_eq(ua, expectedUA + ".desktop");
-    ua = "";
-    run_next_test();
-  });
+  await r.get();
+  _("User-Agent: " + ua);
+  do_check_eq(ua, expectedUA + ".desktop");
+  ua = "";
 });
 
-add_test(function test_mobile_get() {
+add_task(async function test_mobile_get() {
   _("Testing mobile.");
   Svc.Prefs.set("client.type", "mobile");
   let r = new AsyncResource(server.baseURI + "/1.1/johndoe/storage/meta/global");
-  r.get(function(error, content) {
-    _("User-Agent: " + ua);
-    do_check_eq(ua, expectedUA + ".mobile");
-    ua = "";
-    run_next_test();
-  });
+  await r.get();
+  _("User-Agent: " + ua);
+  do_check_eq(ua, expectedUA + ".mobile");
+  ua = "";
 });
 
 add_test(function tear_down() {

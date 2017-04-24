@@ -17,7 +17,7 @@ HTTP(..) == standards-line-height.html standards-line-height.html
 == selection.html selection.html
 HTTP(..) == marker-shadow.html marker-shadow.html
 == aligned-baseline.html aligned-baseline.html
-fails == clipped-elements.html clipped-elements.html
+== clipped-elements.html clipped-elements.html
 HTTP(..) == theme-overflow.html theme-overflow.html
 HTTP(..) == table-cell.html table-cell.html
 fails == two-value-syntax.html two-value-syntax.html

@@ -1012,7 +1012,13 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     if (!CreateAndInitGL(forceEnabled, &failReasons)) {
         nsCString text("WebGL creation failed: ");
         for (const auto& cur : failReasons) {
-            Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, cur.key);
+            // Don't try to accumulate using an empty key if |cur.key| is empty.
+            if (cur.key.IsEmpty()) {
+                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
+                                      NS_LITERAL_CSTRING("FEATURE_FAILURE_REASON_UNKNOWN"));
+            } else {
+                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, cur.key);
+            }
 
             text.AppendASCII("\n* ");
             text.Append(cur.info);

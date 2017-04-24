@@ -49,9 +49,6 @@
   skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
-  skin/classic/global/dirListing/folder.png                (../../windows/global/dirListing/folder.png)
-  skin/classic/global/dirListing/local.png                 (../../windows/global/dirListing/local.png)
-  skin/classic/global/dirListing/up.png                    (../../windows/global/dirListing/up.png)
   skin/classic/global/icons/Close.gif                      (../../windows/global/icons/Close.gif)
   skin/classic/global/icons/close.png                      (../../windows/global/icons/close.png)
   skin/classic/global/icons/close@2x.png                   (../../windows/global/icons/close@2x.png)
@@ -82,7 +79,6 @@
   skin/classic/global/icons/windowControls.png             (../../windows/global/icons/windowControls.png)
   skin/classic/global/radio/radio-check.gif                (../../windows/global/radio/radio-check.gif)
   skin/classic/global/radio/radio-check-dis.gif            (../../windows/global/radio/radio-check-dis.gif)
-  skin/classic/global/scrollbar/slider.gif                 (../../windows/global/scrollbar/slider.gif)
   skin/classic/global/splitter/grip-bottom.gif             (../../windows/global/splitter/grip-bottom.gif)
   skin/classic/global/splitter/grip-top.gif                (../../windows/global/splitter/grip-top.gif)
   skin/classic/global/splitter/grip-left.gif               (../../windows/global/splitter/grip-left.gif)

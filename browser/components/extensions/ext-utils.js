@@ -238,13 +238,18 @@ class TabTracker extends TabTrackerBase {
           });
         }
 
+        // Save the current tab, since the newly-created tab will likely be
+        // active by the time the promise below resolves and the event is
+        // dispatched.
+        let currentTab = nativeTab.ownerGlobal.gBrowser.selectedTab;
+
         // We need to delay sending this event until the next tick, since the
         // tab does not have its final index when the TabOpen event is dispatched.
         Promise.resolve().then(() => {
           if (event.detail.adoptedTab) {
             this.emitAttached(event.originalTarget);
           } else {
-            this.emitCreated(event.originalTarget);
+            this.emitCreated(event.originalTarget, currentTab);
           }
         });
         break;
@@ -389,10 +394,12 @@ class TabTracker extends TabTrackerBase {
    *
    * @param {NativeTab} nativeTab
    *        The tab element which is being created.
+   * @param {NativeTab} [currentTab]
+   *        The tab element for the currently active tab.
    * @private
    */
-  emitCreated(nativeTab) {
-    this.emit("tab-created", {nativeTab});
+  emitCreated(nativeTab, currentTab) {
+    this.emit("tab-created", {nativeTab, currentTab});
   }
 
   /**
@@ -479,12 +486,18 @@ class Tab extends TabBase {
     return this.nativeTab.linkedBrowser;
   }
 
+  get frameLoader() {
+    // If we don't have a frameLoader yet, just return a dummy with no width and
+    // height.
+    return super.frameLoader || {lazyWidth: 0, lazyHeight: 0};
+  }
+
   get cookieStoreId() {
     return getCookieStoreIdForTab(this, this.nativeTab);
   }
 
   get height() {
-    return this.browser.clientHeight;
+    return this.frameLoader.lazyHeight;
   }
 
   get index() {
@@ -525,7 +538,7 @@ class Tab extends TabBase {
   }
 
   get width() {
-    return this.browser.clientWidth;
+    return this.frameLoader.lazyWidth;
   }
 
   get window() {

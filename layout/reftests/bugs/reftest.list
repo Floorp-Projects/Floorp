@@ -1991,3 +1991,6 @@ skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html
 == 1330051.svg 1330051-ref.svg
 == 1352464-1.html 1352464-1-ref.html
+== 1358375-1.html 1358375-ref.html
+== 1358375-2.html 1358375-ref.html
+== 1358375-3.html 1358375-ref.html

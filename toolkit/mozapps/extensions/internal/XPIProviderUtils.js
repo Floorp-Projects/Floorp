@@ -35,6 +35,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
                                    "@mozilla.org/extensions/blocklist;1",
                                    Ci.nsIBlocklistService);
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC",
+                                      "extensions.allow-non-mpc-extensions");
+
 Cu.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
@@ -1933,6 +1936,8 @@ this.XPIDatabaseReconcile = {
               }
             }
 
+            let wasDisabled = oldAddon.appDisabled;
+
             // The add-on has changed if the modification time has changed, if
             // we have an updated manifest for it, or if the schema version has
             // changed.
@@ -1956,6 +1961,18 @@ this.XPIDatabaseReconcile = {
             } else {
               // No change
               newAddon = oldAddon;
+            }
+
+            // If an extension has just become appDisabled and it appears to
+            // be due to the ALLOW_NON_MPC pref, show a notification.  If the
+            // extension is also disabled for some other reason(s), don't
+            // bother with the notification since flipping the pref will leave
+            // the extension disabled.
+            if (!wasDisabled && newAddon.appDisabled &&
+                !ALLOW_NON_MPC && !newAddon.multiprocessCompatible &&
+                (newAddon.blocklistState != Ci.nsIBlocklistService.STATE_BLOCKED) &&
+                newAddon.isPlatformCompatible && newAddon.isCompatible) {
+              AddonManagerPrivate.nonMpcDisabled = true;
             }
 
             if (newAddon)

@@ -11,7 +11,7 @@ add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
 
   info("console.log with a string argument");
-  let receievedMessages = waitForMessages({
+  let receivedMessages = waitForMessages({
     hud,
     messages: [{
       // Test that the output does not include quotes.
@@ -23,13 +23,14 @@ add_task(function* () {
     content.wrappedJSObject.stringLog();
   });
 
-  yield receievedMessages;
+  yield receivedMessages;
 
   info("evaluating a string constant");
   let jsterm = hud.jsterm;
-  yield jsterm.execute("\"string constant\"");
+  yield jsterm.execute("\"string\\nconstant\"");
   let msg = yield waitFor(() => findMessage(hud, "constant"));
   let body = msg.querySelector(".message-body");
-  // On the other hand, a string constant result should be quoted.
-  ok(body.textContent.includes("\"string constant\""), "found expected text");
+  // On the other hand, a string constant result should be quoted, but
+  // newlines should be let through.
+  ok(body.textContent.includes("\"string\nconstant\""), "found expected text");
 });

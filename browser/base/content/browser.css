@@ -522,6 +522,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: none;
 }
 
+#PopupAutoComplete[firstresultstyle="insecureWarning"] {
+  min-width: 200px;
+}
+
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem-insecure-field");
   height: auto;

@@ -19,6 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIDocument.h"
 #include "nsIIncrementalStreamLoader.h"
 #include "nsURIHashKey.h"
@@ -76,6 +77,7 @@ public:
       mElement(aElement),
       mScriptFromHead(false),
       mProgress(Progress::Loading),
+      mDataType(DataType::Unknown),
       mIsInline(true),
       mHasSourceMapURL(false),
       mIsDefer(false),
@@ -87,6 +89,8 @@ public:
       mIsTracking(false),
       mOffThreadToken(nullptr),
       mScriptText(),
+      mScriptBytecode(),
+      mBytecodeOffset(0),
       mJSVersion(aVersion),
       mLineNo(1),
       mCORSMode(aCORSMode),
@@ -96,7 +100,7 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsScriptLoadRequest)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptLoadRequest)
 
   bool IsModuleRequest() const
   {
@@ -143,24 +147,48 @@ public:
     mIsTracking = true;
   }
 
-  enum class Progress {
-    Loading,
+  enum class Progress : uint8_t {
+    Loading,        // Request either source or bytecode
+    Loading_Source, // Explicitly Request source stream
     Compiling,
     FetchingImports,
     Ready
   };
+
   bool IsReadyToRun() const {
     return mProgress == Progress::Ready;
   }
   bool IsLoading() const {
-    return mProgress == Progress::Loading;
+    return mProgress == Progress::Loading ||
+           mProgress == Progress::Loading_Source;
+  }
+  bool IsLoadingSource() const {
+    return mProgress == Progress::Loading_Source;
   }
   bool InCompilingStage() const {
     return mProgress == Progress::Compiling ||
            (IsReadyToRun() && mWasCompiledOMT);
   }
 
+  // Type of data provided by the nsChannel.
+  enum class DataType : uint8_t {
+    Unknown,
+    Source,
+    Bytecode
+  };
+
+  bool IsUnknownDataType() const {
+    return mDataType == DataType::Unknown;
+  }
+  bool IsSource() const {
+    return mDataType == DataType::Source;
+  }
+  bool IsBytecode() const {
+    return mDataType == DataType::Bytecode;
+  }
+
   void MaybeCancelOffThreadScript();
+  void DropBytecodeCacheReferences();
 
   using super::getNext;
   using super::isInList;
@@ -169,6 +197,7 @@ public:
   nsCOMPtr<nsIScriptElement> mElement;
   bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
+  DataType mDataType;     // Does this contain Source or Bytecode?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mIsDefer;          // True if we live in mDeferRequests.
@@ -180,9 +209,20 @@ public:
   bool mIsTracking;       // True if the script comes from a source on our tracking protection list.
   void* mOffThreadToken;  // Off-thread parsing token.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
+
+  // Holds the top-level JSScript that corresponds to the current source, once
+  // it is parsed, and planned to be saved in the bytecode cache.
+  JS::Heap<JSScript*> mScript;
+
   // Holds script text for non-inline scripts. Don't use nsString so we can give
   // ownership to jsapi.
   mozilla::Vector<char16_t> mScriptText;
+
+  // Holds the SRI serialized hash and the script bytecode for non-inline
+  // scripts.
+  mozilla::Vector<uint8_t> mScriptBytecode;
+  uint32_t mBytecodeOffset; // Offset of the bytecode in mScriptBytecode
+
   uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
@@ -191,6 +231,10 @@ public:
   const mozilla::CORSMode mCORSMode;
   const mozilla::dom::SRIMetadata mIntegrity;
   mozilla::net::ReferrerPolicy mReferrerPolicy;
+
+  // Holds the Cache information, which is used to register the bytecode
+  // on the cache entry, such that we can load it the next time.
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 };
 
 class nsScriptLoadRequestList : private mozilla::LinkedList<nsScriptLoadRequest>
@@ -435,6 +479,11 @@ public:
                             mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier);
 
   /**
+   * Returns wether any request is queued, and not executed yet.
+   */
+  bool HasPendingRequests();
+
+  /**
    * Processes any pending requests that are ready for processing.
    */
   void ProcessPendingRequests();
@@ -503,6 +552,13 @@ public:
     return mDocument->GetDocGroup();
   }
 
+  /**
+   * Register the fact that we saw the load event, and that we need to save the
+   * bytecode at the next loop cycle unless new scripts are waiting in the
+   * pipeline.
+   */
+  void LoadEventFired();
+
 private:
   virtual ~nsScriptLoader();
 
@@ -537,6 +593,13 @@ private:
    * Start a load for aRequest's URI.
    */
   nsresult StartLoad(nsScriptLoadRequest *aRequest);
+
+  /**
+   * Abort the current stream, and re-start with a new load request from scratch
+   * without requesting any alternate data. Returns NS_BINDING_RETARGETED on
+   * success, as this error code is used to abort the input stream.
+   */
+  nsresult RestartLoad(nsScriptLoadRequest *aRequest);
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
@@ -580,6 +643,30 @@ private:
   void FireScriptEvaluated(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest);
+
+  /**
+   * Queue the current script load request to be saved, when the page
+   * initialization ends. The page initialization end is defined as being the
+   * time when the load event got received, and when no more scripts are waiting
+   * to be executed.
+   */
+  void RegisterForBytecodeEncoding(nsScriptLoadRequest* aRequest);
+
+  /**
+   * Check if all conditions are met, i-e that the onLoad event fired and that
+   * no more script have to be processed.  If all conditions are met, queue an
+   * event to encode all the bytecode and save them on the cache.
+   */
+  void MaybeTriggerBytecodeEncoding();
+
+  /**
+   * Iterate over all script load request and save the bytecode of executed
+   * functions on the cache provided by the channel.
+   */
+  void EncodeBytecode();
+  void EncodeRequestBytecode(JSContext* aCx, nsScriptLoadRequest* aRequest);
+
+  void GiveUpBytecodeEncoding();
 
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
   nsresult FillCompileOptionsForRequest(const mozilla::dom::AutoJSAPI& jsapi,
@@ -635,6 +722,10 @@ private:
   nsScriptLoadRequestList mXSLTRequests;
   RefPtr<nsScriptLoadRequest> mParserBlockingRequest;
 
+  // List of script load request that are holding a buffer which has to be saved
+  // on the cache.
+  nsScriptLoadRequestList mBytecodeEncodingQueue;
+
   // In mRequests, the additional information here is stored by the element.
   struct PreloadInfo {
     RefPtr<nsScriptLoadRequest> mRequest;
@@ -668,6 +759,7 @@ private:
   bool mDeferEnabled;
   bool mDocumentParsingDone;
   bool mBlockingDOMContentLoaded;
+  bool mLoadEventFired;
 
   // Module map
   nsRefPtrHashtable<nsURIHashKey, mozilla::GenericPromise::Private> mFetchingModules;
@@ -707,6 +799,15 @@ private:
   bool EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
                      const uint8_t* aData, uint32_t aDataLength,
                      bool aEndOfStream, nsCString& oCharset);
+
+  /*
+   * When streaming bytecode, we have the opportunity to fallback early if SRI
+   * does not match the expectation of the document.
+   */
+  nsresult MaybeDecodeSRI();
+
+  // Query the channel to find the data type associated with the input stream.
+  nsresult EnsureKnownDataType(nsIIncrementalStreamLoader *aLoader);
 
   // ScriptLoader which will handle the parsed script.
   RefPtr<nsScriptLoader>        mScriptLoader;

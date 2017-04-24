@@ -667,6 +667,24 @@ TreeBoxObject::ClearStyleAndImageCaches()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TreeBoxObject::RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol)
+{
+  NS_ENSURE_ARG(aCol);
+  NS_ENSURE_TRUE(aRowIndex >= 0, NS_ERROR_INVALID_ARG);
+  nsTreeBodyFrame* body = GetTreeBodyFrame();
+  if (body) {
+    return body->RemoveImageCacheEntry(aRowIndex, aCol);
+  }
+  return NS_OK;
+}
+
+void
+TreeBoxObject::RemoveImageCacheEntry(int32_t row, nsITreeColumn& col, ErrorResult& aRv)
+{
+  aRv = RemoveImageCacheEntry(row, &col);
+}
+
 void
 TreeBoxObject::ClearCachedValues()
 {
