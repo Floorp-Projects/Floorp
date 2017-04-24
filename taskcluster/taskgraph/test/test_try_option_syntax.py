@@ -17,7 +17,7 @@ from mozunit import main
 def unittest_task(n, tp, bt='opt'):
     return (n, Task('test', n, {
         'unittest_try_name': n,
-        'test_platform': tp.split('/')[0],
+        'test_platform': tp,
         'build_type': bt,
     }, {}))
 
@@ -25,7 +25,7 @@ def unittest_task(n, tp, bt='opt'):
 def talos_task(n, tp, bt='opt'):
     return (n, Task('test', n, {
         'talos_try_name': n,
-        'test_platform': tp.split('/')[0],
+        'test_platform': tp,
         'build_type': bt,
     }, {}))
 
@@ -41,13 +41,13 @@ tasks = {k: v for k, v in [
     unittest_task('gtest', 'linux64'),
     unittest_task('l10n-thing', 'linux-l10n'),
     talos_task('dromaeojs', 'linux64'),
-    unittest_task('extra3', 'linux/opt'),
-    unittest_task('extra4', 'linux64/debug'),
-    unittest_task('extra5', 'linux/this'),
-    unittest_task('extra6', 'linux/that'),
-    unittest_task('extra7', 'linux/other'),
-    unittest_task('extra8', 'linux64/asan'),
-    talos_task('extra9', 'linux64/psan'),
+    unittest_task('mochitest-browser-chrome', 'linux/opt'),
+    unittest_task('mochitest-browser-chrome-e10s', 'linux64/debug'),
+    unittest_task('mochitest-chrome', 'linux/this'),
+    unittest_task('mochitest-webgl', 'linux/that'),
+    unittest_task('crashtest-e10s', 'linux/other'),
+    unittest_task('gtest', 'linux64/asan'),
+    talos_task('dromaeojs', 'linux64/psan'),
 ]}
 
 for r in RIDEALONG_BUILDS.values():
