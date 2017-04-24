@@ -676,6 +676,7 @@ function checkActiveAddon(data) {
     signedState,
     isSystem: "boolean",
     isWebExtension: "boolean",
+    multiprocessCompatible: "boolean",
   };
 
   for (let f in EXPECTED_ADDON_FIELDS_TYPES) {
@@ -1131,6 +1132,7 @@ add_task(function* test_addonsAndPlugins() {
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
     isSystem: false,
     isWebExtension: false,
+    multiprocessCompatible: false,
   };
   const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
   const EXPECTED_SYSTEM_ADDON_DATA = {
@@ -1149,6 +1151,7 @@ add_task(function* test_addonsAndPlugins() {
     signedState: undefined,
     isSystem: true,
     isWebExtension: false,
+    multiprocessCompatible: true,
   };
 
   const WEBEXTENSION_ADDON_ID = "tel-webextension-xpi@tests.mozilla.org";
@@ -1169,6 +1172,7 @@ add_task(function* test_addonsAndPlugins() {
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
     isSystem: false,
     isWebExtension: true,
+    multiprocessCompatible: true,
   };
 
   const EXPECTED_PLUGIN_DATA = {
