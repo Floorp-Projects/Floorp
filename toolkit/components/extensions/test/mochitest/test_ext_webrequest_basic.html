@@ -232,6 +232,30 @@ add_task(function* test_webRequest_headers() {
 });
 
 add_task(function* test_webRequest_tabId() {
+  function background() {
+    let tab;
+    browser.tabs.onCreated.addListener(newTab => {
+      tab = newTab;
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "close-tab") {
+        browser.tabs.remove(tab.id);
+        browser.test.sendMessage("tab-closed");
+      }
+    });
+  }
+
+  let tabExt = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+      ],
+    },
+    background,
+  });
+  yield tabExt.startup();
+
   let expect = {
     "file_WebRequest_page3.html": {
       type: "main_frame",
@@ -242,6 +266,12 @@ add_task(function* test_webRequest_tabId() {
   let a = addLink(`file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`);
   a.click();
   yield extension.awaitMessage("done");
+
+  let closed = tabExt.awaitMessage("tab-closed");
+  tabExt.sendMessage("close-tab");
+  yield closed;
+
+  yield tabExt.unload();
 });
 
 add_task(function* test_webRequest_tabId_browser() {
