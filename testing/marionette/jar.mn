@@ -32,6 +32,9 @@ marionette.jar:
   content/assert.js (assert.js)
   content/addon.js (addon.js)
   content/session.js (session.js)
+  content/transport.js (transport.js)
+  content/packets.js (packets.js)
+  content/stream-utils.js (stream-utils.js)
 #ifdef ENABLE_TESTS
   content/test.xul (chrome/test.xul)
   content/test2.xul (chrome/test2.xul)
