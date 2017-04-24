@@ -23,6 +23,16 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
 
+/* All XUL pseudo elements needs to have appearance:auto by default, just in
+   case they have a -moz-appearance. */
+::-moz-tree-column, ::-moz-tree-row, ::-moz-tree-separator,
+::-moz-tree-cell, ::-moz-tree-indentation, ::-moz-tree-line,
+::-moz-tree-twisty, ::-moz-tree-image, ::-moz-tree-cell-text,
+::-moz-tree-checkbox, ::-moz-tree-progressmeter,
+::-moz-tree-drop-feedback {
+  appearance: auto;
+}
+
 /* ::::::::::
    :: Rules for 'hiding' portions of the chrome for special
    :: kinds of windows (not JUST browser windows) with toolbars
