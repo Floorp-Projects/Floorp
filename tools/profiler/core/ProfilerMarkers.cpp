@@ -157,6 +157,37 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
+UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
+                                                 const mozilla::TimeStamp& aStartTime)
+  : ProfilerMarkerPayload(aStartTime, aStartTime, nullptr)
+  , mEntryType("mark")
+  , mName(aName)
+{
+}
+
+UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
+                                                 const mozilla::TimeStamp& aStartTime,
+                                                 const mozilla::TimeStamp& aEndTime)
+  : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
+  , mEntryType("measure")
+  , mName(aName)
+{
+}
+
+UserTimingMarkerPayload::~UserTimingMarkerPayload()
+{
+}
+
+void
+UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                       const TimeStamp& aStartTime,
+                                       UniqueStacks& aUniqueStacks)
+{
+  streamCommonProps("UserTiming", aWriter, aStartTime, aUniqueStacks);
+  aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(mName).get());
+  aWriter.StringProperty("entryType", mEntryType);
+}
+
 DOMEventMarkerPayload::DOMEventMarkerPayload(const nsAString& aType, uint16_t aPhase,
                                              const mozilla::TimeStamp& aStartTime,
                                              const mozilla::TimeStamp& aEndTime)
