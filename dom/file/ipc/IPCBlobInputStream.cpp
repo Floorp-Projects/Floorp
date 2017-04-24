@@ -16,6 +16,7 @@ NS_IMPL_RELEASE(IPCBlobInputStream);
 NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -92,6 +93,32 @@ IPCBlobInputStream::Clone(nsIInputStream** aResult)
   nsCOMPtr<nsIInputStream> stream = mActor->CreateStream();
   stream.forget(aResult);
   return NS_OK;
+}
+
+// nsIIPCSerializableInputStream
+
+void
+IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
+                              FileDescriptorArray& aFileDescriptors)
+{
+  IPCBlobInputStreamParams params;
+  params.id() = mActor->ID();
+
+  aParams = params;
+}
+
+bool
+IPCBlobInputStream::Deserialize(const mozilla::ipc::InputStreamParams& aParams,
+                                const FileDescriptorArray& aFileDescriptors)
+{
+  MOZ_CRASH("This should never be called.");
+  return false;
+}
+
+mozilla::Maybe<uint64_t>
+IPCBlobInputStream::ExpectedSerializedLength()
+{
+  return mozilla::Nothing();
 }
 
 } // namespace dom

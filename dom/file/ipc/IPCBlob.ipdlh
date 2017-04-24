@@ -4,6 +4,7 @@
 
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
+include protocol PIPCBlobInputStream;
 
 include IPCStream;
 include ProtocolTypes;
@@ -32,16 +33,25 @@ union IPCFileUnion
   IPCFile;
 };
 
+union IPCBlobStream
+{
+  // Parent to Child: The child will receive a IPCBlobInputStream. Nothing
+  // can be done with it except retrieving the size.
+  PIPCBlobInputStream;
+
+  // Child to Parent: Normal serialization.
+  IPCStream;
+};
+
 struct IPCBlob
 {
   nsString type;
   uint64_t size;
 
-  IPCStream inputStream;
+  IPCBlobStream inputStream;
 
   IPCFileUnion file;
 };
 
 } // namespace dom
 } // namespace mozilla
-

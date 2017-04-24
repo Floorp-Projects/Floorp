@@ -35,6 +35,9 @@ public:
   void
   ForgetStream(const nsID& aID);
 
+  void
+  GetStream(const nsID& aID, nsIInputStream** aInputStream);
+
 private:
   ~IPCBlobInputStreamStorage();
 
