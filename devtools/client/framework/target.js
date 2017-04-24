@@ -370,6 +370,25 @@ TabTarget.prototype = {
     return !this.window;
   },
 
+  getExtensionPathName(url) {
+    // Return the url if the target is not a webextension.
+    if (!this.isWebExtension) {
+      throw new Error("Target is not a WebExtension");
+    }
+
+    try {
+      const parsedURL = new URL(url);
+      // Only moz-extension URL should be shortened into the URL pathname.
+      if (parsedURL.protocol !== "moz-extension:") {
+        return url;
+      }
+      return parsedURL.pathname;
+    } catch (e) {
+      // Return the url if unable to resolve the pathname.
+      return url;
+    }
+  },
+
   /**
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
@@ -514,8 +533,11 @@ TabTarget.prototype = {
       event.nativeConsoleAPI = packet.nativeConsoleAPI;
       event.isFrameSwitching = packet.isFrameSwitching;
 
-      if (!packet.isFrameSwitching) {
-        // Update the title and url unless this is a frame switch.
+      // Keep the title unmodified when a developer toolbox switches frame
+      // for a tab (Bug 1261687), but always update the title when the target
+      // is a WebExtension (where the addon name is always included in the title
+      // and the url is supposed to be updated every time the selected frame changes).
+      if (!packet.isFrameSwitching || this.isWebExtension) {
         this._url = packet.url;
         this._title = packet.title;
       }
