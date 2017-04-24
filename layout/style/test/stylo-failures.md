@@ -68,7 +68,7 @@ to mochitest command.
   * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
-* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
+* test_computed_style.html `gradient`: -webkit-prefixed gradient values and linear gradient serialization [26]
 * test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
@@ -115,15 +115,9 @@ to mochitest command.
 * font-feature-settings should be a subproperty of font shorthand bug 1363984
   * test_value_storage.html `font-feature-settings` [16]
 * Unsupported prefixed values
-  * moz-prefixed gradient functions bug 1337655
-    * test_value_storage.html `-moz-linear-gradient` [322]
-    * ... `-moz-radial-gradient` [309]
-    * ... `-moz-repeating-` [298]
-    * test_specified_value_serialization.html `-moz-linear-gradient` [2]
   * -webkit-gradient() bug 1363986
     * test_value_storage.html `-webkit-gradient` [225]
   * serialization of prefixed gradient functions bug 1358710
-    * test_specified_value_serialization.html `-webkit-linear-gradient` [1]
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
