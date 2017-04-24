@@ -662,10 +662,11 @@ bool XPCJSRuntime::UsefulToMergeZones() const
 
 void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 {
-    // For now we only have one context. Eventually we'll need to iterate over
-    // all contexts.
-    if (AutoMarkingPtr* roots = XPCJSContext::GetOnly()->mAutoRoots)
-        roots->TraceJSAll(trc);
+    for (CycleCollectedJSContext* ccx : Contexts()) {
+        auto* cx = static_cast<const XPCJSContext*>(ccx);
+        if (AutoMarkingPtr* roots = cx->mAutoRoots)
+            roots->TraceJSAll(trc);
+    }
 
     // XPCJSObjectHolders don't participate in cycle collection, so always
     // trace them here.
@@ -849,36 +850,37 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             MOZ_ASSERT(!self->mGCIsRunning, "bad state");
             self->mGCIsRunning = true;
 
-            // For now we only have one context. Eventually we'll need to
-            // iterate over all contexts.
-            if (AutoMarkingPtr* roots = XPCJSContext::GetOnly()->mAutoRoots)
-                roots->MarkAfterJSFinalizeAll();
+            for (CycleCollectedJSContext* ccx : self->Contexts()) {
+                auto* cx = static_cast<const XPCJSContext*>(ccx);
+                if (AutoMarkingPtr* roots = cx->mAutoRoots)
+                    roots->MarkAfterJSFinalizeAll();
 
-            // Now we are going to recycle any unused WrappedNativeTearoffs.
-            // We do this by iterating all the live callcontexts
-            // and marking the tearoffs in use. And then we
-            // iterate over all the WrappedNative wrappers and sweep their
-            // tearoffs.
-            //
-            // This allows us to perhaps minimize the growth of the
-            // tearoffs. And also makes us not hold references to interfaces
-            // on our wrapped natives that we are not actually using.
-            //
-            // XXX We may decide to not do this on *every* gc cycle.
+                // Now we are going to recycle any unused WrappedNativeTearoffs.
+                // We do this by iterating all the live callcontexts
+                // and marking the tearoffs in use. And then we
+                // iterate over all the WrappedNative wrappers and sweep their
+                // tearoffs.
+                //
+                // This allows us to perhaps minimize the growth of the
+                // tearoffs. And also makes us not hold references to interfaces
+                // on our wrapped natives that we are not actually using.
+                //
+                // XXX We may decide to not do this on *every* gc cycle.
 
-            XPCCallContext* ccxp = XPCJSContext::GetOnly()->GetCallContext();
-            while (ccxp) {
-                // Deal with the strictness of callcontext that
-                // complains if you ask for a tearoff when
-                // it is in a state where the tearoff could not
-                // possibly be valid.
-                if (ccxp->CanGetTearOff()) {
-                    XPCWrappedNativeTearOff* to =
-                        ccxp->GetTearOff();
-                    if (to)
-                        to->Mark();
+                XPCCallContext* ccxp = cx->GetCallContext();
+                while (ccxp) {
+                    // Deal with the strictness of callcontext that
+                    // complains if you ask for a tearoff when
+                    // it is in a state where the tearoff could not
+                    // possibly be valid.
+                    if (ccxp->CanGetTearOff()) {
+                        XPCWrappedNativeTearOff* to =
+                            ccxp->GetTearOff();
+                        if (to)
+                            to->Mark();
+                    }
+                    ccxp = ccxp->GetPrevCallContext();
                 }
-                ccxp = ccxp->GetPrevCallContext();
             }
 
             XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
