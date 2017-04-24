@@ -75,6 +75,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -2494,24 +2495,25 @@ class MOZ_RAII AutoResolveName
 {
 public:
     AutoResolveName(XPCCallContext& ccx, JS::HandleId name
-                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-          mOld(ccx, XPCJSContext::Get()->SetResolveName(name))
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mContext(ccx.GetContext())
+        , mOld(ccx, mContext->SetResolveName(name))
 #ifdef DEBUG
-          ,mCheck(ccx, name)
+        , mCheck(ccx, name)
 #endif
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
+
     ~AutoResolveName()
-        {
-#ifdef DEBUG
-            jsid old =
-#endif
-            XPCJSContext::Get()->SetResolveName(mOld);
-            MOZ_ASSERT(old == mCheck, "Bad Nesting!");
-        }
+    {
+        mozilla::DebugOnly<jsid> old =
+            mContext->SetResolveName(mOld);
+        MOZ_ASSERT(old == mCheck, "Bad Nesting!");
+    }
 
 private:
+    XPCJSContext* mContext;
     JS::RootedId mOld;
 #ifdef DEBUG
     JS::RootedId mCheck;
