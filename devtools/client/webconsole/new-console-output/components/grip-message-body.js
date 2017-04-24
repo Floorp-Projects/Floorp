@@ -63,9 +63,13 @@ function GripMessageBody(props) {
   let onDOMNodeMouseOut;
   let onInspectIconClick;
   if (serviceContainer) {
-    onDOMNodeMouseOver = (object) => serviceContainer.highlightDomElement(object);
+    onDOMNodeMouseOver = serviceContainer.highlightDomElement
+      ? (object) => serviceContainer.highlightDomElement(object)
+      : null;
     onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
-    onInspectIconClick = (object) => serviceContainer.openNodeInInspector(object);
+    onInspectIconClick = serviceContainer.openNodeInInspector
+      ? (object) => serviceContainer.openNodeInInspector(object)
+      : null;
   }
 
   return (

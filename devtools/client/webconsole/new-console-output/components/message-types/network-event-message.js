@@ -57,9 +57,9 @@ function NetworkEventMessage({
     statusInfo = `[${httpVersion} ${status} ${statusText} ${totalTime}ms]`;
   }
 
-  function openNetworkMonitor() {
-    serviceContainer.openNetworkPanel(actor);
-  }
+  const openNetworkMonitor = serviceContainer.openNetworkPanel
+    ? () => serviceContainer.openNetworkPanel(actor)
+    : null;
 
   const method = dom.span({className: "method" }, request.method);
   const xhr = isXHR

@@ -49,9 +49,9 @@ const Message = createClass({
     timeStamp: PropTypes.number,
     serviceContainer: PropTypes.shape({
       emitNewMessage: PropTypes.func.isRequired,
-      onViewSourceInDebugger: PropTypes.func.isRequired,
-      onViewSourceInScratchpad: PropTypes.func.isRequired,
-      onViewSourceInStyleEditor: PropTypes.func.isRequired,
+      onViewSourceInDebugger: PropTypes.func,
+      onViewSourceInScratchpad: PropTypes.func,
+      onViewSourceInStyleEditor: PropTypes.func,
       openContextMenu: PropTypes.func.isRequired,
       openLink: PropTypes.func.isRequired,
       sourceMapService: PropTypes.any,
