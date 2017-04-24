@@ -702,34 +702,40 @@ ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 void
 nsStyleContext::SetStyleBits()
 {
-  // XXXbholley: We should get this information directly from the
-  // ServoComputedValues rather than computing it here. This setup for
-  // ServoComputedValues-backed nsStyleContexts is probably not something
-  // we should ship.
-  //
-  // For example, NS_STYLE_IS_TEXT_COMBINED is still set in ApplyStyleFixups,
-  // which isn't called for ServoComputedValues.
+  // Here we set up various style bits for both the Gecko and Servo paths.
+  // _Only_ change the bits here.  For fixups of the computed values, you can
+  // add to ApplyStyleFixups in Gecko and StyleAdjuster as part of Servo's
+  // cascade.
 
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
   if (mParent && mParent->HasTextDecorationLines()) {
-    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+    AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
   } else {
     // We might have defined a decoration.
     if (StyleTextReset()->HasTextDecorationLines()) {
-      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+      AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
     }
   }
 
   if ((mParent && mParent->HasPseudoElementData()) || IsPseudoElement()) {
-    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
+    AddStyleBit(NS_STYLE_HAS_PSEUDO_ELEMENT_DATA);
   }
 
   // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
   const nsStyleDisplay* disp = StyleDisplay();
   if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
       disp->mDisplay == mozilla::StyleDisplay::None) {
-    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
+    AddStyleBit(NS_STYLE_IN_DISPLAY_NONE_SUBTREE);
+  }
+
+  // Mark text combined for text-combine-upright, as needed.
+  if (mPseudoTag == nsCSSAnonBoxes::mozText && mParent &&
+      mParent->StyleVisibility()->mWritingMode !=
+        NS_STYLE_WRITING_MODE_HORIZONTAL_TB &&
+      mParent->StyleText()->mTextCombineUpright ==
+        NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL) {
+    AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
   }
 }
 
@@ -793,7 +799,6 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
                "incorrectly based on the old writing mode value");
     nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
     mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
-    AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
   }
 
   // CSS 2.1 10.1: Propagate the root element's 'direction' to the ICB.
