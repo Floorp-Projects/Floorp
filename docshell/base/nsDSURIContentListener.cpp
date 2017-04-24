@@ -22,6 +22,7 @@
 #include "nsIScriptError.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIMultiPartChannel.h"
+#include "NullPrincipal.h"
 
 using namespace mozilla;
 
@@ -448,8 +449,10 @@ nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
       if (mDocShell) {
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(mDocShell));
         if (webNav) {
+          RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::Create();
           webNav->LoadURI(u"about:blank",
-                          0, nullptr, nullptr, nullptr);
+                          0, nullptr, nullptr, nullptr,
+                          nullPrincipal);
         }
       }
       return false;
