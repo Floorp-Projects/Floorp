@@ -37,7 +37,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer
 public:
   nsPlainTextSerializer();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPlainTextSerializer)
 
   // nsIContentSerializer
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
