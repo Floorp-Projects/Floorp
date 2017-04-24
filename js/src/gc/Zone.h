@@ -178,6 +178,7 @@ struct Zone : public JS::shadow::Zone,
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
+                                size_t* jitZone,
                                 size_t* baselineStubsOptimized,
                                 size_t* cachedCFG,
                                 size_t* uniqueIdMap,
