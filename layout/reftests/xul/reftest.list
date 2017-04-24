@@ -7,7 +7,7 @@ random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shr
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget) fails-if(browserIsRemote&&dwrite) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
+fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul
 == text-crop.xul text-crop-ref.xul
 == text-small-caps-1.xul text-small-caps-1-ref.xul

@@ -11,6 +11,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -26,8 +27,7 @@ do_get_profile();
 
 let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
 
-let rdfFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-rdfFile.append("mimeTypes.rdf")
+let rdfFile = FileUtils.getFile("ProfD", ["mimeTypes.rdf"]);
 
 function deleteDatasourceFile() {
   if (rdfFile.exists()) {

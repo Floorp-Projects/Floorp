@@ -16,7 +16,7 @@ const IGNORE = ["getPreferredIconURL", "escapeAddonURI",
 
 const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
                         "AddonScreenshot", "AddonType", "startup", "shutdown",
-                        "registerProvider", "unregisterProvider",
+                        "addonIsActive", "registerProvider", "unregisterProvider",
                         "addStartupChange", "removeStartupChange",
                         "recordTimestamp", "recordSimpleMeasure",
                         "recordException", "getSimpleMeasures", "simpleTimer",

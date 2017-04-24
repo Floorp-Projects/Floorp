@@ -2056,14 +2056,15 @@ static PRInt32 pt_SendTo(
     return bytes;
 }  /* pt_SendTo */
 
-// Linux uses SendTo to send data during TCP Fast Open. OSX uses connectx, but
-// we will make it imitate the Linux's interface.
+#if defined(LINUX) || defined(DARWIN)
+/* Linux uses SendTo to send data during TCP Fast Open. OSX uses connectx, but
+ * we will make it imitate the Linux's interface. */
 static PRInt32 pt_TCP_SendTo(
     PRFileDesc *fd, const void *buf,
     PRInt32 amount, PRIntn flags, const PRNetAddr *addr,
     PRIntervalTime timeout)
 {
-#if !defined(DARWIN) || HAS_CONNECTX
+#if defined(LINUX) || HAS_CONNECTX
     PRInt32 syserrno, bytes = -1;
     PRBool fNeedContinue = PR_FALSE;
     pt_SockLen addr_len;
@@ -2084,8 +2085,8 @@ static PRInt32 pt_TCP_SendTo(
 #ifdef _PR_HAVE_SOCKADDR_LEN
         md_af = AF_INET6;
 #else
-        // If _PR_INET6 is defined and it is PR_AF_INET6 we set family
-        // to AF_INET6.
+        /* If _PR_INET6 is defined and it is PR_AF_INET6 we set family
+         * to AF_INET6. */
         addrCopy = *addr;
         addrCopy.raw.family = AF_INET6;
         addrp = &addrCopy;
@@ -2094,8 +2095,8 @@ static PRInt32 pt_TCP_SendTo(
 #endif
 
 #ifdef _PR_HAVE_SOCKADDR_LEN
-    // if _PR_HAVE_SOCKADDR_LEN is defined and it is PR_AF_INET6 we set family
-    // to AF_INET6 and we set address length.
+    /* if _PR_HAVE_SOCKADDR_LEN is defined and it is PR_AF_INET6 we set family
+     * to AF_INET6 and we set address length. */
     addrCopy = *addr;
     ((struct sockaddr*)&addrCopy)->sa_len = addr_len;
     ((struct sockaddr*)&addrCopy)->sa_family = md_af;
@@ -2143,11 +2144,12 @@ static PRInt32 pt_TCP_SendTo(
         pt_MapError(_PR_MD_MAP_SENDTO_ERROR, syserrno);
     }
     return bytes;
-#else
+#else /* !HAS_CONNECTX */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;
 #endif
 }  /* pt_TCP_SendTo */
+#endif /* LINUX || DARWIN */
 
 static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRIntn flags, PRNetAddr *addr, PRIntervalTime timeout)
@@ -3260,7 +3262,11 @@ static PRIOMethods _pr_tcp_methods = {
     pt_Recv,
     pt_Send,
     (PRRecvfromFN)_PR_InvalidInt,
-    pt_TCP_SendTo, // This is for TCP Fast Open. Linux uses SendTo function for this. OSX uses connectx, but we imitate Linux.
+#if defined(LINUX) || defined(DARWIN)
+    pt_TCP_SendTo, /* This is for TCP Fast Open. Linux uses SendTo function for this. OSX uses connectx, but we imitate Linux. */
+#else
+    (PRSendtoFN)_PR_InvalidInt,
+#endif
     pt_Poll,
     pt_AcceptRead,
     pt_TransmitFile,
