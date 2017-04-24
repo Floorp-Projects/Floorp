@@ -13,7 +13,7 @@ const { getFormattedSize } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const UPDATED_TRANSFERRED_PROPS = [
   "transferredSize",
@@ -33,16 +33,13 @@ const RequestListColumnTransferredSize = createClass({
   },
 
   render() {
-    const { transferredSize, fromCache, fromServiceWorker, status } = this.props.item;
-
+    let { fromCache, fromServiceWorker, status, transferredSize } = this.props.item;
     let text;
-    let className = "subitem-label";
+
     if (fromCache || status === "304") {
       text = L10N.getStr("networkMenu.sizeCached");
-      className += " theme-comment";
     } else if (fromServiceWorker) {
       text = L10N.getStr("networkMenu.sizeServiceWorker");
-      className += " theme-comment";
     } else if (typeof transferredSize == "number") {
       text = getFormattedSize(transferredSize);
     } else if (transferredSize === null) {
@@ -50,11 +47,8 @@ const RequestListColumnTransferredSize = createClass({
     }
 
     return (
-      div({
-        className: "requests-list-subitem requests-list-transferred",
-        title: text,
-      },
-        span({ className }, text),
+      div({ className: "requests-list-column requests-list-transferred", title: text },
+        text
       )
     );
   }

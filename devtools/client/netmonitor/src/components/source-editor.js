@@ -10,9 +10,9 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const Editor = require("devtools/client/sourceeditor/editor");
+const { SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE } = require("../constants");
 
 const { div } = DOM;
-const SYNTAX_HIGHLIGHT_MAX_SIZE = 51200;
 
 /**
  * CodeMirror editor as a React component
@@ -33,7 +33,7 @@ const SourceEditor = createClass({
     this.editor = new Editor({
       lineNumbers: true,
       lineWrapping: false,
-      mode: text.length < SYNTAX_HIGHLIGHT_MAX_SIZE ? mode : null,
+      mode: text.length < SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE ? mode : null,
       readOnly: true,
       theme: "mozilla",
       value: text,
@@ -48,7 +48,8 @@ const SourceEditor = createClass({
   componentDidUpdate(prevProps) {
     const { mode, text } = this.props;
 
-    if (prevProps.mode !== mode && text.length < SYNTAX_HIGHLIGHT_MAX_SIZE) {
+    if (prevProps.mode !== mode &&
+        text.length < SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE) {
       this.editor.setMode(mode);
     }
 
