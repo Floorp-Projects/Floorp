@@ -1423,6 +1423,20 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, La
 }
 
 void
+MacroAssembler::loadStringIndexValue(Register str, Register dest, Label* fail)
+{
+    MOZ_ASSERT(str != dest);
+
+    load32(Address(str, JSString::offsetOfFlags()), dest);
+
+    // Does not have a cached index value.
+    branchTest32(Assembler::Zero, dest, Imm32(JSString::INDEX_VALUE_BIT), fail);
+
+    // Extract the index.
+    rshift32(Imm32(JSString::INDEX_VALUE_SHIFT), dest);
+}
+
+void
 MacroAssembler::loadJSContext(Register dest)
 {
     CompileCompartment* compartment = GetJitContext()->compartment;
