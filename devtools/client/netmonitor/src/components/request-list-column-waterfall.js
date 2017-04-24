@@ -16,10 +16,12 @@ const { div } = DOM;
 
 const UPDATED_WATERFALL_PROPS = [
   "eventTimings",
-  "totalTime",
   "fromCache",
   "fromServiceWorker",
+  "totalTime",
 ];
+// List of properties of the timing info we want to create boxes for
+const TIMING_KEYS = ["blocked", "dns", "connect", "send", "wait", "receive"];
 
 const RequestListColumnWaterfall = createClass({
   displayName: "RequestListColumnWaterfall",
@@ -30,15 +32,15 @@ const RequestListColumnWaterfall = createClass({
   },
 
   shouldComponentUpdate(nextProps) {
-    return this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis ||
-      !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item);
+    return !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item) ||
+      this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis;
   },
 
   render() {
-    const { item, firstRequestStartedMillis } = this.props;
+    let { firstRequestStartedMillis, item } = this.props;
 
     return (
-      div({ className: "requests-list-subitem requests-list-waterfall" },
+      div({ className: "requests-list-column requests-list-waterfall" },
         div({
           className: "requests-list-timings",
           style: {
@@ -52,11 +54,8 @@ const RequestListColumnWaterfall = createClass({
   }
 });
 
-// List of properties of the timing info we want to create boxes for
-const TIMING_KEYS = ["blocked", "dns", "connect", "send", "wait", "receive"];
-
 function timingBoxes(item) {
-  const { eventTimings, totalTime, fromCache, fromServiceWorker } = item;
+  let { eventTimings, fromCache, fromServiceWorker, totalTime } = item;
   let boxes = [];
 
   if (fromCache || fromServiceWorker) {
@@ -71,22 +70,26 @@ function timingBoxes(item) {
       // Don't render anything if it surely won't be visible.
       // One millisecond == one unscaled pixel.
       if (width > 0) {
-        boxes.push(div({
-          key,
-          className: "requests-list-timings-box " + key,
-          style: { width }
-        }));
+        boxes.push(
+          div({
+            key,
+            className: `requests-list-timings-box ${key}`,
+            style: { width },
+          })
+        );
       }
     }
   }
 
   if (typeof totalTime === "number") {
-    let text = L10N.getFormatStr("networkMenu.totalMS", totalTime);
-    boxes.push(div({
-      key: "total",
-      className: "requests-list-timings-total",
-      title: text
-    }, text));
+    let title = L10N.getFormatStr("networkMenu.totalMS", totalTime);
+    boxes.push(
+      div({
+        key: "total",
+        className: "requests-list-timings-total",
+        title,
+      }, title)
+    );
   }
 
   return boxes;
