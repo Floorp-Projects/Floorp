@@ -143,19 +143,12 @@ public:
   }
   static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
-  static uint32_t GetTimeoutTime()
-  {
-    return Prefs::sMouseWheelTransactionTimeout;
-  }
+  static uint32_t GetTimeoutTime();
 
   static void OwnScrollbars(bool aOwn);
 
   static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
-  static void InitializeStatics()
-  {
-    Prefs::InitializeStatics();
-  }
 
 protected:
   static void BeginTransaction(nsIFrame* aTargetFrame,
@@ -169,18 +162,9 @@ protected:
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer* aTimer, void* aClosure);
   static void SetTimeout();
-  static uint32_t GetIgnoreMoveDelayTime()
-  {
-    return Prefs::sMouseWheelTransactionIgnoreMoveDelay;
-  }
-  static int32_t GetAccelerationStart()
-  {
-    return Prefs::sMouseWheelAccelerationStart;
-  }
-  static int32_t GetAccelerationFactor()
-  {
-    return Prefs::sMouseWheelAccelerationFactor;
-  }
+  static uint32_t GetIgnoreMoveDelayTime();
+  static int32_t GetAccelerationStart();
+  static int32_t GetAccelerationFactor();
   static DeltaValues OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent);
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
@@ -190,17 +174,6 @@ protected:
   static uint32_t sMouseMoved; // in milliseconds
   static nsITimer* sTimer;
   static int32_t sScrollSeriesCounter;
-
-  class Prefs
-  {
-  public:
-    static void InitializeStatics();
-    static int32_t sMouseWheelAccelerationStart;
-    static int32_t sMouseWheelAccelerationFactor;
-    static uint32_t sMouseWheelTransactionTimeout;
-    static uint32_t sMouseWheelTransactionIgnoreMoveDelay;
-    static bool sTestMouseScroll;
-  };
   static bool sOwnScrollbars;
 };
 
