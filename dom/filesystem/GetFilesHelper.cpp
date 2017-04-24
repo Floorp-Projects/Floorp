@@ -8,8 +8,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FileBlobImpl.h"
-#include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
 #include "FileSystemUtils.h"
 #include "nsProxyRelease.h"
 
@@ -587,15 +585,13 @@ public:
     }
 
     GetFilesResponseSuccess success;
-
-    nsTArray<IPCBlob>& ipcBlobs = success.blobs();
-    ipcBlobs.SetLength(aFiles.Length());
+    nsTArray<PBlobParent*>& blobsParent = success.blobsParent();
+    blobsParent.SetLength(aFiles.Length());
 
     for (uint32_t i = 0; i < aFiles.Length(); ++i) {
-      nsresult rv = IPCBlobUtils::Serialize(aFiles[i]->Impl(),
-                                            mParent->mContentParent,
-                                            ipcBlobs[i]);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      blobsParent[i] =
+        mParent->mContentParent->GetOrCreateActorForBlob(aFiles[i]);
+      if (!blobsParent[i]) {
         mParent->mContentParent->SendGetFilesResponseAndForget(mParent->mUUID,
                                                                GetFilesResponseFailure(NS_ERROR_OUT_OF_MEMORY));
         return;

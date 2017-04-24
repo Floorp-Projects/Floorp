@@ -47,7 +47,6 @@ include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
 include DOMTypes;
 include JavaScriptTypes;
-include IPCBlob;
 include IPCStream;
 include PTabContext;
 include URIParams;
@@ -196,7 +195,7 @@ struct AndroidSystemInfo
 
 struct GetFilesResponseSuccess
 {
-  IPCBlob[] blobs;
+  PBlob[] blobs;
 };
 
 struct GetFilesResponseFailure
