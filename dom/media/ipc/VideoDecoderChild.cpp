@@ -48,11 +48,11 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
   RefPtr<VideoData> video = VideoData::CreateFromImage(
     aData.display(),
     aData.base().offset(),
-    aData.base().time(),
+    media::TimeUnit::FromMicroseconds(aData.base().time()),
     media::TimeUnit::FromMicroseconds(aData.base().duration()),
     image,
     aData.base().keyframe(),
-    aData.base().timecode());
+    media::TimeUnit::FromMicroseconds(aData.base().timecode()));
 
   mDecodedData.AppendElement(Move(video));
   return IPC_OK();
