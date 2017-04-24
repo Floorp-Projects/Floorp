@@ -139,6 +139,26 @@ private:
   uint16_t mPhase;
 };
 
+class UserTimingMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  UserTimingMarkerPayload(const nsAString& aName,
+                          const mozilla::TimeStamp& aStartTime);
+  UserTimingMarkerPayload(const nsAString& aName,
+                          const mozilla::TimeStamp& aStartTime,
+                          const mozilla::TimeStamp& aEndTime);
+  ~UserTimingMarkerPayload();
+
+  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
+                             const mozilla::TimeStamp& aStartTime,
+                             UniqueStacks& aUniqueStacks) override;
+
+private:
+  // Either "mark" or "measure".
+  const char* mEntryType;
+  nsString mName;
+};
+
 /**
  * Contains the translation applied to a 2d layer so we can
  * track the layer position at each frame.
