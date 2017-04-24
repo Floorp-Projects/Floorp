@@ -212,7 +212,7 @@ union GetFilesResponseResult
 
 struct FileCreationSuccessResult
 {
-  IPCBlob blob;
+  PBlob blob;
 };
 
 struct FileCreationErrorResult
