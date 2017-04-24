@@ -2422,7 +2422,8 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
 {
   for (uint32_t i = 0; i < aRegistrations.Length(); ++i) {
     BlobURLRegistrationData& registration = aRegistrations[i];
-    RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(registration.blob());
+    RefPtr<BlobImpl> blobImpl =
+      static_cast<BlobChild*>(registration.blobChild())->GetBlobImpl();
     MOZ_ASSERT(blobImpl);
 
     nsHostObjectProtocolHandler::AddDataEntry(registration.url(),
@@ -3072,11 +3073,10 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScop
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvBlobURLRegistration(const nsCString& aURI,
-                                      const IPCBlob& aBlob,
+ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
                                       const IPC::Principal& aPrincipal)
 {
-  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
+  RefPtr<BlobImpl> blobImpl = static_cast<BlobChild*>(aBlobChild)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
   nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
