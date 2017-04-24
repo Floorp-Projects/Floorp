@@ -1357,7 +1357,7 @@ JSMainRuntimeCompartmentsSystemDistinguishedAmount()
 static int64_t
 JSMainRuntimeCompartmentsUserDistinguishedAmount()
 {
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+    JSContext* cx = XPCJSContext::Get()->Context();
     return JS::UserCompartmentCount(cx);
 }
 
@@ -2247,7 +2247,7 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
 
         Data d;
         d.anonymizeID = anonymize ? 1 : 0;
-        JS_IterateCompartments(nsXPConnect::GetContextInstance()->Context(),
+        JS_IterateCompartments(XPCJSContext::Get()->Context(),
                                &d, CompartmentCallback);
 
         for (size_t i = 0; i < d.paths.length(); i++)
@@ -2673,7 +2673,7 @@ static nsresult
 JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize, size_t* jsStringsSize,
             size_t* jsPrivateSize, size_t* jsOtherSize)
 {
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+    JSContext* cx = XPCJSContext::Get()->Context();
     JS::RootedObject obj(cx, objArg);
 
     TabSizes sizes;
@@ -3178,8 +3178,7 @@ XPCRootSetElem::AddToRootSet(XPCRootSetElem** listHead)
 void
 XPCRootSetElem::RemoveFromRootSet()
 {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetContext()->Context());
+    JS::PokeGC(XPCJSContext::Get()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 

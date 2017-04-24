@@ -245,7 +245,6 @@ public:
         return gSelf;
     }
 
-    static XPCJSContext* GetContextInstance();
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSContext* GetContext() {return mContext;}
 
@@ -1628,8 +1627,6 @@ public:
         {return HasProto() ?
          (XPCWrappedNativeProto*)
          (XPC_SCOPE_WORD(mMaybeProto) & ~XPC_SCOPE_MASK) : nullptr;}
-
-    void SetProto(XPCWrappedNativeProto* p);
 
     XPCWrappedNativeScope*
     GetScope() const
