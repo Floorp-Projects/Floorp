@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -51,6 +52,37 @@ IPCBlobInputStreamStorage::ForgetStream(const nsID& aID)
 {
   mozilla::StaticMutexAutoLock lock(gMutex);
   mStorage.Remove(aID);
+}
+
+void
+IPCBlobInputStreamStorage::GetStream(const nsID& aID,
+                                     nsIInputStream** aInputStream)
+{
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  nsCOMPtr<nsIInputStream> stream = mStorage.Get(aID);
+  if (!stream) {
+    *aInputStream = nullptr;
+    return;
+  }
+
+  // We cannot return always the same inputStream because not all of them are
+  // able to be reused. Better to clone them.
+
+  nsCOMPtr<nsIInputStream> clonedStream;
+  nsCOMPtr<nsIInputStream> replacementStream;
+
+  nsresult rv =
+    NS_CloneInputStream(stream, getter_AddRefs(clonedStream),
+                        getter_AddRefs(replacementStream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (replacementStream) {
+    mStorage.Put(aID, replacementStream);
+  }
+
+  clonedStream.forget(aInputStream);
 }
 
 } // namespace dom
