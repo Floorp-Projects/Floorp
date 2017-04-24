@@ -259,7 +259,7 @@ class ExecutableAllocator
     {
         __clear_cache(code, reinterpret_cast<char*>(code) + size);
     }
-#elif defined(JS_CODEGEN_ARM) && defined(XP_IOS)
+#elif (defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)) && defined(XP_IOS)
     static void cacheFlush(void* code, size_t size)
     {
         sys_icache_invalidate(code, size);
@@ -297,7 +297,7 @@ class ExecutableAllocator
                 : "r0", "r1", "r2");
         }
     }
-#elif defined(JS_CODEGEN_ARM64) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
+#elif defined(JS_CODEGEN_ARM64)
     static void cacheFlush(void* code, size_t size)
     {
         vixl::CPU::EnsureIAndDCacheCoherency(code, size);
