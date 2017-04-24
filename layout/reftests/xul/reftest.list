@@ -58,7 +58,7 @@ fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092
 == object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004-ref.html
 == object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005-ref.html
 == object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006-ref.html
-== object-position-png-001.xul object-position-png-001-ref.html
+fuzzy-if(webrender,16,20) == object-position-png-001.xul object-position-png-001-ref.html
 == object-position-png-002.xul object-position-png-002-ref.html
 
 # Tests for rendering SVG images in a XUL <treecell>:
