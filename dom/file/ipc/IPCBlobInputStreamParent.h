@@ -21,8 +21,10 @@ public:
   // The size of the inputStream must be passed as argument in order to avoid
   // the use of nsIInputStream::Available() which could open a fileDescriptor in
   // case the stream is a nsFileStream.
+  template<typename M>
   static IPCBlobInputStreamParent*
-  Create(nsIInputStream* aInputStream, uint64_t aSize, nsresult* aRv);
+  Create(nsIInputStream* aInputStream, uint64_t aSize, nsresult* aRv,
+         M* aManager);
 
   void
   ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
@@ -39,11 +41,23 @@ public:
     return mSize;
   }
 
+  mozilla::ipc::IPCResult
+  RecvStreamNeeded() override;
+
 private:
-  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize);
+  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
+                           nsIContentParent* aManager);
+
+  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
+                           mozilla::ipc::PBackgroundParent* aManager);
 
   const nsID mID;
   const uint64_t mSize;
+
+  // Only 1 of these 2 is set. Raw pointer because these 2 managers are keeping
+  // the parent actor alive. The pointers will be nullified in ActorDestroyed.
+  nsIContentParent* mContentManager;
+  mozilla::ipc::PBackgroundParent* mPBackgroundManager;
 };
 
 } // namespace dom
