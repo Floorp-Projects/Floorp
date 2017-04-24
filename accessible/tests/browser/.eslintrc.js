@@ -62,7 +62,7 @@ module.exports = { // eslint-disable-line no-undef
     "comma-dangle": ["error", "never"],
     "comma-spacing": "error",
     "comma-style": ["error", "last"],
-    "complexity": ["error", 35],
+    "complexity": ["error", 20],
     "consistent-this": "off",
     "curly": ["error", "multi-line"],
     "default-case": "off",
