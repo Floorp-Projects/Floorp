@@ -224,6 +224,13 @@ const PanelUI = {
       // If it's not a string, assume RegExp
       notifications = this.notifications.filter(n => id.test(n.id));
     }
+    // _updateNotifications can be expensive if it forces attachment of XBL
+    // bindings that haven't been used yet, so return early if we haven't found
+    // any notification to remove, as callers may expect this removeNotification
+    // method to be a no-op for non-existent notifications.
+    if (!notifications.length) {
+      return;
+    }
 
     notifications.forEach(n => {
       this._removeNotification(n);
