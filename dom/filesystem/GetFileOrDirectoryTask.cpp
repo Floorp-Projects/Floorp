@@ -12,7 +12,8 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
@@ -97,7 +98,8 @@ GetFileOrDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseVal
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
 
-      RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(r.blob());
+      RefPtr<BlobImpl> blobImpl =
+        static_cast<BlobChild*>(r.blobChild())->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       mResultFile = File::Create(mFileSystem->GetParentObject(), blobImpl);
@@ -206,14 +208,9 @@ GetFileOrDirectoryTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
   }
 
   RefPtr<BlobImpl> blobImpl = new FileBlobImpl(mTargetPath);
-
-  IPCBlob ipcBlob;
-  aRv = IPCBlobUtils::Serialize(blobImpl, mRequestParent->Manager(), ipcBlob);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return FileSystemDirectoryResponse();
-  }
-
-  return FileSystemFileResponse(ipcBlob);
+  BlobParent* blobParent =
+    BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
+  return FileSystemFileResponse(blobParent, nullptr);
 }
 
 nsresult
