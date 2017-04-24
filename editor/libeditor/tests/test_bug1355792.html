@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<title>Test for Bug 1355792</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<div contenteditable><div><font><table><td>a</table><br><br><table><td>b</table></font></div></div>
+<script>
+var font = document.querySelector("font");
+getSelection().collapse(font, 1);
+document.execCommand("forwarddelete");
+is(document.body.firstChild.innerHTML,
+   "<div><font><table><tbody><tr><td>a</td></tr></tbody></table><br>"
+   + "<table><tbody><tr><td>b</td></tr></tbody></table></font></div>",
+   "No creating an extra <br>");
+is(getSelection().focusNode, font, "Selection node should not change");
+is(getSelection().focusOffset, 1, "Selection offset should not move");
+ok(getSelection().isCollapsed, "Selection should be collapsed");
+</script>

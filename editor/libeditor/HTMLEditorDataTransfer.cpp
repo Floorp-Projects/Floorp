@@ -1668,9 +1668,6 @@ HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
   rv = selection->Collapse(newNode, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Ensure that the inserted <blockquote> has a frame to make it IsEditable.
-  FlushFrames();
-
   return Paste(aSelectionType);
 }
 
@@ -1727,7 +1724,6 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
 NS_IMETHODIMP
 HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
-  AutoEditBatch beginBatching(this);
   // The whole operation should be undoable in one transaction:
   BeginTransaction();
 
@@ -1891,9 +1887,6 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     selection->Collapse(newNode, 0);
   }
 
-  // Ensure that the inserted <span> has a frame to make it IsEditable.
-  FlushFrames();
-
   if (aAddCites) {
     rv = TextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
   } else {
@@ -1976,9 +1969,6 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
 
   // Set the selection inside the blockquote so aQuotedText will go there:
   selection->Collapse(newNode, 0);
-
-  // Ensure that the inserted <blockquote> has a frame to make it IsEditable.
-  FlushFrames();
 
   if (aInsertHTML) {
     rv = LoadHTML(aQuotedText);
