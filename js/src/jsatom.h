@@ -8,6 +8,7 @@
 #define jsatom_h
 
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 
 #include "jsalloc.h"
 
@@ -179,7 +180,8 @@ enum PinningBehavior
 
 extern JSAtom*
 Atomize(JSContext* cx, const char* bytes, size_t length,
-        js::PinningBehavior pin = js::DoNotPinAtom);
+        js::PinningBehavior pin = js::DoNotPinAtom,
+        const mozilla::Maybe<uint32_t>& indexValue = mozilla::Nothing());
 
 template <typename CharT>
 extern JSAtom*
