@@ -274,8 +274,8 @@ struct Statistics
 
     UniqueChars formatCompactSliceMessage() const;
     UniqueChars formatCompactSummaryMessage() const;
-    UniqueChars formatJsonMessage(uint64_t timestamp);
-    UniqueChars formatDetailedMessage();
+    UniqueChars formatJsonMessage(uint64_t timestamp) const;
+    UniqueChars formatDetailedMessage() const;
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
     JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
@@ -421,19 +421,19 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void recordPhaseEnd(Phase phase);
 
     void gcDuration(TimeDuration* total, TimeDuration* maxPause) const;
-    void sccDurations(TimeDuration* total, TimeDuration* maxPause);
+    void sccDurations(TimeDuration* total, TimeDuration* maxPause) const;
     void printStats();
 
     UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
 
-    UniqueChars formatDetailedDescription();
-    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes);
-    UniqueChars formatDetailedTotals();
+    UniqueChars formatDetailedDescription() const;
+    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice) const;
+    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
+    UniqueChars formatDetailedTotals() const;
 
-    UniqueChars formatJsonDescription(uint64_t timestamp);
-    UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes);
+    UniqueChars formatJsonDescription(uint64_t timestamp) const;
+    UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice) const;
+    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes) const;
 
     double computeMMU(TimeDuration resolution) const;
 

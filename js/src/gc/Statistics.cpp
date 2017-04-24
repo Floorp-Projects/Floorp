@@ -313,7 +313,7 @@ Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const
 }
 
 void
-Statistics::sccDurations(TimeDuration* total, TimeDuration* maxPause)
+Statistics::sccDurations(TimeDuration* total, TimeDuration* maxPause) const
 {
     *total = *maxPause = 0;
     for (size_t i = 0; i < sccTimes.length(); i++) {
@@ -491,7 +491,7 @@ Statistics::formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const
 }
 
 UniqueChars
-Statistics::formatDetailedMessage()
+Statistics::formatDetailedMessage() const
 {
     FragmentVector fragments;
 
@@ -515,7 +515,7 @@ Statistics::formatDetailedMessage()
 }
 
 UniqueChars
-Statistics::formatDetailedDescription()
+Statistics::formatDetailedDescription() const
 {
     const double bytesPerMiB = 1024 * 1024;
 
@@ -561,7 +561,7 @@ Statistics::formatDetailedDescription()
 }
 
 UniqueChars
-Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
+Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice) const
 {
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
@@ -586,7 +586,7 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
 }
 
 UniqueChars
-Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes)
+Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const
 {
     static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const TimeDuration MaxUnaccountedChildTime = TimeDuration::FromMicroseconds(50);
@@ -621,7 +621,7 @@ Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes)
 }
 
 UniqueChars
-Statistics::formatDetailedTotals()
+Statistics::formatDetailedTotals() const
 {
     TimeDuration total, longest;
     gcDuration(&total, &longest);
@@ -638,7 +638,7 @@ Statistics::formatDetailedTotals()
 }
 
 UniqueChars
-Statistics::formatJsonMessage(uint64_t timestamp)
+Statistics::formatJsonMessage(uint64_t timestamp) const
 {
     MOZ_ASSERT(!aborted);
 
@@ -684,7 +684,7 @@ SplitDurationMS(TimeDuration d)
 }
 
 UniqueChars
-Statistics::formatJsonDescription(uint64_t timestamp)
+Statistics::formatJsonDescription(uint64_t timestamp) const
 {
     TimeDuration total, longest;
     gcDuration(&total, &longest);
@@ -738,7 +738,7 @@ Statistics::formatJsonDescription(uint64_t timestamp)
 }
 
 UniqueChars
-Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
+Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice) const
 {
     TimeDuration duration = slice.duration();
     lldiv_t durationParts = SplitDurationMS(duration);
@@ -791,7 +791,7 @@ FilterJsonKey(const char*const buffer)
 }
 
 UniqueChars
-Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes)
+Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes) const
 {
     FragmentVector fragments;
     char buffer[128];
