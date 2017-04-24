@@ -11,10 +11,11 @@
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsStringGlue.h"
@@ -130,7 +131,8 @@ GetDirectoryListingTaskChild::SetSuccessRequestResult(const FileSystemResponseVa
       const FileSystemDirectoryListingResponseFile& d =
         data.get_FileSystemDirectoryListingResponseFile();
 
-      RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(d.blob());
+      RefPtr<BlobImpl> blobImpl =
+        static_cast<BlobChild*>(d.blobChild())->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       RefPtr<File> file = File::Create(mFileSystem->GetParentObject(), blobImpl);
@@ -220,6 +222,8 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   AssertIsOnBackgroundThread();
 
+  InfallibleTArray<PBlobParent*> blobs;
+
   nsTArray<FileSystemDirectoryListingResponseData> inputs;
 
   for (unsigned i = 0; i < mTargetData.Length(); i++) {
@@ -247,14 +251,8 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
       filePath.Append(name);
       blobImpl->SetDOMPath(filePath);
 
-      IPCBlob ipcBlob;
-      rv =
-        IPCBlobUtils::Serialize(blobImpl, mRequestParent->Manager(), ipcBlob);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FileSystemErrorResponse(rv);
-      }
-
-      fileData.blob() = ipcBlob;
+      fileData.blobParent() =
+        BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
       inputs.AppendElement(fileData);
     } else {
       MOZ_ASSERT(mTargetData[i].mType == FileOrDirectoryPath::eDirectoryPath);
