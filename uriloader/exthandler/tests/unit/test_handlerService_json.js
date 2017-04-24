@@ -1,35 +1,65 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * Tests the handlerService interfaces using JSON backend.
+/*
+ * Tests the nsIHandlerService interface using the JSON backend.
  */
 
 XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
                                    "@mozilla.org/uriloader/handler-service-json;1",
                                    "nsIHandlerService");
 
-var scriptFile = do_get_file("common_test_handlerService.js");
-Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
+/**
+ * Unloads the nsIHandlerService data store, so the back-end file can be
+ * accessed or modified, and the new data will be loaded at the next access.
+ */
+let unloadHandlerStore = Task.async(function* () {
+  // If this function is called before the nsIHandlerService instance has been
+  // initialized for the first time, the observer below will not be registered.
+  // We have to force initialization to prevent the function from stalling.
+  gHandlerService;
 
-var prepareImportDB = Task.async(function* () {
-  yield reloadData();
-
-  yield OS.File.copy(do_get_file("handlers.json").path, jsonPath);
+  let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
+  Services.obs.notifyObservers(null, "handlersvc-json-replace");
+  yield promise;
 });
 
-var removeImportDB = Task.async(function* () {
-  yield reloadData();
+/**
+ * Unloads the data store and deletes it.
+ */
+let deleteHandlerStore = Task.async(function* () {
+  yield unloadHandlerStore();
 
   yield OS.File.remove(jsonPath, { ignoreAbsent: true });
 });
 
-var reloadData = Task.async(function* () {
-  // Force the initialization of handlerService to prevent observer is not initialized yet.
-  let svc = gHandlerService;
-  let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
-  Services.obs.notifyObservers(null, "handlersvc-json-replace");
-  yield promise;
+/**
+ * Unloads the data store and replaces it with the test data file.
+ */
+let copyTestDataToHandlerStore = Task.async(function* () {
+  yield unloadHandlerStore();
+
+  yield OS.File.copy(do_get_file("handlers.json").path, jsonPath);
+});
+
+var scriptFile = do_get_file("common_test_handlerService.js");
+Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
+
+/**
+ * Ensures forward compatibility by checking that the "store" method preserves
+ * unknown properties in the test data. This is specific to the JSON back-end.
+ */
+add_task(function* test_store_keeps_unknown_properties() {
+  // Create a new nsIHandlerInfo instance before loading the test data.
+  yield deleteHandlerStore();
+  let handlerInfo =
+      HandlerServiceTestUtils.getHandlerInfo("example/type.handleinternally");
+
+  yield copyTestDataToHandlerStore();
+  gHandlerService.store(handlerInfo);
+
+  yield unloadHandlerStore();
+  let data = JSON.parse(new TextDecoder().decode(yield OS.File.read(jsonPath)));
+  do_check_eq(data.mimeTypes["example/type.handleinternally"].unknownProperty,
+              "preserved");
 });
