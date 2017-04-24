@@ -33,6 +33,7 @@ public:
 
   // ListBoxObject.webidl
   int32_t GetRowCount();
+  int32_t GetRowHeight();
   int32_t GetNumberOfVisibleRows();
   int32_t GetIndexOfFirstVisibleRow();
   void EnsureIndexIsVisible(int32_t rowIndex);

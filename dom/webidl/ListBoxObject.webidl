@@ -9,6 +9,7 @@
 interface ListBoxObject : BoxObject {
 
   long getRowCount();
+  long getRowHeight();
   long getNumberOfVisibleRows();
   long getIndexOfFirstVisibleRow();
 
