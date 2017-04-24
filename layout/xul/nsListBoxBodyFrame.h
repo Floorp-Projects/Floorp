@@ -93,6 +93,7 @@ public:
   // size calculation 
   int32_t GetRowCount();
   int32_t GetRowHeightAppUnits() { return mRowHeight; }
+  int32_t GetRowHeightPixels() const;
   int32_t GetFixedRowSize();
   void SetRowHeight(nscoord aRowHeight);
   nscoord GetYPosition();
