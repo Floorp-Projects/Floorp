@@ -102,9 +102,6 @@ module.exports = {
     // much benefit.
     "no-multi-spaces": "warn",
 
-    // No spaces between function name and parentheses
-    "no-spaced-func": "warn",
-
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 
