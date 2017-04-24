@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom.ipc += [
     'IPCBlobInputStream.h',
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
+    'IPCBlobInputStreamStorage.h',
     'MemoryStreamChild.h',
     'MemoryStreamParent.h',
     'nsIRemoteBlob.h',
@@ -24,6 +25,7 @@ UNIFIED_SOURCES += [
     'IPCBlobInputStream.cpp',
     'IPCBlobInputStreamChild.cpp',
     'IPCBlobInputStreamParent.cpp',
+    'IPCBlobInputStreamStorage.cpp',
     'IPCBlobUtils.cpp',
     'MemoryStreamParent.cpp',
 ]
