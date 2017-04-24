@@ -131,6 +131,15 @@ ContentBridgeParent::DeallocPBlobParent(PBlobParent* aActor)
   return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
+PIPCBlobInputStreamParent*
+ContentBridgeParent::SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                                        const nsID& aID,
+                                                        const uint64_t& aSize)
+{
+  return
+    PContentBridgeParent::SendPIPCBlobInputStreamConstructor(aActor, aID, aSize);
+}
+
 PMemoryStreamParent*
 ContentBridgeParent::AllocPMemoryStreamParent(const uint64_t& aSize)
 {
@@ -141,6 +150,19 @@ bool
 ContentBridgeParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
 {
   return nsIContentParent::DeallocPMemoryStreamParent(aActor);
+}
+
+PIPCBlobInputStreamParent*
+ContentBridgeParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                                    const uint64_t& aSize)
+{
+  return nsIContentParent::AllocPIPCBlobInputStreamParent(aID, aSize);
+}
+
+bool
+ContentBridgeParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPIPCBlobInputStreamParent(aActor);
 }
 
 mozilla::jsipc::PJavaScriptParent *

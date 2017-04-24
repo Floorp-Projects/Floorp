@@ -1584,6 +1584,19 @@ ContentChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
   return nsIContentChild::DeallocPMemoryStreamChild(aActor);
 }
 
+PIPCBlobInputStreamChild*
+ContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                            const uint64_t& aSize)
+{
+  return nsIContentChild::AllocPIPCBlobInputStreamChild(aID, aSize);
+}
+
+bool
+ContentChild::DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActor)
+{
+  return nsIContentChild::DeallocPIPCBlobInputStreamChild(aActor);
+}
+
 PBlobChild*
 ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 {
