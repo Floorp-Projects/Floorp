@@ -410,7 +410,7 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
         return -1;
     }
 
-    // ConnectEx requires the socket to be initially bound. We will use INADDR_ANY
+    /* ConnectEx requires the socket to be initially bound. We will use INADDR_ANY. */
     PRNetAddr bindAddr;
     memset(&bindAddr, 0, sizeof(bindAddr));
     if (addr->raw.family == PR_AF_INET) {
@@ -432,13 +432,13 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
 
     rvSent = 0;
     memset(&fd->secret->ol, 0, sizeof(fd->secret->ol));
-    // ConnectEx return TRUE on a success and FALSE on an error.
+    /* ConnectEx return TRUE on a success and FALSE on an error. */
     if (_pr_win_connectex( (SOCKET)osfd, (struct sockaddr *) addr,
                            addrlen, buf, amount,
                            &rvSent, &fd->secret->ol) == TRUE) {
-        // When ConnectEx is used, all previously set socket options and
-        // property are not enabled and to enable them
-        // SO_UPDATE_CONNECT_CONTEXT option need to be set.
+        /* When ConnectEx is used, all previously set socket options and
+         * property are not enabled and to enable them
+         * SO_UPDATE_CONNECT_CONTEXT option need to be set. */
         rv = setsockopt((SOCKET)osfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
         if (rv != 0) {
             err = WSAGetLastError();
@@ -447,10 +447,10 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             _PR_MD_MAP_SETSOCKOPT_ERROR(err);
             return -1;
         }
-        // We imitate Linux here. SendTo will return number of bytes send but
-        // it can not return connection success at the same time, so we return
-        // number of bytes send and "connection success" will be return on the
-        // connectcontinue.
+        /* We imitate Linux here. SendTo will return number of bytes send but
+         * it can not return connection success at the same time, so we return
+         * number of bytes send and "connection success" will be return on the
+         * connectcontinue. */
         fd->secret->alreadyConnected = PR_TRUE;
         return rvSent;
     } else {
@@ -461,13 +461,13 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             _PR_MD_MAP_CONNECT_ERROR(err);
             return -1;
         } else if (fd->secret->nonblocking) {
-            // Remember that overlapped structure is set. We will neede to get
-            // the final result of ConnectEx call.
+            /* Remember that overlapped structure is set. We will neede to get
+             * the final result of ConnectEx call. */
             fd->secret->overlappedActive = PR_TRUE;
             _PR_MD_MAP_CONNECT_ERROR(WSAEWOULDBLOCK);
-            // ConnectEx will copy supplied data to a internal buffer and send
-            // them during Fast Open or after connect. Therefore we can assumed
-            // this data already send.
+            /* ConnectEx will copy supplied data to a internal buffer and send
+             * them during Fast Open or after connect. Therefore we can assumed
+             * this data already send. */
             return amount;
         }
         while (err == ERROR_IO_PENDING) {

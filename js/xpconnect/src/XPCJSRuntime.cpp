@@ -1533,6 +1533,10 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.typePool,
         "Type sets and related data.");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-zone"),
+        zStats.jitZone,
+        "The JIT zone.");
+
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("baseline/optimized-stubs"),
         zStats.baselineStubsOptimized,
         "The Baseline JIT's optimized IC stubs (excluding code).");

@@ -64,6 +64,8 @@ static int32_t GetSystemParam(long flag, int32_t def)
 nsLookAndFeel::nsLookAndFeel()
   : nsXPLookAndFeel()
   , mUseAccessibilityTheme(0)
+  , mUseDefaultTheme(0)
+  , mNativeThemeId(eWindowsTheme_Generic)
 {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
@@ -395,10 +397,18 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = WinUtils::IsTouchDeviceSupportPresent();
         break;
     case eIntID_WindowsDefaultTheme:
-        aResult = nsUXThemeData::IsDefaultWindowTheme();
+        if (XRE_IsContentProcess()) {
+          aResult = mUseDefaultTheme;
+        } else {
+          aResult = nsUXThemeData::IsDefaultWindowTheme();
+        }
         break;
     case eIntID_WindowsThemeIdentifier:
-        aResult = nsUXThemeData::GetNativeThemeId();
+        if (XRE_IsContentProcess()) {
+          aResult = mNativeThemeId;
+        } else {
+          aResult = nsUXThemeData::GetNativeThemeId();
+        }
         break;
 
     case eIntID_OperatingSystemVersionIdentifier:
@@ -675,10 +685,18 @@ nsLookAndFeel::GetIntCacheImpl()
   nsTArray<LookAndFeelInt> lookAndFeelIntCache =
     nsXPLookAndFeel::GetIntCacheImpl();
 
-  LookAndFeelInt useAccessibilityTheme;
-  useAccessibilityTheme.id = eIntID_UseAccessibilityTheme;
-  useAccessibilityTheme.value = GetInt(eIntID_UseAccessibilityTheme);
-  lookAndFeelIntCache.AppendElement(useAccessibilityTheme);
+  LookAndFeelInt lafInt;
+  lafInt.id = eIntID_UseAccessibilityTheme;
+  lafInt.value = GetInt(eIntID_UseAccessibilityTheme);
+  lookAndFeelIntCache.AppendElement(lafInt);
+
+  lafInt.id = eIntID_WindowsDefaultTheme;
+  lafInt.value = GetInt(eIntID_WindowsDefaultTheme);
+  lookAndFeelIntCache.AppendElement(lafInt);
+
+  lafInt.id = eIntID_WindowsThemeIdentifier;
+  lafInt.value = GetInt(eIntID_WindowsThemeIdentifier);
+  lookAndFeelIntCache.AppendElement(lafInt);
 
   return lookAndFeelIntCache;
 }
@@ -687,8 +705,15 @@ void
 nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache)
 {
   for (auto entry : aLookAndFeelIntCache) {
-    if (entry.id == eIntID_UseAccessibilityTheme) {
+    switch (entry.id) {
+      case eIntID_UseAccessibilityTheme:
       mUseAccessibilityTheme = entry.value;
+      break;
+      case eIntID_WindowsDefaultTheme:
+      mUseDefaultTheme = entry.value;
+      break;
+      case eIntID_WindowsThemeIdentifier:
+      mNativeThemeId = entry.value;
       break;
     }
   }

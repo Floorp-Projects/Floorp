@@ -7,6 +7,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "ImageRegion.h"
 #include "Orientation.h"
