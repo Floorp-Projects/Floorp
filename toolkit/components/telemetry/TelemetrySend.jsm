@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = [
   "TelemetrySend",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -279,6 +279,27 @@ this.TelemetrySend = {
    */
   getShutdownState() {
     return TelemetrySendImpl.getShutdownState();
+  },
+
+  /**
+   * Send a ping using the ping sender.
+   * This method will not wait for the ping to be sent, instead it will return
+   * as soon as the pingsender program has been launched.
+   *
+   * This method is currently exposed here only for testing purposes as it's
+   * only used internally.
+   *
+   * @param {String} aUrl The telemetry server URL
+   * @param {String} aPingFilePath The path to the file holding the ping
+   *        contents, if if sent successfully the pingsender will delete it.
+   *
+   * @throws NS_ERROR_FAILURE if we couldn't find or run the pingsender
+   *         executable.
+   * @throws NS_ERROR_NOT_IMPLEMENTED on Android as the pingsender is not
+   *         available.
+   */
+  testRunPingSender(url, pingPath) {
+    TelemetrySendImpl.runPingSender(url, pingPath);
   },
 };
 
@@ -784,7 +805,7 @@ var TelemetrySendImpl = {
     this._log.trace("_sendWithPingSender - sending " + pingId + " to " + submissionURL);
     try {
       const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
-      Telemetry.runPingSender(submissionURL, pingPath);
+      this.runPingSender(submissionURL, pingPath);
     } catch (e) {
       this._log.error("_sendWithPingSender - failed to submit shutdown ping", e);
     }
@@ -1225,5 +1246,22 @@ var TelemetrySendImpl = {
       persistedPingCount: TelemetryStorage.getPendingPingList().length,
       schedulerState: SendScheduler.getShutdownState(),
     };
+  },
+
+  runPingSender(url, pingPath) {
+    if (AppConstants.platform === "android") {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    const exeName = AppConstants.platform === "win" ? "pingsender.exe"
+                                                    : "pingsender";
+
+    let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+    exe.append(exeName);
+
+    let process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
+    process.init(exe);
+    process.run(/* blocking */ false, [url, pingPath], 2);
   },
 };
