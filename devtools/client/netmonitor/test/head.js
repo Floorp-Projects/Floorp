@@ -86,6 +86,9 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 // Always reset some prefs to their original values after the test finishes.
 const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters");
 
+// Reveal all hidden columns for test
+Services.prefs.setCharPref("devtools.netmonitor.hiddenColumns", "[]");
+
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
 
@@ -374,7 +377,8 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
   let hostPort = getUrlHost(url);
-  let remoteAddress = requestItem.remoteAddress;
+  let { httpVersion = "", remoteAddress, remotePort } = requestItem;
+  let remoteIP = remoteAddress ? `${remoteAddress}:${remotePort}` : "unknown";
 
   if (fuzzyUrl) {
     ok(requestItem.method.startsWith(method), "The attached method is correct.");
@@ -400,12 +404,24 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
       unicodeUrl, "The tooltip file is correct.");
   }
 
+  is(target.querySelector(".requests-list-protocol").textContent,
+    httpVersion, "The displayed protocol is correct.");
+
+  is(target.querySelector(".requests-list-protocol").getAttribute("title"),
+    httpVersion, "The tooltip protocol is correct.");
+
   is(target.querySelector(".requests-list-domain").textContent,
     hostPort, "The displayed domain is correct.");
 
   let domainTooltip = hostPort + (remoteAddress ? " (" + remoteAddress + ")" : "");
   is(target.querySelector(".requests-list-domain").getAttribute("title"),
     domainTooltip, "The tooltip domain is correct.");
+
+  is(target.querySelector(".requests-list-remoteip").textContent,
+    remoteIP, "The displayed remote IP is correct.");
+
+  is(target.querySelector(".requests-list-remoteip").getAttribute("title"),
+    remoteIP, "The tooltip remote IP is correct.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-list-status-icon")
@@ -421,12 +437,13 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (cause !== undefined) {
-    let value = target.querySelector(".requests-list-cause > .subitem-label").textContent;
+    let value = Array.from(target.querySelector(".requests-list-cause").childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)[0].textContent;
     let tooltip = target.querySelector(".requests-list-cause").getAttribute("title");
     info("Displayed cause: " + value);
     info("Tooltip cause: " + tooltip);
     is(value, cause.type, "The displayed cause is correct.");
-    is(tooltip, cause.loadingDocumentUri, "The tooltip cause is correct.");
+    is(tooltip, cause.type, "The tooltip cause is correct.");
   }
   if (type !== undefined) {
     let value = target.querySelector(".requests-list-type").textContent;

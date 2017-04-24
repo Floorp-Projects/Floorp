@@ -71,7 +71,7 @@ add_task(function* test() {
    * with the expected content.
    */
   function* showTooltipAndVerify(target) {
-    let anchor = target.querySelector(".requests-list-file");
+    let anchor = target.querySelector(".requests-list-icon");
     yield showTooltipOn(anchor);
 
     info("Tooltip was successfully opened for the image request.");
