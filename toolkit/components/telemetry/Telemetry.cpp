@@ -10,6 +10,11 @@
 
 #include <prio.h>
 #include <prproces.h>
+#ifdef XP_LINUX
+#include <time.h>
+#else
+#include <chrono>
+#endif
 
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/Promise.h"
@@ -2747,6 +2752,22 @@ NS_IMETHODIMP
 TelemetryImpl::MsSinceProcessStart(double* aResult)
 {
   return Telemetry::Common::MsSinceProcessStart(aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::MsSystemNow(double* aResult)
+{
+#ifdef XP_LINUX
+  timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  *aResult = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+#else
+  using namespace std::chrono;
+  milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+  *aResult = static_cast<double>(ms.count());
+#endif // XP_LINUX
+
+  return NS_OK;
 }
 
 // Telemetry Scalars IDL Implementation

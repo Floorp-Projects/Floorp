@@ -17,9 +17,6 @@ module.exports = {
     // which is a valid use case.
     "no-empty": "error",
 
-    // No spaces between function name and parentheses
-    "no-spaced-func": "error",
-
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 8],
 

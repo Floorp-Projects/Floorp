@@ -27,6 +27,7 @@
 #include "vm/StringBuffer.h"
 #include "wasm/WasmAST.h"
 #include "wasm/WasmBinaryToAST.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmTextUtils.h"
 #include "wasm/WasmTypes.h"
 

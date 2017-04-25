@@ -946,11 +946,11 @@ function makeWebBrowserPersist() {
 }
 
 function makeURI(aURL, aOriginCharset, aBaseURI) {
-  return BrowserUtils.makeURI(aURL, aOriginCharset, aBaseURI);
+  return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
 }
 
 function makeFileURI(aFile) {
-  return BrowserUtils.makeFileURI(aFile);
+  return Services.io.newFileURI(aFile);
 }
 
 function makeFilePicker() {
