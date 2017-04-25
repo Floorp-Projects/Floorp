@@ -2189,22 +2189,10 @@ nsHttpTransaction::GetNetworkAddresses(NetAddr &self, NetAddr &peer)
 }
 
 bool
-nsHttpTransaction::CanDo0RTT()
-{
-    if (mRequestHead->IsSafeMethod() &&
-        (!mConnection ||
-         !mConnection->IsProxyConnectInProgress())) {
-        return true;
-    }
-    return false;
-}
-
-bool
 nsHttpTransaction::Do0RTT()
 {
    if (mRequestHead->IsSafeMethod() &&
-       (!mConnection ||
-       !mConnection->IsProxyConnectInProgress())) {
+       !mConnection->IsProxyConnectInProgress()) {
      m0RTTInProgress = true;
    }
    return m0RTTInProgress;
@@ -2234,34 +2222,6 @@ nsHttpTransaction::Finish0RTT(bool aRestart, bool aAlpnChanged /* ignored */)
         // this is code that was skipped in ::ReadSegments while in 0RTT
         mConnected = true;
         mConnection->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
-    }
-    return NS_OK;
-}
-
-nsresult
-nsHttpTransaction::RestartOnFastOpenError()
-{
-    // This will happen on connection error during Fast Open or if connect
-    // during Fast Open takes too long. So we should not have received any
-    // data!
-    MOZ_ASSERT(!mReceivedData);
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-
-    LOG(("nsHttpTransaction::RestartOnFastOpenError - restarting transaction "
-         "%p\n", this));
-
-    // rewind streams in case we already wrote out the request
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
-    if (seekable)
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-        // clear old connection state...
-    mSecurityInfo = nullptr;
-
-    if (!mConnInfo->GetRoutedHost().IsEmpty()) {
-        MutexAutoLock lock(*nsHttp::GetLock());
-        RefPtr<nsHttpConnectionInfo> ci;
-        mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
-        mConnInfo = ci;
     }
     return NS_OK;
 }

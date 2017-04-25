@@ -165,13 +165,7 @@ public:
     virtual void DisableSpdy() { }
     virtual void ReuseConnectionOnRestartOK(bool) { }
 
-    // Returns true if early-data or fast open is possible.
-    virtual MOZ_MUST_USE bool CanDo0RTT() {
-        return false;
-    }
-    // Returns true if early-data is possible and transaction will remember
-    // that it is in 0RTT mode (to know should it rewide transaction or not
-    // in the case of an error).
+    // Returns true if early-data is possible.
     virtual MOZ_MUST_USE bool Do0RTT() {
         return false;
     }
@@ -187,10 +181,6 @@ public:
     // over as http/1 transactions
     // The function will return success or failure of the transaction restart.
     virtual MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    virtual MOZ_MUST_USE nsresult RestartOnFastOpenError() {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
