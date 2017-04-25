@@ -2028,20 +2028,28 @@ AppendCSSGradientToBoxPosition(const nsStyleGradient* aGradient,
   }
   NS_ASSERTION(yValue != 0.5f || xValue != 0.5f, "invalid box position");
 
-  aString.AppendLiteral("to");
+  // XXXdholbert Note: this AppendLiteral call will become conditional in a
+  // later patch in this series.
+  aString.AppendLiteral("to ");
 
   if (yValue == 0.0f) {
-    aString.AppendLiteral(" top");
+    aString.AppendLiteral("top");
   } else if (yValue == 1.0f) {
-    aString.AppendLiteral(" bottom");
+    aString.AppendLiteral("bottom");
   } else if (yValue != 0.5f) { // do not write "center" keyword
     NS_NOTREACHED("invalid box position");
   }
 
+  if (yValue != 0.5f && xValue != 0.5f) {
+    // We're appending both a y-keyword and an x-keyword.
+    // Add a space between them here.
+    aString.AppendLiteral(" ");
+  }
+
   if (xValue == 0.0f) {
-    aString.AppendLiteral(" left");
+    aString.AppendLiteral("left");
   } else if (xValue == 1.0f) {
-    aString.AppendLiteral(" right");
+    aString.AppendLiteral("right");
   } else if (xValue != 0.5f) { // do not write "center" keyword
     NS_NOTREACHED("invalid box position");
   }
