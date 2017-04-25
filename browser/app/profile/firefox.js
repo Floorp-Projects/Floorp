@@ -999,6 +999,13 @@ pref("security.sandbox.content.level", 1);
 // allow stack tracing.  This does not require a restart to take effect.
 pref("security.sandbox.windows.log.stackTraceDepth", 0);
 #endif
+
+// This controls the strength of the Windows GPU process sandbox.  Changes
+// will require restart.
+// For information on what the level number means, see
+// SetSecurityLevelForGPUProcess() in
+// security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
+pref("security.sandbox.gpu.level", 1);
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)

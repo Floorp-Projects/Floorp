@@ -1522,20 +1522,29 @@ CacheIRCompiler::emitGuardAndGetIndexFromString()
     if (!addFailurePath(&failure))
         return false;
 
-    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
-    masm.PushRegsInMask(save);
+    Label vmCall, done;
+    masm.loadStringIndexValue(str, output, &vmCall);
+    masm.jump(&done);
 
-    masm.setupUnalignedABICall(output);
-    masm.passABIArg(str);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
-    masm.mov(ReturnReg, output);
+    {
+        masm.bind(&vmCall);
+        LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+        masm.PushRegsInMask(save);
 
-    LiveRegisterSet ignore;
-    ignore.add(output);
-    masm.PopRegsInMaskIgnore(save, ignore);
+        masm.setupUnalignedABICall(output);
+        masm.passABIArg(str);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+        masm.mov(ReturnReg, output);
 
-    // GetIndexFromString returns a negative value on failure.
-    masm.branchTest32(Assembler::Signed, output, output, failure->label());
+        LiveRegisterSet ignore;
+        ignore.add(output);
+        masm.PopRegsInMaskIgnore(save, ignore);
+
+        // GetIndexFromString returns a negative value on failure.
+        masm.branchTest32(Assembler::Signed, output, output, failure->label());
+    }
+
+    masm.bind(&done);
     return true;
 }
 
