@@ -47,9 +47,9 @@ public:
     , mPreserveAspectRatio(aPreserveAspectRatio)
   { }
 
-  static void MaybeInitAndStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                            nsIFrame* aFromFrame,
-                                            imgIContainer* aImgContainer);
+  static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
+                                     nsIFrame* aFromFrame,
+                                     imgIContainer* aImgContainer);
 
   const Maybe<CSSIntSize>& GetViewportSize() const {
     return mViewportSize;

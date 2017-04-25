@@ -3049,13 +3049,20 @@ nsDOMWindowUtils::IsPartOfOpaqueLayer(nsIDOMElement* aElement, bool* aResult)
     return NS_ERROR_FAILURE;
   }
 
-  PaintedLayer* layer = FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(frame);
-  if (!layer) {
-    return NS_ERROR_FAILURE;
+  ColorLayer* colorLayer = FrameLayerBuilder::GetDebugSingleOldLayerForFrame<ColorLayer>(frame);
+  if (colorLayer) {
+    auto color = colorLayer->GetColor();
+    *aResult = color.a == 1.0f;
+    return NS_OK;
   }
 
-  *aResult = (layer->GetContentFlags() & Layer::CONTENT_OPAQUE);
-  return NS_OK;
+  PaintedLayer* paintedLayer = FrameLayerBuilder::GetDebugSingleOldLayerForFrame<PaintedLayer>(frame);
+  if (paintedLayer) {
+    *aResult = paintedLayer->IsOpaque();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3078,7 +3085,7 @@ nsDOMWindowUtils::NumberOfAssignedPaintedLayers(nsIDOMElement** aElements,
       return NS_ERROR_FAILURE;
     }
 
-    PaintedLayer* layer = FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(frame);
+    PaintedLayer* layer = FrameLayerBuilder::GetDebugSingleOldLayerForFrame<PaintedLayer>(frame);
     if (!layer) {
       return NS_ERROR_FAILURE;
     }
