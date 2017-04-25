@@ -30,7 +30,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
                    const RawServoMediaList* media_list,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   uint32_t line_number_offset)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    RawServoStyleSheetStrong,
                    const RawServoImportRuleBorrowed import_rule)
@@ -40,7 +41,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
                    mozilla::css::Loader* loader,
                    mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   uint32_t line_number_offset)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
