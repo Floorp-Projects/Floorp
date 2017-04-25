@@ -92,7 +92,7 @@ TEST(cubeb, record)
   params.format = STREAM_FORMAT;
   params.rate = SAMPLE_FREQUENCY;
   params.channels = 1;
-  params.layout = CUBEB_LAYOUT_MONO;
+  params.layout = CUBEB_LAYOUT_UNDEFINED;
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb record (mono)", NULL, &params, NULL, nullptr,
                         4096, data_cb_record, state_cb_record, &stream_state);
