@@ -2963,7 +2963,10 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
     } else if (src->is<ArgumentsObject>()) {
         tenuredSize += ArgumentsObject::objectMovedDuringMinorGC(this, dst, src);
     } else if (src->is<ProxyObject>()) {
-        tenuredSize += ProxyObject::objectMovedDuringMinorGC(this, dst, src);
+        // Objects in the nursery are never swapped so the proxy must have an
+        // inline ProxyValueArray.
+        MOZ_ASSERT(src->as<ProxyObject>().usingInlineValueArray());
+        dst->as<ProxyObject>().setInlineValueArray();
     } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
         op(dst, src);
     } else if (src->getClass()->hasFinalize()) {

@@ -39,6 +39,20 @@ class ProxyObject : public ShapedObject
     static ProxyObject* New(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
                             TaggedProto proto_, const ProxyOptions& options);
 
+    // Proxies usually store their ProxyValueArray inline in the object.
+    // There's one unfortunate exception: when a proxy is swapped with another
+    // object, and the sizes don't match, we malloc the ProxyValueArray.
+    void* inlineDataStart() const {
+        return (void*)(uintptr_t(this) + sizeof(ProxyObject));
+    }
+    bool usingInlineValueArray() const {
+        return data.values == inlineDataStart();
+    }
+    void setInlineValueArray() {
+        data.values = reinterpret_cast<detail::ProxyValueArray*>(inlineDataStart());
+    }
+    MOZ_MUST_USE bool initExternalValueArrayAfterSwap(JSContext* cx, const detail::ProxyValueArray& src);
+
     const Value& private_() {
         return GetProxyPrivate(this);
     }
@@ -82,7 +96,6 @@ class ProxyObject : public ShapedObject
     }
 
     gc::AllocKind allocKindForTenure() const;
-    static size_t objectMovedDuringMinorGC(TenuringTracer* trc, JSObject* dst, JSObject* src);
 
   private:
     GCPtrValue* slotOfExtra(size_t n) {
