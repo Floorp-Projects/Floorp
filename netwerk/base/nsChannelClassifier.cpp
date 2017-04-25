@@ -39,7 +39,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/net/HttpBaseChannel.h"
-#include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 namespace net {
@@ -1016,8 +1015,6 @@ nsChannelClassifier::Observe(nsISupports *aSubject, const char *aTopic,
 
   return NS_OK;
 }
-
-#undef LOG_ENABLED
 
 } // namespace net
 } // namespace mozilla
