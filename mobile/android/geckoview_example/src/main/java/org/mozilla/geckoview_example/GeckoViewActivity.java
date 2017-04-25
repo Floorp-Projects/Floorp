@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoView;
@@ -24,6 +25,8 @@ public class GeckoViewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+              " - application start");
 
         setContentView(R.layout.geckoview_activity);
 
@@ -76,11 +79,15 @@ public class GeckoViewActivity extends Activity {
         @Override
         public void onPageStart(GeckoView view, String url) {
             Log.i(LOGTAG, "Starting to load page at " + url);
+            Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                  " - page load start");
         }
 
         @Override
         public void onPageStop(GeckoView view, boolean success) {
             Log.i(LOGTAG, "Stopping page load " + (success ? "successfully" : "unsuccessfully"));
+            Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                  " - page load stop");
         }
 
         @Override
