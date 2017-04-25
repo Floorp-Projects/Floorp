@@ -37,6 +37,8 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                          window. Can be nullptr.
       @param aOpener The window which is trying to open this new chrome window.
                      Can be nullptr
+      @param aNextTabParentId The integer ID of the next tab parent actor to use.
+                              0 means there is no next tab parent ID to use.
       @param cancel Return |true| to reject window creation. If true the
                     implementation has determined the window should not
                     be created at all. The caller should not default
@@ -47,6 +49,7 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                                           in uint32_t chromeFlags,
                                           in nsITabParent aOpeningTab,
                                           in mozIDOMWindowProxy aOpener,
+                                          in unsigned long long aNextTabParentId,
                                           out boolean cancel);
 
   /**

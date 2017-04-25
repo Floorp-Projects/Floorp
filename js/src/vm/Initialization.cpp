@@ -31,6 +31,7 @@
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
+#include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
 using JS::detail::InitState;
@@ -192,8 +193,10 @@ JS_ShutDown(void)
 
     js::FinishDateTimeState();
 
-    if (!JSRuntime::hasLiveRuntimes())
+    if (!JSRuntime::hasLiveRuntimes()) {
+        js::wasm::ReleaseBuiltinThunks();
         js::jit::ReleaseProcessExecutableMemory();
+    }
 
     libraryInitState = InitState::ShutDown;
 }
