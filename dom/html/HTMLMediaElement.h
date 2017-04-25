@@ -693,13 +693,6 @@ public:
 
   double MozFragmentEnd();
 
-  AudioChannel MozAudioChannelType() const
-  {
-    return mAudioChannel;
-  }
-
-  void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
-
   AudioTrackList* AudioTracks();
 
   VideoTrackList* VideoTracks();
@@ -750,9 +743,6 @@ public:
   // dormancy checks to prevent dormant processing for an element
   // that will soon be gone.
   bool IsBeingDestroyed();
-
-  IMPL_EVENT_HANDLER(mozinterruptbegin)
-  IMPL_EVENT_HANDLER(mozinterruptend)
 
   // These are used for testing only
   float ComputedVolume() const;
@@ -1249,9 +1239,6 @@ protected:
   void ReportEMETelemetry();
 
   void ReportTelemetry();
-
-  // Check the permissions for audiochannel.
-  bool CheckAudioChannelPermissions(const nsAString& aType);
 
   // Seeks to aTime seconds. aSeekType can be Exact to seek to exactly the
   // seek target, or PrevSyncPoint if a quicker but less precise seek is
