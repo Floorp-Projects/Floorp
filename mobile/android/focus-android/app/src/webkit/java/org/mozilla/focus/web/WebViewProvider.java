@@ -86,7 +86,6 @@ public class WebViewProvider {
 
         // To respect the html viewport:
         settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
 
         // Also increase text size to fill the viewport (this mirrors the behaviour of Firefox,
         // Chrome does this in the current Chrome Dev, but not Chrome release).
