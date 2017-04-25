@@ -673,14 +673,12 @@ NS_IMETHODIMP
 nsWebBrowser::LoadURI(const char16_t* aURI, uint32_t aLoadFlags,
                       nsIURI* aReferringURI,
                       nsIInputStream* aPostDataStream,
-                      nsIInputStream* aExtraHeaderStream,
-                      nsIPrincipal* aTriggeringPrincipal)
+                      nsIInputStream* aExtraHeaderStream)
 {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShellAsNav->LoadURI(aURI, aLoadFlags, aReferringURI,
-                                 aPostDataStream, aExtraHeaderStream,
-                                 aTriggeringPrincipal);
+  return mDocShellAsNav->LoadURI(
+    aURI, aLoadFlags, aReferringURI, aPostDataStream, aExtraHeaderStream);
 }
 
 NS_IMETHODIMP
