@@ -1820,14 +1820,21 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         MOZ_ASSERT(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
                    gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
                    "unexpected unit");
-        aResult.AppendLiteral("to");
+        // XXXdholbert Note: this AppendLiteral call will become conditional
+        // in a later patch in this series.
+        aResult.AppendLiteral("to ");
+        bool didAppendX = false;
         if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
-          aResult.Append(' ');
           gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position_x,
                                                   aResult, aSerialization);
+          didAppendX = true;
         }
         if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
-          aResult.Append(' ');
+          if (didAppendX) {
+            // We're appending both an x-keyword and a y-keyword.
+            // Add a space between them here.
+            aResult.Append(' ');
+          }
           gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position_y,
                                                   aResult, aSerialization);
         }
