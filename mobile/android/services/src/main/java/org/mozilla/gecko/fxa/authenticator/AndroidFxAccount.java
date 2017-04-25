@@ -805,15 +805,16 @@ public class AndroidFxAccount {
     });
   }
 
-  private long getUserDataLong(String key, long defaultValue) {
+  @SuppressWarnings("unchecked")
+  private <T extends Number> T getUserDataNumber(String key, T defaultValue) {
     final String numStr = accountManager.getUserData(account, key);
     if (TextUtils.isEmpty(numStr)) {
       return defaultValue;
     }
     try {
-      return Long.parseLong(key);
-    } catch (NumberFormatException e) {
-      Logger.warn(LOG_TAG, "Couldn't parse " + key + "; defaulting to " + defaultValue, e);
+      return (T) NumberFormat.getInstance().parse(numStr);
+    } catch (ParseException e) {
+      Logger.warn(LOG_TAG, "Couldn't parse " + key + "; defaulting to 0L.", e);
       return defaultValue;
     }
   }
@@ -824,28 +825,19 @@ public class AndroidFxAccount {
   }
 
   public synchronized int getDeviceRegistrationVersion() {
-    final String numStr = accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION);
-    if (TextUtils.isEmpty(numStr)) {
-      return 0;
-    }
-    try {
-      return Integer.parseInt(numStr);
-    } catch (NumberFormatException e) {
-      Logger.warn(LOG_TAG, "Couldn't parse ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION; defaulting to 0", e);
-      return 0;
-    }
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION, 0);
   }
 
   public synchronized long getDeviceRegistrationTimestamp() {
-    return getUserDataLong(ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP, 0L);
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP, 0L);
   }
 
   public synchronized long getDevicePushRegistrationError() {
-    return getUserDataLong(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR, 0L);
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR, 0L);
   }
 
   public synchronized long getDevicePushRegistrationErrorTime() {
-    return getUserDataLong(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME, 0L);
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME, 0L);
   }
 
   public synchronized void setDeviceId(String id) {
