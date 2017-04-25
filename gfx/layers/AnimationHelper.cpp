@@ -54,7 +54,21 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                              const TransformData& aData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace), Move(aFrameTransform), aData);
+  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
+                                           Move(aFrameTransform),
+                                           aData);
+  mAnimatedValues.Put(aId, value);
+}
+
+void
+CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
+                                             gfx::Matrix4x4&& aTransformInDevSpace)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  const TransformData dontCare = {};
+  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
+                                           gfx::Matrix4x4(),
+                                           dontCare);
   mAnimatedValues.Put(aId, value);
 }
 
