@@ -1761,7 +1761,11 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
     nsCSSValueGradient* gradient = GetGradientValue();
 
     if (gradient->mIsLegacySyntax) {
-      aResult.AppendLiteral("-moz-");
+      if (gradient->mIsMozLegacySyntax) {
+        aResult.AppendLiteral("-moz-");
+      } else {
+        aResult.AppendLiteral("-webkit-");
+      }
     }
     if (gradient->mIsRepeating) {
       aResult.AppendLiteral("repeating-");
@@ -1813,16 +1817,17 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         needSep = true;
       }
     }
-    if (!gradient->mIsRadial && !gradient->mIsLegacySyntax) {
+    if (!gradient->mIsRadial &&
+        !(gradient->mIsLegacySyntax && gradient->mIsMozLegacySyntax)) {
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
           gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None) {
         MOZ_ASSERT(gradient->mAngle.GetUnit() == eCSSUnit_None);
         MOZ_ASSERT(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
                    gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
                    "unexpected unit");
-        // XXXdholbert Note: this AppendLiteral call will become conditional
-        // in a later patch in this series.
-        aResult.AppendLiteral("to ");
+        if (!gradient->mIsLegacySyntax) {
+          aResult.AppendLiteral("to ");
+        }
         bool didAppendX = false;
         if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
           gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position_x,
