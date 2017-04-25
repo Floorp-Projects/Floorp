@@ -25,6 +25,7 @@
 #if defined(DEBUG)
 #include "vm/EnvironmentObject.h"
 #endif
+#include "vm/JSONPrinter.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
@@ -481,6 +482,30 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
   , head(nullptr)
   , tail(&head)
 {
+}
+
+void
+js::Nursery::renderProfileJSON(JSONPrinter& json) const
+{
+    if (!isEnabled()) {
+        json.beginObject();
+        json.property("status", "nursery disabled");
+        json.endObject();
+        return;
+    }
+
+    json.beginObject();
+#define EXTRACT_NAME(name, text) #name,
+    static const char* names[] = {
+FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
+#undef EXTRACT_NAME
+    "" };
+
+    size_t i = 0;
+    for (auto time : profileDurations_)
+        json.property(names[i++], time.ToMicroseconds());
+
+    json.endObject();
 }
 
 /* static */ void

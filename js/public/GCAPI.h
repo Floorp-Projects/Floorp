@@ -357,6 +357,9 @@ struct JS_PUBLIC_API(GCDescription) {
     JS::dbg::GarbageCollectionEvent::Ptr toGCEvent(JSContext* cx) const;
 };
 
+extern JS_PUBLIC_API(UniqueChars)
+MinorGcToJSON(JSContext* cx);
+
 typedef void
 (* GCSliceCallback)(JSContext* cx, GCProgress progress, const GCDescription& desc);
 

@@ -298,3 +298,17 @@ GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
     aWriter.NullProperty("timings");
   }
 }
+
+void
+GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                    const mozilla::TimeStamp& aStartTime,
+                                    UniqueStacks& aUniqueStacks)
+{
+  MOZ_ASSERT(mTimingData);
+  streamCommonProps("GCMinor", aWriter, aStartTime, aUniqueStacks);
+  if (mTimingData) {
+    aWriter.SplicedJSONProperty("nurseryTimings", mTimingData.get());
+  } else {
+    aWriter.NullProperty("nurseryTimings");
+  }
+}
