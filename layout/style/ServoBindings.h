@@ -201,7 +201,7 @@ void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues,
-                            mozilla::UpdateAnimationsTasks aTaskBits);
+                            mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
                                 nsIAtom* aPseudoTagOrNull);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,

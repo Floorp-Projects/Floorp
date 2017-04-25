@@ -457,7 +457,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        ServoComputedValuesBorrowedOrNull aOldComputedValues,
                        ServoComputedValuesBorrowedOrNull aComputedValues,
                        ServoComputedValuesBorrowedOrNull aParentComputedValues,
-                       UpdateAnimationsTasks aTaskBits)
+                       UpdateAnimationsTasks aTasks)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);
@@ -470,7 +470,6 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     return;
   }
 
-  UpdateAnimationsTasks tasks = static_cast<UpdateAnimationsTasks>(aTaskBits);
   if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
     const ServoComputedValuesWithParent servoValues =
       { aComputedValues, aParentComputedValues };
@@ -478,7 +477,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
                                          CSSEnabledState::eForAllContent);
 
-    if (tasks & UpdateAnimationsTasks::CSSAnimations) {
+    if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
       presContext->AnimationManager()->
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
                          servoValues);
@@ -494,7 +493,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       return;
     }
 
-    if (tasks & UpdateAnimationsTasks::CSSTransitions) {
+    if (aTasks & UpdateAnimationsTasks::CSSTransitions) {
       MOZ_ASSERT(aOldComputedValues);
       const ServoComputedValuesWithParent oldServoValues =
         { aOldComputedValues, nullptr };
@@ -502,7 +501,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
         UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
                           oldServoValues, servoValues);
     }
-    if (tasks & UpdateAnimationsTasks::EffectProperties) {
+    if (aTasks & UpdateAnimationsTasks::EffectProperties) {
       presContext->EffectCompositor()->UpdateEffectProperties(
         servoValues, const_cast<dom::Element*>(aElement), pseudoType);
     }
