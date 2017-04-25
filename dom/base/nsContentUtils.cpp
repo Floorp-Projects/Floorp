@@ -49,8 +49,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/HTMLShadowElement.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
@@ -8034,26 +8033,25 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           }
           if (blobImpl) {
             IPCDataTransferData data;
+            IPCBlob ipcBlob;
 
             // If we failed to create the blob actor, then this blob probably
             // can't get the file size for the underlying file, ignore it for
             // now. TODO pass this through anyway.
             if (aChild) {
-              auto* child = mozilla::dom::BlobChild::GetOrCreate(aChild,
-                              static_cast<BlobImpl*>(blobImpl.get()));
-              if (!child) {
+              nsresult rv = IPCBlobUtils::Serialize(blobImpl, aChild, ipcBlob);
+              if (NS_WARN_IF(NS_FAILED(rv))) {
                 continue;
               }
 
-              data = child;
+              data = ipcBlob;
             } else if (aParent) {
-              auto* parent = mozilla::dom::BlobParent::GetOrCreate(aParent,
-                               static_cast<BlobImpl*>(blobImpl.get()));
-              if (!parent) {
+              nsresult rv = IPCBlobUtils::Serialize(blobImpl, aParent, ipcBlob);
+              if (NS_WARN_IF(NS_FAILED(rv))) {
                 continue;
               }
 
-              data = parent;
+              data = ipcBlob;
             }
 
             IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();

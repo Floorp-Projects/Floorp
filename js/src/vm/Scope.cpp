@@ -1212,7 +1212,7 @@ WasmFunctionScope::create(JSContext* cx, WasmInstanceObject* instance, uint32_t 
         // TODO pull the local variable names from the wasm function definition.
         wasm::ValTypeVector locals;
         size_t argsLength;
-        if (!instance->instance().code().debugGetLocalTypes(funcIndex, &locals, &argsLength))
+        if (!instance->instance().debug().debugGetLocalTypes(funcIndex, &locals, &argsLength))
             return nullptr;
         uint32_t namesCount = locals.length();
 

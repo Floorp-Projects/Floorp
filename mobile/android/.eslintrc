@@ -47,6 +47,11 @@ rules:
     camelcase: 0
     comma-dangle: 0
     comma-spacing: 0
+
+    # XXX Bug 1358949 - This should be reduced down - probably to 20 or to
+    # be removed & synced with the mozilla/recommended value.
+    complexity: ["error", 31]
+
     consistent-return: 0
     curly: 0
     dot-notation: 0

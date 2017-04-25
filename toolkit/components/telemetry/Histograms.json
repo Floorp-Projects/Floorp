@@ -5195,6 +5195,16 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
   },
+  "FX_TAB_REMOTE_NAVIGATION_DELAY_MS": {
+    "alert_emails": ["gkrizsanits@mozilla.com", "mconley@mozilla.com"],
+    "bug_numbers": [1352961],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 4000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "Time taken (in ms) from the point of the parent sending the naviagion triggering message to the content and the content receiving it. This message can be either SessionStore:restoreTabContent or WebNavigation:LoadURI and these names are used as keys for this histogram. This is e10s only and recorded in the content process."
+  },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

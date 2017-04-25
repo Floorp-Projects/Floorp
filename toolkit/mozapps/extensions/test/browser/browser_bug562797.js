@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint max-nested-callbacks: ["warn", 12] */
+
 /**
  * Tests that history navigation works for the add-ons manager.
  */
