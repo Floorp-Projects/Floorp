@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+
 add_task(async function test_permissions() {
   function background() {
     browser.test.sendMessage("apis", {
@@ -185,8 +187,7 @@ add_task(async function test_onclick_frameid() {
   }
 
   const extension = ExtensionTestUtils.loadExtension({manifest, background});
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
-    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   await extension.startup();
   await extension.awaitMessage("ready");
@@ -204,6 +205,52 @@ add_task(async function test_onclick_frameid() {
   info = await click("frame");
   isnot(info.frameId, undefined, "frame click, frameId is not undefined");
   isnot(info.frameId, 0, "frame click, frameId probably okay");
+
+  await BrowserTestUtils.removeTab(tab);
+  await extension.unload();
+});
+
+add_task(async function test_multiple_contexts_init() {
+  const manifest = {
+    permissions: ["menus"],
+  };
+
+  function background() {
+    browser.menus.create({id: "parent", title: "parent"});
+    browser.tabs.create({url: "tab.html", active: false});
+  }
+
+  const files = {
+    "tab.html": "<!DOCTYPE html><meta charset=utf-8><script src=tab.js></script>",
+    "tab.js": function() {
+      browser.menus.create({parentId: "parent", id: "child", title: "child"});
+
+      browser.menus.onClicked.addListener(info => {
+        browser.test.sendMessage("click", info);
+      });
+
+      browser.test.sendMessage("ready");
+    },
+  };
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  const extension = ExtensionTestUtils.loadExtension({manifest, background, files});
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  const menu = await openContextMenu();
+  const items = menu.getElementsByAttribute("label", "parent");
+
+  is(items.length, 1, "Found parent menu item");
+  is(items[0].tagName, "menu", "And it has children");
+
+  const popup = await openSubmenu(items[0]);
+  is(popup.firstChild.label, "child", "Correct child menu item");
+  await closeExtensionContextMenu(popup.firstChild);
+
+  const info = await extension.awaitMessage("click");
+  is(info.menuItemId, "child", "onClicked the correct item");
 
   await BrowserTestUtils.removeTab(tab);
   await extension.unload();
