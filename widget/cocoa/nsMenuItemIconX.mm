@@ -319,6 +319,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                                   mLoadingPrincipal, loadGroup, this,
                                   mContent, document, nsIRequest::LOAD_NORMAL, nullptr,
                                   mContentType, EmptyString(),
+                                  /* aUseUrgentStartForChannel */ false,
                                   getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
