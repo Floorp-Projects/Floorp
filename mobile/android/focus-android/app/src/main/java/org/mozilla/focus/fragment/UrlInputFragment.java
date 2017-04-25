@@ -243,7 +243,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             urlInputContainerView.setTranslationY(topDelta);
 
             toolbarBackgroundView.setAlpha(0);
-            toolbarBackgroundView.setTranslationY(-toolbarBackgroundView.getHeight());
 
             dismissView.setAlpha(0);
         }
@@ -279,7 +278,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         // Let the toolbar background come int from the top
         toolbarBackgroundView.animate()
                 .alpha(reverse ? 0 : 1)
-                .translationY(reverse ? -toolbarBackgroundView.getHeight() : 0)
                 .setDuration(200)
                 .setInterpolator(new DecelerateInterpolator());
 
