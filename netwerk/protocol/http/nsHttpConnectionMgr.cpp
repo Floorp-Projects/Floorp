@@ -3512,9 +3512,7 @@ nsHalfOpenSocket::FastOpenConnected(nsresult aError)
         // This is called from nsSocketTransport::RecoverFromError. The
         // socket will try connect and we need to rewind nsHttpTransaction
         MOZ_ASSERT(mConnectionNegotiatingFastOpen);
-        DebugOnly<nsresult> rv =
-            mConnectionNegotiatingFastOpen->Transaction()->RestartOnFastOpenError();
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        Unused << mConnectionNegotiatingFastOpen->Transaction()->RestartOnFastOpenError();
     }
     if (mConnectionNegotiatingFastOpen) {
         mSocketTransport = nullptr;
