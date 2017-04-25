@@ -122,8 +122,20 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     void SetHandleFetchEventEnd(in TimeStamp aTimeStamp);
 
+    // Depending on the outcome we measure the time difference between
+    // |FinishResponseStart| and either |FinishSynthesizedResponseEnd| or
+    // |ChannelResetEnd|.
     [noscript]
-    void SaveTimeStampsToUnderlyingChannel();
+    void SetFinishResponseStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetFinishSynthesizedResponseEnd(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetChannelResetEnd(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SaveTimeStamps();
 
 %{C++
     already_AddRefed<nsIConsoleReportCollector>
