@@ -23,6 +23,13 @@ public:
   , mTaskQueue(new TaskQueue(Move(aPool), aSupportsTailDispatch))
   {}
 
+  AutoTaskQueue(already_AddRefed<SharedThreadPool> aPool,
+                const char* aName,
+                bool aSupportsTailDispatch = false)
+  : AbstractThread(aSupportsTailDispatch)
+  , mTaskQueue(new TaskQueue(Move(aPool), aName, aSupportsTailDispatch))
+  {}
+
   TaskDispatcher& TailDispatcher() override
   {
     return mTaskQueue->TailDispatcher();
