@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Suspends</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+function testSameContent(video1, video2) {
+  if (video1.videoWidth != video2.videoWidth ||
+      video1.videoHeight != video2.videoHeight) {
+    ok(false, `${video1.token} video1 and video2 have different dimensions.`);
+    return;
+  }
+
+  let w = video1.videoWidth;
+  let h = video1.videoHeight;
+  let c1 = document.createElement('canvas');
+  let c2 = document.createElement('canvas');
+  c1.width = w;
+  c1.height = h;
+  c2.width = w;
+  c2.height = h;
+
+  let gfx1 = c1.getContext('2d');
+  let gfx2 = c2.getContext('2d');
+  if (!gfx1 || !gfx2) {
+    ok(false, "Unable to obtain context '2d' from canvas");
+    return;
+  }
+
+  gfx1.drawImage(video1, 0, 0, w, h);
+  gfx2.drawImage(video2, 0, 0, w, h);
+
+  // Get content out.
+  let contentWidth = 4;
+  let contentHeight = 4;
+  let imageData1 = gfx1.getImageData(0, 0, contentWidth, contentHeight);
+  let imageData2 = gfx2.getImageData(0, 0, contentWidth, contentHeight);
+  let pixels1 = imageData1.data;
+  let pixels2 = imageData2.data;
+
+  // Check that the content of two video are identical.
+  for (let i = 0; i < contentWidth*contentHeight; i++) {
+    let pixelCount = 4 * i;
+    if (pixels1[pixelCount+0] != pixels2[pixelCount+0] ||
+        pixels1[pixelCount+1] != pixels2[pixelCount+1] ||
+        pixels1[pixelCount+2] != pixels2[pixelCount+2] ||
+        pixels1[pixelCount+3] != pixels2[pixelCount+3]) {
+      ok(false, `${video1.token} video1 and video2 have different content.`);
+      return;
+    }
+  }
+
+  ok(true, `${video1.token} video1 and video2 have identical content.`);
+}
+
+startTest({
+  desc: "Test resume an ended video shows the last frame.",
+  prefs: [
+    [ "media.test.video-suspend", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    [ "media.suspend-bkgnd-video.delay-ms", 100 ]
+  ],
+  tests: gDecodeSuspendTests,
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    let vReference = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    /*
+     * This test checks that, after a video element had finished its playback,
+     * resuming video decoder should seek to the last frame.
+     * This issue was found in bug 1358057.
+     */
+    Promise.all([waitUntilPlaying(v), waitUntilPlaying(vReference)])
+      .then(() => testVideoSuspendsWhenHidden(v))
+      .then(() => {
+        return Promise.all([waitUntilEnded(v), waitUntilEnded(vReference)]);
+      })
+      .then(() => testVideoOnlySeekCompletedWhenShown(v))
+      .then(() => {
+        testSameContent(v, vReference);
+        removeNodeAndSource(v);
+        removeNodeAndSource(vReference);
+        manager.finished(token);
+      });
+    }
+});
+</script>
