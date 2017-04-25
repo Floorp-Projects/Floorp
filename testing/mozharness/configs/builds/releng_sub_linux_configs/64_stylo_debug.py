@@ -40,5 +40,4 @@ config = {
         'TINDERBOX_OUTPUT': '1',
     },
     'src_mozconfig': 'browser/config/mozconfigs/linux64/stylo-debug',
-    'artifact_flag_build_variant_in_try': None,
 }
