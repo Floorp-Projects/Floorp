@@ -36,6 +36,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * (Search) Query/Hint clicked: - ("action", "select_query", "search_bar")
 * (Erase) UI button clicked - ("action", "click", "erase_button")
 * (Erase) device’s back button pressed - ("action", "click", "back_button", "erase")
+* (Erase) Notification clicked - ("action", "click", "notification", "erase")
 * Setting changed: - ("action", "change", "settings", <key>, { "to": <value> })
 * Share URL with third-party app - ("action", "share", "menu")
 * Open default app for URL - ("action", "open", "menu", "default")
