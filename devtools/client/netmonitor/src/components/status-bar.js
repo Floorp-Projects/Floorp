@@ -43,29 +43,35 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     div({ className: "devtools-toolbar devtools-status-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
+        title: L10N.getStr("networkMenu.summary.tooltip.perf"),
         onClick: openStatistics,
       },
         div({ className: "summary-info-icon" }),
       ),
-      div({ className: "status-bar-label requests-list-network-summary-count" },
-        countText
-      ),
+      div({
+        className: "status-bar-label requests-list-network-summary-count",
+        title: L10N.getStr("networkMenu.summary.tooltip.requestsCount"),
+      }, countText),
       count !== 0 &&
-        div({ className: "status-bar-label requests-list-network-summary-transfer" },
-          transferText
-        ),
+        div({
+          className: "status-bar-label requests-list-network-summary-transfer",
+          title: L10N.getStr("networkMenu.summary.tooltip.transferred"),
+        }, transferText),
       count !== 0 &&
-        div({ className: "status-bar-label requests-list-network-summary-finish" },
-          finishText
-        ),
+        div({
+          className: "status-bar-label requests-list-network-summary-finish",
+          title: L10N.getStr("networkMenu.summary.tooltip.finish"),
+        }, finishText),
       DOMContentLoaded > -1 &&
-        div({ className: "status-bar-label dom-content-loaded" },
-          `DOMContentLoaded: ${getFormattedTime(DOMContentLoaded)}`
-        ),
+        div({
+          className: "status-bar-label dom-content-loaded",
+          title: L10N.getStr("networkMenu.summary.tooltip.domContentLoaded"),
+        }, `DOMContentLoaded: ${getFormattedTime(DOMContentLoaded)}`),
       load > -1 &&
-        div({ className: "status-bar-label load" },
-          `load: ${getFormattedTime(load)}`
-        ),
+        div({
+          className: "status-bar-label load",
+          title: L10N.getStr("networkMenu.summary.tooltip.load"),
+        }, `load: ${getFormattedTime(load)}`),
     )
   );
 }
