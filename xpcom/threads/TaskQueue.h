@@ -53,6 +53,10 @@ public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      bool aSupportsTailDispatch = false);
 
+  TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+            const char* aName,
+            bool aSupportsTailDispatch = false);
+
   TaskDispatcher& TailDispatcher() override;
 
   TaskQueue* AsTaskQueue() override { return this; }
@@ -185,6 +189,9 @@ protected:
   // True if we've started our shutdown process.
   bool mIsShutdown;
   MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+
+  // The name of this TaskQueue. Useful when debugging dispatch failures.
+  const char* const mName;
 
   class Runner : public Runnable {
   public:
