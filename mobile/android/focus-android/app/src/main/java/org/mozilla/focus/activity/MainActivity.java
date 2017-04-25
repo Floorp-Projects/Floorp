@@ -28,6 +28,7 @@ import org.mozilla.focus.web.WebViewProvider;
 public class MainActivity extends AppCompatActivity {
     public static final String ACTION_ERASE = "erase";
     public static final String EXTRA_FINISH = "finish";
+    private static final String EXTRA_SHORTCUT = "shortcut";
 
     private String pendingUrl;
 
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         final Intent intent = getIntent();
 
         if (ACTION_ERASE.equals(intent.getAction())) {
-            eraseFromNotification(intent.getBooleanExtra(EXTRA_FINISH, false));
+            processEraseAction(intent);
 
             // We do not want to erase again the next time we resume the app.
             setIntent(new Intent(Intent.ACTION_MAIN));
@@ -133,7 +134,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void eraseFromNotification(boolean finishActivity) {
+    private void processEraseAction(Intent intent) {
+        final boolean finishActivity = intent.getBooleanExtra(EXTRA_FINISH, false);
+        final boolean fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false);
+
         final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager()
                 .findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
 
@@ -153,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
         if (finishActivity) {
             finish();
             overridePendingTransition(0, 0); // This activity should be visible - avoid any animations.
+        }
+
+        if (fromShortcut) {
+            TelemetryWrapper.eraseEvent();
         }
     }
 

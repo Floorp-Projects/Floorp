@@ -14,6 +14,7 @@
             android:targetPackage="${applicationId}"
             android:targetClass="org.mozilla.focus.activity.MainActivity">
                 <extra android:name="finish" android:value="true" />
+                <extra android:name="shortcut" android:value="true" />
         </intent>
     </shortcut>
 </shortcuts>
