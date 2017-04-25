@@ -1436,10 +1436,10 @@ js::ToWindowIfWindowProxy(JSObject* obj)
 }
 
 JS_FRIEND_API(JSObject*)
-js::ToWindowProxyIfWindow(JSObject* obj)
+js::detail::ToWindowProxyIfWindowSlow(JSObject* obj)
 {
-    if (IsWindow(obj))
-        return obj->as<GlobalObject>().windowProxy();
+    if (JSObject* windowProxy = obj->as<GlobalObject>().maybeWindowProxy())
+        return windowProxy;
     return obj;
 }
 
