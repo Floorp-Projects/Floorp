@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.ProxySelector;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -89,7 +90,7 @@ public class SuggestClient {
             HttpURLConnection urlConnection = null;
             InputStream in = null;
             try {
-                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
                 urlConnection.setConnectTimeout(mTimeout);
                 urlConnection.setRequestProperty("User-Agent", USER_AGENT);
                 in = new BufferedInputStream(urlConnection.getInputStream());
