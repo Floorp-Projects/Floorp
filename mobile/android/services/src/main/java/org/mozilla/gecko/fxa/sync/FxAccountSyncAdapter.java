@@ -6,7 +6,6 @@ package org.mozilla.gecko.fxa.sync;
 
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
-import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -23,8 +22,7 @@ import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.devices.FxAccountDeviceListUpdater;
-import org.mozilla.gecko.fxa.devices.FxAccountDeviceRegistrator;
+import org.mozilla.gecko.fxa.FxAccountDeviceRegistrator;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxADefaultLoginStateMachineDelegate;
@@ -36,6 +34,7 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.MetaGlobal;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -420,15 +419,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
   }
 
-  private void onSessionTokenStateReached(Context context, AndroidFxAccount fxAccount) {
-    // This does not block the main thread, if work has to be done it is executed in a new thread.
-    maybeRegisterDevice(context, fxAccount);
-
-    FxAccountDeviceListUpdater deviceListUpdater = new FxAccountDeviceListUpdater(fxAccount, context.getContentResolver());
-    // Since the clients stage requires a fresh list of remote devices, we update the device list synchronously.
-    deviceListUpdater.update();
-  }
-
   /**
    * A trivial Sync implementation that does not cache client keys,
    * certificates, or tokens.
@@ -556,7 +546,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           schedulePolicy.onHandleFinal(notMarried.getNeededAction());
           syncDelegate.handleCannotSync(notMarried);
           if (notMarried.getStateLabel() == StateLabel.Engaged) {
-            onSessionTokenStateReached(context, fxAccount);
+            maybeRegisterDevice(context, fxAccount);
           }
         }
 
@@ -599,14 +589,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
               return;
             }
 
-            onSessionTokenStateReached(context, fxAccount);
-
             final SessionCallback sessionCallback = new SessionCallback(syncDelegate, schedulePolicy);
             final KeyBundle syncKeyBundle = married.getSyncKeyBundle();
             final String clientState = married.getClientState();
             syncWithAssertion(
                     assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs,
                     syncKeyBundle, clientState, sessionCallback, extras, fxAccount, syncDeadline);
+
+            maybeRegisterDevice(context, fxAccount);
 
             // Force fetch the profile avatar information. (asynchronous, in another thread)
             Logger.info(LOG_TAG, "Fetching profile avatar information.");
