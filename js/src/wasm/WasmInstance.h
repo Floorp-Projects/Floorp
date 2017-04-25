@@ -21,6 +21,7 @@
 
 #include "gc/Barrier.h"
 #include "wasm/WasmCode.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmTable.h"
 
 namespace js {
@@ -66,7 +67,8 @@ class Instance
 {
     JSCompartment* const            compartment_;
     ReadBarrieredWasmInstanceObject object_;
-    const UniqueCode                code_;
+    const MutableCode               code_;
+    const UniqueDebugState          debug_;
     const UniqueGlobalSegment       globals_;
     GCPtrWasmMemoryObject           memory_;
     SharedTableVector               tables_;
@@ -87,7 +89,8 @@ class Instance
   public:
     Instance(JSContext* cx,
              HandleWasmInstanceObject object,
-             UniqueCode code,
+             MutableCode code,
+             UniqueDebugState debug,
              UniqueGlobalSegment globals,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
@@ -101,6 +104,8 @@ class Instance
     JSCompartment* compartment() const { return compartment_; }
     Code& code() { return *code_; }
     const Code& code() const { return *code_; }
+    DebugState& debug() { return *debug_; }
+    const DebugState& debug() const { return *debug_; }
     const CodeSegment& codeSegment() const { return code_->segment(); }
     const GlobalSegment& globalSegment() const { return *globals_; }
     uint8_t* codeBase() const { return code_->segment().base(); }

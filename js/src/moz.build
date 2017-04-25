@@ -372,6 +372,7 @@ UNIFIED_SOURCES += [
     'wasm/WasmCode.cpp',
     'wasm/WasmCompartment.cpp',
     'wasm/WasmCompile.cpp',
+    'wasm/WasmDebug.cpp',
     'wasm/WasmFrameIterator.cpp',
     'wasm/WasmGenerator.cpp',
     'wasm/WasmInstance.cpp',
