@@ -108,7 +108,7 @@ instruction here to clone from the Mercurial repository:
 
 Or, if you really prefer vanilla flavor Git:
 
-    git clone https://git.mozilla.org/integration/gecko-dev.git
+    git clone https://github.com/mozilla/gecko-dev.git
 '''
 
 CONFIGURE_MERCURIAL = '''
