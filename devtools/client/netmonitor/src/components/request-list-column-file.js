@@ -40,7 +40,6 @@ const RequestListColumnFile = createClass({
         img({
           className: "requests-list-icon",
           src: responseContentDataUri,
-          "data-type": responseContentDataUri ? "thumbnail" : undefined,
         }),
         urlDetails.baseNameWithQuery
       )

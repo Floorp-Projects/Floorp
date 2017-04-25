@@ -36,6 +36,7 @@ namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
   struct Keyframe;
+  enum Side;
   namespace css {
     struct URLValue;
   };
@@ -200,7 +201,7 @@ void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues,
-                            mozilla::UpdateAnimationsTasks aTaskBits);
+                            mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
                                 nsIAtom* aPseudoTagOrNull);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
@@ -238,6 +239,14 @@ void Gecko_ReleaseAtom(nsIAtom* aAtom);
 const uint16_t* Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength);
 bool Gecko_AtomEqualsUTF8(nsIAtom* aAtom, const char* aString, uint32_t aLength);
 bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLength);
+
+// Border style
+void Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder);
+void Gecko_ClearMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide);
+void Gecko_AppendMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide,
+                                 nscolor aColor);
+void Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
+                               mozilla::Side aSide);
 
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);

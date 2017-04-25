@@ -8,8 +8,7 @@ use {Parser, ToCss};
 use std::char;
 use std::cmp;
 use std::fmt;
-use std::io::{self, Write};
-use tokenizer::{Token, NumericValue};
+use tokenizer::Token;
 
 /// One contiguous range of code points.
 ///
@@ -35,22 +34,15 @@ impl UnicodeRange {
         //   u '+' '?'+
 
         input.expect_ident_matching("u")?;
+        let after_u = input.position();
+        parse_tokens(input)?;
 
-        // Since start or end can’t be above 0x10FFFF, they can’t have more than 6 hex digits
-        // Conversely, input with more digits would end up returning Err anyway.
-        const MAX_LENGTH_AFTER_U_PLUS: usize = 6 + 1 + 6; // 6 digits, '-', 6 digits
-        let mut buffer = [0; MAX_LENGTH_AFTER_U_PLUS];
+        // This deviates from the spec in case there are CSS comments
+        // between tokens in the middle of one <unicode-range>,
+        // but oh well…
+        let concatenated_tokens = input.slice_from(after_u);
 
-        let remaining_len;
-        {
-            let mut remaining = &mut buffer[..];
-            concatenate_tokens(input, &mut remaining)?;
-            remaining_len = remaining.len();
-        }
-
-        let text_len = buffer.len() - remaining_len;
-        let text = &buffer[..text_len];
-        let range = parse_concatenated(text)?;
+        let range = parse_concatenated(concatenated_tokens.as_bytes())?;
         if range.end > char::MAX as u32 || range.start > range.end {
             Err(())
         } else {
@@ -59,93 +51,52 @@ impl UnicodeRange {
     }
 }
 
-fn concatenate_tokens(input: &mut Parser, remaining: &mut &mut [u8]) -> Result<(), Error> {
+fn parse_tokens(input: &mut Parser) -> Result<(), ()> {
     match input.next_including_whitespace()? {
         Token::Delim('+') => {
             match input.next_including_whitespace()? {
-                Token::Ident(ident) => remaining.write_all(ident.as_bytes())?,
-                Token::Delim('?') => remaining.write_all(b"?")?,
-                _ => return Err(Error)
+                Token::Ident(_) => {}
+                Token::Delim('?') => {}
+                _ => return Err(())
             }
-            parse_question_marks(input, remaining)
+            parse_question_marks(input)
         }
-
-        Token::Dimension(ref value, ref unit) => {
-            // Require a '+' sign as part of the number
-            let int_value = positive_integer_with_plus_sign(value)?;
-            write!(remaining, "{}{}", int_value, unit)?;
-            parse_question_marks(input, remaining)
+        Token::Dimension(..) => {
+            parse_question_marks(input)
         }
-
-        Token::Number(ref value) => {
-            // Require a '+' sign as part of the number
-            let int_value = positive_integer_with_plus_sign(value)?;
-            write!(remaining, "{}", int_value)?;
-
+        Token::Number(_) => {
             let after_number = input.position();
             match input.next_including_whitespace() {
-                Ok(Token::Delim('?')) => {
-                    // If `remaining` is already full, `int_value` has too many digits
-                    // so we can use `result?` Rust syntax.
-                    remaining.write_all(b"?")?;
-                    parse_question_marks(input, remaining)
-                }
-
-                Ok(Token::Dimension(ref value, ref unit)) => {
-                    // Require a '-' sign as part of the number
-                    let int_value = negative_integer(value)?;
-                    write!(remaining, "{}{}", int_value, unit)?
-                }
-
-                Ok(Token::Number(ref value)) => {
-                    // Require a '-' sign as part of the number
-                    let int_value = negative_integer(value)?;
-                    write!(remaining, "{}", int_value)?
-                }
-
+                Ok(Token::Delim('?')) => parse_question_marks(input),
+                Ok(Token::Dimension(..)) => {}
+                Ok(Token::Number(_)) => {}
                 _ => input.reset(after_number)
             }
         }
-
-        _ => return Err(Error)
+        _ => return Err(())
     }
     Ok(())
 }
 
-/// Consume as many '?' as possible and write them to `remaining` until it’s full
-fn parse_question_marks(input: &mut Parser, remaining: &mut &mut [u8]) {
+/// Consume as many '?' as possible
+fn parse_question_marks(input: &mut Parser) {
     loop {
-        let result = input.try(|input| {
-            match input.next_including_whitespace() {
-                Ok(Token::Delim('?')) => remaining.write_all(b"?").map_err(|_| ()),
-                _ => Err(())
+        let position = input.position();
+        match input.next_including_whitespace() {
+            Ok(Token::Delim('?')) => {}
+            _ => {
+                input.reset(position);
+                return
             }
-        });
-        if result.is_err() {
-            return
         }
     }
 }
 
-fn positive_integer_with_plus_sign(value: &NumericValue) -> Result<i32, ()> {
-    let int_value = value.int_value.ok_or(())?;
-    if value.has_sign && int_value >= 0 {
-        Ok(int_value)
-    } else {
-        Err(())
-    }
-}
-
-fn negative_integer(value: &NumericValue) -> Result<i32, ()> {  // Necessarily had a negative sign.
-    let int_value = value.int_value.ok_or(())?;
-    if int_value <= 0 {
-        Ok(int_value)
-    } else {
-        Err(())
-    }
-}
-
-fn parse_concatenated(mut text: &[u8]) -> Result<UnicodeRange, ()> {
+fn parse_concatenated(text: &[u8]) -> Result<UnicodeRange, ()> {
+    let mut text = match text.split_first() {
+        Some((&b'+', text)) => text,
+        _ => return Err(())
+    };
     let (first_hex_value, hex_digit_count) = consume_hex(&mut text);
     let question_marks = consume_question_marks(&mut text);
     let consumed = hex_digit_count + question_marks;
@@ -240,19 +191,4 @@ impl ToCss for UnicodeRange {
         }
         Ok(())
     }
-}
-
-/// Make conversions from io::Error implicit in `?` syntax.
-struct Error;
-
-impl From<Error> for () {
-    fn from(_: Error) -> Self { () }
-}
-
-impl From<()> for Error {
-    fn from(_: ()) -> Self { Error }
-}
-
-impl From<io::Error> for Error {
-    fn from(_: io::Error) -> Self { Error }
 }

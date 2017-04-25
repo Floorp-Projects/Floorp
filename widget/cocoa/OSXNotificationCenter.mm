@@ -161,7 +161,7 @@ public:
   nsCOMPtr<nsIObserver> mObserver;
   nsString mCookie;
   RefPtr<nsICancelable> mIconRequest;
-  id<FakeNSUserNotification> mPendingNotifiction;
+  id<FakeNSUserNotification> mPendingNotification;
 };
 
 NS_IMPL_ISUPPORTS0(OSXNotificationInfo)
@@ -175,7 +175,7 @@ OSXNotificationInfo::OSXNotificationInfo(NSString *name, nsIObserver *observer,
   mName = [name retain];
   mObserver = observer;
   mCookie = alertCookie;
-  mPendingNotifiction = nil;
+  mPendingNotification = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -185,7 +185,7 @@ OSXNotificationInfo::~OSXNotificationInfo()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mName release];
-  [mPendingNotifiction release];
+  [mPendingNotification release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -404,7 +404,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
     }
   } else {
     mPendingAlerts.AppendElement(osxni);
-    osxni->mPendingNotifiction = notification;
+    osxni->mPendingNotification = notification;
     // Wait six seconds for the image to load.
     rv = aAlert->LoadImage(6000, this, osxni,
                            getter_AddRefs(osxni->mIconRequest));
@@ -530,14 +530,14 @@ OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo *osxni)
     }
   }
 
-  [GetNotificationCenter() deliverNotification:osxni->mPendingNotifiction];
+  [GetNotificationCenter() deliverNotification:osxni->mPendingNotification];
 
   if (osxni->mObserver) {
     osxni->mObserver->Observe(nullptr, "alertshow", osxni->mCookie.get());
   }
 
-  [osxni->mPendingNotifiction release];
-  osxni->mPendingNotifiction = nil;
+  [osxni->mPendingNotification release];
+  osxni->mPendingNotification = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -548,7 +548,7 @@ OSXNotificationCenter::OnImageMissing(nsISupports* aUserData)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   OSXNotificationInfo *osxni = static_cast<OSXNotificationInfo*>(aUserData);
-  if (osxni->mPendingNotifiction) {
+  if (osxni->mPendingNotification) {
     // If there was an error getting the image, or the request timed out, show
     // the notification without a content image.
     ShowPendingNotification(osxni);
@@ -571,13 +571,13 @@ OSXNotificationCenter::OnImageReady(nsISupports* aUserData,
   }
 
   OSXNotificationInfo *osxni = static_cast<OSXNotificationInfo*>(aUserData);
-  if (!osxni->mPendingNotifiction) {
+  if (!osxni->mPendingNotification) {
     return NS_ERROR_FAILURE;
   }
 
   NSImage *cocoaImage = nil;
   nsCocoaUtils::CreateNSImageFromImageContainer(image, imgIContainer::FRAME_FIRST, &cocoaImage, 1.0f);
-  (osxni->mPendingNotifiction).contentImage = cocoaImage;
+  (osxni->mPendingNotification).contentImage = cocoaImage;
   [cocoaImage release];
   ShowPendingNotification(osxni);
 
