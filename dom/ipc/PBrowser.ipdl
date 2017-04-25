@@ -19,7 +19,11 @@ include protocol PRemotePrintJob;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol PFileDescriptorSet;
+include protocol PIPCBlobInputStream;
+
 include DOMTypes;
+include IPCBlob;
+include IPCStream;
 include JavaScriptTypes;
 include URIParams;
 include PPrintingTypes;

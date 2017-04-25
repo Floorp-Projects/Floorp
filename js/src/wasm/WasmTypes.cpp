@@ -690,8 +690,8 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
       case Function:
       case TrapExit:
       case ImportJitExit:
-      case BuiltinNativeExit:
       case ImportInterpExit:
+      case BuiltinThunk:
         MOZ_CRASH("should use more specific constructor");
     }
 #endif
@@ -712,8 +712,8 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
     switch (kind_) {
       case TrapExit:
       case ImportJitExit:
-      case BuiltinNativeExit:
       case ImportInterpExit:
+      case BuiltinThunk:
         break;
       case Entry:
       case DebugTrap:
@@ -739,4 +739,17 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
     MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
+}
+
+const CodeRange*
+wasm::LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target)
+{
+    size_t lowerBound = 0;
+    size_t upperBound = codeRanges.length();
+
+    size_t match;
+    if (!BinarySearch(codeRanges, lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &codeRanges[match];
 }

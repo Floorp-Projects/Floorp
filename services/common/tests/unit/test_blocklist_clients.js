@@ -231,7 +231,16 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({
+        "settings": {
+          "batch_max_requests": 25
+        },
+        "url": `http://localhost:${port}/v1/`,
+        "documentation": "https://kinto.readthedocs.org/",
+        "version": "1.5.1",
+        "commit": "cbc6f58",
+        "hello": "kinto"
+      })
     },
     "GET:/v1/buckets/blocklists/collections/addons/records?_sort=-last_modified": {
       "sampleHeaders": [
@@ -242,7 +251,7 @@ function getSampleResponse(req, port) {
         "Etag: \"3000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "prefs": [],
         "blockID": "i539",
         "last_modified": 3000,
@@ -265,7 +274,7 @@ function getSampleResponse(req, port) {
         "Etag: \"3000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "matchFilename": "NPFFAddOn.dll",
         "blockID": "p28",
         "id": "7b1e0b3c-e390-a817-11b6-a6887f65f56e",
@@ -282,7 +291,7 @@ function getSampleResponse(req, port) {
         "Etag: \"3000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "driverVersionComparator": "LESS_THAN_OR_EQUAL",
         "driverVersion": "8.17.12.5896",
         "vendor": "0x10de",
@@ -304,7 +313,7 @@ function getSampleResponse(req, port) {
         "Etag: \"4000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "prefs": [],
         "blockID": "i808",
         "last_modified": 4000,
@@ -339,7 +348,7 @@ function getSampleResponse(req, port) {
         "Etag: \"4000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "infoURL": "https://get.adobe.com/flashplayer/",
         "blockID": "p1044",
         "matchFilename": "libflashplayer\\.so",
@@ -376,7 +385,7 @@ function getSampleResponse(req, port) {
         "Etag: \"4000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "vendor": "0x8086",
         "blockID": "g204",
         "feature": "WEBGL_MSAA",

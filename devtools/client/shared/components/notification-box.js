@@ -29,7 +29,7 @@ const PriorityLevels = {
 
 /**
  * This component represents Notification Box - HTML alternative for
- * <xul:notifictionbox> binding.
+ * <xul:notificationbox> binding.
  *
  * See also MDN for more info about <xul:notificationbox>:
  * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/notificationbox

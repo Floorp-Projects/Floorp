@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::cmp;
 use std::fmt;
 use std::f32::consts::PI;
 
@@ -31,7 +30,12 @@ impl RGBA {
     /// clamped to the 0.0 ... 1.0 range.
     #[inline]
     pub fn from_floats(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
-        Self::new(clamp_f32(red), clamp_f32(green), clamp_f32(blue), clamp_f32(alpha))
+        Self::new(
+            clamp_unit_f32(red),
+            clamp_unit_f32(green),
+            clamp_unit_f32(blue),
+            clamp_unit_f32(alpha),
+        )
     }
 
     /// Returns a transparent color.
@@ -99,7 +103,7 @@ impl ToCss for RGBA {
     {
         // Try first with two decimal places, then with three.
         let mut rounded_alpha = (self.alpha_f32() * 100.).round() / 100.;
-        if clamp_f32(rounded_alpha) != self.alpha {
+        if clamp_unit_f32(rounded_alpha) != self.alpha {
             rounded_alpha = (self.alpha_f32() * 1000.).round() / 1000.;
         }
 
@@ -381,12 +385,7 @@ fn parse_color_hash(value: &str) -> Result<Color, ()> {
     }
 }
 
-
-fn clamp_i32(val: i32) -> u8 {
-    cmp::min(cmp::max(0, val), 255) as u8
-}
-
-fn clamp_f32(val: f32) -> u8 {
+fn clamp_unit_f32(val: f32) -> u8 {
     // Scale by 256, not 255, so that each of the 256 u8 values has an equal range
     // of f32 values mapping to it. Floor before clamping.
     //
@@ -394,21 +393,19 @@ fn clamp_f32(val: f32) -> u8 {
     // `256.0_f32 as u8` is undefined behavior:
     //
     // https://github.com/rust-lang/rust/issues/10184
-    (val * 256.).floor().max(0.).min(255.) as u8
+    clamp_256_f32(val * 256.)
+}
+
+fn clamp_256_f32(val: f32) -> u8 {
+    val.floor().max(0.).min(255.) as u8
 }
 
 #[inline]
 fn parse_color_function(name: &str, arguments: &mut Parser) -> Result<Color, ()> {
-    let is_rgb = match_ignore_ascii_case! { name,
-        "rgb" | "rgba" => true,
-        "hsl" | "hsla" => false,
+    let (red, green, blue, uses_commas) = match_ignore_ascii_case! { name,
+        "rgb" | "rgba" => parse_rgb_components_rgb(arguments)?,
+        "hsl" | "hsla" => parse_rgb_components_hsl(arguments)?,
         _ => return Err(())
-    };
-
-    let (red, green, blue, uses_commas) = if is_rgb {
-        parse_rgb_components_rgb(arguments)?
-    } else {
-        parse_rgb_components_hsl(arguments)?
     };
 
     let alpha = if !arguments.is_exhausted() {
@@ -423,10 +420,10 @@ fn parse_color_function(name: &str, arguments: &mut Parser) -> Result<Color, ()>
         let token = try!(arguments.next());
         match token {
             Token::Number(NumericValue { value: v, .. }) => {
-                clamp_f32(v)
+                clamp_unit_f32(v)
             }
             Token::Percentage(ref v) => {
-                clamp_f32(v.unit_value)
+                clamp_unit_f32(v.unit_value)
             }
             _ => {
                 return Err(())
@@ -452,23 +449,23 @@ fn parse_rgb_components_rgb(arguments: &mut Parser) -> Result<(u8, u8, u8, bool)
     // https://drafts.csswg.org/css-color/#rgb-functions
     match try!(arguments.next()) {
         Token::Number(NumericValue { value: v, .. }) => {
-            red = clamp_i32(v as i32);
-            green = clamp_i32(match try!(arguments.next()) {
+            red = clamp_256_f32(v);
+            green = clamp_256_f32(match try!(arguments.next()) {
                 Token::Number(NumericValue { value: v, .. }) => v,
                 Token::Comma => {
                     uses_commas = true;
                     try!(arguments.expect_number())
                 }
                 _ => return Err(())
-            } as i32);
+            });
             if uses_commas {
                 try!(arguments.expect_comma());
             }
-            blue = clamp_i32(try!(arguments.expect_number()) as i32);
+            blue = clamp_256_f32(try!(arguments.expect_number()));
         }
         Token::Percentage(ref v) => {
-            red = clamp_f32(v.unit_value);
-            green = clamp_f32(match try!(arguments.next()) {
+            red = clamp_unit_f32(v.unit_value);
+            green = clamp_unit_f32(match try!(arguments.next()) {
                 Token::Percentage(ref v) => v.unit_value,
                 Token::Comma => {
                     uses_commas = true;
@@ -479,7 +476,7 @@ fn parse_rgb_components_rgb(arguments: &mut Parser) -> Result<(u8, u8, u8, bool)
             if uses_commas {
                 try!(arguments.expect_comma());
             }
-            blue = clamp_f32(try!(arguments.expect_percentage()));
+            blue = clamp_unit_f32(try!(arguments.expect_percentage()));
         }
         _ => return Err(())
     };
@@ -542,8 +539,8 @@ fn parse_rgb_components_hsl(arguments: &mut Parser) -> Result<(u8, u8, u8, bool)
              else { lightness + saturation - lightness * saturation };
     let m1 = lightness * 2. - m2;
     let hue_times_3 = hue * 3.;
-    let red = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 + 1.));
-    let green = clamp_f32(hue_to_rgb(m1, m2, hue_times_3));
-    let blue = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 - 1.));
+    let red = clamp_unit_f32(hue_to_rgb(m1, m2, hue_times_3 + 1.));
+    let green = clamp_unit_f32(hue_to_rgb(m1, m2, hue_times_3));
+    let blue = clamp_unit_f32(hue_to_rgb(m1, m2, hue_times_3 - 1.));
     return Ok((red, green, blue, uses_commas));
 }

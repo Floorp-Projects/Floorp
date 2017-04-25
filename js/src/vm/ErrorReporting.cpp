@@ -14,6 +14,8 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
+#include "jscntxtinlines.h"
+
 using mozilla::Move;
 
 using JS::HandleObject;

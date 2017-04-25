@@ -10,7 +10,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
-
 const Actions = require("../actions/index");
 const {
   getDisplayedRequestsSummary,
@@ -18,12 +17,11 @@ const {
 } = require("../selectors/index");
 const {
   getFormattedSize,
-  getFormattedTime
+  getFormattedTime,
 } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 
-// Components
-const { div, button, span } = DOM;
+const { button, div } = DOM;
 
 function StatusBar({ summary, openStatistics, timingMarkers }) {
   let { count, contentSize, transferredSize, millis } = summary;
@@ -42,29 +40,32 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     getFormattedTime(millis));
 
   return (
-    div({ className: "devtools-toolbar devtools-toolbar-bottom" },
+    div({ className: "devtools-toolbar devtools-status-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
         onClick: openStatistics,
       },
-        span({ className: "summary-info-icon" }),
+        div({ className: "summary-info-icon" }),
       ),
-      span({ className: "status-bar-label requests-list-network-summary-count" },
-        countText),
+      div({ className: "status-bar-label requests-list-network-summary-count" },
+        countText
+      ),
       count !== 0 &&
-        span({ className: "status-bar-label requests-list-network-summary-transfer" },
-          transferText),
+        div({ className: "status-bar-label requests-list-network-summary-transfer" },
+          transferText
+        ),
       count !== 0 &&
-        span({ className: "status-bar-label requests-list-network-summary-finish" },
-          finishText),
-
+        div({ className: "status-bar-label requests-list-network-summary-finish" },
+          finishText
+        ),
       DOMContentLoaded > -1 &&
-      span({ className: "status-bar-label dom-content-loaded" },
-        `DOMContentLoaded: ${getFormattedTime(DOMContentLoaded)}`),
-
+        div({ className: "status-bar-label dom-content-loaded" },
+          `DOMContentLoaded: ${getFormattedTime(DOMContentLoaded)}`
+        ),
       load > -1 &&
-      span({ className: "status-bar-label load" },
-        `load: ${getFormattedTime(load)}`),
+        div({ className: "status-bar-label load" },
+          `load: ${getFormattedTime(load)}`
+        ),
     )
   );
 }

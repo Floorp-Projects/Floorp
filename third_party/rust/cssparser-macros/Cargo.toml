@@ -1,6 +1,6 @@
 [package]
 name = "cssparser-macros"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "Procedural macros for cssparser"
 documentation = "https://docs.rs/cssparser-macros/"

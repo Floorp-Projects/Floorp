@@ -15,7 +15,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -39,6 +38,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,6 +81,8 @@ public class AndroidFxAccount {
   public static final String ACCOUNT_KEY_DEVICE_ID = "deviceId";
   public static final String ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION = "deviceRegistrationVersion";
   private static final String ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP = "deviceRegistrationTimestamp";
+  private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR = "devicePushRegistrationError";
+  private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME = "devicePushRegistrationErrorTime";
 
   // Account authentication token type for fetching account profile.
   public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
@@ -802,40 +805,39 @@ public class AndroidFxAccount {
     });
   }
 
+  @SuppressWarnings("unchecked")
+  private <T extends Number> T getUserDataNumber(String key, T defaultValue) {
+    final String numStr = accountManager.getUserData(account, key);
+    if (TextUtils.isEmpty(numStr)) {
+      return defaultValue;
+    }
+    try {
+      return (T) NumberFormat.getInstance().parse(numStr);
+    } catch (ParseException e) {
+      Logger.warn(LOG_TAG, "Couldn't parse " + key + "; defaulting to 0L.", e);
+      return defaultValue;
+    }
+  }
+
   @Nullable
   public synchronized String getDeviceId() {
     return accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_ID);
   }
 
-  @NonNull
   public synchronized int getDeviceRegistrationVersion() {
-    String versionStr = accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION);
-    if (TextUtils.isEmpty(versionStr)) {
-      return 0;
-    } else {
-      try {
-        return Integer.parseInt(versionStr);
-      } catch (NumberFormatException ex) {
-        return 0;
-      }
-    }
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION, 0);
   }
 
   public synchronized long getDeviceRegistrationTimestamp() {
-    final String timestampStr = accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP);
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP, 0L);
+  }
 
-    if (TextUtils.isEmpty(timestampStr)) {
-      return 0L;
-    }
+  public synchronized long getDevicePushRegistrationError() {
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR, 0L);
+  }
 
-    // Long.parseLong might throw; while it's not expected that this might happen, let's not risk
-    // crashing here as this method will be called on startup.
-    try {
-      return Long.parseLong(timestampStr);
-    } catch (NumberFormatException e) {
-      Logger.warn(LOG_TAG, "Couldn't parse deviceRegistrationTimestamp; defaulting to 0L.", e);
-      return 0L;
-    }
+  public synchronized long getDevicePushRegistrationErrorTime() {
+    return getUserDataNumber(ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME, 0L);
   }
 
   public synchronized void setDeviceId(String id) {
@@ -862,6 +864,15 @@ public class AndroidFxAccount {
             Integer.toString(deviceRegistrationVersion));
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP,
             Long.toString(timestamp));
+  }
+
+  public synchronized void setDevicePushRegistrationError(long error, long errorTimeMs) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR, Long.toString(error));
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME, Long.toString(errorTimeMs));
+  }
+
+  public synchronized void resetDevicePushRegistrationError() {
+    setDevicePushRegistrationError(0L, 0l);
   }
 
   @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.

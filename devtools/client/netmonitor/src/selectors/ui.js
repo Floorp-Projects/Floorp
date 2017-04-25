@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { REQUESTS_WATERFALL } = require("../constants");
 const { getDisplayedRequests } = require("./requests");
 
 function isNetworkDetailsToggleButtonDisabled(state) {
@@ -15,11 +16,7 @@ const EPSILON = 0.001;
 function getWaterfallScale(state) {
   const { requests, timingMarkers, ui } = state;
 
-  if (requests.firstStartedMillis == +Infinity) {
-    return null;
-  }
-
-  if (ui.waterfallWidth == null) {
+  if (requests.firstStartedMillis === +Infinity || ui.waterfallWidth === null) {
     return null;
   }
 
@@ -27,7 +24,8 @@ function getWaterfallScale(state) {
                                    timingMarkers.firstDocumentDOMContentLoadedTimestamp,
                                    timingMarkers.firstDocumentLoadTimestamp);
   const longestWidth = lastEventMillis - requests.firstStartedMillis;
-  return Math.min(Math.max(ui.waterfallWidth / longestWidth, EPSILON), 1);
+  return Math.min(Math.max(
+    (ui.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH) / longestWidth, EPSILON), 1);
 }
 
 module.exports = {

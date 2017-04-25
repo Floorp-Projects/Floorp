@@ -827,9 +827,13 @@ fn static_assert() {
                                      for y in ["color", "style", "width"]] +
                                     ["border-{0}-radius".format(x.ident.replace("_", "-"))
                                      for x in CORNERS]) %>
+
+<% skip_moz_border_color_longhands = " ".join("-moz-border-{0}-colors".format(x.ident)
+                                              for x in SIDES) %>
 <%self:impl_trait style_struct_name="Border"
                   skip_longhands="${skip_border_longhands} border-image-source border-image-outset
-                                  border-image-repeat border-image-width border-image-slice"
+                                  border-image-repeat border-image-width border-image-slice
+                                  ${skip_moz_border_color_longhands}"
                   skip_additionals="*">
 
     % for side in SIDES:
@@ -879,6 +883,42 @@ fn static_assert() {
 
     pub fn border_${side.ident}_has_nonzero_width(&self) -> bool {
         self.gecko.mComputedBorder.${side.ident} != 0
+    }
+
+    #[allow(non_snake_case)]
+    pub fn set__moz_border_${side.ident}_colors(&mut self,
+                                                v: longhands::_moz_border_${side.ident}_colors::computed_value::T) {
+        match v.0 {
+            None => {
+                unsafe {
+                    bindings::Gecko_ClearMozBorderColors(&mut self.gecko,
+                                                         structs::Side::eSide${to_camel_case(side.ident)});
+                }
+            },
+            Some(ref colors) => {
+                unsafe {
+                    bindings::Gecko_EnsureMozBorderColors(&mut self.gecko);
+                    bindings::Gecko_ClearMozBorderColors(&mut self.gecko,
+                                                         structs::Side::eSide${to_camel_case(side.ident)});
+                }
+                for color in colors {
+                    let c = color_to_nscolor_zero_currentcolor(*color);
+                    unsafe {
+                        bindings::Gecko_AppendMozBorderColors(&mut self.gecko,
+                                                              structs::Side::eSide${to_camel_case(side.ident)},
+                                                              c);
+                    }
+                }
+            }
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn copy__moz_border_${side.ident}_colors_from(&mut self, other: &Self) {
+        unsafe {
+            bindings::Gecko_CopyMozBorderColors(&mut self.gecko, &other.gecko,
+                                                structs::Side::eSide${to_camel_case(side.ident)});
+        }
     }
     % endfor
 
@@ -2992,6 +3032,50 @@ fn static_assert() {
     pub fn copy_clip_from(&mut self, other: &Self) {
         self.gecko.mClip = other.gecko.mClip;
         self.gecko.mClipFlags = other.gecko.mClipFlags;
+    }
+
+    pub fn clone_clip(&self) -> longhands::clip::computed_value::T {
+        use gecko_bindings::structs::NS_STYLE_CLIP_AUTO;
+        use gecko_bindings::structs::NS_STYLE_CLIP_BOTTOM_AUTO;
+        use gecko_bindings::structs::NS_STYLE_CLIP_LEFT_AUTO;
+        use gecko_bindings::structs::NS_STYLE_CLIP_RIGHT_AUTO;
+        use gecko_bindings::structs::NS_STYLE_CLIP_TOP_AUTO;
+        use values::computed::{ClipRect, ClipRectOrAuto};
+        use values::Either;
+
+        if self.gecko.mClipFlags == NS_STYLE_CLIP_AUTO as u8 {
+            ClipRectOrAuto::auto()
+        } else {
+            let left = if self.gecko.mClipFlags & NS_STYLE_CLIP_LEFT_AUTO as u8 != 0 {
+                debug_assert!(self.gecko.mClip.x == 0);
+                None
+            } else {
+                Some(Au(self.gecko.mClip.x))
+            };
+
+            let top = if self.gecko.mClipFlags & NS_STYLE_CLIP_TOP_AUTO as u8 != 0 {
+                debug_assert!(self.gecko.mClip.y == 0);
+                None
+            } else {
+                Some(Au(self.gecko.mClip.y))
+            };
+
+            let bottom = if self.gecko.mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO as u8 != 0 {
+                debug_assert!(self.gecko.mClip.height == 1 << 30); // NS_MAXSIZE
+                None
+            } else {
+                Some(Au(self.gecko.mClip.y + self.gecko.mClip.height))
+            };
+
+            let right = if self.gecko.mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO as u8 != 0 {
+                debug_assert!(self.gecko.mClip.width == 1 << 30); // NS_MAXSIZE
+                None
+            } else {
+                Some(Au(self.gecko.mClip.x + self.gecko.mClip.width))
+            };
+
+            Either::First(ClipRect { top: top, right: right, bottom: bottom, left: left, })
+        }
     }
 
     pub fn set_filter(&mut self, v: longhands::filter::computed_value::T) {
