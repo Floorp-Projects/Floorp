@@ -15,7 +15,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-ServoMediaRule::ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule)
+ServoMediaRule::ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule,
+                               uint32_t aLine, uint32_t aColumn)
   : CSSMediaRule(Servo_MediaRule_GetRules(aRawRule).Consume())
   , mRawRule(Move(aRawRule))
 {

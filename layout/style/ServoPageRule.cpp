@@ -104,8 +104,9 @@ ServoPageRuleDeclaration::GetServoCSSParsingEnvironment() const
 
 // -- ServoPageRule --------------------------------------------------
 
-ServoPageRule::ServoPageRule(RefPtr<RawServoPageRule> aRawRule)
-  : CSSPageRule(0, 0)
+ServoPageRule::ServoPageRule(RefPtr<RawServoPageRule> aRawRule,
+                             uint32_t aLine, uint32_t aColumn)
+  : CSSPageRule(aLine, aColumn)
   , mRawRule(Move(aRawRule))
   , mDecls(Servo_PageRule_GetStyle(mRawRule).Consume())
 {

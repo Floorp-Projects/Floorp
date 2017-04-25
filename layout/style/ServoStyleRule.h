@@ -53,7 +53,8 @@ class ServoStyleRule final : public BindingStyleRule
                            , public nsIDOMCSSStyleRule
 {
 public:
-  explicit ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule);
+  ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
+                 uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,

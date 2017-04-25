@@ -19,7 +19,8 @@ class ServoMediaList;
 class ServoMediaRule final : public dom::CSSMediaRule
 {
 public:
-  explicit ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule);
+  ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule,
+                 uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoMediaRule, dom::CSSMediaRule)
