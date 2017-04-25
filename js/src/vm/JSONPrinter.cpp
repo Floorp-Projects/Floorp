@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/JSONPrinter.h"
+#include "vm/JSONPrinter.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
@@ -13,7 +13,6 @@
 #include <stdarg.h>
 
 using namespace js;
-using namespace js::jit;
 
 void
 JSONPrinter::indent()
@@ -25,7 +24,7 @@ JSONPrinter::indent()
 }
 
 void
-JSONPrinter::property(const char* name)
+JSONPrinter::propertyName(const char* name)
 {
     if (!first_)
         out_.printf(",");
@@ -49,7 +48,7 @@ JSONPrinter::beginObject()
 void
 JSONPrinter::beginObjectProperty(const char* name)
 {
-    property(name);
+    propertyName(name);
     out_.printf("{");
     indentLevel_++;
     first_ = true;
@@ -58,7 +57,7 @@ JSONPrinter::beginObjectProperty(const char* name)
 void
 JSONPrinter::beginListProperty(const char* name)
 {
-    property(name);
+    propertyName(name);
     out_.printf("[");
     first_ = true;
 }
@@ -66,7 +65,7 @@ JSONPrinter::beginListProperty(const char* name)
 void
 JSONPrinter::beginStringProperty(const char* name)
 {
-    property(name);
+    propertyName(name);
     out_.printf("\"");
 }
 
@@ -77,7 +76,7 @@ JSONPrinter::endStringProperty()
 }
 
 void
-JSONPrinter::stringProperty(const char* name, const char* format, ...)
+JSONPrinter::property(const char* name, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -90,7 +89,7 @@ JSONPrinter::stringProperty(const char* name, const char* format, ...)
 }
 
 void
-JSONPrinter::stringValue(const char* format, ...)
+JSONPrinter::value(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -106,25 +105,39 @@ JSONPrinter::stringValue(const char* format, ...)
 }
 
 void
-JSONPrinter::integerProperty(const char* name, int value)
+JSONPrinter::property(const char* name, int value)
 {
-    property(name);
+    propertyName(name);
     out_.printf("%d", value);
 }
 
 void
-JSONPrinter::integerValue(int value)
+JSONPrinter::value(int val)
 {
     if (!first_)
         out_.printf(",");
-    out_.printf("%d", value);
+    out_.printf("%d", val);
     first_ = false;
 }
 
 void
-JSONPrinter::doubleProperty(const char* name, double value)
+JSONPrinter::property(const char* name, uint32_t value)
 {
-    property(name);
+    propertyName(name);
+    out_.printf("%u", value);
+}
+
+void
+JSONPrinter::property(const char* name, uint64_t value)
+{
+    propertyName(name);
+    out_.printf("%" PRIu64, value);
+}
+
+void
+JSONPrinter::property(const char* name, double value)
+{
+    propertyName(name);
     if (mozilla::IsFinite(value))
         out_.printf("%f", value);
     else
