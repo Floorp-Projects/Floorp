@@ -22,8 +22,7 @@ class BlobSet final
 public:
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
 
-  nsresult AppendString(const nsAString& aString, bool nativeEOL,
-                        JSContext* aCx);
+  nsresult AppendString(const nsAString& aString, bool nativeEOL);
 
   nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
 
