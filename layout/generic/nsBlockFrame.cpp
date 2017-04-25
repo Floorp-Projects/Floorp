@@ -56,6 +56,7 @@
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsBidiPresUtils.h"
 
@@ -1510,6 +1511,53 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                    delta, perLineDelta, numLines, ectc - ctc);
     printf("%s\n", buf);
   }
+#endif
+
+#ifdef EARLY_BETA_OR_EARLIER
+  // Bug 1358299 START: Remove this code after the 56 merge date.
+  static bool sIsTelemetryEnabled;
+  static bool sTelemetryPrefCached = false;
+
+  if (!sTelemetryPrefCached) {
+    sTelemetryPrefCached = true;
+    Preferences::AddBoolVarCache(&sIsTelemetryEnabled,
+                                 "toolkit.telemetry.enabled");
+  }
+
+  if (sIsTelemetryEnabled) {
+    // Collect data for the BOX_ALIGN_PROPS_IN_BLOCKS_FLAG probe.
+    auto IsStyleNormalOrAuto = [](uint16_t value)->bool {
+      return ((value == NS_STYLE_ALIGN_NORMAL) ||
+              (value == NS_STYLE_ALIGN_AUTO));
+    };
+
+    // First check this frame for non-default values of the css-align properties
+    // that apply to block containers.
+    // Note: we check here for non-default "justify-items", though technically
+    // that'd only affect rendering if some child has "justify-self:auto".
+    // (It's safe to assume that's likely, since it's the default value that
+    // a child would have.) We also pass in nullptr for the parent style context
+    // because an accurate parameter is slower and only necessary to detect a
+    // narrow edge case with the "legacy" keyword.
+    const nsStylePosition* stylePosition = reflowInput->mStylePosition;
+    if (!IsStyleNormalOrAuto(stylePosition->mJustifyContent) ||
+        !IsStyleNormalOrAuto(stylePosition->mAlignContent) ||
+        !IsStyleNormalOrAuto(stylePosition->ComputedJustifyItems(nullptr))) {
+      Telemetry::Accumulate(Telemetry::BOX_ALIGN_PROPS_IN_BLOCKS_FLAG, true);
+    } else {
+      // If not already flagged by the parent, now check justify-self of the
+      // block-level child frames.
+      for (nsBlockFrame::LineIterator line = LinesBegin();
+           line != LinesEnd(); ++line) {
+        if (line->IsBlock() &&
+            !IsStyleNormalOrAuto(line->mFirstChild->StylePosition()->mJustifySelf)) {
+          Telemetry::Accumulate(Telemetry::BOX_ALIGN_PROPS_IN_BLOCKS_FLAG, true);
+          break;
+        }
+      }
+    }
+  }
+  // Bug 1358299 END
 #endif
 
   NS_FRAME_SET_TRUNCATION(aStatus, (*reflowInput), aMetrics);
