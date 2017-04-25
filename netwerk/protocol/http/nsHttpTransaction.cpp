@@ -2263,6 +2263,8 @@ nsHttpTransaction::RestartOnFastOpenError()
         mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
         mConnInfo = ci;
     }
+    mEarlyDataDisposition = EARLY_NONE;
+    m0RTTInProgress = false;
     return NS_OK;
 }
 
