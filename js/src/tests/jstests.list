@@ -219,10 +219,6 @@ skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317383
 skip script test262/built-ins/TypedArrays/buffer-arg-byteoffset-is-negative-throws.js
 skip script test262/built-ins/TypedArrays/buffer-arg-defined-negative-length.js
-skip script test262/built-ins/TypedArrays/length-arg-is-infinity-throws-rangeerror.js
-skip script test262/built-ins/TypedArrays/length-arg-is-negative-integer-throws-rangeerror.js
-skip script test262/built-ins/TypedArrays/length-arg-toindex-length.js
-skip script test262/built-ins/TypedArrays/object-arg-length-excessive-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=924058
 skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A2_T2.js

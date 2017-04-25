@@ -643,7 +643,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     makeTypedArrayWithTemplate(JSContext* cx, TypedArrayObject* templateObj, int32_t len)
     {
         if (len < 0 || uint32_t(len) >= INT32_MAX / sizeof(NativeType)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return nullptr;
         }
 
@@ -714,18 +714,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         MOZ_ASSERT(args.isConstructing());
         RootedObject newTarget(cx, &args.newTarget().toObject());
 
-        /* () or (number) */
-        uint32_t len = 0;
-        if (args.length() == 0 || ValueIsLength(args[0], &len))
-            return fromLength(cx, len, newTarget);
+        /* () or (length) */
+        if (args.length() == 0 || !args[0].isObject()) {
+            uint64_t len;
+            if (!ToIndex(cx, args.get(0), JSMSG_BAD_ARRAY_LENGTH, &len))
+                return nullptr;
 
-        /* (not an object) */
-        if (!args[0].isObject()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return nullptr;
+            return fromLength(cx, len, newTarget);
         }
 
-        RootedObject dataObj(cx, &args.get(0).toObject());
+        RootedObject dataObj(cx, &args[0].toObject());
 
         /*
          * (typedArray)
@@ -963,8 +961,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                            MutableHandle<ArrayBufferObject*> buffer)
     {
         if (count >= INT32_MAX / unit) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
-                                      "size and count");
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
         uint32_t byteLength = count * unit;
@@ -987,17 +984,22 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static JSObject*
-    fromLength(JSContext* cx, uint32_t nelements, HandleObject newTarget = nullptr)
+    fromLength(JSContext* cx, uint64_t nelements, HandleObject newTarget = nullptr)
     {
         RootedObject proto(cx);
         if (!GetPrototypeForInstance(cx, newTarget, &proto))
             return nullptr;
 
+        if (nelements > UINT32_MAX) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            return nullptr;
+        }
+
         Rooted<ArrayBufferObject*> buffer(cx);
-        if (!maybeCreateArrayBuffer(cx, nelements, BYTES_PER_ELEMENT, nullptr, &buffer))
+        if (!maybeCreateArrayBuffer(cx, uint32_t(nelements), BYTES_PER_ELEMENT, nullptr, &buffer))
             return nullptr;
 
-        return makeInstance(cx, buffer, 0, nelements, proto);
+        return makeInstance(cx, buffer, 0, uint32_t(nelements), proto);
     }
 
     static bool

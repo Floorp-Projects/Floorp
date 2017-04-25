@@ -436,7 +436,7 @@ function test()
     a = new ArrayBuffer(0x10);
     checkThrows(() => new Uint32Array(buffer, 4, 0x3FFFFFFF));
 
-    checkThrows(() => new Float32Array(null));
+    check(() => new Float32Array(null).length === 0);
 
     a = new Uint8Array(0x100);
     b = Uint32Array.prototype.subarray.apply(a, [0, 0x100]);
@@ -496,9 +496,9 @@ function test()
     check(() => (new Float32Array(Math.sqrt(4))).length == 2);
     check(() => (new Float32Array({ length: 10 })).length == 10);
     check(() => (new Float32Array({})).length == 0);
-    checkThrows(() => new Float32Array("3"));
-    checkThrows(() => new Float32Array(null));
-    checkThrows(() => new Float32Array(undefined));
+    check(() => new Float32Array("3").length === 3);
+    check(() => new Float32Array(null).length === 0);
+    check(() => new Float32Array(undefined).length === 0);
 
     // check that NaN conversions happen correctly with array conversions
     check(() => (new Int32Array([NaN])[0]) == 0);
