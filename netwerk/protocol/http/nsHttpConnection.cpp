@@ -87,7 +87,6 @@ nsHttpConnection::nsHttpConnection()
     , mDid0RTTSpdy(false)
     , mResponseThrottled(false)
     , mResumeRecvOnUnthrottle(false)
-    , mFastOpen(false)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -383,9 +382,7 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
     }
 
     rv = ssl->GetNegotiatedNPN(negotiatedNPN);
-    // Fast Open does not work well with TLS Early Data. TODO: dragana
-    // fix this.
-    if (!mFastOpen && !m0RTTChecked && (rv == NS_ERROR_NOT_CONNECTED) &&
+    if (!m0RTTChecked && (rv == NS_ERROR_NOT_CONNECTED) &&
         !mConnInfo->UsingProxy()) {
         // There is no ALPN info (yet!). We need to consider doing 0RTT. We
         // will do so if there is ALPN information from a previous session
@@ -1683,7 +1680,7 @@ nsHttpConnection::OnSocketWritable()
         } else if (!mTransaction) {
             rv = NS_ERROR_FAILURE;
             LOG(("  No Transaction In OnSocketWritable\n"));
-        } else if (NS_SUCCEEDED(rv)) {
+        } else {
 
             // for non spdy sessions let the connection manager know
             if (!mReportedSpdy) {
@@ -1727,9 +1724,6 @@ nsHttpConnection::OnSocketWritable()
             } else {
                 rv = mSocketOutCondition;
             }
-            again = false;
-        } else if (mFastOpen) {
-            rv = mSocketOut->AsyncWait(this, 0, 0, nullptr); // wait for connected event.
             again = false;
         } else if (!transactionBytes) {
             rv = NS_OK;
@@ -2291,30 +2285,6 @@ nsHttpConnection::CheckForTraffic(bool check)
         // mark it as not checked
         mTrafficStamp = false;
     }
-}
-
-nsAHttpTransaction *
-nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
-{
-    MOZ_ASSERT(!mCurrentBytesRead);
-    if (mUsingSpdyVersion) {
-        DontReuse();
-        mUsingSpdyVersion = 0;
-        mSpdySession = nullptr;
-    }
-
-    {
-        MutexAutoLock lock(mCallbacksLock);
-        mCallbacks = nullptr;
-    }
-
-    RefPtr<nsAHttpTransaction> trans = nullptr;
-    if (NS_SUCCEEDED(mTransaction->RestartOnFastOpenError())) {
-        trans = mTransaction;
-    }
-    mTransaction = nullptr;
-    Close(NS_ERROR_NET_RESET);
-    return trans;
 }
 
 } // namespace net

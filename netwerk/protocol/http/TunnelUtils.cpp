@@ -11,7 +11,6 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
-#include "TCPFastOpen.h"
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
 #include "nsISSLSocketControl.h"
@@ -1625,12 +1624,6 @@ NS_IMETHODIMP
 SocketTransportShim::SetQoSBits(uint8_t aQoSBits)
 {
   return mWrapped->SetQoSBits(aQoSBits);
-}
-
-NS_IMETHODIMP
-SocketTransportShim::SetFastOpenCallback(TCPFastOpen *aFastOpen)
-{
-  return mWrapped->SetFastOpenCallback(aFastOpen);
 }
 
 NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback)
