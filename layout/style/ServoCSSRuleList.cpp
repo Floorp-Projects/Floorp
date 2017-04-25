@@ -84,8 +84,12 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
     switch (rule) {
 #define CASE_RULE(const_, name_)                                            \
       case nsIDOMCSSRule::const_##_RULE: {                                  \
-        ruleObj = new Servo##name_##Rule(                                   \
-          Servo_CssRules_Get##name_##RuleAt(mRawRules, aIndex).Consume());  \
+        uint32_t line = 0, column = 0;                                      \
+        RefPtr<RawServo##name_##Rule> rule =                                \
+          Servo_CssRules_Get##name_##RuleAt(                                \
+              mRawRules, aIndex, &line, &column                             \
+          ).Consume();                                                      \
+        ruleObj = new Servo##name_##Rule(rule.forget(), line, column);      \
         break;                                                              \
       }
       CASE_RULE(STYLE, Style)

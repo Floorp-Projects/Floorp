@@ -102,7 +102,8 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
 #define BASIC_RULE_FUNCS(type_) \
   SERVO_BINDING_FUNC(Servo_CssRules_Get##type_##RuleAt, \
                      RawServo##type_##RuleStrong, \
-                     ServoCssRulesBorrowed rules, uint32_t index) \
+                     ServoCssRulesBorrowed rules, uint32_t index, \
+                     uint32_t* line, uint32_t* column) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_Debug, void, \
                      RawServo##type_##RuleBorrowed rule, nsACString* result) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetCssText, void, \
