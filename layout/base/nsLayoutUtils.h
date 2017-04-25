@@ -1774,9 +1774,10 @@ public:
    * Draw a background image.  The image's dimensions are as specified in aDest;
    * the image itself is not consulted to determine a size.
    * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
-   *   @param aRenderingContext Where to draw the image, set up with an
+   *   @param aContext          The context to draw to, already set up with an
    *                            appropriate scale and transform for drawing in
    *                            app units.
+   *   @param aForFrame         The nsIFrame that we're drawing this image for.
    *   @param aImage            The image.
    *   @param aImageSize        The unscaled size of the image being drawn.
    *                            (This might be the image's size if no scaling
@@ -1798,6 +1799,7 @@ public:
    *   @param aExtendMode       How to extend the image over the dest rect.
    */
   static DrawResult DrawBackgroundImage(gfxContext&         aContext,
+                                        nsIFrame*           aForFrame,
                                         nsPresContext*      aPresContext,
                                         imgIContainer*      aImage,
                                         const CSSIntSize&   aImageSize,

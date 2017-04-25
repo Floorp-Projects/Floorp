@@ -30,7 +30,6 @@ XPIDL_MODULE = 'shellservice'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
-        '../../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
         'nsWindowsShellService.cpp',
     ]
     LOCAL_INCLUDES += [
