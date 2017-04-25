@@ -113,7 +113,7 @@ CancelChannelRunnable::Run()
   // TODO: When bug 1204254 is implemented, this time marker should be moved to
   // the point where the body of the network request is complete.
   mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
-  mChannel->SaveTimeStampsToUnderlyingChannel();
+  mChannel->SaveTimeStamps();
 
   mChannel->Cancel(mStatus);
   mRegistration->MaybeScheduleUpdate();
@@ -237,8 +237,10 @@ public:
       return NS_OK;
     }
 
-    mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
-    mChannel->SaveTimeStampsToUnderlyingChannel();
+    TimeStamp timeStamp = TimeStamp::Now();
+    mChannel->SetHandleFetchEventEnd(timeStamp);
+    mChannel->SetFinishSynthesizedResponseEnd(timeStamp);
+    mChannel->SaveTimeStamps();
 
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (obsService) {
@@ -554,6 +556,7 @@ void
 RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
   AutoCancel autoCancel(this, mRequestURL);
+  mInterceptedChannel->SetFinishResponseStart(TimeStamp::Now());
 
   if (!aValue.isObject()) {
     NS_WARNING("FetchEvent::RespondWith was passed a promise resolved to a non-Object value");
@@ -719,6 +722,8 @@ RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   uint32_t line = mRespondWithLineNumber;
   uint32_t column = mRespondWithColumnNumber;
   nsString valueString;
+
+  mInterceptedChannel->SetFinishResponseStart(TimeStamp::Now());
 
   ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
 
