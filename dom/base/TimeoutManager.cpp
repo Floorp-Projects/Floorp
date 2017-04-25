@@ -1018,6 +1018,11 @@ TimeoutManager::ClearAllTimeouts()
   MOZ_LOG(gLog, LogLevel::Debug,
           ("ClearAllTimeouts(TimeoutManager=%p)\n", this));
 
+  if (mThrottleTrackingTimeoutsTimer) {
+    mThrottleTrackingTimeoutsTimer->Cancel();
+    mThrottleTrackingTimeoutsTimer = nullptr;
+  }
+
   ForEachUnorderedTimeout([&](Timeout* aTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
@@ -1123,6 +1128,11 @@ TimeoutManager::Suspend()
   MOZ_LOG(gLog, LogLevel::Debug,
           ("Suspend(TimeoutManager=%p)\n", this));
 
+  if (mThrottleTrackingTimeoutsTimer) {
+    mThrottleTrackingTimeoutsTimer->Cancel();
+    mThrottleTrackingTimeoutsTimer = nullptr;
+  }
+
   ForEachUnorderedTimeout([](Timeout* aTimeout) {
     // Leave the timers with the current time remaining.  This will
     // cause the timers to potentially fire when the window is
@@ -1145,6 +1155,13 @@ TimeoutManager::Resume()
 {
   MOZ_LOG(gLog, LogLevel::Debug,
           ("Resume(TimeoutManager=%p)\n", this));
+
+  // When Suspend() has been called after IsDocumentLoaded(), but the
+  // throttle tracking timer never managed to fire, start the timer
+  // again.
+  if (mWindow.AsInner()->IsDocumentLoaded() && !mThrottleTrackingTimeouts) {
+    MaybeStartThrottleTrackingTimout();
+  }
 
   TimeStamp now = TimeStamp::Now();
   DebugOnly<bool> _seenDummyTimeout = false;
@@ -1311,6 +1328,12 @@ TimeoutManager::StartThrottlingTrackingTimeouts()
 
 void
 TimeoutManager::OnDocumentLoaded()
+{
+  MaybeStartThrottleTrackingTimout();
+}
+
+void
+TimeoutManager::MaybeStartThrottleTrackingTimout()
 {
   if (gTrackingTimeoutThrottlingDelay <= 0) {
     return;
