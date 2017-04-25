@@ -8,6 +8,29 @@ package org.mozilla.focus.web;
 import android.os.Bundle;
 
 public interface IWebView {
+    public class ClickTarget {
+        public final boolean isLink;
+        public final String linkURL;
+
+        public final boolean isImage;
+        public final String imageURL;
+
+        public ClickTarget(final boolean isLink, final String linkURL, final boolean isImage, final String imageURL) {
+            if (isLink && linkURL == null) {
+                throw new IllegalStateException("link clicktarget must contain URL");
+            }
+
+            if (isImage && imageURL == null) {
+                throw new IllegalStateException("image clicktarget must contain URL");
+            }
+
+            this.isLink = isLink;
+            this.linkURL = linkURL;
+            this.isImage = isImage;
+            this.imageURL = imageURL;
+        }
+    }
+
     interface Callback {
         void onPageStarted(String url);
 
@@ -18,9 +41,10 @@ public interface IWebView {
 
         /** Return true if the URL was handled, false if we should continue loading the current URL. */
         boolean handleExternalUrl(String url);
-        void onLinkLongPress(String url);
 
         void onDownloadStart(Download download);
+
+        void onLongPress(final ClickTarget clickTarget);
     }
 
     void setCallback(Callback callback);

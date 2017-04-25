@@ -11,6 +11,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -215,13 +217,39 @@ public class WebViewProvider {
 
                     switch (hitTestResult.getType()) {
                         case HitTestResult.SRC_ANCHOR_TYPE:
-                        case HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
-                            final String url = hitTestResult.getExtra();
-
-                            callback.onLinkLongPress(url);
+                            final String linkURL = hitTestResult.getExtra();
+                            callback.onLongPress(new IWebView.ClickTarget(true, linkURL, false, null));
                             return true;
 
+                        case HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
+                            // hitTestResult.getExtra() contains only the image URL, and not the link
+                            // URL. Internally, WebView's HitTestData contains both, but they only
+                            // make it available via requestFocusNodeHref...
+                            final Message message = new Message();
+                            message.setTarget(new Handler() {
+                                @Override
+                                public void handleMessage(Message msg) {
+                                    final Bundle data = msg.getData();
+                                    final String url = data.getString("url");
+                                    final String src = data.getString("src");
+
+                                    if (url == null || src == null) {
+                                        throw new IllegalStateException("WebView did not supply url or src for image link");
+                                    }
+
+                                    callback.onLongPress(new IWebView.ClickTarget(true, url, true, src));
+                                }
+                            });
+
+                            requestFocusNodeHref(message);
+                            return true;
+
+                        case HitTestResult.IMAGE_TYPE:
+                            final String imageURL = hitTestResult.getExtra();
+                            callback.onLongPress(new IWebView.ClickTarget(false, null, true, imageURL));
+                            return true;
                     }
+
                     return false;
                 }
             });

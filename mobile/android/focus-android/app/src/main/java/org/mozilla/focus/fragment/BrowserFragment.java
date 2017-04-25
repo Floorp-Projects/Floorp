@@ -233,11 +233,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             @Override
-            public void onLinkLongPress(final String url) {
-                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-                startActivity(shareIntent);
+            public void onLongPress(final IWebView.ClickTarget clickTarget) {
+                if (clickTarget.isLink) {
+                    final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, clickTarget.linkURL);
+                    startActivity(shareIntent);
+                }
             }
 
             @Override
