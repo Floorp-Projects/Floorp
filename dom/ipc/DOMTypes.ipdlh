@@ -7,6 +7,7 @@
 include protocol PBlob;
 include protocol PMemoryStream;
 
+include IPCBlob;
 include IPCStream;
 include ProtocolTypes;
 
@@ -41,15 +42,24 @@ struct MessagePortIdentifier
 struct ClonedMessageData
 {
   SerializedStructuredCloneBuffer data;
-  PBlob[] blobs;
+  IPCBlob[] blobs;
   IPCStream[] inputStreams;
   MessagePortIdentifier[] identfiers;
 };
 
-struct BlobDataStream
+struct MemoryBlobDataStream
 {
   PMemoryStream stream;
   uint64_t length;
+};
+
+union BlobDataStream
+{
+  MemoryBlobDataStream;
+
+  // InputStreamParams is used only when we are _sure_ that the serialized size
+  // is lower than 1 Mb. Otherwise we use MemoryBlobDataStream.
+  IPCStream;
 };
 
 union BlobData

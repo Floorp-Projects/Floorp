@@ -40,7 +40,7 @@
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
 
-        <meta-data android:name="android.max_aspect" android:value="2.0"/>
+        <meta-data android:name="android.max_aspect" android:value="2.1"/>
 
 #ifdef MOZ_NATIVE_DEVICES
         <!-- This resources comes from Google Play Services. Required for casting support. -->
@@ -312,8 +312,11 @@
 
 #ifdef MOZ_ANDROID_CUSTOM_TABS
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
-            android:theme="@style/GeckoCustomTabs" />
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/GeckoCustomTabs" />
 #endif
+
         <activity android:name="org.mozilla.gecko.webapps.WebAppActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 

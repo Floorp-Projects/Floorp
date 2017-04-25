@@ -4,23 +4,14 @@
 
 "use strict";
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE = 5; // ms
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES = 3;
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB = [128, 136, 144];
-// 8-bit value of the alpha component of the tick color
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32;
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32;
-// RGBA colors for the timing markers
-const REQUESTS_WATERFALL_DOMCONTENTLOADED_TICKS_COLOR_RGBA = [0, 0, 255, 128];
-const REQUESTS_WATERFALL_LOAD_TICKS_COLOR_RGBA = [255, 0, 0, 128];
+const { REQUESTS_WATERFALL } = require("./constants");
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STATE_KEYS = [
-  "scale",
-  "waterfallWidth",
   "firstRequestStartedMillis",
+  "scale",
   "timingMarkers",
+  "waterfallWidth",
 ];
 
 /**
@@ -62,7 +53,8 @@ WaterfallBackground.prototype = {
     }
 
     // Nuke the context.
-    let canvasWidth = this.canvas.width = state.waterfallWidth;
+    let canvasWidth = this.canvas.width =
+      state.waterfallWidth - REQUESTS_WATERFALL.LABEL_WIDTH;
     // Awww yeah, 1px, repeats on Y axis.
     let canvasHeight = this.canvas.height = 1;
 
@@ -75,14 +67,14 @@ WaterfallBackground.prototype = {
     let view32bit = new Uint32Array(buf);
 
     // Build new millisecond tick lines...
-    let timingStep = REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE;
+    let timingStep = REQUESTS_WATERFALL.BACKGROUND_TICKS_MULTIPLE;
     let optimalTickIntervalFound = false;
     let scaledStep;
 
     while (!optimalTickIntervalFound) {
       // Ignore any divisions that would end up being too close to each other.
       scaledStep = state.scale * timingStep;
-      if (scaledStep < REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN) {
+      if (scaledStep < REQUESTS_WATERFALL.BACKGROUND_TICKS_SPACING_MIN) {
         timingStep <<= 1;
         continue;
       }
@@ -90,8 +82,8 @@ WaterfallBackground.prototype = {
     }
 
     const isRTL = isDocumentRTL(document);
-    const [r, g, b] = REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB;
-    let alphaComponent = REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN;
+    const [r, g, b] = REQUESTS_WATERFALL.BACKGROUND_TICKS_COLOR_RGB;
+    let alphaComponent = REQUESTS_WATERFALL.BACKGROUND_TICKS_OPACITY_MIN;
 
     function drawPixelAt(offset, color) {
       let position = (isRTL ? canvasWidth - offset : offset - 1) | 0;
@@ -100,12 +92,12 @@ WaterfallBackground.prototype = {
     }
 
     // Insert one pixel for each division on each scale.
-    for (let i = 1; i <= REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES; i++) {
+    for (let i = 1; i <= REQUESTS_WATERFALL.BACKGROUND_TICKS_SCALES; i++) {
       let increment = scaledStep * Math.pow(2, i);
       for (let x = 0; x < canvasWidth; x += increment) {
         drawPixelAt(x, [r, g, b, alphaComponent]);
       }
-      alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
+      alphaComponent += REQUESTS_WATERFALL.BACKGROUND_TICKS_OPACITY_ADD;
     }
 
     function drawTimestamp(timestamp, color) {
@@ -118,10 +110,10 @@ WaterfallBackground.prototype = {
     }
 
     drawTimestamp(state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
-                  REQUESTS_WATERFALL_DOMCONTENTLOADED_TICKS_COLOR_RGBA);
+                  REQUESTS_WATERFALL.DOMCONTENTLOADED_TICKS_COLOR_RGBA);
 
     drawTimestamp(state.timingMarkers.firstDocumentLoadTimestamp,
-                  REQUESTS_WATERFALL_LOAD_TICKS_COLOR_RGBA);
+                  REQUESTS_WATERFALL.LOAD_TICKS_COLOR_RGBA);
 
     // Flush the image data and cache the waterfall background.
     pixelArray.set(view8bit);

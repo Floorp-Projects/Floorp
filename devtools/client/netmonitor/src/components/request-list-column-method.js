@@ -10,7 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const RequestListColumnMethod = createClass({
   displayName: "RequestListColumnMethod",
@@ -24,12 +24,8 @@ const RequestListColumnMethod = createClass({
   },
 
   render() {
-    const { method } = this.props.item;
-    return (
-      div({ className: "requests-list-subitem requests-list-method-box" },
-        span({ className: "subitem-label requests-list-method" }, method)
-      )
-    );
+    let { method } = this.props.item;
+    return div({ className: "requests-list-column requests-list-method" }, method);
   }
 });
 

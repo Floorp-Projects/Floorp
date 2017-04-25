@@ -50,6 +50,10 @@
 
 /* General */
 
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #mount,
@@ -63,26 +67,18 @@ body,
   overflow: hidden;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 .split-box {
   overflow: hidden;
 }
 
-.toolbar-labels {
-  overflow: hidden;
-  display: flex;
-  flex: auto;
-}
+/* Toolbar */
 
 .devtools-toolbar {
   display: flex;
 }
 
-.devtools-toolbar-container.devtools-toolbar {
-  height: auto !important;
+.devtools-toolbar-container {
+  height: auto;
   flex-wrap: wrap;
   justify-content: space-between;
 }
@@ -94,13 +90,9 @@ body,
   align-items: center;
 }
 
-#response-content-image-box {
-  overflow: auto;
-}
-
-.cropped-textbox .textbox-input {
-  /* workaround for textbox not supporting the @crop attribute */
-  text-overflow: ellipsis;
+.requests-list-filter-buttons {
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 .learn-more-link {
@@ -116,11 +108,13 @@ body,
 
 /* Status bar */
 
+.devtools-status-bar-label {
+  flex: 0;
+}
+
 .status-bar-label {
   display: inline-flex;
-  align-content: stretch;
   margin-inline-end: 10px;
-
   /* Status bar has just one line so, don't wrap labels */
   white-space: nowrap;
 }
@@ -143,15 +137,7 @@ body,
   color: red;
 }
 
-/* Request list */
-
-.request-list-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+/* Request list empty panel */
 
 .request-list-empty-notice {
   margin: 0;
@@ -184,75 +170,86 @@ body,
   margin: 0 5px;
 }
 
-/* Network requests table */
+/* Requests list table */
 
-.requests-list-toolbar {
+.request-list-container {
   display: flex;
-  padding: 0;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
 }
 
-.requests-list-filter-buttons {
-  display: flex;
-  flex-wrap: nowrap;
+.requests-list-wrapper {
+  width: 100%;
+  height: 100%;
 }
 
-.theme-firebug .requests-list-toolbar {
-  height: 19px !important;
+.requests-list-table {
+  display: table;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .requests-list-contents {
-  height: 100%;
+  display: table-row-group;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   overflow-x: hidden;
   overflow-y: auto;
   --timings-scale: 1;
   --timings-rev-scale: 1;
 }
 
-.requests-list-subitem {
-  display: flex;
-  flex: none;
-  box-sizing: border-box;
-  align-items: center;
-  padding: 3px;
+.requests-list-column {
+  display: table-cell;
   cursor: default;
-}
-
-.subitem-label {
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
+  max-width: 50px;
+  min-width: 50px;
 }
 
-/* Requests list header */
+.requests-list-column > * {
+  display: inline-block;
+}
 
-.requests-list-header {
-  display: flex;
-  flex: none;
+.theme-firebug .requests-list-column {
+  padding: 1px;
+}
+
+/* Requests list headers */
+
+.requests-list-headers {
+  display: table-header-group;
+  height: 24px;
+  padding: 0;
+}
+
+.requests-list-headers .requests-list-column:first-child .requests-list-header-button {
+  border-width: 0;
 }
 
 .requests-list-header-button {
-  display: flex;
-  align-items: center;
-  flex: auto;
-  -moz-appearance: none; appearance: none;
   background-color: transparent;
   border-image: linear-gradient(transparent 15%,
                                 var(--theme-splitter-color) 15%,
                                 var(--theme-splitter-color) 85%,
                                 transparent 85%) 1 1;
-  border-style: solid;
   border-width: 0;
   border-inline-start-width: 1px;
-  min-width: 1px;
-  min-height: 24px;
-  margin: 0;
-  padding-top: 2px;
-  padding-bottom: 2px;
   padding-inline-start: 16px;
-  padding-inline-end: 0;
+  width: 100%;
+  min-height: 23px;
   text-align: center;
   color: inherit;
-  font-weight: inherit !important;
 }
 
 .requests-list-header-button::-moz-focus-inner {
@@ -260,27 +257,27 @@ body,
   padding: 0;
 }
 
-.requests-list-header:first-child .requests-list-header-button {
-  border-width: 0;
-}
-
 .requests-list-header-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
 .requests-list-header-button > .button-text {
-  flex: auto;
-  white-space: nowrap;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  /* Align button text to center */
+  width: calc(100% - 8px);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .requests-list-header-button > .button-icon {
-  flex: none;
+  display: inline-block;
+  width: 7px;
   height: 4px;
   margin-inline-start: 3px;
   margin-inline-end: 6px;
-  width: 7px;
+  vertical-align: middle;
 }
 
 .requests-list-header-button[data-sorted=ascending] > .button-icon {
@@ -291,10 +288,6 @@ body,
   background-image: var(--sort-descending-image);
 }
 
-.requests-list-waterfall-label-wrapper {
-  display: flex;
-}
-
 .requests-list-header-button[data-sorted],
 .requests-list-header-button[data-sorted]:hover {
   background-color: var(--theme-selection-background);
@@ -302,13 +295,11 @@ body,
 }
 
 .requests-list-header-button[data-sorted],
-.requests-list-header[data-active] + .requests-list-header .requests-list-header-button {
+.requests-list-column[data-active] + .requests-list-column .requests-list-header-button {
   border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
 }
 
-/* Firebug theme support for Network panel header */
-
-.theme-firebug .requests-list-header {
+.theme-firebug .requests-list-headers {
   padding: 0 !important;
   font-weight: bold;
   background: linear-gradient(rgba(255, 255, 255, 0.05),
@@ -333,126 +324,26 @@ body,
   color: inherit !important;
 }
 
-.theme-firebug .requests-list-header:hover:active {
+.theme-firebug .requests-list-header-button:hover:active {
   background-image: linear-gradient(rgba(0, 0, 0, 0.1),
                                     transparent);
 }
 
+/* Requests list column */
 
-/* Network requests table: specific column dimensions */
+/* Status column */
 
 .requests-list-status {
-  max-width: 6em;
-  text-align: center;
-  width: 8vw;
+  width: 8%;
 }
 
-.requests-list-method,
-.requests-list-method-box {
-  max-width: 7em;
-  text-align: center;
-  width: 10vw;
-}
-
-.requests-list-icon-and-file {
-  width: 22vw;
-}
-
-.requests-list-icon {
-  background: transparent;
-  width: 15px;
-  height: 15px;
-  margin-inline-end: 4px;
-}
-
-.requests-list-icon {
-  outline: 1px solid var(--table-splitter-color);
-}
-
-.requests-list-security-and-domain {
-  width: 14vw;
-}
-
-.requests-list-remoteip {
-  width: 8vw;
-}
-
-.requests-list-protocol {
-  width: 7vw;
-}
-
-.requests-security-state-icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin-inline-end: 4px;
-}
-
-.request-list-item.selected .requests-security-state-icon {
-  filter: brightness(1.3);
-}
-
-.security-state-insecure {
-  background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
-}
-
-.security-state-secure {
-  background-image: url(chrome://devtools/skin/images/security-state-secure.svg);
-}
-
-.security-state-weak {
-  background-image: url(chrome://devtools/skin/images/security-state-weak.svg);
-}
-
-.security-state-broken {
-  background-image: url(chrome://devtools/skin/images/security-state-broken.svg);
-}
-
-.security-state-local {
-  background-image: url(chrome://devtools/skin/images/globe.svg);
-}
-
-.requests-list-type,
-.requests-list-size {
-  max-width: 6em;
-  width: 8vw;
-  justify-content: center;
-}
-
-.requests-list-transferred {
-  max-width: 8em;
-  width: 8vw;
-  justify-content: center;
-}
-
-.requests-list-cause {
-  max-width: 8em;
-  width: 8vw;
-}
-
-.requests-list-cause-stack {
-  background-color: var(--theme-body-color-alt);
-  color: var(--theme-body-background);
-  font-size: 8px;
+.theme-firebug .requests-list-status {
   font-weight: bold;
-  line-height: 10px;
-  border-radius: 3px;
-  padding: 0 2px;
-  margin: 0;
-  margin-inline-end: 3px;
-  -moz-user-select: none;
 }
-
-.request-list-item.selected .requests-list-transferred.theme-comment {
-  color: var(--theme-selection-color);
-}
-
-/* Network requests table: status codes */
 
 .requests-list-status-code {
-  margin-inline-start: 3px !important;
+  margin-inline-start: 3px;
   width: 3em;
-  margin-inline-end: -3em !important;
 }
 
 .requests-list-status-icon {
@@ -463,7 +354,6 @@ body,
   margin-inline-end: 5px;
   border-radius: 10px;
   transition: box-shadow 0.5s ease-in-out;
-  box-sizing: border-box;
 }
 
 .request-list-item.selected .requests-list-status-icon {
@@ -500,7 +390,7 @@ body,
 
 /* 4xx and 5xx are squares - error codes */
 .requests-list-status-icon[data-code^="4"] {
- background-color: var(--theme-highlight-red);
+  background-color: var(--theme-highlight-red);
   border-radius: 0; /* squares */
 }
 
@@ -510,11 +400,154 @@ body,
   transform: rotate(45deg);
 }
 
-/* Network requests table: waterfall header */
+/* Method column */
+
+.requests-list-method {
+  width: 8%;
+}
+
+.theme-firebug .requests-list-method {
+  color: rgb(128, 128, 128);
+}
+
+/* File column */
+
+.requests-list-file {
+  width: 22%;
+}
+
+.requests-list-file.requests-list-column {
+  text-align: start;
+}
+
+.requests-list-icon {
+  background: transparent;
+  width: 15px;
+  height: 15px;
+  margin: 0 4px;
+  outline: 1px solid var(--table-splitter-color);
+  vertical-align: top;
+}
+
+/* Protocol column */
+
+.requests-list-protocol {
+  width: 8%;
+}
+
+/* Domain column */
+
+.requests-list-domain {
+  width: 13%;
+}
+
+.requests-list-domain.requests-list-column {
+  text-align: start;
+}
+
+.requests-security-state-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  vertical-align: top;
+}
+
+.request-list-item.selected .requests-security-state-icon {
+  filter: brightness(1.3);
+}
+
+.security-state-insecure {
+  background-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
+}
+
+.security-state-secure {
+  background-image: url(chrome://devtools/skin/images/security-state-secure.svg);
+}
+
+.security-state-weak {
+  background-image: url(chrome://devtools/skin/images/security-state-weak.svg);
+}
+
+.security-state-broken {
+  background-image: url(chrome://devtools/skin/images/security-state-broken.svg);
+}
+
+.security-state-local {
+  background-image: url(chrome://devtools/skin/images/globe.svg);
+}
+
+/* RemoteIP column */
+
+.requests-list-remoteip {
+  width: 9%;
+}
+
+/* Cause column */
+
+.requests-list-cause {
+  width: 9%;
+}
+
+.requests-list-cause-stack {
+  display: inline-block;
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
+  font-size: 8px;
+  font-weight: bold;
+  line-height: 10px;
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0;
+  margin-inline-end: 3px;
+}
+
+/* Type column */
+
+.requests-list-type {
+  width: 6%;
+}
+
+/* Transferred column */
+
+.requests-list-transferred {
+  width: 9%;
+}
+
+/* Size column */
+
+.requests-list-size {
+  width: 7%;
+}
+
+.theme-firebug .requests-list-size {
+  justify-content: end;
+  padding-inline-end: 4px;
+}
+
+/* Waterfall column */
 
 .requests-list-waterfall {
-  flex: auto;
+  width: 20vw;
+  max-width: 20vw;
+  min-width: 20vw;
+  background-repeat: repeat-y;
+  background-position: left center;
+  /* Background created on a <canvas> in js. */
+  /* @see devtools/client/netmonitor/src/waterfall-background.js */
+  background-image: -moz-element(#waterfall-background);
+}
+
+.requests-list-waterfall:dir(rtl) {
+  background-position: right center;
+}
+
+.requests-list-waterfall > .requests-list-header-button {
   padding-inline-start: 0;
+}
+
+.requests-list-waterfall > .requests-list-header-button > .button-text {
+  width: auto;
 }
 
 .requests-list-waterfall-label-wrapper:not(.requests-list-waterfall-visible) {
@@ -522,15 +555,16 @@ body,
 }
 
 .requests-list-timings-division {
-  padding-top: 2px;
+  display: inline-block;
   padding-inline-start: 4px;
   font-size: 75%;
   pointer-events: none;
-  box-sizing: border-box;
   text-align: start;
-  /* Allow the timing label to shrink if the container gets too narrow.
-   * The container width then is not limited by the content. */
-  flex: initial;
+}
+
+:root[platform="win"] .requests-list-timings-division {
+  padding-top: 1px;
+  font-size: 90%;
 }
 
 .requests-list-timings-division:not(:first-child) {
@@ -558,22 +592,6 @@ body,
   font-weight: 600;
 }
 
-/* Network requests table: waterfall items */
-
-.requests-list-subitem.requests-list-waterfall {
-  padding-inline-start: 0;
-  padding-inline-end: 4px;
-  /* Background created on a <canvas> in js. */
-  /* @see devtools/client/netmonitor/netmonitor-view.js */
-  background-image: -moz-element(#waterfall-background);
-  background-repeat: repeat-y;
-  background-position: left center;
-}
-
-.requests-list-subitem.requests-list-waterfall:dir(rtl) {
-  background-position: right center;
-}
-
 .requests-list-timings {
   display: flex;
   flex: none;
@@ -587,24 +605,6 @@ body,
 
 .requests-list-timings:dir(rtl) {
   transform-origin: right center;
-}
-
-.requests-list-timings-total:dir(ltr) {
-  transform-origin: left center;
-}
-
-.requests-list-timings-total:dir(rtl) {
-  transform-origin: right center;
-}
-
-.requests-list-timings-total {
-  display: inline-block;
-  padding-inline-start: 4px;
-  font-size: 85%;
-  font-weight: 600;
-  white-space: nowrap;
-  /* This node should not be scaled - apply a reversed transformation */
-  transform: scaleX(var(--timings-rev-scale));
 }
 
 .requests-list-timings-box {
@@ -641,17 +641,29 @@ body,
   background-color: var(--timing-receive-color);
 }
 
-/* SideMenuWidget */
-#network-table .request-list-empty-notice,
-#network-table .request-list-container {
-  background-color: var(--theme-body-background);
+.requests-list-timings-total {
+  display: inline-block;
+  padding-inline-start: 4px;
+  font-size: 85%;
+  font-weight: 600;
+  white-space: nowrap;
+  /* This node should not be scaled - apply a reversed transformation */
+  transform: scaleX(var(--timings-rev-scale));
 }
 
+.requests-list-timings-total:dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-list-timings-total:dir(rtl) {
+  transform-origin: right center;
+}
+
+/* Request list item */
+
 .request-list-item {
-  display: flex;
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  padding: 0;
+  display: table-row;
+  height: 24px;
 }
 
 .request-list-item.selected {
@@ -667,40 +679,15 @@ body,
   background-color: var(--theme-selection-background-semitransparent);
 }
 
-.request-list-item.fromCache > .requests-list-subitem:not(.requests-list-waterfall) {
-    opacity: 0.6;
+.request-list-item.fromCache > .requests-list-column:not(.requests-list-waterfall) {
+  opacity: 0.6;
 }
 
 .theme-firebug .request-list-item:not(.selected):hover {
   background: #EFEFEF;
 }
 
-.theme-firebug .requests-list-subitem {
-  padding: 1px;
-}
-
-/* HTTP Status Column */
-.theme-firebug .requests-list-subitem.requests-list-status {
-  font-weight: bold;
-}
-
-/* Method Column */
-
-.theme-firebug .requests-list-subitem.requests-list-method-box {
-  color: rgb(128, 128, 128);
-}
-
-.request-list-item.selected .requests-list-method {
-  color: var(--theme-selection-color);
-}
-
-/* Size Column */
-.theme-firebug .requests-list-subitem.requests-list-size {
-  justify-content: end;
-  padding-inline-end: 4px;
-}
-
-/* Network details panel */
+/* Network details panel toggle */
 
 .network-details-panel-toggle[disabled] {
   display: none;
@@ -716,7 +703,7 @@ body,
   background-image: var(--theme-pane-expand-image);
 }
 
-/* Network request details tabpanels */
+/* Network details panel */
 
 .network-details-panel {
   width: 100%;
@@ -916,7 +903,6 @@ body,
   height: 50vh;
   font: message-box;
   resize: none;
-  box-sizing: border-box;
 }
 
 .headers-summary .raw-headers .tabpanel-summary-label {
@@ -1052,7 +1038,7 @@ body,
   }
 }
 
-/* Custom request view */
+/* Custom request panel */
 
 .custom-request-panel {
   height: 100%;
@@ -1101,22 +1087,23 @@ body,
   margin-inline-start: 6px;
 }
 
-/* Performance analysis buttons */
+/* Statistics panel buttons */
 
 .requests-list-network-summary-button {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
+  display: inline-flex;
+  cursor: pointer;
+  height: 18px;
   background: none;
   box-shadow: none;
   border-color: transparent;
   padding-inline-end: 0;
-  cursor: pointer;
+  margin-top: 3px;
+  margin-bottom: 3px;
   margin-inline-end: 1em;
 }
 
 .requests-list-network-summary-button > .summary-info-icon {
-  background-image: url(chrome://devtools/skin/images/profiler-stopwatch.svg);
+  background: url(chrome://devtools/skin/images/profiler-stopwatch.svg) no-repeat;
   filter: var(--icon-filter);
   width: 16px;
   height: 16px;
@@ -1127,7 +1114,7 @@ body,
   opacity: 1;
 }
 
-/* Performance analysis view */
+/* Statistics panel */
 
 .statistics-panel {
   display: flex;
@@ -1263,7 +1250,7 @@ body,
   flex-direction: column;
 }
 
-/* Firebug theme support for network charts */
+/* Firebug theme support for statistics panel charts */
 
 .theme-firebug .chart-colored-blob[name=html] {
   fill: rgba(94, 136, 176, 0.8); /* Blue-Grey highlight */
@@ -1305,49 +1292,20 @@ body,
   background: rgba(84, 235, 159, 0.8);
 }
 
-/* Responsive sidebar */
+/* Responsive web design support */
+
 @media (max-width: 700px) {
-  .requests-list-toolbar {
-    height: 22px;
-  }
-
   .requests-list-header-button {
-    min-height: 22px;
-    padding-left: 8px;
-  }
-
-  .requests-list-status {
-    max-width: none;
+    padding-inline-start: 8px;
   }
 
   .requests-list-status-code {
     width: auto;
   }
 
-  .requests-list-method,
-  .requests-list-method-box {
-    max-width: none;
-    width: 12vw;
-  }
-
-  .requests-list-icon-and-file {
-    width: 22vw;
-  }
-
-  .requests-list-security-and-domain {
-    width: 16vw;
-  }
-
-  .requests-list-remoteip {
-    width: 8vw;
-  }
-
-  .requests-list-cause,
-  .requests-list-type,
-  .requests-list-transferred,
   .requests-list-size {
-    max-width: none;
-    width: 8vw;
+    /* Given a fix max-width to display all columns in RWD mode */
+    max-width: 7%;
   }
 
   .requests-list-waterfall {
@@ -1364,26 +1322,9 @@ body,
     width: 100%;
     height: 1px;
   }
-}
 
-/* Platform overrides (copied in from the old platform specific files) */
-
-:root[platform="win"] .requests-list-timings-division {
-  padding-top: 1px;
-  font-size: 90%;
-}
-
-:root[platform="linux"] #headers-summary-resend {
-  padding: 4px;
-}
-
-:root[platform="linux"] #toggle-raw-headers {
-  padding: 4px;
-}
-
-/* Responsive sidebar */
-@media (max-width: 700px) {
   :root[platform="linux"] .requests-list-header-button {
     font-size: 85%;
   }
 }
+

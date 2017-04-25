@@ -2957,9 +2957,26 @@ nsFrameLoader::TryRemoteBrowser()
   nsresult rv = GetNewTabContext(&context);
   NS_ENSURE_SUCCESS(rv, false);
 
+  uint64_t nextTabParentId = 0;
+  if (mOwnerContent) {
+    nsAutoString nextTabParentIdAttr;
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nextTabParentId,
+                           nextTabParentIdAttr);
+    nextTabParentId = strtoull(NS_ConvertUTF16toUTF8(nextTabParentIdAttr).get(),
+                               nullptr, 10);
+
+    // We may be in a window that was just opened, so try the
+    // nsIBrowserDOMWindow API as a backup.
+    if (!nextTabParentId && window) {
+      Unused << window->GetNextTabParentId(&nextTabParentId);
+    }
+  }
+
   nsCOMPtr<Element> ownerElement = mOwnerContent;
   mRemoteBrowser = ContentParent::CreateBrowser(context, ownerElement,
-                                                openerContentParent, sameTabGroupAs);
+                                                openerContentParent,
+                                                sameTabGroupAs,
+                                                nextTabParentId);
   if (!mRemoteBrowser) {
     return false;
   }

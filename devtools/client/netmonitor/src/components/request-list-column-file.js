@@ -14,8 +14,8 @@ const { propertiesEqual } = require("../utils/request-utils");
 const { div, img } = DOM;
 
 const UPDATED_FILE_PROPS = [
-  "urlDetails",
   "responseContentDataUri",
+  "urlDetails",
 ];
 
 const RequestListColumnFile = createClass({
@@ -30,22 +30,18 @@ const RequestListColumnFile = createClass({
   },
 
   render() {
-    const { urlDetails, responseContentDataUri } = this.props.item;
+    let { responseContentDataUri, urlDetails } = this.props.item;
 
     return (
-      div({ className: "requests-list-subitem requests-list-icon-and-file" },
+      div({
+        className: "requests-list-column requests-list-file",
+        title: urlDetails.unicodeUrl,
+      },
         img({
           className: "requests-list-icon",
           src: responseContentDataUri,
-          hidden: !responseContentDataUri,
-          "data-type": responseContentDataUri ? "thumbnail" : undefined,
         }),
-        div({
-          className: "subitem-label requests-list-file",
-          title: urlDetails.unicodeUrl,
-        },
-          urlDetails.baseNameWithQuery,
-        ),
+        urlDetails.baseNameWithQuery
       )
     );
   }

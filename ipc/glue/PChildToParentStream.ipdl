@@ -20,6 +20,14 @@ parent:
   async Close(nsresult aRv);
 
 child:
+  // The remote stream can be used in 2 ways: it can start receiving data
+  // immediately after the creation of the child actor, or it can wait until
+  // the child stream is actually used. This second configuration is enabled by
+  // passing 'true' to delayedStart in AutoIPCStream CTOR.
+  // If we are delaying the reading, at the first use of the remote stream, we
+  // must activate the sending of data. This happens by calling this method.
+  async StartReading();
+
   // The parent side has hit an error condition and has requested the child
   // actor issue a Close() message.  The close must be initiated by the child
   // to avoid racing with an in-flight Buffer() message.

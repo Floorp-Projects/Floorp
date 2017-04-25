@@ -154,7 +154,7 @@ const RequestListContent = createClass({
       return false;
     }
 
-    if (requestItem.responseContent && target.closest(".requests-list-icon-and-file")) {
+    if (requestItem.responseContent && target.closest(".requests-list-icon")) {
       return setTooltipImageContent(tooltip, itemEl, requestItem);
     }
 
@@ -224,33 +224,37 @@ const RequestListContent = createClass({
       columns,
       displayedRequests,
       firstRequestStartedMillis,
-      selectedRequestId,
       onCauseBadgeClick,
       onItemMouseDown,
       onSecurityIconClick,
+      selectedRequestId,
     } = this.props;
 
     return (
-      div({
-        ref: "contentEl",
-        className: "requests-list-contents",
-        tabIndex: 0,
-        onKeyDown: this.onKeyDown,
-      },
-        displayedRequests.map((item, index) => RequestListItem({
-          firstRequestStartedMillis,
-          fromCache: item.status === "304" || item.fromCache,
-          columns,
-          item,
-          index,
-          isSelected: item.id === selectedRequestId,
-          key: item.id,
-          onContextMenu: this.onContextMenu,
-          onFocusedNodeChange: this.onFocusedNodeChange,
-          onMouseDown: () => onItemMouseDown(item.id),
-          onCauseBadgeClick: () => onCauseBadgeClick(item.cause),
-          onSecurityIconClick: () => onSecurityIconClick(item.securityState),
-        }))
+      div({ className: "requests-list-wrapper"},
+        div({ className: "requests-list-table"},
+          div({
+            ref: "contentEl",
+            className: "requests-list-contents",
+            tabIndex: 0,
+            onKeyDown: this.onKeyDown,
+          },
+            displayedRequests.map((item, index) => RequestListItem({
+              firstRequestStartedMillis,
+              fromCache: item.status === "304" || item.fromCache,
+              columns,
+              item,
+              index,
+              isSelected: item.id === selectedRequestId,
+              key: item.id,
+              onContextMenu: this.onContextMenu,
+              onFocusedNodeChange: this.onFocusedNodeChange,
+              onMouseDown: () => onItemMouseDown(item.id),
+              onCauseBadgeClick: () => onCauseBadgeClick(item.cause),
+              onSecurityIconClick: () => onSecurityIconClick(item.securityState),
+            }))
+          )
+        )
       )
     );
   },

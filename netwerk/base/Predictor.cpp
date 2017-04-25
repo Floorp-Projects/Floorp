@@ -691,6 +691,47 @@ private:
   nsCOMPtr<nsIFile> mDBFile;
 };
 
+class PredictorLearnRunnable final : public Runnable {
+public:
+  PredictorLearnRunnable(nsIURI *targetURI, nsIURI *sourceURI,
+                         PredictorLearnReason reason, const OriginAttributes &oa)
+    : mTargetURI(targetURI)
+    , mSourceURI(sourceURI)
+    , mReason(reason)
+    , mOA(oa)
+  { }
+
+  ~PredictorLearnRunnable() { }
+
+  NS_IMETHOD Run() override
+  {
+    if (!gNeckoChild) {
+      // This may have gone away between when this runnable was dispatched and
+      // when it actually runs, so let's be safe here, even though we asserted
+      // earlier.
+      PREDICTOR_LOG(("predictor::learn (async) gNeckoChild went away"));
+      return NS_OK;
+    }
+
+    ipc::URIParams serTargetURI;
+    SerializeURI(mTargetURI, serTargetURI);
+
+    ipc::OptionalURIParams serSourceURI;
+    SerializeURI(mSourceURI, serSourceURI);
+
+    PREDICTOR_LOG(("predictor::learn (async) forwarding to parent"));
+    gNeckoChild->SendPredLearn(serTargetURI, serSourceURI, mReason, mOA);
+
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIURI> mTargetURI;
+  nsCOMPtr<nsIURI> mSourceURI;
+  PredictorLearnReason mReason;
+  const OriginAttributes mOA;
+};
+
 } // namespace
 
 void
@@ -1506,15 +1547,10 @@ Predictor::LearnNative(nsIURI *targetURI, nsIURI *sourceURI,
 
     PREDICTOR_LOG(("    called on child process"));
 
-    ipc::URIParams serTargetURI;
-    SerializeURI(targetURI, serTargetURI);
+    RefPtr<PredictorLearnRunnable> runnable = new PredictorLearnRunnable(
+      targetURI, sourceURI, reason, originAttributes);
+    NS_DispatchToMainThread(runnable);
 
-    ipc::OptionalURIParams serSourceURI;
-    SerializeURI(sourceURI, serSourceURI);
-
-    PREDICTOR_LOG(("    forwarding to parent"));
-    gNeckoChild->SendPredLearn(serTargetURI, serSourceURI, reason,
-                               originAttributes);
     return NS_OK;
   }
 

@@ -105,7 +105,14 @@ public class StringHelper {
     public final String DISTRIBUTION2_LABEL = "Distribution 2";
 
     // Settings menu strings
+    public final String GENERAL_SECTION_LABEL;
+    public final String SEARCH_SECTION_LABEL;
     public final String PRIVACY_SECTION_LABEL;
+    public final String ACCESSIBILITY_SECTION_LABEL;
+    public final String NOTIFICATIONS_SECTION_LABEL;
+    public final String ADVANCED_SECTION_LABEL;
+    public final String CLEAR_PRIVATE_DATA_SECTION_LABEL;
+    public final String DEFAULT_BROWSER_SECTION_LABEL;
     public final String MOZILLA_SECTION_LABEL;
 
     // Mozilla
@@ -187,10 +194,23 @@ public class StringHelper {
     public final String HISTORY;
     public final String PANELS;
 
+    // General Settings
+    public final String LANGUAGE_LABEL;
+
     // Search Settings
     public final String SEARCH_TITLE;
     public final String SEARCH_SUGGESTIONS;
     public final String SEARCH_INSTALLED;
+    public final String SHOW_SEARCH_HISTORY_LABEL;
+
+    // Privacy Settings
+    public final String DO_NOT_TRACK_LABEL;
+
+    // Accessibility Settings
+    public final String ALWAYS_ZOOM_LABEL;
+
+    // Notifications Settings
+    public final String NEW_IN_FIREFOX_LABEL;
 
     // Advanced Settings
     public final String ADVANCED;
@@ -199,6 +219,14 @@ public class StringHelper {
     public final String DISABLED;
     public final String TAP_TO_PLAY;
     public final String HIDE_TITLE_BAR;
+    public final String RESTORE_TABS_LABEL;
+
+    // Clear Private Data Section
+    public final String SITE_SETTINGS_LABEL;
+
+    // Mozilla Firefox Section
+    public final String FAQS_LABEL;
+
 
     // Update Settings
     public final String AUTOMATIC_UPDATES;
@@ -282,7 +310,14 @@ public class StringHelper {
         TITLE_PLACE_HOLDER = res.getString(R.string.url_bar_default_text);
 
         // Settings menu strings
+        GENERAL_SECTION_LABEL = res.getString(R.string.pref_category_general);
+        SEARCH_SECTION_LABEL = res.getString(R.string.pref_category_search);
         PRIVACY_SECTION_LABEL = res.getString(R.string.pref_category_privacy_short);
+        ACCESSIBILITY_SECTION_LABEL = res.getString(R.string.pref_category_accessibility);
+        NOTIFICATIONS_SECTION_LABEL = res.getString(R.string.pref_category_notifications);
+        ADVANCED_SECTION_LABEL = res.getString(R.string.pref_category_advanced);
+        CLEAR_PRIVATE_DATA_SECTION_LABEL = res.getString(R.string.pref_clear_private_data_now);
+        DEFAULT_BROWSER_SECTION_LABEL = res.getString(R.string.pref_default_browser);
         MOZILLA_SECTION_LABEL = res.getString(R.string.pref_category_vendor);
 
         // Labels for the about:home tabs
@@ -342,10 +377,23 @@ public class StringHelper {
         ENABLED = res.getString(R.string.pref_home_updates_enabled);
         HISTORY = res.getString(R.string.home_history_title);
 
+        // General Settings
+        LANGUAGE_LABEL = res.getString(R.string.pref_category_language);
+
         // Search Settings
         SEARCH_TITLE = res.getString(R.string.search);
         SEARCH_SUGGESTIONS = res.getString(R.string.pref_search_suggestions);
         SEARCH_INSTALLED = res.getString(R.string.pref_category_installed_search_engines);
+        SHOW_SEARCH_HISTORY_LABEL = res.getString(R.string.pref_history_search_suggestions);
+
+        // Privacy Settings
+        DO_NOT_TRACK_LABEL = res.getString(R.string.pref_donottrack_title);
+
+        // Accessibility Settings
+        ALWAYS_ZOOM_LABEL = res.getString(R.string.pref_zoom_force_enabled);
+
+        // Notification Settings
+        NEW_IN_FIREFOX_LABEL = res.getString(R.string.pref_whats_new_notification);
 
         // Advanced Settings
         ADVANCED = res.getString(R.string.pref_category_advanced);
@@ -354,6 +402,13 @@ public class StringHelper {
         DISABLED = res.getString(R.string.pref_plugins_disabled );
         TAP_TO_PLAY = res.getString(R.string.pref_plugins_tap_to_play);
         HIDE_TITLE_BAR = res.getString(R.string.pref_scroll_title_bar_summary );
+        RESTORE_TABS_LABEL = res.getString(R.string.pref_restore);
+
+        // Clear Private Data Settings
+        SITE_SETTINGS_LABEL = res.getString(R.string.pref_private_data_siteSettings);
+
+        // Mozilla Firefox Settings
+        FAQS_LABEL = res.getString(R.string.pref_vendor_faqs);
 
         // Update Settings
         AUTOMATIC_UPDATES = res.getString(R.string.pref_home_updates);

@@ -11,7 +11,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { getFormattedSize } = require("../utils/format-utils");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const RequestListColumnContentSize = createClass({
   displayName: "RequestListColumnContentSize",
@@ -25,20 +25,10 @@ const RequestListColumnContentSize = createClass({
   },
 
   render() {
-    const { contentSize } = this.props.item;
-
-    let text;
-    if (typeof contentSize == "number") {
-      text = getFormattedSize(contentSize);
-    }
-
+    let { contentSize } = this.props.item;
+    let size = typeof contentSize === "number" ? getFormattedSize(contentSize) : null;
     return (
-      div({
-        className: "requests-list-subitem subitem-label requests-list-size",
-        title: text,
-      },
-        span({ className: "subitem-label" }, text),
-      )
+      div({ className: "requests-list-column requests-list-size", title: size }, size)
     );
   }
 });

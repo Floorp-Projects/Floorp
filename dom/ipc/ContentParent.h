@@ -189,7 +189,8 @@ public:
   CreateBrowser(const TabContext& aContext,
                 Element* aFrameElement,
                 ContentParent* aOpenerContentParent,
-                TabParent* aSameTabGroupAs);
+                TabParent* aSameTabGroupAs,
+                uint64_t aNextTabParentId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -719,6 +720,7 @@ private:
                      const nsCString& aBaseURI,
                      const OriginAttributes& aOpenerOriginAttributes,
                      const float& aFullZoom,
+                     uint64_t aNextTabParentId,
                      nsresult& aResult,
                      nsCOMPtr<nsITabParent>& aNewTabParent,
                      bool* aWindowIsNew);
@@ -850,6 +852,18 @@ private:
   AllocPMemoryStreamParent(const uint64_t& aSize) override;
 
   virtual bool DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
+
+  virtual PIPCBlobInputStreamParent*
+  SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                     const nsID& aID,
+                                     const uint64_t& aSize) override;
+
+  virtual PIPCBlobInputStreamParent*
+  AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                 const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor) override;
 
   virtual mozilla::ipc::IPCResult
   RecvPBlobConstructor(PBlobParent* aActor,
@@ -1262,6 +1276,9 @@ private:
 #ifdef MOZ_CRASHREPORTER
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
 #endif
+
+  static uint64_t sNextTabParentId;
+  static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
 };
 
 } // namespace dom

@@ -370,7 +370,36 @@ public:
    * frame's display items (i.e. zero, or more than one).
    * This function is for testing purposes and not performance sensitive.
    */
-  static PaintedLayer* GetDebugSingleOldPaintedLayerForFrame(nsIFrame* aFrame);
+  template<class T>
+  static T*
+  GetDebugSingleOldLayerForFrame(nsIFrame* aFrame)
+  {
+    const nsTArray<DisplayItemData*>* array =
+      aFrame->Properties().Get(LayerManagerDataProperty());
+
+    if (!array) {
+      return nullptr;
+    }
+
+    Layer* layer = nullptr;
+    for (DisplayItemData* data : *array) {
+      DisplayItemData::AssertDisplayItemData(data);
+      if (data->mLayer->GetType() != T::Type()) {
+        continue;
+      }
+      if (layer && layer != data->mLayer) {
+        // More than one layer assigned, bail.
+        return nullptr;
+      }
+      layer = data->mLayer;
+    }
+
+    if (!layer) {
+      return nullptr;
+    }
+
+    return static_cast<T*>(layer);
+  }
 
   /**
    * Destroy any stored LayerManagerDataProperty and the associated data for
@@ -450,6 +479,8 @@ public:
     nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
     void Invalidate() { mIsInvalid = true; }
     void ClearAnimationCompositorState();
+
+    static DisplayItemData* AssertDisplayItemData(DisplayItemData* aData);
 
   private:
     DisplayItemData(LayerManagerData* aParent,

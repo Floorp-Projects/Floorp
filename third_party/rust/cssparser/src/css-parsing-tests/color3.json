@@ -253,5 +253,8 @@
 "hsl(10.4719755118rad, 75%, 50%)", [32, 32, 224, 255],
 "hsl(2.6666666666turn, 75%, 50%)", [32, 32, 224, 255],
 
+"rgb(-2147483649, 4294967298, -18446744073709551619) /* https://github.com/w3c/web-platform-tests/blob/master/2dcontext/fill-and-stroke-styles/2d.fillStyle.parse.rgb-clamp-3.html */",
+[0, 255, 0, 255],
+
 "cmyk(0, 0, 0, 0)", null
 ]
