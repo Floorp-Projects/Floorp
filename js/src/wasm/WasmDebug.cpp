@@ -75,7 +75,7 @@ GeneratedSourceMap::searchLineByOffset(JSContext* cx, uint32_t offset, size_t* e
     return true;
 }
 
-DebugState::DebugState(MutableCode code,
+DebugState::DebugState(SharedCode code,
                        const Metadata& metadata,
                        const ShareableBytes* maybeBytecode)
   : code_(Move(code)),
