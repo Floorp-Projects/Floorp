@@ -526,12 +526,16 @@ module.exports = {
     if (!gRootDir) {
       let dirName = path.dirname(module.filename);
 
-      while (dirName && !fs.existsSync(path.join(dirName, ".eslintignore"))) {
-        dirName = path.dirname(dirName);
-      }
-
-      if (!dirName) {
-        throw new Error("Unable to find root of repository");
+      while (true) {
+        const parsed = path.parse(dirName);
+        if (parsed.root === dirName) {
+          // We've reached the top of the filesystem
+          throw new Error("Unable to find root of repository");
+        }
+        dirName = parsed.dir;
+        if (fs.existsSync(path.join(dirName, ".eslintignore"))) {
+          break;
+        }
       }
 
       gRootDir = dirName;
