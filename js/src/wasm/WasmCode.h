@@ -20,6 +20,7 @@
 #define wasm_code_h
 
 #include "js/HashTable.h"
+#include "threading/ExclusiveData.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -33,10 +34,26 @@ struct LinkData;
 struct Metadata;
 class FrameIterator;
 
+// ShareableBytes is a reference-counted Vector of bytes.
+
+struct ShareableBytes : ShareableBase<ShareableBytes>
+{
+    // Vector is 'final', so instead make Vector a member and add boilerplate.
+    Bytes bytes;
+    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
+    const uint8_t* begin() const { return bytes.begin(); }
+    const uint8_t* end() const { return bytes.end(); }
+    size_t length() const { return bytes.length(); }
+    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
+};
+
+typedef RefPtr<ShareableBytes> MutableBytes;
+typedef RefPtr<const ShareableBytes> SharedBytes;
+
 // A wasm CodeSegment owns the allocated executable code for a wasm module.
 
 class CodeSegment;
-typedef UniquePtr<CodeSegment> UniqueCodeSegment;
+typedef UniquePtr<const CodeSegment> UniqueConstCodeSegment;
 
 class CodeSegment
 {
@@ -53,6 +70,17 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
+    CodeSegment(uint8_t* bytes, uint32_t functionLength, uint32_t length, uint8_t* interruptCode,
+                uint8_t* outOfBoundsCode, uint8_t* unalignedAccessCode)
+      : bytes_(bytes),
+        functionLength_(functionLength),
+        length_(length),
+        interruptCode_(interruptCode),
+        outOfBoundsCode_(outOfBoundsCode),
+        unalignedAccessCode_(unalignedAccessCode)
+    {
+    }
+
   protected:
     CodeSegment() { PodZero(this); }
     template <class> friend struct js::MallocProvider;
@@ -63,11 +91,11 @@ class CodeSegment
     void operator=(CodeSegment&&) = delete;
 
   public:
-    static UniqueCodeSegment create(JSContext* cx,
-                                    const Bytes& code,
-                                    const LinkData& linkData,
-                                    const Metadata& metadata,
-                                    HandleWasmMemoryObject memory);
+    static UniqueConstCodeSegment create(JSContext* cx,
+                                         const Bytes& codeBytes,
+                                         const SharedBytes& bytecode,
+                                         const LinkData& linkData,
+                                         const Metadata& metadata);
     ~CodeSegment();
 
     uint8_t* base() const { return bytes_; }
@@ -90,23 +118,6 @@ class CodeSegment
         return pc >= base() && pc < (base() + length_);
     }
 };
-
-// ShareableBytes is a ref-counted vector of bytes which are incrementally built
-// during compilation and then immutably shared.
-
-struct ShareableBytes : ShareableBase<ShareableBytes>
-{
-    // Vector is 'final', so instead make Vector a member and add boilerplate.
-    Bytes bytes;
-    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
-    const uint8_t* begin() const { return bytes.begin(); }
-    const uint8_t* end() const { return bytes.end(); }
-    size_t length() const { return bytes.length(); }
-    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
-};
-
-typedef RefPtr<ShareableBytes> MutableBytes;
-typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A FuncExport represents a single function definition inside a wasm Module
 // that has been exported one or more times. A FuncExport represents an
@@ -356,22 +367,21 @@ typedef RefPtr<const Metadata> SharedMetadata;
 // moment, Code objects are owned uniquely by instances since CodeSegments are
 // not shareable. However, once this restriction is removed, a single Code
 // object will be shared between a module and all its instances.
+//
+// profilingLabels_ is lazily initialized, but behind a lock.
 
 class Code : public ShareableBase<Code>
 {
-    const UniqueCodeSegment  segment_;
-    const SharedMetadata     metadata_;
-    const SharedBytes        maybeBytecode_;
-
-    // Mutated at runtime:
-    CacheableCharsVector     profilingLabels_;
+    const UniqueConstCodeSegment              segment_;
+    const SharedMetadata                      metadata_;
+    const SharedBytes                         maybeBytecode_;
+    const ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
-    Code(UniqueCodeSegment segment,
+    Code(UniqueConstCodeSegment segment,
          const Metadata& metadata,
          const ShareableBytes* maybeBytecode);
 
-    CodeSegment& segment() { return *segment_; }
     const CodeSegment& segment() const { return *segment_; }
     const Metadata& metadata() const { return *metadata_; }
 
@@ -390,7 +400,7 @@ class Code : public ShareableBase<Code>
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.
 
-    void ensureProfilingLabels(bool profilingEnabled);
+    void ensureProfilingLabels(bool profilingEnabled) const;
     const char* profilingLabel(uint32_t funcIndex) const;
 
     // about:memory reporting:
@@ -404,7 +414,7 @@ class Code : public ShareableBase<Code>
     WASM_DECLARE_SERIALIZABLE(Code);
 };
 
-typedef RefPtr<Code> MutableCode;
+typedef RefPtr<const Code> SharedCode;
 
 } // namespace wasm
 } // namespace js

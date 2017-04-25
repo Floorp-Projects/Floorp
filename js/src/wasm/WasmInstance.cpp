@@ -319,7 +319,7 @@ Instance::currentMemory_i32(Instance* instance)
 
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
-                   MutableCode code,
+                   SharedCode code,
                    UniqueDebugState debug,
                    UniqueGlobalSegment globals,
                    HandleWasmMemoryObject memory,

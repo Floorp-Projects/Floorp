@@ -67,7 +67,7 @@ class Instance
 {
     JSCompartment* const            compartment_;
     ReadBarrieredWasmInstanceObject object_;
-    const MutableCode               code_;
+    const SharedCode                code_;
     const UniqueDebugState          debug_;
     const UniqueGlobalSegment       globals_;
     GCPtrWasmMemoryObject           memory_;
@@ -89,7 +89,7 @@ class Instance
   public:
     Instance(JSContext* cx,
              HandleWasmInstanceObject object,
-             MutableCode code,
+             SharedCode code,
              UniqueDebugState debug,
              UniqueGlobalSegment globals,
              HandleWasmMemoryObject memory,
@@ -102,7 +102,6 @@ class Instance
 
     JSContext* cx() const { return tlsData()->cx; }
     JSCompartment* compartment() const { return compartment_; }
-    Code& code() { return *code_; }
     const Code& code() const { return *code_; }
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }

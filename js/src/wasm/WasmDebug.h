@@ -79,7 +79,7 @@ typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAl
 
 class DebugState
 {
-    MutableCode              code_;
+    const SharedCode         code_;
     const SharedMetadata     metadata_;
     const SharedBytes        maybeBytecode_;
     UniqueGeneratedSourceMap maybeSourceMap_;
@@ -96,7 +96,7 @@ class DebugState
     bool ensureSourceMap(JSContext* cx);
 
   public:
-    DebugState(MutableCode code,
+    DebugState(SharedCode code,
                const Metadata& metadata,
                const ShareableBytes* maybeBytecode);
 
