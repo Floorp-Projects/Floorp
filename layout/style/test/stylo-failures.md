@@ -177,8 +177,11 @@ to mochitest command.
     * test_value_storage.html `-moz-linear-gradient` [322]
     * ... `-moz-radial-gradient` [309]
     * ... `-moz-repeating-` [298]
+    * test_specified_value_serialization.html `-moz-linear-gradient` [2]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
+    * test_specified_value_serialization.html `-webkit-linear-gradient` [1]
+    * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
