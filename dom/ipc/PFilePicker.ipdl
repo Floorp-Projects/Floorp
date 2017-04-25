@@ -4,8 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
 include protocol PBrowser;
+include protocol PChildToParentStream;
+include protocol PIPCBlobInputStream;
+include protocol PFileDescriptorSet;
+include protocol PParentToChildStream;
+
+include IPCBlob;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
@@ -14,7 +19,7 @@ namespace dom {
 
 struct InputBlobs
 {
-  PBlob[] blobs;
+  IPCBlob[] blobs;
 };
 
 struct InputDirectory
