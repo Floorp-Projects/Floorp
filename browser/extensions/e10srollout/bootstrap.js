@@ -169,6 +169,7 @@ function defineCohort() {
   if (updateChannel !== "beta" ||
       !inMultiExperiment ||
       userOptedIn.multi ||
+      disqualified ||
       getAddonsDisqualifyForMulti()) {
     Preferences.reset(PREF_E10S_PROCESSCOUNT + ".web");
     return;
