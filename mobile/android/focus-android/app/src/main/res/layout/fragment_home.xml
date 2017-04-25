@@ -51,8 +51,8 @@
             android:background="@drawable/urlbar_background"
             android:gravity="center"
             android:padding="8dp"
-            android:text="@string/urlbar_hint"
-            android:textColor="#40ffffff"
+            android:hint="@string/urlbar_hint"
+            android:textColorHint="#40ffffff"
             android:textSize="15sp"
             android:transitionName="urlbar" />
 
