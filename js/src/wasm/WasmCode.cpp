@@ -363,7 +363,8 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
-           filename.serializedSize();
+           filename.serializedSize() +
+           sizeof(hash);
 }
 
 uint8_t*
@@ -384,6 +385,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
+    cursor = WriteBytes(cursor, hash, sizeof(hash));
     return cursor;
 }
 
@@ -401,7 +403,8 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
-    (cursor = filename.deserialize(cursor));
+    (cursor = filename.deserialize(cursor)) &&
+    (cursor = ReadBytes(cursor, hash, sizeof(hash)));
     debugEnabled = false;
     debugTrapFarJumpOffsets.clear();
     debugFuncToCodeRange.clear();
@@ -1056,6 +1059,41 @@ Code::debugGetResultType(uint32_t funcIndex)
 {
     MOZ_ASSERT(metadata_->debugEnabled);
     return metadata_->debugFuncReturnTypes[funcIndex];
+}
+
+JSString*
+Code::debugDisplayURL(JSContext* cx) const
+{
+    // Build wasm module URL from following parts:
+    // - "wasm:" as protocol;
+    // - URI encoded filename from metadata (if can be encoded), plus ":";
+    // - 64-bit hash of the module bytes (as hex dump).
+    js::StringBuffer result(cx);
+    if (!result.append("wasm:"))
+        return nullptr;
+    if (const char* filename = metadata_->filename.get()) {
+        js::StringBuffer filenamePrefix(cx);
+        // EncodeURI returns false due to invalid chars or OOM -- fail only
+        // during OOM.
+        if (!EncodeURI(cx, filenamePrefix, filename, strlen(filename))) {
+            if (!cx->isExceptionPending())
+                return nullptr;
+            cx->clearPendingException(); // ignore invalid URI
+        } else if (!result.append(filenamePrefix.finishString()) || !result.append(":")) {
+            return nullptr;
+        }
+    }
+
+    const ModuleHash& hash = metadata().hash;
+    for (size_t i = 0; i < sizeof(ModuleHash); i++) {
+        char digit1 = hash[i] / 16, digit2 = hash[i] % 16;
+        if (!result.append((char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10)))
+            return nullptr;
+        if (!result.append((char)(digit2 < 10 ? digit2 + '0' : digit2 + 'a' - 10)))
+            return nullptr;
+    }
+    return result.finishString();
+
 }
 
 void

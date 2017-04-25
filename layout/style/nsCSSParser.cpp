@@ -10235,11 +10235,20 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     // If we got an angle, we might now have a comma, ending the gradient-line.
     bool haveAngleComma = haveAngle && ExpectSymbol(',', true);
 
-    // If we're webkit-prefixed & didn't get an angle,
-    // OR if we're moz-prefixed & didn't get an angle+comma,
-    // then proceed to parse a box-position.
-    if (((aFlags & eGradient_WebkitLegacy) && !haveAngle) ||
-        ((aFlags & eGradient_MozLegacy) && !haveAngleComma)) {
+    // And in fact, if we're -webkit-linear-gradient and got an angle, there
+    // *must* be a comma after the angle. (Though -moz-linear-gradient is more
+    // permissive because it will allow box-position before the comma.)
+    if (aFlags & eGradient_WebkitLegacy && haveAngle && !haveAngleComma) {
+      SkipUntil(')');
+      return false;
+    }
+
+    // If we're prefixed & didn't get an angle + comma, then proceed to parse a
+    // box-position. (Note that due to the above webkit-specific early-return,
+    // this will only parse an *initial* box-position inside of
+    // -webkit-linear-gradient, vs. an initial OR post-angle box-position
+    // inside of -moz-linear-gradient.)
+    if (((aFlags & eGradient_AnyLegacy) && !haveAngleComma)) {
       // (Note: 3rd arg controls whether the "center" keyword is allowed.
       // -moz-linear-gradient allows it; -webkit-linear-gradient does not.)
       if (!ParseBoxPositionValues(cssGradient->mBgPos, false,

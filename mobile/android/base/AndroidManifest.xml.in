@@ -312,8 +312,11 @@
 
 #ifdef MOZ_ANDROID_CUSTOM_TABS
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
-            android:theme="@style/GeckoCustomTabs" />
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/GeckoCustomTabs" />
 #endif
+
         <activity android:name="org.mozilla.gecko.webapps.WebAppActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
