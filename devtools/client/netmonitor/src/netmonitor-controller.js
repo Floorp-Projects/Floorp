@@ -294,6 +294,7 @@ var NetMonitorController = {
  * Functions handling target network events.
  */
 function NetworkEventsHandler() {
+  this.payloadQueue = [];
   this.addRequest = this.addRequest.bind(this);
   this.updateRequest = this.updateRequest.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
@@ -527,6 +528,27 @@ NetworkEventsHandler.prototype = {
     return payload;
   },
 
+  getPayloadFromQueue(id) {
+    return this.payloadQueue.find((item) => item.id === id);
+  },
+
+  // Packet order of "networkUpdateEvent" is predictable, as a result we can wait for
+  // the last one "eventTimings" packet arrives to check payload is ready
+  isQueuePayloadReady(id) {
+    let queuedPayload = this.getPayloadFromQueue(id);
+    return queuedPayload && queuedPayload.payload.eventTimings;
+  },
+
+  pushPayloadToQueue(id, payload) {
+    let queuedPayload = this.getPayloadFromQueue(id);
+    if (!queuedPayload) {
+      this.payloadQueue.push({ id, payload });
+    } else {
+      // Merge upcoming networkEventUpdate payload into existing one
+      queuedPayload.payload = Object.assign({}, queuedPayload.payload, payload);
+    }
+  },
+
   async updateRequest(id, data) {
     let {
       mimeType,
@@ -558,7 +580,12 @@ NetworkEventsHandler.prototype = {
     let payload = Object.assign({}, data,
                                     imageObj, requestHeadersObj, responseHeadersObj,
                                     postDataObj, requestCookiesObj, responseCookiesObj);
-    await this.actions.updateRequest(id, payload, true);
+
+    this.pushPayloadToQueue(id, payload);
+
+    if (this.isQueuePayloadReady(id)) {
+      await this.actions.updateRequest(id, this.getPayloadFromQueue(id).payload, true);
+    }
   },
 
   /**
