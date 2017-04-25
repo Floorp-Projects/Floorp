@@ -249,6 +249,25 @@ button {
   font-weight: 600;
 }
 
+.addon-target-info {
+  display: grid;
+  font-size: 14px;
+  grid-template-columns: 128px 1fr;
+}
+
+.addon-target-info-label {
+  padding-inline-end: 8px;
+  padding-bottom: 8px;
+}
+
+.addon-target-info-label:last-of-type {
+  padding-bottom: 16px;
+}
+
+.addon-target-info-content {
+  margin: 0;
+}
+
 .addon-target-button {
   background: none;
   border: none;
@@ -288,4 +307,19 @@ button {
   /* Subtract the start padding so the button is still a bigger click target but
    * lines up with the icon. */
   margin-inline-start: -4px;
+}
+
+/* We want the ellipsis on the left-hand-side, so make the parent RTL
+ * with an ellipsis and the child can be LTR. */
+.file-path {
+  direction: rtl;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-path-inner {
+  direction: ltr;
+  unicode-bidi: plaintext;
 }

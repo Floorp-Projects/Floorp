@@ -22,7 +22,7 @@ define_invoke_proc_macro!(cssparser_internal__invoke_proc_macro);
 ///     "rgba" => parse_rgba(..),
 ///     "hsl" => parse_hsl(..),
 ///     "hsla" => parse_hsla(..),
-///     name @ _ => Err(format!("unknown function: {}", name))
+///     _ => Err(format!("unknown function: {}", function_name))
 /// }
 /// # ;}
 /// # use std::ops::RangeFull;
@@ -82,7 +82,7 @@ macro_rules! ascii_case_insensitive_phf_map {
         ascii_case_insensitive_phf_map!($name -> $ValueType = { $( $key => $value, )* })
     };
     ($name: ident -> $ValueType: ty = { $( $key: expr => $value: expr, )* }) => {
-        fn $name(input: &str) -> Option<&'static $ValueType> {
+        pub fn $name(input: &str) -> Option<&'static $ValueType> {
             cssparser_internal__invoke_proc_macro! {
                 cssparser_internal__phf_map!( ($ValueType) $( $key ($value) )+ )
             }
