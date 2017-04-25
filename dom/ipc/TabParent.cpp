@@ -3310,18 +3310,6 @@ TabParent::RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TabParent::RecvAllocPipelineId(RefPtr<AllocPipelineIdPromise>&& aPromise)
-{
-  GPUProcessManager* pm = GPUProcessManager::Get();
-  if (!pm) {
-    aPromise->Reject(PromiseRejectReason::HandlerRejected, __func__);
-    return IPC_OK();
-  }
-  aPromise->Resolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);
-  return IPC_OK();
-}
-
 void
 TabParent::LiveResizeStarted()
 {
