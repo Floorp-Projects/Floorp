@@ -35,6 +35,7 @@
 #include "nsStringStream.h"
 #include "sslt.h"
 #include "TunnelUtils.h"
+#include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -87,7 +88,7 @@ nsHttpConnection::nsHttpConnection()
     , mDid0RTTSpdy(false)
     , mResponseThrottled(false)
     , mResumeRecvOnUnthrottle(false)
-    , mFastOpen(false)
+    , mFastOpen(nullptr)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -383,9 +384,7 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
     }
 
     rv = ssl->GetNegotiatedNPN(negotiatedNPN);
-    // Fast Open does not work well with TLS Early Data. TODO: dragana
-    // fix this.
-    if (!mFastOpen && !m0RTTChecked && (rv == NS_ERROR_NOT_CONNECTED) &&
+    if (!m0RTTChecked && (rv == NS_ERROR_NOT_CONNECTED) &&
         !mConnInfo->UsingProxy()) {
         // There is no ALPN info (yet!). We need to consider doing 0RTT. We
         // will do so if there is ALPN information from a previous session
@@ -444,15 +443,24 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
 
     if (rv == NS_ERROR_NOT_CONNECTED) {
         if (mWaitingFor0RTTResponse) {
-            aOut0RTTWriteHandshakeValue = mTransaction->ReadSegments(this,
-                nsIOService::gDefaultSegmentSize, &aOut0RTTBytesWritten);
-            if (NS_FAILED(aOut0RTTWriteHandshakeValue) &&
-                aOut0RTTWriteHandshakeValue != NS_BASE_STREAM_WOULD_BLOCK) {
-                goto npnComplete;
+            int32_t segmentSize = nsIOService::gDefaultSegmentSize;
+            if (mFastOpen) {
+                segmentSize = TCPFastOpenGetBufferSizeLeft(mFastOpen);
+                LOG(("nsHttpConnection::EnsureNPNComplete [this=%p] - It is "
+                     "fast open and the first packet has %d byte to fill.",
+                     this, segmentSize));
             }
-            LOG(("nsHttpConnection::EnsureNPNComplete [this=%p] - written %d "
-                 "bytes during 0RTT", this, aOut0RTTBytesWritten));
-            mContentBytesWritten0RTT += aOut0RTTBytesWritten;
+            if (segmentSize) {
+                aOut0RTTWriteHandshakeValue = mTransaction->ReadSegments(this,
+                    segmentSize, &aOut0RTTBytesWritten);
+                if (NS_FAILED(aOut0RTTWriteHandshakeValue) &&
+                    aOut0RTTWriteHandshakeValue != NS_BASE_STREAM_WOULD_BLOCK) {
+                    goto npnComplete;
+                }
+                LOG(("nsHttpConnection::EnsureNPNComplete [this=%p] - written %d "
+                     "bytes during 0RTT", this, aOut0RTTBytesWritten));
+                mContentBytesWritten0RTT += aOut0RTTBytesWritten;
+            }
         }
 
         rv = ssl->DriveHandshake();

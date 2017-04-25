@@ -12,12 +12,19 @@
 namespace mozilla {
 namespace net {
 
+/**
+ * This layer must be placed just above PR-tcp socket, i.e. it must be under
+ * nss layer.
+ * At the beginning of TCPFastOpenLayer.cpp there is explanation what this
+ * layer do.
+ **/
 nsresult AttachTCPFastOpenIOLayer(PRFileDesc *fd);
 
 // Get the result of TCP Fast Open.
-void TCPFastOpenConnectResult(PRFileDesc *fd, PRErrorCode *err,
-                              bool *fastOpenNotSupported);
+void TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode *err,
+                       bool *fastOpenNotSupported);
 
+int32_t TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd);
 }
 }
 

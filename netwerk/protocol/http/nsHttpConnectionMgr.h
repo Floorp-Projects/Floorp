@@ -373,12 +373,12 @@ private:
         void Unclaim();
 
         bool FastOpenEnabled() override;
-        nsresult StartFastOpen() override;
+        nsresult StartFastOpen(PRFileDesc *) override;
         void FastOpenConnected(nsresult) override;
         void FastOpenNotSupported() override;
     private:
         nsresult SetupConn(nsIAsyncOutputStream *out,
-                           bool aFastOpen);
+                           PRFileDesc *aFastOpen);
 
         // To find out whether |mTransaction| is still in the connection entry's
         // pending queue. If the transaction is found and |removeWhenFound| is

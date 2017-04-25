@@ -16,24 +16,58 @@ static PRDescIdentity sTCPFastOpenLayerIdentity;
 static PRIOMethods    sTCPFastOpenLayerMethods;
 static PRIOMethods   *sTCPFastOpenLayerMethodsPtr = nullptr;
 
+#define TFO_MAX_PACKET_SIZE_IPV4 1460
+#define TFO_MAX_PACKET_SIZE_IPV6 1440
+#define TFO_TLS_RECORD_HEADER_SIZE 22
+
+/**
+ *  For the TCP Fast Open it is necessary to send all data that can fit into the
+ *  first packet on a single sendto function call. Consecutive calls will not
+ *  have an effect. Therefore  TCPFastOpenLayer will collect some data before
+ *  calling sendto. Necko and nss will call PR_Write multiple times with small
+ *  amount of  data.
+ *  TCPFastOpenLayer has 4 states:
+ *    WAITING_FOR_CONNECT:
+ *      This is before connect is call. A call of recv, send or getpeername will
+ *      return PR_NOT_CONNECTED_ERROR. After connect is call the state transfers
+ *      into COLLECT_DATA_FOR_FIRST_PACKET.
+ *
+ *    COLLECT_DATA_FOR_FIRST_PACKET:
+ *      In this state all data received by send function calls will be stored in
+ *      a buffer. If transaction do not have any more data ready to be sent or
+ *      the buffer is full, TCPFastOpenFinish is call. TCPFastOpenFinish sends
+ *      the collected data using sendto function and the state transfers to
+ *      WAITING_FOR_CONNECTCONTINUE. If an error occurs during sendto, the error
+ *      is reported by the TCPFastOpenFinish return values. nsSocketTransfer is
+ *      the only caller of TCPFastOpenFinish; it knows how to interpreter these
+ *      errors.
+ *    WAITING_FOR_CONNECTCONTINUE:
+ *      connectcontinue transfers from this state to CONNECTED. Any other
+ *      function (e.g. send, recv) returns PR_WOULD_BLOCK_ERROR.
+ *    CONNECTED:
+ *      The size of mFirstPacketBuf is 1440/1460 (RFC7413 recomends that packet
+ *      does exceeds these sizes). SendTo does not have to consume all buffered
+ *      data and some data can be still in mFirstPacketBuf. Before sending any
+ *      new data we need to send the remaining buffered data.
+ **/
+
 class TCPFastOpenSecret
 {
 public:
   TCPFastOpenSecret()
     : mState(WAITING_FOR_CONNECT)
-    , mConnectResult(0)
-    , mFastOpenNotSupported(false)
+    , mFirstPacketBufLen(0)
   {}
 
   enum {
     CONNECTED,
     WAITING_FOR_CONNECTCONTINUE,
-    WAITING_FOR_FIRST_SEND,
+    COLLECT_DATA_FOR_FIRST_PACKET,
     WAITING_FOR_CONNECT
   } mState;
   PRNetAddr mAddr;
-  PRErrorCode mConnectResult;
-  bool mFastOpenNotSupported;
+  char mFirstPacketBuf[1460];
+  uint16_t mFirstPacketBufLen;
 };
 
 static PRStatus
@@ -52,10 +86,9 @@ TCPFastOpenConnect(PRFileDesc *fd, const PRNetAddr *addr,
     return PR_FAILURE;
   }
 
-  // Remember the address we will call PR_Sendto and for that we need
-  // the address.
+  // Remember the address. It will be used for sendto or connect later.
   memcpy(&secret->mAddr, addr, sizeof(secret->mAddr));
-  secret->mState = TCPFastOpenSecret::WAITING_FOR_FIRST_SEND;
+  secret->mState = TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET;
 
   return PR_SUCCESS;
 }
@@ -73,52 +106,57 @@ TCPFastOpenSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
 
   switch(secret->mState) {
   case TCPFastOpenSecret::CONNECTED:
+    // Before sending new data we need to drain the data collected during tfo.
+    if (secret->mFirstPacketBufLen) {
+      SOCKET_LOG(("TCPFastOpenSend - %d bytes to drain from "
+                  "mFirstPacketBufLen.\n",
+                  secret->mFirstPacketBufLen ));
+      PRInt32 rv = (fd->lower->methods->send)(fd->lower,
+                                              secret->mFirstPacketBuf,
+                                              secret->mFirstPacketBufLen,
+                                              0, // flags
+                                              PR_INTERVAL_NO_WAIT);
+      if (rv <= 0) {
+        return rv;
+      } else {
+        secret->mFirstPacketBufLen -= rv;
+        if (secret->mFirstPacketBufLen) {
+          memmove(secret->mFirstPacketBuf,
+                  secret->mFirstPacketBuf + rv,
+                  secret->mFirstPacketBufLen);
+
+          PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+          return PR_FAILURE;
+        } // if we drained the buffer we can fall through this checks and call
+          // send for the new data
+      }
+    }
+    SOCKET_LOG(("TCPFastOpenSend sending new data.\n"));
     return (fd->lower->methods->send)(fd->lower, buf, amount, flags, timeout);
   case TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE:
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     return -1;
-  case TCPFastOpenSecret::WAITING_FOR_FIRST_SEND:
+  case TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET:
     {
-      PRInt32 rv = (fd->lower->methods->sendto)(fd->lower, buf, amount, flags,
-                                                &secret->mAddr, timeout);
+      int32_t toSend =
+        (secret->mAddr.raw.family == PR_AF_INET) ? TFO_MAX_PACKET_SIZE_IPV4
+                                              : TFO_MAX_PACKET_SIZE_IPV6;
+      MOZ_ASSERT(secret->mFirstPacketBufLen <= toSend);
+      toSend -= secret->mFirstPacketBufLen;
 
-      SOCKET_LOG(("TCPFastOpenSend - sendto result=%d.\n", rv));
-      if (rv > -1) {
-        secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
-        secret->mConnectResult = PR_IN_PROGRESS_ERROR;
-        return rv;
+      SOCKET_LOG(("TCPFastOpenSend: amount of data in the buffer=%d; the amount"
+                  " of additional data that can be stored=%d.\n",
+                  secret->mFirstPacketBufLen, toSend));
+
+      if (!toSend) {
+        PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+        return -1;
       }
 
-      secret->mConnectResult = PR_GetError();
-      SOCKET_LOG(("TCPFastOpenSend - sendto error=%d.\n",
-                  secret->mConnectResult));
-
-      if (secret->mConnectResult == PR_IS_CONNECTED_ERROR) {
-        secret->mState = TCPFastOpenSecret::CONNECTED;
-
-      } else if (secret->mConnectResult == PR_IN_PROGRESS_ERROR) {
-        secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
-
-      } else if (secret->mConnectResult == PR_NOT_IMPLEMENTED_ERROR || // When a windows version does not support Fast Open it will return this error.
-                 secret->mConnectResult == PR_NOT_TCP_SOCKET_ERROR) { // SendTo will return PR_NOT_TCP_SOCKET_ERROR if TCP Fast Open is turned off on Linux.
-        // We can call connect again.
-        secret->mFastOpenNotSupported = true;
-        rv = (fd->lower->methods->connect)(fd->lower, &secret->mAddr, timeout);
-
-        if (rv == PR_SUCCESS) {
-          secret->mConnectResult = PR_IS_CONNECTED_ERROR;
-          secret->mState = TCPFastOpenSecret::CONNECTED;
-
-        } else {
-          secret->mConnectResult = PR_GetError();
-          secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
-
-        }
-      }
-
-      // Error will be picked up by TCPFastOpenConnectResult.
-      PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
-      return -1;
+      toSend = (toSend > amount) ? amount : toSend;
+      memcpy(secret->mFirstPacketBuf + secret->mFirstPacketBufLen, buf, toSend);
+      secret->mFirstPacketBufLen += toSend;
+      return toSend;
     }
   case TCPFastOpenSecret::WAITING_FOR_CONNECT:
     PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
@@ -145,10 +183,34 @@ TCPFastOpenRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
   PRInt32 rv = -1;
   switch(secret->mState) {
   case TCPFastOpenSecret::CONNECTED:
+
+    if (secret->mFirstPacketBufLen) {
+      // TLS will not call write before receiving data from a server, therefore
+      // we need to force sending buffered data even during recv call. Otherwise
+      // It can come to a deadlock (clients waits for response, but the request
+      // is sitting in mFirstPacketBufLen).
+      SOCKET_LOG(("TCPFastOpenRevc - %d bytes to drain from mFirstPacketBuf.\n",
+                  secret->mFirstPacketBufLen ));
+      PRInt32 rv = (fd->lower->methods->send)(fd->lower,
+                                              secret->mFirstPacketBuf,
+                                              secret->mFirstPacketBufLen,
+                                              0, // flags
+                                              PR_INTERVAL_NO_WAIT);
+      if (rv <= 0) {
+        return rv;
+      } else {
+        secret->mFirstPacketBufLen -= rv;
+        if (secret->mFirstPacketBufLen) {
+          memmove(secret->mFirstPacketBuf,
+                  secret->mFirstPacketBuf + rv,
+                  secret->mFirstPacketBufLen);
+        }
+      }
+    }
     rv = (fd->lower->methods->recv)(fd->lower, buf, amount, flags, timeout);
     break;
   case TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE:
-  case TCPFastOpenSecret::WAITING_FOR_FIRST_SEND:
+  case TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET:
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     break;
   case TCPFastOpenSecret::WAITING_FOR_CONNECT:
@@ -176,7 +238,7 @@ TCPFastOpenConnectContinue(PRFileDesc *fd, PRInt16 out_flags)
     rv = PR_SUCCESS;
     break;
   case TCPFastOpenSecret::WAITING_FOR_CONNECT:
-  case TCPFastOpenSecret::WAITING_FOR_FIRST_SEND:
+  case TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET:
     PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
     rv = PR_FAILURE;
     break;
@@ -184,9 +246,7 @@ TCPFastOpenConnectContinue(PRFileDesc *fd, PRInt16 out_flags)
     rv = (fd->lower->methods->connectcontinue)(fd->lower, out_flags);
 
     SOCKET_LOG(("TCPFastOpenConnectContinue result=%d.\n", rv));
-    if (rv == PR_SUCCESS) {
-      secret->mState = TCPFastOpenSecret::CONNECTED;
-    }
+    secret->mState = TCPFastOpenSecret::CONNECTED;
   }
   return rv;
 }
@@ -229,6 +289,20 @@ TCPFastOpenGetpeername (PRFileDesc *fd, PRNetAddr *addr)
   return PR_SUCCESS;
 }
 
+static PRInt16
+TCPFastOpenPoll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
+{
+  MOZ_RELEASE_ASSERT(fd);
+  MOZ_RELEASE_ASSERT(fd->identity == sTCPFastOpenLayerIdentity);
+
+  TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(fd->secret);
+  if (secret->mFirstPacketBufLen) {
+    how_flags |= PR_POLL_WRITE;
+  }
+
+  return fd->lower->methods->poll(fd->lower, how_flags, p_out_flags);
+}
+
 nsresult
 AttachTCPFastOpenIOLayer(PRFileDesc *fd)
 {
@@ -245,6 +319,7 @@ AttachTCPFastOpenIOLayer(PRFileDesc *fd)
     sTCPFastOpenLayerMethods.connectcontinue = TCPFastOpenConnectContinue;
     sTCPFastOpenLayerMethods.close = TCPFastOpenClose;
     sTCPFastOpenLayerMethods.getpeername = TCPFastOpenGetpeername;
+    sTCPFastOpenLayerMethods.poll = TCPFastOpenPoll;
     sTCPFastOpenLayerMethodsPtr = &sTCPFastOpenLayerMethods;
   }
 
@@ -270,8 +345,8 @@ AttachTCPFastOpenIOLayer(PRFileDesc *fd)
 }
 
 void
-TCPFastOpenConnectResult(PRFileDesc * fd, PRErrorCode *err,
-                         bool *fastOpenNotSupported)
+TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
+                  bool *fastOpenNotSupported)
 {
   PRFileDesc *tfoFd = PR_GetIdentitiesLayer(fd, sTCPFastOpenLayerIdentity);
   MOZ_RELEASE_ASSERT(tfoFd);
@@ -279,24 +354,104 @@ TCPFastOpenConnectResult(PRFileDesc * fd, PRErrorCode *err,
 
   TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(tfoFd->secret);
 
-  MOZ_ASSERT(secret->mState != TCPFastOpenSecret::WAITING_FOR_CONNECT);
+  MOZ_ASSERT(secret->mState == TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET);
 
-  *fastOpenNotSupported = secret->mFastOpenNotSupported;
+  *fastOpenNotSupported = false;
+  PRErrorCode result = 0;
 
-  if (secret->mState == TCPFastOpenSecret::WAITING_FOR_FIRST_SEND) {
-    // Because of the way our HttpTransaction dispatch work, it can happened
-    // that connect is not called.
+  if (!secret->mFirstPacketBufLen) {
+    // Because of the way our nsHttpTransaction dispatch work, it can happened
+    // that data has not been written into the socket.
+    // In this case we can just call connect.
     PRInt32 rv = (tfoFd->lower->methods->connect)(tfoFd->lower, &secret->mAddr,
-                                               PR_INTERVAL_NO_WAIT);
+                                                  PR_INTERVAL_NO_WAIT);
     if (rv == PR_SUCCESS) {
-      secret->mConnectResult = PR_IS_CONNECTED_ERROR;
-      secret->mState = TCPFastOpenSecret::CONNECTED;
+      result = PR_IS_CONNECTED_ERROR;
     } else {
-      secret->mConnectResult = PR_GetError();
-      secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
+      result = PR_GetError();
+    }
+  } else {
+    // We have some data ready in the buffer we will send it with the syn
+    // packet.
+    PRInt32 rv = (tfoFd->lower->methods->sendto)(tfoFd->lower,
+                                                 secret->mFirstPacketBuf,
+                                                 secret->mFirstPacketBufLen,
+                                                 0, //flags
+                                                 &secret->mAddr,
+                                                 PR_INTERVAL_NO_WAIT);
+
+    SOCKET_LOG(("TCPFastOpenFinish - sendto result=%d.\n", rv));
+    if (rv > 0) {
+      result = PR_IN_PROGRESS_ERROR;
+      secret->mFirstPacketBufLen -= rv;
+      if (secret->mFirstPacketBufLen) {
+        memmove(secret->mFirstPacketBuf,
+                secret->mFirstPacketBuf + rv,
+                secret->mFirstPacketBufLen);
+      }
+    } else {
+      result = PR_GetError();
+      SOCKET_LOG(("TCPFastOpenFinish - sendto error=%d.\n", result));
+
+      if (result == PR_NOT_IMPLEMENTED_ERROR || // When a windows version does not support Fast Open it will return this error.
+          result == PR_NOT_TCP_SOCKET_ERROR) { // SendTo will return PR_NOT_TCP_SOCKET_ERROR if TCP Fast Open is turned off on Linux.
+        // We can call connect again.
+        *fastOpenNotSupported = true;
+        rv = (fd->lower->methods->connect)(fd->lower, &secret->mAddr, PR_INTERVAL_NO_WAIT);
+
+        if (rv == PR_SUCCESS) {
+          result = PR_IS_CONNECTED_ERROR;
+        } else {
+          result = PR_GetError();
+        }
+      }
     }
   }
-  *err = secret->mConnectResult;
+
+  if (result == PR_IN_PROGRESS_ERROR) {
+    secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
+  } else {
+    // If the error is not PR_IN_PROGRESS_ERROR, change the state to CONNECT so
+    // that recv/send can perform recv/send on the next lower layer and pick up
+    // the real error. This is really important!
+    // The result can also be PR_IS_CONNECTED_ERROR, that should change the
+    // state to CONNECT anyway.
+    secret->mState = TCPFastOpenSecret::CONNECTED;
+  }
+  *err = result;
+}
+
+/* This function returns the size of the remaining free space in the
+ * first_packet_buffer. This will be used by transactions with a tls layer. For
+ * other transactions it is not necessary. The tls transactions make a tls
+ * record before writing to this layer and if the record is too big the part
+ * that does not have place in the mFirstPacketBuf will be saved on the tls
+ * layer. During TFO we cannot send more than TFO_MAX_PACKET_SIZE_IPV4/6 bytes,
+ * so if we have a big tls record, this record is encrypted with 0RTT key,
+ * tls-early-data can be rejected and than we still need to send the rest of the
+ * record.
+ */
+int32_t
+TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd)
+{
+  PRFileDesc *tfoFd = PR_GetIdentitiesLayer(fd, sTCPFastOpenLayerIdentity);
+  MOZ_RELEASE_ASSERT(tfoFd);
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+  TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(tfoFd->secret);
+
+  MOZ_ASSERT(secret->mState == TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET);
+
+  int32_t sizeLeft =
+    (secret->mAddr.raw.family == PR_AF_INET) ? TFO_MAX_PACKET_SIZE_IPV4
+                                          : TFO_MAX_PACKET_SIZE_IPV6;
+  MOZ_ASSERT(secret->mFirstPacketBufLen <= sizeLeft);
+  sizeLeft -= secret->mFirstPacketBufLen;
+
+  SOCKET_LOG(("TCPFastOpenGetBufferSizeLeft=%d.\n", sizeLeft));
+
+  return (sizeLeft > TFO_TLS_RECORD_HEADER_SIZE) ?
+    sizeLeft - TFO_TLS_RECORD_HEADER_SIZE : 0;
 }
 
 }
