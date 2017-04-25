@@ -212,7 +212,7 @@ public class BrowserApp extends GeckoApp
     private static final String BROWSER_SEARCH_TAG = "browser_search";
 
     // Request ID for startActivityForResult.
-    private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
+    public static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
     private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
     public static final int ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK = 3001;
     public static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS = 3002;
