@@ -221,7 +221,7 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
   if (kernel32) {
     try {
       let GetNativeSystemInfo = kernel32.declare("GetNativeSystemInfo",
-                                                 ctypes.default_abi,
+                                                 ctypes.winapi_abi,
                                                  ctypes.void_t,
                                                  SYSTEM_INFO.ptr);
       let winSystemInfo = SYSTEM_INFO();
@@ -323,7 +323,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
           // Get Service pack info
           try {
             let GetVersionEx = kernel32.declare("GetVersionExW",
-                                                ctypes.default_abi,
+                                                ctypes.winapi_abi,
                                                 BOOL,
                                                 OSVERSIONINFOEXW.ptr);
             let winVer = OSVERSIONINFOEXW();
