@@ -26,10 +26,12 @@ interface Selection {
   void      removeRange(Range range);
   [Throws]
   void      removeAllRanges();
-  //void      empty();
+  [Throws, BinaryName="RemoveAllRanges"]
+  void      empty();
   [Throws, BinaryName="collapseJS"]
   void      collapse(Node? node, optional unsigned long offset = 0);
-  //void      setPosition(Node? node, optional unsigned long offset = 0);
+  [Throws, BinaryName="collapseJS"]
+  void      setPosition(Node? node, optional unsigned long offset = 0);
   [Throws, BinaryName="collapseToStartJS"]
   void      collapseToStart();
   [Throws, BinaryName="collapseToEndJS"]
