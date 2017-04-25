@@ -904,12 +904,20 @@ Module::instantiate(JSContext* cx,
     if (!globalSegment)
         return false;
 
-    auto code = cx->make_unique<Code>(Move(codeSegment), *metadata_, maybeBytecode);
+    MutableCode code(js_new<Code>(Move(codeSegment), *metadata_, maybeBytecode));
     if (!code)
         return false;
 
+    // The debug object must be present even when debugging is not enabled: It
+    // provides the lazily created source text for the program, even if that
+    // text is a placeholder message when debugging is not enabled.
+    auto debug = cx->make_unique<DebugState>(code, *metadata_, maybeBytecode);
+    if (!debug)
+        return false;
+
     instance.set(WasmInstanceObject::create(cx,
-                                            Move(code),
+                                            code,
+                                            Move(debug),
                                             Move(globalSegment),
                                             memory,
                                             Move(tables),
