@@ -324,6 +324,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                 urlInputBackgroundView.setTranslationX(-containerMargin);
                 urlInputBackgroundView.setTranslationY(-containerMargin);
                 urlInputContainerView.setAnimationOffset(0f);
+
+                clearView.setAlpha(0);
             }
 
             // Let the URL input use the full width/height and then shrink to the actual size
@@ -336,9 +338,18 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                     .translationY(reverse ? -containerMargin : 0)
                     .setListener(new AnimatorListenerAdapter() {
                         @Override
+                        public void onAnimationStart(Animator animation) {
+                            if (reverse) {
+                                clearView.setAlpha(0);
+                            }
+                        }
+
+                        @Override
                         public void onAnimationEnd(Animator animation) {
                             if (reverse) {
                                 dismiss();
+                            } else {
+                                clearView.setAlpha(1);
                             }
                         }
                     });
@@ -368,12 +379,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         // The darker background appears with an alpha animation
         toolbarBackgroundView.animate()
-                .setDuration(ANIMATION_DURATION)
-                .alpha(reverse ? 0 : 1);
-
-        // And the clear button appears slightly delayed so that it doesn't clash with the menu button
-        clearView.animate()
-                .setStartDelay(100)
                 .setDuration(ANIMATION_DURATION)
                 .alpha(reverse ? 0 : 1);
     }
