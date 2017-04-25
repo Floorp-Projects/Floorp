@@ -465,15 +465,19 @@ CacheRegisterAllocator::fixupAliasedInputs(MacroAssembler& masm)
             if (!loc1.aliasesReg(loc2))
                 continue;
 
+            // loc1 and loc2 alias so we spill one of them. If one is a
+            // ValueReg and the other is a PayloadReg, we have to spill the
+            // PayloadReg: spilling the ValueReg instead would leave its type
+            // register unallocated on 32-bit platforms.
             if (loc1.kind() == OperandLocation::ValueReg) {
                 MOZ_ASSERT_IF(loc2.kind() == OperandLocation::ValueReg,
                               loc1 == loc2);
+                spillOperandToStack(masm, &loc2);
+            } else {
+                MOZ_ASSERT(loc1.kind() == OperandLocation::PayloadReg);
                 spillOperandToStack(masm, &loc1);
-                break;
+                break; // Spilled loc1, so nothing else will alias it.
             }
-
-            MOZ_ASSERT(loc1.kind() == OperandLocation::PayloadReg);
-            spillOperandToStack(masm, &loc2);
         }
     }
 }
