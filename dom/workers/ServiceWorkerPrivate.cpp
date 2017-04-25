@@ -1507,14 +1507,17 @@ private:
     explicit ResumeRequest(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
       : mChannel(aChannel)
     {
+      mChannel->SetFinishResponseStart(TimeStamp::Now());
     }
 
     NS_IMETHOD Run() override
     {
       AssertIsOnMainThread();
 
-      mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
-      mChannel->SaveTimeStampsToUnderlyingChannel();
+      TimeStamp timeStamp = TimeStamp::Now();
+      mChannel->SetHandleFetchEventEnd(timeStamp);
+      mChannel->SetChannelResetEnd(timeStamp);
+      mChannel->SaveTimeStamps();
 
       nsresult rv = mChannel->ResetInterception();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
