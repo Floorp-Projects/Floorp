@@ -31,6 +31,7 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/GetFilesHelper.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
@@ -2421,8 +2422,7 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
 {
   for (uint32_t i = 0; i < aRegistrations.Length(); ++i) {
     BlobURLRegistrationData& registration = aRegistrations[i];
-    RefPtr<BlobImpl> blobImpl =
-      static_cast<BlobChild*>(registration.blobChild())->GetBlobImpl();
+    RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(registration.blob());
     MOZ_ASSERT(blobImpl);
 
     nsHostObjectProtocolHandler::AddDataEntry(registration.url(),
@@ -2961,7 +2961,7 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
       for (uint32_t i = 0; i < aTransfers.Length() && !hasFiles; ++i) {
         auto& items = aTransfers[i].items();
         for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
-          if (items[j].data().type() == IPCDataTransferData::TPBlobChild) {
+          if (items[j].data().type() == IPCDataTransferData::TIPCBlob) {
             hasFiles = true;
           }
         }
@@ -2982,15 +2982,15 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
             Shmem data = item.data().get_Shmem();
             variant->SetAsACString(nsDependentCString(data.get<char>(), data.Size<char>()));
             Unused << DeallocShmem(data);
-          } else if (item.data().type() == IPCDataTransferData::TPBlobChild) {
-            BlobChild* blob = static_cast<BlobChild*>(item.data().get_PBlobChild());
-            RefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
+          } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
+            RefPtr<BlobImpl> blobImpl =
+              IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
             variant->SetAsISupports(blobImpl);
           } else {
             continue;
           }
           // We should hide this data from content if we have a file, and we aren't a file.
-          bool hidden = hasFiles && item.data().type() != IPCDataTransferData::TPBlobChild;
+          bool hidden = hasFiles && item.data().type() != IPCDataTransferData::TIPCBlob;
           dataTransfer->SetDataWithPrincipalFromOtherProcess(
             NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
             nsContentUtils::GetSystemPrincipal(), hidden);
@@ -3072,10 +3072,11 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScop
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
+ContentChild::RecvBlobURLRegistration(const nsCString& aURI,
+                                      const IPCBlob& aBlob,
                                       const IPC::Principal& aPrincipal)
 {
-  RefPtr<BlobImpl> blobImpl = static_cast<BlobChild*>(aBlobChild)->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(blobImpl);
 
   nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
@@ -3152,12 +3153,12 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
   } else {
     MOZ_ASSERT(aResult.type() == GetFilesResponseResult::TGetFilesResponseSuccess);
 
-    const nsTArray<PBlobChild*>& blobs =
-      aResult.get_GetFilesResponseSuccess().blobsChild();
+    const nsTArray<IPCBlob>& ipcBlobs =
+      aResult.get_GetFilesResponseSuccess().blobs();
 
     bool succeeded = true;
-    for (uint32_t i = 0; succeeded && i < blobs.Length(); ++i) {
-      RefPtr<BlobImpl> impl = static_cast<BlobChild*>(blobs[i])->GetBlobImpl();
+    for (uint32_t i = 0; succeeded && i < ipcBlobs.Length(); ++i) {
+      RefPtr<BlobImpl> impl = IPCBlobUtils::Deserialize(ipcBlobs[i]);
       succeeded = child->AppendBlobImpl(impl);
     }
 
@@ -3304,11 +3305,8 @@ ContentChild::RecvFileCreationResponse(const nsID& aUUID,
   } else {
     MOZ_ASSERT(aResult.type() == FileCreationResult::TFileCreationSuccessResult);
 
-    PBlobChild* blobChild =
-      aResult.get_FileCreationSuccessResult().blobChild();
-    MOZ_ASSERT(blobChild);
-
-    RefPtr<BlobImpl> impl = static_cast<BlobChild*>(blobChild)->GetBlobImpl();
+    RefPtr<BlobImpl> impl =
+      IPCBlobUtils::Deserialize(aResult.get_FileCreationSuccessResult().blob());
     helper->ResponseReceived(impl, NS_OK);
   }
 

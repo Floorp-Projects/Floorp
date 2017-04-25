@@ -583,7 +583,11 @@ class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
 class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
 {
   public:
-    explicit AutoAssertGCCallback(JSObject* obj);
+#ifdef DEBUG
+    AutoAssertGCCallback();
+#else
+    AutoAssertGCCallback() {}
+#endif
 };
 
 /**
@@ -646,10 +650,10 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
         JS::IncrementalReadBarrier(thing);
-    else if (js::gc::detail::CellIsMarkedGray(thing.asCell()))
+    else if (js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()))
         JS::UnmarkGrayGCThingRecursively(thing);
 
-    MOZ_ASSERT(!js::gc::detail::CellIsMarkedGray(thing.asCell()));
+    MOZ_ASSERT(!js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()));
 }
 
 } /* namespace gc */

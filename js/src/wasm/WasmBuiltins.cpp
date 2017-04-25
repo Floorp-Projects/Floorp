@@ -120,9 +120,9 @@ WasmHandleDebugTrap()
     }
 
     DebugFrame* frame = iter.debugFrame();
-    Code& code = iter.instance()->code();
-    MOZ_ASSERT(code.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
-    if (code.stepModeEnabled(frame->funcIndex())) {
+    DebugState& debug = iter.instance()->debug();
+    MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
+    if (debug.stepModeEnabled(frame->funcIndex())) {
         RootedValue result(cx, UndefinedValue());
         JSTrapStatus status = Debugger::onSingleStep(cx, &result);
         if (status == JSTRAP_RETURN) {
@@ -133,7 +133,7 @@ WasmHandleDebugTrap()
         if (status != JSTRAP_CONTINUE)
             return false;
     }
-    if (code.hasBreakpointSite(site->lineOrBytecode())) {
+    if (debug.hasBreakpointSite(site->lineOrBytecode())) {
         RootedValue result(cx, UndefinedValue());
         JSTrapStatus status = Debugger::onTrap(cx, &result);
         if (status == JSTRAP_RETURN) {

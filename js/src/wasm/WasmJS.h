@@ -184,7 +184,8 @@ class WasmInstanceObject : public NativeObject
     static bool construct(JSContext*, unsigned, Value*);
 
     static WasmInstanceObject* create(JSContext* cx,
-                                      UniquePtr<wasm::Code> code,
+                                      RefPtr<const wasm::Code> code,
+                                      UniquePtr<wasm::DebugState> debug,
                                       UniquePtr<wasm::GlobalSegment> globals,
                                       HandleWasmMemoryObject memory,
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,

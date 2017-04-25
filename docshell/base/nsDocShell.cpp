@@ -4746,11 +4746,12 @@ nsDocShell::LoadURI(const char16_t* aURI,
                     uint32_t aLoadFlags,
                     nsIURI* aReferringURI,
                     nsIInputStream* aPostStream,
-                    nsIInputStream* aHeaderStream)
+                    nsIInputStream* aHeaderStream,
+                    nsIPrincipal* aTriggeringPrincipal)
 {
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
                             mozilla::net::RP_Unset, aPostStream,
-                            aHeaderStream, nullptr, nullptr);
+                            aHeaderStream, nullptr, aTriggeringPrincipal);
 }
 
 NS_IMETHODIMP
@@ -7926,11 +7927,16 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           // can increment counts from the search engine
           MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
 
-          return LoadURI(newSpecW.get(),  // URI string
-                         LOAD_FLAGS_NONE, // Load flags
-                         nullptr,         // Referring URI
-                         newPostData,     // Post data stream
-                         nullptr);        // Headers stream
+          nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+          nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
+            ? loadInfo->TriggeringPrincipal()
+            : nsContentUtils::GetSystemPrincipal();
+          return LoadURI(newSpecW.get(),       // URI string
+                         LOAD_FLAGS_NONE,      // Load flags
+                         nullptr,              // Referring URI
+                         newPostData,          // Post data stream
+                         nullptr,              // Headers stream
+                         triggeringPrincipal); // TriggeringPrincipal
         }
       }
     }
