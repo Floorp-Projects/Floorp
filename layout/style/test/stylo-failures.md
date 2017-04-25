@@ -131,14 +131,6 @@ to mochitest command.
   * test_inherit_computation.html `border-image` [2]
   * test_initial_computation.html `border-image` [4]
 * Unimplemented prefixed properties:
-  * -moz-border-*-colors bug 1348173
-    * test_compute_data_with_start_struct.html `-colors` [8]
-    * test_inherit_computation.html `-colors` [8]
-    * test_inherit_storage.html `-colors` [12]
-    * test_initial_computation.html `-colors` [16]
-    * test_initial_storage.html `-colors` [24]
-    * test_value_storage.html `-colors` [96]
-    * test_shorthand_property_getters.html `-colors` [1]
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
