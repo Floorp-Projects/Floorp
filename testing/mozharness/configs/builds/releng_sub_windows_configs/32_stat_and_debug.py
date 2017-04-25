@@ -41,5 +41,6 @@ clang.manifest",
     },
     'src_mozconfig': 'browser/config/mozconfigs/win32/debug-static-analysis',
     'purge_minsize': 9,
+    'artifact_flag_build_variant_in_try': None,
     #######################
 }
