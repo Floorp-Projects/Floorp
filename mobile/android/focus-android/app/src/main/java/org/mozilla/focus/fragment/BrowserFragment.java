@@ -34,6 +34,7 @@ import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
@@ -241,6 +242,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void onDownloadStart(Download download) {
+                if (!AppConstants.supportsDownloadingFiles()) {
+                    return;
+                }
+
                 if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                     // We do have the permission to write to the external storage. Proceed with the download.
                     queueDownload(download);

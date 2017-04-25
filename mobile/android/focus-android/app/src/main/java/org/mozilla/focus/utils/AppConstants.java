@@ -26,4 +26,9 @@ public final class AppConstants {
     public static boolean isReleaseBuild() {
         return BUILD_TYPE_RELEASE.equals(BuildConfig.BUILD_TYPE);
     }
+
+    public static boolean supportsDownloadingFiles() {
+        // This feature is not on the roadmap for v1 - but let's keep it enabled in dev builds. (#14)
+        return isDevBuild();
+    }
 }
