@@ -212,13 +212,8 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
 {
   // XXXbholley: nsStyleSet does visited handling here.
 
-  // XXXbholley: Figure out the correct thing to pass here. Does this fixup
-  // duplicate something that servo already does?
-  // See bug 1344914.
-  bool skipFixup = false;
-
   RefPtr<nsStyleContext> result = NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                                                     aPseudoType, Move(aComputedValues), skipFixup);
+                                                     aPseudoType, Move(aComputedValues));
 
   // Set the body color on the pres context. See nsStyleSet::GetContext
   if (aElementForAnimation &&
@@ -495,12 +490,8 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 #endif
 
-  // FIXME(bz, bug 1344914) We should really GetContext here.
-  // FIXME(heycam) We pass in false for the "skip fixup" argument, since it
-  // does nothing for nsStyleContexts backed by ServoComputedValues.
-  return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                            CSSPseudoElementType::InheritingAnonBox,
-                            computedValues.forget(), false);
+  return GetContext(computedValues.forget(), aParentContext, aPseudoTag,
+                    CSSPseudoElementType::InheritingAnonBox, nullptr);
 }
 
 already_AddRefed<nsStyleContext>

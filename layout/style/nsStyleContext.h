@@ -90,8 +90,7 @@ public:
                  nsPresContext* aPresContext,
                  nsIAtom* aPseudoTag,
                  mozilla::CSSPseudoElementType aPseudoType,
-                 already_AddRefed<ServoComputedValues> aComputedValues,
-                 bool aSkipParentDisplayBasedStyleFixup);
+                 already_AddRefed<ServoComputedValues> aComputedValues);
 
   void* operator new(size_t sz, nsPresContext* aPresContext);
   void Destroy();
@@ -551,7 +550,7 @@ private:
                  mozilla::CSSPseudoElementType aPseudoType);
 
   // Helper post-contruct hook.
-  void FinishConstruction(bool aSkipParentDisplayBasedStyleFixup);
+  void FinishConstruction();
 
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
@@ -560,6 +559,8 @@ private:
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
   void SetStyleBits();
+
+  // Only called for Gecko-backed nsStyleContexts.
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
 
   const void* StyleStructFromServoComputedValues(nsStyleStructID aSID) {
@@ -811,7 +812,6 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsPresContext* aPresContext,
                    nsIAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,
-                   already_AddRefed<ServoComputedValues> aComputedValues,
-                   bool aSkipParentDisplayBasedStyleFixup);
+                   already_AddRefed<ServoComputedValues> aComputedValues);
 
 #endif
