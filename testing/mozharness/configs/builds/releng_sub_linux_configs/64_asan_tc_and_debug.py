@@ -45,6 +45,5 @@ asan.manifest",
 /tools/python27-mercurial/bin:/home/cltbld/bin',
     },
     'src_mozconfig': 'browser/config/mozconfigs/linux64/debug-asan',
-    'artifact_flag_build_variant_in_try': None,
     #######################
 }
