@@ -38,6 +38,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
@@ -1999,10 +2000,16 @@ public class BrowserApp extends GeckoApp
                 final String name = message.getString("name");
                 final String startUrl = message.getString("start_url");
                 final String manifestPath = message.getString("manifest_path");
-                final Bitmap icon = FaviconDecoder
-                    .decodeDataURI(getContext(), message.getString("icon"))
-                    .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                createAppShortcut(name, startUrl, manifestPath, icon);
+                final LoadFaviconResult loadIconResult = FaviconDecoder
+                    .decodeDataURI(getContext(), message.getString("icon"));
+                if (loadIconResult != null) {
+                    final Bitmap icon = loadIconResult
+                        .getBestBitmap(GeckoAppShell.getPreferredIconSize());
+                    createAppShortcut(name, startUrl, manifestPath, icon);
+                } else {
+                    Log.e(LOGTAG, "Failed to load icon!");
+                }
+
                 break;
 
             case "Website:AppInstallFailed":

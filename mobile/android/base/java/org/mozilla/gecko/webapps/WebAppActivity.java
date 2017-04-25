@@ -34,6 +34,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -233,11 +234,14 @@ public class WebAppActivity extends GeckoApp {
 
     private Bitmap readIconFromManifest(JSONObject manifest) {
         final String iconStr = manifest.optString("cached_icon", null);
-        if (iconStr != null) {
-            return FaviconDecoder
-                    .decodeDataURI(getContext(), iconStr)
-                    .getBestBitmap(GeckoAppShell.getPreferredIconSize());
+        if (iconStr == null) {
+            return null;
         }
-        return null;
+        final LoadFaviconResult loadIconResult = FaviconDecoder
+            .decodeDataURI(getContext(), iconStr);
+        if (loadIconResult == null) {
+            return null;
+        }
+        return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
     }
 }
