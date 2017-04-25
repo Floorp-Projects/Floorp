@@ -231,7 +231,8 @@ public class GeckoView extends LayerView
                 handlePromptEvent(GeckoView.this, message, callback);
             } else if ("GeckoView:SecurityChanged".equals(event)) {
                 if (mProgressListener != null) {
-                    mProgressListener.onSecurityChange(GeckoView.this, message.getInt("status"));
+                    int state = message.getInt("status") & ProgressListener.STATE_ALL;
+                    mProgressListener.onSecurityChange(GeckoView.this, state);
                 }
             }
         }
@@ -587,7 +588,7 @@ public class GeckoView extends LayerView
     * This will replace the current handler.
     * @param navigation An implementation of NavigationListener.
     */
-    public void setNavigationDelegate(NavigationListener listener) {
+    public void setNavigationListener(NavigationListener listener) {
         if (mNavigationListener == listener) {
             return;
         }
@@ -1025,6 +1026,7 @@ public class GeckoView extends LayerView
         static final int STATE_IS_BROKEN = 1;
         static final int STATE_IS_SECURE = 2;
         static final int STATE_IS_INSECURE = 4;
+        /* package */ final int STATE_ALL = STATE_IS_BROKEN | STATE_IS_SECURE | STATE_IS_INSECURE;
 
         /**
         * A View has started loading content from the network.
