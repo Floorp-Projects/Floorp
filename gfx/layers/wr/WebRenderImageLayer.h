@@ -22,6 +22,7 @@ public:
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   virtual void ClearCachedResources() override;
+
 protected:
   virtual ~WebRenderImageLayer();
 
@@ -29,6 +30,9 @@ protected:
   {
     return static_cast<WebRenderLayerManager*>(mManager);
   }
+
+  void OnPipelineIdAllocated() {}
+  void OnPipelineIdFailed() {}
 
 public:
   Layer* GetLayer() override { return this; }
@@ -42,6 +46,8 @@ protected:
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
   CompositableType mImageClientTypeContainer;
+  Maybe<wr::PipelineId> mPipelineId;
+  MozPromiseRequestHolder<PipelineIdPromise> mPipelineIdRequest;
 };
 
 } // namespace layers
