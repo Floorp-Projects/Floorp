@@ -276,4 +276,25 @@ private:
   JS::UniqueChars mTimingJSON;
 };
 
+class GCMinorMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  GCMinorMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                       const mozilla::TimeStamp& aEndTime,
+                       JS::UniqueChars&& aTimingData)
+   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
+     mTimingData(mozilla::Move(aTimingData))
+  {}
+
+  virtual ~GCMinorMarkerPayload() {};
+
+  void StreamPayload(SpliceableJSONWriter& aWriter,
+                     const mozilla::TimeStamp& aStartTime,
+                     UniqueStacks& aUniqueStacks) override;
+
+private:
+  JS::UniqueChars mTimingData;
+};
+
+
 #endif // PROFILER_MARKERS_H

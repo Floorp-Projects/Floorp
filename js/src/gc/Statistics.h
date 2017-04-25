@@ -355,6 +355,9 @@ struct Statistics
     // Return JSON for the timings of just the given slice.
     UniqueChars renderJsonSlice(size_t sliceNum) const;
 
+    // Return JSON for the previous nursery collection.
+    UniqueChars renderNurseryJson(JSRuntime* rt) const;
+
   private:
     JSRuntime* runtime;
 
