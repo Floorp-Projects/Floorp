@@ -2041,9 +2041,16 @@ StateObject::HandleResumeVideoDecoding(const TimeUnit& aTarget)
   // Start video-only seek to the current time.
   SeekJob seekJob;
 
-  const SeekTarget::Type type = mMaster->HasAudio()
-                                ? SeekTarget::Type::Accurate
-                                : SeekTarget::Type::PrevSyncPoint;
+  // We use fastseek to optimize the resuming time.
+  // FastSeek is only used for video-only media since we don't need to worry
+  // about A/V sync.
+  // Don't use fastSeek if we want to seek to the end because it might seek to a
+  // keyframe before the last frame (if the last frame itself is not a keyframe)
+  // and we always want to present the final frame to the user when seeking to
+  // the end.
+  const auto type = mMaster->HasAudio() || aTarget == mMaster->Duration()
+                    ? SeekTarget::Type::Accurate
+                    : SeekTarget::Type::PrevSyncPoint;
 
   seekJob.mTarget.emplace(aTarget, type, true /* aVideoOnly */);
 
