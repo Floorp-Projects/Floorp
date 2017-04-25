@@ -218,11 +218,6 @@ var whitelist = new Set([
    platforms: ["linux"]},
   // Bug 1348559
   {file: "chrome://pippki/content/resetpassword.xul"},
-
-  // Bug 1344257
-  {file: "resource://gre-resources/checkmark.svg"},
-  {file: "resource://gre-resources/indeterminate-checkmark.svg"},
-  {file: "resource://gre-resources/radio.svg"},
   // Bug 1351078
   {file: "resource://gre/modules/Battery.jsm"},
   // Bug 1351070
