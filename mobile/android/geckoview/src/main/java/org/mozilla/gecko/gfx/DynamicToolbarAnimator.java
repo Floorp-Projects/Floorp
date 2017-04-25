@@ -157,6 +157,11 @@ public class DynamicToolbarAnimator {
             for (PinReason reason : pinFlags) {
               mCompositor.setPinned(true, reason.mValue);
             }
+        } else if ((mCompositor != null) && !mCompositorControllerOpen) {
+            // Ask the UiCompositorControllerChild if it is open since the open message can
+            // sometimes be sent to a different instance of the LayerView such as when
+            // Fennec is being used in custom tabs.
+            mCompositor.sendToolbarAnimatorMessage(LayerView.IS_COMPOSITOR_CONTROLLER_OPEN);
         }
     }
 
