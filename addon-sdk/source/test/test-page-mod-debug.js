@@ -10,10 +10,6 @@ const { testPageMod, handleReadyState, openNewTab,
 const { cleanUI, after } = require("sdk/test/utils");
 const { open, getFrames, getMostRecentBrowserWindow, getInnerId } = require("sdk/window/utils");
 
-const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { require: devtoolsRequire } = devtools;
-const contentGlobals = devtoolsRequire("devtools/server/content-globals");
-
 // The following adds Debugger constructor to the global namespace.
 const { addDebuggerToGlobal } = require('resource://gre/modules/jsdebugger.jsm');
 addDebuggerToGlobal(this);
@@ -41,18 +37,6 @@ exports.testDebugMetadata = function(assert, done) {
           return false;
         }
       }), "one of the globals is a content script");
-      done();
-    }
-  );
-};
-
-exports.testDevToolsExtensionsGetContentGlobals = function(assert, done) {
-  let mods = testPageMod(assert, done, "about:", [{
-      include: "about:",
-      contentScriptWhen: "start",
-      contentScript: "null;",
-    }], function(win, done) {
-      assert.equal(contentGlobals.getContentGlobals({ 'inner-window-id': getInnerId(win) }).length, 1);
       done();
     }
   );
