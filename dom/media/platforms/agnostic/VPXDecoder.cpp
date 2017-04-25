@@ -22,7 +22,7 @@ namespace mozilla {
 using namespace gfx;
 using namespace layers;
 
-static VPXDecoder::Codec MimeTypeToCodec(const nsACString& aMimeType)
+static int MimeTypeToCodec(const nsACString& aMimeType)
 {
   if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
     return VPXDecoder::Codec::VP8;
@@ -31,13 +31,13 @@ static VPXDecoder::Codec MimeTypeToCodec(const nsACString& aMimeType)
   } else if (aMimeType.EqualsLiteral("video/vp9")) {
     return VPXDecoder::Codec::VP9;
   }
-  return VPXDecoder::Codec::Unknown;
+  return -1;
 }
 
 static nsresult
 InitContext(vpx_codec_ctx_t* aCtx,
             const VideoInfo& aInfo,
-            const VPXDecoder::Codec aCodec)
+            const int aCodec)
 {
   int decode_threads = 2;
 
