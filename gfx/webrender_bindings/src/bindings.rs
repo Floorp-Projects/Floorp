@@ -76,6 +76,22 @@ fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
     }
 }
 
+fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
+    if ptr.is_null() {
+        &[]
+    } else {
+        unsafe { slice::from_raw_parts(ptr, len) }
+    }
+}
+
+fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
+    if ptr.is_null() {
+        &mut []
+    } else {
+        unsafe { slice::from_raw_parts_mut(ptr, len) }
+    }
+}
+
 #[repr(C)]
 pub struct WrByteSlice {
     buffer: *const u8,
@@ -91,7 +107,7 @@ impl WrByteSlice {
     }
 
     pub fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.buffer, self.len) }
+        make_slice(self.buffer, self.len)
     }
 }
 
@@ -111,7 +127,7 @@ impl MutByteSlice {
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        unsafe { slice::from_raw_parts_mut(self.buffer, self.len) }
+        make_slice_mut(self.buffer, self.len)
     }
 }
 
@@ -570,7 +586,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
                     v0: image.v0,
                     u1: image.u1,
                     v1: image.v1,
-                    source: ExternalImageSource::RawData(unsafe { slice::from_raw_parts(image.buff, image.size) }),
+                    source: ExternalImageSource::RawData(make_slice(image.buff, image.size)),
                 }
             },
         }
@@ -762,7 +778,7 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut WrRenderer,
 
     renderer.gl().flush();
 
-    let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
+    let mut slice = make_slice_mut(dst_buffer, buffer_size);
     renderer.gl()
             .read_pixels_into_buffer(0,
                                      0,
@@ -1008,13 +1024,13 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
     // but I suppose it is a good default.
     let preserve_frame_state = true;
 
-    let dl_slice = slice::from_raw_parts(dl_data, dl_size);
+    let dl_slice = make_slice(dl_data, dl_size);
     let mut dl_vec = Vec::new();
     // XXX: see if we can get rid of the copy here
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    let aux_slice = slice::from_raw_parts(aux_data, aux_size);
+    let aux_slice = make_slice(aux_data, aux_size);
     let mut aux_vec = Vec::new();
     // XXX: see if we can get rid of the copy here
     aux_vec.extend_from_slice(aux_slice);
@@ -1059,7 +1075,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
     };
 
     if transform_count > 0 {
-        let transform_slice = unsafe { slice::from_raw_parts(transform_array, transform_count) };
+        let transform_slice = make_slice(transform_array, transform_count);
 
         for element in transform_slice.iter() {
             let prop = PropertyValue {
@@ -1072,7 +1088,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
     }
 
     if opacity_count > 0 {
-        let opacity_slice = unsafe { slice::from_raw_parts(opacity_array, opacity_count) };
+        let opacity_slice = make_slice(opacity_array, opacity_count);
 
         for element in opacity_slice.iter() {
             let prop = PropertyValue {
@@ -1103,7 +1119,7 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut WrAPI,
                                       index: u32) {
     assert!(unsafe { is_in_compositor_thread() });
 
-    let font_slice = unsafe { slice::from_raw_parts(font_buffer, buffer_size as usize) };
+    let font_slice = make_slice(font_buffer, buffer_size);
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
@@ -1215,7 +1231,7 @@ pub extern "C" fn wr_dp_new_clip_region(state: &mut WrState,
     assert!(unsafe { is_in_main_thread() });
 
     let main = main.into();
-    let complex_slice = unsafe { slice::from_raw_parts(complex, complex_count) };
+    let complex_slice = make_slice(complex, complex_count);
     let complex_vector = complex_slice.iter().map(|x| x.into()).collect();
     let mask = unsafe { image_mask.as_ref() }.map(|x| x.into());
 
@@ -1341,7 +1357,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   glyph_size: f32) {
     assert!(unsafe { is_in_main_thread() });
 
-    let glyph_slice = unsafe { slice::from_raw_parts(glyphs, glyph_count as usize) };
+    let glyph_slice = make_slice(glyphs, glyph_count as usize);
     let glyph_vector: Vec<_> = glyph_slice.iter().map(|x| x.into()).collect();
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
@@ -1420,7 +1436,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              outset: WrSideOffsets2Df32) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
     let border_details = BorderDetails::Gradient(GradientBorder {
@@ -1451,7 +1467,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     outset: WrSideOffsets2Df32) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
     let border_details =
@@ -1483,7 +1499,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
     let gradient = state.frame_builder
@@ -1513,7 +1529,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
     let gradient = state.frame_builder
