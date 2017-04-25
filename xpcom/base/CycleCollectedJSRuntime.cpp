@@ -555,6 +555,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
 void
 CycleCollectedJSRuntime::Shutdown(JSContext* cx)
 {
+  JS_RemoveExtraGCRootsTracer(cx, TraceBlackJS, this);
+  JS_RemoveExtraGCRootsTracer(cx, TraceGrayJS, this);
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
