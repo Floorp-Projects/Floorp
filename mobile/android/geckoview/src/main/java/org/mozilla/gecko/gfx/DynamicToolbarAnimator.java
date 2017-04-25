@@ -154,6 +154,11 @@ public class DynamicToolbarAnimator {
     private void dumpStateToCompositor() {
         if ((mCompositor != null) && mCompositorControllerOpen) {
             mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
+            if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
+            } else {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
+            }
             for (PinReason reason : pinFlags) {
               mCompositor.setPinned(true, reason.mValue);
             }
