@@ -49,8 +49,9 @@ BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
 #endif
   }
 
-  return AppendVoidPtr((void*)utf8Str.Data(),
-                       utf8Str.Length());
+  RefPtr<StringBlobImpl> blobImpl =
+    StringBlobImpl::Create(utf8Str, EmptyString());
+  return AppendBlobImpl(blobImpl);
 }
 
 nsresult
