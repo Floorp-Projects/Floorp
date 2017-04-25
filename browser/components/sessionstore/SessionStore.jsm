@@ -3138,9 +3138,7 @@ var SessionStoreInternal = {
     };
 
     // Collect and store session cookies.
-    TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
     state.cookies = SessionCookies.collect();
-    TelemetryStopwatch.finish("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
 
     if (Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
       // get open Scratchpad window states too
