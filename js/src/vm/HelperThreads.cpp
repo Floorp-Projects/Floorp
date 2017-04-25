@@ -121,6 +121,7 @@ FinishOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadSt
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!HelperThreadState().ionFinishedList(lock).append(builder))
         oomUnsafe.crash("FinishOffThreadIonCompile");
+    builder->script()->zoneFromAnyThread()->group()->numFinishedBuilders++;
 }
 
 static JSRuntime*
@@ -222,6 +223,7 @@ js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardL
     for (size_t i = 0; i < finished.length(); i++) {
         jit::IonBuilder* builder = finished[i];
         if (CompiledScriptMatches(selector, builder->script())) {
+            builder->script()->zone()->group()->numFinishedBuilders--;
             jit::FinishOffThreadBuilder(nullptr, builder, lock);
             HelperThreadState().remove(finished, &i);
         }

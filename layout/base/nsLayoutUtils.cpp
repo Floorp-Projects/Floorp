@@ -6786,6 +6786,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
 
 /* static */ DrawResult
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
+                                   nsIFrame*           aForFrame,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
                                    const CSSIntSize&   aImageSize,
@@ -6802,7 +6803,8 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage",
                  js::ProfileEntry::Category::GRAPHICS);
 
-  const Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(aImageSize))));
+  Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(aImageSize))));
+  SVGImageContext::MaybeStoreContextPaint(svgContext, aForFrame, aImage);
 
   /* Fast path when there is no need for image spacing */
   if (aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height) {

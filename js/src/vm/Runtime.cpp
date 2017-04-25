@@ -506,12 +506,13 @@ static bool
 InvokeInterruptCallback(JSContext* cx)
 {
     MOZ_ASSERT(cx->requestDepth >= 1);
+    MOZ_ASSERT(!cx->compartment()->isAtomsCompartment());
 
     cx->runtime()->gc.gcIfRequested();
 
     // A worker thread may have requested an interrupt after finishing an Ion
     // compilation.
-    jit::AttachFinishedCompilations(cx);
+    jit::AttachFinishedCompilations(cx->zone()->group(), cx);
 
     // Important: Additional callbacks can occur inside the callback handler
     // if it re-enters the JS engine. The embedding must ensure that the
