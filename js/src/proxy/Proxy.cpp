@@ -712,7 +712,9 @@ proxy_Finalize(FreeOp* fop, JSObject* obj)
 
     MOZ_ASSERT(obj->is<ProxyObject>());
     obj->as<ProxyObject>().handler()->finalize(fop, obj);
-    js_free(js::detail::GetProxyDataLayout(obj)->values);
+
+    if (!obj->as<ProxyObject>().usingInlineValueArray())
+        js_free(js::detail::GetProxyDataLayout(obj)->values);
 }
 
 static void
