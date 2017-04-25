@@ -245,6 +245,11 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
 
         final String resourceHost = resourceURI.getHost();
         final String pageHost = pageURI.getHost();
+
+        if (pageHost.equals(resourceHost)) {
+            return false;
+        }
+
         if (previouslyMatched.contains(resourceURLString)) {
             return true;
         }
