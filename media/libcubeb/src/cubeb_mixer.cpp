@@ -31,7 +31,8 @@ cubeb_channel_layout cubeb_channel_map_to_layout(cubeb_channel_map const * chann
 {
   uint32_t channel_mask = 0;
   for (uint8_t i = 0 ; i < channel_map->channels ; ++i) {
-    if (channel_map->map[i] == CHANNEL_INVALID) {
+    if (channel_map->map[i] == CHANNEL_INVALID ||
+        channel_map->map[i] == CHANNEL_UNMAPPED) {
       return CUBEB_LAYOUT_UNDEFINED;
     }
     channel_mask |= 1 << channel_map->map[i];
