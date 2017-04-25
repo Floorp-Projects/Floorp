@@ -73,16 +73,11 @@ def add_build_dependency(config, job, taskdesc):
     if len(matches) > 1:
         raise Exception("More than one build platform found for '{}'.".format(key))
 
-    label = matches[0]
+    label = matches[0]['label']
+    target = matches[0]['target-name']
     deps = taskdesc.setdefault('dependencies', {})
     deps.update({'build': label})
 
-    if 'macosx' in label:
-        target = 'target.dmg'
-    elif 'android' in label:
-        target = 'target.apk'
-    else:
-        target = 'target.tar.bz2'
     build_artifact = 'public/build/{}'.format(target)
     installer_url = ARTIFACT_URL.format('<build>', build_artifact)
 
