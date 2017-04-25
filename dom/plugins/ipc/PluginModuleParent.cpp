@@ -31,6 +31,7 @@
 #include "nsPrintfCString.h"
 #include "prsystem.h"
 #include "PluginQuirks.h"
+#include "gfxPlatform.h"
 #include "GeckoProfiler.h"
 #include "nsPluginTags.h"
 #include "nsUnicharUtils.h"
@@ -2800,7 +2801,8 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         // For all builds that use async rendering force use of the accelerated
         // direct path for flash objects that have wmode=window or no wmode
         // specified.
-        if (supportsAsyncRender && supportsForceDirect) {
+        if (supportsAsyncRender && supportsForceDirect &&
+            gfxWindowsPlatform::GetPlatform()->SupportsPluginDirectDXGIDrawing()) {
             ForceDirect(names, values);
         }
 #endif
