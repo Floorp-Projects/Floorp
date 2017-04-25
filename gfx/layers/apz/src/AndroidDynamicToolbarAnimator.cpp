@@ -278,6 +278,10 @@ AndroidDynamicToolbarAnimator::ToolbarAnimatorMessageFromUI(int32_t aMessage)
   case REQUEST_HIDE_TOOLBAR_ANIMATED:
     NotifyControllerPendingAnimation(MOVE_TOOLBAR_UP, eAnimate);
     break;
+  case TOOLBAR_SNAPSHOT_FAILED:
+    mToolbarState = eToolbarVisible;
+    NotifyControllerSnapshotFailed();
+    break;
   default:
     break;
   }
@@ -891,6 +895,19 @@ AndroidDynamicToolbarAnimator::GetFixedLayerMarginsBottom()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return mCompositorToolbarHeight - (mCompositorSurfaceHeight - mCompositorCompositionSize.height);
+}
+
+void
+AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed()
+{
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed));
+    return;
+  }
+
+  mControllerToolbarHeight = 0;
+  mControllerState = eNothingPending;
+  UpdateCompositorToolbarHeight(mControllerToolbarHeight);
 }
 
 } // namespace layers
