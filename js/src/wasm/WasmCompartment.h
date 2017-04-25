@@ -77,7 +77,7 @@ class Compartment
     // This methods returns the wasm::Code containing the given pc, if any
     // exists in the compartment.
 
-    Code* lookupCode(const void* pc) const;
+    const Code* lookupCode(const void* pc) const;
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 

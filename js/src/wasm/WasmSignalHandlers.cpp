@@ -834,7 +834,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    Code* code = activation->compartment()->wasm.lookupCode(pc);
+    const Code* code = activation->compartment()->wasm.lookupCode(pc);
     if (!code)
         return false;
 

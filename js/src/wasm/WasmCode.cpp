@@ -54,15 +54,22 @@ using JS::GenericNaN;
 static Atomic<uint32_t> wasmCodeAllocations(0);
 static const uint32_t MaxWasmCodeAllocations = 16384;
 
+static uint32_t
+RoundupCodeLength(uint32_t codeLength)
+{
+    // codeLength is a multiple of the system's page size, but not necessarily
+    // a multiple of ExecutableCodePageSize.
+    MOZ_ASSERT(codeLength % gc::SystemPageSize() == 0);
+    return JS_ROUNDUP(codeLength, ExecutableCodePageSize);
+}
+
 static uint8_t*
 AllocateCodeSegment(JSContext* cx, uint32_t codeLength)
 {
+    codeLength = RoundupCodeLength(codeLength);
+
     if (wasmCodeAllocations >= MaxWasmCodeAllocations)
         return nullptr;
-
-    // codeLength is a multiple of the system's page size, but not necessarily
-    // a multiple of ExecutableCodePageSize.
-    codeLength = JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 
     void* p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
 
@@ -87,8 +94,18 @@ AllocateCodeSegment(JSContext* cx, uint32_t codeLength)
     return (uint8_t*)p;
 }
 
+static void
+FreeCodeSegment(uint8_t* bytes, uint32_t codeLength)
+{
+    codeLength = RoundupCodeLength(codeLength);
+#ifdef MOZ_VTUNE
+    vtune::UnmarkBytes(bytes, codeLength);
+#endif
+    DeallocateExecutableMemory(bytes, codeLength);
+}
+
 static bool
-StaticallyLink(CodeSegment& cs, const LinkData& linkData)
+StaticallyLink(const CodeSegment& cs, const LinkData& linkData)
 {
     for (LinkData::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = cs.base() + link.patchAtOffset;
@@ -120,7 +137,7 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData)
 }
 
 static void
-SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
+SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
 {
     bool enabled = false;
 #ifdef JS_ION_PERF
@@ -167,55 +184,52 @@ SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata&
     return;
 }
 
-/* static */ UniqueCodeSegment
+/* static */ UniqueConstCodeSegment
 CodeSegment::create(JSContext* cx,
-                    const Bytes& bytecode,
+                    const Bytes& codeBytes,
+                    const SharedBytes& bytecode,
                     const LinkData& linkData,
-                    const Metadata& metadata,
-                    HandleWasmMemoryObject memory)
+                    const Metadata& metadata)
 {
-    MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
-    MOZ_ASSERT(linkData.functionCodeLength < bytecode.length());
+    MOZ_ASSERT(codeBytes.length() % gc::SystemPageSize() == 0);
+    MOZ_ASSERT(linkData.functionCodeLength < codeBytes.length());
 
     // These should always exist and should never be first in the code segment.
     MOZ_ASSERT(linkData.interruptOffset != 0);
     MOZ_ASSERT(linkData.outOfBoundsOffset != 0);
     MOZ_ASSERT(linkData.unalignedAccessOffset != 0);
 
-    auto cs = cx->make_unique<CodeSegment>();
-    if (!cs)
+    uint8_t* codeBase = AllocateCodeSegment(cx, codeBytes.length());
+    if (!codeBase)
         return nullptr;
 
-    cs->bytes_ = AllocateCodeSegment(cx, bytecode.length());
-    if (!cs->bytes_)
+    auto cs = cx->make_unique<const CodeSegment>(codeBase, linkData.functionCodeLength,
+                                                 codeBytes.length(),
+                                                 codeBase + linkData.interruptOffset,
+                                                 codeBase + linkData.outOfBoundsOffset,
+                                                 codeBase + linkData.unalignedAccessOffset);
+    if (!cs) {
+        FreeCodeSegment(codeBase, codeBytes.length());
         return nullptr;
-
-    uint8_t* codeBase = cs->base();
-
-    cs->functionLength_ = linkData.functionCodeLength;
-    cs->length_ = bytecode.length();
-    cs->interruptCode_ = codeBase + linkData.interruptOffset;
-    cs->outOfBoundsCode_ = codeBase + linkData.outOfBoundsOffset;
-    cs->unalignedAccessCode_ = codeBase + linkData.unalignedAccessOffset;
+    }
 
     {
         JitContext jcx(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread()));
         AutoFlushICache afc("CodeSegment::create");
         AutoFlushICache::setRange(uintptr_t(codeBase), cs->length());
 
-        memcpy(codeBase, bytecode.begin(), bytecode.length());
+        memcpy(codeBase, codeBytes.begin(), codeBytes.length());
         if (!StaticallyLink(*cs, linkData))
             return nullptr;
     }
 
     // Reprotect the whole region to avoid having separate RW and RX mappings.
-    uint32_t size = JS_ROUNDUP(cs->length(), ExecutableCodePageSize);
-    if (!ExecutableAllocator::makeExecutable(codeBase, size)) {
+    if (!ExecutableAllocator::makeExecutable(codeBase, RoundupCodeLength(cs->length()))) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    SendCodeRangesToProfiler(*cs, bytecode, metadata);
+    SendCodeRangesToProfiler(*cs, bytecode->bytes, metadata);
 
     return cs;
 }
@@ -230,12 +244,7 @@ CodeSegment::~CodeSegment()
 
     MOZ_ASSERT(length() > 0);
 
-    // Match AllocateCodeSegment.
-    uint32_t size = JS_ROUNDUP(length(), ExecutableCodePageSize);
-#ifdef MOZ_VTUNE
-    vtune::UnmarkBytes(bytes_, size);
-#endif
-    DeallocateExecutableMemory(bytes_, size);
+    FreeCodeSegment(bytes_, length());
 }
 
 size_t
@@ -471,12 +480,13 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
-Code::Code(UniqueCodeSegment segment,
+Code::Code(UniqueConstCodeSegment segment,
            const Metadata& metadata,
            const ShareableBytes* maybeBytecode)
   : segment_(Move(segment)),
     metadata_(&metadata),
-    maybeBytecode_(maybeBytecode)
+    maybeBytecode_(maybeBytecode),
+    profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
 {
     MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
 }
@@ -558,14 +568,16 @@ Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 // since, once we start sampling, we'll be in a signal-handing context where we
 // cannot malloc.
 void
-Code::ensureProfilingLabels(bool profilingEnabled)
+Code::ensureProfilingLabels(bool profilingEnabled) const
 {
+    auto labels = profilingLabels_.lock();
+
     if (!profilingEnabled) {
-        profilingLabels_.clear();
+        labels->clear();
         return;
     }
 
-    if (!profilingLabels_.empty())
+    if (!labels->empty())
         return;
 
     for (const CodeRange& codeRange : metadata_->codeRanges) {
@@ -599,21 +611,23 @@ Code::ensureProfilingLabels(bool profilingEnabled)
         if (!label)
             return;
 
-        if (codeRange.funcIndex() >= profilingLabels_.length()) {
-            if (!profilingLabels_.resize(codeRange.funcIndex() + 1))
+        if (codeRange.funcIndex() >= labels->length()) {
+            if (!labels->resize(codeRange.funcIndex() + 1))
                 return;
         }
 
-        profilingLabels_[codeRange.funcIndex()] = Move(label);
+        ((CacheableCharsVector&)labels)[codeRange.funcIndex()] = Move(label);
     }
 }
 
 const char*
 Code::profilingLabel(uint32_t funcIndex) const
 {
-    if (funcIndex >= profilingLabels_.length() || !profilingLabels_[funcIndex])
+    auto labels = profilingLabels_.lock();
+
+    if (funcIndex >= labels->length() || !((CacheableCharsVector&)labels)[funcIndex])
         return "?";
-    return profilingLabels_[funcIndex].get();
+    return ((CacheableCharsVector&)labels)[funcIndex].get();
 }
 
 void
