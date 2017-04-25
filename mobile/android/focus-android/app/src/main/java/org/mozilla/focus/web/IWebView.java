@@ -19,6 +19,8 @@ public interface IWebView {
         /** Return true if the URL was handled, false if we should continue loading the current URL. */
         boolean handleExternalUrl(String url);
         void onLinkLongPress(String url);
+
+        void onDownloadStart(Download download);
     }
 
     void setCallback(Callback callback);
