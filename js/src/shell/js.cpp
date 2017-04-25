@@ -343,7 +343,7 @@ struct ShellContext
 
     static const uint32_t GeckoProfilingMaxStackSize = 1000;
     ProfileEntry geckoProfilingStack[GeckoProfilingMaxStackSize];
-    uint32_t geckoProfilingStackSize;
+    mozilla::Atomic<uint32_t> geckoProfilingStackSize;
 
     OffThreadState offThreadState;
 

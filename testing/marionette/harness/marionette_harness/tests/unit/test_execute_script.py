@@ -92,40 +92,62 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertIsNone(self.marionette.execute_script("true"))
 
     def test_argument_null(self):
-        self.assertIsNone(self.marionette.execute_script("return arguments[0]", [None]))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox="default"))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox="system"))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox=None))
 
     def test_argument_number(self):
         self.assertEqual(
-            1, self.marionette.execute_script("return arguments[0]", [1]))
+            1, self.marionette.execute_script("return arguments[0]", (1,)))
         self.assertEqual(
-            1.5, self.marionette.execute_script("return arguments[0]", [1.5]))
+            1.5, self.marionette.execute_script("return arguments[0]", (1.5,)))
 
     def test_argument_boolean(self):
-        self.assertTrue(self.marionette.execute_script("return arguments[0]", [True]))
+        self.assertTrue(self.marionette.execute_script("return arguments[0]", (True,)))
 
     def test_argument_string(self):
         self.assertEqual(
-            "foo", self.marionette.execute_script("return arguments[0]", ["foo"]))
+            "foo", self.marionette.execute_script("return arguments[0]", ("foo",)))
 
     def test_argument_array(self):
         self.assertEqual(
-            [1, 2], self.marionette.execute_script("return arguments[0]", [[1, 2]]))
+            [1, 2], self.marionette.execute_script("return arguments[0]", ([1, 2],)))
 
     def test_argument_object(self):
         self.assertEqual({"foo": 1}, self.marionette.execute_script(
-            "return arguments[0]", [{"foo": 1}]))
+            "return arguments[0]", ({"foo": 1},)))
 
-    def test_globals(self):
+    def test_default_sandbox_globals(self):
         for property in globals:
-            self.assert_is_defined(property)
+            self.assert_is_defined(property, sandbox="default")
+
         self.assert_is_defined("Components")
         self.assert_is_defined("window.wrappedJSObject")
 
     def test_system_globals(self):
         for property in globals:
             self.assert_is_defined(property, sandbox="system")
+
         self.assert_is_defined("Components", sandbox="system")
-        self.assert_is_defined("window.wrappedJSObject")
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
+    def test_mutable_sandbox_globals(self):
+        for property in globals:
+            self.assert_is_defined(property, sandbox=None)
+
+        # Components is there, but will be removed soon
+        self.assert_is_defined("Components", sandbox=None)
+        # wrappedJSObject is always there in sandboxes
+        self.assert_is_defined("window.wrappedJSObject", sandbox=None)
 
     def test_exception(self):
         self.assertRaises(errors.JavascriptException,
@@ -142,10 +164,10 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertIn("return b", cm.exception.stacktrace)
 
     def test_permission(self):
-        with self.assertRaises(errors.JavascriptException):
-            self.marionette.execute_script("""
-                var c = Components.classes["@mozilla.org/preferences-service;1"];
-            """)
+        for sandbox in ["default", None]:
+            with self.assertRaises(errors.JavascriptException):
+               self.marionette.execute_script(
+                    "Components.classes['@mozilla.org/preferences-service;1']")
 
     def test_return_web_element(self):
         self.marionette.navigate(elements)
@@ -188,21 +210,34 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(self.marionette.execute_script(
             "return this.foobar", new_sandbox=False), [23, 42])
 
-    def test_wrappedjsobject(self):
+    def test_mutable_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject")
+        with self.assertRaises(errors.JavascriptException):
+            self.marionette.execute_script("window.wrappedJSObject.foo = 1", sandbox=None)
+
+    def test_default_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="default")
+
         try:
-            self.marionette.execute_script("window.wrappedJSObject.foo = 3")
-            self.assertEqual(
-                self.marionette.execute_script("return window.wrappedJSObject.foo"), 3)
+            self.marionette.execute_script(
+                "window.wrappedJSObject.foo = 4", sandbox="default")
+            self.assertEqual(self.marionette.execute_script(
+                "return window.wrappedJSObject.foo", sandbox="default"), 4)
         finally:
-            self.marionette.execute_script("delete window.wrappedJSObject.foo")
+            self.marionette.execute_script(
+                "delete window.wrappedJSObject.foo", sandbox="default")
 
     def test_system_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
         self.marionette.execute_script(
             "window.wrappedJSObject.foo = 4", sandbox="system")
         self.assertEqual(self.marionette.execute_script(
             "return window.wrappedJSObject.foo", sandbox="system"), 4)
 
     def test_system_dead_object(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
         self.marionette.execute_script(
             "window.wrappedJSObject.foo = function() { return 'yo' }",
             sandbox="system")
@@ -263,16 +298,38 @@ class TestExecuteContent(MarionetteTestCase):
             content_timeout_triggered,
             message="Scheduled setTimeout event was cancelled by call to execute_script")
 
-    def test_privileged_code_inspection(self):
-        # test permission denied on toString of unload event handler
+    def test_access_chrome_objects_in_event_listeners(self):
+        # sandbox.window.addEventListener/removeEventListener
+        # is used by Marionette for installing the unloadHandler which
+        # is used to return an error when a document is unloaded during
+        # script execution.
+        #
+        # Certain web frameworks, notably Angular, override
+        # window.addEventListener/removeEventListener and introspects
+        # objects passed to them.  If these objects originates from chrome
+        # without having been cloned, a permission denied error is thrown
+        # as part of the security precautions put in place by the sandbox.
+
+        # addEventListener is called when script is injected
         self.marionette.navigate(inline("""
             <script>
-            window.addEventListener = (type, handler) => handler.toString();
-            </script>"""))
+            window.addEventListener = (event, listener) => listener.toString();
+            </script>
+            """))
         self.marionette.execute_script("", sandbox=None)
 
+        # removeEventListener is called when sandbox is unloaded
+        self.marionette.navigate(inline("""
+            <script>
+            window.removeEventListener = (event, listener) => listener.toString();
+            </script>
+            """))
+        self.marionette.execute_script("", sandbox=None)
+
+    def test_access_global_objects_from_chrome(self):
         # test inspection of arguments
         self.marionette.execute_script("__webDriverArguments.toString()")
+
 
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
@@ -286,8 +343,8 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         super(TestExecuteChrome, self).tearDown()
 
     def test_permission(self):
-        self.assertEqual(1, self.marionette.execute_script("""
-            var c = Components.classes["@mozilla.org/preferences-service;1"]; return 1;"""))
+        self.marionette.execute_script(
+            "Components.classes['@mozilla.org/preferences-service;1']")
 
     @skip_if_mobile("New windows not supported in Fennec")
     def test_unmarshal_element_collection(self):
@@ -330,7 +387,16 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
     def test_window_set_timeout_is_not_cancelled(self):
         pass
 
-    def test_privileged_code_inspection(self):
+    def test_mutable_sandbox_wrappedjsobject(self):
+        pass
+
+    def test_default_sandbox_wrappedjsobject(self):
+        pass
+
+    def test_system_sandbox_wrappedjsobject(self):
+        pass
+
+    def test_access_chrome_objects_in_event_listeners(self):
         pass
 
 

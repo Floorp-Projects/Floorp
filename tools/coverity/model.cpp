@@ -44,6 +44,8 @@ static void MOZ_ReportCrash(const char* aStr, const char* aFilename,
 
 #define PR_ASSERT(expr) assert(!!(expr))
 
+#define NS_RUNTIMEABORT(msg) __coverity_panic__()
+
 int GET_JUMP_OFFSET(jsbytecode* pc) {
   __coverity_tainted_data_sanitize__(&pc[1]);
   __coverity_tainted_data_sanitize__(&pc[2]);

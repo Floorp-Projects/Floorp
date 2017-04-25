@@ -4182,7 +4182,7 @@ Tab.prototype = {
           this.sendOpenSearchMessage(target);
         } else if (list.indexOf("[manifest]") != -1 &&
                    aEvent.type == "DOMLinkAdded" &&
-                   Services.prefs.getBoolPref("manifest.install.enabled")) {
+                   Services.prefs.getBoolPref("manifest.install.enabled", false)) {
           jsonMessage = this.makeManifestMessage(target);
         }
         if (!jsonMessage)

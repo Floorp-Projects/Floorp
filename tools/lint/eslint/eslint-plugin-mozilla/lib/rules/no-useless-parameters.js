@@ -14,6 +14,11 @@
 // -----------------------------------------------------------------------------
 
 module.exports = function(context) {
+  function getRangeAfterArgToEnd(argNumber, args) {
+    let sourceCode = context.getSourceCode();
+    return [sourceCode.getTokenAfter(args[argNumber]).range[0],
+      args[args.length - 1].range[1]];
+  }
 
   // ---------------------------------------------------------------------------
   // Public
@@ -36,38 +41,80 @@ module.exports = function(context) {
 
       if (["addEventListener", "removeEventListener", "addObserver"]
           .includes(name) && args.length === 3 && isFalse(args[2])) {
-        context.report(node, name +
-                       "'s third parameter can be omitted when it's false.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(1, args));
+          },
+          message: `${name}'s third parameter can be omitted when it's false.`
+        });
       }
 
       if (name === "clearUserPref" && args.length > 1) {
-        context.report(node, name + " takes only 1 parameter.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(0, args));
+          },
+          message: `${name} takes only 1 parameter.`
+        });
       }
 
       if (name === "removeObserver" && args.length === 3 && isBool(args[2])) {
-        context.report(node, "removeObserver only takes 2 parameters.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(1, args));
+          },
+          message: "removeObserver only takes 2 parameters."
+        });
       }
 
       if (name === "appendElement" && args.length === 2 && isFalse(args[1])) {
-        context.report(node, name +
-                       "'s second parameter can be omitted when it's false.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(0, args));
+          },
+          message: `${name}'s second parameter can be omitted when it's false.`
+        });
       }
 
       if (name === "notifyObservers" && args.length === 3 &&
           isFalsy(args[2])) {
-        context.report(node, name +
-                       "'s third parameter can be omitted.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(1, args));
+          },
+          message: `${name}'s third parameter can be omitted.`
+        });
       }
 
       if (name === "getComputedStyle" && args.length === 2 &&
           isFalsy(args[1])) {
-        context.report(node,
-                       "getComputedStyle's second parameter can be omitted.");
+        context.report({
+          node,
+          fix: fixer => {
+            return fixer.removeRange(getRangeAfterArgToEnd(0, args));
+          },
+          message: "getComputedStyle's second parameter can be omitted."
+        });
       }
 
       if (name === "newURI" && args.length > 1 &&
           isFalsy(args[args.length - 1])) {
-        context.report(node, "newURI's last parameters are optional.");
+        context.report({
+          node,
+          fix: fixer => {
+            if (args.length > 2 && isFalsy(args[args.length - 2])) {
+              return fixer.removeRange(getRangeAfterArgToEnd(0, args));
+            }
+
+            return fixer.removeRange(getRangeAfterArgToEnd(args.length - 2, args));
+          },
+          message: "newURI's last parameters are optional."
+        });
       }
     }
   };

@@ -130,7 +130,7 @@ class GeckoProfiler
     JSRuntime*           rt;
     ExclusiveData<ProfileStringMap> strings;
     ProfileEntry*        stack_;
-    uint32_t*            size_;
+    mozilla::Atomic<uint32_t>* size_;
     uint32_t             max_;
     bool                 slowAssertions;
     uint32_t             enabled_;
@@ -146,10 +146,6 @@ class GeckoProfiler
 
     bool init();
 
-    uint32_t** addressOfSizePointer() {
-        return &size_;
-    }
-
     uint32_t* addressOfMaxSize() {
         return &max_;
     }
@@ -158,7 +154,6 @@ class GeckoProfiler
         return &stack_;
     }
 
-    uint32_t* sizePointer() { return size_; }
     uint32_t maxSize() { return max_; }
     uint32_t size() { MOZ_ASSERT(installed()); return *size_; }
     ProfileEntry* stack() { return stack_; }
@@ -195,7 +190,7 @@ class GeckoProfiler
 
     jsbytecode* ipToPC(JSScript* script, size_t ip) { return nullptr; }
 
-    void setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max);
+    void setProfilingStack(ProfileEntry* stack, mozilla::Atomic<uint32_t>* size, uint32_t max);
     void setEventMarker(void (*fn)(const char*));
     const char* profileString(JSScript* script, JSFunction* maybeFun);
     void onScriptFinalized(JSScript* script);
