@@ -171,7 +171,7 @@ let eseDBWritingHelpers = {
       loadLibraries();
 
       KERNEL.SystemTimeToFileTime = gLibs.kernel.declare("SystemTimeToFileTime",
-          ctypes.default_abi, ctypes.bool, KERNEL.SYSTEMTIME.ptr, KERNEL.FILETIME.ptr);
+          ctypes.winapi_abi, ctypes.bool, KERNEL.SYSTEMTIME.ptr, KERNEL.FILETIME.ptr);
 
       declareESEFunction("CreateDatabaseW", ESE.JET_SESID, ESE.JET_PCWSTR,
                          ESE.JET_PCWSTR, ESE.JET_DBID.ptr, ESE.JET_GRBIT);
