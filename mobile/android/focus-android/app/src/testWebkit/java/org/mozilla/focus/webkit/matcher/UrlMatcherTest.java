@@ -31,21 +31,21 @@ public class UrlMatcherTest {
                 "bcd.random"
         });
 
-        assertTrue(matcher.matches(Uri.parse("http://bcd.random/something"), "http://mozilla.org"));
-        assertTrue(matcher.matches(Uri.parse("http://bcd.random"), "http://mozilla.org"));
-        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random"), "http://mozilla.org"));
-        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random/something"), "http://mozilla.org"));
-        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random"), "http://mozilla.org"));
-        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random/something"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://bcd.random/something"), Uri.parse("http://mozilla.org")));
+        assertTrue(matcher.matches(Uri.parse("http://bcd.random"), Uri.parse("http://mozilla.org")));
+        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random"), Uri.parse("http://mozilla.org")));
+        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random/something"), Uri.parse("http://mozilla.org")));
+        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random"), Uri.parse("http://mozilla.org")));
+        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random/something"), Uri.parse("http://mozilla.org")));
 
-        assertTrue(!matcher.matches(Uri.parse("http://other.random"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://other.random/something"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://www.other.random"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://www.other.random/something"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific/something"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific"), "http://mozilla.org"));
-        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific/something"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://other.random"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://other.random/something"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://www.other.random"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://www.other.random/something"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific/something"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific"), Uri.parse("http://mozilla.org")));
+        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific/something"), Uri.parse("http://mozilla.org")));
     }
 
     @Test
@@ -127,7 +127,7 @@ public class UrlMatcherTest {
                 final String url = "http://category" + currentCategory + ".com";
 
                 Assert.assertEquals("Incorrect category matched for combo=" + categoryPattern + " url=" + url,
-                        enabled, matcher.matches(Uri.parse(url), "http://www.mozilla.org"));
+                        enabled, matcher.matches(Uri.parse(url), Uri.parse("http://www.mozilla.org")));
             }
         }
     }

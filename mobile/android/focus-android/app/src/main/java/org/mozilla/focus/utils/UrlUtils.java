@@ -75,15 +75,15 @@ public class UrlUtils {
     }
 
     public static boolean isPermittedResourceProtocol(final String url) {
-        return url.startsWith("http:") ||
-                url.startsWith("https:") ||
-                url.startsWith("file:") ||
-                url.startsWith("data:");
+        return url.startsWith("http") ||
+                url.startsWith("https") ||
+                url.startsWith("file") ||
+                url.startsWith("data");
     }
 
     public static boolean isSupportedProtocol(final String url) {
         return isPermittedResourceProtocol(url) ||
-                url.startsWith("error:");
+                url.startsWith("error");
     }
 
     public static boolean urlsMatchExceptForTrailingSlash(final @NonNull String url1, final @NonNull String url2) {

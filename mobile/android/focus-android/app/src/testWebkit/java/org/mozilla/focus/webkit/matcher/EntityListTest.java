@@ -1,5 +1,7 @@
 package org.mozilla.focus.webkit.matcher;
 
+import android.net.Uri;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
@@ -39,29 +41,29 @@ public class EntityListTest {
         entityList.putWhiteList(FocusString.create(mozillaOrg).reverse(), fooComTrie);
         entityList.putWhiteList(FocusString.create(fooMozillaOrg).reverse(), barComTrie);
 
-        assertTrue(entityList.isWhiteListed("http://" + mozillaOrg, "http://" + fooCom));
-        assertFalse(entityList.isWhiteListed("http://" + mozillaOrg, "http://" + barCom));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + mozillaOrg), Uri.parse("http://" + fooCom)));
+        assertFalse(entityList.isWhiteListed(Uri.parse("http://" + mozillaOrg), Uri.parse("http://" + barCom)));
 
-        assertTrue(entityList.isWhiteListed("http://" + fooMozillaOrg, "http://" + fooCom));
-        assertTrue(entityList.isWhiteListed("http://" + fooMozillaOrg, "http://" + barCom));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg), Uri.parse("http://" + fooCom)));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg), Uri.parse("http://" + barCom)));
 
         // Test some junk inputs to make sure we haven't messed up
-        assertFalse(entityList.isWhiteListed("http://" + barCom, "http://" + barCom));
-        assertFalse(entityList.isWhiteListed("http://" + barCom, "http://" + mozillaOrg));
+        assertFalse(entityList.isWhiteListed(Uri.parse("http://" + barCom), Uri.parse("http://" + barCom)));
+        assertFalse(entityList.isWhiteListed(Uri.parse("http://" + barCom), Uri.parse("http://" + mozillaOrg)));
 
         // Test some made up subdomains to ensure they still match *.foo.mozilla.org
-        assertTrue(entityList.isWhiteListed("http://" + "hello." + fooMozillaOrg, "http://" + fooCom));
-        assertTrue(entityList.isWhiteListed("http://" + "hello." + fooMozillaOrg, "http://" + barCom));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + "hello." + fooMozillaOrg), Uri.parse("http://" + fooCom)));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + "hello." + fooMozillaOrg), Uri.parse("http://" + barCom)));
 
         // And that these only match *.mozilla.org
-        assertTrue(entityList.isWhiteListed("http://" + "hello." + mozillaOrg, "http://" + fooCom));
-        assertFalse(entityList.isWhiteListed("http://" + "hello." + mozillaOrg, "http://" + barCom));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + "hello." + mozillaOrg), Uri.parse("http://" + fooCom)));
+        assertFalse(entityList.isWhiteListed(Uri.parse("http://" + "hello." + mozillaOrg), Uri.parse("http://" + barCom)));
 
         // And random subpages don't fail:
-        assertTrue(entityList.isWhiteListed("http://" + mozillaOrg + "/somewhere", "http://" + fooCom + "/somewhereElse/bla/bla"));
-        assertFalse(entityList.isWhiteListed("http://" + mozillaOrg + "/another/page.html?u=a", "http://" + barCom + "/hello"));
-        assertTrue(entityList.isWhiteListed("http://" + fooMozillaOrg + "/somewhere", "http://" + fooCom + "/somewhereElse/bla/bla"));
-        assertTrue(entityList.isWhiteListed("http://" + fooMozillaOrg + "/another/page.html?u=a", "http://" + barCom + "/hello"));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + mozillaOrg + "/somewhere"), Uri.parse("http://" + fooCom + "/somewhereElse/bla/bla")));
+        assertFalse(entityList.isWhiteListed(Uri.parse("http://" + mozillaOrg + "/another/page.html?u=a"), Uri.parse("http://" + barCom + "/hello")));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg + "/somewhere"), Uri.parse("http://" + fooCom + "/somewhereElse/bla/bla")));
+        assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg + "/another/page.html?u=a"), Uri.parse("http://" + barCom + "/hello")));
     }
 
 }

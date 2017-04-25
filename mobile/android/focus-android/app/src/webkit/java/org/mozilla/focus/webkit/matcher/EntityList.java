@@ -5,6 +5,8 @@
 package org.mozilla.focus.webkit.matcher;
 
 
+import android.net.Uri;
+
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
@@ -24,23 +26,19 @@ import java.net.URL;
         rootNode.putWhiteList(revhost, whitelist);
     }
 
-    public boolean isWhiteListed(final String site, final String resource) {
-        if (site.length() == 0 ||
-                resource.length() == 0 ||
-                site.startsWith("data:")) {
+    public boolean isWhiteListed(final Uri site, final Uri resource) {
+        if (site.getHost().length() == 0 ||
+                resource.getHost().length() == 0 ||
+                site.getScheme().equals("data")) {
             return true;
         }
 
-        if (UrlUtils.isPermittedResourceProtocol(resource) &&
-                UrlUtils.isSupportedProtocol(site)) {
-            try {
-                final FocusString revSitehost = FocusString.create(new URL(site).getHost()).reverse();
-                final FocusString revResourcehost = FocusString.create(new URL(resource).getHost()).reverse();
+        if (UrlUtils.isPermittedResourceProtocol(resource.getScheme()) &&
+                UrlUtils.isSupportedProtocol(site.getScheme())) {
+            final FocusString revSitehost = FocusString.create(site.getHost()).reverse();
+            final FocusString revResourcehost = FocusString.create(resource.getHost()).reverse();
 
-                return isWhiteListed(revSitehost, revResourcehost, rootNode);
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException("Malformed URI supplied");
-            }
+            return isWhiteListed(revSitehost, revResourcehost, rootNode);
         } else {
             // This might be some imaginary/custom protocol: theguardian.com loads
             // things like "nielsenwebid://nuid/999" and/or sets an iFrame URL to that:

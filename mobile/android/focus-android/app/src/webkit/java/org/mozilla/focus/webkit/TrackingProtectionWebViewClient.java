@@ -84,8 +84,9 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
 
         // Don't block the main frame from being loaded. This also protects against cases where we
         // open a link that redirects to another app (e.g. to the play store).
+        final Uri pageUri = Uri.parse(currentPageURL);
         if ((!request.isForMainFrame()) &&
-                matcher.matches(resourceUri, currentPageURL)) {
+                matcher.matches(resourceUri, pageUri)) {
             return new WebResourceResponse(null, null, null);
         }
 

@@ -212,7 +212,7 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         }
     }
 
-    public boolean matches(final Uri resourceURI, final String pageURLString) {
+    public boolean matches(final Uri resourceURI, final Uri pageURI) {
         final String path = resourceURI.getPath();
 
         if (path == null) {
@@ -237,18 +237,19 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         }
 
         if (entityList != null &&
-                entityList.isWhiteListed(pageURLString, resourceURLString)) {
+                entityList.isWhiteListed(pageURI, resourceURI)) {
             // We must not cache entityList items (and/or if we did, we'd have to clear the cache
             // on every single location change)
             return false;
         }
 
+        final String resourceHost = resourceURI.getHost();
+        final String pageHost = pageURI.getHost();
         if (previouslyMatched.contains(resourceURLString)) {
             return true;
         }
 
-        final String host = resourceURI.getHost().toString();
-        final FocusString revhost = FocusString.create(host).reverse();
+        final FocusString revhost = FocusString.create(resourceHost).reverse();
 
         for (final Map.Entry<String, Trie> category : categories.entrySet()) {
             if (enabledCategories.contains(category.getKey())) {
