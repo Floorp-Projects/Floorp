@@ -110,7 +110,7 @@ dependencies {
     focusCompile 'com.adjust.sdk:adjust-android:4.11.1'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.0' // Required by Adjust
 
-    geckoCompile(name: 'geckoview-195049fabb7a', ext: 'aar')
+    geckoCompile(name: 'geckoview-latest', ext: 'aar')
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.3.2"
