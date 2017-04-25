@@ -1033,10 +1033,10 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   uintptr_t frameSPs[MAX_NATIVE_FRAMES];
   size_t framesAvail = mozilla::ArrayLength(framePCs);
   size_t framesUsed  = 0;
-  size_t scannedFramesAcquired = 0;
+  size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
   lul::LUL* lul = gPS->LUL(aLock);
   lul->Unwind(&framePCs[0], &frameSPs[0],
-              &framesUsed, &scannedFramesAcquired,
+              &framesUsed, &framePointerFramesAcquired, &scannedFramesAcquired,
               framesAvail, scannedFramesAllowed,
               &startRegs, &stackImg);
 
@@ -1052,7 +1052,9 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
   lul->mStats.mContext += 1;
-  lul->mStats.mCFI     += framesUsed - 1 - scannedFramesAcquired;
+  lul->mStats.mCFI     += framesUsed - 1 - framePointerFramesAcquired -
+                                           scannedFramesAcquired;
+  lul->mStats.mFP      += framePointerFramesAcquired;
   lul->mStats.mScanned += scannedFramesAcquired;
 }
 

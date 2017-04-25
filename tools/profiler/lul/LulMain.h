@@ -183,6 +183,7 @@ public:
   LULStats()
     : mContext(0)
     , mCFI(0)
+    , mFP(0)
     , mScanned(0)
   {}
 
@@ -190,6 +191,7 @@ public:
   explicit LULStats(const LULStats<S>& aOther)
     : mContext(aOther.mContext)
     , mCFI(aOther.mCFI)
+    , mFP(aOther.mFP)
     , mScanned(aOther.mScanned)
   {}
 
@@ -198,6 +200,7 @@ public:
   {
     mContext = aOther.mContext;
     mCFI     = aOther.mCFI;
+    mFP      = aOther.mFP;
     mScanned = aOther.mScanned;
     return *this;
   }
@@ -205,11 +208,13 @@ public:
   template <typename S>
   uint32_t operator-(const LULStats<S>& aOther) {
     return (mContext - aOther.mContext) +
-           (mCFI - aOther.mCFI) + (mScanned - aOther.mScanned);
+           (mCFI - aOther.mCFI) + (mFP - aOther.mFP) +
+           (mScanned - aOther.mScanned);
   }
 
   T mContext; // Number of context frames
   T mCFI;     // Number of CFI/EXIDX frames
+  T mFP;      // Number of frame-pointer recovered frames
   T mScanned; // Number of scanned frames
 };
 
@@ -338,6 +343,7 @@ public:
   void Unwind(/*OUT*/uintptr_t* aFramePCs,
               /*OUT*/uintptr_t* aFrameSPs,
               /*OUT*/size_t* aFramesUsed,
+              /*OUT*/size_t* aFramePointerFramesAcquired,
               /*OUT*/size_t* aScannedFramesAcquired,
               size_t aFramesAvail,
               size_t aScannedFramesAllowed,
