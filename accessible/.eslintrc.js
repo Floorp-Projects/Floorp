@@ -1,9 +1,6 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/recommended"
-  ],
   "rules": {
     // Warn about cyclomatic complexity in functions.
     "complexity": ["error", 42],

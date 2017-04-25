@@ -2,7 +2,6 @@
 
 module.exports = {
   "extends": [
-    "plugin:mozilla/recommended",
     "plugin:mozilla/browser-test",
     "plugin:mozilla/chrome-test",
     "plugin:mozilla/mochitest-test",
