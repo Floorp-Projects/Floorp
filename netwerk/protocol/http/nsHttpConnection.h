@@ -87,7 +87,7 @@ public:
     // Close this connection and return the transaction. The transaction is
     // restarted as well. This will only happened before connection is
     // connected.
-    nsAHttpTransaction * CloseConnectionFastOpenTakesTooLongOrError(bool aCloseocketTransport);
+    nsAHttpTransaction * CloseConnectionFastOpenTakesTooLongOrError();
 
     // Close the underlying socket transport.
     void Close(nsresult reason, bool aIsShutdown = false);
