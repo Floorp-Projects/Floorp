@@ -48,38 +48,47 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Matrix4x4 transform = GetTransform();
-  gfx::Matrix4x4* maybeTransform = &transform;
+  gfx::Matrix4x4* transformForSC = &transform;
   float opacity = GetLocalOpacity();
-  float* maybeOpacity = &opacity;
+  float* opacityForSC = &opacity;
   uint64_t animationsId = 0;
 
   if (gfxPrefs::WebRenderOMTAEnabled() &&
       !GetAnimations().IsEmpty()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
+    OptionalOpacity opacityForCompositor = void_t();
+    OptionalTransform transformForCompositor = void_t();
+
     // Update opacity as nullptr in stacking context if there exists
     // opacity animation, the opacity value will be resolved
     // after animation sampling on the compositor
     if (HasOpacityAnimation()) {
-      maybeOpacity = nullptr;
+      opacityForSC = nullptr;
+      // Pass default opacity to compositor in case gecko fails to
+      // get animated value after animation sampling.
+      opacityForCompositor = opacity;
     }
 
     // Update transfrom as nullptr in stacking context if there exists
     // transform animation, the transform value will be resolved
     // after animation sampling on the compositor
     if (HasTransformAnimation()) {
-      maybeTransform = nullptr;
+      transformForSC = nullptr;
+      // Pass default transform to compositor in case gecko fails to
+      // get animated value after animation sampling.
+      transformForCompositor = transform;
       UpdateTransformDataForAnimation();
     }
 
     animationsId = GetCompositorAnimationsId();
-    CompositorAnimations anim;
-    anim.animations() = GetAnimations();
-    anim.id() = animationsId;
-    WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
+    OpAddCompositorAnimations
+      anim(CompositorAnimations(GetAnimations(), animationsId),
+           transformForCompositor, opacityForCompositor);
+    WrBridge()->AddWebRenderParentCommand(anim);
   }
 
-  StackingContextHelper sc(aBuilder, this, animationsId, maybeOpacity, maybeTransform);
+  StackingContextHelper sc(aBuilder, this, animationsId, opacityForSC, transformForSC);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);

@@ -502,6 +502,15 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
             storage->SetAnimations(data.id(), data.animations());
+            // Store the default opacity
+            if (op.opacity().type() == OptionalOpacity::Tfloat) {
+              storage->SetAnimatedValue(data.id(), op.opacity().get_float());
+            }
+            // Store the default transform
+            if (op.transform().type() == OptionalTransform::TMatrix4x4) {
+              Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
+              storage->SetAnimatedValue(data.id(), Move(transform));
+            }
           }
         }
         break;
