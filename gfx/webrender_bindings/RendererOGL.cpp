@@ -74,6 +74,11 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 RendererOGL::~RendererOGL()
 {
   MOZ_COUNT_DTOR(RendererOGL);
+  if (!mGL->MakeCurrent()) {
+    gfxCriticalNote << "Failed to make render context current during destroying.";
+    // Leak resources!
+    return;
+  }
   wr_renderer_delete(mWrRenderer);
 }
 
