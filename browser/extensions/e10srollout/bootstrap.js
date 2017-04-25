@@ -175,6 +175,13 @@ function defineCohort() {
     return;
   }
 
+  // If we got here with a cohortPrefix, it must be "addons-set50allmpc-",
+  // and we know because of getAddonsDisqualifyForMulti that the addons that
+  // are installed must be web extensions.
+  if (cohortPrefix) {
+    cohortPrefix = "webextensions-";
+  }
+
   // The user is in the multi experiment!
   // Decide how many content processes to use for this user.
   let BUCKETS = {
@@ -187,7 +194,7 @@ function defineCohort() {
   let multiUserSample = getUserSample(true);
   for (let sampleName of Object.getOwnPropertyNames(BUCKETS)) {
     if (multiUserSample < BUCKETS[sampleName]) {
-      setCohort(`multiBucket${sampleName}`);
+      setCohort(`${cohortPrefix}multiBucket${sampleName}`);
       Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", sampleName);
       break;
     }
