@@ -35,7 +35,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 }
 
 nsresult
-BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
+BlobSet::AppendString(const nsAString& aString, bool nativeEOL)
 {
   nsCString utf8Str = NS_ConvertUTF16toUTF8(aString);
 

@@ -256,7 +256,7 @@ Blob::Constructor(const GlobalObject& aGlobal,
   if (aData.WasPassed()) {
     nsAutoString type(aBag.mType);
     MakeValidBlobType(type);
-    impl->InitializeBlob(aGlobal.Context(), aData.Value(), type,
+    impl->InitializeBlob(aData.Value(), type,
                          aBag.mEndings == EndingTypes::Native, aRv);
   } else {
     impl->InitializeBlob(aRv);
