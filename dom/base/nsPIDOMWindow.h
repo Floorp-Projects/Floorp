@@ -890,6 +890,8 @@ public:
 
   bool IsPlayingAudio();
 
+  bool IsDocumentLoaded() const;
+
   mozilla::dom::TimeoutManager& TimeoutManager();
 
   bool IsRunningTimeout();
