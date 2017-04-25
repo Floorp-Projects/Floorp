@@ -553,8 +553,6 @@ public:
 
   bool IsInitedByParent() const { return mInitedByParent; }
 
-  static TabParent* GetNextTabParent();
-
   bool SendLoadRemoteScript(const nsString& aURL,
                             const bool& aRunInGlobalScope);
 
@@ -698,13 +696,6 @@ private:
 
   TabId mTabId;
 
-  // When loading a new tab or window via window.open, the child process sends
-  // a new PBrowser to use. We store that tab in sNextTabParent and then
-  // proceed through the browser's normal paths to create a new
-  // window/tab. When it comes time to create a new TabParent, we instead use
-  // sNextTabParent.
-  static TabParent* sNextTabParent;
-
   // When loading a new tab or window via window.open, the child is
   // responsible for loading the URL it wants into the new TabChild. When the
   // parent receives the CreateWindow message, though, it sends a LoadURL
@@ -778,13 +769,11 @@ public:
 struct MOZ_STACK_CLASS TabParent::AutoUseNewTab final
 {
 public:
-  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew, nsCString* aURLToLoad)
-   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew), mURLToLoad(aURLToLoad)
+  AutoUseNewTab(TabParent* aNewTab, nsCString* aURLToLoad)
+   : mNewTab(aNewTab), mURLToLoad(aURLToLoad)
   {
-    MOZ_ASSERT(!TabParent::sNextTabParent);
     MOZ_ASSERT(!aNewTab->mCreatingWindow);
 
-    TabParent::sNextTabParent = aNewTab;
     aNewTab->mCreatingWindow = true;
     aNewTab->mDelayedURL.Truncate();
   }
@@ -793,17 +782,10 @@ public:
   {
     mNewTab->mCreatingWindow = false;
     *mURLToLoad = mNewTab->mDelayedURL;
-
-    if (TabParent::sNextTabParent) {
-      MOZ_ASSERT(TabParent::sNextTabParent == mNewTab);
-      TabParent::sNextTabParent = nullptr;
-      *mWindowIsNew = false;
-    }
   }
 
 private:
   TabParent* mNewTab;
-  bool* mWindowIsNew;
   nsCString* mURLToLoad;
 };
 
