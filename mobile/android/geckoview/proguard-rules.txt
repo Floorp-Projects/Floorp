@@ -8,7 +8,7 @@
 # methods.
 
 -keep public class * {
-    public protected *;
+    static public protected *;
 }
 
 # Preserve all .class method names.
