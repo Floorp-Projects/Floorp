@@ -13,6 +13,7 @@ nserror = { path = "../../../../xpcom/rust/nserror" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
+encoding_c = "0.7.1"
 
 [features]
 default = []
@@ -21,6 +22,9 @@ servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
 cubeb_pulse_rust = ["cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug"]
+simd-accel = ["encoding_c/simd-accel"]
+no-static-ideograph-encoder-tables = ["encoding_c/no-static-ideograph-encoder-tables"]
+parallel-utf8 = ["encoding_c/parallel-utf8"]
 
 [lib]
 path = "lib.rs"
