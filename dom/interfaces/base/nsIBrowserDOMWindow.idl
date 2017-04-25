@@ -109,7 +109,8 @@ interface nsIBrowserDOMWindow : nsISupports
    // See bug 537428
    */
   nsIFrameLoaderOwner openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
-                                     in short aWhere, in long aFlags);
+                                     in short aWhere, in long aFlags,
+                                     in unsigned long long aNextTabParentId);
 
   /**
    * @param  aWindow the window to test.

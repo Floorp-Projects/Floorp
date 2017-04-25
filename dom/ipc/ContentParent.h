@@ -189,7 +189,8 @@ public:
   CreateBrowser(const TabContext& aContext,
                 Element* aFrameElement,
                 ContentParent* aOpenerContentParent,
-                TabParent* aSameTabGroupAs);
+                TabParent* aSameTabGroupAs,
+                uint64_t aNextTabParentId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -719,6 +720,7 @@ private:
                      const nsCString& aBaseURI,
                      const OriginAttributes& aOpenerOriginAttributes,
                      const float& aFullZoom,
+                     uint64_t aNextTabParentId,
                      nsresult& aResult,
                      nsCOMPtr<nsITabParent>& aNewTabParent,
                      bool* aWindowIsNew);
@@ -1274,6 +1276,9 @@ private:
 #ifdef MOZ_CRASHREPORTER
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
 #endif
+
+  static uint64_t sNextTabParentId;
+  static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
 };
 
 } // namespace dom

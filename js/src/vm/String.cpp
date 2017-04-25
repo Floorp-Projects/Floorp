@@ -208,6 +208,7 @@ JSString::dumpRepresentationHeader(FILE* fp, int indent, const char* subclass) c
     if (flags & ATOM_BIT)               fputs(" ATOM", fp);
     if (isPermanentAtom())              fputs(" PERMANENT", fp);
     if (flags & LATIN1_CHARS_BIT)       fputs(" LATIN1", fp);
+    if (flags & INDEX_VALUE_BIT)        fprintf(fp, " INDEX_VALUE(%u)", getIndexValue());
     fputc('\n', fp);
 }
 
@@ -863,6 +864,9 @@ StaticStrings::init(JSContext* cx)
             HashNumber hash = mozilla::HashString(buffer, 3);
             intStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
         }
+
+        // Static string initialization can not race, so allow even without the lock.
+        intStaticTable[i]->maybeInitializeIndex(i, true);
     }
 
     return true;

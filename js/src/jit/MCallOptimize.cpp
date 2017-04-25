@@ -356,6 +356,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
       case InlinableNative::IntrinsicSetTypedObjectOffset:
         return inlineSetTypedObjectOffset(callInfo);
+      case InlinableNative::Limit:
+        break;
     }
 
     MOZ_CRASH("Shouldn't get here");

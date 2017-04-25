@@ -95,6 +95,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *    are stored as Latin1 instead of TwoByte if all characters are representable
  *    in Latin1.
  *
+ *  - To avoid slow conversions from strings to integer indexes, we cache 16 bit
+ *    unsigned indexes on strings representing such numbers.
+ *
  * Although all strings share the same basic memory layout, we can conceptually
  * arrange them into a hierarchy of operations/invariants and represent this
  * hierarchy in C++ with classes:
@@ -246,6 +249,8 @@ class JSString : public js::gc::TenuredCell
      *  to be null-terminated.  In such cases, the string must keep marking its base since
      *  there may be any number of *other* JSDependentStrings transitively depending on it.
      *
+     * If the INDEX_VALUE_BIT is set the upper 16 bits of the flag word hold the integer
+     * index.
      */
 
     static const uint32_t FLAT_BIT               = JS_BIT(0);
@@ -269,6 +274,9 @@ class JSString : public js::gc::TenuredCell
     static const uint32_t TYPE_FLAGS_MASK        = JS_BIT(6) - 1;
 
     static const uint32_t LATIN1_CHARS_BIT       = JS_BIT(6);
+
+    static const uint32_t INDEX_VALUE_BIT        = JS_BIT(7);
+    static const uint32_t INDEX_VALUE_SHIFT      = 16;
 
     static const uint32_t MAX_LENGTH             = js::MaxStringLength;
 
@@ -351,6 +359,16 @@ class JSString : public js::gc::TenuredCell
     }
     bool hasTwoByteChars() const {
         return !(d.u1.flags & LATIN1_CHARS_BIT);
+    }
+
+    /* Strings might contain cached indexes. */
+    bool hasIndexValue() const {
+        return d.u1.flags & INDEX_VALUE_BIT;
+    }
+    uint32_t getIndexValue() const {
+        MOZ_ASSERT(hasIndexValue());
+        MOZ_ASSERT(isFlat());
+        return d.u1.flags >> INDEX_VALUE_SHIFT;
     }
 
     /* Fallible conversions to more-derived string types. */
@@ -752,13 +770,7 @@ class JSFlatString : public JSLinearString
     static inline JSFlatString* new_(JSContext* cx,
                                      const CharT* chars, size_t length);
 
-    /*
-     * Returns true if this string's characters store an unsigned 32-bit
-     * integer value, initializing *indexp to that value if so.  (Thus if
-     * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
-     * string equal to this string.)
-     */
-    inline bool isIndex(uint32_t* indexp) const {
+    inline bool isIndexSlow(uint32_t* indexp) const {
         MOZ_ASSERT(JSString::isFlat());
         JS::AutoCheckCannotGC nogc;
         if (hasLatin1Chars()) {
@@ -767,6 +779,38 @@ class JSFlatString : public JSLinearString
         }
         const char16_t* s = twoByteChars(nogc);
         return JS7_ISDEC(*s) && isIndexSlow(s, length(), indexp);
+    }
+
+    /*
+     * Returns true if this string's characters store an unsigned 32-bit
+     * integer value, initializing *indexp to that value if so.  (Thus if
+     * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
+     * string equal to this string.)
+     */
+    inline bool isIndex(uint32_t* indexp) const {
+        MOZ_ASSERT(JSString::isFlat());
+
+        if (JSString::hasIndexValue()) {
+            *indexp = getIndexValue();
+            return true;
+        }
+
+        return isIndexSlow(indexp);
+    }
+
+    inline void maybeInitializeIndex(uint32_t index, bool allowAtom = false) {
+        MOZ_ASSERT(JSString::isFlat());
+        MOZ_ASSERT_IF(hasIndexValue(), getIndexValue() == index);
+        MOZ_ASSERT_IF(!allowAtom, !isAtom());
+
+        if (hasIndexValue() || index > UINT16_MAX)
+            return;
+
+        mozilla::DebugOnly<uint32_t> containedIndex;
+        MOZ_ASSERT(isIndexSlow(&containedIndex));
+        MOZ_ASSERT(index == containedIndex);
+
+        d.u1.flags |= (index << INDEX_VALUE_SHIFT) | INDEX_VALUE_BIT;
     }
 
     /*
