@@ -236,13 +236,6 @@ bool TestNtQueryFullAttributesFile(void* aFunc)
   return patchedNtQueryFullAttributesFile(0, 0) != 0;
 }
 
-bool TestLdrUnloadDll(void* aFunc)
-{
-  typedef NTSTATUS (NTAPI *LdrUnloadDllType)(HMODULE);
-  auto patchedLdrUnloadDll = reinterpret_cast<LdrUnloadDllType>(aFunc);
-  return patchedLdrUnloadDll(0) != 0;
-}
-
 bool TestSetUnhandledExceptionFilter(void* aFunc)
 {
   auto patchedSetUnhandledExceptionFilter =
@@ -470,7 +463,6 @@ int main()
       TestHook(TestGetOpenFileNameW, "comdlg32.dll", "GetOpenFileNameW") &&
 #ifdef _M_X64
       TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
-      TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
