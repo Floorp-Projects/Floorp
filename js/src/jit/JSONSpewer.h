@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 
-#include "jit/JSONPrinter.h"
 #include "js/TypeDecls.h"
+#include "vm/JSONPrinter.h"
 
 namespace js {
 namespace jit {
