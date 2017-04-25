@@ -55,6 +55,17 @@ static int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n);
 static const uint32_t TagStackSize = 500;
 static const uint32_t OLStackSize = 100;
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPlainTextSerializer)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPlainTextSerializer)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPlainTextSerializer)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSerializer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(nsPlainTextSerializer,
+                         mElement)
+
 nsresult
 NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 {
@@ -115,10 +126,6 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
   delete[] mOLStack;
   NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
-
-NS_IMPL_ISUPPORTS(nsPlainTextSerializer,
-                  nsIContentSerializer)
-
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,

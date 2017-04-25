@@ -29,7 +29,8 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
   if (doc) {
     ErrorResult rv;
     RefPtr<dom::Event> event =
-      doc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"), rv);
+      doc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
+                       dom::CallerType::System, rv);
     nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryObject(event);
 
     // FIXME: Should probably figure out how to init this with the actual

@@ -78,7 +78,7 @@ def eslint_setup():
     if not npm_path:
         return 1
 
-    extra_parameters = [ "--loglevel=error" ]
+    extra_parameters = ["--loglevel=error"]
 
     # Install ESLint and external plugins
     cmd = [npm_path, "install"]

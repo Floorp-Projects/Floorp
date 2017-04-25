@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.ViewUtils;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.AttributeSet;
 import android.view.View;
@@ -221,12 +222,22 @@ public class TabStripView extends RecyclerView
             return;
         }
 
-        fadingEdgePaint.setShader(new LinearGradient(w - fadingEdgeSize, 0, w, 0,
-                new int[] { 0x0, 0x11292C29, 0xDD292C29 },
-                new float[] { 0, 0.4f, 1.0f }, Shader.TileMode.CLAMP));
+        // Gradient argb color stops.
+        final int transparent = 0x0;
+        final int inBetween = 0x11292C29;
+        final int darkest = 0xDD292C29;
+        if (ViewUtils.isLayoutRtl(this)) {
+            fadingEdgePaint.setShader(new LinearGradient(0, 0, fadingEdgeSize, 0,
+                    new int[] { darkest, inBetween, transparent },
+                    new float[] { 0, 0.6f, 1.0f }, Shader.TileMode.CLAMP));
+        } else {
+            fadingEdgePaint.setShader(new LinearGradient(w - fadingEdgeSize, 0, w, 0,
+                    new int[] { transparent, inBetween, darkest },
+                    new float[] { 0, 0.4f, 1.0f }, Shader.TileMode.CLAMP));
+        }
     }
 
-    private float getFadingEdgeStrength() {
+    private float getFadingEdgeStrength(boolean layoutIsLTR) {
         final int childCount = getChildCount();
         if (childCount == 0) {
             return 0.0f;
@@ -236,12 +247,20 @@ public class TabStripView extends RecyclerView
                 return 1.0f;
             }
 
-            final int right = getChildAt(getChildCount() - 1).getRight();
-            final int paddingRight = getPaddingRight();
-            final int width = getWidth();
+            final float strength;
+            if (layoutIsLTR) {
+                final int right = getChildAt(getChildCount() - 1).getRight();
+                final int paddingRight = getPaddingRight();
+                final int width = getWidth();
 
-            final float strength = (right > width - paddingRight ?
-                    (float) (right - width + paddingRight) / fadingEdgeSize : 0.0f);
+                strength = (right > width - paddingRight ?
+                        (float) (right - width + paddingRight) / fadingEdgeSize : 0.0f);
+            } else {
+                final int left = getChildAt(getChildCount() - 1).getLeft();
+                final int paddingLeft = getPaddingLeft();
+
+                strength = left < paddingLeft ? (float) (paddingLeft - left) / fadingEdgeSize : 0.0f;
+            }
 
             return Math.max(0.0f, Math.min(strength, 1.0f));
         }
@@ -250,10 +269,15 @@ public class TabStripView extends RecyclerView
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        final float strength = getFadingEdgeStrength();
+        final boolean isLTR = !ViewUtils.isLayoutRtl(this);
+        final float strength = getFadingEdgeStrength(isLTR);
         if (strength > 0.0f) {
-            final int r = getRight();
-            canvas.drawRect(r - fadingEdgeSize, getTop(), r, getBottom(), fadingEdgePaint);
+            if (isLTR) {
+                final int r = getRight();
+                canvas.drawRect(r - fadingEdgeSize, getTop(), r, getBottom(), fadingEdgePaint);
+            } else {
+                canvas.drawRect(0, getTop(), fadingEdgeSize, getBottom(), fadingEdgePaint);
+            }
             fadingEdgePaint.setAlpha((int) (strength * 255));
         }
     }

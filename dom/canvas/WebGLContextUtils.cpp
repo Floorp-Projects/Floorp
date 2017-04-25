@@ -11,7 +11,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
-#include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIVariant.h"
