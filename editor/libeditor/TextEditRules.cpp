@@ -26,10 +26,8 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
-#include "nsIDOMNodeIterator.h"
 #include "nsIDOMText.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
@@ -191,7 +189,7 @@ TextEditRules::BeforeEdit(EditAction action,
   RefPtr<Selection> selection = mTextEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  selection->GetAnchorNode(getter_AddRefs(mCachedSelectionNode));
+  mCachedSelectionNode = selection->GetAnchorNode();
   selection->GetAnchorOffset(&mCachedSelectionOffset);
 
   return NS_OK;
@@ -216,7 +214,7 @@ TextEditRules::AfterEdit(EditAction action,
     NS_ENSURE_STATE(mTextEditor);
     nsresult rv =
       mTextEditor->HandleInlineSpellCheck(action, selection,
-                                          mCachedSelectionNode,
+                                          GetAsDOMNode(mCachedSelectionNode),
                                           mCachedSelectionOffset,
                                           nullptr, 0, nullptr, 0);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -995,7 +993,7 @@ TextEditRules::DidUndo(Selection* aSelection,
   NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
   nsIContent* node = mTextEditor->GetLeftmostChild(theRoot);
   if (node && mTextEditor->IsMozEditorBogusNode(node)) {
-    mBogusNode = do_QueryInterface(node);
+    mBogusNode = node;
   } else {
     mBogusNode = nullptr;
   }
@@ -1045,7 +1043,7 @@ TextEditRules::DidRedo(Selection* aSelection,
 
   RefPtr<Element> node = nodeList->Item(0);
   if (mTextEditor->IsMozEditorBogusNode(node)) {
-    mBogusNode = do_QueryInterface(node);
+    mBogusNode = node;
   } else {
     mBogusNode = nullptr;
   }
@@ -1131,7 +1129,7 @@ TextEditRules::RemoveRedundantTrailingBR()
   elem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
 
   // set mBogusNode to be this <br>
-  mBogusNode = do_QueryInterface(elem);
+  mBogusNode = elem;
 
   // give it the bogus node attribute
   elem->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
@@ -1220,16 +1218,14 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
   NS_ENSURE_STATE(newContent);
 
   // set mBogusNode to be the newly created <br>
-  mBogusNode = do_QueryInterface(newContent);
-  NS_ENSURE_TRUE(mBogusNode, NS_ERROR_NULL_POINTER);
+  mBogusNode = newContent;
 
   // Give it a special attribute.
   newContent->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
                       kMOZEditorBogusNodeValue, false);
 
   // Put the node in the document.
-  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(body);
-  nsresult rv = mTextEditor->InsertNode(mBogusNode, bodyNode, 0);
+  nsresult rv = mTextEditor->InsertNode(*mBogusNode, *body, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set selection.

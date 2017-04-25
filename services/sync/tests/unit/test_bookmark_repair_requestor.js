@@ -496,17 +496,17 @@ add_task(async function test_requestor_already_repairing_continue() {
     { method: "started",
       object: "repair",
       value: undefined,
-      extra: { flowID: flowID, numIDs: "3" },
+      extra: { flowID, numIDs: "3" },
     },
     { method: "request",
       object: "repair",
       value: "upload",
-      extra: { flowID: flowID, numIDs: "3", deviceID: "client-a" },
+      extra: { flowID, numIDs: "3", deviceID: "client-a" },
     },
     { method: "aborted",
       object: "repair",
       value: undefined,
-      extra: { flowID: flowID, numIDs: "3", reason: "other clients repairing" },
+      extra: { flowID, numIDs: "3", reason: "other clients repairing" },
     }
   ];
 
