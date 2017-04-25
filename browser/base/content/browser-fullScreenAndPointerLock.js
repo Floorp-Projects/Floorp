@@ -75,7 +75,7 @@ var PointerlockFsWarning = {
     if (aOrigin) {
       this._origin = aOrigin;
     }
-    let uri = BrowserUtils.makeURI(this._origin);
+    let uri = Services.io.newURI(this._origin);
     let host = null;
     try {
       host = uri.host;
