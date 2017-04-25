@@ -366,10 +366,10 @@ NS_GetIsDocumentChannel(nsIChannel * aChannel, bool *aIsDocument)
   // LOAD_HTML_OBJECT_DATA is set it may or may not be used to create a
   // document, depending on its MIME type.
 
-  *aIsDocument = false;
   if (!aChannel || !aIsDocument) {
       return NS_ERROR_NULL_POINTER;
   }
+  *aIsDocument = false;
   nsLoadFlags loadFlags;
   nsresult rv = aChannel->GetLoadFlags(&loadFlags);
   if (NS_FAILED(rv)) {
