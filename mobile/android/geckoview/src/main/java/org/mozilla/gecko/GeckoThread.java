@@ -401,7 +401,8 @@ public class GeckoThread extends Thread {
             }
         }
 
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+              " - runGecko");
 
         final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
         if (gi == null || !gi.isOfficial()) {
