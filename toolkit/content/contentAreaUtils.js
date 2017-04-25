@@ -950,7 +950,7 @@ function makeURI(aURL, aOriginCharset, aBaseURI) {
 }
 
 function makeFileURI(aFile) {
-  return BrowserUtils.makeFileURI(aFile);
+  return Services.io.newFileURI(aFile);
 }
 
 function makeFilePicker() {
