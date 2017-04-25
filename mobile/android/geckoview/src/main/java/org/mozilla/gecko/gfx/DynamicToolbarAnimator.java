@@ -27,7 +27,8 @@ public class DynamicToolbarAnimator {
         ACTION_MODE(2),
         FULL_SCREEN(3),
         CARET_DRAG(4),
-        PAGE_LOADING(5);
+        PAGE_LOADING(5),
+        CUSTOM_TAB(6);
 
         public final int mValue;
         PinReason(final int value) {
