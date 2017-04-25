@@ -1031,7 +1031,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     NS_ASSERTION(child->mParent == this, "Child sheet is not parented to this!");
     StyleSheet* next = child->mNext;
     child->mParent = nullptr;
-    child->mDocument = nullptr;
+    child->SetAssociatedDocument(nullptr, NotOwnedByDocument);
     child->mNext = nullptr;
     child = next;
   }

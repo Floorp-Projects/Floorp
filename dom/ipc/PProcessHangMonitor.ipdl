@@ -14,7 +14,6 @@ struct SlowScriptData
 {
   TabId tabId;
   nsCString filename;
-  uint32_t lineno;
 };
 
 struct PluginHangData

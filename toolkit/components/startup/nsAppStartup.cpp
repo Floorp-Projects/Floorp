@@ -609,7 +609,7 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                  nsIWebBrowserChrome **_retval)
 {
   bool cancel;
-  return CreateChromeWindow2(aParent, aChromeFlags, nullptr, nullptr, &cancel, _retval);
+  return CreateChromeWindow2(aParent, aChromeFlags, nullptr, nullptr, 0, &cancel, _retval);
 }
 
 
@@ -633,6 +633,7 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                   uint32_t aChromeFlags,
                                   nsITabParent *aOpeningTab,
                                   mozIDOMWindowProxy* aOpener,
+                                  uint64_t aNextTabParentId,
                                   bool *aCancel,
                                   nsIWebBrowserChrome **_retval)
 {
@@ -652,10 +653,15 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
 
     if (xulParent)
-      xulParent->CreateNewWindow(aChromeFlags, aOpeningTab, aOpener, getter_AddRefs(newWindow));
+      xulParent->CreateNewWindow(aChromeFlags, aOpeningTab, aOpener,
+                                 aNextTabParentId,
+                                 getter_AddRefs(newWindow));
     // And if it fails, don't try again without a parent. It could fail
     // intentionally (bug 115969).
   } else { // try using basic methods:
+    MOZ_RELEASE_ASSERT(aNextTabParentId == 0,
+                       "Unexpected aNextTabParentId, we shouldn't ever have a next actor ID without a parent");
+
     /* You really shouldn't be making dependent windows without a parent.
       But unparented modal (and therefore dependent) windows happen
       in our codebase, so we allow it after some bellyaching: */

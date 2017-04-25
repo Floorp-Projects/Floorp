@@ -37,6 +37,9 @@ public:
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                          base::ChildPrivileges aPrivs);
 #endif
+
+  void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel);
+
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel);
   enum SandboxLevel {
     LockDown,

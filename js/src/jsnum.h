@@ -14,6 +14,8 @@
 
 #include "js/Conversions.h"
 
+#include "vm/String.h"
+
 
 // This macro is should be `one' if current compiler supports builtin functions
 // like __builtin_sadd_overflow.
@@ -244,6 +246,11 @@ IsDefinitelyIndex(const Value& v, uint32_t* indexp)
         return true;
     }
 
+    if (v.isString() && v.toString()->hasIndexValue()) {
+        *indexp = v.toString()->getIndexValue();
+        return true;
+    }
+
     return false;
 }
 
@@ -257,6 +264,9 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
     }
     if (v.isDouble()) {
         *dp = v.toDouble();
+    } else if (v.isString() && v.toString()->hasIndexValue()) {
+        *dp = v.toString()->getIndexValue();
+        return true;
     } else {
         extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, HandleValue v, double* dp);
         if (!ToNumberSlow(cx, v, dp))
