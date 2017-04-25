@@ -143,10 +143,12 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
   // call flush directly, since the PresShell won't.
   if (mAuthorStyleDisabled) {
     NoteStyleSheetsChanged();
-    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
   }
   // If we've just enabled, then PresShell will trigger the notification and
   // later flush when the stylesheet objects are enabled in JS.
+  //
+  // TODO(emilio): Users can have JS disabled, can't they? Will that affect that
+  // notification on content documents?
 
   return NS_OK;
 }
@@ -838,6 +840,9 @@ void
 ServoStyleSet::NoteStyleSheetsChanged()
 {
   Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
+  if (!mBatching) {
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  }
 }
 
 #ifdef DEBUG
