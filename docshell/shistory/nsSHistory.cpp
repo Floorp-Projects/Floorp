@@ -1624,8 +1624,7 @@ nsSHistory::LoadURI(const char16_t* aURI,
                     uint32_t aLoadFlags,
                     nsIURI* aReferringURI,
                     nsIInputStream* aPostStream,
-                    nsIInputStream* aExtraHeaderStream,
-                    nsIPrincipal* aTriggeringPrincipal)
+                    nsIInputStream* aExtraHeaderStream)
 {
   return NS_OK;
 }

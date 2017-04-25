@@ -236,18 +236,12 @@ interface nsIWebNavigation : nsISupports
    *        header stream is formatted as:
    *            ( HEADER "\r\n" )*
    *        This parameter is optional and may be null.
-   * @param aTriggeringPrincipal
-   *        The principal that initiated the load of aURI. If omitted docShell
-   *        tries to create a codeBasePrincipal from aReferrer if not null. If
-   *        aReferrer is also null docShell peforms a load using the
-   *        SystemPrincipal as the triggeringPrincipal.
    */
-  void loadURI(in wstring                  aURI,
-               in unsigned long            aLoadFlags,
-               in nsIURI                   aReferrer,
-               in nsIInputStream           aPostData,
-               in nsIInputStream           aHeaders,
-               [optional] in nsIPrincipal  aTriggeringPrincipal);
+  void loadURI(in wstring        aURI,
+               in unsigned long  aLoadFlags,
+               in nsIURI         aReferrer,
+               in nsIInputStream aPostData,
+               in nsIInputStream aHeaders);
 
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
