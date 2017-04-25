@@ -38,16 +38,42 @@ NewConsoleOutputWrapper.prototype = {
       this.jsterm.hud[id] = node;
     };
 
-    let childComponent = ConsoleOutput({
-      serviceContainer: {
-        attachRefToHud,
-        emitNewMessage: (node, messageId) => {
-          this.jsterm.hud.emit("new-messages", new Set([{
-            node,
-            messageId,
-          }]));
-        },
-        hudProxyClient: this.jsterm.hud.proxy.client,
+    const serviceContainer = {
+      attachRefToHud,
+      emitNewMessage: (node, messageId) => {
+        this.jsterm.hud.emit("new-messages", new Set([{
+          node,
+          messageId,
+        }]));
+      },
+      hudProxyClient: this.jsterm.hud.proxy.client,
+      openContextMenu: (e, message) => {
+        let { screenX, screenY, target } = e;
+
+        let messageEl = target.closest(".message");
+        let clipboardText = messageEl ? messageEl.textContent : null;
+
+        // Retrieve closes actor id from the DOM.
+        let actorEl = target.closest("[data-link-actor-id]");
+        let actor = actorEl ? actorEl.dataset.linkActorId : null;
+
+        let menu = createContextMenu(this.jsterm, this.parentNode,
+          { actor, clipboardText, message });
+
+        // Emit the "menu-open" event for testing.
+        menu.once("open", () => this.emit("menu-open"));
+        menu.popup(screenX, screenY, this.toolbox);
+
+        return menu;
+      },
+      openLink: url => this.jsterm.hud.owner.openLink(url),
+      createElement: nodename => {
+        return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
+      },
+    };
+
+    if (this.toolbox) {
+      Object.assign(serviceContainer, {
         onViewSourceInDebugger: frame => {
           this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() =>
             this.jsterm.hud.emit("source-in-debugger-opened")
@@ -61,25 +87,6 @@ NewConsoleOutputWrapper.prototype = {
           frame.url,
           frame.line
         ),
-        openContextMenu: (e, message) => {
-          let { screenX, screenY, target } = e;
-
-          let messageEl = target.closest(".message");
-          let clipboardText = messageEl ? messageEl.textContent : null;
-
-          // Retrieve closes actor id from the DOM.
-          let actorEl = target.closest("[data-link-actor-id]");
-          let actor = actorEl ? actorEl.dataset.linkActorId : null;
-
-          let menu = createContextMenu(this.jsterm, this.parentNode,
-            { actor, clipboardText, message });
-
-          // Emit the "menu-open" event for testing.
-          menu.once("open", () => this.emit("menu-open"));
-          menu.popup(screenX, screenY, this.toolbox);
-
-          return menu;
-        },
         openNetworkPanel: (requestId) => {
           return this.toolbox.selectTool("netmonitor").then(panel => {
             return panel.panelWin.NetMonitorController.inspectRequest(requestId);
@@ -87,22 +94,34 @@ NewConsoleOutputWrapper.prototype = {
         },
         sourceMapService:
           this.toolbox ? this.toolbox._deprecatedServerSourceMapService : null,
-        openLink: url => this.jsterm.hud.owner.openLink(url),
-        createElement: nodename => {
-          return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
-        },
         highlightDomElement: (grip, options = {}) => {
-          return this.toolbox && this.toolbox.highlighterUtils
+          return this.toolbox.highlighterUtils
             ? this.toolbox.highlighterUtils.highlightDomValueGrip(grip, options)
             : null;
         },
         unHighlightDomElement: (forceHide = false) => {
-          return this.toolbox && this.toolbox.highlighterUtils
+          return this.toolbox.highlighterUtils
             ? this.toolbox.highlighterUtils.unhighlight(forceHide)
             : null;
         },
-      }
-    });
+        openNodeInInspector: async (grip) => {
+          let onSelectInspector = this.toolbox.selectTool("inspector");
+          let onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
+          let [
+            front,
+            inspector
+          ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
+
+          let onInspectorUpdated = inspector.once("inspector-updated");
+          let onNodeFrontSet = this.toolbox.selection.setNodeFront(front, "console");
+
+          return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+        }
+      });
+    }
+
+    let childComponent = ConsoleOutput({serviceContainer});
+
     let filterBar = FilterBar({
       serviceContainer: {
         attachRefToHud
