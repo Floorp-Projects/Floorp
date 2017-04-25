@@ -105,9 +105,6 @@ to mochitest command.
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
   * ... `font-feature-settings`: bug 1355366 [10]
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
-* unicode-range parsing bugs
-  * servo/rust-cssparser#133
-  * test_font_face_parser.html `4E00`: servo/rust-cssparser#135 [2]
 * @font-face support bug 1290237
   * test_descriptor_storage.html [1]
   * test_font_face_parser.html `@font-face` [8]
