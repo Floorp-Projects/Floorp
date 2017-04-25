@@ -328,9 +328,9 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
             // Let the URL input use the full width/height and then shrink to the actual size
             urlInputBackgroundView.animate()
-                    .setDuration(200)
-                    .scaleX(1)
-                    .scaleY(1)
+                    .setDuration(ANIMATION_DURATION)
+                    .scaleX(reverse ? widthScale : 1)
+                    .scaleY(reverse ? heightScale : 1)
                     .alpha(reverse ? 0 : 1)
                     .translationX(reverse ? -containerMargin : 0)
                     .translationY(reverse ? -containerMargin : 0)
@@ -357,7 +357,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
             // The URL moves from the right (at least if the lock is visible) to it's actual position
             urlView.animate()
-                    .setDuration(200)
+                    .setDuration(ANIMATION_DURATION)
                     .translationX(reverse ? leftDelta : 0);
         }
 
@@ -368,13 +368,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         // The darker background appears with an alpha animation
         toolbarBackgroundView.animate()
-                .setDuration(200)
+                .setDuration(ANIMATION_DURATION)
                 .alpha(reverse ? 0 : 1);
 
         // And the clear button appears slightly delayed so that it doesn't clash with the menu button
         clearView.animate()
                 .setStartDelay(100)
-                .setDuration(200)
+                .setDuration(ANIMATION_DURATION)
                 .alpha(reverse ? 0 : 1);
     }
 
