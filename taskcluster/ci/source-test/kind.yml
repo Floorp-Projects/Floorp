@@ -18,4 +18,6 @@ jobs-from:
 # This is used by run-task based tasks to lookup which build task it
 # should depend on based on its own platform.
 dependent-build-platforms:
-    linux64.*: build-linux64/opt
+    linux64.*:
+        label: build-linux64/opt
+        target-name: target.tar.bz2
