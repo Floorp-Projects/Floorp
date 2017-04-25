@@ -1971,12 +1971,6 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
         return true;
     }
 
-    if (proto.isObject()) {
-        RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewGroupUnknown(cx, clasp, protoObj))
-            return false;
-    }
-
     ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, clasp, proto);
     if (!group)
         return false;
