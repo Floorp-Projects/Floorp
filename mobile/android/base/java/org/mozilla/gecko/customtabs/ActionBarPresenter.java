@@ -179,7 +179,12 @@ public class ActionBarPresenter {
 
     private void initIndicator() {
         mActionBar.setDisplayHomeAsUpEnabled(true);
-        final Drawable icon = mActionBar.getThemedContext().getDrawable(R.drawable.ic_close_light);
+
+        @SuppressWarnings("deprecation")
+        final Drawable icon = mActionBar.getThemedContext()
+                .getResources()
+                .getDrawable(R.drawable.ic_close_light);
+
         DrawableCompat.setTint(icon, mTextPrimaryColor);
         mActionBar.setHomeAsUpIndicator(icon);
     }
