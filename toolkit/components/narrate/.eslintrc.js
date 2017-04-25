@@ -36,14 +36,6 @@ module.exports = {
     "no-return-assign": "error",
     "no-sequences": "error",
     "no-shadow": "warn",
-<<<<<<< working copy
-    "no-spaced-func": "warn",
-||||||| base
-    "no-shadow-restricted-names": "error",
-    "no-spaced-func": "warn",
-=======
-    "no-shadow-restricted-names": "error",
->>>>>>> merge rev
     "no-throw-literal": "error",
     "no-unneeded-ternary": "error",
     "no-unused-vars": "error",
