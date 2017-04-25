@@ -7472,10 +7472,11 @@ JS::GCCellPtr::outOfLineKind() const
 }
 
 bool
-JS::GCCellPtr::mayBeOwnedByOtherRuntime() const
+JS::GCCellPtr::mayBeOwnedByOtherRuntimeSlow() const
 {
-    return (is<JSString>() && as<JSString>().isPermanentAtom()) ||
-           (is<Symbol>() && as<Symbol>().isWellKnownSymbol());
+    if (is<JSString>())
+        return as<JSString>().isPermanentAtom();
+    return as<Symbol>().isWellKnownSymbol();
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

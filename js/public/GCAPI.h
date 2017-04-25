@@ -650,10 +650,10 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
         JS::IncrementalReadBarrier(thing);
-    else if (js::gc::detail::CellIsMarkedGray(thing.asCell()))
+    else if (js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()))
         JS::UnmarkGrayGCThingRecursively(thing);
 
-    MOZ_ASSERT(!js::gc::detail::CellIsMarkedGray(thing.asCell()));
+    MOZ_ASSERT(!js::gc::detail::TenuredCellIsMarkedGray(thing.asCell()));
 }
 
 } /* namespace gc */
