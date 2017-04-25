@@ -3679,7 +3679,8 @@ var SessionStoreInternal = {
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
-      {loadArguments: aLoadArguments, isRemotenessUpdate});
+      {loadArguments: aLoadArguments, isRemotenessUpdate,
+       requestTime: Services.telemetry.msSystemNow()});
   },
 
   /**
