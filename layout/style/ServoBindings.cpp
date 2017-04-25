@@ -1847,6 +1847,13 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
   return ret;
 }
 
+int32_t
+Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed aPresContext)
+{
+  nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
+  return presContext->DeviceContext()->AppUnitsPerPhysicalInch();
+}
+
 void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
