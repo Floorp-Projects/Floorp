@@ -7429,13 +7429,13 @@ JS::AutoEnterCycleCollection::~AutoEnterCycleCollection()
     MOZ_ASSERT(JS::CurrentThreadIsHeapCycleCollecting());
     TlsContext.get()->heapState = HeapState::Idle;
 }
-#endif
 
-JS::AutoAssertGCCallback::AutoAssertGCCallback(JSObject* obj)
+JS::AutoAssertGCCallback::AutoAssertGCCallback()
   : AutoSuppressGCAnalysis()
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
 }
+#endif
 
 JS_FRIEND_API(const char*)
 JS::GCTraceKindToAscii(JS::TraceKind kind)
