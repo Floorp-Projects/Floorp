@@ -178,7 +178,7 @@ public:
   // *JS() methods are mapped to Selection.*().
   // They may move focus only when the range represents normal selection.
   // These methods shouldn't be used by non-JS callers.
-  void CollapseJS(nsINode& aNode, uint32_t aOffset,
+  void CollapseJS(nsINode* aNode, uint32_t aOffset,
                   mozilla::ErrorResult& aRv);
   void CollapseToStartJS(mozilla::ErrorResult& aRv);
   void CollapseToEndJS(mozilla::ErrorResult& aRv);

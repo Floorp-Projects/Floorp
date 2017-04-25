@@ -11,47 +11,44 @@
  */
 
 interface Selection {
-  readonly attribute Node? anchorNode;
+  readonly attribute Node?         anchorNode;
   readonly attribute unsigned long anchorOffset;
-  readonly attribute Node? focusNode;
+  readonly attribute Node?         focusNode;
   readonly attribute unsigned long focusOffset;
-
-  readonly attribute boolean isCollapsed;
-  [Throws, BinaryName="collapseJS"]
-  void               collapse(Node node, unsigned long offset);
-  [Throws, BinaryName="collapseToStartJS"]
-  void               collapseToStart();
-  [Throws, BinaryName="collapseToEndJS"]
-  void               collapseToEnd();
-
-  [Throws, BinaryName="extendJS"]
-  void               extend(Node node, unsigned long offset);
-
-  [Throws, BinaryName="selectAllChildrenJS"]
-  void               selectAllChildren(Node node);
-  [Throws]
-  void               deleteFromDocument();
-
+  readonly attribute boolean       isCollapsed;
   readonly attribute unsigned long rangeCount;
+  //readonly attribute DOMString     type;
   [Throws]
-  Range              getRangeAt(unsigned long index);
+  Range     getRangeAt(unsigned long index);
   [Throws, BinaryName="addRangeJS"]
-  void               addRange(Range range);
+  void      addRange(Range range);
   [Throws]
-  void               removeRange(Range range);
+  void      removeRange(Range range);
   [Throws]
-  void               removeAllRanges();
-
-  [Throws]
-  boolean            containsNode(Node node, boolean allowPartialContainment);
-
+  void      removeAllRanges();
+  //void      empty();
+  [Throws, BinaryName="collapseJS"]
+  void      collapse(Node? node, optional unsigned long offset = 0);
+  //void      setPosition(Node? node, optional unsigned long offset = 0);
+  [Throws, BinaryName="collapseToStartJS"]
+  void      collapseToStart();
+  [Throws, BinaryName="collapseToEndJS"]
+  void      collapseToEnd();
+  [Throws, BinaryName="extendJS"]
+  void      extend(Node node, optional unsigned long offset = 0);
   [Throws, BinaryName="setBaseAndExtentJS"]
-  void               setBaseAndExtent(Node anchorNode,
-                                      unsigned long anchorOffset,
-                                      Node focusNode,
-                                      unsigned long focusOffset);
-
-  stringifier;
+  void      setBaseAndExtent(Node anchorNode,
+                             unsigned long anchorOffset,
+                             Node focusNode,
+                             unsigned long focusOffset);
+  [Throws, BinaryName="selectAllChildrenJS"]
+  void      selectAllChildren(Node node);
+  [CEReactions, Throws]
+  void      deleteFromDocument();
+  [Throws]
+  boolean   containsNode(Node node,
+                         optional boolean allowPartialContainment = false);
+  stringifier DOMString ();
 };
 
 // Additional methods not currently in the spec
