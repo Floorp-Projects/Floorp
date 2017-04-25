@@ -104,8 +104,7 @@ add_task(function* test_remove_uninteresting_window() {
   // history entries and make itself seem uninteresting.
   yield ContentTask.spawn(browser, null, function*() {
     // Epic hackery to make this browser seem suddenly boring.
-    Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
-    docShell.setCurrentURI(BrowserUtils.makeURI("about:blank"));
+    docShell.setCurrentURI(Services.io.newURI("about:blank"));
 
     let {sessionHistory} = docShell.QueryInterface(Ci.nsIWebNavigation);
     sessionHistory.PurgeHistory(sessionHistory.count);

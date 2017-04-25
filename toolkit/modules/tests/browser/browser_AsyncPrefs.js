@@ -37,7 +37,7 @@ function* runTest() {
     ["stuff", "Char"],
     [[], false],
     [{}, false],
-    [BrowserUtils.makeURI("http://mozilla.org/"), false],
+    [Services.io.newURI("http://mozilla.org/"), false],
   ];
 
   const prefMap = [
