@@ -7,6 +7,7 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 #include "nsIDocument.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGEffects.h"
@@ -16,6 +17,52 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 namespace mozilla {
+
+/* static */ bool
+SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI)
+{
+  static bool sEnabledForContent = false;
+  static bool sEnabledForContentCached = false;
+
+  if (!sEnabledForContentCached) {
+    Preferences::AddBoolVarCache(&sEnabledForContent,
+                                 "svg.context-properties.content.enabled", false);
+    sEnabledForContentCached = true;
+  }
+
+  if (sEnabledForContent) {
+    return true;
+  }
+
+  // Context paint is pref'ed off for Web content.  Ideally we'd have some
+  // easy means to determine whether the frame that has linked to the image
+  // is a frame for a content node that originated from Web content.
+  // Unfortunately different types of anonymous content, about: documents
+  // such as about:reader, etc. that are "our" code that we ship are
+  // sometimes hard to distinguish from real Web content.  As a result,
+  // instead of trying to figure out what content is "ours" we instead let
+  // any content provide image context paint, but only if the image is
+  // chrome:// or resource:// do we return true.  This should be sufficient
+  // to stop the image context paint feature being useful to (and therefore
+  // used by and relied upon by) Web content.  (We don't want Web content to
+  // use this feature because we're not sure that image context paint is a
+  // good mechanism for wider use, or suitable for specification.)
+  //
+  // One case where we may return false here and prevent image context paint
+  // being used by "our" content is in-tree WebExtensions.  These have scheme
+  // 'moz-extension://', but so do other developers' extensions, and we don't
+  // want extension developers coming to rely on image context paint either.
+  // We may be able to provide our in-tree extensions access to context paint
+  // once they are signed. For more information see:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1359762#c5
+  //
+  nsAutoCString scheme;
+  if (NS_SUCCEEDED(aURI->GetScheme(scheme)) &&
+      (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource"))) {
+    return true;
+  }
+  return false;
+}
 
 /**
  * Stores in |aTargetPaint| information on how to reconstruct the current
