@@ -59,6 +59,7 @@ class NativeObject;
 class Nursery;
 class HeapSlot;
 class ZoneGroup;
+class JSONPrinter;
 
 void SetGCZeal(JSRuntime*, uint8_t, uint32_t);
 
@@ -258,6 +259,9 @@ class Nursery
     void enterZealMode();
     void leaveZealMode();
 #endif
+
+    /* Write profile time JSON on JSONPrinter. */
+    void renderProfileJSON(JSONPrinter& json) const;
 
     /* Print header line for profile times. */
     static void printProfileHeader();

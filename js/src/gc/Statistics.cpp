@@ -665,6 +665,17 @@ Statistics::renderJsonSlice(size_t sliceNum) const
 }
 
 UniqueChars
+Statistics::renderNurseryJson(JSRuntime* rt) const
+{
+    Sprinter printer(nullptr, false);
+    if (!printer.init())
+        return UniqueChars(nullptr);
+    JSONPrinter json(printer);
+    rt->gc.nursery().renderProfileJSON(json);
+    return UniqueChars(printer.release());
+}
+
+UniqueChars
 Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 {
     if (aborted)

@@ -7684,6 +7684,13 @@ JS::GCDescription::summaryToJSON(JSContext* cx) const
     return cx->runtime()->gc.stats().renderJsonMessage(0, false);
 }
 
+JS_PUBLIC_API(JS::UniqueChars)
+JS::MinorGcToJSON(JSContext* cx)
+{
+    JSRuntime* rt = cx->runtime();
+    return rt->gc.stats().renderNurseryJson(rt);
+}
+
 JS_PUBLIC_API(JS::GCSliceCallback)
 JS::SetGCSliceCallback(JSContext* cx, GCSliceCallback callback)
 {
