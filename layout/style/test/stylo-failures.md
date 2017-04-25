@@ -36,7 +36,8 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [19]
+  * test_transitions_and_reframes.html: pseudo frames bug 1331047 [4]
+  * test_animations.html: 6 of them bug 1331047 [25]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
