@@ -1606,6 +1606,7 @@ function switchToFrame(msg) {
       curContainer.frame.focus();
     }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    return;
   }
 
   sendResponse(rv, command_id);
