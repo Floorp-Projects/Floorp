@@ -576,7 +576,7 @@ var ClickEventHandler = {
       if (docShell.mixedContentChannel) {
         const sm = Services.scriptSecurityManager;
         try {
-          let targetURI = BrowserUtils.makeURI(href);
+          let targetURI = Services.io.newURI(href);
           sm.checkSameOriginURI(docshell.mixedContentChannel.URI, targetURI, false);
           json.allowMixedContent = true;
         } catch (e) {}
@@ -692,7 +692,7 @@ var ClickEventHandler = {
     // In case of XLink, we don't return the node we got href from since
     // callers expect <a>-like elements.
     // Note: makeURI() will throw if aUri is not a valid URI.
-    return [href ? BrowserUtils.makeURI(href, null, baseURI).spec : null, null,
+    return [href ? Services.io.newURI(href, null, baseURI).spec : null, null,
             node && node.ownerDocument.nodePrincipal];
   }
 };
@@ -867,12 +867,10 @@ addMessageListener("ContextMenu:SearchFieldBookmarkData", (message) => {
 
   let charset = node.ownerDocument.characterSet;
 
-  let formBaseURI = BrowserUtils.makeURI(node.form.baseURI,
-                                         charset);
+  let formBaseURI = Services.io.newURI(node.form.baseURI, charset);
 
-  let formURI = BrowserUtils.makeURI(node.form.getAttribute("action"),
-                                     charset,
-                                     formBaseURI);
+  let formURI = Services.io.newURI(node.form.getAttribute("action"), charset,
+                                   formBaseURI);
 
   let spec = formURI.spec;
 
@@ -1462,8 +1460,8 @@ let OfflineApps = {
       return null;
 
     try {
-      var contentURI = BrowserUtils.makeURI(aWindow.location.href, null, null);
-      return BrowserUtils.makeURI(attr, aWindow.document.characterSet, contentURI);
+      return Services.io.newURI(attr, aWindow.document.characterSet,
+                                Services.io.newURI(aWindow.location.href));
     } catch (e) {
       return null;
     }

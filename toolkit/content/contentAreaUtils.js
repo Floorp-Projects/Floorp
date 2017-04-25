@@ -946,7 +946,7 @@ function makeWebBrowserPersist() {
 }
 
 function makeURI(aURL, aOriginCharset, aBaseURI) {
-  return BrowserUtils.makeURI(aURL, aOriginCharset, aBaseURI);
+  return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
 }
 
 function makeFileURI(aFile) {
