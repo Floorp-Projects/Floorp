@@ -476,3 +476,12 @@ audio > xul|videocontrols {
 [error="errorGeneric"]         > [anonid="errorGeneric"] {
   display: inline;
 }
+
+%ifdef XP_WIN
+@media (-moz-windows-default-theme: 0) {
+  .controlsSpacer,
+  .clickToPlay {
+    background-color: transparent;
+  }
+}
+%endif
