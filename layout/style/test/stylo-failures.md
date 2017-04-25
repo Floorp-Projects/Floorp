@@ -173,7 +173,6 @@ to mochitest command.
     * test_value_storage.html `cursor` [4]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
-  * test_pixel_lengths.html `mozmm`: mozmm unit bug 1356104 [3]
 * Unsupported values
   * SVG-only values of pointer-events not recognized
     * test_value_storage.html `pointer-events` [1]
