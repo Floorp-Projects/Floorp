@@ -191,9 +191,6 @@ to mochitest command.
     * ... `-moz-available` [4]
   * several prefixed values in cursor property bug 1356072
     * test_value_storage.html `cursor` [4]
-  * moz-prefixed values of overflow shorthand bug 1330888
-    * test_bug319381.html [8]
-    * test_value_storage.html `'overflow` [8]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit bug 1356104 [3]
