@@ -135,6 +135,9 @@ this.BrowserUtils = {
     return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
   },
 
+  /**
+   * @deprecated Use Services.io.newFileURI directly instead.
+   */
   makeFileURI(aFile) {
     return Services.io.newFileURI(aFile);
   },
