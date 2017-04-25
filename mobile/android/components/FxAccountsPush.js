@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -60,7 +58,9 @@ FxAccountsPush.prototype = {
             resolve(subscription);
           } else {
             Log.w("FxAccountsPush failed to subscribe", result);
-            reject(new Error("FxAccountsPush failed to subscribe"));
+            const err = new Error("FxAccountsPush failed to subscribe");
+            err.result = result;
+            reject(err);
           }
         });
     })
@@ -76,6 +76,10 @@ FxAccountsPush.prototype = {
     })
     .catch(err => {
       Log.i("Error when registering FxA push endpoint " + err);
+      EventDispatcher.instance.sendRequest({
+        type: "FxAccountsPush:Subscribe:Response",
+        error: err.result.toString() // Convert to string because the GeckoBundle can't getLong();
+      });
     });
   },
 

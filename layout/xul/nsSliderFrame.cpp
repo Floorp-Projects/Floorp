@@ -1040,6 +1040,14 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     }
   }
 
+  nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (!thumbFrame) {
+    return;
+  }
+  bool isHorizontal = IsXULHorizontal();
+  nsSize thumbSize = thumbFrame->GetSize();
+  nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
+
   mozilla::layers::FrameMetrics::ViewID scrollTargetId;
   bool hasID = nsLayoutUtils::FindIDFor(scrollableContent, &scrollTargetId);
   bool hasAPZView = hasID && (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
@@ -1065,8 +1073,10 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
                                NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
                                sliderTrackCSS,
-                               IsXULHorizontal() ? AsyncDragMetrics::HORIZONTAL :
-                                                   AsyncDragMetrics::VERTICAL);
+                               NSAppUnitsToFloatPixels(thumbLength,
+                                 float(AppUnitsPerCSSPixel())),
+                               isHorizontal ? AsyncDragMetrics::HORIZONTAL :
+                                              AsyncDragMetrics::VERTICAL);
 
   if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
     return;

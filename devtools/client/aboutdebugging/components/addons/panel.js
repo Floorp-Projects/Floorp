@@ -76,7 +76,8 @@ module.exports = createClass({
             icon: addon.iconURL || ExtensionIcon,
             addonID: addon.id,
             addonActor: addon.actor,
-            temporarilyInstalled: addon.temporarilyInstalled
+            temporarilyInstalled: addon.temporarilyInstalled,
+            url: addon.url,
           };
         });
 

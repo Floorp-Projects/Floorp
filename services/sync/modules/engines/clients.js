@@ -296,7 +296,7 @@ ClientEngine.prototype = {
   // We assume that clients not present in the FxA Device Manager list have been
   // disconnected and so are stale
   _refreshKnownStaleClients() {
-    this._log.debug('Refreshing the known stale clients list');
+    this._log.debug("Refreshing the known stale clients list");
     let localClients = Object.values(this._store._remoteClients)
                              .filter(client => client.fxaDeviceId) // iOS client records don't have fxaDeviceId
                              .map(client => client.fxaDeviceId);
@@ -304,7 +304,7 @@ ClientEngine.prototype = {
     try {
       fxaClients = Async.promiseSpinningly(this.fxAccounts.getDeviceList()).map(device => device.id);
     } catch (ex) {
-      this._log.error('Could not retrieve the FxA device list', ex);
+      this._log.error("Could not retrieve the FxA device list", ex);
       this._knownStaleFxADeviceIds = [];
       return;
     }

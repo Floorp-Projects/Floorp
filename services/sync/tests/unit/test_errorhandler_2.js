@@ -947,7 +947,7 @@ add_task(async function test_engine_applyFailed() {
   engine.enabled = true;
   delete engine.exception;
   engine.sync = function sync() {
-    Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "catapult");
+    Svc.Obs.notify("weave:engine:sync:applied", {newFailed: 1}, "catapult");
   };
 
   Svc.Prefs.set("log.appender.file.logOnError", true);

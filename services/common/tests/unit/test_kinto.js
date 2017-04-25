@@ -19,7 +19,7 @@ function do_get_kinto_sqliteHandle() {
 
 function do_get_kinto_collection(sqliteHandle, collection = "test_collection") {
   let config = {
-    remote:`http://localhost:${server.identity.primaryPort}/v1/`,
+    remote: `http://localhost:${server.identity.primaryPort}/v1/`,
     headers: {Authorization: "Basic " + btoa("user:pass")},
     adapter: FirefoxAdapter,
     adapterOptions: {sqliteHandle},
@@ -378,7 +378,16 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({
+        "settings": {
+          "batch_max_requests": 25
+        },
+        "url": `http://localhost:${port}/v1/`,
+        "documentation": "https://kinto.readthedocs.org/",
+        "version": "1.5.1",
+        "commit": "cbc6f58",
+        "hello": "kinto"
+      })
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified": {
       "sampleHeaders": [
@@ -389,7 +398,14 @@ function getSampleResponse(req, port) {
         "Etag: \"1445606341071\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{"last_modified":1445606341071, "done":false, "id":"68db8313-686e-4fff-835e-07d78ad6f2af", "title":"New test"}]})
+      "responseBody": JSON.stringify({
+        "data": [{
+          "last_modified": 1445606341071,
+          "done": false,
+          "id": "68db8313-686e-4fff-835e-07d78ad6f2af",
+          "title": "New test"
+        }]
+      })
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified&_since=1445606341071": {
       "sampleHeaders": [
@@ -400,7 +416,14 @@ function getSampleResponse(req, port) {
         "Etag: \"1445607941223\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{"last_modified":1445607941223, "done":false, "id":"901967b0-f729-4b30-8d8d-499cba7f4b1d", "title":"Another new test"}]})
+      "responseBody": JSON.stringify({
+        "data": [{
+          "last_modified": 1445607941223,
+          "done": false,
+          "id": "901967b0-f729-4b30-8d8d-499cba7f4b1d",
+          "title": "Another new test"
+        }]
+      })
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified&_since=1445607941223": {
       "sampleHeaders": [
@@ -411,7 +434,14 @@ function getSampleResponse(req, port) {
         "Etag: \"1445607541265\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{"last_modified":1445607541265, "done":false, "id":"901967b0-f729-4b30-8d8d-499cba7f4b1d", "title":"Modified title"}]})
+      "responseBody": JSON.stringify({
+        "data": [{
+          "last_modified": 1445607541265,
+          "done": false,
+          "id": "901967b0-f729-4b30-8d8d-499cba7f4b1d",
+          "title": "Modified title"
+        }]
+      })
     }
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||

@@ -14,10 +14,19 @@ add_task(function* test_merge_bookmarks_flat() {
     let rootFolder = yield CloudSync().bookmarks.getRootFolder("TEST");
     ok(rootFolder.id, "root folder id is ok");
 
-    let items = [
-      {"id":"G_UL4ZhOyX8m", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 1", "uri":"http://www.reddit.com", index:2},
-      {"id":"G_UL4ZhOyX8n", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 2", "uri":"http://www.reddit.com?1", index:1},
-    ];
+    let items = [{
+      "id": "G_UL4ZhOyX8m",
+      "type": rootFolder.BOOKMARK,
+      "title": "reddit: the front page of the internet 1",
+      "uri": "http://www.reddit.com",
+      index: 2
+    }, {
+      "id": "G_UL4ZhOyX8n",
+      "type": rootFolder.BOOKMARK,
+      "title": "reddit: the front page of the internet 2",
+      "uri": "http://www.reddit.com?1",
+      index: 1
+    }];
     yield rootFolder.mergeRemoteItems(items);
 
     let localItems = yield rootFolder.getLocalItems();
@@ -32,11 +41,23 @@ add_task(function* test_merge_bookmarks_in_folders() {
     let rootFolder = yield CloudSync().bookmarks.getRootFolder("TEST");
     ok(rootFolder.id, "root folder id is ok");
 
-    let items = [
-      {"id":"G_UL4ZhOyX8m", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 1", "uri":"http://www.reddit.com", index:2},
-      {"id":"G_UL4ZhOyX8n", "type":rootFolder.BOOKMARK, parent:"G_UL4ZhOyX8x", "title":"reddit: the front page of the internet 2", "uri":"http://www.reddit.com/?a=å%20ä%20ö", index:1},
-      {"id":"G_UL4ZhOyX8x", "type":rootFolder.FOLDER},
-    ];
+    let items = [{
+      "id": "G_UL4ZhOyX8m",
+      "type": rootFolder.BOOKMARK,
+      "title": "reddit: the front page of the internet 1",
+      "uri": "http://www.reddit.com",
+      index: 2
+    }, {
+      "id": "G_UL4ZhOyX8n",
+      "type": rootFolder.BOOKMARK,
+      parent: "G_UL4ZhOyX8x",
+      "title": "reddit: the front page of the internet 2",
+      "uri": "http://www.reddit.com/?a=å%20ä%20ö",
+      index: 1
+    }, {
+      "id": "G_UL4ZhOyX8x",
+      "type": rootFolder.FOLDER
+    }];
     yield rootFolder.mergeRemoteItems(items);
 
     let localItems = yield rootFolder.getLocalItems();
