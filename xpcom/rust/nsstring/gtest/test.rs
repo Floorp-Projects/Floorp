@@ -116,3 +116,26 @@ pub extern fn Rust_FromEmptyRustString() {
     test.assign_utf8(&nsCString::from(String::new()));
     assert!(test.is_empty());
 }
+
+#[no_mangle]
+pub extern fn Rust_WriteToBufferFromRust(cs: *mut nsACString, s: *mut nsAString, fallible_cs: *mut nsACString, fallible_s: *mut nsAString) {
+    unsafe {
+        let cs_buf = (*cs).to_mut();
+        let s_buf = (*s).to_mut();
+        let fallible_cs_buf = (*fallible_cs).fallible_to_mut().unwrap();
+        let fallible_s_buf = (*fallible_s).fallible_to_mut().unwrap();
+
+        cs_buf[0] = b'A';
+        cs_buf[1] = b'B';
+        cs_buf[2] = b'C';
+        s_buf[0] = b'A' as u16;
+        s_buf[1] = b'B' as u16;
+        s_buf[2] = b'C' as u16;
+        fallible_cs_buf[0] = b'A';
+        fallible_cs_buf[1] = b'B';
+        fallible_cs_buf[2] = b'C';
+        fallible_s_buf[0] = b'A' as u16;
+        fallible_s_buf[1] = b'B' as u16;
+        fallible_s_buf[2] = b'C' as u16;
+    }
+}
