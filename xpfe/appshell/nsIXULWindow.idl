@@ -116,11 +116,14 @@ interface nsIXULWindow : nsISupports
    * @param aOpeningTab the TabParent that requested this new window be opened.
    *                    Can be left null.
    * @param aOpener The window which is requesting that this new window be opened.
+   * @param aNextTabParentId The integer ID of the next tab parent actor to use.
+   *        0 means there is no next tab parent actor to use.
    * @return the newly minted window
    */
   nsIXULWindow createNewWindow(in int32_t aChromeFlags,
                                in nsITabParent aOpeningTab,
-                               in mozIDOMWindowProxy aOpener);
+                               in mozIDOMWindowProxy aOpener,
+                               in unsigned long long aNextTabParentId);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 
@@ -159,4 +162,11 @@ interface nsIXULWindow : nsISupports
                                                  in int32_t aDesiredHeight,
                                                  in int32_t shellItemWidth,
                                                  in int32_t shellItemHeight);
+
+  /**
+   * If the window was opened as a content window by script, this will return the
+   * integer ID of the next TabParent actor to use.
+   */
+  [noscript]
+  readonly attribute unsigned long long nextTabParentId;
 };

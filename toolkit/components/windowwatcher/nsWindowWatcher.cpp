@@ -482,6 +482,7 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     uint32_t aChromeFlags,
                                     nsITabParent* aOpeningTabParent,
                                     mozIDOMWindowProxy* aOpener,
+                                    uint64_t aNextTabParentId,
                                     nsIWebBrowserChrome** aResult)
 {
   nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
@@ -500,7 +501,8 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv =
     windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags,
-                                        aOpeningTabParent, aOpener, &cancel,
+                                        aOpeningTabParent, aOpener,
+                                        aNextTabParentId, &cancel,
                                         getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -547,6 +549,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
                                          const nsACString& aFeatures,
                                          bool aCalledFromJS,
                                          float aOpenerFullZoom,
+                                         uint64_t aNextTabParentId,
                                          nsITabParent** aResult)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -615,6 +618,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
 
   CreateChromeWindow(aFeatures, parentChrome, chromeFlags,
                      aOpeningTabParent, nullptr,
+                     aNextTabParentId,
                      getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
@@ -985,7 +989,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       if (windowCreator2) {
         mozIDOMWindowProxy* openerWindow = aForceNoOpener ? nullptr : aParent;
         rv = CreateChromeWindow(features, parentChrome, chromeFlags,
-                                nullptr, openerWindow, getter_AddRefs(newChrome));
+                                nullptr, openerWindow, 0,
+                                getter_AddRefs(newChrome));
 
       } else {
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
