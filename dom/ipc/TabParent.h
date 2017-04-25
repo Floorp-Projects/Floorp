@@ -630,8 +630,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex) override;
 
-  virtual mozilla::ipc::IPCResult RecvAllocPipelineId(RefPtr<AllocPipelineIdPromise>&& aPromise) override;
-
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;
