@@ -28,7 +28,7 @@ include JavaScriptTypes;
 include URIParams;
 include PPrintingTypes;
 include PTabContext;
-
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using class mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
@@ -83,6 +83,7 @@ using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
 using mozilla::FontRange from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace dom {
@@ -554,6 +555,8 @@ parent:
     sync GetTabCount() returns (uint32_t value);
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
+
+    async AllocPipelineId() returns (PipelineId pipelineId);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
