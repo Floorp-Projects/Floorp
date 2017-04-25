@@ -969,6 +969,33 @@ Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLe
 }
 
 void
+Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder)
+{
+  aBorder->EnsureBorderColors();
+}
+
+void Gecko_ClearMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide)
+{
+  aBorder->ClearBorderColors(aSide);
+}
+
+void
+Gecko_AppendMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide,
+                            nscolor aColor)
+{
+  aBorder->AppendBorderColor(aSide, aColor);
+}
+
+void
+Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
+                          mozilla::Side aSide)
+{
+  if (aSrc->mBorderColors) {
+    aDest->CopyBorderColorsFrom(aSrc->mBorderColors[aSide], aSide);
+  }
+}
+
+void
 Gecko_FontFamilyList_Clear(FontFamilyList* aList) {
   aList->Clear();
 }
