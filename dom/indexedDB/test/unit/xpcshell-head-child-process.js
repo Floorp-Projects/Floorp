@@ -15,6 +15,8 @@ function run_test() {
   let thisTest = _TEST_FILE.toString().replace(/\\/g, "/");
   thisTest = thisTest.substring(thisTest.lastIndexOf("/") + 1);
 
+  // This is defined globally via xpcshell.
+  /* global _HEAD_FILES */
   _HEAD_FILES.push(do_get_file(INDEXEDDB_HEAD_FILE).path.replace(/\\/g, "/"));
 
 

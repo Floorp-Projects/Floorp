@@ -31,7 +31,7 @@ function* testSteps()
   is(event.type, "success", "expect a success event");
 
   for (let autoIncrement of [false, true]) {
-    objectStore = db.transaction(autoIncrement, "readwrite")
+    let objectStore = db.transaction(autoIncrement, "readwrite")
                     .objectStore(autoIncrement);
 
     request = objectStore.put({ id: 5, index: 6 });

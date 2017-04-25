@@ -215,7 +215,7 @@ function* testSteps()
     continueToNextStep();
   });
 
-  readRequestError = yield undefined;
+  let readRequestError = yield undefined;
   if (readRequestError) {
     txn.onerror = grabEventAndContinueHandler;
 

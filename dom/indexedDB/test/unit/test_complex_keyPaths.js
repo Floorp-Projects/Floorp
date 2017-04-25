@@ -100,7 +100,7 @@ function* testSteps()
     let store = stores[indexName];
 
     try {
-      request = store.add(info.value);
+      var request = store.add(info.value);
       ok("key" in info, "successfully created request to insert value" + test);
     } catch (e) {
       ok(!("key" in info), "threw when attempted to insert" + test);
@@ -185,18 +185,18 @@ function* testSteps()
         continue;
       }
     }
-    
+
     let index = indexes[indexName];
 
     request = store.add(info.value, 1);
     if ("key" in info) {
       index.getKey(info.key).onsuccess = grabEventAndContinueHandler;
-      e = yield undefined;
+      let e = yield undefined;
       is(e.target.result, 1, "found value when reading" + test);
     }
     else {
       index.count().onsuccess = grabEventAndContinueHandler;
-      e = yield undefined;
+      let e = yield undefined;
       is(e.target.result, 0, "should be empty" + test);
     }
 
