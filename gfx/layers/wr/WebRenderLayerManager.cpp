@@ -9,6 +9,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -676,6 +677,25 @@ void
 WebRenderLayerManager::Composite()
 {
   WrBridge()->SendForceComposite();
+}
+
+RefPtr<PipelineIdPromise>
+WebRenderLayerManager::AllocPipelineId()
+{
+  if (XRE_IsParentProcess()) {
+    GPUProcessManager* pm = GPUProcessManager::Get();
+    if (!pm) {
+      return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
+    }
+    return PipelineIdPromise::CreateAndResolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);;
+  }
+
+  MOZ_ASSERT(XRE_IsContentProcess());
+  TabChild* tabChild = mWidget ? mWidget->GetOwningTabChild() : nullptr;
+  if (!tabChild) {
+    return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
+  }
+  return tabChild->SendAllocPipelineId();
 }
 
 void

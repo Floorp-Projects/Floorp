@@ -28,6 +28,7 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
+  mPipelineIdRequest.DisconnectIfExists();
   if (mKey.isSome()) {
     WrManager()->AddImageKeyForDiscard(mKey.value());
   }
@@ -94,6 +95,21 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
 
   MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
+
+  // Allocate PipelineId if necessary
+  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE &&
+      mPipelineId.isNothing() && !mPipelineIdRequest.Exists()) {
+    RefPtr<WebRenderImageLayer> self = this;
+    Manager()->AllocPipelineId()
+      ->Then(AbstractThread::GetCurrent(), __func__,
+      [self] (const wr::PipelineId& aPipelineId) {
+        self->mPipelineIdRequest.Complete();
+        self->mPipelineId = Some(aPipelineId);
+      },
+      [self] (const ipc::PromiseRejectReason &aReason) {
+        self->mPipelineIdRequest.Complete();
+      })->Track(mPipelineIdRequest);
+  }
 
   if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
