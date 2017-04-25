@@ -627,7 +627,6 @@ GK_ATOM(mouseout, "mouseout")
 GK_ATOM(mouseover, "mouseover")
 GK_ATOM(mousethrough, "mousethrough")
 GK_ATOM(mouseup, "mouseup")
-GK_ATOM(mozaudiochannel, "mozaudiochannel")
 GK_ATOM(mozfullscreenchange, "mozfullscreenchange")
 GK_ATOM(mozfullscreenerror, "mozfullscreenerror")
 GK_ATOM(mozpointerlockchange, "mozpointerlockchange")
@@ -1958,10 +1957,6 @@ GK_ATOM(onuserproximity, "onuserproximity")
 
 // light sensor support
 GK_ATOM(ondevicelight, "ondevicelight")
-
-// Audio channel events
-GK_ATOM(onmozinterruptbegin, "onmozinterruptbegin")
-GK_ATOM(onmozinterruptend, "onmozinterruptend")
 
 // MediaDevices device change event
 GK_ATOM(ondevicechange, "ondevicechange")
