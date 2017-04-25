@@ -616,16 +616,23 @@ const menuTracker = {
   },
 };
 
-var gExtensionCount = 0;
-
 this.menusInternal = class extends ExtensionAPI {
+  constructor(extension) {
+    super(extension);
+
+    if (!gMenuMap.size) {
+      menuTracker.register();
+    }
+    gMenuMap.set(extension, new Map());
+  }
+
   onShutdown(reason) {
     let {extension} = this;
 
     if (gMenuMap.has(extension)) {
       gMenuMap.delete(extension);
       gRootItems.delete(extension);
-      if (--gExtensionCount == 0) {
+      if (!gMenuMap.size) {
         menuTracker.unregister();
       }
     }
@@ -633,11 +640,6 @@ this.menusInternal = class extends ExtensionAPI {
 
   getAPI(context) {
     let {extension} = context;
-
-    gMenuMap.set(extension, new Map());
-    if (++gExtensionCount == 1) {
-      menuTracker.register();
-    }
 
     return {
       menusInternal: {
