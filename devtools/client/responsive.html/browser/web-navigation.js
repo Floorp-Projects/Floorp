@@ -79,6 +79,7 @@ BrowserElementWebNavigation.prototype = {
       triggeringPrincipal: triggeringPrincipal
                            ? Utils.serializePrincipal(triggeringPrincipal)
                            : null,
+      requestTime: Services.telemetry.msSystemNow(),
     });
   },
 
