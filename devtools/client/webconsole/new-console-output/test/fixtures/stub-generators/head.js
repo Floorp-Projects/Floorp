@@ -332,7 +332,7 @@ function* generateEvaluationResultStubs() {
 
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
 
-  for (let [code, key] of evaluationResult) {
+  for (let [key, code] of evaluationResult) {
     const packet = yield new Promise(resolve => {
       toolbox.target.activeConsole.evaluateJS(code, resolve);
     });
@@ -414,9 +414,8 @@ function* generatePageErrorStubs() {
     let received = new Promise(resolve => {
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
         toolbox.target.client.removeListener("pageError", onPacket);
-        let message = prepareMessage(packet, {getNextId: () => 1});
-        stubs.packets.push(formatPacket(message.messageText, packet));
-        stubs.preparedMessages.push(formatStub(message.messageText, packet));
+        stubs.packets.push(formatPacket(key, packet));
+        stubs.preparedMessages.push(formatStub(key, packet));
         resolve();
       });
     });
