@@ -117,6 +117,7 @@ public:
 
 private:
   nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
+  void MaybeStartThrottleTrackingTimout();
 
 private:
   struct Timeouts {
