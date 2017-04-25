@@ -483,6 +483,17 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
                          servoValues);
     }
+
+    // aComputedValues might be nullptr if the target element is now in a
+    // display:none subtree. We still call Gecko_UpdateAnimations in this case
+    // because we need to stop CSS animations in the display:none subtree.
+    // However, we don't need to update transitions since they are stopped by
+    // RestyleManager::AnimationsWithDestroyedFrame so we just return early
+    // here.
+    if (!aComputedValues) {
+      return;
+    }
+
     if (tasks & UpdateAnimationsTasks::CSSTransitions) {
       MOZ_ASSERT(aOldComputedValues);
       const ServoComputedValuesWithParent oldServoValues =
