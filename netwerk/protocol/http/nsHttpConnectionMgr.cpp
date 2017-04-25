@@ -3425,7 +3425,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         }
     }
 
-    return SetupConn(out, nullptr);
+    return SetupConn(out, false);
 }
 
 bool
@@ -3474,9 +3474,8 @@ nsHalfOpenSocket::FastOpenEnabled()
 
 nsresult
 nsHttpConnectionMgr::
-nsHalfOpenSocket::StartFastOpen(PRFileDesc *fd)
+nsHalfOpenSocket::StartFastOpen()
 {
-    MOZ_ASSERT(fd);
     MOZ_ASSERT(mStreamOut);
     MOZ_ASSERT(mEnt && !mBackupTransport);
     mUsingFastOpen = true;
@@ -3488,7 +3487,7 @@ nsHalfOpenSocket::StartFastOpen(PRFileDesc *fd)
     mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
     mSocketTransport->SetEventSink(nullptr, nullptr);
     gHttpHandler->ConnMgr()->RecvdConnect();
-    return SetupConn(mStreamOut, fd);
+    return SetupConn(mStreamOut, true);
 }
 
 void
@@ -3538,7 +3537,7 @@ nsHalfOpenSocket::FastOpenNotSupported()
 nsresult
 nsHttpConnectionMgr::
 nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
-                            PRFileDesc *aFastOpen)
+                            bool aFastOpen)
 {
     MOZ_ASSERT(!aFastOpen || (out == mStreamOut));
     // assign the new socket to the http connection
@@ -3697,7 +3696,7 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         mTransaction = new NullHttpTransaction(mEnt->mConnInfo,
                                                callbacks, mCaps);
 
-        conn->SetFastOpen(nullptr);
+        conn->SetFastOpen(false);
         mConnectionNegotiatingFastOpen = conn;
     }
 
