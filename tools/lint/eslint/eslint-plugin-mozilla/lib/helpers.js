@@ -80,12 +80,11 @@ module.exports = {
    * @return {String}
    *         The JS source for the node.
    */
-  getASTSource(node, context) {
+  getASTSource(node) {
     switch (node.type) {
       case "MemberExpression":
         if (node.computed) {
-          let filename = context && context.getFilename();
-          throw new Error(`getASTSource unsupported computed MemberExpression in ${filename}`);
+          throw new Error("getASTSource unsupported computed MemberExpression");
         }
         return this.getASTSource(node.object) + "." +
           this.getASTSource(node.property);
