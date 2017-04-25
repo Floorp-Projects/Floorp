@@ -14,14 +14,6 @@ module.exports = {
     "node": true
   },
 
-  "plugins": [
-    "mozilla"
-  ],
-
-  "extends": [
-    "plugin:mozilla/recommended"
-  ],
-
   "rules": {
     "camelcase": "error",
     "comma-dangle": ["error", "never"],
