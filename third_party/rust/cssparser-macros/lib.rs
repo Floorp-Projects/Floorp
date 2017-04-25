@@ -27,15 +27,7 @@ define_proc_macros! {
         max_len(arms.iter().flat_map(|arm| &arm.pats).filter_map(|pattern| {
             let expr = match *pattern {
                 syn::Pat::Lit(ref expr) => expr,
-                syn::Pat::Wild |
-                syn::Pat::Ident(_, _, None) => return None,
-                syn::Pat::Ident(_, _, Some(ref sub_pattern)) => {
-                    match **sub_pattern {
-                        syn::Pat::Lit(ref expr) => expr,
-                        syn::Pat::Wild => return None,
-                        _ => panic!("expected string or wildcard pattern, got {:?}", pattern)
-                    }
-                }
+                syn::Pat::Wild => return None,
                 _ => panic!("expected string or wildcard pattern, got {:?}", pattern)
             };
             match **expr {
@@ -62,7 +54,7 @@ define_proc_macros! {
     /// and the corresponding value as a const expression.
     ///
     /// Output: a rust-phf map, with keys ASCII-lowercased:
-    /// ```
+    /// ```text
     /// static MAP: &'static ::cssparser::phf::Map<&'static str, $ValueType> = …;
     /// ```
     #[allow(non_snake_case)]
