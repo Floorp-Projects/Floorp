@@ -9444,29 +9444,14 @@
     "kind": "flag",
     "description": "If a master-password is enabled for this profile"
   },
-  "DISPLAY_SCALING_OSX" : {
+  "DISPLAY_SCALING" : {
     "expires_in_version": "never",
     "kind": "linear",
     "high": 500,
     "n_buckets": 100,
-    "description": "Scaling percentage for the display where the first window is opened (OS X only)",
-    "cpp_guard": "XP_MACOSX"
-  },
-  "DISPLAY_SCALING_MSWIN" : {
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 100,
-    "description": "Scaling percentage for the display where the first window is opened (MS Windows only)",
-    "cpp_guard": "XP_WIN"
-  },
-  "DISPLAY_SCALING_LINUX" : {
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 100,
-    "description": "Scaling percentage for the display where the first window is opened (Linux only)",
-    "cpp_guard": "XP_LINUX"
+    "bug_numbers": [1121966],
+    "alert_emails": ["dolske@mozilla.com"],
+    "description": "Scaling percentage for the display where the first window is opened"
   },
   "SOCIAL_SIDEBAR_STATE": {
     "expires_in_version": "never",

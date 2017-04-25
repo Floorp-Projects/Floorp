@@ -10,7 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
-const { div, span } = DOM;
+const { div } = DOM;
 
 const RequestListColumnCause = createClass({
   displayName: "RequestListColumnCause",
@@ -25,35 +25,27 @@ const RequestListColumnCause = createClass({
   },
 
   render() {
-    const {
-      item,
+    let {
+      item: { cause },
       onCauseBadgeClick,
     } = this.props;
 
-    const { cause } = item;
-
-    let causeType = "";
-    let causeUri = undefined;
+    let causeType = "unknown";
     let causeHasStack = false;
 
     if (cause) {
       // Legacy server might send a numeric value. Display it as "unknown"
       causeType = typeof cause.type === "string" ? cause.type : "unknown";
-      causeUri = cause.loadingDocumentUri;
       causeHasStack = cause.stacktrace && cause.stacktrace.length > 0;
     }
 
     return (
-      div({
-        className: "requests-list-subitem requests-list-cause",
-        title: causeUri,
-      },
-        span({
+      div({ className: "requests-list-column requests-list-cause", title: causeType },
+        causeHasStack && div({
           className: "requests-list-cause-stack",
-          hidden: !causeHasStack,
           onClick: onCauseBadgeClick,
         }, "JS"),
-        span({ className: "subitem-label" }, causeType),
+        causeType
       )
     );
   }

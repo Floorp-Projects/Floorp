@@ -92,6 +92,13 @@ protected:
   AllocPMemoryStreamChild(const uint64_t& aSize) override;
   virtual bool DeallocPMemoryStreamChild(PMemoryStreamChild*) override;
 
+  virtual PIPCBlobInputStreamChild*
+  AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild*) override;
+
   virtual mozilla::ipc::PChildToParentStreamChild*
   AllocPChildToParentStreamChild() override;
 

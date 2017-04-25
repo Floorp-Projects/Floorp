@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PIPCBlobInputStream;
+
+include IPCStream;
+include ProtocolTypes;
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+// This contains any extra bit for making a File out of a Blob.
+// For more information about Blobs and IPC, please read the comments in
+// IPCBlobUtils.h
+
+struct IPCFile
+{
+  nsString name;
+  int64_t lastModified;
+  nsString DOMPath;
+};
+
+// Union for blob vs file.
+union IPCFileUnion
+{
+  // For Blob.
+  void_t;
+
+  // For File.
+  IPCFile;
+};
+
+union IPCBlobStream
+{
+  // Parent to Child: The child will receive a IPCBlobInputStream. Nothing
+  // can be done with it except retrieving the size.
+  PIPCBlobInputStream;
+
+  // Child to Parent: Normal serialization.
+  IPCStream;
+};
+
+struct IPCBlob
+{
+  nsString type;
+  uint64_t size;
+
+  IPCBlobStream inputStream;
+
+  IPCFileUnion file;
+};
+
+} // namespace dom
+} // namespace mozilla

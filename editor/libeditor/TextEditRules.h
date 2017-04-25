@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nscore.h"
 
-class nsIDOMElement;
 class nsIDOMNode;
 
 namespace mozilla {
@@ -124,7 +123,6 @@ protected:
                           nsAString* outString,
                           int32_t aMaxLength);
   nsresult DidInsertText(Selection* aSelection, nsresult aResult);
-  nsresult GetTopEnclosingPre(nsIDOMNode* aNode, nsIDOMNode** aOutPreNode);
 
   nsresult WillInsertBreak(Selection* aSelection, bool* aCancel,
                            bool* aHandled, int32_t aMaxLength);
@@ -235,9 +233,9 @@ protected:
   nsString mPasswordIMEText;
   uint32_t mPasswordIMEIndex;
   // Magic node acts as placeholder in empty doc.
-  nsCOMPtr<nsIDOMNode> mBogusNode;
+  nsCOMPtr<nsIContent> mBogusNode;
   // Cached selected node.
-  nsCOMPtr<nsIDOMNode> mCachedSelectionNode;
+  nsCOMPtr<nsINode> mCachedSelectionNode;
   // Cached selected offset.
   int32_t mCachedSelectionOffset;
   uint32_t mActionNesting;

@@ -130,6 +130,7 @@ private:
                               uint32_t aChromeFlags,
                               nsITabParent* aOpeningTabParent,
                               mozIDOMWindowProxy* aOpener,
+                              uint64_t aNextTabParentId,
                               nsIWebBrowserChrome** aResult);
 
   void MaybeDisablePersistence(const nsACString& aFeatures,

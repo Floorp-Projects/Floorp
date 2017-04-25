@@ -424,7 +424,6 @@ JitZoneGroup::JitZoneGroup(ZoneGroup* group)
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr),
-    cacheIRStubCodes_(nullptr),
     stringConcatStub_(nullptr),
     regExpMatcherStub_(nullptr),
     regExpSearcherStub_(nullptr),
@@ -435,7 +434,6 @@ JitCompartment::JitCompartment()
 JitCompartment::~JitCompartment()
 {
     js_delete(stubCodes_);
-    js_delete(cacheIRStubCodes_);
 }
 
 bool
@@ -450,15 +448,6 @@ JitCompartment::initialize(JSContext* cx)
         return false;
     }
 
-    cacheIRStubCodes_ = cx->new_<CacheIRStubCodeMap>(cx->runtime());
-    if (!cacheIRStubCodes_)
-        return false;
-
-    if (!cacheIRStubCodes_->init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
     return true;
 }
 
@@ -469,6 +458,17 @@ JitCompartment::ensureIonStubsExist(JSContext* cx)
         stringConcatStub_ = generateStringConcatStub(cx);
         if (!stringConcatStub_)
             return false;
+    }
+
+    return true;
+}
+
+bool
+JitZone::init(JSContext* cx)
+{
+    if (!baselineCacheIRStubCodes_.init()) {
+        ReportOutOfMemory(cx);
+        return false;
     }
 
     return true;
@@ -649,7 +649,6 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
     MOZ_ASSERT(!HasOffThreadIonCompile(compartment));
 
     stubCodes_->sweep();
-    cacheIRStubCodes_->sweep();
 
     // If the sweep removed a bailout Fallback stub, nullptr the corresponding return addr.
     for (auto& it : bailoutReturnStubInfo_) {
@@ -677,6 +676,12 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
 }
 
 void
+JitZone::sweep(FreeOp* fop)
+{
+    baselineCacheIRStubCodes_.sweep();
+}
+
+void
 JitCompartment::toggleBarriers(bool enabled)
 {
     // Toggle barriers in compartment wide stubs that have patchable pre barriers.
@@ -692,7 +697,12 @@ JitCompartment::toggleBarriers(bool enabled)
         JitCode* code = *e.front().value().unsafeGet();
         code->togglePreBarriers(enabled, Reprotect);
     }
-    for (CacheIRStubCodeMap::Enum e(*cacheIRStubCodes_); !e.empty(); e.popFront()) {
+}
+
+void
+JitZone::toggleBarriers(bool enabled)
+{
+    for (BaselineCacheIRStubCodeMap::Enum e(baselineCacheIRStubCodes_); !e.empty(); e.popFront()) {
         JitCode* code = *e.front().value().unsafeGet();
         code->togglePreBarriers(enabled, Reprotect);
     }
@@ -704,9 +714,21 @@ JitCompartment::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     size_t n = mallocSizeOf(this);
     if (stubCodes_)
         n += stubCodes_->sizeOfIncludingThis(mallocSizeOf);
-    if (cacheIRStubCodes_)
-        n += cacheIRStubCodes_->sizeOfIncludingThis(mallocSizeOf);
     return n;
+}
+
+void
+JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* jitZone,
+                                size_t* baselineStubsOptimized,
+                                size_t* cachedCFG) const
+{
+    *jitZone += mallocSizeOf(this);
+    *jitZone += baselineCacheIRStubCodes_.sizeOfExcludingThis(mallocSizeOf);
+    *jitZone += ionCacheIRStubInfoSet_.sizeOfExcludingThis(mallocSizeOf);
+
+    *baselineStubsOptimized += optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+    *cachedCFG += cfgSpace_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 JitCode*
@@ -1354,6 +1376,9 @@ jit::ToggleBarriers(JS::Zone* zone, bool needs)
         if (script->hasBaselineScript())
             script->baselineScript()->toggleBarriers(needs);
     }
+
+    if (JitZone* jitZone = zone->jitZone())
+        jitZone->toggleBarriers(needs);
 
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         if (comp->jitCompartment())
@@ -2024,14 +2049,16 @@ CompileBackEnd(MIRGenerator* mir)
     return GenerateCode(mir, lir);
 }
 
-// Find a finished builder for the runtime.
+// Find a builder which the current thread can finish.
 static IonBuilder*
-GetFinishedBuilder(JSContext* cx, GlobalHelperThreadState::IonBuilderVector& finished)
+GetFinishedBuilder(ZoneGroup* group, GlobalHelperThreadState::IonBuilderVector& finished)
 {
     for (size_t i = 0; i < finished.length(); i++) {
         IonBuilder* testBuilder = finished[i];
-        if (testBuilder->script()->runtimeFromAnyThread() == cx->runtime()) {
+        if (testBuilder->script()->runtimeFromAnyThread() == group->runtime &&
+            testBuilder->script()->zone()->group() == group) {
             HelperThreadState().remove(finished, &i);
+            group->numFinishedBuilders--;
             return testBuilder;
         }
     }
@@ -2040,44 +2067,46 @@ GetFinishedBuilder(JSContext* cx, GlobalHelperThreadState::IonBuilderVector& fin
 }
 
 void
-AttachFinishedCompilations(JSContext* cx)
+AttachFinishedCompilations(ZoneGroup* group, JSContext* maybecx)
 {
-    JitCompartment* ion = cx->compartment()->jitCompartment();
-    if (!ion)
+    MOZ_ASSERT_IF(maybecx, maybecx->zone()->group() == group);
+
+    if (!group->numFinishedBuilders)
         return;
 
-    {
-        AutoLockHelperThreadState lock;
+    AutoLockHelperThreadState lock;
+    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
 
-        GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
+    // Incorporate any off thread compilations for the runtime which have
+    // finished, failed or have been cancelled.
+    while (true) {
+        // Find a finished builder for the zone group.
+        IonBuilder* builder = GetFinishedBuilder(group, finished);
+        if (!builder)
+            break;
 
-        // Incorporate any off thread compilations for the runtime which have
-        // finished, failed or have been cancelled.
-        while (true) {
-            // Find a finished builder for the runtime.
-            IonBuilder* builder = GetFinishedBuilder(cx, finished);
-            if (!builder)
-                break;
+        JSScript* script = builder->script();
+        MOZ_ASSERT(script->hasBaselineScript());
+        script->baselineScript()->setPendingIonBuilder(group->runtime, script, builder);
+        group->ionLazyLinkListAdd(builder);
 
-            JSScript* script = builder->script();
-            MOZ_ASSERT(script->hasBaselineScript());
-            script->baselineScript()->setPendingIonBuilder(cx->runtime(), script, builder);
-            cx->zone()->group()->ionLazyLinkListAdd(builder);
-
-            // Don't keep more than 100 lazy link builders in a zone group.
-            // Link the oldest ones immediately.
-            while (cx->zone()->group()->ionLazyLinkListSize() > 100) {
-                jit::IonBuilder* builder = cx->zone()->group()->ionLazyLinkList().getLast();
-                RootedScript script(cx, builder->script());
+        // Don't keep more than 100 lazy link builders in a zone group.
+        // Link the oldest ones immediately. Only do this if we have a valid
+        // context to use (otherwise this method might have been called in the
+        // middle of a compartment change on the current thread's context).
+        if (maybecx) {
+            while (group->ionLazyLinkListSize() > 100) {
+                jit::IonBuilder* builder = group->ionLazyLinkList().getLast();
+                RootedScript script(maybecx, builder->script());
 
                 AutoUnlockHelperThreadState unlock(lock);
-                AutoCompartment ac(cx, script);
-                jit::LinkIonScript(cx, script);
+                AutoCompartment ac(maybecx, script);
+                jit::LinkIonScript(maybecx, script);
             }
-
-            continue;
         }
     }
+
+    MOZ_ASSERT(!group->numFinishedBuilders);
 }
 
 static void

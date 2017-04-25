@@ -5,6 +5,7 @@ add_task(function* setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
+    Services.cookies.removeAll();
   });
 });
 

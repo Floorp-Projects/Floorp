@@ -7,7 +7,7 @@
 <Description>楽天市場 商品検索</Description>
 <InputEncoding>EUC-JP</InputEncoding>
 <Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQALMOAOefn9psbMswMMMQEPjj4/PPz++/v+OPj99/f9+AgMcgIM9AQOuvr////wAAAL8AACH5BAEAAA4ALAAAAAAQABAAAARf0EnJ0FqIze2YemCoaBsQniEwMeIloOQHJk1NvKDSnTRQNIZThddYPAiNk4UYCDQIpwux1ghEEUTGc6BkhWiLA1DokD3Ag5/1odvlFlzFAkdymFAn1caDH3FWFhh1EhEAOw==</Image>
-<Url type="text/html" method="GET" template="http://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/" resultdomain="rakuten.co.jp">
+<Url type="text/html" method="GET" template="https://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/" resultdomain="rakuten.co.jp">
   <Param name="sitem" value="{searchTerms}"/>
   <Param name="sv" value="2"/>
   <Param name="p" value="0"/>

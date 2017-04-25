@@ -46,7 +46,7 @@ EXEC			= exec
 # ELOG prints out failed command when building silently (gmake -s). Pymake
 # prints out failed commands anyway, so ELOG just makes things worse by
 # forcing shell invocations.
-ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
+ifneq (,$(findstring -s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
@@ -953,9 +953,12 @@ ifdef MOZ_MSVCBITS
 # a 32-bit MozillaBuild shell on a 64-bit machine will try to use
 # the 32-bit compiler/linker for everything, while cargo/rustc wants
 # to use the 64-bit linker for build.rs scripts. This conflict results
-# in a build failure (see bug 1350001). Clearing out *just* the changes
-# from vcvars.bat is hard, so we just clear out the whole environment.
-environment_cleaner = -i
+# in a build failure (see bug 1350001). So we clear out the environment
+# variables that are actually relevant to 32- vs 64-bit builds.
+environment_cleaner = PATH='' LIB='' LIBPATH=''
+# The servo build needs to know where python is, and we're removing the PATH
+# so we tell it explicitly via the PYTHON env var.
+environment_cleaner += PYTHON='$(shell which $(PYTHON))'
 else
 environment_cleaner =
 endif

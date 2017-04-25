@@ -78,7 +78,7 @@ to mochitest command.
   * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
-* test_computed_style.html `gradient`: -moz-prefixed radient value [9]
+* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [30]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
@@ -105,9 +105,6 @@ to mochitest command.
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
   * ... `font-feature-settings`: bug 1355366 [10]
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
-* unicode-range parsing bugs
-  * servo/rust-cssparser#133
-  * test_font_face_parser.html `4E00`: servo/rust-cssparser#135 [2]
 * @font-face support bug 1290237
   * test_descriptor_storage.html [1]
   * test_font_face_parser.html `@font-face` [8]
@@ -134,14 +131,6 @@ to mochitest command.
   * test_inherit_computation.html `border-image` [2]
   * test_initial_computation.html `border-image` [4]
 * Unimplemented prefixed properties:
-  * -moz-border-*-colors bug 1348173
-    * test_compute_data_with_start_struct.html `-colors` [8]
-    * test_inherit_computation.html `-colors` [8]
-    * test_inherit_storage.html `-colors` [12]
-    * test_initial_computation.html `-colors` [16]
-    * test_initial_storage.html `-colors` [24]
-    * test_value_storage.html `-colors` [96]
-    * test_shorthand_property_getters.html `-colors` [1]
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
@@ -190,7 +179,6 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
-    * ... `-webkit-linear-gradient` [5]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -251,7 +239,7 @@ to mochitest command.
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
-    * test_selectors.html `:dir` [18]
+    * test_selectors.html `:dir` [8]
 * issues arround font shorthand bug 1349417
   * test_value_storage.html `'font'` [128]
   * test_shorthand_property_getters.html `font shorthand` [1]

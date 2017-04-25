@@ -57,8 +57,7 @@ class ProcessHangMonitor final
     StartDebugger
   };
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
-                                    const char* aFileName,
-                                    unsigned aLineNo);
+                                    const char* aFileName);
 
   void NotifyPluginHang(uint32_t aPluginId);
 

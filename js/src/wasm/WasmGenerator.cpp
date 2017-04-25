@@ -20,6 +20,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/SHA1.h"
 
 #include <algorithm>
 
@@ -1097,6 +1098,19 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     return true;
 }
 
+static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
+              "The ModuleHash size shall not exceed the SHA1 hash size.");
+
+void
+ModuleGenerator::generateBytecodeHash(const ShareableBytes& bytecode)
+{
+    mozilla::SHA1Sum::Hash hash;
+    mozilla::SHA1Sum sha1Sum;
+    sha1Sum.update(bytecode.begin(), bytecode.length());
+    sha1Sum.finish(hash);
+    memcpy(metadata_->hash, hash, sizeof(ModuleHash));
+}
+
 SharedModule
 ModuleGenerator::finish(const ShareableBytes& bytecode)
 {
@@ -1184,6 +1198,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     if (!finishLinkData())
         return nullptr;
+
+    generateBytecodeHash(bytecode);
 
     return SharedModule(js_new<Module>(Move(assumptions_),
                                        Move(code),

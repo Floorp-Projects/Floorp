@@ -423,15 +423,6 @@ public:
     return mLayer->GetScrollbarTargetContainerId();
   }
 
-  int32_t GetScrollThumbLength() const
-  {
-    if (GetScrollbarDirection() == ScrollDirection::VERTICAL) {
-      return mLayer->GetVisibleRegion().GetBounds().height;
-    } else {
-      return mLayer->GetVisibleRegion().GetBounds().width;
-    }
-  }
-
   bool IsScrollbarContainer() const
   {
     MOZ_ASSERT(IsValid());

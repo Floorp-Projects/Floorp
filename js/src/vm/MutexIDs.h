@@ -26,6 +26,8 @@
                                       \
   _(GCLock,                      400) \
                                       \
+  _(WasmInitBuiltinThunks,       450) \
+                                      \
   _(SharedImmutableStringsCache, 500) \
   _(FutexThread,                 500) \
   _(PromiseTaskPtrVector,        500) \

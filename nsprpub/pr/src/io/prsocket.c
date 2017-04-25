@@ -315,9 +315,9 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
     if (fd->secret->alreadyConnected) {
         fd->secret->alreadyConnected = PR_FALSE;
     }
-    // TCP Fast Open on Windows must use ConnectEx, which uses overlapped
-    // input/output.
-    // To get result we need to use GetOverlappedResult.
+    /* TCP Fast Open on Windows must use ConnectEx, which uses overlapped
+     * input/output.
+     * To get result we need to use GetOverlappedResult. */
     if (fd->secret->overlappedActive) {
         PR_ASSERT(fd->secret->nonblocking);
         PRInt32 rvSent;
@@ -325,9 +325,9 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
             fd->secret->overlappedActive = FALSE;
             PR_LOG(_pr_io_lm, PR_LOG_MIN,
                ("SocketConnectContinue GetOverlappedResult succeeded\n"));
-            // When ConnectEx is used, all previously set socket options and
-            // property are not enabled and to enable them
-            // SO_UPDATE_CONNECT_CONTEXT option need to be set.
+            /* When ConnectEx is used, all previously set socket options and
+             * property are not enabled and to enable them
+             * SO_UPDATE_CONNECT_CONTEXT option need to be set. */
             if (setsockopt((SOCKET)osfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0) != 0) {
                 err = WSAGetLastError();
                 PR_LOG(_pr_io_lm, PR_LOG_MIN,
@@ -1198,7 +1198,7 @@ static PRIOMethods tcpMethods = {
 	SocketSend,
 	(PRRecvfromFN)_PR_InvalidInt,
 #if defined(_WIN64) && defined(WIN95)
-	SocketTCPSendTo, // This is for fast open. We imitate Linux interface.
+	SocketTCPSendTo, /* This is for fast open. We imitate Linux interface. */
 #else
 	(PRSendtoFN)_PR_InvalidInt,
 #endif

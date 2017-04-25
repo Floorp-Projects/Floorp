@@ -20,6 +20,25 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
+function filePathForTarget(target) {
+  // Only show file system paths, and only for temporarily installed add-ons.
+  if (!target.temporarilyInstalled || !target.url || !target.url.startsWith("file://")) {
+    return [];
+  }
+  let path = target.url.slice("file://".length);
+  return [
+    dom.dt(
+      { className: "addon-target-info-label" },
+      Strings.GetStringFromName("location")),
+    // Wrap the file path in a span so we can do some RTL/LTR swapping to get
+    // the ellipsis on the left.
+    dom.dd(
+      { className: "addon-target-info-content file-path" },
+      dom.span({ className: "file-path-inner", title: path }, path),
+    ),
+  ];
+}
+
 module.exports = createClass({
   displayName: "AddonTarget",
 
@@ -31,7 +50,8 @@ module.exports = createClass({
       addonID: PropTypes.string.isRequired,
       icon: PropTypes.string,
       name: PropTypes.string.isRequired,
-      temporarilyInstalled: PropTypes.bool
+      temporarilyInstalled: PropTypes.bool,
+      url: PropTypes.string,
     }).isRequired
   },
 
@@ -67,6 +87,10 @@ module.exports = createClass({
           src: target.icon
         }),
         dom.span({ className: "target-name", title: target.name }, target.name)
+      ),
+      dom.dl(
+        { className: "addon-target-info" },
+        ...filePathForTarget(target),
       ),
       dom.div({className: "addon-target-actions"},
         dom.button({
