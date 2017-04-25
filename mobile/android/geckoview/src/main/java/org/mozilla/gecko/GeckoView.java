@@ -267,11 +267,22 @@ public class GeckoView extends LayerView
         init(context, newSettings);
     }
 
-    private void init(final Context context, final GeckoViewSettings settings) {
+    public static final void preload(Context context) {
+        final GeckoProfile profile = GeckoProfile.get(
+            context.getApplicationContext());
+
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(context.getApplicationContext());
         }
 
+        if (GeckoThread.initMainProcess(profile,
+                                        /* args */ null,
+                                        /* debugging */ false)) {
+            GeckoThread.launch();
+        }
+    }
+
+    private void init(final Context context, final GeckoViewSettings settings) {
         // Set the GeckoInterface if the context is an activity and the
         // GeckoInterface has not already been set
         if (context instanceof Activity && getGeckoInterface() == null) {
@@ -279,13 +290,7 @@ public class GeckoView extends LayerView
             GeckoAppShell.setContextGetter(this);
         }
 
-        final GeckoProfile profile = GeckoProfile.get(
-            context.getApplicationContext());
-        if (GeckoThread.initMainProcess(profile,
-                                        /* args */ null,
-                                        /* debugging */ false)) {
-            GeckoThread.launch();
-        }
+        preload(context);
 
         // Perform common initialization for Fennec/GeckoView.
         GeckoAppShell.setLayerView(this);
