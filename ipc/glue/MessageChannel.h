@@ -98,7 +98,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     struct PromiseHolder
     {
         RefPtr<MozPromiseRefcountable> mPromise;
-        std::function<void(MozPromiseRefcountable*, const char*)> mRejectFunction;
+        std::function<void(const char*)> mRejectFunction;
     };
     static Atomic<size_t> gUnresolvedPromises;
     friend class PromiseReporter;
@@ -186,10 +186,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
         }
         PromiseHolder holder;
         holder.mPromise = aPromise;
-        holder.mRejectFunction = [](MozPromiseRefcountable* aPromise,
-                                    const char* aRejectSite) {
-            static_cast<Promise*>(aPromise)->Reject(
-                PromiseRejectReason::ChannelClosed, aRejectSite);
+        holder.mRejectFunction = [aPromise](const char* aRejectSite) {
+            aPromise->Reject(PromiseRejectReason::ChannelClosed, aRejectSite);
         };
         mPendingPromises.insert(std::make_pair(seqno, Move(holder)));
         gUnresolvedPromises++;
