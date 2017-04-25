@@ -169,7 +169,16 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({
+        "settings": {
+          "batch_max_requests": 25
+        },
+        "url": `http://localhost:${port}/v1/`,
+        "documentation": "https://kinto.readthedocs.org/",
+        "version": "1.5.1",
+        "commit": "cbc6f58",
+        "hello": "kinto"
+      })
     },
     "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified": {
       "sampleHeaders": [
@@ -180,7 +189,7 @@ function getSampleResponse(req, port) {
         "Etag: \"1000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{}]})
+      "responseBody": JSON.stringify({"data": [{}]})
     },
     "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=1000": {
       "sampleHeaders": [
@@ -191,11 +200,11 @@ function getSampleResponse(req, port) {
         "Etag: \"3000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
+      "responseBody": JSON.stringify({"data": [{
         "issuerName": "MEQxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwx0aGF3dGUsIEluYy4xHjAcBgNVBAMTFXRoYXd0ZSBFViBTU0wgQ0EgLSBHMw==",
-        "serialNumber":"CrTHPEE6AZSfI3jysin2bA==",
-        "id":"78cf8900-fdea-4ce5-f8fb-b78710617718",
-        "last_modified":3000
+        "serialNumber": "CrTHPEE6AZSfI3jysin2bA==",
+        "id": "78cf8900-fdea-4ce5-f8fb-b78710617718",
+        "last_modified": 3000
       }]})
     },
     "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=3000": {
@@ -207,16 +216,16 @@ function getSampleResponse(req, port) {
         "Etag: \"4000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
-        "issuerName":"MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ",
-        "serialNumber":"ATFpsA==",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02c",
-        "last_modified":4000
+      "responseBody": JSON.stringify({"data": [{
+        "issuerName": "MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ",
+        "serialNumber": "ATFpsA==",
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02c",
+        "last_modified": 4000
       }, {
-        "subject":"MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
-        "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02d",
-        "last_modified":4000
+        "subject": "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
+        "pubKeyHash": "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02d",
+        "last_modified": 4000
       }]})
     },
     "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=4000": {
@@ -228,21 +237,21 @@ function getSampleResponse(req, port) {
         "Etag: \"5000\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{
-        "issuerName":"not a base64 encoded issuer",
-        "serialNumber":"not a base64 encoded serial",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02e",
-        "last_modified":5000
+      "responseBody": JSON.stringify({"data": [{
+        "issuerName": "not a base64 encoded issuer",
+        "serialNumber": "not a base64 encoded serial",
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02e",
+        "last_modified": 5000
       }, {
-        "subject":"not a base64 encoded subject",
-        "pubKeyHash":"not a base64 encoded pubKeyHash",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02f",
-        "last_modified":5000
+        "subject": "not a base64 encoded subject",
+        "pubKeyHash": "not a base64 encoded pubKeyHash",
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02f",
+        "last_modified": 5000
       }, {
-        "subject":"MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
-        "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
-        "id":"dabafde9-df4a-ddba-2548-748da04cc02g",
-        "last_modified":5000
+        "subject": "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
+        "pubKeyHash": "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
+        "id": "dabafde9-df4a-ddba-2548-748da04cc02g",
+        "last_modified": 5000
       }]})
     }
   };

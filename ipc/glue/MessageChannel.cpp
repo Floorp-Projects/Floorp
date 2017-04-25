@@ -717,7 +717,7 @@ MessageChannel::Clear()
 
     gUnresolvedPromises -= mPendingPromises.size();
     for (auto& pair : mPendingPromises) {
-        pair.second.mRejectFunction(__func__);
+        pair.second.mRejectFunction(pair.second.mPromise, __func__);
     }
     mPendingPromises.clear();
 

@@ -241,7 +241,10 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         // insert an action button for menu. click it to show popup menu
         popupMenu = createCustomPopupMenu();
-        actionBarPresenter.addActionButton(menu, getDrawable(R.drawable.ab_menu), true)
+
+        @SuppressWarnings("deprecation")
+        Drawable icon = getResources().getDrawable(R.drawable.ab_menu);
+        actionBarPresenter.addActionButton(menu, icon, true)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View anchor) {

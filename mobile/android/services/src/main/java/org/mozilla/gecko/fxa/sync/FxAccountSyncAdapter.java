@@ -409,13 +409,12 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     // As part of device registration, we obtain a PushSubscription, register our push endpoint
     // with FxA, and update account data with fxaDeviceId, which is part of our synced
     // clients record.
-    if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
-            || TextUtils.isEmpty(fxAccount.getDeviceId())) {
+    if (FxAccountDeviceRegistrator.shouldRegister(fxAccount)) {
       FxAccountDeviceRegistrator.register(context);
       // We might need to re-register periodically to ensure our FxA push subscription is valid.
       // This involves unsubscribing, subscribing and updating remote FxA device record with
       // new push subscription information.
-    } else if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
+    } else if (FxAccountDeviceRegistrator.shouldRenewRegistration(fxAccount)) {
       FxAccountDeviceRegistrator.renewRegistration(context);
     }
   }
