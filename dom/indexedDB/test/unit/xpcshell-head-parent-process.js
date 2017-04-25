@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// Tests using testGenerator are expected to define it themselves.
+/* global testGenerator */
+
 var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
 
 if (!("self" in this)) {

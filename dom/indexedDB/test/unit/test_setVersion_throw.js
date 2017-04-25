@@ -39,6 +39,7 @@ function* testSteps()
   request.onupgradeneeded = function(event) {
     info("Got upgradeneeded event for db 2");
     expectUncaughtException(true);
+    // eslint-disable-next-line no-undef
     trigger_js_exception_by_calling_a_nonexistent_function();
   };
   event = yield undefined;

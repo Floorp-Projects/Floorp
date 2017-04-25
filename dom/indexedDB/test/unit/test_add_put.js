@@ -36,11 +36,11 @@ function* testSteps()
                                              { autoIncrement: autoincrement,
                                                keyPath: (keypath ? "id" : null) });
 
-            test = " for test " + JSON.stringify({ autoincrement: autoincrement,
-                                                   keypath: keypath,
-                                                   method: method,
-                                                   explicit: explicit === undefined ? "undefined" : explicit,
-                                                   existing: existing });
+            let test = " for test " + JSON.stringify({ autoincrement: autoincrement,
+                                                       keypath: keypath,
+                                                       method: method,
+                                                       explicit: explicit === undefined ? "undefined" : explicit,
+                                                       existing: existing });
 
             // Insert "existing" data if needed
             if (existing) {
@@ -64,7 +64,7 @@ function* testSteps()
             }
 
             // Which arguments are passed to function
-            args = [value];
+            let args = [value];
             if (explicit === true) {
               args.push(5);
             }
@@ -138,7 +138,7 @@ function* testSteps()
     }
   }
 
-  
+
   function expectedResult(method, keypath, explicit, autoincrement, existing) {
     if (keypath && explicit)
       return "throw";
