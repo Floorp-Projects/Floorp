@@ -455,6 +455,13 @@ protected:
    */
   bool mNewRequestsWillNeedAnimationReset : 1;
 
+  /**
+   * Flag to indicate whether the channel should be mark as urgent-start.
+   * It should be set in *Element and passed to nsContentUtils::LoadImage.
+   * True if we want to set nsIClassOfService::UrgentStart to the channel to
+   * get the response ASAP for better user responsiveness.
+   */
+  bool mUseUrgentStartForChannel;
 private:
   /* The number of nested AutoStateChangers currently tracking our state. */
   uint8_t mStateChangerDepth;
