@@ -63,6 +63,8 @@ for (var pref of prefs) {
 var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                   getService(Ci.nsIUrlListManager);
 
+let googleKey = SpecialPowers.Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
+
 for (var list of lists) {
   if (!list)
     continue;
@@ -75,7 +77,12 @@ for (var list of lists) {
   if (index >= 0) {
     var provider = listsToProvider[index];
     var pref = "browser.safebrowsing.provider." + provider + ".gethashURL";
-    is(url, SpecialPowers.getCharPref(pref), list + " matches its gethash url");
+    if ((provider == "google" || provider == "google4") &&
+        (!googleKey || googleKey == "no-google-api-key")) {
+      is(url, "", "getHash url of " + list + " should be empty");
+    } else {
+      is(url, SpecialPowers.getCharPref(pref), list + " matches its gethash url");
+    }
   } else {
     is(url, "", list + " should not have a gethash url");
   }

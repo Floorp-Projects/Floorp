@@ -101,12 +101,12 @@ PROT_ListManager.prototype.registerTable = function(tableName,
                                                     providerName,
                                                     updateUrl,
                                                     gethashUrl) {
-  log("registering " + tableName + " with " + updateUrl);
+  this.tablesData[tableName] = {};
   if (!updateUrl) {
     log("Can't register table " + tableName + " without updateUrl");
     return false;
   }
-  this.tablesData[tableName] = {};
+  log("registering " + tableName + " with " + updateUrl);
   this.tablesData[tableName].updateUrl = updateUrl;
   this.tablesData[tableName].gethashUrl = gethashUrl;
   this.tablesData[tableName].provider = providerName;
