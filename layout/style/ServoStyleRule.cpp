@@ -109,8 +109,9 @@ ServoStyleRuleDeclaration::GetServoCSSParsingEnvironment() const
 
 // -- ServoStyleRule --------------------------------------------------
 
-ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
-  : BindingStyleRule(0, 0)
+ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
+                               uint32_t aLine, uint32_t aColumn)
+  : BindingStyleRule(aLine, aColumn)
   , mRawRule(aRawRule)
   , mDecls(Servo_StyleRule_GetStyle(mRawRule).Consume())
 {
