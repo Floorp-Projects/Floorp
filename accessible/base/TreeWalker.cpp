@@ -52,6 +52,18 @@ TreeWalker::
   MOZ_COUNT_CTOR(TreeWalker);
 }
 
+TreeWalker::
+  TreeWalker(DocAccessible* aDocument, nsIContent* aAnchorNode) :
+  mDoc(aDocument), mContext(nullptr), mAnchorNode(aAnchorNode),
+  mARIAOwnsIdx(0),
+  mChildFilter(nsIContent::eSkipPlaceholderContent | nsIContent::eAllChildren),
+  mFlags(eWalkCache),
+  mPhase(eAtStart)
+{
+  MOZ_ASSERT(aAnchorNode, "No anchor node for the accessible tree walker");
+  MOZ_COUNT_CTOR(TreeWalker);
+}
+
 TreeWalker::~TreeWalker()
 {
   MOZ_COUNT_DTOR(TreeWalker);
