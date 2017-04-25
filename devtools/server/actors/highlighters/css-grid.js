@@ -696,6 +696,18 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   /**
+   * Is a given grid fragment valid? i.e. does it actually have tracks? In some cases, we
+   * may have a fragment that defines column tracks but doesn't have any rows (or vice
+   * versa). In which case we do not want to draw anything for that fragment.
+   *
+   * @param {Object} fragment
+   * @return {Boolean}
+   */
+  isValidFragment(fragment) {
+    return fragment.cols.tracks.length && fragment.rows.tracks.length;
+  },
+
+  /**
    * The AutoRefreshHighlighter's _hasMoved method returns true only if the
    * element's quads have changed. Override it so it also returns true if the
    * element's grid has changed (which can happen when you change the
@@ -740,8 +752,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     // Start drawing the grid fragments.
     for (let i = 0; i < this.gridData.length; i++) {
-      let fragment = this.gridData[i];
-      this.renderFragment(fragment);
+      this.renderFragment(this.gridData[i]);
     }
 
     // Display the grid area highlights if needed.
@@ -1030,6 +1041,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   renderFragment(fragment) {
+    if (!this.isValidFragment(fragment)) {
+      return;
+    }
+
     this.renderLines(fragment.cols, COLUMNS, "left", "top", "height",
                      this.getFirstRowLinePos(fragment),
                      this.getLastRowLinePos(fragment));
