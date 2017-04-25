@@ -524,7 +524,7 @@ nsAccessibilityService::DeckPanelSwitched(nsIPresShell* aPresShell,
     }
 #endif
 
-    document->ContentRemoved(aDeckNode, panelNode);
+    document->ContentRemoved(panelNode);
   }
 
   if (aCurrentBoxFrame) {
@@ -582,26 +582,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 #endif
 
   if (document) {
-    // Flatten hierarchy may be broken at this point so we cannot get a true
-    // container by traversing up the DOM tree. Find a parent of first accessible
-    // from the subtree of the given DOM node, that'll be a container. If no
-    // accessibles in subtree then we don't care about the change.
-    Accessible* child = document->GetAccessible(aChildNode);
-    if (!child) {
-      Accessible* container = document->GetContainerAccessible(aChildNode);
-      a11y::TreeWalker walker(container ? container : document, aChildNode,
-                              a11y::TreeWalker::eWalkCache);
-      child = walker.Next();
-    }
-
-    if (child) {
-      MOZ_DIAGNOSTIC_ASSERT(child->Parent(), "Unattached accessible from tree");
-      document->ContentRemoved(child->Parent(), aChildNode);
-#ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eTree))
-        logging::AccessibleNNode("real container", child->Parent());
-#endif
-    }
+    document->ContentRemoved(aChildNode);
   }
 
 #ifdef A11Y_LOG
