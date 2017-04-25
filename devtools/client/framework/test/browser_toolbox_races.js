@@ -5,6 +5,9 @@
 
 "use strict";
 
+// Toggling the toolbox three time can take more than 45s on slow test machine
+requestLongerTimeout(2);
+
 // Test toggling the toolbox quickly and see if there is any race breaking it.
 
 const URL = "data:text/html;charset=utf-8,Toggling devtools quickly";
