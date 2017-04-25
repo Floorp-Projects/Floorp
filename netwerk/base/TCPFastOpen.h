@@ -32,7 +32,7 @@ public:
   // To use TFO we need to have a transaction prepared, e.g. also have
   // nsHttpConnection ready. This functions is call by nsSocketTransport to
   // setup a connection.
-  virtual nsresult StartFastOpen() = 0;
+  virtual nsresult StartFastOpen(PRFileDesc *fd) = 0;
   // Inform nsHalfopenSocket whether a connection using TFO succeeded or not.
   // This will cancel the backup connection and in case of a failure rewind
   // the transaction.
