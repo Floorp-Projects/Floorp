@@ -257,7 +257,8 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                          nsIWebNavigation::LOAD_FLAGS_NONE,
                          nullptr,
                          nullptr,
-                         nullptr);
+                         nullptr,
+                         nsContentUtils::GetSystemPrincipal());
     NS_ENSURE_SUCCESS(rv, rv);
   }
                      
