@@ -475,7 +475,6 @@ WEBIDL_FILES = [
     'CSSValue.webidl',
     'CSSValueList.webidl',
     'CustomElementRegistry.webidl',
-    'DataContainerEvent.webidl',
     'DataTransfer.webidl',
     'DataTransferItem.webidl',
     'DataTransferItemList.webidl',

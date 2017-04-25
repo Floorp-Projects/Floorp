@@ -68,6 +68,7 @@ add_task(function* () {
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
 
+    yield waitUntil(() => !!getSelectedRequest(gStore.getState()).securityState);
     ok(getSelectedRequest(gStore.getState()).securityState,
        "Security state arrived.");
     is(!!document.querySelector("#security-tab"), testcase.visibleOnSecurityInfo,

@@ -46,7 +46,7 @@ class MachCommands(MachCommandBase):
              description='Run eslint or help configure eslint for optimal development.')
     @CommandArgument('paths', default=None, nargs='*',
                      help="Paths to file or directories to lint, like "
-                          "'browser/components/loop' Defaults to the "
+                          "'browser/' Defaults to the "
                           "current directory if not given.")
     @CommandArgument('-s', '--setup', default=False, action='store_true',
                      help='Configure eslint for optimal development.')

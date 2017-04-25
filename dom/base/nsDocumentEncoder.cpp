@@ -142,6 +142,8 @@ protected:
 
   virtual bool IncludeInContext(nsINode *aNode);
 
+  void Clear();
+
   class MOZ_STACK_CLASS AutoReleaseDocumentIfNeeded final
   {
   public:
@@ -153,7 +155,7 @@ protected:
     ~AutoReleaseDocumentIfNeeded()
     {
       if (mEncoder->mFlags & RequiresReinitAfterOutput) {
-        mEncoder->mDocument = nullptr;
+        mEncoder->Clear();
       }
     }
 
@@ -202,7 +204,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocumentEncoder)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder,
-                         mDocument, mSelection, mRange, mNode, mCommonParent)
+                         mDocument, mSelection, mRange, mNode, mSerializer,
+                         mCommonParent)
 
 nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nullptr)
 {
@@ -1013,6 +1016,19 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
+}
+
+void
+nsDocumentEncoder::Clear()
+{
+  mDocument = nullptr;
+  mSelection = nullptr;
+  mRange = nullptr;
+  mNode = nullptr;
+  mCommonParent = nullptr;
+  mNodeFixup = nullptr;
+
+  Initialize(false);
 }
 
 NS_IMETHODIMP

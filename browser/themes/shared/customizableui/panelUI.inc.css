@@ -1798,11 +1798,3 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 .subviewbutton-iconic > .toolbarbutton-text {
   padding-inline-start: 5px;
 }
-
-#appMenu-new-window-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
-}
-
-#appMenu-private-window-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
-}
