@@ -7,7 +7,6 @@
 #define VPXDecoder_h_
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/Span.h"
 
 #include <stdint.h>
 #define VPX_DONT_DEFINE_STDINT_TYPES
@@ -45,12 +44,6 @@ public:
   static bool IsVPX(const nsACString& aMimeType, uint8_t aCodecMask=VP8|VP9);
   static bool IsVP8(const nsACString& aMimeType);
   static bool IsVP9(const nsACString& aMimeType);
-
-  // Return true if a sample is a keyframe for the specified codec.
-  static bool IsKeyframe(Span<const uint8_t> aBuffer, Codec aCodec);
-
-  // Return the frame dimensions for a sample for the specified codec.
-  static nsIntSize GetFrameSize(Span<const uint8_t> aBuffer, Codec aCodec);
 
 private:
   ~VPXDecoder();
