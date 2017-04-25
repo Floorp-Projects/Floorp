@@ -24,24 +24,22 @@ import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoViewSettings;
 
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
 public class WebViewProvider {
     public static void preload(final Context context) {
-        // Nothing: there's no Gecko preloading (yet?).
+        GeckoView.preload(context);
     }
 
     public static View create(Context context, AttributeSet attrs) {
-        final GeckoView geckoView = new GeckoWebView(context, attrs);
-
-        GeckoView.setGeckoInterface(new BaseGeckoInterface(context));
-
-        final GeckoProfile profile = GeckoProfile.get(context.getApplicationContext());
-
-        GeckoThread.init(profile, /* args */ null, /* action */ null, /* debugging */ false);
-        GeckoThread.launch();
+        final GeckoViewSettings settings = new GeckoViewSettings();
+        settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
+        settings.setBoolean(GeckoViewSettings.USE_PRIVATE_MODE, true);
+        settings.setBoolean(GeckoViewSettings.USE_TRACKING_PROTECTION, true);
+        final GeckoView geckoView = new GeckoWebView(context, attrs, settings);
 
         return geckoView;
     }
@@ -52,13 +50,17 @@ public class WebViewProvider {
 
     public static class GeckoWebView extends NestedGeckoView implements IWebView {
         private Callback callback;
+        private String currentUrl = "about:blank";
+        private boolean canGoBack;
+        private boolean canGoForward;
+        private boolean isSecure;
 
-        public GeckoWebView(Context context, AttributeSet attrs) {
-            super(context, attrs);
+        public GeckoWebView(Context context, AttributeSet attrs, GeckoViewSettings settings) {
+            super(context, attrs, settings);
 
-            setChromeDelegate(createChromeDelegate());
             setContentListener(createContentListener());
             setProgressListener(createProgressListener());
+            setNavigationListener(createNavigationListener());
 
             // TODO: set long press listener, call through to callback.onLinkLongPress()
         }
@@ -79,11 +81,6 @@ public class WebViewProvider {
         }
 
         @Override
-        public void reload() {
-            // TODO: Reload website
-        }
-
-        @Override
         public void stopLoading() {
             // TODO: Stop loading website
         }
@@ -91,12 +88,13 @@ public class WebViewProvider {
         @Override
         public String getUrl() {
             // TODO: Get current URL
-            return null;
+            return currentUrl;
         }
 
         @Override
         public void loadUrl(final String url) {
-            // TODO: Load new URL
+            currentUrl = url;
+            loadUri(currentUrl);
         }
 
         @Override
@@ -114,35 +112,10 @@ public class WebViewProvider {
             // TODO: save anything needed for navigation history restoration.
         }
 
-        private ChromeDelegate createChromeDelegate() {
-            return new ChromeDelegate() {
-                @Override
-                public void onAlert(GeckoView geckoView, String s, PromptResult promptResult) {
-
-                }
-
-                @Override
-                public void onConfirm(GeckoView geckoView, String s, PromptResult promptResult) {
-
-                }
-
-                @Override
-                public void onPrompt(GeckoView geckoView, String s, String s1, PromptResult promptResult) {
-
-                }
-
-                @Override
-                public void onDebugRequest(GeckoView geckoView, PromptResult promptResult) {
-
-                }
-            };
-        }
-
         private ContentListener createContentListener() {
             return new ContentListener() {
                 @Override
-                public void onTitleChanged(GeckoView geckoView, String s) {
-
+                public void onTitleChange(GeckoView geckoView, String s) {
                 }
             };
         }
@@ -154,42 +127,54 @@ public class WebViewProvider {
                     if (callback != null) {
                         callback.onPageStarted(url);
                         callback.onProgress(25);
+                        isSecure = false;
                     }
                 }
 
                 @Override
                 public void onPageStop(GeckoView geckoView, boolean success) {
                     if (callback != null) {
-                        callback.onProgress(100);
-                        callback.onPageFinished(false);
+                        if (success) {
+                            callback.onProgress(100);
+                            callback.onPageFinished(isSecure);
+                        }
                     }
                 }
 
                 @Override
-                public void onSecurityChanged(GeckoView geckoView, int status) {
+                public void onSecurityChange(GeckoView geckoView, int status) {
                     // TODO: Split current onPageFinished() callback into two: page finished + security changed
+                    isSecure = status == ProgressListener.STATE_IS_SECURE;
+                }
+            };
+        }
+
+        private NavigationListener createNavigationListener() {
+            return new NavigationListener() {
+                public void onLocationChange(GeckoView view, String url) {
+                    if (callback != null) {
+                        callback.onURLChanged(url);
+                    }
+                }
+
+                public void onCanGoBack(GeckoView view, boolean canGoBack) {
+                    GeckoWebView.this.canGoBack =  canGoBack;
+                }
+
+                public void onCanGoForward(GeckoView view, boolean canGoForward) {
+                    GeckoWebView.this.canGoForward = canGoForward;
                 }
             };
         }
 
         @Override
-        public void goForward() {
-
-        }
-
-        @Override
-        public void goBack() {
-
-        }
-
-        @Override
         public boolean canGoForward() {
-            return false;
+            return canGoForward;
         }
 
         @Override
         public boolean canGoBack() {
-            return false;
+            return canGoBack;
         }
     }
 }
