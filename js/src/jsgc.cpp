@@ -5130,7 +5130,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_FINALIZE_START);
-        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
+        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_PREPARE);
         {
             gcstats::AutoPhase ap2(stats(), gcstats::PHASE_WEAK_ZONES_CALLBACK);
             callWeakPointerZonesCallbacks();
@@ -5142,6 +5142,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
                     callWeakPointerCompartmentCallbacks(comp);
             }
         }
+        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
     }
 
     if (sweepingAtoms) {
@@ -5275,16 +5276,17 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
     sweepPhaseIndex = 0;
     sweepZone = currentSweepGroup;
     sweepActionIndex = 0;
-
-    {
-        gcstats::AutoPhase ap(stats(), gcstats::PHASE_FINALIZE_END);
-        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
-    }
 }
 
 void
 GCRuntime::endSweepingSweepGroup()
 {
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PHASE_FINALIZE_END);
+        FreeOp fop(rt);
+        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
+    }
+
     /* Update the GC state for zones we have swept. */
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCSweeping());
