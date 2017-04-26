@@ -1,0 +1,23 @@
+. "$topsrcdir/browser/config/mozconfigs/macosx64/common-opt"
+
+# Add-on signing is not required for DevEdition
+MOZ_REQUIRE_SIGNING=0
+
+ac_add_options --disable-install-strip
+ac_add_options --enable-verify-mar
+
+ac_add_options --enable-instruments
+
+# Cross-compiled builds fail when dtrace is enabled
+if test `uname -s` != Linux; then
+  ac_add_options --enable-dtrace
+fi
+
+if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
+ac_add_options --with-macbundlename-prefix=Firefox
+fi
+
+ac_add_options --with-branding=browser/branding/aurora
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
