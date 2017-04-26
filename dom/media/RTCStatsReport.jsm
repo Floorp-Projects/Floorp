@@ -15,6 +15,7 @@ function convertToRTCStatsReport(dict) {
   let report = {};
   appendStats(dict.inboundRTPStreamStats, report);
   appendStats(dict.outboundRTPStreamStats, report);
+  appendStats(dict.rtpContributingSourceStats, report);
   appendStats(dict.mediaStreamTrackStats, report);
   appendStats(dict.mediaStreamStats, report);
   appendStats(dict.transportStats, report);
