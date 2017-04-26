@@ -197,7 +197,7 @@ void ProfilerJSEventMarker(const char* aEvent);
 //
 // The PseudoStack members are read by signal handlers, so the mutation of them
 // needs to be signal-safe.
-struct PseudoStack
+class PseudoStack
 {
 public:
   PseudoStack()
