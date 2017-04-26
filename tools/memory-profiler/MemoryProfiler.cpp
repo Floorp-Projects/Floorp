@@ -95,8 +95,7 @@ MemoryProfiler::InitOnce()
     ClearOnShutdown(&sJSContextProfilerMap);
     ClearOnShutdown(&sNativeProfiler);
     std::srand(PR_Now());
-    bool ignored;
-    sStartTime = TimeStamp::ProcessCreation(ignored);
+    sStartTime = TimeStamp::ProcessCreation();
     initialized = true;
   }
 }

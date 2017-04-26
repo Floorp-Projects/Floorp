@@ -206,8 +206,8 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         if (!DefineProperty(cx, obj, cx->names().frame, frame))
             return false;
 
-        bool ignore;
-        double when = (entry.when - mozilla::TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
+        double when = (entry.when -
+                       mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
         RootedValue timestampValue(cx, NumberValue(when));
         if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
