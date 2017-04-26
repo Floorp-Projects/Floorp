@@ -154,13 +154,15 @@ nsresult
 Serialize(BlobImpl* aBlobImpl, nsIContentChild* aManager, IPCBlob& aIPCBlob);
 
 nsresult
-Serialize(BlobImpl* aBlobImpl, PBackgroundChild* aManager, IPCBlob& aIPCBlob);
+Serialize(BlobImpl* aBlobImpl, mozilla::ipc::PBackgroundChild* aManager,
+          IPCBlob& aIPCBlob);
 
 nsresult
 Serialize(BlobImpl* aBlobImpl, nsIContentParent* aManager, IPCBlob& aIPCBlob);
 
 nsresult
-Serialize(BlobImpl* aBlobImpl, PBackgroundParent* aManager, IPCBlob& aIPCBlob);
+Serialize(BlobImpl* aBlobImpl, mozilla::ipc::PBackgroundParent* aManager,
+          IPCBlob& aIPCBlob);
 
 } // IPCBlobUtils
 } // dom namespace

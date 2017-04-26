@@ -579,7 +579,7 @@ DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
 {
     ValTypeVector locals;
     size_t argsLength;
-    if (!instance()->code().debugGetLocalTypes(funcIndex(), &locals, &argsLength))
+    if (!instance()->debug().debugGetLocalTypes(funcIndex(), &locals, &argsLength))
         return false;
 
     BaseLocalIter iter(locals, argsLength, /* debugEnabled = */ true);
@@ -613,7 +613,7 @@ void
 DebugFrame::updateReturnJSValue()
 {
     hasCachedReturnJSValue_ = true;
-    ExprType returnType = instance()->code().debugGetResultType(funcIndex());
+    ExprType returnType = instance()->debug().debugGetResultType(funcIndex());
     switch (returnType) {
       case ExprType::Void:
           cachedReturnJSValue_.setUndefined();
@@ -654,7 +654,7 @@ void
 DebugFrame::observe(JSContext* cx)
 {
    if (!observing_) {
-       instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ true);
+       instance()->debug().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ true);
        observing_ = true;
    }
 }
@@ -663,7 +663,7 @@ void
 DebugFrame::leave(JSContext* cx)
 {
     if (observing_) {
-       instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
+       instance()->debug().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
        observing_ = false;
     }
 }

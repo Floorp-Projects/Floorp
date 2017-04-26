@@ -97,6 +97,8 @@ typedef int32_t I32x4[4];
 typedef float F32x4[4];
 
 class Code;
+class DebugState;
+class GeneratedSourceMap;
 class GlobalSegment;
 class Memory;
 class Module;

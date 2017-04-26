@@ -128,7 +128,7 @@ const PSEUDO_SELECTORS = [
   ["::selection", 0]
 ];
 
-var HELPER_SHEET = `data:text/css;charset=utf-8,
+var HELPER_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
   .__fx-devtools-hide-shortcut__ {
     visibility: hidden !important;
   }
@@ -137,7 +137,7 @@ var HELPER_SHEET = `data:text/css;charset=utf-8,
     outline: 2px dashed #F06!important;
     outline-offset: -2px !important;
   }
-`;
+`);
 
 const flags = require("devtools/shared/flags");
 
@@ -1864,23 +1864,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return true;
   },
 
-  _installHelperSheet: function (node) {
-    if (!this.installedHelpers) {
-      this.installedHelpers = new WeakSet();
-    }
-    let win = node.rawNode.ownerGlobal;
-    if (!this.installedHelpers.has(win)) {
-      loadSheet(win, HELPER_SHEET, "agent");
-      this.installedHelpers.add(win);
-    }
-  },
-
   hideNode: function (node) {
     if (isNodeDead(node)) {
       return;
     }
 
-    this._installHelperSheet(node);
+    loadSheet(node.rawNode.ownerGlobal, HELPER_SHEET);
     node.rawNode.classList.add(HIDDEN_CLASS);
   },
 

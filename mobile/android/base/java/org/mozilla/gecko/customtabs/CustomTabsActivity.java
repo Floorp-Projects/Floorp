@@ -39,6 +39,8 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.util.Clipboard;
@@ -216,6 +218,14 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             }
         }
         super.onResume();
+
+        mLayerView.getDynamicToolbarAnimator().setPinned(true, PinReason.CUSTOM_TAB);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mLayerView.getDynamicToolbarAnimator().setPinned(false, PinReason.CUSTOM_TAB);
     }
 
     // Usually should use onCreateOptionsMenu() to initialize menu items. But GeckoApp overwrite

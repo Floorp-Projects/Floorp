@@ -1003,7 +1003,7 @@ var RefreshBlocker = {
                           .getInterface(Ci.nsIDocShell)
                           .QueryInterface(Ci.nsIRefreshURI);
 
-      let URI = BrowserUtils.makeURI(data.URI, data.originCharset, null);
+      let URI = Services.io.newURI(data.URI, data.originCharset);
 
       refreshURI.forceRefreshURI(URI, data.delay, true);
     }

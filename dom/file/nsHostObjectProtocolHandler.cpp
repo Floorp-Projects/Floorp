@@ -11,9 +11,9 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/BlobImpl.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MediaSource.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
@@ -28,13 +28,9 @@
 
 #define RELEASING_TIMER 1000
 
-using mozilla::DOMMediaStream;
-using mozilla::dom::BlobImpl;
-using mozilla::dom::MediaSource;
-using mozilla::ErrorResult;
-using mozilla::net::LoadInfo;
-using mozilla::Move;
-using mozilla::Unused;
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -144,13 +140,15 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
   }
 
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-  dom::BlobChild* actor = cc->GetOrCreateActorForBlobImpl(aBlobImpl);
-  if (NS_WARN_IF(!actor)) {
+
+  IPCBlob ipcBlob;
+  nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, cc, ipcBlob);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
   Unused << NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(
-    nsCString(aURI), actor, IPC::Principal(aPrincipal)));
+    nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal)));
 }
 
 void
@@ -521,7 +519,7 @@ nsHostObjectProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
   rv = AddDataEntryInternal(aUri, aBlobImpl, aPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozilla::BroadcastBlobURLRegistration(aUri, aBlobImpl, aPrincipal);
+  BroadcastBlobURLRegistration(aUri, aBlobImpl, aPrincipal);
   return NS_OK;
 }
 
@@ -560,15 +558,15 @@ nsHostObjectProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
 /* static */ nsresult
 nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aURI,
                                           nsIPrincipal* aPrincipal,
-                                          mozilla::dom::BlobImpl* aBlobImpl)
+                                          BlobImpl* aBlobImpl)
 {
   return AddDataEntryInternal(aURI, aBlobImpl, aPrincipal);
 }
 
 /* static */ bool
 nsHostObjectProtocolHandler::GetAllBlobURLEntries(
-  nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
-  mozilla::dom::ContentParent* aCP)
+  nsTArray<BlobURLRegistrationData>& aRegistrations,
+  ContentParent* aCP)
 {
   MOZ_ASSERT(aCP);
 
@@ -585,15 +583,15 @@ nsHostObjectProtocolHandler::GetAllBlobURLEntries(
     }
 
     MOZ_ASSERT(info->mBlobImpl);
-    mozilla::dom::PBlobParent* blobParent =
-      aCP->GetOrCreateActorForBlobImpl(info->mBlobImpl);
-    if (!blobParent) {
+
+    IPCBlob ipcBlob;
+    nsresult rv = IPCBlobUtils::Serialize(info->mBlobImpl, aCP, ipcBlob);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
 
-    aRegistrations.AppendElement(mozilla::dom::BlobURLRegistrationData(
-      nsCString(iter.Key()), blobParent, nullptr,
-      IPC::Principal(info->mPrincipal)));
+    aRegistrations.AppendElement(BlobURLRegistrationData(
+      nsCString(iter.Key()), ipcBlob, IPC::Principal(info->mPrincipal)));
   }
 
   return true;
@@ -613,11 +611,11 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 
   if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
-    mozilla::BroadcastBlobURLUnregistration(aUri, info);
+    BroadcastBlobURLUnregistration(aUri, info);
   }
 
   if (!info->mURIs.IsEmpty()) {
-    mozilla::ReleasingTimerHolder::Create(Move(info->mURIs));
+    ReleasingTimerHolder::Create(Move(info->mURIs));
   }
 
   gDataTable->Remove(aUri);
@@ -960,7 +958,7 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 }
 
 nsresult
-NS_GetStreamForMediaStreamURI(nsIURI* aURI, mozilla::DOMMediaStream** aStream)
+NS_GetStreamForMediaStreamURI(nsIURI* aURI, DOMMediaStream** aStream)
 {
   DataInfo* info = GetDataInfoFromURI(aURI);
   if (!info || info->mObjectType != DataInfo::eMediaStream) {
@@ -1007,7 +1005,7 @@ nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 nsresult
-NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource)
+NS_GetSourceForMediaSourceURI(nsIURI* aURI, MediaSource** aSource)
 {
   *aSource = nullptr;
 

@@ -256,7 +256,6 @@ LeafName(const char *path)
 LibHandle::~LibHandle()
 {
   free(path);
-  pthread_mutex_destroy(&mutex);
 }
 
 const char *
@@ -405,12 +404,14 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   /* Search the list of handles we already have for a match. When the given
    * path is not absolute, compare file names, otherwise compare full paths. */
   if (name == path) {
+    AutoLock lock(&handlesMutex);
     for (LibHandleList::iterator it = handles.begin(); it < handles.end(); ++it)
       if ((*it)->GetName() && (strcmp((*it)->GetName(), name) == 0)) {
         handle = *it;
         return handle.forget();
       }
   } else {
+    AutoLock lock(&handlesMutex);
     for (LibHandleList::iterator it = handles.begin(); it < handles.end(); ++it)
       if ((*it)->GetPath() && (strcmp((*it)->GetPath(), path) == 0)) {
         handle = *it;
@@ -459,6 +460,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
 already_AddRefed<LibHandle>
 ElfLoader::GetHandleByPtr(void *addr)
 {
+  AutoLock lock(&handlesMutex);
   /* Scan the list of handles we already have for a match */
   for (LibHandleList::iterator it = handles.begin(); it < handles.end(); ++it) {
     if ((*it)->Contains(addr)) {
@@ -509,6 +511,7 @@ ElfLoader::GetMappableFromPath(const char *path)
 void
 ElfLoader::Register(LibHandle *handle)
 {
+  AutoLock lock(&handlesMutex);
   handles.push_back(handle);
 }
 
@@ -527,6 +530,7 @@ ElfLoader::Forget(LibHandle *handle)
   /* Ensure logging is initialized or refresh if environment changed. */
   Logging::Init();
 
+  AutoLock lock(&handlesMutex);
   LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
     DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
@@ -578,6 +582,7 @@ ElfLoader::~ElfLoader()
   libc = nullptr;
 #endif
 
+  AutoLock lock(&handlesMutex);
   /* Build up a list of all library handles with direct (external) references.
    * We actually skip system library handles because we want to keep at least
    * some of these open. Most notably, Mozilla codebase keeps a few libgnome
@@ -616,6 +621,7 @@ ElfLoader::~ElfLoader()
       }
     }
   }
+  pthread_mutex_destroy(&handlesMutex);
 }
 
 void
@@ -624,6 +630,7 @@ ElfLoader::stats(const char *when)
   if (MOZ_LIKELY(!Logging::isVerbose()))
     return;
 
+  AutoLock lock(&Singleton.handlesMutex);
   for (LibHandleList::iterator it = Singleton.handles.begin();
        it < Singleton.handles.end(); ++it)
     (*it)->stats(when);

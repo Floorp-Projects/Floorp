@@ -279,7 +279,7 @@ ThreadEntry(void* aArg)
   return nullptr;
 }
 
-SamplerThread::SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
                              double aIntervalMilliseconds)
   : mActivityGeneration(aActivityGeneration)
   , mIntervalMicroseconds(
@@ -343,7 +343,7 @@ SamplerThread::~SamplerThread()
 }
 
 void
-SamplerThread::Stop(PS::LockRef aLock)
+SamplerThread::Stop(PSLockRef aLock)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -356,7 +356,7 @@ SamplerThread::Stop(PS::LockRef aLock)
 }
 
 void
-SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
+SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
                                                TickSample& aSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
@@ -466,7 +466,7 @@ paf_prepare()
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  PS::AutoLock lock(gPSMutex);
+  PSAutoLock lock(gPSMutex);
 
   gPS->SetWasPaused(lock, gPS->IsPaused(lock));
   gPS->SetIsPaused(lock, true);
@@ -480,14 +480,14 @@ paf_parent()
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  PS::AutoLock lock(gPSMutex);
+  PSAutoLock lock(gPSMutex);
 
   gPS->SetIsPaused(lock, gPS->WasPaused(lock));
   gPS->SetWasPaused(lock, false);
 }
 
 static void
-PlatformInit(PS::LockRef aLock)
+PlatformInit(PSLockRef aLock)
 {
   // Set up the fork handlers.
   pthread_atfork(paf_prepare, paf_parent, nullptr);
@@ -496,7 +496,7 @@ PlatformInit(PS::LockRef aLock)
 #else
 
 static void
-PlatformInit(PS::LockRef aLock)
+PlatformInit(PSLockRef aLock)
 {
 }
 

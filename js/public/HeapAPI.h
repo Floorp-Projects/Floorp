@@ -210,7 +210,11 @@ class JS_FRIEND_API(GCCellPtr)
         return reinterpret_cast<uintptr_t>(asCell());
     }
 
-    bool mayBeOwnedByOtherRuntime() const;
+    MOZ_ALWAYS_INLINE bool mayBeOwnedByOtherRuntime() const {
+        if (is<JSString>() || is<JS::Symbol>())
+            return mayBeOwnedByOtherRuntimeSlow();
+        return false;
+    }
 
   private:
     static uintptr_t checkedCast(void* p, JS::TraceKind traceKind) {
@@ -223,6 +227,8 @@ class JS_FRIEND_API(GCCellPtr)
                       (uintptr_t(traceKind) & OutOfLineTraceKindMask) == OutOfLineTraceKindMask);
         return uintptr_t(p) | (uintptr_t(traceKind) & OutOfLineTraceKindMask);
     }
+
+    bool mayBeOwnedByOtherRuntimeSlow() const;
 
     JS::TraceKind outOfLineKind() const;
 
@@ -296,15 +302,23 @@ GetGCThingZone(const uintptr_t addr)
 }
 
 static MOZ_ALWAYS_INLINE bool
+TenuredCellIsMarkedGray(const Cell* cell)
+{
+    MOZ_ASSERT(cell);
+    MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+
+    uintptr_t* word, mask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
+    return *word & mask;
+}
+
+static MOZ_ALWAYS_INLINE bool
 CellIsMarkedGray(const Cell* cell)
 {
     MOZ_ASSERT(cell);
     if (js::gc::IsInsideNursery(cell))
         return false;
-
-    uintptr_t* word, mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
-    return *word & mask;
+    return TenuredCellIsMarkedGray(cell);
 }
 
 extern JS_PUBLIC_API(bool)

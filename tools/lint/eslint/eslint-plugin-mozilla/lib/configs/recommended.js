@@ -45,7 +45,7 @@ module.exports = {
 
     // Warn about cyclomatic complexity in functions.
     // XXX Get this down to 20?
-    "complexity": ["error", {"max": 35}],
+    "complexity": ["error", 32],
 
     // Don't require spaces around computed properties
     "computed-property-spacing": ["error", "never"],
@@ -86,6 +86,9 @@ module.exports = {
     // Don't enforce the maximum depth that blocks can be nested. The complexity
     // rule is a better rule to check this.
     "max-depth": "off",
+
+    // Maximum depth callbacks can be nested.
+    "max-nested-callbacks": ["error", 10],
 
     // Always require parenthesis for new calls
     // "new-parens": "error",
@@ -135,7 +138,7 @@ module.exports = {
     // Disallow empty destructuring
     "no-empty-pattern": "error",
 
-    // No assiging to exception variable
+    // No assigning to exception variable
     "no-ex-assign": "error",
 
     // No using !! where casting to boolean is already happening
