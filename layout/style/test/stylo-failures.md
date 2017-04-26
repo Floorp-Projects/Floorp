@@ -52,11 +52,8 @@ to mochitest command.
     * test_animations_reverse.html [1]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-  * CSS Timing Functions: Frames timing functions
-    * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [20]
-    * test_value_storage.html `animation` [15]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
