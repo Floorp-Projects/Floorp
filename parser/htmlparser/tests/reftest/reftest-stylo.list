@@ -1,0 +1,27 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== bug535530-1.html bug535530-1.html
+fails == view-source:bug535530-2.html view-source:bug535530-2.html
+== bug566280-1.html bug566280-1.html
+== bug569229-1.xml bug569229-1.xml
+== bug577418-1.html bug577418-1.html
+== bug582788-1.html bug582788-1.html
+fails == bug582940-1.html bug582940-1.html
+== bug592656-1.html bug592656-1.html
+== bug599320-1.html bug599320-1.html
+== bug608373-1.html bug608373-1.html
+fails == view-source:bug482921-1.html view-source:bug482921-1.html
+fails == view-source:bug482921-2.xhtml view-source:bug482921-2.xhtml
+== bug659763-1.html bug659763-1.html
+== bug659763-2.html bug659763-2.html
+== bug659763-3.html bug659763-3.html
+== bug659763-4.html bug659763-4.html
+== bug659763-5.html bug659763-5.html
+== bug659763-6.html bug659763-6.html
+fails == view-source:bug673094-1.html view-source:bug673094-1.html
+== bug696651-1.html bug696651-1.html
+== bug696651-2.html bug696651-2.html
+fails == view-source:bug700260-1.html view-source:bug700260-1.html
+fails == view-source:bug704667-1.html view-source:bug704667-1.html
+fails == view-source:bug731234-1.html view-source:bug731234-1.html
+== bug820508-1.html bug820508-1.html
+fails == view-source:bug910588-1.html view-source:bug910588-1.html

@@ -1,0 +1,131 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# bmpsuite "questionable" tests
+
+# See ../README.mozilla for details.
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=1
+# "1 bit/pixel paletted image, with only one color in the palette. The
+# documentation says that 1-bpp images have a palette size of 2 (not 'up to
+# 2'), but it would be silly for a viewer not to support a size of 1."
+# [We accept it. So does Chromium.]
+== pal1p1.bmp pal1p1.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=2, compression=0, colors=4
+# "A paletted image with 2 bits/pixel. Usually only 1, 4, and 8 are allowed,
+# but 2 is legal on Windows CE."
+# [We reject it. So does Chromium.]
+== wrapper.html?pal2.bmp wrapper.html?pal2.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
+# "An RLE-compressed image that used 'delta' codes to skip over some pixels,
+# leaving them undefined. Some viewers make undefined pixels transparent,
+# others make them black, and others assign them palette color 0 (purple, in
+# this case)."
+# [We make the undefined pixels transparent. So does Chromium.]
+fails == pal4rletrns.bmp pal4rletrns.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
+# "8-bit version of q/pal4rletrns.bmp."
+# [Ditto.]
+fails == pal8rletrns.bmp pal8rletrns.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
+# "A file with some unused bytes between the palette and the image. This is
+# probably valid, but I’m not 100% sure."
+# [We accept it. So does Chromium.]
+== pal8offs.bmp pal8offs.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=300
+# "An 8-bit image with 300 palette colors. This may be invalid, because the
+# documentation could be interpreted to imply that 8-bit images aren’t allowed
+# to have more than 256 colors."
+# [We accept it. So does Chromium.]
+== pal8oversizepal.bmp pal8oversizepal.bmp
+
+# BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
+# "An OS/2v1 with a less-than-full-sized palette. Probably not valid, but such
+# files have been seen in the wild."
+# [We reject it. Chromium accepts it but draws nothing. Rejecting seems
+# preferable given that the color and pixel data must overlap, which can only
+# lead to rubbish results.]
+== wrapper.html?pal8os2sp.bmp wrapper.html?pal8os2sp.bmp
+
+# BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
+# "My attempt to make an OS/2v2 bitmap."
+# [We accept it. So does Chromium.]
+== pal8os2v2.bmp pal8os2v2.bmp
+
+# BMP: bihsize=16, 127 x 64, bpp=8, compression=0, colors=0
+# "An OS/2v2 bitmap whose header has only 16 bytes, instead of the full 64."
+# [We accept it. So does Chromium.]
+== pal8os2v2-16.bmp pal8os2v2-16.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
+# "An unusual and silly 16-bit image, with 2 red bits, 3 green bits, and 1 blue
+# bit. Most viewers do support this image, but the colors may be darkened with
+# a yellow-green shadow. That’s because they’re doing simple bit-shifting
+# (possibly including one round of bit replication), instead of proper
+# scaling."
+== rgb16-231.bmp rgb16-231.bmp
+
+# BMP: bihsize=124, 127 x 64, bpp=16, compression=3, colors=0
+# "A 16-bit image with an alpha channel. There are 4 bits for each color
+# channel, and 4 bits for the alpha channel. It’s not clear if this is valid,
+# but I can’t find anything that suggests it isn’t."
+fails == rgba16-4444.bmp rgba16-4444.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=300
+# "A 24-bit image, with a palette containing 300 colors. The fact that the
+# palette has more than 256 colors may cause some viewers to complain, but the
+# documentation does not mention a size limit."
+# [We accept it. So does Chromium.]
+== rgb24largepal.bmp rgb24largepal.bmp
+
+# BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
+# "My attempt to make a BMP file with an embedded color profile."
+# [We support it, though we don't do anything with the color profile. Chromium
+# also handles it.]
+== rgb24prof.bmp rgb24prof.bmp
+
+# BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
+# "My attempt to make a BMP file with a linked color profile."
+# [We accept it, though we don't do anything with the color profile. Chromium
+# also handles it.]
+== rgb24lprof.bmp rgb24lprof.bmp
+
+# BMP: bihsize=124, 127 x 64, bpp=0, compression=4, colors=0
+# BMP: bihsize=124, 127 x 64, bpp=0, compression=5, colors=0
+# "My attempt to make BMP files with embedded JPEG and PNG images. These are
+# not likely to be supported by much of anything (they’re intended for 
+# printers)."
+# [We reject them. So does Chromium.]
+== wrapper.html?rgb24jpeg.bmp wrapper.html?rgb24jpeg.bmp
+== wrapper.html?rgb24png.bmp wrapper.html?rgb24png.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=32, compression=0, colors=0
+# "Same as g/rgb32.bmp, except that the unused bits are set to something other
+# than 0. If the image becomes transparent toward the bottom, it probably means
+# the viewer uses heuristics to guess whether the undefined data represents
+# transparency."
+# [We don't apply transparency here. Chromium does the same.]
+== rgb32fakealpha.bmp rgb32fakealpha.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
+# "A 32 bits/pixel image, with all 32 bits used: 11 each for red and green, and
+# 10 for blue. As far as I know, this is perfectly valid, but it is unusual."
+== rgb32-111110.bmp rgb32-111110.bmp
+
+# BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
+# "A BMP with an alpha channel. Transparency is barely documented, so it’s
+# possible that this file is not correctly formed. The color channels are in an
+# unusual order, to prevent viewers from passing this test by making a lucky
+# guess."
+fails == rgba32.bmp rgba32.bmp
+
+# BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
+# "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.
+# I don’t know whether it is constructed correctly."
+# [We reject it. So does Chromium.]
+== wrapper.html?rgba32abf.bmp wrapper.html?rgba32abf.bmp
+
+

@@ -1,0 +1,44 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == first-letter-1.html first-letter-1.html # Bug 1341086
+fails == first-letter-1.html first-letter-1.html # Bug 1341086
+
+== max-height.html max-height.html # Bug 1341086
+== min-height.html min-height.html
+
+# Android is off ever-so-slightly on the points where the text
+# runs into the border on this text, so a little fuzz is needed.
+== overflow-areas-1.html overflow-areas-1.html
+
+# The buttons in these tests have some fancy shading applied to their corners
+# on Android, despite their "-moz-appearance: none; background: gray", so they
+# don't quite match the reference case's normal <div>. That's why they're fuzzy.
+fuzzy-if(Android,125,20) == percent-height-child.html percent-height-child.html
+fuzzy-if(Android,125,20) == percent-width-child.html percent-width-child.html
+
+== vertical-centering.html vertical-centering.html
+
+fails == line-height-button-0.5.html line-height-button-0.5.html
+fails == line-height-button-1.5.html line-height-button-1.5.html
+fails == line-height-input-0.5.html line-height-input-0.5.html
+fails == line-height-input-1.5.html line-height-input-1.5.html
+
+# Looks like Android changes the text color, but to something slightly
+# different from ColorGray
+== disabled-1.html disabled-1.html
+fails == disabled-2.html disabled-2.html
+
+fails == disabled-3.html disabled-3.html
+fails == disabled-4.html disabled-4.html
+fails == disabled-5.html disabled-5.html
+fails == disabled-6.html disabled-6.html
+
+== width-auto-size-em-ltr.html width-auto-size-em-ltr.html
+== width-auto-size-ltr.html width-auto-size-ltr.html
+== width-exact-fit-ltr.html width-exact-fit-ltr.html # Bug 1341086
+== width-auto-size-em-rtl.html width-auto-size-em-rtl.html
+== width-auto-size-rtl.html width-auto-size-rtl.html
+== width-exact-fit-rtl.html width-exact-fit-rtl.html # Bug 1341086
+fails == display-grid-flex-columnset.html display-grid-flex-columnset.html
+== 1317351.html 1317351.html
+
+fails == dynamic-text-indent.html dynamic-text-indent.html # Bug 1341086

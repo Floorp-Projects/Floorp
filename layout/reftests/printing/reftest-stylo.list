@@ -1,0 +1,36 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Sanity check
+== blank.html blank.html
+
+# Bugs
+== 272830-1.html 272830-1.html
+== 318022-1.html 318022-1.html
+== 403669-1.html 403669-1.html
+== 381497-n.html 381497-n.html
+== test-async-print.html test-async-print.html
+== 129941-1a.html 129941-1a.html
+== 129941-1b.html 129941-1b.html
+== 609227-1.html 609227-1.html
+== 609227-2a.html 609227-2a.html
+== 609227-2b.html 609227-2b.html
+== 577450-1.html 577450-1.html
+== 626395-1a.html 626395-1a.html
+== 626395-1b.html 626395-1b.html
+== 626395-2a.html 626395-2a.html
+== 626395-2b.html 626395-2b.html
+== 626395-2c.html 626395-2c.html
+== 626395-2d.html 626395-2d.html
+== 652178-1.html 652178-1.html
+fails == 115199-1.html 115199-1.html
+== 115199-2a.html 115199-2a.html
+== 115199-2b.html 115199-2b.html
+== 652178-1.html 652178-1.html
+== 745025-1.html 745025-1.html
+fails == 820496-1.html 820496-1.html
+
+# NOTE: These tests don't yet rigorously test what they're
+# trying to test (shrink-to-fit behavior), due to bug 967311.
+== 960822.html 960822.html
+== 966419-1.html 966419-1.html
+== 966419-2.html 966419-2.html
+HTTP(..) == 1108104.html 1108104-ref.html

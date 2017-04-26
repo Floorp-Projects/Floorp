@@ -1,0 +1,50 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+
+# sanity checks:
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+
+# dynamic type changes:
+fails == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1.html
+fails == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1.html
+
+# for different values:
+fails == different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1.html
+fails == same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1.html
+
+# dynamic value changes:
+fuzzy-if(skiaContent,1,40) == value-prop-unthemed.html value-prop-unthemed.html
+== value-prop.html value-prop.html
+fuzzy-if(skiaContent,1,40) == valueAsNumber-prop-unthemed.html valueAsNumber-prop-unthemed.html
+== valueAsNumber-prop.html valueAsNumber-prop.html
+fuzzy-if(skiaContent,1,40) == stepDown-unthemed.html stepDown-unthemed.html
+== stepDown.html stepDown.html
+fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html stepUp-unthemed.html
+== stepUp.html stepUp.html
+== max-prop.html max-prop.html
+== reset-value.html reset-value.html
+
+# 'direction' property:
+fails == direction-unthemed-1.html direction-unthemed-1.html
+
+# ::-moz-range-progress pseudo-element:
+fails == moz-range-progress-1.html moz-range-progress-1.html
+fails == moz-range-progress-2.html moz-range-progress-2.html
+== moz-range-progress-3.html moz-range-progress-3.html
+
+# Tests for block and inline orientation in combination with writing-mode
+== range-orient-horizontal.html range-orient-horizontal.html
+== range-orient-horizontal.html range-orient-horizontal.html
+== range-orient-block.html range-orient-block.html
+== range-orient-inline.html range-orient-inline.html
+== range-vlr.html range-vlr.html
+== range-vlr-orient-block.html range-vlr-orient-block.html
+== range-vlr-orient-inline.html range-vlr-orient-inline.html
+== range-vlr-orient-horizontal.html range-vlr-orient-horizontal.html
+== range-vlr-orient-vertical.html range-vlr-orient-vertical.html
+== range-vrl.html range-vrl.html
+== range-vrl-orient-block.html range-vrl-orient-block.html
+== range-vrl-orient-inline.html range-vrl-orient-inline.html
+== range-vrl-orient-horizontal.html range-vrl-orient-horizontal.html
+== range-vrl-orient-vertical.html range-vrl-orient-vertical.html

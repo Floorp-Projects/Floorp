@@ -1,0 +1,22 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Tests related to SVG Animation (using SMIL), focusing on the animateMotion
+# element.
+
+== animateMotion-by-1.svg animateMotion-by-1.svg
+== animateMotion-by-2.svg animateMotion-by-2.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,800) == animateMotion-flattening-1.svg animateMotion-flattening-1.svg
+== animateMotion-from-to-1.svg animateMotion-from-to-1.svg
+== animateMotion-indefinite-to-1.svg animateMotion-indefinite-to-1.svg
+== animateMotion-indefinite-to-2.svg animateMotion-indefinite-to-2.svg
+== animateMotion-rotate-1a.svg animateMotion-rotate-1a.svg
+== animateMotion-rotate-1b.svg animateMotion-rotate-1b.svg
+fuzzy-if(skiaContent,1,40) == animateMotion-rotate-2.svg animateMotion-rotate-2.svg
+== animateMotion-to-overridden-1.svg animateMotion-to-overridden-1.svg
+== animateMotion-values-linear-1.svg animateMotion-values-linear-1.svg
+== animateMotion-values-paced-1a.svg animateMotion-values-paced-1a.svg
+fuzzy-if(skiaContent,1,30) == animateMotion-values-paced-1b.svg animateMotion-values-paced-1b.svg
+
+# Tests involving <mpath> sub-element
+== animateMotion-mpath-pathLength-1.svg animateMotion-mpath-pathLength-1.svg
+== animateMotion-mpath-targetChange-1.svg animateMotion-mpath-targetChange-1.svg
+== animateMotion-mpath-target-transform-1.svg animateMotion-mpath-target-transform-1.svg

@@ -1,0 +1,6 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == input.html input.html
+fails == button.html button.html
+fails == textarea.html textarea.html
+fails == select.html select.html
+== fieldset.html fieldset.html # Bug 1340696

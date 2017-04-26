@@ -1,0 +1,104 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Basic <summary> handling
+fails == multiple-summary.html multiple-summary.html
+fails == open-multiple-summary.html open-multiple-summary.html
+fails == summary-not-first-child.html summary-not-first-child.html
+fails == open-summary-not-first-child.html open-summary-not-first-child.html
+== open-summary-block-style.html open-summary-block-style.html
+== open-summary-inline-style.html open-summary-inline-style.html
+== open-summary-table-cell-style.html open-summary-table-cell-style.html
+fails == no-summary.html no-summary.html
+fails == open-no-summary.html open-no-summary.html
+== summary-not-in-details.html summary-not-in-details.html
+fails == summary-not-direct-child.html summary-not-direct-child.html
+== float-in-summary.html float-in-summary.html
+
+# Add elements dynamically
+fails == dynamic-add-single-summary.html dynamic-add-single-summary.html
+fails == dynamic-add-summary-not-first-child.html dynamic-add-summary-not-first-child.html
+fails == dynamic-add-summary-and-paragraph.html dynamic-add-summary-and-paragraph.html
+fails == dynamic-add-paragraph-before-summary.html dynamic-add-paragraph-before-summary.html
+fails == dynamic-add-paragraph-before-summary-close.html dynamic-add-paragraph-before-summary-close.html
+fails == dynamic-add-paragraph-after-summary.html dynamic-add-paragraph-after-summary.html
+fails == dynamic-add-paragraph-after-summary-close.html dynamic-add-paragraph-after-summary-close.html
+fails == dynamic-add-details.html dynamic-add-details.html
+fails == dynamic-add-first-summary.html dynamic-add-first-summary.html
+fails == dynamic-add-second-summary.html dynamic-add-second-summary.html
+
+# Remove elements dynamically
+fails == dynamic-remove-single-summary.html dynamic-remove-single-summary.html
+fails == dynamic-remove-summary-not-first-child.html dynamic-remove-summary-not-first-child.html
+fails == dynamic-remove-first-summary.html dynamic-remove-first-summary.html
+fails == dynamic-remove-second-summary.html dynamic-remove-second-summary.html
+
+# Toggle details by open attribute
+fails == close-nested-details.html close-nested-details.html
+fails == open-nested-details.html open-nested-details.html
+
+# With 'overflow' property
+== overflow-hidden-open-details.html overflow-hidden-open-details.html
+fails == overflow-auto-open-details.html overflow-auto-open-details.html
+fails == overflow-scroll-details.html overflow-scroll-details.html
+
+# With pagination property
+== details-page-break-after-1.html details-page-break-after-1.html
+== details-page-break-after-2.html details-page-break-after-2.html
+== details-page-break-before-1.html details-page-break-before-1.html
+== details-page-break-before-2.html details-page-break-before-2.html
+
+# With 'float' property
+== float-left-and-float-details.html float-left-and-float-details.html
+== float-left-and-inflow-details.html float-left-and-inflow-details.html
+== float-left-and-float-open-details.html float-left-and-float-open-details.html
+== float-left-and-inflow-open-details.html float-left-and-inflow-open-details.html
+== float-right-and-float-details.html float-right-and-float-details.html
+== float-right-and-inflow-details.html float-right-and-inflow-details.html
+== float-right-and-float-open-details.html float-right-and-float-open-details.html
+== float-right-and-inflow-open-details.html float-right-and-inflow-open-details.html
+== float-open-details-contains-float-left.html float-open-details-contains-float-left.html
+== float-open-details-contains-float-right.html float-open-details-contains-float-right.html
+
+# Various properties on details or summary
+== details-display-inline.html details-display-inline.html
+== details-percentage-height-children.html details-percentage-height-children.html
+== details-absolute-children.html details-absolute-children.html
+== details-three-columns.html details-three-columns.html
+fails == details-writing-mode.html details-writing-mode.html
+== details-in-ol.html details-in-ol.html
+== summary-three-columns.html summary-three-columns.html
+fails == details-first-line.html details-first-line.html
+fails == open-details-first-line-1.html open-details-first-line-1.html
+fails == open-details-first-line-2.html open-details-first-line-2.html
+
+# Dispatch mouse click to summary
+fails == mouse-click-single-summary.html mouse-click-single-summary.html
+fails == mouse-click-twice-single-summary.html mouse-click-twice-single-summary.html
+fails == mouse-click-open-single-summary.html mouse-click-open-single-summary.html
+fails == mouse-click-twice-open-single-summary.html mouse-click-twice-open-single-summary.html
+fails == mouse-click-open-second-summary.html mouse-click-open-second-summary.html
+fails == mouse-click-overflow-hidden-details.html mouse-click-overflow-hidden-details.html
+== mouse-click-twice-overflow-hidden-details.html mouse-click-twice-overflow-hidden-details.html
+fails == mouse-click-overflow-auto-details.html mouse-click-overflow-auto-details.html
+fails == mouse-click-twice-overflow-auto-details.html mouse-click-twice-overflow-auto-details.html
+fails == mouse-click-display-none-details.html mouse-click-display-none-details.html
+fails == mouse-click-change-details-to-display-none.html mouse-click-change-details-to-display-none.html
+== mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none.html
+fails == mouse-click-move-summary-to-different-details.html mouse-click-move-summary-to-different-details.html
+
+# Dispatch mouse click to out-of-flow details or summary
+fails == mouse-click-fixed-summary.html mouse-click-fixed-summary.html
+fails == mouse-click-twice-fixed-summary.html mouse-click-twice-fixed-summary.html
+fails == mouse-click-float-details.html mouse-click-float-details.html
+fails == mouse-click-twice-float-details.html mouse-click-twice-float-details.html
+
+# Dispatch keyboard event to summary
+fails == key-enter-single-summary.html key-enter-single-summary.html
+fails == key-enter-open-second-summary.html key-enter-open-second-summary.html
+fails == key-enter-prevent-default.html key-enter-prevent-default.html
+fails == key-space-single-summary.html key-space-single-summary.html
+
+# Generated content bits
+fails == details-after.html details-after.html
+fails == details-before.html details-before.html
+fails == open-details-after.html open-details-after.html
+fails == open-details-before.html open-details-before.html

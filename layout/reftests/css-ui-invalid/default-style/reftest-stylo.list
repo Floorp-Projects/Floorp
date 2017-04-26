@@ -1,0 +1,11 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == input.html input.html
+fails == button.html button.html
+fails == textarea.html textarea.html
+fails == select.html select.html
+== fieldset.html fieldset.html # Bug 1340696
+== output.html output.html
+fails == input-focus.html input-focus.html
+fails needs-focus == button-focus.html button-focus.html
+fails needs-focus == textarea-focus.html textarea-focus.html
+fails == select-focus.html select-focus.html

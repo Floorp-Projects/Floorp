@@ -1,0 +1,10 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# 468496-1 will also detect bugs in video drivers.
+== 468496-1.html 468496-1.html
+skip-if(stylo) == 611498-1.html 611498-1.html # Bug 1302946
+fails == 709477-1.html 709477-1.html
+skip-if(!asyncPan) == 1086723.html 1086723.html
+== 853889-1.html 853889-1.html
+skip-if(Android) fuzzy-if(skiaContent,1,587) == 1143303-1.svg 1143303-1.svg
+fuzzy(100,30) == 1149923.html 1149923.html
+== 1131264-1.svg 1131264-1.svg

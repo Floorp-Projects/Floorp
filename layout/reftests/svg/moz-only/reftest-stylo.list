@@ -1,0 +1,24 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+
+# XBL tests
+== xbl-basic-01.svg xbl-basic-01.svg
+== xbl-basic-02.svg xbl-basic-02.svg
+== xbl-basic-03.svg xbl-basic-03.svg
+== xbl-grad-ref--grad-in-binding-01.svg xbl-grad-ref--grad-in-binding-01.svg
+== xbl-grad-ref--grad-in-binding-02.svg xbl-grad-ref--grad-in-binding-02.svg
+== xbl-grad-ref--grad-in-bound-01.svg xbl-grad-ref--grad-in-bound-01.svg
+== xbl-grad-ref--grad-in-bound-02.svg xbl-grad-ref--grad-in-bound-02.svg
+== xbl-grad-ref--grad-in-resources-01.svg xbl-grad-ref--grad-in-resources-01.svg
+== xbl-grad-ref--grad-in-resources-02.svg xbl-grad-ref--grad-in-resources-02.svg
+== xbl-grad-ref--grad-in-binding-03.svg xbl-grad-ref--grad-in-binding-03.svg
+== xbl-grad-ref--grad-in-bound-03.svg xbl-grad-ref--grad-in-bound-03.svg
+== xbl-grad-ref--grad-in-binding-04.svg xbl-grad-ref--grad-in-binding-04.svg
+== xbl-grad-ref--grad-in-bound-04.svg xbl-grad-ref--grad-in-bound-04.svg
+
+# Tests for zooming with the full page zoom UI
+random-if(d2d) == feImage-zoom-01a.svg feImage-zoom-01a.svg
+random-if(d2d) == feImage-zoom-01b.svg feImage-zoom-01b.svg
+== foreignObject-zoom-01.svg foreignObject-zoom-01.svg
+== zoom-invalidation-01.svg zoom-invalidation-01.svg
+== replaced-element-zoom-01.html replaced-element-zoom-01.html
+fuzzy-if(winWidget,12,7) == zoomed-svg-with-viewBox-01.svg zoomed-svg-with-viewBox-01.svg

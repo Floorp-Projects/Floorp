@@ -1,0 +1,11 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+#css-color-4 function
+#hsl
+fails == background-color-hsl-001.html background-color-hsl-001.html
+fails == background-color-hsl-002.html background-color-hsl-002.html
+fails == background-color-hsl-003.html background-color-hsl-003.html
+fails == background-color-hsl-004.html background-color-hsl-004.html
+#rgb
+fails == background-color-rgb-001.html background-color-rgb-001.html
+fails == background-color-rgb-002.html background-color-rgb-002.html
+fails == background-color-rgb-003.html background-color-rgb-003.html

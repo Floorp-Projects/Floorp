@@ -1,0 +1,39 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== capitalize-1.html capitalize-1.html
+== capitalize-2.html capitalize-2.html
+== capitalize-3.html capitalize-3.html
+== capitalize-4.html capitalize-4.html
+== capitalize-5.html capitalize-5.html
+== capitalize-6.html capitalize-6.html
+== capitalize-7.html capitalize-7.html
+== capitalize-7a.html capitalize-7a.html
+== capitalize-8.html capitalize-8.html
+== lowercase-1.html lowercase-1.html
+== lowercase-sigma-1.html lowercase-sigma-1.html
+== small-caps-1.html small-caps-1.html
+HTTP(..) == fake-small-caps-1.html fake-small-caps-1.html
+HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
+HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
+HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
+HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
+== uppercase-1.html uppercase-1.html
+== uppercase-szlig-1.html uppercase-szlig-1.html
+# these use DejaVu Sans via @font-face for consistency of results
+== all-upper.html all-upper.html
+== all-lower.html all-lower.html
+== all-title.html all-title.html
+== smtp-upper.html smtp-upper.html
+== smtp-lower.html smtp-lower.html
+== smtp-title.html smtp-title.html
+== turkish-casing-1.html turkish-casing-1.html
+HTTP(..) == small-caps-turkish-1.html small-caps-turkish-1.html
+== greek-uppercase-1a.html greek-uppercase-1a.html
+== greek-uppercase-1b.html greek-uppercase-1b.html
+== greek-uppercase-2.html greek-uppercase-2.html
+HTTP(..) == greek-small-caps-1.html greek-small-caps-1.html
+== irish-uppercase-1.html irish-uppercase-1.html
+fails == irish-lowercase-1a.html irish-lowercase-1a.html
+fails == irish-lowercase-1b.html irish-lowercase-1b.html
+== fullwidth-1.html fullwidth-1.html
+== fullwidth-2.html fullwidth-2.html
+== fullwidth-all.html fullwidth-all.html

@@ -1,0 +1,865 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Test Suite for CSS 2.1, 8.3.1 Collapsing margins - See Bug 477462
+# Based on CSS 2.1: http://www.w3.org/TR/2011/REC-CSS2-20110607/
+# and its Errata, Last revised: $Date: 2013-09-09 17:40:16 $
+# The structure of this manifest is intended to resemble the structure of
+# the prose that defines collapsing margins. As a result, there are several
+# sections where inline-block-, block-, and other- series are combined.
+# E.g. the first section is about horizontal margins and includes both
+# inline- and block series.
+# "Horizontal margins never collapse."
+# Horizontal margins of inline boxes do not collapse.
+# The norefs for these tests depict margins that incorrectly collapsed.
+== inline-horizontal-1.html inline-horizontal-1.html
+== inline-horizontal-1.html inline-horizontal-1.html
+== inline-horizontal-2.html inline-horizontal-2.html
+== inline-horizontal-2.html inline-horizontal-2.html
+== inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+== inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+== inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+== inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+# Horizontal margins of block boxes do not collapse.
+# These block boxes are actually floats - in CSS 2.1 there is no other
+# method to create horizontally adjacent block boxes.
+== block-horizontal-1.html block-horizontal-1.html
+== block-horizontal-1.html block-horizontal-1.html
+== block-horizontal-2.html block-horizontal-2.html
+== block-horizontal-2.html block-horizontal-2.html
+== block-horizontal-3.html block-horizontal-3.html
+== block-horizontal-3.html block-horizontal-3.html
+== block-horizontal-4.html block-horizontal-4.html
+== block-horizontal-4.html block-horizontal-4.html
+== block-horizontal-1-dyn.html block-horizontal-1-dyn.html
+== block-horizontal-1-dyn.html block-horizontal-1-dyn.html
+== block-horizontal-2-dyn.html block-horizontal-2-dyn.html
+== block-horizontal-2-dyn.html block-horizontal-2-dyn.html
+== block-horizontal-3-dyn.html block-horizontal-3-dyn.html
+== block-horizontal-3-dyn.html block-horizontal-3-dyn.html
+== block-horizontal-4-dyn.html block-horizontal-4-dyn.html
+== block-horizontal-4-dyn.html block-horizontal-4-dyn.html
+# Horizontal margins of inline-block boxes do not collapse.
+== inline-block-horizontal-1.html inline-block-horizontal-1.html
+== inline-block-horizontal-1.html inline-block-horizontal-1.html
+== inline-block-horizontal-2.html inline-block-horizontal-2.html
+== inline-block-horizontal-2.html inline-block-horizontal-2.html
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+# Horizontal margins of inline-tables do not collapse.
+== inline-table-horizontal-1.html inline-table-horizontal-1.html
+== inline-table-horizontal-1.html inline-table-horizontal-1.html
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+# "In CSS, the adjoining margins of two or more boxes
+#  (which might or might not be siblings) can combine to form a single margin.
+#  Margins that combine this way are said to collapse,
+#  and the resulting combined margin is called a collapsed margin."
+# "Two margins are adjoining if and only if:" [...]
+# "both belong to vertically-adjacent box edges,
+#  i.e. form one of the following pairs:" [...]
+# "bottom margin of box and top margin of its next in-flow following sibling"
+# "When two or more margins collapse,
+#  the resulting margin width is the maximum of the collapsing margins' widths."
+# The margins of two in-flow siblings should collapse.
+# These tests feature margins of different or equal sizes on each box.
+# The norefs depict incorrect results where the margins did not collapse.
+== block-sibling-1a.html block-sibling-1a.html
+== block-sibling-1a.html block-sibling-1a.html
+== block-sibling-1a.html block-sibling-1a.html
+== block-sibling-1b.html block-sibling-1b.html
+== block-sibling-1b.html block-sibling-1b.html
+== block-sibling-1b.html block-sibling-1b.html
+== block-sibling-1c.html block-sibling-1c.html
+== block-sibling-1c.html block-sibling-1c.html
+== block-sibling-1c.html block-sibling-1c.html
+== block-sibling-2.html block-sibling-2.html
+== block-sibling-2.html block-sibling-2.html
+== block-sibling-2.html block-sibling-2.html
+== block-sibling-3.html block-sibling-3.html
+== block-sibling-3.html block-sibling-3.html
+== block-sibling-3.html block-sibling-3.html
+== block-sibling-1a-dyn.html block-sibling-1a-dyn.html
+== block-sibling-1a-dyn.html block-sibling-1a-dyn.html
+== block-sibling-1a-dyn.html block-sibling-1a-dyn.html
+== block-sibling-1b-dyn.html block-sibling-1b-dyn.html
+== block-sibling-1b-dyn.html block-sibling-1b-dyn.html
+== block-sibling-1b-dyn.html block-sibling-1b-dyn.html
+== block-sibling-1c-dyn.html block-sibling-1c-dyn.html
+== block-sibling-1c-dyn.html block-sibling-1c-dyn.html
+== block-sibling-1c-dyn.html block-sibling-1c-dyn.html
+== block-sibling-2-dyn.html block-sibling-2-dyn.html
+== block-sibling-2-dyn.html block-sibling-2-dyn.html
+== block-sibling-2-dyn.html block-sibling-2-dyn.html
+== block-sibling-3-dyn.html block-sibling-3-dyn.html
+== block-sibling-3-dyn.html block-sibling-3-dyn.html
+== block-sibling-3-dyn.html block-sibling-3-dyn.html
+# "In the case of negative margins, the maximum of the absolute values of the
+#  negative adjoining margins is deducted from the maximum of the positive
+#  adjoining margins. If there are no positive margins, the maximum of the
+#  absolute values of the adjoining margins is deducted from zero."
+# These tests feature sibling block boxes where one or two margins are negative.
+# The norefs depict possible incorrect addition or subtraction of margins.
+== block-negative-1a.html block-negative-1a.html
+== block-negative-1a.html block-negative-1a.html
+== block-negative-1a.html block-negative-1a.html
+== block-negative-1b.html block-negative-1b.html
+== block-negative-1b.html block-negative-1b.html
+== block-negative-1b.html block-negative-1b.html
+== block-negative-2a.html block-negative-2a.html
+== block-negative-2a.html block-negative-2a.html
+== block-negative-2a.html block-negative-2a.html
+== block-negative-2b.html block-negative-2b.html
+== block-negative-2b.html block-negative-2b.html
+== block-negative-2b.html block-negative-2b.html
+== block-negative-3a.html block-negative-3a.html
+== block-negative-3a.html block-negative-3a.html
+== block-negative-3a.html block-negative-3a.html
+== block-negative-3a.html block-negative-3a.html
+== block-negative-3b.html block-negative-3b.html
+== block-negative-3b.html block-negative-3b.html
+== block-negative-3b.html block-negative-3b.html
+== block-negative-3b.html block-negative-3b.html
+== block-negative-4a.html block-negative-4a.html
+== block-negative-4a.html block-negative-4a.html
+== block-negative-4a.html block-negative-4a.html
+== block-negative-4a.html block-negative-4a.html
+== block-negative-4b.html block-negative-4b.html
+== block-negative-4b.html block-negative-4b.html
+== block-negative-4b.html block-negative-4b.html
+== block-negative-4b.html block-negative-4b.html
+== block-negative-5.html block-negative-5.html
+== block-negative-5.html block-negative-5.html
+== block-negative-5.html block-negative-5.html
+== block-negative-5.html block-negative-5.html
+== block-negative-1a-dyn1.html block-negative-1a-dyn1.html
+== block-negative-1a-dyn1.html block-negative-1a-dyn1.html
+== block-negative-1a-dyn1.html block-negative-1a-dyn1.html
+== block-negative-1a-dyn2.html block-negative-1a-dyn2.html
+== block-negative-1a-dyn2.html block-negative-1a-dyn2.html
+== block-negative-1a-dyn2.html block-negative-1a-dyn2.html
+== block-negative-1b-dyn1.html block-negative-1b-dyn1.html
+== block-negative-1b-dyn1.html block-negative-1b-dyn1.html
+== block-negative-1b-dyn1.html block-negative-1b-dyn1.html
+== block-negative-1b-dyn2.html block-negative-1b-dyn2.html
+== block-negative-1b-dyn2.html block-negative-1b-dyn2.html
+== block-negative-1b-dyn2.html block-negative-1b-dyn2.html
+== block-negative-2a-dyn1.html block-negative-2a-dyn1.html
+== block-negative-2a-dyn1.html block-negative-2a-dyn1.html
+== block-negative-2a-dyn1.html block-negative-2a-dyn1.html
+== block-negative-2a-dyn2.html block-negative-2a-dyn2.html
+== block-negative-2a-dyn2.html block-negative-2a-dyn2.html
+== block-negative-2a-dyn2.html block-negative-2a-dyn2.html
+== block-negative-2b-dyn1.html block-negative-2b-dyn1.html
+== block-negative-2b-dyn1.html block-negative-2b-dyn1.html
+== block-negative-2b-dyn1.html block-negative-2b-dyn1.html
+== block-negative-2b-dyn2.html block-negative-2b-dyn2.html
+== block-negative-2b-dyn2.html block-negative-2b-dyn2.html
+== block-negative-2b-dyn2.html block-negative-2b-dyn2.html
+== block-negative-3a-dyn1.html block-negative-3a-dyn1.html
+== block-negative-3a-dyn1.html block-negative-3a-dyn1.html
+== block-negative-3a-dyn1.html block-negative-3a-dyn1.html
+== block-negative-3a-dyn1.html block-negative-3a-dyn1.html
+== block-negative-3a-dyn2.html block-negative-3a-dyn2.html
+== block-negative-3a-dyn2.html block-negative-3a-dyn2.html
+== block-negative-3a-dyn2.html block-negative-3a-dyn2.html
+== block-negative-3a-dyn2.html block-negative-3a-dyn2.html
+== block-negative-3b-dyn1.html block-negative-3b-dyn1.html
+== block-negative-3b-dyn1.html block-negative-3b-dyn1.html
+== block-negative-3b-dyn1.html block-negative-3b-dyn1.html
+== block-negative-3b-dyn1.html block-negative-3b-dyn1.html
+== block-negative-3b-dyn2.html block-negative-3b-dyn2.html
+== block-negative-3b-dyn2.html block-negative-3b-dyn2.html
+== block-negative-3b-dyn2.html block-negative-3b-dyn2.html
+== block-negative-3b-dyn2.html block-negative-3b-dyn2.html
+== block-negative-4a-dyn1.html block-negative-4a-dyn1.html
+== block-negative-4a-dyn1.html block-negative-4a-dyn1.html
+== block-negative-4a-dyn1.html block-negative-4a-dyn1.html
+== block-negative-4a-dyn1.html block-negative-4a-dyn1.html
+== block-negative-4a-dyn2.html block-negative-4a-dyn2.html
+== block-negative-4a-dyn2.html block-negative-4a-dyn2.html
+== block-negative-4a-dyn2.html block-negative-4a-dyn2.html
+== block-negative-4a-dyn2.html block-negative-4a-dyn2.html
+== block-negative-4b-dyn1.html block-negative-4b-dyn1.html
+== block-negative-4b-dyn1.html block-negative-4b-dyn1.html
+== block-negative-4b-dyn1.html block-negative-4b-dyn1.html
+== block-negative-4b-dyn1.html block-negative-4b-dyn1.html
+== block-negative-4b-dyn2.html block-negative-4b-dyn2.html
+== block-negative-4b-dyn2.html block-negative-4b-dyn2.html
+== block-negative-4b-dyn2.html block-negative-4b-dyn2.html
+== block-negative-4b-dyn2.html block-negative-4b-dyn2.html
+== block-negative-5-dyn1.html block-negative-5-dyn1.html
+== block-negative-5-dyn1.html block-negative-5-dyn1.html
+== block-negative-5-dyn1.html block-negative-5-dyn1.html
+== block-negative-5-dyn1.html block-negative-5-dyn1.html
+== block-negative-5-dyn2.html block-negative-5-dyn2.html
+== block-negative-5-dyn2.html block-negative-5-dyn2.html
+== block-negative-5-dyn2.html block-negative-5-dyn2.html
+== block-negative-5-dyn2.html block-negative-5-dyn2.html
+# "Two margins are adjoining if and only if:" [...]
+# "both belong to vertically-adjacent box edges,
+#  i.e. form one of the following pairs:" [...]
+# "top margin of a box and top margin of its first in-flow child"
+# "bottom margin of a last in-flow child and bottom margin of its parent
+#  if the parent has 'auto' computed height"
+# "A collapsed margin is considered adjoining to another margin if
+#  any of its component margins is adjoining to that margin."
+# "Note. Adjoining margins can be generated by elements that are
+#  not related as siblings or ancestors."
+# These tests check whether margins are correctly collapsed even when the
+# boxes participating are not related as siblings or ancestors.
+# The tests feature different sizes of margins on different boxes.
+== block-non-sibling-1a.html block-non-sibling-1a.html
+== block-non-sibling-1a.html block-non-sibling-1a.html
+== block-non-sibling-1b.html block-non-sibling-1b.html
+== block-non-sibling-1b.html block-non-sibling-1b.html
+== block-non-sibling-1c.html block-non-sibling-1c.html
+== block-non-sibling-1c.html block-non-sibling-1c.html
+== block-non-sibling-1d.html block-non-sibling-1d.html
+== block-non-sibling-1d.html block-non-sibling-1d.html
+== block-non-sibling-1e.html block-non-sibling-1e.html
+== block-non-sibling-1e.html block-non-sibling-1e.html
+== block-non-sibling-1f.html block-non-sibling-1f.html
+== block-non-sibling-1f.html block-non-sibling-1f.html
+== block-non-sibling-2a.html block-non-sibling-2a.html
+== block-non-sibling-2a.html block-non-sibling-2a.html
+== block-non-sibling-2b.html block-non-sibling-2b.html
+== block-non-sibling-2b.html block-non-sibling-2b.html
+== block-non-sibling-2c.html block-non-sibling-2c.html
+== block-non-sibling-2c.html block-non-sibling-2c.html
+== block-non-sibling-2d.html block-non-sibling-2d.html
+== block-non-sibling-2d.html block-non-sibling-2d.html
+== block-non-sibling-2e.html block-non-sibling-2e.html
+== block-non-sibling-2e.html block-non-sibling-2e.html
+== block-non-sibling-2f.html block-non-sibling-2f.html
+== block-non-sibling-2f.html block-non-sibling-2f.html
+== block-non-sibling-3a.html block-non-sibling-3a.html
+== block-non-sibling-3a.html block-non-sibling-3a.html
+== block-non-sibling-3b.html block-non-sibling-3b.html
+== block-non-sibling-3b.html block-non-sibling-3b.html
+== block-non-sibling-3c.html block-non-sibling-3c.html
+== block-non-sibling-3c.html block-non-sibling-3c.html
+== block-non-sibling-3d.html block-non-sibling-3d.html
+== block-non-sibling-3d.html block-non-sibling-3d.html
+== block-non-sibling-4.html block-non-sibling-4.html
+== block-non-sibling-4.html block-non-sibling-4.html
+== block-non-sibling-1a-dyn.html block-non-sibling-1a-dyn.html
+== block-non-sibling-1b-dyn.html block-non-sibling-1b-dyn.html
+== block-non-sibling-1c-dyn.html block-non-sibling-1c-dyn.html
+== block-non-sibling-1d-dyn.html block-non-sibling-1d-dyn.html
+== block-non-sibling-1e-dyn.html block-non-sibling-1e-dyn.html
+== block-non-sibling-1f-dyn.html block-non-sibling-1f-dyn.html
+== block-non-sibling-2a-dyn.html block-non-sibling-2a-dyn.html
+== block-non-sibling-2b-dyn.html block-non-sibling-2b-dyn.html
+== block-non-sibling-2c-dyn.html block-non-sibling-2c-dyn.html
+== block-non-sibling-2d-dyn.html block-non-sibling-2d-dyn.html
+== block-non-sibling-2e-dyn.html block-non-sibling-2e-dyn.html
+== block-non-sibling-2f-dyn.html block-non-sibling-2f-dyn.html
+== block-non-sibling-3a-dyn.html block-non-sibling-3a-dyn.html
+== block-non-sibling-3b-dyn.html block-non-sibling-3b-dyn.html
+== block-non-sibling-3c-dyn.html block-non-sibling-3c-dyn.html
+== block-non-sibling-3d-dyn.html block-non-sibling-3d-dyn.html
+== block-non-sibling-4-dyn.html block-non-sibling-4-dyn.html
+# The first-child series tests cases where the top margin of a box collapses
+# with the top margin of its parent element.
+# This series is more extensive than the non-sibling series, because
+# various combinations of positive and negative margins are tested.
+== block-first-child-1a.html block-first-child-1a.html
+== block-first-child-1b.html block-first-child-1b.html
+== block-first-child-1c.html block-first-child-1c.html
+== block-first-child-2.html block-first-child-2.html
+== block-first-child-3.html block-first-child-3.html
+== block-first-child-4.html block-first-child-4.html
+== block-first-child-5.html block-first-child-5.html
+== block-first-child-6.html block-first-child-6.html
+== block-first-child-7.html block-first-child-7.html
+== block-first-child-8a.html block-first-child-8a.html
+== block-first-child-8b.html block-first-child-8b.html
+== block-first-child-8c.html block-first-child-8c.html
+== block-first-child-1a-dyn.html block-first-child-1a-dyn.html
+== block-first-child-1b-dyn.html block-first-child-1b-dyn.html
+== block-first-child-1c-dyn.html block-first-child-1c-dyn.html
+== block-first-child-2-dyn.html block-first-child-2-dyn.html
+== block-first-child-3-dyn.html block-first-child-3-dyn.html
+== block-first-child-4-dyn.html block-first-child-4-dyn.html
+== block-first-child-5-dyn.html block-first-child-5-dyn.html
+== block-first-child-6-dyn.html block-first-child-6-dyn.html
+== block-first-child-7-dyn.html block-first-child-7-dyn.html
+== block-first-child-8a-dyn.html block-first-child-8a-dyn.html
+== block-first-child-8b-dyn.html block-first-child-8b-dyn.html
+== block-first-child-8c-dyn.html block-first-child-8c-dyn.html
+# "The bottom margin of an in-flow block box with a 'height' of 'auto'
+#  collapses with its last in-flow block-level child's bottom margin"
+# Note: The block-auto-height-last-child series automatically covers
+# all cases where 'min-height' is '0' and 'max-height' is 'none' as
+# these are the default values of those properties.
+== block-auto-height-last-child-1a.html block-auto-height-last-child-1a.html
+== block-auto-height-last-child-1b.html block-auto-height-last-child-1b.html
+== block-auto-height-last-child-1c.html block-auto-height-last-child-1c.html
+== block-auto-height-last-child-2.html block-auto-height-last-child-2.html
+== block-auto-height-last-child-3.html block-auto-height-last-child-3.html
+== block-auto-height-last-child-4.html block-auto-height-last-child-4.html
+== block-auto-height-last-child-5.html block-auto-height-last-child-5.html
+== block-auto-height-last-child-6.html block-auto-height-last-child-6.html
+== block-auto-height-last-child-7.html block-auto-height-last-child-7.html
+== block-auto-height-last-child-8a.html block-auto-height-last-child-8a.html
+== block-auto-height-last-child-8b.html block-auto-height-last-child-8b.html
+== block-auto-height-last-child-8c.html block-auto-height-last-child-8c.html
+== block-auto-height-last-child-1a-dyn.html block-auto-height-last-child-1a-dyn.html
+== block-auto-height-last-child-1b-dyn.html block-auto-height-last-child-1b-dyn.html
+== block-auto-height-last-child-1c-dyn.html block-auto-height-last-child-1c-dyn.html
+== block-auto-height-last-child-2-dyn.html block-auto-height-last-child-2-dyn.html
+== block-auto-height-last-child-3-dyn.html block-auto-height-last-child-3-dyn.html
+== block-auto-height-last-child-4-dyn.html block-auto-height-last-child-4-dyn.html
+== block-auto-height-last-child-5-dyn.html block-auto-height-last-child-5-dyn.html
+== block-auto-height-last-child-6-dyn.html block-auto-height-last-child-6-dyn.html
+== block-auto-height-last-child-7-dyn.html block-auto-height-last-child-7-dyn.html
+== block-auto-height-last-child-8a-dyn.html block-auto-height-last-child-8a-dyn.html
+== block-auto-height-last-child-8b-dyn.html block-auto-height-last-child-8b-dyn.html
+== block-auto-height-last-child-8c-dyn.html block-auto-height-last-child-8c-dyn.html
+# The last-child series is an older variant of the
+# block-auto-height-last-child tests.
+== block-last-child-1a.html block-last-child-1a.html
+== block-last-child-1b.html block-last-child-1b.html
+== block-last-child-1c.html block-last-child-1c.html
+== block-last-child-2a.html block-last-child-2a.html
+== block-last-child-2b.html block-last-child-2b.html
+== block-last-child-2c.html block-last-child-2c.html
+== block-last-child-2d.html block-last-child-2d.html
+== block-last-child-3a.html block-last-child-3a.html
+== block-last-child-3b.html block-last-child-3b.html
+== block-last-child-3c.html block-last-child-3c.html
+== block-last-child-3d.html block-last-child-3d.html
+== block-last-child-4a.html block-last-child-4a.html
+== block-last-child-4b.html block-last-child-4b.html
+== block-last-child-4c.html block-last-child-4c.html
+== block-last-child-4d.html block-last-child-4d.html
+# There's also the older block-zero-min-height series which explicitly
+# adds min-height: 0; to boxes with height: auto;
+# This should have no effect on margin-collapsing.
+== block-zero-min-height-1a.html block-zero-min-height-1a.html
+== block-zero-min-height-1b.html block-zero-min-height-1b.html
+== block-zero-min-height-1c.html block-zero-min-height-1c.html
+== block-zero-min-height-1d.html block-zero-min-height-1d.html
+== block-zero-min-height-1e.html block-zero-min-height-1e.html
+== block-zero-min-height-1f.html block-zero-min-height-1f.html
+== block-zero-min-height-1a.html block-zero-min-height-1a.html
+== block-zero-min-height-1b.html block-zero-min-height-1b.html
+== block-zero-min-height-1c.html block-zero-min-height-1c.html
+== block-zero-min-height-1d.html block-zero-min-height-1d.html
+== block-zero-min-height-1e.html block-zero-min-height-1e.html
+== block-zero-min-height-1f.html block-zero-min-height-1f.html
+== block-zero-min-height-2a.html block-zero-min-height-2a.html
+== block-zero-min-height-2b.html block-zero-min-height-2b.html
+== block-zero-min-height-2c.html block-zero-min-height-2c.html
+== block-zero-min-height-2d.html block-zero-min-height-2d.html
+== block-zero-min-height-2e.html block-zero-min-height-2e.html
+== block-zero-min-height-2f.html block-zero-min-height-2f.html
+== block-zero-min-height-2a.html block-zero-min-height-2a.html
+== block-zero-min-height-2b.html block-zero-min-height-2b.html
+== block-zero-min-height-2c.html block-zero-min-height-2c.html
+== block-zero-min-height-2d.html block-zero-min-height-2d.html
+== block-zero-min-height-2e.html block-zero-min-height-2e.html
+== block-zero-min-height-2f.html block-zero-min-height-2f.html
+== block-zero-min-height-3a.html block-zero-min-height-3a.html
+== block-zero-min-height-3b.html block-zero-min-height-3b.html
+== block-zero-min-height-3c.html block-zero-min-height-3c.html
+== block-zero-min-height-3d.html block-zero-min-height-3d.html
+# If a parent box's height is 'auto' and its 'min-height' is non-zero,
+# then its bottom margin collapses with its last-child's bottom margin.
+# This is true even if the two margins do not actually touch each other,
+# as they are still considered 'adjoining'.
+== block-min-height-last-child-1a.html block-min-height-last-child-1a.html
+== block-min-height-last-child-1b.html block-min-height-last-child-1b.html
+== block-min-height-last-child-1c.html block-min-height-last-child-1c.html
+== block-min-height-last-child-2a.html block-min-height-last-child-2a.html
+== block-min-height-last-child-2b.html block-min-height-last-child-2b.html
+== block-min-height-last-child-3a.html block-min-height-last-child-3a.html
+== block-min-height-last-child-3b.html block-min-height-last-child-3b.html
+== block-min-height-last-child-3c.html block-min-height-last-child-3c.html
+== block-min-height-last-child-4a.html block-min-height-last-child-4a.html
+== block-min-height-last-child-4b.html block-min-height-last-child-4b.html
+== block-min-height-last-child-4c.html block-min-height-last-child-4c.html
+== block-min-height-last-child-5a.html block-min-height-last-child-5a.html
+== block-min-height-last-child-5b.html block-min-height-last-child-5b.html
+== block-min-height-last-child-6a.html block-min-height-last-child-6a.html
+== block-min-height-last-child-6b.html block-min-height-last-child-6b.html
+== block-min-height-last-child-6c.html block-min-height-last-child-6c.html
+== block-min-height-last-child-7a.html block-min-height-last-child-7a.html
+== block-min-height-last-child-7b.html block-min-height-last-child-7b.html
+== block-min-height-last-child-7c.html block-min-height-last-child-7c.html
+== block-min-height-last-child-8a.html block-min-height-last-child-8a.html
+== block-min-height-last-child-8b.html block-min-height-last-child-8b.html
+== block-min-height-last-child-9a.html block-min-height-last-child-9a.html
+== block-min-height-last-child-9b.html block-min-height-last-child-9b.html
+== block-min-height-last-child-9c.html block-min-height-last-child-9c.html
+== block-min-height-last-child-1a-dyn.html block-min-height-last-child-1a-dyn.html
+== block-min-height-last-child-1b-dyn.html block-min-height-last-child-1b-dyn.html
+== block-min-height-last-child-1c-dyn.html block-min-height-last-child-1c-dyn.html
+== block-min-height-last-child-2a-dyn.html block-min-height-last-child-2a-dyn.html
+== block-min-height-last-child-2b-dyn.html block-min-height-last-child-2b-dyn.html
+== block-min-height-last-child-3a-dyn.html block-min-height-last-child-3a-dyn.html
+== block-min-height-last-child-3b-dyn.html block-min-height-last-child-3b-dyn.html
+== block-min-height-last-child-3c-dyn.html block-min-height-last-child-3c-dyn.html
+== block-min-height-last-child-4a-dyn.html block-min-height-last-child-4a-dyn.html
+== block-min-height-last-child-4b-dyn.html block-min-height-last-child-4b-dyn.html
+== block-min-height-last-child-4c-dyn.html block-min-height-last-child-4c-dyn.html
+== block-min-height-last-child-5a-dyn.html block-min-height-last-child-5a-dyn.html
+== block-min-height-last-child-5b-dyn.html block-min-height-last-child-5b-dyn.html
+== block-min-height-last-child-6a-dyn.html block-min-height-last-child-6a-dyn.html
+== block-min-height-last-child-6b-dyn.html block-min-height-last-child-6b-dyn.html
+== block-min-height-last-child-6c-dyn.html block-min-height-last-child-6c-dyn.html
+== block-min-height-last-child-7a-dyn.html block-min-height-last-child-7a-dyn.html
+== block-min-height-last-child-7b-dyn.html block-min-height-last-child-7b-dyn.html
+== block-min-height-last-child-7c-dyn.html block-min-height-last-child-7c-dyn.html
+== block-min-height-last-child-8a-dyn.html block-min-height-last-child-8a-dyn.html
+== block-min-height-last-child-8b-dyn.html block-min-height-last-child-8b-dyn.html
+== block-min-height-last-child-9a-dyn.html block-min-height-last-child-9a-dyn.html
+== block-min-height-last-child-9b-dyn.html block-min-height-last-child-9b-dyn.html
+== block-min-height-last-child-9c-dyn.html block-min-height-last-child-9c-dyn.html
+# If a parent box's height is 'auto' and its 'max-height' is not 'none'
+# then its bottom margin collapses with its last-child's bottom margin.
+# According to CSS 2.1 §10.7 (Minimum and maximum heights) this is true,
+# even if the descendant's height is bigger than the defined max-height.
+== block-max-height-last-child-1a.html block-max-height-last-child-1a.html
+== block-max-height-last-child-1b.html block-max-height-last-child-1b.html
+== block-max-height-last-child-1c.html block-max-height-last-child-1c.html
+== block-max-height-last-child-2a.html block-max-height-last-child-2a.html
+== block-max-height-last-child-2b.html block-max-height-last-child-2b.html
+== block-max-height-last-child-3a.html block-max-height-last-child-3a.html
+== block-max-height-last-child-3b.html block-max-height-last-child-3b.html
+== block-max-height-last-child-3c.html block-max-height-last-child-3c.html
+== block-max-height-last-child-4a.html block-max-height-last-child-4a.html
+== block-max-height-last-child-4b.html block-max-height-last-child-4b.html
+== block-max-height-last-child-4c.html block-max-height-last-child-4c.html
+== block-max-height-last-child-5a.html block-max-height-last-child-5a.html
+== block-max-height-last-child-5b.html block-max-height-last-child-5b.html
+== block-max-height-last-child-6a.html block-max-height-last-child-6a.html
+== block-max-height-last-child-6b.html block-max-height-last-child-6b.html
+== block-max-height-last-child-6c.html block-max-height-last-child-6c.html
+== block-max-height-last-child-7a.html block-max-height-last-child-7a.html
+== block-max-height-last-child-7b.html block-max-height-last-child-7b.html
+== block-max-height-last-child-7c.html block-max-height-last-child-7c.html
+== block-max-height-last-child-8a.html block-max-height-last-child-8a.html
+== block-max-height-last-child-8b.html block-max-height-last-child-8b.html
+== block-max-height-last-child-9a.html block-max-height-last-child-9a.html
+== block-max-height-last-child-9b.html block-max-height-last-child-9b.html
+== block-max-height-last-child-9c.html block-max-height-last-child-9c.html
+== block-max-height-last-child-1a-dyn.html block-max-height-last-child-1a-dyn.html
+== block-max-height-last-child-1b-dyn.html block-max-height-last-child-1b-dyn.html
+== block-max-height-last-child-1c-dyn.html block-max-height-last-child-1c-dyn.html
+== block-max-height-last-child-2a-dyn.html block-max-height-last-child-2a-dyn.html
+== block-max-height-last-child-2b-dyn.html block-max-height-last-child-2b-dyn.html
+== block-max-height-last-child-3a-dyn.html block-max-height-last-child-3a-dyn.html
+== block-max-height-last-child-3b-dyn.html block-max-height-last-child-3b-dyn.html
+== block-max-height-last-child-3c-dyn.html block-max-height-last-child-3c-dyn.html
+== block-max-height-last-child-4a-dyn.html block-max-height-last-child-4a-dyn.html
+== block-max-height-last-child-4b-dyn.html block-max-height-last-child-4b-dyn.html
+== block-max-height-last-child-4c-dyn.html block-max-height-last-child-4c-dyn.html
+== block-max-height-last-child-5a-dyn.html block-max-height-last-child-5a-dyn.html
+== block-max-height-last-child-5b-dyn.html block-max-height-last-child-5b-dyn.html
+== block-max-height-last-child-6a-dyn.html block-max-height-last-child-6a-dyn.html
+== block-max-height-last-child-6b-dyn.html block-max-height-last-child-6b-dyn.html
+== block-max-height-last-child-6c-dyn.html block-max-height-last-child-6c-dyn.html
+== block-max-height-last-child-7a-dyn.html block-max-height-last-child-7a-dyn.html
+== block-max-height-last-child-7b-dyn.html block-max-height-last-child-7b-dyn.html
+== block-max-height-last-child-7c-dyn.html block-max-height-last-child-7c-dyn.html
+== block-max-height-last-child-8a-dyn.html block-max-height-last-child-8a-dyn.html
+== block-max-height-last-child-8b-dyn.html block-max-height-last-child-8b-dyn.html
+== block-max-height-last-child-9a-dyn.html block-max-height-last-child-9a-dyn.html
+== block-max-height-last-child-9b-dyn.html block-max-height-last-child-9b-dyn.html
+== block-max-height-last-child-9c-dyn.html block-max-height-last-child-9c-dyn.html
+# If a parent box's height is not 'auto' then its bottom margin
+# never collapses with its last-child's bottom margin,
+# as these margins are not considered 'adjoining'.
+# According to CSS 2.1 §10.7 (Minimum and maximum heights) this is true,
+# even if the value of min- or max-height is used instead.
+== block-fix-height-last-child-1a.html block-fix-height-last-child-1a.html
+== block-fix-height-last-child-1b.html block-fix-height-last-child-1b.html
+== block-fix-height-last-child-2a.html block-fix-height-last-child-2a.html
+== block-fix-height-last-child-2b.html block-fix-height-last-child-2b.html
+== block-fix-height-last-child-3a.html block-fix-height-last-child-3a.html
+== block-fix-height-last-child-3b.html block-fix-height-last-child-3b.html
+== block-fix-height-last-child-4a.html block-fix-height-last-child-4a.html
+== block-fix-height-last-child-4b.html block-fix-height-last-child-4b.html
+== block-fix-height-last-child-4c.html block-fix-height-last-child-4c.html
+== block-fix-height-last-child-4d.html block-fix-height-last-child-4d.html
+== block-fix-height-last-child-4e.html block-fix-height-last-child-4e.html
+== block-fix-height-last-child-4f.html block-fix-height-last-child-4f.html
+== block-fix-height-last-child-4g.html block-fix-height-last-child-4g.html
+== block-fix-height-last-child-4h.html block-fix-height-last-child-4h.html
+== block-fix-height-last-child-1a-dyn.html block-fix-height-last-child-1a-dyn.html
+== block-fix-height-last-child-1b-dyn.html block-fix-height-last-child-1b-dyn.html
+== block-fix-height-last-child-2a-dyn.html block-fix-height-last-child-2a-dyn.html
+== block-fix-height-last-child-2b-dyn.html block-fix-height-last-child-2b-dyn.html
+== block-fix-height-last-child-3a-dyn.html block-fix-height-last-child-3a-dyn.html
+== block-fix-height-last-child-3b-dyn.html block-fix-height-last-child-3b-dyn.html
+== block-fix-height-last-child-4a-dyn.html block-fix-height-last-child-4a-dyn.html
+== block-fix-height-last-child-4b-dyn.html block-fix-height-last-child-4b-dyn.html
+== block-fix-height-last-child-4c-dyn.html block-fix-height-last-child-4c-dyn.html
+== block-fix-height-last-child-4d-dyn.html block-fix-height-last-child-4d-dyn.html
+== block-fix-height-last-child-4e-dyn.html block-fix-height-last-child-4e-dyn.html
+== block-fix-height-last-child-4f-dyn.html block-fix-height-last-child-4f-dyn.html
+== block-fix-height-last-child-4g-dyn.html block-fix-height-last-child-4g-dyn.html
+== block-fix-height-last-child-4h-dyn.html block-fix-height-last-child-4h-dyn.html
+# "Two margins are adjoining if and only if:" [...]
+# "both belong to vertically-adjacent box edges,
+#  i.e. form one of the following pairs:" [...]
+# "top and bottom margins of a box that does not establish a new block
+#  formatting context and that has zero computed 'min-height', zero or
+#  'auto' computed 'height', and no in-flow children"
+# Note that "if the top and bottom margins of a box are adjoining, then it is
+# possible for margins to collapse through it."
+# I.e. a parent's top and bottom margin are still considered adjoining if
+# they collapse through their in-flow children's margins.
+== block-no-content-1a.html block-no-content-1a.html
+== block-no-content-1b.html block-no-content-1b.html
+== block-no-content-1c.html block-no-content-1c.html
+== block-no-content-1d.html block-no-content-1d.html
+== block-no-content-2a.html block-no-content-2a.html
+== block-no-content-2b.html block-no-content-2b.html
+== block-no-content-2c.html block-no-content-2c.html
+== block-no-content-2d.html block-no-content-2d.html
+== block-no-content-2e.html block-no-content-2e.html
+== block-no-content-3a.html block-no-content-3a.html
+== block-no-content-3b.html block-no-content-3b.html
+== block-no-content-3c.html block-no-content-3c.html
+== block-no-content-4a.html block-no-content-4a.html
+== block-no-content-4b.html block-no-content-4b.html
+== block-no-content-4c.html block-no-content-4c.html
+== block-no-content-5a.html block-no-content-5a.html
+== block-no-content-5b.html block-no-content-5b.html
+== block-no-content-6.html block-no-content-6.html
+== block-no-content-7.html block-no-content-7.html
+# "If the top margin of a box with non-zero computed 'min-height' and 'auto'
+#  computed 'height' collapses with the bottom margin of its last in-flow
+#  child, then the child's bottom margin does not collapse with the parent's
+#  bottom margin."
+== block-no-content-8.html block-no-content-8.html
+== block-no-content-1a-dyn.html block-no-content-1a-dyn.html
+== block-no-content-1b-dyn.html block-no-content-1b-dyn.html
+== block-no-content-1c-dyn.html block-no-content-1c-dyn.html
+== block-no-content-1d-dyn.html block-no-content-1d-dyn.html
+== block-no-content-2a-dyn.html block-no-content-2a-dyn.html
+== block-no-content-2b-dyn.html block-no-content-2b-dyn.html
+== block-no-content-2c-dyn.html block-no-content-2c-dyn.html
+== block-no-content-2d-dyn.html block-no-content-2d-dyn.html
+== block-no-content-2e-dyn.html block-no-content-2e-dyn.html
+== block-no-content-3a-dyn.html block-no-content-3a-dyn.html
+== block-no-content-3b-dyn.html block-no-content-3b-dyn.html
+== block-no-content-3c-dyn.html block-no-content-3c-dyn.html
+== block-no-content-4a-dyn.html block-no-content-4a-dyn.html
+== block-no-content-4b-dyn.html block-no-content-4b-dyn.html
+== block-no-content-4c-dyn.html block-no-content-4c-dyn.html
+== block-no-content-5a-dyn.html block-no-content-5a-dyn.html
+== block-no-content-5b-dyn.html block-no-content-5b-dyn.html
+== block-no-content-6-dyn.html block-no-content-6-dyn.html
+== block-no-content-7-dyn.html block-no-content-7-dyn.html
+== block-no-content-8-dyn.html block-no-content-8-dyn.html
+# These tests are similar to the no-content ones, except that some boxes
+# have height: 0; declared on them.
+== block-zero-height-1a.html block-zero-height-1a.html
+== block-zero-height-1b.html block-zero-height-1b.html
+== block-zero-height-2a.html block-zero-height-2a.html
+== block-zero-height-2b.html block-zero-height-2b.html
+== block-zero-height-2c.html block-zero-height-2c.html
+== block-zero-height-3a.html block-zero-height-3a.html
+== block-zero-height-3b.html block-zero-height-3b.html
+== block-zero-height-3c.html block-zero-height-3c.html
+# "Margins of elements that establish new block formatting contexts ([...])
+#  do not collapse with their in-flow children."
+# The margins of a block formatting context can collapse with margins of
+# in-flow sibling boxes, but not with margins of their in-flow children.
+# Elements that establish a block formatting context are:
+# * "elements with 'overflow' other than 'visible'"
+== block-overflow-1.html block-overflow-1.html
+== block-overflow-1.html block-overflow-1.html
+== block-overflow-2.html block-overflow-2.html
+== block-overflow-2.html block-overflow-2.html
+fails == block-overflow-3.html block-overflow-3.html # Bug 1321769?
+fails == block-overflow-3.html block-overflow-3.html # Bug 1321769?
+fails == block-overflow-4.html block-overflow-4.html # Bug 1321769?
+fails == block-overflow-4.html block-overflow-4.html # Bug 1321769?
+== block-overflow-5a.html block-overflow-5a.html
+== block-overflow-5a.html block-overflow-5a.html
+== block-overflow-5b.html block-overflow-5b.html
+== block-overflow-5b.html block-overflow-5b.html
+fails == block-overflow-5c.html block-overflow-5c.html # Bug 1321769?
+fails == block-overflow-5c.html block-overflow-5c.html # Bug 1321769?
+== block-overflow-5d.html block-overflow-5d.html
+== block-overflow-5d.html block-overflow-5d.html
+== block-overflow-1-dyn.html block-overflow-1-dyn.html
+== block-overflow-2-dyn.html block-overflow-2-dyn.html
+fails == block-overflow-3-dyn.html block-overflow-3-dyn.html
+fails == block-overflow-4-dyn.html block-overflow-4-dyn.html
+== block-overflow-5a-dyn.html block-overflow-5a-dyn.html
+== block-overflow-5b-dyn.html block-overflow-5b-dyn.html
+fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
+== block-overflow-5d-dyn.html block-overflow-5d-dyn.html
+# * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
+# §10.3.13 (The fieldset and legend elements): "The fieldset element is
+# expected to establish a new block formatting context."
+== fieldset-sibling-1a.html fieldset-sibling-1a.html
+== fieldset-sibling-1b.html fieldset-sibling-1b.html
+== fieldset-sibling-1c.html fieldset-sibling-1c.html
+== fieldset-sibling-2a.html fieldset-sibling-2a.html
+== fieldset-sibling-2b.html fieldset-sibling-2b.html
+== fieldset-sibling-2c.html fieldset-sibling-2c.html
+== fieldset-sibling-2a.html fieldset-sibling-2a.html
+== fieldset-sibling-2b.html fieldset-sibling-2b.html
+== fieldset-sibling-2c.html fieldset-sibling-2c.html
+== fieldset-sibling-1a-dyn.html fieldset-sibling-1a-dyn.html
+== fieldset-sibling-1b-dyn.html fieldset-sibling-1b-dyn.html
+== fieldset-sibling-1c-dyn.html fieldset-sibling-1c-dyn.html
+== fieldset-sibling-2a-dyn.html fieldset-sibling-2a-dyn.html
+== fieldset-sibling-2b-dyn.html fieldset-sibling-2b-dyn.html
+== fieldset-sibling-2c-dyn.html fieldset-sibling-2c-dyn.html
+== fieldset-child-1.html fieldset-child-1.html
+== fieldset-child-1-dyn.html fieldset-child-1-dyn.html
+# * Tables, per CSS 2.1 §17.4 (Tables in the visual formatting model):
+# "The table wrapper box establishes a block formatting context."
+# "The table wrapper box is a 'block' box if the table is block-level [...]"
+== table-sibling-1a.html table-sibling-1a.html
+== table-sibling-1a.html table-sibling-1a.html
+== table-sibling-1b.html table-sibling-1b.html
+== table-sibling-1b.html table-sibling-1b.html
+== table-sibling-1c.html table-sibling-1c.html
+== table-sibling-1c.html table-sibling-1c.html
+== table-sibling-2a.html table-sibling-2a.html
+== table-sibling-2a.html table-sibling-2a.html
+== table-sibling-2b.html table-sibling-2b.html
+== table-sibling-2b.html table-sibling-2b.html
+== table-sibling-2c.html table-sibling-2c.html
+== table-sibling-2c.html table-sibling-2c.html
+== table-sibling-1a-dyn.html table-sibling-1a-dyn.html
+== table-sibling-1a-dyn.html table-sibling-1a-dyn.html
+== table-sibling-1b-dyn.html table-sibling-1b-dyn.html
+== table-sibling-1b-dyn.html table-sibling-1b-dyn.html
+== table-sibling-1c-dyn.html table-sibling-1c-dyn.html
+== table-sibling-1c-dyn.html table-sibling-1c-dyn.html
+== table-sibling-2a-dyn.html table-sibling-2a-dyn.html
+== table-sibling-2a-dyn.html table-sibling-2a-dyn.html
+== table-sibling-2b-dyn.html table-sibling-2b-dyn.html
+== table-sibling-2b-dyn.html table-sibling-2b-dyn.html
+== table-sibling-2c-dyn.html table-sibling-2c-dyn.html
+== table-sibling-2c-dyn.html table-sibling-2c-dyn.html
+== table-sibling-3-dyn.html table-sibling-3-dyn.html
+== table-sibling-3-dyn.html table-sibling-3-dyn.html
+# * table-caption boxes, per CSS 2.1 §9.4.1 (Block formatting contexts):
+# "[...] block containers (such as [...] table-captions) [...]
+#  establish new block formatting contexts for their contents."
+# The margins of a table-caption do not collapse with the margins
+# of the table wrapper box. They can collapse with the margins of other
+# table-captions, though, if they share the same caption-side.
+== table-caption-1a.html table-caption-1a.html
+== table-caption-1b.html table-caption-1b.html
+== table-caption-1c.html table-caption-1c.html
+== table-caption-2a.html table-caption-2a.html
+== table-caption-2b.html table-caption-2b.html
+== table-caption-2c.html table-caption-2c.html
+== table-caption-1a-dyn.html table-caption-1a-dyn.html
+== table-caption-1b-dyn.html table-caption-1b-dyn.html
+== table-caption-1c-dyn.html table-caption-1c-dyn.html
+== table-caption-2a-dyn.html table-caption-2a-dyn.html
+== table-caption-2b-dyn.html table-caption-2b-dyn.html
+== table-caption-2c-dyn.html table-caption-2c-dyn.html
+# Note: CSS 2.1 suggests that the 'caption-side' values 'top-outside' and
+# 'bottom-outside' will be used in a future CSS Module to restore the
+# CSS 2 definition of 'top' and 'bottom' (which is different from CSS 2.1's).
+# Since Bug
+# alias for the CSS 2.1 values 'top' and 'bottom' respectively.
+== table-caption-top-1.html table-caption-top-1.html
+== table-caption-top-2.html table-caption-top-2.html
+== table-caption-top-outside-1.html table-caption-top-outside-1.html
+== table-caption-top-outside-2.html table-caption-top-outside-2.html
+== table-caption-bottom-1.html table-caption-bottom-1.html
+== table-caption-bottom-2.html table-caption-bottom-2.html
+== table-caption-bottom-outside-1.html table-caption-bottom-outside-1.html
+== table-caption-bottom-outside-2.html table-caption-bottom-outside-2.html
+== table-caption-top-1-dyn.html table-caption-top-1-dyn.html
+== table-caption-top-2-dyn.html table-caption-top-2-dyn.html
+== table-caption-top-outside-1-dyn.html table-caption-top-outside-1-dyn.html
+== table-caption-top-outside-2-dyn.html table-caption-top-outside-2-dyn.html
+== table-caption-bottom-1-dyn.html table-caption-bottom-1-dyn.html
+== table-caption-bottom-2-dyn.html table-caption-bottom-2-dyn.html
+== table-caption-bottom-outside-1-dyn.html table-caption-bottom-outside-1-dyn.html
+== table-caption-bottom-outside-2-dyn.html table-caption-bottom-outside-2-dyn.html
+== caption-sibling-1a.html caption-sibling-1a.html
+== caption-sibling-1a.html caption-sibling-1a.html
+== caption-sibling-1b.html caption-sibling-1b.html
+== caption-sibling-1b.html caption-sibling-1b.html
+== caption-sibling-1c.html caption-sibling-1c.html
+== caption-sibling-1c.html caption-sibling-1c.html
+== caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
+== caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
+== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
+== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
+== caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
+== caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
+== caption-sibling-2-dyn.html caption-sibling-2-dyn.html
+== caption-sibling-2-dyn.html caption-sibling-2-dyn.html
+== caption-child-1.html caption-child-1.html
+== caption-child-1-dyn.html caption-child-1-dyn.html
+# * Multi-column elements, per CSS Multi-column Layout Module
+# (Candidate Recommendation 12 April 2011):
+# "A multi-column element establishes a new block formatting context [...]"
+== column-sibling-1a.html column-sibling-1a.html
+== column-sibling-1b.html column-sibling-1b.html
+== column-sibling-1c.html column-sibling-1c.html
+== column-sibling-1a-dyn.html column-sibling-1a-dyn.html
+== column-sibling-1b-dyn.html column-sibling-1b-dyn.html
+== column-sibling-1c-dyn.html column-sibling-1c-dyn.html
+== column-sibling-2a.html column-sibling-2a.html
+== column-sibling-2b.html column-sibling-2b.html
+== column-sibling-2c.html column-sibling-2c.html
+== column-sibling-2a-dyn.html column-sibling-2a-dyn.html
+== column-sibling-2b-dyn.html column-sibling-2b-dyn.html
+== column-sibling-2c-dyn.html column-sibling-2c-dyn.html
+== column-child-1.html column-child-1.html
+== column-child-1-dyn.html column-child-1-dyn.html
+# * inline-block boxes
+# "Margins of inline-block boxes do not collapse
+#  (not even with their in-flow children)."
+== inline-block-sibling-1a.html inline-block-sibling-1a.html
+== inline-block-sibling-1b.html inline-block-sibling-1b.html
+== inline-block-sibling-1c.html inline-block-sibling-1c.html
+== inline-block-sibling-2.html inline-block-sibling-2.html
+== inline-block-sibling-2.html inline-block-sibling-2.html
+== inline-block-sibling-1a-dyn.html inline-block-sibling-1a-dyn.html
+== inline-block-sibling-1b-dyn.html inline-block-sibling-1b-dyn.html
+== inline-block-sibling-1c-dyn.html inline-block-sibling-1c-dyn.html
+== inline-block-sibling-2-dyn.html inline-block-sibling-2-dyn.html
+== inline-block-child-1.html inline-block-child-1.html
+== inline-block-child-2.html inline-block-child-2.html
+== inline-block-child-2.html inline-block-child-2.html
+== inline-block-child-3.html inline-block-child-3.html
+== inline-block-child-1-dyn.html inline-block-child-1-dyn.html
+== inline-block-child-2-dyn.html inline-block-child-2-dyn.html
+== inline-block-child-3-dyn.html inline-block-child-3-dyn.html
+# * absolutely positioned elements
+# "Margins of absolutely positioned boxes do not collapse
+#  (not even with their in-flow children)."
+== block-abs-pos-1.html block-abs-pos-1.html
+== block-abs-pos-2.html block-abs-pos-2.html
+== block-abs-pos-2.html block-abs-pos-2.html
+== block-abs-pos-1-dyn.html block-abs-pos-1-dyn.html
+== block-abs-pos-2-dyn.html block-abs-pos-2-dyn.html
+# * Floats
+# "Margins between a floated box and any other box do not collapse
+#  (not even between a float and its in-flow children)."
+== block-float-1a.html block-float-1a.html
+== block-float-1a.html block-float-1a.html
+== block-float-1a.html block-float-1a.html
+== block-float-1b.html block-float-1b.html
+== block-float-1b.html block-float-1b.html
+== block-float-1b.html block-float-1b.html
+== block-float-2a.html block-float-2a.html
+== block-float-2a.html block-float-2a.html
+== block-float-2b.html block-float-2b.html
+== block-float-2b.html block-float-2b.html
+== block-float-3a.html block-float-3a.html
+== block-float-3b.html block-float-3b.html
+== block-float-1a-dyn.html block-float-1a-dyn.html
+== block-float-1b-dyn.html block-float-1b-dyn.html
+== block-float-2a-dyn.html block-float-2a-dyn.html
+== block-float-2b-dyn.html block-float-2b-dyn.html
+== block-float-3a-dyn.html block-float-3a-dyn.html
+== block-float-3b-dyn.html block-float-3b-dyn.html
+# Tests for various cases where clearance is applied and collapsing is
+# prevented or only allows for certain margins.
+== block-clear-1a.html block-clear-1a.html
+== block-clear-1b.html block-clear-1b.html
+== block-clear-2.html block-clear-2.html
+== block-clear-2.html block-clear-2.html
+== block-clear-3a.html block-clear-3a.html
+== block-clear-3b.html block-clear-3b.html
+== block-clear-3c.html block-clear-3c.html
+== block-clear-3d.html block-clear-3d.html
+== block-clear-3e.html block-clear-3e.html
+== block-clear-3f.html block-clear-3f.html
+== block-clear-4a.html block-clear-4a.html
+== block-clear-4b.html block-clear-4b.html
+== block-clear-4c.html block-clear-4c.html
+== block-clear-4d.html block-clear-4d.html
+== block-clear-4e.html block-clear-4e.html
+== block-clear-4f.html block-clear-4f.html
+== block-clear-5a.html block-clear-5a.html
+== block-clear-5b.html block-clear-5b.html
+== block-clear-5c.html block-clear-5c.html
+== block-clear-5d.html block-clear-5d.html
+== block-clear-5e.html block-clear-5e.html
+== block-clear-5f.html block-clear-5f.html
+== block-clear-5g.html block-clear-5g.html
+== block-clear-5h.html block-clear-5h.html
+== block-clear-6a-left.html block-clear-6a-left.html
+== block-clear-6b-left.html block-clear-6b-left.html
+== block-clear-6c-left.html block-clear-6c-left.html
+== block-clear-6d-left.html block-clear-6d-left.html
+== block-clear-6d-left.html block-clear-6d-left.html
+== block-clear-6e-left.html block-clear-6e-left.html
+== block-clear-6e-left.html block-clear-6e-left.html
+== block-clear-6f-left.html block-clear-6f-left.html
+== block-clear-6f-left.html block-clear-6f-left.html
+== block-clear-7a-left.html block-clear-7a-left.html
+== block-clear-7b-left.html block-clear-7b-left.html
+== block-clear-7c-left.html block-clear-7c-left.html
+== block-clear-7d-left.html block-clear-7d-left.html
+== block-clear-7e-left.html block-clear-7e-left.html
+== block-clear-7e-left.html block-clear-7e-left.html
+== block-clear-7f-left.html block-clear-7f-left.html
+== block-clear-7f-left.html block-clear-7f-left.html
+== block-clear-7g-left.html block-clear-7g-left.html
+== block-clear-7g-left.html block-clear-7g-left.html
+== block-clear-7h-left.html block-clear-7h-left.html
+== block-clear-7h-left.html block-clear-7h-left.html
+# "Margins of the root element's box do not collapse."
+# Testing the root margins of a generic XML document.
+== block-xml-root-1.xml block-xml-root-1.xml
+# In XML and XHTML, the html element is not necessarily the root element of
+# a document. In that case, the margins of the html element collapse
+# like the margins of any other block boxes.
+== block-xhtml-root-1a.xhtml block-xhtml-root-1a.xhtml
+== block-xhtml-root-1b.xhtml block-xhtml-root-1b.xhtml
+== block-xhtml-root-2.xhtml block-xhtml-root-2.xhtml
+== block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
+# When the html element is the root element of the document, its margins
+# do not collapse.
+== block-xhtml-html-1a.xhtml block-xhtml-html-1a.xhtml
+== block-xhtml-html-1b.xhtml block-xhtml-html-1b.xhtml
+== block-xhtml-html-2.xhtml block-xhtml-html-2.xhtml
+== block-xhtml-html-3.xhtml block-xhtml-html-3.xhtml
+== block-xhtml-html-1a-dyn.xhtml block-xhtml-html-1a-dyn.xhtml
+== block-xhtml-html-1b-dyn.xhtml block-xhtml-html-1b-dyn.xhtml
+== block-xhtml-html-2-dyn.xhtml block-xhtml-html-2-dyn.xhtml
+== block-xhtml-html-3-dyn.xhtml block-xhtml-html-3-dyn.xhtml
+# In HTML documents only the html element can be the root element.
+# Its margins do not collapse.
+== block-html-html-1a.html block-html-html-1a.html
+== block-html-html-1b.html block-html-html-1b.html
+== block-html-html-2.html block-html-html-2.html
+== block-html-html-3.html block-html-html-3.html
+== block-html-html-1a-dyn.html block-html-html-1a-dyn.html
+== block-html-html-1b-dyn.html block-html-html-1b-dyn.html
+== block-html-html-2-dyn.html block-html-html-2-dyn.html
+== block-html-html-3-dyn.html block-html-html-3-dyn.html
+# These are older tests that check whether margins on the root element collapse.
+== block-root-1a.html block-root-1a.html
+== block-root-1a.html block-root-1a.html
+== block-root-1a.html block-root-1a.html
+== block-root-1a.html block-root-1a.html
+== block-root-1b.html block-root-1b.html
+== block-root-1b.html block-root-1b.html
+== block-html-body-1.html block-html-body-1.html
+== block-html-body-1.html block-html-body-1.html
+== block-html-body-1.html block-html-body-1.html
+# Some basic tests for margins given in percent and em.
+== block-percent-1.html block-percent-1.html
+== block-percent-1-dyn.html block-percent-1-dyn.html
+== block-percent-2.html block-percent-2.html
+== block-percent-2-dyn.html block-percent-2-dyn.html
+== block-em-length-1.html block-em-length-1.html
+== block-em-length-1-dyn.html block-em-length-1-dyn.html
+# Other tests.
+== dynamic-add-text-1.html dynamic-add-text-1.html
+== scrollable-vertical-margin.html scrollable-vertical-margin.html
+== scrollable-horizontal-margin.html scrollable-horizontal-margin.html

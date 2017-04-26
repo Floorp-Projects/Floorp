@@ -1,0 +1,25 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# BMP 8BPP tests
+
+# Images of various sizes
+== bmp-size-1x1-8bpp.bmp bmp-size-1x1-8bpp.bmp
+== bmp-size-2x2-8bpp.bmp bmp-size-2x2-8bpp.bmp
+== bmp-size-3x3-8bpp.bmp bmp-size-3x3-8bpp.bmp
+== bmp-size-4x4-8bpp.bmp bmp-size-4x4-8bpp.bmp
+== bmp-size-5x5-8bpp.bmp bmp-size-5x5-8bpp.bmp
+== bmp-size-6x6-8bpp.bmp bmp-size-6x6-8bpp.bmp
+== bmp-size-7x7-8bpp.bmp bmp-size-7x7-8bpp.bmp
+== bmp-size-8x8-8bpp.bmp bmp-size-8x8-8bpp.bmp
+== bmp-size-9x9-8bpp.bmp bmp-size-9x9-8bpp.bmp
+== bmp-size-15x15-8bpp.bmp bmp-size-15x15-8bpp.bmp
+== bmp-size-16x16-8bpp.bmp bmp-size-16x16-8bpp.bmp
+== bmp-size-17x17-8bpp.bmp bmp-size-17x17-8bpp.bmp
+== bmp-size-31x31-8bpp.bmp bmp-size-31x31-8bpp.bmp
+== bmp-size-32x32-8bpp.bmp bmp-size-32x32-8bpp.bmp
+== bmp-size-33x33-8bpp.bmp bmp-size-33x33-8bpp.bmp
+== bmp-not-square-8bpp.bmp bmp-not-square-8bpp.bmp
+== rle-bmp-not-square-8bpp.bmp rle-bmp-not-square-8bpp.bmp
+== os2-bmp-size-32x32-8bpp.bmp os2-bmp-size-32x32-8bpp.bmp
+== rle-bmp-size-32x32-8bpp.bmp rle-bmp-size-32x32-8bpp.bmp
+== top-to-bottom-rle-bmp-size-32x32-8bpp.bmp top-to-bottom-rle-bmp-size-32x32-8bpp.bmp
+== top-to-bottom-16x16-8bpp.bmp top-to-bottom-16x16-8bpp.bmp

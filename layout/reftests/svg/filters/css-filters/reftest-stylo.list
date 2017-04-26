@@ -1,0 +1,69 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# These tests verify that CSS filters behave properly.
+# e.g. filter: blur(3px)
+
+default-preferences pref(layout.css.filters.enabled,true)
+
+== blur.html blur.html
+== blur.svg blur.svg
+== blur-calc.html blur-calc.html
+== blur-calc-negative.html blur-calc-negative.html
+== blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software.html
+== blur-em-radius.html blur-em-radius.html
+== blur-invalid-radius.html blur-invalid-radius.html
+== blur-rem-radius.html blur-rem-radius.html
+== blur-zero-radius.html blur-zero-radius.html
+== blur-zoomed-page.html blur-zoomed-page.html
+== brightness.html brightness.html
+== brightness-darken.html brightness-darken.html
+== brightness-extreme.html brightness-extreme.html
+== brightness-one.html brightness-one.html
+== brightness-percent.html brightness-percent.html
+== brightness-zero.html brightness-zero.html
+== containing-block-1.html containing-block-1.html
+== contrast.html contrast.html
+== contrast-extreme.html contrast-extreme.html
+== contrast-one.html contrast-one.html
+== contrast-percent.html contrast-percent.html
+== contrast-reduce.html contrast-reduce.html
+== contrast-zero.html contrast-zero.html
+== drop-shadow.html drop-shadow.html
+== drop-shadow-default-color.html drop-shadow-default-color.html
+== drop-shadow-negative-offset.html drop-shadow-negative-offset.html
+== grayscale.html grayscale.html
+== grayscale-one.html grayscale-one.html
+== grayscale-over-one.html grayscale-over-one.html
+== grayscale-percent.html grayscale-percent.html
+== grayscale-zero.html grayscale-zero.html
+== hue-rotate.html hue-rotate.html
+== hue-rotate-360.html hue-rotate-360.html
+== hue-rotate-grad.html hue-rotate-grad.html
+== hue-rotate-multichannel.html hue-rotate-multichannel.html
+== hue-rotate-negative.html hue-rotate-negative.html
+== hue-rotate-over-360.html hue-rotate-over-360.html
+== hue-rotate-rad.html hue-rotate-rad.html
+== hue-rotate-turn.html hue-rotate-turn.html
+== hue-rotate-zero.html hue-rotate-zero.html
+== invert.html invert.html
+== invert-half.html invert-half.html
+== invert-one.html invert-one.html
+== invert-over-one.html invert-over-one.html
+== invert-percent.html invert-percent.html
+== invert-zero.html invert-zero.html
+== opacity.html opacity.html
+== opacity-one.html opacity-one.html
+== opacity-over-one.html opacity-over-one.html
+== opacity-over-one-translucent-source.html opacity-over-one-translucent-source.html
+== opacity-percent.html opacity-percent.html
+== opacity-zero.html opacity-zero.html
+== saturate.html saturate.html
+== saturate-desaturate.html saturate-desaturate.html
+== saturate-extreme.html saturate-extreme.html
+== saturate-one.html saturate-one.html
+== saturate-percent.html saturate-percent.html
+== saturate-zero.html saturate-zero.html
+== sepia.html sepia.html
+== sepia-one.html sepia-one.html
+== sepia-over-one.html sepia-over-one.html
+== sepia-percent.html sepia-percent.html
+== sepia-zero.html sepia-zero.html

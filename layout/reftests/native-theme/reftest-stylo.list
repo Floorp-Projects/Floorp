@@ -1,0 +1,85 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == button-html-not-blank.html button-html-not-blank.html
+fails == button-not-blank.html button-not-blank.html
+== checkbox-not-blank.html checkbox-not-blank.html
+fails == combobox-not-blank.html combobox-not-blank.html
+== fieldset-not-blank.html fieldset-not-blank.html
+fails == file-not-blank.html file-not-blank.html
+fails == listbox-not-blank.html listbox-not-blank.html
+== radio-not-blank.html radio-not-blank.html
+fails == text-control-not-blank.html text-control-not-blank.html
+fails == textarea-not-blank.html textarea-not-blank.html
+
+# The following tests will fail if the platform does not have native
+# theme support (which all platforms should have).
+fails == text-input-native.html text-input-native.html
+fails == text-input-nonnative-when-styled.html text-input-nonnative-when-styled.html
+fails == textarea-native.html textarea-native.html
+fails == textarea-nonnative-when-styled.html textarea-nonnative-when-styled.html
+fails == button-native.html button-native.html
+fails == button-nonnative-when-styled.html button-nonnative-when-styled.html
+fails == combobox-native.html combobox-native.html
+fails == combobox-nonnative-when-styled.html combobox-nonnative-when-styled.html
+fails == listbox-native.html listbox-native.html
+fails needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled.html
+fails-if(!nativeThemePref) == radio-native.html radio-native.html
+== radio-still-native-when-styled.html radio-still-native-when-styled.html
+fails-if(!nativeThemePref) == checkbox-native.html checkbox-native.html
+== checkbox-still-native-when-styled.html checkbox-still-native-when-styled.html
+fails == native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels.html
+
+fails == 427122-1.html 427122-1.html
+
+# 403458 is a Windows-only bug
+skip-if(!winWidget) == 403458-winmenu-ltr.xul 403458-winmenu-ltr.xul
+
+== 470711-1.xul 470711-1.xul
+
+== 482955-1.xul 482955-1.xul
+
+== 492155-1.html 492155-1.html
+== 492155-2.html 492155-2.html
+== 492155-3.html 492155-3.html
+fails == 492155-4.html 492155-4.html
+
+fails == box-shadow-input.html box-shadow-input.html
+fails == box-shadow-button.html box-shadow-button.html
+fails == box-shadow-listbox.html box-shadow-listbox.html
+fails == box-shadow-combobox.html box-shadow-combobox.html
+
+# RTL mirroring tests
+== checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl.html
+skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl.xul
+skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl.xul
+fails == select-mirrored-when-rtl.html select-mirrored-when-rtl.html
+
+== resizer-bottomend.xul resizer-bottomend.xul
+random-if(d2d) == resizer-bottomend.xul resizer-bottomend.xul
+== resizer-bottomend.xul resizer-bottomend.xul
+skip-if(gtkWidget) == resizer-bottomend-rtl.xul resizer-bottomend-rtl.xul
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-rtl.xul
+
+== resizer-bottomstart.xul resizer-bottomstart.xul
+random-if(d2d) == resizer-bottomstart.xul resizer-bottomstart.xul
+random-if(d2d) == resizer-bottomstart.xul resizer-bottomstart.xul
+== resizer-bottomstart.xul resizer-bottomstart.xul
+skip-if(gtkWidget) == resizer-bottomstart-rtl.xul resizer-bottomstart-rtl.xul
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomstart-rtl.xul
+
+# Windows-only, depends on native scrollbar metrics
+skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme.html
+skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme.html
+
+== border-radius.html border-radius.html
+
+fails == checkbox-dynamic-1.html checkbox-dynamic-1.html
+
+# These tests have been written to test the overflow of the window widget
+# (bug 568825) but we can't test it on Windows and Cocoa because they have
+# animated progress bars.
+# Nothing shows up on Android, presumably because that appearance type is
+# not implemented.
+skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow.html
+fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow-small.html progress-overflow-small.html
+
+== 676387-1.xul 676387-1.xul

@@ -1,0 +1,48 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+random == bug-364968.html bug-364968.html
+== bug-463204.html bug-463204.html
+== canvas-outside-document.html canvas-outside-document.html
+== mozsetimageelement-01.html mozsetimageelement-01.html
+== mozsetimageelement-02.html mozsetimageelement-02.html
+== image-outside-document-invalidate.html image-outside-document-invalidate.html
+== canvas-outside-document-invalidate-01.html canvas-outside-document-invalidate-01.html
+== canvas-outside-document-invalidate-02.html canvas-outside-document-invalidate-02.html
+#fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
+== element-paint-simple.html element-paint-simple.html # Bug 1341761
+== element-paint-repeated.html element-paint-repeated.html
+== element-paint-recursion.html element-paint-recursion.html
+HTTP(..) == element-paint-continuation.html element-paint-continuation.html
+== element-paint-transform-01.html element-paint-transform-01.html
+== element-paint-transform-02.html element-paint-transform-02.html
+== element-paint-background-size-01.html element-paint-background-size-01.html
+== element-paint-background-size-02.html element-paint-background-size-02.html
+== element-paint-transform-repeated.html element-paint-transform-repeated.html
+== element-paint-transform-03.html element-paint-transform-03.html
+fails == element-paint-native-widget.html element-paint-native-widget.html
+fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html element-paint-subimage-sampling-restriction.html
+== element-paint-clippath.html element-paint-clippath.html
+== element-paint-sharpness-01a.html element-paint-sharpness-01a.html
+fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sharpness-01b.html
+== element-paint-sharpness-01c.html element-paint-sharpness-01c.html
+== element-paint-sharpness-02a.html element-paint-sharpness-02a.html
+== element-paint-sharpness-02b.html element-paint-sharpness-02b.html
+== element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01.html
+== element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02.html
+== element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01a.html
+== element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01b.html
+== element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01c.html
+== gradient-html-01.html gradient-html-01.html
+== gradient-html-02.html gradient-html-02.html
+random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03.html
+== gradient-html-04.html gradient-html-04.html
+== gradient-html-05.html gradient-html-05.html
+fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06a.html
+fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06b.html
+== gradient-html-06c.html gradient-html-06c.html
+== gradient-html-06d.html gradient-html-06d.html
+random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html gradient-html-07a.html
+== gradient-html-07c.html gradient-html-07c.html
+HTTP == invalidate-1.html invalidate-1.html
+== pattern-html-01.html pattern-html-01.html
+== pattern-html-02.html pattern-html-02.html
+== referenced-from-binding-01.html referenced-from-binding-01.html

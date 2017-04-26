@@ -1,0 +1,61 @@
+== bg-fixed-1.html bg-fixed-1.html
+== bg-fixed-cover-1.html bg-fixed-cover-1.html
+== bg-fixed-cover-2.html bg-fixed-cover-2.html
+skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3.html
+skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child.html
+== bg-fixed-child-clip-1.html bg-fixed-child-clip-1.html
+== bg-fixed-child-clip-2.html bg-fixed-child-clip-2.html
+fuzzy(1,246) fuzzy-if(skiaContent,2,160) fuzzy-if(browserIsRemote&&d2d,53,185) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask.html
+== bg-fixed-in-opacity.html bg-fixed-in-opacity.html
+== bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1.html
+== bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2.html
+fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,1,3528) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image.html
+== element-1.html element-1.html
+== iframe-1.html iframe-1.html
+== nested-1.html nested-1.html
+== nested-2.html nested-2.html
+== position-fixed-1.html position-fixed-1.html
+== position-fixed-2.html position-fixed-2.html
+skip-if(!asyncPan) == position-fixed-body.html position-fixed-body.html
+== position-fixed-cover-1.html position-fixed-cover-1.html
+== position-fixed-cover-2.html position-fixed-cover-2.html
+skip-if(!asyncPan) == position-fixed-cover-3.html position-fixed-cover-3.html
+fails == position-fixed-transformed-1.html position-fixed-transformed-1.html
+== split-layers-1.html split-layers-1.html
+== split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1.html
+== split-opacity-layers-1.html split-opacity-layers-1.html
+== sticky-pos-scrollable-1.html sticky-pos-scrollable-1.html
+== sticky-pos-scrollable-2.html sticky-pos-scrollable-2.html
+skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3.html
+fails == fixed-pos-scrollable-1.html fixed-pos-scrollable-1.html
+== culling-1.html culling-1.html
+== position-fixed-iframe-1.html position-fixed-iframe-1.html
+== position-fixed-iframe-2.html position-fixed-iframe-2.html
+fuzzy-if(skiaContent,1,11300) skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container.html
+== position-fixed-inside-sticky-1.html position-fixed-inside-sticky-1.html
+== position-fixed-inside-sticky-2.html position-fixed-inside-sticky-2.html
+== group-opacity-surface-size-1.html group-opacity-surface-size-1.html
+skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed.html
+== offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity.html
+fails == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-1.html
+fails == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-2.html
+fuzzy-if(Android,6,4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-3.html
+fuzzy-if(Android,6,4) skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-4.html
+fails == perspective-scrolling-1.html perspective-scrolling-1.html
+fails == perspective-scrolling-2.html perspective-scrolling-2.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == perspective-scrolling-3.html perspective-scrolling-3.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == perspective-scrolling-4.html perspective-scrolling-4.html
+pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages.html
+== background-blend-mode-1.html background-blend-mode-1.html
+fails == opaque-fractional-displayport-1.html opaque-fractional-displayport-1.html
+fails == opaque-fractional-displayport-2.html opaque-fractional-displayport-2.html
+
+# for the following tests, we want to disable the low-precision buffer
+# as it will expand the displayport beyond what the test specifies in
+# its reftest-displayport attributes, and interfere with where we expect
+# checkerboarding to occur
+default-preferences pref(layers.low-precision-buffer,false)
+== checkerboard-1.html checkerboard-1.html
+== checkerboard-2.html checkerboard-2.html
+skip-if(!asyncPan) == checkerboard-3.html checkerboard-3.html
+default-preferences

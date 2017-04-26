@@ -1,0 +1,12 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+default-preferences pref(layout.css.font-loading-api.enabled,true)
+
+fails HTTP(..) == dynamic-insert-1.html dynamic-insert-1.html
+fails HTTP(..) == dynamic-remove-1.html dynamic-remove-1.html
+fails HTTP(..) == ex-unit-1.html ex-unit-1.html
+== multiple-sets-1.html multiple-sets-1.html
+HTTP(..) == name-collision.html name-collision.html
+HTTP(..) == order-1.html order-1.html
+HTTP(..) == src-list-1.html src-list-1.html
+HTTP(..) == src-list-2.html src-list-2.html
+HTTP(..) == src-list-data-1.html src-list-data-1.html

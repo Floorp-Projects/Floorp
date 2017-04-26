@@ -1,0 +1,13 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== button-valid.html button-valid.html
+== button-invalid.html button-invalid.html
+== button-disabled.html button-disabled.html
+== button-dyn-disabled.html button-dyn-disabled.html
+== button-dyn-not-disabled.html button-dyn-not-disabled.html
+== button-button.html button-button.html
+== button-reset.html button-reset.html
+== button-type-invalid.html button-type-invalid.html
+== button-type-barred.html button-type-barred.html
+== button-disabled-fieldset-1.html button-disabled-fieldset-1.html
+== button-disabled-fieldset-2.html button-disabled-fieldset-2.html
+== button-fieldset-legend.html button-fieldset-legend.html

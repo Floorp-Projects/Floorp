@@ -1,0 +1,19 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# These tests verify that SVG filter chains behave properly.
+# e.g. filter: url(#f1) url(#f2) url(#f3)
+
+default-preferences pref(layout.css.filters.enabled,true)
+
+== clip-input.svg clip-input.svg
+== clip-original-SourceGraphic.svg clip-original-SourceGraphic.svg
+== clip-output.svg clip-output.svg
+== default-subregion.svg default-subregion.svg
+== different-FillPaint-filter-regions.svg different-FillPaint-filter-regions.svg
+== different-StrokePaint-filter-regions.svg different-StrokePaint-filter-regions.svg
+== dont-clip-previous-primitives.svg dont-clip-previous-primitives.svg
+== intersecting-filter-regions.svg intersecting-filter-regions.svg
+== long-chain.svg long-chain.svg
+== multiple-primitives-per-filter.svg multiple-primitives-per-filter.svg
+== second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha.svg
+== second-filter-uses-SourceGraphic.svg second-filter-uses-SourceGraphic.svg
+== simple-chain.svg simple-chain.svg

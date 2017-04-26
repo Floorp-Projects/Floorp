@@ -1,0 +1,128 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family.xhtml
+
+# basic tests for bug 538730
+== synthetic-bold-1.html synthetic-bold-1.html
+== synthetic-bold-2.html synthetic-bold-2.html
+
+# synthetic bold/italic tests
+== defaultfont-bold.html defaultfont-bold.html
+== defaultfont-italic.html defaultfont-italic.html
+== defaultfont-oblique.html defaultfont-oblique.html
+== defaultfont-bolditalic.html defaultfont-bolditalic.html
+== defaultfont-bolditalic.html defaultfont-bolditalic.html
+
+== defaultjapanese-bold.html defaultjapanese-bold.html
+== defaultjapanese-italic.html defaultjapanese-italic.html
+== defaultjapanese-oblique.html defaultjapanese-oblique.html
+== defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
+== defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
+
+== impact-bold.html impact-bold.html
+== impact-italic.html impact-italic.html
+== impact-oblique.html impact-oblique.html
+== impact-bolditalic.html impact-bolditalic.html
+== impact-bolditalic.html impact-bolditalic.html
+
+== arialunicode-bold.html arialunicode-bold.html
+== arialunicode-italic.html arialunicode-italic.html
+== arialunicode-oblique.html arialunicode-oblique.html
+== arialunicode-bolditalic.html arialunicode-bolditalic.html
+== arialunicode-bolditalic.html arialunicode-bolditalic.html
+
+== lucidaconsole-bold.html lucidaconsole-bold.html
+== lucidaconsole-italic.html lucidaconsole-italic.html
+== lucidaconsole-oblique.html lucidaconsole-oblique.html
+== lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
+== lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
+
+# checking that we don't match fullnames, psnames (see bug 538103)
+== arial-variations-1.html arial-variations-1.html
+== arial-variations-2.html arial-variations-2.html
+== arial-variations-3.html arial-variations-3.html
+== arial-variations-4.html arial-variations-4.html
+== arial-variations-5.html arial-variations-5.html
+== arial-variations-6.html arial-variations-6.html
+
+# localized font family names should always match just as English names do
+fails == localized-family-names-001.html localized-family-names-001.html
+fails == localized-family-names-002.html localized-family-names-002.html
+fails == localized-family-names-003.html localized-family-names-003.html
+fails == localized-family-names-004.html localized-family-names-004.html
+
+# family names with escaped spaces shouldn't match the names without the spaces
+== familyname-escapedidents.html familyname-escapedidents.html
+
+# weight mapping tests
+HTTP(..) == normalmedium.html normalmedium.html
+HTTP(..) == normalmedium.html normalmedium.html
+
+# Linux fails due to bug 604815
+== weightmapping-12.html weightmapping-12.html
+HTTP(..) == weightmapping-25.html weightmapping-25.html
+HTTP(..) == weightmapping-45.html weightmapping-45.html
+HTTP(..) == weightmapping-458.html weightmapping-458.html
+HTTP(..) == weightmapping-478.html weightmapping-478.html
+HTTP(..) == weightmapping-7.html weightmapping-7.html
+== weightmapping-12579.html weightmapping-12579.html
+
+HTTP(..) == stretchmapping-all.html stretchmapping-all.html
+HTTP(..) == stretchmapping-reverse.html stretchmapping-reverse.html
+== stretchmapping-35.html stretchmapping-35.html
+== stretchmapping-137.html stretchmapping-137.html
+
+# test for font-stretch using @font-face
+HTTP(..) == font-stretch-1.html font-stretch-1.html
+HTTP(..) == font-shorthand-stretch-1.html font-shorthand-stretch-1.html
+
+# bug 724231 - applying synthetic styles to a single @font-face font
+# should apply artificial obliquing, not switch to a true styled face
+== synthetic-style-1.html synthetic-style-1.html
+== synthetic-style-2.html synthetic-style-2.html
+
+# Bug 765906 - synthetic bold should be used if necessary together with system fallback.
+# **NOTE** we skip these on Linux because of bug 769659.
+# test 1 uses Cherokee; expected to pass on OS X and Win7
+== bold-system-fallback-1.html bold-system-fallback-1.html
+# test 2 uses Chess symbols; expected to pass on Android
+== bold-system-fallback-2.html bold-system-fallback-2.html
+
+# Bug 769475 - applying 'italic' to Arabic text in Arial should NOT change family or metrics.
+# Expected to pass on MacOSX and Windows; other platforms unknown, depending on font availability.
+random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic.html
+
+== syntheticbold-rotated.html syntheticbold-rotated.html
+
+HTTP(..) == font-synthesis-1.html font-synthesis-1.html
+HTTP(..) == font-synthesis-2.html font-synthesis-2.html
+
+# Bug 1060791 - support for format 10 cmap in Apple Symbols;
+# relevant fonts not present on other platforms.
+== apple-symbols-1.html apple-symbols-1.html
+
+# distinguish between italic and oblique
+== simple-oblique.html simple-oblique.html
+== italic-oblique-1.html italic-oblique-1.html
+== italic-oblique-2.html italic-oblique-2.html
+== italic-oblique-3.html italic-oblique-3.html
+== italic-oblique-4.html italic-oblique-4.html
+== italic-oblique-5.html italic-oblique-5.html
+== italic-oblique-6.html italic-oblique-6.html
+== italic-oblique-7.html italic-oblique-7.html
+== italic-oblique-8.html italic-oblique-8.html
+== italic-oblique-9.html italic-oblique-9.html
+== italic-oblique-kinnari.html italic-oblique-kinnari.html
+
+# system font generic per-language tests, only works under OSX currently
+# Bug 1212731 - initial implementation caused startup regression and
+# regression with full-width digits display in UI elements. Disable
+# tests until these problems are corrected.
+random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4.html
+random-if(!OSX) == system-generic-fallback-ko.html system-generic-fallback-ko.html
+random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
+random-if(!OSX) == system-generic-fallback-zh-cn.html system-generic-fallback-zh-cn.html
+random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
+
