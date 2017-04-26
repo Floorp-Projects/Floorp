@@ -10,6 +10,9 @@
  */
 const DevTools = {
   chromeWindowType: "navigator:browser",
+  getToolbox: function () {
+    return {};
+  }
 };
 
 exports.gDevTools = DevTools;
