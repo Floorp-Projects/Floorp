@@ -68,6 +68,10 @@ public class SearchEngineParserTest {
 
         final String[] entries = path.list();
 
+        if (entries == null) {
+            throw new AssertionError("No files in directory " + path.getAbsolutePath());
+        }
+
         for (String entry : entries) {
             final File file = new File(path, entry);
 
