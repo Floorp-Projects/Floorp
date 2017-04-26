@@ -53,27 +53,6 @@ class MozpoolMixin(object):
                            "package is installed! (VirtualenvMixin?): \n%s" % str(e))
             return self.mozpool_handler
 
-    def retrieve_b2g_device(self, b2gbase):
-        mph = self.query_mozpool_handler(self.mozpool_device)
-        for retry in self._retry_sleep(
-                error_message="INFRA-ERROR: Could not request device '%s'" % self.mozpool_device,
-                tbpl_status=TBPL_EXCEPTION):
-            try:
-                image = 'b2g'
-                duration = 4 * 60 * 60 # request valid for 14400 seconds == 4 hours
-                response = mph.request_device(self.mozpool_device, image, assignee=self.mozpool_assignee, \
-                               b2gbase=b2gbase, pxe_config=None, duration=duration)
-                break
-            except self.MozpoolConflictException:
-                self.warning("Device unavailable. Retry#%i.." % retry)
-            except self.MozpoolException, e:
-                self.buildbot_status(TBPL_RETRY)
-                self.fatal("We could not request the device: %s" % str(e))
-
-        self.request_url = response['request']['url']
-        self.info("Got request, url=%s" % self.request_url)
-        self._wait_for_request_ready()
-
     def retrieve_android_device(self, b2gbase):
         mph = self.query_mozpool_handler(self.mozpool_device)
         for retry in self._retry_sleep(
