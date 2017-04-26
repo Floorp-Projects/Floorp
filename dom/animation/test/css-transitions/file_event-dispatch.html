@@ -15,18 +15,18 @@
  */
 function TransitionEventHandler(target) {
   this.target = target;
-  this.target.ontransitionrun = function(evt) {
+  this.target.ontransitionrun = evt => {
     this.transitionrun = evt.elapsedTime;
-  }.bind(this);
-  this.target.ontransitionstart = function(evt) {
+  };
+  this.target.ontransitionstart = evt => {
     this.transitionstart = evt.elapsedTime;
-  }.bind(this);
-  this.target.ontransitionend = function(evt) {
+  };
+  this.target.ontransitionend = evt => {
     this.transitionend = evt.elapsedTime;
-  }.bind(this);
-  this.target.ontransitioncancel = function(evt) {
+  };
+  this.target.ontransitioncancel = evt => {
     this.transitioncancel = evt.elapsedTime;
-  }.bind(this);
+  };
 }
 
 TransitionEventHandler.prototype.clear = function() {

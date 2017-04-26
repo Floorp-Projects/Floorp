@@ -48,7 +48,7 @@ DevToolsStartup.prototype = {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
 
-    let onStartup = function (window) {
+    let onStartup = window => {
       Services.obs.removeObserver(onStartup,
                                   "browser-delayed-startup-finished");
       // Ensure loading core module once firefox is ready
@@ -57,7 +57,7 @@ DevToolsStartup.prototype = {
       if (devtoolsFlag) {
         this.handleDevToolsFlag(window);
       }
-    }.bind(this);
+    };
     Services.obs.addObserver(onStartup, "browser-delayed-startup-finished");
   },
 

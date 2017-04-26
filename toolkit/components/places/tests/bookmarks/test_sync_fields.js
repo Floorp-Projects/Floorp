@@ -127,12 +127,12 @@ class TestCases {
   }
 
   async testSeparators() {
-    let insertSyncedBookmark = async function(uri) {
+    let insertSyncedBookmark = async uri => {
       return await this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
                                            NetUtil.newURI(uri),
                                            PlacesUtils.bookmarks.DEFAULT_INDEX,
                                            "A bookmark name");
-    }.bind(this);
+    };
 
     await insertSyncedBookmark("http://foo.bar");
     let secondBmk = await insertSyncedBookmark("http://bar.foo");

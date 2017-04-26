@@ -247,7 +247,7 @@ var RemoteTabViewer = {
   },
 
   _generateCloudSyncTabList() {
-    let updateTabList = function(remoteTabs) {
+    let updateTabList = remoteTabs => {
       let list = this._tabsList;
 
       for (let client of remoteTabs) {
@@ -270,7 +270,7 @@ var RemoteTabViewer = {
           list.appendChild(tabEnt);
         }
       }
-    }.bind(this);
+    };
 
     return CloudSync().tabs.getRemoteTabs()
                            .then(updateTabList, Promise.reject.bind(Promise));

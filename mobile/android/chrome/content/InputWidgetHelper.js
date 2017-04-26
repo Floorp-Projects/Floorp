@@ -36,7 +36,7 @@ var InputWidgetHelper = {
       type: type,
       min: aElement.min,
       max: aElement.max,
-    }).show((function(data) {
+    }).show(data => {
       let changed = false;
       if (data.button == -1) {
         // This type is not supported with this android version.
@@ -59,7 +59,7 @@ var InputWidgetHelper = {
 
       if (changed)
         this.fireOnChange(aElement);
-    }).bind(this));
+    });
   },
 
   hasInputWidget: function(aElement) {

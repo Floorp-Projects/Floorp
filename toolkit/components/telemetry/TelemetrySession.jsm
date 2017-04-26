@@ -1503,7 +1503,7 @@ var Impl = {
   delayedInit() {
     this._log.trace("delayedInit");
 
-    this._delayedInitTask = (async function() {
+    this._delayedInitTask = (async () => {
       try {
         this._initialized = true;
 
@@ -1548,7 +1548,7 @@ var Impl = {
         this._delayedInitTask = null;
         throw e;
       }
-    }.bind(this))();
+    })();
 
     return this._delayedInitTask;
   },
@@ -2010,7 +2010,7 @@ var Impl = {
         this._initialized = false;
       };
 
-      return (async function() {
+      return (async () => {
         await this.saveShutdownPings();
 
         if (IS_UNIFIED_TELEMETRY) {
@@ -2018,7 +2018,7 @@ var Impl = {
         }
 
         reset();
-      }.bind(this))();
+      })();
     };
 
     // We can be in one the following states here:

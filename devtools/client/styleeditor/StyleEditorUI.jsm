@@ -520,7 +520,7 @@ StyleEditorUI.prototype = {
       },
       disableAnimations: this._alwaysDisableAnimations,
       ordinal: ordinal,
-      onCreate: function (summary, details, data) {
+      onCreate: (summary, details, data) => {
         let createdEditor = data.editor;
         createdEditor.summary = summary;
         createdEditor.details = details;
@@ -595,9 +595,9 @@ StyleEditorUI.prototype = {
           this._selectEditor(createdEditor);
         }
         this.emit("editor-added", createdEditor);
-      }.bind(this),
+      },
 
-      onShow: function (summary, details, data) {
+      onShow: (summary, details, data) => {
         let showEditor = data.editor;
         this.selectedEditor = showEditor;
 
@@ -637,7 +637,7 @@ StyleEditorUI.prototype = {
             }
           }
         }.bind(this)).then(null, e => console.error(e));
-      }.bind(this)
+      }
     });
   },
 

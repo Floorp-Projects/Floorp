@@ -1735,7 +1735,7 @@ var TelemetryStorageImpl = {
   },
 
   removeAbortedSessionPing() {
-    return this._abortedSessionSerializer.enqueueTask(async function() {
+    return this._abortedSessionSerializer.enqueueTask(async () => {
       try {
         await OS.File.remove(gAbortedSessionFilePath, { ignoreAbsent: false });
         this._log.trace("removeAbortedSessionPing - success");
@@ -1746,7 +1746,7 @@ var TelemetryStorageImpl = {
           this._log.error("removeAbortedSessionPing - error removing ping", ex)
         }
       }
-    }.bind(this));
+    });
   },
 
   /**
@@ -1769,7 +1769,7 @@ var TelemetryStorageImpl = {
    * @return {Promise} Resolved when the ping is deleted from the disk.
    */
   async removeDeletionPing() {
-    return this._deletionPingSerializer.enqueueTask(async function() {
+    return this._deletionPingSerializer.enqueueTask(async () => {
       try {
         await OS.File.remove(gDeletionPingFilePath, { ignoreAbsent: false });
         this._log.trace("removeDeletionPing - success");
@@ -1780,7 +1780,7 @@ var TelemetryStorageImpl = {
           this._log.error("removeDeletionPing - error removing ping", ex)
         }
       }
-    }.bind(this));
+    });
   },
 
   isDeletionPing(aPingId) {

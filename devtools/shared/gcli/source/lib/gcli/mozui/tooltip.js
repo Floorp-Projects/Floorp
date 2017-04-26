@@ -170,10 +170,10 @@ Tooltip.prototype.choiceChanged = function(ev) {
   if (this.field && this.field.menu) {
     var conversion = this.assignment.conversion;
     var context = this.requisition.executionContext;
-    conversion.constrainPredictionIndex(context, ev.choice).then(function(choice) {
+    conversion.constrainPredictionIndex(context, ev.choice).then(choice => {
       this.field.menu._choice = choice;
       this.field.menu._updateHighlight();
-    }.bind(this)).catch(util.errorHandler);
+    }).catch(util.errorHandler);
   }
 };
 
@@ -202,9 +202,9 @@ Tooltip.prototype.fieldChanged = function(ev) {
   // Nasty hack, the inputter won't know about the text change yet, so it will
   // get it's calculations wrong. We need to wait until the current set of
   // changes has had a chance to propagate
-  this.document.defaultView.setTimeout(function() {
+  this.document.defaultView.setTimeout(() => {
     this.inputter.focus();
-  }.bind(this), 10);
+  }, 10);
 };
 
 /**

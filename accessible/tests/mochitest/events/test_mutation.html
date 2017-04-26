@@ -381,7 +381,7 @@
     {
       this.txt = null;
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, function() { return this.txt; }.bind(this))
+        new invokerChecker(EVENT_HIDE, () => { return this.txt; })
       ];
 
       this.invoke = function hideNDestroyDoc_invoke()
@@ -405,7 +405,7 @@
     {
       this.target = null;
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, function() { return this.target; }.bind(this))
+        new invokerChecker(EVENT_HIDE, () => { return this.target; })
       ];
 
       this.invoke = function hideHideNDestroyDoc_invoke()
