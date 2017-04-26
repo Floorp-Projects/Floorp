@@ -257,6 +257,7 @@ using mozilla::Get;
 using mozilla::HashCodeScrambler;
 using mozilla::Maybe;
 using mozilla::Swap;
+using mozilla::TimeStamp;
 
 using JS::AutoGCRooter;
 
@@ -7624,6 +7625,44 @@ JS::GCDescription::formatJSON(JSContext* cx, uint64_t timestamp) const
 
     CopyAndInflateChars(out.get(), cstr.get(), nchars);
     return out.release();
+}
+
+TimeStamp
+JS::GCDescription::startTime(JSContext* cx) const
+{
+    return cx->runtime()->gc.stats().start();
+}
+
+TimeStamp
+JS::GCDescription::endTime(JSContext* cx) const
+{
+    return cx->runtime()->gc.stats().end();
+}
+
+TimeStamp
+JS::GCDescription::lastSliceStart(JSContext* cx) const
+{
+    return cx->runtime()->gc.stats().slices().back().start;
+}
+
+TimeStamp
+JS::GCDescription::lastSliceEnd(JSContext* cx) const
+{
+    return cx->runtime()->gc.stats().slices().back().end;
+}
+
+JS::UniqueChars
+JS::GCDescription::sliceToJSON(JSContext* cx) const
+{
+    size_t slices = cx->runtime()->gc.stats().slices().length();
+    MOZ_ASSERT(slices > 0);
+    return cx->runtime()->gc.stats().formatJsonSlice(slices - 1);
+}
+
+JS::UniqueChars
+JS::GCDescription::summaryToJSON(JSContext* cx) const
+{
+    return cx->runtime()->gc.stats().formatJsonMessage(0, false);
 }
 
 JS_PUBLIC_API(JS::GCSliceCallback)
