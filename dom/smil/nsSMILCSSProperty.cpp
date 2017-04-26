@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/Move.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsICSSDeclaration.h"
 #include "nsSMILCSSValueType.h"
@@ -64,10 +65,19 @@ nsSMILCSSProperty::GetBaseValue() const
     return baseValue;
   }
 
-  StyleAnimationValue computedValue;
-  if (!StyleAnimationValue::ExtractComputedValue(mPropID,
-                                                 mBaseStyleContext,
-                                                 computedValue)) {
+  AnimationValue computedValue;
+  if (mElement->IsStyledByServo()) {
+    const ServoComputedValues* currentStyle =
+      mBaseStyleContext->StyleSource().AsServoComputedValues();
+    computedValue.mServo =
+      Servo_ComputedValues_ExtractAnimationValue(currentStyle, mPropID)
+      .Consume();
+    if (!computedValue.mServo) {
+      return baseValue;
+    }
+  } else if (!StyleAnimationValue::ExtractComputedValue(mPropID,
+                                                        mBaseStyleContext,
+                                                        computedValue.mGecko)) {
     return baseValue;
   }
 
@@ -108,10 +118,7 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
 
   // Convert nsSMILValue to string
   nsAutoString valStr;
-  if (!nsSMILCSSValueType::ValueToString(aValue, valStr)) {
-    NS_WARNING("Failed to convert nsSMILValue for CSS property into a string");
-    return NS_ERROR_FAILURE;
-  }
+  nsSMILCSSValueType::ValueToString(aValue, valStr);
 
   // Use string value to style the target element
   nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
