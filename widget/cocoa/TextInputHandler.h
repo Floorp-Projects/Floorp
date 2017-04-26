@@ -593,6 +593,11 @@ protected:
       return !mKeyPressDispatched && !IsDefaultPrevented();
     }
 
+    bool CanHandleCommand() const
+    {
+      return !mKeyDownHandled && !mKeyPressHandled;
+    }
+
     void InitKeyEvent(TextInputHandlerBase* aHandler,
                       WidgetKeyboardEvent& aKeyEvent);
 
