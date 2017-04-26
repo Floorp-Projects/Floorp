@@ -6,6 +6,7 @@
  * For more information see nsIDOMSimpleGestureEvent.idl.
  */
 
+[Func="IsChromeOrXBL"]
 interface SimpleGestureEvent : MouseEvent
 {
   const unsigned long DIRECTION_UP = 1;

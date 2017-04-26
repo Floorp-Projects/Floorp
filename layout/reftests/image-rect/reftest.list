@@ -3,7 +3,7 @@
 == background-common-usage-pixel.html background-common-usage-ref.html
 == background-draw-nothing-empty-rect.html background-draw-nothing-ref.html
 == background-draw-nothing-invalid-syntax.html background-draw-nothing-ref.html
-asserts(0-6) == background-draw-nothing-malformed-images.html background-draw-nothing-ref.html # Bug 576419
+== background-draw-nothing-malformed-images.html background-draw-nothing-ref.html
 == background-monster-rect.html background-monster-rect-ref.html
 == background-over-size-rect.html background-over-size-rect-ref.html
 == background-test-parser.html background-test-parser-ref.html

@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIDOMClipboardEvent.idl',
     'nsIDOMCommandEvent.idl',
     'nsIDOMCustomEvent.idl',
-    'nsIDOMDataContainerEvent.idl',
     'nsIDOMDataTransfer.idl',
     'nsIDOMDragEvent.idl',
     'nsIDOMEvent.idl',

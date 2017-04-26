@@ -19,8 +19,7 @@ Cu.import("chrome://marionette/content/driver.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
 
-// Bug 1083711: Load transport.js as an SDK module instead of subscript
-loader.loadSubScript("resource://devtools/shared/transport/transport.js");
+Cu.import("chrome://marionette/content/transport.js");
 
 const logger = Log.repository.getLogger("Marionette");
 
@@ -94,9 +93,6 @@ const RECOMMENDED_PREFS = new Map([
   // Background thumbnails in particular cause grief, and disabling
   // thumbnails in general cannot hurt
   ["browser.pagethumbnails.capturing_disabled", true],
-
-  // Avoid performing Reader Mode intros during tests
-  ["browser.reader.detectedFirstArticle", true],
 
   // Disable safebrowsing components.
   //

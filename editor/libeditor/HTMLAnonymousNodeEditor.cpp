@@ -233,16 +233,16 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
   newContent->AddMutationObserver(observer);
 
 #ifdef DEBUG
-  // Editor anonymous content gets passed to RecreateFramesFor... which can't
-  // _really_ deal with anonymous content (because it can't get the frame tree
-  // ordering right).  But for us the ordering doesn't matter so this is sort of
-  // ok.
+  // Editor anonymous content gets passed to PostRecreateFramesFor... which
+  // can't _really_ deal with anonymous content (because it can't get the frame
+  // tree ordering right).  But for us the ordering doesn't matter so this is
+  // sort of ok.
   newContent->SetProperty(nsGkAtoms::restylableAnonymousNode,
 			  reinterpret_cast<void*>(true));
 #endif // DEBUG
 
   // display the element
-  ps->RecreateFramesFor(newContent);
+  ps->PostRecreateFramesFor(newContent);
 
   return newContent.forget();
 }

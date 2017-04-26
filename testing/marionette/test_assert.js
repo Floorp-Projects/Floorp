@@ -33,6 +33,14 @@ add_test(function test_platforms() {
   run_next_test();
 });
 
+add_test(function test_noUserPrompt() {
+  assert.noUserPrompt(null);
+  assert.noUserPrompt(undefined);
+  Assert.throws(() => assert.noUserPrompt({}), UnexpectedAlertOpenError);
+
+  run_next_test();
+});
+
 add_test(function test_defined() {
   assert.defined({});
   Assert.throws(() => assert.defined(undefined), InvalidArgumentError);

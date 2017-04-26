@@ -10223,6 +10223,7 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
   if (haveGradientLine) {
     // Parse a <legacy-gradient-line>
     cssGradient->mIsLegacySyntax = true;
+    cssGradient->mIsMozLegacySyntax = (aFlags & eGradient_MozLegacy);
     // In -webkit-linear-gradient expressions (handled below), we need to accept
     // unitless 0 for angles, to match WebKit/Blink.
     int32_t angleFlags = (aFlags & eGradient_WebkitLegacy) ?
@@ -10419,6 +10420,7 @@ CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue,
 
     if (cssGradient->mAngle.GetUnit() != eCSSUnit_None) {
       cssGradient->mIsLegacySyntax = true;
+      cssGradient->mIsMozLegacySyntax = (aFlags & eGradient_MozLegacy);
     }
   }
 

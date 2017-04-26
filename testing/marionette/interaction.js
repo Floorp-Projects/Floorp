@@ -116,7 +116,9 @@ this.interaction = {};
  */
 interaction.clickElement = function* (el, strict = false, specCompat = false) {
   const a11y = accessibility.get(strict);
-  if (specCompat) {
+  if (element.isXULElement(el)) {
+    yield chromeClick(el, a11y);
+  } else if (specCompat) {
     yield webdriverClickElement(el, a11y);
   } else {
     yield seleniumClickElement(el, a11y);
@@ -166,22 +168,10 @@ function* webdriverClickElement (el, a11y) {
   });
 
   // step 8
-
-  // chrome elements
-  if (element.isXULElement(el)) {
-    if (el.localName == "option") {
-      interaction.selectOption(el);
-    } else {
-      el.click();
-    }
-
-  // content elements
+  if (el.localName == "option") {
+    interaction.selectOption(el);
   } else {
-    if (el.localName == "option") {
-      interaction.selectOption(el);
-    } else {
-      event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
-    }
+    event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
   }
 
   // step 9
@@ -190,6 +180,24 @@ function* webdriverClickElement (el, a11y) {
   // step 10
   // TODO(ato): if the click causes navigation,
   // run post-navigation checks
+}
+
+function* chromeClick (el, a11y) {
+  if (!atom.isElementEnabled(el)) {
+    throw new InvalidElementStateError("Element is not enabled");
+  }
+
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
+
+  if (el.localName == "option") {
+    interaction.selectOption(el);
+  } else {
+    el.click();
+  }
 }
 
 function* seleniumClickElement (el, a11y) {
@@ -214,24 +222,13 @@ function* seleniumClickElement (el, a11y) {
     a11y.assertActionable(acc, el);
   });
 
-  // chrome elements
-  if (element.isXULElement(el)) {
-    if (el.localName == "option") {
-      interaction.selectOption(el);
-    } else {
-      el.click();
-    }
-
-  // content elements
+  if (el.localName == "option") {
+    interaction.selectOption(el);
   } else {
-    if (el.localName == "option") {
-      interaction.selectOption(el);
-    } else {
-      let rects = el.getClientRects();
-      let centre = element.getInViewCentrePoint(rects[0], win);
-      let opts = {};
-      event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
-    }
+    let rects = el.getClientRects();
+    let centre = element.getInViewCentrePoint(rects[0], win);
+    let opts = {};
+    event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
   }
 };
 
@@ -291,13 +288,20 @@ interaction.selectOption = function (el) {
  *
  * @return {Promise}
  *     Promise is accepted once event queue is flushed, or rejected if
- *     |win| is unloaded before the queue can be flushed.
+ *     |win| has closed or been unloaded before the queue can be flushed.
  */
 interaction.flushEventLoop = function* (win) {
   let unloadEv;
+
   return new Promise((resolve, reject) => {
+    if (win.closed) {
+      reject();
+      return;
+    }
+
     unloadEv = reject;
     win.addEventListener("unload", unloadEv, {once: true});
+
     win.requestAnimationFrame(resolve);
   }).then(() => {
     win.removeEventListener("unload", unloadEv);

@@ -530,6 +530,52 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
+(function test_bug_1357117() {
+  // Test that vendor-prefixed gradient styles round-trip with the same prefix,
+  // or with no prefix.
+  var backgroundImages = [
+    // [ specified style,
+    //   expected computed style,
+    //   descriptionOfTestcase ],
+    // Linear gradient with legacy-gradient-line (needs prefixed syntax):
+    [ "-moz-linear-gradient(10deg, red, blue)",
+      "-moz-linear-gradient(10deg, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-moz-linear-gradient with angled legacy-gradient-line" ],
+    [ "-webkit-linear-gradient(10deg, red, blue)",
+      "-webkit-linear-gradient(10deg, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-webkit-linear-gradient with angled legacy-gradient-line" ],
+
+    // Linear gradient with box corner (needs prefixed syntax):
+    [ "-moz-linear-gradient(top left, red, blue)",
+      "-moz-linear-gradient(0% 0%, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-moz-linear-gradient with box corner" ],
+    [ "-webkit-linear-gradient(top left, red, blue)",
+      "-webkit-linear-gradient(top left, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-webkit-linear-gradient with box corner" ],
+
+    // Radial gradients (should be serialized using modern unprefixed style):
+    [ "-moz-radial-gradient(contain, red, blue)",
+      "radial-gradient(closest-side, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-moz-radial-gradient with legacy 'contain' keyword" ],
+    [ "-webkit-radial-gradient(contain, red, blue)",
+      "radial-gradient(closest-side, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-webkit-radial-gradient with legacy 'contain' keyword" ],
+  ];
+
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (var i = 0; i < backgroundImages.length; ++i) {
+    var test = backgroundImages[i];
+    p.style.backgroundImage = test[0];
+    is(cs.backgroundImage, test[1],
+       "computed value of prefixed gradient expression (" + test[2] + ")");
+  }
+
+  p.remove();
+})();
+
 </script>
 </pre>
 </body>

@@ -105,15 +105,6 @@ function* testOptionsShortcut() {
 function* testOptions() {
   let tool = toolbox.getPanel("options");
   panelWin = tool.panelWin;
-
-  // It's possible that the iframe for options hasn't fully loaded yet,
-  // and might be paint-suppressed, which means that clicking things
-  // might not work just yet. The "load" event is a good indication that
-  // we're ready to proceed.
-  if (tool.panelDoc.readyState != "complete") {
-    yield once(tool.panelWin, "load");
-  }
-
   let prefNodes = tool.panelDoc.querySelectorAll(
     "input[type=checkbox][data-pref]");
 

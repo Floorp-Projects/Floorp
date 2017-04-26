@@ -499,16 +499,46 @@
        position="bottomcenter topright"
        noautofocus="true">
   <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
-    <panelview id="appMenu-mainView" class="cui-widget-panelview">
+    <panelview id="appMenu-mainView" class="cui-widget-panelview PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
+                       key="key_newNavigator"
                        command="cmd_newNavigator"/>
         <toolbarbutton id="appMenu-private-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newPrivateWindow.label;"
+                       key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-open-file-button"
+                       class="subviewbutton"
+                       label="&openFileCmd.label;"
+                       key="openFileKb"
+                       command="Browser:OpenFile"
+                       />
+        <toolbarbutton id="appMenu-save-file-button"
+                       class="subviewbutton"
+                       label="&savePageCmd.label;"
+                       key="key_savePage"
+                       command="Browser:SavePage"
+                       />
+        <toolbarbutton id="appMenu-page-setup-button"
+                       class="subviewbutton"
+                       label="&printSetupCmd.label;"
+                       command="cmd_pageSetup"
+                       />
+        <toolbarbutton id="appMenu-print-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&printButton.label;"
+                       key="printKb"
+#ifdef XP_MACOSX
+                       command="cmd_print"
+#else
+                       command="cmd_printPreview"
+#endif
+                       />
       </vbox>
     </panelview>
   </panelmultiview>

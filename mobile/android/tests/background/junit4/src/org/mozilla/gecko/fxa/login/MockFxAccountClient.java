@@ -6,7 +6,6 @@ package org.mozilla.gecko.fxa.login;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
-import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
@@ -15,7 +14,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.fxa.FxAccountDevice;
+import org.mozilla.gecko.fxa.devices.FxAccountDevice;
 import org.mozilla.gecko.browserid.MockMyIDTokenFactory;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -180,7 +179,7 @@ public class MockFxAccountClient implements FxAccountClient {
       String deviceId = deviceToRegister.id;
       if (TextUtils.isEmpty(deviceId)) { // Create
         deviceId = UUID.randomUUID().toString();
-        FxAccountDevice device = new FxAccountDevice(deviceToRegister.name, deviceId, deviceToRegister.type, null, null, null, null);
+        FxAccountDevice device = new FxAccountDevice(deviceToRegister.name, deviceId, deviceToRegister.type, null, null, null, null, null);
         requestDelegate.handleSuccess(device);
       } else { // Update
         FxAccountDevice existingDevice = user.devices.get(deviceId);
@@ -189,8 +188,8 @@ public class MockFxAccountClient implements FxAccountClient {
           if (!TextUtils.isEmpty(deviceToRegister.name)) {
             deviceName = deviceToRegister.name;
           } // We could also update the other fields..
-          FxAccountDevice device = new FxAccountDevice(deviceName, existingDevice.id, existingDevice.type,
-                  existingDevice.isCurrentDevice, existingDevice.pushCallback, existingDevice.pushPublicKey,existingDevice.pushAuthKey);
+          FxAccountDevice device = new FxAccountDevice(deviceName, existingDevice.id, existingDevice.type, existingDevice.isCurrentDevice,
+                  existingDevice.lastAccessTime, existingDevice.pushCallback, existingDevice.pushPublicKey,existingDevice.pushAuthKey);
           requestDelegate.handleSuccess(device);
         } else { // Device unknown
           handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.UNKNOWN_DEVICE, "device is unknown");

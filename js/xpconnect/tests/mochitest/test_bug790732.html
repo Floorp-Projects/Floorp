@@ -32,7 +32,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   is(Ci.nsIDOMMouseEvent, MouseEvent);
   is(Ci.nsIDOMMouseScrollEvent, MouseScrollEvent);
   is(Ci.nsIDOMMutationEvent, MutationEvent);
-  is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
+  // XXX We can't test this here because it's only exposed to chrome
+  //is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
   is(Ci.nsIDOMUIEvent, UIEvent);
   is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
   is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);

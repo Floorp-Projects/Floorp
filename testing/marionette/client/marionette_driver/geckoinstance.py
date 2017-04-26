@@ -431,9 +431,6 @@ class DesktopInstance(GeckoInstance):
         # in general can"t hurt - we re-enable them when tests need them
         "browser.pagethumbnails.capturing_disabled": True,
 
-        # Avoid performing Reader Mode intros during tests
-        "browser.reader.detectedFirstArticle": True,
-
         # Disable safebrowsing components
         "browser.safebrowsing.blockedURIs.enabled": False,
         "browser.safebrowsing.downloads.enabled": False,
