@@ -110,7 +110,7 @@ to mochitest command.
   * test_descriptor_storage.html [1]
   * test_font_face_parser.html `@font-face` [8]
 * @namespace support:
-  * test_namespace_rule.html: bug 1355715 [17]
+  * test_namespace_rule.html: bug 1355715 [16]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
@@ -280,7 +280,7 @@ to mochitest command.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
-* test_selectors.html `this_better_be_unvisited`: visited handling [2]
+* test_selectors.html `this_better_be_unvisited`: visited handling [1]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference servo/rust-cssparser#138 [14]
 
 ## Assertions
