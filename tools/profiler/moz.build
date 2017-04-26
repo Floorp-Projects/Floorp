@@ -11,7 +11,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     ]
     EXPORTS += [
         'public/CrossProcessProfilerController.h',
-        'public/ProfilerMarkers.h',
+        'public/ProfilerMarkerPayload.h',
         'public/PseudoStack.h',
         'public/shared-libraries.h',
     ]
@@ -24,7 +24,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfileBufferEntry.cpp',
         'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
-        'core/ProfilerMarkers.cpp',
+        'core/ProfilerMarkerPayload.cpp',
         'core/StackTop.cpp',
         'core/ThreadInfo.cpp',
         'gecko/CrossProcessProfilerController.cpp',
