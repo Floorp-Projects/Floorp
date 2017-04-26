@@ -242,7 +242,7 @@ var SessionSaverInternal = {
       return Promise.resolve();
     }
 
-    stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
+    stopWatchStart("COLLECT_DATA_MS");
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
     PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
@@ -277,7 +277,7 @@ var SessionSaverInternal = {
     // Clear cookies and storage on clean shutdown.
     this._maybeClearCookiesAndStorage(state);
 
-    stopWatchFinish("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
+    stopWatchFinish("COLLECT_DATA_MS");
     return this._writeState(state);
   },
 

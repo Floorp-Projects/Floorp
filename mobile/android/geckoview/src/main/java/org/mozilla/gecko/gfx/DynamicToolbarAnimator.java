@@ -27,7 +27,8 @@ public class DynamicToolbarAnimator {
         ACTION_MODE(2),
         FULL_SCREEN(3),
         CARET_DRAG(4),
-        PAGE_LOADING(5);
+        PAGE_LOADING(5),
+        CUSTOM_TAB(6);
 
         public final int mValue;
         PinReason(final int value) {
@@ -154,9 +155,19 @@ public class DynamicToolbarAnimator {
     private void dumpStateToCompositor() {
         if ((mCompositor != null) && mCompositorControllerOpen) {
             mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
+            if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
+            } else {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
+            }
             for (PinReason reason : pinFlags) {
               mCompositor.setPinned(true, reason.mValue);
             }
+        } else if ((mCompositor != null) && !mCompositorControllerOpen) {
+            // Ask the UiCompositorControllerChild if it is open since the open message can
+            // sometimes be sent to a different instance of the LayerView such as when
+            // Fennec is being used in custom tabs.
+            mCompositor.sendToolbarAnimatorMessage(LayerView.IS_COMPOSITOR_CONTROLLER_OPEN);
         }
     }
 

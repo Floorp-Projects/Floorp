@@ -475,7 +475,7 @@
 
   <popupnotification id="PanelUI-update-restart-notification"
                      popupid="update-restart"
-                     label="&updateRestart.header.message;"
+                     label="&updateRestart.header.message2;"
                      buttonlabel="&updateRestart.acceptButton.label;"
                      buttonaccesskey="&updateRestart.acceptButton.accesskey;"
                      closebuttonhidden="true"

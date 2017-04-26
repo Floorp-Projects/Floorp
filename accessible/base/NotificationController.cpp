@@ -676,7 +676,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
         }
   #endif
 
-        mDocument->ContentRemoved(containerElm, textNode);
+        mDocument->ContentRemoved(textAcc);
         continue;
       }
 

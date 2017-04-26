@@ -1170,10 +1170,7 @@ DocAccessible::ContentRemoved(nsIDocument* aDocument,
   // This one and content removal notification from layout may result in
   // double processing of same subtrees. If it pops up in profiling, then
   // consider reusing a document node cache to reject these notifications early.
-  Accessible* container = GetAccessibleOrContainer(aContainerNode);
-  if (container) {
-    UpdateTreeOnRemoval(container, aChildNode);
-  }
+  ContentRemoved(aChildNode);
 }
 
 void
@@ -1382,7 +1379,7 @@ DocAccessible::RecreateAccessible(nsIContent* aContent)
   // should be coalesced with normal show/hide events.
 
   nsIContent* parent = aContent->GetFlattenedTreeParent();
-  ContentRemoved(parent, aContent);
+  ContentRemoved(aContent);
   ContentInserted(parent, aContent, aContent->GetNextSibling());
 }
 
@@ -1972,33 +1969,36 @@ DocAccessible::FireEventsOnInsertion(Accessible* aContainer)
 }
 
 void
-DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode)
+DocAccessible::ContentRemoved(Accessible* aContent)
 {
-  // If child node is not accessible then look for its accessible children.
-  Accessible* child = GetAccessible(aChildNode);
+  MOZ_DIAGNOSTIC_ASSERT(aContent->Parent(), "Unattached accessible from tree");
+
 #ifdef A11Y_LOG
   logging::TreeInfo("process content removal", 0,
-                    "container", aContainer, "child", aChildNode);
+                    "container", aContent->Parent(), "child", aContent, nullptr);
 #endif
 
-  TreeMutation mt(aContainer);
-  if (child) {
-    mt.BeforeRemoval(child);
-    MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
-    aContainer->RemoveChild(child);
-    UncacheChildrenInSubtree(child);
-    mt.Done();
-    return;
-  }
-
-  TreeWalker walker(aContainer, aChildNode, TreeWalker::eWalkCache);
-  while (Accessible* child = walker.Next()) {
-    mt.BeforeRemoval(child);
-    MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
-    aContainer->RemoveChild(child);
-    UncacheChildrenInSubtree(child);
-  }
+  TreeMutation mt(aContent->Parent());
+  mt.BeforeRemoval(aContent);
+  aContent->Parent()->RemoveChild(aContent);
+  UncacheChildrenInSubtree(aContent);
   mt.Done();
+}
+
+void
+DocAccessible::ContentRemoved(nsIContent* aContentNode)
+{
+  // If child node is not accessible then look for its accessible children.
+  Accessible* acc = GetAccessible(aContentNode);
+  if (acc) {
+    ContentRemoved(acc);
+  }
+  else {
+    TreeWalker walker(this, aContentNode);
+    while (Accessible* acc = walker.Next()) {
+      ContentRemoved(acc);
+    }
+  }
 }
 
 bool
@@ -2051,7 +2051,7 @@ DocAccessible::ValidateARIAOwned()
 
       // If DOM node doesn't have a frame anymore then shutdown its accessible.
       if (child->Parent() && !child->GetFrame()) {
-        UpdateTreeOnRemoval(child->Parent(), child->GetContent());
+        ContentRemoved(child);
         children->RemoveElementAt(idx);
         idx--;
         continue;
