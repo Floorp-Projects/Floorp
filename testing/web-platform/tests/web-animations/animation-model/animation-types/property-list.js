@@ -331,6 +331,11 @@ var gCSSProperties = {
   'clip': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-clip
     types: [
+      'rect',
+      { type: 'discrete', options: [ [ 'rect(10px, 10px, 10px, 10px)',
+                                       'auto' ],
+                                     [ 'rect(10px, 10px, 10px, 10px)',
+                                       'rect(10px, 10px, 10px, auto)'] ] }
     ]
   },
   'clip-path': {
