@@ -919,7 +919,7 @@ Barrier.prototype = Object.freeze({
       // battery-sucking) situation is report the issue and crash.
       timeToCrash = looseTimer(crashAfterMS);
       timeToCrash.promise.then(
-        function onTimeout() {
+        () => {
           // Report the problem as best as we can, then crash.
           let state = this.state;
 
@@ -957,7 +957,7 @@ Barrier.prototype = Object.freeze({
             break;
           }
           gDebug.abort(filename, lineNumber);
-        }.bind(this),
+        },
         function onSatisfied() {
           // The promise has been rejected, which means that we have satisfied
           // all completion conditions.

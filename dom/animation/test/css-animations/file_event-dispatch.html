@@ -21,18 +21,18 @@
  */
 function AnimationEventHandler(target) {
   this.target = target;
-  this.target.onanimationstart = function(evt) {
+  this.target.onanimationstart = evt => {
    this.animationstart = evt.elapsedTime;
-  }.bind(this);
-  this.target.onanimationiteration = function(evt) {
+  };
+  this.target.onanimationiteration = evt => {
     this.animationiteration = evt.elapsedTime;
-  }.bind(this);
-  this.target.onanimationend = function(evt) {
+  };
+  this.target.onanimationend = evt => {
     this.animationend = evt.elapsedTime;
-  }.bind(this);
-  this.target.onanimationcancel = function(evt) {
+  };
+  this.target.onanimationcancel = evt => {
     this.animationcancel = evt.elapsedTime;
-  }.bind(this);
+  };
 }
 AnimationEventHandler.prototype.clear = function() {
   this.animationstart     = undefined;

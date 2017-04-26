@@ -820,7 +820,7 @@ this.CrashManager.prototype = Object.freeze({
 
         // This callback frees resources from the store unless the store
         // is protected from freeing by some other process.
-        let timerCB = function() {
+        let timerCB = () => {
           if (this._storeProtectedCount) {
             this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
                                               this._storeTimer.TYPE_ONE_SHOT);
@@ -832,7 +832,7 @@ this.CrashManager.prototype = Object.freeze({
           // reference is gone.
           this._store = null;
           this._storeTimer = null;
-        }.bind(this);
+        };
 
         this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
                                           this._storeTimer.TYPE_ONE_SHOT);

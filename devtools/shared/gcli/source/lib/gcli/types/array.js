@@ -60,12 +60,12 @@ exports.items = [
       // Hack alert. ArrayConversion needs to be able to answer questions about
       // the status of individual conversions in addition to the overall state.
       // |subArg.conversion| allows us to do that easily.
-      var subArgParse = function(subArg) {
-        return this.subtype.parse(subArg, context).then(function(conversion) {
+      var subArgParse = subArg => {
+        return this.subtype.parse(subArg, context).then(conversion => {
           subArg.conversion = conversion;
           return conversion;
-        }.bind(this));
-      }.bind(this);
+        });
+      };
 
       var conversionPromises = arg.getArguments().map(subArgParse);
       return Promise.all(conversionPromises).then(function(conversions) {

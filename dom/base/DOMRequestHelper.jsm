@@ -303,10 +303,10 @@ DOMRequestIpcHelper.prototype = {
    * which is immediately called with the generated resolverId.
    */
   createPromiseWithId: function(aCallback) {
-    return this.createPromise(function(aResolve, aReject) {
+    return this.createPromise((aResolve, aReject) => {
       let resolverId = this.getPromiseResolverId({ resolve: aResolve, reject: aReject });
       aCallback(resolverId);
-    }.bind(this));
+    });
   },
 
   forEachRequest: function(aCallback) {

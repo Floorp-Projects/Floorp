@@ -699,53 +699,53 @@ const CustomizableWidgets = [
       updateCombinedWidgetStyle(node, this.currentArea, true);
 
       let listener = {
-        onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+        onWidgetAdded: (aWidgetId, aArea, aPosition) => {
           if (aWidgetId != this.id)
             return;
 
           updateCombinedWidgetStyle(node, aArea, true);
-        }.bind(this),
+        },
 
-        onWidgetRemoved: function(aWidgetId, aPrevArea) {
+        onWidgetRemoved: (aWidgetId, aPrevArea) => {
           if (aWidgetId != this.id)
             return;
 
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
           updateCombinedWidgetStyle(node, null, true);
-        }.bind(this),
+        },
 
-        onWidgetReset: function(aWidgetNode) {
+        onWidgetReset: aWidgetNode => {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea, true);
-        }.bind(this),
+        },
 
-        onWidgetUndoMove: function(aWidgetNode) {
+        onWidgetUndoMove: aWidgetNode => {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea, true);
-        }.bind(this),
+        },
 
-        onWidgetMoved: function(aWidgetId, aArea) {
+        onWidgetMoved: (aWidgetId, aArea) => {
           if (aWidgetId != this.id)
             return;
           updateCombinedWidgetStyle(node, aArea, true);
-        }.bind(this),
+        },
 
-        onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
+        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
           if (aWidgetId != this.id || aDoc != aDocument)
             return;
 
           CustomizableUI.removeListener(listener);
-        }.bind(this),
+        },
 
-        onWidgetDrag: function(aWidgetId, aArea) {
+        onWidgetDrag: (aWidgetId, aArea) => {
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
           updateCombinedWidgetStyle(node, aArea, true);
-        }.bind(this)
+        }
       };
       CustomizableUI.addListener(listener);
 
@@ -798,50 +798,50 @@ const CustomizableWidgets = [
       updateCombinedWidgetStyle(node, this.currentArea);
 
       let listener = {
-        onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+        onWidgetAdded: (aWidgetId, aArea, aPosition) => {
           if (aWidgetId != this.id)
             return;
           updateCombinedWidgetStyle(node, aArea);
-        }.bind(this),
+        },
 
-        onWidgetRemoved: function(aWidgetId, aPrevArea) {
+        onWidgetRemoved: (aWidgetId, aPrevArea) => {
           if (aWidgetId != this.id)
             return;
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
           updateCombinedWidgetStyle(node);
-        }.bind(this),
+        },
 
-        onWidgetReset: function(aWidgetNode) {
+        onWidgetReset: aWidgetNode => {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea);
-        }.bind(this),
+        },
 
-        onWidgetUndoMove: function(aWidgetNode) {
+        onWidgetUndoMove: aWidgetNode => {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea);
-        }.bind(this),
+        },
 
-        onWidgetMoved: function(aWidgetId, aArea) {
+        onWidgetMoved: (aWidgetId, aArea) => {
           if (aWidgetId != this.id)
             return;
           updateCombinedWidgetStyle(node, aArea);
-        }.bind(this),
+        },
 
-        onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
+        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
           if (aWidgetId != this.id || aDoc != aDocument)
             return;
           CustomizableUI.removeListener(listener);
-        }.bind(this),
+        },
 
-        onWidgetDrag: function(aWidgetId, aArea) {
+        onWidgetDrag: (aWidgetId, aArea) => {
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
           updateCombinedWidgetStyle(node, aArea);
-        }.bind(this)
+        }
       };
       CustomizableUI.addListener(listener);
 

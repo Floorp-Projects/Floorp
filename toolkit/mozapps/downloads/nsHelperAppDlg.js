@@ -309,7 +309,7 @@ nsUnknownContentTypeDialog.prototype = {
       let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
       picker.displayDirectory = new FileUtils.File(preferredDir);
 
-      gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
+      gDownloadLastDir.getFileAsync(aLauncher.source, lastDir => {
         if (lastDir && isUsableDirectory(lastDir))
           picker.displayDirectory = lastDir;
 
@@ -362,7 +362,7 @@ nsUnknownContentTypeDialog.prototype = {
           }
           aLauncher.saveDestinationAvailable(result);
         });
-      }.bind(this));
+      });
     }.bind(this)).then(null, Components.utils.reportError);
   },
 

@@ -733,21 +733,21 @@ RequestCounter.prototype = {
 
   handler: function(type, preventDefault) {
     this.incr();
-    return function(event) {
+    return event => {
       is(event.type, type || "success", "Correct type");
       this.decr();
-    }.bind(this);
+    };
   },
 
   errorHandler: function(eventType, errorName) {
     this.incr();
-    return function(event) {
+    return event => {
       is(event.type, eventType || "error", "Correct type");
       is(event.target.error.name, errorName || "QuotaExceededError",
           "Correct error name");
       event.preventDefault();
       event.stopPropagation();
       this.decr();
-    }.bind(this);
+    };
   }
 };

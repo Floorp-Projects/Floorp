@@ -1644,11 +1644,11 @@ function MediaTestManager() {
 
     // Always wait for explicit finish.
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.pushPrefEnv({'set': gTestPrefs}, (function() {
+    SpecialPowers.pushPrefEnv({'set': gTestPrefs}, () => {
       this.nextTest();
-    }).bind(this));
+    });
 
-    SimpleTest.registerCleanupFunction(function() {
+    SimpleTest.registerCleanupFunction(() => {
       if (this.tokens.length > 0) {
         info("Test timed out. Remaining tests=" + this.tokens);
       }
@@ -1658,7 +1658,7 @@ function MediaTestManager() {
           handler.ontimeout();
         }
       }
-    }.bind(this));
+    });
   }
 
   // Registers that the test corresponding to 'token' has been started.
@@ -1668,11 +1668,11 @@ function MediaTestManager() {
     this.numTestsRunning++;
     this.handlers[token] = handler;
 
-    var onTimeout = function() {
+    var onTimeout = () => {
       this.hasTimeout = true;
       ok(false, `${token} timed out!`);
       this.finished(token);
-    }.bind(this);
+    };
     // Default timeout to 180s for each test.
     this.timers[token] = setTimeout(onTimeout, 180000);
 
@@ -1738,12 +1738,12 @@ function MediaTestManager() {
       if (this.hasTimeout) {
         dumpDebugInfo();
       }
-      var onCleanup = function() {
+      var onCleanup = () => {
         var end = new Date();
         SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
         SimpleTest.info("Running time: " + elapsedTime(this.startTime) + "s");
         SimpleTest.finish();
-      }.bind(this);
+      };
       mediaTestCleanup(onCleanup);
       return;
     }

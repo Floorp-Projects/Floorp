@@ -67,13 +67,13 @@
     // or until maxTime ms have passed
     function waitForRequest(request, delay, maxTime, func) {
       timeLimit = Date.now() + maxTime;
-      var intervalId = window.setInterval(function() {
+      var intervalId = window.setInterval(() => {
         var req = getLastRequest();
         if (req == request || Date.now() > timeLimit) {
           window.clearInterval(intervalId);
           func();
         }
-      }.bind(this), delay);
+      }, delay);
     }
 
     // initially disable the second of the <style> elements,

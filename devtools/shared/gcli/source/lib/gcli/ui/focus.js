@@ -135,8 +135,8 @@ FocusManager.prototype.addMonitoredElement = function(element, where) {
   var monitor = {
     element: element,
     where: where,
-    onFocus: function() { this._reportFocus(where); }.bind(this),
-    onBlur: function() { this._reportBlur(where); }.bind(this)
+    onFocus: () => { this._reportFocus(where); },
+    onBlur: () => { this._reportBlur(where); }
   };
 
   element.addEventListener('focus', monitor.onFocus, true);
@@ -241,14 +241,14 @@ FocusManager.prototype._reportBlur = function(where) {
       return;
     }
 
-    this._blurDelayTimeout = this.window.setTimeout(function() {
+    this._blurDelayTimeout = this.window.setTimeout(() => {
       if (this.debug) {
         console.log('FocusManager.blur');
       }
       this._hasFocus = false;
       this._checkShow();
       this._blurDelayTimeout = null;
-    }.bind(this), this.blurDelay);
+    }, this.blurDelay);
   }
 };
 

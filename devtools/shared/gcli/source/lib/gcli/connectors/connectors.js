@@ -56,9 +56,9 @@ Connection.prototype.off = function(event, action) {
   }
   var actions = this._listeners[event];
   if (actions) {
-    this._listeners[event] = actions.filter(function(li) {
+    this._listeners[event] = actions.filter(li => {
       return li !== action;
-    }.bind(this));
+    });
   }
 };
 
@@ -71,7 +71,7 @@ Connection.prototype._emit = function(event, data) {
   }
 
   var listeners = this._listeners[event];
-  listeners.forEach(function(listener) {
+  listeners.forEach(listener => {
     // Fail fast if we mutate the list of listeners while emitting
     if (listeners !== this._listeners[event]) {
       throw new Error('Listener list changed while emitting');
@@ -84,7 +84,7 @@ Connection.prototype._emit = function(event, data) {
       console.log('Error calling listeners to ' + event);
       console.error(ex);
     }
-  }.bind(this));
+  });
 };
 
 /**
@@ -131,9 +131,9 @@ Connectors.prototype.remove = function(connector) {
  * Get access to the list of known connectors
  */
 Connectors.prototype.getAll = function() {
-  return Object.keys(this._registered).map(function(name) {
+  return Object.keys(this._registered).map(name => {
     return this._registered[name];
-  }.bind(this));
+  });
 };
 
 var defaultConnectorName;

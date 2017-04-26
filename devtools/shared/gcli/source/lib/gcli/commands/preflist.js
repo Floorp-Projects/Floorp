@@ -133,13 +133,13 @@ var prefList = {
   exec: function(args, context) {
     return new Promise(function(resolve, reject) {
       // This can be slow, get out of the way of the main thread
-      setTimeout(function() {
+      setTimeout(() => {
         var prefsData = {
           settings: context.system.settings.getAll(args.search),
           search: args.search
         };
         resolve(prefsData);
-      }.bind(this), 10);
+      }, 10);
     });
   }
 };

@@ -94,7 +94,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else {
 	    root.prettyFast = factory();
 	  }
-	}(this, function () {
+	}(this, () => {
 	  "use strict";
 
 	  var acorn = this.acorn || __webpack_require__(803);
@@ -952,7 +952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result.toStringWithSourceMap({ file: options.url });
 	  };
 
-	}.bind(this)));
+	}));
 
 
 /***/ },

@@ -391,16 +391,16 @@ WifiGeoPositionProvider.prototype = {
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
     xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
-    xhr.ontimeout = (function() {
+    xhr.ontimeout = () => {
       LOG("Location request XHR timed out.")
       this.notifyListener("notifyError",
                           [POSITION_UNAVAILABLE]);
-    }).bind(this);
-    xhr.onerror = (function() {
+    };
+    xhr.onerror = () => {
       this.notifyListener("notifyError",
                           [POSITION_UNAVAILABLE]);
-    }).bind(this);
-    xhr.onload = (function() {
+    };
+    xhr.onload = () => {
       LOG("server returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
       if ((xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
           !xhr.response || !xhr.response.location) {
@@ -415,7 +415,7 @@ WifiGeoPositionProvider.prototype = {
 
       this.notifyListener("update", [newLocation]);
       gCachedRequest = new CachedRequest(newLocation, data.cellTowers, data.wifiAccessPoints);
-    }).bind(this);
+    };
 
     var requestData = JSON.stringify(data);
     LOG("sending " + requestData);

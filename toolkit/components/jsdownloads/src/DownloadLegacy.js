@@ -233,7 +233,7 @@ DownloadLegacyTransfer.prototype = {
       launchWhenSucceeded,
       contentType,
       launcherPath
-    }).then(function DLT_I_onDownload(aDownload) {
+    }).then(aDownload => {
       // Legacy components keep partial data when they use a ".part" file.
       if (aTempFile) {
         aDownload.tryToKeepPartialData = true;
@@ -247,7 +247,7 @@ DownloadLegacyTransfer.prototype = {
 
       // Add the download to the list, allowing it to be seen and canceled.
       return Downloads.getList(Downloads.ALL).then(list => list.add(aDownload));
-    }.bind(this)).then(null, Cu.reportError);
+    }).then(null, Cu.reportError);
   },
 
   setSha256Hash(hash) {

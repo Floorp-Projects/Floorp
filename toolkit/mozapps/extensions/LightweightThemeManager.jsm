@@ -309,9 +309,9 @@ this.LightweightThemeManager = {
       _updateUsedThemes(usedThemes);
       if (PERSIST_ENABLED) {
         LightweightThemeImageOptimizer.purge();
-        _persistImages(aData, function() {
+        _persistImages(aData, () => {
           _notifyWindows(this.currentThemeForDisplay);
-        }.bind(this));
+        });
       }
     }
 
