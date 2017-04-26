@@ -563,15 +563,20 @@ typedef enum JSFinalizeStatus {
     /**
      * Called when preparing to sweep a group of zones, before anything has been
      * swept.  The collector will not yield to the mutator before calling the
-     * callback with JSFINALIZE_GROUP_END status.
+     * callback with JSFINALIZE_GROUP_START status.
+     */
+    JSFINALIZE_GROUP_PREPARE,
+
+    /**
+     * Called after preparing to sweep a group of zones. Weak references to
+     * unmarked things have been removed at this point, but no GC things have
+     * been swept. The collector may yield to the mutator after this point.
      */
     JSFINALIZE_GROUP_START,
 
     /**
-     * Called when preparing to sweep a group of zones. Weak references to
-     * unmarked things have been removed and things that are not swept
-     * incrementally have been finalized at this point.  The collector may yield
-     * to the mutator after this point.
+     * Called after sweeping a group of zones. All dead GC things have been
+     * swept at this point.
      */
     JSFINALIZE_GROUP_END,
 
