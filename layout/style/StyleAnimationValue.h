@@ -602,6 +602,13 @@ struct AnimationValue
   // Check if |*this| and |aToValue| can be interpolated.
   bool IsInterpolableWith(nsCSSPropertyID aProperty,
                           const AnimationValue& aToValue) const;
+
+  // Compute the distance between *this and aOther.
+  // If |aStyleContext| is nullptr, we will return 0.0 if we have mismatched
+  // transform lists.
+  double ComputeDistance(nsCSSPropertyID aProperty,
+                         const AnimationValue& aOther,
+                         nsStyleContext* aStyleContext) const;
 };
 
 struct PropertyStyleAnimationValuePair
