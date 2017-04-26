@@ -227,12 +227,6 @@ CodeGeneratorShared::ArgToStackOffset(int32_t slot) const
 }
 
 int32_t
-CodeGeneratorShared::CalleeStackOffset() const
-{
-    return masm.framePushed() + JitFrameLayout::offsetOfCalleeToken();
-}
-
-int32_t
 CodeGeneratorShared::SlotToStackOffset(int32_t slot) const
 {
     MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
