@@ -248,6 +248,8 @@ public:
     return std::min(uint32_t(mStackPointer), uint32_t(mozilla::ArrayLength(mStack)));
   }
 
+  mozilla::Atomic<uint32_t>* AddressOfStackPointer() { return &mStackPointer; }
+
 private:
   // No copying.
   PseudoStack(const PseudoStack&) = delete;
