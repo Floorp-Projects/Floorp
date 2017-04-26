@@ -22,6 +22,7 @@
 #include "nsIScriptError.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIMultiPartChannel.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -448,8 +449,13 @@ nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
       if (mDocShell) {
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(mDocShell));
         if (webNav) {
+          nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
+          nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
+            ? loadInfo->TriggeringPrincipal()
+            : nsContentUtils::GetSystemPrincipal();
           webNav->LoadURI(u"about:blank",
-                          0, nullptr, nullptr, nullptr);
+                          0, nullptr, nullptr, nullptr,
+                          triggeringPrincipal);
         }
       }
       return false;

@@ -20,15 +20,12 @@
 #define wasm_code_h
 
 #include "js/HashTable.h"
+#include "threading/ExclusiveData.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
 
 struct AsmJSMetadata;
-class Debugger;
-class WasmActivation;
-class WasmBreakpoint;
-class WasmBreakpointSite;
 class WasmInstanceObject;
 
 namespace wasm {
@@ -37,10 +34,26 @@ struct LinkData;
 struct Metadata;
 class FrameIterator;
 
+// ShareableBytes is a reference-counted Vector of bytes.
+
+struct ShareableBytes : ShareableBase<ShareableBytes>
+{
+    // Vector is 'final', so instead make Vector a member and add boilerplate.
+    Bytes bytes;
+    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
+    const uint8_t* begin() const { return bytes.begin(); }
+    const uint8_t* end() const { return bytes.end(); }
+    size_t length() const { return bytes.length(); }
+    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
+};
+
+typedef RefPtr<ShareableBytes> MutableBytes;
+typedef RefPtr<const ShareableBytes> SharedBytes;
+
 // A wasm CodeSegment owns the allocated executable code for a wasm module.
 
 class CodeSegment;
-typedef UniquePtr<CodeSegment> UniqueCodeSegment;
+typedef UniquePtr<const CodeSegment> UniqueConstCodeSegment;
 
 class CodeSegment
 {
@@ -57,6 +70,17 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
+    CodeSegment(uint8_t* bytes, uint32_t functionLength, uint32_t length, uint8_t* interruptCode,
+                uint8_t* outOfBoundsCode, uint8_t* unalignedAccessCode)
+      : bytes_(bytes),
+        functionLength_(functionLength),
+        length_(length),
+        interruptCode_(interruptCode),
+        outOfBoundsCode_(outOfBoundsCode),
+        unalignedAccessCode_(unalignedAccessCode)
+    {
+    }
+
   protected:
     CodeSegment() { PodZero(this); }
     template <class> friend struct js::MallocProvider;
@@ -67,11 +91,11 @@ class CodeSegment
     void operator=(CodeSegment&&) = delete;
 
   public:
-    static UniqueCodeSegment create(JSContext* cx,
-                                    const Bytes& code,
-                                    const LinkData& linkData,
-                                    const Metadata& metadata,
-                                    HandleWasmMemoryObject memory);
+    static UniqueConstCodeSegment create(JSContext* cx,
+                                         const Bytes& codeBytes,
+                                         const SharedBytes& bytecode,
+                                         const LinkData& linkData,
+                                         const Metadata& metadata);
     ~CodeSegment();
 
     uint8_t* base() const { return bytes_; }
@@ -94,23 +118,6 @@ class CodeSegment
         return pc >= base() && pc < (base() + length_);
     }
 };
-
-// ShareableBytes is a ref-counted vector of bytes which are incrementally built
-// during compilation and then immutably shared.
-
-struct ShareableBytes : ShareableBase<ShareableBytes>
-{
-    // Vector is 'final', so instead make Vector a member and add boilerplate.
-    Bytes bytes;
-    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
-    const uint8_t* begin() const { return bytes.begin(); }
-    const uint8_t* end() const { return bytes.end(); }
-    size_t length() const { return bytes.length(); }
-    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
-};
-
-typedef RefPtr<ShareableBytes> MutableBytes;
-typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A FuncExport represents a single function definition inside a wasm Module
 // that has been exported one or more times. A FuncExport represents an
@@ -356,76 +363,25 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
-// The generated source location for the AST node/expression. The offset field refers
-// an offset in an binary format file.
-
-struct ExprLoc
-{
-    uint32_t lineno;
-    uint32_t column;
-    uint32_t offset;
-    ExprLoc() : lineno(0), column(0), offset(0) {}
-    ExprLoc(uint32_t lineno_, uint32_t column_, uint32_t offset_)
-      : lineno(lineno_), column(column_), offset(offset_)
-    {}
-};
-
-typedef Vector<ExprLoc, 0, SystemAllocPolicy> ExprLocVector;
-typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
-
-// The generated source map for WebAssembly binary file. This map is generated during
-// building the text buffer (see BinaryToExperimentalText).
-
-class GeneratedSourceMap
-{
-    ExprLocVector exprlocs_;
-    UniquePtr<ExprLocIndexVector> sortedByOffsetExprLocIndices_;
-    uint32_t totalLines_;
-
-  public:
-    explicit GeneratedSourceMap() : totalLines_(0) {}
-    ExprLocVector& exprlocs() { return exprlocs_; }
-
-    uint32_t totalLines() { return totalLines_; }
-    void setTotalLines(uint32_t val) { totalLines_ = val; }
-
-    bool searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex);
-};
-
-typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
-typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> StepModeCounters;
-typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy> WasmBreakpointSiteMap;
-
 // Code objects own executable code and the metadata that describes it. At the
 // moment, Code objects are owned uniquely by instances since CodeSegments are
 // not shareable. However, once this restriction is removed, a single Code
 // object will be shared between a module and all its instances.
+//
+// profilingLabels_ is lazily initialized, but behind a lock.
 
-class Code
+class Code : public ShareableBase<Code>
 {
-    const UniqueCodeSegment  segment_;
-    const SharedMetadata     metadata_;
-    const SharedBytes        maybeBytecode_;
-    UniqueGeneratedSourceMap maybeSourceMap_;
-
-    // Mutated at runtime:
-    CacheableCharsVector     profilingLabels_;
-
-    // State maintained when debugging is enabled:
-
-    uint32_t                 enterAndLeaveFrameTrapsCounter_;
-    WasmBreakpointSiteMap    breakpointSites_;
-    StepModeCounters         stepModeCounters_;
-
-    void toggleDebugTrap(uint32_t offset, bool enabled);
-    bool ensureSourceMap(JSContext* cx);
+    const UniqueConstCodeSegment              segment_;
+    const SharedMetadata                      metadata_;
+    const SharedBytes                         maybeBytecode_;
+    const ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
-    Code(UniqueCodeSegment segment,
+    Code(UniqueConstCodeSegment segment,
          const Metadata& metadata,
          const ShareableBytes* maybeBytecode);
 
-    CodeSegment& segment() { return *segment_; }
     const CodeSegment& segment() const { return *segment_; }
     const Metadata& metadata() const { return *metadata_; }
 
@@ -441,53 +397,11 @@ class Code
     bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
     JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
-    // If the source bytecode was saved when this Code was constructed, this
-    // method will render the binary as text. Otherwise, a diagnostic string
-    // will be returned.
-
-    JSString* createText(JSContext* cx);
-    bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);
-    bool getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column);
-    bool totalSourceLines(JSContext* cx, uint32_t* count);
-
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.
 
-    void ensureProfilingLabels(bool profilingEnabled);
+    void ensureProfilingLabels(bool profilingEnabled) const;
     const char* profilingLabel(uint32_t funcIndex) const;
-
-    // The Code can track enter/leave frame events. Any such event triggers
-    // debug trap. The enter/leave frame events enabled or disabled across
-    // all functions.
-
-    void adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled);
-
-    // When the Code is debugEnabled, individual breakpoints can be enabled or
-    // disabled at instruction offsets.
-
-    bool hasBreakpointTrapAtOffset(uint32_t offset);
-    void toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled);
-    WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
-    bool hasBreakpointSite(uint32_t offset);
-    void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
-    bool clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance,
-                            js::Debugger* dbg, JSObject* handler);
-
-    // When the Code is debug-enabled, single-stepping mode can be toggled on
-    // the granularity of individual functions.
-
-    bool stepModeEnabled(uint32_t funcIndex) const;
-    bool incrementStepModeCount(JSContext* cx, uint32_t funcIndex);
-    bool decrementStepModeCount(JSContext* cx, uint32_t funcIndex);
-
-    // Stack inspection helpers.
-
-    bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength);
-    ExprType debugGetResultType(uint32_t funcIndex);
-
-    // Debug URL helpers.
-
-    JSString* debugDisplayURL(JSContext* cx) const;
 
     // about:memory reporting:
 
@@ -500,7 +414,7 @@ class Code
     WASM_DECLARE_SERIALIZABLE(Code);
 };
 
-typedef UniquePtr<Code> UniqueCode;
+typedef RefPtr<const Code> SharedCode;
 
 } // namespace wasm
 } // namespace js

@@ -319,7 +319,8 @@ Instance::currentMemory_i32(Instance* instance)
 
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
-                   UniqueCode code,
+                   SharedCode code,
+                   UniqueDebugState debug,
                    UniqueGlobalSegment globals,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
@@ -327,7 +328,8 @@ Instance::Instance(JSContext* cx,
                    const ValVector& globalImports)
   : compartment_(cx->compartment()),
     object_(object),
-    code_(Move(code)),
+    code_(code),
+    debug_(Move(debug)),
     globals_(Move(globals)),
     memory_(memory),
     tables_(Move(tables)),
@@ -792,7 +794,7 @@ Instance::ensureEnterFrameTrapsState(JSContext* cx, bool enabled)
     if (enterFrameTrapsEnabled_ == enabled)
         return;
 
-    code_->adjustEnterAndLeaveFrameTrapsState(cx, enabled);
+    debug_->adjustEnterAndLeaveFrameTrapsState(cx, enabled);
     enterFrameTrapsEnabled_ = enabled;
 }
 

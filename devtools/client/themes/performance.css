@@ -73,17 +73,17 @@
 /* Details panel buttons */
 
 #select-waterfall-view {
-  list-style-image: url(images/performance-icons.svg#details-waterfall);
+  list-style-image: url(images/performance-details-waterfall.svg);
 }
 
 #select-js-calltree-view,
 #select-memory-calltree-view {
-  list-style-image: url(images/performance-icons.svg#details-call-tree);
+  list-style-image: url(images/performance-details-call-tree.svg);
 }
 
 #select-js-flamegraph-view,
 #select-memory-flamegraph-view {
-  list-style-image: url(images/performance-icons.svg#details-flamegraph);
+  list-style-image: url(images/performance-details-flamegraph.svg);
 }
 
 #select-optimizations-view {

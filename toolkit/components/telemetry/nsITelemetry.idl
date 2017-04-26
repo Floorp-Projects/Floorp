@@ -352,6 +352,12 @@ interface nsITelemetry : nsISupports
   double msSinceProcessStart();
 
   /**
+   * Time since the system wide epoch. This is not a monotonic timer but
+   * can be used across process boundaries.
+   */
+  double msSystemNow();
+
+  /**
    * Adds the value to the given scalar.
    *
    * @param aName The scalar name.

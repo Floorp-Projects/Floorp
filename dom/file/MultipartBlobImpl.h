@@ -49,8 +49,7 @@ public:
 
   void InitializeBlob(ErrorResult& aRv);
 
-  void InitializeBlob(JSContext* aCx,
-                      const Sequence<Blob::BlobPart>& aData,
+  void InitializeBlob(const Sequence<Blob::BlobPart>& aData,
                       const nsAString& aContentType,
                       bool aNativeEOL,
                       ErrorResult& aRv);

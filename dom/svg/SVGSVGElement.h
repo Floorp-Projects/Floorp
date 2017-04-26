@@ -29,7 +29,8 @@ class nsSVGOuterSVGFrame;
 class nsSVGInnerSVGFrame;
 
 namespace mozilla {
-class AutoSVGRenderingState;
+class AutoPreserveAspectRatioOverride;
+class AutoSVGTimeSetRestore;
 class DOMSVGAnimatedPreserveAspectRatio;
 class DOMSVGLength;
 class DOMSVGNumber;
@@ -108,10 +109,11 @@ class SVGSVGElement final : public SVGSVGElementBase
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
+  friend class mozilla::AutoPreserveAspectRatioOverride;
+  friend class mozilla::AutoSVGTimeSetRestore;
   friend class mozilla::dom::SVGView;
   friend class mozilla::SVGFragmentIdentifier;
   friend class mozilla::AutoSVGViewHandler;
-  friend class mozilla::AutoSVGRenderingState;
 
   SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                 FromParser aFromParser);
@@ -306,8 +308,8 @@ private:
   SVGViewElement* GetCurrentViewElement() const;
 
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
-  // These are private so that only our friends (AutoSVGRenderingState in
-  // particular) have access.
+  // These are private so that only our friends
+  // (AutoPreserveAspectRatioOverride in particular) have access.
   void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
   void ClearImageOverridePreserveAspectRatio();
 
@@ -423,45 +425,62 @@ private:
 
 } // namespace dom
 
-// Helper class to automatically manage temporary changes to an SVG document's
-// state for rendering purposes.
-class MOZ_RAII AutoSVGRenderingState
+class MOZ_RAII AutoPreserveAspectRatioOverride
 {
 public:
-  AutoSVGRenderingState(const Maybe<SVGImageContext>& aSVGContext,
-                        float aFrameTime,
-                        dom::SVGSVGElement* aRootElem
-                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mHaveOverrides(aSVGContext.isSome() &&
-                     aSVGContext->GetPreserveAspectRatio().isSome())
-    , mRootElem(aRootElem)
+  AutoPreserveAspectRatioOverride(const Maybe<SVGImageContext>& aSVGContext,
+                                  dom::SVGSVGElement* aRootElem
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mRootElem(aRootElem)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mRootElem, "No SVG node to manage?");
-    if (mHaveOverrides) {
+
+    if (aSVGContext.isSome() &&
+        aSVGContext->GetPreserveAspectRatio().isSome()) {
       // Override preserveAspectRatio in our helper document.
       // XXXdholbert We should technically be overriding the helper doc's clip
       // and overflow properties here, too. See bug 272288 comment 36.
       mRootElem->SetImageOverridePreserveAspectRatio(
-          *aSVGContext->GetPreserveAspectRatio());
+                   *aSVGContext->GetPreserveAspectRatio());
+      mDidOverride = true;
     }
-
-    mOriginalTime = mRootElem->GetCurrentTime();
-    mRootElem->SetCurrentTime(aFrameTime); // Does nothing if there's no change.
   }
 
-  ~AutoSVGRenderingState()
+  ~AutoPreserveAspectRatioOverride()
   {
-    mRootElem->SetCurrentTime(mOriginalTime);
-    if (mHaveOverrides) {
+    if (mDidOverride) {
       mRootElem->ClearImageOverridePreserveAspectRatio();
     }
   }
 
 private:
-  const bool mHaveOverrides;
-  float mOriginalTime;
   const RefPtr<dom::SVGSVGElement> mRootElem;
+  bool mDidOverride;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class MOZ_RAII AutoSVGTimeSetRestore
+{
+public:
+  AutoSVGTimeSetRestore(dom::SVGSVGElement* aRootElem,
+                        float aFrameTime
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mRootElem(aRootElem)
+    , mOriginalTime(mRootElem->GetCurrentTime())
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mRootElem->SetCurrentTime(aFrameTime); // Does nothing if there's no change.
+  }
+
+  ~AutoSVGTimeSetRestore()
+  {
+    mRootElem->SetCurrentTime(mOriginalTime);
+  }
+
+private:
+  const RefPtr<dom::SVGSVGElement> mRootElem;
+  const float mOriginalTime;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

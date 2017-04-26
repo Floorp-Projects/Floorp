@@ -34,6 +34,7 @@
   _(GeckoProfilerStrings,        500) \
   _(ProtectedRegionTree,         500) \
   _(WasmSigIdSet,                500) \
+  _(WasmCodeProfilingLabels,     500) \
   _(ShellOffThreadState,         500) \
   _(SimulatorCacheLock,          500) \
   _(Arm64SimulatorLock,          500) \

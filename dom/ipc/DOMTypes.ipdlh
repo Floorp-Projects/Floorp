@@ -170,7 +170,7 @@ union IPCDataTransferData
 {
   nsString;  // text
   Shmem;     // images using Shmem
-  PBlob;     // files
+  IPCBlob;   // files
 };
 
 struct IPCDataTransferImage

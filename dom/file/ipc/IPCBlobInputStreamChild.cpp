@@ -145,14 +145,15 @@ IPCBlobInputStreamChild::ForgetStream(IPCBlobInputStream* aStream)
 }
 
 void
-IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream)
+IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
+                                      nsIEventTarget* aEventTarget)
 {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mStreams.Contains(aStream));
 
   PendingOperation* opt = mPendingOperations.AppendElement();
   opt->mStream = aStream;
-  opt->mThread = NS_GetCurrentThread();
+  opt->mEventTarget = aEventTarget ? aEventTarget : NS_GetCurrentThread();
 
   if (mOwningThread == NS_GetCurrentThread()) {
     SendStreamNeeded();
@@ -172,7 +173,7 @@ IPCBlobInputStreamChild::RecvStreamReady(const OptionalIPCStream& aStream)
 
   RefPtr<StreamReadyRunnable> runnable =
     new StreamReadyRunnable(mPendingOperations[0].mStream, stream);
-  mPendingOperations[0].mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  mPendingOperations[0].mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
   mPendingOperations.RemoveElementAt(0);
 

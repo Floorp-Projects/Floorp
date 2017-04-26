@@ -9,6 +9,7 @@
 #include "nsWebBrowser.h"
 
 // Helper Classes
+#include "nsContentUtils.h"
 #include "nsStyleCoord.h"
 #include "nsSize.h"
 #include "mozilla/ReflowInput.h"
@@ -1004,7 +1005,8 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
           nsAutoString url;
           if (NS_SUCCEEDED(links[0]->GetUrl(url))) {
             if (!url.IsEmpty()) {
-              webnav->LoadURI(url.get(), 0, nullptr, nullptr, nullptr);
+              webnav->LoadURI(url.get(), 0, nullptr, nullptr, nullptr,
+                              nsContentUtils::GetSystemPrincipal());
             }
           }
 

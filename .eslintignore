@@ -72,7 +72,8 @@ browser/extensions/pdfjs/content/web**
 browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/locales/**
-# vendor library files in activity-stream
+# generated or library files in activity-stream
+browser/extensions/activity-stream/data/content/activity-stream.bundle.js
 browser/extensions/activity-stream/vendor/**
 # imported from chromium
 browser/extensions/mortar/**

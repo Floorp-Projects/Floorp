@@ -40,6 +40,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gTextToSubURI",
 XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
+XPCOMUtils.defineLazyServiceGetter(this, "gChromeReg",
+                                   "@mozilla.org/chrome/chrome-registry;1",
+                                   "nsIChromeRegistry");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
@@ -54,6 +57,7 @@ const MODE_WRONLY   = 0x02;
 const MODE_CREATE   = 0x08;
 const MODE_APPEND   = 0x10;
 const MODE_TRUNCATE = 0x20;
+const PERMS_FILE    = 0o644;
 
 // Directory service keys
 const NS_APP_SEARCH_DIR_LIST  = "SrchPluginsDL";
@@ -189,24 +193,6 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // default engine for the region, in seconds. Only used if the response
 // from the server doesn't specify an interval.
 const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
-
-this.__defineGetter__("FileUtils", function() {
-  delete this.FileUtils;
-  Components.utils.import("resource://gre/modules/FileUtils.jsm");
-  return FileUtils;
-});
-
-this.__defineGetter__("NetUtil", function() {
-  delete this.NetUtil;
-  Components.utils.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
-this.__defineGetter__("gChromeReg", function() {
-  delete this.gChromeReg;
-  return this.gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                           getService(Ci.nsIChromeRegistry);
-});
 
 /**
  * Prefixed to all search debug output.
@@ -829,7 +815,7 @@ function closeSafeOutputStream(aFOS) {
  */
 function makeURI(aURLSpec, aCharset) {
   try {
-    return NetUtil.newURI(aURLSpec, aCharset);
+    return Services.io.newURI(aURLSpec, aCharset);
   } catch (ex) { }
 
   return null;
@@ -843,10 +829,13 @@ function makeURI(aURLSpec, aCharset) {
  */
 function makeChannel(url) {
   try {
-    return NetUtil.newChannel({
-             uri: url,
-             loadUsingSystemPrincipal: true
-           });
+    let uri = typeof url == "string" ? Services.io.newURI(url) : url;
+    return Services.io.newChannelFromURI2(uri,
+                                          null, /* loadingNode */
+                                          Services.scriptSecurityManager.getSystemPrincipal(),
+                                          null, /* triggeringPrincipal */
+                                          Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                          Ci.nsIContentPolicy.TYPE_OTHER);
   } catch (ex) { }
 
   return null;
@@ -1358,7 +1347,7 @@ Engine.prototype = {
     var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
 
-    fileInStream.init(file, MODE_RDONLY, FileUtils.PERMS_FILE, false);
+    fileInStream.init(file, MODE_RDONLY, PERMS_FILE, false);
 
     var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                     createInstance(Ci.nsIDOMParser);
@@ -1386,7 +1375,7 @@ Engine.prototype = {
     if (!file || !(yield OS.File.exists(file.path)))
       FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
-    let fileURI = NetUtil.ioService.newFileURI(file);
+    let fileURI = Services.io.newFileURI(file);
     yield this._retrieveSearchXMLData(fileURI.spec);
 
     // Now that the data is loaded, initialize the engine object
@@ -1406,10 +1395,7 @@ Engine.prototype = {
 
     LOG("_initFromURIAndLoad: Downloading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.newChannel({
-                 uri,
-                 loadUsingSystemPrincipal: true
-               });
+    var chan = makeChannel(uri);
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
       var lastModified = this._engineToUpdate.getAttr("updatelastmodified");
@@ -1472,10 +1458,7 @@ Engine.prototype = {
 
     LOG("_initFromURISync: Loading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.newChannel({
-                 uri,
-                 loadUsingSystemPrincipal: true
-               });
+    var chan = makeChannel(uri);
 
     var stream = chan.open2();
     var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
@@ -1764,10 +1747,7 @@ Engine.prototype = {
       case "ftp":
         LOG("_setIcon: Downloading icon: \"" + uri.spec +
             "\" for engine: \"" + this.name + "\"");
-        var chan = NetUtil.newChannel({
-                     uri,
-                     loadUsingSystemPrincipal: true
-                   });
+        var chan = makeChannel(uri);
 
         let iconLoadCallback = function(aByteArray, aEngine) {
           // This callback may run after we've already set a preferred icon,
@@ -2218,7 +2198,7 @@ Engine.prototype = {
           let spec = uri.spec;
           if (spec.includes(appPath)) {
             let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
-            uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+            uri = Services.io.newURI(spec.replace(appPath, appURI.spec));
           }
         }
       }
@@ -2480,7 +2460,7 @@ Engine.prototype = {
       return null;
     }
 
-    let templateUrl = NetUtil.newURI(url.template).QueryInterface(Ci.nsIURL);
+    let templateUrl = Services.io.newURI(url.template).QueryInterface(Ci.nsIURL);
     return {
       mainDomain: templateUrl.host,
       path: templateUrl.filePath.toLowerCase(),
@@ -3186,7 +3166,7 @@ SearchService.prototype = {
     try {
       stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
-      stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      stream.init(cacheFile, MODE_RDONLY, PERMS_FILE, 0);
 
       let bis = Cc["@mozilla.org/binaryinputstream;1"]
                   .createInstance(Ci.nsIBinaryInputStream);
@@ -3211,7 +3191,7 @@ SearchService.prototype = {
       cacheFile.leafName = "search-metadata.json";
       stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
-      stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      stream.init(cacheFile, MODE_RDONLY, PERMS_FILE, 0);
       let metadata = parseJsonFromStream(stream);
       let json = {};
       if ("[global]" in metadata) {
@@ -3425,7 +3405,7 @@ SearchService.prototype = {
       if (!file.isFile() || file.fileSize == 0 || file.isHidden())
         continue;
 
-      var fileURL = NetUtil.ioService.newFileURI(file).QueryInterface(Ci.nsIURL);
+      var fileURL = Services.io.newFileURI(file).QueryInterface(Ci.nsIURL);
       var fileExtension = fileURL.fileExtension.toLowerCase();
 
       if (fileExtension != "xml") {
@@ -3486,7 +3466,8 @@ SearchService.prototype = {
 
       let addedEngine = null;
       try {
-        let file = new FileUtils.File(osfile.path);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        file.initWithPath(osfile.path);
         addedEngine = new Engine(file, !isInProfile);
         yield checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
         if (!isInProfile && !addedEngine._isDefault) {
@@ -3536,7 +3517,7 @@ SearchService.prototype = {
     for (let url of aURLs) {
       try {
         LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
-        let uri = NetUtil.newURI(url);
+        let uri = Services.io.newURI(url);
         let engine = new Engine(uri, true);
         yield checkForSyncCompletion(engine._asyncInitFromURI(uri));
         engines.push(engine);
@@ -3619,10 +3600,10 @@ SearchService.prototype = {
         LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
         deferred.resolve("");
       }
-      request.open("GET", NetUtil.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
+      request.open("GET", Services.io.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
       request.send();
     };
-    request.open("GET", NetUtil.newURI(listURL).spec, true);
+    request.open("GET", Services.io.newURI(listURL).spec, true);
     request.send();
     let list = yield deferred.promise;
 
@@ -4509,7 +4490,7 @@ SearchService.prototype = {
     // Extract the elements of the provided URL first.
     let soughtKey, soughtQuery;
     try {
-      let soughtUrl = NetUtil.newURI(aURL).QueryInterface(Ci.nsIURL);
+      let soughtUrl = Services.io.newURI(aURL).QueryInterface(Ci.nsIURL);
 
       // Exclude any URL that is not HTTP or HTTPS from the beginning.
       if (soughtUrl.scheme != "http" && soughtUrl.scheme != "https") {

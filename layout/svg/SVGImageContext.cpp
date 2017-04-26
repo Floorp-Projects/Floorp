@@ -10,6 +10,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 
@@ -30,7 +31,7 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
   }
 
   if (!sEnabledForContent &&
-      !aFromFrame->PresContext()->IsChrome()) {
+      !nsContentUtils::IsChromeDoc(aFromFrame->PresContext()->Document())) {
     // Context paint is pref'ed off for content and this is a content doc.
     return;
   }
