@@ -62,15 +62,14 @@ GLuint TexturePoolOGL::AcquireTexture()
 
 static void Clear()
 {
-  if (!sActiveContext)
-    return;
-
-  sActiveContext->MakeCurrent();
+  const bool isCurrent = sActiveContext && sActiveContext->MakeCurrent();
 
   GLuint* item;
   while (sTextures->GetSize()) {
     item = (GLuint*)sTextures->Pop();
-    sActiveContext->fDeleteTextures(1, item);
+    if (isCurrent) {
+      sActiveContext->fDeleteTextures(1, item);
+    }
     delete item;
   }
 }
@@ -90,7 +89,8 @@ void TexturePoolOGL::Fill(GLContext* aContext)
   if (sTextures->GetSize() == TEXTURE_POOL_SIZE)
     return;
 
-  sActiveContext->MakeCurrent();
+  DebugOnly<bool> ok = sActiveContext->MakeCurrent();
+  MOZ_ASSERT(ok);
 
   GLuint* texture = nullptr;
   while (sTextures->GetSize() < TEXTURE_POOL_SIZE) {
