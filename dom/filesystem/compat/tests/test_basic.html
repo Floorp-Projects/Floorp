@@ -95,10 +95,10 @@ function test_directoryEntry_createReader() {
 
   reader.readEntries(function(a) {
     ok(Array.isArray(a), "We want an array.");
-    is(a.length, 2, "reader.readyEntries returns 2 elements.");
+    is(a.length, 3, "reader.readyEntries returns 2 elements.");
 
-    for (var i = 0; i < 2; ++i) {
-      ok(a[i].name == "subdir" || a[i].name == "foo.txt", "Correct names");
+    for (var i = 0; i < 3; ++i) {
+      ok(a[i].name == "subdir" || a[i].name == "foo.txt" || a[i].name == "..subdir..", "Correct names");
       is(a[i].fullPath, directoryEntry.fullPath + "/" + a[i].name, "FullPath is correct");
     }
 
@@ -176,7 +176,17 @@ function test_directoryEntry_getFile_simple() {
 }
 
 function test_directoryEntry_getFile_deep() {
-  directoryEntry.getFile("subdir/bar.txt", {},
+  directoryEntry.getFile("subdir/bar..txt", {},
+  function(e) {
+    is(e.name, "bar..txt", "We have the right FileEntry.");
+    test_getParent(e, directoryEntry, /* nested */ true);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getFile_funnyName() {
+  directoryEntry.getFile("..subdir../bar.txt", {},
   function(e) {
     is(e.name, "bar.txt", "We have the right FileEntry.");
     test_getParent(e, directoryEntry, /* nested */ true);
@@ -240,6 +250,16 @@ function test_directoryEntry_getDirectory_deep() {
   function(e) {
     is(e.name, "subsubdir", "We have the right DirectoryEntry.");
     test_getParent(e, directoryEntry, /* nested */ true);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getDirectory_funnyName() {
+  directoryEntry.getDirectory("..subdir..", {},
+  function(e) {
+    is(e.name, "..subdir..", "We have the right DirectoryEntry.");
+    test_getParent(e, directoryEntry, /* nested */ false);
   }, function(e) {
     ok(false, "This should not happen.");
   });
@@ -316,9 +336,9 @@ function test_root_getFile_simple() {
 }
 
 function test_root_getFile_deep() {
-  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar.txt", {},
+  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar..txt", {},
   function(e) {
-    is(e.name, "bar.txt", "We have the right FileEntry.");
+    is(e.name, "bar..txt", "We have the right FileEntry.");
     next();
   }, function(e) {
     ok(false, "This should not happen.");
@@ -448,6 +468,7 @@ var tests = [
   test_directoryEntry_getFile_nonExistingPath,
   test_directoryEntry_getFile_simple,
   test_directoryEntry_getFile_deep,
+  test_directoryEntry_getFile_funnyName,
 
   test_directoryEntry_getDirectory_securityError,
   test_directoryEntry_getDirectory_typeMismatchError,
@@ -455,6 +476,7 @@ var tests = [
   test_directoryEntry_getDirectory_nonExistingPath,
   test_directoryEntry_getDirectory_simple,
   test_directoryEntry_getDirectory_deep,
+  test_directoryEntry_getDirectory_funnyName,
 
   test_filesystem,
 

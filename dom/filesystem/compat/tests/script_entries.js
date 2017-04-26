@@ -28,12 +28,20 @@ addMessageListener("entries.open", function (e) {
   dir1.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file2 = dir1.clone();
-  file2.append('bar.txt');
+  file2.append('bar..txt'); // Note the double ..
   file2.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var dir2 = dir1.clone();
   dir2.append('subsubdir');
   dir2.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+
+  var dir3 = tmpDir.clone();
+  dir3.append('..subdir..');
+  dir3.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+
+  var file3 = dir3.clone();
+  file3.append('bar.txt');
+  file3.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   File.createFromNsIFile(tmpFile).then(function(file) {
     sendAsyncMessage("entries.opened", {
