@@ -29,9 +29,11 @@ public class Settings {
     }
 
     public boolean shouldBlockImages() {
-        return preferences.getBoolean(
+        // Not shipping in v1 (#188)
+        /* return preferences.getBoolean(
                 resources.getString(R.string.pref_key_performance_block_images),
-                false);
+                false); */
+        return false;
     }
 
     public boolean shouldShowFirstrun() {
