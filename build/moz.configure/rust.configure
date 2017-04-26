@@ -107,14 +107,14 @@ def rust_triple_alias(host_or_target):
     """
     assert host_or_target in (host, target)
 
-    @depends(rustc, host_or_target, when=rust_compiler)
+    @depends(rustc, host_or_target, building_with_gcc, when=rust_compiler)
     @imports('os')
     @imports('subprocess')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     @imports(_from='mozbuild.shellutil', _import='quote')
     @imports(_from='tempfile', _import='mkstemp')
     @imports(_from='textwrap', _import='dedent')
-    def rust_target(rustc, host_or_target):
+    def rust_target(rustc, host_or_target, building_with_gcc):
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
         # Rust uses distinct target triples for targetting the GNU C++ ABI
@@ -130,6 +130,9 @@ def rust_triple_alias(host_or_target):
         # Avoid having to write out os+kernel for all the platforms where
         # they don't differ.
         os_or_kernel = host_or_target.kernel if host_or_target.kernel == 'Linux' and host_or_target.os != 'Android' else host_or_target.os
+        # If we are targetting Windows but the compiler is gcc, we need to
+        # use a different rustc target
+        os_or_kernel = 'WINNT-MINGW' if building_with_gcc and host_or_target.kernel == 'WINNT' else os_or_kernel
         rustc_target = {
             # DragonFly
             ('x86_64', 'DragonFly'): 'x86_64-unknown-dragonfly',
@@ -163,10 +166,10 @@ def rust_triple_alias(host_or_target):
             ('arm', 'Android'): 'armv7-linux-androideabi',
             ('x86', 'Android'): 'i686-linux-android',
             # Windows
-            # XXX better detection of CXX needed here, to figure out whether
-            # we need i686-pc-windows-gnu instead, since mingw32 builds work.
             ('x86', 'WINNT'): 'i686-pc-windows-msvc',
             ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',
+            ('x86', 'WINNT-MINGW'): 'i686-pc-windows-gnu',
+            ('x86_64', 'WINNT-MINGW'): 'x86_64-pc-windows-gnu',
         }.get((host_or_target.cpu, os_or_kernel), None)
 
         if rustc_target is None:
