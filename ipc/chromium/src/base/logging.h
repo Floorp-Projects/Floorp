@@ -13,6 +13,7 @@
 #include "base/basictypes.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Printf.h"
 
 #ifdef NO_CHROMIUM_LOGGING
 #include <sstream>
@@ -39,7 +40,6 @@ public:
     : mSeverity(severity)
     , mFile(file)
     , mLine(line)
-    , mMsg(NULL)
   { }
 
   ~Logger();
@@ -54,7 +54,7 @@ private:
   LogSeverity mSeverity;
   const char* mFile;
   int mLine;
-  char* mMsg;
+  SmprintfPointer mMsg;
 
   DISALLOW_EVIL_CONSTRUCTORS(Logger);
 };

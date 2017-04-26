@@ -44,11 +44,11 @@ static bool Throw(nsresult errNum, JSContext* cx)
 static bool
 ToStringGuts(XPCCallContext& ccx)
 {
-    char* sz;
+    UniqueChars sz;
     XPCWrappedNative* wrapper = ccx.GetWrapper();
 
     if (wrapper)
-        sz = wrapper->ToString(ccx.GetTearOff());
+        sz.reset(wrapper->ToString(ccx.GetTearOff()));
     else
         sz = JS_smprintf("[xpconnect wrapped native prototype]");
 
@@ -57,8 +57,7 @@ ToStringGuts(XPCCallContext& ccx)
         return false;
     }
 
-    JSString* str = JS_NewStringCopyZ(ccx, sz);
-    JS_smprintf_free(sz);
+    JSString* str = JS_NewStringCopyZ(ccx, sz.get());
     if (!str)
         return false;
 

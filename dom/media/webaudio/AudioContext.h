@@ -312,19 +312,12 @@ public:
 
   JSObject* GetGlobalJSObject() const;
 
-  AudioChannel MozAudioChannelType() const;
-
-  AudioChannel TestAudioChannelInAudioNodeStream();
-
   void RegisterNode(AudioNode* aNode);
   void UnregisterNode(AudioNode* aNode);
 
   void OnStateChanged(void* aPromise, AudioContextState aNewState);
 
   BasicWaveFormCache* GetBasicWaveFormCache();
-
-  IMPL_EVENT_HANDLER(mozinterruptbegin)
-  IMPL_EVENT_HANDLER(mozinterruptend)
 
   bool CheckClosed(ErrorResult& aRv);
 

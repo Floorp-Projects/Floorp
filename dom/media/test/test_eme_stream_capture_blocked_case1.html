@@ -22,19 +22,39 @@ function startTest(test, token)
   // Case 1. setting MediaKeys on an element captured by MediaElementSource should fail.
   var p1 = new EMEPromise;
   var case1token = token + "_case1";
-  var setKeysFailed = function() {
-    ok(true, TimeStamp(case1token) + " setMediaKeys failed as expected.");
-    p1.resolve();
-  };
-  var v1 = SetupEME(test, case1token,  { onSetKeysFail: setKeysFailed });
+  let v1 = document.createElement("video");
+
+  function setMediaKeys() {
+    let p = new EMEPromise;
+    CreateMediaKeys(v1, test, case1token)
+    .then(mediaKeys => {
+      v1.setMediaKeys(mediaKeys)
+      .then(() => {
+        p.reject(`${case1token} setMediaKeys shouldn't succeed.`);
+      }, () => {
+        ok(true, TimeStamp(case1token) + " setMediaKeys failed as expected.");
+        p.resolve();
+      })
+    }, p.reject);
+    return p.promise;
+  }
+
   var context = new AudioContext();
   var node = context.createMediaElementSource(v1);
   v1.addEventListener("loadeddata", function(ev) {
     ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });
+
   manager.started(case1token);
-  var p2 = LoadTest(test, v1, case1token, { onlyLoadFirstFragments:2, noEndOfStream:false });
-  EMEPromiseAll(v1, case1token, [p1.promise, p2]);
+
+  Promise.all([
+    LoadTest(test, v1, case1token),
+    setMediaKeys()])
+  .catch(reason => ok(false, reason))
+  .then(() => {
+    CleanUpMedia(v1);
+    manager.finished(case1token);
+  });
 }
 
 function beginTest() {
