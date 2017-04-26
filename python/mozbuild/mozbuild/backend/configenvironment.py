@@ -125,8 +125,11 @@ class ConfigEnvironment(object):
         self.topobjdir = mozpath.abspath(topobjdir)
         self.mozconfig = mozpath.abspath(mozconfig) if mozconfig else None
         self.lib_prefix = self.substs.get('LIB_PREFIX', '')
+        self.rust_lib_prefix = self.substs.get('RUST_LIB_PREFIX', '')
         if 'LIB_SUFFIX' in self.substs:
             self.lib_suffix = '.%s' % self.substs['LIB_SUFFIX']
+        if 'RUST_LIB_SUFFIX' in self.substs:
+            self.rust_lib_suffix = '.%s' % self.substs['RUST_LIB_SUFFIX']
         self.dll_prefix = self.substs.get('DLL_PREFIX', '')
         self.dll_suffix = self.substs.get('DLL_SUFFIX', '')
         if self.substs.get('IMPORT_LIB_SUFFIX'):
