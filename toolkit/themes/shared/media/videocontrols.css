@@ -107,13 +107,15 @@ audio > xul|videocontrols {
   fill: #2d89e6;
 }
 .playButton[paused] {
-  background-image: url(chrome://global/skin/media/playButton.svg#play);
+  background-image: url(chrome://global/skin/media/playButton.svg);
+  -moz-context-properties: fill;
+  fill: #ffffff;
 }
 .playButton[paused]:hover {
-  background-image: url(chrome://global/skin/media/playButton.svg#play-hover);
+  fill: #48a0f7;
 }
 .playButton[paused]:hover:active {
-  background-image: url(chrome://global/skin/media/playButton.svg#play-active);
+  fill: #2d89e6;
 }
 
 .muteButton {
@@ -395,11 +397,13 @@ audio > xul|videocontrols {
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
-  background-image: url(chrome://global/skin/media/playButton.svg#play);
+  background-image: url(chrome://global/skin/media/playButton.svg);
   background-repeat: no-repeat;
   background-position: 54% 50%;
   background-size: 40% 40%;
   background-color: #1a1a1a;
+  -moz-context-properties: fill;
+  fill: #ffffff;
   opacity: 0.8;
   position: relative;
   top: 20px;
