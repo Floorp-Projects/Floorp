@@ -76,11 +76,11 @@ def optimize_task(task, params):
     for opt in task.optimizations:
         opt_type, args = opt[0], opt[1:]
         opt_fn = _optimizations[opt_type]
-        opt_result = opt_fn(task, params, *args)
-        if opt_result:
-            return opt_result
+        optimized, task_id = opt_fn(task, params, *args)
+        if optimized or task_id:
+            return optimized, task_id
 
-    return False
+    return False, None
 
 
 def annotate_task_graph(target_task_graph, params, do_not_optimize,
@@ -118,15 +118,7 @@ def annotate_task_graph(target_task_graph, params, do_not_optimize,
             replacement_task_id = existing_tasks[label]
         # otherwise, examine the task itself (which may be an expensive operation)
         else:
-            opt_result = optimize_task(task, params)
-
-            # use opt_result to determine values for optimized, replacement_task_id
-            optimized = True
-            replacement_task_id = None
-            if opt_result is False:
-                optimized = False
-            elif opt_result is not True:
-                replacement_task_id = opt_result
+            optimized, replacement_task_id = optimize_task(task, params)
 
         task.optimized = optimized
         task.task_id = replacement_task_id
@@ -203,11 +195,11 @@ def opt_index_search(task, params, index_path):
             index_path,
             use_proxy=bool(os.environ.get('TASK_ID')))
 
-        return task_id or True
+        return True, task_id
     except requests.exceptions.HTTPError:
         pass
 
-    return False
+    return False, None
 
 
 @optimization('seta')
@@ -229,20 +221,20 @@ def opt_seta(task, params):
                          params.get('pushdate'),
                          bbb_task):
         # Always optimize away low-value tasks
-        return True
+        return True, None
     else:
-        return False
+        return False, None
 
 
 @optimization('files-changed')
 def opt_files_changed(task, params, file_patterns):
     # pushlog_id == -1 - this is the case when run from a cron.yml job
     if params.get('pushlog_id') == -1:
-        return True
+        return True, None
 
     changed = files_changed.check(params, file_patterns)
     if not changed:
         logger.debug('no files found matching a pattern in `when.files-changed` for ' +
                      task.label)
-        return True
-    return False
+        return True, None
+    return False, None
