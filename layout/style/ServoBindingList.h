@@ -106,6 +106,7 @@ BASIC_RULE_FUNCS(Style)
 GROUP_RULE_FUNCS(Media)
 BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
+GROUP_RULE_FUNCS(Supports)
 #undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
 SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
@@ -128,6 +129,8 @@ SERVO_BINDING_FUNC(Servo_PageRule_GetStyle, RawServoDeclarationBlockStrong,
 SERVO_BINDING_FUNC(Servo_PageRule_SetStyle, void,
                    RawServoPageRuleBorrowed rule,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
+                   RawServoSupportsRuleBorrowed rule, nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
