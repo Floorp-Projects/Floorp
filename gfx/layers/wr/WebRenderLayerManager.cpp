@@ -17,6 +17,7 @@
 #include "WebRenderContainerLayer.h"
 #include "WebRenderImageLayer.h"
 #include "WebRenderPaintedLayer.h"
+#include "WebRenderPaintedLayerBlob.h"
 #include "WebRenderTextLayer.h"
 #include "WebRenderDisplayItemLayer.h"
 
@@ -498,7 +499,11 @@ WebRenderLayerManager::SetRoot(Layer* aLayer)
 already_AddRefed<PaintedLayer>
 WebRenderLayerManager::CreatePaintedLayer()
 {
-  return MakeAndAddRef<WebRenderPaintedLayer>(this);
+  if (gfxPrefs::WebRenderBlobImages()) {
+    return MakeAndAddRef<WebRenderPaintedLayerBlob>(this);
+  } else {
+    return MakeAndAddRef<WebRenderPaintedLayer>(this);
+  }
 }
 
 already_AddRefed<ContainerLayer>
