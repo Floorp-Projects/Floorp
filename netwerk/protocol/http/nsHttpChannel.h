@@ -118,6 +118,7 @@ public:
     NS_IMETHOD OnAuthCancelled(bool userCancel) override;
     NS_IMETHOD CloseStickyConnection() override;
     NS_IMETHOD ForceNoSpdy() override;
+    NS_IMETHOD ConnectionRestartable(bool) override;
     // Functions we implement from nsIHttpAuthenticableChannel but are
     // declared in HttpBaseChannel must be implemented in this class. We
     // just call the HttpBaseChannel:: impls.
@@ -627,6 +628,9 @@ private:
 
     // true if an HTTP transaction is created for the socket thread
     uint32_t                          mUsedNetwork : 1;
+
+    // the next authentication request can be sent on a whole new connection
+    uint32_t                          mAuthConnectionRestartable : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
