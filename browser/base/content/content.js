@@ -51,11 +51,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
-XPCOMUtils.defineLazyGetter(this, "findCssSelector", () => {
-  let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  let { findCssSelector } = require("devtools/shared/inspector/css-logic");
-  return findCssSelector;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "findCssSelector",
+  "resource://gre/modules/css-selector.js");
 
 Cu.importGlobalProperties(["URL"]);
 

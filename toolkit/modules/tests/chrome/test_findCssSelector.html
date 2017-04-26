@@ -12,8 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const CssLogic = require("devtools/shared/inspector/css-logic");
+/* globals findCssSelector */
+Cu.import("resource://gre/modules/css-selector.js", this);
 
 var _tests = [];
 function addTest(test) {
@@ -34,13 +34,13 @@ window.onload = function() {
 }
 
 addTest(function findAllCssSelectors() {
-  var nodes = document.querySelectorAll('*');
+  var nodes = document.querySelectorAll("*");
   for (var i = 0; i < nodes.length; i++) {
-    var selector = CssLogic.findCssSelector(nodes[i]);
+    var selector = findCssSelector(nodes[i]);
     var matches = document.querySelectorAll(selector);
 
-    is(matches.length, 1, 'There is a single match: ' + selector);
-    is(matches[0], nodes[i], 'The selector matches the correct node: ' + selector);
+    is(matches.length, 1, "There is a single match: " + selector);
+    is(matches[0], nodes[i], "The selector matches the correct node: " + selector);
   }
 
   runNextTest();
@@ -51,33 +51,33 @@ addTest(function findCssSelectorNotContainedInDocument() {
   var unattached = document.createElement("div");
   unattached.id = "unattached";
   try {
-    CssLogic.findCssSelector(unattached);
-    ok (false, "Unattached node did not throw")
-  } catch(e) {
+    findCssSelector(unattached);
+    ok(false, "Unattached node did not throw")
+  } catch (e) {
     ok(e, "Unattached node throws an exception");
   }
 
   var unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
   try {
-    CssLogic.findCssSelector(unattachedChild);
-    ok (false, "Unattached child node did not throw")
-  } catch(e) {
+    findCssSelector(unattachedChild);
+    ok(false, "Unattached child node did not throw")
+  } catch (e) {
     ok(e, "Unattached child node throws an exception");
   }
 
   var unattachedBody = document.createElement("body");
   try {
-    CssLogic.findCssSelector(unattachedBody);
-    ok (false, "Unattached body node did not throw")
-  } catch(e) {
+    findCssSelector(unattachedBody);
+    ok(false, "Unattached body node did not throw")
+  } catch (e) {
     ok(e, "Unattached body node throws an exception");
   }
 
   runNextTest();
 });
 
-addTest(function findCssSelector() {
+addTest(function findCssSelectorBasic() {
 
   let data = [
     "#one",
@@ -97,11 +97,11 @@ addTest(function findCssSelector() {
   ];
 
   let container = document.querySelector("#find-css-selector");
-  is (container.children.length, data.length, "Container has correct number of children.");
+  is(container.children.length, data.length, "Container has correct number of children.");
 
   for (let i = 0; i < data.length; i++) {
     let node = container.children[i];
-    is (CssLogic.findCssSelector(node), data[i], "matched id for index " + (i-1));
+    is(findCssSelector(node), data[i], "matched id for index " + (i - 1));
   }
 
   runNextTest();
