@@ -30,9 +30,9 @@ public class DynamicToolbarAnimator {
         PAGE_LOADING(5),
         CUSTOM_TAB(6);
 
-        public final int mValue;
-        PinReason(final int value) {
-            mValue = value;
+        public final int value;
+        PinReason(final int aValue) {
+            value = aValue;
         }
     }
 
@@ -46,7 +46,7 @@ public class DynamicToolbarAnimator {
         public void toggleToolbarChrome(boolean aShow);
     }
 
-    private final Set<PinReason> pinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
+    private final Set<PinReason> mPinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
 
     private final GeckoLayerClient mTarget;
     private LayerView.Compositor mCompositor;
@@ -103,22 +103,22 @@ public class DynamicToolbarAnimator {
      * If true, scroll changes will not affect translation.
      */
     public boolean isPinned() {
-        return !pinFlags.isEmpty();
+        return !mPinFlags.isEmpty();
     }
 
     public boolean isPinnedBy(PinReason reason) {
-        return pinFlags.contains(reason);
+        return mPinFlags.contains(reason);
     }
 
     public void setPinned(boolean pinned, PinReason reason) {
-        if ((mCompositor != null) && (pinned != pinFlags.contains(reason))) {
-             mCompositor.setPinned(pinned, reason.mValue);
+        if ((mCompositor != null) && (pinned != mPinFlags.contains(reason))) {
+             mCompositor.setPinned(pinned, reason.value);
         }
 
         if (pinned) {
-            pinFlags.add(reason);
+            mPinFlags.add(reason);
         } else {
-            pinFlags.remove(reason);
+            mPinFlags.remove(reason);
         }
     }
 
@@ -160,8 +160,8 @@ public class DynamicToolbarAnimator {
             } else {
                 mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
             }
-            for (PinReason reason : pinFlags) {
-              mCompositor.setPinned(true, reason.mValue);
+            for (PinReason reason : PinReason.values()) {
+              mCompositor.setPinned(mPinFlags.contains(reason), reason.value);
             }
         } else if ((mCompositor != null) && !mCompositorControllerOpen) {
             // Ask the UiCompositorControllerChild if it is open since the open message can
