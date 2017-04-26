@@ -118,4 +118,11 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      * using connection-oriented auth.
      */
     [must_use] void forceNoSpdy();
+
+    /**
+     * Tells the channel to mark the connection as allowed to restart on
+     * authentication retry.  This is allowed when the request is a start
+     * of a new authentication round.
+     */
+    void connectionRestartable(in boolean restartable);
 };
