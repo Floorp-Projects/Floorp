@@ -18,7 +18,6 @@
       }
       var initVRPresentation = function(content) {
             return content.navigator.getVRDisplays().then((displays) => {
-            console.log("GetVRDisplay!!");
             content.vrDisplay = displays[0];
             content.canvas = content.document.createElement("canvas");
             content.canvas.id = "vrCanvas";
