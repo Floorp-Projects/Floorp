@@ -5,7 +5,7 @@ All notable changes to this program is documented in this file.
 ## 0.16.1 (2016-04-26)
 
 ### Fixed
-- Read Firefox version number from stdout when failing to look for the application .ini file (fixes (Selenium #3884)[https://github.com/SeleniumHQ/selenium/issues/3884])
+- Read Firefox version number from stdout when failing to look for the application .ini file (fixes [Selenium #3884](https://github.com/SeleniumHQ/selenium/issues/3884))
 - Session is now ended when closing the last Firefox window (fixes [#613](https://github.com/mozilla/geckodriver/issues/613))
 
 ## 0.16.0 (2016-04-21)
