@@ -145,7 +145,7 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   std::vector<wr::ImageKey> mImageKeys;
-  std::vector<uint64_t> mDiscardedCompositorAnimationsIds;
+  nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
