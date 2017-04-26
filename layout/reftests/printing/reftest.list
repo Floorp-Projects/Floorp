@@ -8,20 +8,20 @@
 == 381497-n.html 381497-f.html
 == test-async-print.html 272830-1-ref.html
 == 129941-1a.html 129941-1-ref.html
-fails-if(stylo) == 129941-1b.html 129941-1-ref.html
+== 129941-1b.html 129941-1-ref.html
 == 129941-1c.html 129941-1-ref.html
-fails-if(stylo) == 129941-1d.html 129941-1-ref.html
-fails-if(stylo) == 129941-1e.html 129941-1-ref.html
+== 129941-1d.html 129941-1-ref.html
+== 129941-1e.html 129941-1-ref.html
 == 609227-1.html 609227-1-ref.html
 == 609227-2a.html 609227-2-ref.html
 == 609227-2b.html 609227-2-ref.html
 == 577450-1.html 577450-1-ref.html
 == 626395-1a.html 626395-1-ref.html
-fails-if(stylo) == 626395-1b.html 626395-1-ref.html
+== 626395-1b.html 626395-1-ref.html
 == 626395-2a.html 626395-2-ref.html
-fails-if(stylo) == 626395-2b.html 626395-2-ref.html
+== 626395-2b.html 626395-2-ref.html
 == 626395-2c.html 626395-2-ref.html
-fails-if(stylo) == 626395-2d.html 626395-2-ref.html
+== 626395-2d.html 626395-2-ref.html
 == 652178-1.html 652178-1-ref.html
 fails-if(stylo) == 115199-1.html 115199-1-ref.html
 == 115199-2a.html 115199-2-ref.html

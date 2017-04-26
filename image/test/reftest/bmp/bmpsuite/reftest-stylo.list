@@ -1,8 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# bmpsuite tests
-
-# See README.mozilla for details about these tests.
-
-include g/reftest-stylo.list
-include q/reftest-stylo.list
-include b/reftest-stylo.list
