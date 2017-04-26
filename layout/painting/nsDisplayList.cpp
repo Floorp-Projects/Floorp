@@ -562,7 +562,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     // FIXME: Bug 1334036: We need to get the baseValue for
     //        RawServoAnimationValue.
     SetAnimatable(aProperty.mProperty,
-                  { baseStyle, nullptr },
+                  AnimationValue(baseStyle),
                   aFrame, refBox,
                   animation->baseStyle());
   } else {
