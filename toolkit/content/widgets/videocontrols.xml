@@ -1549,11 +1549,11 @@
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);
 
-        ttBtn.addEventListener("click", function(event) {
+        ttBtn.addEventListener("click", event => {
           event.stopPropagation();
 
           this.changeTextTrack(tt.index);
-        }.bind(this));
+        });
 
         ttBtn.appendChild(ttText);
 

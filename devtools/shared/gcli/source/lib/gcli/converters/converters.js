@@ -220,9 +220,9 @@ Converters.prototype.get = function(from, to) {
  * Get all the registered converters. Most for debugging
  */
 Converters.prototype.getAll = function() {
-  return Object.keys(this._registered.from).map(function(name) {
+  return Object.keys(this._registered.from).map(name => {
     return this._registered.from[name];
-  }.bind(this));
+  });
 };
 
 /**
@@ -257,15 +257,15 @@ Converters.prototype.convert = function(data, from, to, conversionContext) {
     }
 
     var converter = this.get(from, to);
-    return host.exec(function() {
+    return host.exec(() => {
       return converter.exec(data, conversionContext);
-    }.bind(this));
+    });
   }
   catch (ex) {
     var converter = this.get('error', to);
-    return host.exec(function() {
+    return host.exec(() => {
       return converter.exec(ex, conversionContext);
-    }.bind(this));
+    });
   }
 };
 

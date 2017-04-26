@@ -137,7 +137,7 @@ PlacesWrapper.prototype = {
     query.params.item_type = PlacesUtils.bookmarks.TYPE_FOLDER;
 
     this.asyncQuery(query, ["id", "guid"]).then(
-      function(items) {
+      items => {
         let previousIds = folderCache.getChildren(folder);
         let currentIds = new Set();
         for (let item of items) {
@@ -169,7 +169,7 @@ PlacesWrapper.prototype = {
         for (let missingId of missingIds) {
           folderCache.remove(missingId);
         }
-      }.bind(this)
+      }
     );
 
     return deferred.promise;

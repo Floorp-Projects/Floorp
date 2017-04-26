@@ -61,11 +61,11 @@ var gSyncPane = {
       } catch (e) {}
     };
 
-    let onReady = function() {
+    let onReady = () => {
       Services.obs.removeObserver(onReady, "weave:service:ready");
       window.removeEventListener("unload", onUnload);
       this._init();
-    }.bind(this);
+    };
 
     Services.obs.addObserver(onReady, "weave:service:ready");
     window.addEventListener("unload", onUnload);

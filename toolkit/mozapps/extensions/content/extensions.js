@@ -3260,10 +3260,10 @@ var gDetailView = {
       document.getElementById("detail-experiment-time").value = timeMessage;
     }
 
-    this.fillSettingsRows(aScrollToPreferences, (function() {
+    this.fillSettingsRows(aScrollToPreferences, () => {
       this.updateState();
       gViewController.notifyViewChanged();
-    }).bind(this));
+    });
   },
 
   show(aAddonId, aRequest) {

@@ -776,10 +776,10 @@ var RootFolder = function(rootId, rootName) {
   }
   PlacesWrapper.updateCachedFolderIds(folderCache, rootId)
                .then(getGuidForRootFolder, getGuidForRootFolder)
-               .then(function(guid) {
+               .then(guid => {
                        rootGuid = guid;
                        deferred.resolve(this);
-                     }.bind(this),
+                     },
                      deferred.reject);
   return deferred.promise;
 };

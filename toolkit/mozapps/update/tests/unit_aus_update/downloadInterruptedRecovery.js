@@ -103,7 +103,7 @@ IncrementalDownload.prototype = {
              getService(Ci.nsIThreadManager);
     // Do the actual operation async to give a chance for observers
     // to add themselves.
-    tm.dispatchToMainThread(function() {
+    tm.dispatchToMainThread(() => {
       this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
       this._ctxt = ctxt;
       this._observer.onStartRequest(this, this._ctxt);
@@ -137,7 +137,7 @@ IncrementalDownload.prototype = {
           break;
       }
       this._observer.onStopRequest(this, this._ctxt, status);
-    }.bind(this));
+    });
   },
 
   get URI() {

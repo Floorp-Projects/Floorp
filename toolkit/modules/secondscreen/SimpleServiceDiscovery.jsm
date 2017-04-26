@@ -353,7 +353,7 @@ var SimpleServiceDiscovery = {
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     xhr.overrideMimeType("text/xml");
 
-    xhr.addEventListener("load", (function() {
+    xhr.addEventListener("load", () => {
       if (xhr.status == 200) {
         let doc = xhr.responseXML;
         aService.appsURL = xhr.getResponseHeader("Application-URL");
@@ -366,7 +366,7 @@ var SimpleServiceDiscovery = {
 
         this.addService(aService);
       }
-    }).bind(this));
+    });
 
     xhr.send(null);
   },

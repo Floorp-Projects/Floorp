@@ -661,7 +661,7 @@ xhr.prototype = {
   responseXML: null,
   responseText: null,
   send(aBody) {
-    do_execute_soon(function() {
+    do_execute_soon(() => {
       try {
         if (this._options.dropRequest) {
           if (this._timeout > 0 && this._options.timeout) {
@@ -687,7 +687,7 @@ xhr.prototype = {
       } catch (ex) {
         do_throw(ex);
       }
-    }.bind(this));
+    });
   },
   set onabort(aValue) { this._onabort = makeHandler(aValue); },
   get onabort() { return this._onabort; },

@@ -90,7 +90,7 @@ MockColorPickerInstance.prototype = {
     MockColorPicker.showing = true;
     MockColorPicker.shown = true;
 
-    this.window.setTimeout(function() {
+    this.window.setTimeout(() => {
       let result = "";
       try {
         if (typeof MockColorPicker.showCallback == "function") {
@@ -112,6 +112,6 @@ MockColorPickerInstance.prototype = {
       if (aColorPickerShownCallback) {
         aColorPickerShownCallback.done(result);
       }
-    }.bind(this), 0);
+    }, 0);
   }
 };

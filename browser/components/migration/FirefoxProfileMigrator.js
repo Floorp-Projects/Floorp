@@ -105,7 +105,7 @@ FirefoxProfileMigrator.prototype.getLastUsedDate = function() {
 };
 
 FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileDir, currentProfileDir) {
-  let getFileResource = function(aMigrationType, aFileNames) {
+  let getFileResource = (aMigrationType, aFileNames) => {
     let files = [];
     for (let fileName of aFileNames) {
       let file = this._getFileObject(sourceProfileDir, fileName);
@@ -124,7 +124,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
         aCallback(true);
       }
     };
-  }.bind(this);
+  };
 
   let types = MigrationUtils.resourceTypes;
   let places = getFileResource(types.HISTORY, ["places.sqlite"]);

@@ -21,10 +21,10 @@ var gAdvancedPane = {
     this._inited = true;
 
     if (AppConstants.MOZ_UPDATER) {
-      let onUnload = function() {
+      let onUnload = () => {
         window.removeEventListener("unload", onUnload);
         Services.prefs.removeObserver("app.update.", this);
-      }.bind(this);
+      };
       window.addEventListener("unload", onUnload);
       Services.prefs.addObserver("app.update.", this);
       this.updateReadPrefs();

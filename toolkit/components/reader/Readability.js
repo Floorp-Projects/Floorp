@@ -1566,7 +1566,7 @@ Readability.prototype = {
 
     // Now that we've built the article page DOM element, get the page content
     // asynchronously and load the cleaned content into the div we created for it.
-    (function(pageUrl, thisPage) {
+    ((pageUrl, thisPage) => {
       this._ajax(pageUrl, {
         success: function(r) {
 
@@ -1638,16 +1638,16 @@ Readability.prototype = {
           // After the page has rendered, post process the content. This delay is necessary because,
           // in webkit at least, offsetWidth is not set in time to determine image width. We have to
           // wait a little bit for reflow to finish before we can fix floating images.
-          setTimeout((function() {
+          setTimeout(() => {
             this._postProcessContent(thisPage);
-          }).bind(this), 500);
+          }, 500);
 
 
           if (secondNextPageLink)
             this._appendNextPage(secondNextPageLink);
         }
       });
-    }).bind(this)(nextPageLink, articlePage);
+    })(nextPageLink, articlePage);
   },
 
   /**
