@@ -320,12 +320,18 @@ function LoadInitData(v, test, token) {
   let p = new EMEPromise;
   let initDataQueue = [];
 
+  // Call SimpleTest._originalSetTimeout() to bypass the flaky timeout checker.
+  let timer = SimpleTest._originalSetTimeout.call(window, () => {
+    p.reject(`${token} Timed out in waiting for the init data.`);
+  }, 60000);
+
   function onencrypted(ev) {
     initDataQueue.push(ev);
     Log(token, `got encrypted(${ev.initDataType}, ` +
         `${StringToHex(ArrayBufferToString(ev.initData))}) event.`);
     if (test.sessionCount == initDataQueue.length) {
       p.resolve(initDataQueue);
+      clearTimeout(timer);
     }
   }
 
