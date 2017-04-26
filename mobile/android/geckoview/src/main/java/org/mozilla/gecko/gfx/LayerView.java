@@ -88,8 +88,10 @@ public class LayerView extends FrameLayout {
     /* package */ final static int REQUEST_SHOW_TOOLBAR_ANIMATED    = 7;  // Sent to compositor requesting toolbar be shown animated
     /* package */ final static int REQUEST_HIDE_TOOLBAR_IMMEDIATELY = 8;  // Sent to compositor requesting toolbar be hidden immediately
     /* package */ final static int REQUEST_HIDE_TOOLBAR_ANIMATED    = 9;  // Sent to compositor requesting toolbar be hidden animated
-    /* package */ final static int LAYERS_UPDATED                    = 10; // Sent from compositor when a layer has been updated
+    /* package */ final static int LAYERS_UPDATED                   = 10; // Sent from compositor when a layer has been updated
+    /* package */ final static int TOOLBAR_SNAPSHOT_FAILED          = 11; // Sent to compositor when the toolbar snapshot fails.
     /* package */ final static int COMPOSITOR_CONTROLLER_OPEN       = 20; // Special message sent from UiCompositorControllerChild once it is open
+    /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 21; // Special message sent from controller to query if the compositor controller is open
 
     private void postCompositorMessage(final int message) {
         ThreadUtils.postToUiThread(new Runnable() {
@@ -206,6 +208,7 @@ public class LayerView extends FrameLayout {
                 // Send updated toolbar image to compositor.
                 Bitmap bm = mToolbarAnimator.getBitmapOfToolbarChrome();
                 if (bm == null) {
+                    postCompositorMessage(TOOLBAR_SNAPSHOT_FAILED);
                     break;
                 }
                 final int width = bm.getWidth();

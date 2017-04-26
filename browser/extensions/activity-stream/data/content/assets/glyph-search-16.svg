@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #a0a0a0;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <g id="glyph-search-16">
+    <path id="Icon_-_Search_-_16" data-name="Icon - Search - 16" class="cls-1" d="M226.989,348.571l-2.2,2.2-9.533-9.534a11.436,11.436,0,1,1,2.2-2.2ZM208.37,323.745a8.407,8.407,0,1,0,8.406,8.406A8.406,8.406,0,0,0,208.37,323.745Z" transform="translate(-196 -320)"/>
+  </g>
+</svg>
