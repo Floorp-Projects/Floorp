@@ -47,15 +47,18 @@ f.focus();
 
 var testIndex = 0;
 var tests = [
-  ["", defaultUploadDirectory.path],
-  [customUploadDirectory.path, customUploadDirectory.path]
+  ["", null, "Desk"],
+  [customUploadDirectory.path, customUploadDirectory.path, ""]
 ]
 
 MockFilePicker.showCallback = function(filepicker) {
-  info(SpecialPowers.wrap(MockFilePicker).displayDirectory.path);
+  if (tests[testIndex][1] === null) {
+    is(SpecialPowers.wrap(MockFilePicker).displayDirectory, null, "DisplayDirectory is null");
+  } else {
+    is(SpecialPowers.wrap(MockFilePicker).displayDirectory.path, tests[testIndex][1], "DisplayDirectory matches the path");
+  }
 
-  is(SpecialPowers.wrap(MockFilePicker).displayDirectory.path,
-  tests[testIndex][1]);
+  is(SpecialPowers.wrap(MockFilePicker).displaySpecialDirectory, tests[testIndex][2], "DisplaySpecialDirectory matches the path");
 
   if (++testIndex == tests.length) {
     MockFilePicker.cleanup();

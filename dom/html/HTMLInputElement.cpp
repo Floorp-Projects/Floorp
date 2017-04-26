@@ -429,24 +429,29 @@ UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason)
 
   if (aReason == nsIContentPrefCallback2::COMPLETE_ERROR || !mResult) {
     prefStr = Preferences::GetString("dom.input.fallbackUploadDir");
-    if (prefStr.IsEmpty()) {
-      // If no custom directory was set through the pref, default to
-      // "desktop" directory for each platform.
-      NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(localFile));
-    }
   }
 
-  if (!localFile) {
-    if (prefStr.IsEmpty() && mResult) {
-      nsCOMPtr<nsIVariant> pref;
-      mResult->GetValue(getter_AddRefs(pref));
-      pref->GetAsAString(prefStr);
-    }
+  if (prefStr.IsEmpty() && mResult) {
+    nsCOMPtr<nsIVariant> pref;
+    mResult->GetValue(getter_AddRefs(pref));
+    pref->GetAsAString(prefStr);
+  }
+
+  if (!prefStr.IsEmpty()) {
     localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-    localFile->InitWithPath(prefStr);
+    if (localFile && NS_WARN_IF(NS_FAILED(localFile->InitWithPath(prefStr)))) {
+      localFile = nullptr;
+    }
   }
 
-  mFilePicker->SetDisplayDirectory(localFile);
+  if (localFile) {
+    mFilePicker->SetDisplayDirectory(localFile);
+  } else {
+    // If no custom directory was set through the pref, default to
+    // "desktop" directory for each platform.
+    mFilePicker->SetDisplaySpecialDirectory(NS_LITERAL_STRING(NS_OS_DESKTOP_DIR));
+  }
+
   mFilePicker->Open(mFpCallback);
   return NS_OK;
 }
