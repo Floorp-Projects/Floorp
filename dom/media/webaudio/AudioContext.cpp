@@ -1066,21 +1066,6 @@ AudioContext::Unmute() const
   }
 }
 
-AudioChannel
-AudioContext::MozAudioChannelType() const
-{
-  return mDestination->MozAudioChannelType();
-}
-
-AudioChannel
-AudioContext::TestAudioChannelInAudioNodeStream()
-{
-  MediaStream* stream = mDestination->Stream();
-  MOZ_ASSERT(stream);
-
-  return stream->AudioChannelType();
-}
-
 size_t
 AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
