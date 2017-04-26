@@ -13,10 +13,10 @@ fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) HTTP(..) == 108384
 == 1089388-1.html 1089388-1-ref.html
 == 1089388-2.html 1089388-2-ref.html
 == 1090159-1.html 1090159-1-ref.html
-== 1090168-1.html 1090168-1-ref.html
-!= 1090168-1.html 1090168-1-notref.html
-== 1090168-2.html 1090168-2-ref.html
-fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
+fails-if(stylo) == 1090168-1.html 1090168-1-ref.html
+fails-if(stylo) != 1090168-1.html 1090168-1-notref.html
+fails-if(stylo) == 1090168-2.html 1090168-2-ref.html
+fuzzy-if(azureSkia,255,2700) fails-if(stylo) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 == 1091058-1.html 1091058-1-ref.html
 fails-if(stylo) == 1094434-1.html 1094434-1-ref.html
 fails-if(stylo) == 1094434-2.html 1094434-2-ref.html
@@ -111,8 +111,8 @@ fails-if(stylo) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html #
 fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
 fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
 fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
-== 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
-!= 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
+fails-if(stylo) == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
+fails-if(stylo) != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
 
 # Font inflation behaves wrong in vertical writing mode: bug 1138495
 test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1a.html font-inflation-1-ref.html
@@ -144,14 +144,14 @@ fails-if(stylo) == 1175789-underline-overline-1.html 1175789-underline-overline-
 == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
 
 # tests involving sideways-lr mode
-== 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
-== 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
-fuzzy-if(winWidget,3,84) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
-fuzzy-if(winWidget,3,112) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html
-fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+fails-if(stylo) == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
+fails-if(stylo) == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
+fuzzy-if(winWidget,3,84) fails-if(stylo) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
+fuzzy-if(winWidget,3,112) fails-if(stylo) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html
+fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) fails-if(stylo) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
-== 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
+fails-if(stylo) == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
 
 fails-if(stylo) == 1216747-1.html 1216747-1-ref.html
 fails-if(stylo) != 1216747-1.html 1216747-1-notref.html

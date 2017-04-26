@@ -99,7 +99,7 @@ pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == te
 # Fixed layers are temporarily disabled (bug 656167).
 #pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed.html test-pos-fixed-ref.html
 #pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-bg-attachment-fixed.html test-bg-attachment-fixed-ref.html
-pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) fails-if(stylo) == test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
 
 # reftest syntax: require-or
 require-or(unrecognizedCondition,skip) script scripttest-fail.html

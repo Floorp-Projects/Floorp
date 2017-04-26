@@ -5,7 +5,7 @@
 #    2) A failure is denoted by <failure-type>* (as described in
 #       layout/tools/reftest/README.txt) and a path pattern starting
 #       with module. E.g.:
-#       fails css-values-3/attr-*.html
+#       fails-if(!stylo) css-values-3/attr-*.html
 #
 # If a test matches multiple path pattern, the last one wins. Because
 # of this, an item could have zero <failure-type>, which indicates it
@@ -16,7 +16,7 @@
 
 # focus-within
 needs-focus selectors-4/focus-within-00*.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) selectors-4/focus-within-shadow-*.html
+pref(dom.webcomponents.enabled,true) needs-focus selectors-4/focus-within-shadow-*.html
 
 # Bug 1208113
 fails-if(!stylo) needs-focus selectors-4/focus-within-shadow-001.html
@@ -25,7 +25,7 @@ fails-if(!stylo) needs-focus selectors-4/focus-within-shadow-001.html
 #### CSS Values 3 ####################################################
 
 # Fuzzy
-fuzzy-if(OSX,40,6) fails-if(stylo) css-values-3/ch-unit-001.html
+fuzzy-if(OSX,40,6) css-values-3/ch-unit-001.html
 
 # Bug 435426
 fails-if(!stylo) css-values-3/attr-*.html
@@ -43,8 +43,6 @@ skip css-values-3/vh_not_refreshing_on_chrome_iframe.html
 skip css-values-3/vh-support-transform-origin.html
 skip css-values-3/vh-support-transform-translate.html
 
-fails-if(stylo) css-values-3/calc-in-calc.html
-fails-if(stylo) css-values-3/vh-support-atviewport.html
 
 #### CSS Writing Modes 3 #############################################
 
@@ -77,7 +75,7 @@ fuzzy-if(OSX||winWidget,255,480)  css-writing-modes-3/text-indent-v??-0??.xht
 fuzzy-if(OSX||winWidget,226,960)  css-writing-modes-3/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes-3/vertical-alignment-*.xht
 fuzzy-if(OSX||winWidget,153,612)  css-writing-modes-3/writing-mode-vertical-??-00?.*
-fuzzy(255,960) fails-if(stylo) css-writing-modes-3/text-combine-upright-value-all-00?.html
+fuzzy(255,960)  css-writing-modes-3/text-combine-upright-value-all-00?.html
 
 # Bug 1167911
 skip css-writing-modes-3/abs-pos-non-replaced-icb-vlr-021.xht
@@ -140,12 +138,6 @@ fails-if(!stylo) css-writing-modes-3/vertical-alignment-vrl-024.xht
 # Bug 1102175
 fails-if(!stylo) css-writing-modes-3/wm-propagation-body-*.xht
 
-fails-if(stylo) css-writing-modes-3/full-width-001.html
-fails-if(stylo) css-writing-modes-3/full-width-002.html
-fails-if(stylo) css-writing-modes-3/text-combine-upright-inherit-all-001.html
-fails-if(stylo) css-writing-modes-3/text-combine-upright-inherit-all-002.html
-fails-if(stylo) css-writing-modes-3/text-combine-upright-layout-rules-001.html
-fails-if(stylo) css-writing-modes-3/text-combine-upright-line-breaking-rules-001.html
 
 #### CSS Multi-column 1 ##############################################
 
@@ -207,14 +199,14 @@ fuzzy(73,1200) css-multicol-1/multicol-margin-001.xht
 fuzzy(73,1200) css-multicol-1/multicol-margin-002.xht
 fuzzy(243,3322) fuzzy-if(skiaContent,244,3322) css-multicol-1/multicol-margin-child-001.xht
 fuzzy(255,4008) css-multicol-1/multicol-nested-002.xht
-fuzzy(255,4109) fails-if(stylo) css-multicol-1/multicol-nested-005.xht
+fuzzy(255,4109) css-multicol-1/multicol-nested-005.xht
 fuzzy(204,2463) fuzzy-if(skiaContent,208,2463) css-multicol-1/multicol-nested-margin-001.xht
-fails-if(OSX||winWidget||stylo) css-multicol-1/multicol-nested-margin-002.xht
-fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) fails-if(stylo) css-multicol-1/multicol-nested-margin-003.xht
-fuzzy(225,2529) fails-if(stylo) css-multicol-1/multicol-nested-margin-004.xht
-fuzzy(225,2529) fails-if(stylo) css-multicol-1/multicol-nested-margin-005.xht
+fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-nested-margin-002.xht
+fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) css-multicol-1/multicol-nested-margin-003.xht
+fuzzy(225,2529) css-multicol-1/multicol-nested-margin-004.xht
+fuzzy(225,2529) css-multicol-1/multicol-nested-margin-005.xht
 fuzzy(116,142) css-multicol-1/multicol-overflow-000.xht
-fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) fails-if(stylo) css-multicol-1/multicol-overflowing-001.xht
+fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) css-multicol-1/multicol-overflowing-001.xht
 fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) css-multicol-1/multicol-reduce-000.xht
 fuzzy-if(OSX,8,20) css-multicol-1/multicol-rule-000.xht
 fuzzy(116,1584) css-multicol-1/multicol-rule-001.xht

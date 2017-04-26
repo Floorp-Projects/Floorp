@@ -131,7 +131,7 @@ fails-if(!stylo) == background-size-zoom-repeat.html background-size-zoom-repeat
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
 
-== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+fails-if(stylo) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
