@@ -16,12 +16,20 @@
   var test;
   var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
-  function selectRecvSsrc(pc, index) {
+  function addRIDExtension(pc, extensionId) {
     var receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");
     var receiver = receivers[0];
 
-    SpecialPowers.wrap(pc._pc).mozSelectSsrc(receiver, index);
+    SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
+  }
+
+  function selectRecvRID(pc, rid) {
+    var receivers = pc._pc.getReceivers();
+    is(receivers.length, 1, "We have exactly one RTP receiver");
+    var receiver = receivers[0];
+
+    SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
   }
 
   runNetworkTest(() =>
@@ -68,11 +76,17 @@
         }
       ]);
 
-      test.chain.insertAfter('PC_REMOTE_WAIT_FOR_MEDIA_FLOW',[
+      // do this after set local description so the MediaPipeline
+      // has been created.
+      test.chain.insertAfter('PC_REMOTE_SET_LOCAL_DESCRIPTION',[
         function PC_REMOTE_SET_RTP_FIRST_RID(test) {
-          // Cause pcRemote to filter out everything but the first SSRC. This
-          // lets only one of the simulcast streams through.
-          selectRecvSsrc(test.pcRemote, 0);
+          var extmap_id = test.originalOffer.sdp.match(
+              "a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+          ok(extmap_id, "Original offer has extmap id for simulcast: " + extmap_id[1]);
+          // Cause pcRemote to filter out everything but RID "foo", only
+          // allowing one of the simulcast streams through.
+          addRIDExtension(test.pcRemote, extmap_id[1]);
+          selectRecvRID(test.pcRemote, "foo");
         }
       ]);
 
@@ -89,13 +103,13 @@
           ok(vremote, "Should have remote video element for pcRemote");
           ok(vlocal.videoWidth > 0, "source width is positive");
           ok(vlocal.videoHeight > 0, "source height is positive");
-          is(vremote.videoWidth, vlocal.videoWidth / 2, "sink is 1/2 width of source");
-          is(vremote.videoHeight, vlocal.videoHeight / 2, "sink is 1/2 height of source");
+          is(vremote.videoWidth, vlocal.videoWidth, "sink is same width as source");
+          is(vremote.videoHeight, vlocal.videoHeight,  "sink is same height as source");
         },
         function PC_REMOTE_SET_RTP_SECOND_RID(test) {
-          // Now, cause pcRemote to filter out everything but the second SSRC.
-          // This lets only the other simulcast stream through.
-          selectRecvSsrc(test.pcRemote, 1);
+          // Now, cause pcRemote to filter out everything but RID "bar", only
+          // allowing the other simulcast stream through.
+          selectRecvRID(test.pcRemote, "bar");
         },
         function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
           return test.pcRemote.waitForMediaFlow();
@@ -119,8 +133,8 @@
           ok(vremote, "Should have remote video element for pcRemote");
           ok(vlocal.videoWidth > 0, "source width is positive");
           ok(vlocal.videoHeight > 0, "source height is positive");
-          is(vremote.videoWidth, vlocal.videoWidth, "sink is same width as source");
-          is(vremote.videoHeight, vlocal.videoHeight,  "sink is same height as source");
+          is(vremote.videoWidth, vlocal.videoWidth / 2, "sink is 1/2 width of source");
+          is(vremote.videoHeight, vlocal.videoHeight / 2, "sink is 1/2 height of source");
         },
       ]);
 
