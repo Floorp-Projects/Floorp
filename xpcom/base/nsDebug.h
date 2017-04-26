@@ -363,15 +363,6 @@ inline void MOZ_PretendNoReturn()
   #define MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED  1
 #endif
 
-#ifdef XPCOM_GLUE
-  #define NS_CheckThreadSafe(owningThread, msg)
-#else
-  #define NS_CheckThreadSafe(owningThread, msg)                 \
-    if (MOZ_UNLIKELY(owningThread != PR_GetCurrentThread())) {  \
-      MOZ_CRASH(msg);                                           \
-    }
-#endif
-
 #ifdef MOZILLA_INTERNAL_API
 void NS_ABORT_OOM(size_t aSize);
 #else
