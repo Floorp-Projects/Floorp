@@ -26,6 +26,7 @@ const ERRORS = new Set([
   "StaleElementReferenceError",
   "TimeoutError",
   "UnableToSetCookieError",
+  "UnexpectedAlertOpenError",
   "UnknownCommandError",
   "UnknownError",
   "UnsupportedOperationError",
@@ -271,10 +272,23 @@ class ElementClickInterceptedError extends WebDriverError {
     if (obscuredEl && coords) {
       const doc = obscuredEl.ownerDocument;
       const overlayingEl = doc.elementFromPoint(coords.x, coords.y);
-      msg = error.pprint`Element ${obscuredEl} is not clickable ` +
-          `at point (${coords.x},${coords.y}) ` +
-          error.pprint`because another element ${overlayingEl} ` +
-          `obscures it`;
+
+      switch (obscuredEl.style.pointerEvents) {
+        case "none":
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              `because it does not have pointer events enabled, ` +
+              error.pprint`and element ${overlayingEl} ` +
+              `would receive the click instead`;
+          break;
+
+        default:
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              error.pprint`because another element ${overlayingEl} ` +
+              `obscures it`;
+          break;
+      }
     }
 
     super(msg);
@@ -450,6 +464,13 @@ class UnableToSetCookieError extends WebDriverError {
   }
 }
 
+class UnexpectedAlertOpenError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unexpected alert open";
+  }
+}
+
 class UnknownCommandError extends WebDriverError {
   constructor (message) {
     super(message);
@@ -472,9 +493,9 @@ class UnsupportedOperationError extends WebDriverError {
 }
 
 const STATUSES = new Map([
+  ["element click intercepted", ElementClickInterceptedError],
   ["element not accessible", ElementNotAccessibleError],
   ["element not interactable", ElementNotInteractableError],
-  ["element click intercepted", ElementClickInterceptedError],
   ["insecure certificate", InsecureCertificateError],
   ["invalid argument", InvalidArgumentError],
   ["invalid element state", InvalidElementStateError],
@@ -491,6 +512,7 @@ const STATUSES = new Map([
   ["stale element reference", StaleElementReferenceError],
   ["timeout", TimeoutError],
   ["unable to set cookie", UnableToSetCookieError],
+  ["unexpected alert open", UnexpectedAlertOpenError],
   ["unknown command", UnknownCommandError],
   ["unknown error", UnknownError],
   ["unsupported operation", UnsupportedOperationError],
