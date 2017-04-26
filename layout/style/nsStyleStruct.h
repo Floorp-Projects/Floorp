@@ -2308,6 +2308,8 @@ struct StyleTransition
     }
   void SetUnknownProperty(nsCSSPropertyID aProperty,
                           const nsAString& aPropertyString);
+  void SetUnknownProperty(nsCSSPropertyID aProperty,
+                          nsIAtom* aPropertyString);
   void CopyPropertyFrom(const StyleTransition& aOther)
     {
       mProperty = aOther.mProperty;
