@@ -7,6 +7,8 @@ Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 const TEST_PREFIX = "TEST-";
 const TEST_REGEX = new RegExp("^" + TEST_PREFIX);
 
+const LOG_ENTRY_MAX_COUNT = 1000;
+
 function check_event(event, id, data) {
   do_print("Checking message " + id);
   do_check_eq(event[0], id);
@@ -44,6 +46,15 @@ add_task(function* () {
   check_event(log[2], TEST_PREFIX + "3", undefined);
   do_check_true(log[0][1] <= log[1][1]);
   do_check_true(log[1][1] <= log[2][1]);
+
+  // Test that we limit the overall length of the log, and that pushing
+  // it over the limit keeps the older events.
+  for (let i = 0; i < LOG_ENTRY_MAX_COUNT + 1; i++) {
+    TelemetryLog.log(TEST_PREFIX + "to_tha_limit");
+  }
+  log = TelemetrySession.getPayload().log;
+  do_check_eq(log.length, LOG_ENTRY_MAX_COUNT);
+  check_event(log[0], TEST_PREFIX + "1", ["val", "123", "undefined"]);
 
   yield TelemetryController.testShutdown();
 });
