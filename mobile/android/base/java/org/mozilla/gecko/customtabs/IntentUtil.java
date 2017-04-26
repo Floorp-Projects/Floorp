@@ -73,6 +73,17 @@ class IntentUtil {
     }
 
     /**
+     * Only for telemetry to understand caller app's customization
+     * This method should only be called once during one usage.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return true, if the caller customized the color.
+     */
+    static boolean hasToolbarColor(@NonNull Intent intent) {
+        return intent.hasExtra(CustomTabsIntent.EXTRA_TOOLBAR_COLOR);
+    }
+
+    /**
      * To extract color code from intent for top toolbar.
      * It also ensure the color is not translucent.
      *
