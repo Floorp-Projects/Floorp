@@ -748,8 +748,10 @@ create_pa_stream(cubeb_stream * stm,
                  cubeb_stream_params * stream_params,
                  char const * stream_name)
 {
-  assert(stm && stream_params && stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
-         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels);
+  assert(stm && stream_params);
+  assert(&stm->input_stream == pa_stm || (&stm->output_stream == pa_stm &&
+         stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
+         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels));
   *pa_stm = NULL;
   pa_sample_spec ss;
   ss.format = to_pulse_format(stream_params->format);
@@ -758,10 +760,13 @@ create_pa_stream(cubeb_stream * stm,
   ss.rate = stream_params->rate;
   ss.channels = stream_params->channels;
 
-  pa_channel_map cm;
-  layout_to_channel_map(stream_params->layout, &cm);
-
-  *pa_stm = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, &cm);
+  if (stream_params->layout == CUBEB_LAYOUT_UNDEFINED) {
+    *pa_stm = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, NULL);
+  } else {
+    pa_channel_map cm;
+    layout_to_channel_map(stream_params->layout, &cm);
+    *pa_stm = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, &cm);
+  }
   return (*pa_stm == NULL) ? CUBEB_ERROR : CUBEB_OK;
 }
 

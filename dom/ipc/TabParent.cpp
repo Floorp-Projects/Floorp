@@ -413,15 +413,15 @@ mozilla::ipc::IPCResult
 TabParent::Recv__delete__()
 {
   if (XRE_IsParentProcess()) {
-    ContentParent::DeallocateTabId(mTabId,
-                                   Manager()->AsContentParent()->ChildID(),
-                                   mMarkedDestroying);
+    ContentParent::UnregisterRemoteFrame(mTabId,
+                                         Manager()->AsContentParent()->ChildID(),
+                                         mMarkedDestroying);
   }
   else {
     Manager()->AsContentBridgeParent()->NotifyTabDestroyed();
-    ContentParent::DeallocateTabId(mTabId,
-                                   Manager()->ChildID(),
-                                   mMarkedDestroying);
+    ContentParent::UnregisterRemoteFrame(mTabId,
+                                         Manager()->ChildID(),
+                                         mMarkedDestroying);
   }
 
   return IPC_OK();

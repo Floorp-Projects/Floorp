@@ -556,11 +556,11 @@ class WasmTokenStream
     {}
     void generateError(WasmToken token, UniqueChars* error) {
         unsigned column = token.begin() - lineStart_ + 1;
-        error->reset(JS_smprintf("parsing wasm text at %u:%u", line_, column));
+        *error = JS_smprintf("parsing wasm text at %u:%u", line_, column);
     }
     void generateError(WasmToken token, const char* msg, UniqueChars* error) {
         unsigned column = token.begin() - lineStart_ + 1;
-        error->reset(JS_smprintf("parsing wasm text at %u:%u: %s", line_, column, msg));
+        *error = JS_smprintf("parsing wasm text at %u:%u: %s", line_, column, msg);
     }
     WasmToken peek() {
         if (!lookaheadDepth_) {
@@ -3410,7 +3410,7 @@ class Resolver
     bool failResolveLabel(const char* kind, AstName name) {
         TwoByteChars chars(name.begin(), name.length());
         UniqueChars utf8Chars(CharsToNewUTF8CharsZ(nullptr, chars).c_str());
-        error_->reset(JS_smprintf("%s label '%s' not found", kind, utf8Chars.get()));
+        *error_ = JS_smprintf("%s label '%s' not found", kind, utf8Chars.get());
         return false;
     }
 
@@ -3494,7 +3494,7 @@ class Resolver
     }
 
     bool fail(const char* message) {
-        error_->reset(JS_smprintf("%s", message));
+        *error_ = JS_smprintf("%s", message);
         return false;
     }
 };

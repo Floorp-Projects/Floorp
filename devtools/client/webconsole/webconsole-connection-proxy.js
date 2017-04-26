@@ -6,14 +6,8 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
-
-const {Utils: WebConsoleUtils} =
-  require("devtools/client/webconsole/utils");
-const BrowserLoaderModule = {};
-Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
-
-const promise = require("promise");
+const {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 
 const STRINGS_URI = "devtools/client/locales/webconsole.properties";
@@ -127,18 +121,17 @@ WebConsoleConnectionProxy.prototype = {
       return this._connectDefer.promise;
     }
 
-    this._connectDefer = promise.defer();
+    this._connectDefer = defer();
 
     let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
-    this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._connectTimer.initWithCallback(this._connectionTimeout,
-                                        timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._connectTimer = setTimeout(this._connectionTimeout, timeout);
 
     let connPromise = this._connectDefer.promise;
     connPromise.then(() => {
-      this._connectTimer.cancel();
+      clearTimeout(this._connectTimer);
       this._connectTimer = null;
     }, () => {
+      clearTimeout(this._connectTimer);
       this._connectTimer = null;
     });
 
@@ -475,7 +468,7 @@ WebConsoleConnectionProxy.prototype = {
       return this._disconnecter.promise;
     }
 
-    this._disconnecter = promise.defer();
+    this._disconnecter = defer();
 
     if (!this.client) {
       this._disconnecter.resolve(null);
