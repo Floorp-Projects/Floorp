@@ -96,13 +96,15 @@ audio > xul|videocontrols {
 }
 
 .playButton {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause);
+  background-image: url(chrome://global/skin/media/pauseButton.svg);
+  -moz-context-properties: fill;
+  fill: #ffffff;
 }
 .playButton:hover {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause-hover);
+  fill: #48a0f7;
 }
 .playButton:hover:active {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause-active);
+  fill: #2d89e6;
 }
 .playButton[paused] {
   background-image: url(chrome://global/skin/media/playButton.svg#play);
