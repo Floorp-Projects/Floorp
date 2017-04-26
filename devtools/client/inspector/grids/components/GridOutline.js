@@ -6,7 +6,6 @@
 
 const { addons, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const { throttle } = require("devtools/client/inspector/shared/utils");
 
 const Types = require("../types");
 
@@ -14,7 +13,7 @@ const COLUMNS = "cols";
 const ROWS = "rows";
 
 // The delay prior to executing the grid cell highlighting.
-const GRID_CELL_MOUSEOVER_TIMEOUT = 150;
+const GRID_HIGHLIGHTING_DEBOUNCE = 50;
 
 // Move SVG grid to the right 100 units, so that it is not flushed against the edge of
 // layout border
@@ -45,13 +44,6 @@ module.exports = createClass({
       height: 0,
       width: 0,
     };
-  },
-
-  componentWillMount() {
-    // Throttle the grid highlighting of grid cells. It makes the UX smoother by not
-    // lagging the grid cell highlighting if a lot of grid cells are mouseover in a
-    // quick succession.
-    this.highlightCell = throttle(this.highlightCell, GRID_CELL_MOUSEOVER_TIMEOUT);
   },
 
   componentWillReceiveProps({ grids }) {
@@ -135,7 +127,21 @@ module.exports = createClass({
     return height;
   },
 
-  highlightCell({ target }) {
+  highlightCell(e) {
+    // Debounce the highlighting of cells.
+    // This way we don't end up sending many requests to the server for highlighting when
+    // cells get hovered in a rapid succession We only send a request if the user settles
+    // on a cell for some time.
+    if (this.highlightTimeout) {
+      clearTimeout(this.highlightTimeout);
+    }
+    this.highlightTimeout = setTimeout(() => {
+      this.doHighlightCell(e);
+      this.highlightTimeout = null;
+    }, GRID_HIGHLIGHTING_DEBOUNCE);
+  },
+
+  doHighlightCell({ target }) {
     const {
       grids,
       onShowGridAreaHighlight,
