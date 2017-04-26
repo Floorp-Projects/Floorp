@@ -981,8 +981,8 @@ class GCRuntime
     void markAllWeakReferences(gcstats::Phase phase);
     void markAllGrayReferences(gcstats::Phase phase);
 
-    void beginSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
-    void groupZonesForSweeping(AutoLockForExclusiveAccess& lock);
+    void beginSweepPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
+    void groupZonesForSweeping(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
     MOZ_MUST_USE bool findInterZoneEdges();
     void getNextSweepGroup();
     void endMarkingSweepGroup();
@@ -1443,7 +1443,8 @@ GCRuntime::needZealousGC() {
             hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
             hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
             hasZealMode(ZealMode::IncrementalMultipleSlices) ||
-            hasZealMode(ZealMode::Compact))
+            hasZealMode(ZealMode::Compact) ||
+            hasZealMode(ZealMode::IncrementalSweepThenFinish))
         {
             nextScheduled = zealFrequency;
         }
