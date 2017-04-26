@@ -65,6 +65,21 @@ function* initAnimationsFrontForUrl(url) {
   return {inspector, walker, animations, client};
 }
 
+function* initLayoutFrontForUrl(url) {
+  const {InspectorFront} = require("devtools/shared/fronts/inspector");
+
+  yield addTab(url);
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let inspector = InspectorFront(client, form);
+  let walker = yield inspector.getWalker();
+  let layout = yield walker.getLayoutInspector();
+
+  return {inspector, walker, layout, client};
+}
+
 function initDebuggerServer() {
   try {
     // Sometimes debugger server does not get destroyed correctly by previous
