@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div id="content" style="display: none">
+  <audio id="audio1" />
+  <audio id="audio2" mozaudiochannel="foo" />
+</div>
+
+<script type="application/javascript">
+
+function is(a, b, msg) {
+  parent.postMessage({ status: a === b, msg: msg }, '*');
+}
+
+function ok(a, msg) {
+  parent.postMessage({ status: !!a, msg: msg }, '*');
+}
+
+function finish() {
+  parent.postMessage({ finish: true }, '*');
+}
+
+function test_basic() {
+  var audio1 = document.getElementById("audio1");
+  ok(audio1, "Audio Element exists");
+  is(audio1.mozAudioChannelType, "normal", "Default audio1 channel == 'normal'");
+  try {
+  audio1.mozAudioChannelType = "foo";
+  } catch(e) {}
+  is(audio1.mozAudioChannelType, "normal", "Default audio1 channel == 'normal'");
+
+  var audio2 = document.getElementById("audio2");
+  ok(audio2, "Audio Element exists");
+  is(audio2.mozAudioChannelType, "normal", "Default audio2 channel == 'normal'");
+  try {
+  audio2.mozAudioChannelType = "foo";
+  } catch(e) {}
+  is(audio2.mozAudioChannelType, "normal", "Default audio2 channel == 'normal'");
+
+  runTest();
+}
+
+function test_preferences(aChannel) {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", aChannel ]]},
+    function() {
+      var audio = document.createElement('audio');
+      ok(audio, "Audio Element created");
+      is(audio.mozAudioChannelType, aChannel, "Default audio channel == '" + aChannel + "'");
+      runTest();
+    }
+  );
+}
+
+function test_wrong_preferences() {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", 'foobar' ]]},
+    function() {
+      var audio = document.createElement('audio');
+      ok(audio, "Audio Element created");
+      is(audio.mozAudioChannelType, 'normal', "Default audio channel == 'normal'");
+      runTest();
+    }
+  );
+}
+var tests = [
+  test_basic,
+
+  function() { test_preferences("content"); },
+  function() { test_preferences("notification"); },
+  function() { test_preferences("alarm"); },
+  function() { test_preferences("telephony"); },
+  function() { test_preferences("ringer"); },
+  function() { test_preferences("publicnotification"); },
+
+  test_wrong_preferences,
+];
+
+function runTest() {
+  if (!tests.length) {
+    finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+runTest();
+
+</script>
+</body>
+</html>
