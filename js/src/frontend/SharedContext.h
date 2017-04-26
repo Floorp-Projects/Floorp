@@ -231,7 +231,7 @@ class SharedContext
 
   protected:
     enum class Kind {
-        ObjectBox,
+        FunctionBox,
         Global,
         Eval,
         Module
@@ -271,15 +271,13 @@ class SharedContext
     // it. Otherwise nullptr.
     virtual Scope* compilationEnclosingScope() const = 0;
 
-    virtual ObjectBox* toObjectBox() { return nullptr; }
-    bool isObjectBox() { return toObjectBox(); }
-    bool isFunctionBox() { return isObjectBox() && toObjectBox()->isFunctionBox(); }
+    bool isFunctionBox() const { return kind_ == Kind::FunctionBox; }
     inline FunctionBox* asFunctionBox();
-    bool isModuleContext() { return kind_ == Kind::Module; }
+    bool isModuleContext() const { return kind_ == Kind::Module; }
     inline ModuleSharedContext* asModuleContext();
-    bool isGlobalContext() { return kind_ == Kind::Global; }
+    bool isGlobalContext() const { return kind_ == Kind::Global; }
     inline GlobalSharedContext* asGlobalContext();
-    bool isEvalContext() { return kind_ == Kind::Eval; }
+    bool isEvalContext() const { return kind_ == Kind::Eval; }
     inline EvalSharedContext* asEvalContext();
 
     ThisBinding thisBinding()          const { return thisBinding_; }
@@ -454,7 +452,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     void initStandaloneFunction(Scope* enclosingScope);
     void initWithEnclosingParseContext(ParseContext* enclosing, FunctionSyntaxKind kind);
 
-    ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
 
     Scope* compilationEnclosingScope() const override {
