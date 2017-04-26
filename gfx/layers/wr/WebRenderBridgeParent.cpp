@@ -197,7 +197,7 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
-                        				        const gfx::IntSize& aSize,
+                                        const gfx::IntSize& aSize,
                                         const uint32_t& aStride,
                                         const gfx::SurfaceFormat& aFormat,
                                         const ByteBuffer& aBuffer)
@@ -270,17 +270,20 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDeleteCompositorAnimations(const uint64_t& aId)
+WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
-  CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(id);
 
+  uint64_t storageId = mWidget ? 0 : mPipelineId.mHandle;
+  CompositorAnimationStorage* storage =
+    mCompositorBridge->GetAnimationStorage(storageId);
   MOZ_ASSERT(storage);
-  storage->ClearById(aId);
+
+  for (uint32_t i = 0; i < aIds.Length(); i++) {
+    storage->ClearById(aIds[i]);
+  }
 
   return IPC_OK();
 }

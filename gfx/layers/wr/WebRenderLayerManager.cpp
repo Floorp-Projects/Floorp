@@ -311,16 +311,17 @@ WebRenderLayerManager::DiscardImages()
 void
 WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 {
-  mDiscardedCompositorAnimationsIds.push_back(aId);
+  mDiscardedCompositorAnimationsIds.AppendElement(aId);
 }
 
 void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
-  for (auto id : mDiscardedCompositorAnimationsIds) {
-    WrBridge()->SendDeleteCompositorAnimations(id);
+  if (!mDiscardedCompositorAnimationsIds.IsEmpty()) {
+    WrBridge()->
+      SendDeleteCompositorAnimations(mDiscardedCompositorAnimationsIds);
+    mDiscardedCompositorAnimationsIds.Clear();
   }
-  mDiscardedCompositorAnimationsIds.clear();
 }
 
 void
