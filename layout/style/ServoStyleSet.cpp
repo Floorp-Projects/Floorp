@@ -21,6 +21,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIDocumentInlines.h"
 #include "nsPrintfCString.h"
+#include "nsSMILAnimationController.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 
@@ -263,10 +264,18 @@ ServoStyleSet::PreTraverse(Element* aRoot)
 
   // Process animation stuff that we should avoid doing during the parallel
   // traversal.
+  nsSMILAnimationController* smilController =
+    mPresContext->Document()->GetAnimationController();
   if (aRoot) {
     mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot);
+    if (smilController) {
+      smilController->PreTraverseInSubtree(aRoot);
+    }
   } else {
     mPresContext->EffectCompositor()->PreTraverse();
+    if (smilController) {
+      smilController->PreTraverse();
+    }
   }
 }
 
@@ -295,6 +304,11 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
 
   // If there are still animation restyles needed, trigger a second traversal to
   // update CSS animations or transitions' styles.
+  //
+  // We don't need to do this for SMIL since SMIL only updates its animation
+  // values once at the begin of a tick. As a result, even if the previous
+  // traversal caused, for example, the font-size to change, the SMIL style
+  // won't be updated until the next tick anyway.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
   if (forReconstruct ? compositor->PreTraverseInSubtree(root)
                      : compositor->PreTraverse()) {
