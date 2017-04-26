@@ -3728,3 +3728,10 @@ nsStandardURL::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 
 } // namespace net
 } // namespace mozilla
+
+// For unit tests.  Including nsStandardURL.h seems to cause problems via RustURL.h
+nsresult
+Test_NormalizeIPv4(const nsCSubstring& host, nsCString& result)
+{
+    return nsStandardURL::NormalizeIPv4(host, result);
+}
