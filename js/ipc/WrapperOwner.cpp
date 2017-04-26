@@ -919,9 +919,12 @@ CPOWProxyHandler::isConstructor(JSObject* proxy) const
 void
 WrapperOwner::drop(JSObject* obj)
 {
-    ObjectId objId = idOf(obj);
+    // The association may have already been swept from the table but if it's
+    // there then remove it.
+    ObjectId objId = idOfUnchecked(obj);
+    if (cpows_.findPreserveColor(objId) == obj)
+        cpows_.remove(objId);
 
-    cpows_.remove(objId);
     if (active())
         Unused << SendDropObject(objId);
     decref();
