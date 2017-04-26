@@ -1968,7 +1968,7 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& a
          aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Image;
 }
 
-void
+DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                              mozilla::wr::DisplayListBuilder& aBuilder,
                                                              nsTArray<WebRenderParentCommand>& aParentCommands,
@@ -1985,12 +1985,12 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
     if (!aParams.frame->StyleDisplay()->UsedAppearance()) {
-      return;
+      return DrawResult::NOT_READY;
     }
 
     nsIContent* content = aParams.frame->GetContent();
     if (!content || content->GetParent()) {
-      return;
+      return DrawResult::NOT_READY;
     }
 
     sc = aParams.frame->StyleContext();
@@ -2709,7 +2709,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   return result;
 }
 
-void
+DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                    mozilla::wr::DisplayListBuilder& aBuilder,
                                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
@@ -2747,7 +2747,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
   // Skip the following layer painting code if we found the dirty region is
   // empty or the current layer is not selected for drawing.
   if (clipState.mDirtyRectInDevPx.IsEmpty()) {
-    return;
+    return DrawResult::SUCCESS;
   }
 
   nsBackgroundLayerState state =
@@ -2756,13 +2756,15 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
                       clipState.mBGClipArea, layer, nullptr);
 
   if (!state.mFillArea.IsEmpty()) {
-    state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
-                                   aBuilder, aParentCommands, aLayer,
-                                   state.mDestArea, state.mFillArea,
-                                   state.mAnchor + paintBorderArea.TopLeft(),
-                                   clipState.mDirtyRectInAppUnits,
-                                   state.mRepeatSize, aParams.opacity);
+    return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
+                                     aBuilder, aParentCommands, aLayer,
+                                     state.mDestArea, state.mFillArea,
+                                     state.mAnchor + paintBorderArea.TopLeft(),
+                                     clipState.mDirtyRectInAppUnits,
+                                     state.mRepeatSize, aParams.opacity);
   }
+
+  return DrawResult::SUCCESS;
 }
 
 nsRect
