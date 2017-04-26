@@ -612,9 +612,10 @@ impl WebGLCommand {
                 ctx.gl().generate_mipmap(target),
         }
 
-        // FIXME: Use debug_assertions once tests are run with them
-        let error = ctx.gl().get_error();
-        assert!(error == gl::NO_ERROR, "Unexpected WebGL error: 0x{:x} ({})", error, error);
+        if cfg!(debug_assertions) {
+            let error = ctx.gl().get_error();
+            assert!(error == gl::NO_ERROR, "Unexpected WebGL error: 0x{:x} ({})", error, error);
+        }
     }
 
     fn read_pixels(gl: &gl::Gl, x: i32, y: i32, width: i32, height: i32, format: u32, pixel_type: u32,

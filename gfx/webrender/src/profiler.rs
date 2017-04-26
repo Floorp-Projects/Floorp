@@ -158,6 +158,10 @@ impl TimeProfileCounter {
         val
     }
 
+    pub fn inc(&mut self, ns: u64) {
+        self.nanoseconds += ns;
+    }
+
     pub fn get(&self) -> u64 {
         self.nanoseconds
     }
@@ -301,24 +305,22 @@ pub struct ResourceProfileCounters {
 
 #[derive(Clone)]
 pub struct IpcProfileCounters {
-    pub serialize_time: TimeProfileCounter,
-    pub deserialize_time: TimeProfileCounter,
+    pub build_time: TimeProfileCounter,
+    pub consume_time: TimeProfileCounter,
     pub send_time: TimeProfileCounter,
     pub total_time: TimeProfileCounter,
-    pub display_len: IntProfileCounter,
-    pub aux_len: IntProfileCounter,
+    pub display_lists: ResourceProfileCounter,
 }
 
 impl IpcProfileCounters {
-    pub fn set(&mut self, serial_start: u64, serial_end: u64, 
-                              deserial_start: u64, deserial_end: u64,
-                              display_len: usize, aux_len: usize) {
-        self.serialize_time.set(serial_end - serial_start);
-        self.deserialize_time.set(deserial_end - deserial_start);
-        self.send_time.set(deserial_start - serial_end);
-        self.total_time.set(deserial_end - serial_start);
-        self.display_len.set(display_len);
-        self.aux_len.set(aux_len);
+    pub fn set(&mut self, build_start: u64, build_end: u64, 
+                              consume_start: u64, consume_end: u64,
+                              display_len: usize) {
+        self.build_time.inc(build_end - build_start);
+        self.consume_time.inc(consume_end - consume_start);
+        self.send_time.inc(consume_start - build_end);
+        self.total_time.inc(consume_end - build_start);
+        self.display_lists.inc(display_len);
     }
 }
 
@@ -332,18 +334,22 @@ impl BackendProfileCounters {
                 texture_cache: TextureCacheProfileCounters::new(),
             },
             ipc: IpcProfileCounters {
-                serialize_time: TimeProfileCounter::new("IPC Serialize Time", false),
-                deserialize_time: TimeProfileCounter::new("IPC Deserialize Time", false),
-                send_time: TimeProfileCounter::new("IPC Send Time", false),
-                total_time: TimeProfileCounter::new("IPC Time", false),
-                display_len: IntProfileCounter::new("IPC Display List Len"),
-                aux_len: IntProfileCounter::new("IPC Aux List Len"),
+                build_time: TimeProfileCounter::new("Display List Build Time", false),
+                consume_time: TimeProfileCounter::new("Display List Consume Time", false),
+                send_time: TimeProfileCounter::new("Display List Send Time", false),
+                total_time: TimeProfileCounter::new("Total Display List Time", false),
+                display_lists: ResourceProfileCounter::new("Display Lists Sent"),
             }
         }
     }
 
     pub fn reset(&mut self) {
         self.total_time.reset();
+        self.ipc.total_time.reset();
+        self.ipc.build_time.reset();
+        self.ipc.consume_time.reset();
+        self.ipc.send_time.reset();
+        self.ipc.display_lists.reset();
     }
 }
 
@@ -730,12 +736,11 @@ impl Profiler {
         ], debug_renderer, true);
 
         self.draw_counters(&[
-            &backend_profile.ipc.serialize_time,
+            &backend_profile.ipc.build_time,
             &backend_profile.ipc.send_time,
-            &backend_profile.ipc.deserialize_time,
+            &backend_profile.ipc.consume_time,
             &backend_profile.ipc.total_time,
-            &backend_profile.ipc.display_len,
-            &backend_profile.ipc.aux_len,
+            &backend_profile.ipc.display_lists,
         ], debug_renderer, true);
 
         self.draw_counters(&[

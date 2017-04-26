@@ -1165,7 +1165,6 @@ impl WebRenderFrameBuilder {
 
 pub struct WrState {
     pipeline_id: WrPipelineId,
-    z_index: i32,
     frame_builder: WebRenderFrameBuilder,
 }
 
@@ -1175,7 +1174,6 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
 
     let state = Box::new(WrState {
                              pipeline_id: pipeline_id,
-                             z_index: 0,
                              frame_builder: WebRenderFrameBuilder::new(pipeline_id),
                          });
 
@@ -1198,7 +1196,6 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
                               height: u32) {
     assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.list.clear();
-    state.z_index = 0;
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
                                  LayoutSize::new(width as f32, height as f32));
@@ -1207,7 +1204,6 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
          .dl_builder
          .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                 bounds,
-                                0,
                                 None,
                                 TransformStyle::Flat,
                                 None,
@@ -1248,7 +1244,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               transform: *const WrMatrix,
                                               mix_blend_mode: WrMixBlendMode) {
     assert!(unsafe { is_in_main_thread() });
-    state.z_index += 1;
 
     let bounds = bounds.into();
 
@@ -1272,7 +1267,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
          .dl_builder
          .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                 bounds,
-                                state.z_index,
                                 Some(transform_binding),
                                 TransformStyle::Flat,
                                 None,

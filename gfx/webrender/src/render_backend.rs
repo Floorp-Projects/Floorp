@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
+use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
 use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
@@ -213,17 +214,30 @@ impl RenderBackend {
                                 self.discard_frame_state_for_pipeline(pipeline_id);
                             }
                             
-                            let counters = &mut profile_counters.ipc;
+                            let display_list_len = built_display_list.data().len();
+                            let aux_list_len = auxiliary_lists.data().len();
+                            let (builder_start_time, builder_finish_time) = built_display_list.times();
+
+                            let display_list_received_time = precise_time_ns();
+                            
                             profile_counters.total_time.profile(|| {
                                 self.scene.set_display_list(pipeline_id,
                                                             epoch,
                                                             built_display_list,
                                                             background_color,
                                                             viewport_size,
-                                                            auxiliary_lists,
-                                                            counters);
+                                                            auxiliary_lists);
                                 self.build_scene();
                             });
+
+                            // Note: this isn't quite right as auxiliary values will be 
+                            // pulled out somewhere in the prim_store, but aux values are
+                            // really simple and cheap to access, so it's not a big deal.
+                            let display_list_consumed_time = precise_time_ns();
+
+                            profile_counters.ipc.set(builder_start_time, builder_finish_time, 
+                                                     display_list_received_time, display_list_consumed_time,
+                                                     display_list_len + aux_list_len);
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
                             profile_scope!("SetRootPipeline");
@@ -310,6 +324,9 @@ impl RenderBackend {
                                 };
 
                                 let result = wrapper.new_context(size, attributes, dispatcher);
+                                // Creating a new GLContext may make the current bound context_id dirty.
+                                // Clear it to ensure that  make_current() is called in subsequent commands.
+                                self.current_bound_webgl_context_id = None;
 
                                 match result {
                                     Ok(ctx) => {
@@ -336,7 +353,10 @@ impl RenderBackend {
                         }
                         ApiMsg::ResizeWebGLContext(context_id, size) => {
                             let ctx = self.webgl_contexts.get_mut(&context_id).unwrap();
-                            ctx.make_current();
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                ctx.make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             match ctx.resize(&size) {
                                 Ok(_) => {
                                     // Update webgl texture size. Texture id may change too.
@@ -354,12 +374,18 @@ impl RenderBackend {
                             // TODO: Buffer the commands and only apply them here if they need to
                             // be synchronous.
                             let ctx = &self.webgl_contexts[&context_id];
-                            ctx.make_current();
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                ctx.make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             ctx.apply_command(command);
-                            self.current_bound_webgl_context_id = Some(context_id);
                         },
 
                         ApiMsg::VRCompositorCommand(context_id, command) => {
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                self.webgl_contexts[&context_id].make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             self.handle_vr_compositor_command(context_id, command);
                         }
                         ApiMsg::GenerateFrame(property_bindings) => {
@@ -507,7 +533,10 @@ impl RenderBackend {
         let texture = match cmd {
             VRCompositorCommand::SubmitFrame(..) => {
                     match self.resource_cache.get_webgl_texture(&ctx_id).texture_id {
-                        SourceTexture::WebGL(texture_id) => Some(texture_id),
+                        SourceTexture::WebGL(texture_id) => {
+                            let size = self.resource_cache.get_webgl_texture_size(&ctx_id);
+                            Some((texture_id, size))
+                        },
                         _=> None
                     }
             },

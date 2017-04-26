@@ -554,6 +554,10 @@ impl ResourceCache {
         }
     }
 
+    pub fn get_webgl_texture_size(&self, context_id: &WebGLContextId) -> DeviceIntSize {
+        self.webgl_textures[context_id].size
+    }
+
     pub fn expire_old_resources(&mut self, frame_id: FrameId) {
         self.cached_images.expire_old_resources(&mut self.texture_cache, frame_id);
 

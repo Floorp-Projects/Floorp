@@ -285,6 +285,7 @@ pub enum TextureUpdateOp {
         id: ExternalImageId,
         channel_index: u8,
         stride: Option<u32>,
+        offset: u32,
     },
     Grow {
         width: u32,
