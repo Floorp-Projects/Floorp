@@ -13,6 +13,7 @@
 #include "mozilla/ServoMediaRule.h"
 #include "mozilla/ServoNamespaceRule.h"
 #include "mozilla/ServoPageRule.h"
+#include "mozilla/ServoSupportsRule.h"
 
 namespace mozilla {
 
@@ -89,6 +90,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(MEDIA, Media)
       CASE_RULE(NAMESPACE, Namespace)
       CASE_RULE(PAGE, Page)
+      CASE_RULE(SUPPORTS, Supports)
 #undef CASE_RULE
       case nsIDOMCSSRule::FONT_FACE_RULE: {
         // Returns a borrowed nsCSSFontFaceRule object directly, so we
@@ -213,8 +215,9 @@ ServoCSSRuleList::FillStyleRuleHashtable(StyleRuleHashtable& aTable)
       ServoStyleRule* castedRule = static_cast<ServoStyleRule*>(GetRule(i));
       RawServoStyleRule* rawRule = castedRule->Raw();
       aTable.Put(rawRule, castedRule);
-    } else if (type == nsIDOMCSSRule::MEDIA_RULE) {
-      ServoMediaRule* castedRule = static_cast<ServoMediaRule*>(GetRule(i));
+    } else if (type == nsIDOMCSSRule::MEDIA_RULE ||
+               type == nsIDOMCSSRule::SUPPORTS_RULE) {
+      GroupRule* castedRule = static_cast<GroupRule*>(GetRule(i));
 
       // Call this method recursively on the ServoCSSRuleList in the rule.
       ServoCSSRuleList* castedRuleList = static_cast<ServoCSSRuleList*>(
