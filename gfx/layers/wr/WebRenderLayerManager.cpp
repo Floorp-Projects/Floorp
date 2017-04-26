@@ -116,12 +116,17 @@ WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
-    // The size of mask layer is transformed, and we may set the layer transform to wr stacking context.
-    // So we should apply inverse transform for mask layer.
-    gfx::Matrix4x4 transform;
+
+    // The size of mask layer is transformed, and we may set the layer transform
+    // to wr stacking context. So we should apply inverse transform for mask layer
+    // and reverse the offset of the stacking context.
+    gfx::Matrix4x4 transform = maskLayer->GetLayer()->GetTransform();
     if (aUnapplyLayerTransform) {
-      transform = GetWrBoundTransform().Inverse();
+      gfx::Rect bounds = IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect());
+      transform = transform.PreTranslate(-bounds.x, -bounds.y, 0);
+      transform = transform * GetLayer()->GetTransform().Inverse();
     }
+
     return maskLayer->RenderMaskLayer(transform);
   }
 
