@@ -1,0 +1,12 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Tests related to SVG being used as an image, with zooming
+
+# Simple <img> tests
+== img-zoomIn-1.html img-zoomIn-1.html
+== img-zoomOut-1.html img-zoomOut-1.html
+
+# Ensure that scaled SVG images aren't fuzzy when tiled.
+== img-fuzzy-zoomOut-1.html img-fuzzy-zoomOut-1.html
+== img-fuzzy-zoomIn-1.html img-fuzzy-zoomIn-1.html
+== img-fuzzy-transform-zoomOut-1.html img-fuzzy-transform-zoomOut-1.html
+== img-fuzzy-transform-zoomIn-1.html img-fuzzy-transform-zoomIn-1.html

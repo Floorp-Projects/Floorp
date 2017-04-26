@@ -1,0 +1,312 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+
+# This directory contains tests that test the sizing of the SVG viewport into
+# which SVG is rendered. It includes tests for standalone SVG, SVG embedded by
+# reference using the HTML <object> element, and SVG rendered inline within
+# XHTML.
+#
+# SVG's <svg> element is a "replaced element". The main specification texts
+# covering how the <svg> element is sized are:
+#
+#   http://www.w3.org/TR/SVGMobile12/coords.html#InitialViewport
+#   http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
+#   http://www.w3.org/TR/CSS21/visudet.html
+
+skip-if(Android) == scrollbars-01.svg scrollbars-01.svg
+skip-if(Android) == scrollbars-02.svg scrollbars-02.svg
+
+# Standalone tests
+#
+# To get reasonable test coverage of the implementation of the replaced element
+# algorythm we test all permutations of the CSS 'width' and 'height' properties
+# having the values zero, auto, a px value or a percentage value, and of the
+# intrinsic width and height (the 'width' and 'height' attributes) having the
+# values zero, a px value or a percentage value. This gives us 4*4*3*3 == ==
+# tests. On top of that, there are 12 cases from the 144 permutations for which
+# the 'viewBox' attribute should have an affect (see below).
+#
+# In the file names for the standalone tests that follow, the first two fields
+# denote the type of value specified for the CSS 'width' and 'height'
+# properties, and the third and four fields denote the type of value used for
+# the intrinsic width and height (i.e. the 'width' and 'height' attributes).
+#
+# Note that the standalone SVG testcases can't test defaulting to 300x150 px
+# because SVG always has an intrinsic width and height. To get the size of an
+# SVG to default to 300x150 px the SVG will need to have a containing block
+# that depends on the SVG's size (e.g. a floating containing block). Again, see
+# below for those tests.
+
+== standalone--0-0--0-0.svg standalone--0-0--0-0.svg
+== standalone--0-0--0-pct.svg standalone--0-0--0-pct.svg
+== standalone--0-0--0-px.svg standalone--0-0--0-px.svg
+== standalone--0-0--pct-0.svg standalone--0-0--pct-0.svg
+== standalone--0-0--pct-pct.svg standalone--0-0--pct-pct.svg
+== standalone--0-0--pct-px.svg standalone--0-0--pct-px.svg
+== standalone--0-0--px-0.svg standalone--0-0--px-0.svg
+== standalone--0-0--px-pct.svg standalone--0-0--px-pct.svg
+== standalone--0-0--px-px.svg standalone--0-0--px-px.svg
+
+== standalone--0-auto--0-0.svg standalone--0-auto--0-0.svg
+== standalone--0-auto--0-pct.svg standalone--0-auto--0-pct.svg
+== standalone--0-auto--0-px.svg standalone--0-auto--0-px.svg
+== standalone--0-auto--pct-0.svg standalone--0-auto--pct-0.svg
+== standalone--0-auto--pct-pct.svg standalone--0-auto--pct-pct.svg
+== standalone--0-auto--pct-px.svg standalone--0-auto--pct-px.svg
+== standalone--0-auto--px-0.svg standalone--0-auto--px-0.svg
+== standalone--0-auto--px-pct.svg standalone--0-auto--px-pct.svg
+== standalone--0-auto--px-px.svg standalone--0-auto--px-px.svg
+
+== standalone--0-pct--0-0.svg standalone--0-pct--0-0.svg
+== standalone--0-pct--0-pct.svg standalone--0-pct--0-pct.svg
+== standalone--0-pct--0-px.svg standalone--0-pct--0-px.svg
+== standalone--0-pct--pct-0.svg standalone--0-pct--pct-0.svg
+== standalone--0-pct--pct-pct.svg standalone--0-pct--pct-pct.svg
+== standalone--0-pct--pct-px.svg standalone--0-pct--pct-px.svg
+== standalone--0-pct--px-0.svg standalone--0-pct--px-0.svg
+== standalone--0-pct--px-pct.svg standalone--0-pct--px-pct.svg
+== standalone--0-pct--px-px.svg standalone--0-pct--px-px.svg
+
+== standalone--0-px--0-0.svg standalone--0-px--0-0.svg
+== standalone--0-px--0-pct.svg standalone--0-px--0-pct.svg
+== standalone--0-px--0-px.svg standalone--0-px--0-px.svg
+== standalone--0-px--pct-0.svg standalone--0-px--pct-0.svg
+== standalone--0-px--pct-pct.svg standalone--0-px--pct-pct.svg
+== standalone--0-px--pct-px.svg standalone--0-px--pct-px.svg
+== standalone--0-px--px-0.svg standalone--0-px--px-0.svg
+== standalone--0-px--px-pct.svg standalone--0-px--px-pct.svg
+== standalone--0-px--px-px.svg standalone--0-px--px-px.svg
+
+== standalone--auto-0--0-0.svg standalone--auto-0--0-0.svg
+== standalone--auto-0--0-pct.svg standalone--auto-0--0-pct.svg
+== standalone--auto-0--0-px.svg standalone--auto-0--0-px.svg
+== standalone--auto-0--pct-0.svg standalone--auto-0--pct-0.svg
+== standalone--auto-0--pct-pct.svg standalone--auto-0--pct-pct.svg
+== standalone--auto-0--pct-px.svg standalone--auto-0--pct-px.svg
+== standalone--auto-0--px-0.svg standalone--auto-0--px-0.svg
+== standalone--auto-0--px-pct.svg standalone--auto-0--px-pct.svg
+== standalone--auto-0--px-px.svg standalone--auto-0--px-px.svg
+
+== standalone--auto-auto--0-0.svg standalone--auto-auto--0-0.svg
+== standalone--auto-auto--0-pct.svg standalone--auto-auto--0-pct.svg
+== standalone--auto-auto--0-px.svg standalone--auto-auto--0-px.svg
+== standalone--auto-auto--pct-0.svg standalone--auto-auto--pct-0.svg
+fuzzy-if(d2d,1,400) == standalone--auto-auto--pct-pct.svg standalone--auto-auto--pct-pct.svg
+== standalone--auto-auto--pct-px.svg standalone--auto-auto--pct-px.svg
+== standalone--auto-auto--px-0.svg standalone--auto-auto--px-0.svg
+== standalone--auto-auto--px-pct.svg standalone--auto-auto--px-pct.svg
+== standalone--auto-auto--px-px.svg standalone--auto-auto--px-px.svg
+
+== standalone--auto-pct--0-0.svg standalone--auto-pct--0-0.svg
+== standalone--auto-pct--0-pct.svg standalone--auto-pct--0-pct.svg
+== standalone--auto-pct--0-px.svg standalone--auto-pct--0-px.svg
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-0.svg standalone--auto-pct--pct-0.svg
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-pct.svg standalone--auto-pct--pct-pct.svg
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-px.svg standalone--auto-pct--pct-px.svg
+== standalone--auto-pct--px-0.svg standalone--auto-pct--px-0.svg
+== standalone--auto-pct--px-pct.svg standalone--auto-pct--px-pct.svg
+fuzzy-if(d2d,1,1000) == standalone--auto-pct--px-px.svg standalone--auto-pct--px-px.svg
+
+== standalone--auto-px--0-0.svg standalone--auto-px--0-0.svg
+== standalone--auto-px--0-pct.svg standalone--auto-px--0-pct.svg
+== standalone--auto-px--0-px.svg standalone--auto-px--0-px.svg
+== standalone--auto-px--pct-0.svg standalone--auto-px--pct-0.svg
+== standalone--auto-px--pct-pct.svg standalone--auto-px--pct-pct.svg
+== standalone--auto-px--pct-px.svg standalone--auto-px--pct-px.svg
+== standalone--auto-px--px-0.svg standalone--auto-px--px-0.svg
+== standalone--auto-px--px-pct.svg standalone--auto-px--px-pct.svg
+== standalone--auto-px--px-px.svg standalone--auto-px--px-px.svg
+
+== standalone--pct-0--0-0.svg standalone--pct-0--0-0.svg
+== standalone--pct-0--0-pct.svg standalone--pct-0--0-pct.svg
+== standalone--pct-0--0-px.svg standalone--pct-0--0-px.svg
+== standalone--pct-0--pct-0.svg standalone--pct-0--pct-0.svg
+== standalone--pct-0--pct-pct.svg standalone--pct-0--pct-pct.svg
+== standalone--pct-0--pct-px.svg standalone--pct-0--pct-px.svg
+== standalone--pct-0--px-0.svg standalone--pct-0--px-0.svg
+== standalone--pct-0--px-pct.svg standalone--pct-0--px-pct.svg
+== standalone--pct-0--px-px.svg standalone--pct-0--px-px.svg
+
+== standalone--pct-auto--0-0.svg standalone--pct-auto--0-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-auto--0-pct.svg standalone--pct-auto--0-pct.svg
+== standalone--pct-auto--0-px.svg standalone--pct-auto--0-px.svg
+== standalone--pct-auto--pct-0.svg standalone--pct-auto--pct-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-auto--pct-pct.svg standalone--pct-auto--pct-pct.svg
+== standalone--pct-auto--pct-px.svg standalone--pct-auto--pct-px.svg
+== standalone--pct-auto--px-0.svg standalone--pct-auto--px-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-auto--px-pct.svg standalone--pct-auto--px-pct.svg
+== standalone--pct-auto--px-px.svg standalone--pct-auto--px-px.svg
+
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-0.svg standalone--pct-pct--0-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-pct.svg standalone--pct-pct--0-pct.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-px.svg standalone--pct-pct--0-px.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-0.svg standalone--pct-pct--pct-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-pct.svg standalone--pct-pct--pct-pct.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-px.svg standalone--pct-pct--pct-px.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-0.svg standalone--pct-pct--px-0.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-pct.svg standalone--pct-pct--px-pct.svg
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg standalone--pct-pct--px-px.svg
+
+== standalone--pct-px--0-0.svg standalone--pct-px--0-0.svg
+== standalone--pct-px--0-pct.svg standalone--pct-px--0-pct.svg
+== standalone--pct-px--0-px.svg standalone--pct-px--0-px.svg
+== standalone--pct-px--pct-0.svg standalone--pct-px--pct-0.svg
+== standalone--pct-px--pct-pct.svg standalone--pct-px--pct-pct.svg
+== standalone--pct-px--pct-px.svg standalone--pct-px--pct-px.svg
+== standalone--pct-px--px-0.svg standalone--pct-px--px-0.svg
+== standalone--pct-px--px-pct.svg standalone--pct-px--px-pct.svg
+== standalone--pct-px--px-px.svg standalone--pct-px--px-px.svg
+
+== standalone--px-0--0-0.svg standalone--px-0--0-0.svg
+== standalone--px-0--0-pct.svg standalone--px-0--0-pct.svg
+== standalone--px-0--0-px.svg standalone--px-0--0-px.svg
+== standalone--px-0--pct-0.svg standalone--px-0--pct-0.svg
+== standalone--px-0--pct-pct.svg standalone--px-0--pct-pct.svg
+== standalone--px-0--pct-px.svg standalone--px-0--pct-px.svg
+== standalone--px-0--px-0.svg standalone--px-0--px-0.svg
+== standalone--px-0--px-pct.svg standalone--px-0--px-pct.svg
+== standalone--px-0--px-px.svg standalone--px-0--px-px.svg
+
+== standalone--px-auto--0-0.svg standalone--px-auto--0-0.svg
+== standalone--px-auto--0-pct.svg standalone--px-auto--0-pct.svg
+== standalone--px-auto--0-px.svg standalone--px-auto--0-px.svg
+== standalone--px-auto--pct-0.svg standalone--px-auto--pct-0.svg
+== standalone--px-auto--pct-pct.svg standalone--px-auto--pct-pct.svg
+== standalone--px-auto--pct-px.svg standalone--px-auto--pct-px.svg
+== standalone--px-auto--px-0.svg standalone--px-auto--px-0.svg
+== standalone--px-auto--px-pct.svg standalone--px-auto--px-pct.svg
+== standalone--px-auto--px-px.svg standalone--px-auto--px-px.svg
+
+== standalone--px-pct--0-0.svg standalone--px-pct--0-0.svg
+== standalone--px-pct--0-pct.svg standalone--px-pct--0-pct.svg
+== standalone--px-pct--0-px.svg standalone--px-pct--0-px.svg
+== standalone--px-pct--pct-0.svg standalone--px-pct--pct-0.svg
+== standalone--px-pct--pct-pct.svg standalone--px-pct--pct-pct.svg
+== standalone--px-pct--pct-px.svg standalone--px-pct--pct-px.svg
+== standalone--px-pct--px-0.svg standalone--px-pct--px-0.svg
+== standalone--px-pct--px-pct.svg standalone--px-pct--px-pct.svg
+== standalone--px-pct--px-px.svg standalone--px-pct--px-px.svg
+
+== standalone--px-px--0-0.svg standalone--px-px--0-0.svg
+== standalone--px-px--0-pct.svg standalone--px-px--0-pct.svg
+== standalone--px-px--0-px.svg standalone--px-px--0-px.svg
+== standalone--px-px--pct-0.svg standalone--px-px--pct-0.svg
+== standalone--px-px--pct-pct.svg standalone--px-px--pct-pct.svg
+== standalone--px-px--pct-px.svg standalone--px-px--pct-px.svg
+== standalone--px-px--px-0.svg standalone--px-px--px-0.svg
+== standalone--px-px--px-pct.svg standalone--px-px--px-pct.svg
+== standalone--px-px--px-px.svg standalone--px-px--px-px.svg
+
+
+# As mentioned above, the 'viewBox' attribute may play a part in the sizing of
+# the SVG viewport in 12 of the 144 standalone tests above. The 'viewBox'
+# attribute only affects the replaced element sizing algorithm (by providing an
+# intrinsic ratio) when the SVG 'width' and 'height' attributes don't provide
+# an intrinsic ratio but the algorithm says the intrinsic ratio should be used
+# if avaliable. In other words, this is when one of the CSS properties 'width'
+# or 'height' has the value 'auto' and the other has a non-zero value, while
+# one or both of the SVG 'width' and 'height' attributes has a percentage
+# value. For the standalone tests above that means the value of the 'viewBox'
+# attribute matters in the 12 cases that follow.
+#
+# XXX We could also check that 'viewBox' does NOT have an affect in the other
+# cases.
+#
+# XXX What about cases like standalone--auto-pct--0-px--viewBox.svg? Is the
+# intrinsic ratio zero and not used, or should we use the viewBox ratio?
+
+== standalone--auto-pct--pct-pct--viewBox.svg standalone--auto-pct--pct-pct--viewBox.svg
+== standalone--auto-pct--pct-px--viewBox.svg standalone--auto-pct--pct-px--viewBox.svg
+== standalone--auto-pct--px-pct--viewBox.svg standalone--auto-pct--px-pct--viewBox.svg
+== standalone--auto-px--pct-pct--viewBox.svg standalone--auto-px--pct-pct--viewBox.svg
+== standalone--auto-px--pct-px--viewBox.svg standalone--auto-px--pct-px--viewBox.svg
+== standalone--auto-px--px-pct--viewBox.svg standalone--auto-px--px-pct--viewBox.svg
+== standalone--pct-auto--pct-pct--viewBox.svg standalone--pct-auto--pct-pct--viewBox.svg
+== standalone--pct-auto--pct-px--viewBox.svg standalone--pct-auto--pct-px--viewBox.svg
+== standalone--pct-auto--px-pct--viewBox.svg standalone--pct-auto--px-pct--viewBox.svg
+== standalone--px-auto--pct-pct--viewBox.svg standalone--px-auto--pct-pct--viewBox.svg
+== standalone--px-auto--pct-px--viewBox.svg standalone--px-auto--pct-px--viewBox.svg
+== standalone--px-auto--px-pct--viewBox.svg standalone--px-auto--px-pct--viewBox.svg
+
+
+# Sanity tests. These tests check that our choice of percentage width (49%)
+# doesn't coincidently result in the same width as our choice of px width
+# (70px) or the fall back width (300 px), and that our choice of percentage
+# height (49%) doesn't coincidently result in the same height as our choice of
+# px height (70px) or the fall back height (150 px). This ensures that we won't
+# miss false positives for the tests:
+#
+#   standalone--pct-xxx--px-xxx.svg
+#   standalone--xxx-pct--xxx-px.svg
+#   standalone--px-xxx--pct-xxx.svg
+#   standalone--xxx-px--xxx-pct.svg
+#
+# if the user agent ignores the CSS property and uses the attribute instead.
+# This will happen if the content area width is 612 px or the content height is
+# 306 px. Hopefully it's unlikely testers will encounter this.
+
+== standalone-sanity-width-pct.svg standalone-sanity-width-pct.svg
+== standalone-sanity-width-pct.svg standalone-sanity-width-pct.svg
+== standalone-sanity-height-pct.svg standalone-sanity-height-pct.svg
+== standalone-sanity-height-pct.svg standalone-sanity-height-pct.svg
+
+
+# Embedded inline tests
+#
+# The standalone tests provide a reasonable workout for replaced element
+# algorithm sizing, but we also want to test that SVG embedded inline is
+# positioned correctly when the properties 'display', 'float' and 'position'
+# are set to different values.
+#
+# We could certainly expand on these tests, but they provide reasonable base
+# coverage.
+
+HTTP(../..) == inline--display-block--01.xhtml inline--display-block--01.xhtml
+== inline--display-inline--01.xhtml inline--display-inline--01.xhtml
+HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01.xhtml
+== inline--float-left--01.xhtml inline--float-left--01.xhtml
+== inline--float-right--01.xhtml inline--float-right--01.xhtml
+== inline--position-absolute--01.xhtml inline--position-absolute--01.xhtml
+== inline--position-absolute--02.xhtml inline--position-absolute--02.xhtml
+HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01.xhtml
+
+
+# Embedded by reference tests
+#
+# One issue when it comes to documents embedded by reference is whether
+# non-'auto' values for the CSS 'width' and 'height' properties on the
+# _embedded_ document's root element should be used as intrinsic values by
+# replaced elements like HTML <object>. For the sake of simplicity we will
+# ignore this case for now, but it's certainly worth revisiting at some point
+# in the future.
+#
+# Since we have given the replaced element algorithm a reasonable workout in
+# the standalone tests, for the embedded by reference tests we will simply
+# check that the embedded SVG's intrinsic dimensions are used. The following
+# tests do not have any width or height on the <object> element so they should
+# be sized purely by the embedded SVG's intrinsic size.
+
+random-if(Android) == object--auto-auto--0-0.html object--auto-auto--0-0.html
+random-if(Android) == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
+random-if(Android) == object--auto-auto--0-px.html object--auto-auto--0-px.html
+random-if(Android) == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
+# The following four commented out tests fail post bug 428023:
+== object--auto-auto--pct-pct.html object--auto-auto--pct-pct.html
+== object--auto-auto--pct-px.html object--auto-auto--pct-px.html
+random-if(Android) == object--auto-auto--px-0.html object--auto-auto--px-0.html
+== object--auto-auto--px-pct.html object--auto-auto--px-pct.html
+random-if(Android) == object--auto-auto--px-px.html object--auto-auto--px-px.html
+== object--pct-pct--0-0.html object--pct-pct--0-0.html
+
+
+# Assorted tests to check that dynamic changes work correctly
+#
+# Here we have an assortment of different tests to check that updates occur
+# correctly when changes are made that should result in a change in the size
+# or position of the SVG.
+
+== dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
+== dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
+== dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
+== dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
+random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
+

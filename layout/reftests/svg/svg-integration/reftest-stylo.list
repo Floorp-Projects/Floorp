@@ -1,0 +1,45 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# clip-path tests
+include clip-path/reftest-stylo.list
+
+== clipPath-html-01.xhtml clipPath-html-01.xhtml
+== clipPath-html-01-extref.xhtml clipPath-html-01-extref.xhtml
+== clipPath-html-02.xhtml clipPath-html-02.xhtml
+== clipPath-html-02-extref.xhtml clipPath-html-02-extref.xhtml
+== clipPath-html-03.xhtml clipPath-html-03.xhtml
+== clipPath-html-03-extref.xhtml clipPath-html-03-extref.xhtml
+== clipPath-html-04.xhtml clipPath-html-04.xhtml
+== clipPath-html-04-extref.xhtml clipPath-html-04-extref.xhtml
+== clipPath-html-05.xhtml clipPath-html-05.xhtml
+== clipPath-html-05-extref.xhtml clipPath-html-05-extref.xhtml
+== clipPath-html-06.xhtml clipPath-html-06.xhtml
+== clipPath-html-06-extref.xhtml clipPath-html-06-extref.xhtml
+== clipPath-html-07.xhtml clipPath-html-07.xhtml
+== clipPath-html-08.xhtml clipPath-html-08.xhtml
+== clipPath-html-zoomed-01.xhtml clipPath-html-zoomed-01.xhtml
+== clipPath-transformed-html-01.xhtml clipPath-transformed-html-01.xhtml
+== clipPath-transformed-html-02.xhtml clipPath-transformed-html-02.xhtml
+== conditions-outer-svg-01.xhtml conditions-outer-svg-01.xhtml
+== conditions-outer-svg-02.xhtml conditions-outer-svg-02.xhtml
+fails == dynamic-conditions-outer-svg-01.xhtml dynamic-conditions-outer-svg-01.xhtml
+fails == dynamic-conditions-outer-svg-02.xhtml dynamic-conditions-outer-svg-02.xhtml
+fails == dynamic-conditions-outer-svg-03.xhtml dynamic-conditions-outer-svg-03.xhtml
+== dynamic-conditions-outer-svg-04.xhtml dynamic-conditions-outer-svg-04.xhtml
+== filter-html-01.xhtml filter-html-01.xhtml
+random == filter-html-01-extref.xhtml filter-html-01-extref.xhtml
+== filter-html-zoomed-01.xhtml filter-html-zoomed-01.xhtml
+== mask-html-01.xhtml mask-html-01.xhtml
+== mask-html-01-extref-01.xhtml mask-html-01-extref-01.xhtml
+random == mask-html-01-extref-02.xhtml mask-html-01-extref-02.xhtml
+== mask-html-zoomed-01.xhtml mask-html-zoomed-01.xhtml
+fails == mask-html-xbl-bound-01.html mask-html-xbl-bound-01.html
+== mask-transformed-html-01.xhtml mask-transformed-html-01.xhtml
+== mask-transformed-html-02.xhtml mask-transformed-html-02.xhtml
+== patterned-svg-under-transformed-html-01.xhtml patterned-svg-under-transformed-html-01.xhtml
+== patterned-svg-under-transformed-html-02.xhtml patterned-svg-under-transformed-html-02.xhtml
+
+== mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01a.xhtml
+== mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01b.xhtml
+== mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01c.xhtml
+== mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01d.xhtml
+== mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01e.xhtml

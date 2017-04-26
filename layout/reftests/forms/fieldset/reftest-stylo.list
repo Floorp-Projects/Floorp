@@ -1,0 +1,29 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== dynamic-legend-scroll-1.html dynamic-legend-scroll-1.html
+== fieldset-hidden-1.html fieldset-hidden-1.html
+== fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1.html
+== fieldset-percentage-padding-1.html fieldset-percentage-padding-1.html
+fails == fieldset-scroll-1.html fieldset-scroll-1.html
+== fieldset-scrolled-1.html fieldset-scrolled-1.html
+fails == fieldset-overflow-auto-1.html fieldset-overflow-auto-1.html
+== positioned-container-1.html positioned-container-1.html
+== relpos-legend-1.html relpos-legend-1.html
+== relpos-legend-2.html relpos-legend-2.html
+== relpos-legend-3.html relpos-legend-3.html
+== relpos-legend-4.html relpos-legend-4.html
+fails == sticky-legend-1.html sticky-legend-1.html
+fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing.html
+fails == overflow-hidden.html overflow-hidden.html
+== legend-rtl.html legend-rtl.html # Bug 1340696
+fails == fieldset-grid-001.html fieldset-grid-001.html
+fails == fieldset-flexbox-001.html fieldset-flexbox-001.html
+== fieldset-min-width-1a.html fieldset-min-width-1a.html
+== fieldset-min-width-1b.html fieldset-min-width-1b.html
+== fieldset-min-width-2a.html fieldset-min-width-2a.html
+== fieldset-min-width-2b.html fieldset-min-width-2b.html
+== legend-overlapping-right-border-1.html legend-overlapping-right-border-1.html # Bug 1340696
+fails == fieldset-border-image-1a.html fieldset-border-image-1a.html
+fails == fieldset-border-image-1b.html fieldset-border-image-1b.html
+fails == fieldset-border-image-2a.html fieldset-border-image-2a.html
+fails == fieldset-border-image-2b.html fieldset-border-image-2b.html
+== dynamic-text-indent.html dynamic-text-indent.html

@@ -1,0 +1,11 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# test script keyword.
+
+# cases where the test does not include an appropriate getTestCases() function,
+# or where getTestCases() does not return an array of objects with methods
+# testPassed() and testDescription() can not be included since they always
+# produce unexpected failures.
+
+script scripttest-pass.html
+fails script scripttest-fail.html
+fails script scripttest-pass-fail.html

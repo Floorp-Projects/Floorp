@@ -1,0 +1,27 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# basic sanity checking
+fails == plugin-sanity.html plugin-sanity.html # Bug 1341095
+fails == plugin-sanity.html plugin-sanity.html # Bug 1341095
+== plugin-alpha-zindex.html plugin-alpha-zindex.html
+== plugin-alpha-opacity.html plugin-alpha-opacity.html
+== windowless-clipping-1.html windowless-clipping-1.html
+# fuzzy because of anti-aliasing in dashed border
+== border-padding-1.html border-padding-1.html
+== border-padding-2.html border-padding-2.html
+== border-padding-3.html border-padding-3.html
+# The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
+random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) skip-if(stylo) == pluginproblemui-direction-1.html pluginproblemui-direction-1.html
+random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) skip-if(stylo) == pluginproblemui-direction-2.html pluginproblemui-direction-2.html
+== plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
+== plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
+== plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
+== plugin-background.html plugin-background.html
+== plugin-background-1-step.html plugin-background-1-step.html
+== plugin-background-2-step.html plugin-background-2-step.html
+== plugin-background-5-step.html plugin-background-5-step.html
+== plugin-background-10-step.html plugin-background-10-step.html
+== plugin-transform-1.html plugin-transform-1.html
+== plugin-transform-2.html plugin-transform-2.html
+== shrink-1.html shrink-1.html
+== update-1.html update-1.html
+skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers.html

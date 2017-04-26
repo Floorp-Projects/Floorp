@@ -1,0 +1,93 @@
+== table-repaint-a.html table-repaint-a.html
+== table-repaint-b.html table-repaint-b.html
+== table-repaint-c.html table-repaint-c.html
+== table-repaint-d.html table-repaint-d.html
+== 540247-1.xul 540247-1.xul
+fails == 543681-1.html 543681-1.html
+fails-if(stylo&&!browserIsRemote) == 1243409-1.html 1243409-1.html
+skip-if(stylo) == test-image-layers.html test-image-layers.html
+skip-if(stylo) == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
+pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers.html
+skip-if(stylo) == test-animated-image-layers-background.html test-animated-image-layers-background.html
+== box-shadow-border-radius.html box-shadow-border-radius.html
+== filter-userspace-offset.svg?offsetContainer=rect filter-userspace-offset.svg?offsetContainer=rect
+== filter-userspace-offset.svg?offsetContainer=use filter-userspace-offset.svg?offsetContainer=use
+== filter-userspace-offset.svg?offsetContainer=innerSVG filter-userspace-offset.svg?offsetContainer=innerSVG
+== filter-userspace-offset.svg?offsetContainer=foreignObject filter-userspace-offset.svg?offsetContainer=foreignObject
+== filter-userspace-offset.svg?offsetContainer=rect&filter=flood-boundingBox filter-userspace-offset.svg?offsetContainer=rect&filter=flood-boundingBox
+== filter-userspace-offset.svg?offsetContainer=use&filter=flood-boundingBox filter-userspace-offset.svg?offsetContainer=use&filter=flood-boundingBox
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-boundingBox filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-boundingBox
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-boundingBox filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-boundingBox
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-boundingBox filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-boundingBox
+== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-boundingBox filter-userspace-offset.svg?offsetContainer=use&filter=matrix-boundingBox
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-boundingBox filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-boundingBox
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-boundingBox filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-boundingBox
+== filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100 filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-at100 filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-userSpace-atZero filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-userSpace-atZero
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100 filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100 filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-at100 filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-userSpace-atZero filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-userSpace-atZero
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100 filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=rect&mask=boundingBox filter-userspace-offset.svg?offsetContainer=rect&mask=boundingBox
+== filter-userspace-offset.svg?offsetContainer=use&mask=boundingBox filter-userspace-offset.svg?offsetContainer=use&mask=boundingBox
+== filter-userspace-offset.svg?offsetContainer=innerSVG&mask=boundingBox filter-userspace-offset.svg?offsetContainer=innerSVG&mask=boundingBox
+== filter-userspace-offset.svg?offsetContainer=foreignObject&mask=boundingBox filter-userspace-offset.svg?offsetContainer=foreignObject&mask=boundingBox
+== filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100 filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-at100 filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=innerSVG&mask=userSpace-atZero filter-userspace-offset.svg?offsetContainer=innerSVG&mask=userSpace-atZero
+== filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100
+fails == scroll-inactive-layers.html scroll-inactive-layers.html
+fails == scroll-inactive-layers-2.html scroll-inactive-layers-2.html
+fails == inactive-layertree-visible-region-1.html inactive-layertree-visible-region-1.html
+fails == inactive-layertree-visible-region-2.html inactive-layertree-visible-region-2.html
+fails == transform-floating-point-invalidation.html transform-floating-point-invalidation.html
+fails == transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
+fails == nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
+fails == nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
+skip-if(stylo) == clipped-animated-transform-1.html clipped-animated-transform-1.html # bug 1334036
+fails == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
+fails == paintedlayer-recycling-2.html paintedlayer-recycling-2.html
+fails pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html
+fails == paintedlayer-recycling-4.html paintedlayer-recycling-4.html
+fails == paintedlayer-recycling-5.html paintedlayer-recycling-5.html
+fails == paintedlayer-recycling-6.html paintedlayer-recycling-6.html
+fails == paintedlayer-recycling-7.html paintedlayer-recycling-7.html
+== masklayer-1.html masklayer-1.html
+fails == masklayer-2.html masklayer-2.html
+fails == layer-splitting-1.html layer-splitting-1.html
+fails == layer-splitting-2.html layer-splitting-2.html
+fails == layer-splitting-3.html layer-splitting-3.html
+fails == layer-splitting-4.html layer-splitting-4.html
+fails == layer-splitting-5.html layer-splitting-5.html
+fails == layer-splitting-6.html layer-splitting-6.html
+fails == layer-splitting-7.html layer-splitting-7.html
+== image-scrolling-zoom-1.html image-scrolling-zoom-1.html
+== image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-ref.html
+fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolling.html
+== background-position-1.html background-position-1.html
+== background-position-2a.html background-position-2a.html
+== background-position-2b.html background-position-2b.html
+== background-position-2c.html background-position-2c.html
+== background-position-2d.html background-position-2d.html
+== background-position-2e.html background-position-2e.html
+== background-position-2f.html background-position-2f.html
+== zero-opacity-animation.html zero-opacity-animation.html
+== zero-opacity-text.html zero-opacity-text.html
+== negative-w-component.html negative-w-component.html
+
+== mask-invalidation-1a.html mask-invalidation-1a.html
+== mask-invalidation-1b.html mask-invalidation-1b.html
+
+== mask-invalidation-2a.html mask-invalidation-2a.html
+== mask-invalidation-2b.html mask-invalidation-2b.html
+== mask-invalidation-2c.html mask-invalidation-2c.html
+== mask-invalidation-2d.html mask-invalidation-2d.html
+
+== clip-path-invalidation-1a.html clip-path-invalidation-1a.html
+== clip-path-invalidation-1b.html clip-path-invalidation-1b.html
+== clip-path-invalidation-1c.html clip-path-invalidation-1c.html
+== clip-path-invalidation-1d.html clip-path-invalidation-1d.html

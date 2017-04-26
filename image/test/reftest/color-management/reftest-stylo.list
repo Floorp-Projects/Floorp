@@ -1,0 +1,8 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Colormangement
+
+# test for bug 489133, test for bug 460520
+== invalid-chrm.png invalid-chrm.png
+== invalid-whitepoint.png invalid-whitepoint.png
+# test for bug 488955
+== trc-type.html trc-type.html

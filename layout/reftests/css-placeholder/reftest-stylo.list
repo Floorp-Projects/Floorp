@@ -1,0 +1,8 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+include input/reftest-stylo.list
+include textarea/reftest-stylo.list
+
+fails == css-restrictions.html css-restrictions.html
+fails == css-simple-styling.html css-simple-styling.html
+fails == css-background.html css-background.html
+fails == ignore-pseudo-class.html ignore-pseudo-class.html

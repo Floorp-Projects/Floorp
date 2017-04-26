@@ -1,0 +1,12 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== label-dynamic.html label-dynamic.html
+fails-if(Android) == radio-stretched.html radio-stretched.html
+== checked-native.html checked-native.html
+== checked-native.html checked-native.html
+== checked-native-notref.html checked-native-notref.html
+== indeterminate-checked.html indeterminate-checked.html
+== indeterminate-unchecked.html indeterminate-unchecked.html
+== indeterminate-native-checked.html indeterminate-native-checked.html
+== indeterminate-native-unchecked.html indeterminate-native-unchecked.html
+== indeterminate-selector.html indeterminate-selector.html
+skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height.html

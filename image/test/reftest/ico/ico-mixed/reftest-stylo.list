@@ -1,0 +1,4 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# ICO BMP and PNG mixed tests
+
+fails == mixed-bmp-png.ico mixed-bmp-png.ico

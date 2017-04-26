@@ -1,0 +1,43 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== values.html values.html
+== values-rtl.html values-rtl.html
+== margin-padding.html margin-padding.html
+== margin-padding-rtl.html margin-padding-rtl.html
+fails == bar-pseudo-element.html bar-pseudo-element.html
+== bar-pseudo-element-rtl.html bar-pseudo-element-rtl.html
+== indeterminate-style-width.html indeterminate-style-width.html
+
+# vertical tests
+== values-vertical.html values-vertical.html
+== values-vertical-rtl.html values-vertical-rtl.html
+== margin-padding-vertical.html margin-padding-vertical.html
+== margin-padding-vertical-rtl.html margin-padding-vertical-rtl.html
+== bar-pseudo-element-vertical.html bar-pseudo-element-vertical.html
+== bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl.html
+== indeterminate-style-height.html indeterminate-style-height.html
+
+# The following test is disabled but kept in the repository because the
+# transformations will not behave exactly the same for <progress> and two divs.
+# However, it would be possible to manually check those.
+== transformations.html transformations.html
+
+# Tests for bugs:
+== block-invalidate.html block-invalidate.html
+== in-cells.html in-cells.html
+== max-height.html max-height.html
+
+# Tests for block and inline orientation in combination with writing-mode
+fails == progress-orient-horizontal.html progress-orient-horizontal.html
+fails-if(!cocoaWidget||OSX==1010) == progress-orient-vertical.html progress-orient-vertical.html
+fails == progress-orient-block.html progress-orient-block.html
+fails == progress-orient-inline.html progress-orient-inline.html
+fails == progress-vlr.html progress-vlr.html
+fails == progress-vlr-orient-block.html progress-vlr-orient-block.html
+fails == progress-vlr-orient-inline.html progress-vlr-orient-inline.html
+fails == progress-vlr-orient-horizontal.html progress-vlr-orient-horizontal.html
+fails == progress-vlr-orient-vertical.html progress-vlr-orient-vertical.html
+fails == progress-vrl.html progress-vrl.html
+fails == progress-vrl-orient-block.html progress-vrl-orient-block.html
+fails == progress-vrl-orient-inline.html progress-vrl-orient-inline.html
+fails == progress-vrl-orient-horizontal.html progress-vrl-orient-horizontal.html
+fails == progress-vrl-orient-vertical.html progress-vrl-orient-vertical.html

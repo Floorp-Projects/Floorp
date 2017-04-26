@@ -1,0 +1,27 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Please see the comment at the beginning of reftest-stylo.list
+
+== leftN-widthA-rightA.html?margin_parent leftN-widthA-rightA.html?margin_parent
+== leftN-widthA-rightA-2.html?margin_parent leftN-widthA-rightA-2.html?margin_parent
+== leftN-widthA-rightN.html?margin_parent leftN-widthA-rightN.html?margin_parent
+== leftN-widthA-rightN-2.html?margin_parent leftN-widthA-rightN-2.html?margin_parent
+== leftA-widthN-rightA.html?margin_parent leftA-widthN-rightA.html?margin_parent
+== leftN-widthN-rightA.html?margin_parent leftN-widthN-rightA.html?margin_parent
+== leftA-widthN-rightN.html?margin_parent leftA-widthN-rightN.html?margin_parent
+== leftA-widthA-rightN.html?margin_parent leftA-widthA-rightN.html?margin_parent
+== toauto-leftN-widthA-rightA.html?margin_parent toauto-leftN-widthA-rightA.html?margin_parent
+== toauto-leftN-widthA-rightA-2.html?margin_parent toauto-leftN-widthA-rightA-2.html?margin_parent
+== toauto-leftN-widthA-rightN.html?margin_parent toauto-leftN-widthA-rightN.html?margin_parent
+== toauto-leftN-widthA-rightN-2.html?margin_parent toauto-leftN-widthA-rightN-2.html?margin_parent
+== toauto-leftA-widthN-rightA.html?margin_parent toauto-leftA-widthN-rightA.html?margin_parent
+== toauto-leftN-widthN-rightA.html?margin_parent toauto-leftN-widthN-rightA.html?margin_parent
+== toauto-leftA-widthN-rightN.html?margin_parent toauto-leftA-widthN-rightN.html?margin_parent
+== toauto-leftA-widthA-rightN.html?margin_parent toauto-leftA-widthA-rightN.html?margin_parent
+== fromauto-leftN-widthA-rightA.html?margin_parent fromauto-leftN-widthA-rightA.html?margin_parent
+== fromauto-leftN-widthA-rightA-2.html?margin_parent fromauto-leftN-widthA-rightA-2.html?margin_parent
+== fromauto-leftN-widthA-rightN.html?margin_parent fromauto-leftN-widthA-rightN.html?margin_parent
+== fromauto-leftN-widthA-rightN-2.html?margin_parent fromauto-leftN-widthA-rightN-2.html?margin_parent
+== fromauto-leftA-widthN-rightA.html?margin_parent fromauto-leftA-widthN-rightA.html?margin_parent
+== fromauto-leftN-widthN-rightA.html?margin_parent fromauto-leftN-widthN-rightA.html?margin_parent
+== fromauto-leftA-widthN-rightN.html?margin_parent fromauto-leftA-widthN-rightN.html?margin_parent
+== fromauto-leftA-widthA-rightN.html?margin_parent fromauto-leftA-widthA-rightN.html?margin_parent

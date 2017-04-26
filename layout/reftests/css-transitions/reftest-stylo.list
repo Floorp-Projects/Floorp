@@ -1,0 +1,10 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== transitions-inline-already-wrapped-1.html transitions-inline-already-wrapped-1.html
+== transitions-inline-already-wrapped-2.html transitions-inline-already-wrapped-2.html
+== transitions-inline-rewrap-1.html transitions-inline-rewrap-1.html
+== transitions-inline-rewrap-2.html transitions-inline-rewrap-2.html
+== stacking-context-opacity-lose-to-animation.html stacking-context-opacity-lose-to-animation.html
+== stacking-context-transform-lose-to-animation.html stacking-context-transform-lose-to-animation.html
+== stacking-context-opacity-wins-over-important-style.html stacking-context-opacity-wins-over-important-style.html
+== stacking-context-transform-wins-over-important-style.html stacking-context-transform-wins-over-important-style.html
+== transition-and-animation-with-different-durations.html transition-and-animation-with-different-durations.html

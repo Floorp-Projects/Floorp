@@ -1,0 +1,5 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== min-intrinsic-with-percents-across-img-cases.html min-intrinsic-with-percents-across-img-cases.html
+== min-intrinsic-with-percents-across-elements.html min-intrinsic-with-percents-across-elements.html
+skip-if(stylo) == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls.html # Bug 1341086, Bug 1341973
+skip-if(stylo) == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls.html # Bug 1341086

@@ -1,0 +1,63 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# PngSuite - Ancillary chunks
+
+# cHRM chunks
+#
+# ccwn2c08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
+== ccwn2c08.png ccwn2c08.png
+# ccwn3p08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
+== ccwn3p08.png ccwn3p08.png
+
+# pHYs chunks
+#
+# PngSuite implies these first 3 should end up as 32x32 bitmaps, but
+# per discussion in bug 408622 that's not actually true.
+#
+# cdfn2c08 - physical pixel dimensions, 8x32 flat pixels
+== cdfn2c08.png cdfn2c08.png
+# cdhn2c08 - physical pixel dimensions, 32x8 high pixels
+== cdhn2c08.png cdhn2c08.png
+# cdsn2c08 - physical pixel dimensions, 8x8 square pixels
+== cdsn2c08.png cdsn2c08.png
+# cdun2c08 - physical pixel dimensions, 1000 pixels per 1 meter
+== cdun2c08.png cdun2c08.png
+
+# hISt chunks (shouldn't affect display on 24bit systems)
+#
+# ch1n3p04 - histogram 15 colors
+== ch1n3p04.png ch1n3p04.png
+# ch2n3p08 - histogram 256 colors
+== ch2n3p08.png ch2n3p08.png
+
+# tIME chunks (doesn't affect display)
+#
+# cm0n0g04 - modification time, 01-jan-2000 12:34:56
+== cm0n0g04.png cm0n0g04.png
+# cm7n0g04 - modification time, 01-jan-1970 00:00:00
+== cm7n0g04.png cm7n0g04.png
+# cm9n0g04 - modification time, 31-dec-1999 23:59:59
+== cm9n0g04.png cm9n0g04.png
+
+# sBIT chunks
+#
+# cs3n2c16 - color, 13 significant bits
+== cs3n2c16.png cs3n2c16.png
+# cs3n3p08 - paletted, 3 significant bits
+== cs3n3p08.png cs3n3p08.png
+# cs5n2c08 - color, 5 significant bits
+== cs5n2c08.png cs5n2c08.png
+# cs5n3p08 - paletted, 5 significant bits
+== cs5n3p08.png cs5n3p08.png
+# cs8n2c08 - color, 8 significant bits (reference)
+== cs8n2c08.png cs8n2c08.png
+# cs8n3p08 - paletted, 8 significant bits (reference)
+== cs8n3p08.png cs8n3p08.png
+
+# tEXt chunks (doesn't affect display)
+#
+# ct0n0g04 - no textual data
+== ct0n0g04.png ct0n0g04.png
+# ct1n0g04 - with textual data
+== ct1n0g04.png ct1n0g04.png
+# ctzn0g04 - with compressed textual data 
+== ctzn0g04.png ctzn0g04.png
