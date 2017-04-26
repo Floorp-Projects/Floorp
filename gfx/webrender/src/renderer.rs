@@ -1276,7 +1276,7 @@ impl Renderer {
                                                    width, height, stride,
                                                    &data[offset as usize..]);
                     }
-                    TextureUpdateOp::UpdateForExternalBuffer { rect, id, channel_index, stride } => {
+                    TextureUpdateOp::UpdateForExternalBuffer { rect, id, channel_index, stride, offset } => {
                         let handler = self.external_image_handler
                                           .as_mut()
                                           .expect("Found external image, but no handler set!");
@@ -1290,7 +1290,8 @@ impl Renderer {
                                                       rect.origin.y,
                                                       rect.size.width,
                                                       rect.size.height,
-                                                      stride, data);
+                                                      stride,
+                                                      &data[offset as usize..]);
                             }
                             _ => panic!("No external buffer found"),
                         };
@@ -1513,13 +1514,6 @@ impl Renderer {
                 None => {
                     self.device.clear_target(clear_color, Some(1.0));
                 }
-            }
-
-            let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
-            for isolate_clear in &target.isolate_clears {
-                self.device.clear_target_rect(isolate_clear_color,
-                                              None,
-                                              *isolate_clear);
             }
 
             self.device.disable_depth_write();
@@ -1848,7 +1842,7 @@ impl Renderer {
                                                  ORTHO_FAR_PLANE)
                 } else {
                     size = &frame.cache_size;
-                    clear_color = Some([1.0, 1.0, 1.0, 0.0]);
+                    clear_color = Some([0.0, 0.0, 0.0, 0.0]);
                     projection = Matrix4D::ortho(0.0,
                                                  size.width as f32,
                                                  0.0,

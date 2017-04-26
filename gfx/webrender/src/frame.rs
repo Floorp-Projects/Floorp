@@ -316,7 +316,8 @@ impl Frame {
             }
         });
 
-        let mut frame_builder = FrameBuilder::new(window_size,
+        let mut frame_builder = FrameBuilder::new(self.frame_builder.take(),
+                                                  window_size,
                                                   background_color,
                                                   self.frame_builder_config);
 

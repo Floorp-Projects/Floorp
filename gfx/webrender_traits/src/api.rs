@@ -580,9 +580,9 @@ pub enum VRCompositorCommand {
 }
 
 // Trait object that handles WebVR commands.
-// Receives the texture_id associated to the WebGLContext.
+// Receives the texture id and size associated to the WebGLContext.
 pub trait VRCompositorHandler: Send {
-    fn handle(&mut self, command: VRCompositorCommand, texture_id: Option<u32>);
+    fn handle(&mut self, command: VRCompositorCommand, texture: Option<(u32, DeviceIntSize)>);
 }
 
 pub trait RenderNotifier: Send {

@@ -53,9 +53,9 @@ pub struct BuiltDisplayListDescriptor {
     /// The size in bytes of the display list items in this display list.
     display_list_items_size: usize,
     /// The first IPC time stamp: before any work has been done
-    serialization_start_time: u64,
+    builder_start_time: u64,
     /// The second IPC time stamp: after serialization
-    serialization_end_time: u64,
+    builder_finish_time: u64,
 }
 
 impl BuiltDisplayListDescriptor {
@@ -96,8 +96,8 @@ impl BuiltDisplayList {
         }
     }
 
-    pub fn serialization_times(&self) -> (u64, u64) {
-      (self.descriptor.serialization_start_time, self.descriptor.serialization_end_time)
+    pub fn times(&self) -> (u64, u64) {
+      (self.descriptor.builder_start_time, self.descriptor.builder_finish_time)
     }
 }
 
@@ -108,10 +108,12 @@ pub struct DisplayListBuilder {
     pub pipeline_id: PipelineId,
     clip_stack: Vec<ClipId>,
     next_clip_id: u64,
+    builder_start_time: u64,
 }
 
 impl DisplayListBuilder {
     pub fn new(pipeline_id: PipelineId) -> DisplayListBuilder {
+        let start_time = precise_time_ns();
         DisplayListBuilder {
             list: Vec::new(),
             auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
@@ -120,6 +122,7 @@ impl DisplayListBuilder {
 
             // We start at 1 here, because the root scroll id is always 0.
             next_clip_id: 1,
+            builder_start_time: start_time,
         }
     }
 
@@ -432,7 +435,6 @@ impl DisplayListBuilder {
     pub fn push_stacking_context(&mut self,
                                  scroll_policy: ScrollPolicy,
                                  bounds: LayoutRect,
-                                 z_index: i32,
                                  transform: Option<PropertyBinding<LayoutTransform>>,
                                  transform_style: TransformStyle,
                                  perspective: Option<LayoutTransform>,
@@ -441,7 +443,6 @@ impl DisplayListBuilder {
         let item = SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
             stacking_context: StackingContext {
                 scroll_policy: scroll_policy,
-                z_index: z_index,
                 transform: transform,
                 transform_style: transform_style,
                 perspective: perspective,
@@ -550,19 +551,17 @@ impl DisplayListBuilder {
 
     pub fn finalize(self) -> (PipelineId, BuiltDisplayList, AuxiliaryLists) {
         unsafe {
-            let serialization_start_time = precise_time_ns();
-
             let blob = convert_vec_pod_to_blob(self.list);
             let aux_list = self.auxiliary_lists_builder.finalize();
 
-            let serialization_end_time = precise_time_ns();
+            let end_time = precise_time_ns();
 
             (self.pipeline_id,
              BuiltDisplayList {
                  descriptor: BuiltDisplayListDescriptor {
                     display_list_items_size: blob.len(),
-                    serialization_start_time: serialization_start_time,
-                    serialization_end_time: serialization_end_time,
+                    builder_start_time: self.builder_start_time,
+                    builder_finish_time: end_time,
                  },
                  data: blob,
              },

@@ -180,13 +180,13 @@ struct WrState;
 
 struct WrBuiltDisplayListDescriptor {
   size_t display_list_items_size;
-  uint64_t serialization_start_time;
-  uint64_t serialization_end_time;
+  uint64_t builder_start_time;
+  uint64_t builder_finish_time;
 
   bool operator==(const WrBuiltDisplayListDescriptor& aOther) const {
     return display_list_items_size == aOther.display_list_items_size &&
-      serialization_start_time == aOther.serialization_start_time &&
-      serialization_end_time == aOther.serialization_end_time;
+      builder_start_time == aOther.builder_start_time &&
+      builder_finish_time == aOther.builder_finish_time;
   }
 };
 

@@ -803,6 +803,7 @@ impl TextureCache {
                                         id: ext_image.id,
                                         channel_index: ext_image.channel_index,
                                         stride: stride,
+                                        offset: descriptor.offset,
                                     },
                                 };
 
