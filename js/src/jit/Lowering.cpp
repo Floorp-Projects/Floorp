@@ -1919,8 +1919,6 @@ LIRGenerator::visitMod(MMod* ins)
         MOZ_ASSERT(ins->lhs()->type() == MIRType::Double);
         MOZ_ASSERT(ins->rhs()->type() == MIRType::Double);
 
-        gen->setPerformsCall();
-
         // Ion does an unaligned ABI call and thus needs a temp register. Wasm
         // doesn't.
         LDefinition maybeTemp = gen->compilingWasm()
@@ -2266,13 +2264,13 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate)
         break;
 
       case MIRType::Double:
-        // May call into JS::ToInt32().
+        // May call into JS::ToInt32() on the slow OOL path.
         gen->setPerformsCall();
         lowerTruncateDToInt32(truncate);
         break;
 
       case MIRType::Float32:
-        // May call into JS::ToInt32().
+        // May call into JS::ToInt32() on the slow OOL path.
         gen->setPerformsCall();
         lowerTruncateFToInt32(truncate);
         break;
@@ -4470,8 +4468,6 @@ LIRGenerator::visitWasmStackArg(MWasmStackArg* ins)
 void
 LIRGenerator::visitWasmCall(MWasmCall* ins)
 {
-    gen->setPerformsCall();
-
     LAllocation* args = gen->allocate<LAllocation>(ins->numOperands());
     if (!args) {
         abort(AbortReason::Alloc, "Couldn't allocate for MWasmCall");
