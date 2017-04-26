@@ -27,14 +27,6 @@ mozharness.base.errors module
     :undoc-members:
     :show-inheritance:
 
-mozharness.base.gaia_test module
---------------------------------
-
-.. automodule:: mozharness.base.gaia_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.base.log module
 --------------------------
 
