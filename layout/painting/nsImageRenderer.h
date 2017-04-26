@@ -206,16 +206,16 @@ public:
    * {background|mask}-specific arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
-  void BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
-                                          mozilla::wr::DisplayListBuilder& aBuilder,
-                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                          mozilla::layers::WebRenderDisplayItemLayer* aLayer,
-                                          const nsRect&        aDest,
-                                          const nsRect&        aFill,
-                                          const nsPoint&       aAnchor,
-                                          const nsRect&        aDirty,
-                                          const nsSize&        aRepeatSize,
-                                          float                aOpacity);
+  DrawResult BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
+                                                mozilla::wr::DisplayListBuilder& aBuilder,
+                                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
+                                                mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                const nsRect&        aDest,
+                                                const nsRect&        aFill,
+                                                const nsPoint&       aAnchor,
+                                                const nsRect&        aDirty,
+                                                const nsSize&        aRepeatSize,
+                                                float                aOpacity);
 
   /**
    * Draw the image to a single component of a border-image style rendering.
@@ -290,17 +290,17 @@ private:
    *
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
-  void BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
-                                  mozilla::wr::DisplayListBuilder& aBuilder,
-                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                  mozilla::layers::WebRenderDisplayItemLayer* aLayer,
-                                  const nsRect&        aDirtyRect,
-                                  const nsRect&        aDest,
-                                  const nsRect&        aFill,
-                                  const nsPoint&       aAnchor,
-                                  const nsSize&        aRepeatSize,
-                                  const mozilla::CSSIntRect& aSrc,
-                                  float                aOpacity = 1.0);
+  DrawResult BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
+                                        mozilla::wr::DisplayListBuilder& aBuilder,
+                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
+                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                        const nsRect&        aDirtyRect,
+                                        const nsRect&        aDest,
+                                        const nsRect&        aFill,
+                                        const nsPoint&       aAnchor,
+                                        const nsSize&        aRepeatSize,
+                                        const mozilla::CSSIntRect& aSrc,
+                                        float                aOpacity = 1.0);
 
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or

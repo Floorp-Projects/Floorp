@@ -3436,7 +3436,10 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
 
-  nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aParentCommands, aLayer);
+  image::DrawResult result =
+    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aParentCommands, aLayer);
+
+  nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 }
 
 void
