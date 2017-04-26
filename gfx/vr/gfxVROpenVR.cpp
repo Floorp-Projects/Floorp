@@ -345,6 +345,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
                                        uint32_t aNumAxes, ::vr::ETrackedDeviceClass aDeviceType)
   : VRControllerHost(VRDeviceType::OpenVR)
   , mTrigger(0)
+  , mAxisMove(aNumAxes)
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
 {
@@ -362,6 +363,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
       break;
   }
 
+  mAxisMove.SetLengthAndRetainStorage(aNumAxes);
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = aNumButtons;
@@ -389,6 +391,18 @@ uint32_t
 VRControllerOpenVR::GetTrackedIndex()
 {
   return mTrackedIndex;
+}
+
+float
+VRControllerOpenVR::GetAxisMove(uint32_t aAxis)
+{
+  return mAxisMove[aAxis];
+}
+
+void
+VRControllerOpenVR::SetAxisMove(uint32_t aAxis, float aValue)
+{
+  mAxisMove[aAxis] = aValue;
 }
 
 void
@@ -806,8 +820,12 @@ void
 VRSystemManagerOpenVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                                       float aValue)
 {
-  if (aValue != 0.0f) {
+  RefPtr<impl::VRControllerOpenVR> controller(mOpenVRController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+
+  if (controller->GetAxisMove(aAxis) != aValue) {
     NewAxisMove(aControllerIdx, aAxis, aValue);
+    controller->SetAxisMove(aAxis, aValue);
   }
 }
 
@@ -901,7 +919,6 @@ VRSystemManagerOpenVR::ScanForControllers()
 
   ::vr::TrackedDeviceIndex_t trackedIndexArray[::vr::k_unMaxTrackedDeviceCount];
   uint32_t newControllerCount = 0;
-  ::vr::ETrackedDeviceClass deviceType;
   // Basically, we would have HMDs in the tracked devices,
   // but we are just interested in the controllers.
   for (::vr::TrackedDeviceIndex_t trackedDevice = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
@@ -911,7 +928,8 @@ VRSystemManagerOpenVR::ScanForControllers()
       continue;
     }
 
-    deviceType = mVRSystem->GetTrackedDeviceClass(trackedDevice);
+    const ::vr::ETrackedDeviceClass deviceType = mVRSystem->
+                                                 GetTrackedDeviceClass(trackedDevice);
     if (deviceType != ::vr::TrackedDeviceClass_Controller
         && deviceType != ::vr::TrackedDeviceClass_GenericTracker) {
       continue;
@@ -922,23 +940,19 @@ VRSystemManagerOpenVR::ScanForControllers()
   }
 
   if (newControllerCount != mControllerCount) {
-    // The controller count is changed, removing the existing gamepads first.
-    for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
-      RemoveGamepad(i);
-    }
-    mControllerCount = 0;
-    mOpenVRController.Clear();
+    RemoveControllers();
 
     // Re-adding controllers to VRControllerManager.
     for (::vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
       const ::vr::TrackedDeviceIndex_t trackedDevice = trackedIndexArray[i];
+      const ::vr::ETrackedDeviceClass deviceType = mVRSystem->
+                                                   GetTrackedDeviceClass(trackedDevice);
       const ::vr::ETrackedControllerRole role = mVRSystem->
-                                               GetControllerRoleForTrackedDeviceIndex(
-                                               trackedDevice);
-
+                                                GetControllerRoleForTrackedDeviceIndex(
+                                                trackedDevice);
+      const GamepadHand hand = GetGamepadHandFromControllerRole(role);
       uint32_t numButtons = 0;
       uint32_t numAxes = 0;
-      const GamepadHand hand = GetGamepadHandFromControllerRole(role);
 
       // Scan the axes that the controllers support
       for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
@@ -1004,6 +1018,10 @@ VRSystemManagerOpenVR::ScanForControllers()
 void
 VRSystemManagerOpenVR::RemoveControllers()
 {
+  // The controller count is changed, removing the existing gamepads first.
+  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+    RemoveGamepad(i);
+  }
   mOpenVRController.Clear();
   mControllerCount = 0;
 }

@@ -1180,10 +1180,6 @@ public:
     return GetBidiData().embeddingLevel;
   }
 
-  nsTArray<nsIContent*>* GetGenConPseudos() {
-    return Properties().Get(GenConProperty());
-  }
-
   /**
    * Return the distance between the border edge of the frame and the
    * margin edge of the frame.  Like GetRect(), returns the dimensions

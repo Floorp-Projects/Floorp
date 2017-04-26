@@ -883,6 +883,12 @@ element.getContainer = function (el) {
  * pointer-interactable, if it is found somewhere in the
  * |elementsFromPoint| list at |el|'s in-view centre coordinates.
  *
+ * Before running the check, we change |el|'s pointerEvents style property
+ * to "auto", since elements without pointer events enabled do not turn
+ * up in the paint tree we get from document.elementsFromPoint.  This is
+ * a specialisation that is only relevant when checking if the element is
+ * in view.
+ *
  * @param {Element} el
  *     Element to check if is in view.
  *
@@ -890,8 +896,14 @@ element.getContainer = function (el) {
  *     True if |el| is inside the viewport, or false otherwise.
  */
 element.isInView = function (el) {
-  let tree = element.getPointerInteractablePaintTree(el);
-  return tree.includes(el);
+  let originalPointerEvents = el.style.pointerEvents;
+  try {
+    el.style.pointerEvents = "auto";
+    const tree = element.getPointerInteractablePaintTree(el);
+    return tree.includes(el);
+  } finally {
+    el.style.pointerEvents = originalPointerEvents;
+  }
 };
 
 /**
