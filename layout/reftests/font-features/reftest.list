@@ -27,7 +27,7 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 fails-if(stylo) HTTP(..) == font-features-hlig-2.html font-features-hlig.html
 fails-if(stylo) HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
-HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
+fails-if(stylo) HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
 
 # check that feature in style rule overrides @font-face
 fails-if(stylo) HTTP(..) == font-features-hlig-3.html font-features-noliga.html
@@ -47,7 +47,7 @@ fails-if(stylo) HTTP(..) == font-features-order-2.html font-features-noliga.html
 
 # check priority of feature settings vs. font-variant subproperty
 fails-if(stylo) HTTP(..) == font-features-order-3.html font-features-noliga.html
-HTTP(..) == font-features-order-4.html font-features-noliga.html
+fails-if(stylo) HTTP(..) == font-features-order-4.html font-features-noliga.html
 fails-if(stylo) HTTP(..) == font-features-order-5.html font-features-hlig.html
 
 # check priority involving feature settings and font-variant-alternates
@@ -61,9 +61,9 @@ fails-if(stylo) HTTP(..) == annotations.html annotations-ref.html
 # (debug problems with font-variant-debug.html which displays all props)
 fails-if(stylo) HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html
 fails-if(stylo) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
-HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
-HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
-HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
+fails-if(stylo) HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
+fails-if(stylo) HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
+fails-if(stylo) HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
 HTTP(..) == font-variant-position.html font-variant-position-ref.html
 
 # font-kerning
@@ -96,13 +96,13 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) fails-if(st
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
-HTTP(..) != caps-fallback-smallcaps1.html caps-fallback-default.html
+fails-if(stylo) HTTP(..) != caps-fallback-smallcaps1.html caps-fallback-default.html
 HTTP(..) != caps-fallback-smallcaps2.html caps-fallback-default.html
 HTTP(..) != caps-fallback-petitecaps.html caps-fallback-default.html
 fails-if(stylo) HTTP(..) != caps-fallback-allsmallcaps.html caps-fallback-default.html
 fails-if(stylo) HTTP(..) != caps-fallback-allpetitecaps.html caps-fallback-default.html
 # -- normal or fallback rendering
-HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smcp.html
+fails-if(stylo) HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smcp.html
 HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smcp.html
 HTTP(..) == caps-fallback-petitecaps.html caps-fallback-smcp.html
 fails-if(stylo) HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html

@@ -20,7 +20,7 @@ fails-if(stylo) == placeholder-value-unset.html placeholder-simple-ref.html
 fails-if(stylo) == placeholder-value-reset.html placeholder-simple-ref.html
 fails-if(stylo) == placeholder-type-change-1.html placeholder-simple-ref.html
 fails-if(stylo) == placeholder-type-change-2.html placeholder-button-ref.html
-== placeholdershown.html placeholdershown-ref.html
+fails-if(stylo) == placeholdershown.html placeholdershown-ref.html
 fails-if(stylo) == css-display.html placeholder-simple-ref.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.

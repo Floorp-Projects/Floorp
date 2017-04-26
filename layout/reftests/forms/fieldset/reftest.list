@@ -12,7 +12,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,140,276) == positioned-container-1.htm
 == relpos-legend-4.html relpos-legend-4-ref.html
 fails-if(stylo) == sticky-legend-1.html sticky-legend-1-ref.html
 fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
-fails-if(stylo) == overflow-hidden.html overflow-hidden-ref.html
+== overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
 fails-if(stylo) == fieldset-grid-001.html fieldset-grid-001-ref.html
 fails-if(stylo) == fieldset-flexbox-001.html fieldset-flexbox-001-ref.html

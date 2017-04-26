@@ -1,30 +1,30 @@
 default-preferences pref(canvas.filters.enabled,true)
 
-== default-color.html ref.html
-== drop-shadow.html ref.html
-== drop-shadow-transformed.html ref.html
-fuzzy-if(azureSkia,1,1500) == global-alpha.html global-alpha-ref.html
-== global-composite-operation.html global-composite-operation-ref.html
-== liveness.html ref.html
-== multiple-drop-shadows.html shadow-ref.html
-== shadow.html shadow-ref.html
-== subregion-fill-paint.html subregion-ref.html
-== subregion-stroke-paint.html subregion-ref.html
-== svg-bbox.html svg-bbox-ref.html
-== svg-inline.html ref.html
-== svg-liveness.html ref.html
-== svg-off-screen.html ref.html
-== units.html ref.html
-== units-em.html ref.html
-== units-ex.html ref.html
-== units-off-screen.html ref.html
-fuzzy(1,700) == fillText-with-filter-opacity-1.html fillText-with-filter-opacity-1-ref.html
-fuzzy(1,302) == fillText-with-filter-opacity-2.html fillText-with-filter-opacity-2-ref.html
-fuzzy(1,600) == strokeText-with-filter-grayscale-1.html strokeText-with-filter-grayscale-1-ref.html
-fuzzy(1,600) == strokeText-with-filter-grayscale-2.html strokeText-with-filter-grayscale-2-ref.html
-!= fillText-with-shadow-1.html fillText-without-shadow-1-ref.html
-!= fillText-with-shadow-2.html fillText-without-shadow-2-ref.html
-fuzzy(1,400) == fillText-with-filter-grayscale-1.html fillText-with-filter-grayscale-1-ref.html
-fuzzy(1,400) == fillText-with-filter-grayscale-2.html fillText-with-filter-grayscale-2-ref.html
-!= strokeText-with-shadow-1.html strokeText-without-shadow-1-ref.html
-!= strokeText-with-shadow-2.html strokeText-without-shadow-2-ref.html
+fails-if(stylo) == default-color.html ref.html
+fails-if(stylo) == drop-shadow.html ref.html
+fails-if(stylo) == drop-shadow-transformed.html ref.html
+fuzzy-if(azureSkia,1,1500) fails-if(stylo) == global-alpha.html global-alpha-ref.html
+fails-if(stylo) == global-composite-operation.html global-composite-operation-ref.html
+fails-if(stylo) == liveness.html ref.html
+fails-if(stylo) == multiple-drop-shadows.html shadow-ref.html
+fails-if(stylo) == shadow.html shadow-ref.html
+fails-if(stylo) == subregion-fill-paint.html subregion-ref.html
+fails-if(stylo) == subregion-stroke-paint.html subregion-ref.html
+fails-if(stylo) == svg-bbox.html svg-bbox-ref.html
+fails-if(stylo) == svg-inline.html ref.html
+fails-if(stylo) == svg-liveness.html ref.html
+fails-if(stylo) == svg-off-screen.html ref.html
+fails-if(stylo) == units.html ref.html
+fails-if(stylo) == units-em.html ref.html
+fails-if(stylo) == units-ex.html ref.html
+fails-if(stylo) == units-off-screen.html ref.html
+fuzzy(1,700) fails-if(stylo) == fillText-with-filter-opacity-1.html fillText-with-filter-opacity-1-ref.html
+fuzzy(1,302) fails-if(stylo) == fillText-with-filter-opacity-2.html fillText-with-filter-opacity-2-ref.html
+fuzzy(1,600) fails-if(stylo) == strokeText-with-filter-grayscale-1.html strokeText-with-filter-grayscale-1-ref.html
+fuzzy(1,600) fails-if(stylo) == strokeText-with-filter-grayscale-2.html strokeText-with-filter-grayscale-2-ref.html
+fails-if(stylo) != fillText-with-shadow-1.html fillText-without-shadow-1-ref.html
+fails-if(stylo) != fillText-with-shadow-2.html fillText-without-shadow-2-ref.html
+fuzzy(1,400) fails-if(stylo) == fillText-with-filter-grayscale-1.html fillText-with-filter-grayscale-1-ref.html
+fuzzy(1,400) fails-if(stylo) == fillText-with-filter-grayscale-2.html fillText-with-filter-grayscale-2-ref.html
+fails-if(stylo) != strokeText-with-shadow-1.html strokeText-without-shadow-1-ref.html
+fails-if(stylo) != strokeText-with-shadow-2.html strokeText-without-shadow-2-ref.html

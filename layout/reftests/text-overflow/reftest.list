@@ -1,7 +1,7 @@
 == ellipsis-font-fallback.html ellipsis-font-fallback-ref.html
 == line-clipping.html line-clipping-ref.html
 fuzzy-if(Android,16,244) HTTP(..) == marker-basic.html marker-basic-ref.html  # Bug 1128229
-fails-if(stylo) HTTP(..) == marker-string.html marker-string-ref.html
+HTTP(..) == marker-string.html marker-string-ref.html
 skip-if(Android) fails-if(stylo) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) fails-if(stylo) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 fuzzy-if(Android,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,1836) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
@@ -16,7 +16,7 @@ HTTP(..) == standards-line-height.html standards-line-height-ref.html
 fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
-skip-if(Android) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements-ref.html
+skip-if(Android) fuzzy-if(skiaContent,1,5) fails-if(stylo) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
 HTTP(..) == table-cell.html table-cell-ref.html
 fuzzy-if(gtkWidget,10,32) fails-if(stylo) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
@@ -28,10 +28,10 @@ fails-if(stylo) HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
 == float-edges-1-ref.html float-edges-1-ref.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
-fails-if(stylo) == vertical-decorations-1.html vertical-decorations-1-ref.html
-fails-if(stylo) == vertical-decorations-2.html vertical-decorations-2-ref.html
-fails-if(stylo) != vertical-decorations-1.html vertical-decorations-1-2-notref.html
-fails-if(stylo) != vertical-decorations-2.html vertical-decorations-1-2-notref.html
+== vertical-decorations-1.html vertical-decorations-1-ref.html
+== vertical-decorations-2.html vertical-decorations-2-ref.html
+!= vertical-decorations-1.html vertical-decorations-1-2-notref.html
+!= vertical-decorations-2.html vertical-decorations-1-2-notref.html
 == vertical-decorations-3.html vertical-decorations-3-ref.html
 == vertical-decorations-4.html vertical-decorations-4-ref.html
 != vertical-decorations-3.html vertical-decorations-3-4-notref.html
