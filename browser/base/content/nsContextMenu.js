@@ -33,6 +33,7 @@ function openContextMenu(aMessage) {
   gContextMenuContentData = { isRemote: true,
                               event: aMessage.objects.event,
                               popupNode: aMessage.objects.popupNode,
+                              popupNodeSelectors: data.popupNodeSelectors,
                               browser,
                               editFlags: data.editFlags,
                               spellInfo,
@@ -620,7 +621,7 @@ nsContextMenu.prototype = {
     let gBrowser = this.browser.ownerGlobal.gBrowser;
     let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-    return gDevToolsBrowser.inspectNode(gBrowser.selectedTab, this.target);
+    return gDevToolsBrowser.inspectNode(gBrowser.selectedTab, this.targetSelectors);
   },
 
   /**
@@ -701,6 +702,12 @@ nsContextMenu.prototype = {
 
     // Remember the node that was clicked.
     this.target = aNode;
+
+    // Remember the CSS selectors corresponding to clicked node. gContextMenuContentData
+    // can be null if the menu was triggered by tests in which case use an empty array.
+    this.targetSelectors = gContextMenuContentData
+                              ? gContextMenuContentData.popupNodeSelectors
+                              : [];
 
     let ownerDoc = this.target.ownerDocument;
     this.ownerDoc = ownerDoc;
