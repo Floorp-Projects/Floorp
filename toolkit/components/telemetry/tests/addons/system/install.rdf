@@ -19,6 +19,7 @@
     <em:name>XPI Telemetry System Add-on Test</em:name>
     <em:description>A system addon which is shipped with Firefox.</em:description>
     <em:bootstrap>true</em:bootstrap>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
   </Description>
 </RDF>

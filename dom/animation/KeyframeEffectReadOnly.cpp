@@ -1464,19 +1464,17 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
     return nullptr;
   }
 
-  nsIFrame* frame = mTarget->mElement->GetPrimaryFrame();
-  if (!frame) {
-    return nullptr;
-  }
-
+  nsIFrame* frame;
   if (mTarget->mPseudoType == CSSPseudoElementType::before) {
-    frame = nsLayoutUtils::GetBeforeFrame(frame);
+    frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
   } else if (mTarget->mPseudoType == CSSPseudoElementType::after) {
-    frame = nsLayoutUtils::GetAfterFrame(frame);
+    frame = nsLayoutUtils::GetAfterFrame(mTarget->mElement);
   } else {
+    frame = mTarget->mElement->GetPrimaryFrame();
     MOZ_ASSERT(mTarget->mPseudoType == CSSPseudoElementType::NotPseudo,
                "unknown mTarget->mPseudoType");
   }
+
   if (!frame) {
     return nullptr;
   }

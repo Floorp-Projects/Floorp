@@ -270,6 +270,8 @@ struct XPCOMInitData
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
     DataStorageEntry[] dataStorage;
+    nsCString[] appLocales;
+    nsCString[] requestedLocales;
 };
 
 /**
@@ -426,6 +428,9 @@ child:
     async GeolocationError(uint16_t errorCode);
 
     async UpdateDictionaryList(nsString[] dictionaries);
+
+    async UpdateAppLocales(nsCString[] appLocales);
+    async UpdateRequestedLocales(nsCString[] requestedLocales);
 
     // nsIPermissionManager messages
     async AddPermission(Permission permission);

@@ -974,3 +974,16 @@ def is_windows(target, host):
     return host.kernel == 'WINNT' and target.kernel == 'WINNT'
 
 include('windows.configure', when=is_windows)
+
+# Security Hardening
+# ==============================================================
+
+option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
+       help='Enables security hardening compiler options')
+
+@depends('--enable-hardening', c_compiler)
+def security_hardening_cflags(value, c_compiler):
+    if value and c_compiler.type in ['gcc', 'clang']:
+        return '-fstack-protector-strong'
+
+add_old_configure_assignment('HARDENING_CFLAGS', security_hardening_cflags)

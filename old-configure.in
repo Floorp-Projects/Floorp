@@ -553,6 +553,11 @@ if test -n "$COMPILE_ENVIRONMENT"; then
    MOZ_CONFIG_SANITIZE
 fi
 
+# Add the hardening flags from moz.configure
+CFLAGS="$CFLAGS $HARDENING_CFLAGS"
+CPPFLAGS="$CPPFLAGS $HARDENING_CFLAGS"
+CXXFLAGS="$CXXFLAGS $HARDENING_CFLAGS"
+
 dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
