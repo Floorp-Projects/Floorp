@@ -7615,7 +7615,7 @@ JS::GCDescription::toGCEvent(JSContext* cx) const
 char16_t*
 JS::GCDescription::formatJSON(JSContext* cx, uint64_t timestamp) const
 {
-    UniqueChars cstr = cx->runtime()->gc.stats().formatJsonMessage(timestamp);
+    UniqueChars cstr = cx->runtime()->gc.stats().renderJsonMessage(timestamp);
 
     size_t nchars = strlen(cstr.get());
     UniqueTwoByteChars out(js_pod_malloc<char16_t>(nchars + 1));
@@ -7656,13 +7656,13 @@ JS::GCDescription::sliceToJSON(JSContext* cx) const
 {
     size_t slices = cx->runtime()->gc.stats().slices().length();
     MOZ_ASSERT(slices > 0);
-    return cx->runtime()->gc.stats().formatJsonSlice(slices - 1);
+    return cx->runtime()->gc.stats().renderJsonSlice(slices - 1);
 }
 
 JS::UniqueChars
 JS::GCDescription::summaryToJSON(JSContext* cx) const
 {
-    return cx->runtime()->gc.stats().formatJsonMessage(0, false);
+    return cx->runtime()->gc.stats().renderJsonMessage(0, false);
 }
 
 JS_PUBLIC_API(JS::GCSliceCallback)
