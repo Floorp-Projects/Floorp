@@ -2366,6 +2366,20 @@ PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
   return NS_OK;
 }
 
+nsresult
+PeerConnectionImpl::AddRIDExtension(MediaStreamTrack& aRecvTrack,
+                                    unsigned short aExtensionId)
+{
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::AddRIDFilter(MediaStreamTrack& aRecvTrack,
+                                 const nsAString& aRid)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
