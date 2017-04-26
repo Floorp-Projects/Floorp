@@ -186,10 +186,14 @@ this.SelectParentHelper = {
   },
 
   receiveMessage(msg) {
+    if (!currentBrowser) {
+      return;
+    }
+
     if (msg.name == "Forms:UpdateDropDown") {
       // Sanity check - we'd better know what the currently
       // opened menulist is, and what browser it belongs to...
-      if (!currentMenulist || !currentBrowser) {
+      if (!currentMenulist) {
         return;
       }
 
@@ -212,6 +216,8 @@ this.SelectParentHelper = {
 
       // Restore scroll position to what it was prior to the update.
       scrollBox.scrollTop = scrollTop;
+    } else if (msg.name == "Forms:BlurDropDown-Ping") {
+      currentBrowser.messageManager.sendAsyncMessage("Forms:BlurDropDown-Pong", {});
     }
   },
 
@@ -224,6 +230,7 @@ this.SelectParentHelper = {
     browser.ownerGlobal.addEventListener("keydown", this, true);
     browser.ownerGlobal.addEventListener("fullscreen", this, true);
     browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
+    browser.messageManager.addMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
   _unregisterListeners(browser, popup) {
@@ -235,6 +242,7 @@ this.SelectParentHelper = {
     browser.ownerGlobal.removeEventListener("keydown", this, true);
     browser.ownerGlobal.removeEventListener("fullscreen", this, true);
     browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
+    browser.messageManager.removeMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
 };
@@ -461,6 +469,7 @@ function onSearchFocus() {
   let menupopup = searchObj.parentElement;
   menupopup.parentElement.menuBoxObject.activeChild = null;
   menupopup.setAttribute("ignorekeys", "true");
+  currentBrowser.messageManager.sendAsyncMessage("Forms:SearchFocused", {});
 }
 
 function onSearchBlur() {
