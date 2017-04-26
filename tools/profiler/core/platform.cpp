@@ -105,9 +105,6 @@ public:
 };
 #endif
 
-// Per-thread state.
-MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-
 class PSMutex : public mozilla::StaticMutex {};
 
 typedef mozilla::BaseAutoLock<PSMutex> PSAutoLock;
@@ -516,6 +513,19 @@ uint32_t ActivePS::sNextGeneration = 0;
 
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
+
+// Each thread gets its own PseudoStack on thread creation. ThreadInfo has the
+// owning reference; tlsPseudoStack is a non-owning reference. On thread
+// destruction, tlsPseudoStack is cleared, and the ThreadInfo (along with its
+// PseudoStack) may or may not be destroyed.
+//
+// Non-owning PseudoStack references are also temporarily used by
+// profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are
+// balanced, and they occur on the thread itself, which means they are
+// necessarily bounded by the lifetime of the thread, which ensures they can't
+// be used after the PseudoStack is destroyed.
+//
+static MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -2992,6 +3002,14 @@ profiler_log(const char* aStr)
   profiler_tracing("log", aStr);
 }
 
+PseudoStack*
+profiler_get_pseudo_stack()
+{
+  // This function runs both on and off the main thread.
+
+  return tlsPseudoStack.get();
+}
+
 void
 profiler_set_js_context(JSContext* aCx)
 {
@@ -3046,6 +3064,39 @@ profiler_clear_js_context()
   // that for a JS thread that is in the process of disappearing.
 
   pseudoStack->mContext = nullptr;
+}
+
+void*
+profiler_call_enter(const char* aInfo,
+                    js::ProfileEntry::Category aCategory,
+                    void* aFrameAddress, bool aCopy, uint32_t aLine,
+                    const char* aDynamicString)
+{
+  // This function runs both on and off the main thread.
+
+  PseudoStack* pseudoStack = tlsPseudoStack.get();
+  if (!pseudoStack) {
+    return pseudoStack;
+  }
+  pseudoStack->push(aInfo, aCategory, aFrameAddress, aCopy, aLine,
+                    aDynamicString);
+
+  // The handle is meant to support future changes but for now it is simply
+  // used to avoid having to call tlsPseudoStack.get() in profiler_call_exit().
+  return pseudoStack;
+}
+
+void
+profiler_call_exit(void* aHandle)
+{
+  // This function runs both on and off the main thread.
+
+  if (!aHandle) {
+    return;
+  }
+
+  PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
+  pseudoStack->pop();
 }
 
 // END externally visible functions
