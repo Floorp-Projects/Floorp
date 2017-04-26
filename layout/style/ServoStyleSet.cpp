@@ -923,16 +923,46 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
-
   MOZ_ASSERT(!sInServoTraversal);
   sInServoTraversal = true;
+
+  /**
+   * NB: This is needed because we process animations and transitions on the
+   * pseudo-elements themselves, not on the parent's EagerPseudoStyles.
+   *
+   * That means that that style doesn't account for animations, and we can't do
+   * that easily from the traversal without doing wasted work.
+   *
+   * As such, we just lie here a bit, which is the entrypoint of
+   * getComputedStyle, the only API where this can be observed, to look at the
+   * style of the pseudo-element if it exists instead.
+   */
+  Element* elementForStyleResolution = aElement;
+  nsIAtom* pseudoTagForStyleResolution = aPseudoTag;
+  if (aPseudoTag == nsCSSPseudoElements::before) {
+    if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(aElement)) {
+      elementForStyleResolution = pseudo;
+      pseudoTagForStyleResolution = nullptr;
+    }
+  } else if (aPseudoTag == nsCSSPseudoElements::after) {
+    if (Element* pseudo = nsLayoutUtils::GetAfterPseudo(aElement)) {
+      elementForStyleResolution = pseudo;
+      pseudoTagForStyleResolution = nullptr;
+    }
+  }
+
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+    Servo_ResolveStyleLazily(elementForStyleResolution,
+                             pseudoTagForStyleResolution,
+                             mRawSet.get()).Consume();
 
   if (mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag)) {
     computedValues =
-      Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+      Servo_ResolveStyleLazily(elementForStyleResolution,
+                               pseudoTagForStyleResolution,
+                               mRawSet.get()).Consume();
   }
+
   sInServoTraversal = false;
 
   return computedValues.forget();
