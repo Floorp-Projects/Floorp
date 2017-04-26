@@ -3234,17 +3234,25 @@ StyleTransition::SetInitialValues()
 
 void
 StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
-                                             const nsAString& aPropertyString)
+                                    const nsAString& aPropertyString)
 {
   MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
                                         CSSEnabledState::eForAllContent) ==
                aProperty,
              "property and property string should match");
+  nsCOMPtr<nsIAtom> temp = NS_Atomize(aPropertyString);
+  SetUnknownProperty(aProperty, temp);
+}
+
+void
+StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
+                                    nsIAtom* aPropertyString)
+{
   MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||
              aProperty == eCSSPropertyExtra_variable,
              "should be either unknown or custom property");
   mProperty = aProperty;
-  mUnknownProperty = NS_Atomize(aPropertyString);
+  mUnknownProperty = aPropertyString;
 }
 
 bool

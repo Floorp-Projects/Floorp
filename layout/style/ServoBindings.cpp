@@ -628,6 +628,20 @@ Gecko_AnimationGetBaseStyle(void* aBaseStyles, nsCSSPropertyID aProperty)
 }
 
 void
+Gecko_StyleTransition_SetUnsupportedProperty(StyleTransition* aTransition,
+                                             nsIAtom* aAtom)
+{
+  nsCSSPropertyID id =
+    nsCSSProps::LookupProperty(nsDependentAtomString(aAtom),
+                               CSSEnabledState::eForAllContent);
+  if (id == eCSSProperty_UNKNOWN || id == eCSSPropertyExtra_variable) {
+    aTransition->SetUnknownProperty(id, aAtom);
+  } else {
+    aTransition->SetProperty(id);
+  }
+}
+
+void
 Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
   nsRuleNode::FillAllBackgroundLists(*aLayers, aMaxLen);

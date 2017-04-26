@@ -212,6 +212,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_DestroyShapeSource", "aShape", null],
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
+        ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
