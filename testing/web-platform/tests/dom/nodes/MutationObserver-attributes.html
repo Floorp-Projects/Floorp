@@ -221,16 +221,18 @@ runMutationTest(n42,
   var n43 = document.getElementById('n43');
 runMutationTest(n43,
                   {"attributes":true, "attributeOldValue": true},
-                  [{type: "attributes", oldValue: "n43", attributeName: "id"}],
+                  [{type: "attributes", oldValue: "c01 c02", attributeName: "class"},
+                   {type: "attributes", oldValue: "n43", attributeName: "id"}],
                   function() { n43.classList.toggle("c03", false); n43.id = "n430"; },
-                  "attributes Element.classList.toggle: forced missing token removal no mutation");
+                  "attributes Element.classList.toggle: forced missing token removal no-op");
 
   var n44 = document.getElementById('n44');
 runMutationTest(n44,
                   {"attributes":true, "attributeOldValue": true},
-                  [{type: "attributes", oldValue: "n44", attributeName: "id"}],
+                  [{type: "attributes", oldValue: "c01 c02", attributeName: "class"},
+                   {type: "attributes", oldValue: "n44", attributeName: "id"}],
                   function() { n44.classList.toggle("c01", true); n44.id = "n440"; },
-                  "attributes Element.classList.toggle: forced existing token addition no mutation");
+                  "attributes Element.classList.toggle: forced existing token addition no-op");
 
   var n45 = document.getElementById('n45');
 runMutationTest(n45,
