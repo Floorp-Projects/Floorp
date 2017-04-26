@@ -1178,6 +1178,37 @@ const positionType = {
   },
 };
 
+const rectType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                         ['rect(10px, 10px, 10px, 10px)',
+					  'rect(50px, 50px, 50px, 50px)'] },
+                                     { duration: 1000, fill: 'both' });
+	testAnimationSamples(
+          animation, idlName,
+          [{ time: 500,  expected: 'rect(30px, 30px, 30px, 30px)' }]);
+    }, property + ' supports animating as a rect');
+  },
+
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rect(100px, 100px, 100px, 100px)';
+      var animation = target.animate({ [idlName]:
+                                         ['rect(10px, 10px, 10px, 10px)',
+					  'rect(10px, 10px, 10px, 10px)'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(
+        animation, idlName,
+        [{ time: 0, expected: 'rect(110px, 110px, 110px, 110px)' }]);
+    }, property + ': rect');
+  },
+}
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -1191,6 +1222,7 @@ const types = {
   visibility: visibilityType,
   boxShadowList: boxShadowListType,
   textShadowList: textShadowListType,
+  rect: rectType,
   position: positionType,
 };
 
