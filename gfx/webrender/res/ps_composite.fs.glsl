@@ -171,6 +171,10 @@ void main(void) {
     vec4 Cb = texture(sCacheRGBA8, vUv0);
     vec4 Cs = texture(sCacheRGBA8, vUv1);
 
+    // The mix-blend-mode functions assume no premultiplied alpha
+    Cb.rgb /= Cb.a;
+    Cs.rgb /= Cs.a;
+
     if (Cb.a == 0.0) {
         oFragColor = Cs;
         return;
@@ -179,10 +183,6 @@ void main(void) {
         oFragColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;
     }
-
-    // The mix-blend-mode functions assume no premultiplied alpha
-    Cb.rgb /= Cb.a;
-    Cs.rgb /= Cs.a;
 
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);

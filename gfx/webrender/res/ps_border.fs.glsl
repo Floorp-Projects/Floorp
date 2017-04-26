@@ -4,18 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Border styles as defined in webrender_traits/types.rs
-#define BORDER_STYLE_NONE         0
-#define BORDER_STYLE_SOLID        1
-#define BORDER_STYLE_DOUBLE       2
-#define BORDER_STYLE_DOTTED       3
-#define BORDER_STYLE_DASHED       4
-#define BORDER_STYLE_HIDDEN       5
-#define BORDER_STYLE_GROOVE       6
-#define BORDER_STYLE_RIDGE        7
-#define BORDER_STYLE_INSET        8
-#define BORDER_STYLE_OUTSET       9
-
 void discard_pixels_in_rounded_borders(vec2 local_pos) {
   float distanceFromRef = distance(vRefPoint, local_pos);
   if (vRadii.x > 0.0 && (distanceFromRef > vRadii.x || distanceFromRef < vRadii.z)) {

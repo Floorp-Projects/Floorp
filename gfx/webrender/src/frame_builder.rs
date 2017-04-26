@@ -24,7 +24,7 @@ use tiling::StackingContextIndex;
 use tiling::{AuxiliaryListsMap, ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, Frame};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
 use tiling::{RenderTargetContext, RenderTaskCollection, ScrollbarPrimitive, StackingContext};
-use util::{self, pack_as_float, subtract_rect};
+use util::{self, pack_as_float, subtract_rect, recycle_vec};
 use util::RectHelpers;
 use webrender_traits::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipId, ClipRegion};
 use webrender_traits::{ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect};
@@ -124,21 +124,41 @@ pub struct FrameBuilder {
 }
 
 impl FrameBuilder {
-    pub fn new(screen_size: DeviceUintSize,
+    pub fn new(previous: Option<FrameBuilder>,
+               screen_size: DeviceUintSize,
                background_color: Option<ColorF>,
                config: FrameBuilderConfig) -> FrameBuilder {
-        FrameBuilder {
-            screen_size: screen_size,
-            background_color: background_color,
-            stacking_context_store: Vec::new(),
-            clip_scroll_group_store: Vec::new(),
-            prim_store: PrimitiveStore::new(),
-            cmds: Vec::new(),
-            packed_layers: Vec::new(),
-            scrollbar_prims: Vec::new(),
-            config: config,
-            reference_frame_stack: Vec::new(),
-            stacking_context_stack: Vec::new(),
+        match previous {
+            Some(prev) => {
+                FrameBuilder {
+                    stacking_context_store: recycle_vec(prev.stacking_context_store),
+                    clip_scroll_group_store: recycle_vec(prev.clip_scroll_group_store),
+                    cmds: recycle_vec(prev.cmds),
+                    packed_layers: recycle_vec(prev.packed_layers),
+                    scrollbar_prims: recycle_vec(prev.scrollbar_prims),
+                    reference_frame_stack: recycle_vec(prev.reference_frame_stack),
+                    stacking_context_stack: recycle_vec(prev.stacking_context_stack),
+                    prim_store: prev.prim_store.recycle(),
+                    screen_size: screen_size,
+                    background_color: background_color,
+                    config: config,
+                }
+            }
+            None => {
+                FrameBuilder {
+                    stacking_context_store: Vec::new(),
+                    clip_scroll_group_store: Vec::new(),
+                    cmds: Vec::new(),
+                    packed_layers: Vec::new(),
+                    scrollbar_prims: Vec::new(),
+                    reference_frame_stack: Vec::new(),
+                    stacking_context_stack: Vec::new(),
+                    prim_store: PrimitiveStore::new(),
+                    screen_size: screen_size,
+                    background_color: background_color,
+                    config: config,
+                }
+            }
         }
     }
 
@@ -721,18 +741,14 @@ impl FrameBuilder {
                            PrimitiveContainer::TextRun(prim_cpu, prim_gpu));
     }
 
-    pub fn add_box_shadow_no_blur(&mut self,
-                                  clip_id: ClipId,
-                                  box_bounds: &LayerRect,
-                                  clip_region: &ClipRegion,
-                                  box_offset: &LayerPoint,
-                                  color: &ColorF,
-                                  spread_radius: f32,
-                                  border_radius: f32,
-                                  clip_mode: BoxShadowClipMode) {
-        assert!(spread_radius == 0.0); // TODO: fix cases where this isn't true.
-        let bs_rect = box_bounds.translate(box_offset);
-
+    pub fn fill_box_shadow_rect(&mut self,
+                                clip_id: ClipId,
+                                box_bounds: &LayerRect,
+                                bs_rect: LayerRect,
+                                clip_region: &ClipRegion,
+                                color: &ColorF,
+                                border_radius: f32,
+                                clip_mode: BoxShadowClipMode) {
         // We can draw a rectangle instead with the proper border radius clipping.
         let (bs_clip_mode, rect_to_draw) = match clip_mode {
             BoxShadowClipMode::Outset |
@@ -802,14 +818,13 @@ impl FrameBuilder {
         }
 
         if blur_radius == 0.0 && spread_radius == 0.0 && border_radius != 0.0 {
-            self.add_box_shadow_no_blur(clip_id,
-                                        box_bounds,
-                                        clip_region,
-                                        box_offset,
-                                        color,
-                                        spread_radius,
-                                        border_radius,
-                                        clip_mode);
+            self.fill_box_shadow_rect(clip_id,
+                                      box_bounds,
+                                      bs_rect,
+                                      clip_region,
+                                      color,
+                                      border_radius,
+                                      clip_mode);
             return;
         }
 
@@ -885,6 +900,16 @@ impl FrameBuilder {
                 }
             }
             BoxShadowKind::Shadow(rects) => {
+                if clip_mode == BoxShadowClipMode::Inset {
+                    self.fill_box_shadow_rect(clip_id,
+                                              box_bounds,
+                                              bs_rect,
+                                              clip_region,
+                                              color,
+                                              border_radius,
+                                              clip_mode);
+                }
+
                 let inverted = match clip_mode {
                     BoxShadowClipMode::Outset | BoxShadowClipMode::None => 0.0,
                     BoxShadowClipMode::Inset => 1.0,
@@ -1076,7 +1101,6 @@ impl FrameBuilder {
         let mut sc_stack = Vec::new();
         let mut current_task = RenderTask::new_alpha_batch(next_task_index,
                                                            DeviceIntPoint::zero(),
-                                                           false,
                                                            RenderTaskLocation::Fixed);
         next_task_index.0 += 1;
         let mut alpha_task_stack = Vec::new();
@@ -1098,7 +1122,6 @@ impl FrameBuilder {
                         let location = RenderTaskLocation::Dynamic(None, stacking_context_rect.size);
                         let new_task = RenderTask::new_alpha_batch(next_task_index,
                                                                    stacking_context_rect.origin,
-                                                                   stacking_context.should_isolate,
                                                                    location);
                         next_task_index.0 += 1;
                         let prev_task = mem::replace(&mut current_task, new_task);
@@ -1109,7 +1132,6 @@ impl FrameBuilder {
                         let location = RenderTaskLocation::Dynamic(None, stacking_context_rect.size);
                         let new_task = RenderTask::new_alpha_batch(next_task_index,
                                                                    stacking_context_rect.origin,
-                                                                   stacking_context.should_isolate,
                                                                    location);
                         next_task_index.0 += 1;
                         let prev_task = mem::replace(&mut current_task, new_task);

@@ -12,7 +12,7 @@ use render_task::{RenderTask, RenderTaskLocation};
 use resource_cache::{CacheItem, ImageProperties, ResourceCache};
 use std::mem;
 use std::usize;
-use util::TransformedRect;
+use util::{TransformedRect, recycle_vec};
 use webrender_traits::{AuxiliaryLists, ColorF, ImageKey, ImageRendering, YuvColorSpace};
 use webrender_traits::{ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
 use webrender_traits::{FontKey, FontRenderMode, WebGLContextId};
@@ -600,6 +600,7 @@ impl PrimitiveStore {
             cpu_gradients: Vec::new(),
             cpu_radial_gradients: Vec::new(),
             cpu_borders: Vec::new(),
+            prims_to_resolve: Vec::new(),
             gpu_geometry: VertexDataStore::new(),
             gpu_data16: VertexDataStore::new(),
             gpu_data32: VertexDataStore::new(),
@@ -607,7 +608,27 @@ impl PrimitiveStore {
             gpu_data128: VertexDataStore::new(),
             gpu_gradient_data: GradientDataStore::new(),
             gpu_resource_rects: VertexDataStore::new(),
-            prims_to_resolve: Vec::new(),
+        }
+    }
+
+    pub fn recycle(self) -> Self {
+        PrimitiveStore {
+            cpu_metadata: recycle_vec(self.cpu_metadata),
+            cpu_bounding_rects: recycle_vec(self.cpu_bounding_rects),
+            cpu_text_runs: recycle_vec(self.cpu_text_runs),
+            cpu_images: recycle_vec(self.cpu_images),
+            cpu_yuv_images: recycle_vec(self.cpu_yuv_images),
+            cpu_gradients: recycle_vec(self.cpu_gradients),
+            cpu_radial_gradients: recycle_vec(self.cpu_radial_gradients),
+            cpu_borders: recycle_vec(self.cpu_borders),
+            prims_to_resolve: recycle_vec(self.prims_to_resolve),
+            gpu_geometry: self.gpu_geometry.recycle(),
+            gpu_data16: self.gpu_data16.recycle(),
+            gpu_data32: self.gpu_data32.recycle(),
+            gpu_data64: self.gpu_data64.recycle(),
+            gpu_data128: self.gpu_data128.recycle(),
+            gpu_gradient_data: self.gpu_gradient_data.recycle(),
+            gpu_resource_rects: self.gpu_resource_rects.recycle(),
         }
     }
 

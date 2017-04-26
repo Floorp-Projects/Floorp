@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.35.0"
+version = "0.36.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -33,6 +33,7 @@ thread_profiler = "0.1.1"
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
+servo-glutin = "0.10.1"     # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.2", default-features = false }
@@ -43,3 +44,9 @@ dwrote = "0.3"
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.7.0"
 core-text = "4.0"
+
+[[example]]
+name = "basic"
+
+[[example]]
+name = "scrolling"

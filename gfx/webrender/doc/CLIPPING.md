@@ -82,6 +82,10 @@ let generated_id = define_clip(content_rect, clip, id);
 assert!(id == generated_id);
 ```
 
+Note that calling `define_clip` multiple times with the same `clip_id` value
+results in undefined behaviour, and should be avoided. There is a debug mode
+assertion to catch this.
+
 ## Pending changes
 1. Normalize the way that clipping coordinates are defined. Having them
    specified in two different ways makes for a confusing API. This should be

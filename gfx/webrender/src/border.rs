@@ -21,6 +21,7 @@ pub enum BorderCornerKind {
 pub enum BorderEdgeKind {
     None,
     Solid,
+    Clip,
     Unhandled,
 }
 
@@ -72,7 +73,10 @@ impl NormalBorderHelpers for NormalBorder {
             // Inset / outset borders just modtify the color of edges, so can be
             // drawn with the normal border corner shader.
             (BorderStyle::Outset, BorderStyle::Outset) |
-            (BorderStyle::Inset, BorderStyle::Inset) => BorderCornerKind::Clip,
+            (BorderStyle::Inset, BorderStyle::Inset) |
+            (BorderStyle::Double, BorderStyle::Double) |
+            (BorderStyle::Groove, BorderStyle::Groove) |
+            (BorderStyle::Ridge, BorderStyle::Ridge) => BorderCornerKind::Clip,
 
             // Assume complex for these cases.
             // TODO(gw): There are some cases in here that can be handled with a fast path.
@@ -103,10 +107,11 @@ impl NormalBorderHelpers for NormalBorder {
             BorderStyle::Outset => (BorderEdgeKind::Solid, width),
 
             BorderStyle::Double |
-            BorderStyle::Dotted |
-            BorderStyle::Dashed |
             BorderStyle::Groove |
-            BorderStyle::Ridge => (BorderEdgeKind::Unhandled, width),
+            BorderStyle::Ridge => (BorderEdgeKind::Clip, width),
+
+            BorderStyle::Dotted |
+            BorderStyle::Dashed => (BorderEdgeKind::Unhandled, width),
         }
     }
 }
