@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mozaudiochannel</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+function test_basic() {
+  var ac = new AudioContext();
+  ok(ac, "AudioContext created");
+
+  // Default
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  // Unpermitted channels
+  ac = new AudioContext("content");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  ac = new AudioContext("notification");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  ac = new AudioContext("alarm");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  ac = new AudioContext("telephony");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  ac = new AudioContext("ringer");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  ac = new AudioContext("publicnotification");
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  runTest();
+}
+
+function test_permission(aChannel) {
+  var ac = new AudioContext();
+  ok(ac, "AudioContext created");
+
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
+  var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+  is(channel, "normal", "AudioNodeStream is using the correct default audio channel.");
+
+  SpecialPowers.pushPermissions(
+    [{ "type": "audio-channel-" + aChannel, "allow": true, "context": document }],
+    function() {
+      var ac = new AudioContext(aChannel);
+      is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+
+      var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+      is(channel, aChannel, "AudioNodeStream is using the correct new audio channel.");
+
+      runTest();
+    }
+  );
+}
+
+function test_preferences(aChannel) {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", aChannel ]]},
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "audio-channel-" + aChannel, "allow": false, "context": document }],
+        function() {
+          var ac = new AudioContext(aChannel);
+          ok(ac, "AudioContext created");
+          is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+
+          var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+          is(channel, aChannel, "AudioNodeStream is using the correct audio channel.");
+
+          runTest();
+        }
+      );
+    }
+  );
+}
+
+function test_wrong_preferences() {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", 'foobar' ]]},
+    function() {
+      var ac = new AudioContext();
+      ok(ac, "AudioContext created");
+      is(ac.mozAudioChannelType, 'normal', "Default ac channel == 'normal'");
+      runTest();
+    }
+  );
+}
+
+function test_testAudioChannelInAudioNodeStream() {
+  var ac = new AudioContext();
+  ok(ac, "AudioContext created");
+
+  var status = false;
+  try {
+    ac.testAudioChannelInAudioNodeStream();
+  } catch(e) {
+    status = true;
+  }
+
+  ok(status, "testAudioChannelInAudioNodeStream() should not exist in content.");
+  runTest();
+}
+
+var tests = [
+  test_basic,
+
+  function() { test_permission("content"); },
+  function() { test_permission("notification"); },
+  function() { test_permission("alarm"); },
+  function() { test_permission("telephony"); },
+  function() { test_permission("ringer"); },
+  function() { test_permission("publicnotification"); },
+
+  function() { test_preferences("content"); },
+  function() { test_preferences("notification"); },
+  function() { test_preferences("alarm"); },
+  function() { test_preferences("telephony"); },
+  function() { test_preferences("ringer"); },
+  function() { test_preferences("publicnotification"); },
+
+  test_wrong_preferences,
+
+  test_testAudioChannelInAudioNodeStream,
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelAPI", true ]]}, runTest);
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(5);
+
+</script>
+</pre>
+</body>
+</html>
