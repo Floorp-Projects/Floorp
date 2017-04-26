@@ -1079,19 +1079,19 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
       }
     }
 
-    auto DifferentBidiValues = [](nsIFrame* aFrame1, nsIFrame* aFrame2) {
-      nsStyleContext* sc1 = aFrame1->StyleContext();
+    auto DifferentBidiValues = [](nsStyleContext* aSC1, nsIFrame* aFrame2) {
       nsStyleContext* sc2 = aFrame2->StyleContext();
-      return GetBidiControl(sc1) != GetBidiControl(sc2) ||
-             GetBidiOverride(sc1) != GetBidiOverride(sc2);
+      return GetBidiControl(aSC1) != GetBidiControl(sc2) ||
+             GetBidiOverride(aSC1) != GetBidiOverride(sc2);
     };
 
+    nsStyleContext* sc = frame->StyleContext();
     nsIFrame* nextContinuation = frame->GetNextContinuation();
     nsIFrame* prevContinuation = frame->GetPrevContinuation();
     bool isLastFrame = !nextContinuation ||
-                       DifferentBidiValues(frame, nextContinuation);
+                       DifferentBidiValues(sc, nextContinuation);
     bool isFirstFrame = !prevContinuation ||
-                        DifferentBidiValues(frame, prevContinuation);
+                        DifferentBidiValues(sc, prevContinuation);
 
     char16_t controlChar = 0;
     char16_t overrideChar = 0;
@@ -1103,8 +1103,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
         c->DrainSelfOverflowList();
       }
 
-      controlChar = GetBidiControl(frame->StyleContext());
-      overrideChar = GetBidiOverride(frame->StyleContext());
+      controlChar = GetBidiControl(sc);
+      overrideChar = GetBidiOverride(sc);
 
       // Add dummy frame pointers representing bidi control codes before
       // the first frames of elements specifying override, isolation, or
