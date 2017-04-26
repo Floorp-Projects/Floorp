@@ -101,19 +101,19 @@ pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html 
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3-ref.html
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4-ref.html
 
-== float-in-rtl-slr-1a.html float-in-rtl-slr-1-ref.html
-== float-in-rtl-slr-1b.html float-in-rtl-slr-1-ref.html
-== float-in-rtl-slr-1c.html float-in-rtl-slr-1-ref.html
-== float-in-rtl-slr-1d.html float-in-rtl-slr-1-ref.html
-== float-in-rtl-slr-2a.html float-in-rtl-slr-2-ref.html
-== float-in-rtl-slr-2b.html float-in-rtl-slr-2-ref.html
-== float-in-rtl-slr-2c.html float-in-rtl-slr-2-ref.html
+fails-if(stylo) == float-in-rtl-slr-1a.html float-in-rtl-slr-1-ref.html
+fails-if(stylo) == float-in-rtl-slr-1b.html float-in-rtl-slr-1-ref.html
+fails-if(stylo) == float-in-rtl-slr-1c.html float-in-rtl-slr-1-ref.html
+fails-if(stylo) == float-in-rtl-slr-1d.html float-in-rtl-slr-1-ref.html
+fails-if(stylo) == float-in-rtl-slr-2a.html float-in-rtl-slr-2-ref.html
+fails-if(stylo) == float-in-rtl-slr-2b.html float-in-rtl-slr-2-ref.html
+fails-if(stylo) == float-in-rtl-slr-2c.html float-in-rtl-slr-2-ref.html
 fails-if(stylo) == float-in-rtl-slr-2d.html float-in-rtl-slr-2-ref.html
-== float-in-rtl-slr-3a.html float-in-rtl-slr-3-ref.html
-== float-in-rtl-slr-3b.html float-in-rtl-slr-3-ref.html
-== float-in-rtl-slr-3c.html float-in-rtl-slr-3-ref.html
+fails-if(stylo) == float-in-rtl-slr-3a.html float-in-rtl-slr-3-ref.html
+fails-if(stylo) == float-in-rtl-slr-3b.html float-in-rtl-slr-3-ref.html
+fails-if(stylo) == float-in-rtl-slr-3c.html float-in-rtl-slr-3-ref.html
 fails-if(stylo) == float-in-rtl-slr-3d.html float-in-rtl-slr-3-ref.html
-== float-in-rtl-slr-4a.html float-in-rtl-slr-4-ref.html
-== float-in-rtl-slr-4b.html float-in-rtl-slr-4-ref.html
-== float-in-rtl-slr-4c.html float-in-rtl-slr-4-ref.html
+fails-if(stylo) == float-in-rtl-slr-4a.html float-in-rtl-slr-4-ref.html
+fails-if(stylo) == float-in-rtl-slr-4b.html float-in-rtl-slr-4-ref.html
+fails-if(stylo) == float-in-rtl-slr-4c.html float-in-rtl-slr-4-ref.html
 fails-if(stylo) == float-in-rtl-slr-4d.html float-in-rtl-slr-4-ref.html

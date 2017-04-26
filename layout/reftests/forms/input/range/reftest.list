@@ -1,31 +1,31 @@
 
 # sanity checks:
-!= not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
-!= not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
-!= not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
+fails-if(stylo) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+fails-if(stylo) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+fails-if(stylo) != not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
 
 # dynamic type changes:
 fuzzy-if(skiaContent,1,40) fails-if(stylo) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
 fails-if(stylo) == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
 
 # for different values:
-!= different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
-== same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1-ref.html
+fails-if(stylo) != different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
+fails-if(stylo) == same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1-ref.html
 
 # dynamic value changes:
-fuzzy-if(skiaContent,1,40) == value-prop-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) fails-if(stylo) == value-prop-unthemed.html 75pct-unthemed-common-ref.html
 fails-if(stylo) == value-prop.html 75pct-common-ref.html
-fuzzy-if(skiaContent,1,40) == valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) fails-if(stylo) == valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
 fails-if(stylo) == valueAsNumber-prop.html 75pct-common-ref.html
-fuzzy-if(skiaContent,1,40) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) fails-if(stylo) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
 fails-if(stylo) == stepDown.html 75pct-common-ref.html
-fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) fails-if(stylo) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 fails-if(stylo) == stepUp.html 75pct-common-ref.html
 fails-if(stylo) == max-prop.html 100pct-common-ref.html
 fails-if(stylo) == reset-value.html reset-value-ref.html
 
 # 'direction' property:
-== direction-unthemed-1.html direction-unthemed-1-ref.html
+fails-if(stylo) == direction-unthemed-1.html direction-unthemed-1-ref.html
 
 # ::-moz-range-progress pseudo-element:
 fails-if(Android) == moz-range-progress-1.html moz-range-progress-1-ref.html
