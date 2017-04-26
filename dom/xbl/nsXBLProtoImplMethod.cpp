@@ -285,15 +285,24 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
 
   // We are going to run script via JS::Call, so we need a script entry point,
   // but as this is XBL related it does not appear in the HTML spec.
-  dom::AutoEntryScript aes(global, "XBL <constructor>/<destructor> invocation");
-  JSContext* cx = aes.cx();
+  // We need an actual JSContext to do GetScopeForXBLExecution, and it needs to
+  // be in the compartment of globalObject.  But we want our XBL execution scope
+  // to be our entry global.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(global)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  JS::Rooted<JSObject*> globalObject(cx, global->GetGlobalJSObject());
+  JS::Rooted<JSObject*> globalObject(jsapi.cx(), global->GetGlobalJSObject());
 
-  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetScopeForXBLExecution(cx, globalObject, aAddonId));
+  JS::Rooted<JSObject*> scopeObject(jsapi.cx(),
+    xpc::GetScopeForXBLExecution(jsapi.cx(), globalObject, aAddonId));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  JSAutoCompartment ac(cx, scopeObject);
+  dom::AutoEntryScript aes(scopeObject,
+                           "XBL <constructor>/<destructor> invocation",
+                           true);
+  JSContext* cx = aes.cx();
   JS::AutoObjectVector scopeChain(cx);
   if (!nsJSUtils::GetScopeChainForElement(cx, aBoundElement->AsElement(),
                                           scopeChain)) {
