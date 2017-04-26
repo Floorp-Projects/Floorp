@@ -42,6 +42,7 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this._uaColor = null;
   this._uaSelectBackgroundColor = null;
   this._uaSelectColor = null;
+  this._closeAfterBlur = true;
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
@@ -60,6 +61,8 @@ this.SelectContentHelper.prototype = {
     this.global.addMessageListener("Forms:MouseOver", this);
     this.global.addMessageListener("Forms:MouseOut", this);
     this.global.addMessageListener("Forms:MouseUp", this);
+    this.global.addMessageListener("Forms:SearchFocused", this);
+    this.global.addMessageListener("Forms:BlurDropDown-Pong", this);
     this.global.addEventListener("pagehide", this, { mozSystemGroup: true });
     this.global.addEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.addEventListener("blur", this, { mozSystemGroup: true });
@@ -81,6 +84,8 @@ this.SelectContentHelper.prototype = {
     this.global.removeMessageListener("Forms:MouseOver", this);
     this.global.removeMessageListener("Forms:MouseOut", this);
     this.global.removeMessageListener("Forms:MouseUp", this);
+    this.global.removeMessageListener("Forms:SearchFocused", this);
+    this.global.removeMessageListener("Forms:BlurDropDown-Pong", this);
     this.global.removeEventListener("pagehide", this, { mozSystemGroup: true });
     this.global.removeEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.removeEventListener("blur", this, { mozSystemGroup: true });
@@ -269,6 +274,18 @@ this.SelectContentHelper.prototype = {
           this.dispatchMouseEvent(win, this.element, "click");
         }
         break;
+
+      case "Forms:SearchFocused":
+        this._closeAfterBlur = false;
+        break;
+
+      case "Forms:BlurDropDown-Pong":
+        if (!this._closeAfterBlur || !gOpen) {
+          return;
+        }
+        this.global.sendAsyncMessage("Forms:HideDropDown", {});
+        this.uninit();
+        break;
     }
   },
 
@@ -280,7 +297,17 @@ this.SelectContentHelper.prototype = {
           this.uninit();
         }
         break;
-      case "blur":
+      case "blur": {
+        if (this.element !== event.target) {
+          break;
+        }
+        this._closeAfterBlur = true;
+        // Send a ping-pong message to make sure that we wait for
+        // enough cycles to pass from the potential focusing of the
+        // search box to disable closing-after-blur.
+        this.global.sendAsyncMessage("Forms:BlurDropDown-Ping", {});
+        break;
+      }
       case "mozhidedropdown":
         if (this.element === event.target) {
           this.global.sendAsyncMessage("Forms:HideDropDown", {});
