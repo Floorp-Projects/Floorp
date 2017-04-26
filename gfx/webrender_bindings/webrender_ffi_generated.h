@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.5 */
+/* Generated with cbindgen:0.1.6 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
@@ -459,6 +459,32 @@ struct WrGlyphInstance {
   }
 };
 
+struct MutByteSlice {
+  uint8_t* buffer;
+  size_t len;
+
+  bool operator==(const MutByteSlice& aOther) const {
+    return buffer == aOther.buffer &&
+      len == aOther.len;
+  }
+};
+
+struct WrWindowId {
+  uint64_t mHandle;
+
+  bool operator==(const WrWindowId& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+
+  bool operator<(const WrWindowId& aOther) const {
+    return mHandle < aOther.mHandle;
+  }
+
+  bool operator<=(const WrWindowId& aOther) const {
+    return mHandle <= aOther.mHandle;
+  }
+};
+
 struct WrRenderedEpochs;
 
 struct WrRenderer;
@@ -498,22 +524,6 @@ struct WrExternalImageHandler {
     return external_image_obj == aOther.external_image_obj &&
       lock_func == aOther.lock_func &&
       unlock_func == aOther.unlock_func;
-  }
-};
-
-struct WrWindowId {
-  uint64_t mHandle;
-
-  bool operator==(const WrWindowId& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-
-  bool operator<(const WrWindowId& aOther) const {
-    return mHandle < aOther.mHandle;
-  }
-
-  bool operator<=(const WrWindowId& aOther) const {
-    return mHandle <= aOther.mHandle;
   }
 };
 

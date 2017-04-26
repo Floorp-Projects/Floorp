@@ -524,6 +524,10 @@ inline mozilla::Range<const uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
   return mozilla::Range<const uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
+inline mozilla::Range<uint8_t> MutByteSliceToRange(MutByteSlice aWrSlice) {
+  return mozilla::Range<uint8_t>(aWrSlice.buffer, aWrSlice.len);
+}
+
 struct BuiltDisplayList {
   VecU8 dl;
   WrBuiltDisplayListDescriptor dl_desc;
