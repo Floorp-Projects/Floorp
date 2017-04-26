@@ -116,7 +116,9 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        callback.onURLChanged(currentPageURL);
+                        if (callback != null) {
+                            callback.onURLChanged(currentPageURL);
+                        }
                     }
                 });
             }
@@ -183,6 +185,7 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         // the request is for the main frame, and if it's not we could then completely
         // skip the external URL handling.)
         if (!UrlUtils.isSupportedProtocol(url) &&
+                callback != null &&
                 callback.handleExternalUrl(url)) {
             return true;
         }
