@@ -61,7 +61,7 @@ to mochitest command.
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
   * \@support bug 1355394
-    * test_supports_rules.html [1]
+    * test_supports_rules.html [6]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
@@ -261,7 +261,7 @@ to mochitest command.
   * test_rule_serialization.html [2]
   * test_moz_document_rules.html [13]
   * test_bug511909.html `@-moz-document` [4]
-  * test_condition_text.html: also \@supports [7]
+  * test_condition_text.html: also \@supports [11]
 * getComputedStyle style doesn't contain custom properties bug 1336891
   * test_variable_serialization_computed.html [35]
   * test_variables.html `custom property name` [2]
