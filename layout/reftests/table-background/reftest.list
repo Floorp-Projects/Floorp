@@ -1,29 +1,29 @@
 # these could be moved to crashtests
-fails-if(stylo) != backgr_border-table-cell.html empty.html
-fails-if(stylo) != backgr_border-table-column-group.html empty.html
+!= backgr_border-table-cell.html empty.html
+!= backgr_border-table-column-group.html empty.html
 # This seems to be caused by bug 527825
-asserts-if(gtkWidget,0-12) fails-if(stylo) != backgr_border-table-column.html empty.html
-asserts-if(gtkWidget,0-6) fails-if(stylo) != backgr_border-table-quirks.html empty.html
-fails-if(stylo) != backgr_border-table-row-group.html empty.html
-fails-if(stylo) != backgr_border-table-row.html empty.html
-fails-if(stylo) != backgr_border-table.html empty.html
-fails-if(stylo) != backgr_fixed-bg.html empty.html
-fails-if(stylo) != backgr_index.html empty.html
-fails-if(stylo) != backgr_layers-hide.html empty.html
-fails-if(stylo) != backgr_layers-opacity.html empty.html
-fails-if(stylo) != backgr_layers-show.html empty.html
-fails-if(stylo) != backgr_position-table-cell.html empty.html
-fails-if(stylo) != backgr_position-table-column-group.html empty.html
-fails-if(stylo) != backgr_position-table-column.html empty.html
-fails-if(stylo) != backgr_position-table-row-group.html empty.html
-fails-if(stylo) != backgr_position-table-row.html empty.html
-fails-if(stylo) != backgr_position-table.html empty.html
-fails-if(stylo) != backgr_simple-table-cell.html empty.html
-fails-if(stylo) != backgr_simple-table-column-group.html empty.html
-fails-if(stylo) != backgr_simple-table-column.html empty.html
-fails-if(stylo) != backgr_simple-table-row-group.html empty.html
-fails-if(stylo) != backgr_simple-table-row.html empty.html
-fails-if(stylo) != backgr_simple-table.html empty.html
+asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html
+asserts-if(gtkWidget,0-6) != backgr_border-table-quirks.html empty.html
+!= backgr_border-table-row-group.html empty.html
+!= backgr_border-table-row.html empty.html
+!= backgr_border-table.html empty.html
+!= backgr_fixed-bg.html empty.html
+!= backgr_index.html empty.html
+!= backgr_layers-hide.html empty.html
+!= backgr_layers-opacity.html empty.html
+!= backgr_layers-show.html empty.html
+!= backgr_position-table-cell.html empty.html
+!= backgr_position-table-column-group.html empty.html
+!= backgr_position-table-column.html empty.html
+!= backgr_position-table-row-group.html empty.html
+!= backgr_position-table-row.html empty.html
+!= backgr_position-table.html empty.html
+!= backgr_simple-table-cell.html empty.html
+!= backgr_simple-table-column-group.html empty.html
+!= backgr_simple-table-column.html empty.html
+!= backgr_simple-table-row-group.html empty.html
+!= backgr_simple-table-row.html empty.html
+!= backgr_simple-table.html empty.html
 
 # would also be good to test table-header-group and table-footer-group
 # (and rows and row groups in the presence of their reordering)
@@ -41,14 +41,14 @@ fails-if(stylo) != backgr_simple-table.html empty.html
 == border-collapse-table-row.html border-collapse-table-row-ref.html
 == border-collapse-table.html border-collapse-table-ref.html
 fuzzy-if(d2d,1,1083) fuzzy-if(skiaContent,1,2200) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html
-fails-if(!stylo) == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
-fails-if(!stylo) == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
+fails == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
+fails == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
 fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
 fuzzy-if(d2d,1,5453) fuzzy-if(skiaContent,1,11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
 fuzzy-if(d2d,1,2478) fuzzy-if(skiaContent,1,2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
-fails-if(!stylo) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
-fails-if(!stylo) == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
+fails == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
+fails == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
 fuzzy-if(d2d,1,37170) fuzzy-if(skiaContent,1,38000) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
 fuzzy-if(d2d,1,12390) fuzzy-if(skiaContent,1,13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,1,95000) == border-separate-opacity-table.html border-separate-opacity-table-ref.html

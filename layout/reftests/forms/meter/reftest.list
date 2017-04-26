@@ -2,7 +2,7 @@ fuzzy-if(Android,128,16) == values.html values-ref.html
 == values-rtl.html values-rtl-ref.html
 == margin-padding.html margin-padding-ref.html
 == margin-padding-rtl.html margin-padding-rtl-ref.html
-fails-if(stylo) == bar-pseudo-element.html bar-pseudo-element-ref.html
+== bar-pseudo-element.html bar-pseudo-element-ref.html
 == bar-pseudo-element-rtl.html bar-pseudo-element-rtl-ref.html
 
 # vertical tests
@@ -10,7 +10,7 @@ fails-if(stylo) == bar-pseudo-element.html bar-pseudo-element-ref.html
 == values-vertical-rtl.html values-vertical-rtl-ref.html
 == margin-padding-vertical.html margin-padding-vertical-ref.html
 == margin-padding-vertical-rtl.html margin-padding-vertical-rtl-ref.html
-fails-if(stylo) == bar-pseudo-element-vertical.html bar-pseudo-element-vertical-ref.html
+== bar-pseudo-element-vertical.html bar-pseudo-element-vertical-ref.html
 == bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl-ref.html
 
 # The following test is disabled but kept in the repository because the
@@ -24,7 +24,7 @@ include default-style/reftest.list
 # Tests for bugs:
 == block-invalidate.html block-invalidate-ref.html
 == in-cells.html in-cells-ref.html
-fails-if(stylo) == max-height.html max-height-ref.html
+== max-height.html max-height-ref.html
 
 # Tests for block and inline orientation in combination with writing-mode
 != meter-orient-vertical.html meter-orient-horizontal.html

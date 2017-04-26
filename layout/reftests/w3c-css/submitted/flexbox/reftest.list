@@ -72,8 +72,8 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 == flexbox-basic-iframe-vert-001.xhtml    flexbox-basic-iframe-vert-001-ref.xhtml
 == flexbox-basic-img-horiz-001.xhtml      flexbox-basic-img-horiz-001-ref.xhtml
 == flexbox-basic-img-vert-001.xhtml       flexbox-basic-img-vert-001-ref.xhtml
-fails-if(stylo) == flexbox-basic-textarea-horiz-001.xhtml flexbox-basic-textarea-horiz-001-ref.xhtml
-fails-if(stylo) == flexbox-basic-textarea-vert-001.xhtml  flexbox-basic-textarea-vert-001-ref.xhtml
+== flexbox-basic-textarea-horiz-001.xhtml flexbox-basic-textarea-horiz-001-ref.xhtml
+== flexbox-basic-textarea-vert-001.xhtml  flexbox-basic-textarea-vert-001-ref.xhtml
 == flexbox-basic-video-horiz-001.xhtml    flexbox-basic-video-horiz-001-ref.xhtml
 == flexbox-basic-video-vert-001.xhtml     flexbox-basic-video-vert-001-ref.xhtml
 
@@ -148,24 +148,24 @@ fails-if(stylo) == flexbox-basic-textarea-vert-001.xhtml  flexbox-basic-textarea
 # Tests for min-height:auto / min-width:auto on flex items
 == flexbox-min-height-auto-001.html flexbox-min-height-auto-001-ref.html
 == flexbox-min-height-auto-002a.html flexbox-min-height-auto-002-ref.html
-fails-if(!stylo) == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # bug 1055354
+fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # bug 1055354
 == flexbox-min-height-auto-002c.html flexbox-min-height-auto-002-ref.html
-fails-if(stylo) == flexbox-min-height-auto-003.html flexbox-min-height-auto-003-ref.html
-fails-if(stylo) == flexbox-min-height-auto-004.html flexbox-min-height-auto-004-ref.html
+== flexbox-min-height-auto-003.html flexbox-min-height-auto-003-ref.html
+== flexbox-min-height-auto-004.html flexbox-min-height-auto-004-ref.html
 == flexbox-min-width-auto-001.html flexbox-min-width-auto-001-ref.html
 == flexbox-min-width-auto-002a.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-002c.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-003.html flexbox-min-width-auto-003-ref.html
-fails-if(stylo) == flexbox-min-width-auto-004.html flexbox-min-width-auto-004-ref.html
+== flexbox-min-width-auto-004.html flexbox-min-width-auto-004-ref.html
 
 # Tests for flex containers with the "overflow" property set
-fails-if(stylo) == flexbox-overflow-horiz-001.html flexbox-overflow-horiz-001-ref.html
+== flexbox-overflow-horiz-001.html flexbox-overflow-horiz-001-ref.html
 == flexbox-overflow-horiz-002.html flexbox-overflow-horiz-002-ref.html
 == flexbox-overflow-horiz-003.html flexbox-overflow-horiz-003-ref.html
 == flexbox-overflow-horiz-004.html flexbox-overflow-horiz-004-ref.html
 == flexbox-overflow-horiz-005.html flexbox-overflow-horiz-005-ref.html
-fails-if(stylo) == flexbox-overflow-vert-001.html flexbox-overflow-vert-001-ref.html
+== flexbox-overflow-vert-001.html flexbox-overflow-vert-001-ref.html
 == flexbox-overflow-vert-002.html flexbox-overflow-vert-002-ref.html
 == flexbox-overflow-vert-003.html flexbox-overflow-vert-003-ref.html
 == flexbox-overflow-vert-004.html flexbox-overflow-vert-004-ref.html

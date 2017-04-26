@@ -1,45 +1,45 @@
-fails-if(stylo) == solid-image-1.html solid-image-1-ref.html
-fails-if(stylo) == solid-image-1a.html solid-image-1-ref.html
-fails-if(stylo) == solid-image-2.html solid-image-2-ref.html
-fails-if(stylo) == solid-image-2a.html solid-image-2-ref.html
-fails-if(stylo) == multicolor-image-1.html multicolor-image-1-ref.html
+== solid-image-1.html solid-image-1-ref.html
+== solid-image-1a.html solid-image-1-ref.html
+== solid-image-2.html solid-image-2-ref.html
+== solid-image-2a.html solid-image-2-ref.html
+== multicolor-image-1.html multicolor-image-1-ref.html
 # This is fuzzy temporarily until bug 1044702 makes it possible to use source
 # clipping on Windows. (Any other fix would have a significant perf cost.)
-fuzzy-if(winWidget,1,1) fails-if(stylo) == multicolor-image-2.html multicolor-image-2-ref.html
-fails-if(stylo) == multicolor-image-3.html multicolor-image-3-ref.html
-fails-if(stylo) == multicolor-image-4.html multicolor-image-4-ref.html
-fails-if(stylo) == multicolor-image-5.html multicolor-image-5-ref.html
-fails-if(stylo) == transparent-image-1.html transparent-image-1-ref.html
-fails-if(stylo) != repeat-image-1.html repeat-image-1-ref.html
-fails-if(stylo) == 470250-1.html 470250-1-ref.html
-fails-if(stylo) == 470250-2.html 470250-2-ref.html
-fails-if(stylo) != different-h-v-1.html different-h-v-ref.html
-fails-if(stylo) != different-h-v-2.html different-h-v-ref.html
-fails-if(stylo) != different-h-v-1.html different-h-v-2.html
-fails-if(stylo) == center-scaling-1.html center-scaling-1-ref.html
-fails-if(Android) fails-if(usesRepeatResampling) fails-if(stylo) == center-scaling-2.html center-scaling-2-ref.html # Android: very different scaling (blurriness) on some sides
-fails-if(Android) fails-if(usesRepeatResampling) fails-if(stylo) == center-scaling-3.html center-scaling-3-ref.html # Android: very different scaling (blurriness) on some sides
-fails-if(stylo) == center-scaling-4t.html center-scaling-4t-ref.html
-fails-if(stylo) == center-scaling-4r.html center-scaling-4r-ref.html
-fails-if(stylo) == center-scaling-4b.html center-scaling-4b-ref.html
-fails-if(stylo) == center-scaling-4l.html center-scaling-4l-ref.html
-fails-if(stylo) == center-scaling-4tb.html center-scaling-4tb-ref.html
-fails-if(stylo) == center-scaling-4lr.html center-scaling-4lr-ref.html
-fails-if(stylo) == side-scaling-1h.html side-scaling-1h-ref.html
-fails-if(stylo) == side-scaling-1v.html side-scaling-1v-ref.html
-fails-if(stylo) == border-image-width-1a.html border-image-width-1-ref.html
-fails-if(stylo) == border-image-width-1b.html border-image-width-1-ref.html
-fails-if(stylo) == border-image-width-1c.html border-image-width-1-ref.html
-fails-if(stylo) == border-image-width-large.html border-image-width-large-ref.html
-fails-if(stylo) == border-image-outset-1a.html border-image-outset-1-ref.html
-fails-if(stylo) == border-image-outset-1b.html border-image-outset-1-ref.html
-fails-if(stylo) == border-image-outset-1c.html border-image-outset-1-ref.html
-fails-if(stylo) == border-image-nofill-1.html border-image-nofill-1-ref.html
-fails-if(stylo) == border-image-outset-resize-1.html border-image-outset-resize-1-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) fails-if(stylo) == border-image-outset-move-1.html border-image-outset-move-1-ref.html
-fails-if(stylo) == border-image-style-none.html border-image-style-none-ref.html
-fails-if(stylo) == border-image-style-none-length.html border-image-style-none-length-ref.html
-fails-if(stylo) == border-image-style-none-auto.html border-image-style-none-auto-ref.html
+fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2-ref.html
+== multicolor-image-3.html multicolor-image-3-ref.html
+== multicolor-image-4.html multicolor-image-4-ref.html
+== multicolor-image-5.html multicolor-image-5-ref.html
+== transparent-image-1.html transparent-image-1-ref.html
+!= repeat-image-1.html repeat-image-1-ref.html
+== 470250-1.html 470250-1-ref.html
+== 470250-2.html 470250-2-ref.html
+!= different-h-v-1.html different-h-v-ref.html
+!= different-h-v-2.html different-h-v-ref.html
+!= different-h-v-1.html different-h-v-2.html
+== center-scaling-1.html center-scaling-1-ref.html
+fails-if(Android) fails-if(usesRepeatResampling) == center-scaling-2.html center-scaling-2-ref.html # Android: very different scaling (blurriness) on some sides
+fails-if(Android) fails-if(usesRepeatResampling) == center-scaling-3.html center-scaling-3-ref.html # Android: very different scaling (blurriness) on some sides
+== center-scaling-4t.html center-scaling-4t-ref.html
+== center-scaling-4r.html center-scaling-4r-ref.html
+== center-scaling-4b.html center-scaling-4b-ref.html
+== center-scaling-4l.html center-scaling-4l-ref.html
+== center-scaling-4tb.html center-scaling-4tb-ref.html
+== center-scaling-4lr.html center-scaling-4lr-ref.html
+== side-scaling-1h.html side-scaling-1h-ref.html
+== side-scaling-1v.html side-scaling-1v-ref.html
+== border-image-width-1a.html border-image-width-1-ref.html
+== border-image-width-1b.html border-image-width-1-ref.html
+== border-image-width-1c.html border-image-width-1-ref.html
+== border-image-width-large.html border-image-width-large-ref.html
+== border-image-outset-1a.html border-image-outset-1-ref.html
+== border-image-outset-1b.html border-image-outset-1-ref.html
+== border-image-outset-1c.html border-image-outset-1-ref.html
+== border-image-nofill-1.html border-image-nofill-1-ref.html
+== border-image-outset-resize-1.html border-image-outset-resize-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) == border-image-outset-move-1.html border-image-outset-move-1-ref.html
+== border-image-style-none.html border-image-style-none-ref.html
+== border-image-style-none-length.html border-image-style-none-length-ref.html
+== border-image-style-none-auto.html border-image-style-none-auto-ref.html
 
 # border images with gradients
 == border-image-linear-gradient.html border-image-linear-gradient-ref.html
@@ -84,9 +84,9 @@ fuzzy(1,1054) fails-if(OSX) fuzzy-if(skiaContent,2,952) == border-image-repeatin
 fuzzy(125,5808) == border-image-element.html border-image-element-ref.html
 
 # svg-as-border-image
-fails-if(stylo) == svg-as-border-image-1a.html svg-as-border-image-1-ref.html
-fails-if(stylo) == svg-as-border-image-1b.html svg-as-border-image-1-ref.html
-fails-if(stylo) == svg-as-border-image-1c.html svg-as-border-image-1-ref.html
-fails-if(stylo) == svg-as-border-image-2.html svg-as-border-image-2-ref.html
-fails-if(stylo) == svg-as-border-image-3.html svg-as-border-image-3-ref.html
-fails-if(stylo) == svg-as-border-image-4.html svg-as-border-image-4-ref.html
+== svg-as-border-image-1a.html svg-as-border-image-1-ref.html
+== svg-as-border-image-1b.html svg-as-border-image-1-ref.html
+== svg-as-border-image-1c.html svg-as-border-image-1-ref.html
+== svg-as-border-image-2.html svg-as-border-image-2-ref.html
+== svg-as-border-image-3.html svg-as-border-image-3-ref.html
+== svg-as-border-image-4.html svg-as-border-image-4-ref.html

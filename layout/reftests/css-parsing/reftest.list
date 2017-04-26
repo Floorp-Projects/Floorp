@@ -1,5 +1,5 @@
 == at-rule-013.html at-rule-013-ref.html
-fails-if(stylo) == invalid-url-handling.xhtml invalid-url-handling-ref.xhtml
+== invalid-url-handling.xhtml invalid-url-handling-ref.xhtml
 == pseudo-elements-1.html pseudo-elements-1-ref.html
 == invalid-attr-1.html invalid-attr-1-ref.html
 == at-rule-error-handling-import-1.html at-rule-error-handling-ref.html

@@ -20,13 +20,13 @@ fuzzy-if(webrender,255,6) == column-balancing-overflow-005.html column-balancing
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
 fuzzy-if(OSX,32,1000) HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
-fails-if(stylo) HTTP(..) == columnfill-auto-2.html columnfill-auto-2-ref.html
-fails-if(stylo) HTTP(..) == columnfill-auto-3.html columnfill-auto-2-ref.html
-fails-if(stylo) == columnrule-basic.html columnrule-basic-ref.html
-fails-if(stylo) == columnrule-complex.html columnrule-complex-ref.html
+HTTP(..) == columnfill-auto-2.html columnfill-auto-2-ref.html
+HTTP(..) == columnfill-auto-3.html columnfill-auto-2-ref.html
+== columnrule-basic.html columnrule-basic-ref.html
+== columnrule-complex.html columnrule-complex-ref.html
 != columnrule-linestyles.html columnrule-linestyles-notref.html
 == columnrule-padding.html columnrule-padding-ref.html
-fails-if(stylo) == columnfill-overflow.html columnfill-overflow-ref.html
+== columnfill-overflow.html columnfill-overflow-ref.html
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1-ref.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2-ref.html
 == column-balancing-nested-000.html column-balancing-nested-000-ref.html
