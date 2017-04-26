@@ -37,7 +37,7 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #include "shared-libraries.h"
 #include "prtime.h"
 
