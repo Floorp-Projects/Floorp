@@ -40,8 +40,8 @@ fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mod
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
 fuzzy(64,53) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
-fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) fails-if(webrender) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
-fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) fails-if(webrender) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
 fuzzy(2,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
