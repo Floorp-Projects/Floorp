@@ -429,7 +429,7 @@ TEST(GeckoProfiler, Bug1355807)
                  features, MOZ_ARRAY_LENGTH(features),
                  fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
 
-  // In bug 1355807 this caused an assertion failure in stopJSSampling().
+  // In bug 1355807 this caused an assertion failure in StopJSSampling().
   profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
