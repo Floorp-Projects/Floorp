@@ -92,6 +92,11 @@ typedef uint8_t nsHttpVersion;
 // it disables any cutting edge features that we are worried might result in
 // interop problems with critical infrastructure
 #define NS_HTTP_BE_CONSERVATIVE      (1<<11)
+// NS_HTTP_URGENT_START              (1<<12) Gecko 55+
+
+// A sticky connection of the transaction is explicitly allowed to be restarted
+// on ERROR_NET_RESET.
+#define NS_HTTP_CONNECTION_RESTARTABLE  (1<<13)
 
 //-----------------------------------------------------------------------------
 // some default values
