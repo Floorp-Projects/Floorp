@@ -65,7 +65,7 @@ let whitelist = [
 
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
   whitelist.push({
-    sourceName: /res\/(ua|html)\.css$/i,
+    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
     errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
     isFromDevTools: false
   });

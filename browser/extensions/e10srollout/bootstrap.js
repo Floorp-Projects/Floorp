@@ -11,11 +11,17 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
- // The amount of people to be part of e10s
+// The amount of people to be part of e10s
 const TEST_THRESHOLD = {
   "beta": 0.9,  // 90%
   "release": 1.0,  // 100%
   "esr": 1.0,  // 100%
+};
+
+// If a user qualifies for the e10s-multi experiement, this is how many
+// content processes to use.
+const MULTI_BUCKETS = {
+  "beta": { 1: .5, 4: 1, },
 };
 
 const ADDON_ROLLOUT_POLICY = {
@@ -120,14 +126,14 @@ function defineCohort() {
     cohortPrefix = `addons-set${addonPolicy}-`;
   }
 
-  let inMultiExperiment = false;
+  let eligibleForMulti = false;
   if (userOptedOut.e10s || userOptedOut.multi) {
     // If we detected that the user opted out either for multi or e10s, then
     // the proper prefs must already be set.
     setCohort("optedOut");
   } else if (userOptedIn.e10s) {
     setCohort("optedIn");
-    inMultiExperiment = true;
+    eligibleForMulti = true;
   } else if (temporaryDisqualification != "") {
     // Users who are disqualified by the backend (from multiprocessBlockPolicy)
     // can be put into either the test or control groups, because e10s will
@@ -147,11 +153,11 @@ function defineCohort() {
     // qualification which overrides the user sample value when non-empty.
     setCohort(`temp-qualified-${temporaryQualification}`);
     Preferences.set(PREF_TOGGLE_E10S, true);
-    inMultiExperiment = true;
+    eligibleForMulti = true;
   } else if (testGroup) {
     setCohort(`${cohortPrefix}test`);
     Preferences.set(PREF_TOGGLE_E10S, true);
-    inMultiExperiment = true;
+    eligibleForMulti = true;
   } else {
     setCohort(`${cohortPrefix}control`);
     Preferences.reset(PREF_TOGGLE_E10S);
@@ -159,34 +165,37 @@ function defineCohort() {
   }
 
   // Now determine if this user should be in the e10s-multi experiment.
-  // - We only run the experiment on the beta channel.
+  // - We only run the experiment on channels defined in MULTI_BUCKETS.
   // - We decided above whether this user qualifies for the experiment.
   // - If the user already opted into multi, then their prefs are already set
   //   correctly, we're done.
   // - If the user has addons that disqualify them for multi, leave them with
   //   the default number of content processes (1 on beta) but still in the
   //   test cohort.
-  if (updateChannel !== "beta" ||
-      !inMultiExperiment ||
+  if (!(updateChannel in MULTI_BUCKETS) ||
+      !eligibleForMulti ||
       userOptedIn.multi ||
+      disqualified ||
       getAddonsDisqualifyForMulti()) {
     Preferences.reset(PREF_E10S_PROCESSCOUNT + ".web");
     return;
   }
 
+  // If we got here with a cohortPrefix, it must be "addons-set50allmpc-",
+  // and we know because of getAddonsDisqualifyForMulti that the addons that
+  // are installed must be web extensions.
+  if (cohortPrefix) {
+    cohortPrefix = "webextensions-";
+  }
+
   // The user is in the multi experiment!
   // Decide how many content processes to use for this user.
-  let BUCKETS = {
-    1: .25,
-    2: .5,
-    4: .75,
-    8: 1
-  };
+  let buckets = MULTI_BUCKETS[updateChannel];
 
   let multiUserSample = getUserSample(true);
-  for (let sampleName of Object.getOwnPropertyNames(BUCKETS)) {
-    if (multiUserSample < BUCKETS[sampleName]) {
-      setCohort(`multiBucket${sampleName}`);
+  for (let sampleName of Object.getOwnPropertyNames(buckets)) {
+    if (multiUserSample < buckets[sampleName]) {
+      setCohort(`${cohortPrefix}multiBucket${sampleName}`);
       Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", sampleName);
       break;
     }

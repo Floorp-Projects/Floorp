@@ -335,25 +335,16 @@ ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
                                            nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT_IF(aPseudoTagOrNull, aContent->IsElement());
-  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
-
   if (!aPseudoTagOrNull) {
-    return primaryFrame;
+    return aContent->GetPrimaryFrame();
   }
 
-  // FIXME(emilio): Need to take into account display: contents pseudos!
-  if (!primaryFrame) {
-    return nullptr;
-  }
-
-  // NOTE: we probably need to special-case display: contents here. Gecko's
-  // RestyleManager passes the primary frame of the parent instead.
   if (aPseudoTagOrNull == nsCSSPseudoElements::before) {
-    return nsLayoutUtils::GetBeforeFrameForContent(primaryFrame, aContent);
+    return nsLayoutUtils::GetBeforeFrame(aContent);
   }
 
   if (aPseudoTagOrNull == nsCSSPseudoElements::after) {
-    return nsLayoutUtils::GetAfterFrameForContent(primaryFrame, aContent);
+    return nsLayoutUtils::GetAfterFrame(aContent);
   }
 
   MOZ_CRASH("Unkown pseudo-element given to "

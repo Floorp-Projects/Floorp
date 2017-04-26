@@ -87,6 +87,25 @@ static std::string getId(const char *bin_name)
   return "";
 }
 
+static SharedLibrary
+SharedLibraryAtPath(const char* path, unsigned long libStart,
+                    unsigned long libEnd, unsigned long offset = 0)
+{
+  nsAutoString pathStr;
+  mozilla::Unused <<
+    NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path),
+                                                pathStr)));
+
+  nsAutoString nameStr = pathStr;
+  int32_t pos = nameStr.RFindChar('/');
+  if (pos != kNotFound) {
+    nameStr.Cut(0, pos + 1);
+  }
+
+  return SharedLibrary(libStart, libEnd, offset, getId(path),
+                       nameStr, pathStr, nameStr, pathStr,
+                       "", "");
+}
 
 // Config cases (1) and (2) use dl_iterate_phdr.
 #if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
@@ -112,23 +131,9 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
     if (end > libEnd)
       libEnd = end;
   }
-  const char *path = dl_info->dlpi_name;
 
-  nsAutoString pathStr;
-  mozilla::Unused <<
-    NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path),
-                                                pathStr)));
-
-  nsAutoString nameStr = pathStr;
-  int32_t pos = nameStr.RFindChar('/');
-  if (pos != kNotFound) {
-    nameStr.Cut(0, pos + 1);
-  }
-
-  SharedLibrary shlib(libStart, libEnd, 0, getId(path),
-                      nameStr, pathStr, nameStr, pathStr,
-                      "", "");
-  info.AddSharedLibrary(shlib);
+  info.AddSharedLibrary(
+    SharedLibraryAtPath(dl_info->dlpi_name, libStart, libEnd));
 
   return 0;
 }
@@ -226,20 +231,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 #if !defined(CONFIG_CASE_1)
     // This section has to be conditionalised so as to avoid compiler warnings
     // about dead code in case (1).
-    nsAutoString pathStr;
-    mozilla::Unused <<
-      NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(
-                             nsDependentCString(modulePath), pathStr)));
-
-    nsAutoString nameStr = pathStr;
-    int32_t pos = nameStr.RFindChar('/');
-    if (pos != kNotFound) {
-      nameStr.Cut(0, pos + 1);
-    }
-
-    SharedLibrary shlib(start, end, offset, getId(path),
-                        nameStr, pathStr, nameStr, pathStr, "", "");
-    info.AddSharedLibrary(shlib);
+    info.AddSharedLibrary(SharedLibraryAtPath(modulePath, start, end, offset));
     if (info.GetSize() > 10000) {
       LOG("SharedLibraryInfo::GetInfoForSelf(): "
           "implausibly large number of mappings acquired");
@@ -262,11 +254,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   for (size_t i = 0; i < info.GetSize(); i++) {
     SharedLibrary& lib = info.GetMutableEntry(i);
     if (lib.GetStart() == exeExeAddr && lib.GetNativeDebugPath() == "") {
-      nsAutoString exeNameStr;
-      mozilla::Unused <<
-        NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(
-                               nsDependentCString(exeName), exeNameStr)));
-      lib.SetNativeDebugPath(exeNameStr);
+      lib = SharedLibraryAtPath(exeName, lib.GetStart(), lib.GetEnd(),
+                                lib.GetOffset());
+
       // We only expect to see one such entry.
       break;
     }

@@ -25,7 +25,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.FxAccountDeviceRegistrator;
+import org.mozilla.gecko.fxa.devices.FxAccountDeviceRegistrator;
 import org.mozilla.gecko.fxa.FxAccountPushHandler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;

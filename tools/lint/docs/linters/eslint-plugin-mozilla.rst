@@ -192,6 +192,8 @@ Reject common XPCOM methods called with useless optional parameters (eg.
 ``Services.io.newURI(url, null, null)``, or non-existent parameters (eg.
 ``Services.obs.removeObserver(name, observer, false)``).
 
+This option can be autofixed (``--fix``).
+
 no-useless-removeEventListener
 ------------------------------
 

@@ -56,6 +56,10 @@ class nsAutoCauseReflowNotifier;
 
 namespace mozilla {
 
+namespace dom {
+class Element;
+}  // namespace dom
+
 class EventDispatchingCallback;
 
 // A set type for tracking visible frames, for use by the visibility code in
@@ -131,11 +135,6 @@ public:
   virtual void DestroyFramesFor(nsIContent*  aContent,
                                 nsIContent** aDestroyedFramesFor) override;
   virtual void CreateFramesFor(nsIContent* aContent) override;
-
-  /**
-   * Recreates the frames for a node
-   */
-  virtual nsresult RecreateFramesFor(nsIContent* aContent) override;
 
   /**
    * Post a callback that should be handled after reflow has finished.

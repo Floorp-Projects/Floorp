@@ -199,7 +199,7 @@ class ProfileEntry
 };
 
 JS_FRIEND_API(void)
-SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size,
+SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, mozilla::Atomic<uint32_t>* size,
                          uint32_t max);
 
 JS_FRIEND_API(void)

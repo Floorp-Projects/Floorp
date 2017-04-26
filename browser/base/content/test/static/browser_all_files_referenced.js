@@ -36,10 +36,6 @@ var whitelist = new Set([
   // security/manager/pki/resources/content/device_manager.js
   {file: "chrome://pippki/content/load_device.xul"},
 
-  // browser/modules/ReaderParent.jsm
-  {file: "chrome://browser/skin/reader-tour.png"},
-  {file: "chrome://browser/skin/reader-tour@2x.png"},
-
   // Used by setting this url as a pref in about:config
   {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
 
@@ -222,11 +218,6 @@ var whitelist = new Set([
    platforms: ["linux"]},
   // Bug 1348559
   {file: "chrome://pippki/content/resetpassword.xul"},
-
-  // Bug 1344257
-  {file: "resource://gre-resources/checkmark.svg"},
-  {file: "resource://gre-resources/indeterminate-checkmark.svg"},
-  {file: "resource://gre-resources/radio.svg"},
   // Bug 1351078
   {file: "resource://gre/modules/Battery.jsm"},
   // Bug 1351070

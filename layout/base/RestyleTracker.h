@@ -345,13 +345,12 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
       // the descendant.
       RestyleData* curData;
       mPendingRestyles.Get(cur, &curData);
-      NS_ASSERTION(curData, "expected to find a RestyleData for cur");
-      // If cur has an eRestyle_ForceDescendants restyle hint, then we
-      // know that we will get to all descendants.  Don't bother
-      // recording the descendant to restyle in that case.
-      if (curData && !(curData->mRestyleHint & eRestyle_ForceDescendants)) {
-        curData->mDescendants.AppendElement(aElement);
-      }
+
+      // Even if cur has a ForceDescendants restyle hint, we're not guaranteed
+      // to reach aElement in the case the PresShell posts a restyle event from
+      // PostRecreateFramesFor, so we need to track it here.
+      MOZ_ASSERT(curData, "expected to find a RestyleData for cur");
+      curData->mDescendants.AppendElement(aElement);
     }
   }
 

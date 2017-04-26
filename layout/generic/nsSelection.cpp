@@ -5172,11 +5172,15 @@ Selection::CollapseNative(nsINode* aParentNode, int32_t aOffset)
 }
 
 void
-Selection::CollapseJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::CollapseJS(nsINode* aNode, uint32_t aOffset, ErrorResult& aRv)
 {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  Collapse(aNode, aOffset, aRv);
+  if (!aNode) {
+    RemoveAllRanges(aRv);
+    return;
+  }
+  Collapse(*aNode, aOffset, aRv);
 }
 
 nsresult

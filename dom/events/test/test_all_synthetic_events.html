@@ -68,13 +68,6 @@ const kEventConstructors = {
                                                          return new ClipboardEvent(aName, aProps);
                                                        },
                                              },
-  CommandEvent:                              { create: function (aName, aProps) {
-                                                         var e = document.createEvent("commandevent");
-                                                         e.initCommandEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                            aProps.command);
-                                                         return e;
-                                                       },
-                                             },
   CompositionEvent:                          { create: function (aName, aProps) {
                                                          var e = document.createEvent("compositionevent");
                                                          e.initCompositionEvent(aName, aProps.bubbles, aProps.cancelable,
@@ -88,12 +81,6 @@ const kEventConstructors = {
                                              },
   DataErrorEvent:                            { create: function (aName, aProps) {
                                                           return new DataErrorEvent(aName, aProps);
-                                                       },
-                                             },
-  DataContainerEvent:                        { create: function (aName, aProps) {
-                                                         var e = document.createEvent("datacontainerevent");
-                                                         e.initEvent(aName, aProps.bubbles, aProps.cancelable);
-                                                         return e;
                                                        },
                                              },
   DeviceLightEvent:                          { create: function (aName, aProps) {
@@ -271,12 +258,6 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  NotifyPaintEvent:                          { create: function (aName, aProps) {
-                                                         var e = document.createEvent("notifypaintevent");
-                                                         e.initEvent(aName, aProps.bubbles, aProps.cancelable);
-                                                         return e;
-                                                       },
-                                             },
   OfflineAudioCompletionEvent:               { create: "AudioContext" in self
                                                         ? function (aName, aProps) {
                                                             var ac = new AudioContext();
@@ -331,19 +312,6 @@ const kEventConstructors = {
                                                                                aProps.view, aProps.details,
                                                                                aProps.x || 0.0, aProps.y || 0.0,
                                                                                aProps.width || 0.0, aProps.height || 0.0);
-                                                         return e;
-                                                       },
-                                             },
-  SimpleGestureEvent:                        { create: function (aName, aProps) {
-                                                         var e = document.createEvent("simplegestureevent");
-                                                         e.initSimpleGestureEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                                  aProps.view, aProps.detail,
-                                                                                  aProps.screenX, aProps.screenY,
-                                                                                  aProps.clientX, aProps.clientY,
-                                                                                  aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
-                                                                                  aProps.button, aProps.relatedTarget,
-                                                                                  aProps.allowedDirections, aProps.direction, aProps.delta || 0.0,
-                                                                                  aProps.clickCount);
                                                          return e;
                                                        },
                                              },

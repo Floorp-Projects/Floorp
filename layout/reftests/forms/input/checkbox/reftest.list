@@ -1,5 +1,5 @@
 == label-dynamic.html label-dynamic-ref.html
-fails-if(Android) == radio-stretched.html radio-stretched-ref.html # test for bug 464589
+== radio-stretched.html radio-stretched-ref.html # test for bug 464589
 != checked-native.html checked-native-notref.html
 fails-if(Android) == checked-appearance-none.html about:blank
 fails-if(Android) == unchecked-appearance-none.html about:blank
@@ -14,4 +14,4 @@ fails-if(Android) == indeterminate-unchecked.html about:blank
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
 skip-if(Android) == checkbox-baseline.html checkbox-baseline-ref.html # skip-if(Android) because Android use appearance:none by default for checkbox/radio.
 skip-if(Android) == checkbox-radio-color.html checkbox-radio-color-ref.html # skip-if(Android) because Android use appearance:none by default for checkbox/radio.
-skip-if(!Android) == checkbox-radio-auto-sized.html checkbox-radio-auto-sized-ref.html
+skip == checkbox-radio-auto-sized.html checkbox-radio-auto-sized-ref.html # Disabled until bug 1352238 is fixed.

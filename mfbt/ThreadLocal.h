@@ -11,7 +11,6 @@
 
 #if !defined(XP_WIN)
 #  include <pthread.h>
-#  include <signal.h>
 #endif
 
 #include "mozilla/Assertions.h"
@@ -19,15 +18,6 @@
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {
-
-// sig_safe_t denotes an atomic type which can be read or stored in a single
-// instruction.  This means that data of this type is safe to be manipulated
-// from a signal handler, or other similar asynchronous execution contexts.
-#if defined(XP_WIN)
-typedef unsigned long sig_safe_t;
-#else
-typedef sig_atomic_t sig_safe_t;
-#endif
 
 namespace detail {
 

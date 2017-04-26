@@ -60,7 +60,7 @@ function getServicePack() {
   let kernel32 = ctypes.open("kernel32");
   try {
     let GetVersionEx = kernel32.declare("GetVersionExW",
-                                        ctypes.default_abi,
+                                        ctypes.winapi_abi,
                                         BOOL,
                                         OSVERSIONINFOEXW.ptr);
     let winVer = OSVERSIONINFOEXW();
@@ -105,7 +105,7 @@ function getProcArchitecture() {
   let kernel32 = ctypes.open("kernel32");
   try {
     let GetNativeSystemInfo = kernel32.declare("GetNativeSystemInfo",
-                                               ctypes.default_abi,
+                                               ctypes.winapi_abi,
                                                ctypes.void_t,
                                                SYSTEM_INFO.ptr);
     let sysInfo = SYSTEM_INFO();

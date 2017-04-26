@@ -20,6 +20,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
+import org.mozilla.gecko.db.BrowserContract.RemoteDevices;
 import org.mozilla.gecko.db.BrowserContract.Highlights;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Visits;
@@ -94,6 +95,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
     static final String TABLE_ACTIVITY_STREAM_BLOCKLIST = ActivityStreamBlocklist.TABLE_NAME;
     static final String TABLE_PAGE_METADATA = PageMetadata.TABLE_NAME;
+    static final String TABLE_REMOTE_DEVICES = RemoteDevices.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -147,6 +149,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static final int PAGE_METADATA = 1500;
 
+    static final int REMOTE_DEVICES = 1600;
+    static final int REMOTE_DEVICES_ID = 1601;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -165,6 +170,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final Map<String, String> URL_ANNOTATIONS_PROJECTION_MAP;
     static final Map<String, String> VISIT_PROJECTION_MAP;
     static final Map<String, String> PAGE_METADATA_PROJECTION_MAP;
+    static final Map<String, String> REMOTE_DEVICES_PROJECTION_MAP;
     static final Table[] sTables;
 
     static {
@@ -324,6 +330,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, ActivityStreamBlocklist.TABLE_NAME, ACTIVITY_STREAM_BLOCKLIST);
 
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "highlight_candidates", HIGHLIGHT_CANDIDATES);
+
+        // FxA Devices
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "remote_devices", REMOTE_DEVICES);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "remote_devices/#", REMOTE_DEVICES_ID);
+
+        map = new HashMap<>();
+        map.put(RemoteDevices._ID, RemoteDevices._ID);
+        map.put(RemoteDevices.GUID, RemoteDevices.GUID);
+        map.put(RemoteDevices.NAME, RemoteDevices.NAME);
+        map.put(RemoteDevices.TYPE, RemoteDevices.TYPE);
+        map.put(RemoteDevices.IS_CURRENT_DEVICE, RemoteDevices.IS_CURRENT_DEVICE);
+        map.put(RemoteDevices.DATE_CREATED, RemoteDevices.DATE_CREATED);
+        map.put(RemoteDevices.DATE_MODIFIED, RemoteDevices.DATE_MODIFIED);
+        map.put(RemoteDevices.LAST_ACCESS_TIME, RemoteDevices.LAST_ACCESS_TIME);
+        REMOTE_DEVICES_PROJECTION_MAP = Collections.unmodifiableMap(map);
     }
 
     private static class ShrinkMemoryReceiver extends BroadcastReceiver {
@@ -649,6 +670,20 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 deleted = deletePageMetadata(uri, selection, selectionArgs);
                 break;
 
+            case REMOTE_DEVICES_ID:
+                debug("Delete on REMOTE_DEVICES_ID: " + uri);
+
+                selection = DBUtils.concatenateWhere(selection, TABLE_REMOTE_DEVICES + "._ID = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case REMOTE_DEVICES: {
+                trace("Deleting FxA devices: " + uri);
+                beginWrite(db);
+                deleted = deleteRemoteDevices(uri, selection, selectionArgs);
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -718,6 +753,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case PAGE_METADATA: {
                 trace("Insert on PAGE_METADATA: " + uri);
                 id = insertPageMetadata(uri, values);
+                break;
+            }
+
+            case REMOTE_DEVICES: {
+                trace("Insert on REMOTE_DEVICES: " + uri);
+                id = insertFxADevice(uri, values);
                 break;
             }
 
@@ -1391,6 +1432,20 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
+            case REMOTE_DEVICES_ID:
+                selection = DBUtils.concatenateWhere(selection, RemoteDevices._ID + " = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case REMOTE_DEVICES: {
+                debug("FxA devices query: " + uri);
+
+                qb.setProjectionMap(REMOTE_DEVICES_PROJECTION_MAP);
+                qb.setTables(TABLE_REMOTE_DEVICES);
+
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -1997,6 +2052,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 TABLE_PAGE_METADATA, null, values, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
+    private long insertFxADevice(final Uri uri, final ContentValues values) {
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_REMOTE_DEVICES, null, values);
+    }
+
     private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
         final String url = values.getAsString(UrlAnnotations.URL);
         trace("Inserting url annotations for URL: " + url);
@@ -2018,6 +2080,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         return db.delete(TABLE_PAGE_METADATA, selection, selectionArgs);
+    }
+
+    private int deleteRemoteDevices(final Uri uri, final String selection, final String[] selectionArgs) {
+        trace("Deleting FxA Devices for URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        return db.delete(TABLE_REMOTE_DEVICES, selection, selectionArgs);
     }
 
     private void updateUrlAnnotation(final Uri uri, final ContentValues values, final String selection, final String[] selectionArgs) {
@@ -2275,11 +2344,58 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     result.putSerializable(BrowserContract.METHOD_RESULT, e);
                 }
                 break;
+            case BrowserContract.METHOD_REPLACE_REMOTE_CLIENTS:
+                try {
+                    final Uri uri = Uri.parse(uriArg);
+                    bulkReplaceRemoteDevices(uri, extras);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, null);
+
+                    // If anything went wrong during insertion, we know that changes were rolled back.
+                    // Inform our caller that we have failed.
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unexpected error while bulk inserting remote clients", e);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, e);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown method call: " + method);
         }
 
         return result;
+    }
+
+    private void bulkReplaceRemoteDevices(final Uri uri, @NonNull Bundle dataBundle) {
+        final ContentValues[] values = (ContentValues[]) dataBundle.getParcelableArray(BrowserContract.METHOD_PARAM_DATA);
+
+        if (values == null) {
+            throw new IllegalArgumentException("Received null recordBundle while bulk inserting remote clients.");
+        }
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        // Wrap everything in a transaction.
+        beginBatch(db);
+
+        try {
+            // First purge our list of remote devices.
+            // We pass "1" to get a count of the affected rows (see SQLiteDatabase#delete)
+            int count = deleteInTransaction(uri, "1", null);
+            Log.i(LOGTAG, "Deleted " + count + " remote devices.");
+
+            // Then insert the new ones.
+            for (int i = 0; i < values.length; i++) {
+                try {
+                    insertFxADevice(uri, values[i]);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Could not insert device with ID " + values[i].getAsString(RemoteDevices.GUID) + ": " + e);
+                }
+            }
+            markBatchSuccessful(db);
+        } finally {
+            endBatch(db);
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null, false);
     }
 
     private void bulkInsertHistoryWithVisits(final SQLiteDatabase db, @NonNull Bundle dataBundle) {
