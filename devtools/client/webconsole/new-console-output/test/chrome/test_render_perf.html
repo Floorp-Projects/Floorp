@@ -14,7 +14,7 @@
 
 <script type="text/javascript">
 "use strict";
-const numMessages = 2000;
+const numMessages = 4000;
 const testPackets = Array.from({length: numMessages}).map((el, id) => ({
   "from": "server1.conn4.child1/consoleActor2",
   "type": "consoleAPICall",
@@ -49,7 +49,12 @@ async function timeit(cb) {
 }
 
 window.onload = async function () {
+  // This test does costly work multiple times to have better performance data.
+  SimpleTest.requestLongerTimeout(3);
+
   try {
+    const Services = browserRequire("Services");
+    Services.prefs.setIntPref("devtools.hud.loglimit", numMessages);
     const NewConsoleOutputWrapper = browserRequire(
       "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
     const EventEmitter = browserRequire("devtools/shared/event-emitter");
@@ -64,25 +69,31 @@ window.onload = async function () {
     wrapper.init();
 
     let times = [];
-    const iterations = 10;
+    const iterations = 25;
     const lastPacket = testPackets.pop();
     for (let i = 0; i < iterations; i++) {
-      let time = await timeit(() => {
+      let time = await timeit(async () => {
         testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
         // Only wait for the last packet to minimize work.
-        return wrapper.dispatchMessageAdd(lastPacket, true);
+        await wrapper.dispatchMessageAdd(lastPacket, true);
+        await new Promise(resolve => requestAnimationFrame(resolve));
       });
       info(`took ${time} ms to render messages`);
       times.push(time);
 
-      info("Clear the console");
-      await new Promise(resolve => requestAnimationFrame(() => resolve()));
+      // Clear the console
       wrapper.dispatchMessagesClear();
+      await new Promise(resolve => requestAnimationFrame(resolve));
     }
 
+    times.sort();
     let totalTime = times.reduce((sum, t) => sum + t);
     let avg = totalTime / times.length;
-    info(`On average, it took ${avg} ms to render ${numMessages} messages`);
+    let median = times.length % 2 !== 0
+      ? times[Math.floor(times.length / 2)]
+      : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
+    info(`On average, it took ${avg} ms (median ${median} ms) ` +
+         `to render ${numMessages} messages`);
 
     ok(true, "Yay, it didn't time out!");
   } catch (e) {
