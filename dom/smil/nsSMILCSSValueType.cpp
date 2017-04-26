@@ -336,6 +336,31 @@ GetPresContextForElement(Element* aElem)
   return shell ? shell->GetPresContext() : nullptr;
 }
 
+static const nsDependentSubstring
+GetNonNegativePropValue(const nsAString& aString, nsCSSPropertyID aPropID,
+                        bool& aIsNegative)
+{
+  // If value is negative, we'll strip off the "-" so the CSS parser won't
+  // barf, and then manually make the parsed value negative.
+  // (This is a partial solution to let us accept some otherwise out-of-bounds
+  // CSS values. Bug 501188 will provide a more complete fix.)
+  aIsNegative = false;
+  uint32_t subStringBegin = 0;
+
+  // NOTE: We need to opt-out 'stroke-dasharray' from the negative-number
+  // check.  Its values might look negative (e.g. by starting with "-1"), but
+  // they're more complicated than our simple negation logic here can handle.
+  if (aPropID != eCSSProperty_stroke_dasharray) {
+    int32_t absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
+    if (absValuePos > 0) {
+      aIsNegative = true;
+      subStringBegin = (uint32_t)absValuePos; // Start parsing after '-' sign
+    }
+  }
+
+  return Substring(aString, subStringBegin);
+}
+
 // Helper function to parse a string into a StyleAnimationValue
 static bool
 ValueFromStringHelper(nsCSSPropertyID aPropID,
@@ -345,30 +370,17 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                       StyleAnimationValue& aStyleAnimValue,
                       bool* aIsContextSensitive)
 {
-  // If value is negative, we'll strip off the "-" so the CSS parser won't
-  // barf, and then manually make the parsed value negative.
-  // (This is a partial solution to let us accept some otherwise out-of-bounds
-  // CSS values. Bug 501188 will provide a more complete fix.)
-  bool isNegative = false;
-  uint32_t subStringBegin = 0;
-
-  // NOTE: We need to opt-out 'stroke-dasharray' from the negative-number
-  // check.  Its values might look negative (e.g. by starting with "-1"), but
-  // they're more complicated than our simple negation logic here can handle.
-  if (aPropID != eCSSProperty_stroke_dasharray) {
-    int32_t absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
-    if (absValuePos > 0) {
-      isNegative = true;
-      subStringBegin = (uint32_t)absValuePos; // Start parsing after '-' sign
-    }
-  }
   RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr,
                                         aPresContext->PresShell());
   if (!styleContext) {
     return false;
   }
-  nsDependentSubstring subString(aString, subStringBegin);
+
+  bool isNegative = false;
+  const nsDependentSubstring subString =
+    GetNonNegativePropValue(aString, aPropID, isNegative);
+
   if (!StyleAnimationValue::ComputeValue(aPropID, aTargetElement, styleContext,
                                          subString, true, aStyleAnimValue,
                                          aIsContextSensitive)) {
