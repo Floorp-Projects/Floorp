@@ -4,6 +4,7 @@ use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
 use mozversion::{self, firefox_version, Version};
+use regex::bytes::Regex;
 use rustc_serialize::base64::FromBase64;
 use rustc_serialize::json::Json;
 use std::collections::BTreeMap;
@@ -14,7 +15,8 @@ use std::io::BufWriter;
 use std::io::Cursor;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
+use std::process::{Command, Stdio};
+use std::str::{self, FromStr};
 use webdriver::capabilities::{BrowserCapabilities, Capabilities};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use zip;
@@ -53,20 +55,48 @@ impl<'a> FirefoxCapabilities<'a> {
             .and_then(|x| x.canonicalize().ok())
     }
 
-    fn version(&mut self) -> Result<Option<String>, mozversion::Error> {
+    fn version(&mut self) -> Option<String> {
         if let Some(ref binary) = self.chosen_binary {
             if let Some(value) = self.version_cache.get(binary) {
-                return Ok(Some((*value).clone()));
+                return Some((*value).clone());
             }
-            let rv = try!(firefox_version(&*binary)).version_string;
+            debug!("Trying to read firefox version from ini files");
+            let rv = firefox_version(&*binary)
+                .ok()
+                .and_then(|x| x.version_string)
+                .or_else(|| {
+                    debug!("Trying to read firefox version from binary");
+                    self.version_from_binary(binary)
+                });
             if let Some(ref version) = rv {
+                debug!("Found version {}", version);
                 self.version_cache
                     .insert(binary.clone(), version.clone());
+            } else {
+                debug!("Failed to get binary version");
             }
-            Ok(rv)
+            rv
         } else {
-            // TODO: try launching the binary here to figure out the version
-            Ok(None)
+            None
+        }
+    }
+
+    fn version_from_binary(&self, binary: &PathBuf) -> Option<String> {
+        let version_regexp = Regex::new(r#"\d+\.\d+(?:[a-z]\d+)?"#).expect("Error parsing version regexp");
+        let output = Command::new(binary)
+            .args(&["-version"])
+            .stdout(Stdio::piped())
+            .spawn()
+            .and_then(|child| child.wait_with_output())
+            .ok();
+
+        if let Some(x) = output {
+            version_regexp.captures(&*x.stdout)
+                .and_then(|captures| captures.get(0))
+                .and_then(|m| str::from_utf8(m.as_bytes()).ok())
+                .map(|x| x.into())
+        } else {
+            None
         }
     }
 }
@@ -88,7 +118,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     }
 
     fn browser_version(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
-        self.version().or_else(|x| Err(convert_version_error(x)))
+        Ok(self.version())
     }
 
     fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
@@ -104,7 +134,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     }
 
     fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
-        let version_str = try!(self.version().or_else(|x| Err(convert_version_error(x))));
+        let version_str = self.version();
         if let Some(x) = version_str {
             Ok(try!(Version::from_str(&*x).or_else(|x| Err(convert_version_error(x)))).major >= 52)
         } else {
