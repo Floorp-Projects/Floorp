@@ -89,17 +89,9 @@ FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
-#if defined(XP_WIN)
-  if (StringBeginsWith(aPath, NS_LITERAL_STRING("..\\")) ||
-      FindInReadable(NS_LITERAL_STRING("\\..\\"), aPath)) {
+  if (FindInReadable(NS_LITERAL_STRING(".."), aPath)) {
     return false;
   }
-#elif defined(XP_UNIX)
-  if (StringBeginsWith(aPath, NS_LITERAL_STRING("../")) ||
-      FindInReadable(NS_LITERAL_STRING("/../"), aPath)) {
-    return false;
-  }
-#endif
 
   nsTArray<nsString>* paths;
   if (!mPaths.Get(aId, &paths)) {
