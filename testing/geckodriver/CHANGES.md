@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Fixed
+- Session is now ended when closing the last Firefox window (fixes [#613](https://github.com/mozilla/geckodriver/issues/613))
+
 ## v0.16.0 (2016-04-21)
 
 Note that geckodriver v0.16.0 is only compatible with Selenium 3.4 and greater.
