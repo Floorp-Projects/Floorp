@@ -707,17 +707,12 @@ TokenStreamBase::computeErrorMetadataNoOffset(ErrorMetadata* err)
 }
 
 bool
-TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
+TokenStreamBase::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
 {
-    if (offset == NoOffset) {
-        computeErrorMetadataNoOffset(err);
-        return true;
-    }
-
     err->isMuted = mutedErrors;
 
-    // If this TokenStream doesn't have location information, try to get it
-    // from the caller.
+    // If this TokenStreamAnyChars doesn't have location information, try to
+    // get it from the caller.
     if (!filename && !cx->helperThread()) {
         NonBuiltinFrameIter iter(cx,
                                  FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
@@ -725,17 +720,30 @@ TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
         if (!iter.done() && iter.filename()) {
             err->filename = iter.filename();
             err->lineNumber = iter.computeLine(&err->columnNumber);
-
-            // We can't get a line of context if we're using the caller's
-            // location, so we're done.
-            return true;
+            return false;
         }
     }
 
-    // Otherwise this TokenStream's location information should be used.
+    // Otherwise use this TokenStreamAnyChars's location information.
     err->filename = filename;
-    srcCoords.lineNumAndColumnIndex(offset,
-                                    &err->lineNumber, &err->columnNumber);
+    srcCoords.lineNumAndColumnIndex(offset, &err->lineNumber, &err->columnNumber);
+    return true;
+}
+
+bool
+TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
+{
+    if (offset == NoOffset) {
+        computeErrorMetadataNoOffset(err);
+        return true;
+    }
+
+    // This function's return value isn't a success/failure indication: it
+    // returns true if this TokenStream's location information could be used,
+    // and it returns false when that information can't be used (and so we
+    // can't provide a line of context).
+    if (!fillExcludingContext(err, offset))
+        return true;
 
     // Add a line of context from this TokenStream to help with debugging.
     return computeLineOfContext(err, offset);
@@ -755,12 +763,7 @@ TokenStream::computeLineOfContext(ErrorMetadata* err, uint32_t offset)
     if (err->lineNumber != lineno)
         return true;
 
-    // We show only a portion (a "window") of the line around the erroneous
-    // token -- the first char in the token, plus |windowRadius| chars before
-    // it and |windowRadius - 1| chars after it.  This is because for a very
-    // long line, printing the whole line is (a) not that helpful, and (b) can
-    // waste a lot of memory.  See bug 634444.
-    constexpr size_t windowRadius = 60;
+    constexpr size_t windowRadius = ErrorMetadata::lineOfContextRadius;
 
     // The window must start within the current line, no earlier than
     // |windowRadius| characters before |offset|.
