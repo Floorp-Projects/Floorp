@@ -203,7 +203,7 @@ module.exports = {
         expr.callee.type === "Identifier" &&
         expr.callee.name === "importScripts") {
       for (var arg of expr.arguments) {
-        var match = arg.value.match(workerImportFilenameMatch);
+        var match = arg.value && arg.value.match(workerImportFilenameMatch);
         if (match) {
           if (!match[1]) {
             let filePath = path.resolve(dirname, match[2]);
