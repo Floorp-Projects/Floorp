@@ -4076,7 +4076,7 @@ Selection::RemoveItem(nsRange* aItem)
     }
   }
   if (idx < 0)
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
   aItem->SetSelection(nullptr);

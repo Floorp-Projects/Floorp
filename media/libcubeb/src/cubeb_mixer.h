@@ -27,7 +27,8 @@ typedef enum {
   CHANNEL_RCENTER,
   CHANNEL_RRS,
   CHANNEL_LFE,
-  CHANNEL_MAX // Max number of supported channels.
+  CHANNEL_UNMAPPED,
+  CHANNEL_MAX = 256 // Max number of supported channels.
 } cubeb_channel;
 
 static cubeb_channel const CHANNEL_INDEX_TO_ORDER[CUBEB_LAYOUT_MAX][CHANNEL_MAX] = {
@@ -50,6 +51,8 @@ static cubeb_channel const CHANNEL_INDEX_TO_ORDER[CUBEB_LAYOUT_MAX][CHANNEL_MAX]
   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_LS, CHANNEL_RS },                           // 3F2_LFE
   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_RCENTER, CHANNEL_LS, CHANNEL_RS },          // 3F3R_LFE
   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_RLS, CHANNEL_RRS, CHANNEL_LS, CHANNEL_RS }  // 3F4_LFE
+  // When more channels are present, the stream is considered unmapped to a
+  // particular speaker set.
 };
 
 typedef struct {

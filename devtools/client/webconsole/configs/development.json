@@ -1,0 +1,35 @@
+{
+  "title": "Console",
+  "environment": "development",
+  "baseWorkerURL": "http://localhost:8000/public/build/",
+  "host": "",
+  "theme": "light",
+  "dir": "ltr",
+  "features": {
+  },
+  "logging": {
+    "client": false,
+    "firefoxProxy": false,
+    "actions": false
+  },
+  "chrome": {
+    "debug": false,
+    "host": "localhost",
+    "port": 9222
+  },
+  "node": {
+    "debug": false,
+    "host": "localhost",
+    "port": 9229
+  },
+  "firefox": {
+    "webSocketConnection": false,
+    "proxyHost": "localhost:9000",
+    "webSocketHost": "localhost:6080",
+    "mcPath": "./firefox"
+  },
+  "development": {
+    "serverPort": 8000,
+    "examplesPort": 7999
+  }
+}

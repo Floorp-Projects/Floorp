@@ -62,7 +62,7 @@ var gTests = [
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
     // After closing all streams, gUM(audio+camera) causes a prompt.
-    yield closeStream(false, 0, 2);
+    yield closeStream();
     promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true);
     yield promise;
@@ -169,7 +169,7 @@ var gTests = [
     yield checkSharingUI({audio: false, video: true});
 
     // close all streams
-    yield closeStream(false, 0, 2);
+    yield closeStream();
   }
 },
 
@@ -241,7 +241,7 @@ var gTests = [
     yield checkSharingUI({audio: true, video: false});
 
     // close all streams
-    yield closeStream(false, 0, 2);
+    yield closeStream();
   }
 }
 

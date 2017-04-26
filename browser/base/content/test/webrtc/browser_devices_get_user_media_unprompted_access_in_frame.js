@@ -57,7 +57,7 @@ var gTests = [
     yield expectObserverCalled("recording-device-events");
 
     // close the stream
-    yield closeStream(false, "frame1", 2);
+    yield closeStream(false, "frame1");
   }
 },
 
@@ -197,7 +197,7 @@ var gTests = [
     yield expectObserverCalled("recording-window-ended");
 
     // close the stream
-    yield closeStream(false);
+    yield closeStream();
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);

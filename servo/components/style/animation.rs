@@ -272,9 +272,13 @@ impl PropertyAnimation {
         let timing_function = box_style.transition_timing_function_mod(transition_index);
         let duration = box_style.transition_duration_mod(transition_index);
 
+        if let TransitionProperty::Unsupported(_) = transition_property {
+            return result
+        }
+
         if transition_property.is_shorthand() {
             return transition_property.longhands().iter().filter_map(|transition_property| {
-                PropertyAnimation::from_transition_property(*transition_property,
+                PropertyAnimation::from_transition_property(transition_property,
                                                             timing_function,
                                                             duration,
                                                             old_style,
@@ -284,7 +288,7 @@ impl PropertyAnimation {
 
         if transition_property != TransitionProperty::All {
             if let Some(property_animation) =
-                    PropertyAnimation::from_transition_property(transition_property,
+                    PropertyAnimation::from_transition_property(&transition_property,
                                                                 timing_function,
                                                                 duration,
                                                                 old_style,
@@ -296,7 +300,7 @@ impl PropertyAnimation {
 
         TransitionProperty::each(|transition_property| {
             if let Some(property_animation) =
-                    PropertyAnimation::from_transition_property(transition_property,
+                    PropertyAnimation::from_transition_property(&transition_property,
                                                                 timing_function,
                                                                 duration,
                                                                 old_style,
@@ -308,15 +312,15 @@ impl PropertyAnimation {
         result
     }
 
-    fn from_transition_property(transition_property: TransitionProperty,
+    fn from_transition_property(transition_property: &TransitionProperty,
                                 timing_function: TransitionTimingFunction,
                                 duration: Time,
                                 old_style: &ComputedValues,
                                 new_style: &ComputedValues)
                                 -> Option<PropertyAnimation> {
         debug_assert!(!transition_property.is_shorthand() &&
-                      transition_property != TransitionProperty::All);
-        let animated_property = AnimatedProperty::from_transition_property(&transition_property,
+                      transition_property != &TransitionProperty::All);
+        let animated_property = AnimatedProperty::from_transition_property(transition_property,
                                                                            old_style,
                                                                            new_style);
 
@@ -464,13 +468,19 @@ pub fn maybe_start_animations(context: &SharedStyleContext,
 
     let box_style = new_style.get_box();
     for (i, name) in box_style.animation_name_iter().enumerate() {
+        let name = if let Some(atom) = name.as_atom() {
+            atom
+        } else {
+            continue
+        };
+
         debug!("maybe_start_animations: name={}", name);
         let total_duration = box_style.animation_duration_mod(i).seconds();
         if total_duration == 0. {
             continue
         }
 
-        if let Some(ref anim) = context.stylist.animations().get(&name.0) {
+        if let Some(ref anim) = context.stylist.animations().get(name) {
             debug!("maybe_start_animations: animation {} found", name);
 
             // If this animation doesn't have any keyframe, we can just continue
@@ -506,7 +516,7 @@ pub fn maybe_start_animations(context: &SharedStyleContext,
 
 
             new_animations_sender
-                .send(Animation::Keyframes(node, name.0.clone(), KeyframesAnimationState {
+                .send(Animation::Keyframes(node, name.clone(), KeyframesAnimationState {
                     started_at: animation_start,
                     duration: duration as f64,
                     delay: delay as f64,
@@ -584,9 +594,10 @@ pub fn update_style_for_animation(context: &SharedStyleContext,
 
             debug_assert!(!animation.steps.is_empty());
 
-            let maybe_index = style.get_box()
-                                   .animation_name_iter()
-                                   .position(|animation_name| *name == animation_name.0);
+            let maybe_index = style
+                .get_box()
+                .animation_name_iter()
+                .position(|animation_name| Some(name) == animation_name.as_atom());
 
             let index = match maybe_index {
                 Some(index) => index,
@@ -695,7 +706,7 @@ pub fn update_style_for_animation(context: &SharedStyleContext,
             for transition_property in &animation.properties_changed {
                 debug!("update_style_for_animation: scanning prop {:?} for animation \"{}\"",
                        transition_property, name);
-                match PropertyAnimation::from_transition_property(*transition_property,
+                match PropertyAnimation::from_transition_property(transition_property,
                                                                   timing_function,
                                                                   Time::from_seconds(relative_duration as f32),
                                                                   &from_style,

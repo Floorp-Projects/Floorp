@@ -1308,7 +1308,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
         memcpy(newLocale + index, insert, insertLen);
         memcpy(newLocale + index + insertLen, oldLocale + index, localeLen - index + 1); // '\0'
         locale.clear();
-        locale.initBytes(newLocale);
+        locale.initBytes(JS::UniqueChars(newLocale));
     } else {
         MOZ_ASSERT(StringEqualsAscii(usage, "sort"));
     }
