@@ -145,21 +145,20 @@ struct MOZ_STACK_CLASS BidiParagraphData
   nsBlockFrame*       mCurrentBlock;
 #endif
 
-  void Init(nsBlockFrame* aBlockFrame)
-  {
-    mRequiresBidi = false;
-    mPrevContent = nullptr;
+  explicit BidiParagraphData(nsBlockFrame* aBlockFrame)
+    : mPresContext(aBlockFrame->PresContext())
+    , mIsVisual(mPresContext->IsVisualMode())
+    , mRequiresBidi(false)
+    , mParaLevel(nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->StyleContext()))
+    , mPrevContent(nullptr)
 #ifdef DEBUG
-    mCurrentBlock = aBlockFrame;
+    , mCurrentBlock(aBlockFrame)
 #endif
-
-    mParaLevel = nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->StyleContext());
+  {
     if (mParaLevel > 0) {
       mRequiresBidi = true;
     }
 
-    mPresContext = aBlockFrame->PresContext();
-    mIsVisual = mPresContext->IsVisualMode();
     if (mIsVisual) {
       /**
        * Drill up in content to detect whether this is an element that needs to
@@ -703,8 +702,7 @@ CreateContinuation(nsIFrame*  aFrame,
 nsresult
 nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 {
-  BidiParagraphData bpd;
-  bpd.Init(aBlockFrame);
+  BidiParagraphData bpd(aBlockFrame);
 
   // Handle bidi-override being set on the block itself before calling
   // TraverseFrames.
