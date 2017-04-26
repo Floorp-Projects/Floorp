@@ -32,6 +32,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * Stop session - ("action", "background", "app")
 * (Browsing) URL entered: - ("action", "type_url", "search_bar")
 * (Browsing) Incoming intent from third-party app - ("action", "intent_url", "app")
+* (Browsing) Text selection action from third-party app ("action", "text_selection_intent", "app")
 * (Search) Query entered: - ("action", "type_query", "search_bar")
 * (Search) Query/Hint clicked: - ("action", "select_query", "search_bar")
 * (Erase) UI button clicked - ("action", "click", "erase_button")

@@ -28,6 +28,7 @@ import org.mozilla.focus.web.WebViewProvider;
 public class MainActivity extends AppCompatActivity {
     public static final String ACTION_ERASE = "erase";
     public static final String EXTRA_FINISH = "finish";
+    public static final String EXTRA_TEXT_SELECTION = "text_selection";
     private static final String EXTRA_SHORTCUT = "shortcut";
 
     private String pendingUrl;
@@ -194,7 +195,12 @@ public class MainActivity extends AppCompatActivity {
                         BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
                 .commit();
 
-        TelemetryWrapper.browseIntentEvent();
+
+        if (getIntent().getBooleanExtra(EXTRA_TEXT_SELECTION, false)) {
+            TelemetryWrapper.textSelectionIntentEvent();
+        } else {
+            TelemetryWrapper.browseIntentEvent();
+        }
     }
 
     @Override

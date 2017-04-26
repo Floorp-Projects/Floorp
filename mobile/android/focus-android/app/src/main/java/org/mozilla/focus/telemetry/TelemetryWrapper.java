@@ -55,6 +55,7 @@ public final class TelemetryWrapper {
         private static final String SHARE = "share";
         private static final String OPEN = "open";
         private static final String INTENT_URL = "intent_url";
+        private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
     }
 
     private static class Object {
@@ -179,6 +180,10 @@ public final class TelemetryWrapper {
 
     public static void browseIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
+    }
+
+    public static void textSelectionIntentEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.TEXT_SELECTION_INTENT, Object.APP).queue();
     }
 
     private static void searchEnterEvent() {
