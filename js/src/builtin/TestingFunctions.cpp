@@ -4319,9 +4319,8 @@ static bool
 TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool ignore;
-    double when = (mozilla::TimeStamp::Now()
-                   - mozilla::TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
+    double when = (mozilla::TimeStamp::Now() -
+                   mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
     args.rval().setNumber(when);
     return true;
 }

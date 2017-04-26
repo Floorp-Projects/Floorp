@@ -11796,8 +11796,7 @@ GarbageCollectionEvent::toJSObject(JSContext* cx) const
     if (!slicesArray)
         return nullptr;
 
-    bool ignored; // Ignore inconsistencies in process creation timestamp.
-    TimeStamp originTime = TimeStamp::ProcessCreation(ignored);
+    TimeStamp originTime = TimeStamp::ProcessCreation();
 
     size_t idx = 0;
     for (auto range = collections.all(); !range.empty(); range.popFront()) {
