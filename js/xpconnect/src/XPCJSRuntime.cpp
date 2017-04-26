@@ -813,7 +813,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
         return;
 
     switch (status) {
-        case JSFINALIZE_GROUP_START:
+        case JSFINALIZE_GROUP_PREPARE:
         {
             MOZ_ASSERT(!self->mDoingFinalization, "bad state");
 
@@ -821,18 +821,25 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             self->mGCIsRunning = true;
 
             self->mDoingFinalization = true;
+
             break;
         }
-        case JSFINALIZE_GROUP_END:
+        case JSFINALIZE_GROUP_START:
         {
             MOZ_ASSERT(self->mDoingFinalization, "bad state");
-            self->mDoingFinalization = false;
 
             // Sweep scopes needing cleanup
             XPCWrappedNativeScope::KillDyingScopes();
 
             MOZ_ASSERT(self->mGCIsRunning, "bad state");
             self->mGCIsRunning = false;
+
+            break;
+        }
+        case JSFINALIZE_GROUP_END:
+        {
+            MOZ_ASSERT(self->mDoingFinalization, "bad state");
+            self->mDoingFinalization = false;
 
             break;
         }
