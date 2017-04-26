@@ -623,6 +623,13 @@ js::ZoneGlobalsAreAllGray(JS::Zone* zone)
     return true;
 }
 
+JS_FRIEND_API(bool)
+js::IsObjectZoneSweepingOrCompacting(JSObject* obj)
+{
+    MOZ_ASSERT(obj);
+    return MaybeForwarded(obj)->zone()->isGCSweepingOrCompacting();
+}
+
 namespace {
 struct VisitGrayCallbackFunctor {
     GCThingCallback callback_;
