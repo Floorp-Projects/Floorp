@@ -1437,9 +1437,7 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
 
 PLayerTransactionParent*
 CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
-                                                     const uint64_t& aId,
-                                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                               bool *aSuccess)
+                                                     const uint64_t& aId)
 {
   MOZ_ASSERT(aId == 0);
 
@@ -1447,16 +1445,13 @@ CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBacken
 
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
-    *aSuccess = false;
     LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0);
     p->AddIPDLReference();
     return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(this, mLayerManager);
-  *aSuccess = true;
 
-  *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
   LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
   p->AddIPDLReference();
   return p;
