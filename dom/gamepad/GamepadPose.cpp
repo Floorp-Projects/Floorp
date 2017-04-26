@@ -55,9 +55,8 @@ GamepadPose::GetPosition(JSContext* aJSContext,
                          JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mPosition,
-                  mPoseState.isPositionValid ? mPoseState.position : nullptr, 3,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position), aRv);
+  SetFloat32Array(aJSContext, aRetval, mPosition, mPoseState.position, 3,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position), aRv);
 }
 
 void
@@ -65,9 +64,8 @@ GamepadPose::GetLinearVelocity(JSContext* aJSContext,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mLinearVelocity,
-                  mPoseState.isPositionValid ? mPoseState.linearVelocity : nullptr, 3,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position), aRv);
+  SetFloat32Array(aJSContext, aRetval, mLinearVelocity, mPoseState.linearVelocity, 3,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Position), aRv);
 }
 
 void
@@ -75,9 +73,8 @@ GamepadPose::GetLinearAcceleration(JSContext* aJSContext,
                                    JS::MutableHandle<JSObject*> aRetval,
                                    ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mLinearAcceleration,
-                  mPoseState.isPositionValid ? mPoseState.linearAcceleration : nullptr, 3,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_LinearAcceleration), aRv);
+  SetFloat32Array(aJSContext, aRetval, mLinearAcceleration, mPoseState.linearAcceleration, 3,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_LinearAcceleration), aRv);
 }
 
 void
@@ -85,9 +82,8 @@ GamepadPose::GetOrientation(JSContext* aJSContext,
                             JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mOrientation,
-                  mPoseState.isOrientationValid ? mPoseState.orientation : nullptr, 4,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Orientation), aRv);
+  SetFloat32Array(aJSContext, aRetval, mOrientation, mPoseState.orientation, 4,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Orientation), aRv);
 }
 
 void
@@ -95,9 +91,8 @@ GamepadPose::GetAngularVelocity(JSContext* aJSContext,
                                 JS::MutableHandle<JSObject*> aRetval,
                                 ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mAngularVelocity,
-                  mPoseState.isOrientationValid ? mPoseState.angularVelocity : nullptr, 3,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Orientation), aRv);
+  SetFloat32Array(aJSContext, aRetval, mAngularVelocity, mPoseState.angularVelocity, 3,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_Orientation), aRv);
 }
 
 void
@@ -105,9 +100,8 @@ GamepadPose::GetAngularAcceleration(JSContext* aJSContext,
                                     JS::MutableHandle<JSObject*> aRetval,
                                     ErrorResult& aRv)
 {
-  SetFloat32Array(aJSContext, aRetval, mAngularAcceleration,
-                  mPoseState.isOrientationValid ? mPoseState.angularAcceleration : nullptr, 3,
-                  bool(mPoseState.flags & GamepadCapabilityFlags::Cap_AngularAcceleration), aRv);
+  SetFloat32Array(aJSContext, aRetval, mAngularAcceleration, mPoseState.angularAcceleration, 3,
+    bool(mPoseState.flags & GamepadCapabilityFlags::Cap_AngularAcceleration), aRv);
 }
 
 void

@@ -1264,7 +1264,6 @@ VRSystemManagerOculus::HandleInput()
       poseState.angularAcceleration[0] = pose.AngularAcceleration.x;
       poseState.angularAcceleration[1] = pose.AngularAcceleration.y;
       poseState.angularAcceleration[2] = pose.AngularAcceleration.z;
-      poseState.isOrientationValid = true;
     }
     if (state.HandStatusFlags[handIdx] & ovrStatus_PositionTracked) {
       poseState.flags |= GamepadCapabilityFlags::Cap_Position;
@@ -1282,7 +1281,6 @@ VRSystemManagerOculus::HandleInput()
 
       float eyeHeight = ovr_GetFloat(mSession, OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
       poseState.position[1] -= eyeHeight;
-      poseState.isPositionValid = true;
     }
     HandlePoseTracking(i, poseState, controller);
   }
