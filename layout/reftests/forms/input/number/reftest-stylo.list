@@ -1,0 +1,55 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+default-preferences pref(dom.forms.number,true)
+
+# sanity checks:
+# not valid on Android where type=number looks like type=text
+skip-if(stylo) == not-other-type-unthemed-1.html not-other-type-unthemed-1.html # Bug 1341973
+skip-if(stylo) == not-other-type-unthemed-1.html not-other-type-unthemed-1.html # Bug 1341973
+# only valid on Android where type=number looks the same as type=text
+skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthemed.html
+
+# should look the same as type=text, except for the spin box
+== number-similar-to-text-unthemed.html number-similar-to-text-unthemed.html
+== number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl.html
+== number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr.html
+== number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl.html
+
+# dynamic type changes:
+fails == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1.html
+== from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1.html
+
+# dynamic value changes:
+fuzzy-if(skiaContent,2,13) skip-if(stylo) == show-value.html show-value.html # Bug 1341973
+
+# disabled
+== number-disabled.html number-disabled.html
+
+# auto width:
+== number-auto-width-1.html number-auto-width-1.html
+
+# min-height/max-height tests:
+fails == number-min-height-1.html number-min-height-1.html
+fails == number-min-height-2.html number-min-height-2.html
+fails == number-max-height-1.html number-max-height-1.html
+fails == number-max-height-2.html number-max-height-2.html
+
+# number of significant fractional digits:
+== number-significant-fractional-digits.html number-significant-fractional-digits.html
+
+# focus
+fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html focus-handling.html
+
+# select
+== number-selected.html number-selected.html
+
+# pseudo-elements not usable from content:
+== number-pseudo-elements.html number-pseudo-elements.html
+
+== number-placeholder.html number-placeholder.html
+
+# check that if the anonymous text control is reframed, we reframe the whole
+# number control (the fuzzy is for the top-right and bottom-left of the border
+# bevel which gets slightly different antialiasing after invalidation):
+fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-field.html
+
+== pseudo-classes.html pseudo-classes.html

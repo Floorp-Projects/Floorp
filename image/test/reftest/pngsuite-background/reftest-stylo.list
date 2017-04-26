@@ -1,0 +1,23 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# PngSuite - Background colors
+#
+# Note 1: The first 4 images have no bKGD chunk, the last 4 do. The background
+# color indicated by bKGD isn't used, so the two sets of images are rendered
+# identically and thus share common reference HTML files.
+
+# bgai4a08 - 8 bit grayscale, alpha, no background chunk, interlaced
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a08.png wrapper.html?bgai4a08.png
+# bgai4a16 - 16 bit grayscale, alpha, no background chunk, interlaced
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a16.png wrapper.html?bgai4a16.png
+# bgan6a08 - 3x8 bits rgb color, alpha, no background chunk
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a08.png wrapper.html?bgan6a08.png
+# bgan6a16 - 3x16 bits rgb color, alpha, no background chunk
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a16.png wrapper.html?bgan6a16.png
+# bgbn4a08 - 8 bit grayscale, alpha, black background chunk
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgbn4a08.png wrapper.html?bgbn4a08.png
+# bggn4a16 - 16 bit grayscale, alpha, gray background chunk
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bggn4a16.png wrapper.html?bggn4a16.png
+# bgwn6a08 - 3x8 bits rgb color, alpha, white background chunk
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgwn6a08.png wrapper.html?bgwn6a08.png
+# bgyn6a16 - 3x16 bits rgb color, alpha, yellow background chunk 
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgyn6a16.png wrapper.html?bgyn6a16.png

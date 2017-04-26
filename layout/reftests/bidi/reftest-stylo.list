@@ -1,0 +1,175 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+include dirAuto/reftest-stylo.list
+include numeral/reftest-stylo.list
+== bdi-element.html bdi-element.html
+== bidi-000.html bidi-000.html
+== bidi-001.html bidi-001.html
+== bidi-001-j.html bidi-001-j.html
+== bidi-001-v.html bidi-001-v.html
+== bidi-002.html bidi-002.html
+== bidi-003.html bidi-003.html
+== bidi-004.html bidi-004.html
+== bidi-004-j.html bidi-004-j.html
+== bidi-005.html bidi-005.html
+fails == bidi-006.html bidi-006.html
+fails == bidi-006-j.html bidi-006-j.html
+== bidiSVG-01.svg bidiSVG-01.svg
+== bidiSVG-02.svg bidiSVG-02.svg
+== bidiSVG-03.svg bidiSVG-03.svg
+fuzzy-if(skiaContent,1,1) == bidiSVG-04.svg bidiSVG-04.svg
+== bidiSVG-05.svg bidiSVG-05.svg
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == bidiMirroring.svg bidiMirroring.svg
+fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == visualmarquee.html visualmarquee.html
+fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == logicalmarquee.html logicalmarquee.html
+== visualmarquee.html visualmarquee.html
+# test for glyph mirroring in right-to-left text
+== mirroring-01.html mirroring-01.html
+# quote marks are not supposed to mirror, but Unicode 5.0 said they should, so some systems do it
+== mirroring-02.html mirroring-02.html
+== mirroring-03.html mirroring-03.html
+== mixedChartype-00.html mixedChartype-00.html
+== mixedChartype-00-j.html mixedChartype-00-j.html
+== mixedChartype-01.html mixedChartype-01.html
+== mixedChartype-01-j.html mixedChartype-01-j.html
+== mixedChartype-02.html mixedChartype-02.html
+== mixedChartype-02-j.html mixedChartype-02-j.html
+== mixedChartype-03.html mixedChartype-03.html
+== mixedChartype-03-j.html mixedChartype-03-j.html
+== unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001.html
+== unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002.html
+== unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic.html
+fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon.html
+== unicode-bidi-plaintext.html unicode-bidi-plaintext.html
+fails == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-1.html
+fails == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-2.html
+fails == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-3.html
+fails == unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-4.html
+== with-first-letter-1a.html with-first-letter-1a.html
+== with-first-letter-1b.html with-first-letter-1b.html
+== with-first-letter-2a.html with-first-letter-2a.html
+== with-first-letter-2b.html with-first-letter-2b.html
+== 83958-1a.html 83958-1a.html
+== 83958-1b.html 83958-1b.html
+== 83958-1c.html 83958-1c.html
+== 83958-2a.html 83958-2a.html
+== 83958-2b.html 83958-2b.html
+== 115921-1.html 115921-1.html
+fails == 115921-2.html 115921-2.html
+== 151407-1.html 151407-1.html
+== 151407-1a.html 151407-1a.html
+== 151407-2-ltr.html 151407-2-ltr.html
+== 151407-2-rtl.html 151407-2-rtl.html
+== 151407-2-auto.html 151407-2-auto.html
+== 151407-2-empty.html 151407-2-empty.html
+== 151407-2-foopy.html 151407-2-foopy.html
+== 151407-3-ltr.html 151407-3-ltr.html
+== 151407-3-rtl.html 151407-3-rtl.html
+== 151407-3-auto.html 151407-3-auto.html
+== 151407-3-foopy.html 151407-3-foopy.html
+== 229367-1.html 229367-1.html
+fails == 229367-2.html 229367-2.html
+== 229367-3.html 229367-3.html
+== 258928-1.html 258928-1.html
+== 263359-1.html 263359-1.html
+== 263359-1a.html 263359-1a.html
+== 263359-1b.html 263359-1b.html
+fails == 263359-2.html 263359-2.html
+== 263359-3.html 263359-3.html
+== 263359-4.html 263359-4.html
+fails == 267459-1.html 267459-1.html
+fails == 267459-2.html 267459-2.html
+== 299065-1.html 299065-1.html
+== 305643-1.html 305643-1.html
+== 332655-1.html 332655-1.html
+== 332655-2.html 332655-2.html
+fails == 381279-1.html 381279-1.html
+== 386339.html 386339.html
+== 409375.html 409375.html
+== 413542-1.html 413542-1.html
+== 413542-2.html 413542-2.html
+fails == 413928-1.html 413928-1.html
+fails == 413928-2.html 413928-2.html
+== 425338-1a.html 425338-1a.html
+== 425338-1b.html 425338-1b.html
+== 489517-1.html 489517-1.html
+== 489887-1.html 489887-1.html
+== 492231-1.html 492231-1.html
+== 496006-1.html 496006-1.html
+== 503269-1.html 503269-1.html
+== 503957-1.html 503957-1.html
+== 525740-1.html 525740-1.html
+fails == 536963-1.html 536963-1.html
+== 562169-1.html 562169-1.html
+fails == 562169-1a.html 562169-1a.html
+== 562169-2.html 562169-2.html
+fails == 562169-2a.html 562169-2a.html
+== 562169-3.html 562169-3.html
+fails == 562169-3a.html 562169-3a.html # bug 1338982
+== 562169-4.html 562169-4.html
+== 588739-1.html 588739-1.html
+== 588739-2.html 588739-2.html
+== 588739-3.html 588739-3.html
+== 612843-1.html 612843-1.html
+== 613149-1a.html 613149-1a.html
+== 613149-1b.html 613149-1b.html
+== 613149-2a.html 613149-2a.html
+== 613149-2b.html 613149-2b.html
+== 613157-1.html 613157-1.html
+== 613157-2.html 613157-2.html
+== 662288-1.html 662288-1.html
+fails == 670226-1.html 670226-1.html
+== 676245-1.html 676245-1.html
+fails == 698291-1.html 698291-1.html
+== 698706-1.html 698706-1.html
+== 704837-1.html 704837-1.html
+== 712600-1.html 712600-1.html
+== 712600-2.html 712600-2.html
+== 712600-2-dyn.html 712600-2-dyn.html
+== 712600-3.html 712600-3.html
+== 718236-1.html 718236-1.html
+== 718236-2.html 718236-2.html
+== 718236-3.html 718236-3.html
+fails == 726420-1.html 726420-1.html
+== 726460-1.html 726460-1.html
+== 729047-1.html 729047-1.html
+== 730562-1.html 730562-1.html
+== 746987-1.html 746987-1.html
+== 746987-2.html 746987-2.html
+== 746987-3.html 746987-3.html
+== 746987-4.html 746987-4.html
+== 779003-1.html 779003-1.html
+== 779003-1-dynamic.html 779003-1-dynamic.html
+== 817406-1.html 817406-1.html
+== 817406-2.html 817406-2.html
+== 817406-3.html 817406-3.html
+== 817406-4.html 817406-4.html
+== 847242-1.html 847242-1.html
+fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == 869833-1.xul 869833-1.xul
+== 922530-1.html 922530-1.html
+== 922550-1.html 922550-1.html
+== 1067268-1.html 1067268-1.html
+== 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1.html
+== 1069941-inline-bidi-margin-1.html 1069941-inline-bidi-margin-1.html
+== 1155359-1.xul 1155359-1.xul
+== 1157726-1.html 1157726-1.html
+== 1161752.html 1161752.html
+== 1161752-5-embed.html 1161752-5-embed.html
+== brackets-1a-ltr.html brackets-1a-ltr.html
+== brackets-1a-rtl.html brackets-1a-rtl.html
+== brackets-1b-ltr.html brackets-1b-ltr.html
+== brackets-1b-rtl.html brackets-1b-rtl.html
+== brackets-1c-ltr.html brackets-1c-ltr.html
+== brackets-1c-rtl.html brackets-1c-rtl.html
+== brackets-2a-ltr.html brackets-2a-ltr.html
+== brackets-2a-rtl.html brackets-2a-rtl.html
+== brackets-2b-ltr.html brackets-2b-ltr.html
+== brackets-2b-rtl.html brackets-2b-rtl.html
+== brackets-2c-ltr.html brackets-2c-ltr.html
+== brackets-2c-rtl.html brackets-2c-rtl.html
+== brackets-3a-ltr.html brackets-3a-ltr.html
+== brackets-3a-rtl.html brackets-3a-rtl.html
+== brackets-3b-ltr.html brackets-3b-ltr.html
+== brackets-3b-rtl.html brackets-3b-rtl.html
+fails == 1217833-1.html 1217833-1.html
+fails == 1217833-2.html 1217833-2.html
+== 1231175-1.html 1231175-1.html

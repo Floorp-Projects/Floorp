@@ -1,0 +1,44 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== values.html values.html
+== values-rtl.html values-rtl.html
+== margin-padding.html margin-padding.html
+== margin-padding-rtl.html margin-padding-rtl.html
+fails == bar-pseudo-element.html bar-pseudo-element.html # Bug 1341095
+== bar-pseudo-element-rtl.html bar-pseudo-element-rtl.html
+
+# vertical tests
+== values-vertical.html values-vertical.html
+== values-vertical-rtl.html values-vertical-rtl.html
+== margin-padding-vertical.html margin-padding-vertical.html
+== margin-padding-vertical-rtl.html margin-padding-vertical-rtl.html
+fails == bar-pseudo-element-vertical.html bar-pseudo-element-vertical.html # Bug 1341095
+== bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl.html
+
+# The following test is disabled but kept in the repository because the
+# transformations will not behave exactly the same for <meter> and two divs.
+# However, it would be possible to manually check those.
+== transformations.html transformations.html # Bug 1341785
+
+# default style
+include default-style/reftest-stylo.list
+
+# Tests for bugs:
+== block-invalidate.html block-invalidate.html
+== in-cells.html in-cells.html
+fails == max-height.html max-height.html
+
+# Tests for block and inline orientation in combination with writing-mode
+== meter-orient-vertical.html meter-orient-vertical.html
+== meter-orient-horizontal.html meter-orient-horizontal.html
+== meter-orient-block.html meter-orient-block.html
+== meter-orient-inline.html meter-orient-inline.html
+== meter-vlr.html meter-vlr.html
+== meter-vlr-orient-block.html meter-vlr-orient-block.html
+== meter-vlr-orient-inline.html meter-vlr-orient-inline.html
+== meter-vlr-orient-horizontal.html meter-vlr-orient-horizontal.html
+== meter-vlr-orient-vertical.html meter-vlr-orient-vertical.html
+== meter-vrl.html meter-vrl.html
+== meter-vrl-orient-block.html meter-vrl-orient-block.html
+== meter-vrl-orient-inline.html meter-vrl-orient-inline.html
+== meter-vrl-orient-horizontal.html meter-vrl-orient-horizontal.html
+== meter-vrl-orient-vertical.html meter-vrl-orient-vertical.html

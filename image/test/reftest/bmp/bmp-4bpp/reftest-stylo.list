@@ -1,0 +1,25 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# BMP 4BPP tests
+
+# Images of various sizes
+== bmp-size-1x1-4bpp.bmp bmp-size-1x1-4bpp.bmp
+== bmp-size-2x2-4bpp.bmp bmp-size-2x2-4bpp.bmp
+== bmp-size-3x3-4bpp.bmp bmp-size-3x3-4bpp.bmp
+== bmp-size-4x4-4bpp.bmp bmp-size-4x4-4bpp.bmp
+== bmp-size-5x5-4bpp.bmp bmp-size-5x5-4bpp.bmp
+== bmp-size-6x6-4bpp.bmp bmp-size-6x6-4bpp.bmp
+== bmp-size-7x7-4bpp.bmp bmp-size-7x7-4bpp.bmp
+== bmp-size-8x8-4bpp.bmp bmp-size-8x8-4bpp.bmp
+== bmp-size-9x9-4bpp.bmp bmp-size-9x9-4bpp.bmp
+== bmp-size-15x15-4bpp.bmp bmp-size-15x15-4bpp.bmp
+== bmp-size-16x16-4bpp.bmp bmp-size-16x16-4bpp.bmp
+== bmp-size-17x17-4bpp.bmp bmp-size-17x17-4bpp.bmp
+== bmp-size-31x31-4bpp.bmp bmp-size-31x31-4bpp.bmp
+== bmp-size-32x32-4bpp.bmp bmp-size-32x32-4bpp.bmp
+== bmp-size-33x33-4bpp.bmp bmp-size-33x33-4bpp.bmp
+== bmp-not-square-4bpp.bmp bmp-not-square-4bpp.bmp
+== os2bmp-size-32x32-4bpp.bmp os2bmp-size-32x32-4bpp.bmp
+== top-to-bottom-16x16-4bpp.bmp top-to-bottom-16x16-4bpp.bmp
+# test that delta skips are drawn as transparent
+# taken from http://bmptestsuite.sourceforge.net/
+fails == rle4-delta-320x240.bmp rle4-delta-320x240.bmp

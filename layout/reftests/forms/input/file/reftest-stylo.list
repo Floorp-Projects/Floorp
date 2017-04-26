@@ -1,0 +1,8 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == simple.html simple.html # Bug 1341086
+fails == rtl.html rtl.html # Bug 1341086
+fails == size.html size.html # Bug 1341086
+fails == background.html background.html # Bug 1341086
+fails == style.html style.html # Bug 1341086
+fails == width-clip.html width-clip.html
+fails == color-inherit.html color-inherit.html # Bug 1341086

@@ -1,0 +1,8 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== unicode-attribute-selector.html unicode-attribute-selector.html
+== unicode-element-selector.html unicode-element-selector.html
+== unicode-lang.html unicode-lang.html
+== unicode-media-query-media-type.html unicode-media-query-media-type.html
+== unicode-media-query-query.html unicode-media-query-query.html
+== unicode-pseudo-selector.html unicode-pseudo-selector.html
+fails == langattribute.html langattribute.html

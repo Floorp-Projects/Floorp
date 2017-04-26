@@ -1,0 +1,100 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Tests related to SVG Animation (using SMIL) that use syncbase timing.
+
+# New intervals
+== new-interval-simple-1.svg new-interval-simple-1.svg
+== new-interval-simple-2.svg new-interval-simple-2.svg
+== new-interval-negative-offset-1.svg new-interval-negative-offset-1.svg
+== new-interval-negative-offset-2.svg new-interval-negative-offset-2.svg
+== new-interval-negative-offset-3.svg new-interval-negative-offset-3.svg
+== new-interval-negative-offset-4.svg new-interval-negative-offset-4.svg
+== new-interval-negative-syncbase-1.svg new-interval-negative-syncbase-1.svg
+== new-interval-restart-1.svg new-interval-restart-1.svg
+== new-interval-restart-2.svg new-interval-restart-2.svg
+== new-interval-restart-3.svg new-interval-restart-3.svg
+== new-interval-early-end-1.svg new-interval-early-end-1.svg
+== new-interval-early-end-2.svg new-interval-early-end-2.svg
+== new-interval-early-end-3.svg new-interval-early-end-3.svg
+== new-interval-early-end-4.svg new-interval-early-end-4.svg
+== new-interval-early-end-5.svg new-interval-early-end-5.svg
+== new-interval-early-end-6.svg new-interval-early-end-6.svg
+== new-interval-early-end-7.svg new-interval-early-end-7.svg
+== new-interval-doubly-dependent-1.svg new-interval-doubly-dependent-1.svg
+== new-interval-doubly-dependent-2.svg new-interval-doubly-dependent-2.svg
+== new-interval-doubly-dependent-3.svg new-interval-doubly-dependent-3.svg
+== new-interval-triply-dependent-1.svg new-interval-triply-dependent-1.svg
+== new-interval-triply-dependent-2.svg new-interval-triply-dependent-2.svg
+== new-interval-end-negative-1.svg new-interval-end-negative-1.svg
+== new-interval-end-negative-2.svg new-interval-end-negative-2.svg
+== new-interval-end-dep-1.svg new-interval-end-dep-1.svg
+== new-interval-chain-1.svg new-interval-chain-1.svg
+== new-interval-chain-2.svg new-interval-chain-2.svg
+== new-interval-sample-order-1.svg new-interval-sample-order-1.svg
+== new-interval-freeze-begin-1.svg new-interval-freeze-begin-1.svg
+
+# Changing intervals
+== changed-interval-simple-1.svg changed-interval-simple-1.svg
+== changed-interval-simple-2.svg changed-interval-simple-2.svg
+== changed-interval-simple-3.svg changed-interval-simple-3.svg
+== changed-interval-simple-4.svg changed-interval-simple-4.svg
+== changed-interval-simple-5.svg changed-interval-simple-5.svg
+== changed-interval-resolved-1.svg changed-interval-resolved-1.svg
+== changed-interval-resolved-2.svg changed-interval-resolved-2.svg
+== changed-interval-sort-1.svg changed-interval-sort-1.svg
+== changed-interval-change-spec-1.svg changed-interval-change-spec-1.svg
+== changed-interval-change-spec-2.svg changed-interval-change-spec-2.svg
+== changed-interval-change-spec-3.svg changed-interval-change-spec-3.svg
+== changed-interval-change-spec-4.svg changed-interval-change-spec-4.svg
+
+# Deleted intervals
+== deleted-interval-simple-1.svg deleted-interval-simple-1.svg
+== deleted-interval-simple-2.svg deleted-interval-simple-2.svg
+== deleted-interval-simple-3.svg deleted-interval-simple-3.svg
+== deleted-interval-simple-4.svg deleted-interval-simple-4.svg
+== deleted-interval-simple-5.svg deleted-interval-simple-5.svg
+
+# Trimmed intervals
+== trimmed-interval-1.svg trimmed-interval-1.svg
+
+# Cyclic dependencies
+== cycle-ok-1.svg cycle-ok-1.svg
+== cycle-ok-2.svg cycle-ok-2.svg
+== cycle-ok-3.svg cycle-ok-3.svg
+== cycle-ok-4.svg cycle-ok-4.svg
+== cycle-ok-5.svg cycle-ok-5.svg
+== cycle-self-ref-1.svg cycle-self-ref-1.svg
+== cycle-self-ref-2.svg cycle-self-ref-2.svg
+== cycle-self-ref-3.svg cycle-self-ref-3.svg
+== cycle-self-ref-4.svg cycle-self-ref-4.svg
+== cycle-self-ref-5.svg cycle-self-ref-5.svg
+== cycle-invalid-1.svg cycle-invalid-1.svg
+== cycle-invalid-2.svg cycle-invalid-2.svg
+== cycle-invalid-3.svg cycle-invalid-3.svg
+== cycle-invalid-4.svg cycle-invalid-4.svg
+== cycle-change-1.svg cycle-change-1.svg
+== cycle-change-2.svg cycle-change-2.svg
+== cycle-delete-1.svg cycle-delete-1.svg
+== cycle-recursion-1.svg cycle-recursion-1.svg
+== cycle-recursion-2.svg cycle-recursion-2.svg
+
+# Animation sandwich priority
+== sandwich-priority-1.svg sandwich-priority-1.svg
+== sandwich-priority-2.svg sandwich-priority-2.svg
+== sandwich-priority-3.svg sandwich-priority-3.svg
+== sandwich-priority-4.svg sandwich-priority-4.svg
+== sandwich-priority-5.svg sandwich-priority-5.svg
+== sandwich-priority-6.svg sandwich-priority-6.svg
+== sandwich-priority-7.svg sandwich-priority-7.svg
+== sandwich-priority-8.svg sandwich-priority-8.svg
+== sandwich-priority-9.svg sandwich-priority-9.svg
+== sandwich-priority-10.svg sandwich-priority-10.svg
+== sandwich-priority-11.svg sandwich-priority-11.svg
+== sandwich-priority-12.svg sandwich-priority-12.svg
+
+# Cross-time container dependencies
+fails == cross-container-1.xhtml cross-container-1.xhtml
+== cross-container-2.xhtml cross-container-2.xhtml
+fails == cross-container-3.xhtml cross-container-3.xhtml
+
+# Filtering
+== filtered-interval-1.svg filtered-interval-1.svg

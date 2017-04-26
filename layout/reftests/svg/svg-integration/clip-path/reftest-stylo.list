@@ -1,0 +1,59 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# These tests verify that CSS clip-path behaves properly.
+# e.g. clip-path: polygon(nonzero, 3px 3px, 20% 20%)
+
+default-preferences pref(layout.css.clip-path-shapes.enabled,true)
+
+# Following tests adapted from W3C csswg-test repo
+== clip-path-polygon-001.html clip-path-polygon-001.html
+== clip-path-polygon-002.html clip-path-polygon-002.html
+== clip-path-polygon-003.html clip-path-polygon-003.html
+== clip-path-polygon-004.html clip-path-polygon-004.html
+== clip-path-polygon-005.html clip-path-polygon-005.html
+== clip-path-polygon-006.html clip-path-polygon-006.html
+== clip-path-polygon-007.html clip-path-polygon-007.html
+== clip-path-polygon-008.html clip-path-polygon-008.html
+== clip-path-polygon-009.html clip-path-polygon-009.html
+== clip-path-polygon-010.html clip-path-polygon-010.html
+== clip-path-polygon-011.html clip-path-polygon-011.html
+== clip-path-polygon-012.html clip-path-polygon-012.html
+fails == clip-path-polygon-013.html clip-path-polygon-013.html
+
+== clip-path-circle-001.html clip-path-circle-001.html
+== clip-path-circle-002.html clip-path-circle-002.html
+== clip-path-circle-003.html clip-path-circle-003.html
+== clip-path-circle-004.html clip-path-circle-004.html
+== clip-path-circle-005.html clip-path-circle-005.html
+== clip-path-circle-006.html clip-path-circle-006.html
+== clip-path-circle-007.html clip-path-circle-007.html
+== clip-path-circle-008.html clip-path-circle-008.html
+== clip-path-circle-009.html clip-path-circle-009.html
+== clip-path-circle-010.html clip-path-circle-010.html
+== clip-path-circle-011.html clip-path-circle-011.html
+== clip-path-circle-012.html clip-path-circle-012.html
+== clip-path-circle-013.html clip-path-circle-013.html
+== clip-path-circle-014.html clip-path-circle-014.html
+== clip-path-circle-015.html clip-path-circle-015.html
+== clip-path-circle-016.html clip-path-circle-016.html
+== clip-path-circle-017.html clip-path-circle-017.html
+== clip-path-circle-018.html clip-path-circle-018.html
+== clip-path-circle-019.html clip-path-circle-019.html
+== clip-path-circle-020.html clip-path-circle-020.html
+
+== clip-path-ellipse-001.html clip-path-ellipse-001.html
+== clip-path-ellipse-002.html clip-path-ellipse-002.html
+== clip-path-ellipse-003.html clip-path-ellipse-003.html
+== clip-path-ellipse-004.html clip-path-ellipse-004.html
+== clip-path-ellipse-005.html clip-path-ellipse-005.html
+== clip-path-ellipse-006.html clip-path-ellipse-006.html
+== clip-path-ellipse-007.html clip-path-ellipse-007.html
+== clip-path-ellipse-008.html clip-path-ellipse-008.html
+
+== clip-path-inset-001a.html clip-path-inset-001a.html
+== clip-path-inset-001b.html clip-path-inset-001b.html
+== clip-path-inset-001c.html clip-path-inset-001c.html
+# Anti-aliasing behavior for masking and borders is different
+== clip-path-inset-002a.html clip-path-inset-002a.html
+== clip-path-inset-002b.html clip-path-inset-002b.html
+== clip-path-inset-002c.html clip-path-inset-002c.html
+== clip-path-inset-003.html clip-path-inset-003.html

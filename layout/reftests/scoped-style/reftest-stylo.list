@@ -1,0 +1,58 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fails == scoped-style-001.html scoped-style-001.html
+fails == scoped-style-002.html scoped-style-002.html
+fails == scoped-style-003.html scoped-style-003.html
+fails == scoped-style-004.html scoped-style-004.html
+fails == scoped-style-005.html scoped-style-005.html
+== scoped-style-006.html scoped-style-006.html
+== scoped-style-007.html scoped-style-007.html
+fails == scoped-style-008.html scoped-style-008.html
+fails == scoped-style-009.html scoped-style-009.html
+fails == scoped-style-010.html scoped-style-010.html
+fails == scoped-style-011.html scoped-style-011.html
+fails == scoped-style-012.html scoped-style-012.html
+fails == scoped-style-013.html scoped-style-013.html
+== scoped-style-014.html scoped-style-014.html
+fails == scoped-style-015.html scoped-style-015.html
+== scoped-style-016.html scoped-style-016.html
+fails == scoped-style-017.html scoped-style-017.html
+fails == scoped-style-018.html scoped-style-018.html
+== scoped-style-019.svg scoped-style-019.svg
+== scoped-style-020.html scoped-style-020.html
+== scoped-style-021.html scoped-style-021.html
+== scoped-style-022.html scoped-style-022.html
+fails == scoped-style-023.html scoped-style-023.html
+== scoped-style-024.html scoped-style-024.html
+== scoped-style-important-001.html scoped-style-important-001.html
+fails == scoped-style-important-002.html scoped-style-important-002.html
+== scoped-style-important-003.html scoped-style-important-003.html
+== scoped-style-important-004.html scoped-style-important-004.html
+== scoped-style-important-005.html scoped-style-important-005.html
+== scoped-style-important-006.html scoped-style-important-006.html
+== scoped-style-important-007.html scoped-style-important-007.html
+fails == scoped-style-dynamic-001.html scoped-style-dynamic-001.html
+fails == scoped-style-dynamic-002.html scoped-style-dynamic-002.html
+fails == scoped-style-dynamic-003.html scoped-style-dynamic-003.html
+fails == scoped-style-dynamic-004.html scoped-style-dynamic-004.html
+asserts-if(stylo,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005.html # bug 1335340
+fails asserts-if(stylo,1) == scoped-style-dynamic-006.html scoped-style-dynamic-006.html # bug 1335340
+fails == scoped-style-dynamic-007.html scoped-style-dynamic-007.html
+fails == scoped-style-dynamic-008.html scoped-style-dynamic-008.html
+fails asserts-if(stylo,1) == scoped-style-dynamic-009.html scoped-style-dynamic-009.html # bug 1335340
+asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010.html # bug 1335340
+fails == scoped-style-dynamic-011.html scoped-style-dynamic-011.html
+== scoped-style-dynamic-012.svg scoped-style-dynamic-012.svg
+== scoped-style-dynamic-013.svg scoped-style-dynamic-013.svg
+== scoped-style-dynamic-014.svg scoped-style-dynamic-014.svg
+== scoped-style-dynamic-015.svg scoped-style-dynamic-015.svg
+fails == scoped-style-import.html scoped-style-import.html
+fails == scoped-style-media.html scoped-style-media.html
+fails == scoped-style-namespace.html scoped-style-namespace.html
+fails == scoped-style-charset.html scoped-style-charset.html
+fails == scoped-style-document.html scoped-style-document.html
+fails HTTP(..) == scoped-style-font-face.html scoped-style-font-face.html
+fails == scoped-style-keyframes.html scoped-style-keyframes.html
+fails == scoped-style-supports.html scoped-style-supports.html
+fails pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-001.html scoped-style-pseudo-001.html
+fails pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-002.html scoped-style-pseudo-002.html
+pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-003.html scoped-style-pseudo-003.html

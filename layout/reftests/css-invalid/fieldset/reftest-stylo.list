@@ -1,0 +1,30 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== fieldset-valid.html fieldset-valid.html
+== fieldset-invalid.html fieldset-invalid.html
+== fieldset-add-invalid-barred.html fieldset-add-invalid-barred.html
+== fieldset-add-invalid-element-dynamic.html fieldset-add-invalid-element-dynamic.html
+== fieldset-add-invalid-element.html fieldset-add-invalid-element.html
+== fieldset-add-invalid-with-valid-element.html fieldset-add-invalid-with-valid-element.html
+== fieldset-add-valid-element.html fieldset-add-valid-element.html
+== fieldset-add-valid-with-invalid-element.html fieldset-add-valid-with-invalid-element.html
+== fieldset-add-valid-with-no-element.html fieldset-add-valid-with-no-element.html
+== fieldset-dynamic-invalid-barred.html fieldset-dynamic-invalid-barred.html
+== fieldset-dynamic-invalid-not-barred.html fieldset-dynamic-invalid-not-barred.html
+== fieldset-dynamic-invalid.html fieldset-dynamic-invalid.html
+== fieldset-dynamic-valid.html fieldset-dynamic-valid.html
+== fieldset-invalid-and-barred-remove-barred.html fieldset-invalid-and-barred-remove-barred.html
+== fieldset-invalid-and-barred-remove-invalid.html fieldset-invalid-and-barred-remove-invalid.html
+== fieldset-invalid-and-barred.html fieldset-invalid-and-barred.html
+== fieldset-remove-invalid-element.html fieldset-remove-invalid-element.html
+== fieldset-static-invalid-barred.html fieldset-static-invalid-barred.html
+== fieldset-static-invalid.html fieldset-static-invalid.html
+== fieldset-static-valid.html fieldset-static-valid.html
+== fieldset-valid-and-barred-remove-barred.html fieldset-valid-and-barred-remove-barred.html
+== fieldset-valid-and-barred.html fieldset-valid-and-barred.html
+== fieldset-with-invalid-element-add-barred-dynamic.html fieldset-with-invalid-element-add-barred-dynamic.html
+== fieldset-with-valid-and-invalid.html fieldset-with-valid-and-invalid.html
+== fieldset-with-valid-element-add-barred-dynamic.html fieldset-with-valid-element-add-barred-dynamic.html
+== fieldset-nested-invalid.html fieldset-nested-invalid.html
+== fieldset-div-invalid.html fieldset-div-invalid.html
+fails == fieldset-nested-valid-invalid.html fieldset-nested-valid-invalid.html
+fails == fieldset-nested-barred.html fieldset-nested-barred.html

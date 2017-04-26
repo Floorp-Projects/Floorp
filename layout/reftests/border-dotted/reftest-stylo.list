@@ -1,0 +1,14 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Composing dotted/dashed border rendering and not-filled or not-unfilled mask
+# matches to full-filled box, using fuzzyy because of anti-aliasing.
+# These check filled and unfilled regions with solid opaque color,
+# so difference less than 80 is ignorable.
+fuzzy(80,1500) == border-dotted-interaction.html border-dotted-interaction.html
+fuzzy(80,1500) == border-dotted-no-radius.html border-dotted-no-radius.html
+fuzzy(80,1500) == border-dotted-radius.html border-dotted-radius.html
+fuzzy(80,1500) == border-dashed-no-radius.html border-dashed-no-radius.html
+fuzzy(80,1500) == border-dashed-radius.html border-dashed-radius.html
+fuzzy(80,1500) == border-mixed.html border-mixed.html
+== border-dashed-non-integer.html border-dashed-non-integer.html
+fails == border-dashed-radius-zoom.html border-dashed-radius-zoom.html
+fuzzy(80,1500) == border-dotted-radius-zero.html border-dotted-radius-zero.html

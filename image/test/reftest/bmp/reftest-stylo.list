@@ -1,0 +1,17 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# BMP tests
+
+include bmp-1bpp/reftest-stylo.list
+include bmp-4bpp/reftest-stylo.list
+include bmp-8bpp/reftest-stylo.list
+include bmp-24bpp/reftest-stylo.list
+include bmp-corrupted/reftest-stylo.list
+include bmpsuite/reftest-stylo.list
+
+# Two bmp files where the offset to the start of the image data in the file
+# is past the end of the file. In 1240629-1.bmp the offset us uint32_max,
+# so we are testing that we don't try to allocate a buffer that size (and
+# fail on 32 bit platforms) and declare the image in error state. If in the
+# future we decide that such bmps (offset past the end of the file) are
+# invalid the test will still pass, but won't be testing much.
+== 1240629-1.bmp 1240629-1.bmp

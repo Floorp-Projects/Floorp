@@ -1,0 +1,9 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# z00n2c08 - color, no interlacing, compression level 0 (none)
+== z00n2c08.png z00n2c08.png
+# z03n2c08 - color, no interlacing, compression level 3
+== z03n2c08.png z03n2c08.png
+# z06n2c08 - color, no interlacing, compression level 6 (default)
+== z06n2c08.png z06n2c08.png
+# z09n2c08 - color, no interlacing, compression level 9 (maximum) 
+== z09n2c08.png z09n2c08.png

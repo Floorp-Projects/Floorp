@@ -1,0 +1,198 @@
+== data:text/html,<body> data:text/html,<body>
+== data:text/plain, data:text/plain,
+== data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
+
+# these tests make sure async reftests work:
+== test-async.xul test-async.xul
+== test-async.html test-async.html
+
+# test that zoom works (and really zooms, not just scales)
+== test-zoom.html test-zoom.html
+
+# make sure we don't fall over if the root is missing
+== no-root.html no-root.html
+
+# Makes sure that the file: protocol handler and HTTP server both
+# choose HTML vs. XHTML processing based on the file extensions.
+== html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
+HTTP == html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
+
+# make sure red and green colors are not the default and are different from
+# each other
+== green.html green.html
+== green.html green.html
+== red.html red.html
+
+# Make sure about:blank works, even via HTTP.
+== blank.html blank.html
+== about:blank about:blank
+HTTP == blank.html blank.html
+HTTP == about:blank about:blank
+# same for data:
+== default.html default.html
+== data:text/html,<div>Text</div> data:text/html,<div>Text</div>
+HTTP == default.html default.html
+HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
+== blank.html blank.html
+HTTP == blank.html blank.html
+
+HTTP(..) == filter-1.xhtml filter-1.xhtml
+HTTP(..) == filter-2.xhtml filter-2.xhtml
+
+# test that the MozReftestInvalidate event fires
+== invalidation.html invalidation.html
+== zoom-invalidation.html zoom-invalidation.html
+
+# test that xulRuntime.OS works
+== data:text/html,<body>Linux data:text/html,<body>Linux
+== data:text/html,<body>Win data:text/html,<body>Win
+== data:text/html,<body>Mac data:text/html,<body>Mac
+
+# test parsing of asserts() expressions
+asserts(0) load about:blank
+asserts(0-5) load about:blank
+asserts-if(true,0) load about:blank
+asserts-if(false,7) load about:blank
+asserts-if(true,0-4) load about:blank
+asserts-if(false,6-8) load about:blank
+
+# test that <div> is display:block
+== div.html div.html
+
+# test script keyword
+include scripttests-stylo.list
+
+# test url-prefix
+include urlprefixtests-stylo.list
+
+# test default-preferences
+include default-preferences-tests-stylo.list
+
+# test that all corners are visible
+== corners-1.html corners-1.html
+== corners-2.html corners-2.html
+== corners-3.html corners-3.html
+== corners-4.html corners-4.html
+
+# Test that the harness gives the correct page dimensions.
+== page-width-3.9in.html page-width-3.9in.html
+== page-width-4.1in.html page-width-4.1in.html
+== page-width-auto.html page-width-auto.html
+== page-height-2in.html page-height-2in.html
+== page-height-2in.html page-height-2in.html
+== page-height-2.1in.html page-height-2.1in.html
+
+# Check that tests that need focus are skipped when it's not available
+needs-focus load needs-focus.html
+
+# Bug 632636
+== data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
+needs-focus == data:text/plain, data:text/plain,
+
+# Sanity check of viewport+displayport overrides
+== test-displayport-2.html test-displayport-2.html
+fails == 647192-1.html 647192-1.html
+fails == 656041-1.html 656041-1.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-bg.html
+
+# IPC Position-fixed frames/layers test
+# Fixed layers are temporarily disabled (bug 656167).
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed.html test-pos-fixed.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-bg-attachment-fixed.html test-bg-attachment-fixed.html
+pref(dom.meta-viewport.enabled,true) skip-if(stylo) == test-pos-fixed-transform.html test-pos-fixed-transform.html # Bug 1348754
+
+# reftest syntax: require-or
+fails require-or(unrecognizedCondition,skip) script scripttest-fail.html
+fails require-or(true&&unrecognizedCondition,skip) script scripttest-fail.html
+fails require-or(unrecognizedCondition&&true,skip) script scripttest-fail.html
+fails require-or(unrecognizedCondition,fails) script scripttest-fail.html
+require-or(true,fails) script scripttest-pass.html
+require-or(true&&true,fails) script scripttest-pass.html
+
+# tests for pref(...) syntax in manifest, including "fails" examples with incorrect prefs
+# a boolean pref
+pref(gfx.downloadable_fonts.enabled,true) HTTP(..) == font-download.html font-download.html
+fails pref(gfx.downloadable_fonts.enabled,false) HTTP(..) == font-download.html font-download.html
+fails pref(gfx.downloadable_fonts.enabled,0) HTTP(..) == font-download.html font-download.html
+fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html font-download.html
+# a non-existent pref
+fails pref(not.a.real.pref.name,1) == font-download.html font-download.html
+# an integer pref
+#pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
+pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
+pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
+pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
+#pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
+#pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
+# a string pref
+pref(font.default.x-western,"serif") == font-serif.html font-serif.html
+pref(font.default.x-western,"serif") == font-sans-serif.html font-sans-serif.html
+pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-sans-serif.html
+#fails pref(font.default.x-western,"sans-serif") == font-serif.html font-serif.html
+#fails pref(font.default.x-western,true) == font-serif.html font-serif.html
+#fails pref(font.default.x-western,0) == font-serif.html font-serif.html
+# tests for ref-pref, and test-pref
+# ref-pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
+ref-pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
+ref-pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
+# ref-pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
+# ref-pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
+# ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
+# font-default keeps failing
+pref(font.size.variable.x-western,16) == font-default.html font-default.html
+pref(font.size.variable.x-western,16) == font-default.html font-default.html
+pref(font.size.variable.x-western,24) == font-default.html font-default.html
+pref(font.size.variable.x-western,24) == font-default.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-default.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,16) pref(font.size.variable.x-western,24) == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,24) pref(font.size.variable.x-western,16) == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,24) pref(font.size.variable.x-western,24) == font-default.html font-default.html
+# reftest syntax: fuzzy(maxPixelDifference,maxNumberDifferingPixels)
+fuzzy(1,250000) == fuzzy.html fuzzy.html
+fuzzy(1,250000) == too-fuzzy.html too-fuzzy.html
+fuzzy-if(true,1,250000) == fuzzy.html fuzzy.html
+fuzzy-if(false,2,1) == fuzzy-ref.html fuzzy-ref.html
+# When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
+fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy.html
+
+# Test that reftest-no-paint fails correctly
+fails == reftest-no-paint.html reftest-no-paint.html
+
+skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1a.html
+
+# Disable low-res painting for this test as it will cause more to
+# be drawn than we want.
+default-preferences pref(layers.low-precision-buffer,false)
+skip-if(!asyncPan||!browserIsRemote) == async-scroll-1b.html async-scroll-1b.html
+default-preferences
+
+== async-zoom-1.html async-zoom-1.html
+== async-zoom-2.html async-zoom-2.html
+
+# reftest-opaque-layer
+fails == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html # Bug 1341095
+fails == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html # Bug 1341095
+== about:blank about:blank
+fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+
+# If reftest-opaque-layer fails (no matter whether it fails in the test or in the reference),
+# it shouldn't matter whether the test matches the reference.
+fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+== about:blank about:blank
+fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+== about:blank about:blank
+
+# reftest-opaque-layer and reftest-wait
+fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
+fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
+fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
+fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
+
+# reftest-assigned-layer
+fails == reftest-assigned-layer-pass.html reftest-assigned-layer-pass.html
+fails == reftest-assigned-layer-fail-1.html reftest-assigned-layer-fail-1.html
+fails == reftest-assigned-layer-fail-2.html reftest-assigned-layer-fail-2.html
+fails == reftest-assigned-layer-fail-3.html reftest-assigned-layer-fail-3.html
+fails == reftest-assigned-layer-fail-4.html reftest-assigned-layer-fail-4.html

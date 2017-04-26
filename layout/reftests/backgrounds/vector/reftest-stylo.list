@@ -1,0 +1,205 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+include empty/reftest-stylo.list
+
+################################################################################
+# For reference (although the wide--32px-auto* tests/names were changed to
+# avoid viewBox-directed scaling to make the scaled height less than the wide-
+# tests height):
+#
+# for ORIENTATION in tall wide; do for SIZE in 32px-auto auto-32px auto contain cover; do for VIMAGE in *.svg; do cat template.html | sed -e "s/SIZE/$(echo $SIZE | sed -e 's/-/ /')/g" | sed -e "s/VIMAGE/$VIMAGE/g" | sed -e "s/TALLWIDE/$ORIENTATION/g" | sed -e "s/ORIENTATION/$(if [ "$ORIENTATION" = "tall" ]; then echo 'width: 256px; height: 768px'; else echo 'width: 768px; height: 256px'; fi)/g" > $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e 's/.svg//').html; echo "== $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e -e
+#
+################################################################################
+
+== tall--32px-auto--nonpercent-width-nonpercent-height.html tall--32px-auto--nonpercent-width-nonpercent-height.html
+== tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html
+== tall--32px-auto--nonpercent-width-omitted-height.html tall--32px-auto--nonpercent-width-omitted-height.html
+== tall--32px-auto--nonpercent-width-omitted-height-viewbox.html tall--32px-auto--nonpercent-width-omitted-height-viewbox.html
+== tall--32px-auto--nonpercent-width-percent-height.html tall--32px-auto--nonpercent-width-percent-height.html
+== tall--32px-auto--nonpercent-width-percent-height-viewbox.html tall--32px-auto--nonpercent-width-percent-height-viewbox.html
+== tall--32px-auto--omitted-width-nonpercent-height.html tall--32px-auto--omitted-width-nonpercent-height.html
+== tall--32px-auto--omitted-width-nonpercent-height-viewbox.html tall--32px-auto--omitted-width-nonpercent-height-viewbox.html
+== tall--32px-auto--omitted-width-omitted-height.html tall--32px-auto--omitted-width-omitted-height.html
+== tall--32px-auto--omitted-width-omitted-height-viewbox.html tall--32px-auto--omitted-width-omitted-height-viewbox.html
+== tall--32px-auto--omitted-width-percent-height.html tall--32px-auto--omitted-width-percent-height.html
+== tall--32px-auto--omitted-width-percent-height-viewbox.html tall--32px-auto--omitted-width-percent-height-viewbox.html
+== tall--32px-auto--percent-width-nonpercent-height.html tall--32px-auto--percent-width-nonpercent-height.html
+== tall--32px-auto--percent-width-nonpercent-height-viewbox.html tall--32px-auto--percent-width-nonpercent-height-viewbox.html
+== tall--32px-auto--percent-width-omitted-height.html tall--32px-auto--percent-width-omitted-height.html
+== tall--32px-auto--percent-width-omitted-height-viewbox.html tall--32px-auto--percent-width-omitted-height-viewbox.html
+== tall--32px-auto--percent-width-percent-height.html tall--32px-auto--percent-width-percent-height.html
+== tall--32px-auto--percent-width-percent-height-viewbox.html tall--32px-auto--percent-width-percent-height-viewbox.html
+
+== tall--auto-32px--nonpercent-width-nonpercent-height.html tall--auto-32px--nonpercent-width-nonpercent-height.html
+== tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html
+== tall--auto-32px--nonpercent-width-omitted-height.html tall--auto-32px--nonpercent-width-omitted-height.html
+== tall--auto-32px--nonpercent-width-omitted-height-viewbox.html tall--auto-32px--nonpercent-width-omitted-height-viewbox.html
+== tall--auto-32px--nonpercent-width-percent-height.html tall--auto-32px--nonpercent-width-percent-height.html
+== tall--auto-32px--nonpercent-width-percent-height-viewbox.html tall--auto-32px--nonpercent-width-percent-height-viewbox.html
+== tall--auto-32px--omitted-width-nonpercent-height.html tall--auto-32px--omitted-width-nonpercent-height.html
+== tall--auto-32px--omitted-width-nonpercent-height-viewbox.html tall--auto-32px--omitted-width-nonpercent-height-viewbox.html
+== tall--auto-32px--omitted-width-omitted-height.html tall--auto-32px--omitted-width-omitted-height.html
+== tall--auto-32px--omitted-width-omitted-height-viewbox.html tall--auto-32px--omitted-width-omitted-height-viewbox.html
+== tall--auto-32px--omitted-width-percent-height.html tall--auto-32px--omitted-width-percent-height.html
+== tall--auto-32px--omitted-width-percent-height-viewbox.html tall--auto-32px--omitted-width-percent-height-viewbox.html
+== tall--auto-32px--percent-width-nonpercent-height.html tall--auto-32px--percent-width-nonpercent-height.html
+== tall--auto-32px--percent-width-nonpercent-height-viewbox.html tall--auto-32px--percent-width-nonpercent-height-viewbox.html
+== tall--auto-32px--percent-width-omitted-height.html tall--auto-32px--percent-width-omitted-height.html
+== tall--auto-32px--percent-width-omitted-height-viewbox.html tall--auto-32px--percent-width-omitted-height-viewbox.html
+== tall--auto-32px--percent-width-percent-height.html tall--auto-32px--percent-width-percent-height.html
+== tall--auto-32px--percent-width-percent-height-viewbox.html tall--auto-32px--percent-width-percent-height-viewbox.html
+
+== tall--auto--nonpercent-width-nonpercent-height.html tall--auto--nonpercent-width-nonpercent-height.html
+== tall--auto--nonpercent-width-nonpercent-height-viewbox.html tall--auto--nonpercent-width-nonpercent-height-viewbox.html
+== tall--auto--nonpercent-width-omitted-height.html tall--auto--nonpercent-width-omitted-height.html
+== tall--auto--nonpercent-width-omitted-height-viewbox.html tall--auto--nonpercent-width-omitted-height-viewbox.html
+== tall--auto--nonpercent-width-percent-height.html tall--auto--nonpercent-width-percent-height.html
+== tall--auto--nonpercent-width-percent-height-viewbox.html tall--auto--nonpercent-width-percent-height-viewbox.html
+== tall--auto--omitted-width-nonpercent-height.html tall--auto--omitted-width-nonpercent-height.html
+== tall--auto--omitted-width-nonpercent-height-viewbox.html tall--auto--omitted-width-nonpercent-height-viewbox.html
+== tall--auto--omitted-width-omitted-height.html tall--auto--omitted-width-omitted-height.html
+== tall--auto--omitted-width-omitted-height-viewbox.html tall--auto--omitted-width-omitted-height-viewbox.html
+== tall--auto--omitted-width-percent-height.html tall--auto--omitted-width-percent-height.html
+== tall--auto--omitted-width-percent-height-viewbox.html tall--auto--omitted-width-percent-height-viewbox.html
+== tall--auto--percent-width-nonpercent-height.html tall--auto--percent-width-nonpercent-height.html
+== tall--auto--percent-width-nonpercent-height-viewbox.html tall--auto--percent-width-nonpercent-height-viewbox.html
+== tall--auto--percent-width-omitted-height.html tall--auto--percent-width-omitted-height.html
+== tall--auto--percent-width-omitted-height-viewbox.html tall--auto--percent-width-omitted-height-viewbox.html
+== tall--auto--percent-width-percent-height.html tall--auto--percent-width-percent-height.html
+== tall--auto--percent-width-percent-height-viewbox.html tall--auto--percent-width-percent-height-viewbox.html
+
+== tall--contain--nonpercent-width-nonpercent-height.html tall--contain--nonpercent-width-nonpercent-height.html
+== tall--contain--nonpercent-width-nonpercent-height-viewbox.html tall--contain--nonpercent-width-nonpercent-height-viewbox.html
+== tall--contain--nonpercent-width-omitted-height.html tall--contain--nonpercent-width-omitted-height.html
+== tall--contain--nonpercent-width-omitted-height-viewbox.html tall--contain--nonpercent-width-omitted-height-viewbox.html
+== tall--contain--nonpercent-width-percent-height.html tall--contain--nonpercent-width-percent-height.html
+== tall--contain--nonpercent-width-percent-height-viewbox.html tall--contain--nonpercent-width-percent-height-viewbox.html
+== tall--contain--omitted-width-nonpercent-height.html tall--contain--omitted-width-nonpercent-height.html
+== tall--contain--omitted-width-nonpercent-height-viewbox.html tall--contain--omitted-width-nonpercent-height-viewbox.html
+== tall--contain--omitted-width-omitted-height.html tall--contain--omitted-width-omitted-height.html
+== tall--contain--omitted-width-omitted-height-viewbox.html tall--contain--omitted-width-omitted-height-viewbox.html
+== tall--contain--omitted-width-percent-height.html tall--contain--omitted-width-percent-height.html
+== tall--contain--omitted-width-percent-height-viewbox.html tall--contain--omitted-width-percent-height-viewbox.html
+== tall--contain--percent-width-nonpercent-height.html tall--contain--percent-width-nonpercent-height.html
+== tall--contain--percent-width-nonpercent-height-viewbox.html tall--contain--percent-width-nonpercent-height-viewbox.html
+== tall--contain--percent-width-omitted-height.html tall--contain--percent-width-omitted-height.html
+== tall--contain--percent-width-omitted-height-viewbox.html tall--contain--percent-width-omitted-height-viewbox.html
+== tall--contain--percent-width-percent-height.html tall--contain--percent-width-percent-height.html
+== tall--contain--percent-width-percent-height-viewbox.html tall--contain--percent-width-percent-height-viewbox.html
+== tall--cover--nonpercent-width-nonpercent-height.html tall--cover--nonpercent-width-nonpercent-height.html
+== tall--cover--nonpercent-width-nonpercent-height-viewbox.html tall--cover--nonpercent-width-nonpercent-height-viewbox.html
+== tall--cover--nonpercent-width-nonpercent-height--crisp.html tall--cover--nonpercent-width-nonpercent-height--crisp.html
+== tall--cover--nonpercent-width-nonpercent-height-viewbox--crisp.html tall--cover--nonpercent-width-nonpercent-height-viewbox--crisp.html
+== tall--cover--nonpercent-width-omitted-height.html tall--cover--nonpercent-width-omitted-height.html
+== tall--cover--nonpercent-width-omitted-height-viewbox.html tall--cover--nonpercent-width-omitted-height-viewbox.html
+== tall--cover--nonpercent-width-percent-height.html tall--cover--nonpercent-width-percent-height.html
+== tall--cover--nonpercent-width-percent-height-viewbox.html tall--cover--nonpercent-width-percent-height-viewbox.html
+== tall--cover--omitted-width-nonpercent-height.html tall--cover--omitted-width-nonpercent-height.html
+== tall--cover--omitted-width-nonpercent-height-viewbox.html tall--cover--omitted-width-nonpercent-height-viewbox.html
+== tall--cover--omitted-width-omitted-height.html tall--cover--omitted-width-omitted-height.html
+== tall--cover--omitted-width-omitted-height-viewbox.html tall--cover--omitted-width-omitted-height-viewbox.html
+== tall--cover--omitted-width-percent-height.html tall--cover--omitted-width-percent-height.html
+== tall--cover--omitted-width-percent-height-viewbox.html tall--cover--omitted-width-percent-height-viewbox.html
+== tall--cover--percent-width-nonpercent-height.html tall--cover--percent-width-nonpercent-height.html
+== tall--cover--percent-width-nonpercent-height-viewbox.html tall--cover--percent-width-nonpercent-height-viewbox.html
+== tall--cover--percent-width-omitted-height.html tall--cover--percent-width-omitted-height.html
+== tall--cover--percent-width-omitted-height-viewbox.html tall--cover--percent-width-omitted-height-viewbox.html
+== tall--cover--percent-width-percent-height.html tall--cover--percent-width-percent-height.html
+== tall--cover--percent-width-percent-height-viewbox.html tall--cover--percent-width-percent-height-viewbox.html
+
+== wide--12px-auto--nonpercent-width-nonpercent-height.html wide--12px-auto--nonpercent-width-nonpercent-height.html
+== wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html
+== wide--12px-auto--nonpercent-width-omitted-height.html wide--12px-auto--nonpercent-width-omitted-height.html
+== wide--12px-auto--nonpercent-width-omitted-height-viewbox.html wide--12px-auto--nonpercent-width-omitted-height-viewbox.html
+== wide--12px-auto--nonpercent-width-percent-height.html wide--12px-auto--nonpercent-width-percent-height.html
+== wide--12px-auto--nonpercent-width-percent-height-viewbox.html wide--12px-auto--nonpercent-width-percent-height-viewbox.html
+== wide--12px-auto--omitted-width-nonpercent-height.html wide--12px-auto--omitted-width-nonpercent-height.html
+== wide--12px-auto--omitted-width-nonpercent-height-viewbox.html wide--12px-auto--omitted-width-nonpercent-height-viewbox.html
+== wide--12px-auto--omitted-width-omitted-height.html wide--12px-auto--omitted-width-omitted-height.html
+== wide--12px-auto--omitted-width-omitted-height-viewbox.html wide--12px-auto--omitted-width-omitted-height-viewbox.html
+== wide--12px-auto--omitted-width-percent-height.html wide--12px-auto--omitted-width-percent-height.html
+== wide--12px-auto--omitted-width-percent-height-viewbox.html wide--12px-auto--omitted-width-percent-height-viewbox.html
+== wide--12px-auto--percent-width-nonpercent-height.html wide--12px-auto--percent-width-nonpercent-height.html
+== wide--12px-auto--percent-width-nonpercent-height-viewbox.html wide--12px-auto--percent-width-nonpercent-height-viewbox.html
+== wide--12px-auto--percent-width-omitted-height.html wide--12px-auto--percent-width-omitted-height.html
+== wide--12px-auto--percent-width-omitted-height-viewbox.html wide--12px-auto--percent-width-omitted-height-viewbox.html
+== wide--12px-auto--percent-width-percent-height.html wide--12px-auto--percent-width-percent-height.html
+== wide--12px-auto--percent-width-percent-height-viewbox.html wide--12px-auto--percent-width-percent-height-viewbox.html
+
+== wide--auto-32px--nonpercent-width-nonpercent-height.html wide--auto-32px--nonpercent-width-nonpercent-height.html
+== wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html
+== wide--auto-32px--nonpercent-width-omitted-height.html wide--auto-32px--nonpercent-width-omitted-height.html
+== wide--auto-32px--nonpercent-width-omitted-height-viewbox.html wide--auto-32px--nonpercent-width-omitted-height-viewbox.html
+== wide--auto-32px--nonpercent-width-percent-height.html wide--auto-32px--nonpercent-width-percent-height.html
+== wide--auto-32px--nonpercent-width-percent-height-viewbox.html wide--auto-32px--nonpercent-width-percent-height-viewbox.html
+== wide--auto-32px--omitted-width-nonpercent-height.html wide--auto-32px--omitted-width-nonpercent-height.html
+== wide--auto-32px--omitted-width-nonpercent-height-viewbox.html wide--auto-32px--omitted-width-nonpercent-height-viewbox.html
+== wide--auto-32px--omitted-width-omitted-height.html wide--auto-32px--omitted-width-omitted-height.html
+== wide--auto-32px--omitted-width-omitted-height-viewbox.html wide--auto-32px--omitted-width-omitted-height-viewbox.html
+== wide--auto-32px--omitted-width-percent-height.html wide--auto-32px--omitted-width-percent-height.html
+== wide--auto-32px--omitted-width-percent-height-viewbox.html wide--auto-32px--omitted-width-percent-height-viewbox.html
+== wide--auto-32px--percent-width-nonpercent-height.html wide--auto-32px--percent-width-nonpercent-height.html
+== wide--auto-32px--percent-width-nonpercent-height-viewbox.html wide--auto-32px--percent-width-nonpercent-height-viewbox.html
+== wide--auto-32px--percent-width-omitted-height.html wide--auto-32px--percent-width-omitted-height.html
+== wide--auto-32px--percent-width-omitted-height-viewbox.html wide--auto-32px--percent-width-omitted-height-viewbox.html
+== wide--auto-32px--percent-width-percent-height.html wide--auto-32px--percent-width-percent-height.html
+== wide--auto-32px--percent-width-percent-height-viewbox.html wide--auto-32px--percent-width-percent-height-viewbox.html
+
+== wide--auto--nonpercent-width-nonpercent-height.html wide--auto--nonpercent-width-nonpercent-height.html
+== wide--auto--nonpercent-width-nonpercent-height-viewbox.html wide--auto--nonpercent-width-nonpercent-height-viewbox.html
+== wide--auto--nonpercent-width-omitted-height.html wide--auto--nonpercent-width-omitted-height.html
+== wide--auto--nonpercent-width-omitted-height-viewbox.html wide--auto--nonpercent-width-omitted-height-viewbox.html
+== wide--auto--nonpercent-width-percent-height.html wide--auto--nonpercent-width-percent-height.html
+== wide--auto--nonpercent-width-percent-height-viewbox.html wide--auto--nonpercent-width-percent-height-viewbox.html
+== wide--auto--omitted-width-nonpercent-height.html wide--auto--omitted-width-nonpercent-height.html
+== wide--auto--omitted-width-nonpercent-height-viewbox.html wide--auto--omitted-width-nonpercent-height-viewbox.html
+== wide--auto--omitted-width-omitted-height.html wide--auto--omitted-width-omitted-height.html
+== wide--auto--omitted-width-omitted-height-viewbox.html wide--auto--omitted-width-omitted-height-viewbox.html
+== wide--auto--omitted-width-percent-height.html wide--auto--omitted-width-percent-height.html
+== wide--auto--omitted-width-percent-height-viewbox.html wide--auto--omitted-width-percent-height-viewbox.html
+== wide--auto--percent-width-nonpercent-height.html wide--auto--percent-width-nonpercent-height.html
+== wide--auto--percent-width-nonpercent-height-viewbox.html wide--auto--percent-width-nonpercent-height-viewbox.html
+== wide--auto--percent-width-omitted-height.html wide--auto--percent-width-omitted-height.html
+== wide--auto--percent-width-omitted-height-viewbox.html wide--auto--percent-width-omitted-height-viewbox.html
+== wide--auto--percent-width-percent-height.html wide--auto--percent-width-percent-height.html
+== wide--auto--percent-width-percent-height-viewbox.html wide--auto--percent-width-percent-height-viewbox.html
+
+== wide--contain--nonpercent-width-nonpercent-height.html wide--contain--nonpercent-width-nonpercent-height.html
+== wide--contain--nonpercent-width-nonpercent-height-viewbox.html wide--contain--nonpercent-width-nonpercent-height-viewbox.html
+== wide--contain--nonpercent-width-omitted-height.html wide--contain--nonpercent-width-omitted-height.html
+== wide--contain--nonpercent-width-omitted-height-viewbox.html wide--contain--nonpercent-width-omitted-height-viewbox.html
+== wide--contain--nonpercent-width-percent-height.html wide--contain--nonpercent-width-percent-height.html
+== wide--contain--nonpercent-width-percent-height-viewbox.html wide--contain--nonpercent-width-percent-height-viewbox.html
+== wide--contain--omitted-width-nonpercent-height.html wide--contain--omitted-width-nonpercent-height.html
+== wide--contain--omitted-width-nonpercent-height-viewbox.html wide--contain--omitted-width-nonpercent-height-viewbox.html
+== wide--contain--omitted-width-omitted-height.html wide--contain--omitted-width-omitted-height.html
+== wide--contain--omitted-width-omitted-height-viewbox.html wide--contain--omitted-width-omitted-height-viewbox.html
+== wide--contain--omitted-width-percent-height.html wide--contain--omitted-width-percent-height.html
+== wide--contain--omitted-width-percent-height-viewbox.html wide--contain--omitted-width-percent-height-viewbox.html
+== wide--contain--percent-width-nonpercent-height.html wide--contain--percent-width-nonpercent-height.html
+== wide--contain--percent-width-nonpercent-height-viewbox.html wide--contain--percent-width-nonpercent-height-viewbox.html
+== wide--contain--percent-width-omitted-height.html wide--contain--percent-width-omitted-height.html
+== wide--contain--percent-width-omitted-height-viewbox.html wide--contain--percent-width-omitted-height-viewbox.html
+== wide--contain--percent-width-percent-height.html wide--contain--percent-width-percent-height.html
+== wide--contain--percent-width-percent-height-viewbox.html wide--contain--percent-width-percent-height-viewbox.html
+
+== wide--cover--nonpercent-width-nonpercent-height.html wide--cover--nonpercent-width-nonpercent-height.html
+== wide--cover--nonpercent-width-nonpercent-height-viewbox.html wide--cover--nonpercent-width-nonpercent-height-viewbox.html
+== wide--cover--nonpercent-width-omitted-height.html wide--cover--nonpercent-width-omitted-height.html
+== wide--cover--nonpercent-width-omitted-height-viewbox.html wide--cover--nonpercent-width-omitted-height-viewbox.html
+== wide--cover--nonpercent-width-percent-height.html wide--cover--nonpercent-width-percent-height.html
+== wide--cover--nonpercent-width-percent-height-viewbox.html wide--cover--nonpercent-width-percent-height-viewbox.html
+== wide--cover--omitted-width-nonpercent-height.html wide--cover--omitted-width-nonpercent-height.html
+== wide--cover--omitted-width-nonpercent-height-viewbox.html wide--cover--omitted-width-nonpercent-height-viewbox.html
+== wide--cover--omitted-width-omitted-height.html wide--cover--omitted-width-omitted-height.html
+== wide--cover--omitted-width-omitted-height-viewbox.html wide--cover--omitted-width-omitted-height-viewbox.html
+== wide--cover--omitted-width-percent-height.html wide--cover--omitted-width-percent-height.html
+== wide--cover--omitted-width-percent-height-viewbox.html wide--cover--omitted-width-percent-height-viewbox.html
+== wide--cover--percent-width-nonpercent-height.html wide--cover--percent-width-nonpercent-height.html
+== wide--cover--percent-width-nonpercent-height-viewbox.html wide--cover--percent-width-nonpercent-height-viewbox.html
+== wide--cover--percent-width-omitted-height.html wide--cover--percent-width-omitted-height.html
+== wide--cover--percent-width-omitted-height-viewbox.html wide--cover--percent-width-omitted-height-viewbox.html
+== wide--cover--percent-width-percent-height.html wide--cover--percent-width-percent-height.html
+== wide--cover--percent-width-percent-height-viewbox.html wide--cover--percent-width-percent-height-viewbox.html
+
+== diagonal-percentage-vector-background.html diagonal-percentage-vector-background.html
+== no-aspect-ratio-wide.html no-aspect-ratio-wide.html

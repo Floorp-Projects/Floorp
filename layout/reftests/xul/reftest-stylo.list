@@ -1,0 +1,70 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== menuitem-key.xul menuitem-key.xul
+# these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
+random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1.xul
+random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2.xul
+== textbox-overflow-1.xul textbox-overflow-1.xul
+# accesskeys are not normally displayed on Mac, so skip this test
+skip-if(cocoaWidget) == accesskey.xul accesskey.xul
+fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1.xul
+== tree-row-outline-1.xul tree-row-outline-1.xul
+== text-crop.xul text-crop.xul
+== text-small-caps-1.xul text-small-caps-1.xul
+fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630.xul
+fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525.xul
+
+# Tests for XUL <image> with 'object-fit' & 'object-position':
+# These tests should be very similar to tests in our w3c-css/submitted/images3
+# reftest directory. They live here because they use XUL, and it
+# wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL.
+== object-fit-contain-png-001.xul object-fit-contain-png-001.xul
+== object-fit-contain-png-002.xul object-fit-contain-png-002.xul
+== object-fit-contain-svg-001.xul object-fit-contain-svg-001.xul
+== object-fit-contain-svg-002.xul object-fit-contain-svg-002.xul
+== object-fit-contain-svg-003.xul object-fit-contain-svg-003.xul
+== object-fit-contain-svg-004.xul object-fit-contain-svg-004.xul
+== object-fit-contain-svg-005.xul object-fit-contain-svg-005.xul
+== object-fit-contain-svg-006.xul object-fit-contain-svg-006.xul
+== object-fit-cover-png-001.xul object-fit-cover-png-001.xul
+== object-fit-cover-png-002.xul object-fit-cover-png-002.xul
+== object-fit-cover-svg-001.xul object-fit-cover-svg-001.xul
+== object-fit-cover-svg-002.xul object-fit-cover-svg-002.xul
+== object-fit-cover-svg-003.xul object-fit-cover-svg-003.xul
+== object-fit-cover-svg-004.xul object-fit-cover-svg-004.xul
+== object-fit-cover-svg-005.xul object-fit-cover-svg-005.xul
+== object-fit-cover-svg-006.xul object-fit-cover-svg-006.xul
+== object-fit-fill-png-001.xul object-fit-fill-png-001.xul
+== object-fit-fill-png-002.xul object-fit-fill-png-002.xul
+== object-fit-fill-svg-001.xul object-fit-fill-svg-001.xul
+== object-fit-fill-svg-002.xul object-fit-fill-svg-002.xul
+== object-fit-fill-svg-003.xul object-fit-fill-svg-003.xul
+== object-fit-fill-svg-004.xul object-fit-fill-svg-004.xul
+== object-fit-fill-svg-005.xul object-fit-fill-svg-005.xul
+== object-fit-fill-svg-006.xul object-fit-fill-svg-006.xul
+== object-fit-none-png-001.xul object-fit-none-png-001.xul
+== object-fit-none-png-002.xul object-fit-none-png-002.xul
+== object-fit-none-svg-001.xul object-fit-none-svg-001.xul
+== object-fit-none-svg-002.xul object-fit-none-svg-002.xul
+== object-fit-none-svg-003.xul object-fit-none-svg-003.xul
+== object-fit-none-svg-004.xul object-fit-none-svg-004.xul
+== object-fit-none-svg-005.xul object-fit-none-svg-005.xul
+== object-fit-none-svg-006.xul object-fit-none-svg-006.xul
+== object-fit-scale-down-png-001.xul object-fit-scale-down-png-001.xul
+== object-fit-scale-down-png-002.xul object-fit-scale-down-png-002.xul
+== object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001.xul
+== object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002.xul
+== object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003.xul
+== object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004.xul
+== object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005.xul
+== object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006.xul
+== object-position-png-001.xul object-position-png-001.xul
+== object-position-png-002.xul object-position-png-002.xul
+
+# Tests for rendering SVG images in a XUL <treecell>:
+# XXXdholbert: These are marked as "random" right now, since they might not
+# render the images they trying to test in time for the reftest snapshot, per
+# bug 1218954.
+== treecell-image-svg-1a.xul treecell-image-svg-1a.xul
+== treecell-image-svg-1b.xul treecell-image-svg-1b.xul
+
+== treechildren-padding-percent-1.xul treechildren-padding-percent-1.xul

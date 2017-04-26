@@ -1,0 +1,6 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== label-dynamic.html label-dynamic.html
+== checked-native.html checked-native.html
+== checked-native.html checked-native.html
+== checked-native-notref.html checked-native-notref.html
+skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height.html

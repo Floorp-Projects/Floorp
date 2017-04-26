@@ -1,5 +1,5 @@
 pref(layout.css.moz-appearance.enabled,true) pref(layout.css.appearance.enabled,true) skip-if(!cocoaWidget) != 507947.html about:blank
-pref(layout.css.moz-appearance.enabled,true) == progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
+pref(layout.css.moz-appearance.enabled,true) fails-if(stylo) == progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
 fuzzy-if(Android,17,1120) == meter-native-style.html meter-native-style-ref.html
 skip-if(!cocoaWidget) fails-if(stylo) == meter-vertical-native-style.html meter-vertical-native-style-ref.html # dithering
 pref(layout.css.moz-appearance.enabled,true) fails-if(stylo) == meter-fallback-default-style.html meter-fallback-default-style-ref.html

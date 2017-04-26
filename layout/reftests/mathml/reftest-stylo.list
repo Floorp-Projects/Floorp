@@ -1,0 +1,387 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== dir-1.html dir-1.html
+== dir-2.html dir-2.html
+random-if(gtkWidget) == dir-3.html dir-3.html
+== dir-4.html dir-4.html
+== dir-5.html dir-5.html
+fails == dir-6.html dir-6.html
+fails == dir-6a.html dir-6a.html
+== dir-7.html dir-7.html
+== dir-8.html dir-8.html
+== dir-9.html dir-9.html
+== dir-10.html dir-10.html
+== dir-11.html dir-11.html
+== css-spacing-1.html css-spacing-1.html
+fails pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1.html # bug 1339711
+fails pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1.xhtml # bug 1339711
+fails == displaystyle-1.html displaystyle-1.html
+== displaystyle-2.html displaystyle-2.html
+== displaystyle-3.html displaystyle-3.html
+fails == displaystyle-4.html displaystyle-4.html
+== mirror-op-1.html mirror-op-1.html
+== mirror-op-2.html mirror-op-2.html
+== mirror-op-3.html mirror-op-3.html
+== mirror-op-4.html mirror-op-4.html
+== dynamic-mi.xhtml dynamic-mi.xhtml
+== mphantom-1.html mphantom-1.html
+== mphantom-2.html mphantom-2.html
+== mfenced-1.xhtml mfenced-1.xhtml
+== mfenced-2a.xhtml mfenced-2a.xhtml
+== mfenced-2b.xhtml mfenced-2b.xhtml
+== mfenced-3a.xhtml mfenced-3a.xhtml
+== mfenced-3b.xhtml mfenced-3b.xhtml
+== mfenced-3c.xhtml mfenced-3c.xhtml
+== mfenced-3d.xhtml mfenced-3d.xhtml
+== mfenced-4a.xhtml mfenced-4a.xhtml
+== mfenced-4b.xhtml mfenced-4b.xhtml
+== mfenced-5a.xhtml mfenced-5a.xhtml
+== mfenced-5b.xhtml mfenced-5b.xhtml
+== mfenced-5c.xhtml mfenced-5c.xhtml
+== mfenced-5d.xhtml mfenced-5d.xhtml
+== mfenced-6.html mfenced-6.html
+== mfenced-7.html mfenced-7.html
+== mfenced-8.html mfenced-8.html
+== mfenced-9.html mfenced-9.html
+fails == mfenced-10.html mfenced-10.html
+== mfenced-11.html mfenced-11.html
+== mfenced-12.html mfenced-12.html
+== mi-mathvariant-1.xhtml mi-mathvariant-1.xhtml
+== mi-mathvariant-2.xhtml mi-mathvariant-2.xhtml
+== mi-mathvariant-3.html mi-mathvariant-3.html
+== non-spacing-accent-1.xhtml non-spacing-accent-1.xhtml
+== overbar-width-1.xhtml overbar-width-1.xhtml
+== quotes-1.xhtml quotes-1.xhtml
+== stretchy-underbar-1.xhtml stretchy-underbar-1.xhtml
+== stretchy-munderover-1a.html stretchy-munderover-1a.html
+== stretchy-munderover-1b.html stretchy-munderover-1b.html
+== stretchy-munderover-1c.html stretchy-munderover-1c.html
+== stretchy-munderover-1d.html stretchy-munderover-1d.html
+== stretchy-munderover-1e.html stretchy-munderover-1e.html
+== stretchy-munderover-2a.html stretchy-munderover-2a.html
+== stretchy-munderover-2b.html stretchy-munderover-2b.html
+== stretchy-munderover-2c.html stretchy-munderover-2c.html
+== stretchy-munderover-2d.html stretchy-munderover-2d.html
+== stretchy-munderover-2e.html stretchy-munderover-2e.html
+== stretchy-munderover-2f.html stretchy-munderover-2f.html
+== stretchy-munderover-2g.html stretchy-munderover-2g.html
+== stretchy-munderover-3a.html stretchy-munderover-3a.html
+== stretchy-munderover-3b.html stretchy-munderover-3b.html
+== stretchy-munderover-3c.html stretchy-munderover-3c.html
+== stretchy-munderover-3d.html stretchy-munderover-3d.html
+== stretchy-msup-1a.html stretchy-msup-1a.html
+== stretchy-msup-1b.html stretchy-msup-1b.html
+== stretchy-msup-1c.html stretchy-msup-1c.html
+== stretchy-msup-1d.html stretchy-msup-1d.html
+== stretchy-mfenced-1a.html stretchy-mfenced-1a.html
+== stretchy-mfenced-1b.html stretchy-mfenced-1b.html
+== stretchy-mfenced-2a.html stretchy-mfenced-2a.html
+== stretchy-mfenced-2b.html stretchy-mfenced-2b.html
+== stretchy-mfenced-3a.html stretchy-mfenced-3a.html
+== stretchy-mfenced-3b.html stretchy-mfenced-3b.html
+== stretchy-mfenced-4a.html stretchy-mfenced-4a.html
+== stretchy-mfenced-4b.html stretchy-mfenced-4b.html
+== stretchy-mover-1a.html stretchy-mover-1a.html
+== stretchy-mover-1b.html stretchy-mover-1b.html
+== stretchy-mover-2a.html stretchy-mover-2a.html
+== stretchy-mover-2b.html stretchy-mover-2b.html
+== stretchy-mover-3.html stretchy-mover-3.html
+== stretchy-largeop-1.html stretchy-largeop-1.html
+fails == stretchy-largeop-2.html stretchy-largeop-2.html
+== stretchy-largeop-3.html stretchy-largeop-3.html
+fails == table-width-1.xhtml table-width-1.xhtml
+== table-width-2.html table-width-2.html
+fails == table-width-3.html table-width-3.html
+== table-width-4.html table-width-4.html
+== underbar-width-1.xhtml underbar-width-1.xhtml
+== mathml-type-supported.xhtml mathml-type-supported.xhtml
+fails == mtable-align-negative-rownumber.html mtable-align-negative-rownumber.html
+== embellished-op-1-1.html embellished-op-1-1.html
+== embellished-op-1-2.html embellished-op-1-2.html
+== embellished-op-1-3.html embellished-op-1-3.html
+== embellished-op-1-4.html embellished-op-1-4.html
+== embellished-op-1-5.html embellished-op-1-5.html
+== embellished-op-2-1.html embellished-op-2-1.html
+== embellished-op-2-2.html embellished-op-2-2.html
+== embellished-op-2-3.html embellished-op-2-3.html
+== embellished-op-2-4.html embellished-op-2-4.html
+== embellished-op-3-1.html embellished-op-3-1.html
+== embellished-op-3-2.html embellished-op-3-2.html
+== embellished-op-3-3.html embellished-op-3-3.html
+== embellished-op-3-4.html embellished-op-3-4.html
+== embellished-op-3-5.html embellished-op-3-5.html
+fails == embellished-op-4-1.html embellished-op-4-1.html
+fails == embellished-op-4-2.html embellished-op-4-2.html
+fails == embellished-op-4-3.html embellished-op-4-3.html
+== embellished-op-5-1.html embellished-op-5-1.html
+== embellished-op-5-2.html embellished-op-5-2.html
+fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1.xhtml
+== semantics-2.html semantics-2.html
+== semantics-3.html semantics-3.html
+== semantics-4.html semantics-4.html
+== mathcolor-1.xml mathcolor-1.xml
+== mathcolor-2.xml mathcolor-2.xml
+== mathcolor-3.xml mathcolor-3.xml
+== mathcolor-4.xml mathcolor-4.xml
+== mathbackground-1.xml mathbackground-1.xml
+== mathbackground-2.xml mathbackground-2.xml
+== mathbackground-3.xml mathbackground-3.xml
+== mathbackground-4.xml mathbackground-4.xml
+== mstyle-1.xhtml mstyle-1.xhtml
+fails == mstyle-2.xhtml mstyle-2.xhtml
+== mstyle-3.xhtml mstyle-3.xhtml
+== mstyle-4.xhtml mstyle-4.xhtml
+== mstyle-5.xhtml mstyle-5.xhtml
+== scale-stretchy-1.xhtml scale-stretchy-1.xhtml
+== scale-stretchy-2.xhtml scale-stretchy-2.xhtml
+== scale-stretchy-3.xhtml scale-stretchy-3.xhtml
+== scale-stretchy-4.xhtml scale-stretchy-4.xhtml
+== scale-stretchy-5.xhtml scale-stretchy-5.xhtml
+fails == stretchy-1.html stretchy-1.html
+== mspace-1.html mspace-1.html
+== mpadded-1.html mpadded-1.html
+== mpadded-2.html mpadded-2.html
+== mpadded-3.html mpadded-3.html
+== mpadded-4.html mpadded-4.html
+== mpadded-5.html mpadded-5.html
+== mpadded-1-2.html mpadded-1-2.html
+== mpadded-6.html mpadded-6.html
+random-if(gtkWidget) == mpadded-7.html mpadded-7.html
+random-if(gtkWidget) == mpadded-8.html mpadded-8.html
+random-if(gtkWidget) == mpadded-9.html mpadded-9.html
+== math-display.html math-display.html
+fails == scriptlevel-1.html scriptlevel-1.html
+== scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1.html
+== munderover-align-accent-false.html munderover-align-accent-false.html
+== munderover-align-accent-true.html munderover-align-accent-true.html
+== munder-mover-align-accent-true.html munder-mover-align-accent-true.html
+== munder-mover-align-accent-false.html munder-mover-align-accent-false.html
+== mfrac-linethickness-1.xhtml mfrac-linethickness-1.xhtml
+== mfrac-linethickness-2.xhtml mfrac-linethickness-2.xhtml
+== mfrac-linethickness-3.xhtml mfrac-linethickness-3.xhtml
+== mathml-negativespace.html mathml-negativespace.html
+== negative-mspace-1.html negative-mspace-1.html
+== link-1.xhtml link-1.xhtml
+== munderover-empty-scripts.html munderover-empty-scripts.html
+== positive-namedspace.html positive-namedspace.html
+fails == mtable-align-whitespace.html mtable-align-whitespace.html
+== mtable-width.html mtable-width.html
+fails == mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-mtable-dynamic.html
+fails == mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-mtable-dynamic.html
+fails == mtable-rowalign-single-mtr.html mtable-rowalign-single-mtr.html
+fails == mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-mtr-dynamic.html
+fails == mtable-rowalign-single-mtable.html mtable-rowalign-single-mtable.html
+fails == mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-mtable-dynamic.html
+fails == mtable-rowalign-multi-mtable.html mtable-rowalign-multi-mtable.html
+fails == mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-mtable-dynamic.html
+fails == mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-mtable-dynamic.html
+fails == mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-mtable-dynamic.html
+fails == mtable-columnalign-single-mtr.html mtable-columnalign-single-mtr.html
+fails == mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-mtr-dynamic.html
+fails == mtable-columnalign-single-mtable.html mtable-columnalign-single-mtable.html
+fails == mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-mtable-dynamic.html
+fails == mtable-columnalign-multi-mtr.html mtable-columnalign-multi-mtr.html
+fails == mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-mtr-dynamic.html
+fails == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-mtable.html
+fails == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-mtable-dynamic.html
+== maction-selection.html maction-selection.html
+== maction-dynamic-embellished-op.html maction-dynamic-embellished-op.html
+== maction-dynamic-1.html maction-dynamic-1.html
+== maction-dynamic-2.html maction-dynamic-2.html
+== mo-lspace-rspace.html mo-lspace-rspace.html
+fails == mo-lspace-rspace-2.html mo-lspace-rspace-2.html
+== mo-lspace-rspace-3.html mo-lspace-rspace-3.html
+== mo-lspace-rspace-4.html mo-lspace-rspace-4.html
+== mo-invisibleoperators.html mo-invisibleoperators.html
+== mo-invisibleoperators-2.html mo-invisibleoperators-2.html
+== mo-glyph-size.html mo-glyph-size.html
+== maction-dynamic-3.html maction-dynamic-3.html
+== whitespace-trim-1.html whitespace-trim-1.html
+== whitespace-trim-2.html whitespace-trim-2.html
+== whitespace-trim-3.html whitespace-trim-3.html
+== whitespace-trim-4.html whitespace-trim-4.html
+== whitespace-trim-5.html whitespace-trim-5.html
+== opentype-stretchy.html opentype-stretchy.html
+== opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness.html
+== operator-1.xhtml operator-1.xhtml
+== scriptshift-1.xhtml scriptshift-1.xhtml
+== number-size-1.xhtml number-size-1.xhtml
+== multiscripts-1.html multiscripts-1.html
+== mathml-mmultiscript-base.html mathml-mmultiscript-base.html
+== mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript.html
+== menclose-1a.html menclose-1a.html
+== menclose-1b.html menclose-1b.html
+== menclose-1c.html menclose-1c.html
+== menclose-1d.html menclose-1d.html
+== menclose-1e.html menclose-1e.html
+== menclose-1f.html menclose-1f.html
+== menclose-1g.html menclose-1g.html
+== menclose-1h.html menclose-1h.html
+== menclose-1i.html menclose-1i.html
+== menclose-1j.html menclose-1j.html
+== menclose-1k.html menclose-1k.html
+== menclose-1l.html menclose-1l.html
+== menclose-1m.html menclose-1m.html
+== menclose-1n.html menclose-1n.html
+== menclose-1o.html menclose-1o.html
+== menclose-1p.html menclose-1p.html
+== menclose-1q.html menclose-1q.html
+random-if(gtkWidget) == menclose-2-actuarial.html menclose-2-actuarial.html
+random-if(gtkWidget) == menclose-2-bottom.html menclose-2-bottom.html
+random-if(gtkWidget) == menclose-2-box.html menclose-2-box.html
+== menclose-2-circle.html menclose-2-circle.html
+== menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike.html
+== menclose-2-horizontalstrike.html menclose-2-horizontalstrike.html
+== menclose-2-left.html menclose-2-left.html
+== menclose-2-longdiv.html menclose-2-longdiv.html
+random-if(gtkWidget) == menclose-2-right.html menclose-2-right.html
+random-if(gtkWidget) == menclose-2-roundedbox.html menclose-2-roundedbox.html
+== menclose-2-top.html menclose-2-top.html
+random-if(gtkWidget) == menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow.html
+== menclose-2-updiagonalstrike.html menclose-2-updiagonalstrike.html
+== menclose-2-verticalstrike.html menclose-2-verticalstrike.html
+random-if(gtkWidget) == menclose-2-roundedbox.html menclose-2-roundedbox.html
+== menclose-2-phasorangle.html menclose-2-phasorangle.html
+== menclose-3-box.html menclose-3-box.html
+== menclose-3-madruwb.html menclose-3-madruwb.html
+== menclose-3-radical.html menclose-3-radical.html
+== menclose-3-default.html menclose-3-default.html
+== menclose-3-invalid.html menclose-3-invalid.html
+== menclose-3-multiple.html menclose-3-multiple.html
+== menclose-3-unknown.html menclose-3-unknown.html
+== menclose-4.html menclose-4.html
+== menclose-5-actuarial.html menclose-5-actuarial.html
+== menclose-5-bottom.html menclose-5-bottom.html
+== menclose-5-box.html menclose-5-box.html
+== menclose-5-circle.html menclose-5-circle.html
+== menclose-5-downdiagonalstrike.html menclose-5-downdiagonalstrike.html
+== menclose-5-horizontalstrike.html menclose-5-horizontalstrike.html
+== menclose-5-left.html menclose-5-left.html
+== menclose-5-longdiv.html menclose-5-longdiv.html
+== menclose-5-madruwb.html menclose-5-madruwb.html
+== menclose-5-radical.html menclose-5-radical.html
+== menclose-5-right.html menclose-5-right.html
+== menclose-5-roundedbox.html menclose-5-roundedbox.html
+== menclose-5-top.html menclose-5-top.html
+== menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow.html
+== menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike.html
+== menclose-5-verticalstrike.html menclose-5-verticalstrike.html
+== menclose-5-phasorangle.html menclose-5-phasorangle.html
+== menclose-6-actuarial.html menclose-6-actuarial.html
+== menclose-6-bottom.html menclose-6-bottom.html
+== menclose-6-box.html menclose-6-box.html
+== menclose-6-circle.html menclose-6-circle.html
+== menclose-6-downdiagonalstrike.html menclose-6-downdiagonalstrike.html
+== menclose-6-horizontalstrike.html menclose-6-horizontalstrike.html
+== menclose-6-left.html menclose-6-left.html
+== menclose-6-longdiv.html menclose-6-longdiv.html
+== menclose-6-madruwb.html menclose-6-madruwb.html
+== menclose-6-radical.html menclose-6-radical.html
+== menclose-6-right.html menclose-6-right.html
+== menclose-6-roundedbox.html menclose-6-roundedbox.html
+== menclose-6-top.html menclose-6-top.html
+== menclose-6-updiagonalarrow.html menclose-6-updiagonalarrow.html
+== menclose-6-updiagonalstrike.html menclose-6-updiagonalstrike.html
+== menclose-6-verticalstrike.html menclose-6-verticalstrike.html
+== menclose-6-phasorangle.html menclose-6-phasorangle.html
+== mmultiscript-align.html mmultiscript-align.html
+== subscript-italic-correction.html subscript-italic-correction.html
+== mathvariant-1a.html mathvariant-1a.html
+== mathvariant-1b.html mathvariant-1b.html
+== mathvariant-1c.html mathvariant-1c.html
+== mathvariant-1d.html mathvariant-1d.html
+== mathvariant-2.html mathvariant-2.html
+fails == mathvariant-3.html mathvariant-3.html
+== mathvariant-4.html mathvariant-4.html
+== mathvariant-5.html mathvariant-5.html
+fails == dtls-1.html dtls-1.html
+fails == dtls-2.html dtls-2.html
+fails == dtls-3.html dtls-3.html
+fails == ssty-1.html ssty-1.html
+fails == ssty-2.html ssty-2.html
+fails == ssty-3.html ssty-3.html
+fails == ssty-4.html ssty-4.html
+fails == mathscript-1.html mathscript-1.html
+fails == mathscript-2.html mathscript-2.html
+== mo-accent-dynamic.html mo-accent-dynamic.html
+== mo-movablelimits-dynamic.html mo-movablelimits-dynamic.html
+== munderover-accent-dynamic.html munderover-accent-dynamic.html
+== munderover-accentunder-dynamic.html munderover-accentunder-dynamic.html
+fails == columnlines-1a.html columnlines-1a.html
+fails == columnlines-1b.html columnlines-1b.html
+fails == columnlines-1c.html columnlines-1c.html
+== columnlines-2a.html columnlines-2a.html
+== columnlines-2b.html columnlines-2b.html
+== columnlines-3-1.html columnlines-3-1.html
+== columnlines-3-2.html columnlines-3-2.html
+fails == rowlines-1a.html rowlines-1a.html
+fails == rowlines-1b.html rowlines-1b.html
+fails == rowlines-1c.html rowlines-1c.html
+fails == rowlines-2a.html rowlines-2a.html
+fails == rowlines-2b.html rowlines-2b.html
+== rowlines-3-1.html rowlines-3-1.html
+== rowlines-3-2.html rowlines-3-2.html
+fails == tablespacing-1.html tablespacing-1.html
+== tablespacing-2.html tablespacing-2.html
+== tablespacing-3.html tablespacing-3.html
+== tablespacing-4.html tablespacing-4.html
+fails == tablespacing-5.html tablespacing-5.html
+fails == tablespacing-5a.html tablespacing-5a.html
+fails == tablespacing-6.html tablespacing-6.html
+fails == tablespacing-7.html tablespacing-7.html
+== tablespacing-8a.html tablespacing-8a.html
+== tablespacing-8b.html tablespacing-8b.html
+== op-dict-1.html op-dict-1.html
+== op-dict-2.html op-dict-2.html
+== op-dict-3.html op-dict-3.html
+== op-dict-4.html op-dict-4.html
+== op-dict-5.html op-dict-5.html
+== op-dict-6.html op-dict-6.html
+== op-dict-7.html op-dict-7.html
+== op-dict-8.html op-dict-8.html
+== op-dict-9.html op-dict-9.html
+== op-dict-10.html op-dict-10.html
+fails == op-dict-11.html op-dict-11.html
+== op-dict-12.html op-dict-12.html
+== op-dict-13.html op-dict-13.html
+== mfrac-A-1.html mfrac-A-1.html
+== mfrac-A-2.html mfrac-A-2.html
+== mfrac-A-3.html mfrac-A-3.html
+== mfrac-A-4.html mfrac-A-4.html
+== mfrac-A-5.html mfrac-A-5.html
+== mfrac-A-6.html mfrac-A-6.html
+== mfrac-A-7.html mfrac-A-7.html
+== mfrac-A-8.html mfrac-A-8.html
+== mfrac-B-1.html mfrac-B-1.html
+== mfrac-B-2.html mfrac-B-2.html
+== mfrac-B-3.html mfrac-B-3.html
+fails == mfrac-B-4.html mfrac-B-4.html
+fails == mfrac-B-5.html mfrac-B-5.html
+fails == mfrac-B-6.html mfrac-B-6.html
+fails == mfrac-B-7.html mfrac-B-7.html
+== mfrac-C-1.html mfrac-C-1.html
+== mfrac-C-2.html mfrac-C-2.html
+fails == mfrac-C-3.html mfrac-C-3.html
+fails == mfrac-C-4.html mfrac-C-4.html
+== mfrac-D-1.html mfrac-D-1.html
+== mfrac-D-2.html mfrac-D-2.html
+fails == mfrac-D-3.html mfrac-D-3.html
+fails == mfrac-D-4.html mfrac-D-4.html
+== mfrac-E-1.html mfrac-E-1.html
+pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
+pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1.html
+fails pref(font.minimum-size.x-math,40) == default-font.html default-font.html
+== radicalbar-1.html radicalbar-1.html
+== radicalbar-1a.html radicalbar-1a.html
+== radicalbar-1b.html radicalbar-1b.html
+== radicalbar-1c.html radicalbar-1c.html
+== radicalbar-1d.html radicalbar-1d.html
+== radicalbar-2.html radicalbar-2.html
+== radicalbar-2a.html radicalbar-2a.html
+== radicalbar-2b.html radicalbar-2b.html
+== radicalbar-2c.html radicalbar-2c.html
+== radicalbar-2d.html radicalbar-2d.html
+== radicalbar-3.html radicalbar-3.html
+== radicalbar-3a.html radicalbar-3a.html
+== radicalbar-3b.html radicalbar-3b.html
+== radicalbar-3c.html radicalbar-3c.html
+== radicalbar-3d.html radicalbar-3d.html

@@ -1,0 +1,22 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# PngSuite - Chunk ordering
+#
+# The resulting images of a type (color or grayscale) should all look the
+# same, so they share common HTML reference files.
+
+# oi1n0g16 - grayscale mother image with 1 idat-chunk
+== oi1n0g16.png oi1n0g16.png
+# oi1n2c16 - color mother image with 1 idat-chunk
+== oi1n2c16.png oi1n2c16.png
+# oi2n0g16 - grayscale image with 2 idat-chunks
+== oi2n0g16.png oi2n0g16.png
+# oi2n2c16 - color image with 2 idat-chunks
+== oi2n2c16.png oi2n2c16.png
+# oi4n0g16 - grayscale image with 4 unequal sized idat-chunks
+== oi4n0g16.png oi4n0g16.png
+# oi4n2c16 - color image with 4 unequal sized idat-chunks
+== oi4n2c16.png oi4n2c16.png
+# oi9n0g16 - grayscale image with all idat-chunks length one
+== oi9n0g16.png oi9n0g16.png
+# oi9n2c16 - color image with all idat-chunks length one 
+== oi9n2c16.png oi9n2c16.png

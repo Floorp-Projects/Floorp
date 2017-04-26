@@ -1,0 +1,95 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# really basic tests that square, circular, and elliptical border and
+# outline radius are not the same thing
+== border-square.html border-square.html
+== border-circle.html border-circle.html
+== border-ellips.html border-ellips.html
+== border-square.html border-square.html
+== border-square.html border-square.html
+== border-circle.html border-circle.html
+
+== outline-square.html outline-square.html
+== outline-circle.html outline-circle.html
+== outline-ellips.html outline-ellips.html
+== outline-square.html outline-square.html
+== outline-square.html outline-square.html
+== outline-circle.html outline-circle.html
+== border-value-interpret.html border-value-interpret.html
+fails == curved-borders-all-styles.html curved-borders-all-styles.html
+# ridge/groove borders
+
+# percent units
+== percent-1.html percent-1.html
+== percent-2.html percent-2.html
+fuzzy-if(skiaContent,1,343) == percent-3.html percent-3.html
+
+# more serious tests, using SVG reference
+== border-circle-2.html border-circle-2.html
+fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) fuzzy-if(skiaContent,52,377) == curved-stripe-border.html curved-stripe-border.html
+
+# Corners
+== corner-1.html corner-1.html
+== corner-2.html corner-2.html
+fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android,3,15) fuzzy-if(skiaContent,3,100) == corner-3.html corner-3.html
+fuzzy-if(skiaContent,1,2728) == corner-4.html corner-4.html
+
+# Test that radii too long are reduced
+== border-reduce-height.html border-reduce-height.html
+
+# Tests for border clipping
+== clipping-1.html clipping-1.html
+== clipping-2.html clipping-2.html
+# great tests for this due to antialiasing problems described in bug 466572
+fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3.html
+
+# Tests for clipping the contents of replaced elements and overflow!=visible
+== clipping-4-ref.html clipping-4-ref.html
+fuzzy-if(true,1,20) fuzzy-if(d2d,64,196) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android,140,237) == clipping-4-canvas.html clipping-4-canvas.html
+fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,140) == clipping-4-image.html clipping-4-image.html
+== clipping-4-overflow-hidden.html clipping-4-overflow-hidden.html
+== clipping-5-canvas.html clipping-5-canvas.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-image.html
+== clipping-5-overflow-hidden.html clipping-5-overflow-hidden.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,77) == clipping-5-refi.html clipping-5-refi.html
+fuzzy-if(true,1,7) fuzzy-if(d2d,48,94) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-refc.html
+== clipping-6.html clipping-6.html
+fuzzy-if(true,2,29) fuzzy-if(d2d,46,50) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,19,29) == clipping-7.html clipping-7.html
+== clipping-and-zindex-1.html clipping-and-zindex-1.html
+fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-canvas.html
+== intersecting-clipping-1-image.html intersecting-clipping-1-image.html
+== intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-overflow-hidden.html
+fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,250) == intersecting-clipping-1-refi.html intersecting-clipping-1-refi.html
+fuzzy-if(true,1,33) fuzzy-if(d2d,48,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refc.html intersecting-clipping-1-refc.html
+
+# Inheritance
+== inherit-1.html inherit-1.html
+
+# Table elements
+== table-collapse-1.html table-collapse-1.html
+# when border-collapse: collapse
+
+fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1a.html
+fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1b.html
+
+# test that border-radius is reduced for scrollbars
+fails == scrollbar-clamping-1.html scrollbar-clamping-1.html
+fails == scrollbar-clamping-2.html scrollbar-clamping-2.html
+
+# Test for bad corner joins.
+== corner-joins-1.xhtml corner-joins-1.xhtml
+== corner-joins-2.xhtml corner-joins-2.xhtml
+
+== scroll-1.html scroll-1.html
+
+== transforms-1.html transforms-1.html
+
+== zero-radius-clip-1.html zero-radius-clip-1.html
+
+== iframe-1.html iframe-1.html
+
+# Test for antialiasing gaps between background and border
+fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||skiaContent,1,9) == curved-border-background-nogap.html curved-border-background-nogap.html
+
+== color-layer-1a.html color-layer-1a.html
+
+== corner-split.html corner-split.html

@@ -1,0 +1,204 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== simple.svg simple.svg
+== simple-2.svg simple-2.svg
+== simple-underline.svg simple-underline.svg
+== simple-underline-scaled.svg simple-underline-scaled.svg
+== simple-anchor-end-bidi.svg simple-anchor-end-bidi.svg
+== simple-anchor-end-rtl.svg simple-anchor-end-rtl.svg
+== simple-anchor-end.svg simple-anchor-end.svg
+fuzzy-if(skiaContent&&dwrite,103,131) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi.svg
+== simple-anchor-middle-rtl.svg simple-anchor-middle-rtl.svg
+fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle.svg
+== simple-bidi.svg simple-bidi.svg
+== simple-bidi-2.svg simple-bidi-2.svg
+
+== simple-dx.svg simple-dx.svg
+== simple-dx-2.svg simple-dx-2.svg
+== simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi.svg
+== simple-dx-anchor-end-rtl.svg simple-dx-anchor-end-rtl.svg
+== simple-dx-anchor-end.svg simple-dx-anchor-end.svg
+== simple-dx-anchor-middle-bidi.svg simple-dx-anchor-middle-bidi.svg
+== simple-dx-anchor-middle-rtl.svg simple-dx-anchor-middle-rtl.svg
+== simple-dx-anchor-middle.svg simple-dx-anchor-middle.svg
+== simple-dx-bidi.svg simple-dx-bidi.svg
+== simple-dx-bidi-2.svg simple-dx-bidi-2.svg
+== simple-dx-rtl.svg simple-dx-rtl.svg
+== simple-dx-rtl-2.svg simple-dx-rtl-2.svg
+
+== simple-fill-color-dynamic.svg simple-fill-color-dynamic.svg
+== simple-fill-color.svg simple-fill-color.svg
+HTTP(../..) == simple-fill-gradient.svg simple-fill-gradient.svg
+== simple-fill-none.svg simple-fill-none.svg
+== simple-pointer-events.svg simple-pointer-events.svg
+
+== simple-multiple-dx.svg simple-multiple-dx.svg
+== simple-multiple-dx-2.svg simple-multiple-dx-2.svg
+== simple-multiple-dx-anchor-end-bidi.svg simple-multiple-dx-anchor-end-bidi.svg
+HTTP(../..) == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi.svg
+== simple-multiple-dx-anchor-end-rtl.svg simple-multiple-dx-anchor-end-rtl.svg
+== simple-multiple-dx-anchor-end.svg simple-multiple-dx-anchor-end.svg
+fuzzy-if(skiaContent,1,2) HTTP(../..) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl.svg
+HTTP(../..) == simple-multiple-dx-anchor-middle.svg simple-multiple-dx-anchor-middle.svg
+== simple-multiple-dx-bidi.svg simple-multiple-dx-bidi.svg
+== simple-multiple-dx-bidi-2.svg simple-multiple-dx-bidi-2.svg
+== simple-multiple-dx-rtl.svg simple-multiple-dx-rtl.svg
+== simple-multiple-dx-rtl-2.svg simple-multiple-dx-rtl-2.svg
+
+== simple-rtl.svg simple-rtl.svg
+== simple-rtl-2.svg simple-rtl-2.svg
+HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate.svg
+
+== multiple-x.svg multiple-x.svg
+== multiple-x-bidi.svg multiple-x-bidi.svg
+== multiple-x-rtl.svg multiple-x-rtl.svg
+== multiple-x-anchor-end-bidi.svg multiple-x-anchor-end-bidi.svg
+== multiple-x-anchor-end-rtl.svg multiple-x-anchor-end-rtl.svg
+== multiple-x-anchor-end.svg multiple-x-anchor-end.svg
+== multiple-x-dx-bidi.svg multiple-x-dx-bidi.svg
+== multiple-x-dx-rtl.svg multiple-x-dx-rtl.svg
+== multiple-x-dx.svg multiple-x-dx.svg
+== multiple-x-holes-bidi.svg multiple-x-holes-bidi.svg
+== multiple-x-holes-dx-bidi.svg multiple-x-holes-dx-bidi.svg
+== multiple-x-holes.svg multiple-x-holes.svg
+== multiple-x-holes-dx.svg multiple-x-holes-dx.svg
+== multiple-x-holes-multiple-dx-bidi.svg multiple-x-holes-multiple-dx-bidi.svg
+== multiple-x-holes-multiple-dx-rtl.svg multiple-x-holes-multiple-dx-rtl.svg
+== multiple-x-holes-multiple-dx.svg multiple-x-holes-multiple-dx.svg
+== multiple-x-holes-rtl.svg multiple-x-holes-rtl.svg
+== multiple-x-multiple-dx-bidi.svg multiple-x-multiple-dx-bidi.svg
+== multiple-x-multiple-dx-rtl.svg multiple-x-multiple-dx-rtl.svg
+== multiple-x-multiple-dx.svg multiple-x-multiple-dx.svg
+== multiple-x-multiple-dx-anchor-end-bidi.svg multiple-x-multiple-dx-anchor-end-bidi.svg
+== multiple-x-multiple-dx-anchor-end-rtl.svg multiple-x-multiple-dx-anchor-end-rtl.svg
+== multiple-x-multiple-dx-anchor-end.svg multiple-x-multiple-dx-anchor-end.svg
+
+== multiple-x-percentages.svg multiple-x-percentages.svg
+== multiple-x-percentages-2.html multiple-x-percentages-2.html
+== multiple-x-percentages-3.html multiple-x-percentages-3.html
+
+== multiple-x-white-space.svg multiple-x-white-space.svg
+
+== multiple-chunks-bidi.svg multiple-chunks-bidi.svg
+== multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi.svg
+== multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl.svg
+== multiple-chunks-different-anchor.svg multiple-chunks-different-anchor.svg
+== multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor.svg
+== multiple-chunks-directions-and-anchor-dx.svg multiple-chunks-directions-and-anchor-dx.svg
+== multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx.svg
+== multiple-chunks-dx-bidi.svg multiple-chunks-dx-bidi.svg
+== multiple-chunks-dx-different-anchor-bidi.svg multiple-chunks-dx-different-anchor-bidi.svg
+== multiple-chunks-dx-different-anchor-rtl.svg multiple-chunks-dx-different-anchor-rtl.svg
+== multiple-chunks-dx-different-anchor.svg multiple-chunks-dx-different-anchor.svg
+== multiple-chunks-dx-rtl.svg multiple-chunks-dx-rtl.svg
+== multiple-chunks-dx.svg multiple-chunks-dx.svg
+== multiple-chunks-fill-color.svg multiple-chunks-fill-color.svg
+== multiple-chunks-multiple-dx-bidi.svg multiple-chunks-multiple-dx-bidi.svg
+== multiple-chunks-multiple-dx-different-anchor-bidi.svg multiple-chunks-multiple-dx-different-anchor-bidi.svg
+== multiple-chunks-multiple-dx-different-anchor-rtl.svg multiple-chunks-multiple-dx-different-anchor-rtl.svg
+== multiple-chunks-multiple-dx-different-anchor.svg multiple-chunks-multiple-dx-different-anchor.svg
+== multiple-chunks-multiple-dx-rtl.svg multiple-chunks-multiple-dx-rtl.svg
+== multiple-chunks-multiple-dx.svg multiple-chunks-multiple-dx.svg
+== multiple-chunks-rtl.svg multiple-chunks-rtl.svg
+== multiple-chunks.svg multiple-chunks.svg
+
+== display-none-1.svg display-none-1.svg
+== display-none-2.svg display-none-2.svg
+== display-none-3.svg display-none-3.svg
+== display-none-4.svg display-none-4.svg
+
+== simple-multiline.svg simple-multiline.svg
+== simple-multiline-number.svg simple-multiline-number.svg
+== simple-multiline-pc.svg simple-multiline-pc.svg
+== simple-multiline-anchor-end.svg simple-multiline-anchor-end.svg
+
+fuzzy-if(skiaContent,1,15) == textpath.svg textpath.svg
+== textpath-a.svg textpath-a.svg
+== textpath-anchor-middle.svg textpath-anchor-middle.svg
+== textpath-anchor-end.svg textpath-anchor-end.svg
+== textpath-invalid-parent.svg textpath-invalid-parent.svg
+== textpath-multiline.svg textpath-multiline.svg
+== textpath-multiline-2.svg textpath-multiline-2.svg
+== textpath-after.svg textpath-after.svg
+== textpath-after-anchor-end.svg textpath-after-anchor-end.svg
+
+== textLength.svg textLength.svg
+fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,4,100) == textLength-3.svg textLength-3.svg
+== textLength-4.svg textLength-4.svg
+== textLength-5.svg textLength-5.svg
+== textLength-6.svg textLength-6.svg
+
+# text-shadow
+== text-shadow.svg text-shadow.svg
+
+# vertical text
+== vertical-01.svg vertical-01.svg
+
+# tests for ignoring various properties
+== ignore-border.svg ignore-border.svg
+== ignore-display.svg ignore-display.svg
+== ignore-float.svg ignore-float.svg
+== ignore-float-first-letter.svg ignore-float-first-letter.svg
+== ignore-position.svg ignore-position.svg
+== ignore-margin.svg ignore-margin.svg
+== ignore-padding.svg ignore-padding.svg
+== ignore-vertical-align.svg ignore-vertical-align.svg
+== ignore-overflow-scroll.svg ignore-overflow-scroll.svg
+== ignore-text-align.svg ignore-text-align.svg
+== ignore-text-align-2.svg ignore-text-align-2.svg
+
+# pseudo-elements
+== pseudo-first-line.svg pseudo-first-line.svg
+== pseudo-first-line-2.svg pseudo-first-line-2.svg
+== pseudo-first-letter.svg pseudo-first-letter.svg
+== pseudo-first-letter-2.svg pseudo-first-letter-2.svg
+== ignore-before-after.svg ignore-before-after.svg
+
+# invalid child nodes
+== ignore-invalid-child.svg ignore-invalid-child.svg
+== ignore-invalid-child-2.svg ignore-invalid-child-2.svg
+
+# text inside a link
+== link-surrounding.svg link-surrounding.svg
+
+# dynamic document changes
+== dynamic-font-size.svg dynamic-font-size.svg
+== dynamic-font-size-2.svg dynamic-font-size-2.svg
+== dynamic-font-size-3.svg dynamic-font-size-3.svg
+== dynamic-font-size-4.svg dynamic-font-size-4.svg
+== dynamic-dominant-baseline.svg dynamic-dominant-baseline.svg
+== dynamic-multiple-x.svg dynamic-multiple-x.svg
+fuzzy-if(!d2d,14,2) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke.svg
+== dynamic-text-shadow.svg dynamic-text-shadow.svg
+
+# text and masks
+fuzzy-if(skiaContent&&winWidget,50,224) HTTP(../..) == mask-applied.svg mask-applied.svg
+fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == mask-content.svg mask-content.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == mask-content-2.svg mask-content-2.svg
+
+# text and clipPaths
+HTTP(../..) == clipPath-applied.svg clipPath-applied.svg
+fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == clipPath-content.svg clipPath-content.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2.svg
+
+# text and patterns
+fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content.svg
+
+# text and filters
+fuzzy-if(skiaContent&&winWidget,122,336) HTTP(../..) == filter-applied.svg filter-applied.svg
+
+# vertical text
+fuzzy-if(skiaContent,1,80) == textpath-vertical-dx.svg textpath-vertical-dx.svg
+
+# selection
+needs-focus == deselectAll.svg deselectAll.svg
+fuzzy-if(skiaContent,1,250) needs-focus == selectSubString.svg selectSubString.svg
+fuzzy-if(skiaContent,1,600) needs-focus == selectSubString-2.svg selectSubString-2.svg
+fuzzy-if(skiaContent,1,250) needs-focus == selectSubString-3.svg selectSubString-3.svg
+needs-focus == simple-selection.svg simple-selection.svg
+fuzzy-if(skiaContent,1,100) needs-focus == simple-bidi-selection.svg simple-bidi-selection.svg
+fuzzy-if(skiaContent,1,50) needs-focus == simple-fill-color-selection.svg simple-fill-color-selection.svg
+fuzzy-if(skiaContent,1,150) needs-focus == simple-underline-selection.svg simple-underline-selection.svg
+fuzzy-if(skiaContent,1,300) needs-focus == multiple-text-selection.svg multiple-text-selection.svg
+needs-focus == multiple-chunks-selection.svg multiple-chunks-selection.svg
+fuzzy-if(skiaContent,1,200) needs-focus == textpath-selection.svg textpath-selection.svg
