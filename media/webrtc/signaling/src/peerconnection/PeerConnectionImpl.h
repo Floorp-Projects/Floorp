@@ -665,6 +665,9 @@ private:
     return true;
   }
 
+  RefPtr<MediaPipeline> GetMediaPipelineForTrack(
+      dom::MediaStreamTrack& aRecvTrack);
+
   nsresult GetTimeSinceEpoch(DOMHighResTimeStamp *result);
 
   // Shut down media - called on main thread only

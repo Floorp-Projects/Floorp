@@ -736,6 +736,40 @@ MediaPipeline::UpdateTransport_s(int level,
 }
 
 void
+MediaPipeline::AddRIDExtension_m(size_t extension_id)
+{
+  RUN_ON_THREAD(sts_thread_,
+                WrapRunnable(this,
+                             &MediaPipeline::AddRIDExtension_s,
+                             extension_id),
+                NS_DISPATCH_NORMAL);
+}
+
+void
+MediaPipeline::AddRIDExtension_s(size_t extension_id)
+{
+  rtp_parser_->RegisterRtpHeaderExtension(webrtc::kRtpExtensionRtpStreamId,
+                                          extension_id);
+}
+
+void
+MediaPipeline::AddRIDFilter_m(const std::string& rid)
+{
+  RUN_ON_THREAD(sts_thread_,
+                WrapRunnable(this,
+                             &MediaPipeline::AddRIDFilter_s,
+                             rid),
+                NS_DISPATCH_NORMAL);
+}
+
+void
+MediaPipeline::AddRIDFilter_s(const std::string& rid)
+{
+  filter_ = new MediaPipelineFilter;
+  filter_->AddRemoteRtpStreamId(rid);
+}
+
+void
 MediaPipeline::SelectSsrc_m(size_t ssrc_index)
 {
   if (ssrc_index < ssrcs_received_.size()) {
