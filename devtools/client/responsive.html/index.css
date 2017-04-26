@@ -12,11 +12,7 @@
   --viewport-color: #999797;
   --viewport-hover-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
-  --viewport-selection-arrow: url("./images/select-arrow.svg#light");
-  --viewport-selection-arrow-hovered:
-    url("./images/select-arrow.svg#light-hovered");
-  --viewport-selection-arrow-selected:
-    url("./images/select-arrow.svg#light-selected");
+  --viewport-selection-arrow: url("./images/select-arrow.svg");
 }
 
 .theme-dark {
@@ -26,11 +22,7 @@
   --viewport-color: #c6ccd0;
   --viewport-hover-color: #dde1e4;
   --viewport-active-color: #fcfcfc;
-  --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
-  --viewport-selection-arrow-hovered:
-    url("./images/select-arrow.svg#dark-hovered");
-  --viewport-selection-arrow-selected:
-    url("./images/select-arrow.svg#dark-selected");
+  --viewport-selection-arrow: url("./images/select-arrow.svg");
 }
 
 * {
@@ -91,11 +83,13 @@ select {
   -moz-appearance: none; appearance: none;
   background-color: var(--theme-toolbar-background);
   background-image: var(--viewport-selection-arrow);
+  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  fill: currentColor;
+  color: var(--viewport-color);
   background-position: 100% 50%;
   background-repeat: no-repeat;
   background-size: 7px;
   border: none;
-  color: var(--viewport-color);
   height: 100%;
   padding: 0 8px;
   text-align: center;
@@ -103,12 +97,10 @@ select {
 }
 
 select.selected {
-  background-image: var(--viewport-selection-arrow-selected);
   color: var(--viewport-active-color);
 }
 
 select:not(:disabled):hover {
-  background-image: var(--viewport-selection-arrow-hovered);
   color: var(--viewport-hover-color);
 }
 
@@ -117,7 +109,6 @@ select:not(:disabled):hover {
    select is focused.  It's unclear whether the visual effect that results here
    is intentional and desired. */
 select:focus {
-  background-image: var(--viewport-selection-arrow-selected);
   color: var(--viewport-active-color);
 }
 
@@ -203,12 +194,10 @@ select > option.divider {
 }
 
 #global-dpr-selector:not(.disabled):hover > select {
-  background-image: var(--viewport-selection-arrow-hovered);
   color: var(--viewport-hover-color);
 }
 
 #global-dpr-selector:focus > select {
-  background-image: var(--viewport-selection-arrow-selected);
   color: var(--viewport-active-color);
 }
 

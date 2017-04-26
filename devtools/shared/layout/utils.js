@@ -730,11 +730,11 @@ function getWindowFor(node) {
  *
  * @param {DOMWindow} window
  * @param {String} url
- * @param {String} [type="author"]
+ * @param {String} [type="agent"]
  */
-function loadSheet(window, url, type = "author") {
+function loadSheet(window, url, type = "agent") {
   if (!(type in SHEET_TYPE)) {
-    type = "author";
+    type = "agent";
   }
 
   let windowUtils = utilsFor(window);
@@ -752,11 +752,11 @@ exports.loadSheet = loadSheet;
  *
  * @param {DOMWindow} window
  * @param {String} url
- * @param {String} [type="author"]
+ * @param {String} [type="agent"]
  */
-function removeSheet(window, url, type = "author") {
+function removeSheet(window, url, type = "agent") {
   if (!(type in SHEET_TYPE)) {
-    type = "author";
+    type = "agent";
   }
 
   let windowUtils = utilsFor(window);

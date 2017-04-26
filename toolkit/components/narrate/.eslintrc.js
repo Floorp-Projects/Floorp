@@ -36,7 +36,6 @@ module.exports = {
     "no-return-assign": "error",
     "no-sequences": "error",
     "no-shadow": "warn",
-    "no-spaced-func": "warn",
     "no-throw-literal": "error",
     "no-unneeded-ternary": "error",
     "no-unused-vars": "error",

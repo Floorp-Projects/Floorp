@@ -1,14 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global Preferences */
 "use strict";
 
 const {utils: Cu} = Components;
 
 const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
-const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm", {});
+
+const PREF_PREFIX = "browser.newtabpage.activity-stream.";
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -32,7 +35,9 @@ this.Store = class Store {
         return this._store[method](...args);
       }.bind(this);
     });
-    this.feeds = new Set();
+    this.feeds = new Map();
+    this._feedFactories = null;
+    this._prefHandlers = new Map();
     this._messageChannel = new ActivityStreamMessageChannel({dispatch: this.dispatch});
     this._store = redux.createStore(
       redux.combineReducers(reducers),
@@ -53,33 +58,93 @@ this.Store = class Store {
   }
 
   /**
-   * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
-   *        After initialization has finished, an INIT action is dispatched.
+   * initFeed - Initializes a feed by calling its constructor function
    *
-   * @param  {array} feeds An array of objects with an optional .onAction method
+   * @param  {string} feedName The name of a feed, as defined in the object
+   *                           passed to Store.init
    */
-  init(feeds) {
-    if (feeds) {
-      feeds.forEach(subscriber => {
-        subscriber.store = this;
-        this.feeds.add(subscriber);
-      });
-    }
-    this._messageChannel.createChannel();
-    this.dispatch({type: at.INIT});
+  initFeed(feedName) {
+    const feed = this._feedFactories[feedName]();
+    feed.store = this;
+    this.feeds.set(feedName, feed);
   }
 
   /**
-   * uninit - Clears all feeds, dispatches an UNINIT action, and
-   *          destroys the message manager channel.
+   * uninitFeed - Removes a feed and calls its uninit function if defined
+   *
+   * @param  {string} feedName The name of a feed, as defined in the object
+   *                           passed to Store.init
+   */
+  uninitFeed(feedName) {
+    const feed = this.feeds.get(feedName);
+    if (!feed) {
+      return;
+    }
+    if (feed.uninit) {
+      feed.uninit();
+    }
+    this.feeds.delete(feedName);
+  }
+
+  /**
+   * maybeStartFeedAndListenForPrefChanges - Listen for pref changes that turn a
+   *     feed off/on, and as long as that pref was not explicitly set to
+   *     false, initialize the feed immediately.
+   *
+   * @param  {string} name The name of a feed, as defined in the object passed
+   *                       to Store.init
+   */
+  maybeStartFeedAndListenForPrefChanges(name) {
+    const prefName = PREF_PREFIX + name;
+
+    // If the pref was never set, set it to true by default.
+    if (!Preferences.has(prefName)) {
+      Preferences.set(prefName, true);
+    }
+
+    // Create a listener that turns the feed off/on based on changes
+    // to the pref, and cache it so we can unlisten on shut-down.
+    const onPrefChanged = isEnabled => (isEnabled ? this.initFeed(name) : this.uninitFeed(name));
+    this._prefHandlers.set(prefName, onPrefChanged);
+    Preferences.observe(prefName, onPrefChanged);
+
+    // TODO: This should propbably be done in a generic pref manager for Activity Stream.
+    // If the pref is true, start the feed immediately.
+    if (Preferences.get(prefName)) {
+      this.initFeed(name);
+    }
+  }
+
+  /**
+   * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
+   *
+   * @param  {array} feeds An array of objects with an optional .onAction method
+   */
+  init(feedConstructors) {
+    if (feedConstructors) {
+      this._feedFactories = feedConstructors;
+      for (const name of Object.keys(feedConstructors)) {
+        this.maybeStartFeedAndListenForPrefChanges(name);
+      }
+    }
+    this._messageChannel.createChannel();
+  }
+
+  /**
+   * uninit -  Uninitalizes each feed, clears them, and destroys the message
+   *           manager channel.
    *
    * @return {type}  description
    */
   uninit() {
+    this.feeds.forEach(feed => this.uninitFeed(feed));
+    this._prefHandlers.forEach((handler, pref) => Preferences.ignore(pref, handler));
+    this._prefHandlers.clear();
+    this._feedFactories = null;
     this.feeds.clear();
-    this.dispatch({type: at.UNINIT});
     this._messageChannel.destroyChannel();
   }
 };
 
-this.EXPORTED_SYMBOLS = ["Store"];
+this.PREF_PREFIX = PREF_PREFIX;
+this.EXPORTED_SYMBOLS = ["Store", "PREF_PREFIX"];

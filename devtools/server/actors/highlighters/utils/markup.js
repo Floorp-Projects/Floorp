@@ -102,20 +102,6 @@ function isXUL(window) {
 exports.isXUL = isXUL;
 
 /**
- * Inject a helper stylesheet in the window.
- */
-var installedHelperSheets = new WeakSet();
-
-function installHelperSheet(win, url = STYLESHEET_URI, type = "agent") {
-  if (installedHelperSheets.has(win.document)) {
-    return;
-  }
-  loadSheet(win, url, type);
-  installedHelperSheets.add(win.document);
-}
-exports.installHelperSheet = installHelperSheet;
-
-/**
  * Returns true if a DOM node is "valid", where "valid" means that the node isn't a dead
  * object wrapper, is still attached to a document, and is of a given type.
  * @param {DOMNode} node
@@ -275,7 +261,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).
     // If it did, highlighters.css would be injected as an anonymous content
     // node using CanvasFrameAnonymousContentHelper instead.
-    installHelperSheet(this.highlighterEnv.window);
+    loadSheet(this.highlighterEnv.window, STYLESHEET_URI);
 
     let node = this.nodeBuilder();
 

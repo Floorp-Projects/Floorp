@@ -128,11 +128,16 @@ this.BrowserUtils = {
    * @param aOriginCharset The charset of the URI.
    * @param aBaseURI Base URI to resolve aURL, or null.
    * @return an nsIURI object based on aURL.
+   *
+   * @deprecated Use Services.io.newURI directly instead.
    */
   makeURI(aURL, aOriginCharset, aBaseURI) {
     return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
   },
 
+  /**
+   * @deprecated Use Services.io.newFileURI directly instead.
+   */
   makeFileURI(aFile) {
     return Services.io.newFileURI(aFile);
   },

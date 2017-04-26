@@ -10,7 +10,7 @@
 -->
 <!ENTITY update.checkForUpdatesButton.label       "Check for updates">
 <!ENTITY update.checkForUpdatesButton.accesskey   "C">
-<!ENTITY update.updateButton.label2               "Restart &brandShortName; to Update">
+<!ENTITY update.updateButton.label3               "Restart to update &brandShorterName;">
 <!ENTITY update.updateButton.accesskey            "R">
 
 

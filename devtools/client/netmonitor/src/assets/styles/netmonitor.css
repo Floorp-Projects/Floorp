@@ -24,8 +24,8 @@
   --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
 
-  --sort-ascending-image: url(chrome://devtools/skin/images/sort-arrows.svg#ascending);
-  --sort-descending-image: url(chrome://devtools/skin/images/sort-arrows.svg#descending);
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
 }
 
 :root.theme-light {
@@ -39,8 +39,8 @@
   --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
 
-  --sort-ascending-image: url(chrome://devtools/skin/images/sort-arrows.svg#ascending);
-  --sort-descending-image: url(chrome://devtools/skin/images/sort-arrows.svg#descending);
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
 }
 
 :root.theme-firebug {

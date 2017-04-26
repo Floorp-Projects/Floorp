@@ -7833,7 +7833,7 @@ nsGlobalWindow::Forward(ErrorResult& aError)
 }
 
 void
-nsGlobalWindow::HomeOuter(ErrorResult& aError)
+nsGlobalWindow::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -7881,13 +7881,14 @@ nsGlobalWindow::HomeOuter(ErrorResult& aError)
                            nsIWebNavigation::LOAD_FLAGS_NONE,
                            nullptr,
                            nullptr,
-                           nullptr);
+                           nullptr,
+                           &aSubjectPrincipal);
 }
 
 void
-nsGlobalWindow::Home(ErrorResult& aError)
+nsGlobalWindow::Home(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(HomeOuter, (aError), aError, );
+  FORWARD_TO_OUTER_OR_THROW(HomeOuter, (aSubjectPrincipal, aError), aError, );
 }
 
 void

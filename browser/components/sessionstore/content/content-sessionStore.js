@@ -144,6 +144,11 @@ var MessageListener = {
         this.restoreHistory(data);
         break;
       case "SessionStore:restoreTabContent":
+        if (data.isRemotenessUpdate) {
+          let histogram = Services.telemetry.getKeyedHistogramById("FX_TAB_REMOTE_NAVIGATION_DELAY_MS");
+          histogram.add("SessionStore:restoreTabContent",
+                        Services.telemetry.msSystemNow() - data.requestTime);
+        }
         this.restoreTabContent(data);
         break;
       case "SessionStore:resetRestore":

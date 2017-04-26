@@ -38,6 +38,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
@@ -257,6 +258,12 @@ public class BrowserApp extends GeckoApp
     private static final int ADDON_MENU_OFFSET = 1000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
 
+    // When the static action bar is shown, only the real toolbar chrome should be
+    // shown when the toolbar is visible. Causing the toolbar animator to also
+    // show the snapshot causes the content to shift under the users finger.
+    // See: Bug 1358554
+    private boolean mShowingToolbarChromeForActionBar;
+
     private static class MenuItemInfo {
         public int id;
         public String label;
@@ -385,7 +392,10 @@ public class BrowserApp extends GeckoApp
                     updateHomePagerForTab(tab);
                 }
 
-                mDynamicToolbar.persistTemporaryVisibility();
+                if (mShowingToolbarChromeForActionBar) {
+                    mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
+                    mShowingToolbarChromeForActionBar = false;
+                }
                 break;
             case START:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1999,10 +2009,16 @@ public class BrowserApp extends GeckoApp
                 final String name = message.getString("name");
                 final String startUrl = message.getString("start_url");
                 final String manifestPath = message.getString("manifest_path");
-                final Bitmap icon = FaviconDecoder
-                    .decodeDataURI(getContext(), message.getString("icon"))
-                    .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                createAppShortcut(name, startUrl, manifestPath, icon);
+                final LoadFaviconResult loadIconResult = FaviconDecoder
+                    .decodeDataURI(getContext(), message.getString("icon"));
+                if (loadIconResult != null) {
+                    final Bitmap icon = loadIconResult
+                        .getBestBitmap(GeckoAppShell.getPreferredIconSize());
+                    createAppShortcut(name, startUrl, manifestPath, icon);
+                } else {
+                    Log.e(LOGTAG, "Failed to load icon!");
+                }
+
                 break;
 
             case "Website:AppInstallFailed":
@@ -4029,6 +4045,7 @@ public class BrowserApp extends GeckoApp
         return this;
     }
 
+
     /* Implementing ActionModeCompat.Presenter */
     @Override
     public void startActionMode(final ActionModeCompat.Callback callback) {
@@ -4037,9 +4054,11 @@ public class BrowserApp extends GeckoApp
             mActionBarFlipper.showNext();
             DynamicToolbarAnimator toolbar = mLayerView.getDynamicToolbarAnimator();
 
-            // If the toolbar is dynamic and not currently showing, just slide it in
+            // If the toolbar is dynamic and not currently showing, just show the real toolbar
+            // and keep the animated snapshot hidden
             if (mDynamicToolbar.isEnabled() && toolbar.getCurrentToolbarHeight() == 0) {
-                mDynamicToolbar.setTemporarilyVisible(true, VisibilityTransition.ANIMATE);
+                toggleToolbarChrome(true);
+                mShowingToolbarChromeForActionBar = true;
             }
             mDynamicToolbar.setPinned(true, PinReason.ACTION_MODE);
 
@@ -4068,9 +4087,12 @@ public class BrowserApp extends GeckoApp
 
         mActionBarFlipper.showPrevious();
 
-        // Only slide the urlbar out if it was hidden when the action mode started
-        // Don't animate hiding it so that there's no flash as we switch back to url mode
-        mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
+        // Hide the real toolbar chrome if it was hidden before the action bar
+        // was shown.
+        if (mShowingToolbarChromeForActionBar) {
+            toggleToolbarChrome(false);
+            mShowingToolbarChromeForActionBar = false;
+        }
     }
 
     public static interface TabStripInterface {

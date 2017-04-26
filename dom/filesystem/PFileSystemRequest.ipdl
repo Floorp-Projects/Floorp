@@ -5,14 +5,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PBlob;
+include protocol PIPCBlobInputStream;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PFileDescriptorSet;
+
+include IPCBlob;
 
 namespace mozilla {
 namespace dom {
 
 struct FileSystemFileResponse
 {
-  PBlob blob;
+  IPCBlob blob;
 };
 
 struct FileSystemDirectoryResponse
@@ -22,7 +27,7 @@ struct FileSystemDirectoryResponse
 
 struct FileSystemDirectoryListingResponseFile
 {
-  PBlob blob;
+  IPCBlob blob;
 };
 
 struct FileSystemDirectoryListingResponseDirectory

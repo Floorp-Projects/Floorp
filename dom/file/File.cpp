@@ -148,7 +148,7 @@ File::Constructor(const GlobalObject& aGlobal,
 
   nsAutoString type(aBag.mType);
   MakeValidBlobType(type);
-  impl->InitializeBlob(aGlobal.Context(), aData, type, false, aRv);
+  impl->InitializeBlob(aData, type, false, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -896,13 +896,14 @@ LUL::MaybeShowStats()
   if (n_new >= 5000) {
     uint32_t n_new_Context = mStats.mContext - mStatsPrevious.mContext;
     uint32_t n_new_CFI     = mStats.mCFI     - mStatsPrevious.mCFI;
+    uint32_t n_new_FP      = mStats.mFP      - mStatsPrevious.mFP;
     uint32_t n_new_Scanned = mStats.mScanned - mStatsPrevious.mScanned;
     mStatsPrevious = mStats;
     char buf[200];
     SprintfLiteral(buf,
                    "LUL frame stats: TOTAL %5u"
-                   "    CTX %4u    CFI %4u    SCAN %4u",
-                   n_new, n_new_Context, n_new_CFI, n_new_Scanned);
+                   "    CTX %4u    CFI %4u    FP %4u    SCAN %4u",
+                   n_new, n_new_Context, n_new_CFI, n_new_FP, n_new_Scanned);
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
   }
@@ -1346,6 +1347,7 @@ void
 LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
             /*OUT*/uintptr_t* aFrameSPs,
             /*OUT*/size_t* aFramesUsed, 
+            /*OUT*/size_t* aFramePointerFramesAcquired,
             /*OUT*/size_t* aScannedFramesAcquired,
             size_t aFramesAvail,
             size_t aScannedFramesAllowed,
@@ -1545,8 +1547,62 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
     } else {
 
-      // There's no RuleSet for the specified address, so see if
-      // it's possible to get anywhere by stack-scanning.
+      // There's no RuleSet for the specified address.  On amd64_linux, see if
+      // it's possible to recover the caller's frame by using the frame pointer.
+      // This would probably work for the 32-bit case too, but hasn't been
+      // tested for that case.
+
+#if defined(GP_PLAT_amd64_linux)
+      // We seek to compute (new_IP, new_SP, new_BP) from (old_BP, stack image),
+      // and assume the following layout:
+      //
+      //                 <--- new_SP
+      //   +----------+
+      //   |  new_IP  |  (return address)
+      //   +----------+
+      //   |  new_BP  |  <--- old_BP
+      //   +----------+
+      //   |   ....   |
+      //   |   ....   |
+      //   |   ....   |
+      //   +----------+  <---- old_SP (arbitrary, but must be <= old_BP)
+
+      const size_t wordSzB = sizeof(uintptr_t);
+      TaggedUWord old_xsp = regs.xsp;
+
+      // points at new_BP ?
+      TaggedUWord old_xbp = regs.xbp;
+      // points at new_IP ?
+      TaggedUWord old_xbp_plus1 = regs.xbp + TaggedUWord(1 * wordSzB);
+      // is the new_SP ?
+      TaggedUWord old_xbp_plus2 = regs.xbp + TaggedUWord(2 * wordSzB);
+
+      if (old_xbp.Valid() && old_xbp.IsAligned() &&
+          old_xsp.Valid() && old_xsp.IsAligned() &&
+          old_xsp.Value() <= old_xbp.Value()) {
+        // We don't need to do any range, alignment or validity checks for
+        // addresses passed to DerefTUW, since that performs them itself, and
+        // returns an invalid value on failure.  Any such value will poison
+        // subsequent uses, and we do a final check for validity before putting
+        // the computed values into |regs|.
+        TaggedUWord new_xbp = DerefTUW(old_xbp, aStackImg);
+        if (new_xbp.Valid() && new_xbp.IsAligned() &&
+            old_xbp.Value() < new_xbp.Value()) {
+          TaggedUWord new_xip = DerefTUW(old_xbp_plus1, aStackImg);
+          TaggedUWord new_xsp = old_xbp_plus2;
+          if (new_xbp.Valid() && new_xip.Valid() && new_xsp.Valid()) {
+            regs.xbp = new_xbp;
+            regs.xip = new_xip;
+            regs.xsp = new_xsp;
+            (*aFramePointerFramesAcquired)++;
+            continue;
+          }
+        }
+      }
+#endif
+
+      // As a last-ditch resort, see if it's possible to get anywhere by
+      // stack-scanning.
 
       // Use stack scanning frugally.
       if (n_scanned_frames++ >= aScannedFramesAllowed) {
@@ -1768,9 +1824,10 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   size_t framesAvail = mozilla::ArrayLength(framePCs);
   size_t framesUsed  = 0;
   size_t scannedFramesAllowed = 0;
-  size_t scannedFramesAcquired = 0;
+  size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
   aLUL->Unwind( &framePCs[0], &frameSPs[0],
-                &framesUsed, &scannedFramesAcquired,
+                &framesUsed,
+                &framePointerFramesAcquired, &scannedFramesAcquired,
                 framesAvail, scannedFramesAllowed,
                 &startRegs, stackImg );
 

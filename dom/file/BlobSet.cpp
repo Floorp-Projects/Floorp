@@ -35,7 +35,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 }
 
 nsresult
-BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
+BlobSet::AppendString(const nsAString& aString, bool nativeEOL)
 {
   nsCString utf8Str = NS_ConvertUTF16toUTF8(aString);
 
@@ -49,8 +49,9 @@ BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
 #endif
   }
 
-  return AppendVoidPtr((void*)utf8Str.Data(),
-                       utf8Str.Length());
+  RefPtr<StringBlobImpl> blobImpl =
+    StringBlobImpl::Create(utf8Str, EmptyString());
+  return AppendBlobImpl(blobImpl);
 }
 
 nsresult

@@ -881,6 +881,16 @@ Module::instantiate(JSContext* cx,
     if (!instantiateTable(cx, &table, &tables))
         return false;
 
+    // The CodeSegment does not hold on to the bytecode, see comment below.
+
+    auto codeSegment = CodeSegment::create(cx, code_, bytecode_, linkData_, *metadata_);
+    if (!codeSegment)
+        return false;
+
+    auto globalSegment = GlobalSegment::create(linkData_.globalDataLength);
+    if (!globalSegment)
+        return false;
+
     // To support viewing the source of an instance (Instance::createText), the
     // instance must hold onto a ref of the bytecode (keeping it alive). This
     // wastes memory for most users, so we try to only save the source when a
@@ -896,20 +906,21 @@ Module::instantiate(JSContext* cx,
         maybeBytecode = bytecode_.get();
     }
 
-    auto codeSegment = CodeSegment::create(cx, code_, linkData_, *metadata_, memory);
-    if (!codeSegment)
-        return false;
-
-    auto globalSegment = GlobalSegment::create(linkData_.globalDataLength);
-    if (!globalSegment)
-        return false;
-
-    auto code = cx->make_unique<Code>(Move(codeSegment), *metadata_, maybeBytecode);
+    SharedCode code(js_new<Code>(Move(codeSegment), *metadata_, maybeBytecode));
     if (!code)
         return false;
 
+    // The debug object must be present even when debugging is not enabled: It
+    // provides the lazily created source text for the program, even if that
+    // text is a placeholder message when debugging is not enabled.
+
+    auto debug = cx->make_unique<DebugState>(code, *metadata_, maybeBytecode);
+    if (!debug)
+        return false;
+
     instance.set(WasmInstanceObject::create(cx,
-                                            Move(code),
+                                            code,
+                                            Move(debug),
                                             Move(globalSegment),
                                             memory,
                                             Move(tables),
