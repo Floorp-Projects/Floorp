@@ -2373,14 +2373,26 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
-  if (currentKeyEvent && currentKeyEvent->CanDispatchKeyPressEvent()) {
+  // If the command isn't caused by key operation, the command should
+  // be handled in the super class of the caller.
+  if (!currentKeyEvent) {
+    return Destroyed();
+  }
+
+  // If the key operation causes this command, should dispatch a keypress
+  // event.
+  // XXX This must be worng.  Even if this command is caused by the key
+  //     operation, its our default action can be different from the
+  //     command.  So, in this case, we should dispatch a keypress event
+  //     which have the command and editor should handle it.
+  if (currentKeyEvent->CanDispatchKeyPressEvent()) {
     nsresult rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
         MOZ_LOG(gLog, LogLevel::Error,
           ("%p IMEInputHandler::DoCommandBySelector, "
            "FAILED, due to BeginNativeInputTransaction() failure "
            "at dispatching keypress", this));
-      return false;
+      return Destroyed();
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
@@ -2397,10 +2409,17 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        "dispatched, Destroyed()=%s, keypressHandled=%s",
        this, TrueOrFalse(Destroyed()),
        TrueOrFalse(currentKeyEvent->mKeyPressHandled)));
+    // This command is now dispatched with keypress event.
+    // So, this shouldn't be handled by nobody anymore.
+    return true;
   }
 
-  return (!Destroyed() && currentKeyEvent &&
-          currentKeyEvent->IsDefaultPrevented());
+  // If the key operation didn't cause keypress event or caused keypress event
+  // but not prevented its default, we need to honor the command.  For example,
+  // Korean IME sends "insertNewline:" when committing existing composition
+  // with Enter key press.  In such case, the key operation has been consumed
+  // by the committing composition but we still need to handle the command.
+  return Destroyed() || !currentKeyEvent->CanHandleCommand();
 }
 
 
