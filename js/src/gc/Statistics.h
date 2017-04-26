@@ -19,6 +19,7 @@
 
 #include "js/GCAPI.h"
 #include "js/Vector.h"
+#include "vm/JSONPrinter.h"
 
 using mozilla::Maybe;
 
@@ -274,7 +275,6 @@ struct Statistics
 
     UniqueChars formatCompactSliceMessage() const;
     UniqueChars formatCompactSummaryMessage() const;
-    UniqueChars formatJsonMessage(uint64_t timestamp, bool includeSlices = true) const;
     UniqueChars formatDetailedMessage() const;
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
@@ -341,8 +341,12 @@ struct Statistics
     // Print total profile times on shutdown.
     void printTotalProfileTimes();
 
+    // Return JSON for a whole major GC, optionally including detailed
+    // per-slice data.
+    UniqueChars renderJsonMessage(uint64_t timestamp, bool includeSlices = true) const;
+
     // Return JSON for the timings of just the given slice.
-    UniqueChars formatJsonSlice(size_t sliceNum) const;
+    UniqueChars renderJsonSlice(size_t sliceNum) const;
 
   private:
     JSRuntime* runtime;
@@ -446,9 +450,10 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
     UniqueChars formatDetailedTotals() const;
 
-    UniqueChars formatJsonDescription(uint64_t timestamp) const;
-    UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice) const;
-    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes) const;
+    void formatJsonDescription(uint64_t timestamp, JSONPrinter&) const;
+    void formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter&) const;
+    void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter&) const;
+    void formatJsonSlice(size_t sliceNum, JSONPrinter&) const;
 
     double computeMMU(TimeDuration resolution) const;
 
