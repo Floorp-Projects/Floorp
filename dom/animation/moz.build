@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     'KeyframeUtils.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
+    'ServoComputedValuesWithParent.h',
     'TimingParams.h',
 ]
 
