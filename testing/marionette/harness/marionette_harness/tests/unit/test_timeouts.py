@@ -24,9 +24,8 @@ class TestTimeouts(MarionetteTestCase):
 
     def test_page_timeout_fail(self):
         self.marionette.timeout.page_load = 0
-        test_html = self.marionette.absolute_url("slow")
-        with self.assertRaises(MarionetteException):
-            self.marionette.navigate(test_html)
+        test_html = self.marionette.absolute_url("test.html")
+        self.assertRaises(MarionetteException, self.marionette.navigate, test_html)
 
     def test_page_timeout_pass(self):
         self.marionette.timeout.page_load = 60
@@ -37,11 +36,9 @@ class TestTimeouts(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         self.marionette.timeout.implicit = 1
-        with self.assertRaises(NoSuchElementException):
-            self.marionette.find_element(By.ID, "I'm not on the page")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
         self.marionette.timeout.implicit = 0
-        with self.assertRaises(NoSuchElementException):
-            self.marionette.find_element(By.ID, "I'm not on the page")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
 
     @skip_if_mobile("Bug 1317121 - android emulator is too slow")
     def test_search_timeout_found_settimeout(self):
@@ -85,8 +82,7 @@ class TestTimeouts(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         self.marionette.timeout.script = 1
-        with self.assertRaises(ScriptTimeoutException):
-            self.marionette.execute_async_script("var x = 1;")
+        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
     def test_no_timeout_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
