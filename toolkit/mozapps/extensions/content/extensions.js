@@ -3380,7 +3380,7 @@ var gDetailView = {
           [this._addon.name, gStrings.brandShortName, gStrings.appVersion], 3
         );
         document.getElementById("detail-warning-link").hidden = true;
-      } else if (this.appDisabled && !this._addon.multiprocessCompatible && !ALLOW_NON_MPC) {
+      } else if (this._addon.appDisabled && !this._addon.multiprocessCompatible && !ALLOW_NON_MPC) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
           "details.notification.nonMpcDisabled", [this._addon.name], 1
