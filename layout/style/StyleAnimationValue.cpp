@@ -5295,3 +5295,31 @@ AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
   return StyleAnimationValue::Interpolate(
            aProperty, mGecko, aToValue.mGecko, 0.5, dummy);
 }
+
+double
+AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
+                                const AnimationValue& aOther,
+                                nsStyleContext* aStyleContext) const
+{
+  if (IsNull() || aOther.IsNull()) {
+    return 0.0;
+  }
+
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  MOZ_ASSERT(mGecko.IsNull() == aOther.mGecko.IsNull() &&
+             !mServo == !aOther.mServo,
+             "Animation values should have the same style engine");
+
+  if (mServo) {
+    return Servo_AnimationValues_ComputeDistance(mServo, aOther.mServo);
+  }
+
+  double distance = 0.0;
+  return StyleAnimationValue::ComputeDistance(aProperty,
+                                              mGecko,
+                                              aOther.mGecko,
+                                              aStyleContext,
+                                              distance)
+         ? distance
+         : 0.0;
+}
