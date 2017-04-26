@@ -967,7 +967,17 @@ const char* gc::ZealModeHelpText =
     "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
     "   14: (Compact) Perform a shrinking collection every N allocations\n"
     "   15: (CheckHeapAfterGC) Walk the heap to check its integrity after every GC\n"
-    "   16: (CheckNursery) Check nursery integrity on minor GC\n";
+    "   16: (CheckNursery) Check nursery integrity on minor GC\n"
+    "   17: (IncrementalSweepThenFinish) Incremental GC in two slices: 1) start sweeping 2) finish collection\n";
+
+// The set of zeal modes that control incremental slices. These modes are
+// mutually exclusive.
+static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
+    ZealMode::IncrementalRootsThenFinish,
+    ZealMode::IncrementalMarkAllThenFinish,
+    ZealMode::IncrementalMultipleSlices,
+    ZealMode::IncrementalSweepThenFinish
+};
 
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
@@ -988,14 +998,11 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
             group->nursery().enterZealMode();
     }
 
-    // Zeal modes 8-10 are mutually exclusive. If we're setting one of those,
-    // we first reset all of them.
-    if (zealMode >= ZealMode::IncrementalRootsThenFinish &&
-        zealMode <= ZealMode::IncrementalMultipleSlices)
-    {
-        clearZealMode(ZealMode::IncrementalRootsThenFinish);
-        clearZealMode(ZealMode::IncrementalMarkAllThenFinish);
-        clearZealMode(ZealMode::IncrementalMultipleSlices);
+    // Some modes are mutually exclusive. If we're setting one of those, we
+    // first reset all of them.
+    if (IncrementalSliceZealModes.contains(zealMode)) {
+        for (auto mode : IncrementalSliceZealModes)
+            clearZealMode(mode);
     }
 
     bool schedule = zealMode >= ZealMode::Alloc;
@@ -4553,7 +4560,7 @@ GCRuntime::findInterZoneEdges()
 }
 
 void
-GCRuntime::groupZonesForSweeping(AutoLockForExclusiveAccess& lock)
+GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock)
 {
 #ifdef DEBUG
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
@@ -4564,6 +4571,15 @@ GCRuntime::groupZonesForSweeping(AutoLockForExclusiveAccess& lock)
     ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode], lock);
     if (!isIncremental || !findInterZoneEdges())
         finder.useOneComponent();
+
+#ifdef JS_GC_ZEAL
+    // Use one component for IncrementalSweepThenFinish zeal mode.
+    if (isIncremental && reason == JS::gcreason::DEBUG_GC &&
+        hasZealMode(ZealMode::IncrementalSweepThenFinish))
+    {
+        finder.useOneComponent();
+    }
+#endif
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCMarking());
@@ -5313,7 +5329,7 @@ GCRuntime::endSweepingSweepGroup()
 }
 
 void
-GCRuntime::beginSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& lock)
+GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock)
 {
     /*
      * Sweep phase.
@@ -5334,14 +5350,14 @@ GCRuntime::beginSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& l
     gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP);
 
     sweepOnBackgroundThread =
-        !destroyingRuntime && !TraceEnabled() && CanUseExtraThreads();
+        reason != JS::gcreason::DESTROY_RUNTIME && !TraceEnabled() && CanUseExtraThreads();
 
     releaseObservedTypes = shouldReleaseObservedTypes();
 
     AssertNoWrappersInGrayList(rt);
     DropStringWrappers(rt);
 
-    groupZonesForSweeping(lock);
+    groupZonesForSweeping(reason, lock);
     endMarkingSweepGroup();
     beginSweepingSweepGroup(lock);
 }
@@ -6082,7 +6098,8 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
     isIncremental = !budget.isUnlimited();
 
     if (useZeal && (hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
-                    hasZealMode(ZealMode::IncrementalMarkAllThenFinish)))
+                    hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
+                    hasZealMode(ZealMode::IncrementalSweepThenFinish)))
     {
         /*
          * Yields between slices occurs at predetermined points in these modes;
@@ -6160,7 +6177,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
          * This runs to completion, but we don't continue if the budget is
          * now exhasted.
          */
-        beginSweepPhase(destroyingRuntime, lock);
+        beginSweepPhase(reason, lock);
         if (budget.isOverBudget())
             break;
 
@@ -6168,8 +6185,12 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
          * Always yield here when running in incremental multi-slice zeal
          * mode, so RunDebugGC can reset the slice buget.
          */
-        if (isIncremental && useZeal && hasZealMode(ZealMode::IncrementalMultipleSlices))
+        if (isIncremental && useZeal &&
+            (hasZealMode(ZealMode::IncrementalMultipleSlices) ||
+             hasZealMode(ZealMode::IncrementalSweepThenFinish)))
+        {
             break;
+        }
 
         MOZ_FALLTHROUGH;
 
@@ -6188,7 +6209,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             gcstats::AutoPhase ap(stats(), gcstats::PHASE_WAIT_BACKGROUND_THREAD);
 
             // Yield until background finalization is done.
-            if (isIncremental) {
+            if (!budget.isUnlimited()) {
                 // Poll for end of background sweeping
                 AutoLockGC lock(rt);
                 if (isBackgroundSweeping())
@@ -6212,7 +6233,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         incrementalState = State::Compact;
 
         // Always yield before compacting since it is not incremental.
-        if (isCompacting && isIncremental)
+        if (isCompacting && !budget.isUnlimited())
             break;
 
         MOZ_FALLTHROUGH;
@@ -6238,7 +6259,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             gcstats::AutoPhase ap(stats(), gcstats::PHASE_WAIT_BACKGROUND_THREAD);
 
             // Yield until background decommit is done.
-            if (isIncremental && decommitTask.isRunning())
+            if (!budget.isUnlimited() && decommitTask.isRunning())
                 break;
 
             decommitTask.join();
@@ -7122,7 +7143,8 @@ GCRuntime::runDebugGC()
     auto budget = SliceBudget::unlimited();
     if (hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
         hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
-        hasZealMode(ZealMode::IncrementalMultipleSlices))
+        hasZealMode(ZealMode::IncrementalMultipleSlices) ||
+        hasZealMode(ZealMode::IncrementalSweepThenFinish))
     {
         js::gc::State initialState = incrementalState;
         if (hasZealMode(ZealMode::IncrementalMultipleSlices)) {
