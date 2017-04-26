@@ -538,10 +538,6 @@ public:
     case SYS_SEND:
     case SYS_SOCKET: // DANGEROUS
     case SYS_CONNECT: // DANGEROUS
-    case SYS_ACCEPT:
-    case SYS_ACCEPT4:
-    case SYS_BIND:
-    case SYS_LISTEN:
     case SYS_GETSOCKOPT:
     case SYS_SETSOCKOPT:
     case SYS_GETSOCKNAME:
