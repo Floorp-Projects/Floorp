@@ -800,20 +800,11 @@ function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestP
     var setting = { name: aPrefName,
                     type: prefType,
                     value: prefVal };
-
-    if (gCompareStyloToGecko && aPrefName != "layout.css.servo.enabled") {
-        // ref-pref() is ignored, test-pref() and pref() are added to both
-        if (aWhere != "ref-") {
-            aTestPrefSettings.push(setting);
-            aRefPrefSettings.push(setting);
-        }
-    } else {
-        if (aWhere != "ref-") {
-            aTestPrefSettings.push(setting);
-        }
-        if (aWhere != "test-") {
-            aRefPrefSettings.push(setting);
-        }
+    if (aWhere != "ref-") {
+        aTestPrefSettings.push(setting);
+    }
+    if (aWhere != "test-") {
+        aRefPrefSettings.push(setting);
     }
     return true;
 }
@@ -1166,12 +1157,8 @@ function ReadManifest(aURL, inherited_status, aFilter)
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURIWithPrincipal(principal, refURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            var type = items[0];
-            if (gCompareStyloToGecko) {
-                type = TYPE_REFTEST_EQUAL;
-                refURI = testURI;
-            }
-            AddTestItem({ type: type,
+
+            AddTestItem({ type: items[0],
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
