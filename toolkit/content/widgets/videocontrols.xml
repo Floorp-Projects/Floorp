@@ -655,7 +655,7 @@
 
             // If the user is dragging the scrubber ignore the delayed seek
             // responses (don't yank the thumb away from the user)
-            if (this.scrubber.isDragging || this.scrubber.startToDrag) {
+            if (this.scrubber.isDragging) {
               return;
             }
             this.showPosition(currentTime, duration);
@@ -899,16 +899,14 @@
         const duration = Math.round(this.video.duration * 1000); // in ms
         let time = this.scrubber.value;
 
-        if (!this.scrubber.startToDrag || this.scrubber.isDragging) {
-          this.seekToPosition(time);
-          this.showPosition(time, duration);
-        }
+        this.seekToPosition(time);
+        this.showPosition(time, duration);
 
-        this.scrubber.startToDrag = true;
+        this.scrubber.isDragging = true;
+        this.pauseVideoDuringDragging();
       },
 
       onScrubberChange(e) {
-        this.scrubber.startToDrag = false;
         this.scrubber.isDragging = false;
 
         if (this.isPausedByDragging) {
@@ -1033,12 +1031,6 @@
       },
       HIDE_CONTROLS_TIMEOUT_MS: 2000,
       onMouseMove(event) {
-        // Pause playing video when the mouse is dragging over the control bar.
-        if (this.scrubber.startToDrag) {
-          this.scrubber.isDragging = true;
-          this.pauseVideoDuringDragging();
-        }
-
         // If the controls are static, don't change anything.
         if (!this.dynamicControls) {
           return;
