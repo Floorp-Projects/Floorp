@@ -283,9 +283,7 @@ task stringsCleanUpdate()  {
     }
 }
 
-
-task findbugs(type: FindBugs) {
-    // Flip this switch to fail the build when issues are found
+findbugs {
     ignoreFailures = false
 
     effort = "max"
@@ -295,15 +293,22 @@ task findbugs(type: FindBugs) {
     reportLevel = "medium"
 
     excludeFilter = new File("${project.rootDir}/findbugs/exclude.xml")
+}
 
-    classes = files("${project.rootDir}/app/build/intermediates/classes")
-    source = fileTree('src/main/java/')
+task findbugs(type: FindBugs, dependsOn: "assemble", group: 'verification') {
+    classes = files("$projectDir.absolutePath/build/intermediates/classes")
+
+    source = fileTree('src/main/java')
     classpath = files()
 
-    // Only one report format is supported. Html is easier for me to read, so let's use that
+    // Only one report format is supported. Html is easier to read, so let's use that
     // (xml is the one that's enabled by default).
     reports {
         xml.enabled = false
         html.enabled = true
     }
+}
+
+afterEvaluate {
+    check.dependsOn 'findbugs'
 }
