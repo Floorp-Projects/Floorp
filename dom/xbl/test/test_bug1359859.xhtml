@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1359859
+  -->
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="testBinding">
+        <implementation>
+          <constructor>
+            XPCNativeWrapper.unwrap(window).running();
+            this.constructed = true;
+            throw new Error("Constructor threw");
+          </constructor>
+          <field name="throwingField">throw new Error("field threw")</field>
+          <field name="normalField">"hello"</field>
+        </implementation>
+      </binding>
+    </bindings>
+    <script>
+      // We need to wait for the binding to load.
+      SimpleTest.waitForExplicitFinish();
+      function running() {
+        // Wait for the rest of the constructor to run
+        SimpleTest.executeSoon(function() {
+          is(document.getElementById("bound").throwingField, undefined,
+             "Should not have a value for a throwing field");
+          is(document.getElementById("bound").normalField, "hello",
+             "Binding should be installed");
+          // The real test is that we haven't gotten any error events so far.
+          SimpleTest.finish();
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="bound" style="-moz-binding: url(#testBinding)"/>
+  </body>
+</html>
+    
