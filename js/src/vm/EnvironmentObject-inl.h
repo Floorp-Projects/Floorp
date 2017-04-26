@@ -8,7 +8,6 @@
 #define vm_EnvironmentObject_inl_h
 
 #include "vm/EnvironmentObject.h"
-#include "frontend/SharedContext.h"
 
 #include "jsobjinlines.h"
 
