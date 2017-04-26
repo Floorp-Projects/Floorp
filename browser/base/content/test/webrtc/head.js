@@ -215,7 +215,7 @@ function expectObserverCalled(aTopic) {
   });
 }
 
-function expectNoObserverCalled() {
+function expectNoObserverCalled(aIgnoreDeviceEvents = false) {
   return new Promise(resolve => {
     let mm = _mm();
     mm.addMessageListener("Test:ExpectNoObserverCalled:Reply",
@@ -225,7 +225,15 @@ function expectNoObserverCalled() {
         if (!data[topic])
           continue;
 
-        is(data[topic], 0, topic + " notification unexpected");
+        // If we are stopping tracks that were created from 2 different
+        // getUserMedia calls, the "recording-device-events" notification is
+        // fired twice on Windows and Mac, and intermittently twice on Linux.
+        if (topic == "recording-device-events" && aIgnoreDeviceEvents) {
+          todo(false, "Got " + data[topic] + " unexpected " + topic +
+               " notifications, see bug 1320994");
+        } else {
+          is(data[topic], 0, topic + " notification unexpected");
+        }
       }
       resolve();
     });
@@ -346,7 +354,8 @@ function getMediaCaptureState() {
   });
 }
 
-function* stopSharing(aType = "camera", aShouldKeepSharing = false) {
+function* stopSharing(aType = "camera", aShouldKeepSharing = false,
+                      aExpectDoubleRecordingEvent = false) {
   let promiseRecordingEvent = promiseObserverCalled("recording-device-events");
   gIdentityHandler._identityBox.click();
   let permissions = document.getElementById("identity-popup-permission-list");
@@ -363,7 +372,7 @@ function* stopSharing(aType = "camera", aShouldKeepSharing = false) {
   if (!aShouldKeepSharing)
     yield expectObserverCalled("recording-window-ended");
 
-  yield expectNoObserverCalled();
+  yield expectNoObserverCalled(aExpectDoubleRecordingEvent);
 
   if (!aShouldKeepSharing)
     yield* checkNotSharing();
@@ -382,13 +391,16 @@ function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType,
   });
 }
 
-function* closeStream(aAlreadyClosed, aFrameId) {
+function* closeStream(aAlreadyClosed, aFrameId, aStreamCount = 1) {
   yield expectNoObserverCalled();
 
   let promises;
   if (!aAlreadyClosed) {
-    promises = [promiseObserverCalled("recording-device-events"),
-                promiseObserverCalled("recording-window-ended")];
+    promises = [];
+    for (let i = 0; i < aStreamCount; i++) {
+      promises.push(promiseObserverCalled("recording-device-events"));
+    }
+    promises.push(promiseObserverCalled("recording-window-ended"));
   }
 
   info("closing the stream");
