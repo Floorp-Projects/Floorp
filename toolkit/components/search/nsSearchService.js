@@ -3992,6 +3992,17 @@ SearchService.prototype = {
     return engines;
   },
 
+  getEnginesByExtensionID: function SRCH_SVC_getEngines(aExtensionID, aCount) {
+    this._ensureInitialized();
+    LOG("getEngines: getting all engines for " + aExtensionID);
+    var engines = this._getSortedEngines(true).filter(function(engine) {
+      return engine._extensionID == aExtensionID;
+    });
+    aCount.value = engines.length;
+    return engines;
+  },
+
+
   getEngineByName: function SRCH_SVC_getEngineByName(aEngineName) {
     this._ensureInitialized();
     return this._engines[aEngineName] || null;
