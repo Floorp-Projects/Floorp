@@ -28,12 +28,10 @@ class PublicSuffixPatterns {
 
         EXACT = new HashSet<>();
 
-        InputStream stream = null;
-
+        BufferedReader reader = null;
         try {
-            stream = context.getAssets().open("publicsuffixlist");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    new BufferedInputStream(stream)));
+            reader = new BufferedReader(new InputStreamReader(
+                    new BufferedInputStream(context.getAssets().open("publicsuffixlist"))));
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -43,7 +41,7 @@ class PublicSuffixPatterns {
         } catch (IOException e) {
             Log.e("Patterns", "IOException during loading public suffix list");
         } finally {
-            IOUtils.safeStreamClose(stream);
+            IOUtils.safeStreamClose(reader);
         }
 
         return EXACT;
