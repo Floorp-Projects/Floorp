@@ -4,18 +4,18 @@ test-pref(dom.animations-api.core.enabled,true) == 1298742-1.html 1298742-ref.ht
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe-in-delay.html stacking-context-animation-ref.html
-test-pref(dom.animations-api.core.enabled,true) random-if(stylo) == stacking-context-opacity-changing-target.html stacking-context-animation-changing-target-ref.html
+test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-target.html stacking-context-animation-changing-target-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-target-in-delay.html stacking-context-animation-changing-target-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-effect.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-losing-css-animation-in-delay.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-keyframe.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-keyframe-in-delay.html stacking-context-animation-ref.html
-test-pref(dom.animations-api.core.enabled,true) random-if(stylo) == stacking-context-transform-changing-target.html stacking-context-animation-changing-target-ref.html
+test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-target.html stacking-context-animation-changing-target-ref.html
 
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-target-in-delay.html stacking-context-animation-changing-target-ref.html
-test-pref(dom.animations-api.core.enabled,true) random-if(stylo) == stacking-context-transform-changing-effect.html stacking-context-animation-ref.html
+test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-effect.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-display-property.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-losing-css-animation-in-delay.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-composition-changed-from-accumulate-to-replace.html style-updates-for-iteration-composite-ref.html
-test-pref(dom.animations-api.core.enabled,true) fails-if(stylo) == style-updates-on-iteration-composition-changed-from-replace-to-accumulate.html style-updates-for-iteration-composite-ref.html
-test-pref(dom.animations-api.core.enabled,true) fails-if(stylo) == style-updates-on-current-iteration-changed.html style-updates-for-iteration-composite-ref.html
+test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-composition-changed-from-replace-to-accumulate.html style-updates-for-iteration-composite-ref.html
+test-pref(dom.animations-api.core.enabled,true) == style-updates-on-current-iteration-changed.html style-updates-for-iteration-composite-ref.html

@@ -1,41 +1,41 @@
-fails-if(stylo) == input-valid.html input-ref.html
-fuzzy(11,4) fails-if(stylo) == input-customerror.html input-ref.html
-fails-if(stylo) == input-disabled.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-disabled.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-not-disabled.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-not-disabled-changed.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-readonly.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-readonly.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-not-readonly.html input-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-dyn-not-readonly-changed.html input-ref.html
-fails-if(stylo) == input-required-valid.html input-withtext-ref.html
-fails-if(stylo) == input-required-valid-changed.html input-withtext-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-required-invalid.html input-ref.html
-fails-if(stylo) == input-button.html input-button-ref.html
-fails-if(stylo) == input-reset.html input-button-ref.html
-fails-if(stylo) == input-email-invalid.html input-withtext-ref.html
-fails-if(stylo) == input-email-valid.html input-email-ref.html
-fails-if(stylo) == input-email-valid-changed.html input-email-ref.html
-fails-if(stylo) == input-url-invalid.html input-withtext-ref.html
-fails-if(stylo) == input-url-valid.html input-url-ref.html
-fails-if(stylo) == input-url-valid-changed.html input-url-ref.html
-fails-if(stylo) == input-pattern-valid.html input-withtext-ref.html
-fails-if(stylo) == input-pattern-valid-changed.html input-withtext-ref.html
-fails-if(stylo) == input-pattern-invalid.html input-withtext-ref.html
-fails-if(stylo) == input-type-barred.html input-button-ref.html
-fuzzy(64,4) fails-if(stylo) == input-type-invalid.html input-ref.html
-fails-if(stylo) == input-disabled-fieldset-1.html input-fieldset-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-disabled-fieldset-2.html input-fieldset-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-fieldset-legend.html input-fieldset-legend-ref.html
+== input-valid.html input-ref.html
+fuzzy(11,4) == input-customerror.html input-ref.html
+== input-disabled.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-disabled.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-not-disabled.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-not-disabled-changed.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-readonly.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-readonly.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly.html input-ref.html
+fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly-changed.html input-ref.html
+== input-required-valid.html input-withtext-ref.html
+== input-required-valid-changed.html input-withtext-ref.html
+fuzzy-if(skiaContent,1,3) == input-required-invalid.html input-ref.html
+== input-button.html input-button-ref.html
+== input-reset.html input-button-ref.html
+== input-email-invalid.html input-withtext-ref.html
+== input-email-valid.html input-email-ref.html
+== input-email-valid-changed.html input-email-ref.html
+== input-url-invalid.html input-withtext-ref.html
+== input-url-valid.html input-url-ref.html
+== input-url-valid-changed.html input-url-ref.html
+== input-pattern-valid.html input-withtext-ref.html
+== input-pattern-valid-changed.html input-withtext-ref.html
+== input-pattern-invalid.html input-withtext-ref.html
+== input-type-barred.html input-button-ref.html
+fuzzy(64,4) == input-type-invalid.html input-ref.html
+== input-disabled-fieldset-1.html input-fieldset-ref.html
+fuzzy-if(skiaContent,1,3) == input-disabled-fieldset-2.html input-fieldset-ref.html
+fuzzy-if(skiaContent,1,3) == input-fieldset-legend.html input-fieldset-legend-ref.html
 == input-checkbox-valid-changed.html success-ref.html
 == input-checkbox-valid-default.html success-ref.html
-fails-if(stylo) == input-file-valid-changed.html input-file-ref.html
-fails-if(stylo) == input-file-valid-default.html input-file-ref.html
+== input-file-valid-changed.html input-file-ref.html
+== input-file-valid-default.html input-file-ref.html
 == input-radio-required.html success-ref.html
 == input-radio-customerror.html success-ref.html
 == input-radio-dyn-valid-1.html success-ref.html
 == input-radio-dyn-valid-2.html success-ref.html
 == input-radio-nogroup-required-valid.html success-ref.html
 == input-radio-nogroup-required-invalid.html success-ref.html
-fuzzy-if(skiaContent,1,3) fails-if(stylo) == input-novalidate.html input-withtext-ref.html
+fuzzy-if(skiaContent,1,3) == input-novalidate.html input-withtext-ref.html
 # input type='hidden' shouldn't show

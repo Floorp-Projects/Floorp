@@ -21,12 +21,12 @@
 # others make them black, and others assign them palette color 0 (purple, in
 # this case)."
 # [We make the undefined pixels transparent. So does Chromium.]
-fails-if(stylo) == pal4rletrns.bmp pal4rletrns.png
+== pal4rletrns.bmp pal4rletrns.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
 # "8-bit version of q/pal4rletrns.bmp."
 # [Ditto.]
-fails-if(stylo) == pal8rletrns.bmp pal8rletrns.png
+== pal8rletrns.bmp pal8rletrns.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
 # "A file with some unused bytes between the palette and the image. This is
@@ -71,7 +71,7 @@ fuzzy(1,899) == pal8os2v2-16.bmp pal8.png
 # "A 16-bit image with an alpha channel. There are 4 bits for each color
 # channel, and 4 bits for the alpha channel. It’s not clear if this is valid,
 # but I can’t find anything that suggests it isn’t."
-fails-if(stylo) == rgba16-4444.bmp rgba16-4444.png
+== rgba16-4444.bmp rgba16-4444.png
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=300
 # "A 24-bit image, with a palette containing 300 colors. The fact that the
@@ -119,7 +119,7 @@ fuzzy(1,1408) == rgb32-111110.bmp rgb24.png
 # possible that this file is not correctly formed. The color channels are in an
 # unusual order, to prevent viewers from passing this test by making a lucky
 # guess."
-fails-if(stylo) == rgba32.bmp rgba32.png
+== rgba32.bmp rgba32.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
 # "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.

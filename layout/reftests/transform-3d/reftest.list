@@ -1,73 +1,73 @@
-fails-if(stylo) == scalez-1a.html scalez-1-ref.html
-fails-if(stylo) == rotatey-1a.html rotatey-1-ref.html
-fails-if(stylo) == rotatex-1a.html rotatex-1-ref.html
+== scalez-1a.html scalez-1-ref.html
+== rotatey-1a.html rotatey-1-ref.html
+== rotatex-1a.html rotatex-1-ref.html
 # Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
-fails-if(stylo) == scalezrotatex-1.html scalezrotatex-1-ref.html
+== scalezrotatex-1.html scalezrotatex-1-ref.html
 # Check that the perspectve() transform function results in some visual changes
-fails-if(stylo) != rotatex-perspective-1a.html rotatex-1-ref.html
+!= rotatex-perspective-1a.html rotatex-1-ref.html
 # Check that -moz-perspective results in visual changes to child transformed elements
-fails-if(stylo) != rotatex-perspective-1b.html rotatex-1-ref.html
+!= rotatex-perspective-1b.html rotatex-1-ref.html
 # -moz-perspective should only apply to child elements
-fails-if(stylo) == rotatex-perspective-1c.html rotatex-1-ref.html
-fails-if(stylo) == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
-fails-if(stylo) == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidget,17,4) fuzzy-if(skiaContent,16,286) fails-if(webrender) fails-if(stylo) == preserve3d-1a.html preserve3d-1-ref.html
-fails-if(stylo) == preserve3d-1b.html about:blank
-fails-if(stylo) == preserve3d-clipped.html about:blank
-fails-if(webrender) fails-if(stylo) == preserve3d-2a.html preserve3d-2-ref.html
-fails-if(webrender) fails-if(stylo) == preserve3d-2b.html preserve3d-2-ref.html
-fails-if(stylo) == preserve3d-2c.html preserve3d-2-ref.html
+== rotatex-perspective-1c.html rotatex-1-ref.html
+== rotatex-perspective-3a.html rotatex-perspective-3-ref.html
+== scalez-1a.html scalez-1-ref.html
+fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidget,17,4) fuzzy-if(skiaContent,16,286) fails-if(webrender) == preserve3d-1a.html preserve3d-1-ref.html
+== preserve3d-1b.html about:blank
+== preserve3d-clipped.html about:blank
+fails-if(webrender) == preserve3d-2a.html preserve3d-2-ref.html
+fails-if(webrender) == preserve3d-2b.html preserve3d-2-ref.html
+== preserve3d-2c.html preserve3d-2-ref.html
 fails-if(webrender) == preserve3d-2d.html preserve3d-2-ref.html
-fails-if(webrender) fails-if(stylo) == preserve3d-3a.html preserve3d-3-ref.html
-fails-if(stylo) == preserve3d-4a.html about:blank
-fuzzy-if(gtkWidget,4,200) fuzzy-if(Android,4,300) fuzzy-if(winWidget&&!layersGPUAccelerated,2,100) fuzzy-if(skiaContent,16,100) fails-if(webrender) fails-if(stylo) == preserve3d-5a.html preserve3d-5-ref.html
+fails-if(webrender) == preserve3d-3a.html preserve3d-3-ref.html
+== preserve3d-4a.html about:blank
+fuzzy-if(gtkWidget,4,200) fuzzy-if(Android,4,300) fuzzy-if(winWidget&&!layersGPUAccelerated,2,100) fuzzy-if(skiaContent,16,100) fails-if(webrender) == preserve3d-5a.html preserve3d-5-ref.html
 == preserve3d-6a.html preserve3d-6-ref.html
-fails-if(stylo) == scale3d-z.html scalez-1-ref.html
-fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fails-if(stylo) == scale3d-all.html scale3d-1-ref.html # subpixel AA
-fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fails-if(stylo) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
-fails-if(stylo) == scale3d-xz.html scale3d-1-ref.html
-fails-if(stylo) == translatez-1a.html translatez-1-ref.html
-fails-if(stylo) != translatez-1b.html translatez-1-ref.html
-fails-if(stylo) == translate3d-1a.html translate3d-1-ref.html
-fuzzy-if(skiaContent,1,4) fails-if(stylo) == matrix3d-1a.html matrix3d-1-ref.html
-fails-if(stylo) == matrix3d-2a.html matrix3d-2-ref.html
-fails-if(stylo) == rotate3d-1a.html rotatex-1-ref.html
-fails-if(stylo) == rotate3d-2a.html rotatey-1-ref.html
-fails-if(stylo) != backface-visibility-1a.html about:blank
-fails-if(stylo) == backface-visibility-1b.html about:blank
-fails-if(stylo) == backface-visibility-1c.html about:blank
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) fails-if(stylo) == backface-visibility-2.html backface-visibility-2-ref.html
+== scale3d-z.html scalez-1-ref.html
+fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
+== scale3d-xz.html scale3d-1-ref.html
+== translatez-1a.html translatez-1-ref.html
+!= translatez-1b.html translatez-1-ref.html
+== translate3d-1a.html translate3d-1-ref.html
+fuzzy-if(skiaContent,1,4) == matrix3d-1a.html matrix3d-1-ref.html
+== matrix3d-2a.html matrix3d-2-ref.html
+== rotate3d-1a.html rotatex-1-ref.html
+== rotate3d-2a.html rotatey-1-ref.html
+!= backface-visibility-1a.html about:blank
+== backface-visibility-1b.html about:blank
+== backface-visibility-1c.html about:blank
+fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
 fails-if(webrender) == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-clipping-1.html perspective-clipping-1-ref.html
-fails-if(stylo) != perspective-origin-1a.html rotatex-perspective-1a.html
-fails-if(stylo) == perspective-origin-1b.html perspective-origin-1a.html
-fuzzy(3,99) random-if(Android&&!browserIsRemote) fails-if(stylo) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
+!= perspective-origin-1a.html rotatex-perspective-1a.html
+== perspective-origin-1b.html perspective-origin-1a.html
+fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html perspective-origin-3-ref.html
-fails-if(stylo) == perspective-origin-4a.html perspective-origin-4-ref.html
+== perspective-origin-4a.html perspective-origin-4-ref.html
 fails-if(webrender) == perspective-zindex.html green-rect.html
 fails-if(webrender) == perspective-zindex-2.html green-rect.html
-fails-if(webrender) fails-if(stylo) != sorting-1a.html sorting-1-ref.html
+fails-if(webrender) != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
-fails-if(webrender) fails-if(stylo) == sorting-2a.html sorting-2-ref.html
+fails-if(webrender) == sorting-2a.html sorting-2-ref.html
 # Parallel planes, same z depth (shouldn't be sorted!)
-fails-if(webrender) fails-if(stylo) == sorting-2b.html sorting-2-ref.html
-fails-if(webrender) fails-if(stylo) == sorting-3a.html green-rect.html
+fails-if(webrender) == sorting-2b.html sorting-2-ref.html
+fails-if(webrender) == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
-fails-if(stylo) == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
-fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) fails-if(stylo) == overflow-hidden-1a.html overflow-hidden-1-ref.html
-fails-if(webrender) fails-if(stylo) == transform-style-flat-1a.html transform-style-flat-1-ref.html
-fails-if(stylo) == willchange-containing-block.html?willchange willchange-containing-block.html?ref
-fails-if(stylo) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) fails-if(stylo) == scroll-perspective-1.html scroll-perspective-1-ref.html
+== rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
+fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
+fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.html
+== willchange-containing-block.html?willchange willchange-containing-block.html?ref
+!= willchange-containing-block.html?willchange willchange-containing-block.html?noblock
+fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
-fails-if(!layersGPUAccelerated&&!stylo) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
+fails-if(!layersGPUAccelerated) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
 != 1157984-1.html about:blank # Bug 1157984
-fuzzy(3,99) fails-if(stylo) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
-fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fails-if(stylo) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
-fails-if(stylo) != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
-fuzzy(3,99) fails-if(stylo) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
-fails-if(stylo) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
-fails-if(stylo) != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
+fuzzy(3,99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
+fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
+!= animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
+fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
+== animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
+!= animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) fails-if(webrender) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
@@ -87,5 +87,5 @@ fuzzy(255,150) fails-if(webrender) == split-intersect2.html split-intersect2-ref
 fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,150,120) fails-if(webrender) == component-alpha-1.html component-alpha-1-ref.html
 fails-if(webrender) == nested-transform-1.html nested-transform-1-ref.html
-fails-if(webrender) fails-if(stylo) == transform-geometry-1.html transform-geometry-1-ref.html
+fails-if(webrender) == transform-geometry-1.html transform-geometry-1-ref.html
 fails-if(webrender) == intermediate-1.html intermediate-1-ref.html

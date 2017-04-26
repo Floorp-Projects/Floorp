@@ -2,27 +2,27 @@ fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll
 == fieldset-hidden-1.html fieldset-hidden-1-ref.html
 == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1-ref.html
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
-fails-if(stylo) == fieldset-scroll-1.html fieldset-scroll-1-ref.html
+== fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
-fails-if(stylo) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
+== fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,140,276) == positioned-container-1.html positioned-container-1-ref.html
 == relpos-legend-1.html relpos-legend-1-ref.html
 == relpos-legend-2.html relpos-legend-2-ref.html
 == relpos-legend-3.html relpos-legend-3-ref.html
 == relpos-legend-4.html relpos-legend-4-ref.html
-fails-if(stylo) == sticky-legend-1.html sticky-legend-1-ref.html
+== sticky-legend-1.html sticky-legend-1-ref.html
 fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
-fails-if(stylo) == fieldset-grid-001.html fieldset-grid-001-ref.html
-fails-if(stylo) == fieldset-flexbox-001.html fieldset-flexbox-001-ref.html
+== fieldset-grid-001.html fieldset-grid-001-ref.html
+== fieldset-flexbox-001.html fieldset-flexbox-001-ref.html
 == fieldset-min-width-1a.html fieldset-min-width-1-ref.html
 == fieldset-min-width-1b.html fieldset-min-width-1-ref.html
 == fieldset-min-width-2a.html fieldset-min-width-2-ref.html
 == fieldset-min-width-2b.html fieldset-min-width-2-ref.html
 == legend-overlapping-right-border-1.html legend-overlapping-right-border-1-ref.html
-fails-if(stylo) == fieldset-border-image-1a.html fieldset-border-image-1-ref.html
-fails-if(stylo) == fieldset-border-image-1b.html fieldset-border-image-1-ref.html
-fails-if(stylo) == fieldset-border-image-2a.html fieldset-border-image-2-ref.html
-fails-if(stylo) == fieldset-border-image-2b.html fieldset-border-image-2-ref.html
+== fieldset-border-image-1a.html fieldset-border-image-1-ref.html
+== fieldset-border-image-1b.html fieldset-border-image-1-ref.html
+== fieldset-border-image-2a.html fieldset-border-image-2-ref.html
+== fieldset-border-image-2b.html fieldset-border-image-2-ref.html
 == dynamic-text-indent.html dynamic-text-indent-ref.html

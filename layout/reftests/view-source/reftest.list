@@ -1,1 +1,1 @@
-fails-if(!stylo) == view-source-image.html view-source-image-ref.html # security checks prevent loading view-source:
+fails == view-source-image.html view-source-image-ref.html # security checks prevent loading view-source:

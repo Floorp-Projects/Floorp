@@ -1,12 +1,12 @@
 == default-size.html default-size-ref.html
-fuzzy-if(Android,8,1000) fails-if(stylo) == size-1.html size-1-ref.html
+fuzzy-if(Android,8,1000) == size-1.html size-1-ref.html
 
 == empty-transaction-1.html empty-transaction-1-ref.html
 
 == image-rendering-test.html image-rendering-ref.html
 == image-shadow.html image-shadow-ref.html
 
-asserts-if(cocoaWidget,0-2) fails-if(stylo) == size-change-1.html size-change-1-ref.html
+asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 
 random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 
@@ -24,35 +24,35 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 
 == text-ltr-left.html text-rtl-left.html
 
-fails-if(stylo) == text-ltr-alignment-test.html text-ltr-alignment-ref.html
-fails-if(stylo) == text-rtl-alignment-test.html text-rtl-alignment-ref.html
+== text-ltr-alignment-test.html text-ltr-alignment-ref.html
+== text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
 == text-horzline-with-bottom.html text-horzline.html
 fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
 
-fails-if(stylo) != text-big-stroke.html text-blank.html
-fails-if(stylo) != text-big-stroke.html text-big-fill.html
+!= text-big-stroke.html text-blank.html
+!= text-big-stroke.html text-big-fill.html
 
-fails-if(stylo) == text-context-state-test.html text-context-state-ref.html
-fails-if(stylo) == text-font-inherit.html text-big-fill.html
-fails-if(stylo) == text-space-replace-test.html text-space-replace-ref.html
+== text-context-state-test.html text-context-state-ref.html
+== text-font-inherit.html text-big-fill.html
+== text-space-replace-test.html text-space-replace-ref.html
 
-fails-if(stylo) == text-no-frame-test.html text-no-frame-ref.html
-fails-if(stylo) == text-no-frame-2-test.html text-not-in-doc-ref.html
-fuzzy-if(azureSkiaGL,10,400) fails-if(stylo) == text-not-in-doc-test.html text-not-in-doc-ref.html
+== text-no-frame-test.html text-no-frame-ref.html
+== text-no-frame-2-test.html text-not-in-doc-ref.html
+fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-ref.html
 
-fails-if(stylo) == text-bidi-ltr-test.html text-bidi-ltr-ref.html
-fails-if(stylo) != text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
-fails-if(stylo) == text-bidi-rtl-test.html text-bidi-rtl-ref.html
+== text-bidi-ltr-test.html text-bidi-ltr-ref.html
+!= text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
+== text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
-fails-if(stylo) != text-font-lang.html text-font-lang-notref.html
+!= text-font-lang.html text-font-lang-notref.html
 
-fails-if(stylo) == text-measure.html text-measure-ref.html
-fails-if(stylo) == text-small-caps-1.html text-small-caps-1-ref.html
+== text-measure.html text-measure-ref.html
+== text-small-caps-1.html text-small-caps-1-ref.html
 
 random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
 
-fails-if(stylo) == strokeText-path.html strokeText-path-ref.html
+== strokeText-path.html strokeText-path-ref.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
 ## Currently fails most places due to partial backout of bug 808288, see bug 837461.
@@ -63,10 +63,10 @@ random != text-emoji.html text-emoji-notref.html
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-fails-if((azureSkia&&!azureSkiaGL&&!stylo)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if((azureSkia&&!azureSkiaGL&&!stylo)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
@@ -83,7 +83,7 @@ fuzzy-if(azureSkia||skiaContent,9,470) random-if(Android) == dash-1.html dash-1-
 == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
-fails-if(stylo) != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
+!= 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
 
 == 726951-shadow-clips.html 726951-shadow-clips-ref.html
 
@@ -96,18 +96,18 @@ fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
 fuzzy-if(d2d,12,21) fuzzy-if(skiaContent,12,7) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,141) == 784573-1.html 784573-1-ref.html
 
-fails-if(stylo) == 802658-1.html 802658-1-ref.html
+== 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
-fails-if(stylo) == 1107096-invisibles.html 1107096-invisibles-ref.html
+== 1107096-invisibles.html 1107096-invisibles-ref.html
 == 1151821-1.html 1151821-1-ref.html
 == 1201272-1.html 1201272-1-ref.html
 == 1224976-1.html 1224976-1-ref.html
 == 1238795-1.html 1238795-1-ref.html
 == 1303534-1.html 1303534-1-ref.html
 
-fails-if(stylo) == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1-ref.html
-fuzzy-if(winWidget,1,14) fails-if(stylo) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
-fuzzy-if(winWidget,94,1575) fuzzy-if(cocoaWidget,1,24) fails-if(stylo) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html
+== 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1-ref.html
+fuzzy-if(winWidget,1,14) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
+fuzzy-if(winWidget,94,1575) fuzzy-if(cocoaWidget,1,24) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html
 
 == text-indent-1a.html text-indent-1-ref.html
 == text-indent-1b.html text-indent-1-ref.html

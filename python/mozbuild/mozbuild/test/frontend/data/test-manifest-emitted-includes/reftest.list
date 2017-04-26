@@ -1,2 +1,2 @@
-fails-if(stylo) == reftest1.html reftest1-ref.html
+== reftest1.html reftest1-ref.html
 include included-reftest.list

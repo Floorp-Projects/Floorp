@@ -9,12 +9,12 @@
 == capitalize-8.html capitalize-8-ref.html
 == lowercase-1.html lowercase-ref.html
 == lowercase-sigma-1.html lowercase-sigma-1-ref.html
-random-if(winWidget) fails-if(stylo) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp'
-fails-if(stylo) HTTP(..) == fake-small-caps-1.html fake-small-caps-1-ref.html
-fails-if(stylo) HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1-ref.html
-fails-if(stylo) HTTP(..) != opentype-small-caps-1.html opentype-small-caps-1-notref.html
-fails-if(stylo) HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1-ref.html
-fails-if(stylo) HTTP(..) != graphite-small-caps-1.html graphite-small-caps-1-notref.html
+random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp'
+HTTP(..) == fake-small-caps-1.html fake-small-caps-1-ref.html
+HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1-ref.html
+HTTP(..) != opentype-small-caps-1.html opentype-small-caps-1-notref.html
+HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1-ref.html
+HTTP(..) != graphite-small-caps-1.html graphite-small-caps-1-notref.html
 == uppercase-1.html uppercase-ref.html
 == uppercase-szlig-1.html uppercase-szlig-ref.html
 # these use DejaVu Sans via @font-face for consistency of results
@@ -25,15 +25,15 @@ fuzzy-if(skiaContent,1,80) HTTP(..) == all-title.html all-title-ref.html
 == smtp-lower.html smtp-lower-ref.html
 == smtp-title.html smtp-title-ref.html
 == turkish-casing-1.html turkish-casing-1-ref.html
-fails-if(stylo) HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
+HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
 == greek-uppercase-1a.html greek-uppercase-1-ref.html
 == greek-uppercase-1b.html greek-uppercase-1-ref.html
 == greek-uppercase-2.html greek-uppercase-2-ref.html
 == greek-uppercase-3.html greek-uppercase-3-ref.html
-fails-if(stylo) HTTP(..) == greek-small-caps-1.html greek-small-caps-1-ref.html
+HTTP(..) == greek-small-caps-1.html greek-small-caps-1-ref.html
 == irish-uppercase-1.html irish-uppercase-1-ref.html
-fails-if(stylo) == irish-lowercase-1a.html irish-lowercase-1-ref.html
-fails-if(stylo) == irish-lowercase-1b.html irish-lowercase-1-ref.html
+== irish-lowercase-1a.html irish-lowercase-1-ref.html
+== irish-lowercase-1b.html irish-lowercase-1-ref.html
 == fullwidth-1.html fullwidth-1-ref.html
 == fullwidth-2.html fullwidth-2-ref.html
 == fullwidth-all.html fullwidth-all-ref.html

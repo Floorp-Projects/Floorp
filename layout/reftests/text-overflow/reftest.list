@@ -2,13 +2,13 @@
 == line-clipping.html line-clipping-ref.html
 fuzzy-if(Android,16,244) HTTP(..) == marker-basic.html marker-basic-ref.html  # Bug 1128229
 HTTP(..) == marker-string.html marker-string-ref.html
-skip-if(Android) fails-if(stylo) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
-skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) fails-if(stylo) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
+skip-if(Android) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
+skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 fuzzy-if(Android,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,1836) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
 fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonymous-block.html anonymous-block-ref.html # gtkWidget:bug 1309103
 HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1724) fuzzy-if(gtkWidget,10,8) fails-if(stylo) HTTP(..) == block-padding.html block-padding-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1724) fuzzy-if(gtkWidget,10,8) HTTP(..) == block-padding.html block-padding-ref.html
 HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
@@ -16,14 +16,14 @@ HTTP(..) == standards-line-height.html standards-line-height-ref.html
 fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
-skip-if(Android) fuzzy-if(skiaContent,1,5) fails-if(stylo) == clipped-elements.html clipped-elements-ref.html
+skip-if(Android) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
 HTTP(..) == table-cell.html table-cell-ref.html
-fuzzy-if(gtkWidget,10,32) fails-if(stylo) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
-fails-if(stylo) HTTP(..) == single-value.html single-value-ref.html
+fuzzy-if(gtkWidget,10,32) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
+HTTP(..) == single-value.html single-value-ref.html
 fuzzy-if(gtkWidget,10,2) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
 fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(gtkWidget) HTTP(..) == xulscroll.html xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
-fails-if(stylo) HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
+HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
 == dynamic-change-1.html dynamic-change-1-ref.html
 == float-edges-1-ref.html float-edges-1-ref.html
 

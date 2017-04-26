@@ -1,1 +1,1 @@
-skip-if(stylo) == usercss.html usercss-ref.html
+== usercss.html usercss-ref.html

@@ -45,8 +45,8 @@ HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
 
 # test that xulRuntime.OS works
 fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
-fails-if(xulRuntime.OS!="WINNT"&&!stylo) == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
-fails-if(xulRuntime.OS!="Darwin"&&!stylo) == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 
 # test parsing of asserts() expressions
 asserts(0) load about:blank
@@ -86,20 +86,20 @@ include default-preferences-tests.list
 needs-focus load needs-focus.html
 
 # Bug 632636
-fails-if(!stylo) == data:text/plain,HELLO about:blank
+fails == data:text/plain,HELLO about:blank
 needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android) random-if(transparentScrollbars) fails-if(stylo) == 647192-1.html 647192-1-ref.html
-skip-if(!browserIsRemote) fails-if(stylo) == 656041-1.html 656041-1-ref.html
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html
+skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
 
 # IPC Position-fixed frames/layers test
 # Fixed layers are temporarily disabled (bug 656167).
 #pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed.html test-pos-fixed-ref.html
 #pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-bg-attachment-fixed.html test-bg-attachment-fixed-ref.html
-pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) fails-if(stylo) == test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
 
 # reftest syntax: require-or
 require-or(unrecognizedCondition,skip) script scripttest-fail.html
@@ -111,19 +111,19 @@ require-or(true&&true,fails) script scripttest-pass.html
 
 # tests for pref(...) syntax in manifest, including "fails" examples with incorrect prefs
 # a boolean pref
-pref(gfx.downloadable_fonts.enabled,true) skip-if(stylo) HTTP(..) != font-download.html font-default.html
-pref(gfx.downloadable_fonts.enabled,false) skip-if(stylo) HTTP(..) == font-download.html font-default.html
-fails-if(!stylo) pref(gfx.downloadable_fonts.enabled,0) skip-if(stylo) HTTP(..) == font-download.html font-default.html
-fails-if(!stylo) pref(gfx.downloadable_fonts.enabled,"foo") skip-if(stylo) HTTP(..) == font-download.html font-default.html
+pref(gfx.downloadable_fonts.enabled,true) HTTP(..) != font-download.html font-default.html
+pref(gfx.downloadable_fonts.enabled,false) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,0) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html font-default.html
 # a non-existent pref
-fails-if(!stylo) pref(not.a.real.pref.name,1) skip-if(stylo) == font-download.html font-default.html
+fails pref(not.a.real.pref.name,1) == font-download.html font-default.html
 # an integer pref
 pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
 pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
 pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
 pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
-fails-if(!stylo) pref(font.size.variable.x-western,false) skip-if(stylo) == font-size-16.html font-default.html
-fails-if(!stylo) pref(font.size.variable.x-western,"foo") skip-if(stylo) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
 # a string pref
 pref(font.default.x-western,"serif") == font-serif.html font-default.html
 pref(font.default.x-western,"serif") != font-sans-serif.html font-default.html
@@ -132,28 +132,28 @@ pref(font.default.x-western,"sans-serif") != font-serif.html font-default.html
 fails pref(font.default.x-western,true) == font-serif.html font-default.html
 fails pref(font.default.x-western,0) == font-serif.html font-default.html
 # tests for ref-pref, and test-pref
-ref-pref(font.size.variable.x-western,16) skip-if(stylo) == font-size-16.html font-default.html
-ref-pref(font.size.variable.x-western,16) skip-if(stylo) != font-size-24.html font-default.html
-ref-pref(font.size.variable.x-western,24) skip-if(stylo) == font-size-24.html font-default.html
-ref-pref(font.size.variable.x-western,24) skip-if(stylo) != font-size-16.html font-default.html
-fails-if(!stylo) ref-pref(font.size.variable.x-western,false) skip-if(stylo) == font-size-16.html font-default.html
-fails-if(!stylo) ref-pref(font.size.variable.x-western,"foo") skip-if(stylo) == font-size-16.html font-default.html
+ref-pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
+ref-pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
+ref-pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
+ref-pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
 test-pref(font.size.variable.x-western,16) == font-default.html font-size-16.html
 test-pref(font.size.variable.x-western,16) != font-default.html font-size-24.html
 test-pref(font.size.variable.x-western,24) == font-default.html font-size-24.html
 test-pref(font.size.variable.x-western,24) != font-default.html font-size-16.html
 fails test-pref(font.size.variable.x-western,false) == font-default.html font-size-16.html
 fails test-pref(font.size.variable.x-western,"foo") == font-default.html font-size-16.html
-ref-pref(font.size.variable.x-western,16) test-pref(font.size.variable.x-western,24) skip-if(stylo) != font-default.html font-default.html
-ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,16) skip-if(stylo) != font-default.html font-default.html
-ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,24) skip-if(stylo) == font-default.html font-default.html
+ref-pref(font.size.variable.x-western,16) test-pref(font.size.variable.x-western,24) != font-default.html font-default.html
+ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,16) != font-default.html font-default.html
+ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
 # reftest syntax: fuzzy(maxPixelDifference,maxNumberDifferingPixels)
 fuzzy(1,250000) == fuzzy.html fuzzy-ref.html
 fuzzy(1,250000) != too-fuzzy.html fuzzy-ref.html
 fuzzy-if(true,1,250000) == fuzzy.html fuzzy-ref.html
 fuzzy-if(false,2,1) == fuzzy-ref.html fuzzy-ref.html
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
-fails-if(!stylo) fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
+fails fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 
 # Test that reftest-no-paint fails correctly
 fails == reftest-no-paint.html reftest-no-paint-ref.html
@@ -170,28 +170,28 @@ skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1
 fuzzy(112,800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
 
 # reftest-opaque-layer
-fails-if(stylo) == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
-fails-if(stylo) != reftest-opaque-layer-pass.html about:blank
+== reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-pass.html about:blank
 != about:blank reftest-opaque-layer-pass.html
-fails fails-if(stylo) == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
 # If reftest-opaque-layer fails (no matter whether it fails in the test or in the reference),
 # it shouldn't matter whether the test matches the reference.
-fails fails-if(stylo) != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
-fails-if(!stylo) fails-if(stylo) == reftest-opaque-layer-fail.html about:blank
-== about:blank reftest-opaque-layer-fail.html
-fails-if(stylo) != reftest-opaque-layer-fail.html about:blank
-!= about:blank reftest-opaque-layer-fail.html
+fails != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+fails == reftest-opaque-layer-fail.html about:blank
+fails == about:blank reftest-opaque-layer-fail.html
+fails != reftest-opaque-layer-fail.html about:blank
+fails != about:blank reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
-fails-if(stylo) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
-fails-if(stylo) != reftest-opaque-layer-wait-pass.html about:blank
-fails fails-if(stylo) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
-fails-if(!stylo) fails-if(stylo) != reftest-opaque-layer-wait-fail.html about:blank
+== reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-wait-pass.html about:blank
+fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
+fails != reftest-opaque-layer-wait-fail.html about:blank
 
 # reftest-assigned-layer
-fails-if(stylo) != reftest-assigned-layer-pass.html about:blank
-fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-1.html about:blank
-fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-2.html about:blank
-fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-3.html about:blank
-fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-4.html about:blank
+!= reftest-assigned-layer-pass.html about:blank
+fails != reftest-assigned-layer-fail-1.html about:blank
+fails != reftest-assigned-layer-fail-2.html about:blank
+fails != reftest-assigned-layer-fail-3.html about:blank
+fails != reftest-assigned-layer-fail-4.html about:blank
