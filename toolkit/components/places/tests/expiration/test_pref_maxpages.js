@@ -14,9 +14,6 @@
  * If the pref is set to a number < 0 we will use the default value.
  */
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-
 var tests = [
 
   { desc: "Set max_pages to a negative value, with 1 page.",
@@ -60,10 +57,6 @@ var tests = [
   },
 ];
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* test_pref_maxpages() {
   // The pref should not exist by default.
   try {
@@ -83,33 +76,26 @@ add_task(function* test_pref_maxpages() {
     let now = getExpirablePRTime();
     for (let i = 0; i < currentTest.addPages; i++) {
       let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-      yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now++ });
+      yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now-- });
     }
 
     // Observe history.
-    let historyObserver = {
-      onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
-      onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
-      onClearHistory() {},
-      onVisit() {},
-      onTitleChanged() {},
-      onDeleteURI(aURI) {
-        print("onDeleteURI " + aURI.spec);
-        currentTest.receivedNotifications++;
-      },
-      onPageChanged() {},
-      onDeleteVisits(aURI, aTime) {
-        print("onDeleteVisits " + aURI.spec + " " + aTime);
-      },
+    let historyObserver = new NavHistoryObserver();
+    historyObserver.onDeleteURI = aURI => {
+      print("onDeleteURI " + aURI.spec);
+      currentTest.receivedNotifications++;
     };
-    hs.addObserver(historyObserver);
+    historyObserver.onDeleteVisits = (aURI, aTime) => {
+      print("onDeleteVisits " + aURI.spec + " " + aTime);
+    };
+    PlacesUtils.history.addObserver(historyObserver);
 
     setMaxPages(currentTest.maxPages);
 
     // Expire now.
     yield promiseForceExpirationStep(-1);
 
-    hs.removeObserver(historyObserver, false);
+    PlacesUtils.history.removeObserver(historyObserver, false);
 
     do_check_eq(currentTest.receivedNotifications,
                 currentTest.expectedNotifications);
