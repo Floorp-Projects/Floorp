@@ -2894,7 +2894,9 @@ MediaFormatReader::NotifyDataArrived()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (mShutdown || !mDemuxer || !mDemuxerInitDone) {
+  if (mShutdown
+      || !mDemuxer
+      || (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
     return;
   }
 
