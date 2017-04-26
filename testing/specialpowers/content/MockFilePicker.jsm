@@ -72,6 +72,7 @@ this.MockFilePicker = {
     this.appendFilterCallback = null;
     this.appendFiltersCallback = null;
     this.displayDirectory = null;
+    this.displaySpecialDirectory = "";
     this.filterIndex = 0;
     this.mode = null;
     this.returnData = [];
@@ -179,6 +180,7 @@ MockFilePickerInstance.prototype = {
   parent: null,
   filterIndex: 0,
   displayDirectory: null,
+  displaySpecialDirectory: "",
   get file() {
     if (MockFilePicker.returnData.length >= 1) {
       return MockFilePicker.returnData[0].nsIFile;
@@ -269,6 +271,7 @@ MockFilePickerInstance.prototype = {
         }
 
         MockFilePicker.displayDirectory = this.displayDirectory;
+        MockFilePicker.displaySpecialDirectory = this.displaySpecialDirectory;
         MockFilePicker.shown = true;
         if (typeof MockFilePicker.showCallback == "function") {
           try {
