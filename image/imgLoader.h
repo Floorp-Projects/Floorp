@@ -48,8 +48,7 @@ public:
   nsrefcnt AddRef()
   {
     NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
-    MOZ_ASSERT(_mOwningThread.GetThread() == PR_GetCurrentThread(),
-      "imgCacheEntry addref isn't thread-safe!");
+    NS_ASSERT_OWNINGTHREAD(imgCacheEntry);
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "imgCacheEntry", sizeof(*this));
     return mRefCnt;
@@ -58,8 +57,7 @@ public:
   nsrefcnt Release()
   {
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    MOZ_ASSERT(_mOwningThread.GetThread() == PR_GetCurrentThread(),
-      "imgCacheEntry release isn't thread-safe!");
+    NS_ASSERT_OWNINGTHREAD(imgCacheEntry);
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "imgCacheEntry");
     if (mRefCnt == 0) {
