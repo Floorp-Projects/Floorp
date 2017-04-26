@@ -1636,40 +1636,59 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 }
 
 struct Moz2dImageRenderer {
-    _images: HashMap<WrImageKey, BlobImageResult>,
+    images: HashMap<ImageKey, BlobImageData>,
+
+    // The images rendered in the current frame (not kept here between frames)
+    rendered_images: HashMap<BlobImageRequest, BlobImageResult>,
 }
 
 impl BlobImageRenderer for Moz2dImageRenderer {
-    fn add(&mut self, _key: ImageKey, _data: BlobImageData, _tiling: Option<TileSize>) {
-        // Not implemented yet.
+    fn add(&mut self, key: ImageKey, data: BlobImageData, _tiling: Option<TileSize>) {
+        self.images.insert(key, data);
     }
 
-    fn update(&mut self, _key: ImageKey, _data: BlobImageData) {
-        // Not implemented yet.
+    fn update(&mut self, key: ImageKey, data: BlobImageData) {
+        self.images.insert(key, data);
     }
 
-    fn delete(&mut self, _key: ImageKey) {
-        // Not implemented yet.
+    fn delete(&mut self, key: ImageKey) {
+        self.images.remove(&key);
     }
 
     fn request(&mut self,
-               _key: BlobImageRequest,
-               _descriptor: &BlobImageDescriptor,
+               request: BlobImageRequest,
+               descriptor: &BlobImageDescriptor,
                _dirty_rect: Option<DeviceUintRect>,
                _images: &ImageStore) {
-        // Not implemented yet.
-    }
+        let data = self.images.get(&request.key).unwrap();
+        let buf_size = (descriptor.width * descriptor.height * descriptor.format.bytes_per_pixel().unwrap()) as usize;
+        let mut output = vec![255u8; buf_size];
 
-    fn resolve(&mut self, _key: BlobImageRequest) -> BlobImageResult {
-        // Not implemented yet.
-        Err(BlobImageError::Other("unimplemented!".to_string()))
+        unsafe {
+            if wr_moz2d_render_cb(WrByteSlice::new(&data[..]),
+                                  descriptor.width,
+                                  descriptor.height,
+                                  descriptor.format,
+                                  MutByteSlice::new(output.as_mut_slice())) {
+                self.rendered_images.insert(request,
+                                            Ok(RasterizedBlobImage {
+                              width: descriptor.width,
+                              height: descriptor.height,
+                              data: output,
+                          }));
+            }
+        }
+    }
+    fn resolve(&mut self, request: BlobImageRequest) -> BlobImageResult {
+        self.rendered_images.remove(&request).unwrap_or(Err(BlobImageError::InvalidKey))
     }
 }
 
 impl Moz2dImageRenderer {
     fn new() -> Self {
         Moz2dImageRenderer {
-            _images: HashMap::new(),
+            images: HashMap::new(),
+            rendered_images: HashMap::new()
         }
     }
 }
@@ -1677,12 +1696,12 @@ impl Moz2dImageRenderer {
 // TODO: nical
 // Update for the new blob image interface changes.
 //
-// extern "C" {
-//     // TODO: figure out the API for tiled blob images.
-//     fn wr_moz2d_render_cb(blob: WrByteSlice,
-//                           width: u32,
-//                           height: u32,
-//                           format: WrImageFormat,
-//                           output: MutByteSlice)
-//                           -> bool;
-// }
+extern "C" {
+     // TODO: figure out the API for tiled blob images.
+     fn wr_moz2d_render_cb(blob: WrByteSlice,
+                           width: u32,
+                           height: u32,
+                           format: WrImageFormat,
+                           output: MutByteSlice)
+                           -> bool;
+}
