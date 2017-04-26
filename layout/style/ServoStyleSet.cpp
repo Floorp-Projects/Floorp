@@ -13,7 +13,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/ServoComputedValuesWithParent.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
