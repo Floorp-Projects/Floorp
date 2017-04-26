@@ -192,7 +192,6 @@ private:
 
     bool     ValidIPv6orHostname(const char *host, uint32_t aLen);
     static bool     IsValidOfBase(unsigned char c, const uint32_t base);
-    static nsresult ParseIPv4Number(nsCString &input, uint32_t &number);
     nsresult NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
