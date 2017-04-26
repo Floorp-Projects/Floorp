@@ -45,7 +45,9 @@
 
 #narrate-skip-previous {
   border-top-left-radius: 3px;
-  background-image: url("chrome://global/skin/narrate/back.svg#enabled");
+  background-image: url("chrome://global/skin/narrate/back.svg");
+  -moz-context-properties: fill;
+  fill: rgb(128 128 128);
 }
 
 #narrate-skip-next {
@@ -54,7 +56,7 @@
 }
 
 #narrate-skip-previous:disabled {
-  background-image: url("chrome://global/skin/narrate/back.svg#disabled");
+  fill: rgb(128 128 128 / 50%);
 }
 
 #narrate-skip-next:disabled {
