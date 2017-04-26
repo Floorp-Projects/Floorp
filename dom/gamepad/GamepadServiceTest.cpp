@@ -260,6 +260,7 @@ GamepadServiceTest::NewPoseMove(uint32_t aIndex,
     poseState.orientation[1] = value.Data()[1];
     poseState.orientation[2] = value.Data()[2];
     poseState.orientation[3] = value.Data()[3];
+    poseState.isOrientationValid = true;
   }
   if (!aPos.IsNull()) {
     const Float32Array& value = aPos.Value();
@@ -268,6 +269,7 @@ GamepadServiceTest::NewPoseMove(uint32_t aIndex,
     poseState.position[0] = value.Data()[0];
     poseState.position[1] = value.Data()[1];
     poseState.position[2] = value.Data()[2];
+    poseState.isPositionValid = true;
   }
   if (!aAngVelocity.IsNull()) {
     const Float32Array& value = aAngVelocity.Value();
