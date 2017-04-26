@@ -497,7 +497,7 @@ function nsPlacesExpiration() {
                      getService(Ci.nsIPrefService).
                      getBranch(PREF_BRANCH);
 
-  this._loadPrefs().then(() => {
+  this._loadPrefsPromise = this._loadPrefs().then(() => {
     // Observe our preferences branch for changes.
     this._prefBranch.addObserver("", this, true);
 
@@ -540,7 +540,7 @@ nsPlacesExpiration.prototype = {
 
       this._finalizeInternalStatements();
     } else if (aTopic == TOPIC_PREF_CHANGED) {
-      this._loadPrefs().then(() => {
+      this._loadPrefsPromise = this._loadPrefs().then(() => {
         if (aData == PREF_INTERVAL_SECONDS) {
           // Renew the timer with the new interval value.
           this._newTimer();
@@ -705,7 +705,6 @@ nsPlacesExpiration.prototype = {
   _telemetrySteps: 1,
   handleCompletion: function PEX_handleCompletion(aReason) {
     if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-
       if (this._mostRecentExpiredVisitDays) {
         try {
           Services.telemetry
@@ -804,12 +803,11 @@ nsPlacesExpiration.prototype = {
     // Get the user's limit, if it was set.
     this._urisLimit = this._prefBranch.getIntPref(PREF_MAX_URIS,
                                                   PREF_MAX_URIS_NOTSET);
-
     if (this._urisLimit < 0) {
       // Some testing code expects a pref change to be synchronous, so
       // temporarily set this to a large value, while we asynchronously update
       // to the correct value.
-      this._urisLimit = 300000;
+      this._urisLimit = 100000;
 
       // The user didn't specify a custom limit, so we calculate the number of
       // unique places that may fit an optimal database size on this hardware.
@@ -841,19 +839,30 @@ nsPlacesExpiration.prototype = {
       );
 
       // Calculate avg size of a URI in the database.
-      let db = yield PlacesUtils.promiseDBConnection();
-      let pageSize = (yield db.execute(`PRAGMA page_size`))[0].getResultByIndex(0);
-      let pageCount = (yield db.execute(`PRAGMA page_count`))[0].getResultByIndex(0);
-      let freelistCount = (yield db.execute(`PRAGMA freelist_count`))[0].getResultByIndex(0);
-      let dbSize = (pageCount - freelistCount) * pageSize;
-      let uriCount = (yield db.execute(`SELECT count(*) FROM moz_places`))[0].getResultByIndex(0);
-      let avgURISize = Math.ceil(dbSize / uriCount);
-      // For new profiles this value may be too large, due to the Sqlite header,
-      // or Infinity when there are no pages.  Thus we must limit it.
-      if (avgURISize > (URIENTRY_AVG_SIZE * 3)) {
-        avgURISize = URIENTRY_AVG_SIZE;
+      let db;
+      try {
+        db = yield PlacesUtils.promiseDBConnection();
+      } catch (ex) {
+        // We may have been initialized late in the shutdown process, maybe
+        // by a call to clear history on shutdown.
+        // If we're unable to get a connection clone, we'll just proceed with
+        // the default value, it should not be critical at this point in the
+        // application life-cycle.
       }
-      this._urisLimit = Math.ceil(optimalDatabaseSize / avgURISize);
+      if (db) {
+        let pageSize = (yield db.execute(`PRAGMA page_size`))[0].getResultByIndex(0);
+        let pageCount = (yield db.execute(`PRAGMA page_count`))[0].getResultByIndex(0);
+        let freelistCount = (yield db.execute(`PRAGMA freelist_count`))[0].getResultByIndex(0);
+        let dbSize = (pageCount - freelistCount) * pageSize;
+        let uriCount = (yield db.execute(`SELECT count(*) FROM moz_places`))[0].getResultByIndex(0);
+        let avgURISize = Math.ceil(dbSize / uriCount);
+        // For new profiles this value may be too large, due to the Sqlite header,
+        // or Infinity when there are no pages.  Thus we must limit it.
+        if (avgURISize > (URIENTRY_AVG_SIZE * 3)) {
+          avgURISize = URIENTRY_AVG_SIZE;
+        }
+        this._urisLimit = Math.ceil(optimalDatabaseSize / avgURISize);
+      }
     }
 
     // Expose the calculated limit to other components.
@@ -914,22 +923,32 @@ nsPlacesExpiration.prototype = {
    */
   _expireWithActionAndLimit:
   function PEX__expireWithActionAndLimit(aAction, aLimit) {
-    // Skip expiration during batch mode.
-    if (this._inBatchMode)
-      return;
-    // Don't try to further expire after shutdown.
-    if (this._shuttingDown && aAction != ACTION.SHUTDOWN_DIRTY) {
-      return;
-    }
+    Task.spawn(function*() {
+      // Ensure that we'll run statements with the most up-to-date pref values.
+      // On shutdown we cannot do this, since we must enqueue the expiration
+      // statements synchronously before the connection goes away.
+      // TODO (Bug 1275878): handle this properly through a shutdown blocker.
+      if (!this._shuttingDown)
+        yield this._loadPrefsPromise;
 
-    let boundStatements = [];
-    for (let queryType in EXPIRATION_QUERIES) {
-      if (EXPIRATION_QUERIES[queryType].actions & aAction)
-        boundStatements.push(this._getBoundStatement(queryType, aLimit, aAction));
-    }
+      // Skip expiration during batch mode.
+      if (this._inBatchMode)
+        return;
+      // Don't try to further expire after shutdown.
+      if (this._shuttingDown && aAction != ACTION.SHUTDOWN_DIRTY) {
+        return;
+      }
 
-    // Execute statements asynchronously in a transaction.
-    this._db.executeAsync(boundStatements, boundStatements.length, this);
+      let boundStatements = [];
+      for (let queryType in EXPIRATION_QUERIES) {
+        if (EXPIRATION_QUERIES[queryType].actions & aAction)
+          boundStatements.push(this._getBoundStatement(queryType, aLimit, aAction));
+      }
+
+
+      // Execute statements asynchronously in a transaction.
+      this._db.executeAsync(boundStatements, boundStatements.length, this);
+    }.bind(this)).catch(Cu.reportError);
   },
 
   /**
