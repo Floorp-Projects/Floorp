@@ -147,10 +147,17 @@ typedef enum nsCharType nsCharType;
    }
 
   /**
-   * Give an nsString.
+   * Give a 16-bit (UTF-16) text buffer and length
    * @return true if the string contains right-to-left characters
    */
-   bool HasRTLChars(const nsAString& aString);
+   bool HasRTLChars(const char16_t* aText, uint32_t aLength);
+
+  /**
+   * Convenience function to call the above on an nsAString.
+   */
+   inline bool HasRTLChars(const nsAString& aString) {
+     return HasRTLChars(aString.BeginReading(), aString.Length());
+   }
 
 // These values are shared with Preferences dialog
 //  ------------------
