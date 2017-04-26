@@ -136,6 +136,7 @@ struct MOZ_STACK_CLASS BidiParagraphData
   // Cached presentation context for the frames we're processing.
   nsPresContext*      mPresContext;
   bool                mIsVisual;
+  bool                mRequiresBidi;
   nsBidiLevel         mParaLevel;
   nsIContent*         mPrevContent;
   nsIFrame*           mPrevFrame;
@@ -146,12 +147,16 @@ struct MOZ_STACK_CLASS BidiParagraphData
 
   void Init(nsBlockFrame* aBlockFrame)
   {
+    mRequiresBidi = false;
     mPrevContent = nullptr;
 #ifdef DEBUG
     mCurrentBlock = aBlockFrame;
 #endif
 
     mParaLevel = nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->StyleContext());
+    if (mParaLevel > 0) {
+      mRequiresBidi = true;
+    }
 
     mPresContext = aBlockFrame->PresContext();
     mIsVisual = mPresContext->IsVisualMode();
@@ -710,13 +715,40 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   char16_t ch = GetBidiOverride(aBlockFrame->StyleContext());
   if (ch != 0) {
     bpd.PushBidiControl(ch);
+    bpd.mRequiresBidi = true;
+  } else {
+    // If there are no unicode-bidi properties and no RTL characters in the
+    // block's content, then it is pure LTR and we can skip the rest of bidi
+    // resolution.
+    nsIContent* currContent = nullptr;
+    for (nsBlockFrame* block = aBlockFrame; block;
+         block = static_cast<nsBlockFrame*>(block->GetNextContinuation())) {
+      block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+      if (!bpd.mRequiresBidi &&
+          ChildListMayRequireBidi(block->PrincipalChildList().FirstChild(),
+                                  &currContent)) {
+        bpd.mRequiresBidi = true;
+      }
+      if (!bpd.mRequiresBidi) {
+        nsBlockFrame::FrameLines* overflowLines = block->GetOverflowLines();
+        if (overflowLines) {
+          if (ChildListMayRequireBidi(overflowLines->mFrames.FirstChild(),
+                                      &currContent)) {
+            bpd.mRequiresBidi = true;
+          }
+        }
+      }
+    }
+    if (!bpd.mRequiresBidi) {
+      return NS_OK;
+    }
   }
+
   for (nsBlockFrame* block = aBlockFrame; block;
        block = static_cast<nsBlockFrame*>(block->GetNextContinuation())) {
 #ifdef DEBUG
     bpd.mCurrentBlock = block;
 #endif
-    block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     nsBlockInFlowLineIterator it(block, block->LinesBegin());
     bpd.mPrevFrame = nullptr;
     TraverseFrames(&it, block->PrincipalChildList().FirstChild(), &bpd);
@@ -1255,6 +1287,56 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
   } while (childFrame);
 
   MOZ_ASSERT(initialLineContainer == aLineIter->GetContainer());
+}
+
+bool
+nsBidiPresUtils::ChildListMayRequireBidi(nsIFrame*    aFirstChild,
+                                         nsIContent** aCurrContent)
+{
+  MOZ_ASSERT(!aFirstChild || !aFirstChild->GetPrevSibling(),
+             "Expecting to traverse from the start of a child list");
+
+  for (nsIFrame* childFrame = aFirstChild; childFrame;
+       childFrame = childFrame->GetNextSibling()) {
+
+    nsIFrame* frame = childFrame;
+
+    // If the real frame for a placeholder is a first-letter frame, we need to
+    // consider its contents for potential Bidi resolution.
+    if (childFrame->GetType() == nsGkAtoms::placeholderFrame) {
+      nsIFrame* realFrame =
+        nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
+      if (realFrame->GetType() == nsGkAtoms::letterFrame) {
+        frame = realFrame;
+      }
+    }
+
+    // If unicode-bidi properties are present, we should do bidi resolution.
+    nsStyleContext* sc = frame->StyleContext();
+    if (GetBidiControl(sc) || GetBidiOverride(sc)) {
+      return true;
+    }
+
+    if (IsBidiLeaf(frame)) {
+      if (frame->GetType() == nsGkAtoms::textFrame) {
+        // Check whether the text frame has any RTL characters; if so, bidi
+        // resolution will be needed.
+        nsIContent* content = frame->GetContent();
+        if (content != *aCurrContent) {
+          *aCurrContent = content;
+          const nsTextFragment* txt = content->GetText();
+          if (txt->Is2b() && HasRTLChars(txt->Get2b(), txt->GetLength())) {
+            return true;
+          }
+        }
+      }
+    } else if (ChildListMayRequireBidi(frame->PrincipalChildList().FirstChild(),
+                                       aCurrContent)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void
