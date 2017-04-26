@@ -6,6 +6,8 @@
 
 #include "vm/JSONPrinter.h"
 
+#include "jsdtoa.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/SizePrintfMacros.h"
@@ -124,7 +126,7 @@ void
 JSONPrinter::property(const char* name, uint32_t value)
 {
     propertyName(name);
-    out_.printf("%u", value);
+    out_.printf("%" PRIu32, value);
 }
 
 void
@@ -142,6 +144,33 @@ JSONPrinter::property(const char* name, double value)
         out_.printf("%f", value);
     else
         out_.printf("null");
+}
+
+void
+JSONPrinter::floatProperty(const char* name, double value, size_t precision)
+{
+    if (!mozilla::IsFinite(value)) {
+        propertyName(name);
+        out_.printf("null");
+        return;
+    }
+
+    if (!dtoaState_) {
+        dtoaState_ = NewDtoaState();
+        if (!dtoaState_) {
+            out_.reportOutOfMemory();
+            return;
+        }
+    }
+
+    char buffer[DTOSTR_STANDARD_BUFFER_SIZE];
+    char* str = js_dtostr(dtoaState_, buffer, sizeof(buffer), DTOSTR_STANDARD, precision, value);
+    if (!str) {
+        out_.reportOutOfMemory();
+        return;
+    }
+
+    property(name, str);
 }
 
 void
