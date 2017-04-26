@@ -24,7 +24,7 @@ fails == two-value-syntax.html two-value-syntax.html
 fails HTTP(..) == single-value.html single-value.html
 == atomic-under-marker.html atomic-under-marker.html
 fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(http.oscpu=="Linux\u0020x86_64") HTTP(..) == xulscroll.html xulscroll.html
-fails HTTP(..) == combobox-zoom.html combobox-zoom.html
+HTTP(..) == combobox-zoom.html combobox-zoom.html
 == dynamic-change-1.html dynamic-change-1.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands

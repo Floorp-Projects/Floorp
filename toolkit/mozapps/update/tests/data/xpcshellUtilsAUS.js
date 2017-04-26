@@ -2419,7 +2419,7 @@ function lockDirectory(aDirPath) {
   const FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
   const INVALID_HANDLE_VALUE = LPVOID(0xffffffff);
   let kernel32 = ctypes.open("kernel32");
-  let CreateFile = kernel32.declare("CreateFileW", ctypes.default_abi,
+  let CreateFile = kernel32.declare("CreateFileW", ctypes.winapi_abi,
                                     LPVOID, LPCWSTR, DWORD, DWORD,
                                     LPVOID, DWORD, DWORD, LPVOID);
   gHandle = CreateFile(aDirPath, GENERIC_READ,
@@ -3740,7 +3740,7 @@ function adjustGeneralPaths() {
       try {
         debugDump("start - closing handle");
         let kernel32 = ctypes.open("kernel32");
-        let CloseHandle = kernel32.declare("CloseHandle", ctypes.default_abi,
+        let CloseHandle = kernel32.declare("CloseHandle", ctypes.winapi_abi,
                                            ctypes.bool, /* return*/
                                            ctypes.voidptr_t /* handle*/);
         if (!CloseHandle(gHandle)) {

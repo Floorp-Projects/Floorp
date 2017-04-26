@@ -317,11 +317,9 @@ AllChildrenIterator::Get() const
 {
   switch (mPhase) {
     case eAtBeforeKid: {
-      nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-      MOZ_ASSERT(frame, "No frame at eAtBeforeKid phase");
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
-      MOZ_ASSERT(beforeFrame, "No content before frame at eAtBeforeKid phase");
-      return beforeFrame->GetContent();
+      Element* before = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+      MOZ_ASSERT(before, "No content before frame at eAtBeforeKid phase");
+      return before;
     }
 
     case eAtExplicitKids:
@@ -331,11 +329,9 @@ AllChildrenIterator::Get() const
       return mAnonKids[mAnonKidsIdx];
 
     case eAtAfterKid: {
-      nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-      MOZ_ASSERT(frame, "No frame at eAtAfterKid phase");
-      nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(frame);
-      MOZ_ASSERT(afterFrame, "No content before frame at eAtBeforeKid phase");
-      return afterFrame->GetContent();
+      Element* after = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
+      MOZ_ASSERT(after, "No content after frame at eAtAfterKid phase");
+      return after;
     }
 
     default:
@@ -349,15 +345,10 @@ AllChildrenIterator::Seek(nsIContent* aChildToFind)
 {
   if (mPhase == eAtBegin || mPhase == eAtBeforeKid) {
     mPhase = eAtExplicitKids;
-    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-    if (frame) {
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
-      if (beforeFrame) {
-        if (beforeFrame->GetContent() == aChildToFind) {
-          mPhase = eAtBeforeKid;
-          return true;
-        }
-      }
+    Element* beforePseudo = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+    if (beforePseudo && beforePseudo == aChildToFind) {
+      mPhase = eAtBeforeKid;
+      return true;
     }
   }
 
@@ -404,13 +395,10 @@ AllChildrenIterator::GetNextChild()
 {
   if (mPhase == eAtBegin) {
     mPhase = eAtExplicitKids;
-    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-    if (frame) {
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
-      if (beforeFrame) {
-        mPhase = eAtBeforeKid;
-        return beforeFrame->GetContent();
-      }
+    Element* beforeContent = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+    if (beforeContent) {
+      mPhase = eAtBeforeKid;
+      return beforeContent;
     }
   }
 
@@ -446,13 +434,10 @@ AllChildrenIterator::GetNextChild()
       return mAnonKids[mAnonKidsIdx];
     }
 
-    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-    if (frame) {
-      nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(frame);
-      if (afterFrame) {
-        mPhase = eAtAfterKid;
-        return afterFrame->GetContent();
-      }
+    Element* afterContent = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
+    if (afterContent) {
+      mPhase = eAtAfterKid;
+      return afterContent;
     }
   }
 
@@ -466,13 +451,10 @@ AllChildrenIterator::GetPreviousChild()
   if (mPhase == eAtEnd) {
     MOZ_ASSERT(mAnonKidsIdx == mAnonKids.Length());
     mPhase = eAtAnonKids;
-    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-    if (frame) {
-      nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(frame);
-      if (afterFrame) {
-        mPhase = eAtAfterKid;
-        return afterFrame->GetContent();
-      }
+    Element* afterContent = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
+    if (afterContent) {
+      mPhase = eAtAfterKid;
+      return afterContent;
     }
   }
 
@@ -501,13 +483,10 @@ AllChildrenIterator::GetPreviousChild()
       return kid;
     }
 
-    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
-    if (frame) {
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
-      if (beforeFrame) {
-        mPhase = eAtBeforeKid;
-        return beforeFrame->GetContent();
-      }
+    Element* beforeContent = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+    if (beforeContent) {
+      mPhase = eAtBeforeKid;
+      return beforeContent;
     }
   }
 

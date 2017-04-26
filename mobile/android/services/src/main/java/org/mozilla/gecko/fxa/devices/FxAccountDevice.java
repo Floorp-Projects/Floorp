@@ -2,48 +2,54 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.fxa;
+package org.mozilla.gecko.fxa.devices;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 public class FxAccountDevice {
 
-  public static final String JSON_KEY_NAME = "name";
-  public static final String JSON_KEY_ID = "id";
-  public static final String JSON_KEY_TYPE = "type";
-  public static final String JSON_KEY_ISCURRENTDEVICE = "isCurrentDevice";
-  public static final String JSON_KEY_PUSH_CALLBACK = "pushCallback";
-  public static final String JSON_KEY_PUSH_PUBLICKEY = "pushPublicKey";
-  public static final String JSON_KEY_PUSH_AUTHKEY = "pushAuthKey";
+  private static final String JSON_KEY_NAME = "name";
+  private static final String JSON_KEY_ID = "id";
+  private static final String JSON_KEY_TYPE = "type";
+  private static final String JSON_KEY_ISCURRENTDEVICE = "isCurrentDevice";
+  private static final String JSON_KEY_PUSH_CALLBACK = "pushCallback";
+  private static final String JSON_KEY_PUSH_PUBLICKEY = "pushPublicKey";
+  private static final String JSON_KEY_PUSH_AUTHKEY = "pushAuthKey";
+  private static final String JSON_LAST_ACCESS_TIME = "lastAccessTime";
 
   public final String id;
   public final String name;
   public final String type;
   public final Boolean isCurrentDevice;
+  public final Long lastAccessTime;
   public final String pushCallback;
   public final String pushPublicKey;
   public final String pushAuthKey;
 
   public FxAccountDevice(String name, String id, String type, Boolean isCurrentDevice,
-                         String pushCallback, String pushPublicKey, String pushAuthKey) {
+                         Long lastAccessTime, String pushCallback, String pushPublicKey,
+                         String pushAuthKey) {
     this.name = name;
     this.id = id;
     this.type = type;
     this.isCurrentDevice = isCurrentDevice;
+    this.lastAccessTime = lastAccessTime;
     this.pushCallback = pushCallback;
     this.pushPublicKey = pushPublicKey;
     this.pushAuthKey = pushAuthKey;
   }
 
   public static FxAccountDevice fromJson(ExtendedJSONObject json) {
-    String name = json.getString(JSON_KEY_NAME);
-    String id = json.getString(JSON_KEY_ID);
-    String type = json.getString(JSON_KEY_TYPE);
-    Boolean isCurrentDevice = json.getBoolean(JSON_KEY_ISCURRENTDEVICE);
-    String pushCallback = json.getString(JSON_KEY_PUSH_CALLBACK);
-    String pushPublicKey = json.getString(JSON_KEY_PUSH_PUBLICKEY);
-    String pushAuthKey = json.getString(JSON_KEY_PUSH_AUTHKEY);
-    return new FxAccountDevice(name, id, type, isCurrentDevice, pushCallback, pushPublicKey, pushAuthKey);
+    final String name = json.getString(JSON_KEY_NAME);
+    final String id = json.getString(JSON_KEY_ID);
+    final String type = json.getString(JSON_KEY_TYPE);
+    final Boolean isCurrentDevice = json.getBoolean(JSON_KEY_ISCURRENTDEVICE);
+    final Long lastAccessTime = json.getLong(JSON_LAST_ACCESS_TIME);
+    final String pushCallback = json.getString(JSON_KEY_PUSH_CALLBACK);
+    final String pushPublicKey = json.getString(JSON_KEY_PUSH_PUBLICKEY);
+    final String pushAuthKey = json.getString(JSON_KEY_PUSH_AUTHKEY);
+    return new FxAccountDevice(name, id, type, isCurrentDevice, lastAccessTime, pushCallback,
+                               pushPublicKey, pushAuthKey);
   }
 
   public ExtendedJSONObject toJson() {
@@ -73,7 +79,6 @@ public class FxAccountDevice {
     private String id;
     private String name;
     private String type;
-    private Boolean isCurrentDevice;
     private String pushCallback;
     private String pushPublicKey;
     private String pushAuthKey;
@@ -90,10 +95,6 @@ public class FxAccountDevice {
       this.type = type;
     }
 
-    public void isCurrentDevice() {
-      this.isCurrentDevice = Boolean.TRUE;
-    }
-
     public void pushCallback(String pushCallback) {
       this.pushCallback = pushCallback;
     }
@@ -107,7 +108,7 @@ public class FxAccountDevice {
     }
 
     public FxAccountDevice build() {
-      return new FxAccountDevice(this.name, this.id, this.type, this.isCurrentDevice,
+      return new FxAccountDevice(this.name, this.id, this.type, null, null,
                                  this.pushCallback, this.pushPublicKey, this.pushAuthKey);
     }
   }

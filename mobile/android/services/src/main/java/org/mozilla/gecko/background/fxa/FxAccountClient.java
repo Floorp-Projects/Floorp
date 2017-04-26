@@ -8,7 +8,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
-import org.mozilla.gecko.fxa.FxAccountDevice;
+import org.mozilla.gecko.fxa.devices.FxAccountDevice;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import java.util.List;

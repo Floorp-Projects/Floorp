@@ -8,7 +8,6 @@
  */
 const TEST_PREFS = [
   ["reader.parse-on-load.enabled", true],
-  ["browser.reader.detectedFirstArticle", false],
 ];
 
 const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");

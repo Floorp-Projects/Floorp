@@ -3756,11 +3756,11 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
 
   RefPtr<nsROCSSPrimitiveValue> cssValue = nullptr;
   nsIFrame* frame = element->GetPrimaryFrame();
-  if (frame && !aPseudoElement.IsEmpty()) {
+  if (!aPseudoElement.IsEmpty()) {
     if (aPseudoElement.EqualsLiteral("::before")) {
-      frame = nsLayoutUtils::GetBeforeFrame(frame);
+      frame = nsLayoutUtils::GetBeforeFrame(element);
     } else if (aPseudoElement.EqualsLiteral("::after")) {
-      frame = nsLayoutUtils::GetAfterFrame(frame);
+      frame = nsLayoutUtils::GetAfterFrame(element);
     } else {
       return NS_ERROR_INVALID_ARG;
     }

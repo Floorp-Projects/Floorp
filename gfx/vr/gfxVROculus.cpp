@@ -1468,13 +1468,7 @@ VRSystemManagerOculus::ScanForControllers()
   }
 
   if (newControllerCount != mControllerCount) {
-    // controller count is changed, removing the existing gamepads first.
-    for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
-      RemoveGamepad(i);
-    }
-
-    mControllerCount = 0;
-    mOculusController.Clear();
+    RemoveControllers();
 
     // Re-adding controllers to VRControllerManager.
     for (uint32_t i = 0; i < newControllerCount; ++i) {
@@ -1501,6 +1495,11 @@ VRSystemManagerOculus::ScanForControllers()
 void
 VRSystemManagerOculus::RemoveControllers()
 {
+  // controller count is changed, removing the existing gamepads first.
+  for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
+    RemoveGamepad(i);
+  }
+
   mOculusController.Clear();
   mControllerCount = 0;
 }

@@ -167,6 +167,7 @@ class LSANLeaks(object):
         self.logger = logger
         self.inReport = False
         self.fatalError = False
+        self.symbolizerError = False
         self.foundFrames = set([])
         self.recordMoreFrames = None
         self.currStack = None
@@ -188,6 +189,8 @@ class LSANLeaks(object):
             "==\d+==ERROR: LeakSanitizer: detected memory leaks")
         self.fatalErrorRegExp = re.compile(
             "==\d+==LeakSanitizer has encountered a fatal error.")
+        self.symbolizerOomRegExp = re.compile(
+            "LLVMSymbolizer: error reading file: Cannot allocate memory")
         self.stackFrameRegExp = re.compile("    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
         self.sysLibStackFrameRegExp = re.compile(
             "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)")
@@ -199,6 +202,10 @@ class LSANLeaks(object):
 
         if re.match(self.fatalErrorRegExp, line):
             self.fatalError = True
+            return
+
+        if re.match(self.symbolizerOomRegExp, line):
+            self.symbolizerError = True
             return
 
         if not self.inReport:
@@ -239,6 +246,12 @@ class LSANLeaks(object):
         if self.fatalError:
             self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer "
                               "has encountered a fatal error.")
+
+        if self.symbolizerError:
+            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer | LLVMSymbolizer "
+                              "was unable to allocate memory.")
+            self.logger.info("TEST-INFO | LeakSanitizer | This will cause leaks that "
+                             "should be ignored to instead be reported as an error")
 
         if self.foundFrames:
             self.logger.info("TEST-INFO | LeakSanitizer | To show the "

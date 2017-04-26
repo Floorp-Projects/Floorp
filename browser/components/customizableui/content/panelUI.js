@@ -149,6 +149,9 @@ const PanelUI = {
    * @param aEvent the event (if any) that triggers showing the menu.
    */
   show(aEvent) {
+    if (gPhotonStructure) {
+      this._ensureShortcutsShown();
+    }
     return new Promise(resolve => {
       this.ensureReady().then(() => {
         if (this.panel.state == "open" ||
@@ -868,6 +871,22 @@ const PanelUI = {
       document.getAnonymousElementByAttribute(candidate, "class",
                                               "toolbarbutton-icon");
     return iconAnchor || candidate;
+  },
+
+  _addedShortcuts: false,
+  _ensureShortcutsShown() {
+    if (this._addedShortcuts) {
+      return;
+    }
+    this._addedShortcuts = true;
+    for (let button of this.mainView.querySelectorAll("toolbarbutton[key]")) {
+      let keyId = button.getAttribute("key");
+      let key = document.getElementById(keyId);
+      if (!key) {
+        continue;
+      }
+      button.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(key));
+    }
   },
 
   _notify(status, topic) {

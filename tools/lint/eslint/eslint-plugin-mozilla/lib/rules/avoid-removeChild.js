@@ -34,7 +34,7 @@ module.exports = function(context) {
       if (callee.object.type == "MemberExpression" &&
           callee.object.property.type == "Identifier" &&
           callee.object.property.name == "parentNode" &&
-          helpers.getASTSource(callee.object.object) ==
+          helpers.getASTSource(callee.object.object, context) ==
             helpers.getASTSource(node.arguments[0])) {
         context.report(node, "use element.remove() instead of " +
                              "element.parentNode.removeChild(element)");
@@ -43,7 +43,7 @@ module.exports = function(context) {
       if (node.arguments[0].type == "MemberExpression" &&
           node.arguments[0].property.type == "Identifier" &&
           node.arguments[0].property.name == "firstChild" &&
-          helpers.getASTSource(callee.object) ==
+          helpers.getASTSource(callee.object, context) ==
             helpers.getASTSource(node.arguments[0].object)) {
         context.report(node, "use element.firstChild.remove() instead of " +
                              "element.removeChild(element.firstChild)");

@@ -240,7 +240,8 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
     if (doc) {
       ErrorResult rv;
       RefPtr<dom::Event> event =
-        doc->CreateEvent(NS_LITERAL_STRING("Events"),rv);
+        doc->CreateEvent(NS_LITERAL_STRING("Events"), dom::CallerType::System,
+                         rv);
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Test that the box model displays the right values for a pseduo-element.
+// Test that the box model displays the right values for a pseudo-element.
 
 const TEST_URI = `
   <style type='text/css'>
@@ -53,7 +53,7 @@ const res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
-    value: "auto"
+    value: 0
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
@@ -61,7 +61,7 @@ const res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
-    value: "auto"
+    value: 0
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",

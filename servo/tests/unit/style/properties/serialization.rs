@@ -16,8 +16,7 @@ use stylesheets::block_from;
 
 #[test]
 fn property_declaration_block_should_serialize_correctly() {
-    use style::properties::longhands::overflow_x::SpecifiedValue as OverflowXValue;
-    use style::properties::longhands::overflow_y::SpecifiedValue as OverflowYContainer;
+    use style::properties::longhands::overflow_x::SpecifiedValue as OverflowValue;
 
     let declarations = vec![
         (PropertyDeclaration::Width(
@@ -37,11 +36,11 @@ fn property_declaration_block_should_serialize_correctly() {
          Importance::Normal),
 
         (PropertyDeclaration::OverflowX(
-            OverflowXValue::auto),
+            OverflowValue::auto),
          Importance::Normal),
 
         (PropertyDeclaration::OverflowY(
-            OverflowYContainer(OverflowXValue::auto)),
+            OverflowValue::auto),
          Importance::Normal),
     ];
 
@@ -68,18 +67,15 @@ mod shorthand_serialization {
 
     mod overflow {
         pub use super::*;
-        use style::properties::longhands::overflow_x::SpecifiedValue as OverflowXValue;
-        use style::properties::longhands::overflow_y::SpecifiedValue as OverflowYContainer;
+        use style::properties::longhands::overflow_x::SpecifiedValue as OverflowValue;
 
         #[test]
         fn equal_overflow_properties_should_serialize_to_single_value() {
             let mut properties = Vec::new();
 
-            let overflow_x = OverflowXValue::auto;
-            properties.push(PropertyDeclaration::OverflowX(overflow_x));
-
-            let overflow_y = OverflowYContainer(OverflowXValue::auto);
-            properties.push(PropertyDeclaration::OverflowY(overflow_y));
+            let overflow = OverflowValue::auto;
+            properties.push(PropertyDeclaration::OverflowX(overflow));
+            properties.push(PropertyDeclaration::OverflowY(overflow));
 
             let serialization = shorthand_properties_to_string(properties);
             assert_eq!(serialization, "overflow: auto;");
@@ -89,10 +85,10 @@ mod shorthand_serialization {
         fn different_overflow_properties_should_serialize_to_two_values() {
             let mut properties = Vec::new();
 
-            let overflow_x = OverflowXValue::scroll;
+            let overflow_x = OverflowValue::scroll;
             properties.push(PropertyDeclaration::OverflowX(overflow_x));
 
-            let overflow_y = OverflowYContainer(OverflowXValue::auto);
+            let overflow_y = OverflowValue::auto;
             properties.push(PropertyDeclaration::OverflowY(overflow_y));
 
             let serialization = shorthand_properties_to_string(properties);
@@ -799,8 +795,8 @@ mod shorthand_serialization {
         use style::properties::longhands::mask_position_y as position_y;
         use style::properties::longhands::mask_repeat as repeat;
         use style::properties::longhands::mask_size as size;
+        use style::values::generics::position::{HorizontalPosition, Keyword, PositionValue, VerticalPosition};
         use style::values::specified::Image;
-        use style::values::specified::position::{HorizontalPosition, VerticalPosition, Keyword};
         use super::*;
 
         macro_rules! single_vec_value_typedef {
@@ -836,16 +832,16 @@ mod shorthand_serialization {
             let mode = single_vec_keyword_value!(mode, luminance);
 
             let position_x = single_vec_value_typedef!(position_x,
-                HorizontalPosition {
+                HorizontalPosition(PositionValue {
                     keyword: None,
                     position: Some(LengthOrPercentage::Length(NoCalcLength::from_px(7f32))),
-                }
+                })
             );
             let position_y = single_vec_value_typedef!(position_y,
-                VerticalPosition {
+                VerticalPosition(PositionValue {
                     keyword: Some(Keyword::Bottom),
                     position: Some(LengthOrPercentage::Length(NoCalcLength::from_px(4f32))),
-                }
+                })
             );
 
             let size = single_vec_variant_value!(size,
@@ -891,17 +887,17 @@ mod shorthand_serialization {
             let mode = single_vec_keyword_value!(mode, luminance);
 
             let position_x = single_vec_value_typedef!(position_x,
-                HorizontalPosition {
+                HorizontalPosition(PositionValue {
                     keyword: None,
                     position: Some(LengthOrPercentage::Length(NoCalcLength::from_px(7f32))),
-                }
+                })
             );
 
             let position_y = single_vec_value_typedef!(position_y,
-                VerticalPosition {
+                VerticalPosition(PositionValue  {
                     keyword: None,
                     position: Some(LengthOrPercentage::Length(NoCalcLength::from_px(4f32))),
-                }
+                })
             );
 
             let size = single_vec_variant_value!(size,
