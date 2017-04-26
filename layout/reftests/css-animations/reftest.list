@@ -1,7 +1,7 @@
 == screen-animations.html screen-animations-ref.html
 != screen-animations.html screen-animations-notref.html
-fails-if(!stylo) == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
-fails-if(!stylo) != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
+fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
+fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
 == animate-opacity.html animate-opacity-ref.html
 == animate-preserves3d.html animate-preserves3d-ref.html
 == in-visibility-hidden-animation.html in-visibility-hidden-animation-ref.html
@@ -42,8 +42,8 @@ fails == background-position-in-delay.html background-position-ref.html # This t
 fails == background-position-running.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer, and reftest-opaque-layer only handles items assigned to PaintedLayers.
 fails == background-position-important.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position overridden by a non-animated !important style also creates an active layer, and reftest-opaque-layer only handles items that are assigned to PaintedLayers.
 
-fails-if(stylo) == mask-position-after-finish-1a.html mask-anim-ref.html
-fails-if(stylo) == mask-position-after-finish-1b.html mask-anim-ref.html
+== mask-position-after-finish-1a.html mask-anim-ref.html
+== mask-position-after-finish-1b.html mask-anim-ref.html
 == mask-position-in-delay-1a.html mask-anim-ref.html
 == mask-position-in-delay-1b.html mask-anim-ref.html
 == mask-size-after-finish-1a.html mask-anim-ref.html

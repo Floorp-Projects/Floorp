@@ -35,8 +35,8 @@ HTTP == type-overridden-by-server.html type-overridden-by-server-ref.html
 #     need to require Flash on the test machine to run them
 #
 # XXX need to support <img src="foo.svg"> for these to pass
-fails-if(!stylo) == svg.html svg-ref.html
-fails-if(!stylo) == svg-with-type.html svg-with-type-ref.html
+fails == svg.html svg-ref.html
+fails == svg-with-type.html svg-with-type-ref.html
 #
 # XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
 #     first support the standby attribute on objects, then need to figure out
@@ -54,4 +54,4 @@ fails-if(!stylo) == svg-with-type.html svg-with-type-ref.html
 # XXX missing test 034 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them
 #
-fails-if(stylo) == malformed-uri.html malformed-uri-ref.html
+== malformed-uri.html malformed-uri-ref.html

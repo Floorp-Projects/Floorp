@@ -91,9 +91,9 @@
 == sandwich-priority-12.svg green-box-ref.svg
 
 # Cross-time container dependencies
-fails-if(stylo) == cross-container-1.xhtml green-box-ref.xhtml
+== cross-container-1.xhtml green-box-ref.xhtml
 == cross-container-2.xhtml green-box-ref.xhtml
-fails-if(stylo) == cross-container-3.xhtml green-box-ref.xhtml
+== cross-container-3.xhtml green-box-ref.xhtml
 
 # Filtering
 == filtered-interval-1.svg green-box-ref.svg

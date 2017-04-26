@@ -35,15 +35,15 @@
 == percent-truncation-1.html percent-truncation-1-ref.html
 == percent-truncation-2.html percent-truncation-2-ref.html
 == percent-truncation-3.html percent-truncation-3-ref.html
-fails-if(stylo) == balancing-1.html balancing-1-ref.html
+== balancing-1.html balancing-1-ref.html
 == balancing-2.html balancing-2-ref.html
 == cellpadding.html cellpadding-ref.html
 == cellspacing.html cellspacing-ref.html
 == percent-basis.html percent-basis-ref.html
 == default-box-sizing-separate-standards.html default-box-sizing-separate-standards-ref.html
 == default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks-ref.html
-fails-if(!stylo) == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards-ref.html # bug 371180
-fails-if(!stylo) == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180
+fails == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards-ref.html # bug 371180
+fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180
 == colspan-percent-distribution-1.html colspan-percent-distribution-1-ref.html
 == colspan-percent-distribution-2.html colspan-percent-distribution-2-ref.html
 == spanning-cell-sort-1-small.html spanning-cell-sort-1-ref.html

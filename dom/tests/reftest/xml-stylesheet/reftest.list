@@ -3,7 +3,7 @@ HTTP == css_relative_href_also_external.xml pass.svg
 HTTP == css_relative_href_also_external_override.xml pass.svg
 == embedded_dtd_id.svg pass.svg
 != error_no_href.svg fail.svg
-fails-if(!stylo) == lreas_selflink_dtd_id.svg pass.svg
+fails == lreas_selflink_dtd_id.svg pass.svg
 == lreas_selflink_empty_href.svg pass.svg
 == lreas_selflink_relative_href.svg pass.svg
 == xslt_relative_href.svg pass.svg

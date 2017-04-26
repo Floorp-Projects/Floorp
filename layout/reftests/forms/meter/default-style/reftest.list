@@ -1,2 +1,2 @@
-fails-if(stylo) == default-style.html default-style-ref.html
-fails-if(stylo) == default-style-dyn.html default-style-dyn-ref.html
+== default-style.html default-style-ref.html
+== default-style-dyn.html default-style-dyn-ref.html

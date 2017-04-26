@@ -1,13 +1,13 @@
-fuzzy-if(Android,4,11) fails-if(stylo) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
-fails-if(stylo) == multiple.html multiple-ref.html
-fails-if(stylo) == boguskids.html boguskids-ref.html
-fails-if(stylo) == dynamic-boguskids.html boguskids-ref.html
-fails-if(stylo) == option-children.html option-children-ref.html
+fuzzy-if(Android,4,11) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
+== multiple.html multiple-ref.html
+== boguskids.html boguskids-ref.html
+== dynamic-boguskids.html boguskids-ref.html
+== option-children.html option-children-ref.html
 fuzzy(1,4) == padding-button-placement.html padding-button-placement-ref.html
 HTTP(../..) == vertical-centering.html vertical-centering-ref.html
-fails-if(stylo) == 997709-2.html 997709-2-ref.html
-needs-focus fails-if(stylo) == focusring-1.html focusring-1-ref.html
-needs-focus fails-if(stylo) == focusring-2.html focusring-2-ref.html
-needs-focus fails-if(stylo) == focusring-3.html focusring-3-ref.html
-fails-if(stylo) == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
-fails-if(stylo) == dynamic-text-overflow-1.html dynamic-text-overflow-1-ref.html
+== 997709-2.html 997709-2-ref.html
+needs-focus == focusring-1.html focusring-1-ref.html
+needs-focus == focusring-2.html focusring-2-ref.html
+needs-focus == focusring-3.html focusring-3-ref.html
+== dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
+== dynamic-text-overflow-1.html dynamic-text-overflow-1-ref.html

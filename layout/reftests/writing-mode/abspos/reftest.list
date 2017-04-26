@@ -13,12 +13,12 @@
 == 1183431-orthogonal-modes-5a.html 1183431-orthogonal-modes-5-ref.html
 == 1183431-orthogonal-modes-5b.html 1183431-orthogonal-modes-5-ref.html
 == 1183431-orthogonal-modes-5c.html 1183431-orthogonal-modes-5-ref.html
-fails-if(!stylo) == 1183431-orthogonal-modes-6a.html 1183431-orthogonal-modes-6-ref.html # bug 1191801
+fails == 1183431-orthogonal-modes-6a.html 1183431-orthogonal-modes-6-ref.html # bug 1191801
 == 1183431-orthogonal-modes-6b.html 1183431-orthogonal-modes-6-ref.html
 == 1183431-orthogonal-modes-6c.html 1183431-orthogonal-modes-6-ref.html
 == 1183431-orthogonal-modes-7a.html 1183431-orthogonal-modes-7-ref.html
 == 1183431-orthogonal-modes-7b.html 1183431-orthogonal-modes-7-ref.html
 == 1183431-orthogonal-modes-7c.html 1183431-orthogonal-modes-7-ref.html
-fails-if(!stylo) == 1183431-orthogonal-modes-8a.html 1183431-orthogonal-modes-8-ref.html # bug 1191801
+fails == 1183431-orthogonal-modes-8a.html 1183431-orthogonal-modes-8-ref.html # bug 1191801
 == 1183431-orthogonal-modes-8b.html 1183431-orthogonal-modes-8-ref.html
 == 1183431-orthogonal-modes-8c.html 1183431-orthogonal-modes-8-ref.html

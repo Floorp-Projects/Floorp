@@ -1,14 +1,14 @@
 # Simple test. Should fail on platforms where input type color isn't activated
 # yet. The missing platform is Android (bug 875750).
-fails-if(Android) fails-if(stylo) == input-color-1.html input-color-1-ref.html
+fails-if(Android) == input-color-1.html input-color-1-ref.html
 
 default-preferences pref(dom.forms.color,true)
 
 # Despite the "default-preferences" line above, Android is still
 # excluded from some style in forms.css, which makes the following tests fail.
-fails-if(Android) fails-if(stylo) == margin-padding-1.html margin-padding-1-ref.html
-fails-if(stylo) == block-invalidate-1.html block-invalidate-1-ref.html
-fails-if(stylo) == block-invalidate-2.html block-invalidate-2-ref.html
-fuzzy-if(gtkWidget,8,33) fuzzy-if(skiaContent,8,35) fails-if(Android) fails-if(stylo) == transformations-1.html transformations-1-ref.html
-pref(layout.css.moz-appearance.enabled,true) fails-if(Android) fails-if(stylo) == custom-style-1.html custom-style-1-ref.html
-fails-if(Android) fails-if(stylo) == custom-style-2.html custom-style-2-ref.html
+fails-if(Android) == margin-padding-1.html margin-padding-1-ref.html
+== block-invalidate-1.html block-invalidate-1-ref.html
+== block-invalidate-2.html block-invalidate-2-ref.html
+fuzzy-if(gtkWidget,8,33) fuzzy-if(skiaContent,8,35) fails-if(Android) == transformations-1.html transformations-1-ref.html
+pref(layout.css.moz-appearance.enabled,true) fails-if(Android) == custom-style-1.html custom-style-1-ref.html
+fails-if(Android) == custom-style-2.html custom-style-2-ref.html

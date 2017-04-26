@@ -17,15 +17,15 @@ fuzzy-if(Android,2,4) == left-2.html left-2-ref.html
 fuzzy-if(Android,2,4) == right-2.html right-2-ref.html
 fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
-fails-if(stylo) == padding-1.html padding-1-ref.html
+== padding-1.html padding-1-ref.html
 == padding-2.html padding-2-ref.html
-fails-if(stylo) == padding-3.html padding-3-ref.html
+== padding-3.html padding-3-ref.html
 == overcontain-1.html overcontain-1-ref.html
-fails-if(stylo) == initial-1.html initial-1-ref.html
+== initial-1.html initial-1-ref.html
 == initial-scroll-1.html initial-scroll-1-ref.html
 == scrollframe-reflow-1.html scrollframe-reflow-1-ref.html
 == scrollframe-reflow-2.html scrollframe-reflow-2-ref.html
-fails-if(stylo) == scrollframe-auto-1.html scrollframe-auto-1-ref.html
+== scrollframe-auto-1.html scrollframe-auto-1-ref.html
 fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1-ref.html
 == top-bottom-1.html top-bottom-1-ref.html
 == top-bottom-2.html top-bottom-2-ref.html
@@ -41,7 +41,7 @@ fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
 == inline-2.html inline-2-ref.html
 fuzzy-if(OSX,99,210) == inline-3.html inline-3-ref.html
 skip-if(!asyncPan) == inline-4.html inline-4-ref.html
-fails-if(!stylo) == column-contain-1a.html column-contain-1-ref.html
+fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
