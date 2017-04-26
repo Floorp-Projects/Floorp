@@ -978,6 +978,7 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mIsHandlingResizeEvent(false), mIsInnerWindow(aOuterWindow != nullptr),
   mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
+  mMayHaveMouseMoveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
   mInnerObjectsFreed(false),
   mIsModalContentWindow(false),
@@ -2050,11 +2051,14 @@ nsGlobalWindow::FreeInnerObjects()
     EventTarget* html = mDoc->GetHtmlElement();
     EventTarget* body = mDoc->GetBodyElement();
 
+    bool mouseAware = AsInner()->HasMouseMoveEventListeners();
     bool keyboardAware = win->MayHaveAPZAwareKeyEventListener() ||
                          mDoc->MayHaveAPZAwareKeyEventListener() ||
                          (html && html->MayHaveAPZAwareKeyEventListener()) ||
                          (body && body->MayHaveAPZAwareKeyEventListener());
 
+    Telemetry::Accumulate(Telemetry::APZ_AWARE_MOUSEMOVE_LISTENERS,
+                          mouseAware ? 1 : 0);
     Telemetry::Accumulate(Telemetry::APZ_AWARE_KEY_LISTENERS,
                           keyboardAware ? 1 : 0);
   }
