@@ -392,7 +392,7 @@ GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId o
 }
 
 static void
-TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, Shape* shape, ObjOperandId objId,
+TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
                      Maybe<ObjOperandId>* expandoId)
 {
     if (obj->is<UnboxedPlainObject>()) {
@@ -415,10 +415,10 @@ TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, Shape* shape, ObjOper
 
 static void
 EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
-                  Shape* shape, ObjOperandId objId, Maybe<ObjOperandId>* holderId)
+                  ObjOperandId objId, Maybe<ObjOperandId>* holderId)
 {
     Maybe<ObjOperandId> expandoId;
-    TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, objId, &expandoId);
 
     if (obj != holder) {
         GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -452,7 +452,7 @@ EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
                    Shape* shape, ObjOperandId objId)
 {
     Maybe<ObjOperandId> holderId;
-    EmitReadSlotGuard(writer, obj, holder, shape, objId, &holderId);
+    EmitReadSlotGuard(writer, obj, holder, objId, &holderId);
 
     if (obj == holder && obj->is<UnboxedPlainObject>())
         holder = obj->as<UnboxedPlainObject>().maybeExpando();
@@ -514,7 +514,7 @@ EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
     // require outerizing).
     if (mode == ICState::Mode::Specialized || IsWindow(obj)) {
         Maybe<ObjOperandId> expandoId;
-        TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
+        TestMatchingReceiver(writer, obj, objId, &expandoId);
 
         if (obj != holder) {
             GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -2113,7 +2113,7 @@ InIRGenerator::tryAttachNativeIn(HandleId key, ValOperandId keyId,
 
     Maybe<ObjOperandId> holderId;
     emitIdGuard(keyId, key);
-    EmitReadSlotGuard(writer, obj, holder, prop.shape(), objId, &holderId);
+    EmitReadSlotGuard(writer, obj, holder, objId, &holderId);
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
@@ -2130,7 +2130,7 @@ InIRGenerator::tryAttachNativeInDoesNotExist(HandleId key, ValOperandId keyId,
 
     Maybe<ObjOperandId> holderId;
     emitIdGuard(keyId, key);
-    EmitReadSlotGuard(writer, obj, nullptr, nullptr, objId, &holderId);
+    EmitReadSlotGuard(writer, obj, nullptr, objId, &holderId);
     writer.loadBooleanResult(false);
     writer.returnFromIC();
 
@@ -2243,7 +2243,7 @@ HasOwnIRGenerator::tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
 
     Maybe<ObjOperandId> expandoId;
     emitIdGuard(keyId, key);
-    TestMatchingReceiver(writer, obj, nullptr, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, objId, &expandoId);
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
@@ -2267,7 +2267,7 @@ HasOwnIRGenerator::tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId 
 
     Maybe<ObjOperandId> expandoId;
     emitIdGuard(keyId, key);
-    TestMatchingReceiver(writer, obj, nullptr, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, objId, &expandoId);
     writer.loadBooleanResult(false);
     writer.returnFromIC();
 
@@ -2833,7 +2833,7 @@ SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId, Handle
     // require outerizing).
     if (mode_ == ICState::Mode::Specialized || IsWindow(obj)) {
         Maybe<ObjOperandId> expandoId;
-        TestMatchingReceiver(writer, obj, propShape, objId, &expandoId);
+        TestMatchingReceiver(writer, obj, objId, &expandoId);
 
         if (obj != holder) {
             GeneratePrototypeGuards(writer, obj, holder, objId);
