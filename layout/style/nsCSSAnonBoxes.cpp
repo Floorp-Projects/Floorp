@@ -56,6 +56,7 @@ bool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
 /* static */ bool
 nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
 {
+  MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudo));
   return StringBeginsWith(nsDependentAtomString(aPseudo),
                           NS_LITERAL_STRING(":-moz-tree-"));
 }
