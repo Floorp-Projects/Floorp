@@ -300,16 +300,29 @@ nsDOMTokenList::Toggle(const nsAString& aToken,
   AutoTArray<nsString, 1> tokens;
   (*tokens.AppendElement()).Rebind(aToken.Data(), aToken.Length());
 
-  if (isPresent) {
-    if (!forceOn) {
-      RemoveInternal(attr, tokens);
-      isPresent = false;
+  if (isPresent && !forceOn) {
+    RemoveInternal(attr, tokens);
+    return false;
+  }
+
+  if (!isPresent && !forceOff) {
+    AddInternal(attr, tokens);
+    return true;
+  }
+
+  if (attr) {
+    // Remove duplicates and whitespace from attr
+    RemoveDuplicates(attr);
+
+    nsAutoString resultStr;
+    for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
+      if (!resultStr.IsEmpty()) {
+        resultStr.AppendLiteral(" ");
+      }
+      resultStr.Append(nsDependentAtomString(attr->AtomAt(i)));
     }
-  } else {
-    if (!forceOff) {
-      AddInternal(attr, tokens);
-      isPresent = true;
-    }
+
+    mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
   }
 
   return isPresent;
@@ -375,9 +388,7 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
     resultStr.Append(nsDependentAtomString(aAttr->AtomAt(i)));
   }
 
-  if (sawIt) {
-    mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
-  }
+  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
 }
 
 bool
