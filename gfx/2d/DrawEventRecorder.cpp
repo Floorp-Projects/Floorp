@@ -78,5 +78,40 @@ DrawEventRecorderFile::Close()
   mOutputFile.close();
 }
 
+DrawEventRecorderMemory::DrawEventRecorderMemory()
+  : DrawEventRecorderPrivate(nullptr)
+{
+  mOutputStream = &mMemoryStream;
+
+  WriteHeader();
+}
+
+void
+DrawEventRecorderMemory::Flush()
+{
+   mOutputStream->flush();
+}
+
+size_t
+DrawEventRecorderMemory::RecordingSize()
+{
+  return mMemoryStream.tellp();
+}
+
+bool
+DrawEventRecorderMemory::CopyRecording(char* aBuffer, size_t aBufferLen)
+{
+  return !!mMemoryStream.read(aBuffer, aBufferLen);
+}
+
+void
+DrawEventRecorderMemory::WipeRecording()
+{
+  mMemoryStream.str(std::string());
+  mMemoryStream.clear();
+
+  WriteHeader();
+}
+
 } // namespace gfx
 } // namespace mozilla

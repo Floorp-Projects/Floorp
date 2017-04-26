@@ -103,6 +103,55 @@ private:
   std::ofstream mOutputFile;
 };
 
+// WARNING: This should not be used in its existing state because
+// it is likely to OOM because of large continguous allocations.
+class DrawEventRecorderMemory final : public DrawEventRecorderPrivate
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory)
+
+  /**
+   * Constructs a DrawEventRecorder that stores the recording in memory.
+   */
+  DrawEventRecorderMemory();
+
+  /**
+   * @return the current size of the recording (in chars).
+   */
+  size_t RecordingSize();
+
+  /**
+   * Copies at most aBufferLen chars of the recording into aBuffer.
+   *
+   * @param aBuffer buffer to receive the recording chars
+   * @param aBufferLen length of aBuffer
+   * @return true if copied successfully
+   */
+  bool CopyRecording(char* aBuffer, size_t aBufferLen);
+
+  /**
+   * Wipes the internal recording buffer, but the recorder does NOT forget which
+   * objects it has recorded. This can be used so that a recording can be copied
+   * and processed in chunks, releasing memory as it goes.
+   */
+  void WipeRecording();
+
+  /**
+   * Gets a readable reference of the underlying stream, reset to the beginning.
+   */
+  std::istream& GetInputStream() {
+    mMemoryStream.seekg(0);
+    return mMemoryStream;
+  }
+
+private:
+  ~DrawEventRecorderMemory() {};
+
+  void Flush() final;
+
+  std::stringstream mMemoryStream;
+};
+
 } // namespace gfx
 } // namespace mozilla
 
