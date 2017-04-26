@@ -12016,8 +12016,10 @@ IonBuilder::jsop_lambda_arrow(JSFunction* fun)
     MOZ_ASSERT(!fun->isNative());
 
     MDefinition* newTargetDef = current->pop();
+    MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun);
+    current->add(cst);
     MLambdaArrow* ins = MLambdaArrow::New(alloc(), constraints(), current->environmentChain(),
-                                          newTargetDef, fun);
+                                          newTargetDef, cst);
     current->add(ins);
     current->push(ins);
 
