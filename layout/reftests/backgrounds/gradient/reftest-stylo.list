@@ -1,4 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == scaled-color-stop-position.html scaled-color-stop-position.html
-fails == color-stop-clamp-interpolation.html color-stop-clamp-interpolation.html
-== linear-gradient-repeated.html linear-gradient-repeated.html

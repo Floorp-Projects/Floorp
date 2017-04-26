@@ -1,6 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(!cocoaWidget) == 482681.xul 482681.xul
-skip-if(!cocoaWidget) == radiosize.xul radiosize.xul
-skip-if(!cocoaWidget) == checkboxsize.xul checkboxsize.xul
-skip-if(!cocoaWidget) == baseline.xul baseline.xul
-skip-if(!cocoaWidget) == nostretch.xul nostretch.xul

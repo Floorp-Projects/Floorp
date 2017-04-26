@@ -1,5 +1,5 @@
-fails-if(stylo) == bug785684-x.html bug785684-ref.html
-fails-if(stylo) == bug785684-y.html bug785684-ref.html
+== bug785684-x.html bug785684-ref.html
+== bug785684-y.html bug785684-ref.html
 == table-row-pagination.html table-row-pagination-ref.html
 == 963441.html 963441-ref.html
 fails-if(stylo) == table-caption-scroll.html table-caption-scroll-ref.html
