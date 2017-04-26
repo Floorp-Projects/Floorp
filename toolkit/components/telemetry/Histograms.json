@@ -5623,14 +5623,6 @@
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window data (ms)"
   },
-  "FX_SESSION_RESTORE_COLLECT_COOKIES_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 10,
-    "description": "Session restore: Time to collect cookies (ms)"
-  },
   "FX_SESSION_RESTORE_COLLECT_DATA_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "default",
@@ -5638,14 +5630,6 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window and tab data (ms)"
-  },
-  "FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 10,
-    "description": "Session restore: Duration of the longest uninterruptible operation while collecting all window and tab data (ms)"
   },
   "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],

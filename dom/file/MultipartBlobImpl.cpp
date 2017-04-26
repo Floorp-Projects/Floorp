@@ -171,8 +171,7 @@ MultipartBlobImpl::InitializeBlob(ErrorResult& aRv)
 }
 
 void
-MultipartBlobImpl::InitializeBlob(JSContext* aCx,
-                                  const Sequence<Blob::BlobPart>& aData,
+MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
                                   const nsAString& aContentType,
                                   bool aNativeEOL,
                                   ErrorResult& aRv)
@@ -189,7 +188,7 @@ MultipartBlobImpl::InitializeBlob(JSContext* aCx,
     }
 
     else if (data.IsUSVString()) {
-      aRv = blobSet.AppendString(data.GetAsUSVString(), aNativeEOL, aCx);
+      aRv = blobSet.AppendString(data.GetAsUSVString(), aNativeEOL);
       if (aRv.Failed()) {
         return;
       }
