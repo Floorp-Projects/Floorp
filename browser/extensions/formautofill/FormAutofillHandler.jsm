@@ -61,8 +61,36 @@ FormAutofillHandler.prototype = {
    * Set fieldDetails from the form about fields that can be autofilled.
    */
   collectFormFields() {
-    let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
-    this.fieldDetails = fieldDetails ? fieldDetails : [];
+    this.fieldDetails = [];
+
+    for (let element of this.form.elements) {
+      // Exclude elements to which no autocomplete field has been assigned.
+      let info = FormAutofillHeuristics.getInfo(element);
+      if (!info) {
+        continue;
+      }
+
+      // Store the association between the field metadata and the element.
+      if (this.fieldDetails.some(f => f.section == info.section &&
+                                      f.addressType == info.addressType &&
+                                      f.contactType == info.contactType &&
+                                      f.fieldName == info.fieldName)) {
+        // A field with the same identifier already exists.
+        log.debug("Not collecting a field matching another with the same info:", info);
+        continue;
+      }
+
+      let formatWithElement = {
+        section: info.section,
+        addressType: info.addressType,
+        contactType: info.contactType,
+        fieldName: info.fieldName,
+        elementWeakRef: Cu.getWeakReference(element),
+      };
+
+      this.fieldDetails.push(formatWithElement);
+    }
+
     log.debug("Collected details on", this.fieldDetails.length, "fields");
   },
 
