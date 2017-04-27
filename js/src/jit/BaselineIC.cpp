@@ -1208,8 +1208,6 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         return false;
     }
 
-    RootedObject obj(cx, &objValue.toObject());
-
     if (stub->state().maybeTransition())
         stub->discardStubs(cx);
 
@@ -1218,7 +1216,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         jsbytecode* pc = stub->icEntry()->pc(script);
 
         ICStubEngine engine = ICStubEngine::Baseline;
-        InIRGenerator gen(cx, script, pc, stub->state().mode(), key, obj);
+        HasPropIRGenerator gen(cx, script, pc, CacheKind::In, stub->state().mode(), key, objValue);
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
@@ -1230,6 +1228,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
             stub->state().trackNotAttached();
     }
 
+    RootedObject obj(cx, &objValue.toObject());
     bool cond = false;
     if (!OperatorIn(cx, key, obj, &cond))
         return false;
@@ -1284,7 +1283,8 @@ DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
         jsbytecode* pc = stub->icEntry()->pc(script);
 
         ICStubEngine engine = ICStubEngine::Baseline;
-        HasOwnIRGenerator gen(cx, script, pc, stub->state().mode(), keyValue, objValue);
+        HasPropIRGenerator gen(cx, script, pc, CacheKind::HasOwn,
+                               stub->state().mode(), keyValue, objValue);
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),

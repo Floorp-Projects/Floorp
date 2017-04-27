@@ -355,7 +355,7 @@ IonHasOwnIC::update(JSContext* cx, HandleScript outerScript, IonHasOwnIC* ic,
     if (ic->state().canAttachStub()) {
         bool attached = false;
         RootedScript script(cx, ic->script());
-        HasOwnIRGenerator gen(cx, script, pc, ic->state().mode(), idVal, val);
+        HasPropIRGenerator gen(cx, script, pc, CacheKind::HasOwn, ic->state().mode(), idVal, val);
         if (gen.tryAttachStub())
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
 
