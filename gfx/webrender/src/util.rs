@@ -301,20 +301,33 @@ fn extract_inner_rect_impl<U>(rect: &TypedRect<f32, U>,
                               radii: &BorderRadius,
                               k: f32) -> Option<TypedRect<f32, U>> {
     // `k` defines how much border is taken into account
+    // We enforce the offsets to be rounded to pixel boundaries
+    // by `ceil`-ing and `floor`-ing them
 
-    let xl = rect.origin.x +
-        k * radii.top_left.width.max(radii.bottom_left.width);
-    let xr = rect.origin.x + rect.size.width -
-        k * radii.top_right.width.max(radii.bottom_right.width);
-    let yt = rect.origin.y +
-        k * radii.top_left.height.max(radii.top_right.height);
-    let yb = rect.origin.y + rect.size.height -
-        k * radii.bottom_left.height.max(radii.bottom_right.height);
+    let xl = (k * radii.top_left.width.max(radii.bottom_left.width)).ceil();
+    let xr = (rect.size.width - k * radii.top_right.width.max(radii.bottom_right.width)).floor();
+    let yt = (k * radii.top_left.height.max(radii.top_right.height)).ceil();
+    let yb = (rect.size.height - k * radii.bottom_left.height.max(radii.bottom_right.height)).floor();
 
     if xl <= xr && yt <= yb {
-        Some(TypedRect::new(TypedPoint2D::new(xl, yt),
+        Some(TypedRect::new(TypedPoint2D::new(rect.origin.x + xl, rect.origin.y + yt),
              TypedSize2D::new(xr-xl, yb-yt)))
     } else {
         None
     }
+}
+
+/// Consumes the old vector and returns a new one that may reuse the old vector's allocated
+/// memory.
+pub fn recycle_vec<T>(mut old_vec: Vec<T>) -> Vec<T> {
+    if old_vec.capacity() > 2 * old_vec.len() {
+        // Avoid reusing the buffer if it is a lot larger than it needs to be. This prevents
+        // a frame with exceptionally large allocations to cause subsequent frames to retain
+        // more memory than they need.
+        return Vec::with_capacity(old_vec.len());
+    }
+
+    old_vec.clear();
+
+    return old_vec;
 }

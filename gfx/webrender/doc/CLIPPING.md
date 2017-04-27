@@ -33,7 +33,7 @@ itself**. This different than for clips defined by `SpecificDisplayItem::Clip`.
 
 Clip display items allow items to share clips in order to increase performance
 (shared clips are only rasterized once) and to allow for scrolling regions.
-Display items can be assigned a clip display item using the `scroll_layer_id`
+Display items can be assigned a clip display item using the `clip_id`
 field. An item can be assigned any clip that is defined by its parent stacking
 context or any of the ancestors. The behavior of assigning an id outside of
 this hierarchy is undefined, because that situation does not occur in CSS
@@ -42,8 +42,8 @@ The clip display item has a `ClipRegion` as well as several other fields:
 
 ```rust
 pub struct ClipDisplayItem {
-    pub id: ScrollLayerId,
-    pub parent_id: ScrollLayerId,
+    pub id: ClipId,
+    pub parent_id: ClipId,
 }
 ```
 
@@ -72,27 +72,26 @@ scroll positions using the WebRender API. In order to make this as cheap as
 possible and to avoid having to create a `HashMap` to map between the two types
 of ids, the WebRender API provides an optional id argument in
 `DisplayListBuilder::define_clip`. The only types of ids that are supported
-here are those created with `ScrollLayerId::new(...)`. If this argument is not
+here are those created with `ClipId::new(...)`. If this argument is not
 provided `define_clip` will return a uniquely generated id. Thus, the following
 should always be true:
 
 ```rust
-let id = ScrollLayerId::new(my_internal_id, pipeline_id);
+let id = ClipId::new(my_internal_id, pipeline_id);
 let generated_id = define_clip(content_rect, clip, id);
 assert!(id == generated_id);
 ```
 
+Note that calling `define_clip` multiple times with the same `clip_id` value
+results in undefined behaviour, and should be avoided. There is a debug mode
+assertion to catch this.
+
 ## Pending changes
-
-1. Rename `ScrollLayerId` to `ClipId`. The current name is a holdover from the
-   previous design.  ([github issue](https://github.com/servo/webrender/issues/1089))
-
-2. Normalize the way that clipping coordinates are defined. Having them
+1. Normalize the way that clipping coordinates are defined. Having them
    specified in two different ways makes for a confusing API. This should be
    fixed.  ([github issue](https://github.com/servo/webrender/issues/1090))
 
-3. It should be possible to specify more than one predefined clip for an item.
+1. It should be possible to specify more than one predefined clip for an item.
    This is necessary for items that live in a scrolling frame, but are also
    clipped by a clip that lives outside that frame.
    ([github issue](https://github.com/servo/webrender/issues/840))
-

@@ -51,6 +51,8 @@ public:
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
 
+  virtual wr::MaybeExternalImageId GetNextExternalImageId() { return Nothing(); }
+
 protected:
   virtual ~LayersIPCChannel() {}
 };
@@ -69,7 +71,8 @@ public:
     const SurfaceDescriptor& aSharedData,
     LayersBackend aLayersBackend,
     TextureFlags aFlags,
-    uint64_t aSerial) = 0;
+    uint64_t aSerial,
+    wr::MaybeExternalImageId& aExternalImageId) = 0;
 };
 
 } // namespace layers

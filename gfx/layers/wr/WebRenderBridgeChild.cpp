@@ -65,7 +65,6 @@ bool
 WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mDestroyed);
-  MOZ_ASSERT(!mIsInTransaction);
 
   UpdateFwdTransactionId();
   this->SendDPBegin(aSize);
@@ -76,11 +75,8 @@ WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 }
 
 void
-WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId)
+WebRenderBridgeChild::ClearReadLocks()
 {
-  MOZ_ASSERT(!mDestroyed);
-  MOZ_ASSERT(mIsInTransaction);
-
   for (nsTArray<ReadLockInit>& locks : mReadLocks) {
     if (locks.Length()) {
       if (!SendInitReadLocks(locks)) {
@@ -90,61 +86,73 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
     }
   }
 
+  mReadLocks.Clear();
+}
+
+void
+WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
+                            const gfx::IntSize& aSize,
+                            bool aIsSync,
+                            uint64_t aTransactionId,
+                            const WebRenderScrollData& aScrollData)
+{
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(mIsInTransaction);
+
   wr::BuiltDisplayList dl = aBuilder.Finalize();
   ByteBuffer dlData(Move(dl.dl));
   ByteBuffer auxData(Move(dl.aux));
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        dlData, dl.dl_desc, auxData, dl.aux_desc);
+                        dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    dlData, dl.dl_desc, auxData, dl.aux_desc);
+                    dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
   }
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
-  mReadLocks.Clear();
   mIsInTransaction = false;
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::GetNextExternalImageId()
 {
-  return GetCompositorBridgeChild()->GetNextExternalImageId();
+  wr::MaybeExternalImageId id = GetCompositorBridgeChild()->GetNextExternalImageId();
+  MOZ_RELEASE_ASSERT(id.isSome());
+  return id.value();
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::AllocExternalImageId(const CompositableHandle& aHandle)
 {
   MOZ_ASSERT(!mDestroyed);
 
-  uint64_t imageId = GetNextExternalImageId();
+  wr::ExternalImageId imageId = GetNextExternalImageId();
   SendAddExternalImageId(imageId, aHandle);
   return imageId;
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable->IsConnected());
 
-  uint64_t imageId = GetNextExternalImageId();
+  wr::ExternalImageId imageId = GetNextExternalImageId();
   SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle());
   return imageId;
 }
 
 void
-WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
+WebRenderBridgeChild::DeallocExternalImageId(wr::ExternalImageId& aImageId)
 {
   if (mDestroyed) {
     // This can happen if the IPC connection was torn down, because, e.g.
     // the GPU process died.
     return;
   }
-
-  MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
 }
 
@@ -170,7 +178,7 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 
 void
 WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
-                                 gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                                 gfx::ScaledFont* aFont, const LayerPoint& aOffset, const gfx::Rect& aBounds,
                                  const gfx::Rect& aClip)
 {
   MOZ_ASSERT(aFont);

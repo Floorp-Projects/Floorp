@@ -17,10 +17,12 @@ include protocol PTexture;
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using WrAuxiliaryListsDescriptor from "mozilla/webrender/webrender_ffi.h";
+using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 
 namespace mozilla {
 namespace layers {
@@ -50,13 +52,15 @@ parent:
   async DeleteFont(FontKey aFontKey);
   async DPBegin(IntSize aSize);
   async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-              ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc);
+              ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc,
+              WebRenderScrollData aScrollData);
   sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-                 ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc);
+                 ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc,
+                 WebRenderScrollData aScrollData);
   sync DPGetSnapshot(PTexture texture);
-  async AddExternalImageId(uint64_t aImageId, CompositableHandle aHandle);
-  async AddExternalImageIdForCompositable(uint64_t aImageId, CompositableHandle aHandle);
-  async RemoveExternalImageId(uint64_t aImageId);
+  async AddExternalImageId(ExternalImageId aImageId, CompositableHandle aHandle);
+  async AddExternalImageIdForCompositable(ExternalImageId aImageId, CompositableHandle aHandle);
+  async RemoveExternalImageId(ExternalImageId aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();
   // Schedule a composite if one isn't already scheduled.

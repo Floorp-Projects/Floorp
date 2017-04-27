@@ -9,9 +9,10 @@
 #include "Layers.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {
@@ -21,19 +22,17 @@ class WebRenderDisplayItemLayer : public WebRenderLayer,
 public:
   explicit WebRenderDisplayItemLayer(WebRenderLayerManager* aLayerManager)
     : DisplayItemLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderDisplayItemLayer);
   }
 
   Maybe<wr::ImageKey> SendImageContainer(ImageContainer* aContainer,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands);
+  bool PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                       nsTArray<layers::WebRenderParentCommand>& aParentCommands);
 
 protected:
-  virtual ~WebRenderDisplayItemLayer()
-  {
-    MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
-  }
+  virtual ~WebRenderDisplayItemLayer();
 
 public:
   Layer* GetLayer() override { return this; }
@@ -44,8 +43,8 @@ private:
   nsTArray<WebRenderParentCommand> mParentCommands;
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
-  uint64_t mExternalImageId;
-
+  wr::MaybeExternalImageId mExternalImageId;
+  Maybe<wr::ImageKey> mKey;
 };
 
 } // namespace layers

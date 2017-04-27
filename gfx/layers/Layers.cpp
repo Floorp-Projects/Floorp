@@ -696,6 +696,17 @@ Layer::GetLocalTransformTyped()
 }
 
 bool
+Layer::HasOpacityAnimation() const
+{
+  for (uint32_t i = 0; i < mAnimations.Length(); i++) {
+    if (mAnimations[i].property() == eCSSProperty_opacity) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
 Layer::HasTransformAnimation() const
 {
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {

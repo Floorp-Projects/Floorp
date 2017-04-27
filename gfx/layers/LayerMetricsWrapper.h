@@ -354,6 +354,18 @@ public:
     return nullptr;
   }
 
+  Maybe<uint64_t> GetReferentId() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->AsRefLayer()
+           ? Some(mLayer->AsRefLayer()->GetReferentId())
+           : Nothing();
+    }
+    return Nothing();
+  }
+
   Maybe<ParentLayerIntRect> GetClipRect() const
   {
     MOZ_ASSERT(IsValid());

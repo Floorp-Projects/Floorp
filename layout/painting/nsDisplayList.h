@@ -2154,6 +2154,9 @@ protected:
 
   nsDisplayItem() { mAbove = nullptr; }
 
+  typedef bool (*PrefFunc)(void);
+  bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc);
+
   nsIFrame* mFrame;
   const DisplayItemClipChain* mClipChain;
   const DisplayItemClip* mClip;

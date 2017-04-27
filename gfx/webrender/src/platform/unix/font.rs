@@ -61,15 +61,14 @@ impl FontContext {
         }
     }
 
-    pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: &[u8]) {
+    pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: &[u8], index: u32) {
         if !self.faces.contains_key(&font_key) {
             let mut face: FT_Face = ptr::null_mut();
-            let face_index = 0 as FT_Long;
             let result = unsafe {
                 FT_New_Memory_Face(self.lib,
                                    bytes.as_ptr(),
                                    bytes.len() as FT_Long,
-                                   face_index,
+                                   index as FT_Long,
                                    &mut face)
             };
             if result.succeeded() && !face.is_null() {

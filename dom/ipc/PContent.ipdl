@@ -64,6 +64,7 @@ include MemoryReportTypes;
 // are put into different UnifiedProtocolsXX.cpp files.
 // XXX Remove this once bug 1069073 is fixed
 include "mozilla/dom/PContentBridgeParent.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 using AlertNotificationType from "mozilla/AlertNotificationIPCSerializer.h";
@@ -96,6 +97,7 @@ using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 
 union ChromeRegistryItem
 {
@@ -1109,6 +1111,8 @@ parent:
 
     async AddMemoryReport(MemoryReport aReport);
     async FinishMemoryReport(uint32_t aGeneration);
+
+    async AllocPipelineId() returns (PipelineId pipelineId);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
