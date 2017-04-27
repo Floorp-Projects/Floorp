@@ -37,7 +37,6 @@ toolkit.jar:
    skin/classic/global/alerts/alert.css                        (alerts/alert.css)
 
    skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
-   skin/classic/global/icons/autocomplete-search.svg           (icons/autocomplete-search.svg)
    skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
    skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
    skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)

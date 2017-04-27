@@ -5,7 +5,9 @@
 %include ../../../shared/extensions/extensions.inc.css
 
 #header-utils-btn .toolbarbutton-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities-native");
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
+  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  fill: GrayText;
 }
 
 .sorter[checkState="1"] .button-icon {

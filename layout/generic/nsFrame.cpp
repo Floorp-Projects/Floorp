@@ -7070,6 +7070,11 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
   if (0 != mState) {
     aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);
   }
+  if (Properties().Has(BidiDataProperty())) {
+    FrameBidiData bidi = GetBidiData();
+    aTo += nsPrintfCString(" bidi(%d,%d,%d)", bidi.baseLevel,
+                           bidi.embeddingLevel, bidi.precedingControl);
+  }
   if (IsTransformed()) {
     aTo += nsPrintfCString(" transformed");
   }

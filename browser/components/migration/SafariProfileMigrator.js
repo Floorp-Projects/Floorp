@@ -204,7 +204,7 @@ History.prototype = {
   },
 
   migrate: function H_migrate(aCallback) {
-    PropertyListUtils.read(this._file, function migrateHistory(aDict) {
+    PropertyListUtils.read(this._file, aDict => {
       try {
         if (!aDict)
           throw new Error("Could not read history property list");
@@ -247,7 +247,7 @@ History.prototype = {
         Cu.reportError(ex);
         aCallback(false);
       }
-    }.bind(this));
+    });
   }
 };
 
@@ -276,7 +276,7 @@ MainPreferencesPropertyList.prototype = {
     let alreadyReading = this._callbacks.length > 0;
     this._callbacks.push(aCallback);
     if (!alreadyReading) {
-      PropertyListUtils.read(this._file, function readPrefs(aDict) {
+      PropertyListUtils.read(this._file, aDict => {
         this._dict = aDict;
         for (let callback of this._callbacks) {
           try {
@@ -286,7 +286,7 @@ MainPreferencesPropertyList.prototype = {
           }
         }
         this._callbacks.splice(0);
-      }.bind(this));
+      });
     }
   },
 

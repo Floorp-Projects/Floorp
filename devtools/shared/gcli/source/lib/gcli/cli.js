@@ -200,7 +200,7 @@ Assignment.prototype.getPredictionRanked = function(context, rank) {
     return Promise.resolve(undefined);
   }
 
-  return this.getPredictions(context).then(function(predictions) {
+  return this.getPredictions(context).then(predictions => {
     if (predictions.length === 0) {
       return undefined;
     }
@@ -210,7 +210,7 @@ Assignment.prototype.getPredictionRanked = function(context, rank) {
       rank = predictions.length + rank;
     }
     return predictions[rank];
-  }.bind(this));
+  });
 };
 
 /**
@@ -874,7 +874,7 @@ Requisition.prototype.toCanonicalString = function() {
   var ctx = this.executionContext;
 
   // First stringify all the arguments
-  var argPromise = util.promiseEach(this.getAssignments(), function(assignment) {
+  var argPromise = util.promiseEach(this.getAssignments(), assignment => {
     // Bug 664377: This will cause problems if there is a non-default value
     // after a default value. Also we need to decide when to use
     // named parameters in place of positional params. Both can wait.
@@ -883,14 +883,14 @@ Requisition.prototype.toCanonicalString = function() {
     }
 
     var val = assignment.param.type.stringify(assignment.value, ctx);
-    return Promise.resolve(val).then(function(str) {
+    return Promise.resolve(val).then(str => {
       return ' ' + str;
-    }.bind(this));
-  }.bind(this));
+    });
+  });
 
-  return argPromise.then(function(strings) {
+  return argPromise.then(strings => {
     return cmd + strings.join('') + lineSuffix;
-  }.bind(this));
+  });
 };
 
 /**
@@ -923,9 +923,9 @@ Object.defineProperty(Requisition.prototype, '_summaryJson', {
       })
     };
 
-    Object.keys(this._assignments).forEach(function(name) {
+    Object.keys(this._assignments).forEach(name => {
       summary[name] = this.getAssignment(name)._summaryJson;
-    }.bind(this));
+    });
 
     return summary;
   },
@@ -1030,7 +1030,7 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
 
   var updateId = options.internal ? null : this._beginChange();
 
-  var setAssignmentInternal = function(conversion) {
+  var setAssignmentInternal = conversion => {
     if (options.internal || this._isChangeCurrent(updateId)) {
       this._setAssignmentInternal(assignment, conversion);
     }
@@ -1040,7 +1040,7 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
     }
 
     return Promise.resolve(undefined);
-  }.bind(this);
+  };
 
   if (arg == null) {
     var blank = assignment.param.type.getBlank(this.executionContext);
@@ -1236,7 +1236,7 @@ Requisition.prototype.getStateData = function(start, rank) {
                           current.getPredictionRanked(context, rank) :
                           Promise.resolve(null);
 
-  return predictionPromise.then(function(prediction) {
+  return predictionPromise.then(prediction => {
     // directTabText is for when the current input is a prefix of the completion
     // arrowTabText is for when we need to use an -> to show what will be used
     var directTabText = '';
@@ -1304,7 +1304,7 @@ Requisition.prototype.getStateData = function(start, rank) {
     // Generally each emptyParameter marker begins with a space to separate it
     // from whatever came before, unless what comes before ends in a space.
 
-    this.getAssignments().forEach(function(assignment) {
+    this.getAssignments().forEach(assignment => {
       // Named arguments are handled with a group [options] marker
       if (!assignment.param.isPositionalAllowed) {
         return;
@@ -1325,7 +1325,7 @@ Requisition.prototype.getStateData = function(start, rank) {
           '[' + assignment.param.name + ']\u00a0';
 
       emptyParameters.push(text);
-    }.bind(this));
+    });
 
     var command = this.commandAssignment.value;
     var addOptionsMarker = false;
@@ -1359,7 +1359,7 @@ Requisition.prototype.getStateData = function(start, rank) {
       arrowTabText: arrowTabText,
       emptyParameters: emptyParameters
     };
-  }.bind(this));
+  });
 };
 
 /**
@@ -1400,7 +1400,7 @@ Requisition.prototype.complete = function(cursor, rank) {
 
   var context = this.executionContext;
   var predictionPromise = assignment.getPredictionRanked(context, rank);
-  return predictionPromise.then(function(prediction) {
+  return predictionPromise.then(prediction => {
     var outstanding = [];
 
     // Note: Since complete is asynchronous we should perhaps have a system to
@@ -1436,24 +1436,24 @@ Requisition.prototype.complete = function(cursor, rank) {
       var assignPromise = this.setAssignment(assignment, arg);
 
       if (!prediction.incomplete) {
-        assignPromise = assignPromise.then(function() {
+        assignPromise = assignPromise.then(() => {
           // The prediction is complete, add a space to let the user move-on
-          return this._addSpace(assignment).then(function() {
+          return this._addSpace(assignment).then(() => {
             // Bug 779443 - Remove or explain the re-parse
             if (assignment instanceof UnassignedAssignment) {
               return this.update(this.toString());
             }
-          }.bind(this));
-        }.bind(this));
+          });
+        });
       }
 
       outstanding.push(assignPromise);
     }
 
-    return Promise.all(outstanding).then(function() {
+    return Promise.all(outstanding).then(() => {
       return true;
-    }.bind(this));
-  }.bind(this));
+    });
+  });
 };
 
 /**
@@ -1462,15 +1462,15 @@ Requisition.prototype.complete = function(cursor, rank) {
 Requisition.prototype.nudge = function(assignment, by) {
   var ctx = this.executionContext;
   var val = assignment.param.type.nudge(assignment.value, by, ctx);
-  return Promise.resolve(val).then(function(replacement) {
+  return Promise.resolve(val).then(replacement => {
     if (replacement != null) {
       var val = assignment.param.type.stringify(replacement, ctx);
-      return Promise.resolve(val).then(function(str) {
+      return Promise.resolve(val).then(str => {
         var arg = assignment.arg.beget({ text: str });
         return this.setAssignment(assignment, arg);
-      }.bind(this));
+      });
     }
-  }.bind(this));
+  });
 };
 
 /**
@@ -1491,10 +1491,10 @@ function getDataCommandAttribute(element) {
  * change to the current command.
  */
 Requisition.prototype._contextUpdate = function(typed) {
-  return this.update(typed).then(function(reply) {
+  return this.update(typed).then(reply => {
     this.onExternalUpdate({ typed: typed });
     return reply;
-  }.bind(this));
+  });
 };
 
 /**
@@ -1520,9 +1520,9 @@ Requisition.prototype.update = function(typed) {
 
   this._split(args);
 
-  return this._assign(args).then(function() {
+  return this._assign(args).then(() => {
     return this._endChangeCheckOrder(updateId);
-  }.bind(this));
+  });
 };
 
 /**
@@ -1826,9 +1826,9 @@ Requisition.prototype._split = function(args) {
  * Add all the passed args to the list of unassigned assignments.
  */
 Requisition.prototype._addUnassignedArgs = function(args) {
-  args.forEach(function(arg) {
+  args.forEach(arg => {
     this._unassigned.push(new UnassignedAssignment(this, arg));
-  }.bind(this));
+  });
 
   return RESOLVED;
 };
@@ -1926,7 +1926,7 @@ Requisition.prototype._assign = function(args) {
   }, this);
 
   // What's left are positional parameters: assign in order
-  var positionalDone = namedDone.then(function() {
+  var positionalDone = namedDone.then(() => {
     return util.promiseEach(unassignedParams, function(name) {
       var assignment = this.getAssignment(name);
 
@@ -1972,20 +1972,20 @@ Requisition.prototype._assign = function(args) {
         return this.setAssignment(assignment, arg, noArgUp);
       }
     }, this);
-  }.bind(this));
+  });
 
   // Now we need to assign the array argument (if any)
-  var arrayDone = positionalDone.then(function() {
+  var arrayDone = positionalDone.then(() => {
     return util.promiseEach(Object.keys(arrayArgs), function(name) {
       var assignment = this.getAssignment(name);
       return this.setAssignment(assignment, arrayArgs[name], noArgUp);
     }, this);
-  }.bind(this));
+  });
 
   // What's left is can't be assigned, but we need to officially unassign them
-  return arrayDone.then(function() {
+  return arrayDone.then(() => {
     return this._addUnassignedArgs(args);
-  }.bind(this));
+  });
 };
 
 /**
@@ -2074,16 +2074,16 @@ Requisition.prototype.exec = function(options) {
     var ex = new Error(this.getStatusMessage());
     // We only reject a call to exec if GCLI breaks. Errors with commands are
     // exposed in the 'error' status of the Output object
-    return Promise.resolve(onError(ex)).then(function(output) {
+    return Promise.resolve(onError(ex)).then(output => {
       this.clear();
       return output;
-    }.bind(this));
+    });
   }
   else {
     try {
-      return host.exec(function() {
+      return host.exec(() => {
         return command.exec(args, this.executionContext);
-      }.bind(this)).then(onDone, onError);
+      }).then(onDone, onError);
     }
     catch (ex) {
       var data = (typeof ex.message === 'string' && ex.stack != null) ?
@@ -2120,9 +2120,9 @@ Requisition.prototype._contextUpdateExec = function(typed, options) {
  * @return A promise of an output object
  */
 Requisition.prototype.updateExec = function(input, options) {
-  return this.update(input).then(function() {
+  return this.update(input).then(() => {
     return this.exec(options);
-  }.bind(this));
+  });
 };
 
 exports.Requisition = Requisition;
@@ -2144,9 +2144,9 @@ function Output(options) {
   this.error = false;
   this.start = new Date();
 
-  this.promise = new Promise(function(resolve, reject) {
+  this.promise = new Promise((resolve, reject) => {
     this._resolve = resolve;
-  }.bind(this));
+  });
 }
 
 /**

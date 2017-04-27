@@ -4386,7 +4386,7 @@ OverflowableToolbar.prototype = {
 
   _hideTimeoutId: null,
   _showWithTimeout() {
-    this.show().then(function() {
+    this.show().then(() => {
       let window = this._toolbar.ownerGlobal;
       if (this._hideTimeoutId) {
         window.clearTimeout(this._hideTimeoutId);
@@ -4396,7 +4396,7 @@ OverflowableToolbar.prototype = {
           this._panel.hidePopup();
         }
       }, OVERFLOW_PANEL_HIDE_DELAY_MS);
-    }.bind(this));
+    });
   },
 };
 

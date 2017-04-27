@@ -296,10 +296,10 @@ var TPS = {
                    " on window " + JSON.stringify(aWindow));
     switch (action) {
       case ACTION_ADD:
-        BrowserWindows.Add(aWindow.private, function(win) {
+        BrowserWindows.Add(aWindow.private, win => {
           Logger.logInfo("window finished loading");
           this.FinishAsyncOperation();
-        }.bind(this));
+        });
         break;
     }
     Logger.logPass("executing action " + action.toUpperCase() + " on windows");

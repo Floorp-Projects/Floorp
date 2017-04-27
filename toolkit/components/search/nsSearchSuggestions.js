@@ -145,13 +145,13 @@ SuggestAutoComplete.prototype = {
       return;
     }
 
-    Services.search.init((function startSearch_cb(aResult) {
+    Services.search.init(aResult => {
       if (!Components.isSuccessCode(aResult)) {
         Cu.reportError("Could not initialize search service, bailing out: " + aResult);
         return;
       }
       this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
-    }).bind(this));
+    });
   },
 
   /**

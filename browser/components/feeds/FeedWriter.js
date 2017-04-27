@@ -965,13 +965,13 @@ FeedWriter.prototype = {
     // Show the file picker before subscribing if the
     // choose application menuitem was chosen using the keyboard
     if (selectedItem.id == "chooseApplicationMenuItem") {
-      this._chooseClientApp(function(aResult) {
+      this._chooseClientApp(aResult => {
         if (aResult) {
           selectedItem =
             this._handlersList.selectedOptions[0];
           subscribeCallback();
         }
-      }.bind(this));
+      });
     } else {
       subscribeCallback();
     }

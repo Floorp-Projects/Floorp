@@ -47,16 +47,16 @@ function createExec(name) {
   return function (args, context) {
     var promises = [];
 
-    Object.keys(args).map(function (argName) {
+    Object.keys(args).map(argName => {
       var value = args[argName];
       var type = this.getParameterByName(argName).type;
       var promise = Promise.resolve(type.stringify(value, context));
-      promises.push(promise.then(function (str) {
+      promises.push(promise.then(str => {
         return { name: argName, value: str };
-      }.bind(this)));
-    }.bind(this));
+      }));
+    });
 
-    return Promise.all(promises).then(function (data) {
+    return Promise.all(promises).then(data => {
       var argValues = {};
       data.forEach(function (entry) { argValues[entry.name] = entry.value; });
 
@@ -64,7 +64,7 @@ function createExec(name) {
         name: name,
         args: argValues
       });
-    }.bind(this));
+    });
   };
 }
 

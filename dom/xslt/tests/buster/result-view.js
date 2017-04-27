@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+const SYSTEMPRINCIPAL = Services.scriptSecurityManager.getSystemPrincipal();
+
 function onNewResultView(event)
 {
     dump("onNewResultView\n");
@@ -42,9 +45,11 @@ function onResultViewLoad(event)
     aRunItem = window.arguments[1];
     var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
     document.getElementById('src').webNavigation.loadURI('view-source:'+
-        aResultItem.testpath+'.xml', loadFlags, null, null, null);
+        aResultItem.testpath+'.xml', loadFlags, null, null, null,
+        SYSTEMPRINCIPAL);
     document.getElementById('style').webNavigation.loadURI('view-source:'+
-        aResultItem.testpath+'.xsl', loadFlags, null, null, null);
+        aResultItem.testpath+'.xsl', loadFlags, null, null, null,
+        SYSTEMPRINCIPAL);
 
     if (aRunItem && aRunItem.mRefDoc && aRunItem.mResDoc) {
         document.getElementById("refSourceBox").setAttribute("class", "hidden");
@@ -56,7 +61,8 @@ function onResultViewLoad(event)
     else {
         document.getElementById("inspectorBox").setAttribute("class", "hidden");
         document.getElementById('ref').webNavigation.loadURI('view-source:'+
-            aResultItem.refpath+'.out', loadFlags, null, null, null);
+            aResultItem.refpath+'.out', loadFlags, null, null, null,
+            SYSTEMPRINCIPAL);
     }
     return true;
 }

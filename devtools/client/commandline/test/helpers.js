@@ -268,13 +268,13 @@ var { helpers, assert } = (function () {
  * @return A promise resolved with the event object when the event first happens
  */
   helpers.listenOnce = function (element, event, useCapture) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       var onEvent = function (ev) {
         element.removeEventListener(event, onEvent, useCapture);
         resolve(ev);
       };
       element.addEventListener(event, onEvent, useCapture);
-    }.bind(this));
+    });
   };
 
 /**
@@ -287,13 +287,13 @@ var { helpers, assert } = (function () {
  * function other parameters are dropped.
  */
   helpers.observeOnce = function (topic, ownsWeak = false) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       let resolver = function (subject) {
         Services.obs.removeObserver(resolver, topic);
         resolve(subject);
       };
       Services.obs.addObserver(resolver, topic, ownsWeak);
-    }.bind(this));
+    });
   };
 
 /**
@@ -553,9 +553,9 @@ var { helpers, assert } = (function () {
     },
 
     unassigned: function (options) {
-      return options.requisition._unassigned.map(function (assignment) {
+      return options.requisition._unassigned.map(assignment => {
         return assignment.arg.toString();
-      }.bind(this));
+      });
     },
 
     outputState: function (options) {
@@ -604,7 +604,7 @@ var { helpers, assert } = (function () {
     var hintsPromise = helpers._actual.hints(options);
     var predictionsPromise = helpers._actual.predictions(options);
 
-    return Promise.all([ hintsPromise, predictionsPromise ]).then(function (values) {
+    return Promise.all([ hintsPromise, predictionsPromise ]).then(values => {
       var hints = values[0];
       var predictions = values[1];
       var output = "";
@@ -674,7 +674,7 @@ var { helpers, assert } = (function () {
       output += "]);";
 
       return output;
-    }.bind(this), util.errorHandler);
+    }, util.errorHandler);
   };
 
 /**
@@ -1001,7 +1001,7 @@ var { helpers, assert } = (function () {
     }
 
     try {
-      return requisition.exec({ hidden: true }).then(function (output) {
+      return requisition.exec({ hidden: true }).then(output => {
         if ("type" in expected) {
           assert.is(output.type,
                   expected.type,
@@ -1084,7 +1084,7 @@ var { helpers, assert } = (function () {
           }
           return { output: output, text: textOutput };
         });
-      }.bind(this)).then(function (data) {
+      }).then(function (data) {
         if (expected.error) {
           cli.logErrors = origLogErrors;
         }

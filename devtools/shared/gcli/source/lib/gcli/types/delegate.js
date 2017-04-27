@@ -42,23 +42,23 @@ exports.items = [
     delegateType: undefined,
 
     stringify: function(value, context) {
-      return this.getType(context).then(function(delegated) {
+      return this.getType(context).then(delegated => {
         return delegated.stringify(value, context);
-      }.bind(this));
+      });
     },
 
     parse: function(arg, context) {
-      return this.getType(context).then(function(delegated) {
+      return this.getType(context).then(delegated => {
         return delegated.parse(arg, context);
-      }.bind(this));
+      });
     },
 
     nudge: function(value, by, context) {
-      return this.getType(context).then(function(delegated) {
+      return this.getType(context).then(delegated => {
         return delegated.nudge ?
                delegated.nudge(value, by, context) :
                undefined;
-      }.bind(this));
+      });
     },
 
     getType: function(context) {
@@ -125,16 +125,16 @@ exports.items = [
     },
 
     parse: function(arg, context) {
-      return this.front.parseType(context.typed, this.paramName).then(function(json) {
+      return this.front.parseType(context.typed, this.paramName).then(json => {
         var status = Status.fromString(json.status);
         return new Conversion(undefined, arg, status, json.message, json.predictions);
-      }.bind(this));
+      });
     },
 
     nudge: function(value, by, context) {
-      return this.front.nudgeType(context.typed, by, this.paramName).then(function(json) {
+      return this.front.nudgeType(context.typed, by, this.paramName).then(json => {
         return { stringified: json.arg };
-      }.bind(this));
+      });
     }
   },
   // 'blank' is a type for use with DelegateType when we don't know yet.

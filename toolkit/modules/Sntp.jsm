@@ -174,16 +174,15 @@ Sntp.prototype = {
       onStartRequest: function onStartRequest(request, context) {
       },
 
-      onStopRequest: function onStopRequest(request, context, status) {
+      onStopRequest: (request, context, status) => {
         if (!Components.isSuccessCode(status)) {
           debug("Connection failed");
           this._requesting = false;
           this._retry();
         }
-      }.bind(this),
+      },
 
-      onDataAvailable: function onDataAvailable(request, context, inputStream,
-                                                offset, count) {
+      onDataAvailable: (request, context, inputStream, offset, count) => {
         function GetTimeStamp(binaryInputStream) {
           let s = binaryInputStream.read32();
           let f = binaryInputStream.read32();
@@ -218,12 +217,12 @@ Sntp.prototype = {
           this._retry();
         }
         inputStream.close();
-      }.bind(this)
+      }
     };
 
     function SNTPRequester() {}
     SNTPRequester.prototype = {
-      onOutputStreamReady: function(stream) {
+      onOutputStreamReady: stream => {
         try {
           let data = GetRequest();
           let bytes_write = stream.write(data, data.length);
@@ -234,7 +233,7 @@ Sntp.prototype = {
           this._requesting = false;
           this._retry();
         }
-      }.bind(this)
+      }
     };
 
     // Number of seconds between Jan 1, 1900 and Jan 1, 1970.

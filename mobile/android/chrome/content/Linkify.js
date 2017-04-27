@@ -87,7 +87,7 @@ Linkifier.prototype = {
     }
 
     let nodeWalker = aDoc.createTreeWalker(aDoc.body, NodeFilter.SHOW_TEXT, filterNode, false);
-    let parseNode = function() {
+    let parseNode = () => {
       let node = nodeWalker.nextNode();
       if (!node) {
         this._linkifyTimer = null;
@@ -101,7 +101,7 @@ Linkifier.prototype = {
       } else {
         this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT);
       }
-    }.bind(this);
+    };
 
     this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT); 
   }

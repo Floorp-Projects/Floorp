@@ -1,22 +1,7 @@
-<?xml version="1.0"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16">
-  <style>
-    use:not(:target) {
-      display: none;
-    }
-    use {
-      fill: GrayText;
-    }
-    use[id$="-inverted"] {
-      fill: highlighttext;
-    }
-  </style>
-  <defs>
-    <path id="search" fill-rule="evenodd" d="M14.517,12.884l-3.279-3.287c0.545-0.851,0.864-1.861,0.864-2.947 c0-3.022-2.444-5.472-5.458-5.472c-3.014,0-5.458,2.45-5.458,5.472c0,3.022,2.444,5.471,5.458,5.471 c1.093,0,2.108-0.325,2.962-0.88l3.275,3.283c0.396,0.397,1.039,0.397,1.435,0l0.202-0.202 C14.913,13.925,14.913,13.281,14.517,12.884z M6.644,10.001c-1.846,0-3.344-1.501-3.344-3.352c0-1.851,1.497-3.352,3.344-3.352 c1.847,0,3.344,1.501,3.344,3.352C9.987,8.501,8.49,10.001,6.644,10.001z"/>
-  </defs>
-  <use id="search-icon" xlink:href="#search"/>
-  <use id="search-icon-inverted" xlink:href="#search"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <path fill="context-fill" fill-rule="evenodd" d="M14.517,12.884l-3.279-3.287c0.545-0.851,0.864-1.861,0.864-2.947 c0-3.022-2.444-5.472-5.458-5.472c-3.014,0-5.458,2.45-5.458,5.472c0,3.022,2.444,5.471,5.458,5.471 c1.093,0,2.108-0.325,2.962-0.88l3.275,3.283c0.396,0.397,1.039,0.397,1.435,0l0.202-0.202 C14.913,13.925,14.913,13.281,14.517,12.884z M6.644,10.001c-1.846,0-3.344-1.501-3.344-3.352c0-1.851,1.497-3.352,3.344-3.352 c1.847,0,3.344,1.501,3.344,3.352C9.987,8.501,8.49,10.001,6.644,10.001z"/>
 </svg>
+

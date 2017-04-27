@@ -96,6 +96,10 @@ typedef uint8_t nsHttpVersion;
 // Transactions with this flag should be processed first.
 #define NS_HTTP_URGENT_START         (1<<12)
 
+// A sticky connection of the transaction is explicitly allowed to be restarted
+// on ERROR_NET_RESET.
+#define NS_HTTP_CONNECTION_RESTARTABLE  (1<<13)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

@@ -143,10 +143,10 @@ BrowserBot.prototype = {
 // "https://localhost:8080/bot/browser/" on chrome for Android.
 AndroidChromeBot = function (name, androidDeviceManager, callback) {
   Bot.call(this, name, callback);
-  androidDeviceManager.getNewDevice(function (serialNumber) {
+  androidDeviceManager.getNewDevice(serialNumber => {
     this.serialNumber_ = serialNumber;
     this.spawnBotProcess_();
-  }.bind(this));
+  });
 }
 
 AndroidChromeBot.prototype = {
@@ -155,14 +155,14 @@ AndroidChromeBot.prototype = {
     var runChrome = 'adb -s ' + this.serialNumber_ + ' shell am start ' +
     '-n com.android.chrome/com.google.android.apps.chrome.Main ' +
     '-d https://localhost:8080/bot/browser/';
-    child.exec(runChrome, function (error, stdout, stderr) {
+    child.exec(runChrome, (error, stdout, stderr) => {
       if (error) {
         this.log(error);
         process.exit(1);
       }
       this.log('Opening Chrome for Android...');
       this.log(stdout);
-    }.bind(this));
+    });
   },
 
   __proto__: Bot.prototype
@@ -174,7 +174,7 @@ AndroidDeviceManager = function () {
 
 AndroidDeviceManager.prototype = {
   getNewDevice: function (callback) {
-    this.listDevices_(function (devices) {
+    this.listDevices_(devices => {
       for (var i = 0; i < devices.length; i++) {
         if (!this.connectedDevices_[devices[i]]) {
           this.connectedDevices_[devices[i]] = devices[i];
@@ -188,7 +188,7 @@ AndroidDeviceManager.prototype = {
         console.log('Error: There is no enough connected devices.');
       }
       process.exit(1);
-    }.bind(this));
+    });
   },
 
   listDevices_: function (callback) {
