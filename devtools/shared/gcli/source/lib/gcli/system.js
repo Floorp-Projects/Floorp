@@ -179,9 +179,9 @@ exports.createSystem = function(options) {
         return Promise.resolve();
       }
       else {
-        return Promise.all(promises).then(function() {
+        return Promise.all(promises).then(() => {
           this.commands.onCommandsChange.resumeFire();
-        }.bind(this));
+        });
       }
     },
 
@@ -213,9 +213,9 @@ exports.createSystem = function(options) {
       Object.keys(modules).forEach(unloadModule);
       pendingChanges = false;
 
-      return Promise.all(promises).then(function() {
+      return Promise.all(promises).then(() => {
         this.commands.onCommandsChange.resumeFire();
-      }.bind(this));
+      });
     },
 
     destroy: function() {

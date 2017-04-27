@@ -43,14 +43,14 @@ var TestRunner = {
   run() {
     waitForExplicitFinish();
 
-    SessionStore.promiseInitialized.then(function() {
+    SessionStore.promiseInitialized.then(() => {
       this._iter = runTests();
       if (this._iter) {
         this.next();
       } else {
         finish();
       }
-    }.bind(this));
+    });
   },
 
   /**

@@ -590,12 +590,6 @@ public:
      */
     mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
-    static mozilla::gfx::IntRect FrameCounterBounds() {
-      int bits = 16;
-      int sizeOfBit = 3;
-      return mozilla::gfx::IntRect(0, 0, bits * sizeOfBit, sizeOfBit);
-    }
-
     mozilla::gl::SkiaGLGlue* GetSkiaGLGlue();
     void PurgeSkiaGPUCache();
     static void PurgeSkiaFontCache();

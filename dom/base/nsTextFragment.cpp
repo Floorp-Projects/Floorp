@@ -450,21 +450,8 @@ void
 nsTextFragment::UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength)
 {
   if (mState.mIs2b && !mState.mIsBidi) {
-    const char16_t* cp = aBuffer;
-    const char16_t* end = cp + aLength;
-    while (cp < end) {
-      char16_t ch1 = *cp++;
-      uint32_t utf32Char = ch1;
-      if (NS_IS_HIGH_SURROGATE(ch1) &&
-          cp < end &&
-          NS_IS_LOW_SURROGATE(*cp)) {
-        char16_t ch2 = *cp++;
-        utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
-      }
-      if (UTF32_CHAR_IS_BIDI(utf32Char) || IsBidiControlRTL(utf32Char)) {
-        mState.mIsBidi = true;
-        break;
-      }
+    if (HasRTLChars(aBuffer, aLength)) {
+      mState.mIsBidi = true;
     }
   }
 }

@@ -292,13 +292,13 @@ AddonsReconciler.prototype = {
    *        Listener instance to remove.
    */
   removeChangeListener: function removeChangeListener(listener) {
-    this._listeners = this._listeners.filter(function(element) {
+    this._listeners = this._listeners.filter(element => {
       if (element == listener) {
         this._log.debug("Removing change listener.");
         return false;
       }
       return true;
-    }.bind(this));
+    });
   },
 
   /**
@@ -346,7 +346,7 @@ AddonsReconciler.prototype = {
 
     let installs;
 
-    AddonManager.getAllAddons(function(addons) {
+    AddonManager.getAllAddons(addons => {
       let ids = {};
 
       for (let addon of addons) {
@@ -399,7 +399,7 @@ AddonsReconciler.prototype = {
       } else {
         callback();
       }
-    }.bind(this));
+    });
   },
 
   /**

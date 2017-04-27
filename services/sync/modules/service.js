@@ -325,7 +325,7 @@ Sync11Service.prototype = {
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
-    Utils.nextTick(function onNextTick() {
+    Utils.nextTick(() => {
       this.status.ready = true;
 
       // UI code uses the flag on the XPCOM service so it doesn't have
@@ -336,7 +336,7 @@ Sync11Service.prototype = {
       xps.ready = true;
 
       Svc.Obs.notify("weave:service:ready");
-    }.bind(this));
+    });
   },
 
   _checkSetup: function _checkSetup() {

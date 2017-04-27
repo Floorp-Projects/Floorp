@@ -744,10 +744,10 @@ BrowserElementChild.prototype = {
 
   _activateNextPaintListener: function(e) {
     if (!this._nextPaintHandler) {
-      this._nextPaintHandler = this._addMozAfterPaintHandler(function () {
+      this._nextPaintHandler = this._addMozAfterPaintHandler(() => {
         this._nextPaintHandler = null;
         sendAsyncMsg('nextpaint');
-      }.bind(this));
+      });
     }
   },
 

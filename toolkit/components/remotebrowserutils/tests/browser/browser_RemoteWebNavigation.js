@@ -1,3 +1,5 @@
+Cu.import("resource://gre/modules/Services.jsm");
+const SYSTEMPRINCIPAL = Services.scriptSecurityManager.getSystemPrincipal();
 const DUMMY1 = "http://example.com/browser/toolkit/modules/tests/browser/dummy_page.html";
 const DUMMY2 = "http://example.org/browser/toolkit/modules/tests/browser/dummy_page.html"
 
@@ -22,8 +24,8 @@ add_task(function* test_referrer() {
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                makeURI(DUMMY2),
-                                null, null);
+                                makeURI(DUMMY2), null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY1);
 
   yield ContentTask.spawn(browser, [ DUMMY1, DUMMY2 ], function([dummy1, dummy2]) {
@@ -48,12 +50,14 @@ add_task(function* test_history() {
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null);
+                                null, null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY1);
 
   browser.webNavigation.loadURI(DUMMY2,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null);
+                                null, null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY2);
 
   yield ContentTask.spawn(browser, [DUMMY1, DUMMY2], function([dummy1, dummy2]) {
@@ -104,18 +108,21 @@ add_task(function* test_flags() {
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null);
+                                null, null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY1);
 
   browser.webNavigation.loadURI(DUMMY2,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-                                null, null, null);
+                                null, null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY2);
   yield checkHistory(browser, { count: 1, index: 0 });
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                                null, null, null);
+                                null, null, null,
+                                SYSTEMPRINCIPAL);
   yield waitForLoad(DUMMY1);
   yield checkHistory(browser, { count: 1, index: 0 });
 
@@ -133,7 +140,8 @@ add_task(function* test_badarguments() {
   try {
     browser.webNavigation.loadURI(DUMMY1,
                                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                  null, {}, null);
+                                  null, {}, null,
+                                  SYSTEMPRINCIPAL);
     ok(false, "Should have seen an exception from trying to pass some postdata");
   } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some postdata");
@@ -142,7 +150,8 @@ add_task(function* test_badarguments() {
   try {
     browser.webNavigation.loadURI(DUMMY1,
                                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                  null, null, {});
+                                  null, null, {},
+                                  SYSTEMPRINCIPAL);
     ok(false, "Should have seen an exception from trying to pass some headers");
   } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some headers");

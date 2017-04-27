@@ -830,7 +830,7 @@ AboutReader.prototype = {
   },
 
   _showProgressDelayed() {
-    this._win.setTimeout(function() {
+    this._win.setTimeout(() => {
       // No need to show progress if the article has been loaded,
       // if the window has been unloaded, or if there was an error
       // trying to load the article.
@@ -843,7 +843,7 @@ AboutReader.prototype = {
 
       this._messageElement.textContent = gStrings.GetStringFromName("aboutReader.loading2");
       this._messageElement.style.display = "block";
-    }.bind(this), 300);
+    }, 300);
   },
 
   /**

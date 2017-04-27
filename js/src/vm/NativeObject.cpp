@@ -2372,7 +2372,7 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
     // Step 5 for dense elements.
     if (prop.isDenseOrTypedArrayElement()) {
         // Step 5.a.
-        if (obj->getElementsHeader()->isFrozen())
+        if (pobj->getElementsHeader()->isFrozen())
             return result.fail(JSMSG_READ_ONLY);
 
         // Pure optimization for the common case:

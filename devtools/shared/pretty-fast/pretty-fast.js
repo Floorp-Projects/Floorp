@@ -14,7 +14,7 @@
   } else {
     root.prettyFast = factory();
   }
-}(this, function () {
+}(this, () => {
   "use strict";
 
   var acorn = this.acorn || require("acorn/acorn");
@@ -870,4 +870,4 @@
     return result.toStringWithSourceMap({ file: options.url });
   };
 
-}.bind(this)));
+}));

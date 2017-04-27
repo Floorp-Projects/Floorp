@@ -98,17 +98,17 @@ PerformanceTelemetry.prototype.recordLogs = function () {
   let originalLogKeyed = this._telemetry.logKeyed;
   this._log = {};
 
-  this._telemetry.log = (function (histo, data) {
+  this._telemetry.log = (histo, data) => {
     let results = this._log[histo] = this._log[histo] || [];
     results.push(data);
     originalLog(histo, data);
-  }).bind(this);
+  };
 
-  this._telemetry.logKeyed = (function (histo, key, data) {
+  this._telemetry.logKeyed = (histo, key, data) => {
     let results = this._log[histo] = this._log[histo] || [];
     results.push([key, data]);
     originalLogKeyed(histo, key, data);
-  }).bind(this);
+  };
 };
 
 PerformanceTelemetry.prototype.getLogs = function () {

@@ -312,7 +312,7 @@ AsyncResource.prototype = {
     // Make a lazy getter to convert the json response into an object.
     // Note that this can cause a parse error to be thrown far away from the
     // actual fetch, so be warned!
-    XPCOMUtils.defineLazyGetter(ret, "obj", function() {
+    XPCOMUtils.defineLazyGetter(ret, "obj", () => {
       try {
         return JSON.parse(ret);
       } catch (ex) {
@@ -323,7 +323,7 @@ AsyncResource.prototype = {
                         "\".");
         throw ex;
       }
-    }.bind(this));
+    });
 
     this._deferred.resolve(ret);
   },

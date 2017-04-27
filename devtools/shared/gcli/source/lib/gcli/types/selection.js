@@ -90,7 +90,7 @@ SelectionType.prototype.stringify = function(value, context) {
     return value[this.stringifyProperty];
   }
 
-  return this.getLookup(context).then(function(lookup) {
+  return this.getLookup(context).then(lookup => {
     var name = null;
     lookup.some(function(item) {
       if (item.value === value) {
@@ -100,7 +100,7 @@ SelectionType.prototype.stringify = function(value, context) {
       return false;
     }, this);
     return name;
-  }.bind(this));
+  });
 };
 
 /**
@@ -265,10 +265,10 @@ exports.findPredictions = function(arg, lookup) {
 };
 
 SelectionType.prototype.parse = function(arg, context) {
-  return Promise.resolve(this.getLookup(context)).then(function(lookup) {
+  return Promise.resolve(this.getLookup(context)).then(lookup => {
     var predictions = exports.findPredictions(arg, lookup);
     return exports.convertPredictions(arg, predictions);
-  }.bind(this));
+  });
 };
 
 /**
@@ -303,13 +303,13 @@ function isHidden(option) {
 }
 
 SelectionType.prototype.getBlank = function(context) {
-  var predictFunc = function(context2) {
+  var predictFunc = context2 => {
     return Promise.resolve(this.getLookup(context2)).then(function(lookup) {
       return lookup.filter(function(option) {
         return !isHidden(option);
       }).slice(0, Conversion.maxPredictions - 1);
     });
-  }.bind(this);
+  };
 
   return new Conversion(undefined, new BlankArgument(), Status.INCOMPLETE, '',
                         predictFunc);
@@ -330,7 +330,7 @@ SelectionType.prototype.getBlank = function(context) {
  * So for selections, we treat +1 as -1 and -1 as +1.
  */
 SelectionType.prototype.nudge = function(value, by, context) {
-  return this.getLookup(context).then(function(lookup) {
+  return this.getLookup(context).then(lookup => {
     var index = this._findValue(lookup, value);
     if (index === -1) {
       if (by < 0) {
@@ -354,7 +354,7 @@ SelectionType.prototype.nudge = function(value, by, context) {
       index = 0;
     }
     return lookup[index].value;
-  }.bind(this));
+  });
 };
 
 /**

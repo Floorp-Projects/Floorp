@@ -539,7 +539,6 @@ struct ProfileSample
   Maybe<double> mResponsiveness;
   Maybe<double> mRSS;
   Maybe<double> mUSS;
-  Maybe<int> mFrameNumber;
 };
 
 static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
@@ -549,8 +548,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
     TIME = 1,
     RESPONSIVENESS = 2,
     RSS = 3,
-    USS = 4,
-    FRAME_NUMBER = 5
+    USS = 4
   };
 
   AutoArraySchemaWriter writer(aWriter);
@@ -571,10 +569,6 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 
   if (aSample.mUSS.isSome()) {
     writer.DoubleElement(USS, *aSample.mUSS);
-  }
-
-  if (aSample.mFrameNumber.isSome()) {
-    writer.IntElement(FRAME_NUMBER, *aSample.mFrameNumber);
   }
 }
 
@@ -617,11 +611,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
         if (sample.isSome()) {
           sample->mUSS = Some(entry.mTagDouble);
          }
-        break;
-      case ProfileBufferEntry::Kind::FrameNumber:
-        if (sample.isSome()) {
-          sample->mFrameNumber = Some(entry.mTagInt);
-        }
         break;
       case ProfileBufferEntry::Kind::Sample:
         {

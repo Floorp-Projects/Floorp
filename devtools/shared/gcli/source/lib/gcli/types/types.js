@@ -827,7 +827,7 @@ Conversion.prototype.constrainPredictionIndex = function(context, index) {
     return Promise.resolve();
   }
 
-  return this.getPredictions(context).then(function(value) {
+  return this.getPredictions(context).then(value => {
     if (value.length === 0) {
       return undefined;
     }
@@ -837,7 +837,7 @@ Conversion.prototype.constrainPredictionIndex = function(context, index) {
       index = value.length + index;
     }
     return index;
-  }.bind(this));
+  });
 };
 
 /**
