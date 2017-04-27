@@ -118,9 +118,6 @@ public:
     FinalizeNow,
   };
 
-  void FinalizeDeferredThings(DeferredFinalizeType aType);
-
-public:
   CycleCollectedJSRuntime* Runtime() const
   {
     MOZ_ASSERT(mRuntime);
@@ -132,11 +129,6 @@ public:
 
   std::queue<nsCOMPtr<nsIRunnable>>& GetPromiseMicroTaskQueue();
   std::queue<nsCOMPtr<nsIRunnable>>& GetDebuggerPromiseMicroTaskQueue();
-
-  void PrepareForForgetSkippable();
-  void BeginCycleCollectionCallback();
-  void EndCycleCollectionCallback(CycleCollectorResults& aResults);
-  void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false);
 
   JSContext* Context() const
   {
@@ -178,42 +170,6 @@ public:
     CycleCollectedJSContext* mCCJSCX;
     bool mOldValue;
   };
-
-  void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
-  void RemoveJSHolder(void* aHolder);
-#ifdef DEBUG
-  bool IsJSHolder(void* aHolder);
-  void AssertNoObjectsToTrace(void* aPossibleJSHolder);
-#endif
-
-  nsCycleCollectionParticipant* GCThingParticipant();
-  nsCycleCollectionParticipant* ZoneParticipant();
-
-  nsresult TraverseRoots(nsCycleCollectionNoteRootCallback& aCb);
-  virtual bool UsefulToMergeZones() const;
-  void FixWeakMappingGrayBits() const;
-  bool AreGCGrayBitsValid() const;
-  void GarbageCollect(uint32_t aReason) const;
-
-  void NurseryWrapperAdded(nsWrapperCache* aCache);
-  void NurseryWrapperPreserved(JSObject* aWrapper);
-  void JSObjectsTenured();
-
-  void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                        DeferredFinalizeFunction aFunc,
-                        void* aThing);
-  void DeferredFinalize(nsISupports* aSupports);
-
-  void DumpJSHeap(FILE* aFile);
-
-  // Add aZone to the set of zones waiting for a GC.
-  void AddZoneWaitingForGC(JS::Zone* aZone);
-
-  // Prepare any zones for GC that have been passed to AddZoneWaitingForGC()
-  // since the last GC or since the last call to PrepareWaitingZonesForGC(),
-  // whichever was most recent. If there were no such zones, prepare for a
-  // full GC.
-  void PrepareWaitingZonesForGC();
 
 protected:
   JSContext* MaybeContext() const { return mJSContext; }
