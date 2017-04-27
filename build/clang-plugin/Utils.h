@@ -6,6 +6,7 @@
 #define Utils_h__
 
 #include "plugin.h"
+#include "ThirdPartyPaths.h"
 
 // Check if the given expression contains an assignment expression.
 // This can either take the form of a Binary Operator or a
@@ -381,6 +382,47 @@ inline bool isPlacementNew(const CXXNewExpr *Expression) {
     return false;
   }
   return true;
+}
+
+inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
+  SmallString<1024> FileName = SM.getFilename(Loc);
+  llvm::sys::fs::make_absolute(FileName);
+
+  for (uint32_t i = 0; i < MOZ_THIRD_PARTY_PATHS_COUNT; ++i) {
+    auto PathB = sys::path::begin(FileName);
+    auto PathE = sys::path::end(FileName);
+
+    auto ThirdPartyB = sys::path::begin(MOZ_THIRD_PARTY_PATHS[i]);
+    auto ThirdPartyE = sys::path::end(MOZ_THIRD_PARTY_PATHS[i]);
+
+    for (; PathB != PathE; ++PathB) {
+      // Perform an inner loop to compare path segments, checking if the current
+      // segment is the start of the current third party path.
+      auto IPathB = PathB;
+      auto IThirdPartyB = ThirdPartyB;
+      for (; IPathB != PathE && IThirdPartyB != ThirdPartyE;
+           ++IPathB, ++IThirdPartyB) {
+        if (IPathB->compare_lower(*IThirdPartyB) != 0) {
+          break;
+        }
+      }
+
+      // We found a match!
+      if (IThirdPartyB == ThirdPartyE) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+inline bool inThirdPartyPath(const Decl *D) {
+  D = D->getCanonicalDecl();
+  SourceLocation Loc = D->getLocation();
+  const SourceManager &SM = D->getASTContext().getSourceManager();
+
+  return inThirdPartyPath(Loc, SM);
 }
 
 #endif
