@@ -682,7 +682,9 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
     *stackAdjust = stackForCall;
     reserveStack(*stackAdjust);
     {
-        moveResolver_.resolve();
+        enoughMemory_ &= moveResolver_.resolve();
+        if (!enoughMemory_)
+            return;
         MoveEmitter emitter(*this);
         emitter.emit(moveResolver_);
         emitter.finish();

@@ -8523,19 +8523,20 @@ class MLambda
 };
 
 class MLambdaArrow
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data
 {
     const LambdaFunctionInfo info_;
 
     MLambdaArrow(CompilerConstraintList* constraints, MDefinition* envChain,
-                 MDefinition* newTarget_, JSFunction* fun)
-      : MBinaryInstruction(envChain, newTarget_), info_(fun)
+                 MDefinition* newTarget, MConstant* cst)
+      : MTernaryInstruction(envChain, newTarget, cst),
+        info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType::Object);
-        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
-        if (!fun->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, fun));
+        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(info().fun));
+        if (!info().fun->isSingleton())
+            setResultTypeSet(MakeSingletonTypeSet(constraints, info().fun));
     }
 
   public:
@@ -8543,8 +8544,15 @@ class MLambdaArrow
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
 
+    MConstant* functionOperand() const {
+        return getOperand(2)->toConstant();
+    }
     const LambdaFunctionInfo& info() const {
         return info_;
+    }
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
     }
     bool appendRoots(MRootList& roots) const override {
         return info_.appendRoots(roots);
