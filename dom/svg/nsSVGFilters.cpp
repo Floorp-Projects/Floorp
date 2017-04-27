@@ -502,7 +502,7 @@ nsSVGFELightingElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
 }
 
 FilterPrimitiveDescription
-nsSVGFELightingElement::AddLightingAttributes(FilterPrimitiveDescription aDescription,
+nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& aDescription,
                                               nsSVGFilterInstance* aInstance)
 {
   nsIFrame* frame = GetPrimaryFrame();
@@ -523,7 +523,7 @@ nsSVGFELightingElement::AddLightingAttributes(FilterPrimitiveDescription aDescri
     return FilterPrimitiveDescription(PrimitiveType::Empty);
   }
 
-  FilterPrimitiveDescription& descr = aDescription;
+  FilterPrimitiveDescription descr = aDescription;
   descr.Attributes().Set(eLightingLight, ComputeLightAttributes(aInstance));
   descr.Attributes().Set(eLightingSurfaceScale, surfaceScale);
   descr.Attributes().Set(eLightingKernelUnitLength, kernelUnitLength);
