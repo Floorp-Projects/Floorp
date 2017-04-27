@@ -30,27 +30,17 @@ public class Zipper {
 
     public static String unzipData(byte[] data) throws IOException {
         StringBuilder result = new StringBuilder();
-
         final ByteArrayInputStream bs = new ByteArrayInputStream(data);
-        BufferedReader in = null;
+        GZIPInputStream gstream = new GZIPInputStream(bs);
         try {
-            in = new BufferedReader(new InputStreamReader(new GZIPInputStream(bs), StringUtils.UTF_8));
+            InputStreamReader reader = new InputStreamReader(gstream, StringUtils.UTF_8);
+            BufferedReader in = new BufferedReader(reader);
             String read;
             while ((read = in.readLine()) != null) {
                 result.append(read);
             }
         } finally {
-            // We usually use IOUtils.safeStreamClose(), however stumbler is completely independent
-            // of the rest of fennec, and hence we can't use it here:
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // eat it - nothing we can do
-                }
-            }
-
-            // Is always non-null
+            gstream.close();
             bs.close();
         }
         return result.toString();
