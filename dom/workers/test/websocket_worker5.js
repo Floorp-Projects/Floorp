@@ -8,6 +8,7 @@ var tests = [
   test44, // Test sending/receving binary ArrayBuffer
   test46, // Test that we don't dispatch incoming msgs once in CLOSING state
   test47, // Make sure onerror/onclose aren't called during close()
+  test49, // Test that we fail if subprotocol returned from server doesn't match 
 ];
 
 doTest();

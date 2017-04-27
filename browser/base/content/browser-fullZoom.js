@@ -155,10 +155,10 @@ var FullZoom = {
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(browser.currentURI.spec, this.name, ctxt, {
       handleResult() { hasPref = true; },
-      handleCompletion: function() {
+      handleCompletion: () => {
         if (!hasPref && token.isCurrent)
           this._applyPrefToZoom(undefined, browser);
-      }.bind(this)
+      }
     });
   },
 
@@ -224,14 +224,14 @@ var FullZoom = {
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(aURI.spec, this.name, ctxt, {
       handleResult(resultPref) { value = resultPref.value; },
-      handleCompletion: function() {
+      handleCompletion: () => {
         if (!token.isCurrent) {
           this._notifyOnLocationChange(browser);
           return;
         }
         this._applyPrefToZoom(value, browser,
                               this._notifyOnLocationChange.bind(this, browser));
-      }.bind(this)
+      }
     });
   },
 
@@ -364,9 +364,9 @@ var FullZoom = {
     this._cps2.set(browser.currentURI.spec, this.name,
                    ZoomManager.getZoomForBrowser(browser),
                    this._loadContextFromBrowser(browser), {
-      handleCompletion: function() {
+      handleCompletion: () => {
         this._isNextContentPrefChangeInternal = true;
-      }.bind(this),
+      },
     });
   },
 
@@ -381,9 +381,9 @@ var FullZoom = {
       return;
     let ctxt = this._loadContextFromBrowser(browser);
     this._cps2.removeByDomainAndName(browser.currentURI.spec, this.name, ctxt, {
-      handleCompletion: function() {
+      handleCompletion: () => {
         this._isNextContentPrefChangeInternal = true;
-      }.bind(this),
+      },
     });
   },
 

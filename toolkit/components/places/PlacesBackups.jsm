@@ -192,7 +192,7 @@ this.PlacesBackups = {
 
       let backupFolderPath = yield this.getBackupFolder();
       let iterator = new OS.File.DirectoryIterator(backupFolderPath);
-      yield iterator.forEach(function(aEntry) {
+      yield iterator.forEach(aEntry => {
         // Since this is a lazy getter and OS.File I/O is serialized, we can
         // safely remove .tmp files without risking to remove ongoing backups.
         if (aEntry.name.endsWith(".tmp")) {
@@ -210,7 +210,7 @@ this.PlacesBackups = {
         }
 
         return undefined;
-      }.bind(this));
+      });
       iterator.close();
 
       this._backupFiles.sort((a, b) => {

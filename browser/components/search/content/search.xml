@@ -77,7 +77,7 @@
 
         this._initialized = true;
 
-        Services.search.init((function search_init_cb(aStatus) {
+        Services.search.init(aStatus => {
           // Bail out if the binding's been destroyed
           if (!this._initialized)
             return;
@@ -89,7 +89,7 @@
           } else {
             Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
           }
-        }).bind(this));
+        });
 
         // Some accessibility tests create their own <searchbar> that doesn't
         // use the popup binding below, so null-check oneOffButtons.

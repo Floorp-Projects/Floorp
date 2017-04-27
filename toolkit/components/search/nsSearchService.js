@@ -3267,10 +3267,10 @@ SearchService.prototype = {
   _batchTask: null,
   get batchTask() {
     if (!this._batchTask) {
-      let task = function taskCallback() {
+      let task = () => {
         LOG("batchTask: Invalidating engine cache");
         this._buildCache();
-      }.bind(this);
+      };
       this._batchTask = new DeferredTask(task, CACHE_INVALIDATION_DELAY);
     }
     return this._batchTask;

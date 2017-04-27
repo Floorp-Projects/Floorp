@@ -28,7 +28,7 @@ addMessageListener("entries.open", function (e) {
   dir1.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file2 = dir1.clone();
-  file2.append('bar.txt');
+  file2.append('bar..txt'); // Note the double ..
   file2.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var dir2 = dir1.clone();

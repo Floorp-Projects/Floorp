@@ -248,7 +248,7 @@ NotificationStorage.prototype = {
   },
 
   _populateCache: function(notifications) {
-    notifications.forEach(function(notification) {
+    notifications.forEach(notification => {
       this._notifications[notification.id] = notification;
       if (notification.tag && notification.origin) {
         let tag = notification.tag;
@@ -258,7 +258,7 @@ NotificationStorage.prototype = {
         }
         this._byTag[origin][tag] = notification;
       }
-    }.bind(this));
+    });
     this._cached = true;
   },
 

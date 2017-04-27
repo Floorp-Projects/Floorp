@@ -445,13 +445,15 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         mUiMode = uiMode;
 
-        // The "Throbber start" and "Throbber stop" log messages in this method
+        // The "page load start" and "page load stop" log messages in this method
         // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
         // See discussion in Bug 804457. Bug 805124 tracks paring these down.
         if (mUiMode == UIMode.PROGRESS) {
-            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
+            Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                  " - page load start");
         } else {
-            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
+            Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                  " - page load stop");
         }
 
         updatePageActions();

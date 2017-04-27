@@ -111,7 +111,7 @@ Completer.prototype.resized = function(ev) {
 Completer.prototype.update = function(ev) {
   this.choice = (ev && ev.choice != null) ? ev.choice : 0;
 
-  this._getCompleterTemplateData().then(function(data) {
+  this._getCompleterTemplateData().then(data => {
     if (this.template == null) {
       return; // destroy() has been called
     }
@@ -123,7 +123,7 @@ Completer.prototype.update = function(ev) {
     while (template.hasChildNodes()) {
       this.element.appendChild(template.firstChild);
     }
-  }.bind(this));
+  });
 };
 
 /**

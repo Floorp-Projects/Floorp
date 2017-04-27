@@ -33,9 +33,9 @@ gaia_switch/examples/index.html from the Gaia repository.
 
       // The setTimeout is necessary to avoid missing @import styles
       // when appending two stylesheets. Bug 1003294.
-      setTimeout(function nextTick() {
+      setTimeout(() => {
         this.shadowRoot.appendChild(style.cloneNode(true));
-      }.bind(this));
+      });
     }
 
   };

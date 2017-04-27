@@ -229,7 +229,7 @@ describe('flow.js', function() {
             this.emit('end_stream');
           }
           if (frame.type === 'BLOCKED') {
-            setTimeout(function() {
+            setTimeout(() => {
               this._push({
                 type: 'WINDOW_UPDATE',
                 flags: {},
@@ -237,7 +237,7 @@ describe('flow.js', function() {
                 window_size: this._received
               });
               this._received = 0;
-            }.bind(this), 20);
+            }, 20);
           }
           callback();
         };
