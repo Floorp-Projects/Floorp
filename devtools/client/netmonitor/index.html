@@ -51,6 +51,37 @@
           return NetMonitorController.shutdownNetMonitor();
         }
       };
+
+      // Implement support for chrome://devtools/content/netmonitor/index.html?type=tab&id=1234 URLs
+      // where 1234 is the tab id, you can retrieve from about:debugging#tabs links.
+      // Simply copy the id from about:devtools-toolbox?type=tab&id=1234 URLs.
+
+      // URL constructor doesn't support chrome: scheme
+      let href = window.location.href.replace(/chrome:/, "http://");
+      let url = new window.URL(href);
+
+      // If query parameters are given in a chrome tab, the inspector is running in standalone.
+      if (window.location.protocol === "chrome:" && url.search.length > 1) {
+        const { targetFromURL } = require("devtools/client/framework/target-from-url");
+
+        (async function () {
+          let target = await targetFromURL(url);
+          // Start the network event listening as it is done in the toolbox code
+          await target.activeConsole.startListeners([
+            "NetworkActivity",
+          ]);
+          // Create a fake toolbox object
+          let toolbox = {
+            target,
+            viewSourceInDebugger() {
+              throw new Error("toolbox.viewSourceInDebugger is not implement from a tab");
+            }
+          };
+          window.Netmonitor.bootstrap({ toolbox });
+        })().catch(e => {
+          window.alert("Unable to start the network monitor:" + e.message + "\n" + e.stack);
+        });
+      }
     </script>
   </body>
 </html>
