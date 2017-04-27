@@ -297,16 +297,15 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
                 userCursor = mDB.getBookmarksInFolder(contentResolver, mFolderInfo.id);
             }
 
-
             if (partnerCursor == null && userCursor == null) {
+                // MergeCursor can handle nulls, but CursorAdapter assumes that all Cursors
+                // have an _id column (which isn't the case if MergeCursor contains two nulls).
+                // It is however able to handle completely null cursors, so in this scenario
+                // we do return null.
                 return null;
-            } else if (partnerCursor == null) {
-                return userCursor;
-            } else if (userCursor == null) {
-                return partnerCursor;
-            } else {
-                return new MergeCursor(new Cursor[] { partnerCursor, userCursor });
             }
+
+            return new MergeCursor(new Cursor[] { partnerCursor, userCursor });
         }
 
         @Override
