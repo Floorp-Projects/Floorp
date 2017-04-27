@@ -34,12 +34,7 @@ runWithMSE(function (ms, v) {
     var target = 2;
 
     v.addEventListener("loadedmetadata", function () {
-      if (v.currentTime != target &&
-          v.buffered.length &&
-          target >= v.buffered.start(0) &&
-          target < v.buffered.end(0)) {
-        v.currentTime = target;
-      }
+      v.currentTime = target;
     });
 
     var wasSeeking = false;
