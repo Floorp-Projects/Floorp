@@ -3,15 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.MAIN_MESSAGE_TYPE = "ActivityStream:Main";
-this.CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
+const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
+const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
 
-this.actionTypes = [
+const actionTypes = [
   "INIT",
   "UNINIT",
   "NEW_TAB_INITIAL_STATE",
   "NEW_TAB_LOAD",
-  "NEW_TAB_UNLOAD"
+  "NEW_TAB_UNLOAD",
+  "PERFORM_SEARCH",
+  "SCREENSHOT_UPDATED",
+  "SEARCH_STATE_UPDATED",
+  "TOP_SITES_UPDATED"
 // The line below creates an object like this:
 // {
 //   INIT: "INIT",
@@ -85,6 +89,8 @@ function SendToContent(action, target) {
     toTarget: target
   });
 }
+
+this.actionTypes = actionTypes;
 
 this.actionCreators = {
   SendToMain,

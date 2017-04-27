@@ -4076,7 +4076,7 @@ Selection::RemoveItem(nsRange* aItem)
     }
   }
   if (idx < 0)
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
   aItem->SetSelection(nullptr);
@@ -5172,11 +5172,15 @@ Selection::CollapseNative(nsINode* aParentNode, int32_t aOffset)
 }
 
 void
-Selection::CollapseJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::CollapseJS(nsINode* aNode, uint32_t aOffset, ErrorResult& aRv)
 {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  Collapse(aNode, aOffset, aRv);
+  if (!aNode) {
+    RemoveAllRanges(aRv);
+    return;
+  }
+  Collapse(*aNode, aOffset, aRv);
 }
 
 nsresult

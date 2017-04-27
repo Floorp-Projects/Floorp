@@ -59,7 +59,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         void waitForChild() {
             ThreadUtils.assertNotOnUiThread();
-            synchronized(this) {
+            synchronized (this) {
                 if (mWait) {
                     try {
                         this.wait(5000); // 5 seconds
@@ -87,7 +87,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Failed to get child " + mType + " process PID. Process may have died.", e);
             }
-            synchronized(this) {
+            synchronized (this) {
                 if (mWait) {
                     mWait = false;
                     this.notifyAll();
@@ -97,10 +97,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            synchronized(INSTANCE.mConnections) {
+            synchronized (INSTANCE.mConnections) {
                 INSTANCE.mConnections.remove(mType);
             }
-            synchronized(this) {
+            synchronized (this) {
                 if (mWait) {
                     mWait = false;
                     this.notifyAll();
@@ -110,11 +110,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         @Override
         public void binderDied() {
-            Log.e(LOGTAG,"Binder died. Attempt to unbind service: " + mType + " " + mPid);
+            Log.e(LOGTAG, "Binder died. Attempt to unbind service: " + mType + " " + mPid);
             try {
                 GeckoAppShell.getApplicationContext().unbindService(this);
             } catch (final java.lang.IllegalArgumentException e) {
-                Log.e(LOGTAG,"Looks like connection was already unbound", e);
+                Log.e(LOGTAG, "Looks like connection was already unbound", e);
             }
         }
     }
@@ -127,7 +127,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     public int start(String type, String[] args, int crashFd, int ipcFd) {
         ChildConnection connection = null;
-        synchronized(mConnections) {
+        synchronized (mConnections) {
             connection = mConnections.get(type);
         }
         if (connection != null) {
@@ -166,7 +166,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 crashPfd.close();
             }
             ipcPfd.close();
-            synchronized(mConnections) {
+            synchronized (mConnections) {
                 mConnections.put(type, connection);
             }
             return connection.mPid;

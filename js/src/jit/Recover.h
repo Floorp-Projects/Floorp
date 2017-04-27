@@ -106,6 +106,7 @@ namespace jit {
     _(NewDerivedTypedObject)                    \
     _(CreateThisWithTemplate)                   \
     _(Lambda)                                   \
+    _(LambdaArrow)                              \
     _(SimdBox)                                  \
     _(ObjectState)                              \
     _(ArrayState)                               \
@@ -622,6 +623,14 @@ class RLambda final : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_NUM_OP_(Lambda, 2)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RLambdaArrow final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(LambdaArrow, 3)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };

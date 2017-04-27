@@ -43,6 +43,8 @@ public:
   bool Push(int64_t aOffset, int64_t aTime, int32_t aSampleRate,
             uint32_t aFrames, uint32_t aChannels, CopyFunc aCopyFunc)
   {
+    auto time = media::TimeUnit::FromMicroseconds(aTime);
+
     // If we are losing more than a reasonable amount to padding, try to chunk
     // the data.
     size_t maxSlop = AudioDataSize(aFrames, aChannels) / MAX_SLOP_DIVISOR;
@@ -63,14 +65,14 @@ public:
       NS_ASSERTION(framesCopied <= aFrames, "functor copied too many frames");
       buffer.SetLength(size_t(framesCopied) * aChannels);
 
-      CheckedInt64 duration = FramesToUsecs(framesCopied, aSampleRate);
-      if (!duration.isValid()) {
+      auto duration = FramesToTimeUnit(framesCopied, aSampleRate);
+      if (!duration.IsValid()) {
         return false;
       }
 
       mQueue.Push(new AudioData(aOffset,
-                                aTime,
-                                duration.value(),
+                                time,
+                                duration,
                                 framesCopied,
                                 Move(buffer),
                                 aChannels,
@@ -78,7 +80,7 @@ public:
 
       // Remove the frames we just pushed into the queue and loop if there is
       // more to be done.
-      aTime += duration.value();
+      time += duration;
       aFrames -= framesCopied;
 
       // NOTE: No need to update aOffset as its only an approximation anyway.

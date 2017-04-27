@@ -114,7 +114,7 @@ DOMMediaStream::TrackPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBl
   if (mInputPort) {
     return mInputPort->BlockSourceTrackId(aTrackId, aBlockingMode);
   }
-  RefPtr<Pledge<bool>> rejected = new Pledge<bool>();
+  auto rejected = MakeRefPtr<Pledge<bool>>();
   rejected->Reject(NS_ERROR_FAILURE);
   return rejected.forget();
 }

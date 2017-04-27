@@ -14,82 +14,96 @@
 
 <script type="text/javascript">
 "use strict";
-
-const testPackets = [];
-const numMessages = 1000;
-for (let id = 0; id < numMessages; id++) {
-  let message = "Odd text";
-  if (id % 2 === 0) {
-    message = "Even text";
+const numMessages = 4000;
+const testPackets = Array.from({length: numMessages}).map((el, id) => ({
+  "from": "server1.conn4.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "arguments": [
+      "foobar",
+      `${id % 2 === 0 ? "Even" : "Odd"} text`,
+      id
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "file:///test.html",
+    "functionName": "",
+    "groupName": "",
+    "level": "log",
+    "lineNumber": 1,
+    "private": false,
+    "styles": [],
+    "timeStamp": 1455064271115 + id,
+    "timer": null,
+    "workerType": "none",
+    "category": "webdev"
   }
-  testPackets.push({
-    "from": "server1.conn4.child1/consoleActor2",
-    "type": "consoleAPICall",
-    "message": {
-      "arguments": [
-        "foobar",
-        message,
-        id
-      ],
-      "columnNumber": 1,
-      "counter": null,
-      "filename": "file:///test.html",
-      "functionName": "",
-      "groupName": "",
-      "level": "log",
-      "lineNumber": 1,
-      "private": false,
-      "styles": [],
-      "timeStamp": 1455064271115 + id,
-      "timer": null,
-      "workerType": "none",
-      "category": "webdev"
-    }
-  });
-}
+}));
 
-function timeit(cb) {
+async function timeit(cb) {
   // Return a Promise that resolves the number of seconds cb takes.
-  return new Promise(resolve => {
-    let start = performance.now();
-    cb();
-    let elapsed = performance.now() - start;
-    resolve(elapsed / 1000);
-  });
+  let start = performance.now();
+  await cb();
+  let elapsed = performance.now() - start;
+  return elapsed;
 }
 
-window.onload = Task.async(function* () {
-  const { configureStore } = browserRequire(
-    "devtools/client/webconsole/new-console-output/store");
-  const { filterTextSet, filtersClear } = browserRequire(
-    "devtools/client/webconsole/new-console-output/actions/index");
-  const NewConsoleOutputWrapper = browserRequire(
-    "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
-  const wrapper = new NewConsoleOutputWrapper(document.querySelector("#output"), {});
+window.onload = async function () {
+  // This test does costly work multiple times to have better performance data.
+  SimpleTest.requestLongerTimeout(3);
 
-  const store = configureStore();
+  try {
+    const Services = browserRequire("Services");
+    Services.prefs.setIntPref("devtools.hud.loglimit", numMessages);
+    const NewConsoleOutputWrapper = browserRequire(
+      "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
+    const EventEmitter = browserRequire("devtools/shared/event-emitter");
 
-  let time = yield timeit(() => {
-    testPackets.forEach((message) => {
-      wrapper.dispatchMessageAdd(message);
-    });
-  });
-  info("took " + time + " seconds to render messages");
+    const wrapper = new NewConsoleOutputWrapper(
+      document.getElementById("output"),
+      {hud: EventEmitter.decorate({proxy: {}})},
+      {},
+      null,
+      document,
+    );
+    wrapper.init();
 
-  time = yield timeit(() => {
-    store.dispatch(filterTextSet("Odd text"));
-  });
-  info("took " + time + " seconds to search filter half the messages");
+    let times = [];
+    const iterations = 25;
+    const lastPacket = testPackets.pop();
+    for (let i = 0; i < iterations; i++) {
+      let time = await timeit(async () => {
+        testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
+        // Only wait for the last packet to minimize work.
+        await wrapper.dispatchMessageAdd(lastPacket, true);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      });
+      info(`took ${time} ms to render messages`);
+      times.push(time);
 
-  time = yield timeit(() => {
-    store.dispatch(filtersClear());
-  });
-  info("took " + time + " seconds to clear the filter");
+      // Clear the console
+      wrapper.dispatchMessagesClear();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
 
-  ok(true, "Yay, it didn't time out!");
+    times.sort();
+    let totalTime = times.reduce((sum, t) => sum + t);
+    let avg = totalTime / times.length;
+    let median = times.length % 2 !== 0
+      ? times[Math.floor(times.length / 2)]
+      : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
+    info(`On average, it took ${avg} ms (median ${median} ms) ` +
+         `to render ${numMessages} messages`);
+
+    ok(true, "Yay, it didn't time out!");
+  } catch (e) {
+    ok(false, `Error :  ${e.message}
+      ${e.stack}
+    `);
+  }
 
   SimpleTest.finish();
-});
+};
 </script>
 </body>
 </html>

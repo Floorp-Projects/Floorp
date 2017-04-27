@@ -2674,27 +2674,31 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 
   EventStates newState = ObjectState();
 
+  if (newState == aOldState && mType == aOldType) {
+    return; // Also done.
+  }
+
   if (newState != aOldState) {
     NS_ASSERTION(thisContent->IsInComposedDoc(), "Something is confused");
     // This will trigger frame construction
     EventStates changedBits = aOldState ^ newState;
-
     {
       nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(thisContent, changedBits);
-    }
-    if (aSync) {
-      NS_ASSERTION(InActiveDocument(thisContent), "Something is confused");
-      // Make sure that frames are actually constructed immediately.
-      doc->FlushPendingNotifications(FlushType::Frames);
     }
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
     nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     if (shell) {
-      shell->RecreateFramesFor(thisContent);
+      shell->PostRecreateFramesFor(thisContent->AsElement());
     }
+  }
+
+  if (aSync) {
+    NS_ASSERTION(InActiveDocument(thisContent), "Something is confused");
+    // Make sure that frames are actually constructed immediately.
+    doc->FlushPendingNotifications(FlushType::Frames);
   }
 }
 

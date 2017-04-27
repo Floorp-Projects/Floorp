@@ -50,7 +50,8 @@ public:
   }
 
   void
-  StreamNeeded(IPCBlobInputStream* aStream);
+  StreamNeeded(IPCBlobInputStream* aStream,
+               nsIEventTarget* aEventTarget);
 
   mozilla::ipc::IPCResult
   RecvStreamReady(const OptionalIPCStream& aStream) override;
@@ -76,7 +77,7 @@ private:
   struct PendingOperation
   {
     RefPtr<IPCBlobInputStream> mStream;
-    nsCOMPtr<nsIThread> mThread;
+    nsCOMPtr<nsIEventTarget> mEventTarget;
   };
   nsTArray<PendingOperation> mPendingOperations;
 

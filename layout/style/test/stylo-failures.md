@@ -36,7 +36,8 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [19]
+  * test_transitions_and_reframes.html: pseudo frames bug 1331047 [4]
+  * test_animations.html: 6 of them bug 1331047 [25]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -55,7 +56,7 @@ to mochitest command.
     * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [20]
-    * test_value_storage.html `animation` [91]
+    * test_value_storage.html `animation` [15]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
@@ -74,11 +75,9 @@ to mochitest command.
 * Transition support:
   * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [10]
-  * test_transitions_computed_value_combinations.html [145]
-  * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
-* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [30]
+* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
@@ -88,8 +87,8 @@ to mochitest command.
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
-  * test_counter_style.html [1]
-  * test_rule_insertion.html `@counter-style` [4]
+  * test_counter_style.html [5]
+  * test_rule_insertion.html `@counter-style` [1]
   * ... `cjk-decimal` [1]
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
@@ -109,7 +108,7 @@ to mochitest command.
   * test_descriptor_storage.html [1]
   * test_font_face_parser.html `@font-face` [8]
 * @namespace support:
-  * test_namespace_rule.html: bug 1355715 [17]
+  * test_namespace_rule.html: bug 1355715 [16]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
@@ -177,8 +176,11 @@ to mochitest command.
     * test_value_storage.html `-moz-linear-gradient` [322]
     * ... `-moz-radial-gradient` [309]
     * ... `-moz-repeating-` [298]
+    * test_specified_value_serialization.html `-moz-linear-gradient` [2]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
+    * test_specified_value_serialization.html `-webkit-linear-gradient` [1]
+    * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -188,9 +190,6 @@ to mochitest command.
     * ... `-moz-available` [4]
   * several prefixed values in cursor property bug 1356072
     * test_value_storage.html `cursor` [4]
-  * moz-prefixed values of overflow shorthand bug 1330888
-    * test_bug319381.html [8]
-    * test_value_storage.html `'overflow` [8]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit bug 1356104 [3]
@@ -279,7 +278,7 @@ to mochitest command.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
-* test_selectors.html `this_better_be_unvisited`: visited handling [2]
+* test_selectors.html `this_better_be_unvisited`: visited handling [1]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference servo/rust-cssparser#138 [14]
 
 ## Assertions

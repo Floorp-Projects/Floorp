@@ -130,6 +130,11 @@ UiCompositorControllerChild::ToolbarAnimatorMessageFromUI(const int32_t& aMessag
     return false;
   }
 
+  if (aMessage == IS_COMPOSITOR_CONTROLLER_OPEN) {
+    RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
+    return true;
+  }
+
   return SendToolbarAnimatorMessageFromUI(aMessage);
 }
 

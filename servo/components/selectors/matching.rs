@@ -385,15 +385,7 @@ fn matches_simple_selector<E, F>(
             matches_generic_nth_child(element, 0, 1, true, true, flags_setter)
         }
         Component::Negation(ref negated) => {
-            !negated.iter().all(|s| {
-                match matches_complex_selector_internal(s.iter(),
-                                                        element,
-                                                        relations,
-                                                        flags_setter) {
-                    SelectorMatchingResult::Matched => true,
-                    _ => false,
-                }
-            })
+            !negated.iter().all(|ss| matches_simple_selector(ss, element, relations, flags_setter))
         }
     }
 }
@@ -415,7 +407,7 @@ fn matches_generic_nth_child<E, F>(element: &E,
         HAS_SLOW_SELECTOR_LATER_SIBLINGS
     });
 
-    let mut index = 1;
+    let mut index: i32 = 1;
     let mut next_sibling = if is_from_end {
         element.next_sibling_element()
     } else {
@@ -443,11 +435,13 @@ fn matches_generic_nth_child<E, F>(element: &E,
         };
     }
 
-    if a == 0 {
-        b == index
-    } else {
-        (index - b) / a >= 0 &&
-        (index - b) % a == 0
+    // Is there a non-negative integer n such that An+B=index?
+    match index.checked_sub(b) {
+        None => false,
+        Some(an) => match an.checked_div(a) {
+            Some(n) => n >= 0 && a * n == an,
+            None /* a == 0 */ => an == 0,
+        },
     }
 }
 

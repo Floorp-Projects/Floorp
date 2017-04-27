@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <meta charset=utf-8>
+    <title>Bug 1359658: Animation-only dirty descendants bit should be cleared
+           for display:none content</title>
+  </head>
+  <body>
+  <div id="ancestor">
+    <svg>
+      <rect id="target" width="100%" height="100%" fill="lime"/>
+    </svg>
+  </div>
+  </body>
+  <script>
+'use strict';
+
+const ancestor = document.getElementById('ancestor');
+const target   = document.getElementById('target');
+
+document.addEventListener('DOMContentLoaded', () => {
+  const animation = target.animate({ color: [ 'red', 'lime' ] },
+                                   { duration: 1000, iterations: Infinity });
+  requestAnimationFrame(() => {
+    // Tweak animation to cause animation dirty bit to be set
+    animation.effect.timing.duration = 2000;
+    ancestor.style.display = "none";
+    getComputedStyle(ancestor).display;
+    document.documentElement.className = '';
+  });
+});
+  </script>
+</html>

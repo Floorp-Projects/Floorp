@@ -5,8 +5,10 @@
 package org.mozilla.gecko.fxa.receivers;
 
 import android.app.IntentService;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.background.common.log.Logger;
@@ -15,6 +17,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException.FxAccountAbstractClientRemoteException;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
@@ -74,6 +77,8 @@ public class FxAccountDeletedService extends IntentService {
           "deleted Account.");
       return;
     }
+
+    clearRemoteDevicesList(intent, context);
 
     // Delete current device the from FxA devices list.
     deleteFxADevice(intent);
@@ -157,6 +162,17 @@ public class FxAccountDeletedService extends IntentService {
     } else {
       Logger.error(LOG_TAG, "Cached OAuth server URI is null or cached OAuth tokens are null; ignoring.");
     }
+  }
+
+  private void clearRemoteDevicesList(Intent intent, Context context) {
+    final Uri remoteDevicesUriWithProfile = BrowserContract.RemoteDevices.CONTENT_URI
+            .buildUpon()
+            .appendQueryParameter(BrowserContract.PARAM_PROFILE,
+                                  intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE))
+            .build();
+    ContentResolver cr = context.getContentResolver();
+
+    cr.delete(remoteDevicesUriWithProfile, null, null);
   }
 
   // Remove our current device from the FxA device list.

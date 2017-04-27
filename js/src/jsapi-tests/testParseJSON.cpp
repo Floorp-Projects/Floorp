@@ -306,9 +306,8 @@ Error(JSContext* cx, const char (&input)[N], uint32_t expectedLine,
     CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
     CHECK(report.report()->errorNumber == JSMSG_JSON_BAD_PARSE);
 
-    const char* lineAndColumnASCII = JS_smprintf("line %d column %d", expectedLine, expectedColumn);
-    CHECK(strstr(report.toStringResult().c_str(), lineAndColumnASCII) != nullptr);
-    js_free((void*)lineAndColumnASCII);
+    UniqueChars lineAndColumnASCII = JS_smprintf("line %d column %d", expectedLine, expectedColumn);
+    CHECK(strstr(report.toStringResult().c_str(), lineAndColumnASCII.get()) != nullptr);
 
     /* We do not execute JS, so there should be no exception thrown. */
     CHECK(!JS_IsExceptionPending(cx));

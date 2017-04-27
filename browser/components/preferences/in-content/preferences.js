@@ -148,14 +148,15 @@ function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
   const kDefaultCategoryInternalName = "paneGeneral";
   let hash = document.location.hash;
+
+  let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
+  let breakIndex = category.indexOf("-");
   // Subcategories allow for selecting smaller sections of the preferences
   // until proper search support is enabled (bug 1353954).
-  let breakIndex = hash.indexOf("-");
-  let subcategory = breakIndex != -1 && hash.substring(breakIndex + 1);
+  let subcategory = breakIndex != -1 && category.substring(breakIndex + 1);
   if (subcategory) {
-    hash = hash.substring(0, breakIndex);
+    category = category.substring(0, breakIndex);
   }
-  let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
   category = friendlyPrefCategoryNameToInternalName(category);
 
   // Updating the hash (below) or changing the selected category

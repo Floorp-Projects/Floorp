@@ -1410,11 +1410,8 @@ public:
        const nsAString& aMessage = EmptyString(),
        const nsAString& aConstraint = EmptyString()) {
     RefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage, aConstraint);
-    RefPtr<ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>> runnable =
-      new ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>(mOnSuccess,
-                                                                   mOnFailure,
-                                                                   *error,
-                                                                   mWindowID);
+    auto runnable = MakeRefPtr<ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>>(
+        mOnSuccess, mOnFailure, *error, mWindowID);
     // These should be empty now
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
@@ -2298,9 +2295,8 @@ if (privileged) {
   p->Then([self, onSuccess, onFailure, windowID, c, listener, askPermission,
            prefs, isHTTPS, callID, principalInfo,
            isChrome](SourceSet*& aDevices) mutable {
-
-    RefPtr<Refcountable<UniquePtr<SourceSet>>> devices(
-         new Refcountable<UniquePtr<SourceSet>>(aDevices)); // grab result
+    // grab result
+    auto devices = MakeRefPtr<Refcountable<UniquePtr<SourceSet>>>(aDevices);
 
     // Ensure that our windowID is still good.
     if (!nsGlobalWindow::GetInnerWindowWithId(windowID)) {

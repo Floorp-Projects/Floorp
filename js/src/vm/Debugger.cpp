@@ -634,23 +634,23 @@ JSBreakpointSite::destroyIfEmpty(FreeOp* fop)
         script->destroyBreakpointSite(fop, pc);
 }
 
-WasmBreakpointSite::WasmBreakpointSite(wasm::Code* code_, uint32_t offset_)
-  : BreakpointSite(Type::Wasm), code(code_), offset(offset_)
+WasmBreakpointSite::WasmBreakpointSite(wasm::DebugState* debug_, uint32_t offset_)
+  : BreakpointSite(Type::Wasm), debug(debug_), offset(offset_)
 {
-    MOZ_ASSERT(code_);
+    MOZ_ASSERT(debug_);
 }
 
 void
 WasmBreakpointSite::recompile(FreeOp* fop)
 {
-    code->toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
+    debug->toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
 void
 WasmBreakpointSite::destroyIfEmpty(FreeOp* fop)
 {
     if (isEmpty())
-        code->destroyBreakpointSite(fop, offset);
+        debug->destroyBreakpointSite(fop, offset);
 }
 
 /*** Debugger hook dispatch **********************************************************************/
@@ -1982,7 +1982,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
         isJS = false;
         pc = nullptr;
         bytecodeOffset = iter.wasmBytecodeOffset();
-        site = iter.wasmInstance()->code().getOrCreateBreakpointSite(cx, bytecodeOffset);
+        site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(cx, bytecodeOffset);
     }
 
     /* Build list of breakpoint handlers. */
@@ -2036,7 +2036,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
             if (isJS)
                 site = iter.script()->getBreakpointSite(pc);
             else
-                site = iter.wasmInstance()->code().getOrCreateBreakpointSite(cx, bytecodeOffset);
+                site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(cx, bytecodeOffset);
         }
     }
 
@@ -3220,7 +3220,9 @@ Debugger::sweepAll(FreeOp* fop)
     JSRuntime* rt = fop->runtime();
 
     for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        for (Debugger* dbg : group->debuggerList()) {
+        Debugger* dbg = group->debuggerList().getFirst();
+        while (dbg) {
+            Debugger* next = dbg->getNext();
             if (IsAboutToBeFinalized(&dbg->object)) {
                 /*
                  * dbg is being GC'd. Detach it from its debuggees. The debuggee
@@ -3229,7 +3231,9 @@ Debugger::sweepAll(FreeOp* fop)
                  */
                 for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
                     dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e);
+                fop->delete_(dbg);
             }
+            dbg = next;
         }
     }
 }
@@ -3271,17 +3275,6 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
     }
 }
 
-/* static */ void
-Debugger::finalize(FreeOp* fop, JSObject* obj)
-{
-    MOZ_ASSERT(fop->onActiveCooperatingThread());
-
-    Debugger* dbg = fromJSObject(obj);
-    if (!dbg)
-        return;
-    fop->delete_(dbg);
-}
-
 const ClassOps Debugger::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
@@ -3290,7 +3283,7 @@ const ClassOps Debugger::classOps_ = {
     nullptr,    /* enumerate   */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
-    Debugger::finalize,
+    nullptr,    /* finalize    */
     nullptr,    /* call        */
     nullptr,    /* hasInstance */
     nullptr,    /* construct   */
@@ -3300,8 +3293,7 @@ const ClassOps Debugger::classOps_ = {
 const Class Debugger::class_ = {
     "Debugger",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT) |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
     &Debugger::classOps_
 };
 
@@ -3904,7 +3896,8 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
      * Debugger.{Frame,Object,Script,Memory}.prototype in reserved slots. The
      * rest of the reserved slots are for hooks; they default to undefined.
      */
-    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &Debugger::class_, proto));
+    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &Debugger::class_, proto,
+                                                             TenuredObject));
     if (!obj)
         return false;
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
@@ -5682,7 +5675,7 @@ struct DebuggerScriptGetLineCountMatcher
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         uint32_t result;
-        if (!wasmInstance->instance().code().totalSourceLines(cx_, &result))
+        if (!wasmInstance->instance().debug().totalSourceLines(cx_, &result))
             return false;
         totalLines = double(result);
         return true;
@@ -6221,7 +6214,7 @@ class DebuggerScriptGetOffsetLocationMatcher
         size_t lineno;
         size_t column;
         bool found;
-        if (!instance->instance().code().getOffsetLocation(cx_, offset_, &found, &lineno, &column))
+        if (!instance->instance().debug().getOffsetLocation(cx_, offset_, &found, &lineno, &column))
             return false;
 
         if (!found) {
@@ -6439,7 +6432,7 @@ class DebuggerScriptGetLineOffsetsMatcher
 
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         Vector<uint32_t> offsets(cx_);
-        if (!instance->instance().code().getLineOffsets(cx_, lineno_, &offsets))
+        if (!instance->instance().debug().getLineOffsets(cx_, lineno_, &offsets))
             return false;
 
         result_.set(NewDenseEmptyArray(cx_));
@@ -6740,11 +6733,11 @@ struct DebuggerScriptSetBreakpointMatcher
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         wasm::Instance& instance = wasmInstance->instance();
-        if (!instance.code().hasBreakpointTrapAtOffset(offset_)) {
+        if (!instance.debug().hasBreakpointTrapAtOffset(offset_)) {
             JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
             return false;
         }
-        WasmBreakpointSite* site = instance.code().getOrCreateBreakpointSite(cx_, offset_);
+        WasmBreakpointSite* site = instance.debug().getOrCreateBreakpointSite(cx_, offset_);
         if (!site)
             return false;
         site->inc(cx_->runtime()->defaultFreeOp());
@@ -6834,7 +6827,7 @@ class DebuggerScriptClearBreakpointMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> instance) {
-        return instance->instance().code().clearBreakpointsIn(cx_, instance, dbg_, handler_);
+        return instance->instance().debug().clearBreakpointsIn(cx_, instance, dbg_, handler_);
     }
 };
 
@@ -7241,7 +7234,7 @@ class DebuggerSourceGetTextMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        return wasmInstance->instance().code().createText(cx_);
+        return wasmInstance->instance().debug().createText(cx_);
     }
 };
 
@@ -7285,7 +7278,7 @@ class DebuggerSourceGetURLMatcher
         return Nothing();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        if (JSString* str = wasmInstance->instance().code().debugDisplayURL(cx_))
+        if (JSString* str = wasmInstance->instance().debug().debugDisplayURL(cx_))
             return Some(str);
         return Nothing();
     }
@@ -7920,11 +7913,11 @@ DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame, OnStep
         wasm::DebugFrame* wasmFrame = referent.asWasmDebugFrame();
         if (handler && !prior) {
             // Single stepping toggled off->on.
-            if (!instance->code().incrementStepModeCount(cx, wasmFrame->funcIndex()))
+            if (!instance->debug().incrementStepModeCount(cx, wasmFrame->funcIndex()))
                 return false;
         } else if (!handler && prior) {
             // Single stepping toggled on->off.
-            if (!instance->code().decrementStepModeCount(cx, wasmFrame->funcIndex()))
+            if (!instance->debug().decrementStepModeCount(cx, wasmFrame->funcIndex()))
                 return false;
         }
     } else {
@@ -8258,8 +8251,8 @@ DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp* fop, AbstractFrameP
         return;
     if (frame.isWasmDebugFrame()) {
         wasm::Instance* instance = frame.wasmInstance();
-        instance->code().decrementStepModeCount(instance->cx(),
-                                                frame.asWasmDebugFrame()->funcIndex());
+        instance->debug().decrementStepModeCount(instance->cx(),
+                                                 frame.asWasmDebugFrame()->funcIndex());
     } else {
         frame.script()->decrementStepModeCount(fop);
     }
@@ -11796,8 +11789,7 @@ GarbageCollectionEvent::toJSObject(JSContext* cx) const
     if (!slicesArray)
         return nullptr;
 
-    bool ignored; // Ignore inconsistencies in process creation timestamp.
-    TimeStamp originTime = TimeStamp::ProcessCreation(ignored);
+    TimeStamp originTime = TimeStamp::ProcessCreation();
 
     size_t idx = 0;
     for (auto range = collections.all(); !range.empty(); range.popFront()) {

@@ -29,34 +29,23 @@ add_task(function* test_reader_button() {
   TEST_PREFS.forEach(([name, value]) => {
     Services.prefs.setBoolPref(name, value);
   });
-  Services.prefs.setBoolPref("browser.reader.detectedFirstArticle", false);
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
   ok(!UITour.isInfoOnTarget(window, "readerMode-urlBar"),
      "Info panel shouldn't appear without the reader mode button");
-  ok(!Services.prefs.getBoolPref("browser.reader.detectedFirstArticle"),
-     "Shouldn't have detected the first article");
 
-  // We're going to show the reader mode intro popup, make sure we wait for it:
-  let tourPopupShownPromise =
-    BrowserTestUtils.waitForEvent(document.getElementById("UITourTooltip"), "popupshown");
   // Point tab to a test page that is reader-able.
   let url = TEST_PATH + "readerModeArticle.html";
   yield promiseTabLoadEvent(tab, url);
   yield promiseWaitForCondition(() => !readerButton.hidden);
-  yield tourPopupShownPromise;
+
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
-  ok(UITour.isInfoOnTarget(window, "readerMode-urlBar"),
-     "Info panel should be anchored at the reader mode button");
-  ok(Services.prefs.getBoolPref("browser.reader.detectedFirstArticle"),
-     "Should have detected the first article");
 
   // Switch page into reader mode.
   let promiseTabLoad = promiseTabLoadEvent(tab);
   readerButton.click();
   yield promiseTabLoad;
-  ok(!UITour.isInfoOnTarget(window, "readerMode-urlBar"), "Info panel should have closed");
 
   let readerUrl = gBrowser.selectedBrowser.currentURI.spec;
   ok(readerUrl.startsWith("about:reader"), "about:reader loaded after clicking reader mode button");

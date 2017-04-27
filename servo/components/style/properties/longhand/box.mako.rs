@@ -36,6 +36,54 @@
 
     pub mod computed_value {
         pub use super::SpecifiedValue as T;
+
+        impl T {
+            /// Returns whether this "display" value is the display of a flex or
+            /// grid container.
+            ///
+            /// This is used to implement various style fixups.
+            pub fn is_item_container(&self) -> bool {
+                matches!(*self,
+                         T::flex
+                         | T::inline_flex
+                         % if product == "gecko":
+                         | T::grid
+                         | T::inline_grid
+                         % endif
+                )
+            }
+
+            /// Convert this display into an equivalent block display.
+            ///
+            /// Also used for style adjustments.
+            pub fn equivalent_block_display(&self, _is_root_element: bool) -> Self {
+                match *self {
+                    // Values that have a corresponding block-outside version.
+                    T::inline_table => T::table,
+                    T::inline_flex => T::flex,
+
+                    % if product == "gecko":
+                    T::inline_grid => T::grid,
+                    T::_webkit_inline_box => T::_webkit_box,
+                    % endif
+
+                    // Special handling for contents and list-item on the root
+                    // element for Gecko.
+                    % if product == "gecko":
+                    T::contents | T::list_item if _is_root_element => T::block,
+                    % endif
+
+                    // These are not changed by blockification.
+                    T::none | T::block | T::flex | T::list_item | T::table => *self,
+                    % if product == "gecko":
+                    T::contents | T::flow_root | T::grid | T::_webkit_box => *self,
+                    % endif
+
+                    // Everything else becomes block.
+                    _ => T::block,
+                }
+            }
+        }
     }
 
     #[allow(non_camel_case_types)]
@@ -351,57 +399,23 @@ ${helpers.single_keyword("overflow-clip-box", "padding-box content-box",
     spec="Internal, not web-exposed, \
           may be standardized in the future (https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-clip-box)")}
 
+<%
+    overflow_custom_consts = { "-moz-hidden-unscrollable": "CLIP" }
+%>
+
 // FIXME(pcwalton, #2742): Implement scrolling for `scroll` and `auto`.
 ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
-                         extra_gecko_values="clip",
                          need_clone=True, animation_value_type="none",
+                         extra_gecko_aliases="-moz-scrollbars-none=hidden",
+                         extra_gecko_values="-moz-hidden-unscrollable",
+                         custom_consts=overflow_custom_consts,
                          gecko_constant_prefix="NS_STYLE_OVERFLOW",
                          spec="https://drafts.csswg.org/css-overflow/#propdef-overflow-x")}
 
 // FIXME(pcwalton, #2742): Implement scrolling for `scroll` and `auto`.
 <%helpers:longhand name="overflow-y" need_clone="True" animation_value_type="none"
                    spec="https://drafts.csswg.org/css-overflow/#propdef-overflow-y">
-    use super::overflow_x;
-
-    use std::fmt;
-    use style_traits::ToCss;
-    use values::computed::ComputedValueAsSpecified;
-    use values::HasViewportPercentage;
-
-    no_viewport_percentage!(SpecifiedValue);
-
-    impl ToCss for SpecifiedValue {
-        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            self.0.to_css(dest)
-        }
-    }
-
-    /// The specified and computed value for overflow-y is a wrapper on top of
-    /// `overflow-x`, so we re-use the logic, but prevent errors from mistakenly
-    /// assign one to other.
-    ///
-    /// TODO(Manishearth, emilio): We may want to just use the same value.
-    pub mod computed_value {
-        pub use super::SpecifiedValue as T;
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    pub struct SpecifiedValue(pub super::overflow_x::SpecifiedValue);
-
-    impl ComputedValueAsSpecified for SpecifiedValue {}
-
-    #[inline]
-    #[allow(missing_docs)]
-    pub fn get_initial_value() -> computed_value::T {
-        computed_value::T(overflow_x::get_initial_value())
-    }
-
-    #[inline]
-    #[allow(missing_docs)]
-    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
-        overflow_x::parse(context, input).map(SpecifiedValue)
-    }
+    pub use super::overflow_x::{SpecifiedValue, parse, get_initial_value, computed_value};
 </%helpers:longhand>
 
 <%helpers:vector_longhand name="transition-duration"
@@ -782,7 +796,7 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
     use std::ops::Deref;
     use style_traits::ToCss;
     use values::computed::ComputedValueAsSpecified;
-    use values::HasViewportPercentage;
+    use values::{HasViewportPercentage, KeyframesName};
 
     pub mod computed_value {
         pub use super::SpecifiedValue as T;
@@ -790,7 +804,14 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
 
     #[derive(Clone, Debug, Hash, Eq, PartialEq)]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    pub struct SpecifiedValue(pub Atom);
+    pub struct SpecifiedValue(pub Option<KeyframesName>);
+
+    impl SpecifiedValue {
+        /// As an Atom
+        pub fn as_atom(&self) -> Option< &Atom> {
+            self.0.as_ref().map(|n| n.as_atom())
+        }
+    }
 
     #[inline]
     pub fn get_initial_value() -> computed_value::T {
@@ -799,48 +820,32 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
 
     #[inline]
     pub fn get_initial_specified_value() -> SpecifiedValue {
-        SpecifiedValue(atom!(""))
+        SpecifiedValue(None)
     }
 
     impl fmt::Display for SpecifiedValue {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            self.0.fmt(f)
+            self.to_css(f)
         }
     }
 
     impl ToCss for SpecifiedValue {
         fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            if self.0 == atom!("") {
-                dest.write_str("none")
+            if let Some(ref name) = self.0 {
+                name.to_css(dest)
             } else {
-                dest.write_str(&*self.0.to_string())
+                dest.write_str("none")
             }
         }
     }
 
     impl Parse for SpecifiedValue {
-        fn parse(_context: &ParserContext, input: &mut ::cssparser::Parser) -> Result<Self, ()> {
-            use cssparser::Token;
-            use properties::CSSWideKeyword;
-            use std::ascii::AsciiExt;
-
-            let atom = match input.next() {
-                Ok(Token::Ident(ref value)) => {
-                    if CSSWideKeyword::from_ident(value).is_some() {
-                        // We allow any ident for the animation-name except one
-                        // of the CSS-wide keywords.
-                        return Err(());
-                    } else if value.eq_ignore_ascii_case("none") {
-                        // FIXME We may want to support `@keyframes ""` at some point.
-                        atom!("")
-                    } else {
-                        Atom::from(&**value)
-                    }
-                }
-                Ok(Token::QuotedString(value)) => Atom::from(&*value),
-                _ => return Err(()),
-            };
-            Ok(SpecifiedValue(atom))
+        fn parse(context: &ParserContext, input: &mut ::cssparser::Parser) -> Result<Self, ()> {
+            if let Ok(name) = input.try(|input| KeyframesName::parse(context, input)) {
+                Ok(SpecifiedValue(Some(name)))
+            } else {
+                input.expect_ident_matching("none").map(|()| SpecifiedValue(None))
+            }
         }
     }
     no_viewport_percentage!(SpecifiedValue);
@@ -1111,7 +1116,6 @@ ${helpers.predefined_type("scroll-snap-coordinate",
                           animation_value_type="ComputedValue",
                           allow_empty=True,
                           delegate_animate=True)}
-
 
 
 <%helpers:longhand name="transform" extra_prefixes="webkit"
@@ -2096,83 +2100,13 @@ ${helpers.predefined_type("perspective",
                           flags="CREATES_STACKING_CONTEXT FIXPOS_CB",
                           animation_value_type="ComputedValue")}
 
-<%helpers:longhand name="perspective-origin" boxed="True"
-                   animation_value_type="ComputedValue"
-                   extra_prefixes="moz webkit"
-                   spec="https://drafts.csswg.org/css-transforms/#perspective-origin-property">
-    use std::fmt;
-    use style_traits::ToCss;
-    use values::HasViewportPercentage;
-    use values::specified::{LengthOrPercentage, Percentage};
-
-    pub mod computed_value {
-        use properties::animated_properties::Interpolate;
-        use values::computed::LengthOrPercentage;
-        use values::computed::Position;
-
-        pub type T = Position;
-    }
-
-    impl HasViewportPercentage for SpecifiedValue {
-        fn has_viewport_percentage(&self) -> bool {
-            self.horizontal.has_viewport_percentage() || self.vertical.has_viewport_percentage()
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq)]
-    #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    pub struct SpecifiedValue {
-        horizontal: LengthOrPercentage,
-        vertical: LengthOrPercentage,
-    }
-
-    impl ToCss for SpecifiedValue {
-        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            try!(self.horizontal.to_css(dest));
-            try!(dest.write_str(" "));
-            self.vertical.to_css(dest)
-        }
-    }
-
-    #[inline]
-    pub fn get_initial_value() -> computed_value::T {
-        computed_value::T {
-            horizontal: computed::LengthOrPercentage::Percentage(0.5),
-            vertical: computed::LengthOrPercentage::Percentage(0.5),
-        }
-    }
-
-    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
-        let result = try!(super::parse_origin(context, input));
-        match result.depth {
-            Some(_) => Err(()),
-            None => Ok(SpecifiedValue {
-                horizontal: result.horizontal.unwrap_or(LengthOrPercentage::Percentage(Percentage(0.5))),
-                vertical: result.vertical.unwrap_or(LengthOrPercentage::Percentage(Percentage(0.5))),
-            })
-        }
-    }
-
-    impl ToComputedValue for SpecifiedValue {
-        type ComputedValue = computed_value::T;
-
-        #[inline]
-        fn to_computed_value(&self, context: &Context) -> computed_value::T {
-            computed_value::T {
-                horizontal: self.horizontal.to_computed_value(context),
-                vertical: self.vertical.to_computed_value(context),
-            }
-        }
-
-        #[inline]
-        fn from_computed_value(computed: &computed_value::T) -> Self {
-            SpecifiedValue {
-                horizontal: ToComputedValue::from_computed_value(&computed.horizontal),
-                vertical: ToComputedValue::from_computed_value(&computed.vertical),
-            }
-        }
-    }
-</%helpers:longhand>
+${helpers.predefined_type("perspective-origin",
+                          "position::OriginPosition",
+                          "computed::position::OriginPosition::center()",
+                          boxed="True",
+                          extra_prefixes="moz webkit",
+                          spec="https://drafts.csswg.org/css-transforms/#perspective-origin-property",
+                          animation_value_type="ComputedValue")}
 
 ${helpers.single_keyword("backface-visibility",
                          "visible hidden",
@@ -2533,29 +2467,8 @@ ${helpers.single_keyword("-moz-orient",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="shape-outside" products="gecko" animation_value_type="none" boxed="True"
-                   spec="https://drafts.csswg.org/css-shapes/#shape-outside-property">
-    use std::fmt;
-    use style_traits::ToCss;
-    use values::specified::basic_shape::{ShapeBox, ShapeSource};
-    use values::HasViewportPercentage;
-
-    no_viewport_percentage!(SpecifiedValue);
-
-    pub mod computed_value {
-        use values::computed::basic_shape::{ShapeBox, ShapeSource};
-
-        pub type T = ShapeSource<ShapeBox>;
-    }
-
-    pub type SpecifiedValue = ShapeSource<ShapeBox>;
-
-    #[inline]
-    pub fn get_initial_value() -> computed_value::T {
-        Default::default()
-    }
-
-    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
-        ShapeSource::parse(context, input)
-    }
-</%helpers:longhand>
+${helpers.predefined_type("shape-outside", "basic_shape::ShapeWithShapeBox",
+                          "generics::basic_shape::ShapeSource::None",
+                          products="gecko", boxed="True",
+                          animation_value_type="none",
+                          spec="https://drafts.csswg.org/css-shapes/#shape-outside-property")}

@@ -22,7 +22,8 @@ function startTest(test, token)
   // Case 2. creating a MediaElementSource on a media element with a MediaKeys should fail.
   var p1 = new EMEPromise;
   var case2token = token + "_case2";
-  var v2 = SetupEME(test, case2token);
+  let v2 = document.createElement("video");
+
   v2.addEventListener("loadeddata", function(ev) {
     ok(true, case2token + " should reach loadeddata");
     var threw = false;
@@ -35,9 +36,16 @@ function startTest(test, token)
     ok(threw, "Should throw an error creating a MediaElementSource on an EME video.");
     p1.resolve();
   });
+
   manager.started(case2token);
-  var p2 = LoadTest(test, v2, case2token, { onlyLoadFirstFragments:2, noEndOfStream:false });
-  EMEPromiseAll(v2, case2token, [p1.promise, p2]);
+  let p2 = SetupEME(v2, test, case2token);
+
+  Promise.all([p1.promise, p2])
+  .catch(reason => ok(false, reason))
+  .then(() => {
+    CleanUpMedia(v2);
+    manager.finished(case2token);
+  });
 }
 
 function beginTest() {

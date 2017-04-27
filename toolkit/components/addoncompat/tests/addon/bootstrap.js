@@ -7,7 +7,6 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const baseURL = "http://mochi.test:8888/browser/" +
@@ -240,7 +239,7 @@ function testSandbox() {
 function testAddonContent() {
   let chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Components.interfaces.nsIChromeRegistry);
-  let base = chromeRegistry.convertChromeURL(BrowserUtils.makeURI("chrome://addonshim1/content/"));
+  let base = chromeRegistry.convertChromeURL(Services.io.newURI("chrome://addonshim1/content/"));
 
   let res = Services.io.getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);

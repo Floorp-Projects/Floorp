@@ -27,11 +27,12 @@ public class DynamicToolbarAnimator {
         ACTION_MODE(2),
         FULL_SCREEN(3),
         CARET_DRAG(4),
-        PAGE_LOADING(5);
+        PAGE_LOADING(5),
+        CUSTOM_TAB(6);
 
-        public final int mValue;
-        PinReason(final int value) {
-            mValue = value;
+        public final int value;
+        PinReason(final int aValue) {
+            value = aValue;
         }
     }
 
@@ -45,7 +46,7 @@ public class DynamicToolbarAnimator {
         public void toggleToolbarChrome(boolean aShow);
     }
 
-    private final Set<PinReason> pinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
+    private final Set<PinReason> mPinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
 
     private final GeckoLayerClient mTarget;
     private LayerView.Compositor mCompositor;
@@ -102,22 +103,22 @@ public class DynamicToolbarAnimator {
      * If true, scroll changes will not affect translation.
      */
     public boolean isPinned() {
-        return !pinFlags.isEmpty();
+        return !mPinFlags.isEmpty();
     }
 
     public boolean isPinnedBy(PinReason reason) {
-        return pinFlags.contains(reason);
+        return mPinFlags.contains(reason);
     }
 
     public void setPinned(boolean pinned, PinReason reason) {
-        if ((mCompositor != null) && (pinned != pinFlags.contains(reason))) {
-             mCompositor.setPinned(pinned, reason.mValue);
+        if ((mCompositor != null) && (pinned != mPinFlags.contains(reason))) {
+             mCompositor.setPinned(pinned, reason.value);
         }
 
         if (pinned) {
-            pinFlags.add(reason);
+            mPinFlags.add(reason);
         } else {
-            pinFlags.remove(reason);
+            mPinFlags.remove(reason);
         }
     }
 
@@ -154,9 +155,19 @@ public class DynamicToolbarAnimator {
     private void dumpStateToCompositor() {
         if ((mCompositor != null) && mCompositorControllerOpen) {
             mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
-            for (PinReason reason : pinFlags) {
-              mCompositor.setPinned(true, reason.mValue);
+            if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
+            } else {
+                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
             }
+            for (PinReason reason : PinReason.values()) {
+              mCompositor.setPinned(mPinFlags.contains(reason), reason.value);
+            }
+        } else if ((mCompositor != null) && !mCompositorControllerOpen) {
+            // Ask the UiCompositorControllerChild if it is open since the open message can
+            // sometimes be sent to a different instance of the LayerView such as when
+            // Fennec is being used in custom tabs.
+            mCompositor.sendToolbarAnimatorMessage(LayerView.IS_COMPOSITOR_CONTROLLER_OPEN);
         }
     }
 

@@ -2029,55 +2029,17 @@ MessageChannel::DispatchInterruptMessage(Message&& aMsg, size_t stackDepth)
 
     IPC_ASSERT(aMsg.is_interrupt() && !aMsg.is_reply(), "wrong message type");
 
-    // Race detection: see the long comment near mRemoteStackDepthGuess in
-    // MessageChannel.h. "Remote" stack depth means our side, and "local" means
-    // the other side.
-    if (aMsg.interrupt_remote_stack_depth_guess() != RemoteViewOfStackDepth(stackDepth)) {
-        // Interrupt in-calls have raced. The winner, if there is one, gets to defer
-        // processing of the other side's in-call.
-        bool defer;
-        const char* winner;
-        const MessageInfo parentMsgInfo =
-          (mSide == ChildSide) ? MessageInfo(aMsg) : mInterruptStack.top();
-        const MessageInfo childMsgInfo =
-          (mSide == ChildSide) ? mInterruptStack.top() : MessageInfo(aMsg);
-        switch (mListener->MediateInterruptRace(parentMsgInfo, childMsgInfo))
-        {
-          case RIPChildWins:
-            winner = "child";
-            defer = (mSide == ChildSide);
-            break;
-          case RIPParentWins:
-            winner = "parent";
-            defer = (mSide != ChildSide);
-            break;
-          case RIPError:
-            MOZ_CRASH("NYI: 'Error' Interrupt race policy");
-            return;
-          default:
-            MOZ_CRASH("not reached");
-            return;
-        }
-
-        if (LoggingEnabled()) {
-            printf_stderr("  (%s: %s won, so we're%sdeferring)\n",
-                          (mSide == ChildSide) ? "child" : "parent",
-                          winner,
-                          defer ? " " : " not ");
-        }
-
-        if (defer) {
-            // We now know the other side's stack has one more frame
-            // than we thought.
-            ++mRemoteStackDepthGuess; // decremented in MaybeProcessDeferred()
-            mDeferred.push(Move(aMsg));
-            return;
-        }
-
-        // We "lost" and need to process the other side's in-call. Don't need
-        // to fix up the mRemoteStackDepthGuess here, because we're just about
-        // to increment it in DispatchCall(), which will make it correct again.
+    if (ShouldDeferInterruptMessage(aMsg, stackDepth)) {
+        // We now know the other side's stack has one more frame
+        // than we thought.
+        ++mRemoteStackDepthGuess; // decremented in MaybeProcessDeferred()
+        mDeferred.push(Move(aMsg));
+        return;
     }
+
+    // If we "lost" a race and need to process the other side's in-call, we
+    // don't need to fix up the mRemoteStackDepthGuess here, because we're just
+    // about to increment it, which will make it correct again.
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
@@ -2103,6 +2065,54 @@ MessageChannel::DispatchInterruptMessage(Message&& aMsg, size_t stackDepth)
     }
 }
 
+bool
+MessageChannel::ShouldDeferInterruptMessage(const Message& aMsg, size_t aStackDepth)
+{
+    AssertWorkerThread();
+
+    // We may or may not own the lock in this function, so don't access any
+    // channel state.
+
+    IPC_ASSERT(aMsg.is_interrupt() && !aMsg.is_reply(), "wrong message type");
+
+    // Race detection: see the long comment near mRemoteStackDepthGuess in
+    // MessageChannel.h. "Remote" stack depth means our side, and "local" means
+    // the other side.
+    if (aMsg.interrupt_remote_stack_depth_guess() == RemoteViewOfStackDepth(aStackDepth)) {
+        return false;
+    }
+
+    // Interrupt in-calls have raced. The winner, if there is one, gets to defer
+    // processing of the other side's in-call.
+    bool defer;
+    const char* winner;
+    const MessageInfo parentMsgInfo =
+        (mSide == ChildSide) ? MessageInfo(aMsg) : mInterruptStack.top();
+    const MessageInfo childMsgInfo =
+        (mSide == ChildSide) ? mInterruptStack.top() : MessageInfo(aMsg);
+    switch (mListener->MediateInterruptRace(parentMsgInfo, childMsgInfo))
+    {
+        case RIPChildWins:
+            winner = "child";
+            defer = (mSide == ChildSide);
+            break;
+        case RIPParentWins:
+            winner = "parent";
+            defer = (mSide != ChildSide);
+            break;
+        case RIPError:
+            MOZ_CRASH("NYI: 'Error' Interrupt race policy");
+        default:
+            MOZ_CRASH("not reached");
+    }
+
+    IPC_LOG("race in %s: %s won",
+            (mSide == ChildSide) ? "child" : "parent",
+            winner);
+
+    return defer;
+}
+
 void
 MessageChannel::MaybeUndeferIncall()
 {
@@ -2114,12 +2124,18 @@ MessageChannel::MaybeUndeferIncall()
 
     size_t stackDepth = InterruptStackDepth();
 
+    Message& deferred = mDeferred.top();
+
     // the other side can only *under*-estimate our actual stack depth
-    IPC_ASSERT(mDeferred.top().interrupt_remote_stack_depth_guess() <= stackDepth,
+    IPC_ASSERT(deferred.interrupt_remote_stack_depth_guess() <= stackDepth,
                "fatal logic error");
 
+    if (ShouldDeferInterruptMessage(deferred, stackDepth)) {
+        return;
+    }
+
     // maybe time to process this message
-    Message call(Move(mDeferred.top()));
+    Message call(Move(deferred));
     mDeferred.pop();
 
     // fix up fudge factor we added to account for race

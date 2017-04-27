@@ -232,7 +232,7 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
       __func__);
   }
   NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
-  CheckedInt64 startTime = aSample->mTime.ToMicroseconds();
+  auto startTime = aSample->mTime;
 
   // Trim the initial frames while the decoder is settling.
   if (mSkip > 0) {
@@ -243,7 +243,7 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
     PodMove(buffer.get(),
             buffer.get() + skipFrames * channels,
             keepFrames * channels);
-    startTime = startTime + FramesToUsecs(skipFrames, mOpusParser->mRate);
+    startTime = startTime + FramesToTimeUnit(skipFrames, mOpusParser->mRate);
     frames = keepFrames;
     mSkip -= skipFrames;
   }
@@ -287,17 +287,17 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
   }
 #endif
 
-  CheckedInt64 duration = FramesToUsecs(frames, mOpusParser->mRate);
-  if (!duration.isValid()) {
+  auto duration = FramesToTimeUnit(frames, mOpusParser->mRate);
+  if (!duration.IsValid()) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                   RESULT_DETAIL("Overflow converting WebM audio duration")),
       __func__);
   }
-  CheckedInt64 time = startTime -
-                      FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
-                      FramesToUsecs(mFrames, mOpusParser->mRate);
-  if (!time.isValid()) {
+  auto time = startTime -
+              FramesToTimeUnit(mOpusParser->mPreSkip, mOpusParser->mRate) +
+              FramesToTimeUnit(mFrames, mOpusParser->mRate);
+  if (!time.IsValid()) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                   RESULT_DETAIL("Overflow shifting tstamp by codec delay")),
@@ -308,7 +308,7 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
   mFrames += frames;
 
   return DecodePromise::CreateAndResolve(
-    DecodedData{ new AudioData(aSample->mOffset, time.value(), duration.value(),
+    DecodedData{ new AudioData(aSample->mOffset, time, duration,
                                frames, Move(buffer), mOpusParser->mChannels,
                                mOpusParser->mRate) },
     __func__);

@@ -920,7 +920,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY updateManual.panelUI.label "Download a fresh copy of &brandShorterName;">
 
 <!ENTITY updateRestart.message "After a quick restart, &brandShorterName; will restore all your open tabs and windows.">
-<!ENTITY updateRestart.header.message "Restart &brandShorterName; to apply the update.">
+<!ENTITY updateRestart.header.message2 "Restart to update &brandShorterName;.">
 <!ENTITY updateRestart.acceptButton.label "Restart and Restore">
 <!ENTITY updateRestart.acceptButton.accesskey "R">
 <!ENTITY updateRestart.cancelButton.label "Not Now">
