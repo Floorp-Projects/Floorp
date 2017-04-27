@@ -95,8 +95,7 @@ parent:
   async OnDecoderInitDone(uint32_t aStatus);
 
   // Return values of cdm::ContentDecryptionModule8::DecryptAndDecodeFrame
-  async DecodedShmem(CDMVideoFrame aFrame, Shmem aData);
-  async DecodedData(CDMVideoFrame aFrame, uint8_t[] aData);
+  async Decoded(CDMVideoFrame aFrame);
   async DecodeFailed(uint32_t aStatus);
 
   async ResetVideoDecoderComplete();
