@@ -25,11 +25,11 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     }
 
     gfx::Rect rect = GetTransform().TransformBounds(IntRectToRect(mBounds))
-        - ParentStackingContextBounds().ToUnknownRect().TopLeft();
+        - ParentBounds().ToUnknownRect().TopLeft();
     gfx::Rect clip;
     if (GetClipRect().isSome()) {
       clip = IntRectToRect(GetClipRect().ref().ToUnknownRect())
-          - ParentStackingContextBounds().ToUnknownRect().TopLeft();
+          - ParentBounds().ToUnknownRect().TopLeft();
     } else {
       clip = rect;
     }
