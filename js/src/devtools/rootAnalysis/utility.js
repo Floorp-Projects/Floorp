@@ -226,11 +226,13 @@ function xdbLibrary()
 
 function cLibrary()
 {
+    var libPossibilities = ['libc.so.6', 'libc.so', 'libc.dylib'];
     var lib;
-    try {
-        lib = ctypes.open("libc.so.6");
-    } catch(e) {
-        lib = ctypes.open("libc.so");
+    for (const name of libPossibilities) {
+        try {
+            lib = ctypes.open("libc.so.6");
+        } catch(e) {
+        }
     }
 
     return {

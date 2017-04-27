@@ -13,10 +13,9 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 
-
 #if !defined(XPCOM_GLUE_AVOID_NSPR)
-#include "prthread.h" /* needed for thread-safety checks */
-#endif // !XPCOM_GLUE_AVOID_NSPR
+#include "prthread.h" /* needed for cargo-culting headers */
+#endif
 
 #include "nsDebug.h"
 #include "nsXPCOM.h"
@@ -51,27 +50,42 @@ ToCanonicalSupports(nsISupports* aSupports)
 
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
+#include "prthread.h" /* needed for thread-safety checks */
+
 class nsAutoOwningThread
 {
 public:
   nsAutoOwningThread() { mThread = PR_GetCurrentThread(); }
-  void* GetThread() const { return mThread; }
+
+  // We move the actual assertion checks out-of-line to minimize code bloat,
+  // but that means we have to pass a non-literal string to
+  // MOZ_CRASH_UNSAFE_OOL.  To make that more safe, the public interface
+  // requires a literal string and passes that to the private interface; we
+  // can then be assured that we effectively are passing a literal string
+  // to MOZ_CRASH_UNSAFE_OOL.
+  template<int N>
+  void AssertOwnership(const char (&aMsg)[N]) const
+  {
+    AssertCurrentThreadOwnsMe(aMsg);
+  }
 
 private:
+  void AssertCurrentThreadOwnsMe(const char* aMsg) const;
+
   void* mThread;
 };
 
 #define NS_DECL_OWNINGTHREAD            nsAutoOwningThread _mOwningThread;
 #define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) \
-  NS_CheckThreadSafe(agg->_mOwningThread.GetThread(), #_class " not thread-safe")
+  agg->_mOwningThread.AssertOwnership(#_class " not thread-safe")
 #define NS_ASSERT_OWNINGTHREAD(_class) NS_ASSERT_OWNINGTHREAD_AGGREGATE(this, _class)
-#else // !DEBUG && !(NIGHTLY_BUILD && !MOZ_PROFILING)
+#else // !MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
 #define NS_DECL_OWNINGTHREAD            /* nothing */
 #define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) ((void)0)
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 
-#endif // DEBUG || (NIGHTLY_BUILD && !MOZ_PROFILING)
+#endif // MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
 
 // Macros for reference-count and constructor logging
