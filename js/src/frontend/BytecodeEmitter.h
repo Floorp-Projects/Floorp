@@ -540,6 +540,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(ParseNode* pn, bool needsProto = false);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ParseNode* pn);
 
+    MOZ_MUST_USE bool replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset);
+
     MOZ_MUST_USE bool emitHoistedFunctionsInList(ParseNode* pn);
 
     MOZ_MUST_USE bool emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp,
@@ -676,6 +678,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // []/{} expression).
     MOZ_MUST_USE bool emitSetOrInitializeDestructuring(ParseNode* target, DestructuringFlavor flav);
 
+    // emitDestructuringObjRestExclusionSet emits the property exclusion set
+    // for the rest-property in an object pattern.
+    MOZ_MUST_USE bool emitDestructuringObjRestExclusionSet(ParseNode* pattern);
+
     // emitDestructuringOps assumes the to-be-destructured value has been
     // pushed on the stack and emits code to destructure each part of a [] or
     // {} lhs expression.
@@ -692,6 +698,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // Throw a TypeError if the value atop the stack isn't convertible to an
     // object, with no overall effect on the stack.
     MOZ_MUST_USE bool emitRequireObjectCoercible();
+
+    enum class CopyOption {
+        Filtered, Unfiltered
+    };
+
+    // Calls either the |CopyDataProperties| or the
+    // |CopyDataPropertiesUnfiltered| intrinsic function, consumes three (or
+    // two in the latter case) elements from the stack.
+    MOZ_MUST_USE bool emitCopyDataProperties(CopyOption option);
 
     // emitIterator expects the iterable to already be on the stack.
     // It will replace that stack value with the corresponding iterator
