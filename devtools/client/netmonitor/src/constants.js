@@ -135,15 +135,6 @@ const HEADERS = [
     canFilter: false,
   },
   {
-    name: "cookies",
-    canFilter: false,
-  },
-  {
-    name: "setCookies",
-    boxName: "set-cookies",
-    canFilter: false,
-  },
-  {
     name: "transferred",
     canFilter: true,
   },
