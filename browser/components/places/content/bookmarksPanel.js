@@ -16,7 +16,8 @@ function searchBookmarks(aSearchString) {
     tree.applyFilter(aSearchString,
                      [PlacesUtils.bookmarksMenuFolderId,
                       PlacesUtils.unfiledBookmarksFolderId,
-                      PlacesUtils.toolbarFolderId]);
+                      PlacesUtils.toolbarFolderId,
+                      PlacesUtils.mobileFolderId]);
 }
 
 window.addEventListener("SidebarFocused",
