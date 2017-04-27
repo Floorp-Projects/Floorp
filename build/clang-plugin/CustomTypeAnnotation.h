@@ -15,11 +15,13 @@ class CustomTypeAnnotation {
     RK_BaseClass,
     RK_Field,
     RK_TemplateInherited,
+    RK_Implicit,
   };
   struct AnnotationReason {
     QualType Type;
     ReasonKind Kind;
     const FieldDecl *Field;
+    std::string ImplicitReason;
 
     bool valid() const { return Kind != RK_None; }
   };
@@ -53,13 +55,14 @@ public:
   }
 
 private:
-  bool hasLiteralAnnotation(QualType T) const;
   AnnotationReason directAnnotationReason(QualType T);
   AnnotationReason tmplArgAnnotationReason(ArrayRef<TemplateArgument> Args);
 
 protected:
-  // Allow subclasses to apply annotations to external code:
-  virtual bool hasFakeAnnotation(const TagDecl *D) const { return false; }
+  // Allow subclasses to apply annotations for reasons other than a direct
+  // annotation. A non-empty string return value means that the object D is
+  // annotated, and should contain the reason why.
+  virtual std::string getImplicitReason(const TagDecl *D) const { return ""; }
 };
 
 extern CustomTypeAnnotation StackClass;
