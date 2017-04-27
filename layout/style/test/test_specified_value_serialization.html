@@ -156,6 +156,36 @@
   p.remove();
 })();
 
+(function test_bug_1357932() {
+  // Test for box-position keyword ordering, in serialization of specified CSS
+  // gradients.
+  var backgroundImages = [
+    // [ specified style,
+    //   expected serialization,
+    //   descriptionOfTestcase ],
+    // Linear gradient to box position ordering:
+    [ "linear-gradient(to right top, gray, pink)",
+      "linear-gradient(to right top, gray, pink)",
+      "linear-gradient ordering to right top" ],
+    [ "linear-gradient(to top right, yellow, teal)",
+      "linear-gradient(to right top, yellow, teal)",
+      "linear-gradient ordering to top right" ],
+  ];
+
+  var frame_container = document.getElementById("display");
+  var p = document.createElement("p");
+  frame_container.appendChild(p);
+
+  for (var i = 0; i < backgroundImages.length; ++i) {
+    var test = backgroundImages[i];
+    p.style.backgroundImage = test[0];
+    is(p.style.backgroundImage, test[1],
+       "serialization value of gradient expression (" + test[2] + ")");
+  }
+
+  p.remove();
+})();
+
 </script>
 </pre>
 </body>
