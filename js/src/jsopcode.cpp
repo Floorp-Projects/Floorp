@@ -1185,7 +1185,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         if (!nbytes)
             return false;
         UniqueChars copy = JS_smprintf("%s", nbytes);
-        if (!nbytes) {
+        if (!copy) {
             ReportOutOfMemory(cx);
             return false;
         }
