@@ -126,7 +126,7 @@ fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\
 == mathbackground-2.xml mathbackground-2.xml
 == mathbackground-3.xml mathbackground-3.xml
 == mathbackground-4.xml mathbackground-4.xml
-fails-if(debug) == mstyle-1.xhtml mstyle-1.xhtml
+random-if(true) == mstyle-1.xhtml mstyle-1.xhtml
 fails == mstyle-2.xhtml mstyle-2.xhtml
 == mstyle-3.xhtml mstyle-3.xhtml
 == mstyle-4.xhtml mstyle-4.xhtml
@@ -367,7 +367,7 @@ fails == mfrac-C-4.html mfrac-C-4.html
 fails == mfrac-D-3.html mfrac-D-3.html
 fails == mfrac-D-4.html mfrac-D-4.html
 == mfrac-E-1.html mfrac-E-1.html
-fails-if(debug) pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
+random-if(true) pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1.html
 fails pref(font.minimum-size.x-math,40) == default-font.html default-font.html
 == radicalbar-1.html radicalbar-1.html
