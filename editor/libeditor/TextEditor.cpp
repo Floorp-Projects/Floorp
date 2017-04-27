@@ -1191,12 +1191,13 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     docEncoder = mCachedDocumentEncoder;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
-  NS_ASSERTION(domDoc, "Need a document");
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ASSERTION(doc, "Need a document");
 
   nsresult rv =
-    docEncoder->Init(domDoc, aFormatType,
-                     aFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
+    docEncoder->NativeInit(
+                  doc, aFormatType,
+                  aFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
