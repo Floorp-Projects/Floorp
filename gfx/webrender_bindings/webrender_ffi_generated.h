@@ -94,6 +94,13 @@ enum class WrRepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrYuvColorSpace : uint32_t {
+  Rec601 = 1,
+  Rec709 = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 struct WrAPI;
 
 struct WrImageKey {
@@ -803,6 +810,15 @@ wr_dp_push_text(WrState* state,
     const WrGlyphInstance* glyphs,
     uint32_t glyph_count,
     float glyph_size)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_yuv_image(WrState* state,
+    WrRect bounds,
+    WrClipRegion clip,
+    const WrImageKey* image_keys,
+    uint8_t key_num,
+    WrYuvColorSpace color_space)
 WR_FUNC;
 
 WR_INLINE void

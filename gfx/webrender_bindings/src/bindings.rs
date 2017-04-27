@@ -49,6 +49,8 @@ type WrPipelineId = PipelineId;
 type WrImageKey = ImageKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrFontKey = FontKey;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrYuvColorSpace = YuvColorSpace;
 
 /// cbindgen:field-names=[mHandle]
 #[repr(C)]
@@ -1328,16 +1330,40 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    key: WrImageKey) {
     assert!(unsafe { is_in_main_thread() });
 
-    let bounds = bounds.into();
-
     state.frame_builder
          .dl_builder
-         .push_image(bounds,
+         .push_image(bounds.into(),
                      clip.into(),
                      stretch_size.into(),
                      tile_spacing.into(),
                      image_rendering,
                      key);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_yuv_image(state: &mut WrState,
+                                       bounds: WrRect,
+                                       clip: WrClipRegion,
+                                       image_keys: *const WrImageKey,
+                                       key_num: u8,
+                                       color_space: WrYuvColorSpace) {
+    assert!(unsafe { is_in_main_thread() });
+    assert!(key_num == 3);
+    unsafe {
+        for key_index in 0..key_num {
+            assert!(!image_keys.offset(key_index as isize).is_null());
+        }
+    }
+    let key_slice = make_slice(image_keys, key_num as usize);
+
+    state.frame_builder
+         .dl_builder
+         .push_yuv_image(bounds.into(),
+                         clip.into(),
+                         key_slice[0],
+                         key_slice[1],
+                         key_slice[2],
+                         color_space);
 }
 
 #[no_mangle]
