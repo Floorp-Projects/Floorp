@@ -648,7 +648,7 @@ ApplyAnimatedValue(Layer* aLayer,
 static AnimationProcessTypes
 SampleAnimations(Layer* aLayer,
                  CompositorAnimationStorage* aStorage,
-                 TimeStamp aPoint,
+                 TimeStamp aTime,
                  uint64_t* aLayerAreaAnimated)
 {
   // This tracks the first-encountered RefLayer in the layer tree. Since we are
@@ -672,7 +672,7 @@ SampleAnimations(Layer* aLayer,
 
         bool hasInEffectAnimations = false;
         StyleAnimationValue animationValue = layer->GetBaseAnimationStyle();
-        if (AnimationHelper::SampleAnimationForEachNode(aPoint,
+        if (AnimationHelper::SampleAnimationForEachNode(aTime,
                                                         layer->GetAnimations(),
                                                         layer->GetAnimationData(),
                                                         animationValue,

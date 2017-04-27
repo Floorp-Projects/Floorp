@@ -576,7 +576,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   return result;
 }
 
-void
+DrawResult
 nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                             mozilla::wr::DisplayListBuilder&            aBuilder,
                                             nsTArray<WebRenderParentCommand>&           aParentCommands,
@@ -591,11 +591,11 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return;
+    return DrawResult::NOT_READY;
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return;
+    return DrawResult::SUCCESS;
   }
 
   switch (mType) {
@@ -613,21 +613,23 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                                                                     ConvertImageRendererToDrawFlags(mFlags));
       if (!container) {
         NS_WARNING("Failed to get image container");
-        return;
+        return DrawResult::BAD_IMAGE;
       }
       Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
       if (key.isNothing()) {
-        return;
+        return DrawResult::BAD_IMAGE;
       }
 
       const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
-      Rect destRect = NSRectToRect(aDest, appUnitsPerDevPixel);
-      Rect dest = aLayer->RelativeToParent(destRect);
+      LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
+          aDest, appUnitsPerDevPixel);
+      LayerRect dest = aLayer->RelativeToParent(destRect);
 
-      Rect fillRect = NSRectToRect(aFill, appUnitsPerDevPixel);
-      Rect fill = aLayer->RelativeToParent(fillRect);
+      LayoutDeviceRect fillRect = LayoutDeviceRect::FromAppUnits(
+          aFill, appUnitsPerDevPixel);
+      LayerRect fill = aLayer->RelativeToParent(fillRect);
 
-      Rect clip = fill;
+      LayerRect clip = fill;
       Size gapSize((aRepeatSize.width - aDest.width) / appUnitsPerDevPixel,
                    (aRepeatSize.height - aDest.height) / appUnitsPerDevPixel);
       aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
@@ -638,6 +640,8 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
     default:
       break;
   }
+
+  return DrawResult::SUCCESS;
 }
 
 already_AddRefed<gfxDrawable>
@@ -700,7 +704,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
               aOpacity);
 }
 
-void
+DrawResult
 nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
@@ -714,19 +718,19 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return;
+    return mPrepareResult;
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return;
+    return DrawResult::SUCCESS;
   }
 
-  BuildWebRenderDisplayItems(aPresContext, aBuilder, aParentCommands, aLayer,
-                             aDirty, aDest, aFill, aAnchor, aRepeatSize,
-                             CSSIntRect(0, 0,
-                                        nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                                        nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-                             aOpacity);
+  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aParentCommands, aLayer,
+                                    aDirty, aDest, aFill, aAnchor, aRepeatSize,
+                                    CSSIntRect(0, 0,
+                                               nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                                               nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+                                    aOpacity);
 }
 
 /**

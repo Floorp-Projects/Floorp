@@ -885,7 +885,8 @@ CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                           const LayersBackend&,
                                           const TextureFlags&,
                                           const uint64_t&,
-                                          const uint64_t& aSerial)
+                                          const uint64_t& aSerial,
+                                          const wr::MaybeExternalImageId& aExternalImageId)
 {
   return TextureClient::CreateIPDLActor();
 }
@@ -1055,9 +1056,10 @@ PTextureChild*
 CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                      LayersBackend aLayersBackend,
                                      TextureFlags aFlags,
-                                     uint64_t aSerial)
+                                     uint64_t aSerial,
+                                     wr::MaybeExternalImageId& aExternalImageId)
 {
-  return PCompositorBridgeChild::SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, 0 /* FIXME? */, aSerial);
+  return PCompositorBridgeChild::SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, 0 /* FIXME? */, aSerial, aExternalImageId);
 }
 
 bool
@@ -1185,7 +1187,7 @@ CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActo
   return true;
 }
 
-uint64_t
+wr::MaybeExternalImageId
 CompositorBridgeChild::GetNextExternalImageId()
 {
   static uint32_t sNextID = 1;
@@ -1194,7 +1196,7 @@ CompositorBridgeChild::GetNextExternalImageId()
 
   uint64_t imageId = mNamespace;
   imageId = imageId << 32 | sNextID;
-  return imageId;
+  return Some(wr::ToExternalImageId(imageId));
 }
 
 } // namespace layers

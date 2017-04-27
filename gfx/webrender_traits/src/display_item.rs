@@ -14,7 +14,7 @@ pub struct DisplayItem {
     pub item: SpecificDisplayItem,
     pub rect: LayoutRect,
     pub clip: ClipRegion,
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -43,8 +43,8 @@ pub struct ItemRange {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ClipDisplayItem {
-    pub id: ScrollLayerId,
-    pub parent_id: ScrollLayerId,
+    pub id: ClipId,
+    pub parent_id: ClipId,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -248,7 +248,6 @@ pub struct PushStackingContextDisplayItem {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
-    pub z_index: i32,
     pub transform: Option<PropertyBinding<LayoutTransform>>,
     pub transform_style: TransformStyle,
     pub perspective: Option<LayoutTransform>,
@@ -367,7 +366,6 @@ pub struct ComplexClipRegion {
 
 impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
-               z_index: i32,
                transform: Option<PropertyBinding<LayoutTransform>>,
                transform_style: TransformStyle,
                perspective: Option<LayoutTransform>,
@@ -377,7 +375,6 @@ impl StackingContext {
                -> StackingContext {
         StackingContext {
             scroll_policy: scroll_policy,
-            z_index: z_index,
             transform: transform,
             transform_style: transform_style,
             perspective: perspective,
@@ -503,44 +500,63 @@ impl ComplexClipRegion {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum ScrollLayerId {
+pub enum ClipId {
     Clip(u64, PipelineId),
     ClipExternalId(u64, PipelineId),
     ReferenceFrame(u64, PipelineId),
 }
 
-impl ScrollLayerId {
-    pub fn root_scroll_layer(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::Clip(0, pipeline_id)
+impl ClipId {
+    pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {
+        ClipId::Clip(0, pipeline_id)
     }
 
-    pub fn root_reference_frame(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::ReferenceFrame(0, pipeline_id)
+    pub fn root_reference_frame(pipeline_id: PipelineId) -> ClipId {
+        ClipId::ReferenceFrame(0, pipeline_id)
     }
 
-    pub fn new(id: u64, pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::ClipExternalId(id, pipeline_id)
+    pub fn new(id: u64, pipeline_id: PipelineId) -> ClipId {
+        ClipId::ClipExternalId(id, pipeline_id)
     }
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
-            ScrollLayerId::Clip(_, pipeline_id) |
-            ScrollLayerId::ClipExternalId(_, pipeline_id) |
-            ScrollLayerId::ReferenceFrame(_, pipeline_id) => pipeline_id,
+            ClipId::Clip(_, pipeline_id) |
+            ClipId::ClipExternalId(_, pipeline_id) |
+            ClipId::ReferenceFrame(_, pipeline_id) => pipeline_id,
         }
     }
 
     pub fn is_reference_frame(&self) -> bool {
         match *self {
-            ScrollLayerId::ReferenceFrame(..) => true,
+            ClipId::ReferenceFrame(..) => true,
             _ => false,
         }
     }
 
     pub fn external_id(&self) -> Option<u64> {
         match *self {
-            ScrollLayerId::ClipExternalId(id, _) => Some(id),
+            ClipId::ClipExternalId(id, _) => Some(id),
             _ => None,
         }
     }
+
+    pub fn is_root_scroll_node(&self) -> bool {
+        match *self {
+            ClipId::Clip(id, _) if id == 0 => true,
+            _ => false,
+        }
+    }
 }
+
+macro_rules! define_empty_heap_size_of {
+    ($name:ident) => {
+        impl ::heapsize::HeapSizeOf for $name {
+            fn heap_size_of_children(&self) -> usize { 0 }
+        }
+    }
+}
+
+define_empty_heap_size_of!(ClipId);
+define_empty_heap_size_of!(RepeatMode);
+define_empty_heap_size_of!(ImageKey);

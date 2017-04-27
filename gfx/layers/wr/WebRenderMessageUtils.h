@@ -72,6 +72,22 @@ struct ParamTraits<mozilla::wr::FontKey>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::ExternalImageId>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::ExternalImageId& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::ExternalImageId* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::wr::PipelineId>
 {
   static void
@@ -163,12 +179,16 @@ struct ParamTraits<WrBuiltDisplayListDescriptor>
   Write(Message* aMsg, const WrBuiltDisplayListDescriptor& aParam)
   {
     WriteParam(aMsg, aParam.display_list_items_size);
+    WriteParam(aMsg, aParam.builder_start_time);
+    WriteParam(aMsg, aParam.builder_finish_time);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, WrBuiltDisplayListDescriptor* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->display_list_items_size);
+    return ReadParam(aMsg, aIter, &aResult->display_list_items_size)
+        && ReadParam(aMsg, aIter, &aResult->builder_start_time)
+        && ReadParam(aMsg, aIter, &aResult->builder_finish_time);
   }
 };
 

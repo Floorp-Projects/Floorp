@@ -18,8 +18,24 @@ impl ImageKey {
 /// An arbitrary identifier for an external image provided by the
 /// application. It must be a unique identifier for each external
 /// image.
+#[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
+
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
+pub enum ExternalImageType {
+    Texture2DHandle,        // gl TEXTURE_2D handle
+    TextureRectHandle,      // gl TEXTURE_RECT handle
+    TextureExternalHandle,  // gl TEXTURE_EXTERNAL handle
+    ExternalBuffer,
+}
+
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
+pub struct ExternalImageData {
+    pub id: ExternalImageId,
+    pub channel_index: u8,
+    pub image_type: ExternalImageType,
+}
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -29,6 +45,7 @@ pub enum ImageFormat {
     RGB8     = 2,
     RGBA8    = 3,
     RGBAF32  = 4,
+    RG8      = 5,
 }
 
 impl ImageFormat {
@@ -38,6 +55,7 @@ impl ImageFormat {
             ImageFormat::RGB8 => Some(3),
             ImageFormat::RGBA8 => Some(4),
             ImageFormat::RGBAF32 => Some(16),
+            ImageFormat::RG8 => Some(2),
             ImageFormat::Invalid => None,
         }
     }
@@ -68,19 +86,6 @@ impl ImageDescriptor {
     pub fn compute_stride(&self) -> u32 {
         self.stride.unwrap_or(self.width * self.format.bytes_per_pixel().unwrap())
     }
-}
-
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub enum ExternalImageType {
-    Texture2DHandle,    // gl TEXTURE_2D handle
-    TextureRectHandle,  // gl TEXTURE_RECT handle
-    ExternalBuffer,
-}
-
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub struct ExternalImageData {
-    pub id: ExternalImageId,
-    pub image_type: ExternalImageType,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

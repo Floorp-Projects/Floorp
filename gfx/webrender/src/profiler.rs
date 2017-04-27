@@ -158,6 +158,10 @@ impl TimeProfileCounter {
         val
     }
 
+    pub fn inc(&mut self, ns: u64) {
+        self.nanoseconds += ns;
+    }
+
     pub fn get(&self) -> u64 {
         self.nanoseconds
     }
@@ -271,6 +275,7 @@ pub struct TextureCacheProfileCounters {
     pub pages_a8: ResourceProfileCounter,
     pub pages_rgb8: ResourceProfileCounter,
     pub pages_rgba8: ResourceProfileCounter,
+    pub pages_rg8: ResourceProfileCounter,
 }
 
 impl TextureCacheProfileCounters {
@@ -279,30 +284,72 @@ impl TextureCacheProfileCounters {
             pages_a8: ResourceProfileCounter::new("Texture A8 cached pages"),
             pages_rgb8: ResourceProfileCounter::new("Texture RGB8 cached pages"),
             pages_rgba8: ResourceProfileCounter::new("Texture RGBA8 cached pages"),
+            pages_rg8: ResourceProfileCounter::new("Texture RG8 cached pages"),
         }
     }
 }
 
 #[derive(Clone)]
 pub struct BackendProfileCounters {
+    pub total_time: TimeProfileCounter,
+    pub resources: ResourceProfileCounters,
+    pub ipc: IpcProfileCounters,
+}
+
+#[derive(Clone)]
+pub struct ResourceProfileCounters {
     pub font_templates: ResourceProfileCounter,
     pub image_templates: ResourceProfileCounter,
-    pub total_time: TimeProfileCounter,
     pub texture_cache: TextureCacheProfileCounters,
+}
+
+#[derive(Clone)]
+pub struct IpcProfileCounters {
+    pub build_time: TimeProfileCounter,
+    pub consume_time: TimeProfileCounter,
+    pub send_time: TimeProfileCounter,
+    pub total_time: TimeProfileCounter,
+    pub display_lists: ResourceProfileCounter,
+}
+
+impl IpcProfileCounters {
+    pub fn set(&mut self, build_start: u64, build_end: u64, 
+                              consume_start: u64, consume_end: u64,
+                              display_len: usize) {
+        self.build_time.inc(build_end - build_start);
+        self.consume_time.inc(consume_end - consume_start);
+        self.send_time.inc(consume_start - build_end);
+        self.total_time.inc(consume_end - build_start);
+        self.display_lists.inc(display_len);
+    }
 }
 
 impl BackendProfileCounters {
     pub fn new() -> BackendProfileCounters {
         BackendProfileCounters {
-            font_templates: ResourceProfileCounter::new("Font Templates"),
-            image_templates: ResourceProfileCounter::new("Image Templates"),
             total_time: TimeProfileCounter::new("Backend CPU Time", false),
-            texture_cache: TextureCacheProfileCounters::new(),
+            resources: ResourceProfileCounters {
+                font_templates: ResourceProfileCounter::new("Font Templates"),
+                image_templates: ResourceProfileCounter::new("Image Templates"),
+                texture_cache: TextureCacheProfileCounters::new(),
+            },
+            ipc: IpcProfileCounters {
+                build_time: TimeProfileCounter::new("Display List Build Time", false),
+                consume_time: TimeProfileCounter::new("Display List Consume Time", false),
+                send_time: TimeProfileCounter::new("Display List Send Time", false),
+                total_time: TimeProfileCounter::new("Total Display List Time", false),
+                display_lists: ResourceProfileCounter::new("Display Lists Sent"),
+            }
         }
     }
 
     pub fn reset(&mut self) {
         self.total_time.reset();
+        self.ipc.total_time.reset();
+        self.ipc.build_time.reset();
+        self.ipc.consume_time.reset();
+        self.ipc.send_time.reset();
+        self.ipc.display_lists.reset();
     }
 }
 
@@ -560,6 +607,7 @@ pub struct Profiler {
     compositor_time: ProfileGraph,
     gpu_time: ProfileGraph,
     gpu_frames: GpuFrameCollection,
+    ipc_time: ProfileGraph,
 }
 
 impl Profiler {
@@ -573,6 +621,7 @@ impl Profiler {
             compositor_time: ProfileGraph::new(600),
             gpu_time: ProfileGraph::new(600),
             gpu_frames: GpuFrameCollection::new(),
+            ipc_time: ProfileGraph::new(600),
         }
     }
 
@@ -654,6 +703,13 @@ impl Profiler {
         self.x_right = 400.0;
         self.y_right = 40.0;
 
+        let mut gpu_time = 0;
+        let gpu_samples = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
+        for sample in &gpu_samples {
+            gpu_time += sample.time_ns;
+        }
+        renderer_timers.gpu_time.set(gpu_time);
+
         self.draw_counters(&[
             &renderer_profile.frame_counter,
             &renderer_profile.frame_time,
@@ -668,14 +724,23 @@ impl Profiler {
         ], debug_renderer, true);
 
         self.draw_counters(&[
-            &backend_profile.font_templates,
-            &backend_profile.image_templates,
+            &backend_profile.resources.font_templates,
+            &backend_profile.resources.image_templates,
         ], debug_renderer, true);
 
         self.draw_counters(&[
-            &backend_profile.texture_cache.pages_a8,
-            &backend_profile.texture_cache.pages_rgb8,
-            &backend_profile.texture_cache.pages_rgba8,
+            &backend_profile.resources.texture_cache.pages_a8,
+            &backend_profile.resources.texture_cache.pages_rgb8,
+            &backend_profile.resources.texture_cache.pages_rgba8,
+            &backend_profile.resources.texture_cache.pages_rg8,
+        ], debug_renderer, true);
+
+        self.draw_counters(&[
+            &backend_profile.ipc.build_time,
+            &backend_profile.ipc.send_time,
+            &backend_profile.ipc.consume_time,
+            &backend_profile.ipc.total_time,
+            &backend_profile.ipc.display_lists,
         ], debug_renderer, true);
 
         self.draw_counters(&[
@@ -688,21 +753,22 @@ impl Profiler {
             &renderer_timers.cpu_time,
             &renderer_timers.gpu_time,
         ], debug_renderer, false);
+        
 
-        let mut gpu_time = 0;
-        let gpu_samples = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
-        for sample in &gpu_samples {
-            gpu_time += sample.time_ns;
-        }
+
 
         self.backend_time.push(backend_profile.total_time.nanoseconds);
         self.compositor_time.push(renderer_timers.cpu_time.nanoseconds);
+        self.ipc_time.push(backend_profile.ipc.total_time.nanoseconds);
         self.gpu_time.push(gpu_time);
         self.gpu_frames.push(gpu_time, gpu_samples);
+
 
         let rect = self.backend_time.draw_graph(self.x_left, self.y_left, "CPU (backend)", debug_renderer);
         self.y_left += rect.size.height + PROFILE_PADDING;
         let rect = self.compositor_time.draw_graph(self.x_left, self.y_left, "CPU (compositor)", debug_renderer);
+        self.y_left += rect.size.height + PROFILE_PADDING;
+        let rect = self.ipc_time.draw_graph(self.x_left, self.y_left, "DisplayList IPC", debug_renderer);
         self.y_left += rect.size.height + PROFILE_PADDING;
         let rect = self.gpu_time.draw_graph(self.x_left, self.y_left, "GPU", debug_renderer);
         self.y_left += rect.size.height + PROFILE_PADDING;

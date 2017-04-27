@@ -10,6 +10,7 @@ use util::{ComplexClipRegionHelpers, MatrixHelpers, TransformedRect};
 use webrender_traits::{AuxiliaryLists, BorderRadius, ClipRegion, ComplexClipRegion, ImageMask};
 use webrender_traits::{DeviceIntRect, LayerToWorldTransform};
 use webrender_traits::{LayerRect, LayerPoint, LayerSize};
+use std::ops::Not;
 
 const MAX_CLIP: f32 = 1000000.0;
 
@@ -18,6 +19,17 @@ const MAX_CLIP: f32 = 1000000.0;
 pub enum ClipMode {
     Clip,           // Pixels inside the region are visible.
     ClipOut,        // Pixels outside the region are visible.
+}
+
+impl Not for ClipMode {
+    type Output = ClipMode;
+
+    fn not(self) -> ClipMode {
+        match self {
+            ClipMode::Clip => ClipMode::ClipOut,
+            ClipMode::ClipOut => ClipMode::Clip
+        }
+    }
 }
 
 #[repr(C)]
