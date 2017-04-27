@@ -69,8 +69,10 @@ public:
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
-  , mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                             /* aSupportsTailDispatch = */ true))
+  , mTaskQueue(new TaskQueue(
+      GetMediaThreadPool(MediaThreadType::PLAYBACK),
+      "MediaDecoderReader::mTaskQueue",
+      /* aSupportsTailDispatch = */ true))
   , mWatchManager(this, mTaskQueue)
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
   , mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderReader::mDuration (Mirror)")

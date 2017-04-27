@@ -1375,36 +1375,40 @@ GeckoDriver.prototype.getWindowRect = function (cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
-  assert.firefox();
+  assert.firefox()
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let {x, y, height, width} = cmd.parameters;
+  let {x, y, width, height} = cmd.parameters;
 
   if (height != null && width != null) {
     assert.positiveInteger(height);
     assert.positiveInteger(width);
-    yield new Promise(resolve => {
-      // When the DOM resize event claims that it fires _after_ the document
-      // view has been resized, it is lying.
-      //
-      // Because resize events fire at a high rate, DOM modifications
-      // such as updates to outerWidth/outerHeight are not guaranteed to
-      // have processed.  To overcome this... abomination... of the web
-      // platform, we throttle the event using setTimeout.  If everything
-      // was well in this world we would use requestAnimationFrame, but
-      // it does not seem to like our particular flavour of XUL.
-      const fps15 = 66;
-      const synchronousResize = () => win.setTimeout(resolve, fps15);
-      win.addEventListener("resize", synchronousResize, {once: true});
-      win.resizeTo(width, height);
-    });
+
+    if (win.outerWidth != width && win.outerHeight != height) {
+      yield new Promise(resolve => {
+        // When the DOM resize event claims that it fires _after_ the document
+        // view has been resized, it is lying.
+        //
+        // Because resize events fire at a high rate, DOM modifications
+        // such as updates to outerWidth/outerHeight are not guaranteed to
+        // have processed.  To overcome this... abomination... of the web
+        // platform, we throttle the event using setTimeout.  If everything
+        // was well in this world we would use requestAnimationFrame, but
+        // it does not seem to like our particular flavour of XUL.
+        const fps15 = 66;
+        const synchronousResize = () => win.setTimeout(resolve, fps15);
+        win.addEventListener("resize", synchronousResize, {once: true});
+        win.resizeTo(width, height);
+      });
+    }
   }
 
   if (x != null && y != null) {
     assert.integer(x);
     assert.integer(y);
-    let orig = {screenX: win.screenX, screenY: win.screenY};
+    const orig = {screenX: win.screenX, screenY: win.screenY};
+
     win.moveTo(x, y);
     yield wait.until((resolve, reject) => {
       if ((x == win.screenX && y == win.screenY) ||
@@ -1422,7 +1426,6 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
     "width": win.outerWidth,
     "height": win.outerHeight,
   };
-
 };
 
 /**
@@ -2026,7 +2029,25 @@ GeckoDriver.prototype.clickElement = function* (cmd, resp) {
       // listen for it and then just send an error back. The person making the
       // call should be aware something isnt right and handle accordingly
       this.addFrameCloseListener("click");
-      yield this.listener.clickElement(id);
+
+      let click = this.listener.clickElement({id: id, pageTimeout: this.timeouts.pageLoad});
+
+      // If a remoteness update interrupts our page load, this will never return
+      // We need to re-issue this request to correctly poll for readyState and
+      // send errors.
+      this.curBrowser.pendingCommands.push(() => {
+        let parameters = {
+          // TODO(ato): Bug 1242595
+          command_id: this.listener.activeMessageId,
+          pageTimeout: this.timeouts.pageLoad,
+          startTime: new Date().getTime(),
+        };
+        this.mm.broadcastAsyncMessage(
+            "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
+            parameters);
+      });
+
+      yield click;
       break;
   }
 };
@@ -2855,8 +2876,13 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
 };
 
 /**
- * Maximizes the user agent window as if the user pressed the maximise
- * button.
+ * Synchronously maximizes the user agent window as if the user pressed
+ * the maximize button, or restores it if it is already maximized.
+ *
+ * Not supported on Fennec.
+ *
+ * @return {Map.<string, number>}
+ *     Window rect.
  *
  * @throws {UnsupportedOperationError}
  *     Not available for current application.
@@ -2865,12 +2891,27 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.maximizeWindow = function (cmd, resp) {
+GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  win.maximize()
+  yield new Promise(resolve => {
+    win.addEventListener("resize", resolve, {once: true});
+
+    if (win.windowState == win.STATE_MAXIMIZED) {
+      win.restore();
+    } else {
+      win.maximize();
+    }
+  });
+
+  return {
+    x: win.screenX,
+    y: win.screenY,
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**

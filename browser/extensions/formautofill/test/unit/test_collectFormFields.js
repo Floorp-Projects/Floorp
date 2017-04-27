@@ -25,6 +25,8 @@ const TESTCASES = [
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
     fieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
@@ -42,6 +44,8 @@ const TESTCASES = [
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
@@ -59,6 +63,8 @@ const TESTCASES = [
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},

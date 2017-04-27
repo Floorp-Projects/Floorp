@@ -527,9 +527,6 @@ BrowserGlue.prototype = {
 
     SelfSupportBackend.init();
 
-    // Ensure we keep track of places/pw-mananager undo by init'ing this early.
-    Cu.import("resource:///modules/AutoMigrate.jsm");
-
     if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
 

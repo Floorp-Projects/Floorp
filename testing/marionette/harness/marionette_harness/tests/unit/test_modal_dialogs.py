@@ -8,7 +8,7 @@ from marionette_driver import errors
 from marionette_driver.marionette import Alert
 from marionette_driver.wait import Wait
 
-from marionette_harness import MarionetteTestCase, skip_if_e10s, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):

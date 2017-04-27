@@ -954,20 +954,6 @@ EffectCompositor::PreTraverse()
   return PreTraverseInSubtree(nullptr);
 }
 
-static bool
-IsFlattenedTreeDescendantOf(nsINode* aPossibleDescendant,
-                            nsINode* aPossibleAncestor)
-{
-  do {
-    if (aPossibleDescendant == aPossibleAncestor) {
-      return true;
-    }
-    aPossibleDescendant = aPossibleDescendant->GetFlattenedTreeParentNode();
-  } while (aPossibleDescendant);
-
-  return false;
-}
-
 bool
 EffectCompositor::PreTraverseInSubtree(Element* aRoot)
 {
@@ -989,7 +975,9 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
 
       // Ignore restyles that aren't in the flattened tree subtree rooted at
       // aRoot.
-      if (aRoot && !IsFlattenedTreeDescendantOf(target.mElement, aRoot)) {
+      if (aRoot &&
+          !nsContentUtils::ContentIsFlattenedTreeDescendantOf(target.mElement,
+                                                              aRoot)) {
         continue;
       }
 

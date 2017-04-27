@@ -22,6 +22,7 @@ ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent,
                                      uint32_t aPluginId)
   : mPluginId(aPluginId)
   , mContentParent(aContentParent)
+  , mVideoShmemCount(MediaPrefs::EMEChromiumAPIVideoShmemCount())
 {
   GMP_LOG(
     "ChromiumCDMParent::ChromiumCDMParent(this=%p, contentParent=%p, id=%u)",
@@ -600,35 +601,82 @@ ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
 }
 
 ipc::IPCResult
-ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
+ChromiumCDMParent::RecvDecodedData(const CDMVideoFrame& aFrame,
+                                   nsTArray<uint8_t>&& aData)
 {
-  // On failure we need to deallocate the shmem used to store the decrypted
-  // sample. On success we return it to the CDM to be reused.
-  auto autoDeallocateShmem =
-    MakeScopeExit([&, this] { this->DeallocShmem(aFrame.mData()); });
-
-  if (mIsShutdown || mDecodePromise.IsEmpty()) {
+  GMP_LOG("ChromiumCDMParent::RecvDecodedData(this=%p) "
+          "mVideoShmemCount=%" PRIu32,
+          this,
+          mVideoShmemCount);
+  // We'd expect CDMs to not have video frames larger than 1280x720 (due to
+  // DRM robustness requirements), which is about 1.5MB per frame. So put an
+  // upper limit on the number of shmems we tolerate the CDM asking for. In
+  // practice, we expect the CDM to need less than 5, but some encodings
+  // require more.
+  Shmem shmem;
+  if (mVideoShmemCount >= 50 || !AllocShmem(mVideoFrameBufferSize,
+                                            Shmem::SharedMemory::TYPE_BASIC,
+                                            &shmem)) {
+    GMP_LOG("ChromiumCDMParent::RecvDecodedData(this=%p) "
+            "failed to allocate shmem for CDM.",
+            this);
+    mVideoDecoderInitialized = false;
+    mDecodePromise.RejectIfExists(
+      MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Failled to send shmems to CDM after decode init.")),
+      __func__);
     return IPC_OK();
   }
-  VideoData::YCbCrBuffer b;
-  uint8_t* data = aFrame.mData().get<uint8_t>();
-  MOZ_ASSERT(aFrame.mData().Size<uint8_t>() > 0);
+  mVideoShmemCount++;
 
-  b.mPlanes[0].mData = data;
+  ProcessDecoded(aFrame, aData, Move(shmem));
+
+  return IPC_OK();
+}
+
+ipc::IPCResult
+ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
+                                    ipc::Shmem&& aShmem)
+{
+  ProcessDecoded(
+    aFrame,
+    MakeSpan<uint8_t>(aShmem.get<uint8_t>(), aShmem.Size<uint8_t>()),
+    Move(aShmem));
+  return IPC_OK();
+}
+
+void
+ChromiumCDMParent::ProcessDecoded(const CDMVideoFrame& aFrame,
+                                  Span<uint8_t> aData,
+                                  ipc::Shmem&& aGiftShmem)
+{
+  // On failure we need to deallocate the shmem we're to return to the
+  // CDM. On success we return it to the CDM to be reused.
+  auto autoDeallocateShmem =
+    MakeScopeExit([&, this] { this->DeallocShmem(aGiftShmem); });
+
+  if (mIsShutdown || mDecodePromise.IsEmpty()) {
+    return;
+  }
+  VideoData::YCbCrBuffer b;
+  MOZ_ASSERT(aData.Length() > 0);
+
+  b.mPlanes[0].mData = aData.Elements();
   b.mPlanes[0].mWidth = aFrame.mImageWidth();
   b.mPlanes[0].mHeight = aFrame.mImageHeight();
   b.mPlanes[0].mStride = aFrame.mYPlane().mStride();
   b.mPlanes[0].mOffset = aFrame.mYPlane().mPlaneOffset();
   b.mPlanes[0].mSkip = 0;
 
-  b.mPlanes[1].mData = data;
+  b.mPlanes[1].mData = aData.Elements();
   b.mPlanes[1].mWidth = (aFrame.mImageWidth() + 1) / 2;
   b.mPlanes[1].mHeight = (aFrame.mImageHeight() + 1) / 2;
   b.mPlanes[1].mStride = aFrame.mUPlane().mStride();
   b.mPlanes[1].mOffset = aFrame.mUPlane().mPlaneOffset();
   b.mPlanes[1].mSkip = 0;
 
-  b.mPlanes[2].mData = data;
+  b.mPlanes[2].mData = aData.Elements();
   b.mPlanes[2].mWidth = (aFrame.mImageWidth() + 1) / 2;
   b.mPlanes[2].mHeight = (aFrame.mImageHeight() + 1) / 2;
   b.mPlanes[2].mStride = aFrame.mVPlane().mStride();
@@ -649,12 +697,12 @@ ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
 
   // Return the shmem to the CDM so the shmem can be reused to send us
   // another frame.
-  if (!SendGiveBuffer(aFrame.mData())) {
+  if (!SendGiveBuffer(aGiftShmem)) {
     mDecodePromise.RejectIfExists(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("Can't return shmem to CDM process")),
       __func__);
-    return IPC_OK();
+    return;
   }
   // Don't need to deallocate the shmem since the CDM process is responsible
   // for it again.
@@ -668,8 +716,6 @@ ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
                   RESULT_DETAIL("CallBack::CreateAndCopyData")),
       __func__);
   }
-
-  return IPC_OK();
 }
 
 ipc::IPCResult
@@ -798,12 +844,19 @@ ChromiumCDMParent::RecvOnDecoderInitDone(const uint32_t& aStatus)
     // of padding for safety.
     //
     // Normally the CDM won't allocate more than one buffer at once, but
-    // we've seen cases where it allocates two buffers, returns one and holds
-    // onto the other. So the minimum number of shmems we give to the CDM
-    // must be at least two, and the default is three for safety.
-    const uint32_t count =
-      std::max<uint32_t>(2u, MediaPrefs::EMEChromiumAPIVideoShmemCount());
-    for (uint32_t i = 0; i < count; i++) {
+    // we've seen cases where it allocates multiple buffers, returns one and
+    // holds onto the rest. So we need to ensure we have a minimum number of
+    // shmems pre-allocated for the CDM. This minimum is set by the pref
+    // media.eme.chromium-api.video-shmems.
+    //
+    // We also have a failure recovery mechanism; if the CDM asks for more
+    // buffers than we have shmem's available, ChromiumCDMChild gives the
+    // CDM a non-shared memory buffer, and returns the frame to the parent
+    // in an nsTArray<uint8_t> instead of a shmem. Every time this happens,
+    // the parent sends an extra shmem to the CDM process for it to add to the
+    // set of shmems with which to return output. Via this mechanism we should
+    // recover from incorrectly predicting how many shmems to pre-allocate.
+    for (uint32_t i = 0; i < mVideoShmemCount; i++) {
       if (!SendBufferToCDM(mVideoFrameBufferSize)) {
         mVideoDecoderInitialized = false;
         mInitVideoDecoderPromise.RejectIfExists(

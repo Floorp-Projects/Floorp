@@ -62,6 +62,7 @@ public:
 NS_IMPL_ISUPPORTS(TaskQueue::EventTargetWrapper, nsIEventTarget)
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+                     const char* aName,
                      bool aRequireTailDispatch)
   : AbstractThread(aRequireTailDispatch)
   , mTarget(aTarget)
@@ -69,8 +70,15 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
+  , mName(aName)
 {
   MOZ_COUNT_CTOR(TaskQueue);
+}
+
+TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+                     bool aSupportsTailDispatch)
+  : TaskQueue(Move(aTarget), "Unnamed", aSupportsTailDispatch)
+{
 }
 
 TaskQueue::~TaskQueue()
