@@ -328,8 +328,8 @@ fails == control-chars-01b.html control-chars-01b.html
 fails == control-chars-01c.html control-chars-01c.html
 fails == control-chars-01d.html control-chars-01d.html
 == control-chars-02.html control-chars-02.html
-fails == control-chars-03a.html control-chars-03a.html
-fails == control-chars-03b.html control-chars-03b.html
+== control-chars-03a.html control-chars-03a.html
+== control-chars-03b.html control-chars-03b.html
 pref(layout.css.control-characters.visible,true) == control-chars-04a.html control-chars-04a.html
 pref(layout.css.control-characters.visible,true) == control-chars-04b.html control-chars-04b.html
 pref(layout.css.control-characters.visible,true) == control-chars-04c.html control-chars-04c.html

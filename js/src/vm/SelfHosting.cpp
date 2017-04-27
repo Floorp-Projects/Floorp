@@ -291,7 +291,7 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
             UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
             if (!bytes)
                 return;
-            errorArgs[i - 1].initBytes(bytes.release());
+            errorArgs[i - 1].initBytes(Move(bytes));
         }
         if (!errorArgs[i - 1])
             return;

@@ -356,8 +356,8 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
   if (useNullSample) {
     data = new NullData(aFrameRef.byte_offset,
-                        aFrameRef.composition_timestamp.ToMicroseconds(),
-                        aFrameRef.duration.ToMicroseconds());
+                        aFrameRef.composition_timestamp,
+                        aFrameRef.duration);
   } else if (mUseSoftwareImages) {
     size_t width = CVPixelBufferGetWidth(aImage);
     size_t height = CVPixelBufferGetHeight(aImage);
@@ -412,11 +412,11 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       VideoData::CreateAndCopyData(info,
                                    mImageContainer,
                                    aFrameRef.byte_offset,
-                                   aFrameRef.composition_timestamp.ToMicroseconds(),
+                                   aFrameRef.composition_timestamp,
                                    aFrameRef.duration,
                                    buffer,
                                    aFrameRef.is_sync_point,
-                                   aFrameRef.decode_timestamp.ToMicroseconds(),
+                                   aFrameRef.decode_timestamp,
                                    visible);
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
@@ -432,11 +432,11 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     data =
       VideoData::CreateFromImage(info.mDisplay,
                                  aFrameRef.byte_offset,
-                                 aFrameRef.composition_timestamp.ToMicroseconds(),
+                                 aFrameRef.composition_timestamp,
                                  aFrameRef.duration,
                                  image.forget(),
                                  aFrameRef.is_sync_point,
-                                 aFrameRef.decode_timestamp.ToMicroseconds());
+                                 aFrameRef.decode_timestamp);
 #else
     MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
 #endif

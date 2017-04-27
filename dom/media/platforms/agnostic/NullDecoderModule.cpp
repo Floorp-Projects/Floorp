@@ -17,10 +17,10 @@ public:
     // Create a dummy VideoData with no image. This gives us something to
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aSample->mOffset,
-                                      aSample->mTime.ToMicroseconds(),
-                                      aSample->mDuration.ToMicroseconds(),
+                                      aSample->mTime,
+                                      aSample->mDuration,
                                       aSample->mKeyframe,
-                                      aSample->mTimecode.ToMicroseconds(),
+                                      aSample->mTimecode,
                                       gfx::IntSize(),
                                       0));
     return v.forget();

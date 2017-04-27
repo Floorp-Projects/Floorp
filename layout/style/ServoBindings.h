@@ -37,6 +37,7 @@ namespace mozilla {
   enum FontFamilyType : uint32_t;
   struct Keyframe;
   enum Side;
+  struct StyleTransition;
   namespace css {
     struct URLValue;
   };
@@ -230,6 +231,9 @@ double Gecko_GetPositionInSegment(
 RawServoAnimationValueBorrowedOrNull Gecko_AnimationGetBaseStyle(
   void* aBaseStyles,
   nsCSSPropertyID aProperty);
+void Gecko_StyleTransition_SetUnsupportedProperty(
+  mozilla::StyleTransition* aTransition,
+  nsIAtom* aAtom);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);

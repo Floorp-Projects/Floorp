@@ -1220,16 +1220,14 @@ pre_call_clean_up:
                     NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED;
             static const char format[] = "%s \"%s\"";
             const char * msg;
-            char* sz = nullptr;
+            UniqueChars sz;
 
             if (nsXPCException::NameAndFormatForNSResult(code, nullptr, &msg) && msg)
                 sz = JS_smprintf(format, msg, name);
 
-            XPCConvert::ConstructException(code, sz, GetInterfaceName(), name,
+            XPCConvert::ConstructException(code, sz.get(), GetInterfaceName(), name,
                                            nullptr, getter_AddRefs(syntheticException),
                                            nullptr, nullptr);
-            if (sz)
-                JS_smprintf_free(sz);
             success = false;
         }
     }

@@ -382,7 +382,7 @@ Statement::internalFinalize(bool aDestructing)
     // Finalizing it here would be useless and segfaultish.
     //
 
-    char *msg = ::mozilla::Smprintf("SQL statement (%p) should have been finalized"
+    SmprintfPointer msg = ::mozilla::Smprintf("SQL statement (%p) should have been finalized"
       " before garbage-collection. For more details on this statement, set"
       " NSPR_LOG_MESSAGES=mozStorage:5 .",
       mDBStatement);
@@ -397,13 +397,11 @@ Statement::internalFinalize(bool aDestructing)
 #if 0
     // Deactivate the warning until we have fixed the exising culprit
     // (see bug 914070).
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif // 0
 
     // Use %s so we aren't exposing random strings to printf interpolation.
-    MOZ_LOG(gStorageLog, LogLevel::Warning, ("%s", msg));
-
-    ::mozilla::SmprintfFree(msg);
+    MOZ_LOG(gStorageLog, LogLevel::Warning, ("%s", msg.get()));
   }
 
 #endif

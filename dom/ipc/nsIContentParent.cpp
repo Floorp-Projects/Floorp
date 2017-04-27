@@ -10,6 +10,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabParent.h"
@@ -138,12 +139,15 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
   }
 
   uint32_t chromeFlags = aChromeFlags;
+  TabId openerTabId(0);
   if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
     // CanOpenBrowser has ensured that the IPCTabContext is of
     // type PopupIPCTabContext, and that the opener TabParent is
     // reachable.
     const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
     auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    openerTabId = opener->GetTabId();
+
     // We must ensure that the private browsing and remoteness flags
     // match those of the opener.
     nsCOMPtr<nsILoadContext> loadContext = opener->GetLoadContext();
@@ -155,6 +159,29 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
     loadContext->GetUsePrivateBrowsing(&isPrivate);
     if (isPrivate) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+    }
+  }
+
+  if (openerTabId > 0 ||
+      aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
+    // Creation of PBrowser triggered from grandchild process is currently
+    // broken and not supported (i.e. this code path doesn't work in
+    // ContentBridgeParent).
+    //
+    // If you're working on fixing the code path for ContentBridgeParent,
+    // remember to handle the remote frame registration below carefully as it
+    // has to be registered in parent process.
+    MOZ_ASSERT(XRE_IsParentProcess());
+    if (!XRE_IsParentProcess()) {
+      return nullptr;
+    }
+
+    // The creation of PBrowser was triggered from content process through
+    // either window.open() or service worker's openWindow().
+    // We need to register remote frame with the child generated tab id.
+    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+    if (!cpm->RegisterRemoteFrame(aTabId, openerTabId, aContext, aCpId)) {
+      return nullptr;
     }
   }
 

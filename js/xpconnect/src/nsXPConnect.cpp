@@ -1009,7 +1009,7 @@ nsXPConnect::DebugPrintJSStack(bool showArgs,
     if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
-        return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps);
+        return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps).release();
 
     return nullptr;
 }

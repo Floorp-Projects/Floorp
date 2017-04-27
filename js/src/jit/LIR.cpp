@@ -376,26 +376,26 @@ LDefinition::toString() const
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char* buf;
+    UniqueChars buf;
     if (isBogusTemp()) {
         buf = JS_smprintf("bogus");
     } else {
         buf = JS_smprintf("v%u<%s>", virtualRegister(), typeName(type()));
         if (buf) {
             if (policy() == LDefinition::FIXED)
-                buf = JS_sprintf_append(buf, ":%s", output()->toString().get());
+                buf = JS_sprintf_append(Move(buf), ":%s", output()->toString().get());
             else if (policy() == LDefinition::MUST_REUSE_INPUT)
-                buf = JS_sprintf_append(buf, ":tied(%u)", getReusedInput());
+                buf = JS_sprintf_append(Move(buf), ":tied(%u)", getReusedInput());
         }
     }
 
     if (!buf)
         oomUnsafe.crash("LDefinition::toString()");
 
-    return UniqueChars(buf);
+    return buf;
 }
 
-static char*
+static UniqueChars
 PrintUse(const LUse* use)
 {
     switch (use->policy()) {
@@ -420,7 +420,7 @@ LAllocation::toString() const
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char* buf;
+    UniqueChars buf;
     if (isBogus()) {
         buf = JS_smprintf("bogus");
     } else {
@@ -452,7 +452,7 @@ LAllocation::toString() const
     if (!buf)
         oomUnsafe.crash("LAllocation::toString()");
 
-    return UniqueChars(buf);
+    return buf;
 }
 
 void

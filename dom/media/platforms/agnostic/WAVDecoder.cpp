@@ -79,7 +79,6 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
   size_t aLength = aSample->Size();
   ByteReader aReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
-  uint64_t aTstampUsecs = aSample->mTime.ToMicroseconds();
 
   int32_t frames = aLength * 8 / mInfo.mBitDepth / mInfo.mChannels;
 
@@ -118,10 +117,10 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
     }
   }
 
-  int64_t duration = frames / mInfo.mRate;
+  auto duration = media::TimeUnit::FromMicroseconds(frames / mInfo.mRate);
 
   return DecodePromise::CreateAndResolve(
-    DecodedData{ new AudioData(aOffset, aTstampUsecs, duration, frames,
+    DecodedData{ new AudioData(aOffset, aSample->mTime, duration, frames,
                                Move(buffer), mInfo.mChannels, mInfo.mRate) },
     __func__);
 }

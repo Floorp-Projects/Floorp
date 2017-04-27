@@ -34,22 +34,3 @@ interface AudioContext : BaseAudioContext {
     [NewObject, Throws]
     MediaStreamAudioDestinationNode createMediaStreamDestination();
 };
-
-// Mozilla extensions
-partial interface AudioContext {
-  // Read AudioChannel.webidl for more information about this attribute.
-  [Pref="media.useAudioChannelAPI"]
-  readonly attribute AudioChannel mozAudioChannelType;
-
-  // These 2 events are dispatched when the AudioContext object is muted by
-  // the AudioChannelService. It's call 'interrupt' because when this event is
-  // dispatched on a HTMLMediaElement, the audio stream is paused.
-  [Pref="media.useAudioChannelAPI"]
-  attribute EventHandler onmozinterruptbegin;
-
-  [Pref="media.useAudioChannelAPI"]
-  attribute EventHandler onmozinterruptend;
-
-  // This method is for test only.
-  [ChromeOnly] AudioChannel testAudioChannelInAudioNodeStream();
-};

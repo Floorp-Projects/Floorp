@@ -808,7 +808,8 @@ function isUsableAddon(aAddon) {
       return false;
   }
 
-  if (!ALLOW_NON_MPC && aAddon.multiprocessCompatible !== true) {
+  if (!ALLOW_NON_MPC && aAddon.type == "extension" &&
+      aAddon.multiprocessCompatible !== true) {
     logger.warn(`disabling ${aAddon.id} since it is not multiprocess compatible`);
     return false;
   }

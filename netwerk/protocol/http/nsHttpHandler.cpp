@@ -890,12 +890,11 @@ nsHttpHandler::InitUserAgentComponents()
           ? WNT_BASE "; WOW64"
           : WNT_BASE;
 #endif
-        char *buf = mozilla::Smprintf(format,
-                               info.dwMajorVersion,
-                               info.dwMinorVersion);
+        SmprintfPointer buf = mozilla::Smprintf(format,
+                                                info.dwMajorVersion,
+                                                info.dwMinorVersion);
         if (buf) {
-            mOscpu = buf;
-            mozilla::SmprintfFree(buf);
+            mOscpu = buf.get();
         }
     }
 #elif defined (XP_MACOSX)

@@ -204,7 +204,7 @@ FFmpegAudioDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
       }
 
       results.AppendElement(new AudioData(
-        samplePosition, pts.ToMicroseconds(), duration.ToMicroseconds(),
+        samplePosition, pts, duration,
         mFrame->nb_samples, Move(audio), numChannels, samplingRate));
 
       pts = newpts;

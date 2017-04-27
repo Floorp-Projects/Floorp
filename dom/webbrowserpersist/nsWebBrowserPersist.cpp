@@ -2028,7 +2028,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
 
             if (base.IsEmpty() || duplicateCounter > 1)
             {
-                char * tmp = mozilla::Smprintf("_%03d", duplicateCounter);
+                SmprintfPointer tmp = mozilla::Smprintf("_%03d", duplicateCounter);
                 NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
                 if (filename.Length() < kDefaultMaxFilenameLength - 4)
                 {
@@ -2038,8 +2038,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
                 {
                     base.Mid(tmpBase, 0, base.Length() - 4);
                 }
-                tmpBase.Append(tmp);
-                mozilla::SmprintfFree(tmp);
+                tmpBase.Append(tmp.get());
             }
             else
             {
