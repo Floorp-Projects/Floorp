@@ -248,12 +248,14 @@ nsXBLResourceLoader::NotifyBoundElements()
         if (shell) {
           nsIFrame* childFrame = content->GetPrimaryFrame();
           if (!childFrame) {
-            // Check to see if it's in the undisplayed content map.
-            //
-            // FIXME(emilio, bug 1359384): What about display: contents stuff?
-            // Looks like this would be inefficient in that case?
+            // Check to see if it's in the undisplayed content map, or the
+            // display: contents map.
             nsStyleContext* sc =
               shell->FrameManager()->GetUndisplayedContent(content);
+
+            if (!sc) {
+              sc = shell->FrameManager()->GetDisplayContentsStyleFor(content);
+            }
 
             if (!sc) {
               shell->PostRecreateFramesFor(content->AsElement());
