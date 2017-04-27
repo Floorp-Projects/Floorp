@@ -747,8 +747,7 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     int64_t pageFaults = slice.endFaults - slice.startFaults;
-    bool ignore;
-    TimeStamp originTime = TimeStamp::ProcessCreation(ignore);
+    TimeStamp originTime = TimeStamp::ProcessCreation();
 
     const char* format =
         "\"slice\":%d,"
@@ -1029,9 +1028,8 @@ Statistics::printStats()
     } else {
         UniqueChars msg = formatDetailedMessage();
         if (msg) {
-            bool ignoredInconsistency;
             double secSinceStart =
-                (slices[0].start - TimeStamp::ProcessCreation(ignoredInconsistency)).ToSeconds();
+                (slices[0].start - TimeStamp::ProcessCreation()).ToSeconds();
             fprintf(fp, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
         }
     }

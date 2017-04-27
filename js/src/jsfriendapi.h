@@ -473,6 +473,9 @@ AreGCGrayBitsValid(JSContext* cx);
 extern JS_FRIEND_API(bool)
 ZoneGlobalsAreAllGray(JS::Zone* zone);
 
+extern JS_FRIEND_API(bool)
+IsObjectZoneSweepingOrCompacting(JSObject* obj);
+
 typedef void
 (*GCThingCallback)(void* closure, JS::GCCellPtr thing);
 

@@ -260,6 +260,7 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
                            InfallibleTArray<nsString>&& aFilters,
                            InfallibleTArray<nsString>&& aFilterNames,
                            const nsString& aDisplayDirectory,
+                           const nsString& aDisplaySpecialDirectory,
                            const nsString& aOkButtonLabel)
 {
   if (!CreateFilePicker()) {
@@ -284,6 +285,8 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
       localFile->InitWithPath(aDisplayDirectory);
       mFilePicker->SetDisplayDirectory(localFile);
     }
+  } else if (!aDisplaySpecialDirectory.IsEmpty()) {
+    mFilePicker->SetDisplaySpecialDirectory(aDisplaySpecialDirectory);
   }
 
   mCallback = new FilePickerShownCallback(this);

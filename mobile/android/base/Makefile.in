@@ -8,28 +8,6 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .NOTPARALLEL:
 endif
 
-MOZ_BUILDID := $(shell awk '{print $$3}' $(DEPTH)/buildid.h)
-
-# Set the appropriate version code, based on the existance of the
-# MOZ_APP_ANDROID_VERSION_CODE variable.
-ifdef MOZ_APP_ANDROID_VERSION_CODE
-    ANDROID_VERSION_CODE:=$(MOZ_APP_ANDROID_VERSION_CODE)
-else
-    ANDROID_VERSION_CODE:=$(shell $(PYTHON) \
-      $(topsrcdir)/python/mozbuild/mozbuild/android_version_code.py \
-        --verbose \
-        --with-android-cpu-arch=$(ANDROID_CPU_ARCH) \
-        $(if $(MOZ_ANDROID_MIN_SDK_VERSION),--with-android-min-sdk=$(MOZ_ANDROID_MIN_SDK_VERSION)) \
-        $(if $(MOZ_ANDROID_MAX_SDK_VERSION),--with-android-max-sdk=$(MOZ_ANDROID_MAX_SDK_VERSION)) \
-        $(MOZ_BUILDID))
-endif
-
-DEFINES += \
-  -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
-  -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
-  -DMOZ_BUILDID=$(MOZ_BUILDID) \
-  $(NULL)
-
 GARBAGE += \
   classes.dex  \
   gecko.ap_  \
@@ -309,7 +287,7 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 		-outjars jars-proguarded \
 		-libraryjars $(library_jars)
 
-ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
+ANNOTATION_PROCESSOR_JAR_FILES := $(abspath $(DEPTH)/build/annotationProcessors/annotationProcessors.jar)
 
 # This annotation processing step also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
@@ -375,7 +353,7 @@ res/raw/browsersearch.json: .locales.deps ;
 res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
-  $(DEPTH)/mobile/android/base/AndroidManifest.xml \
+  AndroidManifest.xml \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
@@ -479,8 +457,8 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .aapt.nodeps: FORCE
 	cp $(gradle_dir)/app/intermediates/res/resources-automation-debug.ap_ gecko-nodeps.ap_
 else
-# .aapt.nodeps: $(DEPTH)/mobile/android/base/AndroidManifest.xml FORCE
-$(eval $(call aapt_command,.aapt.nodeps,$(DEPTH)/mobile/android/base/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
+# .aapt.nodeps: AndroidManifest.xml FORCE
+$(eval $(call aapt_command,.aapt.nodeps,AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 endif
 
 # Override the Java settings with some specific android settings
@@ -515,7 +493,7 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 
 # Targets built very early during a Gradle build.
 gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
-gradle-targets: $(DEPTH)/mobile/android/base/AndroidManifest.xml
+gradle-targets: AndroidManifest.xml
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
 ifndef MOZILLA_OFFICIAL

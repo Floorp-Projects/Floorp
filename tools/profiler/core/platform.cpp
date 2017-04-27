@@ -473,8 +473,7 @@ static const int SAMPLER_MAX_STRING_LENGTH = 128;
 
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
-               volatile js::ProfileEntry& entry, PseudoStack* stack,
-               void* lastpc)
+               volatile js::ProfileEntry& entry, PseudoStack* stack)
 {
   // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations and
   // should not be recorded in the profile.
@@ -509,15 +508,6 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
         if (!entry.pc()) {
           // The JIT only allows the top-most entry to have a nullptr pc.
           MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
-
-          // If stack-walking was disabled, then that's just unfortunate.
-          if (lastpc) {
-            jsbytecode* jspc = js::ProfilingGetPC(stack->mContext, script,
-                                                  lastpc);
-            if (jspc) {
-              lineno = JS_PCToLineNumber(script, jspc);
-            }
-          }
         } else {
           lineno = JS_PCToLineNumber(script, entry.pc());
         }
@@ -706,7 +696,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
-      AddPseudoEntry(aLock, aBuffer, pseudoFrame, pseudoStack, nullptr);
+      AddPseudoEntry(aLock, aBuffer, pseudoFrame, pseudoStack);
       pseudoIndex++;
       continue;
     }
@@ -1988,8 +1978,7 @@ profiler_init(void* aStackTop)
     // indicates that the profiler has initialized successfully.
     gPS = new PS();
 
-    bool ignore;
-    gPS->SetProcessStartTime(lock, mozilla::TimeStamp::ProcessCreation(ignore));
+    gPS->SetProcessStartTime(lock, mozilla::TimeStamp::ProcessCreation());
 
     locked_register_thread(lock, kMainThreadName, aStackTop);
 

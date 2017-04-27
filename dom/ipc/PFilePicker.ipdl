@@ -41,7 +41,8 @@ protocol PFilePicker
 parent:
     async Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
                nsString defaultExtension, nsString[] filters, nsString[] filterNames,
-               nsString displayDirectory, nsString okButtonLabel);
+               nsString displayDirectory, nsString displaySpecialDirectory,
+               nsString okButtonLabel);
 
 child:
     async __delete__(MaybeInputData data, int16_t result);
