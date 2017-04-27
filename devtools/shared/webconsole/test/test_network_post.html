@@ -204,13 +204,13 @@ function onResponseHeaders(aState, aResponse)
   ok(!!aResponse.rawHeaders, "response rawHeaders available");
 
   checkHeadersOrCookies(aResponse.headers, {
-    "Content-Type": /^application\/(json|octet-stream)$/,
-    "Content-Length": /^\d+$/,
+    "content-type": /^application\/(json|octet-stream)$/,
+    "content-length": /^\d+$/,
   });
 
   checkRawHeaders(aResponse.rawHeaders, {
-    "Content-Type": /^application\/(json|octet-stream)$/,
-    "Content-Length": /^\d+$/,
+    "content-type": /^application\/(json|octet-stream)$/,
+    "content-length": /^\d+$/,
   });
 
   onResponseCookies = onResponseCookies.bind(null, aState);

@@ -6,8 +6,9 @@
 #ifndef GFX_WEBRENDERCANVASLAYER_H
 #define GFX_WEBRENDERCANVASLAYER_H
 
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "ShareableCanvasLayer.h"
-#include "WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace gfx {
@@ -22,7 +23,6 @@ class WebRenderCanvasLayer : public WebRenderLayer,
 public:
   explicit WebRenderCanvasLayer(WebRenderLayerManager* aLayerManager)
     : ShareableCanvasLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderCanvasLayer);
   }
@@ -45,7 +45,7 @@ public:
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
 protected:
-  uint64_t mExternalImageId;
+  wr::MaybeExternalImageId mExternalImageId;
 };
 
 } // namespace layers

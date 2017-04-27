@@ -15,11 +15,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
-use webrender_traits::{Epoch, ColorF, PipelineId};
-use webrender_traits::{ImageFormat, NativeFontHandle};
-use webrender_traits::{ExternalImageData, ExternalImageId, ScrollLayerId};
-use webrender_traits::{ImageData};
-use webrender_traits::{DeviceUintRect};
+use webrender_traits::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
+use webrender_traits::{ImageData, ImageFormat, NativeFontHandle, PipelineId};
 
 // An ID for a texture that is owned by the
 // texture cache module. This can include atlases
@@ -59,7 +56,7 @@ pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
 
 #[derive(Clone)]
 pub enum FontTemplate {
-    Raw(Arc<Vec<u8>>),
+    Raw(Arc<Vec<u8>>, u32),
     Native(NativeFontHandle),
 }
 
@@ -68,7 +65,6 @@ pub enum TextureSampler {
     Color0,
     Color1,
     Color2,
-    Mask,
     CacheA8,
     CacheRGBA8,
     Data16,
@@ -287,7 +283,9 @@ pub enum TextureUpdateOp {
     UpdateForExternalBuffer {
         rect: DeviceUintRect,
         id: ExternalImageId,
+        channel_index: u8,
         stride: Option<u32>,
+        offset: u32,
     },
     Grow {
         width: u32,
@@ -298,8 +296,6 @@ pub enum TextureUpdateOp {
     },
     Free,
 }
-
-pub type ExternalImageUpdateList = Vec<ExternalImageId>;
 
 pub struct TextureUpdate {
     pub id: CacheTextureId,
@@ -330,14 +326,14 @@ pub struct RendererFrame {
     /// been rendered, which is necessary for reftests.
     pub pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
     /// The layers that are currently affected by the over-scrolling animation.
-    pub layers_bouncing_back: HashSet<ScrollLayerId, BuildHasherDefault<FnvHasher>>,
+    pub layers_bouncing_back: HashSet<ClipId, BuildHasherDefault<FnvHasher>>,
 
     pub frame: Option<tiling::Frame>,
 }
 
 impl RendererFrame {
     pub fn new(pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
-               layers_bouncing_back: HashSet<ScrollLayerId, BuildHasherDefault<FnvHasher>>,
+               layers_bouncing_back: HashSet<ClipId, BuildHasherDefault<FnvHasher>>,
                frame: Option<tiling::Frame>)
                -> RendererFrame {
         RendererFrame {
@@ -350,7 +346,7 @@ impl RendererFrame {
 
 pub enum ResultMsg {
     RefreshShader(PathBuf),
-    NewFrame(RendererFrame, TextureUpdateList, ExternalImageUpdateList, BackendProfileCounters),
+    NewFrame(RendererFrame, TextureUpdateList, BackendProfileCounters),
 }
 
 #[repr(u32)]

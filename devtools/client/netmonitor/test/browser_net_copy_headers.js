@@ -54,12 +54,12 @@ add_task(function* () {
 
   const EXPECTED_RESPONSE_HEADERS = [
     `${httpVersion} ${status} ${statusText}`,
-    "Last-Modified: Sun, 3 May 2015 11:11:11 GMT",
-    "Content-Type: text/html",
-    "Content-Length: 465",
-    "Connection: close",
-    "Server: httpd.js",
-    "Date: Sun, 3 May 2015 11:11:11 GMT"
+    "last-modified: Sun, 3 May 2015 11:11:11 GMT",
+    "content-type: text/html",
+    "content-length: 465",
+    "connection: close",
+    "server: httpd.js",
+    "date: Sun, 3 May 2015 11:11:11 GMT"
   ].join("\n");
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },
@@ -71,8 +71,8 @@ add_task(function* () {
   }, function validate(result) {
     // Fake the "Last-Modified" and "Date" headers because they will vary:
     result = String(result)
-      .replace(/Last-Modified: [^\n]+ GMT/, "Last-Modified: Sun, 3 May 2015 11:11:11 GMT")
-      .replace(/Date: [^\n]+ GMT/, "Date: Sun, 3 May 2015 11:11:11 GMT");
+      .replace(/last-modified: [^\n]+ GMT/, "last-modified: Sun, 3 May 2015 11:11:11 GMT")
+      .replace(/date: [^\n]+ GMT/, "date: Sun, 3 May 2015 11:11:11 GMT");
     return result === EXPECTED_RESPONSE_HEADERS;
   });
   info("Clipboard contains the currently selected item's response headers.");

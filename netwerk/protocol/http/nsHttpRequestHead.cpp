@@ -131,6 +131,20 @@ nsHttpRequestHead::Origin(nsACString &aOrigin)
 }
 
 nsresult
+nsHttpRequestHead::SetHeader(const nsACString &h, const nsACString &v,
+                             bool m /*= false*/)
+{
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    if (mInVisitHeaders) {
+        return NS_ERROR_FAILURE;
+    }
+
+    return mHeaders.SetHeader(h, v, m,
+                              nsHttpHeaderArray::eVarietyRequestOverride);
+}
+
+nsresult
 nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString &v,
                              bool m /*= false*/)
 {
@@ -158,7 +172,7 @@ nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString &v, bool m,
 }
 
 nsresult
-nsHttpRequestHead::SetEmptyHeader(nsHttpAtom h)
+nsHttpRequestHead::SetEmptyHeader(const nsACString &h)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -253,6 +267,7 @@ nsHttpRequestHead::ParseHeaderSet(const char *buffer)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsHttpAtom hdr;
+    nsAutoCString headerNameOriginal;
     nsAutoCString val;
     while (buffer) {
         const char *eof = strchr(buffer, '\r');
@@ -262,9 +277,13 @@ nsHttpRequestHead::ParseHeaderSet(const char *buffer)
         if (NS_SUCCEEDED(nsHttpHeaderArray::ParseHeaderLine(
             nsDependentCSubstring(buffer, eof - buffer),
             &hdr,
+            &headerNameOriginal,
             &val))) {
 
-            DebugOnly<nsresult> rv = mHeaders.SetHeaderFromNet(hdr, val, false);
+            DebugOnly<nsresult> rv = mHeaders.SetHeaderFromNet(hdr,
+                                                               headerNameOriginal,
+                                                               val,
+                                                               false);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
         buffer = eof + 1;

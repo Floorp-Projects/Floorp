@@ -45,6 +45,8 @@ public:
   wr::WindowId GetId() const { return mId; }
 
   void GenerateFrame();
+  void GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
+                     const nsTArray<WrTransformProperty>& aTransformArray);
 
   void SetWindowParameters(LayoutDeviceIntSize size);
   void SetRootDisplayList(gfx::Color aBgColor,
@@ -73,11 +75,11 @@ public:
 
   void AddExternalImageHandle(ImageKey key,
                               const ImageDescriptor& aDescriptor,
-                              uint64_t aHandle);
+                              ExternalImageId aHandle);
 
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
-                              uint64_t aHandle);
+                              ExternalImageId aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
@@ -85,7 +87,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes);
+  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
 
   void DeleteFont(wr::FontKey aKey);
 
@@ -142,14 +144,22 @@ public:
                            const gfx::Matrix4x4& aTransform,
                            const WrMixBlendMode& aMixBlendMode);
 
+  void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
+                           const uint64_t& aAnimationId,
+                           const float* aOpacity,
+                           const gfx::Matrix4x4* aTransform,
+                           const WrMixBlendMode& aMixBlendMode);
   void PopStackingContext();
+
+  void PushClip(const WrRect& aClipRect,
+                const WrImageMask* aMask);
+  void PopClip();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList dl);
 
-  void PushScrollLayer(const WrRect& aBounds, // TODO: We should work with strongly typed rects
-                       const WrRect& aOverflow,
+  void PushScrollLayer(const WrRect& aContentRect, // TODO: We should work with strongly typed rects
+                       const WrRect& aClipRect,
                        const WrImageMask* aMask); // TODO: needs a wrapper.
-
   void PopScrollLayer();
 
 

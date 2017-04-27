@@ -11,7 +11,8 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.task);
+                                 prim.task,
+                                 prim.local_rect.p0);
 
     vPos = vi.local_pos - prim.local_rect.p0;
 

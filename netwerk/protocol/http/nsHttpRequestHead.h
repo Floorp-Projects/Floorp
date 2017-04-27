@@ -58,11 +58,13 @@ public:
                    int32_t port);
     void Origin(nsACString &aOrigin);
 
+    MOZ_MUST_USE nsresult SetHeader(const nsACString &h, const nsACString &v,
+                                    bool m=false);
     MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v,
                                     bool m=false);
     MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m,
                                     nsHttpHeaderArray::HeaderVariety variety);
-    MOZ_MUST_USE nsresult SetEmptyHeader(nsHttpAtom h);
+    MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString &h);
     MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString &v);
 
     MOZ_MUST_USE nsresult ClearHeader(nsHttpAtom h);

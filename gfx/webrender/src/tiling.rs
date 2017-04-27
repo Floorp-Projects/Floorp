@@ -23,12 +23,11 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{AuxiliaryLists, ColorF, DeviceIntPoint, DeviceIntRect};
-use webrender_traits::{DeviceIntSize, DeviceUintPoint};
-use webrender_traits::{DeviceUintSize, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
-use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, ScrollLayerId};
-use webrender_traits::{TransformStyle, WorldPoint4D, WorldToLayerTransform};
-use webrender_traits::{ExternalImageType};
+use webrender_traits::{AuxiliaryLists, ClipId, ColorF, DeviceIntPoint, DeviceIntRect};
+use webrender_traits::{DeviceIntSize, DeviceUintPoint, DeviceUintSize, ExternalImageType};
+use webrender_traits::{FontRenderMode, ImageRendering, LayerPoint, LayerRect};
+use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
+use webrender_traits::{WorldPoint4D, WorldToLayerTransform};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -108,7 +107,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
 
 #[derive(Debug)]
 pub struct ScrollbarPrimitive {
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
     pub prim_index: PrimitiveIndex,
     pub border_radius: f32,
 }
@@ -117,13 +116,13 @@ pub struct ScrollbarPrimitive {
 pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
-    PrimitiveRun(PrimitiveIndex, usize, ScrollLayerId),
+    PrimitiveRun(PrimitiveIndex, usize, ClipId),
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum PrimitiveFlags {
     None,
-    Scrollbar(ScrollLayerId, f32)
+    Scrollbar(ClipId, f32)
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -146,7 +145,7 @@ impl RenderTaskCollection {
     pub fn new(static_render_task_count: usize) -> RenderTaskCollection {
         RenderTaskCollection {
             render_task_data: vec![RenderTaskData::empty(); static_render_task_count],
-            dynamic_tasks: HashMap::with_hasher(Default::default()),
+            dynamic_tasks: HashMap::default(),
         }
     }
 
@@ -222,6 +221,14 @@ impl BatchList {
             alpha_batches: Vec::new(),
             opaque_batches: Vec::new(),
         }
+    }
+
+    fn with_suitable_batch<F>(&mut self,
+                              key: &AlphaBatchKey,
+                              item_bounding_rect: &DeviceIntRect,
+                              f: F) where F: Fn(&mut PrimitiveBatch) {
+        let batch = self.get_suitable_batch(key, item_bounding_rect);
+        f(batch)
     }
 
     fn get_suitable_batch(&mut self,
@@ -371,7 +378,7 @@ impl AlphaRenderItem {
             AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, z) => {
                 let group = &ctx.clip_scroll_group_store[clip_scroll_group_index.0];
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-                let transform_kind = group.xf_rect.as_ref().unwrap().kind;
+                let transform_kind = group.screen_bounding_rect.as_ref().unwrap().0;
                 let needs_clipping = prim_metadata.needs_clipping();
                 let mut flags = AlphaBatchKeyFlags::empty();
                 if needs_clipping {
@@ -414,10 +421,29 @@ impl AlphaRenderItem {
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::Border => {
-                        let key = AlphaBatchKey::new(AlphaBatchKind::Border, flags, blend_mode, textures);
-                        let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        for border_segment in 0..8 {
-                            batch.add_instance(base_instance.build(border_segment, 0, 0));
+                        let border_cpu = &ctx.prim_store.cpu_borders[prim_metadata.cpu_prim_index.0];
+                        if border_cpu.use_new_border_path {
+                            // TODO(gw): Select correct blend mode for edges and corners!!
+                            let corner_key = AlphaBatchKey::new(AlphaBatchKind::BorderCorner, flags, blend_mode, textures);
+                            let edge_key = AlphaBatchKey::new(AlphaBatchKind::BorderEdge, flags, blend_mode, textures);
+
+                            batch_list.with_suitable_batch(&corner_key, item_bounding_rect, |batch| {
+                                for border_segment in 0..4 {
+                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
+                                }
+                            });
+
+                            batch_list.with_suitable_batch(&edge_key, item_bounding_rect, |batch| {
+                                for border_segment in 0..4 {
+                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
+                                }
+                            });
+                        } else {
+                            let key = AlphaBatchKey::new(AlphaBatchKind::Border, flags, blend_mode, textures);
+                            let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
+                            for border_segment in 0..8 {
+                                batch.add_instance(base_instance.build(border_segment, 0, 0));
+                            }
                         }
                     }
                     PrimitiveKind::Rectangle => {
@@ -433,6 +459,9 @@ impl AlphaRenderItem {
                                 match ext_image.image_type {
                                     ExternalImageType::Texture2DHandle => AlphaBatchKind::Image,
                                     ExternalImageType::TextureRectHandle => AlphaBatchKind::ImageRect,
+                                    ExternalImageType::TextureExternalHandle => {
+                                        panic!("No implementation for single channel TextureExternalHandle image.");
+                                    }
                                     _ => {
                                         panic!("Non-texture handle type should be handled in other way.");
                                     }
@@ -460,9 +489,24 @@ impl AlphaRenderItem {
                         let key = AlphaBatchKey::new(batch_kind, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
 
+                        let cache_task_index = match prim_metadata.render_task {
+                            Some(ref task) => {
+                                let cache_task_id = task.id;
+                                render_tasks.get_task_index(&cache_task_id,
+                                                            child_pass_index).0 as i32
+                            }
+                            None => 0,
+                        };
+
                         for glyph_index in 0..prim_metadata.gpu_data_count {
+                            let user_data0 = match batch_kind {
+                                AlphaBatchKind::TextRun => text_cpu.resource_address.0 + glyph_index,
+                                AlphaBatchKind::CacheImage => cache_task_index,
+                                _ => unreachable!(),
+                            };
+
                             batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + glyph_index,
-                                                                   text_cpu.resource_address.0 + glyph_index,
+                                                                   user_data0,
                                                                    0));
                         }
                     }
@@ -488,6 +532,8 @@ impl AlphaRenderItem {
                                                                0));
                     }
                     PrimitiveKind::YuvImage => {
+                        // TODO (Jerry):
+                        // handle NV12
                         let image_yuv_cpu = &ctx.prim_store.cpu_yuv_images[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::YuvImage, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
@@ -774,7 +820,6 @@ pub struct ColorRenderTarget {
     pub vertical_blurs: Vec<BlurCommand>,
     pub horizontal_blurs: Vec<BlurCommand>,
     pub readbacks: Vec<DeviceIntRect>,
-    pub isolate_clears: Vec<DeviceIntRect>,
     allocator: TextureAllocator,
 }
 
@@ -792,7 +837,6 @@ impl RenderTarget for ColorRenderTarget {
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
             readbacks: Vec::new(),
-            isolate_clears: Vec::new(),
             allocator: TextureAllocator::new(size),
         }
     }
@@ -821,16 +865,6 @@ impl RenderTarget for ColorRenderTarget {
                     task_id: task.id,
                     items: info.items,
                 });
-
-                if info.isolate_clear {
-                    let location = match task.location {
-                        RenderTaskLocation::Dynamic(origin, size) => {
-                            DeviceIntRect::new(origin.unwrap().0, size)
-                        }
-                        RenderTaskLocation::Fixed => panic!()
-                    };
-                    self.isolate_clears.push(location);
-                }
             }
             RenderTaskKind::VerticalBlur(_, prim_index) => {
                 // Find the child render task that we are applying
@@ -1098,6 +1132,8 @@ pub enum AlphaBatchKind {
     RadialGradient,
     BoxShadow,
     CacheImage,
+    BorderCorner,
+    BorderEdge,
 }
 
 bitflags! {
@@ -1284,12 +1320,12 @@ impl StackingContext {
         }
     }
 
-    pub fn clip_scroll_group(&self, scroll_layer_id: ScrollLayerId) -> ClipScrollGroupIndex {
+    pub fn clip_scroll_group(&self, clip_id: ClipId) -> ClipScrollGroupIndex {
         // Currently there is only one scrolled stacking context per context,
         // but eventually this will be selected from the vector based on the
         // scroll layer of this primitive.
         for group in &self.clip_scroll_groups {
-            if group.1 == scroll_layer_id {
+            if group.1 == clip_id {
                 return *group;
             }
         }
@@ -1300,25 +1336,25 @@ impl StackingContext {
         !self.composite_ops.will_make_invisible()
     }
 
-    pub fn has_clip_scroll_group(&self, id: ScrollLayerId) -> bool {
+    pub fn has_clip_scroll_group(&self, id: ClipId) -> bool {
         self.clip_scroll_groups.iter().rev().any(|index| index.1 == id)
     }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct ClipScrollGroupIndex(pub usize, pub ScrollLayerId);
+pub struct ClipScrollGroupIndex(pub usize, pub ClipId);
 
 #[derive(Debug)]
 pub struct ClipScrollGroup {
     pub stacking_context_index: StackingContextIndex,
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
     pub packed_layer_index: PackedLayerIndex,
-    pub xf_rect: Option<TransformedRect>,
+    pub screen_bounding_rect: Option<(TransformedRectKind, DeviceIntRect)>,
 }
 
 impl ClipScrollGroup {
     pub fn is_visible(&self) -> bool {
-        self.xf_rect.is_some()
+        self.screen_bounding_rect.is_some()
     }
 }
 
@@ -1356,15 +1392,13 @@ impl PackedLayer {
                     local_rect: &LayerRect,
                     screen_rect: &DeviceIntRect,
                     device_pixel_ratio: f32)
-                    -> Option<TransformedRect> {
+                    -> Option<(TransformedRectKind, DeviceIntRect)> {
         let xf_rect = TransformedRect::new(&local_rect, &self.transform, device_pixel_ratio);
-        if !xf_rect.bounding_rect.intersects(screen_rect) {
-            return None;
-        }
-
-        self.screen_vertices = xf_rect.vertices.clone();
-        self.local_clip_rect = *local_rect;
-        Some(xf_rect)
+        xf_rect.bounding_rect.intersection(screen_rect).map(|rect| {
+            self.screen_vertices = xf_rect.vertices.clone();
+            self.local_clip_rect = *local_rect;
+            (xf_rect.kind, rect)
+        })
     }
 }
 

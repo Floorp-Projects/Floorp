@@ -98,7 +98,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     }
   ]; // gTests
 
-  add_task(function* test() {
+  add_task(function* run_all() {
     for (let test of gTests) {
       info("Running: " + test.desc);
       yield test.run();

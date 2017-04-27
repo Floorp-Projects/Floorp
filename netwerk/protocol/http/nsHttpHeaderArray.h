@@ -49,21 +49,30 @@ public:
     };
 
     // Used by internal setters: to set header from network use SetHeaderFromNet
+    MOZ_MUST_USE nsresult SetHeader(const nsACString &headerName,
+                                    const nsACString &value,
+                                    bool merge, HeaderVariety variety);
     MOZ_MUST_USE nsresult SetHeader(nsHttpAtom header, const nsACString &value,
+                                    bool merge, HeaderVariety variety);
+    MOZ_MUST_USE nsresult SetHeader(nsHttpAtom header,
+                                    const nsACString &headerName,
+                                    const nsACString &value,
                                     bool merge, HeaderVariety variety);
 
     // Used by internal setters to set an empty header
-    MOZ_MUST_USE nsresult SetEmptyHeader(nsHttpAtom header,
+    MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString &headerName,
                                          HeaderVariety variety);
 
     // Merges supported headers. For other duplicate values, determines if error
     // needs to be thrown or 1st value kept.
     // For the response header we keep the original headers as well.
     MOZ_MUST_USE nsresult SetHeaderFromNet(nsHttpAtom header,
+                                           const nsACString &headerNameOriginal,
                                            const nsACString &value,
                                            bool response);
 
     MOZ_MUST_USE nsresult SetResponseHeaderFromCache(nsHttpAtom header,
+                                                     const nsACString &headerNameOriginal,
                                                      const nsACString &value,
                                                      HeaderVariety variety);
 
@@ -101,15 +110,17 @@ public:
     // parse a header line, return the header atom and a pointer to the
     // header value (the substring of the header line -- do not free).
     static MOZ_MUST_USE nsresult ParseHeaderLine(const nsACString& line,
-                                                 nsHttpAtom *header=nullptr,
-                                                 nsACString* value=nullptr);
+                                                 nsHttpAtom *header = nullptr,
+                                                 nsACString *headerNameOriginal = nullptr,
+                                                 nsACString *value = nullptr);
 
     void Flatten(nsACString &, bool pruneProxyHeaders, bool pruneTransients);
     void FlattenOriginalHeader(nsACString &);
 
     uint32_t Count() const { return mHeaders.Length(); }
 
-    const char *PeekHeaderAt(uint32_t i, nsHttpAtom &header) const;
+    const char *PeekHeaderAt(uint32_t i, nsHttpAtom &header,
+                             nsACString &headerNameOriginal) const;
 
     void Clear();
 
@@ -117,6 +128,7 @@ public:
     struct nsEntry
     {
         nsHttpAtom header;
+        nsCString headerNameOriginal;
         nsCString value;
         HeaderVariety variety = eVarietyUnknown;
 
@@ -146,6 +158,7 @@ private:
                                       const nsACString &value,
                                       HeaderVariety variety);
     MOZ_MUST_USE nsresult SetHeader_internal(nsHttpAtom header,
+                                             const nsACString &headeName,
                                              const nsACString &value,
                                              HeaderVariety variety);
 
@@ -280,7 +293,11 @@ nsHttpHeaderArray::MergeHeader(nsHttpAtom header,
     if (entry->variety == eVarietyResponseNetOriginalAndResponse) {
         MOZ_ASSERT(variety == eVarietyResponse);
         entry->variety = eVarietyResponseNetOriginal;
-        nsresult rv = SetHeader_internal(header, newValue, eVarietyResponse);
+        // Copy entry->headerNameOriginal because in SetHeader_internal we are going
+        // to a new one and a realocation can happen.
+        nsCString headerNameOriginal = entry->headerNameOriginal;
+        nsresult rv = SetHeader_internal(header, headerNameOriginal,
+                                         newValue, eVarietyResponse);
         if (NS_FAILED(rv)) {
             return rv;
         }

@@ -50,10 +50,6 @@ void UnlockExternalImage(void* aObj, WrExternalImageId aId)
   texture->Unlock();
 }
 
-void ReleaseExternalImage(void* aObj, WrExternalImageId aId)
-{
-}
-
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
@@ -78,6 +74,11 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 RendererOGL::~RendererOGL()
 {
   MOZ_COUNT_DTOR(RendererOGL);
+  if (!mGL->MakeCurrent()) {
+    gfxCriticalNote << "Failed to make render context current during destroying.";
+    // Leak resources!
+    return;
+  }
   wr_renderer_delete(mWrRenderer);
 }
 
@@ -88,7 +89,6 @@ RendererOGL::GetExternalImageHandler()
     this,
     LockExternalImage,
     UnlockExternalImage,
-    ReleaseExternalImage,
   };
 }
 
