@@ -69,7 +69,7 @@ void
 TLSServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
                                        const NetAddr& aClientAddr)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   nsresult rv;
 
   RefPtr<nsSocketTransport> trans = new nsSocketTransport;
