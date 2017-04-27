@@ -19,14 +19,24 @@
               document.documentElement.clientWidth || document.body.clientWidth;
           var viewportHeight =
               document.documentElement.clientHeight || document.body.clientHeight;
-          var passed = records.length === 1 &&
+          var result = records.length === 1 &&
                        records[0].rootBounds.top === 0 &&
                        records[0].rootBounds.left === 0 &&
                        records[0].rootBounds.right === viewportWidth &&
                        records[0].rootBounds.width === viewportWidth &&
                        records[0].rootBounds.bottom === viewportHeight &&
                        records[0].rootBounds.height === viewportHeight;
-          window.opener.postMessage(passed, '*');
+          if (!result) {
+              result = [records[0].rootBounds.top,
+                        records[0].rootBounds.left,
+                        records[0].rootBounds.right,
+                        records[0].rootBounds.width,
+                        records[0].rootBounds.bottom,
+                        records[0].rootBounds.height,
+                        viewportWidth,
+                        viewportHeight].join(',');
+          }
+          window.opener.postMessage(result, '*');
         });
         io.observe(document.getElementById("target"));
 </script>
