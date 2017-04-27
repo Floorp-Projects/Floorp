@@ -864,8 +864,7 @@ JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc)
 bool
 JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread(JSRuntime* rt)
 {
-    return IsMarkedUnbarriered(rt, &jitcode_) ||
-           jitcode_->arena()->allocatedDuringIncremental;
+    return IsMarkedUnbarriered(rt, &jitcode_);
 }
 
 bool
@@ -894,8 +893,7 @@ JitcodeGlobalEntry::BaselineEntry::sweepChildren()
 bool
 JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread(JSRuntime* rt)
 {
-    return IsMarkedUnbarriered(rt, &script_) ||
-           script_->arena()->allocatedDuringIncremental;
+    return IsMarkedUnbarriered(rt, &script_);
 }
 
 template <class ShouldTraceProvider>
@@ -963,11 +961,8 @@ bool
 JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread(JSRuntime* rt)
 {
     for (unsigned i = 0; i < numScripts(); i++) {
-        if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script) &&
-            !sizedScriptList()->pairs[i].script->arena()->allocatedDuringIncremental)
-        {
+        if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script))
             return false;
-        }
     }
 
     if (!optsAllTypes_)
@@ -976,11 +971,8 @@ JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread(JSRuntime* rt)
     for (IonTrackedTypeWithAddendum* iter = optsAllTypes_->begin();
          iter != optsAllTypes_->end(); iter++)
     {
-        if (!TypeSet::IsTypeMarked(rt, &iter->type) &&
-            !TypeSet::IsTypeAllocatedDuringIncremental(iter->type))
-        {
+        if (!TypeSet::IsTypeMarked(rt, &iter->type))
             return false;
-        }
     }
 
     return true;
