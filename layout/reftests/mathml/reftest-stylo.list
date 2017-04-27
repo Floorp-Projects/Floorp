@@ -126,7 +126,7 @@ fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\
 == mathbackground-2.xml mathbackground-2.xml
 == mathbackground-3.xml mathbackground-3.xml
 == mathbackground-4.xml mathbackground-4.xml
-== mstyle-1.xhtml mstyle-1.xhtml
+fails == mstyle-1.xhtml mstyle-1.xhtml
 fails == mstyle-2.xhtml mstyle-2.xhtml
 == mstyle-3.xhtml mstyle-3.xhtml
 == mstyle-4.xhtml mstyle-4.xhtml
