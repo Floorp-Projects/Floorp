@@ -463,8 +463,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   }
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  Rect destRect =
-    NSRectToRect(mDest, appUnitsPerDevPixel);
+  Rect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel).ToUnknownRect();
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
   IntRect dest = RoundedToInt(destRectTransformed);
 
@@ -503,8 +502,8 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
-  Rect destRect =
-    NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
+  Rect destRect = LayoutDeviceRect::FromAppUnits(
+      aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel).ToUnknownRect();
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
 
   layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),

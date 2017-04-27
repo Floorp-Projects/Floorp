@@ -12,6 +12,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/UpdateImageHelper.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
@@ -134,14 +135,20 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
     mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
 
-  bool snap;
-  gfx::Rect bounds = mozilla::NSRectToRect(mItem->GetBounds(mBuilder, &snap),
-                                      mItem->Frame()->PresContext()->AppUnitsPerDevPixel());
-  gfx::IntSize imageSize = RoundedToInt(bounds.Size());
-
-  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize);
   const int32_t appUnitsPerDevPixel = mItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  gfx::Point offset = NSPointToPoint(mItem->ToReferenceFrame(), appUnitsPerDevPixel);
+
+  bool snap;
+  LayerRect bounds = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(mItem->GetBounds(mBuilder, &snap), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  LayerIntSize imageSize = RoundedToInt(bounds.Size());
+  LayerRect imageRect;
+  imageRect.SizeTo(LayerSize(imageSize));
+
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize.ToUnknownSize());
+  LayerPoint offset = ViewAs<LayerPixel>(
+      LayoutDevicePoint::FromAppUnits(mItem->ToReferenceFrame(), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
 
   {
     RefPtr<gfx::DrawTarget> target = helper.GetDrawTarget();
@@ -149,8 +156,8 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
       return false;
     }
 
-    target->ClearRect(gfx::Rect(0, 0, imageSize.width, imageSize.height));
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset);
+    target->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset.ToUnknownPoint());
     MOZ_ASSERT(context);
 
     nsRenderingContext ctx(context);
@@ -161,7 +168,7 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
     return false;
   }
 
-  gfx::Rect dest = RelativeToParent(gfx::Rect(0, 0, imageSize.width, imageSize.height)) + offset;
+  gfx::Rect dest = RelativeToParent(imageRect.ToUnknownRect()) + offset.ToUnknownPoint();
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
   WrImageKey key = GetImageKey();
   aParentCommands.AppendElement(layers::OpAddExternalImage(

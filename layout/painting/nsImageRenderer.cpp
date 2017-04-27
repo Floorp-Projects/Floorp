@@ -621,10 +621,12 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       }
 
       const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
-      Rect destRect = NSRectToRect(aDest, appUnitsPerDevPixel);
+      Rect destRect = LayoutDeviceRect::FromAppUnits(
+          aDest, appUnitsPerDevPixel).ToUnknownRect();
       Rect dest = aLayer->RelativeToParent(destRect);
 
-      Rect fillRect = NSRectToRect(aFill, appUnitsPerDevPixel);
+      Rect fillRect = LayoutDeviceRect::FromAppUnits(
+          aFill, appUnitsPerDevPixel).ToUnknownRect();
       Rect fill = aLayer->RelativeToParent(fillRect);
 
       Rect clip = fill;
