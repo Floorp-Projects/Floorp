@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_REORDER, ROLE_LINK */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 function* testImageMap(browser, accDoc) {

@@ -4,9 +4,8 @@
 
 'use strict';
 
-/* global EVENT_STATE_CHANGE, STATE_CHECKED, STATE_BUSY, STATE_REQUIRED,
-          STATE_INVALID, EXT_STATE_ENABLED */
-
+/* import-globals-from ../../mochitest/role.js */
+/* import-globals-from ../../mochitest/states.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR },
             { name: 'states.js', dir: MOCHITESTS_DIR });
 

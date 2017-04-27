@@ -1,7 +1,5 @@
 'use strict';
 
-/* global getMainChromeWindow, AccessFuTest, GestureSettings, GestureTracker,
-   SimpleTest, getBoundsForDOMElm, Point, Utils */
 /* exported loadJSON, eventMap */
 
 var Ci = Components.interfaces;
