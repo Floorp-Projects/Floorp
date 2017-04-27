@@ -38,7 +38,6 @@ function* registerConverter() {
         loadUsingSystemPrincipal: true,
       });
       channel.originalURI = aRequest.QueryInterface(Ci.nsIChannel).URI;
-      channel.loadInfo.resultPrincipalURI = channel.originalURI;
       channel.loadGroup = aRequest.loadGroup;
       channel.owner = Services.scriptSecurityManager
                               .createCodebasePrincipal(channel.URI, {});

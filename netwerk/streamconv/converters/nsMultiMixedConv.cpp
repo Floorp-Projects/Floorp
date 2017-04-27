@@ -877,10 +877,6 @@ nsMultiMixedConv::SendStart()
 
     mPartChannel->SetContentDisposition(mContentDisposition);
 
-    // Each part of a multipart/replace response can be used
-    // for the top level document.  We must inform upper layers
-    // about this by setting the LOAD_REPLACE flag so that certain
-    // state assertions are evaluated as positive.
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);
     loadFlags |= nsIChannel::LOAD_REPLACE;

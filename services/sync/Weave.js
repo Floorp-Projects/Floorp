@@ -159,7 +159,6 @@ AboutWeaveLog.prototype = {
     let channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
 
     channel.originalURI = aURI;
-    aLoadInfo.resultPrincipalURI = aURI;
 
     // Ensure that the about page has the same privileges as a regular directory
     // view. That way links to files can be opened. make sure we use the correct

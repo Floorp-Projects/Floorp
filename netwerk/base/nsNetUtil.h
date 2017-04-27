@@ -782,9 +782,11 @@ nsresult NS_URIChainHasFlags(nsIURI   *uri,
 already_AddRefed<nsIURI> NS_GetInnermostURI(nsIURI *aURI);
 
 /**
- * Get the "final" URI for a channel.  This is either channel's load info
- * resultPrincipalURI, if set, or GetURI.  In most cases (but not all) load
- * info resultPrincipalURI, if set, corresponds to originalURI of the channel.
+ * Get the "final" URI for a channel.  This is either the same as GetURI or
+ * GetOriginalURI, depending on whether this channel has
+ * nsIChanel::LOAD_REPLACE set.  For channels without that flag set, the final
+ * URI is the original URI, while for ones with the flag the final URI is the
+ * channel URI.
  */
 nsresult NS_GetFinalChannelURI(nsIChannel *channel, nsIURI **uri);
 
