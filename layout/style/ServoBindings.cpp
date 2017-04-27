@@ -359,15 +359,10 @@ Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
   }
 }
 
-typedef DeclarationBlock*(*DeclarationBlockGetter)(RawGeckoElementBorrowed);
-
-static RawServoDeclarationBlockStrongBorrowedOrNull
-UnwrapDeclarationBlock(RawGeckoElementBorrowed aElement,
-                       DeclarationBlockGetter aGetterFunc)
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
-  MOZ_ASSERT(aElement, "Invalid GeckoElement");
-
-  DeclarationBlock* decl = aGetterFunc(aElement);
+  DeclarationBlock* decl = aElement->GetInlineStyleDeclaration();
   if (!decl) {
     return nullptr;
   }
@@ -381,19 +376,25 @@ UnwrapDeclarationBlock(RawGeckoElementBorrowed aElement,
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
-{
-  return UnwrapDeclarationBlock(aElement, [](RawGeckoElementBorrowed elem) {
-    return elem->GetInlineStyleDeclaration();
-  });
-}
-
-RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
-  return UnwrapDeclarationBlock(aElement, [](RawGeckoElementBorrowed elem) {
-    return const_cast<dom::Element*>(elem)->GetSMILOverrideStyleDeclaration();
-  });
+  // This function duplicates a lot of the code in
+  // Gecko_GetStyleAttrDeclarationBlock above because I haven't worked out a way
+  // to persuade hazard analysis that a pointer-to-lambda is ok yet.
+  MOZ_ASSERT(aElement, "Invalid GeckoElement");
+
+  DeclarationBlock* decl =
+    const_cast<dom::Element*>(aElement)->GetSMILOverrideStyleDeclaration();
+  if (!decl) {
+    return nullptr;
+  }
+  if (decl->IsGecko()) {
+    // XXX This can happen when nodes are adopted from a Gecko-style-backend
+    //     document into a Servo-style-backend document.  See bug 1330051.
+    NS_WARNING("stylo: requesting a Gecko declaration block?");
+    return nullptr;
+  }
+  return decl->AsServo()->RefRawStrong();
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
