@@ -273,7 +273,6 @@ add_test(function test_noNewFailed_noErrorLog() {
   Svc.Prefs.set("log.appender.file.logOnError", true);
   Svc.Prefs.set("log.appender.file.logOnSuccess", false);
 
-  let log = Log.repository.getLogger("Sync.Test.FileLog");
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
     // No log file was written.
