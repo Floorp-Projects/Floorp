@@ -5665,7 +5665,7 @@ pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 // when the page is reloaded. To turn this feature off, just set the limit to 0.
 pref("prompts.authentication_dialog_abuse_limit", 3);
 
-pref("dom.IntersectionObserver.enabled", false);
+pref("dom.IntersectionObserver.enabled", true);
 
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", false);
