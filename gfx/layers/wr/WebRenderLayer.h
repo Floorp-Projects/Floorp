@@ -57,6 +57,7 @@ protected:
   LayerRect Bounds();
   BoundsTransformMatrix BoundsTransform();
   LayerRect BoundsForStackingContext();
+  Maybe<LayerRect> ClipRect();
 
   gfx::Rect GetWrBoundsRect();
   gfx::Rect GetWrRelBounds();
