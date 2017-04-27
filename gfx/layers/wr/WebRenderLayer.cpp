@@ -55,46 +55,49 @@ WebRenderLayer::RelativeToTransformedVisible(Rect aRect)
   return aRect;
 }
 
-Rect
+LayerRect
 WebRenderLayer::ParentStackingContextBounds()
 {
   // Walk up to find the parent stacking context. This will be created either
   // by the nearest scrollable metrics, or by the parent layer which must be a
   // ContainerLayer.
-  Layer* layer = GetLayer();
-  if (layer->GetParent()) {
-    return IntRectToRect(layer->GetParent()->GetVisibleRegion().GetBounds().ToUnknownRect());
+  if (Layer* parent = GetLayer()->GetParent()) {
+    return ToWebRenderLayer(parent)->Bounds();
   }
-  return Rect();
+  return LayerRect();
 }
 
-Rect
-WebRenderLayer::RelativeToParent(Rect aRect)
+LayerRect
+WebRenderLayer::RelativeToParent(const LayerRect& aRect)
 {
-  Rect parentBounds = ParentStackingContextBounds();
-  aRect.MoveBy(-parentBounds.x, -parentBounds.y);
-  return aRect;
+  return aRect - ParentStackingContextBounds().TopLeft();
 }
 
-Point
+LayerRect
+WebRenderLayer::RelativeToParent(const LayoutDeviceRect& aRect)
+{
+  return RelativeToParent(ViewAs<LayerPixel>(
+      aRect, PixelCastJustification::WebRenderHasUnitResolution));
+}
+
+LayerPoint
 WebRenderLayer::GetOffsetToParent()
 {
-  Rect parentBounds = ParentStackingContextBounds();
-  return parentBounds.TopLeft();
+  return ParentStackingContextBounds().TopLeft();
 }
 
-Rect
+LayerRect
 WebRenderLayer::VisibleBoundsRelativeToParent()
 {
-  return RelativeToParent(IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect()));
+  return RelativeToParent(Bounds());
 }
 
-Rect
+gfx::Rect
 WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 {
   IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();
   Rect transformed = GetLayer()->GetTransform().TransformBounds(IntRectToRect(bounds));
-  return RelativeToParent(transformed);
+  return transformed - ParentStackingContextBounds().ToUnknownRect().TopLeft();
 }
 
 Maybe<WrImageMask>
@@ -178,10 +181,10 @@ WebRenderLayer::ClipRect()
   return Some(transform.Inverse().TransformBounds(clip));
 }
 
-gfx::Rect
+LayerRect
 WebRenderLayer::GetWrRelBounds()
 {
-  return RelativeToParent(BoundsForStackingContext().ToUnknownRect());
+  return RelativeToParent(BoundsForStackingContext());
 }
 
 Maybe<wr::ImageKey>
@@ -228,7 +231,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
 
   Matrix4x4 transform = GetLayer()->GetTransform();
   LayerRect clip = GetWrClipRect(aRect);
-  Rect relBounds = GetWrRelBounds();
+  LayerRect relBounds = GetWrRelBounds();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
 

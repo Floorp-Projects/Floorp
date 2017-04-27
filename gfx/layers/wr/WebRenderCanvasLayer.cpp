@@ -60,7 +60,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     transform.PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1);
   }
 
-  gfx::Rect relBounds = GetWrRelBounds();
+  LayerRect relBounds = GetWrRelBounds();
   LayerRect rect = RelativeToVisible(LayerRect(0, 0, mBounds.width, mBounds.height));
 
   LayerRect clipRect = GetWrClipRect(rect);
