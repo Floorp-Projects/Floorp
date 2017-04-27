@@ -22,6 +22,7 @@ public:
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   virtual void ClearCachedResources() override;
+
 protected:
   virtual ~WebRenderImageLayer();
 
@@ -38,10 +39,22 @@ public:
 protected:
   CompositableType GetImageClientType();
 
+  class Holder {
+  public:
+    explicit Holder(WebRenderImageLayer* aLayer)
+      : mLayer(aLayer)
+    {}
+    WebRenderImageLayer* operator ->() const { return mLayer; }
+  private:
+    WebRenderImageLayer* mLayer;
+  };
+
   wr::MaybeExternalImageId mExternalImageId;
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
   CompositableType mImageClientTypeContainer;
+  Maybe<wr::PipelineId> mPipelineId;
+  MozPromiseRequestHolder<PipelineIdPromise> mPipelineIdRequest;
 };
 
 } // namespace layers

@@ -5281,6 +5281,18 @@ ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables
 }
 
 mozilla::ipc::IPCResult
+ContentParent::RecvAllocPipelineId(RefPtr<AllocPipelineIdPromise>&& aPromise)
+{
+  GPUProcessManager* pm = GPUProcessManager::Get();
+  if (!pm) {
+    aPromise->Reject(PromiseRejectReason::HandlerRejected, __func__);
+    return IPC_OK();
+  }
+  aPromise->Resolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentParent::RecvFileCreationRequest(const nsID& aID,
                                        const nsString& aFullPath,
                                        const nsString& aType,

@@ -8,7 +8,9 @@
 #include "apz/src/AsyncPanZoomController.h"
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -681,6 +683,25 @@ void
 WebRenderLayerManager::Composite()
 {
   WrBridge()->SendForceComposite();
+}
+
+RefPtr<PipelineIdPromise>
+WebRenderLayerManager::AllocPipelineId()
+{
+  if (XRE_IsParentProcess()) {
+    GPUProcessManager* pm = GPUProcessManager::Get();
+    if (!pm) {
+      return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
+    }
+    return PipelineIdPromise::CreateAndResolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);;
+  }
+
+  MOZ_ASSERT(XRE_IsContentProcess());
+  RefPtr<dom::ContentChild> contentChild = dom::ContentChild::GetSingleton();
+  if (!contentChild) {
+    return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
+  }
+  return contentChild->SendAllocPipelineId();
 }
 
 void
