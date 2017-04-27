@@ -2721,8 +2721,8 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  // .streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects)
-  if (7 != argCount)
+  // .streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects, postFile = false)
+  if (!(7 <= argCount && argCount <= 8))
     return false;
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
@@ -2779,6 +2779,14 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     return false;
   bool allowRedirects = NPVARIANT_TO_BOOLEAN(args[6]);
 
+  bool postFile = false;
+  if (argCount >= 8) {
+    if (!NPVARIANT_IS_BOOLEAN(args[7])) {
+      return false;
+    }
+    postFile = NPVARIANT_TO_BOOLEAN(args[7]);
+  }
+
   URLNotifyData* ndata = new URLNotifyData;
   ndata->cookie = "dynamic-cookie";
   ndata->writeCallback = writeCallback;
@@ -2797,7 +2805,7 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
   if (doPost) {
     err = NPN_PostURLNotify(npp, urlstr, nullptr,
                             postData.UTF8Length, postData.UTF8Characters,
-                            false, ndata);
+                            postFile, ndata);
   }
   else {
     err = NPN_GetURLNotify(npp, urlstr, nullptr, ndata);
