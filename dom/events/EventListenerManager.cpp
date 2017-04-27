@@ -129,6 +129,7 @@ EventListenerManagerBase::EventListenerManagerBase()
   , mMayHaveTouchEventListener(false)
   , mMayHaveMouseEnterLeaveEventListener(false)
   , mMayHavePointerEnterLeaveEventListener(false)
+  , mMayHaveAPZAwareKeyEventListener(false)
   , mMayHaveKeyEventListener(false)
   , mMayHaveInputOrCompositionEventListener(false)
   , mClearingListeners(false)
@@ -410,6 +411,9 @@ EventListenerManager::AddEventListenerInternal(
              aTypeAtom == nsGkAtoms::onkeyup) {
     if (!aFlags.mInSystemGroup) {
       mMayHaveKeyEventListener = true;
+    }
+    if (!aFlags.mPassive && aTypeAtom != nsGkAtoms::onkeyup) {
+      mMayHaveAPZAwareKeyEventListener = true;
     }
   } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
              aTypeAtom == nsGkAtoms::oncompositionstart ||
