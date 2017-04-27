@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Put any other stuff relative to this test folder below.
 
+const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
 // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
