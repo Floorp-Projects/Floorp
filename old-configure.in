@@ -3140,9 +3140,7 @@ MOZ_D3DCOMPILER_VISTA_DLL_PATH=
 if test "$COMPILE_ENVIRONMENT" ; then
 case "$target_os" in
 *mingw*)
-    if test "$OS_ARCH" = "$HOST_OS_ARCH"; then
-      MOZ_ANGLE_RENDERER=1
-    fi
+    MOZ_ANGLE_RENDERER=1
     ;;
 esac
 
@@ -3194,7 +3192,11 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
       AC_MSG_RESULT([Windows SDK not found.])
     fi
   else
-    AC_MSG_ERROR([Couldn't find Windows SDK 8.1 or higher needed for ANGLE.])
+    if test "$OS_ARCH" = "$HOST_OS_ARCH"; then
+      AC_MSG_ERROR([Couldn't find Windows SDK 8.1 or higher needed for ANGLE.])
+    else
+      AC_MSG_RESULT([Windows SDK not needed for ANGLE in Linux MinGW build.])
+    fi
   fi
 
   if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
