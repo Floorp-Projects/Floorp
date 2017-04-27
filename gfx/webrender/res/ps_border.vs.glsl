@@ -3,51 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-struct Border {
-    vec4 style;
-    vec4 widths;
-    vec4 colors[4];
-    vec4 radii[2];
-};
-
-Border fetch_border(int index) {
-    Border border;
-
-    ivec2 uv = get_fetch_uv_8(index);
-
-    border.style = texelFetchOffset(sData128, uv, 0, ivec2(0, 0));
-    border.widths = texelFetchOffset(sData128, uv, 0, ivec2(1, 0));
-    border.colors[0] = texelFetchOffset(sData128, uv, 0, ivec2(2, 0));
-    border.colors[1] = texelFetchOffset(sData128, uv, 0, ivec2(3, 0));
-    border.colors[2] = texelFetchOffset(sData128, uv, 0, ivec2(4, 0));
-    border.colors[3] = texelFetchOffset(sData128, uv, 0, ivec2(5, 0));
-    border.radii[0] = texelFetchOffset(sData128, uv, 0, ivec2(6, 0));
-    border.radii[1] = texelFetchOffset(sData128, uv, 0, ivec2(7, 0));
-
-    return border;
-}
-
 void main(void) {
     Primitive prim = load_primitive();
     Border border = fetch_border(prim.prim_index);
     int sub_part = prim.sub_index;
+    vBorderRect = prim.local_rect;
 
-    vec2 tl_outer = prim.local_rect.p0;
+    vec2 tl_outer = vBorderRect.p0;
     vec2 tl_inner = tl_outer + vec2(max(border.radii[0].x, border.widths.x),
                                     max(border.radii[0].y, border.widths.y));
 
-    vec2 tr_outer = vec2(prim.local_rect.p0.x + prim.local_rect.size.x,
-                         prim.local_rect.p0.y);
+    vec2 tr_outer = vec2(vBorderRect.p0.x + vBorderRect.size.x,
+                         vBorderRect.p0.y);
     vec2 tr_inner = tr_outer + vec2(-max(border.radii[0].z, border.widths.z),
                                     max(border.radii[0].w, border.widths.y));
 
-    vec2 br_outer = vec2(prim.local_rect.p0.x + prim.local_rect.size.x,
-                         prim.local_rect.p0.y + prim.local_rect.size.y);
+    vec2 br_outer = vec2(vBorderRect.p0.x + vBorderRect.size.x,
+                         vBorderRect.p0.y + vBorderRect.size.y);
     vec2 br_inner = br_outer - vec2(max(border.radii[1].x, border.widths.z),
                                     max(border.radii[1].y, border.widths.w));
 
-    vec2 bl_outer = vec2(prim.local_rect.p0.x,
-                         prim.local_rect.p0.y + prim.local_rect.size.y);
+    vec2 bl_outer = vec2(vBorderRect.p0.x,
+                         vBorderRect.p0.y + vBorderRect.size.y);
     vec2 bl_inner = bl_outer + vec2(max(border.radii[1].z, border.widths.x),
                                     -max(border.radii[1].w, border.widths.w));
 
@@ -128,22 +105,21 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.task);
+                                                    prim.task,
+                                                    prim.local_rect.p0);
     vLocalPos = vi.local_pos;
-
-    // Local space
-    vLocalRect = vi.clipped_local_rect;
+    vLocalRect = segment_rect;
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.task);
+                                 prim.task,
+                                 prim.local_rect.p0);
     vLocalPos = vi.local_pos.xy;
-
-    // Local space
-    vLocalRect = vec4(prim.local_rect.p0, prim.local_rect.size);
 #endif
+
+    write_clip(vi.screen_pos, prim.clip_area);
 
     float x0, y0, x1, y1;
     switch (sub_part) {
@@ -209,8 +185,8 @@ void main(void) {
 #else
     vDistanceFromMixLine = (vi.local_pos.x - x0) * height -
                            (vi.local_pos.y - y0) * width;
-    vDistanceFromMiddle = (vi.local_pos.x - vLocalRect.x) +
-                          (vi.local_pos.y - vLocalRect.y) -
-                          0.5 * (vLocalRect.z + vLocalRect.w);
+    vDistanceFromMiddle = (vi.local_pos.x - vBorderRect.p0.x) +
+                          (vi.local_pos.y - vBorderRect.p0.y) -
+                          0.5 * (vBorderRect.size.x + vBorderRect.size.y);
 #endif
 }

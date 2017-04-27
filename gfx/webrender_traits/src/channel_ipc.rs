@@ -29,7 +29,7 @@ impl PayloadSenderHelperMethods for PayloadSender {
 
 impl PayloadReceiverHelperMethods for PayloadReceiver {
     fn recv_payload(&self) -> Result<Payload, Error> {
-        self.recv().map(|data| Payload::from_data(data) )
+        self.recv().map(|data| Payload::from_data(&data) )
                    .map_err(|e| io::Error::new(ErrorKind::Other, error::Error::description(&e)))
     }
 }

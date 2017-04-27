@@ -12,7 +12,7 @@ flat varying vec4 vStRect;        // Rectangle of valid texture rect.
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;
-flat varying vec4 vLocalRect;
+flat varying RectWithSize vLocalRect;
 flat varying vec2 vStretchSize;
 #else
 varying vec2 vLocalPos;

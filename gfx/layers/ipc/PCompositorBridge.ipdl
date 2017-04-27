@@ -16,6 +16,7 @@ include protocol PLayerTransaction;
 include protocol PTexture;
 include protocol PWebRenderBridge;
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
@@ -37,6 +38,7 @@ using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using base::ProcessId from "base/process.h";
+using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -245,7 +247,7 @@ parent:
    */
   async AllPluginsCaptured();
 
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial);
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 
   sync SyncWithCompositor();
 

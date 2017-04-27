@@ -21,8 +21,8 @@ pub struct SceneProperties {
 impl SceneProperties {
     pub fn new() -> SceneProperties {
         SceneProperties {
-            transform_properties: HashMap::with_hasher(Default::default()),
-            float_properties: HashMap::with_hasher(Default::default()),
+            transform_properties: HashMap::default(),
+            float_properties: HashMap::default(),
         }
     }
 
@@ -102,9 +102,9 @@ impl Scene {
     pub fn new() -> Scene {
         Scene {
             root_pipeline_id: None,
-            pipeline_map: HashMap::with_hasher(Default::default()),
-            pipeline_auxiliary_lists: HashMap::with_hasher(Default::default()),
-            display_lists: HashMap::with_hasher(Default::default()),
+            pipeline_map: HashMap::default(),
+            pipeline_auxiliary_lists: HashMap::default(),
+            display_lists: HashMap::default(),
             properties: SceneProperties::new(),
         }
     }
@@ -120,9 +120,10 @@ impl Scene {
                             background_color: Option<ColorF>,
                             viewport_size: LayerSize,
                             auxiliary_lists: AuxiliaryLists) {
+
         self.pipeline_auxiliary_lists.insert(pipeline_id, auxiliary_lists);
         self.display_lists.insert(pipeline_id, built_display_list.into_display_items());
-
+        
         let new_pipeline = ScenePipeline {
             pipeline_id: pipeline_id,
             epoch: epoch,

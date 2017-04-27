@@ -1062,9 +1062,9 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // Make the rects relative to the parent stacking context
-  clipBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(clipBounds.ToUnknownRect()));
-  firstTileBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(firstTileBounds.ToUnknownRect()));
-  gradientBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(gradientBounds.ToUnknownRect()));
+  LayerRect layerClipBounds = aLayer->RelativeToParent(clipBounds);
+  LayerRect layerFirstTileBounds = aLayer->RelativeToParent(firstTileBounds);
+  LayerRect layerGradientBounds = aLayer->RelativeToParent(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
@@ -1080,26 +1080,26 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
 
     aBuilder.PushLinearGradient(
-      mozilla::wr::ToWrRect(gradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+      mozilla::wr::ToWrRect(layerGradientBounds),
+      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrPoint(lineEnd),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(firstTileBounds.Size()),
+      mozilla::wr::ToWrSize(layerFirstTileBounds.Size()),
       mozilla::wr::ToWrSize(tileSpacing));
   } else {
     gradientRadius.width *= srcTransform.width;
     gradientRadius.height *= srcTransform.height;
 
     aBuilder.PushRadialGradient(
-      mozilla::wr::ToWrRect(gradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+      mozilla::wr::ToWrRect(layerGradientBounds),
+      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrSize(gradientRadius),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(firstTileBounds.Size()),
+      mozilla::wr::ToWrSize(layerFirstTileBounds.Size()),
       mozilla::wr::ToWrSize(tileSpacing));
   }
 }

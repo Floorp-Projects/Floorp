@@ -6,8 +6,10 @@
 #ifndef GFX_WEBRENDERCONTAINERLAYER_H
 #define GFX_WEBRENDERCONTAINERLAYER_H
 
+#include "gfxPrefs.h"
 #include "Layers.h"
-#include "WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {
@@ -25,6 +27,13 @@ public:
 protected:
   virtual ~WebRenderContainerLayer()
   {
+
+    if (gfxPrefs::WebRenderOMTAEnabled() &&
+        GetAnimations().Length()) {
+      mManager->AsWebRenderLayerManager()->
+        AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
+    }
+
     ContainerLayer::RemoveAllChildren();
     MOZ_COUNT_DTOR(WebRenderContainerLayer);
   }
