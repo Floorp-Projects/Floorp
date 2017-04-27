@@ -20,7 +20,10 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Matrix4x4 transform = GetTransform();
+  gfx::Matrix4x4* maybeTransform = &transform;
   float opacity = GetLocalOpacity();
+  float* maybeOpacity = &opacity;
+  uint64_t animationsId = 0;
   LayerRect relBounds = GetWrRelBounds();
   gfx::Rect clip(0, 0, relBounds.width, relBounds.height);
 
@@ -41,24 +44,24 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
       GetAnimations().Length()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
+    animationsId = GetCompositorAnimationsId();
     CompositorAnimations anim;
     anim.animations() = GetAnimations();
-    anim.id() = GetCompositorAnimationsId();
+    anim.id() = animationsId;
     WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
 
-    float* maybeOpacity = HasOpacityAnimation() ? nullptr : &opacity;
-    gfx::Matrix4x4* maybeTransform = HasTransformAnimation() ? nullptr : &transform;
-    aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                                 GetCompositorAnimationsId(),
-                                 maybeOpacity,
-                                 maybeTransform,
-                                 mixBlendMode);
-  } else {
-    aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                                 opacity,
-                                 transform,
-                                 mixBlendMode);
+    if (!HasOpacityAnimation()) {
+      maybeOpacity = nullptr;
+    }
+    if (!HasTransformAnimation()) {
+      maybeTransform = nullptr;
+    }
   }
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                               animationsId,
+                               maybeOpacity,
+                               maybeTransform,
+                               mixBlendMode);
 
   aBuilder.PushClip(wr::ToWrRect(clip),
                     mask.ptrOr(nullptr));
