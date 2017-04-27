@@ -47,7 +47,6 @@ public:
   WrImageKey GetImageKey();
 
   LayerRect RelativeToVisible(const LayerRect& aRect);
-  LayerRect ParentStackingContextBounds();
   LayerRect RelativeToParent(const LayerRect& aRect);
   LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
   LayerRect VisibleBoundsRelativeToParent();
@@ -57,6 +56,7 @@ protected:
   LayerRect Bounds();
   BoundsTransformMatrix BoundsTransform();
   LayerRect BoundsForStackingContext();
+  LayerRect ParentBounds();
   Maybe<LayerRect> ClipRect();
 
   LayerRect GetWrBoundsRect();
