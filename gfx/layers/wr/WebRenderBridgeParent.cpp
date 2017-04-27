@@ -7,6 +7,7 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 
 #include "CompositableHost.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/Range.h"

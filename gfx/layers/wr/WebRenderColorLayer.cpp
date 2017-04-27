@@ -9,6 +9,7 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -19,24 +20,18 @@ using namespace mozilla::gfx;
 void
 WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  gfx::Matrix4x4 transform = GetTransform();
-  LayerRect relBounds = GetWrRelBounds();
-  LayerRect rect = GetWrBoundsRect();
+  StackingContextHelper sc(aBuilder, this);
 
-  LayerRect clipRect = GetWrClipRect(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
-
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-
+  LayerRect rect = Bounds();
   DumpLayerInfo("ColorLayer", rect);
 
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              1.0f,
-                              transform,
-                              mixBlendMode);
-  aBuilder.PushRect(wr::ToWrRect(rect), clip, wr::ToWrColor(mColor));
-  aBuilder.PopStackingContext();
+  LayerRect clipRect = ClipRect().valueOr(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
+
+  aBuilder.PushRect(sc.ToRelativeWrRect(rect), clip, wr::ToWrColor(mColor));
 }
 
 } // namespace layers
