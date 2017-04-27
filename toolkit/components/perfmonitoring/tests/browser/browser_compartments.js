@@ -158,17 +158,6 @@ function monotinicity_tester(source, testName) {
     // Sanity check on components data.
     let map = new Map();
     for (let item of snapshot.componentsData) {
-      for (let [probe, k] of [
-        ["jank", "totalUserTime"],
-        ["jank", "totalSystemTime"],
-        ["cpow", "totalCPOWTime"]
-      ]) {
-        // Note that we cannot expect components data to be always smaller
-        // than process data, as `getrusage` & co are not monotonic.
-        SilentAssert.leq(item[probe][k], 6 * snapshot.processData[probe][k],
-          `Sanity check (${name}): ${k} of component is not impossibly larger than that of process`);
-      }
-
       let isCorrectPid = (item.processId == pid && !item.isChildProcess)
         || (item.processId != pid && item.isChildProcess);
       SilentAssert.ok(isCorrectPid, `Pid check (${name}): the item comes from the right process`);
