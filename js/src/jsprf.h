@@ -12,19 +12,22 @@
 #include <stdarg.h>
 
 #include "jstypes.h"
+#include "js/Utility.h"
 
 /* Wrappers for mozilla::Smprintf and friends that are used throughout
    JS.  */
 
-extern JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...)
+extern JS_PUBLIC_API(JS::UniqueChars) JS_smprintf(const char* fmt, ...)
     MOZ_FORMAT_PRINTF(1, 2);
 
 extern JS_PUBLIC_API(void) JS_smprintf_free(char* mem);
 
-extern JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...)
+extern JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last,
+                                                        const char* fmt, ...)
      MOZ_FORMAT_PRINTF(2, 3);
 
-extern JS_PUBLIC_API(char*) JS_vsmprintf(const char* fmt, va_list ap);
-extern JS_PUBLIC_API(char*) JS_vsprintf_append(char* last, const char* fmt, va_list ap);
+extern JS_PUBLIC_API(JS::UniqueChars) JS_vsmprintf(const char* fmt, va_list ap);
+extern JS_PUBLIC_API(JS::UniqueChars) JS_vsprintf_append(JS::UniqueChars&& last,
+                                                         const char* fmt, va_list ap);
 
 #endif /* jsprf_h */

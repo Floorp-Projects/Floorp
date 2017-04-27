@@ -136,18 +136,6 @@ IsNewline(char aChar)
   return aChar == '\n' || aChar == '\r';
 }
 
-namespace {
-struct SmprintfFreePolicy
-{
-  void operator()(char* ptr) {
-    mozilla::SmprintfFree(ptr);
-  }
-};
-
-typedef mozilla::UniquePtr<char, SmprintfFreePolicy> SmprintfPointer;
-
-} // namespace
-
 /**
  * If we are pre-loading XPTs, this method may do nothing because the
  * console service is not initialized.

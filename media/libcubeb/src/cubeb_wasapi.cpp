@@ -1556,11 +1556,6 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
    * use the default setting retrieved from the stream format of the audio
    * engine's internal processing by GetMixFormat. */
   if (mix_format->nChannels > 2) {
-    /* Currently, we only support mono and stereo for capture stream. */
-    if (direction == eCapture) {
-      XASSERT(false && "Multichannel recording is not supported.");
-    }
-
     handle_channel_layout(stm, mix_format, stream_params);
   }
 

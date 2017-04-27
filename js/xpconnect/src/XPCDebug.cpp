@@ -41,20 +41,19 @@ xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps)
     JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
     if (!cx) {
         printf("there is no JSContext on the stack!\n");
-    } else if (char* buf = xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
-        DebugDump("%s\n", buf);
-        JS_smprintf_free(buf);
+    } else if (JS::UniqueChars buf = xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
+        DebugDump("%s\n", buf.get());
     }
     return true;
 }
 
-char*
+JS::UniqueChars
 xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
                  bool showThisProps)
 {
     JS::AutoSaveExceptionState state(cx);
 
-    char* buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf)
         DebugDump("%s", "Failed to format JavaScript stack for dump\n");
 

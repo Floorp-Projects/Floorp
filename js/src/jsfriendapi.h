@@ -267,8 +267,9 @@ DumpBacktrace(JSContext* cx);
 namespace JS {
 
 /** Exposed for DumpJSStack */
-extern JS_FRIEND_API(char*)
-FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bool showThisProps);
+extern JS_FRIEND_API(JS::UniqueChars)
+FormatStackDump(JSContext* cx, JS::UniqueChars&& buf, bool showArgs, bool showLocals,
+                bool showThisProps);
 
 /**
  * Set all of the uninitialized lexicals on an object to undefined. Return

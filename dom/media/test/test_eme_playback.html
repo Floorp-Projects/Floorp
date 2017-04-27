@@ -78,37 +78,35 @@ function startTest(test, token)
 
   var sessions = [];
 
-  var v = SetupEME(test, token,
-    {
-      onsessioncreated: function(session) {
-        sessions.push(session);
-        session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token));
+  function onSessionCreated(session) {
+    sessions.push(session);
+    session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token));
 
-        session.numKeystatuseschangeEvents = 0;
-        session.numOnkeystatuseschangeEvents = 0;
+    session.numKeystatuseschangeEvents = 0;
+    session.numOnkeystatuseschangeEvents = 0;
 
-        session.addEventListener("keystatuseschange", function() {
-          session.numKeystatuseschangeEvents += 1;
-        });
-        session.onkeystatuseschange = function() {
-          session.numOnkeystatuseschangeEvents += 1;
-        };
+    session.addEventListener("keystatuseschange", function() {
+      session.numKeystatuseschangeEvents += 1;
+    });
+    session.onkeystatuseschange = function() {
+      session.numOnkeystatuseschangeEvents += 1;
+    };
 
-        session.numMessageEvents = 0;
-        session.numOnMessageEvents = 0;
-        session.addEventListener("message", function() {
-          session.numMessageEvents += 1;
-        });
-        session.onmessage = function() {
-          session.numOnMessageEvents += 1;
-        };
-      }
-    }
-  );
+    session.numMessageEvents = 0;
+    session.numOnMessageEvents = 0;
+    session.addEventListener("message", function() {
+      session.numMessageEvents += 1;
+    });
+    session.onmessage = function() {
+      session.numOnMessageEvents += 1;
+    };
+  }
 
+  let v = document.createElement("video");
   document.body.appendChild(v);
 
   var gotEncrypted = 0;
+  let finish = new EMEPromise;
 
   v.addEventListener("encrypted", function(ev) {
     gotEncrypted += 1;
@@ -160,16 +158,25 @@ function startTest(test, token)
       ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
     }
 
-    v.closeSessions().then(() => manager.finished(token));
+    CloseSessions(v, sessions).then(finish.resolve, finish.reject);
   });
 
-  LoadTest(test, v, token)
-  .then(function() {
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token)])
+  .then(values => {
     v.play();
-  }).catch(function() {
-    ok(false, token + " failed to load");
-    manager.finished(token);
-  });
+    let initData = values[0];
+    initData.map(ev => {
+      let session = v.mediaKeys.createSession();
+      onSessionCreated(session);
+      MakeRequest(test, token, ev, session);
+    });
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+  .then(() => manager.finished(token));
 }
 
 function beginTest() {

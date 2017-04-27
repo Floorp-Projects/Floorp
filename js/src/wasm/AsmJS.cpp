@@ -2273,7 +2273,7 @@ class MOZ_STACK_CLASS ModuleValidator
         MOZ_ASSERT(errorOffset_ == UINT32_MAX);
         MOZ_ASSERT(fmt);
         errorOffset_ = offset;
-        errorString_.reset(JS_vsmprintf(fmt, ap));
+        errorString_ = JS_vsmprintf(fmt, ap);
         return false;
     }
 
@@ -8588,7 +8588,7 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
 
     int64_t after = PRMJ_Now();
     int ms = (after - before) / PRMJ_USEC_PER_MSEC;
-    *compilationTimeReport = UniqueChars(JS_smprintf("loaded from cache in %dms", ms));
+    *compilationTimeReport = JS_smprintf("loaded from cache in %dms", ms);
     if (!*compilationTimeReport)
         return false;
 
@@ -8689,7 +8689,7 @@ BuildConsoleMessage(JSContext* cx, unsigned time, JS::AsmJSCacheResult cacheResu
         break;
     }
 
-    return UniqueChars(JS_smprintf("total compilation time %dms; %s", time, cacheString));
+    return JS_smprintf("total compilation time %dms; %s", time, cacheString);
 #else
     return DuplicateString("");
 #endif

@@ -624,8 +624,9 @@ parent:
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
-                            TabId openerTabId)
-        returns (ContentParentId cpId, bool isForBrowser, TabId tabId);
+                            TabId openerTabId,
+                            TabId tabId)
+        returns (ContentParentId cpId, bool isForBrowser);
     sync BridgeToChildProcess(ContentParentId cpId)
         returns (Endpoint<PContentBridgeParent> endpoint);
 
@@ -915,15 +916,10 @@ parent:
     sync KeygenProvideContent()
         returns (nsString aAttribute, nsString[] aContent);
 
-    /**
-     * Tell the chrome process there is an creation of PBrowser.
-     * return a system-wise unique Id.
-     */
-    sync AllocateTabId(TabId openerTabId, IPCTabContext context, ContentParentId cpId)
-        returns (TabId tabId);
-    async DeallocateTabId(TabId tabId,
-                          ContentParentId cpId,
-                          bool aMarkedDestroying);
+    /** Clear RemoteFrameInfo of the given tab id. */
+    async UnregisterRemoteFrame(TabId tabId,
+                                ContentParentId cpId,
+                                bool aMarkedDestroying);
 
     /**
      * Tell the chrome process there is a destruction of PBrowser(Tab)

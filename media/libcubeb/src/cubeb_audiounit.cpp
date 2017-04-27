@@ -226,6 +226,7 @@ channel_label_to_cubeb_channel(UInt32 label)
     case kAudioChannelLabel_RearSurroundLeft: return CHANNEL_RLS;
     case kAudioChannelLabel_RearSurroundRight: return CHANNEL_RRS;
     case kAudioChannelLabel_CenterSurround: return CHANNEL_RCENTER;
+    case kAudioChannelLabel_Unknown: return CHANNEL_UNMAPPED;
     default: return CHANNEL_INVALID;
   }
 }
@@ -244,6 +245,7 @@ cubeb_channel_to_channel_label(cubeb_channel channel)
     case CHANNEL_RLS: return kAudioChannelLabel_RearSurroundLeft;
     case CHANNEL_RRS: return kAudioChannelLabel_RearSurroundRight;
     case CHANNEL_RCENTER: return kAudioChannelLabel_CenterSurround;
+    case CHANNEL_UNMAPPED: return kAudioChannelLabel_Unknown;
     default: return kAudioChannelLabel_Unknown;
   }
 }
@@ -643,10 +645,10 @@ static int audiounit_stream_get_volume(cubeb_stream * stm, float * volume);
 static int audiounit_stream_set_volume(cubeb_stream * stm, float volume);
 
 static int
-audiounit_reinit_stream(cubeb_stream * stm, bool is_started)
+audiounit_reinit_stream(cubeb_stream * stm)
 {
   auto_lock context_lock(stm->context->mutex);
-  if (is_started) {
+  if (!stm->shutdown) {
     audiounit_stream_stop_internal(stm);
   }
 
@@ -671,7 +673,7 @@ audiounit_reinit_stream(cubeb_stream * stm, bool is_started)
     stm->frames_read = 0;
 
     // If the stream was running, start it again.
-    if (is_started) {
+    if (!stm->shutdown) {
       audiounit_stream_start_internal(stm);
     }
   }
@@ -685,8 +687,6 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
 {
   cubeb_stream * stm = (cubeb_stream*) user;
   stm->switching_device = true;
-  // Note if the stream was running or not
-  bool was_running = !stm->shutdown;
 
   LOG("(%p) Audio device changed, %u events.", stm, (unsigned int) address_count);
   for (UInt32 i = 0; i < address_count; i++) {
@@ -715,8 +715,12 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
           stm->input_device = 0;
         }
         break;
-      case kAudioDevicePropertyDataSource:
-        LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource", (unsigned int) i);
+      case kAudioDevicePropertyDataSource: {
+          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource", (unsigned int) i);
+          if (has_output(stm)) {
+              stm->output_device = 0;
+          }
+        }
         break;
       default:
         LOG("Event[%u] - mSelector == Unexpected Event id %d, return", (unsigned int) i, addresses[i].mSelector);
@@ -743,7 +747,7 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
   // Use a new thread, through the queue, to avoid deadlock when calling
   // Get/SetProperties method from inside notify callback
   dispatch_async(stm->context->serial_queue, ^() {
-    if (audiounit_reinit_stream(stm, was_running) != CUBEB_OK) {
+    if (audiounit_reinit_stream(stm) != CUBEB_OK) {
       stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
       LOG("(%p) Could not reopen the stream after switching.", stm);
     }
@@ -1086,6 +1090,12 @@ audiounit_convert_channel_layout(AudioChannelLayout * layout)
     // kAudioChannelLayoutTag_Stereo
     // ....
     LOG("Only handle UseChannelDescriptions for now.\n");
+    return CUBEB_LAYOUT_UNDEFINED;
+  }
+
+  // This devices has more channels that we can support, bail out.
+  if (layout->mNumberChannelDescriptions >= CHANNEL_MAX) {
+    LOG("Audio device has more than %d channels, bailing out.", CHANNEL_MAX);
     return CUBEB_LAYOUT_UNDEFINED;
   }
 
@@ -2579,10 +2589,10 @@ audiounit_stream_start_internal(cubeb_stream * stm)
 static int
 audiounit_stream_start(cubeb_stream * stm)
 {
+  auto_lock context_lock(stm->context->mutex);
   stm->shutdown = false;
   stm->draining = false;
 
-  auto_lock context_lock(stm->context->mutex);
   audiounit_stream_start_internal(stm);
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
@@ -2608,9 +2618,9 @@ audiounit_stream_stop_internal(cubeb_stream * stm)
 static int
 audiounit_stream_stop(cubeb_stream * stm)
 {
+  auto_lock context_lock(stm->context->mutex);
   stm->shutdown = true;
 
-  auto_lock context_lock(stm->context->mutex);
   audiounit_stream_stop_internal(stm);
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);

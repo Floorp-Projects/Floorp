@@ -1006,24 +1006,22 @@ Connection::internalClose(sqlite3 *aNativeConnection)
               stmt));
 
 #ifdef DEBUG
-      char *msg = ::mozilla::Smprintf("SQL statement '%s' (%p) should have been finalized before closing the connection",
-                               ::sqlite3_sql(stmt),
-                               stmt);
-      NS_WARNING(msg);
-      ::mozilla::SmprintfFree(msg);
-      msg = nullptr;
+      {
+        SmprintfPointer msg = ::mozilla::Smprintf("SQL statement '%s' (%p) should have been finalized before closing the connection",
+                                           ::sqlite3_sql(stmt),
+                                           stmt);
+        NS_WARNING(msg.get());
+      }
 #endif // DEBUG
 
       srv = ::sqlite3_finalize(stmt);
 
 #ifdef DEBUG
       if (srv != SQLITE_OK) {
-        msg = ::mozilla::Smprintf("Could not finalize SQL statement '%s' (%p)",
-                           ::sqlite3_sql(stmt),
-                           stmt);
-        NS_WARNING(msg);
-        ::mozilla::SmprintfFree(msg);
-        msg = nullptr;
+        SmprintfPointer msg = ::mozilla::Smprintf("Could not finalize SQL statement '%s' (%p)",
+                                           ::sqlite3_sql(stmt),
+                                           stmt);
+        NS_WARNING(msg.get());
       }
 #endif // DEBUG
 
@@ -1816,12 +1814,11 @@ Connection::CreateTable(const char *aTableName,
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  char *buf = ::mozilla::Smprintf("CREATE TABLE %s (%s)", aTableName, aTableSchema);
+  SmprintfPointer buf = ::mozilla::Smprintf("CREATE TABLE %s (%s)", aTableName, aTableSchema);
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  int srv = executeSql(mDBConn, buf);
-  ::mozilla::SmprintfFree(buf);
+  int srv = executeSql(mDBConn, buf.get());
 
   return convertResultCode(srv);
 }

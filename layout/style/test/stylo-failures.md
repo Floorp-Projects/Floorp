@@ -56,7 +56,7 @@ to mochitest command.
     * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [20]
-    * test_value_storage.html `animation` [91]
+    * test_value_storage.html `animation` [15]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
@@ -75,8 +75,6 @@ to mochitest command.
 * Transition support:
   * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [10]
-  * test_transitions_computed_value_combinations.html [145]
-  * test_value_storage.html `transition` [218]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
@@ -89,8 +87,8 @@ to mochitest command.
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
-  * test_counter_style.html [1]
-  * test_rule_insertion.html `@counter-style` [4]
+  * test_counter_style.html [5]
+  * test_rule_insertion.html `@counter-style` [1]
   * ... `cjk-decimal` [1]
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]

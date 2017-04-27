@@ -994,11 +994,11 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
     VideoData::CreateAndCopyData(info,
                                  mImageContainer,
                                  0, // Filled later by caller.
-                                 0, // Filled later by caller.
+                                 media::TimeUnit::Zero(), // Filled later by caller.
                                  media::TimeUnit::FromMicroseconds(1), // We don't know the duration.
                                  b,
                                  0, // Filled later by caller.
-                                 -1,
+                                 media::TimeUnit::FromMicroseconds(-1),
                                  info.ImageRect());
 
   LOG("YUV420 VideoData: disp width %d, height %d, pic width %d, height %d, time %lld",
