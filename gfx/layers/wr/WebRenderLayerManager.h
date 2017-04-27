@@ -8,12 +8,9 @@
 
 #include "Layers.h"
 #include "mozilla/ipc/MessageChannel.h"
-#include "mozilla/layers/CompositorController.h"
-#include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/webrender/webrender_ffi.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 
 class nsIWidget;
 
@@ -21,58 +18,11 @@ namespace mozilla {
 namespace layers {
 
 class CompositorBridgeChild;
-class ImageClientSingle;
 class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
-class WebRenderLayerManager;
-class APZCTreeManager;
 
 typedef MozPromise<mozilla::wr::PipelineId, mozilla::ipc::PromiseRejectReason, false> PipelineIdPromise;
-
-
-class WebRenderLayer
-{
-public:
-  virtual Layer* GetLayer() = 0;
-  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
-  {
-    MOZ_ASSERT(false);
-    return Nothing();
-  }
-
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; }
-  static inline WebRenderLayer*
-  ToWebRenderLayer(Layer* aLayer)
-  {
-    return static_cast<WebRenderLayer*>(aLayer->ImplData());
-  }
-
-  Maybe<wr::ImageKey> UpdateImageKey(ImageClientSingle* aImageClient,
-                                     ImageContainer* aContainer,
-                                     Maybe<wr::ImageKey>& aOldKey,
-                                     wr::ExternalImageId& aExternalImageId);
-
-  WebRenderLayerManager* WrManager();
-  WebRenderBridgeChild* WrBridge();
-  WrImageKey GetImageKey();
-
-  gfx::Rect RelativeToVisible(gfx::Rect aRect);
-  gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
-  gfx::Rect ParentStackingContextBounds();
-  gfx::Rect RelativeToParent(gfx::Rect aRect);
-  gfx::Rect VisibleBoundsRelativeToParent();
-  gfx::Point GetOffsetToParent();
-  gfx::Rect TransformedVisibleBoundsRelativeToParent();
-protected:
-  gfx::Rect GetWrBoundsRect();
-  gfx::Rect GetWrRelBounds();
-  gfx::Rect GetWrClipRect(gfx::Rect& aRect);
-  gfx::Matrix4x4 GetWrBoundTransform();
-  void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
-};
 
 class WebRenderLayerManager final : public LayerManager
 {

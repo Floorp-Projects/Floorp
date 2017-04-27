@@ -9,9 +9,10 @@
 #include "Layers.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {
