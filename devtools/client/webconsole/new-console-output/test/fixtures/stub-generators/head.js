@@ -122,6 +122,22 @@ function getCleanedPacket(key, packet) {
           // Clean timestamp there too.
           res.exception.preview.timestamp = existingPacket.exception.preview.timestamp;
         }
+
+        if (
+          typeof res.exception.preview.message === "object"
+          && res.exception.preview.message.type === "longString"
+        ) {
+          res.exception.preview.message.actor =
+            existingPacket.exception.preview.message.actor;
+        }
+      }
+
+      if (
+        typeof res.exceptionMessage === "object"
+        && res.exceptionMessage.type === "longString"
+      ) {
+        res.exceptionMessage.actor =
+          existingPacket.exceptionMessage.actor;
       }
     }
 
@@ -135,6 +151,13 @@ function getCleanedPacket(key, packet) {
     if (res.pageError) {
       // Clean timeStamp on pageError messages.
       res.pageError.timeStamp = existingPacket.pageError.timeStamp;
+
+      if (
+        typeof res.pageError.errorMessage === "object"
+        && res.pageError.errorMessage.type === "longString"
+      ) {
+        res.pageError.errorMessage.actor = existingPacket.pageError.errorMessage.actor;
+      }
     }
 
     if (res.packet) {
