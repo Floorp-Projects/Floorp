@@ -158,40 +158,27 @@ class ProxyScriptContext extends BaseContext {
 
     if (!rule) {
       this.extension.emit("proxy-error", {
-        message: "FindProxyForURL: Missing Proxy Rule",
+        message: "FindProxyForURL: Expected Proxy Rule",
       });
       return null;
     }
 
     let parts = rule.split(/\s+/);
-
-    if (!parts[0]) {
+    if (!parts[0] || parts.length !== 2) {
       this.extension.emit("proxy-error", {
-        message: "FindProxyForURL: Missing Proxy Rule",
+        message: `FindProxyForURL: Invalid Proxy Rule: ${rule}`,
       });
       return null;
     }
 
-    if (parts.length > 2) {
-      this.extension.emit("proxy-error", {
-        message: `FindProxyForURL: Too many arguments passed for proxy rule: "${rule}"`,
-      });
-      return null;
-    }
+    parts[0] = parts[0].toLowerCase();
 
-    switch (parts[0].toLowerCase()) {
+    switch (parts[0]) {
       case PROXY_TYPES.PROXY:
       case PROXY_TYPES.SOCKS:
         if (!parts[1]) {
           this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Missing argument for proxy type: "${parts[0]}"`,
-          });
-          return null;
-        }
-
-        if (parts.length != 2) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Too many arguments for proxy rule: "${rule}"`,
+            message: `FindProxyForURL: Missing argument for "${parts[0]}"`,
           });
           return null;
         }
@@ -199,13 +186,13 @@ class ProxyScriptContext extends BaseContext {
         let [host, port] = parts[1].split(":");
         if (!host || !port) {
           this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Unable to parse host and port from proxy rule: "${rule}"`,
+            message: `FindProxyForURL: Unable to parse argument for ${rule}`,
           });
           return null;
         }
 
         let type = PROXY_TYPES.SOCKS;
-        if (parts[0].toLowerCase() == PROXY_TYPES.PROXY) {
+        if (parts[0] == PROXY_TYPES.PROXY) {
           type = PROXY_TYPES.HTTPS;
         }
 
@@ -213,11 +200,6 @@ class ProxyScriptContext extends BaseContext {
         return ProxyService.newProxyInfo(type, host, port, 0,
           PROXY_TIMEOUT_SEC, failoverProxy);
       case PROXY_TYPES.DIRECT:
-        if (parts.length != 1) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Invalid argument for proxy type: "${parts[0]}"`,
-          });
-        }
         return null;
       default:
         this.extension.emit("proxy-error", {
