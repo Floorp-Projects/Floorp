@@ -128,38 +128,35 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
 
         if self.try_message_has_flag('artifact'):
             # Not all jobs that look like builds can be made into artifact
-            # builds (for example, various SAN builds might not make sense as
-            # artifact builds).  For jobs that can't be turned into artifact
-            # jobs, provide a falsy `artifact_flag_build_variant_in_try`.
+            # builds (for example, various SAN builds will not make sense as
+            # artifact builds).  By default, only a vanilla debug or opt build
+            # will be replaced by an artifact build.
             #
             # In addition, some jobs want to specify their artifact equivalent.
             # Use `artifact_flag_build_variant_in_try` to specify that variant.
-            # Defaults to `artifact`, or `debug-artifact` for `debug` and
-            # `cross-debug` build variants.
             #
             # This is temporary, until we find a way to introduce an "artifact
             # build dimension" like "opt"/"debug" into the CI configurations.
             self.info('Artifact build requested in try syntax.')
 
-            default = 'artifact'
-            if c.get('build_variant') in ['debug', 'cross-debug']:
-                default = 'debug-artifact'
-
             variant = None
+
             if 'artifact_flag_build_variant_in_try' in c:
-                variant = c.get('artifact_flag_build_variant_in_try')
+                variant = c['artifact_flag_build_variant_in_try']
                 if not variant:
                     self.info('Build variant has falsy `artifact_flag_build_variant_in_try`; '
                               'ignoring artifact build request and performing original build.')
                     return
-
-                self.info('Build variant has non-falsy `artifact_build_variant_in_try`.')
+                self.info('Build variant has `artifact_build_variant_in_try`: "%s".' % variant)
             else:
-                variant = default
+                if not c.get('build_variant'):
+                    variant = 'artifact'
+                elif c.get('build_variant') in ['debug', 'cross-debug']:
+                    variant = 'debug-artifact'
 
-            self.info('Using artifact build variant "%s".' % variant)
-
-            self._update_build_variant(rw_config, variant)
+            if variant:
+                self.info('Using artifact build variant "%s".' % variant)
+                self._update_build_variant(rw_config, variant)
 
     # helpers
     def _update_build_variant(self, rw_config, variant='artifact'):

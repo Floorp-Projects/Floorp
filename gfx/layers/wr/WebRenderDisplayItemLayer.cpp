@@ -11,9 +11,22 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/UpdateImageHelper.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
+
+WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
+{
+  MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
+  if (mKey.isSome()) {
+    WrManager()->AddImageKeyForDiscard(mKey.value());
+  }
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+  }
+}
 
 void
 WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
@@ -26,10 +39,8 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
     gfx::Rect rect = TransformedVisibleBoundsRelativeToParent();
-    gfx::Rect overflow(0.0, 0.0, rect.width, rect.height);
-    aBuilder.PushScrollLayer(wr::ToWrRect(rect),
-                             wr::ToWrRect(overflow),
-                             imageMask);
+    gfx::Rect clip(0.0, 0.0, rect.width, rect.height);
+    aBuilder.PushClip(wr::ToWrRect(clip), imageMask);
   }
 
   if (mItem) {
@@ -38,15 +49,25 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mParentCommands.Clear();
     mItem->CreateWebRenderCommands(builder, mParentCommands, this);
     mBuiltDisplayList = builder.Finalize();
+  } else {
+    // else we have an empty transaction and just use the
+    // old commands.
+    WebRenderLayerManager* manager = static_cast<WebRenderLayerManager*>(Manager());
+    MOZ_ASSERT(manager);
+
+    // Since our recording relies on our parent layer's transform and stacking context
+    // If this layer or our parent changed, this empty transaction won't work.
+    if (manager->IsMutatedLayer(this) || manager->IsMutatedLayer(GetParent())) {
+      manager->SetTransactionIncomplete();
+      return;
+    }
   }
-  // else we have an empty transaction and just use the
-  // old commands.
 
   aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
 
   if (imageMask) {
-    aBuilder.PopScrollLayer();
+    aBuilder.PopClip();
   }
 }
 
@@ -54,6 +75,8 @@ Maybe<wr::ImageKey>
 WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
                                               nsTArray<layers::WebRenderParentCommand>& aParentCommands)
 {
+  MOZ_ASSERT(aContainer);
+
   if (mImageContainer != aContainer) {
     AutoLockImage autoLock(aContainer);
     Image* image = autoLock.GetImage();
@@ -71,26 +94,92 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
       mImageClient->Connect();
     }
 
-    if (!mExternalImageId) {
+    if (mExternalImageId.isNothing()) {
       MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+      mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
     }
-    MOZ_ASSERT(mExternalImageId);
+    MOZ_ASSERT(mExternalImageId.isSome());
+    MOZ_ASSERT(mImageClient->AsImageClientSingle());
 
-    if (!mImageClient->UpdateImage(aContainer, /* unused */0)) {
-      return Nothing();
-    }
+    mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                          aContainer,
+                          mKey,
+                          mExternalImageId.ref());
+
     mImageContainer = aContainer;
   }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
+  return mKey;
+}
+
+bool
+WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                                           nsTArray<layers::WebRenderParentCommand>& aParentCommands)
+{
+  if (!mImageContainer) {
+    mImageContainer = LayerManager::CreateImageContainer();
+  }
+
+  if (!mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WrBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return false;
+    }
+    mImageClient->Connect();
+  }
+
+  if (mExternalImageId.isNothing()) {
+    MOZ_ASSERT(mImageClient);
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
+  }
+
+  const int32_t appUnitsPerDevPixel = mItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  bool snap;
+  LayerRect bounds = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(mItem->GetBounds(mBuilder, &snap), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  LayerIntSize imageSize = RoundedToInt(bounds.Size());
+  LayerRect imageRect;
+  imageRect.SizeTo(LayerSize(imageSize));
+
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize.ToUnknownSize());
+  LayerPoint offset = ViewAs<LayerPixel>(
+      LayoutDevicePoint::FromAppUnits(mItem->ToReferenceFrame(), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+
+  {
+    RefPtr<gfx::DrawTarget> target = helper.GetDrawTarget();
+    if (!target) {
+      return false;
+    }
+
+    target->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset.ToUnknownPoint());
+    MOZ_ASSERT(context);
+
+    nsRenderingContext ctx(context);
+    mItem->Paint(mBuilder, &ctx);
+  }
+
+  if (!helper.UpdateImage()) {
+    return false;
+  }
+
+  LayerRect dest = RelativeToParent(imageRect) + offset;
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrImageKey key = GetImageKey();
   aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                mExternalImageId,
+                                mExternalImageId.value(),
                                 key));
-  WrManager()->AddImageKeyForDiscard(key);
-  return Some(key);
+  aBuilder.PushImage(wr::ToWrRect(dest),
+                     clipRegion,
+                     WrImageRendering::Auto,
+                     key);
+
+  return true;
 }
 
 } // namespace layers

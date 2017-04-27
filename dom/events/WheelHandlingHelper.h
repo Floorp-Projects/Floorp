@@ -158,7 +158,7 @@ protected:
   static bool UpdateTransaction(WidgetWheelEvent* aEvent);
   static void MayEndTransaction();
 
-  static nsIntPoint GetScreenPoint(WidgetGUIEvent* aEvent);
+  static LayoutDeviceIntPoint GetScreenPoint(WidgetGUIEvent* aEvent);
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer* aTimer, void* aClosure);
   static void SetTimeout();

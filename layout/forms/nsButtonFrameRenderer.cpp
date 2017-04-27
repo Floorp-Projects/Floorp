@@ -160,7 +160,7 @@ nsDisplayButtonBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowDisplayButtonBorder()) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowDisplayButtonBorder)) {
     // TODO: Figure out what to do with sync decode images
     if (aBuilder->ShouldSyncDecodeImages()) {
       return LAYER_NONE;
@@ -342,7 +342,7 @@ nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   Maybe<nsCSSBorderRenderer> br;
 
-  if (gfxPrefs::LayersAllowButtonForegroundLayers()) {
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowButtonForegroundLayers)) {
     nsPresContext *presContext = mFrame->PresContext();
     const nsStyleDisplay *disp = mFrame->StyleDisplay();
     if (!mFrame->IsThemed(disp) ||

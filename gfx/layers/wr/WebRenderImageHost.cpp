@@ -9,6 +9,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerManagerComposite.h"     // for TexturedEffect, Effect, etc
+#include "mozilla/layers/WebRenderCompositableHolder.h"
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -25,10 +26,12 @@ class ISurfaceAllocator;
 WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
   , ImageComposite()
+  , mWrCompositableHolder(nullptr)
 {}
 
 WebRenderImageHost::~WebRenderImageHost()
 {
+  MOZ_ASSERT(!mWrCompositableHolder);
 }
 
 void
@@ -62,6 +65,22 @@ WebRenderImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 
   mImages.SwapElements(newImages);
   newImages.Clear();
+
+  // Video producers generally send replacement images with the same frameID but
+  // slightly different timestamps in order to sync with the audio clock. This
+  // means that any CompositeUntil() call we made in Composite() may no longer
+  // guarantee that we'll composite until the next frame is ready. Fix that here.
+  if (mWrCompositableHolder && mLastFrameID >= 0) {
+    for (size_t i = 0; i < mImages.Length(); ++i) {
+      bool frameComesAfter = mImages[i].mFrameID > mLastFrameID ||
+                             mImages[i].mProducerID != mLastProducerID;
+      if (frameComesAfter && !mImages[i].mTimeStamp.IsNull()) {
+        mWrCompositableHolder->CompositeUntil(mImages[i].mTimeStamp +
+                           TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+        break;
+      }
+    }
+  }
 }
 
 void
@@ -95,8 +114,11 @@ WebRenderImageHost::RemoveTextureHost(TextureHost* aTexture)
 TimeStamp
 WebRenderImageHost::GetCompositionTime() const
 {
-  // XXX temporary workaround
-  return TimeStamp::Now();
+  TimeStamp time;
+  if (mWrCompositableHolder) {
+    time = mWrCompositableHolder->GetCompositionTime();
+  }
+  return time;
 }
 
 TextureHost*
@@ -107,6 +129,27 @@ WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect)
     return img->mTextureHost;
   }
   return nullptr;
+}
+
+TextureHost*
+WebRenderImageHost::GetAsTextureHostForComposite()
+{
+  int imageIndex = ChooseImageIndex();
+  if (imageIndex < 0) {
+    return nullptr;
+  }
+
+  if (mWrCompositableHolder && uint32_t(imageIndex) + 1 < mImages.Length()) {
+    mWrCompositableHolder->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+  }
+
+  TimedImage* img = &mImages[imageIndex];
+
+  if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
+    mLastFrameID = img->mFrameID;
+    mLastProducerID = img->mProducerID;
+  }
+  return img->mTextureHost;
 }
 
 void WebRenderImageHost::Attach(Layer* aLayer,

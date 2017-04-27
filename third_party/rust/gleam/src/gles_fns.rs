@@ -1131,6 +1131,21 @@ impl Gl for GlesFns {
         }
     }
 
+    fn get_shader_precision_format(&self,
+                                   shader_type: GLuint,
+                                   precision_type: GLuint)
+                                   -> (GLint, GLint, GLint) {
+        let mut range = [0 as GLint, 0];
+        let mut precision = 0 as GLint;
+        unsafe {
+            self.ffi_gl_.GetShaderPrecisionFormat(shader_type,
+                                                  precision_type,
+                                                  range.as_mut_ptr(),
+                                                  &mut precision);
+        }
+        (range[0], range[1], precision)
+    }
+
     fn compile_shader(&self, shader: GLuint) {
         unsafe {
             self.ffi_gl_.CompileShader(shader);
@@ -1265,13 +1280,6 @@ impl Gl for GlesFns {
         }
     }
 
-    #[allow(unused_variables)]
-    #[cfg(not(target_os="android"))]
-    fn egl_image_target_texture2d_oes(&self, target: GLenum, image: GLeglImageOES) {
-        panic!("not supported")
-    }
-
-    #[cfg(target_os="android")]
     fn egl_image_target_texture2d_oes(&self, target: GLenum, image: GLeglImageOES) {
         unsafe {
             self.ffi_gl_.EGLImageTargetTexture2DOES(target, image);

@@ -2,7 +2,7 @@
 random-if(!haveTestPlugin) != plugin-sanity.html about:blank
 fails-if(!haveTestPlugin) == plugin-sanity.html div-sanity.html
 fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) == plugin-alpha-zindex.html div-alpha-zindex.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,164000) fails-if(webrender) == plugin-alpha-opacity.html div-alpha-opacity.html
+fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,164000) == plugin-alpha-opacity.html div-alpha-opacity.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
 # fuzzy because of anti-aliasing in dashed border
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html # bug 629430

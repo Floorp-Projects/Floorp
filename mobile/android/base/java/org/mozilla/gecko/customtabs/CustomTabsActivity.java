@@ -77,7 +77,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         if (savedInstanceState != null) {
             startIntent = savedInstanceState.getParcelable(SAVED_START_INTENT);
         } else {
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
+            sendTelemetry();
             startIntent = getIntent();
             final String host = getReferrerHost();
             recordCustomTabUsage(host);
@@ -99,6 +99,24 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
 
         Tabs.registerOnTabsChangedListener(this);
+    }
+
+    private void sendTelemetry() {
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
+        if (IntentUtil.hasToolbarColor(startIntent)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab-hasToolbarColor");
+        }
+        if (IntentUtil.hasActionButton(startIntent)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab-hasActionButton");
+        }
+        if (IntentUtil.isActionButtonTinted(startIntent)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab-isActionButtonTinted");
+        }
+        if (IntentUtil.hasShareItem(startIntent)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab-hasShareItem");
+        }
+
+
     }
 
     private void recordCustomTabUsage(final String host) {
@@ -271,29 +289,42 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-home");
                 finish();
                 return true;
             case R.id.share:
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-share");
                 onShareClicked();
                 return true;
             case R.id.custom_tabs_menu_forward:
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-forward");
                 onForwardClicked();
                 return true;
             case R.id.custom_tabs_menu_control:
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-control");
                 onLoadingControlClicked();
                 return true;
             case R.id.custom_tabs_menu_open_in:
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-open-in");
                 onOpenInClicked();
                 return true;
         }
 
         final PendingIntent intent = menuItemsIntent.get(item.getItemId());
         if (intent != null) {
-            performPendingIntent(intent);
+            onCustomMenuItemClicked(intent);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Called when the menu that's been clicked is added by the client
+     */
+    private void onCustomMenuItemClicked(PendingIntent intent) {
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-customized-menu");
+        performPendingIntent(intent);
     }
 
     @Override
@@ -468,6 +499,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     private void onActionButtonClicked() {
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "customtab-action-button");
         PendingIntent pendingIntent = IntentUtil.getActionButtonPendingIntent(startIntent);
         performPendingIntent(pendingIntent);
     }

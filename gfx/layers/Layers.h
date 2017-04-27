@@ -1441,6 +1441,7 @@ public:
   void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
 
   bool HasTransformAnimation() const;
+  bool HasOpacityAnimation() const;
 
   StyleAnimationValue GetBaseAnimationStyle() const
   {

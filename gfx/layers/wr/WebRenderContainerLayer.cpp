@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -20,37 +21,44 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
+  gfx::Matrix4x4* maybeTransform = &transform;
+  float opacity = GetLocalOpacity();
+  float* maybeOpacity = &opacity;
+  uint64_t animationsId = 0;
+
+  if (gfxPrefs::WebRenderOMTAEnabled() &&
+      GetAnimations().Length()) {
+    MOZ_ASSERT(GetCompositorAnimationsId());
+
+    animationsId = GetCompositorAnimationsId();
+    CompositorAnimations anim;
+    anim.animations() = GetAnimations();
+    anim.id() = animationsId;
+    WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
+
+    if (!HasOpacityAnimation()) {
+      maybeOpacity = nullptr;
+    }
+    if (!HasTransformAnimation()) {
+      maybeTransform = nullptr;
+    }
+  }
+
+  StackingContextHelper sc(aBuilder, this, animationsId, maybeOpacity, maybeTransform);
+
+  LayerRect rect = Bounds();
+  DumpLayerInfo("ContainerLayer", rect);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  aBuilder.PushClip(sc.ToRelativeWrRect(rect), mask.ptrOr(nullptr));
 
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("ContainerLayer %p using bounds=%s, overflow=%s, transform=%s, mix-blend-mode=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(mixBlendMode).c_str());
-  }
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               GetLocalOpacity(),
-                               //GetLayer()->GetAnimations(),
-                               transform,
-                               mixBlendMode);
-  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
-                           wr::ToWrRect(overflow),
-                           mask.ptrOr(nullptr));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
-  aBuilder.PopScrollLayer();
-  aBuilder.PopStackingContext();
+  aBuilder.PopClip();
 }
 
 void
