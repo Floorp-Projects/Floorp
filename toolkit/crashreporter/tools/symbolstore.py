@@ -377,7 +377,6 @@ class Dumper:
                  copy_debug=False,
                  vcsinfo=False,
                  srcsrv=False,
-                 exclude=[],
                  repo_manifest=None,
                  file_mapping=None):
         # popen likes absolute paths, at least on windows
@@ -392,13 +391,9 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
-        self.exclude = exclude[:]
         if repo_manifest:
             self.parse_repo_manifest(repo_manifest)
         self.file_mapping = file_mapping or {}
-
-        # book-keeping to keep track of the cleanup work per file tuple
-        self.files_record = {}
 
     def parse_repo_manifest(self, repo_manifest):
         """
@@ -452,11 +447,7 @@ class Dumper:
 
     # subclasses override this
     def ShouldProcess(self, file):
-        return not any(fnmatch.fnmatch(os.path.basename(file), exclude) for exclude in self.exclude)
-
-    # and can override this
-    def ShouldSkipDir(self, dir):
-        return False
+        return True
 
     def RunFileCommand(self, file):
         """Utility function, returns the output of file(1)"""
@@ -479,167 +470,117 @@ class Dumper:
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         pass
 
-    def Process(self, *args):
-        """Process files recursively in args."""
-        # We collect all files to process first then sort by size to schedule
-        # larger files first because larger files tend to take longer and we
-        # don't like long pole stragglers.
-        files = set()
-        for arg in args:
-            for f in self.get_files_to_process(arg):
-                files.add(f)
+    def Process(self, file_to_process):
+        """Process the given file."""
+        if self.ShouldProcess(os.path.abspath(file_to_process)):
+            self.ProcessFile(file_to_process)
 
-        for f in sorted(files, key=os.path.getsize, reverse=True):
-            self.ProcessFiles((f,))
-
-    def get_files_to_process(self, file_or_dir):
-        """Generate the files to process from an input."""
-        if os.path.isdir(file_or_dir) and not self.ShouldSkipDir(file_or_dir):
-            for f in self.get_files_to_process_in_dir(file_or_dir):
-                yield f
-        elif os.path.isfile(file_or_dir) and self.ShouldProcess(os.path.abspath(file_or_dir)):
-            yield file_or_dir
-
-    def get_files_to_process_in_dir(self, path):
-        """Generate the files to process in a directory.
-
-        Valid files are are determined by calling ShouldProcess.
-        """
-        for root, dirs, files in os.walk(path):
-            for d in dirs[:]:
-                if self.ShouldSkipDir(d):
-                    dirs.remove(d)
-            for f in files:
-                fullpath = os.path.join(root, f)
-                if self.ShouldProcess(fullpath):
-                    yield fullpath
-
-    def ProcessFilesFinished(self, res):
-        """Callback from multiprocesing when ProcessFilesWork finishes;
-        run the cleanup work, if any"""
-        # only run the cleanup function once per tuple of files
-        self.files_record[res['files']] += 1
-        if self.files_record[res['files']] == len(self.archs):
-            del self.files_record[res['files']]
-            if res['after']:
-                res['after'](res['status'], res['after_arg'])
-
-    def ProcessFiles(self, files, after=None, after_arg=None):
+    def ProcessFile(self, file, dsymbundle=None):
         """Dump symbols from these files into a symbol file, stored
         in the proper directory structure in  |symbol_path|; processing is performed
         asynchronously, and Finish must be called to wait for it complete and cleanup.
         All files after the first are fallbacks in case the first file does not process
         successfully; if it does, no other files will be touched."""
-        print("Beginning work for files: %s" % str(files), file=sys.stderr)
+        print("Beginning work for file: %s" % file, file=sys.stderr)
 
         # tries to get the vcs root from the .mozconfig first - if it's not set
         # the tinderbox vcs path will be assigned further down
         vcs_root = os.environ.get('MOZ_SOURCE_REPO')
         for arch_num, arch in enumerate(self.archs):
-            self.files_record[files] = 0 # record that we submitted jobs for this tuple of files
-            res = self.ProcessFilesWork(files, arch_num, arch, vcs_root, after, after_arg)
-            self.ProcessFilesFinished(res)
+            self.ProcessFileWork(file, arch_num, arch, vcs_root, dsymbundle)
 
-    def dump_syms_cmdline(self, file, arch, files):
+    def dump_syms_cmdline(self, file, arch, dsymbundle=None):
         '''
         Get the commandline used to invoke dump_syms.
         '''
         # The Mac dumper overrides this.
         return [self.dump_syms, file]
 
-    def ProcessFilesWork(self, files, arch_num, arch, vcs_root, after, after_arg):
+    def ProcessFileWork(self, file, arch_num, arch, vcs_root, dsymbundle=None):
         t_start = time.time()
-        print("Processing files: %s" % (files,), file=sys.stderr)
-
-        # our result is a status, a cleanup function, an argument to that function, and the tuple of files we were called on
-        result = { 'status' : False, 'after' : after, 'after_arg' : after_arg, 'files' : files }
+        print("Processing file: %s" % file, file=sys.stderr)
 
         sourceFileStream = ''
         code_id, code_file = None, None
-        for file in files:
-            # files is a tuple of files, containing fallbacks in case the first file doesn't process successfully
-            try:
-                cmd = self.dump_syms_cmdline(file, arch, files)
-                print(' '.join(cmd), file=sys.stderr)
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                        stderr=open(os.devnull, 'wb'))
-                module_line = proc.stdout.next()
-                if module_line.startswith("MODULE"):
-                    # MODULE os cpu guid debug_file
-                    (guid, debug_file) = (module_line.split())[3:5]
-                    # strip off .pdb extensions, and append .sym
-                    sym_file = re.sub("\.pdb$", "", debug_file) + ".sym"
-                    # we do want forward slashes here
-                    rel_path = os.path.join(debug_file,
-                                            guid,
-                                            sym_file).replace("\\", "/")
-                    full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                              rel_path))
-                    try:
-                        os.makedirs(os.path.dirname(full_path))
-                    except OSError: # already exists
-                        pass
-                    f = open(full_path, "w")
-                    f.write(module_line)
-                    # now process the rest of the output
-                    for line in proc.stdout:
-                        if line.startswith("FILE"):
-                            # FILE index filename
-                            (x, index, filename) = line.rstrip().split(None, 2)
-                            filename = os.path.normpath(self.FixFilenameCase(filename))
-                            # We want original file paths for the source server.
-                            sourcepath = filename
-                            if filename in self.file_mapping:
-                                filename = self.file_mapping[filename]
-                            if self.vcsinfo:
-                                (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
-                                # sets vcs_root in case the loop through files were to end on an empty rootname
-                                if vcs_root is None:
-                                  if rootname:
-                                     vcs_root = rootname
-                            # gather up files with hg for indexing
-                            if filename.startswith("hg"):
-                                (ver, checkout, source_file, revision) = filename.split(":", 3)
-                                sourceFileStream += sourcepath + "*" + source_file + '*' + revision + "\r\n"
-                            f.write("FILE %s %s\n" % (index, filename))
-                        elif line.startswith("INFO CODE_ID "):
-                            # INFO CODE_ID code_id code_file
-                            # This gives some info we can use to
-                            # store binaries in the symbol store.
-                            bits = line.rstrip().split(None, 3)
-                            if len(bits) == 4:
-                                code_id, code_file = bits[2:]
-                            f.write(line)
-                        else:
-                            # pass through all other lines unchanged
-                            f.write(line)
-                            # we want to return true only if at least one line is not a MODULE or FILE line
-                            result['status'] = True
-                    f.close()
-                    proc.wait()
-                    # we output relative paths so callers can get a list of what
-                    # was generated
-                    print(rel_path)
-                    if self.srcsrv and vcs_root:
-                        # add source server indexing to the pdb file
-                        self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
-                    # only copy debug the first time if we have multiple architectures
-                    if self.copy_debug and arch_num == 0:
-                        self.CopyDebug(file, debug_file, guid,
-                                       code_file, code_id)
-            except StopIteration:
-                pass
-            except Exception as e:
-                print("Unexpected error: %s" % str(e), file=sys.stderr)
-                raise
-            if result['status']:
-                # we only need 1 file to work
-                break
+        try:
+            cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
+            print(' '.join(cmd), file=sys.stderr)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=open(os.devnull, 'wb'))
+            module_line = proc.stdout.next()
+            if module_line.startswith("MODULE"):
+                # MODULE os cpu guid debug_file
+                (guid, debug_file) = (module_line.split())[3:5]
+                # strip off .pdb extensions, and append .sym
+                sym_file = re.sub("\.pdb$", "", debug_file) + ".sym"
+                # we do want forward slashes here
+                rel_path = os.path.join(debug_file,
+                                        guid,
+                                        sym_file).replace("\\", "/")
+                full_path = os.path.normpath(os.path.join(self.symbol_path,
+                                                          rel_path))
+                try:
+                    os.makedirs(os.path.dirname(full_path))
+                except OSError: # already exists
+                    pass
+                f = open(full_path, "w")
+                f.write(module_line)
+                # now process the rest of the output
+                for line in proc.stdout:
+                    if line.startswith("FILE"):
+                        # FILE index filename
+                        (x, index, filename) = line.rstrip().split(None, 2)
+                        filename = os.path.normpath(self.FixFilenameCase(filename))
+                        # We want original file paths for the source server.
+                        sourcepath = filename
+                        if filename in self.file_mapping:
+                            filename = self.file_mapping[filename]
+                        if self.vcsinfo:
+                            (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
+                            # sets vcs_root in case the loop through files were to end on an empty rootname
+                            if vcs_root is None:
+                              if rootname:
+                                 vcs_root = rootname
+                        # gather up files with hg for indexing
+                        if filename.startswith("hg"):
+                            (ver, checkout, source_file, revision) = filename.split(":", 3)
+                            sourceFileStream += sourcepath + "*" + source_file + '*' + revision + "\r\n"
+                        f.write("FILE %s %s\n" % (index, filename))
+                    elif line.startswith("INFO CODE_ID "):
+                        # INFO CODE_ID code_id code_file
+                        # This gives some info we can use to
+                        # store binaries in the symbol store.
+                        bits = line.rstrip().split(None, 3)
+                        if len(bits) == 4:
+                            code_id, code_file = bits[2:]
+                        f.write(line)
+                    else:
+                        # pass through all other lines unchanged
+                        f.write(line)
+                f.close()
+                proc.wait()
+                # we output relative paths so callers can get a list of what
+                # was generated
+                print(rel_path)
+                if self.srcsrv and vcs_root:
+                    # add source server indexing to the pdb file
+                    self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
+                # only copy debug the first time if we have multiple architectures
+                if self.copy_debug and arch_num == 0:
+                    self.CopyDebug(file, debug_file, guid,
+                                   code_file, code_id)
+        except StopIteration:
+            pass
+        except Exception as e:
+            print("Unexpected error: %s" % str(e), file=sys.stderr)
+            raise
+
+        if dsymbundle:
+            shutil.rmtree(dsymbundle)
 
         elapsed = time.time() - t_start
-        print('Finished processing %s in %.2fs' % (files, elapsed),
+        print('Finished processing %s in %.2fs' % (file, elapsed),
               file=sys.stderr)
-        return result
 
 # Platform-specific subclasses.  For the most part, these just have
 # logic to determine what files to extract symbols from.
@@ -650,8 +591,6 @@ class Dumper_Win32(Dumper):
     def ShouldProcess(self, file):
         """This function will allow processing of exe or dll files that have pdb
         files with the same base name next to them."""
-        if not Dumper.ShouldProcess(self, file):
-            return False
         if file.endswith(".exe") or file.endswith(".dll"):
             path, ext = os.path.splitext(file)
             if os.path.isfile(path + ".pdb"):
@@ -775,8 +714,6 @@ class Dumper_Linux(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
-        if not Dumper.ShouldProcess(self, file):
-            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
@@ -815,16 +752,9 @@ class Dumper_Solaris(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
-        if not Dumper.ShouldProcess(self, file):
-            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
-
-def AfterMac(status, dsymbundle):
-    """Cleanup function to run on Macs after we process the file(s)."""
-    # CopyDebug will already have been run from Dumper.ProcessFiles
-    shutil.rmtree(dsymbundle)
 
 class Dumper_Mac(Dumper):
     def ShouldProcess(self, file):
@@ -832,46 +762,30 @@ class Dumper_Mac(Dumper):
         executable, or end with the .dylib extension, and additionally
         file(1) reports as being Mach-O files.  It expects to find the file
         command in PATH."""
-        if not Dumper.ShouldProcess(self, file):
-            return False
         if file.endswith(".dylib") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("Mach-O")
         return False
 
-    def ShouldSkipDir(self, dir):
-        """We create .dSYM bundles on the fly, but if someone runs
-        buildsymbols twice, we should skip any bundles we created
-        previously, otherwise we'll recurse into them and try to 
-        dump the inner bits again."""
-        if dir.endswith(".dSYM"):
-            return True
-        return False
-
-    def ProcessFiles(self, files, after=None, after_arg=None):
-        # also note, files must be len 1 here, since we're the only ones
-        # that ever add more than one file to the list
-        print("Starting Mac pre-processing on file: %s" % (files[0]),
+    def ProcessFile(self, file):
+        print("Starting Mac pre-processing on file: %s" % file,
               file=sys.stderr)
-        res = self.ProcessFilesWorkMac(files[0])
-        self.ProcessFilesMacFinished(res)
-
-    def ProcessFilesMacFinished(self, result):
-        if result['status']:
+        dsymbundle = self.GenerateDSYM(file)
+        if dsymbundle:
             # kick off new jobs per-arch with our new list of files
-            Dumper.ProcessFiles(self, result['files'], after=AfterMac, after_arg=result['files'][0])
+            Dumper.ProcessFile(self, file, dsymbundle=dsymbundle)
 
-    def dump_syms_cmdline(self, file, arch, files):
+    def dump_syms_cmdline(self, file, arch, dsymbundle=None):
         '''
         Get the commandline used to invoke dump_syms.
         '''
         # dump_syms wants the path to the original binary and the .dSYM
         # in order to dump all the symbols.
-        if len(files) == 2 and file == files[0] and file.endswith('.dSYM'):
+        if dsymbundle:
             # This is the .dSYM bundle.
-            return [self.dump_syms] + arch.split() + ['-g', file, files[1]]
-        return Dumper.dump_syms_cmdline(self, file, arch, files)
+            return [self.dump_syms] + arch.split() + ['-g', dsymbundle, file]
+        return Dumper.dump_syms_cmdline(self, file, arch)
 
-    def ProcessFilesWorkMac(self, file):
+    def GenerateDSYM(self, file):
         """dump_syms on Mac needs to be run on a dSYM bundle produced
         by dsymutil(1), so run dsymutil here and pass the bundle name
         down to the superclass method instead."""
@@ -879,9 +793,6 @@ class Dumper_Mac(Dumper):
         print("Running Mac pre-processing on file: %s" % (file,),
               file=sys.stderr)
 
-        # our return is a status and a tuple of files to dump symbols for
-        # the extra files are fallbacks; as soon as one is dumped successfully, we stop
-        result = { 'status' : False, 'files' : None, 'file_key' : file }
         dsymbundle = file + ".dSYM"
         if os.path.exists(dsymbundle):
             shutil.rmtree(dsymbundle)
@@ -899,30 +810,27 @@ class Dumper_Mac(Dumper):
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
             print("No symbols found in file: %s" % (file,), file=sys.stderr)
-            result['status'] = False
-            result['files'] = (file, )
-            return result
+            return False
 
-        result['status'] = True
-        result['files'] = (dsymbundle, file)
         elapsed = time.time() - t_start
         print('Finished processing %s in %.2fs' % (file, elapsed),
               file=sys.stderr)
-        return result
+        return dsymbundle
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
-        """ProcessFiles has already produced a dSYM bundle, so we should just
+        """ProcessFile has already produced a dSYM bundle, so we should just
         copy that to the destination directory. However, we'll package it
         into a .tar.bz2 because the debug symbols are pretty huge, and
         also because it's a bundle, so it's a directory. |file| here is the
-        dSYM bundle, and |debug_file| is the original filename."""
+        the original filename."""
+        dsymbundle = file + '.dSYM'
         rel_path = os.path.join(debug_file,
                                 guid,
-                                os.path.basename(file) + ".tar.bz2")
+                                os.path.basename(dsymbundle) + ".tar.bz2")
         full_path = os.path.abspath(os.path.join(self.symbol_path,
                                                   rel_path))
-        success = subprocess.call(["tar", "cjf", full_path, os.path.basename(file)],
-                                  cwd=os.path.dirname(file),
+        success = subprocess.call(["tar", "cjf", full_path, os.path.basename(dsymbundle)],
+                                  cwd=os.path.dirname(dsymbundle),
                                   stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         if success == 0 and os.path.exists(full_path):
             print(rel_path)
@@ -945,9 +853,6 @@ def main():
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
                       help="Add source index information to debug files, making them suitable for use in a source server.")
-    parser.add_option("-x", "--exclude",
-                      action="append", dest="exclude", default=[], metavar="PATTERN",
-                      help="Skip processing files matching PATTERN.")
     parser.add_option("--repo-manifest",
                       action="store", dest="repo_manifest",
                       help="""Get source information from this XML manifest
@@ -986,11 +891,10 @@ to canonical locations in the source repository. Specify
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
                                        srcsrv=options.srcsrv,
-                                       exclude=options.exclude,
                                        repo_manifest=options.repo_manifest,
                                        file_mapping=file_mapping)
 
-    dumper.Process(*args[2:])
+    dumper.Process(args[2])
 
 # run main if run directly
 if __name__ == "__main__":
