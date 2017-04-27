@@ -22,13 +22,19 @@
 class nsIContent;
 class nsIAtom;
 
+namespace mozilla {
+class Encoding;
+}
+
 class nsXHTMLContentSerializer : public nsXMLContentSerializer {
  public:
   nsXHTMLContentSerializer();
   virtual ~nsXHTMLContentSerializer();
 
-  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
-                  const char* aCharSet, bool aIsCopying,
+  NS_IMETHOD Init(uint32_t flags,
+                  uint32_t aWrapColumn,
+                  const mozilla::Encoding* aEncoding,
+                  bool aIsCopying,
                   bool aRewriteEncodingDeclaration,
                   bool* aNeedsPreformatScanning) override;
 

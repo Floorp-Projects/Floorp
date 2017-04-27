@@ -11,7 +11,6 @@
 #include "nsUConvPropertySearch.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsEncoderDecoderUtils.h"
 #if HAVE_GNU_LIBC_VERSION_H
 #include <gnu/libc-version.h>
 #endif
