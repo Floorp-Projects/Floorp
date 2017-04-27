@@ -15,6 +15,7 @@
 #include "nsIMutationObserver.h"
 #include "nsRect.h"
 #include "nsString.h"
+#include "nsWeakPtr.h"
 
 #include "mozilla/Attributes.h"
 
@@ -54,12 +55,9 @@ private:
 
   friend class nsSHEntry;
 
-  friend class HistoryTracker;
-
   static already_AddRefed<nsSHEntryShared> Duplicate(nsSHEntryShared* aEntry);
 
   void RemoveFromExpirationTracker();
-  void Expire();
   nsresult SyncPresentationState();
   void DropPresentationState();
 
@@ -89,11 +87,14 @@ private:
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsExpirationState mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
+  nsWeakPtr mSHistory;
 
   bool mIsFrameNavigation;
   bool mSaveLayoutState;
   bool mSticky;
   bool mDynamicallyCreated;
+
+  // This flag is about necko cache, not bfcache.
   bool mExpired;
 };
 

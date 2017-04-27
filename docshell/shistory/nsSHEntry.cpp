@@ -962,3 +962,10 @@ nsSHEntry::SetLastTouched(uint32_t aLastTouched)
   mShared->mLastTouched = aLastTouched;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHEntry::SetSHistory(nsISHistory* aSHistory)
+{
+  mShared->mSHistory = do_GetWeakReference(aSHistory);
+  return NS_OK;
+}

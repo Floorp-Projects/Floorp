@@ -16,9 +16,10 @@
 #include "nsIWebNavigation.h"
 #include "nsSHEntryShared.h"
 #include "nsTObserverArray.h"
-#include "nsWeakPtr.h"
+#include "nsWeakReference.h"
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIDocShell;
 class nsSHEnumerator;
@@ -29,9 +30,37 @@ class nsISHTransaction;
 class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                          public nsISHistory,
                          public nsISHistoryInternal,
-                         public nsIWebNavigation
+                         public nsIWebNavigation,
+                         public nsSupportsWeakReference
 {
 public:
+
+  // The timer based history tracker is used to evict bfcache on expiration.
+  class HistoryTracker final : public nsExpirationTracker<nsSHEntryShared, 3>
+  {
+  public:
+    explicit HistoryTracker(nsSHistory* aSHistory,
+                            uint32_t aTimeout,
+                            nsIEventTarget* aEventTarget)
+      : nsExpirationTracker(1000 * aTimeout / 2, "HistoryTracker", aEventTarget)
+    {
+      MOZ_ASSERT(aSHistory);
+      mSHistory = aSHistory;
+    }
+
+  protected:
+    virtual void NotifyExpired(nsSHEntryShared* aObj)
+    {
+      RemoveObject(aObj);
+      mSHistory->EvictExpiredContentViewerForEntry(aObj);
+    }
+
+  private:
+    // HistoryTracker is owned by nsSHistory; it always outlives HistoryTracker
+    // so it's safe to use raw pointer here.
+    nsSHistory* mSHistory;
+  };
+
   nsSHistory();
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
@@ -86,6 +115,9 @@ private:
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(int32_t aIndex, bool aKeepNext);
+
+  // Track all bfcache entries and evict on expiration.
+  mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
   nsCOMPtr<nsISHTransaction> mListRoot;
   int32_t mIndex;
