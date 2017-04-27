@@ -54,7 +54,7 @@ crashtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
@@ -219,7 +219,7 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -370,7 +370,7 @@ marionette:
             default: both
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
         by-test-platform:
@@ -426,7 +426,7 @@ mochitest:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             default: ['all']
     mozharness:
         by-test-platform:
@@ -469,7 +469,7 @@ mochitest-a11y:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -519,7 +519,7 @@ mochitest-browser-chrome:
             default: 3600
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             default: ['all']
     mozharness:
         mochitest-flavor: browser
@@ -556,6 +556,7 @@ mochitest-browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
+            windows.*: ['mozilla-central', 'try']
             linux64/opt: ['mozilla-central', 'try']
             default: []
     e10s: true
@@ -597,7 +598,7 @@ mochitest-chrome:
     e10s: false
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             default: ['all']
     mozharness:
         by-test-platform:
@@ -644,7 +645,7 @@ mochitest-clipboard:
         default: both
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             default: ['all']
     mozharness:
         by-test-platform:
@@ -691,8 +692,8 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
-            windows.*: ['mozilla-central', 'try']
+            windows10.*: []
+            windows7.*: ['mozilla-central', 'try']
             default: ['all']
     e10s:
         by-test-platform:
@@ -738,7 +739,7 @@ mochitest-gpu:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     e10s:
@@ -830,7 +831,7 @@ mochitest-media:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -898,7 +899,7 @@ mochitest-webgl:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -1002,7 +1003,7 @@ reftest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     instance-size:
@@ -1060,7 +1061,7 @@ reftest-no-accel:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -1403,7 +1404,8 @@ web-platform-tests:
     checkout: true
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
+            windows10.*: []
+            windows7.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
         script: web_platform_tests.py
@@ -1435,7 +1437,8 @@ web-platform-tests-reftests:
     checkout: true
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
+            windows10.*: []
+            windows7.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
         script: web_platform_tests.py
@@ -1480,7 +1483,7 @@ xpcshell:
     treeherder-symbol: tc-X(X)
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows.*: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     docker-image: {"in-tree": "desktop1604-test"}

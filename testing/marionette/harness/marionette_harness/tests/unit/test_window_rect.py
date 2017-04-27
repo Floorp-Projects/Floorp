@@ -7,7 +7,7 @@ from marionette_driver.errors import InvalidArgumentException
 from marionette_harness import MarionetteTestCase
 
 
-class TestWindowPosition(MarionetteTestCase):
+class TestPosition(MarionetteTestCase):
 
     def setUp(self):
         MarionetteTestCase.setUp(self)
@@ -20,6 +20,8 @@ class TestWindowPosition(MarionetteTestCase):
 
     def test_get_types(self):
         position = self.marionette.get_window_position()
+        self.assertIn("x", position)
+        self.assertIn("y", position)
         self.assertIsInstance(position["x"], int)
         self.assertIsInstance(position["y"], int)
 
@@ -42,17 +44,6 @@ class TestWindowPosition(MarionetteTestCase):
 
         self.assertNotEqual(old_position["x"], new_position["x"])
         self.assertNotEqual(old_position["y"], new_position["y"])
-
-    def test_set_size_with_rect(self):
-        actual = self.marionette.window_size
-        width = actual["width"] - 50
-        height = actual["height"] - 50
-
-        size = self.marionette.set_window_rect(width=width, height=height)
-        self.assertEqual(size["width"], width,
-                         "New width is {0} but should be {1}".format(size["width"], width))
-        self.assertEqual(size["height"], height,
-                         "New height is {0} but should be {1}".format(size["height"], height))
 
     def test_move_to_new_position(self):
         old_position = self.marionette.get_window_position()
@@ -111,3 +102,85 @@ class TestWindowPosition(MarionetteTestCase):
         elif os == "windows_nt":
             self.assertEqual(-8, position["x"])
             self.assertEqual(-8, position["y"])
+
+
+class TestSize(MarionetteTestCase):
+
+    def setUp(self):
+        super(MarionetteTestCase, self).setUp()
+        self.max = self.marionette.execute_script("""
+            return {
+              width: window.screen.availWidth,
+              height: window.screen.availHeight,
+            }""", sandbox=None)
+
+        # WebDriver spec says a resize cannot result in window being
+        # maximised, an error is returned if that is the case; therefore if
+        # the window is maximised at the start of this test, returning to
+        # the original size via set_window_size size will result in error;
+        # so reset to original size minus 1 pixel width
+        start_size = self.marionette.window_size
+        if start_size["width"] == self.max["width"] and start_size["height"] == self.max["height"]:
+            self.start_size["width"] -= 1
+            self.start_size["height"] -= 1
+        self.marionette.set_window_size(start_size["width"], start_size["height"])
+
+        self.original_size = self.marionette.window_size
+
+    def tearDown(self):
+        self.marionette.set_window_size(
+            self.original_size["width"], self.original_size["height"])
+        super(MarionetteTestCase, self).tearDown()
+
+    def test_get_types(self):
+        size = self.marionette.window_size
+        self.assertIn("width", size)
+        self.assertIn("height", size)
+        self.assertIsInstance(size["width"], int)
+        self.assertIsInstance(size["height"], int)
+
+    def test_set_types(self):
+        for width, height in (["a", "b"], [1.2, 3.4], [True, False], [[], []], [{}, {}]):
+            print("testing invalid type size ({},{})".format(width, height))
+            with self.assertRaises(InvalidArgumentException):
+                self.marionette.set_window_size(width, height)
+
+    def test_setting_window_rect_with_nulls_errors(self):
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_rect(height=None, width=None,
+                                            x=None, y=None)
+
+    def test_set_size_with_rect(self):
+        actual = self.marionette.window_size
+        width = actual["width"] - 50
+        height = actual["height"] - 50
+
+        size = self.marionette.set_window_rect(width=width, height=height)
+        self.assertEqual(size["width"], width,
+                         "New width is {0} but should be {1}".format(size["width"], width))
+        self.assertEqual(size["height"], height,
+                         "New height is {0} but should be {1}".format(size["height"], height))
+
+    def test_resize_to_new_size(self):
+        old = self.marionette.window_size
+        new = {"width": old["width"] + 10, "height": old["height"] + 10}
+        self.marionette.set_window_size(new["width"], new["height"])
+        actual = self.marionette.window_size
+        self.assertEqual(actual["width"], new["width"])
+        self.assertEqual(actual["height"], new["height"])
+
+    def test_resize_to_existing_size(self):
+        old = self.marionette.window_size
+        self.marionette.set_window_size(old["width"], old["height"])
+        new = self.marionette.window_size
+        self.assertEqual(old["width"], new["width"])
+        self.assertEqual(old["height"], new["height"])
+
+    def test_resize_larger_than_screen(self):
+        self.marionette.set_window_size(
+            self.max["width"] * 2, self.max["height"] * 2)
+        new = self.marionette.window_size
+
+        # in X the window size may be greater than the bounds of the screen
+        self.assertGreaterEqual(new["width"], self.max["width"])
+        self.assertGreaterEqual(new["height"], self.max["height"])

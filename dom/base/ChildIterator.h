@@ -255,12 +255,14 @@ private:
 
 /**
  * StyleChildrenIterator traverses the children of the element from the
- * perspective of the style system, particularly the children we need to traverse
- * during restyle. This is identical to AllChildrenIterator with
- * (eAllChildren | eSkipDocumentLevelNativeAnonymousContent), _except_ that we
- * detect and skip any native anonymous children that are used to implement
- * pseudo-elements (since the style system needs to cascade those using
- * different algorithms).
+ * perspective of the style system, particularly the children we need to
+ * traverse during restyle.
+ *
+ * At present, this is identical to AllChildrenIterator with
+ * (eAllChildren | eSkipDocumentLevelNativeAnonymousContent). We used to have
+ * detect and skip any native anonymous children that are used to implement some
+ * special magic in here that went away, but we keep the separate class so
+ * we can reintroduce special magic back if needed.
  *
  * Note: it assumes that no mutation of the DOM or frame tree takes place during
  * iteration, and will break horribly if that is not true.

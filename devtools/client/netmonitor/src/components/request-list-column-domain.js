@@ -9,6 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { getFormattedIPAndPort } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
@@ -34,10 +35,12 @@ const RequestListColumnDomain = createClass({
 
   render() {
     let { item, onSecurityIconClick } = this.props;
-    let { remoteAddress, securityState, urlDetails: { host, isLocal } } = item;
+    let { remoteAddress, remotePort, securityState,
+      urlDetails: { host, isLocal } } = item;
     let iconClassList = ["requests-security-state-icon"];
     let iconTitle;
-    let title = host + (remoteAddress ? ` (${remoteAddress})` : "");
+    let title = host + (remoteAddress ?
+      ` (${getFormattedIPAndPort(remoteAddress, remotePort)})` : "");
 
     if (isLocal) {
       iconClassList.push("security-state-local");

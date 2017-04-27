@@ -12,10 +12,15 @@
 #include "nsString.h"
 #include "nsSMILParserUtils.h"
 #include "nsSMILValue.h"
+#include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
-#include "mozilla/StyleAnimationValue.h"
+#include "mozilla/Keyframe.h" // For PropertyValuePair
+#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoComputedValuesWithParent.h"
+#include "mozilla/StyleAnimationValue.h" // For AnimationValue
+#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
 #include "nsStyleUtil.h"
@@ -27,26 +32,31 @@ using mozilla::StyleAnimationValue;
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
 struct ValueWrapper {
-  ValueWrapper(nsCSSPropertyID aPropID, const StyleAnimationValue& aValue) :
-    mPropID(aPropID), mCSSValue(aValue) {}
+  ValueWrapper(nsCSSPropertyID aPropID, const AnimationValue& aValue)
+    : mPropID(aPropID), mCSSValue(aValue) {}
+  ValueWrapper(nsCSSPropertyID aPropID, const StyleAnimationValue& aValue)
+    : mPropID(aPropID), mCSSValue(aValue) {}
+  ValueWrapper(nsCSSPropertyID aPropID,
+               const RefPtr<RawServoAnimationValue>& aValue)
+    : mPropID(aPropID), mCSSValue(aValue) {}
 
   nsCSSPropertyID mPropID;
-  StyleAnimationValue mCSSValue;
+  AnimationValue mCSSValue;
 };
 
 // Helper Methods
 // --------------
-static const StyleAnimationValue*
+static const AnimationValue*
 GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
 {
-  static const StyleAnimationValue
-    sZeroCoord(0, StyleAnimationValue::CoordConstructor);
-  static const StyleAnimationValue
-    sZeroPercent(0.0f, StyleAnimationValue::PercentConstructor);
-  static const StyleAnimationValue
-    sZeroFloat(0.0f,  StyleAnimationValue::FloatConstructor);
-  static const StyleAnimationValue
-    sZeroColor(NS_RGB(0,0,0), StyleAnimationValue::ColorConstructor);
+  static const AnimationValue sZeroCoord(
+    StyleAnimationValue(0, StyleAnimationValue::CoordConstructor));
+  static const AnimationValue sZeroPercent(
+    StyleAnimationValue(0.0f, StyleAnimationValue::PercentConstructor));
+  static const AnimationValue sZeroFloat(
+    StyleAnimationValue(0.0f,  StyleAnimationValue::FloatConstructor));
+  static const AnimationValue sZeroColor(
+    StyleAnimationValue(NS_RGB(0,0,0), StyleAnimationValue::ColorConstructor));
 
   MOZ_ASSERT(aUnit != StyleAnimationValue::eUnit_Null,
              "Need non-null unit for a zero value");
@@ -75,19 +85,33 @@ GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
 //
 // Returns true on success, or false.
 static bool
-FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
-                             const StyleAnimationValue*& aValue2)
+FinalizeStyleAnimationValues(const AnimationValue*& aValue1,
+                             const AnimationValue*& aValue2)
 {
   MOZ_ASSERT(aValue1 || aValue2,
              "expecting at least one non-null value");
+  MOZ_ASSERT(!aValue1 || !aValue2 || !aValue1->mServo == !aValue2->mServo,
+             "If both values are specified, they should be for the same"
+             " style system");
+
+  bool isServo = aValue1 ? aValue1->mServo : aValue2->mServo;
+
+  if (isServo) {
+    // Bug 1355349: Implement additive animation for Stylo
+    if (!aValue1 || !aValue2) {
+      NS_WARNING("stylo: Missing values are not yet supported (bug 1355349)");
+      return false;
+    }
+    return true;
+  }
 
   // Are we missing either val? (If so, it's an implied 0 in other val's units)
   if (!aValue1) {
-    aValue1 = GetZeroValueForUnit(aValue2->GetUnit());
+    aValue1 = GetZeroValueForUnit(aValue2->mGecko.GetUnit());
     return !!aValue1; // Fail if we have no zero value for this unit.
   }
   if (!aValue2) {
-    aValue2 = GetZeroValueForUnit(aValue1->GetUnit());
+    aValue2 = GetZeroValueForUnit(aValue1->mGecko.GetUnit());
     return !!aValue2; // Fail if we have no zero value for this unit.
   }
 
@@ -96,13 +120,13 @@ FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
   // eUnit_Float) mixed with unitless 0 length (parsed as eUnit_Coord).  These
   // won't interoperate in StyleAnimationValue, since their Units don't match.
   // In this case, we replace the eUnit_Coord 0 value with eUnit_Float 0 value.
-  const StyleAnimationValue& zeroCoord =
+  const AnimationValue& zeroCoord =
     *GetZeroValueForUnit(StyleAnimationValue::eUnit_Coord);
   if (*aValue1 == zeroCoord &&
-      aValue2->GetUnit() == StyleAnimationValue::eUnit_Float) {
+      aValue2->mGecko.GetUnit() == StyleAnimationValue::eUnit_Float) {
     aValue1 = GetZeroValueForUnit(StyleAnimationValue::eUnit_Float);
   } else if (*aValue2 == zeroCoord &&
-             aValue1->GetUnit() == StyleAnimationValue::eUnit_Float) {
+             aValue1->mGecko.GetUnit() == StyleAnimationValue::eUnit_Float) {
     aValue2 = GetZeroValueForUnit(StyleAnimationValue::eUnit_Float);
   }
 
@@ -234,10 +258,12 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     return NS_ERROR_FAILURE;
   }
 
-  const StyleAnimationValue* valueToAdd = valueToAddWrapper ?
-    &valueToAddWrapper->mCSSValue : nullptr;
-  const StyleAnimationValue* destValue = destWrapper ?
-    &destWrapper->mCSSValue : nullptr;
+  const AnimationValue* valueToAdd = valueToAddWrapper
+                                     ? &valueToAddWrapper->mCSSValue
+                                     : nullptr;
+  const AnimationValue* destValue = destWrapper
+                                    ? &destWrapper->mCSSValue
+                                    : nullptr;
   if (!FinalizeStyleAnimationValues(valueToAdd, destValue)) {
     return NS_ERROR_FAILURE;
   }
@@ -249,13 +275,20 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
 
   // Handle barely-initialized "zero" destination.
   if (!destWrapper) {
-    aDest.mU.mPtr = destWrapper =
-      new ValueWrapper(property, *destValue);
+    aDest.mU.mPtr = destWrapper = new ValueWrapper(property, *destValue);
+  }
+
+  // Bug 1355349: Implement additive animation for Stylo
+  if (destWrapper->mCSSValue.mServo) {
+    NS_WARNING("stylo: Additive animation not supported yet (bug 1355349)");
+    return NS_ERROR_FAILURE;
   }
 
   return StyleAnimationValue::Add(property,
-                                  destWrapper->mCSSValue, *valueToAdd, aCount) ?
-    NS_OK : NS_ERROR_FAILURE;
+                                  destWrapper->mCSSValue.mGecko,
+                                  valueToAdd->mGecko, aCount)
+         ? NS_OK
+         : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -271,18 +304,27 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
   const ValueWrapper* toWrapper = ExtractValueWrapper(aTo);
   MOZ_ASSERT(toWrapper, "expecting non-null endpoint");
 
-  const StyleAnimationValue* fromCSSValue = fromWrapper ?
-    &fromWrapper->mCSSValue : nullptr;
-  const StyleAnimationValue* toCSSValue = &toWrapper->mCSSValue;
+  const AnimationValue* fromCSSValue = fromWrapper
+                                       ? &fromWrapper->mCSSValue
+                                       : nullptr;
+  const AnimationValue* toCSSValue = &toWrapper->mCSSValue;
   if (!FinalizeStyleAnimationValues(fromCSSValue, toCSSValue)) {
     return NS_ERROR_FAILURE;
   }
 
+  if (toCSSValue->mServo) {
+    aDistance = Servo_AnimationValues_ComputeDistance(fromCSSValue->mServo,
+                                                      toCSSValue->mServo);
+    return NS_OK;
+  }
+
   return StyleAnimationValue::ComputeDistance(toWrapper->mPropID,
-                                              *fromCSSValue, *toCSSValue,
+                                              fromCSSValue->mGecko,
+                                              toCSSValue->mGecko,
                                               nullptr,
-                                              aDistance) ?
-    NS_OK : NS_ERROR_FAILURE;
+                                              aDistance)
+         ? NS_OK
+         : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -304,16 +346,34 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   const ValueWrapper* endWrapper = ExtractValueWrapper(aEndVal);
   MOZ_ASSERT(endWrapper, "expecting non-null endpoint");
 
-  const StyleAnimationValue* startCSSValue = startWrapper ?
-    &startWrapper->mCSSValue : nullptr;
-  const StyleAnimationValue* endCSSValue = &endWrapper->mCSSValue;
+  const AnimationValue* startCSSValue = startWrapper
+                                        ? &startWrapper->mCSSValue
+                                        : nullptr;
+  const AnimationValue* endCSSValue = &endWrapper->mCSSValue;
   if (!FinalizeStyleAnimationValues(startCSSValue, endCSSValue)) {
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(!startCSSValue ||
+             !startCSSValue->mServo == !endCSSValue->mServo,
+             "Start and end values should use the same style system");
+
+  if (endCSSValue->mServo) {
+    RefPtr<RawServoAnimationValue> resultValue =
+      Servo_AnimationValues_Interpolate(startCSSValue->mServo,
+                                        endCSSValue->mServo,
+                                        aUnitDistance).Consume();
+    if (!resultValue) {
+      return NS_ERROR_FAILURE;
+    }
+    aResult.mU.mPtr = new ValueWrapper(endWrapper->mPropID, resultValue);
+    return NS_OK;
+  }
+
   StyleAnimationValue resultValue;
   if (StyleAnimationValue::Interpolate(endWrapper->mPropID,
-                                       *startCSSValue, *endCSSValue,
+                                       startCSSValue->mGecko,
+                                       endCSSValue->mGecko,
                                        aUnitDistance, resultValue)) {
     aResult.mU.mPtr = new ValueWrapper(endWrapper->mPropID, resultValue);
     return NS_OK;
@@ -336,20 +396,15 @@ GetPresContextForElement(Element* aElem)
   return shell ? shell->GetPresContext() : nullptr;
 }
 
-// Helper function to parse a string into a StyleAnimationValue
-static bool
-ValueFromStringHelper(nsCSSPropertyID aPropID,
-                      Element* aTargetElement,
-                      nsPresContext* aPresContext,
-                      const nsAString& aString,
-                      StyleAnimationValue& aStyleAnimValue,
-                      bool* aIsContextSensitive)
+static const nsDependentSubstring
+GetNonNegativePropValue(const nsAString& aString, nsCSSPropertyID aPropID,
+                        bool& aIsNegative)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
   // barf, and then manually make the parsed value negative.
   // (This is a partial solution to let us accept some otherwise out-of-bounds
   // CSS values. Bug 501188 will provide a more complete fix.)
-  bool isNegative = false;
+  aIsNegative = false;
   uint32_t subStringBegin = 0;
 
   // NOTE: We need to opt-out 'stroke-dasharray' from the negative-number
@@ -358,18 +413,29 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   if (aPropID != eCSSProperty_stroke_dasharray) {
     int32_t absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
     if (absValuePos > 0) {
-      isNegative = true;
+      aIsNegative = true;
       subStringBegin = (uint32_t)absValuePos; // Start parsing after '-' sign
     }
   }
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr,
-                                        aPresContext->PresShell());
-  if (!styleContext) {
-    return false;
-  }
-  nsDependentSubstring subString(aString, subStringBegin);
-  if (!StyleAnimationValue::ComputeValue(aPropID, aTargetElement, styleContext,
+
+  return Substring(aString, subStringBegin);
+}
+
+// Helper function to parse a string into a StyleAnimationValue
+static bool
+ValueFromStringHelper(nsCSSPropertyID aPropID,
+                      Element* aTargetElement,
+                      nsPresContext* aPresContext,
+                      nsStyleContext* aStyleContext,
+                      const nsAString& aString,
+                      StyleAnimationValue& aStyleAnimValue,
+                      bool* aIsContextSensitive)
+{
+  bool isNegative = false;
+  const nsDependentSubstring subString =
+    GetNonNegativePropValue(aString, aPropID, isNegative);
+
+  if (!StyleAnimationValue::ComputeValue(aPropID, aTargetElement, aStyleContext,
                                          subString, true, aStyleAnimValue,
                                          aIsContextSensitive)) {
     return false;
@@ -386,6 +452,95 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                                   aPresContext->EffectiveTextZoom());
   }
   return true;
+}
+
+static already_AddRefed<RawServoAnimationValue>
+ValueFromStringHelper(nsCSSPropertyID aPropID,
+                      Element* aTargetElement,
+                      nsPresContext* aPresContext,
+                      nsStyleContext* aStyleContext,
+                      const nsAString& aString)
+{
+  // FIXME (bug 1358966): Support shorthand properties
+  if (nsCSSProps::IsShorthand(aPropID)) {
+    return nullptr;
+  }
+
+  // Get a suitable style context for Servo
+  const ServoComputedValues* currentStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+  // Bug 1349004: Remove GetParentAllowServo
+  const ServoComputedValues* parentStyle =
+    aStyleContext->GetParentAllowServo()
+    ? aStyleContext->GetParentAllowServo()->StyleSource()
+      .AsServoComputedValues()
+    : nullptr;
+  const ServoComputedValuesWithParent servoStyles =
+    { currentStyle, parentStyle };
+
+  // FIXME (bug 1357295): Handle negative values properly
+#ifdef DEBUG
+  {
+    bool isNegative = false;
+    Unused << GetNonNegativePropValue(aString, aPropID, isNegative);
+    if (isNegative) {
+      NS_WARNING("stylo: Special negative value handling not yet supported"
+                 " (bug 1357295)");
+    }
+  }
+#endif // DEBUG
+
+  // Parse property
+  nsIDocument* doc = aTargetElement->GetUncomposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  // FIXME this is using the wrong base uri (bug 1343919)
+  RefPtr<URLExtraData> data = new URLExtraData(doc->GetDocumentURI(),
+                                               doc->GetDocumentURI(),
+                                               doc->NodePrincipal());
+  NS_ConvertUTF16toUTF8 value(aString);
+  RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
+    Servo_ParseProperty(aPropID, &value, data).Consume();
+  if (!servoDeclarationBlock) {
+    return nullptr;
+  }
+
+  // Compute value
+  PropertyValuePair propValuePair;
+  propValuePair.mProperty = aPropID;
+  propValuePair.mServoDeclarationBlock = servoDeclarationBlock;
+  AutoTArray<Keyframe, 1> keyframes;
+  keyframes.AppendElement()->mPropertyValues.AppendElement(Move(propValuePair));
+  nsTArray<ComputedKeyframeValues> computedValues =
+    aPresContext->StyleSet()->AsServo()
+      ->GetComputedKeyframeValuesFor(keyframes, aTargetElement, servoStyles);
+
+  // Pull out the appropriate value
+  if (computedValues.IsEmpty() || computedValues[0].IsEmpty()) {
+    return nullptr;
+  }
+  // So long as we don't support shorthands (bug 1358966) the following
+  // assertion should hold.
+  MOZ_ASSERT(computedValues.Length() == 1 &&
+             computedValues[0].Length() == 1,
+             "Should only have a single property with a single value");
+  AnimationValue computedValue = computedValues[0][0].mValue;
+  if (!computedValue.mServo) {
+    return nullptr;
+  }
+
+  if (aPropID == eCSSProperty_font_size) {
+    // FIXME (bug 1357296): Divide out text-zoom, since SVG is supposed to
+    // ignore it.
+    if (aPresContext->EffectiveTextZoom() != 1.0) {
+      NS_WARNING("stylo: Dividing out text-zoom not yet supported"
+                 " (bug 1357296)");
+    }
+  }
+
+  // Result should be already add-refed
+  return computedValue.mServo.forget();
 }
 
 // static
@@ -411,8 +566,32 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr,
+                                        presContext->PresShell());
+  if (!styleContext) {
+    return;
+  }
+
+  if (aTargetElement->IsStyledByServo()) {
+    RefPtr<RawServoAnimationValue> parsedValue =
+      ValueFromStringHelper(aPropID, aTargetElement, presContext,
+                            styleContext, aString);
+    if (aIsContextSensitive) {
+      // FIXME: Bug 1358955 - detect context-sensitive values and set this value
+      // appropriately.
+      *aIsContextSensitive = false;
+    }
+
+    if (parsedValue) {
+      sSingleton.Init(aValue);
+      aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
+    }
+    return;
+  }
+
   StyleAnimationValue parsedValue;
-  if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
+  if (ValueFromStringHelper(aPropID, aTargetElement, presContext, styleContext,
                             aString, parsedValue, aIsContextSensitive)) {
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
@@ -423,7 +602,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
 nsSMILValue
 nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
                                             Element* aTargetElement,
-                                            const StyleAnimationValue& aValue)
+                                            const AnimationValue& aValue)
 {
   nsSMILValue result;
 
@@ -448,16 +627,18 @@ nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
 }
 
 // static
-bool
+void
 nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                                   nsAString& aString)
 {
   MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
              "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
-  return !wrapper ||
-    StyleAnimationValue::UncomputeValue(wrapper->mPropID,
-                                        wrapper->mCSSValue, aString);
+  if (!wrapper) {
+    return;
+  }
+
+  wrapper->mCSSValue.SerializeSpecifiedValue(wrapper->mPropID, aString);
 }
 
 // static

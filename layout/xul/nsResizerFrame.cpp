@@ -202,7 +202,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         nsCOMPtr<nsIScreen> screen;
         nsCOMPtr<nsIScreenManager> sm(do_GetService("@mozilla.org/gfx/screenmanager;1"));
         if (sm) {
-          nsIntRect frameRect = GetScreenRect();
+          CSSIntRect frameRect = GetScreenRect();
           // ScreenForRect requires display pixels, so scale from device pix
           double scale;
           window->GetUnscaledDevicePixelsPerCSSPixel(&scale);

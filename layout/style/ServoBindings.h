@@ -191,33 +191,27 @@ Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed element);
 
 // Animations
 bool
-Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
-                       nsIAtom* aPseudoTag,
+Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
                        RawServoAnimationValueMapBorrowed aAnimationValues);
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
-void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
-                            nsIAtom* aPseudoTagOrNull,
+void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
                             ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues,
                             mozilla::UpdateAnimationsTasks aTasks);
-bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
-                                nsIAtom* aPseudoTagOrNull);
-bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
-                                   nsIAtom* aPseudoTagOrNull);
-bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
-                                    nsIAtom* aPseudoTagOrNull);
-size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement,
-                                       nsIAtom* aPseudoTagOrNull);
+bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
+bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);
+bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElementOrPseudo);
+size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElementOrPseudo);
 nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
-  RawGeckoElementBorrowed aElement,
-  nsIAtom* aPseudoTagOrNull,
+  RawGeckoElementBorrowed aElementOrPseudo,
   size_t aIndex);
 RawServoAnimationValueBorrowedOrNull Gecko_ElementTransitions_EndValueAt(
-  RawGeckoElementBorrowed aElement,
-  nsIAtom* aPseudoTagOrNull,
+  RawGeckoElementBorrowed aElementOrPseudo,
   size_t aIndex);
 double Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming);
 double Gecko_GetPositionInSegment(
@@ -315,8 +309,9 @@ void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
 // Incremental restyle.
 // Also, we might want a ComputedValues to ComputedValues API for animations?
 // Not if we do them in Gecko...
-nsStyleContext* Gecko_GetStyleContext(RawGeckoNodeBorrowed node,
+nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
+nsIAtom* Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);

@@ -907,6 +907,9 @@ protected:
   static bool               sDisableNonTestMouseEvents;
 
   mozilla::TimeStamp        mLastOSWake;
+
+  static mozilla::TimeStamp sLastInputCreated;
+  static mozilla::TimeStamp sLastInputProcessed;
 };
 
 } // namespace mozilla
