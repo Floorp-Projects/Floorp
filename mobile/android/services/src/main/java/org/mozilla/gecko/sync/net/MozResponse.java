@@ -18,7 +18,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import ch.boye.httpclientandroidlib.Header;
@@ -107,12 +106,12 @@ public class MozResponse {
       throw new IOException("no entity");
     }
 
-    Reader in = null;
+    InputStream content = entity.getContent();
     try {
-      in = new BufferedReader(new InputStreamReader(entity.getContent(), StringUtils.UTF_8));
+      Reader in = new BufferedReader(new InputStreamReader(content, "UTF-8"));
       return new ExtendedJSONObject(in);
     } finally {
-      IOUtils.safeStreamClose(in);
+      content.close();
     }
   }
 
