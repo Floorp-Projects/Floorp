@@ -44,7 +44,7 @@ public interface IWebView {
 
         void onDownloadStart(Download download);
 
-        void onLongPress(final ClickTarget clickTarget);
+        void onLongPress(final ClickTarget clickTarget, float x, float y);
     }
 
     void setCallback(Callback callback);

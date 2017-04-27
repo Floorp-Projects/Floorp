@@ -88,8 +88,7 @@ public class InfoFragment extends WebFragment {
             public void onDownloadStart(Download download) {
             }
 
-            @Override
-            public void onLongPress(final IWebView.ClickTarget clickTarget) {
+            public void onLongPress(IWebView.ClickTarget clickTarget, final float x, final float y) {
             }
 
             @Override
