@@ -21,6 +21,8 @@
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
 #                    generate relative filenames.
 
+from __future__ import print_function
+
 import buildconfig
 import errno
 import sys
@@ -151,7 +153,7 @@ class HGRepoInfo:
             root = read_output('hg', '-R', path,
                                'showconfig', 'paths.default')
             if not root:
-                print >> sys.stderr, "Failed to get HG Repo for %s" % path
+                print("Failed to get HG Repo for %s" % path, file=sys.stderr)
         cleanroot = None
         if root:
             match = rootRegex.match(root)
@@ -160,9 +162,10 @@ class HGRepoInfo:
                 if cleanroot.endswith('/'):
                     cleanroot = cleanroot[:-1]
         if cleanroot is None:
-            print >> sys.stderr, textwrap.dedent("""\
-                Could not determine repo info for %s.  This is either not a clone of the web-based
-                repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % path
+            print(textwrap.dedent("""\
+            Could not determine repo info for %s.  This is either not a clone of the web-based
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % path,
+                  sys.stderr)
             sys.exit(1)
         self.rev = rev
         self.root = root
@@ -207,9 +210,10 @@ class GitRepoInfo:
                 if cleanroot.endswith('/'):
                     cleanroot = cleanroot[:-1]
         if cleanroot is None:
-            print >> sys.stderr, textwrap.dedent("""\
-                Could not determine repo info for %s (%s).  This is either not a clone of a web-based
-                repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % (path, root)
+            print(textwrap.dedent("""\
+            Could not determine repo info for %s (%s).  This is either not a clone of a web-based
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % (path, root),
+                  file=sys.stderr)
             sys.exit(1)
         self.rev = rev
         self.cleanroot = cleanroot
@@ -396,15 +400,6 @@ class Dumper:
         # book-keeping to keep track of the cleanup work per file tuple
         self.files_record = {}
 
-    def output(self, dest, output_str):
-        """Writes |output_str| to |dest|, holding, terminates with a newline."""
-        dest.write(output_str + "\n")
-        dest.flush()
-
-    def output_pid(self, dest, output_str):
-        """Debugging output; prepends the pid to the string."""
-        self.output(dest, "%d: %s" % (os.getpid(), output_str))
-
     def parse_repo_manifest(self, repo_manifest):
         """
         Parse an XML manifest of repository info as produced
@@ -441,7 +436,7 @@ class Dumper:
             if not path:
                 path = name
             if not (name and path and rev and remote):
-                print "Skipping project %s" % proj.toxml()
+                print("Skipping project %s" % proj.toxml())
                 continue
             remote = remotes[remote]
             # Turn git URLs into http URLs so that urljoin works.
@@ -535,7 +530,7 @@ class Dumper:
         asynchronously, and Finish must be called to wait for it complete and cleanup.
         All files after the first are fallbacks in case the first file does not process
         successfully; if it does, no other files will be touched."""
-        self.output_pid(sys.stderr, "Beginning work for files: %s" % str(files))
+        print("Beginning work for files: %s" % str(files), file=sys.stderr)
 
         # tries to get the vcs root from the .mozconfig first - if it's not set
         # the tinderbox vcs path will be assigned further down
@@ -554,7 +549,7 @@ class Dumper:
 
     def ProcessFilesWork(self, files, arch_num, arch, vcs_root, after, after_arg):
         t_start = time.time()
-        self.output_pid(sys.stderr, "Processing files: %s" % (files,))
+        print("Processing files: %s" % (files,), file=sys.stderr)
 
         # our result is a status, a cleanup function, an argument to that function, and the tuple of files we were called on
         result = { 'status' : False, 'after' : after, 'after_arg' : after_arg, 'files' : files }
@@ -565,7 +560,7 @@ class Dumper:
             # files is a tuple of files, containing fallbacks in case the first file doesn't process successfully
             try:
                 cmd = self.dump_syms_cmdline(file, arch, files)
-                self.output_pid(sys.stderr, ' '.join(cmd))
+                print(' '.join(cmd), file=sys.stderr)
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                         stderr=open(os.devnull, 'wb'))
                 module_line = proc.stdout.next()
@@ -624,7 +619,7 @@ class Dumper:
                     proc.wait()
                     # we output relative paths so callers can get a list of what
                     # was generated
-                    self.output(sys.stdout, rel_path)
+                    print(rel_path)
                     if self.srcsrv and vcs_root:
                         # add source server indexing to the pdb file
                         self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
@@ -635,15 +630,15 @@ class Dumper:
             except StopIteration:
                 pass
             except Exception as e:
-                self.output(sys.stderr, "Unexpected error: %s" % (str(e),))
+                print("Unexpected error: %s" % str(e), file=sys.stderr)
                 raise
             if result['status']:
                 # we only need 1 file to work
                 break
 
         elapsed = time.time() - t_start
-        self.output_pid(sys.stderr, 'Finished processing %s in %.2fs' %
-                        (files, elapsed))
+        print('Finished processing %s in %.2fs' % (files, elapsed),
+              file=sys.stderr)
         return result
 
 # Platform-specific subclasses.  For the most part, these just have
@@ -732,9 +727,9 @@ class Dumper_Win32(Dumper):
                                                   rel_path))
         shutil.copyfile(file, full_path)
         if compress(full_path):
-            self.output(sys.stdout, rel_path[:-1] + '_')
+            print(rel_path[:-1] + '_')
         else:
-            self.output(sys.stdout, rel_path)
+            print(rel_path)
 
         # Copy the binary file as well
         if code_file and code_id:
@@ -753,9 +748,9 @@ class Dumper_Win32(Dumper):
                         raise
                 shutil.copyfile(full_code_path, full_path)
                 if compress(full_path):
-                    self.output(sys.stdout, rel_path[:-1] + '_')
+                    print(rel_path[:-1] + '_')
                 else:
-                    self.output(sys.stdout, rel_path)
+                    print(rel_path)
 
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
@@ -801,7 +796,7 @@ class Dumper_Linux(Dumper):
             shutil.move(file_dbg, full_path)
             # gzip the shipped debug files
             os.system("gzip -4 -f %s" % full_path)
-            self.output(sys.stdout, rel_path + ".gz")
+            print(rel_path + ".gz")
         else:
             if os.path.isfile(file_dbg):
                 os.unlink(file_dbg)
@@ -855,7 +850,8 @@ class Dumper_Mac(Dumper):
     def ProcessFiles(self, files, after=None, after_arg=None):
         # also note, files must be len 1 here, since we're the only ones
         # that ever add more than one file to the list
-        self.output_pid(sys.stderr, "Starting Mac pre-processing on file: %s" % (files[0]))
+        print("Starting Mac pre-processing on file: %s" % (files[0]),
+              file=sys.stderr)
         res = self.ProcessFilesWorkMac(files[0])
         self.ProcessFilesMacFinished(res)
 
@@ -880,7 +876,8 @@ class Dumper_Mac(Dumper):
         by dsymutil(1), so run dsymutil here and pass the bundle name
         down to the superclass method instead."""
         t_start = time.time()
-        self.output_pid(sys.stderr, "Running Mac pre-processing on file: %s" % (file,))
+        print("Running Mac pre-processing on file: %s" % (file,),
+              file=sys.stderr)
 
         # our return is a status and a tuple of files to dump symbols for
         # the extra files are fallbacks; as soon as one is dumped successfully, we stop
@@ -894,14 +891,14 @@ class Dumper_Mac(Dumper):
             cmd = ([dsymutil] +
                    [a.replace('-a ', '--arch=') for a in self.archs if a] +
                    [file])
-            self.output_pid(sys.stderr, ' '.join(cmd))
+            print(' '.join(cmd), file=sys.stderr)
             subprocess.check_call(cmd, stdout=open(os.devnull, 'w'))
         except subprocess.CalledProcessError as e:
-            self.output_pid(sys.stderr, 'Error running dsymutil: %s' % str(e))
+            print('Error running dsymutil: %s' % str(e), file=sys.stderr)
 
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
-            self.output_pid(sys.stderr, "No symbols found in file: %s" % (file,))
+            print("No symbols found in file: %s" % (file,), file=sys.stderr)
             result['status'] = False
             result['files'] = (file, )
             return result
@@ -909,8 +906,8 @@ class Dumper_Mac(Dumper):
         result['status'] = True
         result['files'] = (dsymbundle, file)
         elapsed = time.time() - t_start
-        self.output_pid(sys.stderr, 'Finished processing %s in %.2fs' %
-                        (file, elapsed))
+        print('Finished processing %s in %.2fs' % (file, elapsed),
+              file=sys.stderr)
         return result
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
@@ -928,7 +925,7 @@ class Dumper_Mac(Dumper):
                                   cwd=os.path.dirname(file),
                                   stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         if success == 0 and os.path.exists(full_path):
-            self.output(sys.stdout, rel_path)
+            print(rel_path)
 
 # Entry point if called as a standalone program
 def main():
@@ -969,7 +966,7 @@ to canonical locations in the source repository. Specify
     if options.srcsrv:
         pdbstr = os.environ.get("PDBSTR_PATH")
         if not os.path.exists(pdbstr):
-            print >> sys.stderr, "Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n"
+            print("Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n", file=sys.stderr)
             sys.exit(1)
 
     if len(args) < 3:
