@@ -25,6 +25,22 @@ StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
   mOrigin = aLayer->Bounds().TopLeft();
 }
 
+StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+                                             WebRenderLayer* aLayer,
+                                             uint64_t aAnimationsId,
+                                             float* aOpacityPtr,
+                                             gfx::Matrix4x4* aTransformPtr)
+  : mBuilder(&aBuilder)
+{
+  LayerRect scBounds = aLayer->RelativeToParent(aLayer->BoundsForStackingContext());
+  mBuilder->PushStackingContext(wr::ToWrRect(scBounds),
+                                aAnimationsId,
+                                aOpacityPtr,
+                                aTransformPtr,
+                                wr::ToWrMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()));
+  mOrigin = aLayer->Bounds().TopLeft();
+}
+
 StackingContextHelper::~StackingContextHelper()
 {
   mBuilder->PopStackingContext();

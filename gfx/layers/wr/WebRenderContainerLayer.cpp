@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -24,21 +25,6 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   float opacity = GetLocalOpacity();
   float* maybeOpacity = &opacity;
   uint64_t animationsId = 0;
-  LayerRect relBounds = GetWrRelBounds();
-  gfx::Rect clip(0, 0, relBounds.width, relBounds.height);
-
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("ContainerLayer %p using bounds=%s, clip=%s, transform=%s, mix-blend-mode=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(clip).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(mixBlendMode).c_str());
-  }
 
   if (gfxPrefs::WebRenderOMTAEnabled() &&
       GetAnimations().Length()) {
@@ -57,14 +43,14 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
       maybeTransform = nullptr;
     }
   }
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               animationsId,
-                               maybeOpacity,
-                               maybeTransform,
-                               mixBlendMode);
 
-  aBuilder.PushClip(wr::ToWrRect(clip),
-                    mask.ptrOr(nullptr));
+  StackingContextHelper sc(aBuilder, this, animationsId, maybeOpacity, maybeTransform);
+
+  LayerRect rect = Bounds();
+  DumpLayerInfo("ContainerLayer", rect);
+
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  aBuilder.PushClip(sc.ToRelativeWrRect(rect), mask.ptrOr(nullptr));
 
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
@@ -73,7 +59,6 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
   aBuilder.PopClip();
-  aBuilder.PopStackingContext();
 }
 
 void
