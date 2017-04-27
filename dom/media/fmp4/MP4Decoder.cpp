@@ -245,8 +245,9 @@ MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlo
     return nullptr;
   }
 
-  RefPtr<TaskQueue> taskQueue =
-    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  RefPtr<TaskQueue> taskQueue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+    "MP4Decoder::IsVideoAccelerated::taskQueue");
   VideoInfo config;
   RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aKnowsCompositor, config, taskQueue));
   if (!decoder) {

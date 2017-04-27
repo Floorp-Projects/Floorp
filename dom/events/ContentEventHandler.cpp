@@ -2654,7 +2654,7 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
 
   LayoutDeviceIntPoint eventLoc =
     aEvent->mRefPoint + aEvent->mWidget->WidgetToScreenOffset();
-  nsIntRect docFrameRect = docFrame->GetScreenRect(); // Returns CSS pixels
+  CSSIntRect docFrameRect = docFrame->GetScreenRect();
   CSSIntPoint eventLocCSS(
     mPresContext->DevPixelsToIntCSSPixels(eventLoc.x) - docFrameRect.x,
     mPresContext->DevPixelsToIntCSSPixels(eventLoc.y) - docFrameRect.y);

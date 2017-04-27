@@ -519,6 +519,14 @@ this.ExtensionData = class {
         continue;
       }
 
+      if (perm === "geckoProfiler") {
+        const acceptedExtensions = Preferences.get("extensions.geckoProfiler.acceptedExtensionIds");
+        if (!acceptedExtensions.split(",").includes(this.id)) {
+          this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
+          continue;
+        }
+      }
+
       this.permissions.add(perm);
       let type = classifyPermission(perm);
       if (type.origin) {

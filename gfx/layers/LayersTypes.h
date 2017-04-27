@@ -302,7 +302,8 @@ private:
 enum class ScrollDirection : uint32_t {
   NONE,
   VERTICAL,
-  HORIZONTAL
+  HORIZONTAL,
+  SENTINEL /* for IPC serialization */
 };
 
 } // namespace layers

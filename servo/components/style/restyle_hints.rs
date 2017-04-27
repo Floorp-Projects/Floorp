@@ -17,7 +17,7 @@ use selector_parser::{AttrValue, NonTSPseudoClass, Snapshot, SelectorImpl};
 use selectors::{Element, MatchAttr};
 use selectors::matching::{ElementSelectorFlags, StyleRelations};
 use selectors::matching::matches_selector;
-use selectors::parser::{AttrSelector, Combinator, ComplexSelector, Component};
+use selectors::parser::{AttrSelector, Combinator, Component, Selector};
 use selectors::parser::{SelectorInner, SelectorIter, SelectorMethods};
 use selectors::visitor::SelectorVisitor;
 use std::clone::Clone;
@@ -62,6 +62,11 @@ bitflags! {
         /// attribute has changed, and this change didn't have any other
         /// dependencies.
         const RESTYLE_STYLE_ATTRIBUTE = 0x40,
+
+        /// Replace the style data coming from SMIL animations without updating
+        /// any other style data. This hint is only processed in animation-only
+        /// traversal which is prior to normal traversal.
+        const RESTYLE_SMIL = 0x80,
     }
 }
 
@@ -95,27 +100,29 @@ pub fn assert_restyle_hints_match() {
         nsRestyleHint_eRestyle_CSSTransitions => RESTYLE_CSS_TRANSITIONS,
         nsRestyleHint_eRestyle_CSSAnimations => RESTYLE_CSS_ANIMATIONS,
         nsRestyleHint_eRestyle_StyleAttribute => RESTYLE_STYLE_ATTRIBUTE,
+        nsRestyleHint_eRestyle_StyleAttribute_Animations => RESTYLE_SMIL,
     }
 }
 
 impl RestyleHint {
     /// The subset hints that affect the styling of a single element during the
     /// traversal.
+    #[inline]
     pub fn for_self() -> Self {
-        RESTYLE_SELF | RESTYLE_STYLE_ATTRIBUTE | RESTYLE_CSS_ANIMATIONS | RESTYLE_CSS_TRANSITIONS
+        RESTYLE_SELF | RESTYLE_STYLE_ATTRIBUTE | Self::for_animations()
     }
 
     /// The subset hints that are used for animation restyle.
+    #[inline]
     pub fn for_animations() -> Self {
-        RESTYLE_CSS_ANIMATIONS | RESTYLE_CSS_TRANSITIONS
+        RESTYLE_SMIL | RESTYLE_CSS_ANIMATIONS | RESTYLE_CSS_TRANSITIONS
     }
 }
 
 #[cfg(feature = "gecko")]
 impl From<nsRestyleHint> for RestyleHint {
     fn from(raw: nsRestyleHint) -> Self {
-        use std::mem;
-        let raw_bits: u32 = unsafe { mem::transmute(raw) };
+        let raw_bits: u32 = raw.0;
         // FIXME(bholley): Finish aligning the binary representations here and
         // then .expect() the result of the checked version.
         if Self::from_bits(raw_bits).is_none() {
@@ -566,11 +573,10 @@ impl DependencySet {
     /// Adds a selector to this `DependencySet`, and returns whether it may need
     /// cache revalidation, that is, whether two siblings of the same "shape"
     /// may have different style due to this selector.
-    pub fn note_selector(&mut self,
-                         base: &ComplexSelector<SelectorImpl>)
-                         -> bool
-    {
-        let mut next = Some(base.clone());
+    pub fn note_selector(&mut self, selector: &Selector<SelectorImpl>) -> bool {
+        let mut is_pseudo_element = selector.pseudo_element.is_some();
+
+        let mut next = Some(selector.inner.complex.clone());
         let mut combinator = None;
         let mut needs_revalidation = false;
 
@@ -581,6 +587,19 @@ impl DependencySet {
                 hint: combinator_to_restyle_hint(combinator),
                 needs_revalidation: false,
             };
+
+            if is_pseudo_element {
+                // TODO(emilio): use more fancy restyle hints to avoid restyling
+                // the whole subtree when pseudos change.
+                //
+                // We currently need is_pseudo_element to handle eager pseudos
+                // (so the style the parent stores doesn't become stale), and
+                // restyle_descendants to handle all of them (::before and
+                // ::after, because we find them in the subtree, and other lazy
+                // pseudos for the same reason).
+                visitor.hint |= RESTYLE_SELF | RESTYLE_DESCENDANTS;
+                is_pseudo_element = false;
+            }
 
             {
                 // Visit all the simple selectors.

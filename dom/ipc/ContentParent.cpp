@@ -2227,7 +2227,12 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     SerializeURI(nullptr, xpcomInit.userContentSheetURL());
   }
 
+  // 1. Build ContentDeviceData first, as it may affect some gfxVars.
   gfxPlatform::GetPlatform()->BuildContentDeviceData(&xpcomInit.contentDeviceData());
+  // 2. Gather non-default gfxVars.
+  xpcomInit.gfxNonDefaultVarUpdates() = gfxVars::FetchNonDefaultVars();
+  // 3. Start listening for gfxVars updates, to notify content process later on.
+  gfxVars::AddReceiver(this);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (gfxInfo) {
@@ -5273,6 +5278,18 @@ ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables
     return IPC_FAIL_NO_REASON(this);
   }
   *aRv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvAllocPipelineId(RefPtr<AllocPipelineIdPromise>&& aPromise)
+{
+  GPUProcessManager* pm = GPUProcessManager::Get();
+  if (!pm) {
+    aPromise->Reject(PromiseRejectReason::HandlerRejected, __func__);
+    return IPC_OK();
+  }
+  aPromise->Resolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);
   return IPC_OK();
 }
 

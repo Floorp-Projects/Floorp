@@ -11,7 +11,7 @@
 == column-balancing-overflow-002.html column-balancing-overflow-002.ref.html
 == column-balancing-overflow-003.html column-balancing-overflow-003.ref.html
 == column-balancing-overflow-004.html column-balancing-overflow-004.ref.html
-fuzzy-if(webrender,255,6) == column-balancing-overflow-005.html column-balancing-overflow-005.ref.html
+fuzzy-if(webrender,255,12) == column-balancing-overflow-005.html column-balancing-overflow-005.ref.html
 == column-balancing-000.html column-balancing-000.ref.html
 == column-balancing-001.html column-balancing-000.ref.html
 == column-balancing-002.html column-balancing-002.ref.html

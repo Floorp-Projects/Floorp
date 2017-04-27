@@ -134,3 +134,24 @@ extern "C" void Rust_FromEmptyRustString();
 TEST(RustNsString, FromEmptyRustString) {
   Rust_FromEmptyRustString();
 }
+
+extern "C" void Rust_WriteToBufferFromRust(nsACString* aCStr, nsAString* aStr, nsACString* aFallibleCStr, nsAString* aFallibleStr);
+TEST(RustNsString, WriteToBufferFromRust) {
+  nsAutoCString cStr;
+  nsAutoString str;
+  nsAutoCString fallibleCStr;
+  nsAutoString fallibleStr;
+
+  cStr.AssignLiteral("abc");
+  str.AssignLiteral("abc");
+  fallibleCStr.AssignLiteral("abc");
+  fallibleStr.AssignLiteral("abc");
+
+  Rust_WriteToBufferFromRust(&cStr, &str, &fallibleCStr, &fallibleStr);
+
+  EXPECT_TRUE(cStr.EqualsASCII("ABC"));
+  EXPECT_TRUE(str.EqualsASCII("ABC"));
+  EXPECT_TRUE(fallibleCStr.EqualsASCII("ABC"));
+  EXPECT_TRUE(fallibleStr.EqualsASCII("ABC"));
+}
+

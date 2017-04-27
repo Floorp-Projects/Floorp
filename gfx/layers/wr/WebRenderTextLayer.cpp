@@ -24,10 +24,12 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
         return;
     }
 
-    gfx::Rect rect = RelativeToParent(GetTransform().TransformBounds(IntRectToRect(mBounds)));
+    gfx::Rect rect = GetTransform().TransformBounds(IntRectToRect(mBounds))
+        - ParentBounds().ToUnknownRect().TopLeft();
     gfx::Rect clip;
     if (GetClipRect().isSome()) {
-      clip = RelativeToParent(IntRectToRect(GetClipRect().ref().ToUnknownRect()));
+      clip = IntRectToRect(GetClipRect().ref().ToUnknownRect())
+          - ParentBounds().ToUnknownRect().TopLeft();
     } else {
       clip = rect;
     }

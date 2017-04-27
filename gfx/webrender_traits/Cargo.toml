@@ -1,6 +1,6 @@
 [package]
 name = "webrender_traits"
-version = "0.32.0"
+version = "0.36.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -20,8 +20,10 @@ ipc-channel = {version = "0.7", optional = true}
 offscreen_gl_context = {version = "0.8", features = ["serde"], optional = true}
 serde = "0.9"
 serde_derive = "0.9"
+time = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.3"
 core-graphics = "0.7"
 
 [target.'cfg(target_os = "windows")'.dependencies]

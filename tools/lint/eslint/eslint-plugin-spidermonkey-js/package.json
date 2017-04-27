@@ -21,6 +21,8 @@
   "main": "lib/index.js",
   "dependencies": {
   },
+  "devDependencies": {
+  },
   "engines": {
     "node": ">=6.9.1"
   },

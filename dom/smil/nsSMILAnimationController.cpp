@@ -11,6 +11,8 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/RestyleManagerInlines.h"
+#include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -325,11 +327,6 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
 
   bool isStyleFlushNeeded = mResampleNeeded;
   mResampleNeeded = false;
-
-  if (mDocument->IsStyledByServo()) {
-    NS_WARNING("stylo: SMIL animations not supported yet");
-    return;
-  }
 
   nsCOMPtr<nsIDocument> document(mDocument);  // keeps 'this' alive too
 
@@ -721,6 +718,67 @@ nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
   }
 
   mMightHavePendingStyleUpdates = false;
+}
+
+bool
+nsSMILAnimationController::PreTraverse()
+{
+  return PreTraverseInSubtree(nullptr);
+}
+
+bool
+nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mMightHavePendingStyleUpdates) {
+    return false;
+  }
+
+  nsIPresShell* shell = mDocument->GetShell();
+  if (!shell) {
+    return false;
+  }
+
+  nsPresContext* context = shell->GetPresContext();
+  if (!context) {
+    return false;
+  }
+  MOZ_ASSERT(context->RestyleManager()->IsServo(),
+             "PreTraverse should only be called for the servo style system");
+
+  bool foundElementsNeedingRestyle = false;
+  for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
+    SVGAnimationElement* animElement = iter.Get()->GetKey();
+
+    nsSMILTargetIdentifier key;
+    if (!GetTargetIdentifierForAnimation(animElement, key)) {
+      // Something's wrong/missing about animation's target; skip this animation
+      continue;
+    }
+
+    // Ignore restyles that aren't in the flattened tree subtree rooted at
+    // aRoot.
+    if (aRoot &&
+        !nsContentUtils::ContentIsFlattenedTreeDescendantOf(key.mElement,
+                                                            aRoot)) {
+      continue;
+    }
+
+    context->RestyleManager()->AsServo()->
+      PostRestyleEventForAnimations(key.mElement,
+                                    eRestyle_StyleAttribute_Animations);
+
+    foundElementsNeedingRestyle = true;
+  }
+
+  // Only clear the mMightHavePendingStyleUpdates flag if we definitely posted
+  // all restyles.
+  if (!aRoot) {
+    mMightHavePendingStyleUpdates = false;
+  }
+
+  return foundElementsNeedingRestyle;
 }
 
 //----------------------------------------------------------------------

@@ -23,7 +23,7 @@ use style::font_metrics::get_metrics_provider_for_product;
 use style::gecko::data::{PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::global_style_data::{GLOBAL_STYLE_DATA, GlobalStyleData};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
-use style::gecko::selector_parser::{SelectorImpl, PseudoElement};
+use style::gecko::selector_parser::PseudoElement;
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::wrapper::GeckoElement;
 use style::gecko_bindings::bindings;
@@ -166,7 +166,8 @@ fn create_shared_context<'a>(global_style_data: &GlobalStyleData,
     }
 }
 
-fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
+fn traverse_subtree(element: GeckoElement,
+                    raw_data: RawServoStyleSetBorrowed,
                     traversal_flags: TraversalFlags) {
     // When new content is inserted in a display:none subtree, we will call into
     // servo to try to style it. Detect that here and bail out.
@@ -178,6 +179,7 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
     }
 
     let per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    debug_assert!(!per_doc_data.stylesheets.has_changed());
 
     let token = RecalcStyleOnly::pre_traverse(element, &per_doc_data.stylist, traversal_flags);
     if !token.should_traverse() {
@@ -935,12 +937,15 @@ pub extern "C" fn Servo_ResolvePseudoStyle(element: RawGeckoElementBorrowed,
     }
 }
 
-fn get_pseudo_style(guard: &SharedRwLockReadGuard, element: GeckoElement, pseudo_tag: *mut nsIAtom,
-                    styles: &ElementStyles, doc_data: &PerDocumentStyleData)
+fn get_pseudo_style(guard: &SharedRwLockReadGuard,
+                    element: GeckoElement,
+                    pseudo_tag: *mut nsIAtom,
+                    styles: &ElementStyles,
+                    doc_data: &PerDocumentStyleData)
                     -> Option<Arc<ComputedValues>>
 {
     let pseudo = PseudoElement::from_atom_unchecked(Atom::from(pseudo_tag), false);
-    match SelectorImpl::pseudo_element_cascade_type(&pseudo) {
+    match pseudo.cascade_type() {
         PseudoElementCascadeType::Eager => styles.pseudos.get(&pseudo).map(|s| s.values().clone()),
         PseudoElementCascadeType::Precomputed => unreachable!("No anonymous boxes"),
         PseudoElementCascadeType::Lazy => {
@@ -1795,19 +1800,17 @@ pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
     let damage = GeckoRestyleDamage::new(change_hint);
     debug!("Servo_NoteExplicitHints: {:?}, restyle_hint={:?}, change_hint={:?}",
            element, restyle_hint, change_hint);
-    debug_assert!(restyle_hint == structs::nsRestyleHint_eRestyle_CSSAnimations ||
-                  restyle_hint == structs::nsRestyleHint_eRestyle_CSSTransitions ||
-                  (restyle_hint.0 & (structs::nsRestyleHint_eRestyle_CSSAnimations.0 |
-                                     structs::nsRestyleHint_eRestyle_CSSTransitions.0)) == 0,
-                  "eRestyle_CSSAnimations or eRestyle_CSSTransitions should only appear by itself");
+
+    let restyle_hint: RestyleHint = restyle_hint.into();
+    debug_assert!(RestyleHint::for_animations().contains(restyle_hint) ||
+                  !RestyleHint::for_animations().intersects(restyle_hint),
+                  "Animation restyle hints should not appear with non-animation restyle hints");
 
     let mut maybe_data = element.mutate_data();
     let maybe_restyle_data = maybe_data.as_mut().and_then(|d| unsafe {
-        maybe_restyle(d, element, restyle_hint == structs::nsRestyleHint_eRestyle_CSSAnimations ||
-                                  restyle_hint == structs::nsRestyleHint_eRestyle_CSSTransitions)
+        maybe_restyle(d, element, restyle_hint.intersects(RestyleHint::for_animations()))
     });
     if let Some(restyle_data) = maybe_restyle_data {
-        let restyle_hint: RestyleHint = restyle_hint.into();
         restyle_data.hint.insert(&restyle_hint.into());
         restyle_data.damage |= damage;
     } else {

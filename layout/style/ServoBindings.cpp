@@ -51,6 +51,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ServoMediaList.h"
+#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
@@ -287,12 +288,11 @@ Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
 }
 
 nsStyleContext*
-Gecko_GetStyleContext(RawGeckoNodeBorrowed aNode, nsIAtom* aPseudoTagOrNull)
+Gecko_GetStyleContext(RawGeckoElementBorrowed aElement,
+                      nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(aNode->IsContent());
   nsIFrame* relevantFrame =
-    ServoRestyleManager::FrameForPseudoElement(aNode->AsContent(),
-                                               aPseudoTagOrNull);
+    ServoRestyleManager::FrameForPseudoElement(aElement, aPseudoTagOrNull);
   if (relevantFrame) {
     return relevantFrame->StyleContext();
   }
@@ -303,11 +303,20 @@ Gecko_GetStyleContext(RawGeckoNodeBorrowed aNode, nsIAtom* aPseudoTagOrNull)
 
   // FIXME(emilio): Is there a shorter path?
   nsCSSFrameConstructor* fc =
-    aNode->OwnerDoc()->GetShell()->GetPresContext()->FrameConstructor();
+    aElement->OwnerDoc()->GetShell()->GetPresContext()->FrameConstructor();
 
   // NB: This is only called for CalcStyleDifference, and we handle correctly
   // the display: none case since Servo still has the older style.
-  return fc->GetDisplayContentsStyleFor(aNode->AsContent());
+  return fc->GetDisplayContentsStyleFor(aElement);
+}
+
+nsIAtom*
+Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
+{
+  CSSPseudoElementType pseudo = aElement->GetPseudoElementType();
+  if (pseudo == CSSPseudoElementType::NotPseudo)
+    return nullptr;
+  return nsCSSPseudoElements::GetPseudoAtom(pseudo);
 }
 
 nsChangeHint
@@ -375,6 +384,28 @@ Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
+  // This function duplicates a lot of the code in
+  // Gecko_GetStyleAttrDeclarationBlock above because I haven't worked out a way
+  // to persuade hazard analysis that a pointer-to-lambda is ok yet.
+  MOZ_ASSERT(aElement, "Invalid GeckoElement");
+
+  DeclarationBlock* decl =
+    const_cast<dom::Element*>(aElement)->GetSMILOverrideStyleDeclaration();
+  if (!decl) {
+    return nullptr;
+  }
+  if (decl->IsGecko()) {
+    // XXX This can happen when nodes are adopted from a Gecko-style-backend
+    //     document into a Servo-style-backend document.  See bug 1330051.
+    NS_WARNING("stylo: requesting a Gecko declaration block?");
+    return nullptr;
+  }
+  return decl->AsServo()->RefRawStrong();
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
@@ -412,16 +443,27 @@ Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed aElement)
   return nullptr;
 }
 
+static nsIAtom*
+PseudoTagAndCorrectElementForAnimation(const Element*& aElementOrPseudo) {
+  if (aElementOrPseudo->IsGeneratedContentContainerForBefore()) {
+    aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
+    return nsCSSPseudoElements::before;
+  }
+
+  if (aElementOrPseudo->IsGeneratedContentContainerForAfter()) {
+    aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
+    return nsCSSPseudoElements::after;
+  }
+
+  return nullptr;
+}
+
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
-                       nsIAtom* aPseudoTag,
                        EffectCompositor::CascadeLevel aCascadeLevel,
                        RawServoAnimationValueMapBorrowed aAnimationValues)
 {
-  MOZ_ASSERT(aElement, "Invalid GeckoElement");
-  MOZ_ASSERT(!aPseudoTag ||
-             aPseudoTag == nsCSSPseudoElements::before ||
-             aPseudoTag == nsCSSPseudoElements::after);
+  MOZ_ASSERT(aElement);
 
   nsIDocument* doc = aElement->GetComposedDoc();
   if (!doc || !doc->GetShell()) {
@@ -433,13 +475,16 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
     return false;
   }
 
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
+
   CSSPseudoElementType pseudoType =
     nsCSSPseudoElements::GetPseudoType(
-      aPseudoTag,
+      pseudoTag,
       nsCSSProps::EnabledState::eIgnoreEnabledState);
 
   return presContext->EffectCompositor()
-    ->GetServoAnimationRule(aElement, pseudoType,
+    ->GetServoAnimationRule(aElement,
+                            pseudoType,
                             aCascadeLevel,
                             aAnimationValues);
 }
@@ -453,7 +498,6 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
 
 void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
-                       nsIAtom* aPseudoTagOrNull,
                        ServoComputedValuesBorrowedOrNull aOldComputedValues,
                        ServoComputedValuesBorrowedOrNull aComputedValues,
                        ServoComputedValuesBorrowedOrNull aParentComputedValues,
@@ -461,20 +505,18 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
 
   nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
   if (!presContext) {
     return;
   }
 
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
     const ServoComputedValuesWithParent servoValues =
       { aComputedValues, aParentComputedValues };
     CSSPseudoElementType pseudoType =
-      nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+      nsCSSPseudoElements::GetPseudoType(pseudoTag,
                                          CSSEnabledState::eForAllContent);
 
     if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
@@ -509,61 +551,56 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 }
 
 bool
-Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
-                           nsIAtom* aPseudoTagOrNull)
+Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+    nsCSSPseudoElements::GetPseudoType(pseudoTag,
                                        CSSEnabledState::eForAllContent);
 
   return !!EffectSet::GetEffectSet(aElement, pseudoType);
 }
 
 bool
-Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
-                              nsIAtom* aPseudoTagOrNull)
+Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement)
 {
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   nsAnimationManager::CSSAnimationCollection* collection =
     nsAnimationManager::CSSAnimationCollection
-                      ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+                      ::GetAnimationCollection(aElement, pseudoTag);
 
   return collection && !collection->mAnimations.IsEmpty();
 }
 
 bool
-Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
-                               nsIAtom* aPseudoTagOrNull)
+Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement)
 {
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+                       ::GetAnimationCollection(aElement, pseudoTag);
 
   return collection && !collection->mAnimations.IsEmpty();
 }
 
 size_t
-Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement,
-                                nsIAtom* aPseudoTagOrNull)
+Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement)
 {
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+                       ::GetAnimationCollection(aElement, pseudoTag);
 
   return collection ? collection->mAnimations.Length() : 0;
 }
 
 static CSSTransition*
-GetCurrentTransitionAt(RawGeckoElementBorrowed aElement,
-                       nsIAtom* aPseudoTagOrNull,
-                       size_t aIndex)
+GetCurrentTransitionAt(RawGeckoElementBorrowed aElement, size_t aIndex)
 {
+  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+                       ::GetAnimationCollection(aElement, pseudoTag);
   if (!collection) {
     return nullptr;
   }
@@ -575,23 +612,18 @@ GetCurrentTransitionAt(RawGeckoElementBorrowed aElement,
 
 nsCSSPropertyID
 Gecko_ElementTransitions_PropertyAt(RawGeckoElementBorrowed aElement,
-                                    nsIAtom* aPseudoTagOrNull,
                                     size_t aIndex)
 {
-  CSSTransition* transition = GetCurrentTransitionAt(aElement,
-                                                     aPseudoTagOrNull,
-                                                     aIndex);
+  CSSTransition* transition = GetCurrentTransitionAt(aElement, aIndex);
   return transition ? transition->TransitionProperty()
                     : nsCSSPropertyID::eCSSProperty_UNKNOWN;
 }
 
 RawServoAnimationValueBorrowedOrNull
 Gecko_ElementTransitions_EndValueAt(RawGeckoElementBorrowed aElement,
-                                    nsIAtom* aPseudoTagOrNull,
                                     size_t aIndex)
 {
   CSSTransition* transition = GetCurrentTransitionAt(aElement,
-                                                     aPseudoTagOrNull,
                                                      aIndex);
   return transition ? transition->ToValue().mServo.get() : nullptr;
 }
