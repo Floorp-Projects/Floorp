@@ -103,6 +103,17 @@ public class WebViewProvider {
         }
 
         @Override
+        public void setBlockingEnabled(boolean enabled) {
+            // TODO: Enable / disable content blocking
+        }
+
+        @Override
+        public boolean isBlockingEnabled() {
+            // TODO: Return whether content blocking is enabled
+            return true;
+        }
+
+        @Override
         public void restoreWebviewState(Bundle savedInstanceState) {
             // TODO: restore navigation history, and reopen previously opened page
         }

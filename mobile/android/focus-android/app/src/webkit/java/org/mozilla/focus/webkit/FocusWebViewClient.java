@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.focus.web;
+package org.mozilla.focus.webkit;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -20,6 +20,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.webkit.ErrorPage;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
 
@@ -29,16 +30,15 @@ import java.util.Map;
  * WebViewClient layer that handles browser specific WebViewClient functionality, such as error pages
  * and external URL handling.
  */
-public class FocusWebViewClient extends TrackingProtectionWebViewClient {
-    final static String ERROR_PROTOCOL = "error:";
+/* package */ class FocusWebViewClient extends TrackingProtectionWebViewClient {
+    private final static String ERROR_PROTOCOL = "error:";
+
+    private IWebView.Callback callback;
+    private boolean errorReceived;
 
     public FocusWebViewClient(Context context) {
         super(context);
     }
-
-    private IWebView.Callback callback;
-
-    boolean errorReceived;
 
     public void setCallback(IWebView.Callback callback) {
         this.callback = callback;

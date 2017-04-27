@@ -47,6 +47,13 @@ public interface IWebView {
         void onLongPress(final HitTarget hitTarget);
     }
 
+    /**
+     * Enable/Disable content blocking for this session (Only the blockers that are enabled in the app's settings will be turned on/off).
+     */
+    void setBlockingEnabled(boolean enabled);
+
+    boolean isBlockingEnabled();
+
     void setCallback(Callback callback);
 
     void onPause();

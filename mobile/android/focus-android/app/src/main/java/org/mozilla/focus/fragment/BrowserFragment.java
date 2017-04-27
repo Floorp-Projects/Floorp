@@ -384,10 +384,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.back: {
-                final IWebView webView = getWebView();
-                if (webView != null) {
-                    webView.goBack();
-                }
+                goBack();
                 break;
             }
 
@@ -400,10 +397,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.refresh: {
-                final IWebView webView = getWebView();
-                if (webView != null) {
-                    webView.reload();
-                }
+                reload();
                 break;
             }
 
@@ -553,5 +547,24 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if (webView != null) {
             webView.loadUrl(url);
         }
+    }
+
+    public void reload() {
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            webView.reload();
+        }
+    }
+
+    public void setBlockingEnabled(boolean enabled) {
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            webView.setBlockingEnabled(enabled);
+        }
+    }
+
+    public boolean isBlockingEnabled() {
+        final IWebView webView = getWebView();
+        return webView == null || webView.isBlockingEnabled();
     }
 }

@@ -7,41 +7,24 @@ package org.mozilla.focus.web;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
-import android.webkit.CookieManager;
-import android.webkit.DownloadListener;
-import android.webkit.WebBackForwardList;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
-import android.webkit.WebStorage;
 import android.webkit.WebView;
-import android.webkit.WebViewDatabase;
 
-import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
-import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.Settings;
-import org.mozilla.focus.utils.ThreadUtils;
-import org.mozilla.focus.webkit.NestedWebView;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
+import org.mozilla.focus.webkit.WebkitView;
 
 /**
  * WebViewProvider for creating a WebKit based IWebVIew implementation.
  */
 public class WebViewProvider {
-    private static final String KEY_CURRENTURL = "currenturl";
-
     /**
      * Preload webview data. This allows the webview implementation to load resources and other data
      * it might need, in advance of intialising the view (at which time we are probably wanting to
@@ -120,7 +103,7 @@ public class WebViewProvider {
         settings.setSavePassword(false);
     }
 
-    private static void applyAppSettings(Context context, WebSettings settings) {
+    public static void applyAppSettings(Context context, WebSettings settings) {
         final Settings appSettings = new Settings(context);
 
         // We could consider calling setLoadsImagesAutomatically() here too (This will block images not loaded over the network too)
@@ -190,233 +173,5 @@ public class WebViewProvider {
         uaBuilder.append(getUABrowserString(existingWebViewUA, focusToken));
 
         return uaBuilder.toString();
-    }
-
-    private static class LinkHandler implements View.OnLongClickListener {
-        private final WebView webView;
-        private @Nullable IWebView.Callback callback = null;
-
-        public LinkHandler(final WebView webView) {
-            this.webView = webView;
-        }
-
-        public void setCallback(final @Nullable IWebView.Callback callback) {
-            this.callback = callback;
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            if (callback == null) {
-                return false;
-            }
-
-            final WebView.HitTestResult hitTestResult = webView.getHitTestResult();
-
-            switch (hitTestResult.getType()) {
-                case WebView.HitTestResult.SRC_ANCHOR_TYPE:
-                    final String linkURL = hitTestResult.getExtra();
-                    callback.onLongPress(new IWebView.HitTarget(true, linkURL, false, null));
-                    return true;
-
-                case WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
-                    // hitTestResult.getExtra() contains only the image URL, and not the link
-                    // URL. Internally, WebView's HitTestData contains both, but they only
-                    // make it available via requestFocusNodeHref...
-                    final Message message = new Message();
-                    message.setTarget(new Handler() {
-                        @Override
-                        public void handleMessage(Message msg) {
-                            final Bundle data = msg.getData();
-                            final String url = data.getString("url");
-                            final String src = data.getString("src");
-
-                            if (url == null || src == null) {
-                                throw new IllegalStateException("WebView did not supply url or src for image link");
-                            }
-
-                            callback.onLongPress(new IWebView.HitTarget(true, url, true, src));
-                        }
-                    });
-
-                    webView.requestFocusNodeHref(message);
-                    return true;
-            }
-
-            return false;
-        }
-    }
-
-
-    private static class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
-        private Callback callback;
-        private FocusWebViewClient client;
-        private final LinkHandler linkHandler;
-
-        public WebkitView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-
-            client = new FocusWebViewClient(getContext().getApplicationContext());
-
-            setWebViewClient(client);
-            setWebChromeClient(createWebChromeClient());
-            setDownloadListener(createDownloadListener());
-
-            if (BuildConfig.DEBUG) {
-                setWebContentsDebuggingEnabled(true);
-            }
-
-            setLongClickable(true);
-
-            linkHandler = new LinkHandler(this);
-            setOnLongClickListener(linkHandler);
-        }
-
-        @Override
-        protected void onAttachedToWindow() {
-            super.onAttachedToWindow();
-
-            PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
-        }
-
-        @Override
-        protected void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-
-            PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
-        }
-
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            applyAppSettings(getContext(), getSettings());
-        }
-
-        @Override
-        public void restoreWebviewState(Bundle savedInstanceState) {
-            // We need to have a different method name because restoreState() returns
-            // a WebBackForwardList, and we can't overload with different return types:
-            final WebBackForwardList backForwardList = restoreState(savedInstanceState);
-
-            // Pages are only added to the back/forward list when loading finishes. If a new page is
-            // loading when the Activity is paused/killed, then that page won't be in the list,
-            // and needs to be restored separately to the history list. We detect this by checking
-            // whether the last fully loaded page (getCurrentItem()) matches the last page that the
-            // WebView was actively loading (which was retrieved during onSaveInstanceState():
-            // WebView.getUrl() always returns the currently loading or loaded page).
-            // If the app is paused/killed before the initial page finished loading, then the entire
-            // list will be null - so we need to additionally check whether the list even exists.
-
-            final String desiredURL = savedInstanceState.getString(KEY_CURRENTURL);
-            client.notifyCurrentURL(desiredURL);
-
-            if (backForwardList != null &&
-                    backForwardList.getCurrentItem().getUrl().equals(desiredURL)) {
-                // restoreState doesn't actually load the current page, it just restores navigation history,
-                // so we also need to explicitly reload in this case:
-                reload();
-            } else {
-                loadUrl(desiredURL);
-            }
-        }
-
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            saveState(outState);
-            // See restoreWebViewState() for an explanation of why we need to save this in _addition_
-            // to WebView's state
-            outState.putString(KEY_CURRENTURL, getUrl());
-        }
-
-        @Override
-        public void setCallback(Callback callback) {
-            this.callback = callback;
-            client.setCallback(callback);
-            linkHandler.setCallback(callback);
-        }
-
-        public void loadUrl(String url) {
-            // We need to check external URL handling here - shouldOverrideUrlLoading() is only
-            // called by webview when clicking on a link, and not when opening a new page for the
-            // first time using loadUrl().
-            if (!client.shouldOverrideUrlLoading(this, url)) {
-                super.loadUrl(url);
-            }
-
-            client.notifyCurrentURL(url);
-        }
-
-        @Override
-        public void destroy() {
-            super.destroy();
-
-            // WebView might save data to disk once it gets destroyed. In this case our cleanup call
-            // might not have been able to see this data. Let's do it again.
-            deleteContentFromKnownLocations();
-        }
-
-        @Override
-        public void cleanup() {
-            clearFormData();
-            clearHistory();
-            clearMatches();
-            clearSslPreferences();
-            clearCache(true);
-
-            // We don't care about the callback - we just want to make sure cookies are gone
-            CookieManager.getInstance().removeAllCookies(null);
-
-            WebStorage.getInstance().deleteAllData();
-
-            final WebViewDatabase webViewDatabase = WebViewDatabase.getInstance(getContext());
-            // It isn't entirely clear how this differs from WebView.clearFormData()
-            webViewDatabase.clearFormData();
-            webViewDatabase.clearHttpAuthUsernamePassword();
-
-            deleteContentFromKnownLocations();
-        }
-
-        private void deleteContentFromKnownLocations() {
-            final Context context = getContext();
-
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    // We call all methods on WebView to delete data. But some traces still remain
-                    // on disk. This will wipe the whole webview directory.
-                    FileUtils.deleteWebViewDirectory(context);
-
-                    // WebView stores some files in the cache directory. We do not use it ourselves
-                    // so let's truncate it.
-                    FileUtils.truncateCacheDirectory(context);
-                }
-            });
-        }
-
-        private WebChromeClient createWebChromeClient() {
-            return new WebChromeClient() {
-                @Override
-                public void onProgressChanged(WebView view, int newProgress) {
-                    if (callback != null) {
-                        // This is the earliest point where we might be able to confirm a redirected
-                        // URL: we don't necessarily get a shouldInterceptRequest() after a redirect,
-                        // so we can only check the updated url in onProgressChanges(), or in onPageFinished()
-                        // (which is even later).
-                        callback.onURLChanged(view.getUrl());
-                        callback.onProgress(newProgress);
-                    }
-                }
-            };
-        }
-
-        private DownloadListener createDownloadListener() {
-            return new DownloadListener() {
-                @Override
-                public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                    if (callback != null) {
-                        final Download download = new Download(url, userAgent, contentDisposition, mimetype, contentLength);
-                        callback.onDownloadStart(download);
-                    }
-                }
-            };
-        }
     }
 }

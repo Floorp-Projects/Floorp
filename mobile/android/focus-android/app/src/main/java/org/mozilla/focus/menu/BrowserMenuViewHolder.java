@@ -20,6 +20,10 @@ public abstract class BrowserMenuViewHolder extends RecyclerView.ViewHolder impl
         this.menu = menu;
     }
 
+    public BrowserMenu getMenu() {
+        return menu;
+    }
+
     public void setOnClickListener(View.OnClickListener listener) {
         this.listener = listener;
     }

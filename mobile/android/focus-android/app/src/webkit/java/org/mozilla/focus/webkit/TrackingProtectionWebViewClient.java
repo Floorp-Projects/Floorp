@@ -20,9 +20,10 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.webkit.matcher.UrlMatcher;
 
 public class TrackingProtectionWebViewClient extends WebViewClient {
-    protected String currentPageURL;
-
     private static volatile UrlMatcher MATCHER;
+
+    private boolean blockingEnabled;
+    /* package */ String currentPageURL;
 
     public static void triggerPreload(final Context context) {
         // Only trigger loading if MATCHER is null. (If it's null, MATCHER could already be loading,
@@ -47,14 +48,28 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         return MATCHER;
     }
 
-    public TrackingProtectionWebViewClient(final Context context) {
+    /* package */ TrackingProtectionWebViewClient(final Context context) {
         // Hopefully we have loaded background data already. We call triggerPreload() to try to trigger
         // background loading of the lists as early as possible.
         triggerPreload(context);
+
+        this.blockingEnabled = true;
+    }
+
+    public void setBlockingEnabled(boolean enabled) {
+        this.blockingEnabled = enabled;
+    }
+
+    public boolean isBlockingEnabled() {
+        return blockingEnabled;
     }
 
     @Override
     public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request) {
+        if (!blockingEnabled) {
+            return super.shouldInterceptRequest(view, request);
+        }
+
         final Uri resourceUri = request.getUrl();
 
         // shouldInterceptRequest() might be called _before_ onPageStarted or shouldOverrideUrlLoading

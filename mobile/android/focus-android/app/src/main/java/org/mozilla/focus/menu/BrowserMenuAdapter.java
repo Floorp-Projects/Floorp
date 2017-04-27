@@ -83,6 +83,8 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
             return new NavigationItemViewHolder(inflater.inflate(R.layout.menu_navigation, parent, false), fragment);
         } else if (viewType == MenuItemViewHolder.LAYOUT_ID) {
             return new MenuItemViewHolder(inflater.inflate(R.layout.menu_item, parent, false));
+        } else if (viewType == BlockingItemViewHolder.LAYOUT_ID) {
+            return new BlockingItemViewHolder(inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment);
         }
 
         throw new IllegalArgumentException("Unknown view type: " + viewType);
@@ -93,20 +95,30 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         holder.setMenu(menu);
         holder.setOnClickListener(fragment);
 
-        final int actualPosition = shouldShowButtonToolbar() ? position - 1 : position;
+        int actualPosition = translateToMenuPosition(position);
 
-        if (actualPosition >= 0) {
+        if (actualPosition >= 0 && position != getBlockingSwitchPosition()) {
             ((MenuItemViewHolder) holder).bind(items.get(actualPosition));
         }
+    }
+
+    private int translateToMenuPosition(int position) {
+        return shouldShowButtonToolbar() ? position - 2 : position - 1;
     }
 
     @Override
     public int getItemViewType(int position) {
         if (position == 0 && shouldShowButtonToolbar()) {
             return NavigationItemViewHolder.LAYOUT_ID;
+        } else if (position == getBlockingSwitchPosition()) {
+            return BlockingItemViewHolder.LAYOUT_ID;
         } else {
             return MenuItemViewHolder.LAYOUT_ID;
         }
+    }
+
+    private int getBlockingSwitchPosition() {
+        return shouldShowButtonToolbar() ? 1 : 0;
     }
 
     @Override
@@ -116,6 +128,9 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         if (shouldShowButtonToolbar()) {
             itemCount++;
         }
+
+        // For the blocking switch
+        itemCount++;
 
         return itemCount;
     }

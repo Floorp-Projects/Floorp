@@ -5,13 +5,21 @@
 
 package org.mozilla.focus.utils;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ThreadUtils {
     private static final ExecutorService backgroundExecutorService = Executors.newSingleThreadExecutor();
+    private static final Handler handler = new Handler(Looper.getMainLooper());
 
     public static void postToBackgroundThread(final Runnable runnable) {
         backgroundExecutorService.submit(runnable);
+    }
+
+    public static void postToMainThreadDelayed(final Runnable runnable, long delayMillis) {
+        handler.postDelayed(runnable, delayMillis);
     }
 }
