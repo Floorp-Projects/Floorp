@@ -72,7 +72,7 @@ public:
    */
   using AsyncUpdateCallback = std::function<void(nsresult)>;
   nsresult AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
-                             AsyncUpdateCallback aCallback);
+                             const AsyncUpdateCallback& aCallback);
 
   /**
    * Wait until the ongoing async update is finished and callback
