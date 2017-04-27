@@ -741,40 +741,8 @@ CssComputedView.prototype = {
     try {
       let win = this.styleWindow;
       let text = win.getSelection().toString().trim();
-      // isPropertyPresent is set when a property name is spotted and
-      // we assume that the next line will be a property value.
-      let isPropertyPresent = false;
-      // Tidy up block headings by moving CSS property names and their
-      // values onto the same line and inserting a colon between them.
-      let textArray = text.split(/[\r\n]+/);
-      let result = "";
 
-      // Parse text array to output string.
-      if (textArray.length > 1) {
-        for (let prop of textArray) {
-          if (CssComputedView.propertyNames.indexOf(prop) !== -1) {
-            // Property name found so setting isPropertyPresent to true
-            isPropertyPresent = true;
-            // Property name
-            result += prop;
-          } else if (isPropertyPresent === true) {
-            // Since isPropertyPresent is true so we assume that this is
-            // a property value and we append it to result preceeded by
-            // a :.
-            result += ": " + prop + ";\n";
-            isPropertyPresent = false;
-          } else {
-            // since isPropertyPresent is not set, we assume this is
-            // normal text and we append it to result without any :.
-            result += prop + "\n";
-          }
-        }
-      } else {
-        // Short text fragment.
-        result = textArray[0];
-      }
-
-      clipboardHelper.copyString(result);
+      clipboardHelper.copyString(text);
     } catch (e) {
       console.error(e);
     }
@@ -1007,7 +975,7 @@ PropertyView.prototype = {
     this.shortcuts.on("Return", (name, event) => this.onMatchedToggle(event));
     this.shortcuts.on("Space", (name, event) => this.onMatchedToggle(event));
 
-    let nameContainer = doc.createElementNS(HTML_NS, "div");
+    let nameContainer = doc.createElementNS(HTML_NS, "span");
     nameContainer.className = "property-name-container";
     this.element.appendChild(nameContainer);
 
@@ -1018,8 +986,8 @@ PropertyView.prototype = {
     nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
-    this.nameNode = doc.createElementNS(HTML_NS, "div");
-    this.nameNode.setAttribute("class", "property-name theme-fg-color5");
+    this.nameNode = doc.createElementNS(HTML_NS, "span");
+    this.nameNode.classList.add("property-name", "theme-fg-color5");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");
@@ -1030,22 +998,36 @@ PropertyView.prototype = {
     // Make it hand over the focus to the container
     this.onFocus = () => this.element.focus();
     this.nameNode.addEventListener("click", this.onFocus);
+
+    // Build the style name ":" separator
+    let nameSeparator = doc.createElementNS(HTML_NS, "span");
+    nameSeparator.classList.add("visually-hidden");
+    nameSeparator.textContent = ": ";
+    this.nameNode.appendChild(nameSeparator);
+
     nameContainer.appendChild(this.nameNode);
 
-    let valueContainer = doc.createElementNS(HTML_NS, "div");
+    let valueContainer = doc.createElementNS(HTML_NS, "span");
     valueContainer.className = "property-value-container";
     this.element.appendChild(valueContainer);
 
     // Build the style value element
-    this.valueNode = doc.createElementNS(HTML_NS, "div");
-    this.valueNode.setAttribute("class", "property-value theme-fg-color1");
+    this.valueNode = doc.createElementNS(HTML_NS, "span");
+    this.valueNode.classList.add("property-value", "theme-fg-color1");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
     // Make it hand over the focus to the container
     this.valueNode.addEventListener("click", this.onFocus);
+
+    // Build the style value ";" separator
+    let valueSeparator = doc.createElementNS(HTML_NS, "span");
+    valueSeparator.classList.add("visually-hidden");
+    valueSeparator.textContent = ";";
+
     valueContainer.appendChild(this.valueNode);
+    valueContainer.appendChild(valueSeparator);
 
     return this.element;
   },
@@ -1055,7 +1037,7 @@ PropertyView.prototype = {
     let element = doc.createElementNS(HTML_NS, "div");
     element.setAttribute("class", this.propertyContentClassName);
     this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
-    this.matchedSelectorsContainer.setAttribute("class", "matchedselectors");
+    this.matchedSelectorsContainer.classList.add("matchedselectors");
     element.appendChild(this.matchedSelectorsContainer);
 
     return element;
@@ -1165,13 +1147,18 @@ PropertyView.prototype = {
       let status = createChild(p, "span", {
         dir: "ltr",
         class: "rule-text theme-fg-color3 " + selector.statusClass,
-        title: selector.statusText,
+        title: selector.statusText
+      });
+
+      let keyDiv = createChild(status, "div", {
+        class: "fix-get-selection",
         textContent: selector.sourceText
       });
-      let valueSpan = createChild(status, "span", {
-        class: "other-property-value theme-fg-color1"
+
+      let valueDiv = createChild(status, "div", {
+        class: "fix-get-selection other-property-value theme-fg-color1"
       });
-      valueSpan.appendChild(selector.outputFragment);
+      valueDiv.appendChild(selector.outputFragment);
       promises.push(selector.ready);
     }
 
