@@ -18,12 +18,11 @@ const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 Cu.importGlobalProperties(["fetch"]);
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
-const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js", {});
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
-const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm", {});
-
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Kinto",           "resource://services-common/kinto-offline-client.js");
+XPCOMUtils.defineLazyModuleGetter(this, "KintoHttpClient", "resource://services-common/kinto-http-client.js");
+XPCOMUtils.defineLazyModuleGetter(this, "FirefoxAdapter",  "resource://services-common/kinto-storage-adapter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "CanonicalJSON",   "resource://gre/modules/CanonicalJSON.jsm");
 
 const KEY_APPDIR                             = "XCurProcD";
 const PREF_SETTINGS_SERVER                   = "services.settings.server";
@@ -96,10 +95,7 @@ class BlocklistClient {
     this.bucketName = bucketName;
     this.signerName = signerName;
 
-    this._kinto = new Kinto({
-      bucket: bucketName,
-      adapter: FirefoxAdapter,
-    });
+    this._kinto = null;
   }
 
   get identifier() {
@@ -186,6 +182,13 @@ class BlocklistClient {
     const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
     const enforceCollectionSigning =
       Services.prefs.getBoolPref(PREF_BLOCKLIST_ENFORCE_SIGNING);
+
+    if (!this._kinto) {
+      this._kinto = new Kinto({
+        bucket: this.bucketName,
+        adapter: FirefoxAdapter,
+      });
+    }
 
     // if there is a signerName and collection signing is enforced, add a
     // hook for incoming changes that validates the signature
