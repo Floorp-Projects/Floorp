@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -163,8 +164,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     return;
   }
 
-  gfx::Matrix4x4 transform = GetTransform();
-  LayerRect relBounds = GetWrRelBounds();
+  StackingContextHelper sc(aBuilder, this);
 
   LayerRect rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
@@ -172,14 +172,14 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                  "No other scalemodes than stretch and none supported yet.");
     rect = LayerRect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
-  rect = RelativeToVisible(rect);
 
-  LayerRect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = ClipRect().valueOr(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   DumpLayerInfo("Image Layer", rect);
   if (gfxPrefs::LayersDump()) {
@@ -188,12 +188,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(filter).c_str());
   }
 
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                            1.0f,
-                            transform,
-                            mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, mKey.value());
-  aBuilder.PopStackingContext();
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
 }
 
 Maybe<WrImageMask>
