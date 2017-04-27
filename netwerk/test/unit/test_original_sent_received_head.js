@@ -114,11 +114,11 @@ function checkResponse(request, data, context) {
   var locationHeaderFound = 0;
   request.visitResponseHeaders({
     visitHeader: function visit(aName, aValue) {
-      if (aName == "Link") {
+      if (aName == "link") {
         linkHeaderFound++;
         do_check_eq(aValue, "value1, value2");
       }
-      if (aName == "Location") {
+      if (aName == "location") {
         locationHeaderFound++;
         do_check_eq(aValue, "loc");
       }
@@ -132,7 +132,7 @@ function checkResponse(request, data, context) {
   var locationOrgHeaderFound = 0;
   request.visitOriginalResponseHeaders({
     visitHeader: function visitOrg(aName, aValue) {
-      if (aName == "Link") {
+      if (aName == "link") {
         if (linkOrgHeaderFound == 0) {
           do_check_eq(aValue, "");
         } else if (linkOrgHeaderFound == 1 ) {
@@ -142,7 +142,7 @@ function checkResponse(request, data, context) {
         }
         linkOrgHeaderFound++;
       }
-      if (aName == "Location") {
+      if (aName == "location") {
           locationOrgHeaderFound++;
           do_check_eq(aValue, "loc");
       }
@@ -176,7 +176,7 @@ function checkResponse(request, data, context) {
   var locationOrgHeaderFound2 = 0;
   request.visitOriginalResponseHeaders({
     visitHeader: function visitOrg(aName, aValue) {
-      if (aName == "Link") {
+      if (aName == "link") {
         if (linkOrgHeaderFound2 == 0) {
           do_check_eq(aValue, "");
         } else if (linkOrgHeaderFound2 == 1 ) {
@@ -186,7 +186,7 @@ function checkResponse(request, data, context) {
         }
         linkOrgHeaderFound2++;
       }
-      if (aName == "Location") {
+      if (aName == "location") {
         locationOrgHeaderFound2++;
         do_check_eq(aValue, "loc");
       }
@@ -199,7 +199,7 @@ function checkResponse(request, data, context) {
 
   if (dbg) { print("============== Test GetResponseHeader"); }
   var linkOrgHeaderFound3 = 0;
-  request.getOriginalResponseHeader("Link",{
+  request.getOriginalResponseHeader("link",{
     visitHeader: function visitOrg(aName, aValue) {
       if (linkOrgHeaderFound3 == 0) {
         do_check_eq(aValue, "");
