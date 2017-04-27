@@ -31,6 +31,13 @@ public:
   StackingContextHelper(wr::DisplayListBuilder& aBuilder,
                         WebRenderLayer* aLayer,
                         const Maybe<gfx::Matrix4x4>& aTransform = Nothing());
+  // Alternate constructor which invokes the version of PushStackingContext
+  // for animations.
+  StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+                        WebRenderLayer* aLayer,
+                        uint64_t aAnimationsId,
+                        float* aOpacityPtr,
+                        gfx::Matrix4x4* aTransformPtr);
   // Pops the stacking context
   ~StackingContextHelper();
 
