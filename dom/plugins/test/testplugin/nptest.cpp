@@ -133,6 +133,7 @@ static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uin
 static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool postFileToURLTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setPluginWantsAllStreams(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -206,6 +207,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointX",
   "convertPointY",
   "streamTest",
+  "postFileToURLTest",
   "setPluginWantsAllStreams",
   "crash",
   "crashOnDestroy",
@@ -280,6 +282,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   convertPointX,
   convertPointY,
   streamTest,
+  postFileToURLTest,
   setPluginWantsAllStreams,
   crashPlugin,
   crashOnDestroy,
@@ -2819,6 +2822,38 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     BOOLEAN_TO_NPVARIANT(false, *result);
   }
 
+  return true;
+}
+
+static bool
+postFileToURLTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (1 != argCount)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  string url;
+  {
+    if (!NPVARIANT_IS_STRING(args[0]))
+      return false;
+    NPString npurl = NPVARIANT_TO_STRING(args[0]);
+    // make a copy to ensure that the url string is null-terminated
+    url = string(npurl.UTF8Characters, npurl.UTF8Length);
+  }
+
+
+  NPError err;
+  {
+    string buf("/path/to/file");
+    err = NPN_PostURL(npp,
+                      url.c_str(),
+                      nullptr /* target */,
+                      buf.length(), buf.c_str(),
+                      true /* file */);
+  }
+
+  BOOLEAN_TO_NPVARIANT(NPERR_NO_ERROR == err, *result);
   return true;
 }
 

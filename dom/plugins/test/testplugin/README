@@ -384,6 +384,13 @@ NPN_[Get/Post]URLNotify succeeds, and `false` if it fails.
 @redirectCallback will be called from urlredirectnotify if a redirect is attempted
 @allowRedirects boolean value indicating whether or not to allow redirects
 
+* postFileToURLTest(url)
+Calls NPN_PostURL/NPN_PostURLNotify to make a POST request to the URL with
+request from postFile.
+The function will return `0` if NPN_PostURL/NPN_PostURLNotify succeeds, and
+the error code if it fails.
+@param url string, url to request
+
 * setPluginWantsAllStreams(wantsAllStreams)
 Set the value returned by the plugin for NPPVpluginWantsAllNetworkStreams.
 
