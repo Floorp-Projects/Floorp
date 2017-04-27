@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Note: this file is included in aboutDialog.xul if MOZ_UPDATER is defined.
+// Note: this file is included in aboutDialog.xul and preferences/advanced.xul
+// if MOZ_UPDATER is defined.
 
 /* import-globals-from aboutDialog.js */
 
