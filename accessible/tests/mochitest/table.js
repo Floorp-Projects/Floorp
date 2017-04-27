@@ -16,7 +16,7 @@ const kRowHeaderCell = 2; // Indicates the cell is row header cell
 const kColHeaderCell = 4; // Indicated the cell is column header cell
 const kOrigin = kDataCell | kRowHeaderCell | kColHeaderCell;
 
-const kRowSpanned = 8; // Indicates the cell is not origin and row spanned 
+const kRowSpanned = 8; // Indicates the cell is not origin and row spanned
 const kColSpanned = 16; // Indicates the cell is not origin and column spanned
 const kSpanned = kRowSpanned | kColSpanned;
 
@@ -417,7 +417,6 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   var selRows = new Array();
 
   // isRowSelected test
-  var selrowCount = 0;
   for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     var isRowSelected = true;
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
@@ -539,7 +538,6 @@ function testUnselectTableColumn(aIdentifier, aColIdx, aCellsArray)
 
   var rowCount = aCellsArray.length;
   for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-    var cellState = aCellsArray[rowIdx][aColIdx];
     // Unselect origin cell.
     var [origRowIdx, origColIdx] =
       getOrigRowAndColumn(aCellsArray, rowIdx, aColIdx);

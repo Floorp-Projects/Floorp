@@ -115,7 +115,6 @@ function testAbsentRelation(aIdentifier, aRelType, aUnrelatedIdentifiers)
   var relation = getRelationByType(aIdentifier, aRelType);
 
   var relDescr = getRelationErrorMsg(aIdentifier, aRelType);
-  var relDescrStart = getRelationErrorMsg(aIdentifier, aRelType, true);
 
   if (!aUnrelatedIdentifiers) {
     ok(false, "No identifiers given for unrelated accessibles.");

@@ -50,9 +50,13 @@ function doTest()
 
   is(accTable.selectedRowCount, 1, "no cells selected");
 
-  var columnDescription = accTable.getColumnDescription(1);
-  var rowDescription = accTable.getRowDescription(1);
-
+  // These shouldn't throw.
+  try {
+    accTable.getColumnDescription(1);
+    accTable.getRowDescription(1);
+  } catch (ex) {
+    ok(false, "getColumnDescription/getRowDescription shouldn't throw.");
+  }
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();
