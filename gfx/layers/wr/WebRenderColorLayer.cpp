@@ -21,9 +21,9 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect rect = GetWrBoundsRect();
+  LayerRect rect = GetWrBoundsRect();
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 

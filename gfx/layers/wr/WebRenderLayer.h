@@ -46,7 +46,7 @@ public:
   WebRenderBridgeChild* WrBridge();
   WrImageKey GetImageKey();
 
-  gfx::Rect RelativeToVisible(gfx::Rect aRect);
+  LayerRect RelativeToVisible(const LayerRect& aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
   gfx::Rect ParentStackingContextBounds();
   gfx::Rect RelativeToParent(gfx::Rect aRect);
@@ -59,10 +59,10 @@ protected:
   LayerRect BoundsForStackingContext();
   Maybe<LayerRect> ClipRect();
 
-  gfx::Rect GetWrBoundsRect();
+  LayerRect GetWrBoundsRect();
   gfx::Rect GetWrRelBounds();
-  gfx::Rect GetWrClipRect(gfx::Rect& aRect);
-  void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
+  LayerRect GetWrClipRect(const LayerRect& aRect);
+  void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
 };
 
