@@ -208,9 +208,6 @@ EnableContextProfilingStack(JSContext* cx, bool enabled);
 JS_FRIEND_API(void)
 RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
-JS_FRIEND_API(jsbytecode*)
-ProfilingGetPC(JSContext* cx, JSScript* script, void* ip);
-
 } // namespace js
 
 #endif  /* js_ProfilingStack_h */

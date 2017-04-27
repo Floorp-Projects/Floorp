@@ -4,7 +4,7 @@
 
 
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
-const gHttpTestRoot = "https://example.com/tests/dom/base/test/";
+const gHttpTestRoot = "https://example.com/browser/dom/base/test/";
 var origBlockActive;
 var gTestBrowser = null;
 

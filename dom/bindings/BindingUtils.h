@@ -1318,18 +1318,20 @@ GetUseXBLScope(const ParentObject& aParentObject)
 
 template<class T>
 inline void
-ClearWrapper(T* p, nsWrapperCache* cache)
+ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj)
 {
-  cache->ClearWrapper();
+  JS::AutoAssertGCCallback inCallback;
+  cache->ClearWrapper(obj);
 }
 
 template<class T>
 inline void
-ClearWrapper(T* p, void*)
+ClearWrapper(T* p, void*, JSObject* obj)
 {
+  JS::AutoAssertGCCallback inCallback;
   nsWrapperCache* cache;
   CallQueryInterface(p, &cache);
-  ClearWrapper(p, cache);
+  ClearWrapper(p, cache, obj);
 }
 
 template<class T>

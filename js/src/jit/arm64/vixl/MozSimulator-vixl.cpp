@@ -29,6 +29,7 @@
 #include "jit/arm64/vixl/Debugger-vixl.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/IonTypes.h"
+#include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmCode.h"
@@ -427,9 +428,12 @@ void Simulator::VisitException(const Instruction* instr) {
         case kCallRtRedirected:
           VisitCallRedirection(instr);
           return;
-        case kMarkStackPointer:
-          spStack_.append(xreg(31, Reg31IsStackPointer));
+        case kMarkStackPointer: {
+          js::AutoEnterOOMUnsafeRegion oomUnsafe;
+          if (!spStack_.append(xreg(31, Reg31IsStackPointer)))
+            oomUnsafe.crash("tracking stack for ARM64 simulator");
           return;
+        }
         case kCheckStackPointer: {
           int64_t current = xreg(31, Reg31IsStackPointer);
           int64_t expected = spStack_.popCopy();

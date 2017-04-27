@@ -188,8 +188,6 @@ class GeckoProfiler
     void beginPseudoJS(const char* string, void* sp);
     void endPseudoJS() { pop(); }
 
-    jsbytecode* ipToPC(JSScript* script, size_t ip) { return nullptr; }
-
     void setProfilingStack(ProfileEntry* stack, mozilla::Atomic<uint32_t>* size, uint32_t max);
     void setEventMarker(void (*fn)(const char*));
     const char* profileString(JSScript* script, JSFunction* maybeFun);

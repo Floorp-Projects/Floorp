@@ -758,7 +758,7 @@ nsAppStartup::GetStartupInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aRetva
   if (procTime.IsNull()) {
     bool error = false;
 
-    procTime = TimeStamp::ProcessCreation(error);
+    procTime = TimeStamp::ProcessCreation(&error);
 
     if (error) {
       Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS,

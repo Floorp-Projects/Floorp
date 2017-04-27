@@ -100,8 +100,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mLoadingEnabled = false;
   }
 
-  bool isInconsistent;
-  mMostRecentRequestChange = TimeStamp::ProcessCreation(isInconsistent);
+  mMostRecentRequestChange = TimeStamp::ProcessCreation();
 }
 
 void

@@ -16,9 +16,9 @@
 
 #define MOZ_WEAKREF_DECL_OWNINGTHREAD nsAutoOwningThread _mWeakRefOwningThread;
 #define MOZ_WEAKREF_ASSERT_OWNINGTHREAD \
-  NS_CheckThreadSafe(_mWeakRefOwningThread.GetThread(), "nsWeakReference not thread-safe")
+  _mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
 #define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) \
-  NS_CheckThreadSafe((that)->_mWeakRefOwningThread.GetThread(), "nsWeakReference not thread-safe")
+  (that)->_mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
 
 #else
 
