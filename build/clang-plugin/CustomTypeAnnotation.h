@@ -67,6 +67,5 @@ extern CustomTypeAnnotation GlobalClass;
 extern CustomTypeAnnotation NonHeapClass;
 extern CustomTypeAnnotation HeapClass;
 extern CustomTypeAnnotation NonTemporaryClass;
-extern CustomTypeAnnotation NonParam;
 
 #endif
