@@ -21,6 +21,7 @@ interface nsIDocShellTreeItem;
 interface nsIStructuredCloneContainer;
 interface nsIBFCacheEntry;
 interface nsIPrincipal;
+interface nsISHistory;
 
 %{C++
 #include "nsRect.h"
@@ -326,6 +327,11 @@ interface nsISHEntry : nsISupports
      * if true == "manual", false == "auto".
      */
     attribute boolean scrollRestorationIsManual;
+
+    /**
+     * Set the session history it belongs to. It's only set on root entries.
+     */
+    [noscript] void setSHistory(in nsISHistory aSHistory);
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

@@ -97,6 +97,16 @@ interface nsISHistoryInternal: nsISupports
    void evictAllContentViewers();
 
    /**
+    * Add a BFCache entry to expiration tracker so it gets evicted on expiration.
+    */
+   void addToExpirationTracker(in nsIBFCacheEntry aEntry);
+
+   /**
+    * Remove a BFCache entry from expiration tracker.
+    */
+   void removeFromExpirationTracker(in nsIBFCacheEntry aEntry);
+
+   /**
     * Remove dynamic entries found at given index.
     *
     * @param aIndex
