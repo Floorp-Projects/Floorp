@@ -92,7 +92,7 @@ public:
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
-                  gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                  gfx::ScaledFont* aFont, const LayerPoint& aOffset, const gfx::Rect& aBounds,
                   const gfx::Rect& aClip);
 
   wr::FontKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);

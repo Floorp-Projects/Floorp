@@ -48,10 +48,11 @@ public:
 
   LayerRect RelativeToVisible(const LayerRect& aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
-  gfx::Rect ParentStackingContextBounds();
-  gfx::Rect RelativeToParent(gfx::Rect aRect);
-  gfx::Rect VisibleBoundsRelativeToParent();
-  gfx::Point GetOffsetToParent();
+  LayerRect ParentStackingContextBounds();
+  LayerRect RelativeToParent(const LayerRect& aRect);
+  LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
+  LayerRect VisibleBoundsRelativeToParent();
+  LayerPoint GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
   LayerRect Bounds();
@@ -60,7 +61,7 @@ protected:
   Maybe<LayerRect> ClipRect();
 
   LayerRect GetWrBoundsRect();
-  gfx::Rect GetWrRelBounds();
+  LayerRect GetWrRelBounds();
   LayerRect GetWrClipRect(const LayerRect& aRect);
   void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);

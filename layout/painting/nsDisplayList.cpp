@@ -4511,16 +4511,16 @@ nsDisplayCaret::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   mCaret->ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
 
   gfx::Color color = ToDeviceColor(frame->GetCaretColorAt(contentOffset));
-  Rect devCaretRect = LayoutDeviceRect::FromAppUnits(
-    caretRect + ToReferenceFrame(), appUnitsPerDevPixel).ToUnknownRect();
-  Rect devHookRect = LayoutDeviceRect::FromAppUnits(
-    hookRect + ToReferenceFrame(), appUnitsPerDevPixel).ToUnknownRect();
+  LayoutDeviceRect devCaretRect = LayoutDeviceRect::FromAppUnits(
+    caretRect + ToReferenceFrame(), appUnitsPerDevPixel);
+  LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
+    hookRect + ToReferenceFrame(), appUnitsPerDevPixel);
 
-  Rect caretTransformedRect = aLayer->RelativeToParent(devCaretRect);
-  Rect hookTransformedRect = aLayer->RelativeToParent(devHookRect);
+  LayerRect caretTransformedRect = aLayer->RelativeToParent(devCaretRect);
+  LayerRect hookTransformedRect = aLayer->RelativeToParent(devHookRect);
 
-  IntRect caret = RoundedToInt(caretTransformedRect);
-  IntRect hook = RoundedToInt(hookTransformedRect);
+  LayerIntRect caret = RoundedToInt(caretTransformedRect);
+  LayerIntRect hook = RoundedToInt(hookTransformedRect);
 
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(wr::ToWrRect(caret),
@@ -4769,16 +4769,16 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
     outset[i] = (float)(mBorderImageRenderer->mImageOutset.Side(i)) / appUnitsPerDevPixel;
   }
 
-  Rect destRect = LayoutDeviceRect::FromAppUnits(
-    mBorderImageRenderer->mArea, appUnitsPerDevPixel).ToUnknownRect();
-  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
-  IntRect dest = RoundedToInt(destRectTransformed);
+  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
+    mBorderImageRenderer->mArea, appUnitsPerDevPixel);
+  LayerRect destRectTransformed = aLayer->RelativeToParent(destRect);
+  LayerIntRect dest = RoundedToInt(destRectTransformed);
 
-  IntRect clip = dest;
+  LayerIntRect clip = dest;
   if (!mBorderImageRenderer->mClip.IsEmpty()) {
-    Rect clipRect = LayoutDeviceRect::FromAppUnits(
-      mBorderImageRenderer->mClip, appUnitsPerDevPixel).ToUnknownRect();
-    Rect clipRectTransformed = aLayer->RelativeToParent(clipRect);
+    LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
+      mBorderImageRenderer->mClip, appUnitsPerDevPixel);
+    LayerRect clipRectTransformed = aLayer->RelativeToParent(clipRect);
     clip = RoundedToInt(clipRectTransformed);
   }
 
@@ -4829,10 +4829,10 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart, lineEnd, gradientRadius);
 
       if (gradientData->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
-        Point startPoint = dest.TopLeft();
-        startPoint = startPoint + Point(lineStart.x, lineStart.y);
-        Point endPoint = dest.TopLeft();
-        endPoint = endPoint + Point(lineEnd.x, lineEnd.y);
+        LayerPoint startPoint = dest.TopLeft();
+        startPoint = startPoint + ViewAs<LayerPixel>(lineStart, PixelCastJustification::WebRenderHasUnitResolution);
+        LayerPoint endPoint = dest.TopLeft();
+        endPoint = endPoint + ViewAs<LayerPixel>(lineEnd, PixelCastJustification::WebRenderHasUnitResolution);
 
         aBuilder.PushBorderGradient(wr::ToWrRect(dest),
                                     aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
@@ -5155,8 +5155,8 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
 
   // Everything here is in app units, change to device units.
   for (uint32_t i = 0; i < rects.Length(); ++i) {
-    Rect clipRect = LayoutDeviceRect::FromAppUnits(
-        rects[i], appUnitsPerDevPixel).ToUnknownRect();
+    LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
+        rects[i], appUnitsPerDevPixel);
     nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
     MOZ_ASSERT(shadows);
 
@@ -5174,11 +5174,11 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
       shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
       shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
 
-      Rect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
-          shadowRect, appUnitsPerDevPixel).ToUnknownRect();
-      deviceBoxRect = aLayer->RelativeToParent(deviceBoxRect);
+      LayoutDeviceRect deviceBox = LayoutDeviceRect::FromAppUnits(
+          shadowRect, appUnitsPerDevPixel);
+      LayerRect deviceBoxRect = aLayer->RelativeToParent(deviceBox);
       deviceBoxRect.Round();
-      Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
+      LayerRect deviceClipRect = aLayer->RelativeToParent(clipRect);
 
       // TODO: support non-uniform border radius.
       float borderRadius = hasBorderRadius ? borderRadii.TopLeft().width
@@ -5347,8 +5347,8 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
   nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
 
   for (uint32_t i = 0; i < rects.Length(); ++i) {
-    Rect clipRect = LayoutDeviceRect::FromAppUnits(
-        rects[i], appUnitsPerDevPixel).ToUnknownRect();
+    LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
+        rects[i], appUnitsPerDevPixel);
 
     for (uint32_t i = shadows->Length(); i > 0; --i) {
       nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
@@ -5364,7 +5364,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
       // Now translate everything to device pixels.
       Rect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel).ToUnknownRect();
-      Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
+      LayerRect deviceClipRect = aLayer->RelativeToParent(clipRect);
       Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
       Point shadowOffset;

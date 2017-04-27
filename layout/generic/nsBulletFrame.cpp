@@ -463,9 +463,9 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   }
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  Rect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel).ToUnknownRect();
-  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
-  IntRect dest = RoundedToInt(destRectTransformed);
+  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
+  LayerRect destRectTransformed = aLayer->RelativeToParent(destRect);
+  LayerIntRect dest = RoundedToInt(destRectTransformed);
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
 
@@ -502,9 +502,9 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
-  Rect destRect = LayoutDeviceRect::FromAppUnits(
-      aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel).ToUnknownRect();
-  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
+      aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
+  gfx::Rect destRectTransformed = aLayer->RelativeToParent(destRect).ToUnknownRect();
 
   layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
                                 destRectTransformed, destRectTransformed);

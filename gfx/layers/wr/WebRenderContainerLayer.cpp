@@ -21,7 +21,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   gfx::Matrix4x4 transform = GetTransform();
   float opacity = GetLocalOpacity();
-  gfx::Rect relBounds = GetWrRelBounds();
+  LayerRect relBounds = GetWrRelBounds();
   gfx::Rect clip(0, 0, relBounds.width, relBounds.height);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
