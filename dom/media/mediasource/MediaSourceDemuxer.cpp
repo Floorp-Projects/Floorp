@@ -66,18 +66,17 @@ MediaSourceDemuxer::AddSizeOfResources(
   GetTaskQueue()->Dispatch(task.forget());
 }
 
-void MediaSourceDemuxer::NotifyDataArrived()
+void MediaSourceDemuxer::NotifyInitDataArrived()
 {
   RefPtr<MediaSourceDemuxer> self = this;
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self] () {
-      if (self->mInitPromise.IsEmpty()) {
-        return;
-      }
-      if (self->ScanSourceBuffersForContent()) {
-        self->mInitPromise.ResolveIfExists(NS_OK, __func__);
-      }
-    });
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() {
+    if (self->mInitPromise.IsEmpty()) {
+      return;
+    }
+    if (self->ScanSourceBuffersForContent()) {
+      self->mInitPromise.ResolveIfExists(NS_OK, __func__);
+    }
+  });
   GetTaskQueue()->Dispatch(task.forget());
 }
 
