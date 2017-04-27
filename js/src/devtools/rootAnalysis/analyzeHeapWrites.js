@@ -379,6 +379,10 @@ function ignoreContents(entry)
         /CSSValueSerializeCalcOps::Append/,
         "Gecko_CSSValue_SetFunction",
         "Gecko_CSSValue_SetArray",
+        "Gecko_EnsureMozBorderColors",
+        "Gecko_ClearMozBorderColors",
+        "Gecko_AppendMozBorderColors",
+        "Gecko_CopyMozBorderColors",
 
         // Needs main thread assertions or other fixes.
         /UndisplayedMap::GetEntryFor/,
