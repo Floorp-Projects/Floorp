@@ -270,7 +270,7 @@ nsSocketInputStream::OnSocketReady(nsresult condition)
     SOCKET_LOG(("nsSocketInputStream::OnSocketReady [this=%p cond=%" PRIx32 "]\n",
                 this, static_cast<uint32_t>(condition)));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     nsCOMPtr<nsIInputStreamCallback> callback;
     {
@@ -534,7 +534,7 @@ nsSocketOutputStream::OnSocketReady(nsresult condition)
     SOCKET_LOG(("nsSocketOutputStream::OnSocketReady [this=%p cond=%" PRIx32 "]\n",
                 this, static_cast<uint32_t>(condition)));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     nsCOMPtr<nsIOutputStreamCallback> callback;
     {
@@ -937,7 +937,7 @@ nsSocketTransport::InitWithFilename(const char *filename)
 nsresult
 nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
 
     char buf[kNetAddrMaxCStrBufSize];
@@ -1692,7 +1692,7 @@ nsSocketTransport::OnMsgInputClosed(nsresult reason)
     SOCKET_LOG(("nsSocketTransport::OnMsgInputClosed [this=%p reason=%" PRIx32 "]\n",
         this, static_cast<uint32_t>(reason)));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     mInputClosed = true;
     // check if event should affect entire transport
@@ -1714,7 +1714,7 @@ nsSocketTransport::OnMsgOutputClosed(nsresult reason)
     SOCKET_LOG(("nsSocketTransport::OnMsgOutputClosed [this=%p reason=%" PRIx32 "]\n",
         this, static_cast<uint32_t>(reason)));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     mOutputClosed = true;
     // check if event should affect entire transport
@@ -1732,7 +1732,7 @@ nsSocketTransport::OnMsgOutputClosed(nsresult reason)
 void
 nsSocketTransport::OnSocketConnected()
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     SOCKET_LOG(("  advancing to STATE_TRANSFERRING\n"));
 
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
@@ -1768,7 +1768,7 @@ nsSocketTransport::OnSocketConnected()
 void
 nsSocketTransport::SetSocketName(PRFileDesc *fd)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (mSelfAddrIsSet) {
         return;
     }
@@ -1816,8 +1816,6 @@ STS_PRCloseOnSocketTransport(PRFileDesc *fd)
 {
   if (gSocketTransportService) {
     // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
-    // FIX - Should use RUN_ON_THREAD once it's generally available
-    // RUN_ON_THREAD(gSocketThread,WrapRunnableNM(&PR_Close, mFD);
     gSocketTransportService->Dispatch(new ThunkPRClose(fd), NS_DISPATCH_NORMAL);
   } else {
     // something horrible has happened
@@ -1839,7 +1837,7 @@ nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
              gSocketTransportService->MaxTimeForPrClosePref())) {
           // If shutdown last to long, let the socket leak and do not close it.
           SOCKET_LOG(("Intentional leak"));
-        } else if (PR_GetCurrentThread() == gSocketThread) {
+        } else if (OnSocketThread()) {
             SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%p]\n", this));
             CloseSocket(mFD,
                 mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
@@ -2098,7 +2096,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     SOCKET_LOG(("nsSocketTransport::OnSocketDetached [this=%p cond=%" PRIx32 "]\n",
                 this, static_cast<uint32_t>(mCondition)));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     // if we didn't initiate this detach, then be sure to pass an error
     // condition up to our consumers.  (e.g., STS is shutting down.)
@@ -2405,7 +2403,7 @@ nsSocketTransport::GetPort(int32_t *port)
 NS_IMETHODIMP
 nsSocketTransport::GetNetworkInterfaceId(nsACString &aNetworkInterfaceId)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     aNetworkInterfaceId = mNetworkInterfaceId;
     return NS_OK;
 }
@@ -2413,7 +2411,7 @@ nsSocketTransport::GetNetworkInterfaceId(nsACString &aNetworkInterfaceId)
 NS_IMETHODIMP
 nsSocketTransport::SetNetworkInterfaceId(const nsACString &aNetworkInterfaceId)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     mNetworkInterfaceId = aNetworkInterfaceId;
     return NS_OK;
 }
@@ -2756,7 +2754,7 @@ nsSocketTransport::SetConnectionFlags(uint32_t value)
 void
 nsSocketTransport::OnKeepaliveEnabledPrefChange(bool aEnabled)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     // The global pref toggles keepalive as a system feature; it only affects
     // an individual socket if keepalive has been specifically enabled for it.
@@ -2846,7 +2844,7 @@ NS_IMETHODIMP
 nsSocketTransport::SetKeepaliveEnabled(bool aEnable)
 {
 #if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (aEnable == mKeepaliveEnabled) {
         SOCKET_LOG(("nsSocketTransport::SetKeepaliveEnabled [%p] already %s.",
@@ -2897,7 +2895,7 @@ nsSocketTransport::SetKeepaliveVals(int32_t aIdleTime,
                                     int32_t aRetryInterval)
 {
 #if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (NS_WARN_IF(aIdleTime <= 0 || kMaxTCPKeepIdle < aIdleTime)) {
         return NS_ERROR_INVALID_ARG;
     }
@@ -3048,7 +3046,7 @@ static void LogNSPRError(const char* aPrefix, const void *aObjPtr)
 nsresult
 nsSocketTransport::PRFileDescAutoLock::SetKeepaliveEnabled(bool aEnable)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(!(aEnable && !gSocketTransportService->IsKeepaliveEnabled()),
                "Cannot enable keepalive if global pref is disabled!");
     if (aEnable && !gSocketTransportService->IsKeepaliveEnabled()) {
@@ -3071,7 +3069,7 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveEnabled(bool aEnable)
 static void LogOSError(const char *aPrefix, const void *aObjPtr)
 {
 #if defined(DEBUG)
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
 #ifdef XP_WIN
     DWORD errCode = WSAGetLastError();
@@ -3110,7 +3108,7 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
                                                         int aProbeCount)
 {
 #if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (NS_WARN_IF(aIdleTime <= 0 || kMaxTCPKeepIdle < aIdleTime)) {
         return NS_ERROR_INVALID_ARG;
     }

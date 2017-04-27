@@ -413,7 +413,7 @@ private:
     void OnInputClosed(nsresult reason)
     {
         // no need to post an event if called on the socket thread
-        if (PR_GetCurrentThread() == gSocketThread)
+        if (OnSocketThread())
             OnMsgInputClosed(reason);
         else
             PostEvent(MSG_INPUT_CLOSED, reason);
@@ -421,7 +421,7 @@ private:
     void OnInputPending()
     {
         // no need to post an event if called on the socket thread
-        if (PR_GetCurrentThread() == gSocketThread)
+        if (OnSocketThread())
             OnMsgInputPending();
         else
             PostEvent(MSG_INPUT_PENDING);
@@ -429,7 +429,7 @@ private:
     void OnOutputClosed(nsresult reason)
     {
         // no need to post an event if called on the socket thread
-        if (PR_GetCurrentThread() == gSocketThread)
+        if (OnSocketThread())
             OnMsgOutputClosed(reason); // XXX need to not be inside lock!
         else
             PostEvent(MSG_OUTPUT_CLOSED, reason);
@@ -437,7 +437,7 @@ private:
     void OnOutputPending()
     {
         // no need to post an event if called on the socket thread
-        if (PR_GetCurrentThread() == gSocketThread)
+        if (OnSocketThread())
             OnMsgOutputPending();
         else
             PostEvent(MSG_OUTPUT_PENDING);
