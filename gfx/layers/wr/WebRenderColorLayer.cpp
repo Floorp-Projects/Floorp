@@ -33,7 +33,6 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                               1.0f,
-                              //GetAnimations(),
                               transform,
                               mixBlendMode);
   aBuilder.PushRect(wr::ToWrRect(rect), clip, wr::ToWrColor(mColor));
