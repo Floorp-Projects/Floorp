@@ -386,6 +386,8 @@ class BookmarkValidator {
    *   the fields describing client/server relationship will not have been filled
    *   out yet.
    */
+  // XXX This should be split up and the complexity reduced.
+  // eslint-disable-next-line complexity
   async inspectServerRecords(serverRecords) {
     let deletedItemIds = new Set();
     let idToRecord = new Map();
@@ -679,6 +681,8 @@ class BookmarkValidator {
    * - problemData is the same as for inspectServerRecords, except all properties
    *   will be filled out.
    */
+  // XXX This should be split up and the complexity reduced.
+  // eslint-disable-next-line complexity
   async compareServerWithClient(serverRecords, clientTree) {
 
     let clientRecords = await this.createClientRecordsFromTree(clientTree);

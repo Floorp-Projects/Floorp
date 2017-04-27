@@ -697,4 +697,5 @@ class SyncTelemetryImpl {
 
 }
 
+/* global SyncTelemetry */
 this.SyncTelemetry = new SyncTelemetryImpl(ENGINES);

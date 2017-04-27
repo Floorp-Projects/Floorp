@@ -3,9 +3,8 @@
 
 /* import-globals-from head_appinfo.js */
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
-// From head_http_server.js (which also imports this file).
-/* global new_timestamp */
+/* import-globals-from head_errorhandler_common.js */
+/* import-globals-from head_http_server.js */
 
 // This file expects Service to be defined in the global scope when EHTestsCommon
 // is used (from service.js).
@@ -485,6 +484,8 @@ Utils.getDefaultDeviceName = function() {
 };
 
 function registerRotaryEngine() {
+  let {RotaryEngine} =
+    Cu.import("resource://testing-common/services/sync/rotaryengine.js", {});
   Service.engineManager.clear();
 
   Service.engineManager.register(RotaryEngine);
