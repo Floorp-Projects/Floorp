@@ -1346,14 +1346,14 @@ StorageServer.prototype = {
         return;
       }
 
-      let ensureUserExists = function ensureUserExists(username) {
+      let ensureUserExists = username => {
         if (this.userExists(username)) {
           return;
         }
 
         this._log.info("StorageServer: Unknown user: " + username);
         throw HTTP_401;
-      }.bind(this);
+      };
 
       let auth = req.getHeader("authorization");
       this._log.debug("Authorization: " + auth);

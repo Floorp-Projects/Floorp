@@ -627,7 +627,7 @@ nsPlacesExpiration.prototype = {
 
   notify: function PEX_timerCallback() {
     // Check if we are over history capacity, if so visits must be expired.
-    this._getPagesStats((function onPagesCount(aPagesCount, aStatsCount) {
+    this._getPagesStats((aPagesCount, aStatsCount) => {
       let overLimitPages = aPagesCount - this._urisLimit;
       this._overLimit = overLimitPages > 0;
 
@@ -643,7 +643,7 @@ nsPlacesExpiration.prototype = {
                                                              : LIMIT.SMALL;
 
       this._expireWithActionAndLimit(action, limit);
-    }).bind(this));
+    });
   },
 
   // mozIStorageStatementCallback

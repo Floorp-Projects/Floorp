@@ -208,10 +208,6 @@ PROFILER_FUNC(bool profiler_is_active(), false)
 // Supported features: "displaylistdump", "gpu", "layersdump", "restyle".
 PROFILER_FUNC(bool profiler_feature_active(const char*), false)
 
-// Set the current frame number. Operates the same whether the profiler is
-// active or not.
-PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
-
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.
 PROFILER_FUNC(mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0),

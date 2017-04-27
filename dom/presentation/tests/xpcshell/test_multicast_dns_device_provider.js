@@ -239,9 +239,9 @@ function registerService() {
       this.serviceRegistered++;
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
+        cancel: () => {
           this.serviceUnregistered++;
-        }.bind(this)
+        }
       };
     },
     resolveService: function(serviceInfo, listener) {},
@@ -328,9 +328,9 @@ function registerServiceDynamically() {
       this.serviceRegistered++;
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
+        cancel: () => {
           this.serviceUnregistered++;
-        }.bind(this)
+        }
       };
     },
     resolveService: function(serviceInfo, listener) {},
@@ -1176,9 +1176,9 @@ function serverClosed() {
       this.serviceRegistered++;
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
+        cancel: () => {
           this.serviceUnregistered++;
-        }.bind(this)
+        }
       };
     },
     resolveService: function(serviceInfo, listener) {

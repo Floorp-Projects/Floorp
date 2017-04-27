@@ -92,7 +92,7 @@ AddonUtilsInternal.prototype = {
     function installAddonFromSearchResult(addon, options, cb) {
     this._log.info("Trying to install add-on from search result: " + addon.id);
 
-    this.getInstallFromSearchResult(addon, function onResult(error, install) {
+    this.getInstallFromSearchResult(addon, (error, install) => {
       if (error) {
         cb(error, null);
         return;
@@ -149,7 +149,7 @@ AddonUtilsInternal.prototype = {
         this._log.error("Error installing add-on", ex);
         cb(ex, null);
       }
-    }.bind(this));
+    });
   },
 
   /**
@@ -235,7 +235,7 @@ AddonUtilsInternal.prototype = {
     }
 
     AddonRepository.getAddonsByIDs(ids, {
-      searchSucceeded: function searchSucceeded(addons, addonsLength, total) {
+      searchSucceeded: (addons, addonsLength, total) => {
         this._log.info("Found " + addonsLength + "/" + ids.length +
                        " add-ons during repository search.");
 
@@ -342,7 +342,7 @@ AddonUtilsInternal.prototype = {
           this.installAddonFromSearchResult(addon, options, installCallback);
         }
 
-      }.bind(this),
+      },
 
       searchFailed: function searchFailed() {
         cb(new Error("AddonRepository search failed"), null);
@@ -420,7 +420,7 @@ AddonUtilsInternal.prototype = {
     }
 
     let listener = {
-      onEnabling: function onEnabling(wrapper, needsRestart) {
+      onEnabling: (wrapper, needsRestart) => {
         this._log.debug("onEnabling: " + wrapper.id);
         if (wrapper.id != addon.id) {
           return;
@@ -433,9 +433,9 @@ AddonUtilsInternal.prototype = {
 
         AddonManager.removeAddonListener(listener);
         cb(null, wrapper);
-      }.bind(this),
+      },
 
-      onEnabled: function onEnabled(wrapper) {
+      onEnabled: wrapper => {
         this._log.debug("onEnabled: " + wrapper.id);
         if (wrapper.id != addon.id) {
           return;
@@ -443,9 +443,9 @@ AddonUtilsInternal.prototype = {
 
         AddonManager.removeAddonListener(listener);
         cb(null, wrapper);
-      }.bind(this),
+      },
 
-      onDisabling: function onDisabling(wrapper, needsRestart) {
+      onDisabling: (wrapper, needsRestart) => {
         this._log.debug("onDisabling: " + wrapper.id);
         if (wrapper.id != addon.id) {
           return;
@@ -457,9 +457,9 @@ AddonUtilsInternal.prototype = {
 
         AddonManager.removeAddonListener(listener);
         cb(null, wrapper);
-      }.bind(this),
+      },
 
-      onDisabled: function onDisabled(wrapper) {
+      onDisabled: wrapper => {
         this._log.debug("onDisabled: " + wrapper.id);
         if (wrapper.id != addon.id) {
           return;
@@ -467,9 +467,9 @@ AddonUtilsInternal.prototype = {
 
         AddonManager.removeAddonListener(listener);
         cb(null, wrapper);
-      }.bind(this),
+      },
 
-      onOperationCancelled: function onOperationCancelled(wrapper) {
+      onOperationCancelled: wrapper => {
         this._log.debug("onOperationCancelled: " + wrapper.id);
         if (wrapper.id != addon.id) {
           return;
@@ -477,7 +477,7 @@ AddonUtilsInternal.prototype = {
 
         AddonManager.removeAddonListener(listener);
         cb(new Error("Operation cancelled"), wrapper);
-      }.bind(this)
+      }
     };
 
     // The add-on listeners are only fired if the add-on is active. If not, the

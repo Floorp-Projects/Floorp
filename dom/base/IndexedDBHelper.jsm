@@ -143,7 +143,7 @@ IndexedDBHelper.prototype = {
    *        Error callback to call when an error is encountered.
    */
   newTxn: function newTxn(txn_type, store_name, callback, successCb, failureCb) {
-    this.ensureDB(function () {
+    this.ensureDB(() => {
       if (DEBUG) debug("Starting new transaction" + txn_type);
       let txn;
       try {
@@ -182,7 +182,7 @@ IndexedDBHelper.prototype = {
         }
       };
       callback(txn, stores);
-    }.bind(this), failureCb);
+    }, failureCb);
   },
 
   /**

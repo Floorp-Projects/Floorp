@@ -159,7 +159,6 @@ StreamSamplesAndMarkers(const char* aName,
       schema.WriteField("responsiveness");
       schema.WriteField("rss");
       schema.WriteField("uss");
-      schema.WriteField("frameNumber");
     }
 
     aWriter.StartArrayProperty("data");

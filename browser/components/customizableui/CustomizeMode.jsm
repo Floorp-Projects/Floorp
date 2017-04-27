@@ -385,14 +385,14 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this)).then(null, function(e) {
+    }.bind(this)).then(null, e => {
       log.error("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isEnteringCustomizeMode = false;
       // Exit customize mode to ensure proper clean-up when entering failed.
       this.exit();
-    }.bind(this));
+    });
   },
 
   exit() {
@@ -542,12 +542,12 @@ CustomizeMode.prototype = {
       if (this._wantToBeInCustomizeMode) {
         this.enter();
       }
-    }.bind(this)).then(null, function(e) {
+    }.bind(this)).then(null, e => {
       log.error("Error exiting customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isExitingCustomizeMode = false;
-    }.bind(this));
+    });
   },
 
   /**
@@ -1320,7 +1320,7 @@ CustomizeMode.prototype = {
       panel.hidePopup();
     };
 
-    AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
+    AddonManager.getAddonByID(DEFAULT_THEME_ID, aDefaultTheme => {
       let doc = this.window.document;
 
       function buildToolbarButton(aTheme) {
@@ -1403,7 +1403,7 @@ CustomizeMode.prototype = {
       }
       let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
       recommendedLabel.hidden = hideRecommendedLabel;
-    }.bind(this));
+    });
   },
 
   _clearLWThemesMenu(panel) {
@@ -1563,7 +1563,7 @@ CustomizeMode.prototype = {
 
     // Hack needed so that the dragimage will still show the
     // item as it appeared before it was hidden.
-    this._initializeDragAfterMove = function() {
+    this._initializeDragAfterMove = () => {
       // For automated tests, we sometimes start exiting customization mode
       // before this fires, which leaves us with placeholders inserted after
       // we've exited. So we need to check that we are indeed customizing.
@@ -1581,7 +1581,7 @@ CustomizeMode.prototype = {
       }
       this._initializeDragAfterMove = null;
       this.window.clearTimeout(this._dragInitializeTimeout);
-    }.bind(this);
+    };
     this._dragInitializeTimeout = this.window.setTimeout(this._initializeDragAfterMove, 0);
   },
 

@@ -988,12 +988,14 @@ html|span.ac-emphasize-text-url {
 
 .ac-type-icon[type=keyword],
 .ac-site-icon[type=searchengine] {
-  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
+  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
+  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  fill: GrayText;
 }
 
 .ac-type-icon[type=keyword][selected],
 .ac-site-icon[type=searchengine][selected] {
-  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
+  fill: highlighttext;
 }
 
 .ac-type-icon[type=switchtab],

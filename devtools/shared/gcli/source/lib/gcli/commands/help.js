@@ -78,9 +78,9 @@ function getHelpManData(commandData, context) {
         */
       }
 
-      return Promise.resolve(input).then(function(defaultDescr) {
+      return Promise.resolve(input).then(defaultDescr => {
         return '(' + (param.type.name || param.type) + ', ' + defaultDescr + ')';
-      }.bind(this));
+      });
     },
     getSynopsis: function(param) {
       var name = param.name + (param.short ? '|-' + param.short : '');

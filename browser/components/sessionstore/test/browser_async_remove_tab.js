@@ -139,7 +139,9 @@ add_task(function* save_worthy_tabs_remote_final() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace about:blank with a new remote page.
-  let snippet = 'webNavigation.loadURI("https://example.com/", null, null, null, null)';
+  let snippet = 'webNavigation.loadURI("https://example.com/",\
+                                       null, null, null, null,\
+                                       Services.scriptSecurityManager.getSystemPrincipal())';
   yield promiseNewLocationAndHistoryEntryReplaced(browser, snippet);
 
   // Remotness shouldn't have changed.
