@@ -41,9 +41,7 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.restrictions.Restrictions;
-import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.RawResource;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
@@ -270,7 +268,7 @@ public class SuggestedSites {
             return;
         }
 
-        OutputStreamWriter outputStreamWriter = null;
+        OutputStreamWriter osw = null;
 
         try {
             final JSONArray jsonSites = new JSONArray();
@@ -278,14 +276,20 @@ public class SuggestedSites {
                 jsonSites.put(site.toJSON());
             }
 
-            outputStreamWriter = new OutputStreamWriter(new FileOutputStream(f), StringUtils.UTF_8);
+            osw = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");
 
             final String jsonString = jsonSites.toString();
-            outputStreamWriter.write(jsonString, 0, jsonString.length());
+            osw.write(jsonString, 0, jsonString.length());
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to save suggested sites", e);
         } finally {
-            IOUtils.safeStreamClose(outputStreamWriter);
+            if (osw != null) {
+                try {
+                    osw.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
         }
     }
 
