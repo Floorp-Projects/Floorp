@@ -10435,6 +10435,13 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
+  "APZ_AWARE_KEY_LISTENERS": {
+    "alert_emails": ["rhunt@mozilla.com"],
+    "bug_numbers": [1352654],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "description": "The percentage of pages with a non-passive key event on the path to the root scrolling element that would disable APZ key scrolling. This is tracked for non system principal windows, so it applies to toplevel windows and subframes/iframes, but not chrome windows. "
+  },
   "SCROLL_INPUT_METHODS": {
     "alert_emails": ["botond@mozilla.com"],
     "bug_numbers": [1238137],
