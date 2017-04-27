@@ -31,9 +31,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	function __w_pdfjs_require__(moduleId) {
 /******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-/******/
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
@@ -402,7 +402,7 @@ function createValidAbsoluteUrl(url, baseUrl) {
 }
 function shadow(obj, prop, value) {
   Object.defineProperty(obj, prop, {
-    value: value,
+    value,
     enumerable: true,
     configurable: true,
     writable: false
@@ -992,7 +992,7 @@ function MessageHandler(sourceName, targetName, comObj) {
   this.postMessageTransfers = true;
   var callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
   var ah = this.actionHandler = Object.create(null);
-  this._onComObjOnMessage = event => {
+  this._onComObjOnMessage = function messageHandlerComObjOnMessage(event) {
     var data = event.data;
     if (data.targetName !== this.sourceName) {
       return;
@@ -1019,8 +1019,8 @@ function MessageHandler(sourceName, targetName, comObj) {
           return action[0].call(action[1], data.data);
         }).then(function (result) {
           comObj.postMessage({
-            sourceName: sourceName,
-            targetName: targetName,
+            sourceName,
+            targetName,
             isReply: true,
             callbackId: data.callbackId,
             data: result
@@ -1030,8 +1030,8 @@ function MessageHandler(sourceName, targetName, comObj) {
             reason = reason + '';
           }
           comObj.postMessage({
-            sourceName: sourceName,
-            targetName: targetName,
+            sourceName,
+            targetName,
             isReply: true,
             callbackId: data.callbackId,
             error: reason
@@ -1043,34 +1043,34 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else {
       error('Unknown action from worker: ' + data.action);
     }
-  };
+  }.bind(this);
   comObj.addEventListener('message', this._onComObjOnMessage);
 }
 MessageHandler.prototype = {
-  on: function messageHandlerOn(actionName, handler, scope) {
+  on(actionName, handler, scope) {
     var ah = this.actionHandler;
     if (ah[actionName]) {
       error('There is already an actionName called "' + actionName + '"');
     }
     ah[actionName] = [handler, scope];
   },
-  send: function messageHandlerSend(actionName, data, transfers) {
+  send(actionName, data, transfers) {
     var message = {
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
-      data: data
+      data
     };
     this.postMessage(message, transfers);
   },
-  sendWithPromise: function messageHandlerSendWithPromise(actionName, data, transfers) {
+  sendWithPromise(actionName, data, transfers) {
     var callbackId = this.callbackIndex++;
     var message = {
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
-      data: data,
-      callbackId: callbackId
+      data,
+      callbackId
     };
     var capability = createPromiseCapability();
     this.callbacksCapabilities[callbackId] = capability;
@@ -1081,14 +1081,14 @@ MessageHandler.prototype = {
     }
     return capability.promise;
   },
-  postMessage: function (message, transfers) {
+  postMessage(message, transfers) {
     if (transfers && this.postMessageTransfers) {
       this.comObj.postMessage(message, transfers);
     } else {
       this.comObj.postMessage(message);
     }
   },
-  destroy: function () {
+  destroy() {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
   }
 };
@@ -14556,7 +14556,7 @@ var ChunkedStreamManager = function ChunkedStreamManagerClosure() {
         };
         rangeReader.read().then(readChunk, reject);
       });
-      promise.then(data => {
+      promise.then(function (data) {
         if (this.aborted) {
           return;
         }
@@ -14564,7 +14564,7 @@ var ChunkedStreamManager = function ChunkedStreamManagerClosure() {
           chunk: data,
           begin: begin
         });
-      });
+      }.bind(this));
     },
     requestAllChunks: function ChunkedStreamManager_requestAllChunks() {
       var missingChunks = this.stream.getMissingChunks();
@@ -16798,12 +16798,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var glyphs = font.charsToGlyphs(chars);
       var isAddToPathSet = !!(state.textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG);
       if (font.data && (isAddToPathSet || this.options.disableFontFace)) {
-        var buildPath = fontChar => {
+        var buildPath = function (fontChar) {
           if (!font.renderer.hasBuiltPath(fontChar)) {
             var path = font.renderer.getPathJs(fontChar);
             this.handler.send('commonobj', [font.loadedName + '_path_' + fontChar, 'FontPath', path]);
           }
-        };
+        }.bind(this);
         for (var i = 0, ii = glyphs.length; i < ii; i++) {
           var glyph = glyphs[i];
           buildPath(glyph.fontChar);
@@ -17274,7 +17274,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
         closePendingRestoreOPS();
         resolve();
-      }).catch(reason => {
+      }).catch(function (reason) {
         if (this.options.ignoreErrors) {
           this.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.unknown });
           warn('getOperatorList - ignoring errors during task: ' + task.name);
@@ -17282,7 +17282,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           return;
         }
         throw reason;
-      });
+      }.bind(this));
     },
     getTextContent: function PartialEvaluator_getTextContent(stream, task, resources, stateManager, normalizeWhitespace, combineTextItems) {
       stateManager = stateManager || new StateManager(new TextState());
@@ -17695,14 +17695,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
         flushTextContentItem();
         resolve(textContent);
-      }).catch(reason => {
+      }).catch(function (reason) {
         if (this.options.ignoreErrors) {
           warn('getTextContent - ignoring errors during task: ' + task.name);
           flushTextContentItem();
           return textContent;
         }
         throw reason;
-      });
+      }.bind(this));
     },
     extractDataStructures: function PartialEvaluator_extractDataStructures(dict, baseDict, properties) {
       var xref = this.xref;
@@ -17778,10 +17778,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       properties.baseEncodingName = baseEncodingName;
       properties.hasEncoding = !!baseEncodingName || differences.length > 0;
       properties.dict = dict;
-      return toUnicodePromise.then(toUnicode => {
+      return toUnicodePromise.then(function (toUnicode) {
         properties.toUnicode = toUnicode;
         return this.buildToUnicode(properties);
-      }).then(function (toUnicode) {
+      }.bind(this)).then(function (toUnicode) {
         properties.toUnicode = toUnicode;
         return properties;
       });
@@ -18161,10 +18161,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             firstChar: 0,
             lastChar: maxCharIndex
           };
-          return this.extractDataStructures(dict, dict, properties).then(properties => {
+          return this.extractDataStructures(dict, dict, properties).then(function (properties) {
             properties.widths = this.buildCharCodeToWidth(metrics.widths, properties);
             return new Font(baseFontName, null, properties);
-          });
+          }.bind(this));
         }
       }
       var firstChar = dict.get('FirstChar') || 0;
@@ -18242,15 +18242,15 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       } else {
         cMapPromise = Promise.resolve(undefined);
       }
-      return cMapPromise.then(() => {
+      return cMapPromise.then(function () {
         return this.extractDataStructures(dict, baseDict, properties);
-      }).then(properties => {
+      }.bind(this)).then(function (properties) {
         this.extractWidths(dict, descriptor, properties);
         if (type === 'Type3') {
           properties.isType3Font = true;
         }
         return new Font(fontName.name, fontFile, properties);
-      });
+      }.bind(this));
     }
   };
   return PartialEvaluator;
@@ -21605,22 +21605,22 @@ var Catalog = function CatalogClosure() {
       this.fontCache.forEach(function (promise) {
         promises.push(promise);
       });
-      return Promise.all(promises).then(translatedFonts => {
+      return Promise.all(promises).then(function (translatedFonts) {
         for (var i = 0, ii = translatedFonts.length; i < ii; i++) {
           var font = translatedFonts[i].dict;
           delete font.translated;
         }
         this.fontCache.clear();
         this.builtInCMapCache = Object.create(null);
-      });
+      }.bind(this));
     },
     getPage: function Catalog_getPage(pageIndex) {
       if (!(pageIndex in this.pagePromises)) {
-        this.pagePromises[pageIndex] = this.getPageDict(pageIndex).then(a => {
+        this.pagePromises[pageIndex] = this.getPageDict(pageIndex).then(function (a) {
           var dict = a[0];
           var ref = a[1];
           return this.pageFactory.createPage(pageIndex, dict, ref, this.fontCache, this.builtInCMapCache);
-        });
+        }.bind(this));
       }
       return this.pagePromises[pageIndex];
     },
@@ -22665,7 +22665,7 @@ var ObjectLoader = function () {
         addChildren(currentNode, nodesToVisit);
       }
       if (pendingRequests.length) {
-        this.xref.stream.manager.requestRanges(pendingRequests).then(() => {
+        this.xref.stream.manager.requestRanges(pendingRequests).then(function pendingRequestCallback() {
           nodesToVisit = nodesToRevisit;
           for (var i = 0; i < nodesToRevisit.length; i++) {
             var node = nodesToRevisit[i];
@@ -22674,7 +22674,7 @@ var ObjectLoader = function () {
             }
           }
           this._walk(nodesToVisit);
-        }, this.capability.reject);
+        }.bind(this), this.capability.reject);
         return;
       }
       this.refSet = null;
@@ -24271,7 +24271,7 @@ var Annotation = function AnnotationClosure() {
       this.data.contents = stringToPDFString(dict.get('Contents') || '');
     },
     loadResources: function Annotation_loadResources(keys) {
-      return new Promise((resolve, reject) => {
+      return new Promise(function (resolve, reject) {
         this.appearance.dict.getAsync('Resources').then(function (resources) {
           if (!resources) {
             resolve();
@@ -24282,7 +24282,7 @@ var Annotation = function AnnotationClosure() {
             resolve(resources);
           }, reject);
         }, reject);
-      });
+      }.bind(this));
     },
     getOperatorList: function Annotation_getOperatorList(evaluator, task, renderForms) {
       if (!this.appearance) {
@@ -25811,10 +25811,10 @@ var Page = function PageClosure() {
       if (!this.resourcesPromise) {
         this.resourcesPromise = this.pdfManager.ensure(this, 'resources');
       }
-      return this.resourcesPromise.then(() => {
+      return this.resourcesPromise.then(function resourceSuccess() {
         var objectLoader = new ObjectLoader(this.resources.map, keys, this.xref);
         return objectLoader.load();
-      });
+      }.bind(this));
     },
     getOperatorList: function Page_getOperatorList(handler, task, intent, renderInteractiveForms) {
       var self = this;
@@ -27295,7 +27295,7 @@ var Font = function FontClosure() {
         this.toFontChar = buildToFontChar(properties.defaultEncoding, getGlyphsUnicode(), properties.differences);
       } else {
         glyphsUnicodeMap = getGlyphsUnicode();
-        this.toUnicode.forEach((charCode, unicodeCharCode) => {
+        this.toUnicode.forEach(function (charCode, unicodeCharCode) {
           if (!this.composite) {
             glyphName = properties.differences[charCode] || properties.defaultEncoding[charCode];
             unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
@@ -27304,7 +27304,7 @@ var Font = function FontClosure() {
             }
           }
           this.toFontChar[charCode] = unicodeCharCode;
-        });
+        }.bind(this));
       }
       this.loadedName = fontName.split('-')[0];
       this.loading = false;
@@ -36565,8 +36565,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.243';
-var pdfjsBuild = '96cb599e';
+var pdfjsVersion = '1.8.269';
+var pdfjsBuild = 'acdfc2d8';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
