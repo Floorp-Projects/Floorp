@@ -561,7 +561,7 @@ SessionStore.prototype = {
 
     // Assign it a unique identifier (timestamp) and create its data object
     aWindow.__SSID = "window" + Date.now();
-    this._windows[aWindow.__SSID] = { tabs: [], selectedTabId: INVALID_TAB_ID, closedTabs: [] };
+    this._windows[aWindow.__SSID] = { tabs: [], selected: 0, closedTabs: [] };
 
     // Perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
@@ -679,20 +679,8 @@ SessionStore.prototype = {
   },
 
   onTabClose: function ss_onTabClose(aWindow, aBrowser, aTabIndex) {
-    let data = aBrowser.__SS_data;
-    let tab = aWindow.BrowserApp.getTabForId(data.tabId);
-
-    let windowData = this._windows[aWindow.__SSID];
-    if (windowData.selectedTabId == tab.id) {
-      // Normally, we will first select another tab anyway before closing the previous tab, which
-      // would make this logic moot. However
-      // - we only update the selected tab when selecting a normal BROWSING-type tab, and
-      // - in conjunction with switching between activities, the event order as we see it can
-      //   become reversed.
-      windowData.selectedTabId = INVALID_TAB_ID;
-    }
-
-    if (this._maxTabsUndo == 0 || this._sessionDataIsEmpty(data) || tab.type != "BROWSING") {
+    let data = aBrowser.__SS_data || {};
+    if (this._maxTabsUndo == 0 || this._sessionDataIsEmpty(data)) {
       this._lastClosedTabIndex = INVALID_TAB_INDEX;
       return;
     }
@@ -714,7 +702,7 @@ SessionStore.prototype = {
         this._sendClosedTabsToJava(aWindow);
       }
 
-      log("onTabClose() ran for tab " + tab.id);
+      log("onTabClose() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
       let evt = new Event("SSTabCloseProcessed", {"bubbles":true, "cancelable":false});
       aBrowser.dispatchEvent(evt);
     }
@@ -807,12 +795,11 @@ SessionStore.prototype = {
       return;
     }
 
+    let index = aWindow.BrowserApp.selectedTabIndex;
+    this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
+
     let tab = aWindow.BrowserApp.getTabForBrowser(aBrowser);
     let tabId = tab.id;
-
-    if (tab.type == "BROWSING") {
-      this._windows[aWindow.__SSID].selectedTabId = tabId;
-    }
 
     // Restore the resurrected browser
     if (tabId != this._keepAsZombieTabId) {
@@ -1061,9 +1048,6 @@ SessionStore.prototype = {
       for (let prop in win) {
         normalWin[prop] = data[prop];
       }
-      // This particular attribute will be converted to a tab index further down
-      // and stored in the appropriate (normal or private) window data.
-      delete normalWin.selectedTabId;
       normalWin.tabs = [];
 
       // Save normal closed tabs. Forget about private closed tabs.
@@ -1077,14 +1061,10 @@ SessionStore.prototype = {
       // data will be sent to Java for Android to hold it in memory.
       for (let i = 0; i < win.tabs.length; ++i) {
         let tab = win.tabs[i];
-        if (tab.type != "BROWSING") {
-          continue;
-        }
-
         let savedWin = tab.isPrivate ? privateData.windows[winIndex] : normalData.windows[winIndex];
         savedWin.tabs.push(tab);
-        if (win.selectedTabId === tab.tabId) {
-          savedWin.selected = savedWin.tabs.length; // 1-based index
+        if (win.selected == i + 1) {
+          savedWin.selected = savedWin.tabs.length;
         }
       }
     }
@@ -1153,11 +1133,8 @@ SessionStore.prototype = {
     let winData = this._windows[aWindow.__SSID];
     winData.tabs = [];
 
-    let selectedTab = aWindow.BrowserApp.selectedTab;
-
-    if (selectedTab != null && selectedTab.type == "BROWSING") {
-      winData.selectedTabId = selectedTab.id;
-    }
+    let index = aWindow.BrowserApp.selectedTabIndex;
+    winData.selected = parseInt(index) + 1; // 1-based
 
     let tabs = aWindow.BrowserApp.tabs;
     for (let i = 0; i < tabs.length; i++) {
@@ -1452,22 +1429,11 @@ SessionStore.prototype = {
 
         delete tab.browser.__SS_restore;
         tab.browser.removeAttribute("pending");
-
-        this._windows[window.__SSID].selectedTabId = tab.id;
       } else {
         // Mark the browser for delay loading
         tab.browser.__SS_restore = true;
         tab.browser.setAttribute("pending", "true");
       }
-    }
-
-    if (state.windows[0].hasOwnProperty("selectedTabId") &&
-      this._windows[window.__SSID].selectedTabId == INVALID_TAB_ID) {
-      // If none of the restored tabs was the selected tab, we might be opening an URL from an
-      // external intent. If this new tab is a normal BROWSING tab, we'll catch its selection
-      // anyway, however if we've opened a custom tab/web app or anything like that we want to
-      // ignore it. So instead, we store the tab we would have selected from the session file.
-      this._windows[window.__SSID].selectedTabId = state.windows[0].selectedTabId;
     }
 
     // Restore the closed tabs array on the current window.
