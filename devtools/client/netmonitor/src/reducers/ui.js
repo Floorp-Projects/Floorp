@@ -27,8 +27,6 @@ const Columns = I.Record({
   remoteip: false,
   cause: true,
   type: true,
-  cookies: false,
-  setCookies: false,
   transferred: true,
   contentSize: true,
   waterfall: true,
