@@ -95,6 +95,7 @@ struct CDMVideoFrame {
   uint32_t mFormat;
   int32_t mImageWidth;
   int32_t mImageHeight;
+  Shmem mData;
   CDMVideoPlane mYPlane;
   CDMVideoPlane mUPlane;
   CDMVideoPlane mVPlane;
