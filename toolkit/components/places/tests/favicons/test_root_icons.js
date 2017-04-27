@@ -19,6 +19,7 @@ add_task(function* () {
                faviconURI.spec);
 
   // Check database entries.
+  yield PlacesTestUtils.promiseAsyncUpdates();
   let db = yield PlacesUtils.promiseDBConnection();
   let rows = yield db.execute("SELECT * FROM moz_icons");
   Assert.equal(rows.length, 1, "There should only be 1 icon entry");
@@ -70,6 +71,7 @@ add_task(function* test_removePagesByTimeframe() {
   );
 
   // Check database entries.
+  yield PlacesTestUtils.promiseAsyncUpdates();
   let db = yield PlacesUtils.promiseDBConnection();
   let rows = yield db.execute("SELECT * FROM moz_icons");
   Assert.equal(rows.length, 1, "There should only be 1 icon entry");
