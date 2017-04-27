@@ -355,8 +355,11 @@ ChromiumCDMProxy::Shutdown()
     cdm.swap(mCDM);
   }
   if (cdm) {
+    // We need to keep this proxy alive until the parent has finished its
+    // Shutdown (as it may still try to use the proxy until then).
+    RefPtr<ChromiumCDMProxy> self(this);
     nsCOMPtr<nsIRunnable> task =
-      NewRunnableMethod(cdm, &gmp::ChromiumCDMParent::Shutdown);
+      NS_NewRunnableFunction([self, cdm]() { cdm->Shutdown(); });
     mGMPThread->Dispatch(task.forget());
   }
 }

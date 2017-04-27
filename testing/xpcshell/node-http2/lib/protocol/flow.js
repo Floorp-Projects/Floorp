@@ -87,13 +87,13 @@ Flow.prototype._write = function _write(frame, encoding, callback) {
   }
 
   if ((frame.type === 'DATA') && (frame.data.length > 0)) {
-    this._receive(frame, function() {
+    this._receive(frame, () => {
       this._received += frame.data.length;
       if (!this._restoreWindowTimer) {
         this._restoreWindowTimer = setImmediate(this._restoreWindow.bind(this));
       }
       callback();
-    }.bind(this));
+    });
   }
 
   else {

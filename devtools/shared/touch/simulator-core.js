@@ -239,10 +239,10 @@ SimulatorCore.prototype = {
       clientY,
     });
     let content = this.getContent(target);
-    let timeout = content.setTimeout((function contextMenu() {
+    let timeout = content.setTimeout(() => {
       target.dispatchEvent(evt);
       this.cancelClick = true;
-    }).bind(this), delay);
+    }, delay);
 
     return timeout;
   },

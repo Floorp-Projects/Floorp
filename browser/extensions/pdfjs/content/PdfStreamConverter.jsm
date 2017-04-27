@@ -794,10 +794,10 @@ class FindEventManager {
   }
 
   bind() {
-    var unload = function(e) {
+    var unload = e => {
       this.unbind();
       this.contentWindow.removeEventListener(e.type, unload);
-    }.bind(this);
+    };
     this.contentWindow.addEventListener("unload", unload);
 
     // We cannot directly attach listeners to for the find events

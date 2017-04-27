@@ -25,7 +25,7 @@ ResourceCleaner.prototype = {
   },
   cleanup: function ResourceCleaner_cleanup() {
     let keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(this._map);
-    keys.forEach((function cleaner(k) {
+    keys.forEach(k => {
       try {
         k.dispose();
       } catch (x) {
@@ -33,7 +33,7 @@ ResourceCleaner.prototype = {
         // during the test. This is normal.
       }
       this._map.delete(k);
-    }).bind(this));
+    });
   }
 };
 

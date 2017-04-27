@@ -110,13 +110,13 @@ RuleEditor.prototype = {
     this.source = createChild(this.element, "div", {
       class: "ruleview-rule-source theme-link"
     });
-    this.source.addEventListener("click", function () {
+    this.source.addEventListener("click", () => {
       if (this.source.hasAttribute("unselectable")) {
         return;
       }
       let rule = this.rule.domRule;
       this.ruleView.emit("ruleview-linked-clicked", rule);
-    }.bind(this));
+    });
     let sourceLabel = this.doc.createElement("span");
     sourceLabel.classList.add("ruleview-rule-source-label");
     this.source.appendChild(sourceLabel);

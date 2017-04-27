@@ -790,7 +790,7 @@ BrowserIDClusterManager.prototype = {
   },
 
   _findCluster() {
-    let endPointFromIdentityToken = function() {
+    let endPointFromIdentityToken = () => {
       // The only reason (in theory ;) that we can end up with a null token
       // is when this.identity._canFetchKeys() returned false.  In turn, this
       // should only happen if the master-password is locked or the credentials
@@ -811,10 +811,10 @@ BrowserIDClusterManager.prototype = {
       }
       log.debug("_findCluster returning " + endpoint);
       return endpoint;
-    }.bind(this);
+    };
 
     // Spinningly ensure we are ready to authenticate and have a valid token.
-    let promiseClusterURL = function() {
+    let promiseClusterURL = () => {
       return this.identity.whenReadyToAuthenticate.promise.then(
         () => {
           // We need to handle node reassignment here.  If we are being asked
@@ -829,7 +829,7 @@ BrowserIDClusterManager.prototype = {
         }
       ).then(endPointFromIdentityToken
       );
-    }.bind(this);
+    };
 
     let cb = Async.makeSpinningCallback();
     promiseClusterURL().then(function(clusterURL) {

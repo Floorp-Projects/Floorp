@@ -3853,9 +3853,10 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // If we sent a sub protocol header, verify the response matches
-  // If it does not, set mProtocol to "" so the protocol attribute
-  // of the WebSocket JS object reflects that
+  // If we sent a sub protocol header, verify the response matches.
+  // If response contains protocol that was not in request, fail.
+  // If response contained no protocol header, set to "" so the protocol
+  // attribute of the WebSocket JS object reflects that
   if (!mProtocol.IsEmpty()) {
     nsAutoCString respProtocol;
     rv = mHttpChannel->GetResponseHeader(
@@ -3865,7 +3866,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
       rv = NS_ERROR_ILLEGAL_VALUE;
       val = mProtocol.BeginWriting();
       while ((token = nsCRT::strtok(val, ", \t", &val))) {
-        if (PL_strcasecmp(token, respProtocol.get()) == 0) {
+        if (PL_strcmp(token, respProtocol.get()) == 0) {
           rv = NS_OK;
           break;
         }
@@ -3877,9 +3878,11 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
         mProtocol = respProtocol;
       } else {
         LOG(("WebsocketChannel::OnStartRequest: "
-             "subprotocol [%s] not found - %s returned",
-             mProtocol.get(), respProtocol.get()));
+             "Server replied with non-matching subprotocol [%s]: aborting",
+             respProtocol.get()));
         mProtocol.Truncate();
+        AbortSession(NS_ERROR_ILLEGAL_VALUE);
+        return NS_ERROR_ILLEGAL_VALUE;
       }
     } else {
       LOG(("WebsocketChannel::OnStartRequest "

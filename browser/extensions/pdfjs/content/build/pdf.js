@@ -992,7 +992,7 @@ function MessageHandler(sourceName, targetName, comObj) {
   this.postMessageTransfers = true;
   var callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
   var ah = this.actionHandler = Object.create(null);
-  this._onComObjOnMessage = function messageHandlerComObjOnMessage(event) {
+  this._onComObjOnMessage = event => {
     var data = event.data;
     if (data.targetName !== this.sourceName) {
       return;
@@ -1043,7 +1043,7 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else {
       error('Unknown action from worker: ' + data.action);
     }
-  }.bind(this);
+  };
   comObj.addEventListener('message', this._onComObjOnMessage);
 }
 MessageHandler.prototype = {
@@ -1225,14 +1225,14 @@ var DOMCMapReaderFactory = function DOMCMapReaderFactoryClosure() {
       if (!name) {
         return Promise.reject(new Error('CMap name must be specified.'));
       }
-      return new Promise(function (resolve, reject) {
+      return new Promise((resolve, reject) => {
         var url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
         if (this.isCompressed) {
           request.responseType = 'arraybuffer';
         }
-        request.onreadystatechange = function () {
+        request.onreadystatechange = () => {
           if (request.readyState !== XMLHttpRequest.DONE) {
             return;
           }
@@ -1252,9 +1252,9 @@ var DOMCMapReaderFactory = function DOMCMapReaderFactoryClosure() {
             }
           }
           reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
-        }.bind(this);
+        };
         request.send(null);
-      }.bind(this));
+      });
     }
   };
   return DOMCMapReaderFactory;
@@ -2239,13 +2239,13 @@ var PDFDocumentLoadingTask = function PDFDocumentLoadingTaskClosure() {
     destroy: function () {
       this.destroyed = true;
       var transportDestroyed = !this._transport ? Promise.resolve() : this._transport.destroy();
-      return transportDestroyed.then(function () {
+      return transportDestroyed.then(() => {
         this._transport = null;
         if (this._worker) {
           this._worker.destroy();
           this._worker = null;
         }
-      }.bind(this));
+      });
     },
     then: function PDFDocumentLoadingTask_then(onFulfilled, onRejected) {
       return this.promise.then.apply(this.promise, arguments);
@@ -2279,20 +2279,20 @@ var PDFDataRangeTransport = function pdfDataRangeTransportClosure() {
       }
     },
     onDataProgress: function PDFDataRangeTransport_onDataProgress(loaded) {
-      this._readyCapability.promise.then(function () {
+      this._readyCapability.promise.then(() => {
         var listeners = this._progressListeners;
         for (var i = 0, n = listeners.length; i < n; ++i) {
           listeners[i](loaded);
         }
-      }.bind(this));
+      });
     },
     onDataProgressiveRead: function PDFDataRangeTransport_onDataProgress(chunk) {
-      this._readyCapability.promise.then(function () {
+      this._readyCapability.promise.then(() => {
         var listeners = this._progressiveReadListeners;
         for (var i = 0, n = listeners.length; i < n; ++i) {
           listeners[i](chunk);
         }
-      }.bind(this));
+      });
     },
     transportReady: function PDFDataRangeTransport_transportReady() {
       this._readyCapability.resolve();
@@ -2660,11 +2660,11 @@ var PDFWorker = function PDFWorkerClosure() {
       }
       var cloned = new WeakMap();
       var e = { data: cloneValue(obj) };
-      this._deferred.then(function () {
+      this._deferred.then(() => {
         this._listeners.forEach(function (listener) {
           listener.call(this, e);
         }, this);
-      }.bind(this));
+      });
     },
     addEventListener: function (name, listener) {
       this._listeners.push(listener);
@@ -2716,7 +2716,7 @@ var PDFWorker = function PDFWorkerClosure() {
         try {
           var worker = new Worker(workerSrc);
           var messageHandler = new _util.MessageHandler('main', 'worker', worker);
-          var terminateEarly = function () {
+          var terminateEarly = () => {
             worker.removeEventListener('error', onWorkerError);
             messageHandler.destroy();
             worker.terminate();
@@ -2725,14 +2725,14 @@ var PDFWorker = function PDFWorkerClosure() {
             } else {
               this._setupFakeWorker();
             }
-          }.bind(this);
-          var onWorkerError = function (event) {
+          };
+          var onWorkerError = event => {
             if (!this._webWorker) {
               terminateEarly();
             }
-          }.bind(this);
+          };
           worker.addEventListener('error', onWorkerError);
-          messageHandler.on('test', function PDFWorker_test(data) {
+          messageHandler.on('test', data => {
             worker.removeEventListener('error', onWorkerError);
             if (this.destroyed) {
               terminateEarly();
@@ -2753,14 +2753,14 @@ var PDFWorker = function PDFWorkerClosure() {
               messageHandler.destroy();
               worker.terminate();
             }
-          }.bind(this));
+          });
           messageHandler.on('console_log', function (data) {
             console.log.apply(console, data);
           });
           messageHandler.on('console_error', function (data) {
             console.error.apply(console, data);
           });
-          messageHandler.on('ready', function (data) {
+          messageHandler.on('ready', data => {
             worker.removeEventListener('error', onWorkerError);
             if (this.destroyed) {
               terminateEarly();
@@ -2771,7 +2771,7 @@ var PDFWorker = function PDFWorkerClosure() {
             } catch (e) {
               this._setupFakeWorker();
             }
-          }.bind(this));
+          });
           var sendTest = function () {
             var postMessageTransfers = (0, _dom_utils.getDefaultSetting)('postMessageTransfers') && !isPostMessageTransfersDisabled;
             var testObj = new Uint8Array([postMessageTransfers ? 255 : 0]);
@@ -2796,7 +2796,7 @@ var PDFWorker = function PDFWorkerClosure() {
         (0, _util.warn)('Setting up fake worker.');
         isWorkerDisabled = true;
       }
-      setupFakeWorkerGlobal().then(function (WorkerMessageHandler) {
+      setupFakeWorkerGlobal().then(WorkerMessageHandler => {
         if (this.destroyed) {
           this._readyCapability.reject(new Error('Worker was destroyed'));
           return;
@@ -2810,7 +2810,7 @@ var PDFWorker = function PDFWorkerClosure() {
         var messageHandler = new _util.MessageHandler(id, id + '_worker', port);
         this._messageHandler = messageHandler;
         this._readyCapability.resolve();
-      }.bind(this));
+      });
     },
     destroy: function PDFWorker_destroy() {
       this.destroyed = true;
@@ -2913,9 +2913,9 @@ var WorkerTransport = function WorkerTransportClosure() {
       messageHandler.on('PasswordRequest', function transportPasswordRequest(exception) {
         this._passwordCapability = (0, _util.createPromiseCapability)();
         if (loadingTask.onPassword) {
-          var updatePassword = function (password) {
+          var updatePassword = password => {
             this._passwordCapability.resolve({ password: password });
-          }.bind(this);
+          };
           loadingTask.onPassword(updatePassword, exception.code);
         } else {
           this._passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
@@ -2991,9 +2991,9 @@ var WorkerTransport = function WorkerTransportClosure() {
               disableFontFace: (0, _dom_utils.getDefaultSetting)('disableFontFace'),
               fontRegistry: fontRegistry
             });
-            this.fontLoader.bind([font], function fontReady(fontObjs) {
+            this.fontLoader.bind([font], fontObjs => {
               this.commonObjs.resolve(id, font);
-            }.bind(this));
+            });
             break;
           case 'FontPath':
             this.commonObjs.resolve(id, data[2]);
@@ -3140,14 +3140,14 @@ var WorkerTransport = function WorkerTransportClosure() {
       if (pageIndex in this.pagePromises) {
         return this.pagePromises[pageIndex];
       }
-      var promise = this.messageHandler.sendWithPromise('GetPage', { pageIndex: pageIndex }).then(function (pageInfo) {
+      var promise = this.messageHandler.sendWithPromise('GetPage', { pageIndex: pageIndex }).then(pageInfo => {
         if (this.destroyed) {
           throw new Error('Transport destroyed');
         }
         var page = new PDFPageProxy(pageIndex, pageInfo, this);
         this.pageCache[pageIndex] = page;
         return page;
-      }.bind(this));
+      });
       this.pagePromises[pageIndex] = promise;
       return promise;
     },
@@ -3192,7 +3192,7 @@ var WorkerTransport = function WorkerTransportClosure() {
       return this.messageHandler.sendWithPromise('GetStats', null);
     },
     startCleanup: function WorkerTransport_startCleanup() {
-      this.messageHandler.sendWithPromise('Cleanup', null).then(function endCleanup() {
+      this.messageHandler.sendWithPromise('Cleanup', null).then(() => {
         for (var i = 0, ii = this.pageCache.length; i < ii; i++) {
           var page = this.pageCache[i];
           if (page) {
@@ -3201,7 +3201,7 @@ var WorkerTransport = function WorkerTransportClosure() {
         }
         this.commonObjs.clear();
         this.fontLoader.clear();
-      }.bind(this));
+      });
     }
   };
   return WorkerTransport;

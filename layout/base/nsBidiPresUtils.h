@@ -400,6 +400,23 @@ private:
                              BidiParagraphData*         aBpd);
 
   /**
+   * Perform a recursive "pre-traversal" of the child frames of a block or
+   * inline container frame, to determine whether full bidi resolution is
+   * actually needed.
+   * This explores the same frames as TraverseFrames (above), but is less
+   * expensive and may allow us to avoid performing the full TraverseFrames
+   * operation.
+   * @param   aFirstChild  frame to start traversal from
+   * @param[in/out]  aCurrContent  the content node that we've most recently
+   *          scanned for RTL characters (so that when descendant frames refer
+   *          to the same content, we can avoid repeatedly scanning it).
+   * @return  true if it finds that bidi is (or may be) required,
+   *          false if no potentially-bidi content is present.
+   */
+  static bool ChildListMayRequireBidi(nsIFrame*    aFirstChild,
+                                      nsIContent** aCurrContent);
+
+  /**
    * Position ruby content frames (ruby base/text frame).
    * Called from RepositionRubyFrame.
    */

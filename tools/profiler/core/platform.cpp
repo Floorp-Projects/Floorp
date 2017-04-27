@@ -162,8 +162,6 @@ public:
     , mLUL(nullptr)
 #endif
     , mInterposeObserver(nullptr)
-    , mFrameNumber(0)
-    , mLatestRecordedFrameNumber(0)
   {}
 
   #define GET_AND_SET(type_, name_) \
@@ -224,9 +222,6 @@ public:
 #endif
 
   GET_AND_SET(mozilla::ProfilerIOInterposeObserver*, InterposeObserver)
-
-  GET_AND_SET(int, FrameNumber)
-  GET_AND_SET(int, LatestRecordedFrameNumber)
 
   #undef GET_AND_SET
 
@@ -322,11 +317,6 @@ private:
   // The interposer that records main thread I/O. Null when the profiler is
   // inactive.
   mozilla::ProfilerIOInterposeObserver* mInterposeObserver;
-
-  // The current frame number and the most recent frame number recorded in a
-  // sample.
-  int mFrameNumber;
-  int mLatestRecordedFrameNumber;
 };
 
 uint32_t PS::sActivityGeneration = 0;
@@ -1112,12 +1102,6 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
     double ussMemory = static_cast<double>(aSample.mUSSMemory);
     aBuffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
-
-  int frameNumber = gPS->FrameNumber(aLock);
-  if (frameNumber != gPS->LatestRecordedFrameNumber(aLock)) {
-    aBuffer->addTag(ProfileBufferEntry::FrameNumber(frameNumber));
-    gPS->SetLatestRecordedFrameNumber(aLock, frameNumber);
-  }
 }
 
 // END tick/unwinding code
@@ -1217,7 +1201,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 5);
+  aWriter.IntProperty("version", 6);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -2690,18 +2674,6 @@ profiler_is_active()
   PSAutoLock lock(gPSMutex);
 
   return gPS->IsActive(lock);
-}
-
-void
-profiler_set_frame_number(int aFrameNumber)
-{
-  // This function runs both on (via tests) and off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PSAutoLock lock(gPSMutex);
-
-  gPS->SetFrameNumber(lock, aFrameNumber);
 }
 
 void

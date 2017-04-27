@@ -715,17 +715,21 @@
       terminateEventListeners() {
         if (this.videoEvents) {
           for (let event of this.videoEvents) {
-            this.video.removeEventListener(event, this, {
-              capture: true,
-              mozSystemGroup: true
-            });
+            try {
+              this.video.removeEventListener(event, this, {
+                capture: true,
+                mozSystemGroup: true
+              });
+            } catch (ex) {}
           }
         }
 
         if (this.controlListeners) {
           for (let element of this.controlListeners) {
-            element.item.removeEventListener(element.event, element.func,
-              { mozSystemGroup: true, capture: element.capture });
+            try {
+              element.item.removeEventListener(element.event, element.func,
+                { mozSystemGroup: true, capture: element.capture });
+            } catch (ex) {}
           }
 
           delete this.controlListeners;
@@ -1545,11 +1549,11 @@
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);
 
-        ttBtn.addEventListener("click", function(event) {
+        ttBtn.addEventListener("click", event => {
           event.stopPropagation();
 
           this.changeTextTrack(tt.index);
-        }.bind(this));
+        });
 
         ttBtn.appendChild(ttText);
 
@@ -2041,7 +2045,9 @@
       handleEvent(aEvent) {
         if (aEvent.type == "transitionend") {
           this.firstShow = false;
-          this.videocontrols.removeEventListener("transitionend", this);
+          try {
+            this.videocontrols.removeEventListener("transitionend", this);
+          } catch (ex) {}
           return;
         }
 
@@ -2052,7 +2058,9 @@
 
       terminateEventListeners() {
         for (var event of this.videoEvents) {
-          this.Utils.video.removeEventListener(event, this);
+          try {
+            this.Utils.video.removeEventListener(event, this);
+          } catch (ex) {}
         }
       },
 
@@ -2197,12 +2205,16 @@
       controlListeners: [],
       terminateEventListeners() {
         for (let event of this.videoEvents) {
-          this.video.removeEventListener(event, this, { mozSystemGroup: true });
+          try {
+            this.video.removeEventListener(event, this, { mozSystemGroup: true });
+          } catch (ex) {}
         }
 
         for (let element of this.controlListeners) {
-          element.item.removeEventListener(element.event, element.func,
-            { mozSystemGroup: true });
+          try {
+            element.item.removeEventListener(element.event, element.func,
+              { mozSystemGroup: true });
+          } catch (ex) {}
         }
 
         delete this.controlListeners;

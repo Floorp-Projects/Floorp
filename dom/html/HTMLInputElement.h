@@ -256,10 +256,7 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<OwningFileOrDirectory>& GetFilesOrDirectoriesInternal() const
-  {
-    return mFilesOrDirectories;
-  }
+  const nsTArray<OwningFileOrDirectory>& GetFilesOrDirectoriesInternal() const;
 
   void SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
                              bool aSetValueChanged);
@@ -1533,30 +1530,8 @@ protected:
     nsTextEditorState*       mState;
   } mInputData;
 
-  /**
-   * The value of the input if it is a file input. This is the list of files or
-   * directories DOM objects used when uploading a file. It is vital that this
-   * is kept separate from mValue so that it won't be possible to 'leak' the
-   * value from a text-input to a file-input. Additionally, the logic for this
-   * value is kept as simple as possible to avoid accidental errors where the
-   * wrong filename is used.  Therefor the list of filenames is always owned by
-   * this member, never by the frame. Whenever the frame wants to change the
-   * filename it has to call SetFilesOrDirectories to update this member.
-   */
-  nsTArray<OwningFileOrDirectory> mFilesOrDirectories;
-
-  RefPtr<GetFilesHelper> mGetFilesRecursiveHelper;
-  RefPtr<GetFilesHelper> mGetFilesNonRecursiveHelper;
-
-  /**
-   * Hack for bug 1086684: Stash the .value when we're a file picker.
-   */
-  nsString mFirstFilePath;
-
-  RefPtr<FileList>  mFileList;
-  Sequence<RefPtr<FileSystemEntry>> mEntries;
-
-  nsString mStaticDocFileList;
+  struct FileData;
+  UniquePtr<FileData> mFileData;
 
   /**
    * The value of the input element when first initialized and it is updated

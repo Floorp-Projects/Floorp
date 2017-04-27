@@ -240,11 +240,11 @@ var AboutConfig = {
       clearTimeout(this._filterChangeTimer);
     }
 
-    this._filterChangeTimer = setTimeout((function() {
+    this._filterChangeTimer = setTimeout(() => {
       this._filterChangeTimer = null;
       // Display updated prefs list when filterInput value settles
       this._displayNewList();
-    }).bind(this), FILTER_CHANGE_TRIGGER);
+    }, FILTER_CHANGE_TRIGGER);
   },
 
   // Update displayed list when filterInput value changes
@@ -265,9 +265,9 @@ var AboutConfig = {
     window.onscroll = this.onScroll.bind(this);
 
     // Pause for screen to settle, then ensure at top
-    setTimeout((function() {
+    setTimeout(() => {
       window.scrollTo(0, 0);
-    }).bind(this), INITIAL_PAGE_DELAY);
+    }, INITIAL_PAGE_DELAY);
   },
 
   // Clear the displayed preferences list

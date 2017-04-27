@@ -5,13 +5,15 @@
 %include ../../../shared/extensions/extensions.inc.css
 
 #header-utils-btn {
-  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
+  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  fill: #424f5a;
   margin-inline-end: 16px;
 }
 
 @media (-moz-windows-default-theme: 0) {
   #header-utils-btn {
-    list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities-native");
+    fill: GrayText;
   }
 }
 

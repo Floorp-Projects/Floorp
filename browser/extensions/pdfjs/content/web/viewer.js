@@ -739,9 +739,9 @@ var PDFRenderingQueue = function PDFRenderingQueueClosure() {
           break;
         case RenderingStates.INITIAL:
           this.highestPriorityPage = view.renderingId;
-          var continueRendering = function () {
+          var continueRendering = () => {
             this.renderHighestPriority();
-          }.bind(this);
+          };
           view.draw().then(continueRendering, continueRendering);
           break;
       }
@@ -1187,10 +1187,10 @@ var PDFViewerApplication = {
   },
   open: function pdfViewOpen(file, args) {
     if (this.pdfLoadingTask) {
-      return this.close().then(function () {
+      return this.close().then(() => {
         _preferences.Preferences.reload();
         return this.open(file, args);
-      }.bind(this));
+      });
     }
     var parameters = Object.create(null),
         scale;
@@ -1313,10 +1313,10 @@ var PDFViewerApplication = {
           this.disableAutoFetchLoadingBarTimeout = null;
         }
         this.loadingBar.show();
-        this.disableAutoFetchLoadingBarTimeout = setTimeout(function () {
+        this.disableAutoFetchLoadingBarTimeout = setTimeout(() => {
           this.loadingBar.hide();
           this.disableAutoFetchLoadingBarTimeout = null;
-        }.bind(this), DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT);
+        }, DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT);
       }
     }
   },
@@ -2273,7 +2273,7 @@ var OverlayManager = {
   overlays: {},
   active: null,
   register: function overlayManagerRegister(name, element, callerCloseMethod, canForceClose) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       var container;
       if (!name || !element || !(container = element.parentNode)) {
         throw new Error('Not enough parameters.');
@@ -2287,10 +2287,10 @@ var OverlayManager = {
         canForceClose: canForceClose || false
       };
       resolve();
-    }.bind(this));
+    });
   },
   unregister: function overlayManagerUnregister(name) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       if (!this.overlays[name]) {
         throw new Error('The overlay does not exist.');
       } else if (this.active === name) {
@@ -2298,10 +2298,10 @@ var OverlayManager = {
       }
       delete this.overlays[name];
       resolve();
-    }.bind(this));
+    });
   },
   open: function overlayManagerOpen(name) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       if (!this.overlays[name]) {
         throw new Error('The overlay does not exist.');
       } else if (this.active) {
@@ -2318,10 +2318,10 @@ var OverlayManager = {
       this.overlays[this.active].container.classList.remove('hidden');
       window.addEventListener('keydown', this._keyDown);
       resolve();
-    }.bind(this));
+    });
   },
   close: function overlayManagerClose(name) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       if (!this.overlays[name]) {
         throw new Error('The overlay does not exist.');
       } else if (!this.active) {
@@ -2334,7 +2334,7 @@ var OverlayManager = {
       this.active = null;
       window.removeEventListener('keydown', this._keyDown);
       resolve();
-    }.bind(this));
+    });
   },
   _keyDown: function overlayManager_keyDown(evt) {
     var self = OverlayManager;
@@ -2728,7 +2728,7 @@ var Preferences = {
   isInitializedPromiseResolved: false,
   initializedPromise: null,
   initialize: function preferencesInitialize() {
-    return this.initializedPromise = getDefaultPreferences().then(function (defaults) {
+    return this.initializedPromise = getDefaultPreferences().then(defaults => {
       Object.defineProperty(this, 'defaults', {
         value: Object.freeze(defaults),
         writable: false,
@@ -2737,12 +2737,12 @@ var Preferences = {
       });
       this.prefs = cloneObj(defaults);
       return this._readFromStorage(defaults);
-    }.bind(this)).then(function (prefObj) {
+    }).then(prefObj => {
       this.isInitializedPromiseResolved = true;
       if (prefObj) {
         this.prefs = prefObj;
       }
-    }.bind(this));
+    });
   },
   _writeToStorage: function preferences_writeToStorage(prefObj) {
     return Promise.resolve();
@@ -2751,22 +2751,22 @@ var Preferences = {
     return Promise.resolve();
   },
   reset: function preferencesReset() {
-    return this.initializedPromise.then(function () {
+    return this.initializedPromise.then(() => {
       this.prefs = cloneObj(this.defaults);
       return this._writeToStorage(this.defaults);
-    }.bind(this));
+    });
   },
   reload: function preferencesReload() {
-    return this.initializedPromise.then(function () {
-      this._readFromStorage(this.defaults).then(function (prefObj) {
+    return this.initializedPromise.then(() => {
+      this._readFromStorage(this.defaults).then(prefObj => {
         if (prefObj) {
           this.prefs = prefObj;
         }
-      }.bind(this));
-    }.bind(this));
+      });
+    });
   },
   set: function preferencesSet(name, value) {
-    return this.initializedPromise.then(function () {
+    return this.initializedPromise.then(() => {
       if (this.defaults[name] === undefined) {
         throw new Error('preferencesSet: \'' + name + '\' is undefined.');
       } else if (value === undefined) {
@@ -2787,10 +2787,10 @@ var Preferences = {
       }
       this.prefs[name] = value;
       return this._writeToStorage(this.prefs);
-    }.bind(this));
+    });
   },
   get: function preferencesGet(name) {
-    return this.initializedPromise.then(function () {
+    return this.initializedPromise.then(() => {
       var defaultValue = this.defaults[name];
       if (defaultValue === undefined) {
         throw new Error('preferencesGet: \'' + name + '\' is undefined.');
@@ -2801,7 +2801,7 @@ var Preferences = {
         }
       }
       return defaultValue;
-    }.bind(this));
+    });
   }
 };
 ;
@@ -3023,7 +3023,7 @@ var PDFFindController = function PDFFindControllerClosure() {
       }
       this.state = state;
       this.updateUIState(FindStates.FIND_PENDING);
-      this._firstPagePromise.then(function () {
+      this._firstPagePromise.then(() => {
         this.extractText();
         clearTimeout(this.findTimeout);
         if (cmd === 'find') {
@@ -3031,7 +3031,7 @@ var PDFFindController = function PDFFindControllerClosure() {
         } else {
           this.nextMatch();
         }
-      }.bind(this));
+      });
     },
     updatePage: function PDFFindController_updatePage(index) {
       if (this.selected.pageIdx === index) {
@@ -3345,12 +3345,12 @@ var DownloadManager = function DownloadManagerClosure() {
         blobUrl: blobUrl,
         originalUrl: url,
         filename: filename
-      }, function response(err) {
+      }, err => {
         if (err && this.onerror) {
           this.onerror(err);
         }
         window.URL.revokeObjectURL(blobUrl);
-      }.bind(this));
+      });
     }
   };
   return DownloadManager;
@@ -3729,17 +3729,17 @@ var HandTool = function HandToolClosure() {
     this.wasActive = false;
     this.handTool = new _grab_to_pan.GrabToPan({
       element: this.container,
-      onActiveChanged: function (isActive) {
+      onActiveChanged: isActive => {
         this.eventBus.dispatch('handtoolchanged', { isActive: isActive });
-      }.bind(this)
+      }
     });
     this.eventBus.on('togglehandtool', this.toggle.bind(this));
-    Promise.all([_ui_utils.localized, _preferences.Preferences.get('enableHandToolOnLoad')]).then(function resolved(values) {
+    Promise.all([_ui_utils.localized, _preferences.Preferences.get('enableHandToolOnLoad')]).then(values => {
       if (values[1] === true) {
         this.handTool.activate();
       }
-    }.bind(this)).catch(function rejected(reason) {});
-    this.eventBus.on('presentationmodechanged', function (e) {
+    }).catch(function rejected(reason) {});
+    this.eventBus.on('presentationmodechanged', e => {
       if (e.switchInProgress) {
         return;
       }
@@ -3748,7 +3748,7 @@ var HandTool = function HandToolClosure() {
       } else {
         this.exitPresentationMode();
       }
-    }.bind(this));
+    });
   }
   HandTool.prototype = {
     get isActive() {
@@ -3894,10 +3894,10 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
       };
     },
     _bindLink: function PDFAttachmentViewer_bindLink(button, content, filename) {
-      button.onclick = function downloadFile(e) {
+      button.onclick = e => {
         this.downloadManager.downloadData(content, filename, '');
         return false;
-      }.bind(this);
+      };
     },
     render: function PDFAttachmentViewer_render(params) {
       params = params || {};
@@ -4636,14 +4636,14 @@ var PDFOutlineViewer = function PDFOutlineViewerClosure() {
     _addToggleButton: function PDFOutlineViewer_addToggleButton(div) {
       var toggler = document.createElement('div');
       toggler.className = 'outlineItemToggler';
-      toggler.onclick = function (event) {
+      toggler.onclick = event => {
         event.stopPropagation();
         toggler.classList.toggle('outlineItemsHidden');
         if (event.shiftKey) {
           var shouldShowAll = !toggler.classList.contains('outlineItemsHidden');
           this._toggleOutlineItem(div, shouldShowAll);
         }
-      }.bind(this);
+      };
       div.insertBefore(toggler, div.firstChild);
     },
     _toggleOutlineItem: function PDFOutlineViewer_toggleOutlineItem(root, show) {
@@ -5202,22 +5202,22 @@ var PDFPresentationMode = function PDFPresentationModeClosure() {
     this.mouseScrollDelta = 0;
     this.touchSwipeState = null;
     if (contextMenuItems) {
-      contextMenuItems.contextFirstPage.addEventListener('click', function PDFPresentationMode_contextFirstPageClick(e) {
+      contextMenuItems.contextFirstPage.addEventListener('click', e => {
         this.contextMenuOpen = false;
         this.eventBus.dispatch('firstpage');
-      }.bind(this));
-      contextMenuItems.contextLastPage.addEventListener('click', function PDFPresentationMode_contextLastPageClick(e) {
+      });
+      contextMenuItems.contextLastPage.addEventListener('click', e => {
         this.contextMenuOpen = false;
         this.eventBus.dispatch('lastpage');
-      }.bind(this));
-      contextMenuItems.contextPageRotateCw.addEventListener('click', function PDFPresentationMode_contextPageRotateCwClick(e) {
+      });
+      contextMenuItems.contextPageRotateCw.addEventListener('click', e => {
         this.contextMenuOpen = false;
         this.eventBus.dispatch('rotatecw');
-      }.bind(this));
-      contextMenuItems.contextPageRotateCcw.addEventListener('click', function PDFPresentationMode_contextPageRotateCcwClick(e) {
+      });
+      contextMenuItems.contextPageRotateCcw.addEventListener('click', e => {
         this.contextMenuOpen = false;
         this.eventBus.dispatch('rotateccw');
-      }.bind(this));
+      });
     }
   }
   PDFPresentationMode.prototype = {
@@ -5301,11 +5301,11 @@ var PDFPresentationMode = function PDFPresentationModeClosure() {
       if (this.switchInProgress) {
         clearTimeout(this.switchInProgress);
       }
-      this.switchInProgress = setTimeout(function switchInProgressTimeout() {
+      this.switchInProgress = setTimeout(() => {
         this._removeFullscreenChangeListeners();
         delete this.switchInProgress;
         this._notifyStateChange();
-      }.bind(this), DELAY_BEFORE_RESETTING_SWITCH_IN_PROGRESS);
+      }, DELAY_BEFORE_RESETTING_SWITCH_IN_PROGRESS);
     },
     _resetSwitchInProgress: function PDFPresentationMode_resetSwitchInProgress() {
       if (this.switchInProgress) {
@@ -5318,10 +5318,10 @@ var PDFPresentationMode = function PDFPresentationModeClosure() {
       this._resetSwitchInProgress();
       this._notifyStateChange();
       this.container.classList.add(ACTIVE_SELECTOR);
-      setTimeout(function enterPresentationModeTimeout() {
+      setTimeout(() => {
         this.pdfViewer.currentPageNumber = this.args.page;
         this.pdfViewer.currentScaleValue = 'page-fit';
-      }.bind(this), 0);
+      }, 0);
       this._addWindowListeners();
       this._showControls();
       this.contextMenuOpen = false;
@@ -5331,14 +5331,14 @@ var PDFPresentationMode = function PDFPresentationModeClosure() {
     _exit: function PDFPresentationMode_exit() {
       var page = this.pdfViewer.currentPageNumber;
       this.container.classList.remove(ACTIVE_SELECTOR);
-      setTimeout(function exitPresentationModeTimeout() {
+      setTimeout(() => {
         this.active = false;
         this._removeFullscreenChangeListeners();
         this._notifyStateChange();
         this.pdfViewer.currentScaleValue = this.args.previousScale;
         this.pdfViewer.currentPageNumber = page;
         this.args = null;
-      }.bind(this), 0);
+      }, 0);
       this._removeWindowListeners();
       this._hideControls();
       this._resetMouseScrollState();
@@ -5368,10 +5368,10 @@ var PDFPresentationMode = function PDFPresentationModeClosure() {
       } else {
         this.container.classList.add(CONTROLS_SELECTOR);
       }
-      this.controlsTimeout = setTimeout(function showControlsTimeout() {
+      this.controlsTimeout = setTimeout(() => {
         this.container.classList.remove(CONTROLS_SELECTOR);
         delete this.controlsTimeout;
-      }.bind(this), DELAY_BEFORE_HIDING_CONTROLS);
+      }, DELAY_BEFORE_HIDING_CONTROLS);
     },
     _hideControls: function PDFPresentationMode_hideControls() {
       if (!this.controlsTimeout) {
@@ -5709,7 +5709,7 @@ var PDFSidebar = function PDFSidebarClosure() {
       if (this.disableNotification) {
         return;
       }
-      var removeNotification = function (view) {
+      var removeNotification = view => {
         switch (view) {
           case SidebarView.OUTLINE:
             this.outlineButton.classList.remove(UI_NOTIFICATION_CLASS);
@@ -5718,7 +5718,7 @@ var PDFSidebar = function PDFSidebarClosure() {
             this.attachmentsButton.classList.remove(UI_NOTIFICATION_CLASS);
             break;
         }
-      }.bind(this);
+      };
       if (!this.isOpen && view !== null) {
         return;
       }
@@ -6166,7 +6166,7 @@ var PDFThumbnailViewer = function PDFThumbnailViewerClosure() {
       if (!pdfDocument) {
         return Promise.resolve();
       }
-      return pdfDocument.getPage(1).then(function (firstPage) {
+      return pdfDocument.getPage(1).then(firstPage => {
         var pagesCount = pdfDocument.numPages;
         var viewport = firstPage.getViewport(1.0);
         for (var pageNum = 1; pageNum <= pagesCount; ++pageNum) {
@@ -6180,7 +6180,7 @@ var PDFThumbnailViewer = function PDFThumbnailViewerClosure() {
           });
           this.thumbnails.push(thumbnail);
         }
-      }.bind(this));
+      });
     },
     _cancelRendering: function PDFThumbnailViewer_cancelRendering() {
       for (var i = 0, ii = this.thumbnails.length; i < ii; i++) {
@@ -6215,11 +6215,11 @@ var PDFThumbnailViewer = function PDFThumbnailViewerClosure() {
       if (this._pagesRequests[pageNumber]) {
         return this._pagesRequests[pageNumber];
       }
-      var promise = this.pdfDocument.getPage(pageNumber).then(function (pdfPage) {
+      var promise = this.pdfDocument.getPage(pageNumber).then(pdfPage => {
         thumbView.setPdfPage(pdfPage);
         this._pagesRequests[pageNumber] = null;
         return pdfPage;
-      }.bind(this));
+      });
       this._pagesRequests[pageNumber] = promise;
       return promise;
     },
@@ -6227,9 +6227,9 @@ var PDFThumbnailViewer = function PDFThumbnailViewerClosure() {
       var visibleThumbs = this._getVisibleThumbs();
       var thumbView = this.renderingQueue.getHighestPriority(visibleThumbs, this.thumbnails, this.scroll.down);
       if (thumbView) {
-        this._ensurePdfPageLoaded(thumbView).then(function () {
+        this._ensurePdfPageLoaded(thumbView).then(() => {
           this.renderingQueue.renderView(thumbView);
-        }.bind(this));
+        });
         return true;
       }
       return false;
@@ -7159,11 +7159,11 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
         timeout: timeout,
         enhanceTextSelection: this.enhanceTextSelection
       });
-      this.textLayerRenderTask.promise.then(function () {
+      this.textLayerRenderTask.promise.then(() => {
         this.textLayerDiv.appendChild(textLayerFrag);
         this._finishRendering();
         this.updateMatches();
-      }.bind(this), function (reason) {});
+      }, function (reason) {});
     },
     cancel: function TextLayerBuilder_cancel() {
       if (this.textLayerRenderTask) {
@@ -7564,7 +7564,7 @@ var ViewHistory = function ViewHistoryClosure() {
     this.fingerprint = fingerprint;
     this.cacheSize = cacheSize || DEFAULT_VIEW_HISTORY_CACHE_SIZE;
     this.isInitializedPromiseResolved = false;
-    this.initializedPromise = this._readFromStorage().then(function (databaseStr) {
+    this.initializedPromise = this._readFromStorage().then(databaseStr => {
       this.isInitializedPromiseResolved = true;
       var database = JSON.parse(databaseStr || '{}');
       if (!('files' in database)) {
@@ -7586,15 +7586,15 @@ var ViewHistory = function ViewHistoryClosure() {
       }
       this.file = database.files[index];
       this.database = database;
-    }.bind(this));
+    });
   }
   ViewHistory.prototype = {
     _writeToStorage: function ViewHistory_writeToStorage() {
-      return new Promise(function (resolve) {
+      return new Promise(resolve => {
         var databaseStr = JSON.stringify(this.database);
         sessionStorage.setItem('pdfjs.history', databaseStr);
         resolve();
-      }.bind(this));
+      });
     },
     _readFromStorage: function ViewHistory_readFromStorage() {
       return new Promise(function (resolve) {

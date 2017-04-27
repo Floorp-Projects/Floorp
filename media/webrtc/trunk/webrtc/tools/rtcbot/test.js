@@ -136,13 +136,13 @@ StatisticsReport.prototype = {
   },
 
   finish: function (doneCallback) {
-    fs.exists("test/reports/", function (exists) {
+    fs.exists("test/reports/", exists => {
       if(exists) {
         writeFile.bind(this)();
       } else {
         fs.mkdir("test/reports/", 0o777, writeFile.bind(this));
       }
-    }.bind(this));
+    });
 
     function writeFile () {
       fs.writeFile("test/reports/" + this.outputFileName_ + "_" +

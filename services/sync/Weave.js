@@ -117,7 +117,7 @@ WeaveService.prototype = {
       // Force Weave service to load if it hasn't triggered from overlays
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
-        notify: function() {
+        notify: () => {
           let isConfigured = false;
           // We only load more if it looks like Sync is configured.
           if (this.enabled) {
@@ -135,7 +135,7 @@ WeaveService.prototype = {
             getHistogramById("WEAVE_CONFIGURED_MASTER_PASSWORD").add(Utils.mpEnabled());
             this.ensureLoaded();
           }
-        }.bind(this)
+        }
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }

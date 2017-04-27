@@ -133,10 +133,10 @@ var gBrowserThumbnails = {
     else
       aBrowser.addEventListener("scroll", this, true);
 
-    let timeout = setTimeout(function() {
+    let timeout = setTimeout(() => {
       this._clearTimeout(aBrowser);
       this._capture(aBrowser);
-    }.bind(this), this._captureDelayMS);
+    }, this._captureDelayMS);
 
     this._timeouts.set(aBrowser, timeout);
   },

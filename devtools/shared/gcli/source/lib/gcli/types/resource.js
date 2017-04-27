@@ -64,9 +64,9 @@ function CssResource(domSheet) {
 CssResource.prototype = Object.create(Resource.prototype);
 
 CssResource.prototype.loadContents = function() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     resolve(this.element.ownerNode.innerHTML);
-  }.bind(this));
+  });
 };
 
 CssResource._getAllStyles = function(context) {
@@ -130,7 +130,7 @@ function ScriptResource(scriptNode) {
 ScriptResource.prototype = Object.create(Resource.prototype);
 
 ScriptResource.prototype.loadContents = function() {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (this.inline) {
       resolve(this.element.innerHTML);
     }
@@ -146,7 +146,7 @@ ScriptResource.prototype.loadContents = function() {
       xhr.open('GET', this.element.src, true);
       xhr.send();
     }
-  }.bind(this));
+  });
 };
 
 ScriptResource._getAllScripts = function(context) {

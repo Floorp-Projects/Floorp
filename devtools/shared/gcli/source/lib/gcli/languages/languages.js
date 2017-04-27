@@ -57,9 +57,9 @@ var baseLanguage = {
 
   handleInput: function(input) {
     if (input === ':') {
-      return this.terminal.setInput('').then(function() {
+      return this.terminal.setInput('').then(() => {
         return this.terminal.pushLanguage('commands');
-      }.bind(this));
+      });
     }
 
     return this.terminal.unsetChoice().then(function() {
@@ -73,7 +73,7 @@ var baseLanguage = {
     rowoutEle.classList.add('gcli-row-script');
     rowoutEle.setAttribute('aria-live', 'assertive');
 
-    return this.exec(input).then(function(line) {
+    return this.exec(input).then(line => {
       rowoutEle.innerHTML = line;
 
       this.terminal.addElement(rowoutEle);
@@ -83,7 +83,7 @@ var baseLanguage = {
 
       this.terminal.unsetChoice().catch(util.errorHandler);
       this.terminal.inputElement.value = '';
-    }.bind(this));
+    });
   },
 
   setCursor: function(cursor) {
@@ -141,9 +141,9 @@ Languages.prototype.remove = function(language) {
  * Get access to the list of known languages
  */
 Languages.prototype.getAll = function() {
-  return Object.keys(this._registered).map(function(name) {
+  return Object.keys(this._registered).map(name => {
     return this._registered[name];
-  }.bind(this));
+  });
 };
 
 /**

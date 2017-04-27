@@ -620,7 +620,7 @@ var CastingApps = {
       return this.allowableExtension(aVideo.sourceURI, aService.extensions) || this.allowableMimeType(aVideo.type, aService.types);
     }
 
-    this.prompt(function(aService) {
+    this.prompt(aService => {
       if (!aService)
         return;
 
@@ -638,14 +638,14 @@ var CastingApps = {
         }
       }
 
-      app.stop(function() {
-        app.start(function(aStarted) {
+      app.stop(() => {
+        app.start(aStarted => {
           if (!aStarted) {
             dump("CastingApps: Unable to start app");
             return;
           }
 
-          app.remoteMedia(function(aRemoteMedia) {
+          app.remoteMedia(aRemoteMedia => {
             if (!aRemoteMedia) {
               dump("CastingApps: Failed to create remotemedia");
               return;
@@ -662,10 +662,10 @@ var CastingApps = {
               },
               videoRef: Cu.getWeakReference(aVideo.element)
             };
-          }.bind(this), this);
-        }.bind(this));
-      }.bind(this));
-    }.bind(this), filterFunc.bind(this));
+          }, this);
+        });
+      });
+    }, filterFunc.bind(this));
   },
 
   closeExternal: function() {

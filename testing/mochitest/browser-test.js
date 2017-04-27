@@ -167,7 +167,7 @@ function Tester(aTests, structuredLogger, aCallback) {
   this._coverageCollector = null;
 
   this._toleratedUncaughtRejections = null;
-  this._uncaughtErrorObserver = function({message, date, fileName, stack, lineNumber}) {
+  this._uncaughtErrorObserver = ({message, date, fileName, stack, lineNumber}) => {
     let error = message;
     if (fileName || lineNumber) {
       error = {
@@ -195,7 +195,7 @@ function Tester(aTests, structuredLogger, aCallback) {
         /*error*/error,
         /*known*/tolerate,
         /*stack*/stack));
-    }.bind(this);
+    };
 }
 Tester.prototype = {
   EventUtils: {},
@@ -581,7 +581,7 @@ Tester.prototype = {
     // Check the window state for the current test before moving to the next one.
     // This also causes us to check before starting any tests, since nextTest()
     // is invoked to start the tests.
-    this.waitForWindowsState((function () {
+    this.waitForWindowsState(() => {
       if (this.done) {
         if (this._coverageCollector) {
           this._coverageCollector.finalize();
@@ -670,7 +670,7 @@ Tester.prototype = {
 
       this.currentTestIndex++;
       this.execTest();
-    }).bind(this));
+    });
   }),
 
   execTest: function Tester_execTest() {

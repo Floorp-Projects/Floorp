@@ -105,7 +105,7 @@ exports.staticRequire = function(requistingModule, name) {
     return Promise.resolve('');
   }
   else {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       var filename = resourceDirName(requistingModule.id) + '/' + name;
       filename = filename.replace(/\/\.\//g, '/');
       filename = 'resource://devtools/shared/gcli/source/lib/' + filename;
@@ -113,17 +113,17 @@ exports.staticRequire = function(requistingModule, name) {
       var xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
                   .createInstance(Ci.nsIXMLHttpRequest);
 
-      xhr.onload = function onload() {
+      xhr.onload = () => {
         resolve(xhr.responseText);
-      }.bind(this);
+      };
 
-      xhr.onabort = xhr.onerror = xhr.ontimeout = function(err) {
+      xhr.onabort = xhr.onerror = xhr.ontimeout = err => {
         reject(err);
-      }.bind(this);
+      };
 
       xhr.open('GET', filename);
       xhr.send();
-    }.bind(this));
+    });
   }
 };
 
@@ -152,7 +152,7 @@ exports.script.useTarget = function(tgt) {
                       target.makeRemote();
 
   return targetPromise.then(function() {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       client = target._client;
 
       client.addListener('pageError', function(packet) {
@@ -203,7 +203,7 @@ exports.script.useTarget = function(tgt) {
 
       var listeners = [ 'PageError', 'ConsoleAPI' ];
       client.attachConsole(consoleActor, listeners, onAttach);
-    }.bind(this));
+    });
   });
 };
 
@@ -211,7 +211,7 @@ exports.script.useTarget = function(tgt) {
  * Execute some JavaScript
  */
 exports.script.evaluate = function(javascript) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     var onResult = function(response) {
       var output = response.result;
       if (typeof output === 'object' && output.type === 'undefined') {
@@ -226,5 +226,5 @@ exports.script.evaluate = function(javascript) {
     };
 
     webConsoleClient.evaluateJS(javascript, onResult, {});
-  }.bind(this));
+  });
 };
