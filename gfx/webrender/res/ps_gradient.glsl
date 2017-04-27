@@ -6,7 +6,7 @@ varying vec4 vColor;
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;
-flat varying vec4 vLocalRect;
+flat varying RectWithSize vLocalRect;
 #else
 varying vec2 vPos;
 #endif

@@ -281,7 +281,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
 
   // Next frame hasn't been decoded yet.
   // Use the buffered range to consider if we have the next frame available.
-  TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
+  auto currentPosition = CurrentPosition();
   TimeIntervals buffered = GetBuffered();
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeInterval interval(
@@ -306,7 +306,7 @@ MediaSourceDecoder::CanPlayThrough()
     return false;
   }
   TimeUnit duration = TimeUnit::FromSeconds(mMediaSource->Duration());
-  TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
+  auto currentPosition = CurrentPosition();
   if (duration.IsInfinite()) {
     // We can't make an informed decision and just assume that it's a live
     // stream

@@ -31,13 +31,12 @@ to mochitest command.
 
 * Media query support:
   * test_media_queries.html [156]
-  * test_media_queries_dynamic.html [11]
+  * test_media_queries_dynamic.html [7]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_transitions_and_reframes.html: pseudo frames bug 1331047 [4]
-  * test_animations.html: 6 of them bug 1331047 [25]
+  * test_animations.html [19]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -52,11 +51,8 @@ to mochitest command.
     * test_animations_reverse.html [1]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-  * CSS Timing Functions: Frames timing functions
-    * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [20]
-    * test_value_storage.html `animation` [15]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
@@ -74,7 +70,7 @@ to mochitest command.
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
   * test_compute_data_with_start_struct.html `transition` [2]
-  * test_transitions.html: pseudo elements [10]
+  * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
@@ -125,10 +121,6 @@ to mochitest command.
   * test_initial_storage.html `grid` [*]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
   * test_value_storage.html `'grid` [*]
-* url value from decl setter bug 1330503
-  * test_compute_data_with_start_struct.html `border-image-source` [2]
-  * test_inherit_computation.html `border-image` [2]
-  * test_initial_computation.html `border-image` [4]
 * Unimplemented prefixed properties:
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]

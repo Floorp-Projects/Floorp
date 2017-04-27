@@ -13,6 +13,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h" // for TextureForwarder
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey
@@ -122,7 +123,8 @@ public:
                                             const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags,
                                             const uint64_t& aId,
-                                            const uint64_t& aSerial) override;
+                                            const uint64_t& aSerial,
+                                            const wr::MaybeExternalImageId& aExternalImageId) override;
 
   virtual bool DeallocPTextureChild(PTextureChild* actor) override;
 
@@ -131,7 +133,8 @@ public:
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        LayersBackend aLayersBackend,
                                        TextureFlags aFlags,
-                                       uint64_t aSerial) override;
+                                       uint64_t aSerial,
+                                       wr::MaybeExternalImageId& aExternalImageId) override;
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
@@ -234,7 +237,7 @@ public:
     return mDeviceResetSequenceNumber;
   }
 
-  uint64_t GetNextExternalImageId();
+  wr::MaybeExternalImageId GetNextExternalImageId() override;
 
 private:
   // Private destructor, to discourage deletion outside of Release():

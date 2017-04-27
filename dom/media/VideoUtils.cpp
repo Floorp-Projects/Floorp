@@ -309,10 +309,10 @@ GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength)
 }
 
 already_AddRefed<TaskQueue>
-CreateMediaDecodeTaskQueue()
+CreateMediaDecodeTaskQueue(const char* aName)
 {
   RefPtr<TaskQueue> queue = new TaskQueue(
-    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), aName);
   return queue.forget();
 }
 

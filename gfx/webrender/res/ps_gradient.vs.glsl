@@ -61,8 +61,9 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.task);
-    vLocalRect = vi.clipped_local_rect;
+                                                    prim.task,
+                                                    prim.local_rect.p0);
+    vLocalRect = segment_rect;
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy - prim.local_rect.p0) / prim.local_rect.size;
 #else
@@ -70,7 +71,8 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.task);
+                                 prim.task,
+                                 prim.local_rect.p0);
 
     vec2 f = (vi.local_pos - segment_rect.p0) / segment_rect.size;
     vPos = vi.local_pos;

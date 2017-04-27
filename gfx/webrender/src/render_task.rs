@@ -8,8 +8,8 @@ use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
-use webrender_traits::{DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use webrender_traits::{MixBlendMode, ScrollLayerId};
+use webrender_traits::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use webrender_traits::MixBlendMode;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
@@ -33,7 +33,7 @@ pub enum RenderTaskKey {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MaskCacheKey {
     Primitive(PrimitiveIndex),
-    ScrollLayer(ScrollLayerId),
+    ClipNode(ClipId),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -61,7 +61,6 @@ pub enum AlphaRenderItem {
 pub struct AlphaRenderTask {
     screen_origin: DeviceIntPoint,
     pub items: Vec<AlphaRenderItem>,
-    pub isolate_clear: bool,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -144,7 +143,6 @@ pub struct RenderTask {
 impl RenderTask {
     pub fn new_alpha_batch(task_index: RenderTaskIndex,
                            screen_origin: DeviceIntPoint,
-                           isolate_clear: bool,
                            location: RenderTaskLocation) -> RenderTask {
         RenderTask {
             id: RenderTaskId::Static(task_index),
@@ -153,7 +151,6 @@ impl RenderTask {
             kind: RenderTaskKind::Alpha(AlphaRenderTask {
                 screen_origin: screen_origin,
                 items: Vec::new(),
-                isolate_clear: isolate_clear,
             }),
         }
     }

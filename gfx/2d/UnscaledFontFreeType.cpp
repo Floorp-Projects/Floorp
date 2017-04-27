@@ -7,12 +7,46 @@
 
 #include FT_TRUETYPE_TABLES_H
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+
 namespace mozilla {
 namespace gfx {
 
 bool
 UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton)
 {
+  if (!mFile.empty()) {
+    int fd = open(mFile.c_str(), O_RDONLY);
+    if (fd < 0) {
+      return false;
+    }
+    struct stat buf;
+    if (fstat(fd, &buf) < 0 ||
+        // Don't erroneously read directories as files.
+        !S_ISREG(buf.st_mode) ||
+        // Verify the file size fits in a uint32_t.
+        buf.st_size <= 0 ||
+        off_t(uint32_t(buf.st_size)) != buf.st_size) {
+      close(fd);
+      return false;
+    }
+    uint32_t length = buf.st_size;
+    uint8_t* fontData =
+      reinterpret_cast<uint8_t*>(
+        mmap(nullptr, length, PROT_READ, MAP_PRIVATE, fd, 0));
+    close(fd);
+    if (fontData == MAP_FAILED) {
+      return false;
+    }
+    aDataCallback(fontData, length, mIndex, aBaton);
+    munmap(fontData, length);
+    return true;
+  }
+
   bool success = false;
   FT_ULong length = 0;
   // Request the SFNT file. This may not always succeed for all font types.

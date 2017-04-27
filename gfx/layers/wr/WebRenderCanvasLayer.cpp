@@ -12,6 +12,7 @@
 #include "GLScreenBuffer.h"
 #include "LayersLogging.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "PersistentBufferProvider.h"
@@ -26,8 +27,8 @@ WebRenderCanvasLayer::~WebRenderCanvasLayer()
 {
   MOZ_COUNT_DTOR(WebRenderCanvasLayer);
 
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
 }
 
@@ -50,48 +51,40 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   UpdateCompositableClient();
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mCanvasClient);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mCanvasClient));
   }
 
-  MOZ_ASSERT(mExternalImageId);
-
-  gfx::Matrix4x4 transform = GetTransform();
+  Maybe<gfx::Matrix4x4> transform;
   const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
   if (needsYFlip) {
-    transform.PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1);
+    transform = Some(GetTransform().PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1));
   }
 
-  gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect rect = RelativeToVisible(gfx::Rect(0, 0, mBounds.width, mBounds.height));
+  StackingContextHelper sc(aBuilder, this, transform);
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect rect(0, 0, mBounds.width, mBounds.height);
+  DumpLayerInfo("CanvasLayer", rect);
+
+  LayerRect clipRect = ClipRect().valueOr(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
-  DumpLayerInfo("CanvasLayer", rect);
   if (gfxPrefs::LayersDump()) {
     printf_stderr("CanvasLayer %p texture-filter=%s\n",
                   this->GetLayer(),
                   Stringify(filter).c_str());
   }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  WrImageKey key = GetImageKey();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   Manager()->AddImageKeyForDiscard(key);
 
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               1.0f,
-                               //GetAnimations(),
-                               transform,
-                               mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
-  aBuilder.PopStackingContext();
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, key);
 }
 
 void

@@ -29,6 +29,9 @@ typedef WrPipelineId PipelineId;
 typedef WrImageKey ImageKey;
 typedef WrFontKey FontKey;
 typedef WrEpoch Epoch;
+typedef WrExternalImageId ExternalImageId;
+
+typedef Maybe<ExternalImageId> MaybeExternalImageId;
 
 inline WindowId NewWindowId(uint64_t aId) {
   WindowId id;
@@ -353,6 +356,22 @@ static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
   return WrRepeatMode::Stretch;
 }
 
+static inline WrTransformProperty ToWrTransformProperty(uint64_t id, gfx::Matrix4x4& transform)
+{
+  WrTransformProperty prop;
+  prop.id = id;
+  prop.transform = ToWrMatrix(transform);
+  return prop;
+}
+
+static inline WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float opacity)
+{
+  WrOpacityProperty prop;
+  prop.id = id;
+  prop.opacity = opacity;
+  return prop;
+}
+
 template<class T>
 static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
                                                         const LayerSize& size)
@@ -363,9 +382,14 @@ static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>&
   return complex_clip;
 }
 
-static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
+// Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
+inline uint64_t AsUint64(const ExternalImageId& aId) {
+  return static_cast<uint64_t>(aId.mHandle);
+}
+
+static inline ExternalImageId ToExternalImageId(uint64_t aID)
 {
-  WrExternalImageId Id;
+  ExternalImageId Id;
   Id.mHandle = aID;
   return Id;
 }

@@ -99,7 +99,7 @@ protected:
 
 OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
                                layers::ImageContainer* aImageContainer)
-  : mOmxTaskQueue(CreateMediaDecodeTaskQueue())
+  : mOmxTaskQueue(CreateMediaDecodeTaskQueue("OmxDataDecoder::mOmxTaskQueue"))
   , mImageContainer(aImageContainer)
   , mWatchManager(this, mOmxTaskQueue)
   , mOmxState(OMX_STATETYPE::OMX_StateInvalid, "OmxDataDecoder::mOmxState")

@@ -37,6 +37,7 @@ class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class WebRenderCompositableHolder;
+class WebRenderImageHost;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositorVsyncSchedulerOwner
@@ -91,7 +92,8 @@ public:
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
                                     const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc) override;
+                                    const WrAuxiliaryListsDescriptor& auxDesc,
+                                    const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -100,14 +102,15 @@ public:
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
                                         const ByteBuffer& aux,
-                                        const WrAuxiliaryListsDescriptor& auxDesc) override;
+                                        const WrAuxiliaryListsDescriptor& auxDesc,
+                                        const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
-  mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
+  mozilla::ipc::IPCResult RecvAddExternalImageId(const ExternalImageId& aImageId,
                                                  const CompositableHandle& aHandle) override;
-  mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
+  mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                                                 const CompositableHandle& aHandle) override;
-  mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
+  mozilla::ipc::IPCResult RecvRemoveExternalImageId(const ExternalImageId& aImageId) override;
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
@@ -158,6 +161,9 @@ public:
     return mIdNameSpace;
   }
 
+  void UpdateAPZ();
+  const WebRenderScrollData& GetScrollData() const;
+
 private:
   virtual ~WebRenderBridgeParent();
 
@@ -179,7 +185,11 @@ private:
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
                    const ByteBuffer& aux,
-                   const WrAuxiliaryListsDescriptor& auxDesc);
+                   const WrAuxiliaryListsDescriptor& auxDesc,
+                   const WebRenderScrollData& aScrollData);
+
+  void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
+                        nsTArray<WrTransformProperty>& aTransformArray);
 
 private:
   struct PendingTransactionId {
@@ -200,7 +210,7 @@ private:
   std::vector<wr::ImageKey> mKeysToDelete;
   // XXX How to handle active keys of non-ExternalImages?
   nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
-  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
+  nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mExternalImageIds;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
   // These fields keep track of the latest layer observer epoch values in the child and the
@@ -216,6 +226,9 @@ private:
 
   bool mPaused;
   bool mDestroyed;
+
+  // Can only be accessed on the compositor thread.
+  WebRenderScrollData mScrollData;
 
   static uint32_t sIdNameSpace;
 };

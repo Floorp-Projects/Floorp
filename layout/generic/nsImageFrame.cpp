@@ -1583,7 +1583,8 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters)
 {
-  if (!nsDisplayItem::ForceActiveLayers() && !gfxPrefs::LayersAllowImageLayers()) {
+  if (!nsDisplayItem::ForceActiveLayers() &&
+      !ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowImageLayers)) {
     bool animated = false;
     if (!nsLayoutUtils::AnimatedImageLayersEnabled() ||
         mImage->GetType() != imgIContainer::TYPE_RASTER ||

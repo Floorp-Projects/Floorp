@@ -6,7 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
-use internal_types::{ExternalImageUpdateList, FontTemplate, SourceTexture, TextureUpdateList};
+use internal_types::{FontTemplate, SourceTexture, TextureUpdateList};
 use platform::font::{FontContext, RasterizedGlyph};
 use profiler::TextureCacheProfileCounters;
 use std::cell::RefCell;
@@ -26,7 +26,7 @@ use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextI
 use webrender_traits::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor, ColorF};
 use webrender_traits::{GlyphOptions, GlyphInstance, TileOffset, TileSize};
 use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError};
-use webrender_traits::{ExternalImageData, ExternalImageType};
+use webrender_traits::{ExternalImageData, ExternalImageType, LayoutPoint};
 use threadpool::ThreadPool;
 use euclid::Point2D;
 
@@ -83,7 +83,7 @@ impl RenderedGlyphKey {
                size: Au,
                color: ColorF,
                index: u32,
-               point: Point2D<f32>,
+               point: LayoutPoint,
                render_mode: FontRenderMode,
                glyph_options: Option<GlyphOptions>) -> RenderedGlyphKey {
         RenderedGlyphKey {
@@ -129,8 +129,8 @@ pub struct ResourceClassCache<K,V> {
 impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resource {
     fn new() -> ResourceClassCache<K,V> {
         ResourceClassCache {
-            resources: HashMap::with_hasher(Default::default()),
-            last_access_times: HashMap::with_hasher(Default::default()),
+            resources: HashMap::default(),
+            last_access_times: HashMap::default(),
         }
     }
 
@@ -219,7 +219,6 @@ pub struct ResourceCache {
     pending_image_requests: Vec<ImageRequest>,
     glyph_cache_tx: Sender<GlyphCacheMsg>,
     glyph_cache_result_queue: Receiver<GlyphCacheResultMsg>,
-    pending_external_image_update_list: ExternalImageUpdateList,
 
     blob_image_renderer: Option<Box<BlobImageRenderer>>,
     blob_image_requests: HashSet<ImageRequest>,
@@ -235,10 +234,10 @@ impl ResourceCache {
         ResourceCache {
             cached_glyphs: Some(ResourceClassCache::new()),
             cached_images: ResourceClassCache::new(),
-            webgl_textures: HashMap::with_hasher(Default::default()),
-            font_templates: HashMap::with_hasher(Default::default()),
-            image_templates: HashMap::with_hasher(Default::default()),
-            cached_glyph_dimensions: HashMap::with_hasher(Default::default()),
+            webgl_textures: HashMap::default(),
+            font_templates: HashMap::default(),
+            image_templates: HashMap::default(),
+            cached_glyph_dimensions: HashMap::default(),
             texture_cache: texture_cache,
             state: State::Idle,
             enable_aa: enable_aa,
@@ -246,7 +245,6 @@ impl ResourceCache {
             pending_image_requests: Vec::new(),
             glyph_cache_tx: glyph_cache_tx,
             glyph_cache_result_queue: glyph_cache_result_queue,
-            pending_external_image_update_list: ExternalImageUpdateList::new(),
 
             blob_image_renderer: blob_image_renderer,
             blob_image_requests: HashSet::new(),
@@ -346,22 +344,9 @@ impl ResourceCache {
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
         let value = self.image_templates.remove(&image_key);
 
-        // If the key is associated to an external image, pass the external id to renderer for cleanup.
-        if let Some(image) = value {
-            if let ImageData::External(ext_image) = image.data {
-                match ext_image.image_type {
-                    ExternalImageType::Texture2DHandle |
-                    ExternalImageType::TextureRectHandle => {
-                        self.pending_external_image_update_list.push(ext_image.id);
-                    }
-                    _ => {}
-                }
-            }
-
-            return;
+        if value.is_none() {
+            println!("Delete the non-exist key:{:?}", image_key);
         }
-
-        println!("Delete the non-exist key:{:?}", image_key);
     }
 
     pub fn add_webgl_texture(&mut self, id: WebGLContextId, texture_id: SourceTexture, size: DeviceIntSize) {
@@ -444,10 +429,6 @@ impl ResourceCache {
         self.texture_cache.pending_updates()
     }
 
-    pub fn pending_external_image_updates(&mut self) -> ExternalImageUpdateList {
-        mem::replace(&mut self.pending_external_image_update_list, ExternalImageUpdateList::new())
-    }
-
     pub fn get_glyphs<F>(&self,
                          font_key: FontKey,
                          size: Au,
@@ -463,7 +444,7 @@ impl ResourceCache {
                                                   size,
                                                   color,
                                                   0,
-                                                  Point2D::new(0.0, 0.0),
+                                                  LayoutPoint::new(0.0, 0.0),
                                                   render_mode,
                                                   glyph_options);
         let mut texture_id = None;
@@ -498,8 +479,8 @@ impl ResourceCache {
                 FONT_CONTEXT.with(|font_context| {
                     let mut font_context = font_context.borrow_mut();
                     match *font_template {
-                        FontTemplate::Raw(ref bytes) => {
-                            font_context.add_raw_font(&glyph_key.font_key, &**bytes);
+                        FontTemplate::Raw(ref bytes, index) => {
+                            font_context.add_raw_font(&glyph_key.font_key, &**bytes, index);
                         }
                         FontTemplate::Native(ref native_font_handle) => {
                             font_context.add_native_font(&glyph_key.font_key,
@@ -544,7 +525,8 @@ impl ResourceCache {
             ImageData::External(ext_image) => {
                 match ext_image.image_type {
                     ExternalImageType::Texture2DHandle |
-                    ExternalImageType::TextureRectHandle => {
+                    ExternalImageType::TextureRectHandle |
+                    ExternalImageType::TextureExternalHandle => {
                         Some(ext_image)
                     },
                     // external buffer uses resource_cache.
@@ -570,6 +552,10 @@ impl ResourceCache {
             uv0: DevicePoint::new(0.0, webgl_texture.size.height as f32),
             uv1: DevicePoint::new(webgl_texture.size.width as f32, 0.0),
         }
+    }
+
+    pub fn get_webgl_texture_size(&self, context_id: &WebGLContextId) -> DeviceIntSize {
+        self.webgl_textures[context_id].size
     }
 
     pub fn expire_old_resources(&mut self, frame_id: FrameId) {
@@ -769,7 +755,8 @@ impl ResourceCache {
             ImageData::External(ext_image) => {
                 match ext_image.image_type {
                     ExternalImageType::Texture2DHandle |
-                    ExternalImageType::TextureRectHandle => {
+                    ExternalImageType::TextureRectHandle |
+                    ExternalImageType::TextureExternalHandle => {
                         // external handle doesn't need to update the texture_cache.
                     }
                     ExternalImageType::ExternalBuffer => {
@@ -884,8 +871,8 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                             FONT_CONTEXT.with(|font_context| {
                                 let mut font_context = font_context.borrow_mut();
                                 match font_template {
-                                    FontTemplate::Raw(ref bytes) => {
-                                        font_context.add_raw_font(&font_key, &**bytes);
+                                    FontTemplate::Raw(ref bytes, index) => {
+                                        font_context.add_raw_font(&font_key, &**bytes, index);
                                     }
                                     FontTemplate::Native(ref native_font_handle) => {
                                         font_context.add_native_font(&font_key,

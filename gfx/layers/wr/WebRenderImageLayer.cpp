@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -20,7 +21,6 @@ using namespace gfx;
 
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-  , mExternalImageId(0)
   , mImageClientTypeContainer(CompositableType::UNKNOWN)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
@@ -29,8 +29,12 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  mPipelineIdRequest.DisconnectIfExists();
+  if (mKey.isSome()) {
+    WrManager()->AddImageKeyForDiscard(mKey.value());
+  }
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
 }
 
@@ -93,6 +97,24 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
 
+  // Allocate PipelineId if necessary
+  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE &&
+      mPipelineId.isNothing() && !mPipelineIdRequest.Exists()) {
+    // Use Holder to pass this pointer to lambda.
+    // Static anaysis tool does not permit to pass refcounted variable to lambda.
+    // And we do not want to use RefPtr<WebRenderImageLayer> here.
+    Holder holder(this);
+    Manager()->AllocPipelineId()
+      ->Then(AbstractThread::GetCurrent(), __func__,
+      [holder] (const wr::PipelineId& aPipelineId) {
+        holder->mPipelineIdRequest.Complete();
+        holder->mPipelineId = Some(aPipelineId);
+      },
+      [holder] (const ipc::PromiseRejectReason &aReason) {
+        holder->mPipelineIdRequest.Complete();
+      })->Track(mPipelineIdRequest);
+  }
+
   if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
                                                   WrBridge(),
@@ -103,17 +125,17 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
+  if (mExternalImageId.isNothing()) {
     if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
       MOZ_ASSERT(!mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
+      mExternalImageId = Some(WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle()));
     } else {
       // Handle CompositableType::IMAGE case
       MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+      mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
     }
   }
-  MOZ_ASSERT(mExternalImageId);
+  MOZ_ASSERT(mExternalImageId.isSome());
 
   // XXX Not good for async ImageContainer case.
   AutoLockImage autoLock(mContainer);
@@ -123,27 +145,41 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
   gfx::IntSize size = image->GetSize();
 
-  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+    // Always allocate key
+    WrImageKey key = GetImageKey();
+    WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
+    Manager()->AddImageKeyForDiscard(key);
+    mKey = Some(key);
+  } else {
+    // Handle CompositableType::IMAGE case
+    MOZ_ASSERT(mImageClient->AsImageClientSingle());
+    mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                          mContainer,
+                          mKey,
+                          mExternalImageId.ref());
+  }
+
+  if (mKey.isNothing()) {
     return;
   }
 
-  gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = GetWrRelBounds();
+  StackingContextHelper sc(aBuilder, this);
 
-  gfx::Rect rect = gfx::Rect(0, 0, size.width, size.height);
+  LayerRect rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
     NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
                  "No other scalemodes than stretch and none supported yet.");
-    rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
+    rect = LayerRect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
-  rect = RelativeToVisible(rect);
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = ClipRect().valueOr(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   DumpLayerInfo("Image Layer", rect);
   if (gfxPrefs::LayersDump()) {
@@ -152,19 +188,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(filter).c_str());
   }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  Manager()->AddImageKeyForDiscard(key);
-
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                            1.0f,
-                            //GetAnimations(),
-                            transform,
-                            mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
-  aBuilder.PopStackingContext();
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
 }
 
 Maybe<WrImageMask>
@@ -194,29 +218,28 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
-  MOZ_ASSERT(mExternalImageId);
 
   AutoLockImage autoLock(mContainer);
   Image* image = autoLock.GetImage();
   if (!image) {
     return Nothing();
   }
-  if (!mImageClient->UpdateImage(mContainer, /* unused */0)) {
+
+  MOZ_ASSERT(mImageClient->AsImageClientSingle());
+  mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                        mContainer,
+                        mKey,
+                        mExternalImageId.ref());
+  if (mKey.isNothing()) {
     return Nothing();
   }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  Manager()->AddImageKeyForDiscard(key);
-
   gfx::IntSize size = image->GetSize();
   WrImageMask imageMask;
-  imageMask.image = key;
+  imageMask.image = mKey.value();
   Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
   imageMask.rect = wr::ToWrRect(maskRect);
   imageMask.repeat = false;

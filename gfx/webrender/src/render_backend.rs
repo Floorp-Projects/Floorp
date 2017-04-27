@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
+use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
 use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
@@ -122,10 +123,10 @@ impl RenderBackend {
                         r.write_msg(frame_counter, &msg);
                     }
                     match msg {
-                        ApiMsg::AddRawFont(id, bytes) => {
-                            profile_counters.font_templates.inc(bytes.len());
+                        ApiMsg::AddRawFont(id, bytes, index) => {
+                            profile_counters.resources.font_templates.inc(bytes.len());
                             self.resource_cache
-                                .add_font_template(id, FontTemplate::Raw(Arc::new(bytes)));
+                                .add_font_template(id, FontTemplate::Raw(Arc::new(bytes), index));
                         }
                         ApiMsg::AddNativeFont(id, native_font_handle) => {
                             self.resource_cache
@@ -144,7 +145,7 @@ impl RenderBackend {
                         }
                         ApiMsg::AddImage(id, descriptor, data, tiling) => {
                             if let ImageData::Raw(ref bytes) = data {
-                                profile_counters.image_templates.inc(bytes.len());
+                                profile_counters.resources.image_templates.inc(bytes.len());
                             }
                             self.resource_cache.add_image_template(id, descriptor, data, tiling);
                         }
@@ -212,6 +213,13 @@ impl RenderBackend {
                             if !preserve_frame_state {
                                 self.discard_frame_state_for_pipeline(pipeline_id);
                             }
+                            
+                            let display_list_len = built_display_list.data().len();
+                            let aux_list_len = auxiliary_lists.data().len();
+                            let (builder_start_time, builder_finish_time) = built_display_list.times();
+
+                            let display_list_received_time = precise_time_ns();
+                            
                             profile_counters.total_time.profile(|| {
                                 self.scene.set_display_list(pipeline_id,
                                                             epoch,
@@ -220,7 +228,16 @@ impl RenderBackend {
                                                             viewport_size,
                                                             auxiliary_lists);
                                 self.build_scene();
-                            })
+                            });
+
+                            // Note: this isn't quite right as auxiliary values will be 
+                            // pulled out somewhere in the prim_store, but aux values are
+                            // really simple and cheap to access, so it's not a big deal.
+                            let display_list_consumed_time = precise_time_ns();
+
+                            profile_counters.ipc.set(builder_start_time, builder_finish_time, 
+                                                     display_list_received_time, display_list_consumed_time,
+                                                     display_list_len + aux_list_len);
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
                             profile_scope!("SetRootPipeline");
@@ -237,7 +254,7 @@ impl RenderBackend {
                         ApiMsg::Scroll(delta, cursor, move_phase) => {
                             profile_scope!("Scroll");
                             let frame = {
-                                let counters = &mut profile_counters.texture_cache;
+                                let counters = &mut profile_counters.resources.texture_cache;
                                 profile_counters.total_time.profile(|| {
                                     if self.frame.scroll(delta, cursor, move_phase) {
                                         Some(self.render(counters))
@@ -255,10 +272,10 @@ impl RenderBackend {
                                 None => self.notify_compositor_of_new_scroll_frame(false),
                             }
                         }
-                        ApiMsg::ScrollLayerWithId(origin, id) => {
-                            profile_scope!("ScrollLayerWithScrollId");
+                        ApiMsg::ScrollNodeWithId(origin, id) => {
+                            profile_scope!("ScrollNodeWithScrollId");
                             let frame = {
-                                let counters = &mut profile_counters.texture_cache;
+                                let counters = &mut profile_counters.resources.texture_cache;
                                 profile_counters.total_time.profile(|| {
                                     if self.frame.scroll_nodes(origin, id) {
                                         Some(self.render(counters))
@@ -280,7 +297,7 @@ impl RenderBackend {
                         ApiMsg::TickScrollingBounce => {
                             profile_scope!("TickScrollingBounce");
                             let frame = {
-                                let counters = &mut profile_counters.texture_cache;
+                                let counters = &mut profile_counters.resources.texture_cache;
                                 profile_counters.total_time.profile(|| {
                                     self.frame.tick_scrolling_bounce_animations();
                                     self.render(counters)
@@ -292,10 +309,9 @@ impl RenderBackend {
                         ApiMsg::TranslatePointToLayerSpace(..) => {
                             panic!("unused api - remove from webrender_traits");
                         }
-                        ApiMsg::GetScrollLayerState(tx) => {
-                            profile_scope!("GetScrollLayerState");
-                            tx.send(self.frame.get_scroll_node_state())
-                              .unwrap()
+                        ApiMsg::GetScrollNodeState(tx) => {
+                            profile_scope!("GetScrollNodeState");
+                            tx.send(self.frame.get_scroll_node_state()).unwrap()
                         }
                         ApiMsg::RequestWebGLContext(size, attributes, tx) => {
                             if let Some(ref wrapper) = self.webrender_context_handle {
@@ -308,6 +324,9 @@ impl RenderBackend {
                                 };
 
                                 let result = wrapper.new_context(size, attributes, dispatcher);
+                                // Creating a new GLContext may make the current bound context_id dirty.
+                                // Clear it to ensure that  make_current() is called in subsequent commands.
+                                self.current_bound_webgl_context_id = None;
 
                                 match result {
                                     Ok(ctx) => {
@@ -334,7 +353,10 @@ impl RenderBackend {
                         }
                         ApiMsg::ResizeWebGLContext(context_id, size) => {
                             let ctx = self.webgl_contexts.get_mut(&context_id).unwrap();
-                            ctx.make_current();
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                ctx.make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             match ctx.resize(&size) {
                                 Ok(_) => {
                                     // Update webgl texture size. Texture id may change too.
@@ -352,12 +374,18 @@ impl RenderBackend {
                             // TODO: Buffer the commands and only apply them here if they need to
                             // be synchronous.
                             let ctx = &self.webgl_contexts[&context_id];
-                            ctx.make_current();
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                ctx.make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             ctx.apply_command(command);
-                            self.current_bound_webgl_context_id = Some(context_id);
                         },
 
                         ApiMsg::VRCompositorCommand(context_id, command) => {
+                            if Some(context_id) != self.current_bound_webgl_context_id {
+                                self.webgl_contexts[&context_id].make_current();
+                                self.current_bound_webgl_context_id = Some(context_id);
+                            }
                             self.handle_vr_compositor_command(context_id, command);
                         }
                         ApiMsg::GenerateFrame(property_bindings) => {
@@ -381,7 +409,7 @@ impl RenderBackend {
                             }
 
                             let frame = {
-                                let counters = &mut profile_counters.texture_cache;
+                                let counters = &mut profile_counters.resources.texture_cache;
                                 profile_counters.total_time.profile(|| {
                                     self.render(counters)
                                 })
@@ -474,8 +502,7 @@ impl RenderBackend {
                      frame: RendererFrame,
                      profile_counters: &mut BackendProfileCounters) {
         let pending_update = self.resource_cache.pending_updates();
-        let pending_external_image_update = self.resource_cache.pending_external_image_updates();
-        let msg = ResultMsg::NewFrame(frame, pending_update, pending_external_image_update, profile_counters.clone());
+        let msg = ResultMsg::NewFrame(frame, pending_update, profile_counters.clone());
         self.result_tx.send(msg).unwrap();
         profile_counters.reset();
     }
@@ -506,7 +533,10 @@ impl RenderBackend {
         let texture = match cmd {
             VRCompositorCommand::SubmitFrame(..) => {
                     match self.resource_cache.get_webgl_texture(&ctx_id).texture_id {
-                        SourceTexture::WebGL(texture_id) => Some(texture_id),
+                        SourceTexture::WebGL(texture_id) => {
+                            let size = self.resource_cache.get_webgl_texture_size(&ctx_id);
+                            Some((texture_id, size))
+                        },
                         _=> None
                     }
             },
