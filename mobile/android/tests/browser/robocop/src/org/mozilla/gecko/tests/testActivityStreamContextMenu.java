@@ -20,10 +20,10 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.DBUtils;
-import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
-import org.mozilla.gecko.home.activitystream.model.Highlight;
-import org.mozilla.gecko.home.activitystream.model.Item;
-import org.mozilla.gecko.home.activitystream.model.TopSite;
+import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.model.Item;
+import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
 
 /**
  * This test is unfortunately closely coupled to the current implementation, however it is still
