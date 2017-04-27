@@ -65,6 +65,8 @@ public:
      */
     int64_t TotalEntitySize();
 
+    MOZ_MUST_USE nsresult SetHeader(const nsACString &h, const nsACString &v,
+                                    bool m=false);
     MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v,
                                     bool m=false);
     MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString &v);
@@ -138,8 +140,8 @@ public:
     bool HasContentType();
     bool HasContentCharset();
 private:
-    MOZ_MUST_USE nsresult SetHeader_locked(nsHttpAtom h, const nsACString &v,
-                              bool m=false);
+    MOZ_MUST_USE nsresult SetHeader_locked(nsHttpAtom atom, const nsACString &h,
+                                           const nsACString &v, bool m=false);
     void AssignDefaultStatusText();
     void ParseVersion(const char *);
     void ParseCacheControl(const char *);

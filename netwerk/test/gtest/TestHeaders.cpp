@@ -9,8 +9,9 @@ TEST(TestHeaders, DuplicateHSTS) {
     // headers are.
     mozilla::net::nsHttpHeaderArray headers;
     nsresult rv = headers.SetHeaderFromNet(
-        mozilla::net::nsHttp::Strict_Transport_Security, NS_LITERAL_CSTRING("max-age=360"), true
-    );
+        mozilla::net::nsHttp::Strict_Transport_Security,
+        NS_LITERAL_CSTRING("Strict_Transport_Security"),
+        NS_LITERAL_CSTRING("max-age=360"), true);
     ASSERT_EQ(rv, NS_OK);
 
     nsAutoCString h;
@@ -19,8 +20,9 @@ TEST(TestHeaders, DuplicateHSTS) {
     ASSERT_EQ(h.get(), "max-age=360");
 
     rv = headers.SetHeaderFromNet(
-        mozilla::net::nsHttp::Strict_Transport_Security, NS_LITERAL_CSTRING("max-age=720"), true
-    );
+        mozilla::net::nsHttp::Strict_Transport_Security,
+        NS_LITERAL_CSTRING("Strict_Transport_Security"),
+        NS_LITERAL_CSTRING("max-age=720"), true);
     ASSERT_EQ(rv, NS_OK);
 
     rv = headers.GetHeader(mozilla::net::nsHttp::Strict_Transport_Security, h);

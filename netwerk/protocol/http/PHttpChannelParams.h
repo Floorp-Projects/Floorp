@@ -98,7 +98,11 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.header);
+    if (aParam.headerNameOriginal.IsEmpty()) {
+      WriteParam(aMsg, aParam.header);
+    } else {
+      WriteParam(aMsg, aParam.headerNameOriginal);
+    }
     WriteParam(aMsg, aParam.value);
     switch (aParam.variety) {
       case mozilla::net::nsHttpHeaderArray::eVarietyUnknown:
@@ -124,10 +128,17 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint8_t variety;
-    if (!ReadParam(aMsg, aIter, &aResult->header) ||
+    nsAutoCString header;
+    if (!ReadParam(aMsg, aIter, &header) ||
         !ReadParam(aMsg, aIter, &aResult->value)  ||
         !ReadParam(aMsg, aIter, &variety))
       return false;
+
+    mozilla::net::nsHttpAtom atom = mozilla::net::nsHttp::ResolveAtom(header);
+    aResult->header = atom;
+    if (!header.Equals(atom.get())) {
+      aResult->headerNameOriginal = header;
+    }
 
     switch (variety) {
       case 0:
