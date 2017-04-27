@@ -780,6 +780,11 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     if (entry)
         sessionStateGrip = entry->mMetaData;
 
+    // remember if we already had the continuation state.  it means we are in
+    // the middle of the authentication exchange and the connection must be
+    // kept sticky then (and only then).
+    bool authAtProgress = !!*continuationState;
+
     // for digest auth, maybe our cached nonce value simply timed out...
     bool identityInvalid;
     nsISupports *sessionState = sessionStateGrip;
@@ -803,19 +808,18 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
         rv = mAuthChannel->CloseStickyConnection();
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (!proxyAuth) {
-          // We must clear proxy ident in the following scenario + explanation:
-          // - we are authenticating to an NTLM proxy and an NTLM server
-          // - we successfully authenticated to the proxy, mProxyIdent keeps
-          //   the user name/domain and password, the identity has also been cached
-          // - we just threw away the connection because we are now asking for
-          //   creds for the server (WWW auth)
-          // - hence, we will have to auth to the proxy again as well
-          // - if we didn't clear the proxy identity, it would be considered
-          //   as non-valid and we would ask the user again ; clearing it forces
-          //   use of the cached identity and not asking the user again
-          mProxyIdent.Clear();
+            // We must clear proxy ident in the following scenario + explanation:
+            // - we are authenticating to an NTLM proxy and an NTLM server
+            // - we successfully authenticated to the proxy, mProxyIdent keeps
+            //   the user name/domain and password, the identity has also been cached
+            // - we just threw away the connection because we are now asking for
+            //   creds for the server (WWW auth)
+            // - hence, we will have to auth to the proxy again as well
+            // - if we didn't clear the proxy identity, it would be considered
+            //   as non-valid and we would ask the user again ; clearing it forces
+            //   use of the cached identity and not asking the user again
+            mProxyIdent.Clear();
         }
-        mConnectionBased = false;
     }
 
     mConnectionBased = !!(authFlags & nsIHttpAuthenticator::CONNECTION_BASED);
@@ -823,6 +827,12 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
         rv = mAuthChannel->ForceNoSpdy();
         MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
+
+    // It's legal if the peer closes the connection after the first 401/7.
+    // Making the connection sticky will prevent its restart giving the user
+    // a 'network reset' error every time.  Hence, we mark the connection
+    // as restartable.
+    mAuthChannel->ConnectionRestartable(mConnectionBased && !authAtProgress);
 
     if (identityInvalid) {
         if (entry) {

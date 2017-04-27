@@ -82,16 +82,18 @@ nsresult HandleNumbers(char16_t* aBuffer, uint32_t aSize, uint32_t aNumFlag)
   return NS_OK;
 }
 
-bool HasRTLChars(const nsAString& aString)
+bool HasRTLChars(const char16_t* aText, uint32_t aLength)
 {
-// This is used to determine whether to enable bidi if a string has 
-// right-to-left characters. To simplify things, anything that could be a
-// surrogate or RTL presentation form is covered just by testing >= 0xD800).
-// It's fine to enable bidi in rare cases where it actually isn't needed.
-  int32_t length = aString.Length();
-  for (int32_t i = 0; i < length; i++) {
-    char16_t ch = aString.CharAt(i);
-    if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
+  // This is used to determine whether a string has right-to-left characters
+  // that mean it will require bidi processing.
+  const char16_t* cp = aText;
+  const char16_t* end = cp + aLength;
+  while (cp < end) {
+    uint32_t ch = *cp++;
+    if (NS_IS_HIGH_SURROGATE(ch) && cp < end && NS_IS_LOW_SURROGATE(*cp)) {
+      ch = SURROGATE_TO_UCS4(ch, *cp++);
+    }
+    if (UTF32_CHAR_IS_BIDI(ch) || IsBidiControlRTL(ch)) {
       return true;
     }
   }

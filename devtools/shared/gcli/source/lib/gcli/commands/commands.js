@@ -97,14 +97,14 @@ function Command(types, commandSpec) {
   this.paramGroups = {};
   this._shortParams = {};
 
-  var addParam = function(param) {
+  var addParam = param => {
     var groupName = param.groupName || l10n.lookup('canonDefaultGroupName');
     this.params.push(param);
     if (!this.paramGroups.hasOwnProperty(groupName)) {
       this.paramGroups[groupName] = [];
     }
     this.paramGroups[groupName].push(param);
-  }.bind(this);
+  };
 
   // Track if the user is trying to mix default params and param groups.
   // All the non-grouped parameters must come before all the param groups
@@ -185,11 +185,11 @@ Command.prototype.toJson = function(customProps) {
   }
 
   if (Array.isArray(customProps)) {
-    customProps.forEach(function(prop) {
+    customProps.forEach(prop => {
       if (this[prop] != null) {
         json[prop] = this[prop];
       }
-    }.bind(this));
+    });
   }
 
   return json;
@@ -469,12 +469,12 @@ Commands.prototype.getAll = function() {
 Commands.prototype.getCommandSpecs = function(customProps) {
   var commandSpecs = [];
 
-  Object.keys(this._commands).forEach(function(name) {
+  Object.keys(this._commands).forEach(name => {
     var command = this._commands[name];
     if (!command.noRemote) {
       commandSpecs.push(command.toJson(customProps));
     }
-  }.bind(this));
+  });
 
   return commandSpecs;
 };
@@ -507,13 +507,13 @@ Commands.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to
     });
   }
 
-  commandSpecs.forEach(function(commandSpec) {
+  commandSpecs.forEach(commandSpec => {
     var originalName = commandSpec.name;
     if (!commandSpec.isParent) {
-      commandSpec.exec = function(args, context) {
+      commandSpec.exec = (args, context) => {
         context.commandName = originalName;
         return remoter(args, context);
-      }.bind(this);
+      };
     }
 
     if (prefix != null) {
@@ -521,7 +521,7 @@ Commands.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to
     }
     commandSpec.isProxy = true;
     this.add(commandSpec);
-  }.bind(this));
+  });
 };
 
 /**
@@ -530,14 +530,14 @@ Commands.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to
  */
 Commands.prototype.removeProxyCommands = function(prefix) {
   var toRemove = [];
-  Object.keys(this._commandSpecs).forEach(function(name) {
+  Object.keys(this._commandSpecs).forEach(name => {
     if (name.indexOf(prefix) === 0) {
       toRemove.push(name);
     }
-  }.bind(this));
+  });
 
   var removed = [];
-  toRemove.forEach(function(name) {
+  toRemove.forEach(name => {
     var command = this.get(name);
     if (command.isProxy) {
       this.remove(name);
@@ -547,7 +547,7 @@ Commands.prototype.removeProxyCommands = function(prefix) {
       console.error('Skipping removal of \'' + name +
                     '\' because it is not a proxy command.');
     }
-  }.bind(this));
+  });
 
   return removed;
 };

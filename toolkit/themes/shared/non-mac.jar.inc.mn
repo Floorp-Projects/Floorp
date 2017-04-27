@@ -49,6 +49,7 @@
   skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
+  skin/classic/global/icons/autocomplete-search.svg        (../../windows/global/icons/autocomplete-search.svg)
   skin/classic/global/icons/Close.gif                      (../../windows/global/icons/Close.gif)
   skin/classic/global/icons/close.png                      (../../windows/global/icons/close.png)
   skin/classic/global/icons/close@2x.png                   (../../windows/global/icons/close@2x.png)

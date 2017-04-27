@@ -31,10 +31,10 @@ exports.items = [
       let contentWindow = context.environment.window;
 
       let dbg = new Debugger(contentWindow);
-      dbg.onEnterFrame = function (frame) {
+      dbg.onEnterFrame = frame => {
         // BUG 773652 -  Make the output from the GCLI calllog command nicer
         contentWindow.console.log("Method call: " + this.callDescription(frame));
-      }.bind(this);
+      };
 
       debuggers.push(dbg);
 
@@ -162,11 +162,11 @@ exports.items = [
       let dbg = new Debugger(globalObj);
       chromeDebuggers.push(dbg);
 
-      dbg.onEnterFrame = function (frame) {
+      dbg.onEnterFrame = frame => {
         // BUG 773652 -  Make the output from the GCLI calllog command nicer
         contentWindow.console.log(l10n.lookup("callLogChromeMethodCall") +
                                   ": " + this.callDescription(frame));
-      }.bind(this);
+      };
 
       let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
       let target = TargetFactory.forTab(gBrowser.selectedTab);

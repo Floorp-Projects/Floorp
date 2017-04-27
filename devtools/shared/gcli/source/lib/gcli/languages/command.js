@@ -97,7 +97,7 @@ var commandLanguage = exports.commandLanguage = {
       commandHtmlPromise = host.staticRequire(module, './command.html');
     }
 
-    return commandHtmlPromise.then(function(commandHtml) {
+    return commandHtmlPromise.then(commandHtml => {
       this.commandDom = host.toDom(this.document, commandHtml);
 
       this.requisition.commandOutputManager.onOutput.add(this.outputted, this);
@@ -107,7 +107,7 @@ var commandLanguage = exports.commandLanguage = {
       this.requisition.onExternalUpdate.add(this.textChanged, this);
 
       return this;
-    }.bind(this));
+    });
   },
 
   destroy: function() {
@@ -249,11 +249,11 @@ var commandLanguage = exports.commandLanguage = {
     // If the user is on a valid value, then we increment the value, but if
     // they've typed something that's not right we page through predictions
     if (this.assignment.getStatus() === Status.VALID) {
-      return this.requisition.nudge(this.assignment, 1).then(function() {
+      return this.requisition.nudge(this.assignment, 1).then(() => {
         this.textChanged();
         this.focusManager.onInputChange();
         return true;
-      }.bind(this));
+      });
     }
 
     return Promise.resolve(false);
@@ -264,11 +264,11 @@ var commandLanguage = exports.commandLanguage = {
    */
   handleDownArrow: function() {
     if (this.assignment.getStatus() === Status.VALID) {
-      return this.requisition.nudge(this.assignment, -1).then(function() {
+      return this.requisition.nudge(this.assignment, -1).then(() => {
         this.textChanged();
         this.focusManager.onInputChange();
         return true;
-      }.bind(this));
+      });
     }
 
     return Promise.resolve(false);
@@ -289,10 +289,10 @@ var commandLanguage = exports.commandLanguage = {
     this.terminal._previousValue = this.terminal.inputElement.value;
     this.terminal.inputElement.value = '';
 
-    return this.requisition.exec().then(function() {
+    return this.requisition.exec().then(() => {
       this.textChanged();
       return true;
-    }.bind(this));
+    });
   },
 
   /**
@@ -313,14 +313,14 @@ var commandLanguage = exports.commandLanguage = {
     // the call to complete() we should avoid making changes before the end
     // of the event loop
     var index = this.terminal.getChoiceIndex();
-    return this.requisition.complete(inputState.cursor, index).then(function(updated) {
+    return this.requisition.complete(inputState.cursor, index).then(updated => {
       // Abort UI changes if this UI update has been overtaken
       if (!updated) {
         return RESOLVED;
       }
       this.textChanged();
       return this.terminal.unsetChoice();
-    }.bind(this));
+    });
   },
 
   /**
@@ -329,14 +329,14 @@ var commandLanguage = exports.commandLanguage = {
   handleInput: function(value) {
     this.terminal._caretChange = Caret.NO_CHANGE;
 
-    return this.requisition.update(value).then(function(updated) {
+    return this.requisition.update(value).then(updated => {
       // Abort UI changes if this UI update has been overtaken
       if (!updated) {
         return RESOLVED;
       }
       this.textChanged();
       return this.terminal.unsetChoice();
-    }.bind(this));
+    });
   },
 
   /**
@@ -437,9 +437,9 @@ var commandLanguage = exports.commandLanguage = {
    */
   fieldChanged: function(ev) {
     this.requisition.setAssignment(this.assignment, ev.conversion.arg,
-                                   { matchPadding: true }).then(function() {
+                                   { matchPadding: true }).then(() => {
       this.textChanged();
-    }.bind(this));
+    });
 
     var isError = ev.conversion.message != null && ev.conversion.message !== '';
     this.focusManager.setError(isError);
@@ -473,7 +473,7 @@ var commandLanguage = exports.commandLanguage = {
 
     domtemplate.template(template, data, templateOptions);
 
-    ev.output.promise.then(function() {
+    ev.output.promise.then(() => {
       var document = data.rowoutEle.ownerDocument;
 
       if (ev.output.completed) {
@@ -485,7 +485,7 @@ var commandLanguage = exports.commandLanguage = {
 
       util.clearElement(data.rowoutEle);
 
-      return ev.output.convert('dom', context).then(function(node) {
+      return ev.output.convert('dom', context).then(node => {
         this.terminal.scrollToBottom();
         data.throbEle.style.display = ev.output.completed ? 'none' : 'block';
 
@@ -501,8 +501,8 @@ var commandLanguage = exports.commandLanguage = {
         event.initEvent('load', true, true);
         event.addedElement = node;
         node.dispatchEvent(event);
-      }.bind(this));
-    }.bind(this)).catch(console.error);
+      });
+    }).catch(console.error);
 
     this.terminal.addElement(data.rowinEle);
     this.terminal.addElement(data.rowoutEle);

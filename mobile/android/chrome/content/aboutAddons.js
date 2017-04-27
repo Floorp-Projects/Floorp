@@ -150,10 +150,10 @@ var Addons = {
     outer.className = "addon-item list-item";
     outer.setAttribute("role", "button");
     outer.setAttribute("contextmenu", "addonmenu");
-    outer.addEventListener("click", function() {
+    outer.addEventListener("click", () => {
       this.showDetails(outer);
       history.pushState({ id: aAddon.id }, document.title);
-    }.bind(this), true);
+    }, true);
 
     let img = document.createElement("img");
     img.className = "icon";

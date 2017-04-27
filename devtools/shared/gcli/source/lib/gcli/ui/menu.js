@@ -55,24 +55,24 @@ function Menu(options) {
   if (menuCssPromise == null) {
     menuCssPromise = host.staticRequire(module, './menu.css');
   }
-  menuCssPromise.then(function(menuCss) {
+  menuCssPromise.then(menuCss => {
     // Pull the HTML into the DOM, but don't add it to the document
     if (menuCss != null) {
       util.importCss(menuCss, this.document, 'gcli-menu');
     }
-  }.bind(this), console.error);
+  }, console.error);
 
   this.templateOptions = { blankNullUndefined: true, stack: 'menu.html' };
   if (menuHtmlPromise == null) {
     menuHtmlPromise = host.staticRequire(module, './menu.html');
   }
-  menuHtmlPromise.then(function(menuHtml) {
+  menuHtmlPromise.then(menuHtml => {
     if (this.document == null) {
       return; // destroy() has been called
     }
 
     this.template = host.toDom(this.document, menuHtml);
-  }.bind(this), console.error);
+  }, console.error);
 
   // Contains the items that should be displayed
   this.items = [];
@@ -152,13 +152,13 @@ Menu.prototype.show = function(items, match) {
     return;
   }
 
-  this.items = items.filter(function(item) {
+  this.items = items.filter(item => {
     return item.hidden === undefined || item.hidden !== true;
-  }.bind(this));
+  });
 
-  this.items = this.items.map(function(item) {
+  this.items = this.items.map(item => {
     return getHighlightingProxy(item, match, this.template.ownerDocument);
-  }.bind(this));
+  });
 
   if (this.items.length === 0) {
     this.element.style.display = 'none';

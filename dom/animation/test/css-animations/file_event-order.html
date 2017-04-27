@@ -43,11 +43,11 @@ function setupAnimation(t, animationStyle, receiveEvents) {
                                              'animationend' ]);
 
   ['start', 'iteration', 'end'].forEach(name => {
-    div['onanimation' + name] = function(evt) {
+    div['onanimation' + name] = evt => {
     receiveEvents.push({ type:        evt.type,
                          target:      evt.target,
                          elapsedTime: evt.elapsedTime });
-    }.bind(this);
+    };
   });
 
   const animation = div.getAnimations()[0];

@@ -28,6 +28,9 @@ def web_socket_do_extra_handshake(request):
     time.sleep(13)
   elif request.ws_protocol == "test-41b":
     request.sts = "max-age=100"
+  elif request.ws_protocol == "test-49":
+    # subprotocols are compared case-sensitively, so this should fail
+    request.ws_protocol = "teST-49"
   else:
     pass
 

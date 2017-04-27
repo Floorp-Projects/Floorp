@@ -321,9 +321,9 @@ BingRequest.prototype = {
       // Set up request options.
       let deferred = Promise.defer();
       let options = {
-        onLoad: (function(responseText, xhr) {
+        onLoad: (responseText, xhr) => {
           deferred.resolve(this);
-        }).bind(this),
+        },
         onError(e, responseText, xhr) {
           deferred.reject(xhr);
         },

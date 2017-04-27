@@ -1018,7 +1018,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
         return r;
       };
       rpp.setElements = function(start, vals) {
-        vals.forEach(function(v, i) { this.set(start+i, v); }.bind(this));
+        vals.forEach((v, i) => { this.set(start+i, v); });
       };
       r['new'] = function(length) {
         return wrap(jenvpp().NewObjectArray(jenv, length, elemClass, null),

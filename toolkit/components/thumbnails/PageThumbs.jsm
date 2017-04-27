@@ -832,9 +832,9 @@ var PageThumbsExpiration = {
     let urls = [];
     let filtersToWaitFor = this._filters.length;
 
-    let expire = function expire() {
+    let expire = () => {
       this.expireThumbnails(urls);
-    }.bind(this);
+    };
 
     // No registered filters.
     if (!filtersToWaitFor) {

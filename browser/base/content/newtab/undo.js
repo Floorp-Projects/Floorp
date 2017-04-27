@@ -106,10 +106,10 @@ var gUndoDialog = {
    * Undo all blocked sites.
    */
   _undoAll: function UndoDialog_undoAll() {
-    NewTabUtils.undoAll(function() {
+    NewTabUtils.undoAll(() => {
       gUpdater.updateGrid();
       this.hide();
-    }.bind(this));
+    });
   }
 };
 

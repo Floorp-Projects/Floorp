@@ -1697,7 +1697,7 @@ var gApplicationsPane = {
     aEvent.stopPropagation();
 
     var handlerApp;
-    let chooseAppCallback = function(aHandlerApp) {
+    let chooseAppCallback = aHandlerApp => {
       // Rebuild the actions menu whether the user picked an app or canceled.
       // If they picked an app, we want to add the app to the menu and select it.
       // If they canceled, we want to go back to their previous selection.
@@ -1718,7 +1718,7 @@ var gApplicationsPane = {
           }
         }
       }
-    }.bind(this);
+    };
 
     if (AppConstants.platform == "win") {
       var params = {};
@@ -1753,7 +1753,7 @@ var gApplicationsPane = {
     } else {
       let winTitle = this._prefsBundle.getString("fpTitleChooseApp");
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      let fpCallback = function fpCallback_done(aResult) {
+      let fpCallback = aResult => {
         if (aResult == Ci.nsIFilePicker.returnOK && fp.file &&
             this._isValidHandlerExecutable(fp.file)) {
           handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
@@ -1767,7 +1767,7 @@ var gApplicationsPane = {
 
           chooseAppCallback(handlerApp);
         }
-      }.bind(this);
+      };
 
       // Prompt the user to pick an app.  If they pick one, and it's a valid
       // selection, then add it to the list of possible handlers.
