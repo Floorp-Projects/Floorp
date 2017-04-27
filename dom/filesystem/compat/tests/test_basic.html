@@ -176,9 +176,9 @@ function test_directoryEntry_getFile_simple() {
 }
 
 function test_directoryEntry_getFile_deep() {
-  directoryEntry.getFile("subdir/bar.txt", {},
+  directoryEntry.getFile("subdir/bar..txt", {},
   function(e) {
-    is(e.name, "bar.txt", "We have the right FileEntry.");
+    is(e.name, "bar..txt", "We have the right FileEntry.");
     test_getParent(e, directoryEntry, /* nested */ true);
   }, function(e) {
     ok(false, "This should not happen.");
@@ -316,9 +316,9 @@ function test_root_getFile_simple() {
 }
 
 function test_root_getFile_deep() {
-  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar.txt", {},
+  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar..txt", {},
   function(e) {
-    is(e.name, "bar.txt", "We have the right FileEntry.");
+    is(e.name, "bar..txt", "We have the right FileEntry.");
     next();
   }, function(e) {
     ok(false, "This should not happen.");
