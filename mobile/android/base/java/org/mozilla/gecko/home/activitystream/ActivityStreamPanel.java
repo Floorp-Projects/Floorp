@@ -28,7 +28,7 @@ import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 import java.util.Collections;
 import java.util.List;
 
-public class ActivityStream extends FrameLayout {
+public class ActivityStreamPanel extends FrameLayout {
     private final StreamRecyclerAdapter adapter;
 
     private static final int LOADER_ID_HIGHLIGHTS = 0;
@@ -51,7 +51,7 @@ public class ActivityStream extends FrameLayout {
     private int desiredTilesHeight;
     private int tileMargin;
 
-    public ActivityStream(Context context, AttributeSet attrs) {
+    public ActivityStreamPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setBackgroundColor(ContextCompat.getColor(context, R.color.about_page_header_grey));
