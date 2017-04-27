@@ -10,8 +10,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.importGlobalProperties(["URL"]);
 
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-
 const MockDocument = {
   /**
    * Create a document for the given URL containing the given HTML with the ownerDocument of all <form>s having a mocked location.
@@ -46,16 +44,6 @@ const MockDocument = {
     Object.defineProperty(aElement, "ownerDocument", {
       value: document,
     });
-  },
-
-  createTestDocumentFromFile(aDocumentURL, aFile) {
-    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                     createInstance(Ci.nsIFileInputStream);
-    fileStream.init(aFile, -1, -1, 0);
-
-    let data = NetUtil.readInputStreamToString(fileStream, fileStream.available());
-
-    return this.createTestDocument(aDocumentURL, data);
   },
 
 };
