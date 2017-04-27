@@ -90,18 +90,18 @@ class FSURLEncoded : public EncodingFormSubmission
 {
 public:
   /**
-   * @param aCharset the charset of the form as a string
+   * @param aEncoding the character encoding of the form
    * @param aMethod the method of the submit (either NS_FORM_METHOD_GET or
    *        NS_FORM_METHOD_POST).
    */
-  FSURLEncoded(const nsACString& aCharset,
+  FSURLEncoded(NotNull<const Encoding*> aEncoding,
                int32_t aMethod,
                nsIDocument* aDocument,
                nsIContent* aOriginatingElement)
-    : EncodingFormSubmission(aCharset, aOriginatingElement),
-      mMethod(aMethod),
-      mDocument(aDocument),
-      mWarnedFileControl(false)
+    : EncodingFormSubmission(aEncoding, aOriginatingElement)
+    , mMethod(aMethod)
+    , mDocument(aDocument)
+    , mWarnedFileControl(false)
   {
   }
 
@@ -336,16 +336,8 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
         do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
-      mimeStream->AddHeader("Content-Type",
-                            PromiseFlatString(
-                              "application/x-www-form-urlencoded; charset="
-                              + mCharset
-                            ).get());
-#else
       mimeStream->AddHeader("Content-Type",
                             "application/x-www-form-urlencoded");
-#endif
       mimeStream->SetAddContentLength(true);
       mimeStream->SetData(dataStream);
 
@@ -428,9 +420,9 @@ FSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
 
 // --------------------------------------------------------------------------
 
-FSMultipartFormData::FSMultipartFormData(const nsACString& aCharset,
+FSMultipartFormData::FSMultipartFormData(NotNull<const Encoding*> aEncoding,
                                          nsIContent* aOriginatingElement)
-    : EncodingFormSubmission(aCharset, aOriginatingElement)
+  : EncodingFormSubmission(aEncoding, aOriginatingElement)
 {
   mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -695,8 +687,9 @@ namespace {
 class FSTextPlain : public EncodingFormSubmission
 {
 public:
-  FSTextPlain(const nsACString& aCharset, nsIContent* aOriginatingElement)
-    : EncodingFormSubmission(aCharset, aOriginatingElement)
+  FSTextPlain(NotNull<const Encoding*> aEncoding,
+              nsIContent* aOriginatingElement)
+    : EncodingFormSubmission(aEncoding, aOriginatingElement)
   {
   }
 
@@ -813,18 +806,20 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
 // --------------------------------------------------------------------------
 
-EncodingFormSubmission::EncodingFormSubmission(const nsACString& aCharset,
-                                               nsIContent* aOriginatingElement)
-  : HTMLFormSubmission(aCharset, aOriginatingElement)
-  , mEncoder(aCharset)
+EncodingFormSubmission::EncodingFormSubmission(
+  NotNull<const Encoding*> aEncoding,
+  nsIContent* aOriginatingElement)
+  : HTMLFormSubmission(aEncoding, aOriginatingElement)
 {
-  if (!(aCharset.EqualsLiteral("UTF-8") || aCharset.EqualsLiteral("gb18030"))) {
-    NS_ConvertUTF8toUTF16 charsetUtf16(aCharset);
-    const char16_t* charsetPtr = charsetUtf16.get();
+  if (!aEncoding->CanEncodeEverything()) {
+    nsAutoCString name;
+    aEncoding->Name(name);
+    NS_ConvertUTF8toUTF16 nameUtf16(name);
+    const char16_t* namePtr = nameUtf16.get();
     SendJSWarning(aOriginatingElement ? aOriginatingElement->GetOwnerDocument()
                                       : nullptr,
                   "CannotEncodeAllUnicode",
-                  &charsetPtr,
+                  &namePtr,
                   1);
   }
 }
@@ -838,8 +833,11 @@ nsresult
 EncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
                                   bool aHeaderEncode)
 {
-  if (!mEncoder.Encode(aStr, aOut)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+  const Encoding* ignored;
+  Tie(rv, ignored) = mEncoding->Encode(aStr, aOut);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   if (aHeaderEncode) {
@@ -859,12 +857,9 @@ EncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
 
 namespace {
 
-void
-GetSubmitCharset(nsGenericHTMLElement* aForm,
-                 nsACString& oCharset)
+NotNull<const Encoding*>
+GetSubmitEncoding(nsGenericHTMLElement* aForm)
 {
-  oCharset.AssignLiteral("UTF-8"); // default to utf-8
-
   nsAutoString acceptCharsetValue;
   aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::acceptcharset,
                  acceptCharsetValue);
@@ -881,8 +876,10 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
         nsAutoString uCharset;
         acceptCharsetValue.Mid(uCharset, offset, cnt);
 
-        if (EncodingUtils::FindEncodingForLabelNoReplacement(uCharset, oCharset))
-          return;
+        auto encoding = Encoding::ForLabelNoReplacement(uCharset);
+        if (encoding) {
+          return WrapNotNull(encoding);
+        }
       }
       offset = spPos + 1;
     } while (spPos != -1);
@@ -891,8 +888,9 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
   // Get the charset from document
   nsIDocument* doc = aForm->GetComposedDoc();
   if (doc) {
-    oCharset = doc->GetDocumentCharacterSet();
+    return Encoding::ForName(doc->GetDocumentCharacterSet());
   }
+  return WrapNotNull(UTF_8_ENCODING);
 }
 
 void
@@ -934,26 +932,16 @@ HTMLFormSubmission::GetFromForm(nsGenericHTMLElement* aForm,
     GetEnumAttr(aForm, nsGkAtoms::method, &method);
   }
 
-  // Get charset
-  nsAutoCString charset;
-  GetSubmitCharset(aForm, charset);
-
-  // We now have a canonical charset name, so we only have to check it
-  // against canonical names.
-
-  // use UTF-8 for UTF-16* (per WHATWG and existing practice of
-  // MS IE/Opera).
-  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16"))) {
-    charset.AssignLiteral("UTF-8");
-  }
+  // Get encoding
+  auto encoding = GetSubmitEncoding(aForm)->OutputEncoding();
 
   // Choose encoder
   if (method == NS_FORM_METHOD_POST &&
       enctype == NS_FORM_ENCTYPE_MULTIPART) {
-    *aFormSubmission = new FSMultipartFormData(charset, aOriginatingElement);
+    *aFormSubmission = new FSMultipartFormData(encoding, aOriginatingElement);
   } else if (method == NS_FORM_METHOD_POST &&
              enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-    *aFormSubmission = new FSTextPlain(charset, aOriginatingElement);
+    *aFormSubmission = new FSTextPlain(encoding, aOriginatingElement);
   } else {
     nsIDocument* doc = aForm->OwnerDoc();
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
@@ -971,8 +959,8 @@ HTMLFormSubmission::GetFromForm(nsGenericHTMLElement* aForm,
       SendJSWarning(doc, "ForgotPostWarning",
                     &enctypeStrPtr, 1);
     }
-    *aFormSubmission = new FSURLEncoded(charset, method, doc,
-                                        aOriginatingElement);
+    *aFormSubmission =
+      new FSURLEncoded(encoding, method, doc, aOriginatingElement);
   }
 
   return NS_OK;

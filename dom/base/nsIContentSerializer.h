@@ -14,6 +14,7 @@ class nsIDocument;
 class nsAString;
 
 namespace mozilla {
+class Encoding;
 namespace dom {
 class Element;
 } // namespace dom
@@ -28,8 +29,10 @@ class nsIContentSerializer : public nsISupports {
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
-  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
-                  const char* aCharSet, bool aIsCopying,
+  NS_IMETHOD Init(uint32_t flags,
+                  uint32_t aWrapColumn,
+                  const mozilla::Encoding* aEncoding,
+                  bool aIsCopying,
                   bool aIsWholeDocument,
                   bool* aNeedsPerformatScanning) = 0;
 

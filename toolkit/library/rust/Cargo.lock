@@ -285,6 +285,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "encoding_glue"
+version = "0.1.0"
+dependencies = [
+ "encoding_rs 0.6.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+]
+
+[[package]]
 name = "encoding_rs"
 version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -370,6 +379,7 @@ version = "0.1.0"
 dependencies = [
  "cubeb-pulse 0.0.1",
  "encoding_c 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_glue 0.1.0",
  "geckoservo 0.0.1",
  "mp4parse_capi 0.8.0",
  "nserror 0.1.0",

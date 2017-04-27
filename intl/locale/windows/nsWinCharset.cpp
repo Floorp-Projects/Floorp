@@ -9,11 +9,8 @@
 #include "nsUConvPropertySearch.h"
 #include <windows.h>
 #include "nsWin32Locale.h"
-#include "nsCOMPtr.h"
-#include "nsReadableUtils.h"
-#include "nsServiceManagerUtils.h"
+#include "nsString.h"
 #include "nsPlatformCharset.h"
-#include "nsEncoderDecoderUtils.h"
 
 using namespace mozilla;
 

@@ -42,8 +42,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPlainTextSerializer)
 
   // nsIContentSerializer
-  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
-                  const char* aCharSet, bool aIsCopying,
+  NS_IMETHOD Init(uint32_t flags,
+                  uint32_t aWrapColumn,
+                  const mozilla::Encoding* aEncoding,
+                  bool aIsCopying,
                   bool aIsWholeDocument,
                   bool* aNeedsPreformatScanning) override;
 
