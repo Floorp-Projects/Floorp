@@ -235,7 +235,7 @@ LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir)
     lir->setMir(mir);
 
     MOZ_ASSERT(lir->isCall());
-    gen->setPerformsCall();
+    gen->setNeedsStaticStackAlignment();
 
     uint32_t vreg = getVirtualRegister();
 
