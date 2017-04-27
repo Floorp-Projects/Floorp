@@ -166,6 +166,9 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
      * to override all other choices
      */
     init_oneshot,
+#if defined(USE_PULSE_RUST)
+    pulse_rust_init,
+#endif
 #if defined(USE_PULSE)
     pulse_init,
 #endif
