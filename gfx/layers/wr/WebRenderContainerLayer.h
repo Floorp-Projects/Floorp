@@ -8,7 +8,8 @@
 
 #include "gfxPrefs.h"
 #include "Layers.h"
-#include "WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {

@@ -9,7 +9,8 @@
 #include "Layers.h"
 #include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
