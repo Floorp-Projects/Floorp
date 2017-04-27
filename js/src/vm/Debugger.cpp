@@ -524,6 +524,7 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 BreakpointSite::BreakpointSite(Type type)
   : type_(type), enabledCount(0)
 {
+    JS_INIT_CLIST(&breakpoints);
 }
 
 void
@@ -546,22 +547,21 @@ BreakpointSite::dec(FreeOp* fop)
 bool
 BreakpointSite::isEmpty() const
 {
-    return breakpoints.isEmpty();
+    return JS_CLIST_IS_EMPTY(&breakpoints);
 }
 
 Breakpoint*
 BreakpointSite::firstBreakpoint() const
 {
-    if (isEmpty())
+    if (JS_CLIST_IS_EMPTY(&breakpoints))
         return nullptr;
-    return &(*breakpoints.begin());
+    return Breakpoint::fromSiteLinks(JS_NEXT_LINK(&breakpoints));
 }
 
 bool
-BreakpointSite::hasBreakpoint(Breakpoint* toFind)
+BreakpointSite::hasBreakpoint(Breakpoint* bp)
 {
-    const BreakpointList::Iterator bp(toFind);
-    for (auto p = breakpoints.begin(); p; p++)
+    for (Breakpoint* p = firstBreakpoint(); p; p = p->nextInSite())
         if (p == bp)
             return true;
     return false;
@@ -571,8 +571,20 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handl
     : debugger(debugger), site(site), handler(handler)
 {
     MOZ_ASSERT(handler->compartment() == debugger->object->compartment());
-    debugger->breakpoints.pushBack(this);
-    site->breakpoints.pushBack(this);
+    JS_APPEND_LINK(&debuggerLinks, &debugger->breakpoints);
+    JS_APPEND_LINK(&siteLinks, &site->breakpoints);
+}
+
+Breakpoint*
+Breakpoint::fromDebuggerLinks(JSCList* links)
+{
+    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, debuggerLinks));
+}
+
+Breakpoint*
+Breakpoint::fromSiteLinks(JSCList* links)
+{
+    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, siteLinks));
 }
 
 void
@@ -580,8 +592,8 @@ Breakpoint::destroy(FreeOp* fop)
 {
     if (debugger->enabled)
         site->dec(fop);
-    debugger->breakpoints.remove(this);
-    site->breakpoints.remove(this);
+    JS_REMOVE_LINK(&debuggerLinks);
+    JS_REMOVE_LINK(&siteLinks);
     site->destroyIfEmpty(fop);
     fop->delete_(this);
 }
@@ -589,13 +601,15 @@ Breakpoint::destroy(FreeOp* fop)
 Breakpoint*
 Breakpoint::nextInDebugger()
 {
-    return debuggerLink.mNext;
+    JSCList* link = JS_NEXT_LINK(&debuggerLinks);
+    return (link == &debugger->breakpoints) ? nullptr : fromDebuggerLinks(link);
 }
 
 Breakpoint*
 Breakpoint::nextInSite()
 {
-    return siteLink.mNext;
+    JSCList* link = JS_NEXT_LINK(&siteLinks);
+    return (link == &site->breakpoints) ? nullptr : fromSiteLinks(link);
 }
 
 JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
@@ -670,6 +684,9 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 {
     assertSameCompartment(cx, dbg);
 
+    JS_INIT_CLIST(&breakpoints);
+    JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
+
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     if (logger) {
@@ -688,14 +705,15 @@ Debugger::~Debugger()
     allocationsLog.clear();
 
     /*
+     * Since the inactive state for this link is a singleton cycle, it's always
+     * safe to apply JS_REMOVE_LINK to it, regardless of whether we're in the list or not.
+     *
      * We don't have to worry about locking here since Debugger is not
      * background finalized.
      */
-    JSContext* cx = TlsContext.get();
-    if (onNewGlobalObjectWatchersLink.mPrev ||
-        onNewGlobalObjectWatchersLink.mNext)
-        cx->runtime()->onNewGlobalObjectWatchers().remove(this);
+    JS_REMOVE_LINK(&onNewGlobalObjectWatchersLink);
 
+    JSContext* cx = TlsContext.get();
     cx->runtime()->endSingleThreadedExecution(cx);
 }
 
@@ -2160,7 +2178,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
 void
 Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(!cx->runtime()->onNewGlobalObjectWatchers().isEmpty());
+    MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers()));
     if (global->compartment()->creationOptions().invisibleToDebugger())
         return;
 
@@ -2170,9 +2188,13 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
      * can be mutated while we're walking it.
      */
     AutoObjectVector watchers(cx);
-    for (auto& dbg : cx->runtime()->onNewGlobalObjectWatchers()) {
-        MOZ_ASSERT(dbg.observesNewGlobalObject());
-        JSObject* obj = dbg.object;
+    for (JSCList* link = JS_LIST_HEAD(&cx->runtime()->onNewGlobalObjectWatchers());
+         link != &cx->runtime()->onNewGlobalObjectWatchers();
+         link = JS_NEXT_LINK(link))
+    {
+        Debugger* dbg = fromOnNewGlobalObjectWatchersLink(link);
+        MOZ_ASSERT(dbg->observesNewGlobalObject());
+        JSObject* obj = dbg->object;
         JS::ExposeObjectToActiveJS(obj);
         if (!watchers.append(obj)) {
             if (cx->isExceptionPending())
@@ -3349,9 +3371,14 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
          */
         if (dbg->getHook(OnNewGlobalObject)) {
             if (!wasEnabled) {
-                cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
+                /* If we were not enabled, the link should be a singleton list. */
+                MOZ_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+                JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
+                               &cx->runtime()->onNewGlobalObjectWatchers());
             } else {
-                cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
+                /* If we were enabled, the link should be inserted in the list. */
+                MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+                JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
             }
         }
 
@@ -3511,9 +3538,14 @@ Debugger::setOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp)
     if (dbg->enabled) {
         JSObject* newHook = dbg->getHook(OnNewGlobalObject);
         if (!oldHook && newHook) {
-            cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
+            /* If we didn't have a hook, the link should be a singleton list. */
+            MOZ_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+            JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
+                           &cx->runtime()->onNewGlobalObjectWatchers());
         } else if (oldHook && !newHook) {
-            cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
+            /* If we did have a hook, the link should be inserted in the list. */
+            MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+            JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
         }
     }
 
