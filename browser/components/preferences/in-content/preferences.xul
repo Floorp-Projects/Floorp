@@ -37,6 +37,8 @@
   "chrome://browser/locale/preferences/applications.dtd">
 <!ENTITY % advancedDTD SYSTEM
   "chrome://browser/locale/preferences/advanced.dtd">
+<!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
+%aboutDialogDTD;
 %brandDTD;
 %globalPreferencesDTD;
 %preferencesDTD;
