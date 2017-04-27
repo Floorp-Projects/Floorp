@@ -411,7 +411,7 @@ status_t MPEG4Extractor::readMetaData() {
         // The parseChunk function returns UNKNOWN_ERROR to skip
         // some boxes we don't want to handle. Filter that error
         // code but return others so e.g. I/O errors propagate.
-        if (err != OK && err != (status_t) UNKNOWN_ERROR) {
+        if (err != OK && err != static_cast<status_t>(UNKNOWN_ERROR)) {
           ALOGW("Error %d parsing chunck at offset %lld looking for first track",
               err, (long long)offset);
           break;
@@ -627,7 +627,7 @@ status_t MPEG4Extractor::parseDrmSINF(off64_t *offset, off64_t data_offset) {
         return ERROR_MALFORMED;
     }
 
-    return UNKNOWN_ERROR;  // Return a dummy error.
+    return static_cast<status_t>(UNKNOWN_ERROR);  // Return a dummy error.
 }
 
 struct PathAdder {
@@ -845,7 +845,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 mInitCheck = OK;
 
                 if (!mIsDrm) {
-                    return UNKNOWN_ERROR;  // Return a dummy error.
+                    return static_cast<status_t>(UNKNOWN_ERROR);  // Return a dummy error.
                 } else {
                     return OK;
                 }
@@ -1979,7 +1979,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         {
             parseSegmentIndex(data_offset, chunk_data_size);
             *offset += chunk_size;
-            return UNKNOWN_ERROR; // stop parsing after sidx
+            return static_cast<status_t>(UNKNOWN_ERROR); // stop parsing after sidx
         }
 
         case FOURCC('w', 'a', 'v', 'e'):
