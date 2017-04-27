@@ -46,15 +46,6 @@ WebRenderLayer::RelativeToVisible(const LayerRect& aRect)
   return aRect - Bounds().TopLeft();
 }
 
-Rect
-WebRenderLayer::RelativeToTransformedVisible(Rect aRect)
-{
-  IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();
-  Rect transformed = GetLayer()->GetTransform().TransformBounds(IntRectToRect(bounds));
-  aRect.MoveBy(-transformed.x, -transformed.y);
-  return aRect;
-}
-
 LayerRect
 WebRenderLayer::ParentStackingContextBounds()
 {

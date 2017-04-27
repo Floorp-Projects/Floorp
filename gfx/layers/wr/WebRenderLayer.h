@@ -47,7 +47,6 @@ public:
   WrImageKey GetImageKey();
 
   LayerRect RelativeToVisible(const LayerRect& aRect);
-  gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
   LayerRect ParentStackingContextBounds();
   LayerRect RelativeToParent(const LayerRect& aRect);
   LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
