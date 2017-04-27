@@ -145,26 +145,25 @@ public class FileUtils {
      */
     public static String readStringFromInputStreamAndCloseStream(final InputStream inputStream, final int bufferSize)
             throws IOException {
-        InputStreamReader reader = null;
+        if (bufferSize <= 0) {
+            // Safe close: it's more important to alert the programmer of
+            // their error than to let them catch and continue on their way.
+            IOUtils.safeStreamClose(inputStream);
+            throw new IllegalArgumentException("Expected buffer size larger than 0. Got: " + bufferSize);
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder(bufferSize);
+        final InputStreamReader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
         try {
-            if (bufferSize <= 0) {
-                throw new IllegalArgumentException("Expected buffer size larger than 0. Got: " + bufferSize);
-            }
-
-            final StringBuilder stringBuilder = new StringBuilder(bufferSize);
-            reader = new InputStreamReader(inputStream, StringUtils.UTF_8);
-
             int charsRead;
             final char[] buffer = new char[bufferSize];
             while ((charsRead = reader.read(buffer, 0, bufferSize)) != -1) {
                 stringBuilder.append(buffer, 0, charsRead);
             }
-
-            return stringBuilder.toString();
         } finally {
-            IOUtils.safeStreamClose(reader);
-            IOUtils.safeStreamClose(inputStream);
+            reader.close();
         }
+        return stringBuilder.toString();
     }
 
     /**
