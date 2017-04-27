@@ -846,6 +846,8 @@
                          tooltiptext="&urlbar.persistentStorageNotificationAnchor.tooltip;"/>
                 </box>
                 <image id="connection-icon"/>
+                <image id="remote-control-icon"
+                       tooltiptext="&urlbar.remoteControlNotificationAnchor.tooltip;"/>
                 <hbox id="identity-icon-labels">
                   <label id="identity-icon-label" class="plain" flex="1"/>
                   <label id="identity-icon-country-label" class="plain"/>
