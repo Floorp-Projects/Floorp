@@ -15,7 +15,6 @@
 #include "nsDataHashtable.h"
 #include "PlatformDecoderModule.h"
 #include "ImageContainer.h"
-#include "mozilla/Span.h"
 
 namespace mozilla {
 
@@ -117,15 +116,7 @@ protected:
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
                                    const uint32_t& aStatus) override;
   ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus) override;
-  ipc::IPCResult RecvDecodedShmem(const CDMVideoFrame& aFrame,
-                                  ipc::Shmem&& aShmem) override;
-  ipc::IPCResult RecvDecodedData(const CDMVideoFrame& aFrame,
-                                 nsTArray<uint8_t>&& aData) override;
-
-  void ProcessDecoded(const CDMVideoFrame& aFrame,
-                      Span<uint8_t> aData,
-                      ipc::Shmem&& aGiftShmem);
-
+  ipc::IPCResult RecvDecoded(const CDMVideoFrame& aFrame) override;
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
   ipc::IPCResult RecvShutdown() override;
   ipc::IPCResult RecvResetVideoDecoderComplete() override;
@@ -160,10 +151,6 @@ protected:
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushDecoderPromise;
 
   int32_t mVideoFrameBufferSize = 0;
-
-  // Count of the number of shmems in the set used to return decoded video
-  // frames from the CDM to Gecko.
-  uint32_t mVideoShmemCount;
 
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;
