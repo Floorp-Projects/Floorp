@@ -39,6 +39,26 @@ public:
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
+  TimeStamp GetCompositionTime() const {
+    return mCompositionTime;
+  }
+  void SetCompositionTime(TimeStamp aTimeStamp) {
+    mCompositionTime = aTimeStamp;
+    if (!mCompositionTime.IsNull() && !mCompositeUntilTime.IsNull() &&
+        mCompositionTime >= mCompositeUntilTime) {
+      mCompositeUntilTime = TimeStamp();
+    }
+  }
+  void CompositeUntil(TimeStamp aTimeStamp) {
+    if (mCompositeUntilTime.IsNull() ||
+        mCompositeUntilTime < aTimeStamp) {
+      mCompositeUntilTime = aTimeStamp;
+    }
+  }
+  TimeStamp GetCompositeUntilTime() const {
+    return mCompositeUntilTime;
+  }
+
 private:
 
   struct ForwardingTextureHost {
@@ -56,6 +76,14 @@ private:
   };
 
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
+
+  // Render time for the current composition.
+  TimeStamp mCompositionTime;
+
+  // When nonnull, during rendering, some compositable indicated that it will
+  // change its rendering at this time. In order not to miss it, we composite
+  // on every vsync until this time occurs (this is the latest such time).
+  TimeStamp mCompositeUntilTime;
 };
 
 } // namespace layers
