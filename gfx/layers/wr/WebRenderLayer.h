@@ -52,10 +52,11 @@ public:
   LayerRect VisibleBoundsRelativeToParent();
   LayerPoint GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
-protected:
+
   LayerRect Bounds();
-  BoundsTransformMatrix BoundsTransform();
   LayerRect BoundsForStackingContext();
+protected:
+  BoundsTransformMatrix BoundsTransform();
   LayerRect ParentBounds();
   Maybe<LayerRect> ClipRect();
 

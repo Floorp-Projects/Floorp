@@ -7,6 +7,7 @@
 
 #include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -90,32 +91,22 @@ WebRenderPaintedLayer::UpdateImageClient()
 void
 WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder)
 {
-  LayerIntRegion visibleRegion = GetVisibleRegion();
-  LayerIntRect bounds = visibleRegion.GetBounds();
-  LayerIntSize size = bounds.Size();
+  StackingContextHelper sc(aBuilder, this);
 
-  gfx::Matrix4x4 transform = GetTransform();
-  LayerRect relBounds = GetWrRelBounds();
-  LayerRect rect(0, 0, size.width, size.height);
-
-  LayerRect clipRect = GetWrClipRect(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
-
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-
+  LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
+
+  LayerRect clipRect = ClipRect().valueOr(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
 
   WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   Manager()->AddImageKeyForDiscard(key);
 
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              1.0f,
-                              transform,
-                              mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, wr::ImageRendering::Auto, key);
-  aBuilder.PopStackingContext();
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, key);
 }
 
 void
