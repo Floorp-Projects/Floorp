@@ -103,10 +103,11 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
-    // Only remove this proto from the map if it is the one in the map.
+#ifdef DEBUG
+    // Check that this object has already been swept from the map.
     ClassInfo2WrappedNativeProtoMap* map = GetScope()->GetWrappedNativeProtoMap();
-    if (map->Find(mClassInfo) == this)
-        map->Remove(mClassInfo);
+    MOZ_ASSERT(map->Find(mClassInfo) != this);
+#endif
 
     GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
 

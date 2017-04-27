@@ -1041,9 +1041,8 @@ bool MinidumpCallback(
     WriteString(lastCrashFile, crashTimeString);
   }
 
-  bool ignored = false;
-  double uptimeTS = (TimeStamp::NowLoRes()-
-                     TimeStamp::ProcessCreation(ignored)).ToSecondsSigDigits();
+  double uptimeTS = (TimeStamp::NowLoRes() -
+                     TimeStamp::ProcessCreation()).ToSecondsSigDigits();
   char uptimeTSString[64];
   SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
 
@@ -3215,9 +3214,8 @@ WriteExtraData(nsIFile* extraFile,
                     nsDependentCString("CrashTime"),
                     nsDependentCString(crashTimeString));
 
-    bool ignored = false;
-    double uptimeTS = (TimeStamp::NowLoRes()-
-                       TimeStamp::ProcessCreation(ignored)).ToSecondsSigDigits();
+    double uptimeTS = (TimeStamp::NowLoRes() -
+                       TimeStamp::ProcessCreation()).ToSecondsSigDigits();
     char uptimeTSString[64];
     SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
 
@@ -3542,7 +3540,7 @@ OOPInit()
 #if defined(XP_WIN)
   childCrashNotifyPipe =
     mozilla::Smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
-               static_cast<int>(::GetCurrentProcessId()));
+               static_cast<int>(::GetCurrentProcessId())).release();
 
   const std::wstring dumpPath = gExceptionHandler->dump_path();
   crashServer = new CrashGenerationServer(
@@ -3572,7 +3570,7 @@ OOPInit()
 #elif defined(XP_MACOSX)
   childCrashNotifyPipe =
     mozilla::Smprintf("gecko-crash-server-pipe.%i",
-               static_cast<int>(getpid()));
+               static_cast<int>(getpid())).release();
   const std::string dumpPath = gExceptionHandler->dump_path();
 
   crashServer = new CrashGenerationServer(

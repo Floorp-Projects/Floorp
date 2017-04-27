@@ -15,6 +15,10 @@ module.exports = {
     // Commas at the end of the line not the start
     "comma-style": "error",
 
+    // XXX Bug 1358949 - This should be reduced down - probably to 20 or to
+    // be removed & synced with the mozilla/recommended value.
+    "complexity": ["error", 43],
+
     // Use [] instead of Array()
     "no-array-constructor": "error",
 

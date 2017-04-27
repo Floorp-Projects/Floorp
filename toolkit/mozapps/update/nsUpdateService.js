@@ -843,7 +843,7 @@ function shouldUseService() {
     try {
       try {
         let GetVersionEx = kernel32.declare("GetVersionExW",
-                                            ctypes.default_abi,
+                                            ctypes.winapi_abi,
                                             BOOL,
                                             OSVERSIONINFOEXW.ptr);
         let winVer = OSVERSIONINFOEXW();

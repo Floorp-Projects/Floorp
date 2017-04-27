@@ -105,8 +105,9 @@ evaluate.sandbox = function (sb, script, args = [], opts = {}) {
     let src = "";
     sb[COMPLETE] = resolve;
     timeoutHandler = () => reject(new ScriptTimeoutError("Timed out"));
-    unloadHandler = () => reject(
-        new JavaScriptError("Document was unloaded during execution"));
+    unloadHandler = sandbox.cloneInto(
+        () => reject(new JavaScriptError("Document was unloaded during execution")),
+        sb);
 
     // wrap in function
     if (!opts.directInject) {
@@ -145,7 +146,7 @@ evaluate.sandbox = function (sb, script, args = [], opts = {}) {
 
     // timeout and unload handlers
     scriptTimeoutID = setTimeout(timeoutHandler, opts.timeout || DEFAULT_TIMEOUT);
-    sb.window.onunload = sandbox.cloneInto(unloadHandler, sb);
+    sb.window.onunload = unloadHandler;
 
     let res;
     try {

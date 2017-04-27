@@ -318,13 +318,15 @@ protected:
                          nsRect& aTextRect);
 
   // A helper used when hit testing.
-  nsIAtom* GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
-                               int32_t aRowIndex, nsTreeColumn* aColumn);
+  nsICSSAnonBoxPseudo* GetItemWithinCellAt(nscoord aX,
+                                           const nsRect& aCellRect,
+                                           int32_t aRowIndex,
+                                           nsTreeColumn* aColumn);
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.
   void GetCellAt(nscoord aX, nscoord aY, int32_t* aRow, nsTreeColumn** aCol,
-                 nsIAtom** aChildElt);
+                 nsICSSAnonBoxPseudo** aChildElt);
 
   // Retrieve the area for the twisty for a cell.
   nsITheme* GetTwistyRect(int32_t aRowIndex,
@@ -362,7 +364,7 @@ protected:
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  nsStyleContext* GetPseudoStyleContext(nsIAtom* aPseudoElement);
+  nsStyleContext* GetPseudoStyleContext(nsICSSAnonBoxPseudo* aPseudoElement);
 
   // Retrieves the scrollbars and scrollview relevant to this treebody. We
   // traverse the frame tree under our base element, in frame order, looking

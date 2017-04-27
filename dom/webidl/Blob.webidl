@@ -22,16 +22,12 @@ interface Blob {
 
   readonly attribute DOMString type;
 
-  // readonly attribute boolean isClosed; TODO bug 1048321
-
   //slice Blob into byte-ranged chunks
 
   [Throws]
   Blob slice([Clamp] optional long long start,
              [Clamp] optional long long end,
              optional DOMString contentType = "");
-
-  // void close(); TODO bug 1048325
 };
 
 enum EndingTypes { "transparent", "native" };

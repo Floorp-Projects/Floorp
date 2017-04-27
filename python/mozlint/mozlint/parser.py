@@ -12,7 +12,7 @@ from .errors import LinterNotFound, LinterParseError
 
 
 class Parser(object):
-    """Reads and validates `.lint` files."""
+    """Reads and validates `.lint.py` files."""
     required_attributes = (
         'name',
         'description',
@@ -77,8 +77,8 @@ class Parser(object):
         if not os.path.isfile(path):
             raise LinterNotFound(path)
 
-        if not path.endswith('.lint'):
-            raise LinterParseError(path, "Invalid filename, linters must end with '.lint'!")
+        if not path.endswith('.lint.py'):
+            raise LinterParseError(path, "Invalid filename, linters must end with '.lint.py'!")
 
         linter = self._load_linter(path)
         self._validate(linter)

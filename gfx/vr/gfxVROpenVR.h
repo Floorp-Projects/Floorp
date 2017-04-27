@@ -69,6 +69,8 @@ public:
                               uint32_t aNumAxes, ::vr::ETrackedDeviceClass aDeviceType);
   void SetTrackedIndex(uint32_t aTrackedIndex);
   uint32_t GetTrackedIndex();
+  float GetAxisMove(uint32_t aAxis);
+  void SetAxisMove(uint32_t aAxis, float aValue);
   void SetTrigger(float aValue);
   float GetTrigger();
   void SetHand(dom::GamepadHand aHand);
@@ -94,6 +96,7 @@ private:
   // The index of tracked devices from ::vr::IVRSystem.
   uint32_t mTrackedIndex;
   float mTrigger;
+  nsTArray<float> mAxisMove;
   nsCOMPtr<nsIThread> mVibrateThread;
   Atomic<bool> mIsVibrateStopped;
 };

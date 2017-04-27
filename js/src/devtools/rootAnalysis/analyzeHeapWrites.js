@@ -212,6 +212,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_DestroyShapeSource", "aShape", null],
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
+        ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -1074,31 +1075,44 @@ function isSafeVariable(entry, variable)
             return true;
         }
 
-        // References to the contents of an array are threadsafe if the array
-        // itself is threadsafe.
-        if ((isDirectCall(edge, /operator\[\]/) ||
-             isDirectCall(edge, /nsStyleContent::ContentAt/)) &&
-            isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
-        {
-            return true;
-        }
-
-        // Watch for the coerced result of a getter_AddRefs call.
-        if (isDirectCall(edge, /operator /)) {
-            var otherEdge = expressionValueEdge(edge.PEdgeCallInstance.Exp);
-            if (otherEdge &&
-                isDirectCall(otherEdge, /getter_AddRefs/) &&
-                isEdgeSafeArgument(entry, otherEdge.PEdgeCallArguments.Exp[0]))
+        if ("PEdgeCallInstance" in edge) {
+            // References to the contents of an array are threadsafe if the array
+            // itself is threadsafe.
+            if ((isDirectCall(edge, /operator\[\]/) ||
+                 isDirectCall(edge, /nsStyleContent::ContentAt/)) &&
+                isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
             {
                 return true;
             }
-        }
 
-        // Coercion via AsAString preserves safety.
-        if (isDirectCall(edge, /AsAString/) &&
-            isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
-        {
-            return true;
+            // Watch for the coerced result of a getter_AddRefs call.
+            if (isDirectCall(edge, /operator /)) {
+                var otherEdge = expressionValueEdge(edge.PEdgeCallInstance.Exp);
+                if (otherEdge &&
+                    isDirectCall(otherEdge, /getter_AddRefs/) &&
+                    isEdgeSafeArgument(entry, otherEdge.PEdgeCallArguments.Exp[0]))
+                {
+                    return true;
+                }
+            }
+
+            // Placement-new returns a pointer that is as safe as the pointer
+            // passed to it. Exp[0] is the size, Exp[1] is the pointer/address.
+            // Note that the invocation of the constructor is a separate call,
+            // and so need not be considered here.
+            if (isDirectCall(edge, /operator new/) &&
+                edge.PEdgeCallInstance.Exp.length == 2 &&
+                isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp[1]))
+            {
+                return true;
+            }
+
+            // Coercion via AsAString preserves safety.
+            if (isDirectCall(edge, /AsAString/) &&
+                isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
+            {
+                return true;
+            }
         }
 
         // Watch out for variables which were assigned arguments.

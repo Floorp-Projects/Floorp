@@ -90,7 +90,7 @@ public:
   nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
   nsINodeList* GetAnonymousNodesFor(nsIContent* aContent);
 
-  nsresult ClearBinding(nsIContent* aContent);
+  nsresult ClearBinding(mozilla::dom::Element* aElement);
   nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
                                nsIPrincipal* aOriginPrincipal);
 

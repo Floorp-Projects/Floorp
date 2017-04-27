@@ -1585,90 +1585,38 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
   return id;
 }
 
-/*static*/ nsIFrame*
-nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
-                                        const nsIContent* aContent)
+static Element*
+GetPseudo(const nsIContent* aContent, nsIAtom* aPseudoProperty)
 {
-  // We need to call GetGenConPseudos() on the first continuation/ib-split.
-  // Find it, for symmetry with GetAfterFrameForContent.
-  nsContainerFrame* genConParentFrame =
-    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
-  if (!genConParentFrame) {
-    return nullptr;
-  }
-  nsTArray<nsIContent*>* prop = genConParentFrame->GetGenConPseudos();
-  if (prop) {
-    const nsTArray<nsIContent*>& pseudos(*prop);
-    for (uint32_t i = 0; i < pseudos.Length(); ++i) {
-      if (pseudos[i]->GetParent() == aContent &&
-          pseudos[i]->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore) {
-        return pseudos[i]->GetPrimaryFrame();
-      }
-    }
-  }
-  // If the first child frame is a pseudo-frame, then try that.
-  // Note that the frame we create for the generated content is also a
-  // pseudo-frame and so don't drill down in that case.
-  nsIFrame* childFrame = genConParentFrame->PrincipalChildList().FirstChild();
-  if (childFrame &&
-      childFrame->IsPseudoFrame(aContent) &&
-      !childFrame->IsGeneratedContentFrame()) {
-    return GetBeforeFrameForContent(childFrame, aContent);
-  }
-  return nullptr;
+  MOZ_ASSERT(aPseudoProperty == nsGkAtoms::beforePseudoProperty ||
+             aPseudoProperty == nsGkAtoms::afterPseudoProperty);
+  return static_cast<Element*>(aContent->GetProperty(aPseudoProperty));
+}
+
+/*static*/ Element*
+nsLayoutUtils::GetBeforePseudo(const nsIContent* aContent)
+{
+  return GetPseudo(aContent, nsGkAtoms::beforePseudoProperty);
 }
 
 /*static*/ nsIFrame*
-nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
+nsLayoutUtils::GetBeforeFrame(const nsIContent* aContent)
 {
-  return GetBeforeFrameForContent(aFrame, aFrame->GetContent());
+  Element* pseudo = GetBeforePseudo(aContent);
+  return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
+}
+
+/*static*/ Element*
+nsLayoutUtils::GetAfterPseudo(const nsIContent* aContent)
+{
+  return GetPseudo(aContent, nsGkAtoms::afterPseudoProperty);
 }
 
 /*static*/ nsIFrame*
-nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
-                                       const nsIContent* aContent)
+nsLayoutUtils::GetAfterFrame(const nsIContent* aContent)
 {
-  // We need to call GetGenConPseudos() on the first continuation,
-  // but callers are likely to pass the last.
-  nsContainerFrame* genConParentFrame =
-    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
-  if (!genConParentFrame) {
-    return nullptr;
-  }
-  nsTArray<nsIContent*>* prop = genConParentFrame->GetGenConPseudos();
-  if (prop) {
-    const nsTArray<nsIContent*>& pseudos(*prop);
-    for (uint32_t i = 0; i < pseudos.Length(); ++i) {
-      if (pseudos[i]->GetParent() == aContent &&
-          pseudos[i]->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter) {
-        return pseudos[i]->GetPrimaryFrame();
-      }
-    }
-  }
-  // If the last child frame is a pseudo-frame, then try that.
-  // Note that the frame we create for the generated content is also a
-  // pseudo-frame and so don't drill down in that case.
-  genConParentFrame = aFrame->GetContentInsertionFrame();
-  if (!genConParentFrame) {
-    return nullptr;
-  }
-  nsIFrame* lastParentContinuation =
-    LastContinuationWithChild(static_cast<nsContainerFrame*>(
-      LastContinuationOrIBSplitSibling(genConParentFrame)));
-  nsIFrame* childFrame =
-    lastParentContinuation->GetChildList(nsIFrame::kPrincipalList).LastChild();
-  if (childFrame &&
-      childFrame->IsPseudoFrame(aContent) &&
-      !childFrame->IsGeneratedContentFrame()) {
-    return GetAfterFrameForContent(childFrame->FirstContinuation(), aContent);
-  }
-  return nullptr;
-}
-
-/*static*/ nsIFrame*
-nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
-{
-  return GetAfterFrameForContent(aFrame, aFrame->GetContent());
+  Element* pseudo = GetAfterPseudo(aContent);
+  return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
 }
 
 // static

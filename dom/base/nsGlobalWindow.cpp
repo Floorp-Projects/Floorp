@@ -1161,7 +1161,7 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
   nsGlobalWindow* outerWindow = GetOuterWindow(proxy);
   if (outerWindow) {
-    outerWindow->ClearWrapper();
+    outerWindow->ClearWrapper(proxy);
 
     // Ideally we would use OnFinalize here, but it's possible that
     // EnsureScriptEnvironment will later be called on the window, and we don't
@@ -1728,7 +1728,7 @@ nsGlobalWindow::~nsGlobalWindow()
   MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug, ("DOMWINDOW %p destroyed", this));
 
   if (IsOuterWindow()) {
-    JSObject *proxy = GetWrapperPreserveColor();
+    JSObject *proxy = GetWrapperMaybeDead();
     if (proxy) {
       js::SetProxyExtra(proxy, 0, js::PrivateValue(nullptr));
     }
@@ -3947,7 +3947,7 @@ void
 nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
 {
   MOZ_ASSERT(IsOuterWindow());
-  if (aObject == GetWrapperPreserveColor()) {
+  if (aObject == GetWrapperMaybeDead()) {
     PoisonWrapper();
   }
 }
@@ -6562,7 +6562,8 @@ nsGlobalWindow::DispatchResizeEvent(const CSSIntSize& aSize)
 
   ErrorResult res;
   RefPtr<Event> domEvent =
-    mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), res);
+    mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), CallerType::System,
+                      res);
   if (res.Failed()) {
     return false;
   }
@@ -7832,7 +7833,7 @@ nsGlobalWindow::Forward(ErrorResult& aError)
 }
 
 void
-nsGlobalWindow::HomeOuter(ErrorResult& aError)
+nsGlobalWindow::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -7880,13 +7881,14 @@ nsGlobalWindow::HomeOuter(ErrorResult& aError)
                            nsIWebNavigation::LOAD_FLAGS_NONE,
                            nullptr,
                            nullptr,
-                           nullptr);
+                           nullptr,
+                           &aSubjectPrincipal);
 }
 
 void
-nsGlobalWindow::Home(ErrorResult& aError)
+nsGlobalWindow::Home(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(HomeOuter, (aError), aError, );
+  FORWARD_TO_OUTER_OR_THROW(HomeOuter, (aSubjectPrincipal, aError), aError, );
 }
 
 void

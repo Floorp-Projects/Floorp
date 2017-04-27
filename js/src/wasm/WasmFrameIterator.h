@@ -34,6 +34,7 @@ class CallSite;
 class Code;
 class CodeRange;
 class DebugFrame;
+class DebugState;
 class Instance;
 class SigIdDesc;
 struct FuncOffsets;

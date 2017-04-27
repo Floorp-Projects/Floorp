@@ -373,20 +373,6 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
-  "CREATE_EVENT_COMMANDEVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"commandevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_COMMANDEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"commandevents\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
   "CREATE_EVENT_COMPOSITIONEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"compositionevent\") ever called",
@@ -397,20 +383,6 @@
   "CREATE_EVENT_CUSTOMEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"customevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_DATACONTAINEREVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"datacontainerevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_DATACONTAINEREVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"datacontainerevents\") ever called",
     "expires_in_version": "56",
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
@@ -432,13 +404,6 @@
   "CREATE_EVENT_DRAGEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"dragevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_DRAGEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"dragevents\") ever called",
     "expires_in_version": "56",
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
@@ -534,30 +499,9 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
-  "CREATE_EVENT_NOTIFYPAINTEVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"notifypaintevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_PAGETRANSITION" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"pagetransition\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
   "CREATE_EVENT_POPSTATEEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"popstateevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_POPUPEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"popupevents\") ever called",
     "expires_in_version": "56",
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
@@ -569,23 +513,9 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
-  "CREATE_EVENT_SIMPLEGESTUREEVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"simplegestureevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
   "CREATE_EVENT_STORAGEEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"storageevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_SVGEVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"svgevent\") ever called",
     "expires_in_version": "56",
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
@@ -597,20 +527,6 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
-  "CREATE_EVENT_SVGZOOMEVENT" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"svgzoomevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_SVGZOOMEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"svgzoomevents\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
   "CREATE_EVENT_TEXTEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"textevent\") ever called",
@@ -618,23 +534,9 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
-  "CREATE_EVENT_TEXTEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"textevents\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
   "CREATE_EVENT_TIMEEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"timeevent\") ever called",
-    "expires_in_version": "56",
-    "kind": "count",
-    "bug_numbers": [1295588, 1251198]
-  },
-  "CREATE_EVENT_TIMEEVENTS" : {
-    "alert_emails": ["ayg@aryeh.name"],
-    "description": "Was document.createEvent(\"timeevents\") ever called",
     "expires_in_version": "56",
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
@@ -5293,6 +5195,16 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
   },
+  "FX_TAB_REMOTE_NAVIGATION_DELAY_MS": {
+    "alert_emails": ["gkrizsanits@mozilla.com", "mconley@mozilla.com"],
+    "bug_numbers": [1352961],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 4000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "Time taken (in ms) from the point of the parent sending the naviagion triggering message to the content and the content receiving it. This message can be either SessionStore:restoreTabContent or WebNavigation:LoadURI and these names are used as keys for this histogram. This is e10s only and recorded in the content process."
+  },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5711,14 +5623,6 @@
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window data (ms)"
   },
-  "FX_SESSION_RESTORE_COLLECT_COOKIES_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 10,
-    "description": "Session restore: Time to collect cookies (ms)"
-  },
   "FX_SESSION_RESTORE_COLLECT_DATA_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "default",
@@ -5726,14 +5630,6 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window and tab data (ms)"
-  },
-  "FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 10,
-    "description": "Session restore: Duration of the longest uninterruptible operation while collecting all window and tab data (ms)"
   },
   "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],

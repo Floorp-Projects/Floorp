@@ -111,7 +111,7 @@ public class StringUtils {
         }
 
         if (newURL.endsWith("/")) {
-            newURL = newURL.substring(0, newURL.length()-1);
+            newURL = newURL.substring(0, newURL.length() - 1);
         }
 
         return newURL;

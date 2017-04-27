@@ -343,11 +343,11 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     VideoData::CreateAndCopyData(mInfo,
                                   mImageContainer,
                                   aSample->mOffset,
-                                  pts,
+                                  TimeUnit::FromMicroseconds(pts),
                                   TimeUnit::FromMicroseconds(duration),
                                   b,
                                   !!mFrame->key_frame,
-                                  -1,
+                                  TimeUnit::FromMicroseconds(-1),
                                   mInfo.ScaledImageRect(mFrame->width,
                                                         mFrame->height));
 

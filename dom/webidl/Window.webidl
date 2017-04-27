@@ -278,11 +278,11 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute long   scrollMaxX;
   [Replaceable, Throws] readonly attribute long   scrollMaxY;
 
-  [Throws, UnsafeInPrerendering] attribute boolean            fullScreen;
+  [Throws, UnsafeInPrerendering] attribute boolean fullScreen;
 
-  [Throws, ChromeOnly, UnsafeInPrerendering] void             back();
-  [Throws, ChromeOnly, UnsafeInPrerendering] void             forward();
-  [Throws, ChromeOnly, UnsafeInPrerendering] void             home();
+  [Throws, ChromeOnly, UnsafeInPrerendering] void back();
+  [Throws, ChromeOnly, UnsafeInPrerendering] void forward();
+  [Throws, ChromeOnly, UnsafeInPrerendering, NeedsSubjectPrincipal] void home();
 
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(DOMString action,

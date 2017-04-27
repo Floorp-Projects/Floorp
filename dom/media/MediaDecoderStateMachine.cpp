@@ -1390,8 +1390,8 @@ private:
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
     RefPtr<AudioData> data(new AudioData(
-      aAudio->mOffset, mSeekJob.mTarget->GetTime().ToMicroseconds(),
-      duration.ToMicroseconds(), frames, Move(audioData), channels,
+      aAudio->mOffset, mSeekJob.mTarget->GetTime(),
+      duration, frames, Move(audioData), channels,
       aAudio->mRate));
     MOZ_ASSERT(AudioQueue().GetSize() == 0,
                "Should be the 1st sample after seeking");

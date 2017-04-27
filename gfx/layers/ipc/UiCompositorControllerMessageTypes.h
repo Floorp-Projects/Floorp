@@ -27,7 +27,9 @@ enum UiCompositorControllerMessageTypes {
   REQUEST_HIDE_TOOLBAR_IMMEDIATELY = 8,  // Sent to the compositor when the snapshot should be hidden immediately
   REQUEST_HIDE_TOOLBAR_ANIMATED    = 9,  // Sent to the compositor when the snapshot should be hidden with an animation
   LAYERS_UPDATED                   = 10, // Sent from the compositor when any layer has been updated
-  COMPOSITOR_CONTROLLER_OPEN       = 20  // Compositor controller IPC is open
+  TOOLBAR_SNAPSHOT_FAILED          = 11, // Sent to compositor when the toolbar snapshot fails.
+  COMPOSITOR_CONTROLLER_OPEN       = 20, // Compositor controller IPC is open
+  IS_COMPOSITOR_CONTROLLER_OPEN    = 21  // Special message sent from controller to query if the compositor controller is open
 };
 
 } // namespace layers

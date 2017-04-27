@@ -86,9 +86,12 @@ def find_linters(linters=None):
 
         files = os.listdir(search_path)
         for f in files:
-            name, ext = os.path.splitext(f)
-            if ext != '.lint':
+            name = os.path.basename(f)
+
+            if not name.endswith('.lint.py'):
                 continue
+
+            name = name.rsplit('.', 2)[0]
 
             if linters and name not in linters:
                 continue

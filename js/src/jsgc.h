@@ -807,8 +807,6 @@ class ArenaLists
   private:
     inline void queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase);
     inline void queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase);
-
-    inline void finalizeNow(FreeOp* fop, AllocKind thingKind, Arena** empty = nullptr);
     inline void queueForForegroundSweep(FreeOp* fop, AllocKind thingKind);
     inline void queueForBackgroundSweep(FreeOp* fop, AllocKind thingKind);
     inline void mergeSweptArenas(AllocKind thingKind);
@@ -1183,13 +1181,14 @@ inline void CheckValueAfterMovingGC(const JS::Value& value);
             D(CheckHashTablesOnMinorGC, 13)    \
             D(Compact, 14)                     \
             D(CheckHeapAfterGC, 15)            \
-            D(CheckNursery, 16)
+            D(CheckNursery, 16)                \
+            D(IncrementalSweepThenFinish, 17)
 
 enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
     JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
 #undef ZEAL_MODE
-    Limit = 16
+    Limit = 17
 };
 
 enum VerifierType {

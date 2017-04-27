@@ -589,7 +589,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void traceObject(JSTracer* trc, JSObject* obj);
     void trace(JSTracer* trc);
     void traceForMovingGC(JSTracer* trc);
-    static void finalize(FreeOp* fop, JSObject* obj);
     void traceCrossCompartmentEdges(JSTracer* tracer);
 
     static const ClassOps classOps_;
@@ -1655,14 +1654,14 @@ BreakpointSite::asJS()
 class WasmBreakpointSite : public BreakpointSite
 {
   public:
-    wasm::Code* code;
+    wasm::DebugState* debug;
     uint32_t offset;
 
   protected:
     void recompile(FreeOp* fop) override;
 
   public:
-    WasmBreakpointSite(wasm::Code* code, uint32_t offset);
+    WasmBreakpointSite(wasm::DebugState* debug, uint32_t offset);
 
     void destroyIfEmpty(FreeOp* fop) override;
 };

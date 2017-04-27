@@ -47,6 +47,7 @@ include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
 include DOMTypes;
 include JavaScriptTypes;
+include IPCBlob;
 include IPCStream;
 include PTabContext;
 include URIParams;
@@ -197,7 +198,7 @@ struct AndroidSystemInfo
 
 struct GetFilesResponseSuccess
 {
-  PBlob[] blobs;
+  IPCBlob[] blobs;
 };
 
 struct GetFilesResponseFailure
@@ -213,7 +214,7 @@ union GetFilesResponseResult
 
 struct FileCreationSuccessResult
 {
-  PBlob blob;
+  IPCBlob blob;
 };
 
 struct FileCreationErrorResult
@@ -230,7 +231,7 @@ union FileCreationResult
 struct BlobURLRegistrationData
 {
     nsCString url;
-    PBlob blob;
+    IPCBlob blob;
     Principal principal;
 };
 
@@ -271,6 +272,8 @@ struct XPCOMInitData
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
     DataStorageEntry[] dataStorage;
+    nsCString[] appLocales;
+    nsCString[] requestedLocales;
 };
 
 /**
@@ -428,6 +431,9 @@ child:
 
     async UpdateDictionaryList(nsString[] dictionaries);
 
+    async UpdateAppLocales(nsCString[] appLocales);
+    async UpdateRequestedLocales(nsCString[] requestedLocales);
+
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
 
@@ -579,7 +585,7 @@ child:
 
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
 
-    async BlobURLRegistration(nsCString aURI, PBlob aBlob,
+    async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
                               Principal aPrincipal);
 
     async BlobURLUnregistration(nsCString aURI);
@@ -620,8 +626,9 @@ parent:
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
-                            TabId openerTabId)
-        returns (ContentParentId cpId, bool isForBrowser, TabId tabId);
+                            TabId openerTabId,
+                            TabId tabId)
+        returns (ContentParentId cpId, bool isForBrowser);
     sync BridgeToChildProcess(ContentParentId cpId)
         returns (Endpoint<PContentBridgeParent> endpoint);
 
@@ -911,15 +918,10 @@ parent:
     sync KeygenProvideContent()
         returns (nsString aAttribute, nsString[] aContent);
 
-    /**
-     * Tell the chrome process there is an creation of PBrowser.
-     * return a system-wise unique Id.
-     */
-    sync AllocateTabId(TabId openerTabId, IPCTabContext context, ContentParentId cpId)
-        returns (TabId tabId);
-    async DeallocateTabId(TabId tabId,
-                          ContentParentId cpId,
-                          bool aMarkedDestroying);
+    /** Clear RemoteFrameInfo of the given tab id. */
+    async UnregisterRemoteFrame(TabId tabId,
+                                ContentParentId cpId,
+                                bool aMarkedDestroying);
 
     /**
      * Tell the chrome process there is a destruction of PBrowser(Tab)
@@ -1082,7 +1084,7 @@ parent:
                                int64_t lastModified, bool aExistenceCheck,
                                bool aIsFromNsIFile);
 
-     async StoreAndBroadcastBlobURLRegistration(nsCString url, PBlob blob,
+     async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
                                                 Principal principal);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);

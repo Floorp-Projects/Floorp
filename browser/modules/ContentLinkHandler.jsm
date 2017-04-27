@@ -134,7 +134,7 @@ this.ContentLinkHandler = {
 
   getLinkIconURI(aLink) {
     let targetDoc = aLink.ownerDocument;
-    var uri = BrowserUtils.makeURI(aLink.href, targetDoc.characterSet);
+    var uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
     try {
       uri.userPass = "";
     } catch (e) {

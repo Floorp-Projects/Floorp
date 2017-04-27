@@ -242,7 +242,7 @@ var SessionSaverInternal = {
       return Promise.resolve();
     }
 
-    stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
+    stopWatchStart("COLLECT_DATA_MS");
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
     PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
@@ -274,26 +274,44 @@ var SessionSaverInternal = {
       }
     }
 
-    // Clear all cookies and storage on clean shutdown according to user preferences
-    if (RunState.isClosing) {
-      let expireCookies = Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
-                          Services.cookies.QueryInterface(Ci.nsICookieService).ACCEPT_SESSION;
-      let sanitizeCookies = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
-                            Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
-      let restart = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-      // Don't clear when restarting
-      if ((expireCookies || sanitizeCookies) && !restart) {
-        for (let window of state.windows) {
-          delete window.cookies;
-          for (let tab of window.tabs) {
-            delete tab.storage;
-          }
+    // Clear cookies and storage on clean shutdown.
+    this._maybeClearCookiesAndStorage(state);
+
+    stopWatchFinish("COLLECT_DATA_MS");
+    return this._writeState(state);
+  },
+
+  /**
+   * Purges cookies and DOMSessionStorage data from the session on clean
+   * shutdown, only if requested by the user's preferences.
+   */
+  _maybeClearCookiesAndStorage(state) {
+    // Only do this on shutdown.
+    if (!RunState.isClosing) {
+      return;
+    }
+
+    // Don't clear when restarting.
+    if (Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")) {
+      return;
+    }
+
+    let expireCookies = Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
+                        Services.cookies.QueryInterface(Ci.nsICookieService).ACCEPT_SESSION;
+    let sanitizeCookies = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
+                          Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
+
+    if (expireCookies || sanitizeCookies) {
+      // Remove cookies.
+      delete state.cookies;
+
+      // Remove DOMSessionStorage data.
+      for (let window of state.windows) {
+        for (let tab of window.tabs) {
+          delete tab.storage;
         }
       }
     }
-
-    stopWatchFinish("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
-    return this._writeState(state);
   },
 
   /**

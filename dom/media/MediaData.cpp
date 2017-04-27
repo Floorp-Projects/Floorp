@@ -73,8 +73,8 @@ AudioData::IsAudible() const
 /* static */
 already_AddRefed<AudioData>
 AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
-                                                  int64_t aTimestamp,
-                                                  int64_t aDuration)
+                                                 const TimeUnit& aTimestamp,
+                                                 const TimeUnit& aDuration)
 {
   NS_ENSURE_TRUE(aOther, nullptr);
   RefPtr<AudioData> v = new AudioData(aOther->mOffset,
@@ -163,10 +163,10 @@ IsInEmulator()
 #endif
 
 VideoData::VideoData(int64_t aOffset,
-                     int64_t aTime,
-                     int64_t aDuration,
+                     const TimeUnit& aTime,
+                     const TimeUnit& aDuration,
                      bool aKeyframe,
-                     int64_t aTimecode,
+                     const TimeUnit& aTimecode,
                      IntSize aDisplay,
                      layers::ImageContainer::FrameID aFrameID)
   : MediaData(VIDEO_DATA, aOffset, aTime, aDuration, 1)
@@ -176,7 +176,7 @@ VideoData::VideoData(int64_t aOffset,
 {
   MOZ_ASSERT(!mDuration.IsNegative(), "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
-  mTimecode = TimeUnit::FromMicroseconds(aTimecode);
+  mTimecode = aTimecode;
 }
 
 VideoData::~VideoData()
@@ -285,11 +285,11 @@ already_AddRefed<VideoData>
 VideoData::CreateAndCopyData(const VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
-                             int64_t aTime,
+                             const TimeUnit& aTime,
                              const TimeUnit& aDuration,
                              const YCbCrBuffer& aBuffer,
                              bool aKeyframe,
-                             int64_t aTimecode,
+                             const TimeUnit& aTimecode,
                              const IntRect& aPicture)
 {
   if (!aContainer) {
@@ -297,7 +297,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
-                                      aDuration.ToMicroseconds(),
+                                      aDuration,
                                       aKeyframe,
                                       aTimecode,
                                       aInfo.mDisplay,
@@ -311,7 +311,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration.ToMicroseconds(),
+                                    aDuration,
                                     aKeyframe,
                                     aTimecode,
                                     aInfo.mDisplay,
@@ -369,12 +369,12 @@ already_AddRefed<VideoData>
 VideoData::CreateAndCopyData(const VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
-                             int64_t aTime,
+                             const TimeUnit& aTime,
                              const TimeUnit& aDuration,
                              const YCbCrBuffer& aBuffer,
                              const YCbCrBuffer::Plane &aAlphaPlane,
                              bool aKeyframe,
-                             int64_t aTimecode,
+                             const TimeUnit& aTimecode,
                              const IntRect& aPicture)
 {
   if (!aContainer) {
@@ -382,7 +382,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
-                                      aDuration.ToMicroseconds(),
+                                      aDuration,
                                       aKeyframe,
                                       aTimecode,
                                       aInfo.mDisplay,
@@ -396,7 +396,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration.ToMicroseconds(),
+                                    aDuration,
                                     aKeyframe,
                                     aTimecode,
                                     aInfo.mDisplay,
@@ -435,15 +435,15 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 already_AddRefed<VideoData>
 VideoData::CreateFromImage(const IntSize& aDisplay,
                            int64_t aOffset,
-                           int64_t aTime,
+                           const TimeUnit& aTime,
                            const TimeUnit& aDuration,
                            const RefPtr<Image>& aImage,
                            bool aKeyframe,
-                           int64_t aTimecode)
+                           const TimeUnit& aTimecode)
 {
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration.ToMicroseconds(),
+                                    aDuration,
                                     aKeyframe,
                                     aTimecode,
                                     aDisplay,
