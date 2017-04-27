@@ -41,12 +41,6 @@ WebRenderLayer::GetImageKey()
 }
 
 LayerRect
-WebRenderLayer::RelativeToVisible(const LayerRect& aRect)
-{
-  return aRect - Bounds().TopLeft();
-}
-
-LayerRect
 WebRenderLayer::ParentBounds()
 {
   // Walk up to find the parent stacking context. This will be created by the
@@ -74,12 +68,6 @@ LayerPoint
 WebRenderLayer::GetOffsetToParent()
 {
   return ParentBounds().TopLeft();
-}
-
-LayerRect
-WebRenderLayer::VisibleBoundsRelativeToParent()
-{
-  return RelativeToParent(Bounds());
 }
 
 gfx::Rect
@@ -110,24 +98,6 @@ WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
   }
 
   return Nothing();
-}
-
-LayerRect
-WebRenderLayer::GetWrBoundsRect()
-{
-  LayerRect bounds = Bounds();
-  bounds.MoveTo(0, 0);
-  return bounds;
-}
-
-LayerRect
-WebRenderLayer::GetWrClipRect(const LayerRect& aRect)
-{
-  Maybe<LayerRect> clip = ClipRect();
-  if (clip) {
-    return RelativeToVisible(clip.ref());
-  }
-  return aRect;
 }
 
 LayerRect
@@ -169,12 +139,6 @@ WebRenderLayer::ClipRect()
   ParentLayerRect clip(layer->GetClipRect().ref());
   LayerToParentLayerMatrix4x4 transform = layer->GetLocalTransformTyped();
   return Some(transform.Inverse().TransformBounds(clip));
-}
-
-LayerRect
-WebRenderLayer::GetWrRelBounds()
-{
-  return RelativeToParent(BoundsForStackingContext());
 }
 
 Maybe<wr::ImageKey>
@@ -220,19 +184,16 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
   }
 
   Matrix4x4 transform = GetLayer()->GetTransform();
-  LayerRect clip = GetWrClipRect(aRect);
-  LayerRect relBounds = GetWrRelBounds();
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  LayerRect bounds = Bounds();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
 
-  printf_stderr("%s %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
+  printf_stderr("%s %p using bounds=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
                 aLayerType,
                 GetLayer(),
-                Stringify(relBounds).c_str(),
-                Stringify(overflow).c_str(),
+                Stringify(bounds).c_str(),
                 Stringify(transform).c_str(),
                 Stringify(aRect).c_str(),
-                Stringify(clip).c_str(),
+                Stringify(ClipRect().valueOr(aRect)).c_str(),
                 Stringify(mixBlendMode).c_str());
 }
 
