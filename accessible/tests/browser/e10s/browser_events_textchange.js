@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global EVENT_TEXT_INSERTED, EVENT_TEXT_REMOVED,
-          nsIAccessibleTextChangeEvent */
-
 'use strict';
 
 function checkTextChangeEvent(event, id, text, start, end, isInserted, isFromUserInput) {

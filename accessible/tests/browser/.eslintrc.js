@@ -4,52 +4,6 @@ module.exports = {
   "extends": [
     "plugin:mozilla/browser-test"
   ],
-  // All globals made available in the test environment.
-  "globals": {
-    // Content scripts have global 'content' object
-    "content": true,
-
-    "add_task": true,
-
-    // Defined in accessible/tests/mochitest/ common.js, name.js, states.js
-    "prettyName": true,
-    "statesToString": true,
-    "eventTypeToString": true,
-    "testAttrs": true,
-    "testAbsentAttrs": true,
-    "testName": true,
-    "testDescr": true,
-    "testStates": true,
-    "testRelation": true,
-    "testValue": true,
-    "testAccessibleTree": true,
-    "isAccessible": true,
-    "getAccessibleDOMNodeID": true,
-
-    // Defined for all top level accessibility browser tests.
-    "setE10sPrefs": true,
-    "unsetE10sPrefs": true,
-    "initPromise": true,
-    "shutdownPromise": true,
-    "forceGC": true,
-
-    // Defined for all e10s accessibility browser tests.
-    "addAccessibleTask": true,
-    "BrowserTestUtils": true,
-    "ContentTask": true,
-    "gBrowser": true,
-    "isDefunct": true,
-    "loadScripts": true,
-    "loadFrameScripts": true,
-    "Logger": true,
-    "MOCHITESTS_DIR": true,
-    "waitForEvent": true,
-    "waitForMultipleEvents": true,
-    "invokeSetAttribute": true,
-    "invokeSetStyle": true,
-    "invokeFocus": true,
-    "findAccessibleChildByID": true
-  },
   "rules": {
     "mozilla/no-aArgs": "error",
     "mozilla/no-cpows-in-tests": "error",
