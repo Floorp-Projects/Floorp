@@ -529,7 +529,7 @@ inline void
 JSContext::enterZoneGroup(js::ZoneGroup* group)
 {
     MOZ_ASSERT(this == js::TlsContext.get());
-    group->enter();
+    group->enter(this);
 }
 
 inline void
