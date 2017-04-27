@@ -11,6 +11,7 @@
 #include "mozilla/dom/StorageManagerBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Telemetry.h"
 #include "nsContentPermissionHelper.h"
 #include "nsIQuotaCallbacks.h"
 #include "nsIQuotaRequests.h"
@@ -838,6 +839,7 @@ StorageManager::Persist(ErrorResult& aRv)
 {
   MOZ_ASSERT(mOwner);
 
+  Telemetry::ScalarAdd(Telemetry::ScalarID::NAVIGATOR_STORAGE_PERSIST_COUNT, 1);
   return ExecuteOpOnMainOrWorkerThread(mOwner,
                                        RequestResolver::Type::Persist,
                                        aRv);
@@ -848,6 +850,8 @@ StorageManager::Estimate(ErrorResult& aRv)
 {
   MOZ_ASSERT(mOwner);
 
+  Telemetry::ScalarAdd(Telemetry::ScalarID::NAVIGATOR_STORAGE_ESTIMATE_COUNT,
+                       1);
   return ExecuteOpOnMainOrWorkerThread(mOwner,
                                        RequestResolver::Type::Estimate,
                                        aRv);
