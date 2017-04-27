@@ -124,7 +124,7 @@ var healthReportWrapper = {
     console.log("AboutHealthReport: showing settings.");
     EventDispatcher.instance.sendRequest({
       type: "Settings:Show",
-      resource: "preferences_vendor",
+      resource: "preferences_privacy",
     });
   },
 
