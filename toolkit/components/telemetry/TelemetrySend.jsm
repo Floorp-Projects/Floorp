@@ -812,7 +812,7 @@ var TelemetrySendImpl = {
       const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
       this.runPingSender(submissionURL, pingPath);
     } catch (e) {
-      this._log.error("_sendWithPingSender - failed to submit shutdown ping", e);
+      this._log.error("_sendWithPingSender - failed to submit ping", e);
     }
   },
 

@@ -8,6 +8,7 @@
  * checked in the second request.
  */
 
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -35,6 +36,10 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 
 var gClientID = null;
+
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
+  return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+});
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (PingServer.started) {
@@ -504,6 +509,94 @@ add_task(function* test_telemetryCleanFHRDatabase() {
   for (let dbFilePath of DEFAULT_DB_PATHS) {
     Assert.ok(!(yield OS.File.exists(dbFilePath)), "The DB must not be on the disk anymore: " + dbFilePath);
   }
+});
+
+add_task(function* test_sendNewProfile() {
+  if (gIsAndroid ||
+      (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)) {
+    // We don't support the pingsender on Android, yet, see bug 1335917.
+    // We also don't suppor the pingsender testing on Treeherder for
+    // Linux 32 bit (due to missing libraries). So skip it there too.
+    // See bug 1310703 comment 78.
+    return;
+  }
+
+  const NEWPROFILE_PING_TYPE = "new-profile";
+  const PREF_NEWPROFILE_ENABLED = "toolkit.telemetry.newProfilePing.enabled";
+  const PREF_NEWPROFILE_DELAY = "toolkit.telemetry.newProfilePing.delay";
+
+  // Make sure Telemetry is shut down before beginning and that we have
+  // no pending pings.
+  let resetTest = async function() {
+    await TelemetryController.testShutdown();
+    await TelemetryStorage.testClearPendingPings();
+    PingServer.clearRequests();
+  };
+  yield resetTest();
+
+  // Make sure to reset all the new-profile ping prefs.
+  const stateFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
+  yield OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  Preferences.set(PREF_NEWPROFILE_DELAY, 1);
+  Preferences.set(PREF_NEWPROFILE_ENABLED, true);
+
+  // Check that a new-profile ping is sent on the first session.
+  let nextReq = PingServer.promiseNextRequest();
+  yield TelemetryController.testReset();
+  let req = yield nextReq;
+  let ping = decodeRequestPayload(req);
+  checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
+  Assert.equal(ping.payload.reason, "startup",
+               "The new-profile ping generated after startup must have the correct reason");
+
+  // Check that is not sent with the pingsender during startup.
+  Assert.throws(() => req.getHeader("X-PingSender-Version"),
+                "Should not have used the pingsender.");
+
+  // Make sure that the new-profile ping is sent at shutdown if it wasn't sent before.
+  yield resetTest();
+  yield OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  Preferences.reset(PREF_NEWPROFILE_DELAY);
+
+  nextReq = PingServer.promiseNextRequest();
+  yield TelemetryController.testReset();
+  yield TelemetryController.testShutdown();
+  req = yield nextReq;
+  ping = decodeRequestPayload(req);
+  checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
+  Assert.equal(ping.payload.reason, "shutdown",
+               "The new-profile ping generated at shutdown must have the correct reason");
+
+  // Check that the new-profile ping is sent at shutdown using the pingsender.
+  Assert.equal(req.getHeader("User-Agent"), "pingsender/1.0",
+               "Should have received the correct user agent string.");
+  Assert.equal(req.getHeader("X-PingSender-Version"), "1.0",
+               "Should have received the correct PingSender version string.");
+
+  // Check that no new-profile ping is sent on second sessions, not at startup
+  // nor at shutdown.
+  yield resetTest();
+  PingServer.registerPingHandler(
+    () => Assert.ok(false, "The new-profile ping must be sent only on new profiles."));
+  yield TelemetryController.testReset();
+  yield TelemetryController.testShutdown();
+
+  // Check that we don't send the new-profile ping if the profile already contains
+  // a state file (but no "newProfilePingSent" property).
+  yield resetTest();
+  yield OS.File.remove(stateFilePath, { ignoreAbsent: true });
+  const sessionState = {
+    sessionId: null,
+    subsessionId: null,
+    profileSubsessionCounter: 3785,
+  };
+  yield CommonUtils.writeJSON(sessionState, stateFilePath);
+  yield TelemetryController.testReset();
+  yield TelemetryController.testShutdown();
+
+  // Reset the pref and restart Telemetry.
+  Preferences.reset(PREF_NEWPROFILE_ENABLED);
+  PingServer.resetPingHandler();
 });
 
 // Testing shutdown and checking that pings sent afterwards are rejected.
