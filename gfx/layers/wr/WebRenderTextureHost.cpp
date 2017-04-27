@@ -19,13 +19,12 @@
 namespace mozilla {
 namespace layers {
 
-uint64_t WebRenderTextureHost::sSerialCounter(0);
-
 WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
                                            TextureFlags aFlags,
-                                           TextureHost* aTexture)
+                                           TextureHost* aTexture,
+                                           wr::ExternalImageId& aExternalImageId)
   : TextureHost(aFlags)
-  , mExternalImageId(++sSerialCounter)
+  , mExternalImageId(aExternalImageId)
   , mIsWrappingNativeHandle(false)
 {
   MOZ_COUNT_CTOR(WebRenderTextureHost);
@@ -37,7 +36,7 @@ WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
 WebRenderTextureHost::~WebRenderTextureHost()
 {
   MOZ_COUNT_DTOR(WebRenderTextureHost);
-  wr::RenderThread::Get()->UnregisterExternalImage(mExternalImageId);
+  wr::RenderThread::Get()->UnregisterExternalImage(wr::AsUint64(mExternalImageId));
 }
 
 void
@@ -68,7 +67,7 @@ WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& a
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId, texture);
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture);
 }
 
 bool

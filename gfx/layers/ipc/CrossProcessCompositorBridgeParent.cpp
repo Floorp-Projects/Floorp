@@ -189,17 +189,17 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   // child process invoking this codepath before it's ready
   MOZ_RELEASE_ASSERT(false);
 #endif
+  uint64_t layersId = wr::AsUint64(aPipelineId);
   // Check to see if this child process has access to this layer tree.
-  if (!LayerTreeOwnerTracker::Get()->IsMapped(aPipelineId.mHandle, OtherPid())) {
+  if (!LayerTreeOwnerTracker::Get()->IsMapped(layersId, OtherPid())) {
     NS_ERROR("Unexpected layers id in AllocPAPZCTreeManagerParent; dropping message...");
     return nullptr;
   }
 
-  auto pipelineHandle = aPipelineId.mHandle;
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  MOZ_ASSERT(sIndirectLayerTrees.find(pipelineHandle) != sIndirectLayerTrees.end());
-  MOZ_ASSERT(sIndirectLayerTrees[pipelineHandle].mWrBridge == nullptr);
-  CompositorBridgeParent* cbp = sIndirectLayerTrees[pipelineHandle].mParent;
+  MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
+  MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
+  CompositorBridgeParent* cbp = sIndirectLayerTrees[layersId].mParent;
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
   WebRenderBridgeParent* parent = nullptr;
@@ -208,8 +208,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder));
 
   parent->AddRef(); // IPDL reference
-  sIndirectLayerTrees[pipelineHandle].mCrossProcessParent = this;
-  sIndirectLayerTrees[pipelineHandle].mWrBridge = parent;
+  sIndirectLayerTrees[layersId].mCrossProcessParent = this;
+  sIndirectLayerTrees[layersId].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
   *aIdNamespace = parent->GetIdNameSpace();
 
@@ -225,7 +225,7 @@ CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBrid
   MOZ_RELEASE_ASSERT(false);
 #endif
   WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
-  EraseLayerState(parent->PipelineId().mHandle);
+  EraseLayerState(wr::AsUint64(parent->PipelineId()));
   parent->Release(); // IPDL reference
   return true;
 }
@@ -509,7 +509,8 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
                                                         const LayersBackend& aLayersBackend,
                                                         const TextureFlags& aFlags,
                                                         const uint64_t& aId,
-                                                        const uint64_t& aSerial)
+                                                        const uint64_t& aSerial,
+                                                        const wr::MaybeExternalImageId& aExternalImageId)
 {
   CompositorBridgeParent::LayerTreeState* state = nullptr;
 
@@ -532,7 +533,7 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
     gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
   }
 
-  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial);
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial, aExternalImageId);
 }
 
 bool

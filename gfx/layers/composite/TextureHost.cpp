@@ -65,7 +65,7 @@ namespace layers {
 class TextureParent : public ParentActor<PTextureParent>
 {
 public:
-  explicit TextureParent(HostIPCAllocator* aAllocator, uint64_t aSerial);
+  explicit TextureParent(HostIPCAllocator* aAllocator, uint64_t aSerial, const wr::MaybeExternalImageId& aExternalImageId);
 
   ~TextureParent();
 
@@ -87,6 +87,7 @@ public:
   RefPtr<TextureHost> mTextureHost;
   // mSerial is unique in TextureClient's process.
   const uint64_t mSerial;
+  wr::MaybeExternalImageId mExternalImageId;
 };
 
 static bool
@@ -109,7 +110,8 @@ TextureHost::CreateIPDLActor(HostIPCAllocator* aAllocator,
                              const SurfaceDescriptor& aSharedData,
                              LayersBackend aLayersBackend,
                              TextureFlags aFlags,
-                             uint64_t aSerial)
+                             uint64_t aSerial,
+                             const wr::MaybeExternalImageId& aExternalImageId)
 {
   if (aSharedData.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer &&
       aSharedData.get_SurfaceDescriptorBuffer().data().type() == MemoryOrShmem::Tuintptr_t &&
@@ -118,7 +120,7 @@ TextureHost::CreateIPDLActor(HostIPCAllocator* aAllocator,
     NS_ERROR("A client process is trying to peek at our address space using a MemoryTexture!");
     return nullptr;
   }
-  TextureParent* actor = new TextureParent(aAllocator, aSerial);
+  TextureParent* actor = new TextureParent(aAllocator, aSerial, aExternalImageId);
   if (!actor->Init(aSharedData, aLayersBackend, aFlags)) {
     delete actor;
     return nullptr;
@@ -196,7 +198,8 @@ already_AddRefed<TextureHost>
 TextureHost::Create(const SurfaceDescriptor& aDesc,
                     ISurfaceAllocator* aDeallocator,
                     LayersBackend aBackend,
-                    TextureFlags aFlags)
+                    TextureFlags aFlags,
+                    wr::MaybeExternalImageId& aExternalImageId)
 {
   RefPtr<TextureHost> result;
 
@@ -243,7 +246,8 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
   }
 
   if (WrapWithWebRenderTextureHost(aDeallocator, aBackend, aFlags)) {
-    result = new WebRenderTextureHost(aDesc, aFlags, result);
+    MOZ_ASSERT(aExternalImageId.isSome());
+    result = new WebRenderTextureHost(aDesc, aFlags, result, aExternalImageId.ref());
   }
 
   return result.forget();
@@ -1080,9 +1084,10 @@ size_t MemoryTextureHost::GetBufferSize()
   return std::numeric_limits<size_t>::max();
 }
 
-TextureParent::TextureParent(HostIPCAllocator* aSurfaceAllocator, uint64_t aSerial)
+TextureParent::TextureParent(HostIPCAllocator* aSurfaceAllocator, uint64_t aSerial, const wr::MaybeExternalImageId& aExternalImageId)
 : mSurfaceAllocator(aSurfaceAllocator)
 , mSerial(aSerial)
+, mExternalImageId(aExternalImageId)
 {
   MOZ_COUNT_CTOR(TextureParent);
 }
@@ -1109,7 +1114,8 @@ TextureParent::Init(const SurfaceDescriptor& aSharedData,
   mTextureHost = TextureHost::Create(aSharedData,
                                      mSurfaceAllocator,
                                      aBackend,
-                                     aFlags);
+                                     aFlags,
+                                     mExternalImageId);
   if (mTextureHost) {
     mTextureHost->mActor = this;
   }

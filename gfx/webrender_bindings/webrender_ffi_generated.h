@@ -51,6 +51,7 @@ enum class WrImageFormat : uint32_t {
   RGB8 = 2,
   RGBA8 = 3,
   RGBAF32 = 4,
+  RG8 = 5,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -93,6 +94,13 @@ enum class WrRepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrYuvColorSpace : uint32_t {
+  Rec601 = 1,
+  Rec709 = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 struct WrAPI;
 
 struct WrImageKey {
@@ -128,6 +136,14 @@ struct WrByteSlice {
   bool operator==(const WrByteSlice& aOther) const {
     return buffer == aOther.buffer &&
       len == aOther.len;
+  }
+};
+
+struct WrExternalImageId {
+  uint64_t mHandle;
+
+  bool operator==(const WrExternalImageId& aOther) const {
+    return mHandle == aOther.mHandle;
   }
 };
 
@@ -171,9 +187,13 @@ struct WrState;
 
 struct WrBuiltDisplayListDescriptor {
   size_t display_list_items_size;
+  uint64_t builder_start_time;
+  uint64_t builder_finish_time;
 
   bool operator==(const WrBuiltDisplayListDescriptor& aOther) const {
-    return display_list_items_size == aOther.display_list_items_size;
+    return display_list_items_size == aOther.display_list_items_size &&
+      builder_start_time == aOther.builder_start_time &&
+      builder_finish_time == aOther.builder_finish_time;
   }
 };
 
@@ -200,6 +220,34 @@ struct WrAuxiliaryListsDescriptor {
       complex_clip_regions_size == aOther.complex_clip_regions_size &&
       filters_size == aOther.filters_size &&
       glyph_instances_size == aOther.glyph_instances_size;
+  }
+};
+
+struct WrOpacityProperty {
+  uint64_t id;
+  float opacity;
+
+  bool operator==(const WrOpacityProperty& aOther) const {
+    return id == aOther.id &&
+      opacity == aOther.opacity;
+  }
+};
+
+struct WrMatrix {
+  float values[16];
+
+  bool operator==(const WrMatrix& aOther) const {
+    return values == aOther.values;
+  }
+};
+
+struct WrTransformProperty {
+  uint64_t id;
+  WrMatrix transform;
+
+  bool operator==(const WrTransformProperty& aOther) const {
+    return id == aOther.id &&
+      transform == aOther.transform;
   }
 };
 
@@ -401,14 +449,6 @@ struct WrNinePatchDescriptor {
   }
 };
 
-struct WrMatrix {
-  float values[16];
-
-  bool operator==(const WrMatrix& aOther) const {
-    return values == aOther.values;
-  }
-};
-
 struct WrGlyphInstance {
   uint32_t index;
   WrPoint point;
@@ -445,31 +485,19 @@ struct WrExternalImage {
   }
 };
 
-struct WrExternalImageId {
-  uint64_t mHandle;
-
-  bool operator==(const WrExternalImageId& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-};
-
 typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
 
 typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
-
-typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageId);
 
 struct WrExternalImageHandler {
   void* external_image_obj;
   LockExternalImageCallback lock_func;
   UnlockExternalImageCallback unlock_func;
-  ReleaseExternalImageCallback release_func;
 
   bool operator==(const WrExternalImageHandler& aOther) const {
     return external_image_obj == aOther.external_image_obj &&
       lock_func == aOther.lock_func &&
-      unlock_func == aOther.unlock_func &&
-      release_func == aOther.release_func;
+      unlock_func == aOther.unlock_func;
   }
 };
 
@@ -504,14 +532,14 @@ WR_INLINE void
 wr_api_add_external_image_buffer(WrAPI* api,
     WrImageKey image_key,
     const WrImageDescriptor* descriptor,
-    uint64_t external_image_id)
+    WrExternalImageId external_image_id)
 WR_FUNC;
 
 WR_INLINE void
 wr_api_add_external_image_handle(WrAPI* api,
     WrImageKey image_key,
     const WrImageDescriptor* descriptor,
-    uint64_t external_image_id)
+    WrExternalImageId external_image_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -525,7 +553,8 @@ WR_INLINE void
 wr_api_add_raw_font(WrAPI* api,
     WrFontKey key,
     uint8_t* font_buffer,
-    size_t buffer_size)
+    size_t buffer_size,
+    uint32_t index)
 WR_FUNC;
 
 WR_INLINE void
@@ -558,6 +587,14 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_generate_frame(WrAPI* api)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_generate_frame_with_properties(WrAPI* api,
+    const WrOpacityProperty* opacity_array,
+    size_t opacity_count,
+    const WrTransformProperty* transform_array,
+    size_t transform_count)
 WR_FUNC;
 
 WR_INLINE WrIdNamespace
@@ -750,16 +787,17 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_scroll_layer(WrState* state,
-    WrRect bounds,
-    WrRect overflow,
+    WrRect content_rect,
+    WrRect clip_rect,
     const WrImageMask* mask)
 WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_stacking_context(WrState* state,
     WrRect bounds,
-    float opacity,
-    WrMatrix transform,
+    uint64_t animation_id,
+    const float* opacity,
+    const WrMatrix* transform,
     WrMixBlendMode mix_blend_mode)
 WR_FUNC;
 
@@ -772,6 +810,15 @@ wr_dp_push_text(WrState* state,
     const WrGlyphInstance* glyphs,
     uint32_t glyph_count,
     float glyph_size)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_yuv_image(WrState* state,
+    WrRect bounds,
+    WrClipRegion clip,
+    const WrImageKey* image_keys,
+    uint8_t key_num,
+    WrYuvColorSpace color_space)
 WR_FUNC;
 
 WR_INLINE void

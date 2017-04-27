@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_WEBRENDERTEXTUREHOST_H
 
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -24,7 +25,8 @@ class WebRenderTextureHost : public TextureHost
 public:
   WebRenderTextureHost(const SurfaceDescriptor& aDesc,
                        TextureFlags aFlags,
-                       TextureHost* aTexture);
+                       TextureHost* aTexture,
+                       wr::ExternalImageId& aExternalImageId);
   virtual ~WebRenderTextureHost();
 
   virtual void DeallocateDeviceData() override {}
@@ -57,7 +59,7 @@ public:
 
   virtual WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
-  uint64_t GetExternalImageKey() { return mExternalImageId; }
+  wr::ExternalImageId GetExternalImageKey() { return mExternalImageId; }
 
   int32_t GetRGBStride();
 
@@ -67,11 +69,9 @@ protected:
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc, TextureHost* aTexture);
 
   RefPtr<TextureHost> mWrappedTextureHost;
-  uint64_t mExternalImageId;
+  wr::ExternalImageId mExternalImageId;
 
   bool mIsWrappingNativeHandle;
-
-  static uint64_t sSerialCounter;
 };
 
 } // namespace layers

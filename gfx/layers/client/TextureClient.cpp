@@ -892,11 +892,15 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
     return false;
   }
 
+  // Try external image id allocation.
+  mExternalImageId = aForwarder->GetTextureForwarder()->GetNextExternalImageId();
+
   PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
     desc,
     aForwarder->GetCompositorBackendType(),
     GetFlags(),
-    mSerial);
+    mSerial,
+    mExternalImageId);
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
                     << static_cast<int32_t>(aForwarder->GetCompositorBackendType()) << ", "
@@ -948,11 +952,15 @@ TextureClient::InitIPDLActor(KnowsCompositor* aForwarder)
     return false;
   }
 
+  // Try external image id allocation.
+  mExternalImageId = aForwarder->GetTextureForwarder()->GetNextExternalImageId();
+
   PTextureChild* actor = fwd->CreateTexture(
     desc,
     aForwarder->GetCompositorBackendType(),
     GetFlags(),
-    mSerial);
+    mSerial,
+    mExternalImageId);
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
                     << static_cast<int32_t>(aForwarder->GetCompositorBackendType()) << ", "

@@ -7,9 +7,9 @@
 
 #include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "mozilla/layers/TextureWrapperImage.h"
+#include "mozilla/layers/UpdateImageHelper.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
@@ -19,107 +19,12 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-void
-WebRenderPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
-{
-  PROFILER_LABEL("WebRenderPaintedLayer", "PaintThebes",
-    js::ProfileEntry::Category::GRAPHICS);
-
-  mContentClient->BeginPaint();
-
-  uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
-
-  PaintState state =
-    mContentClient->BeginPaintBuffer(this, flags);
-  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
-
-  if (!state.mRegionToDraw.IsEmpty() && !Manager()->GetPaintedLayerCallback()) {
-    return;
-  }
-
-  // The area that became invalid and is visible needs to be repainted
-  // (this could be the whole visible area if our buffer switched
-  // from RGB to RGBA, because we might need to repaint with
-  // subpixel AA)
-  state.mRegionToInvalidate.And(state.mRegionToInvalidate,
-                                GetLocalVisibleRegion().ToUnknownRegion());
-
-  bool didUpdate = false;
-  RotatedContentBuffer::DrawIterator iter;
-  while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
-    if (!target || !target->IsValid()) {
-      if (target) {
-        mContentClient->ReturnDrawTargetToBuffer(target);
-      }
-      continue;
-    }
-
-    SetAntialiasingFlags(this, target);
-
-    RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
-    MOZ_ASSERT(ctx); // already checked the target above
-    Manager()->GetPaintedLayerCallback()(this,
-                                              ctx,
-                                              iter.mDrawRegion,
-                                              iter.mDrawRegion,
-                                              state.mClip,
-                                              state.mRegionToInvalidate,
-                                              Manager()->GetPaintedLayerCallbackData());
-
-    ctx = nullptr;
-    mContentClient->ReturnDrawTargetToBuffer(target);
-    didUpdate = true;
-  }
-
-  mContentClient->EndPaint(aReadbackUpdates);
-
-  if (didUpdate) {
-    Mutated();
-
-    // XXX It will cause reftests failures. See Bug 1340798.
-    //mValidRegion.Or(mValidRegion, state.mRegionToDraw);
-
-    ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
-
-    // Hold(this) ensures this layer is kept alive through the current transaction
-    // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
-    // so deleting this Hold for whatever reason will break things.
-    Manager()->Hold(this);
-
-    contentClientRemote->Updated(state.mRegionToDraw,
-                                 mVisibleRegion.ToUnknownRegion(),
-                                 state.mDidSelfCopy);
-  }
-}
-
-void
-WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
-{
-  if (!mContentClient) {
-    mContentClient = ContentClient::CreateContentClient(Manager()->WrBridge());
-    if (!mContentClient) {
-      return;
-    }
-    mContentClient->Connect();
-    MOZ_ASSERT(mContentClient->GetForwarder());
-  }
-
-  nsTArray<ReadbackProcessor::Update> readbackUpdates;
-  nsIntRegion readbackRegion;
-  if (aReadback && UsedForReadback()) {
-    aReadback->GetPaintedLayerUpdates(this, &readbackUpdates);
-  }
-
-  PaintThebes(&readbackUpdates);
-}
-
-void
-WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+bool
+WebRenderPaintedLayer::SetupExternalImages()
 {
   // XXX We won't keep using ContentClient for WebRenderPaintedLayer in the future and
   // there is a crash problem for ContentClient on MacOS. So replace ContentClient with
   // ImageClient. See bug 1341001.
-  //RenderLayerWithReadback(nullptr);
 
   if (!mImageContainer) {
     mImageContainer = LayerManager::CreateImageContainer();
@@ -130,47 +35,39 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                                   WrBridge(),
                                                   TextureFlags::DEFAULT);
     if (!mImageClient) {
-      return;
+      return false;
     }
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    MOZ_ASSERT(mExternalImageId);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
 
+  return true;
+}
+
+bool
+WebRenderPaintedLayer::UpdateImageClient()
+{
+  MOZ_ASSERT(Manager()->GetPaintedLayerCallback());
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
   LayerIntSize size = bounds.Size();
-  if (size.IsEmpty()) {
-      if (gfxPrefs::LayersDump()) {
-        printf_stderr("PaintedLayer %p skipping\n", this->GetLayer());
-      }
-      return;
-  }
-
   IntSize imageSize(size.width, size.height);
-  RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(SurfaceFormat::B8G8R8A8,
-                                                                                            imageSize,
-                                                                                            BackendSelector::Content,
-                                                                                            TextureFlags::DEFAULT);
-  if (!texture) {
-    return;
-  }
+
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize);
 
   {
-    TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
-    if (!autoLock.Succeeded()) {
-      return;
-    }
-    RefPtr<DrawTarget> target = texture->BorrowDrawTarget();
+    RefPtr<DrawTarget> target = helper.GetDrawTarget();
     if (!target) {
-      return;
+      return false;
     }
+
     target->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
     target->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
-    RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
+    RefPtr<gfxContext> ctx =
+        gfxContext::CreatePreservingTransformOrNull(target);
     MOZ_ASSERT(ctx); // already checked the target above
 
     Manager()->GetPaintedLayerCallback()(this,
@@ -183,37 +80,71 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
       target->FillRect(Rect(0, 0, imageSize.width, imageSize.height), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
     }
   }
-  RefPtr<TextureWrapperImage> image = new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), imageSize));
-  mImageContainer->SetCurrentImageInTransaction(image);
-  if (!mImageClient->UpdateImage(mImageContainer, /* unused */0)) {
+
+  if (!helper.UpdateImage()) {
+    return false;
+  }
+
+  return true;
+}
+
+void
+WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder)
+{
+  StackingContextHelper sc(aBuilder, this);
+
+  LayerRect rect = Bounds();
+  DumpLayerInfo("PaintedLayer", rect);
+
+  LayerRect clipRect = ClipRect().valueOr(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(
+      sc.ToRelativeWrRect(clipRect),
+      mask.ptrOr(nullptr));
+
+  WrImageKey key = GetImageKey();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
+  Manager()->AddImageKeyForDiscard(key);
+
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, key);
+}
+
+void
+WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+{
+  if (!SetupExternalImages()) {
     return;
   }
 
-  gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect rect(0, 0, size.width, size.height);
+  if (GetVisibleRegion().IsEmpty()) {
+    if (gfxPrefs::LayersDump()) {
+      printf_stderr("PaintedLayer %p skipping\n", this->GetLayer());
+    }
+    return;
+  }
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
+  nsIntRegion regionToPaint;
+  regionToPaint.Sub(mVisibleRegion.ToUnknownRegion(), mValidRegion);
 
-  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+  // We have something to paint but can't. This usually happens only in
+  // empty transactions
+  if (!regionToPaint.IsEmpty() && !Manager()->GetPaintedLayerCallback()) {
+    Manager()->SetTransactionIncomplete();
+    return;
+  }
 
-  DumpLayerInfo("PaintedLayer", rect);
+  if (!regionToPaint.IsEmpty() && Manager()->GetPaintedLayerCallback()) {
+    if (!UpdateImageClient()) {
+      return;
+    }
+  } else {
+    // We have an empty transaction, just reuse the old image we had before.
+    MOZ_ASSERT(mExternalImageId);
+    MOZ_ASSERT(mImageContainer->HasCurrentImage());
+    MOZ_ASSERT(GetInvalidRegion().IsEmpty());
+  }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  Manager()->AddImageKeyForDiscard(key);
-
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              1.0f,
-                              //GetAnimations(),
-                              transform,
-                              mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, wr::ImageRendering::Auto, key);
-  aBuilder.PopStackingContext();
+  CreateWebRenderDisplayList(aBuilder);
 }
 
 } // namespace layers

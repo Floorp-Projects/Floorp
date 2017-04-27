@@ -3,22 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use frame_builder::FrameBuilder;
+use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, PrimitiveContainer};
 use tiling::PrimitiveFlags;
-use webrender_traits::{BorderSide, BorderStyle, BorderWidths, NormalBorder};
-use webrender_traits::{ClipRegion, LayerPoint, LayerRect, LayerSize, ScrollLayerId};
+use util::pack_as_float;
+use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ColorF, NormalBorder};
+use webrender_traits::{ClipId, ClipRegion, LayerPoint, LayerRect, LayerSize};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BorderCornerKind {
     None,
     Solid,
-    Complex,
+    Clip,
+    Unhandled,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BorderEdgeKind {
     None,
     Solid,
-    Complex,
+    Clip,
+    Unhandled,
 }
 
 pub trait NormalBorderHelpers {
@@ -62,20 +66,28 @@ impl NormalBorderHelpers for NormalBorder {
                 if edge0.color == edge1.color && radius.width == 0.0 && radius.height == 0.0 {
                     BorderCornerKind::Solid
                 } else {
-                    BorderCornerKind::Complex
+                    BorderCornerKind::Clip
                 }
             }
+
+            // Inset / outset borders just modtify the color of edges, so can be
+            // drawn with the normal border corner shader.
+            (BorderStyle::Outset, BorderStyle::Outset) |
+            (BorderStyle::Inset, BorderStyle::Inset) |
+            (BorderStyle::Double, BorderStyle::Double) |
+            (BorderStyle::Groove, BorderStyle::Groove) |
+            (BorderStyle::Ridge, BorderStyle::Ridge) => BorderCornerKind::Clip,
 
             // Assume complex for these cases.
             // TODO(gw): There are some cases in here that can be handled with a fast path.
             // For example, with inset/outset borders, two of the four corners are solid.
-            (BorderStyle::Dotted, _) | (_, BorderStyle::Dotted) => BorderCornerKind::Complex,
-            (BorderStyle::Dashed, _) | (_, BorderStyle::Dashed) => BorderCornerKind::Complex,
-            (BorderStyle::Double, _) | (_, BorderStyle::Double) => BorderCornerKind::Complex,
-            (BorderStyle::Groove, _) | (_, BorderStyle::Groove) => BorderCornerKind::Complex,
-            (BorderStyle::Ridge, _) | (_, BorderStyle::Ridge) => BorderCornerKind::Complex,
-            (BorderStyle::Outset, _) | (_, BorderStyle::Outset) => BorderCornerKind::Complex,
-            (BorderStyle::Inset, _) | (_, BorderStyle::Inset) => BorderCornerKind::Complex,
+            (BorderStyle::Dotted, _) | (_, BorderStyle::Dotted) => BorderCornerKind::Unhandled,
+            (BorderStyle::Dashed, _) | (_, BorderStyle::Dashed) => BorderCornerKind::Unhandled,
+            (BorderStyle::Double, _) | (_, BorderStyle::Double) => BorderCornerKind::Unhandled,
+            (BorderStyle::Groove, _) | (_, BorderStyle::Groove) => BorderCornerKind::Unhandled,
+            (BorderStyle::Ridge, _) | (_, BorderStyle::Ridge) => BorderCornerKind::Unhandled,
+            (BorderStyle::Outset, _) | (_, BorderStyle::Outset) => BorderCornerKind::Unhandled,
+            (BorderStyle::Inset, _) | (_, BorderStyle::Inset) => BorderCornerKind::Unhandled,
         }
     }
 
@@ -95,25 +107,76 @@ impl NormalBorderHelpers for NormalBorder {
             BorderStyle::Outset => (BorderEdgeKind::Solid, width),
 
             BorderStyle::Double |
-            BorderStyle::Dotted |
-            BorderStyle::Dashed |
             BorderStyle::Groove |
-            BorderStyle::Ridge => (BorderEdgeKind::Complex, width),
+            BorderStyle::Ridge => (BorderEdgeKind::Clip, width),
+
+            BorderStyle::Dotted |
+            BorderStyle::Dashed => (BorderEdgeKind::Unhandled, width),
         }
     }
 }
 
 impl FrameBuilder {
+    fn add_normal_border_primitive(&mut self,
+                                   rect: &LayerRect,
+                                   border: &NormalBorder,
+                                   widths: &BorderWidths,
+                                   clip_id: ClipId,
+                                   clip_region: &ClipRegion,
+                                   use_new_border_path: bool) {
+        let radius = &border.radius;
+        let left = &border.left;
+        let right = &border.right;
+        let top = &border.top;
+        let bottom = &border.bottom;
+
+        // These colors are used during inset/outset scaling.
+        let left_color      = left.border_color(1.0, 2.0/3.0, 0.3, 0.7);
+        let top_color       = top.border_color(1.0, 2.0/3.0, 0.3, 0.7);
+        let right_color     = right.border_color(2.0/3.0, 1.0, 0.7, 0.3);
+        let bottom_color    = bottom.border_color(2.0/3.0, 1.0, 0.7, 0.3);
+
+        let prim_cpu = BorderPrimitiveCpu {
+            use_new_border_path: use_new_border_path,
+        };
+
+        let prim_gpu = BorderPrimitiveGpu {
+            colors: [ left_color, top_color, right_color, bottom_color ],
+            widths: [ widths.left,
+                      widths.top,
+                      widths.right,
+                      widths.bottom ],
+            style: [
+                pack_as_float(left.style as u32),
+                pack_as_float(top.style as u32),
+                pack_as_float(right.style as u32),
+                pack_as_float(bottom.style as u32),
+            ],
+            radii: [
+                radius.top_left,
+                radius.top_right,
+                radius.bottom_right,
+                radius.bottom_left,
+            ],
+        };
+
+        self.add_primitive(clip_id,
+                           &rect,
+                           clip_region,
+                           &[],
+                           PrimitiveContainer::Border(prim_cpu, prim_gpu));
+    }
+
     // TODO(gw): This allows us to move border types over to the
     // simplified shader model one at a time. Once all borders
     // are converted, this can be removed, along with the complex
     // border code path.
-    pub fn add_simple_border(&mut self,
+    pub fn add_normal_border(&mut self,
                              rect: &LayerRect,
                              border: &NormalBorder,
                              widths: &BorderWidths,
-                             scroll_layer_id: ScrollLayerId,
-                             clip_region: &ClipRegion) -> bool {
+                             clip_id: ClipId,
+                             clip_region: &ClipRegion) {
         // The border shader is quite expensive. For simple borders, we can just draw
         // the border with a few rectangles. This generally gives better batching, and
         // a GPU win in fragment shader time.
@@ -129,74 +192,139 @@ impl FrameBuilder {
         let top = &border.top;
         let bottom = &border.bottom;
 
-        // If any of the corners are complex, fall back to slow path for now.
-        let tl = border.get_corner(left, widths.left, top, widths.top, &radius.top_left);
-        let tr = border.get_corner(top, widths.top, right, widths.right, &radius.top_right);
-        let br = border.get_corner(right, widths.right, bottom, widths.bottom, &radius.bottom_right);
-        let bl = border.get_corner(bottom, widths.bottom, left, widths.left, &radius.bottom_left);
+        let corners = [
+            border.get_corner(left, widths.left, top, widths.top, &radius.top_left),
+            border.get_corner(top, widths.top, right, widths.right, &radius.top_right),
+            border.get_corner(right, widths.right, bottom, widths.bottom, &radius.bottom_right),
+            border.get_corner(bottom, widths.bottom, left, widths.left, &radius.bottom_left),
+        ];
 
-        if tl == BorderCornerKind::Complex ||
-           tr == BorderCornerKind::Complex ||
-           br == BorderCornerKind::Complex ||
-           bl == BorderCornerKind::Complex {
-            return false;
+        // If any of the corners are unhandled, fall back to slow path for now.
+        if corners.iter().any(|c| *c == BorderCornerKind::Unhandled) {
+            self.add_normal_border_primitive(rect,
+                                             border,
+                                             widths,
+                                             clip_id,
+                                             clip_region,
+                                             false);
+            return;
         }
 
-        // If any of the edges are complex, fall back to slow path for now.
         let (left_edge, left_len) = border.get_edge(left, widths.left);
         let (top_edge, top_len) = border.get_edge(top, widths.top);
         let (right_edge, right_len) = border.get_edge(right, widths.right);
         let (bottom_edge, bottom_len) = border.get_edge(bottom, widths.bottom);
 
-        if left_edge == BorderEdgeKind::Complex ||
-           top_edge == BorderEdgeKind::Complex ||
-           right_edge == BorderEdgeKind::Complex ||
-           bottom_edge == BorderEdgeKind::Complex {
-            return false;
+        let edges = [
+            left_edge,
+            top_edge,
+            right_edge,
+            bottom_edge,
+        ];
+
+        // If any of the edges are unhandled, fall back to slow path for now.
+        if edges.iter().any(|e| *e == BorderEdgeKind::Unhandled) {
+            self.add_normal_border_primitive(rect,
+                                             border,
+                                             widths,
+                                             clip_id,
+                                             clip_region,
+                                             false);
+            return;
         }
 
-        let p0 = rect.origin;
-        let p1 = rect.bottom_right();
-        let rect_width = rect.size.width;
-        let rect_height = rect.size.height;
+        // Use a simple rectangle case when all edges and corners are either
+        // solid or none.
+        let all_corners_simple = corners.iter().all(|c| {
+            *c == BorderCornerKind::Solid || *c == BorderCornerKind::None
+        });
+        let all_edges_simple = edges.iter().all(|e| {
+            *e == BorderEdgeKind::Solid || *e == BorderEdgeKind::None
+        });
 
-        // Add a solid rectangle for each visible edge/corner combination.
-        if top_edge == BorderEdgeKind::Solid {
-            self.add_solid_rectangle(scroll_layer_id,
-                                     &LayerRect::new(p0,
-                                                     LayerSize::new(rect.size.width, top_len)),
-                                     clip_region,
-                                     &border.top.color,
-                                     PrimitiveFlags::None);
-        }
-        if left_edge == BorderEdgeKind::Solid {
-            self.add_solid_rectangle(scroll_layer_id,
-                                     &LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
-                                                     LayerSize::new(left_len,
-                                                                    rect_height - top_len - bottom_len)),
-                                     clip_region,
-                                     &border.left.color,
-                                     PrimitiveFlags::None);
-        }
-        if right_edge == BorderEdgeKind::Solid {
-            self.add_solid_rectangle(scroll_layer_id,
-                                     &LayerRect::new(LayerPoint::new(p1.x - right_len,
-                                                                     p0.y + top_len),
-                                                     LayerSize::new(right_len,
-                                                                    rect_height - top_len - bottom_len)),
-                                     clip_region,
-                                     &border.right.color,
-                                     PrimitiveFlags::None);
-        }
-        if bottom_edge == BorderEdgeKind::Solid {
-            self.add_solid_rectangle(scroll_layer_id,
-                                     &LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
-                                                     LayerSize::new(rect_width, bottom_len)),
-                                     clip_region,
-                                     &border.bottom.color,
-                                     PrimitiveFlags::None);
-        }
+        if all_corners_simple && all_edges_simple {
+            let p0 = rect.origin;
+            let p1 = rect.bottom_right();
+            let rect_width = rect.size.width;
+            let rect_height = rect.size.height;
 
-        true
+            // Add a solid rectangle for each visible edge/corner combination.
+            if top_edge == BorderEdgeKind::Solid {
+                self.add_solid_rectangle(clip_id,
+                                         &LayerRect::new(p0,
+                                                         LayerSize::new(rect_width, top_len)),
+                                         clip_region,
+                                         &border.top.color,
+                                         PrimitiveFlags::None);
+            }
+            if left_edge == BorderEdgeKind::Solid {
+                self.add_solid_rectangle(clip_id,
+                                         &LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
+                                                         LayerSize::new(left_len,
+                                                                        rect_height - top_len - bottom_len)),
+                                         clip_region,
+                                         &border.left.color,
+                                         PrimitiveFlags::None);
+            }
+            if right_edge == BorderEdgeKind::Solid {
+                self.add_solid_rectangle(clip_id,
+                                         &LayerRect::new(LayerPoint::new(p1.x - right_len,
+                                                                         p0.y + top_len),
+                                                         LayerSize::new(right_len,
+                                                                        rect_height - top_len - bottom_len)),
+                                         clip_region,
+                                         &border.right.color,
+                                         PrimitiveFlags::None);
+            }
+            if bottom_edge == BorderEdgeKind::Solid {
+                self.add_solid_rectangle(clip_id,
+                                         &LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
+                                                         LayerSize::new(rect_width, bottom_len)),
+                                         clip_region,
+                                         &border.bottom.color,
+                                         PrimitiveFlags::None);
+            }
+        } else {
+            self.add_normal_border_primitive(rect,
+                                             border,
+                                             widths,
+                                             clip_id,
+                                             clip_region,
+                                             true);
+        }
+    }
+}
+
+pub trait BorderSideHelpers {
+    fn border_color(&self,
+                    scale_factor_0: f32,
+                    scale_factor_1: f32,
+                    black_color_0: f32,
+                    black_color_1: f32) -> ColorF;
+}
+
+impl BorderSideHelpers for BorderSide {
+    fn border_color(&self,
+                    scale_factor_0: f32,
+                    scale_factor_1: f32,
+                    black_color_0: f32,
+                    black_color_1: f32) -> ColorF {
+        match self.style {
+            BorderStyle::Inset => {
+                if self.color.r != 0.0 || self.color.g != 0.0 || self.color.b != 0.0 {
+                    self.color.scale_rgb(scale_factor_1)
+                } else {
+                    ColorF::new(black_color_0, black_color_0, black_color_0, self.color.a)
+                }
+            }
+            BorderStyle::Outset => {
+                if self.color.r != 0.0 || self.color.g != 0.0 || self.color.b != 0.0 {
+                    self.color.scale_rgb(scale_factor_0)
+                } else {
+                    ColorF::new(black_color_1, black_color_1, black_color_1, self.color.a)
+                }
+            }
+            _ => self.color,
+        }
     }
 }

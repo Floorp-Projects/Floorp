@@ -9,19 +9,30 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
+using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
 
 struct OpAddExternalImage {
-  uint64_t externalImageId;
+  ExternalImageId externalImageId;
   ImageKey key;
+};
+
+struct OpAddCompositorAnimations {
+  CompositorAnimations data;
+};
+
+struct OpRemoveCompositorAnimations {
+  uint64_t id;
 };
 
 union WebRenderParentCommand {
   OpAddExternalImage;
   CompositableOperation;
+  OpAddCompositorAnimations;
+  OpRemoveCompositorAnimations;
 };
 
 } // namespace

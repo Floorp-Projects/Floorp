@@ -130,7 +130,8 @@ public:
                                               const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags,
                                               const uint64_t& aId,
-                                              const uint64_t& aSerial) override;
+                                              const uint64_t& aSerial,
+                                              const wr::MaybeExternalImageId& aExternalImageId) override;
 
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 

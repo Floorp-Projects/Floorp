@@ -5009,7 +5009,7 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
     // Bug 748228
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  if (gfxPrefs::LayersAllowTextLayers()) {
+  if (ShouldUseAdvancedLayer(aBuilder->GetWidgetLayerManager(), gfxPrefs::LayersAllowTextLayers)) {
     RefPtr<DrawTargetCapture> capture =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
     RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);

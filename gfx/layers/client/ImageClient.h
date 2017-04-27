@@ -70,6 +70,8 @@ public:
 
   static already_AddRefed<TextureClient> CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwarder);
 
+  uint32_t GetLastUpdateGenerationCounter() { return mLastUpdateGenerationCounter; }
+
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
@@ -100,6 +102,8 @@ public:
   virtual void FlushAllImages() override;
 
   ImageClientSingle* AsImageClientSingle() override { return this; }
+
+  bool IsEmpty() { return mBuffers.IsEmpty(); }
 
 protected:
   struct Buffer {

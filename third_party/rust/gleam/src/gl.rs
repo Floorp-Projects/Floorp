@@ -357,6 +357,10 @@ pub trait Gl {
     fn get_shader_info_log(&self, shader: GLuint) -> String;
     fn get_string(&self, which: GLenum) -> String;
     fn get_shader_iv(&self, shader: GLuint, pname: GLenum) -> GLint;
+    fn get_shader_precision_format(&self,
+                                   shader_type: GLuint,
+                                   precision_type: GLuint)
+                                   -> (GLint, GLint, GLint);
     fn compile_shader(&self, shader: GLuint);
     fn create_program(&self) -> GLuint;
     fn delete_program(&self, program: GLuint);

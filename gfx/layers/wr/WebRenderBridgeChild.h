@@ -60,7 +60,9 @@ public:
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize,
+             bool aIsSync, uint64_t aTransactionId,
+             const WebRenderScrollData& aScrollData);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
@@ -70,9 +72,9 @@ public:
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
 
-  uint64_t AllocExternalImageId(const CompositableHandle& aHandle);
-  uint64_t AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
-  void DeallocExternalImageId(uint64_t aImageId);
+  wr::ExternalImageId AllocExternalImageId(const CompositableHandle& aHandle);
+  wr::ExternalImageId AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
+  void DeallocExternalImageId(wr::ExternalImageId& aImageId);
 
   /**
    * Clean this up, finishing with SendShutDown() which will cause __delete__
@@ -90,19 +92,20 @@ public:
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
-                  gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                  gfx::ScaledFont* aFont, const LayerPoint& aOffset, const gfx::Rect& aBounds,
                   const gfx::Rect& aClip);
 
   wr::FontKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
 
   void RemoveExpiredFontKeys();
+  void ClearReadLocks();
 
 private:
   friend class CompositorBridgeChild;
 
   ~WebRenderBridgeChild() {}
 
-  uint64_t GetNextExternalImageId();
+  wr::ExternalImageId GetNextExternalImageId();
 
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,

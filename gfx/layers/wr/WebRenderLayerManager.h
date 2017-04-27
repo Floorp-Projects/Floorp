@@ -7,11 +7,10 @@
 #define GFX_WEBRENDERLAYERMANAGER_H
 
 #include "Layers.h"
-#include "mozilla/layers/CompositorController.h"
+#include "mozilla/ipc/MessageChannel.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
-#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 
 class nsIWidget;
 
@@ -22,45 +21,8 @@ class CompositorBridgeChild;
 class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
-class WebRenderLayerManager;
-class APZCTreeManager;
 
-class WebRenderLayer
-{
-public:
-  virtual Layer* GetLayer() = 0;
-  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
-  {
-    MOZ_ASSERT(false);
-    return Nothing();
-  }
-
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; }
-  static inline WebRenderLayer*
-  ToWebRenderLayer(Layer* aLayer)
-  {
-    return static_cast<WebRenderLayer*>(aLayer->ImplData());
-  }
-
-  WebRenderLayerManager* WrManager();
-  WebRenderBridgeChild* WrBridge();
-
-  gfx::Rect RelativeToVisible(gfx::Rect aRect);
-  gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
-  gfx::Rect ParentStackingContextBounds();
-  gfx::Rect RelativeToParent(gfx::Rect aRect);
-  gfx::Rect VisibleBoundsRelativeToParent();
-  gfx::Point GetOffsetToParent();
-  gfx::Rect TransformedVisibleBoundsRelativeToParent();
-protected:
-  gfx::Rect GetWrBoundsRect();
-  gfx::Rect GetWrRelBounds();
-  gfx::Rect GetWrClipRect(gfx::Rect& aRect);
-  gfx::Matrix4x4 GetWrBoundTransform();
-  void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
-};
+typedef MozPromise<mozilla::wr::PipelineId, mozilla::ipc::PromiseRejectReason, false> PipelineIdPromise;
 
 class WebRenderLayerManager final : public LayerManager
 {
@@ -136,6 +98,7 @@ public:
     mNeedsComposite = aNeedsComposite;
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
+  virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
 
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
@@ -147,10 +110,23 @@ public:
   // transaction or destruction
   void AddImageKeyForDiscard(wr::ImageKey);
   void DiscardImages();
+  void DiscardLocalImages();
+
+  // Before destroying a layer with animations, add its compositorAnimationsId
+  // to a list of ids that will be discarded on the next transaction
+  void AddCompositorAnimationsIdForDiscard(uint64_t aId);
+  void DiscardCompositorAnimations();
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
+  virtual void Mutated(Layer* aLayer) override;
+  virtual void MutatedSimple(Layer* aLayer) override;
+
   void Hold(Layer* aLayer);
+  void SetTransactionIncomplete() { mTransactionIncomplete = true; }
+  bool IsMutatedLayer(Layer* aLayer);
+
+  RefPtr<PipelineIdPromise> AllocPipelineId();
 
 private:
   /**
@@ -161,9 +137,15 @@ private:
 
   void ClearLayer(Layer* aLayer);
 
+  bool EndTransactionInternal(DrawPaintedLayerCallback aCallback,
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags);
+
+
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   std::vector<wr::ImageKey> mImageKeys;
+  std::vector<uint64_t> mDiscardedCompositorAnimationsIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
@@ -179,7 +161,16 @@ private:
 
   LayerRefArray mKeepAlive;
 
+  // Layers that have been mutated. If we have an empty transaction
+  // then a display item layer will no longer be valid
+  // if it was a mutated layers.
+  void AddMutatedLayer(Layer* aLayer);
+  void ClearMutatedLayers();
+  LayerRefArray mMutatedLayers;
+  bool mTransactionIncomplete;
+
   bool mNeedsComposite;
+  bool mIsFirstPaint;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send

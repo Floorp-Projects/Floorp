@@ -1157,6 +1157,28 @@ impl Gl for GlFns {
         }
     }
 
+    fn get_shader_precision_format(&self, _shader_type: GLuint, precision_type: GLuint) -> (GLint, GLint, GLint) {
+        // gl.GetShaderPrecisionFormat is not available until OpenGL 4.1.
+        // Fallback to OpenGL standard precissions that most desktop hardware support.
+        match precision_type {
+            ffi::LOW_FLOAT | ffi::MEDIUM_FLOAT | ffi::HIGH_FLOAT => {
+                // Fallback to IEEE 754 single precision
+                // Range: from -2^127 to 2^127
+                // Significand precision: 23 bits
+                (127, 127, 23)
+            },
+            ffi::LOW_INT | ffi::MEDIUM_INT | ffi::HIGH_INT => {
+                // Fallback to single precision integer
+                // Range: from -2^24 to 2^24
+                // Precision: For integer formats this value is always 0
+                (24, 24, 0)
+            },
+            _ => {
+                (0, 0, 0)
+            }
+        }
+    }
+
     fn compile_shader(&self, shader: GLuint) {
         unsafe {
             self.ffi_gl_.CompileShader(shader);
