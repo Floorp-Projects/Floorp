@@ -121,11 +121,6 @@ protected:
                                   ipc::Shmem&& aShmem) override;
   ipc::IPCResult RecvDecodedData(const CDMVideoFrame& aFrame,
                                  nsTArray<uint8_t>&& aData) override;
-
-  void ProcessDecoded(const CDMVideoFrame& aFrame,
-                      Span<uint8_t> aData,
-                      ipc::Shmem&& aGiftShmem);
-
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
   ipc::IPCResult RecvShutdown() override;
   ipc::IPCResult RecvResetVideoDecoderComplete() override;
@@ -140,6 +135,11 @@ protected:
   void ResolvePromise(uint32_t aPromiseId);
 
   bool InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample);
+
+  bool PurgeShmems();
+  bool EnsureSufficientShmems(size_t aVideoFrameSize);
+  already_AddRefed<VideoData> CreateVideoFrame(const CDMVideoFrame& aFrame,
+                                               Span<uint8_t> aData);
 
   const uint32_t mPluginId;
   GMPContentParent* mContentParent;
@@ -159,11 +159,13 @@ protected:
 
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushDecoderPromise;
 
-  int32_t mVideoFrameBufferSize = 0;
+  size_t mVideoFrameBufferSize = 0;
 
   // Count of the number of shmems in the set used to return decoded video
   // frames from the CDM to Gecko.
-  uint32_t mVideoShmemCount;
+  uint32_t mVideoShmemsActive = 0;
+  // Maximum number of shmems to use to return decoded video frames.
+  uint32_t mVideoShmemLimit;
 
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;
