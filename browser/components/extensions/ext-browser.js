@@ -180,6 +180,14 @@ extensions.registerModules({
       ["pageAction"],
     ],
   },
+  geckoProfiler: {
+    url: "chrome://browser/content/ext-geckoProfiler.js",
+    schema: "chrome://browser/content/schemas/geckoProfiler.json",
+    scopes: ["addon_parent"],
+    paths: [
+      ["geckoProfiler"],
+    ],
+  },
   sessions: {
     url: "chrome://browser/content/ext-sessions.js",
     schema: "chrome://browser/content/schemas/sessions.json",

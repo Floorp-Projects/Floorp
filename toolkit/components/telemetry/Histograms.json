@@ -225,6 +225,14 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
+  "BOX_ALIGN_PROPS_IN_BLOCKS_FLAG": {
+    "alert_emails": ["bwerth@mozilla.com"],
+    "bug_numbers": [1351383],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "57",
+    "kind": "boolean",
+    "description": "Whether we have layed out any display:block containers with not-yet-supported properties from CSS Box Align."
+  },
   "CHECKERBOARD_DURATION": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
@@ -5580,6 +5588,15 @@
     "high": 10000,
     "n_buckets": 50,
     "description": "Time (ms) from the Input event being created to the end of it being handled"
+  },
+  "INPUT_EVENT_RESPONSE_COALESCED_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1357457],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Time (ms) from the Input event being created to the end of it being handled, but with overlapping events coalesced."
   },
   "LOAD_INPUT_EVENT_RESPONSE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],

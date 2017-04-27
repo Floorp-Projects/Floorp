@@ -1,0 +1,12 @@
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/win32/common-opt"
+
+# Add-on signing is not required for DevEdition
+MOZ_REQUIRE_SIGNING=0
+
+ac_add_options --enable-verify-mar
+
+ac_add_options --with-branding=browser/branding/aurora
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

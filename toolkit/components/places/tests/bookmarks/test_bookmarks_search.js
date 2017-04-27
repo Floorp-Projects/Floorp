@@ -221,3 +221,39 @@ add_task(function* search_folder() {
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
+add_task(function* search_excludes_separators() {
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://example.com/",
+                                                 title: "a bookmark" });
+  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+
+  checkBookmarkObject(bm1);
+  checkBookmarkObject(bm2);
+
+  let results = yield PlacesUtils.bookmarks.search({});
+  Assert.ok(results.findIndex(bookmark => { return bookmark.guid == bm1.guid }) > -1,
+            "The bookmark was found in the results.");
+  Assert.equal(-1, results.findIndex(bookmark => { return bookmark.guid == bm2.guid }),
+            "The separator was excluded from the results.");
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* search_excludes_tags() {
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://example.com/",
+                                                 title: "a bookmark" });
+  checkBookmarkObject(bm1);
+  PlacesUtils.tagging.tagURI(uri(bm1.url.href), ["Test Tag"]);
+
+  let results = yield PlacesUtils.bookmarks.search("example.com");
+  // If tags are not being excluded, this would return two results, one representing the tag.
+  Assert.equal(1, results.length, "A single object was returned from search.");
+  Assert.deepEqual(bm1, results[0], "The bookmark was returned.");
+
+  results = yield PlacesUtils.bookmarks.search("Test Tag");
+  Assert.equal(0, results.length, "The tag folder was not returned.");
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
