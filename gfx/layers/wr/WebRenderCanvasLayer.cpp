@@ -61,9 +61,9 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
 
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect rect = RelativeToVisible(gfx::Rect(0, 0, mBounds.width, mBounds.height));
+  LayerRect rect = RelativeToVisible(LayerRect(0, 0, mBounds.width, mBounds.height));
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 

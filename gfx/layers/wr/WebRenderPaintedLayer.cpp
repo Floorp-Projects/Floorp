@@ -96,9 +96,9 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
 
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect rect(0, 0, size.width, size.height);
+  LayerRect rect(0, 0, size.width, size.height);
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 

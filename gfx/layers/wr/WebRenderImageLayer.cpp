@@ -166,15 +166,15 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
 
-  gfx::Rect rect = gfx::Rect(0, 0, size.width, size.height);
+  LayerRect rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
     NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
                  "No other scalemodes than stretch and none supported yet.");
-    rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
+    rect = LayerRect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
   rect = RelativeToVisible(rect);
 
-  gfx::Rect clipRect = GetWrClipRect(rect);
+  LayerRect clipRect = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 

@@ -40,12 +40,10 @@ WebRenderLayer::GetImageKey()
   return key;
 }
 
-Rect
-WebRenderLayer::RelativeToVisible(Rect aRect)
+LayerRect
+WebRenderLayer::RelativeToVisible(const LayerRect& aRect)
 {
-  IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();
-  aRect.MoveBy(-bounds.x, -bounds.y);
-  return aRect;
+  return aRect - Bounds().TopLeft();
 }
 
 Rect
@@ -121,19 +119,20 @@ WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
   return Nothing();
 }
 
-gfx::Rect
+LayerRect
 WebRenderLayer::GetWrBoundsRect()
 {
-  LayerIntRect bounds = GetLayer()->GetVisibleRegion().GetBounds();
-  return Rect(0, 0, bounds.width, bounds.height);
+  LayerRect bounds = Bounds();
+  bounds.MoveTo(0, 0);
+  return bounds;
 }
 
-gfx::Rect
-WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
+LayerRect
+WebRenderLayer::GetWrClipRect(const LayerRect& aRect)
 {
   Maybe<LayerRect> clip = ClipRect();
   if (clip) {
-    return RelativeToVisible(clip.ref().ToUnknownRect());
+    return RelativeToVisible(clip.ref());
   }
   return aRect;
 }
@@ -221,14 +220,14 @@ WebRenderLayer::UpdateImageKey(ImageClientSingle* aImageClient,
 }
 
 void
-WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
+WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
 {
   if (!gfxPrefs::LayersDump()) {
     return;
   }
 
   Matrix4x4 transform = GetLayer()->GetTransform();
-  Rect clip = GetWrClipRect(aRect);
+  LayerRect clip = GetWrClipRect(aRect);
   Rect relBounds = GetWrRelBounds();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
