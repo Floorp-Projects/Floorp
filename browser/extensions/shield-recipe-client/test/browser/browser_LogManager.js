@@ -3,7 +3,7 @@
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/LogManager.jsm", this);
 
-add_task(function*() {
+add_task(async function() {
   // Ensure that configuring the logger affects all generated loggers.
   const firstLogger = LogManager.getLogger("first");
   LogManager.configure(5);
@@ -17,7 +17,7 @@ add_task(function*() {
   ok(logger.appenders.length > 0, true, "Loggers have at least one appender.");
 
   // Ensure our loggers log to the console.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.monitorConsole(resolve, [{message: /legend has it/}]);
     logger.warn("legend has it");
