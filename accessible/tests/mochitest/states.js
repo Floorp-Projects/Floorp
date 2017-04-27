@@ -204,7 +204,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
 function testIsDefunct(aAccessible, aTestName)
 {
   var id = prettyName(aAccessible) + (aTestName ? " [" + aTestName + "]" : "");
-  var [state, extraState] = getStates(aAccessible);
+  var [/*state*/, extraState] = getStates(aAccessible);
   isState(extraState & EXT_STATE_DEFUNCT, EXT_STATE_DEFUNCT, true,
           "no defuct state for " + id + "!");
 }
