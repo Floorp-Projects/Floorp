@@ -201,8 +201,6 @@ CurrentThreadIsHeapCycleCollecting()
 class MOZ_STACK_CLASS JS_PUBLIC_API(AutoEnterCycleCollection)
 {
 #ifdef DEBUG
-    JSRuntime* runtime;
-
   public:
     explicit AutoEnterCycleCollection(JSRuntime* rt);
     ~AutoEnterCycleCollection();
