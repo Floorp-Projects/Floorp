@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_REORDER, ROLE_TEXT_CONTAINER ROLE_PARAGRAPH, ROLE_TEXT_LEAF */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 function* removeTextData(browser, accessible, id, role) {

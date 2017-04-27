@@ -4,8 +4,8 @@
 
 'use strict';
 
-/* exported Logger, MOCHITESTS_DIR, isDefunct, invokeSetAttribute, invokeFocus,
-            invokeSetStyle, findAccessibleChildByID, getAccessibleDOMNodeID,
+/* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
+            invokeSetStyle, getAccessibleDOMNodeID,
             CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, Cc, Cu */
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
@@ -78,27 +78,6 @@ let Logger = {
 };
 
 /**
- * Check if an accessible object has a defunct test.
- * @param  {nsIAccessible}  accessible object to test defunct state for
- * @return {Boolean}        flag indicating defunct state
- */
-function isDefunct(accessible) {
-  let defunct = false;
-  try {
-    let extState = {};
-    accessible.getState({}, extState);
-    defunct = extState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT;
-  } catch (x) {
-    defunct = true;
-  } finally {
-    if (defunct) {
-      Logger.log(`Defunct accessible: ${prettyName(accessible)}`);
-    }
-  }
-  return defunct;
-}
-
-/**
  * Asynchronously set or remove content element's attribute (in content process
  * if e10s is enabled).
  * @param  {Object}  browser  current "tabbrowser" element
@@ -169,25 +148,6 @@ function invokeFocus(browser, id) {
     }
     elm.focus();
   });
-}
-
-/**
- * Traverses the accessible tree starting from a given accessible as a root and
- * looks for an accessible that matches based on its DOMNode id.
- * @param  {nsIAccessible}  accessible root accessible
- * @param  {String}         id         id to look up accessible for
- * @return {nsIAccessible?}            found accessible if any
- */
-function findAccessibleChildByID(accessible, id) {
-  if (getAccessibleDOMNodeID(accessible) === id) {
-    return accessible;
-  }
-  for (let i = 0; i < accessible.children.length; ++i) {
-    let found = findAccessibleChildByID(accessible.getChildAt(i), id);
-    if (found) {
-      return found;
-    }
-  }
 }
 
 /**
