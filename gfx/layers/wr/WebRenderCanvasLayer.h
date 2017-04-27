@@ -6,8 +6,9 @@
 #ifndef GFX_WEBRENDERCANVASLAYER_H
 #define GFX_WEBRENDERCANVASLAYER_H
 
+#include "mozilla/layers/WebRenderLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "ShareableCanvasLayer.h"
-#include "WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace gfx {
