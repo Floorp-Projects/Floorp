@@ -3356,8 +3356,7 @@ nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
 NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval)
 {
-    bool isInconsistent = false;
-    TimeStamp start = TimeStamp::ProcessCreation(isInconsistent);
+    TimeStamp start = TimeStamp::ProcessCreation();
     *aRetval = (TimeStamp::Now() - start).ToMilliseconds();
     return NS_OK;
 }

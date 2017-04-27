@@ -1436,8 +1436,7 @@ WriteHeapGraph(JSContext* cx,
 static unsigned long
 msSinceProcessCreation(const TimeStamp& now)
 {
-  bool ignored;
-  auto duration = now - TimeStamp::ProcessCreation(ignored);
+  auto duration = now - TimeStamp::ProcessCreation();
   return (unsigned long) duration.ToMilliseconds();
 }
 

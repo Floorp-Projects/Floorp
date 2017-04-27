@@ -140,8 +140,9 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     MOZ_ASSERT(!isAsmJS());
 
-    metadata_->debugEnabled = args.debugEnabled && BaselineCanCompile();
-    compileMode_ = args.alwaysBaseline || metadata_->debugEnabled
+    bool canBaseline = BaselineCanCompile();
+    metadata_->debugEnabled = args.debugEnabled && canBaseline;
+    compileMode_ = ((args.alwaysBaseline || metadata_->debugEnabled) && canBaseline)
                    ? CompileMode::Baseline
                    : CompileMode::Ion;
 

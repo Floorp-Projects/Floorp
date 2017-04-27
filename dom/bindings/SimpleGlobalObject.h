@@ -87,7 +87,7 @@ private:
 
   virtual ~SimpleGlobalObject()
   {
-    ClearWrapper();
+    MOZ_ASSERT(!GetWrapperMaybeDead());
   }
 
   const GlobalType mType;

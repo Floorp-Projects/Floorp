@@ -258,8 +258,7 @@ Logger::VariantToString(const VARIANT& aVariant, nsACString& aOut, LONG aIndex)
 Logger::GetElapsedTime()
 {
   TimeStamp ts = TimeStamp::Now();
-  bool inconsistent;
-  TimeDuration duration = ts - TimeStamp::ProcessCreation(inconsistent);
+  TimeDuration duration = ts - TimeStamp::ProcessCreation();
   return duration.ToMicroseconds();
 }
 

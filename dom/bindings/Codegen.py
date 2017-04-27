@@ -1652,14 +1652,14 @@ class CGAddPropertyHook(CGAbstractClassHook):
             """)
 
 
-def finalizeHook(descriptor, hookName, freeOp):
+def finalizeHook(descriptor, hookName, freeOp, obj):
     finalize = ""
     if descriptor.wrapperCache:
-        finalize += "ClearWrapper(self, self);\n"
+        finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
         finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
     if descriptor.isGlobal():
-        finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
+        finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), %s);\n" % (freeOp, obj)
     finalize += ("AddForDeferredFinalization<%s>(self);\n" %
                  descriptor.nativeType)
     return CGIfWrapper(CGGeneric(finalize), "self")
@@ -1675,7 +1675,8 @@ class CGClassFinalizeHook(CGAbstractClassHook):
                                      'void', args)
 
     def generate_code(self):
-        return finalizeHook(self.descriptor, self.name, self.args[0].name).define()
+        return finalizeHook(self.descriptor, self.name,
+                            self.args[0].name, self.args[1].name).define()
 
 
 class CGClassObjectMovedHook(CGAbstractClassHook):
@@ -12227,7 +12228,8 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
     def getBody(self):
         return (("%s* self = UnwrapPossiblyNotInitializedDOMObject<%s>(proxy);\n" %
                  (self.descriptor.nativeType, self.descriptor.nativeType)) +
-                finalizeHook(self.descriptor, FINALIZE_HOOK_NAME, self.args[0].name).define())
+                finalizeHook(self.descriptor, FINALIZE_HOOK_NAME,
+                             self.args[0].name, self.args[1].name).define())
 
 
 class CGDOMJSProxyHandler_getElements(ClassMethod):

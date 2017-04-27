@@ -231,7 +231,8 @@ public class GeckoView extends LayerView
                 handlePromptEvent(GeckoView.this, message, callback);
             } else if ("GeckoView:SecurityChanged".equals(event)) {
                 if (mProgressListener != null) {
-                    mProgressListener.onSecurityChange(GeckoView.this, message.getInt("status"));
+                    int state = message.getInt("status") & ProgressListener.STATE_ALL;
+                    mProgressListener.onSecurityChange(GeckoView.this, state);
                 }
             }
         }
@@ -257,14 +258,32 @@ public class GeckoView extends LayerView
         super(context);
 
         final GeckoViewSettings newSettings = new GeckoViewSettings(settings, getEventDispatcher());
+        init(context, settings);
+    }
+
+    public GeckoView(Context context, AttributeSet attrs, final GeckoViewSettings settings) {
+        super(context, attrs);
+
+        final GeckoViewSettings newSettings = new GeckoViewSettings(settings, getEventDispatcher());
         init(context, newSettings);
     }
 
-    private void init(final Context context, final GeckoViewSettings settings) {
+    public static final void preload(Context context) {
+        final GeckoProfile profile = GeckoProfile.get(
+            context.getApplicationContext());
+
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(context.getApplicationContext());
         }
 
+        if (GeckoThread.initMainProcess(profile,
+                                        /* args */ null,
+                                        /* debugging */ false)) {
+            GeckoThread.launch();
+        }
+    }
+
+    private void init(final Context context, final GeckoViewSettings settings) {
         // Set the GeckoInterface if the context is an activity and the
         // GeckoInterface has not already been set
         if (context instanceof Activity && getGeckoInterface() == null) {
@@ -272,13 +291,7 @@ public class GeckoView extends LayerView
             GeckoAppShell.setContextGetter(this);
         }
 
-        final GeckoProfile profile = GeckoProfile.get(
-            context.getApplicationContext());
-        if (GeckoThread.initMainProcess(profile,
-                                        /* args */ null,
-                                        /* debugging */ false)) {
-            GeckoThread.launch();
-        }
+        preload(context);
 
         // Perform common initialization for Fennec/GeckoView.
         GeckoAppShell.setLayerView(this);
@@ -575,7 +588,7 @@ public class GeckoView extends LayerView
     * This will replace the current handler.
     * @param navigation An implementation of NavigationListener.
     */
-    public void setNavigationDelegate(NavigationListener listener) {
+    public void setNavigationListener(NavigationListener listener) {
         if (mNavigationListener == listener) {
             return;
         }
@@ -1013,6 +1026,7 @@ public class GeckoView extends LayerView
         static final int STATE_IS_BROKEN = 1;
         static final int STATE_IS_SECURE = 2;
         static final int STATE_IS_INSECURE = 4;
+        /* package */ final int STATE_ALL = STATE_IS_BROKEN | STATE_IS_SECURE | STATE_IS_INSECURE;
 
         /**
         * A View has started loading content from the network.

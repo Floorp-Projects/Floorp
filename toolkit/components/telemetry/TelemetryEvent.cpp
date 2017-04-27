@@ -588,8 +588,7 @@ TelemetryEvent::RecordChildEvents(GeckoProcessType aProcessType,
     // Timestamps from child processes are absolute. We fix them up here to be
     // relative to the main process start time.
     // This allows us to put events from all processes on the same timeline.
-    bool inconsistent = false;
-    double relativeTimestamp = (e.timestamp - TimeStamp::ProcessCreation(inconsistent)).ToMilliseconds();
+    double relativeTimestamp = (e.timestamp - TimeStamp::ProcessCreation()).ToMilliseconds();
 
     ::RecordEvent(locker, aProcessType, relativeTimestamp, e.category, e.method, e.object, e.value, e.extra);
   }

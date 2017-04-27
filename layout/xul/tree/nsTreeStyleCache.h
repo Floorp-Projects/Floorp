@@ -40,7 +40,7 @@ public:
                                   nsPresContext* aPresContext,
                                   nsIContent* aContent,
                                   nsStyleContext* aContext,
-                                  nsIAtom* aPseudoElement,
+                                  nsICSSAnonBoxPseudo* aPseudoElement,
                                   const AtomArray & aInputWord);
 
 protected:

@@ -160,15 +160,15 @@ virtual void uninit() override
 bool checkSingleGroup()
 {
     CHECK(FinalizeCalls < BufferSize);
-    CHECK(FinalizeCalls == 3);
+    CHECK(FinalizeCalls == 4);
     return true;
 }
 
 bool checkMultipleGroups()
 {
     CHECK(FinalizeCalls < BufferSize);
-    CHECK(FinalizeCalls % 2 == 1);
-    CHECK((FinalizeCalls - 1) / 2 > 1);
+    CHECK(FinalizeCalls % 3 == 1);
+    CHECK((FinalizeCalls - 1) / 3 > 1);
     return true;
 }
 
@@ -180,9 +180,10 @@ bool checkFinalizeStatus()
      * and then once more with JSFINALIZE_COLLECTION_END.
      */
 
-    for (unsigned i = 0; i < FinalizeCalls - 1; i += 2) {
-        CHECK(StatusBuffer[i] == JSFINALIZE_GROUP_START);
-        CHECK(StatusBuffer[i + 1] == JSFINALIZE_GROUP_END);
+    for (unsigned i = 0; i < FinalizeCalls - 1; i += 3) {
+        CHECK(StatusBuffer[i] == JSFINALIZE_GROUP_PREPARE);
+        CHECK(StatusBuffer[i + 1] == JSFINALIZE_GROUP_START);
+        CHECK(StatusBuffer[i + 2] == JSFINALIZE_GROUP_END);
     }
 
     CHECK(StatusBuffer[FinalizeCalls - 1] == JSFINALIZE_COLLECTION_END);

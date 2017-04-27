@@ -1919,13 +1919,21 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-        for stat in ['cache_write_errors', 'requests_not_cacheable']:
-            yield {
-                'name': 'sccache %s' % stat,
-                'value': stats['stats'][stat],
-                'extraOptions': self.perfherder_resource_options(),
-                'subtests': [],
-            }
+        yield {
+            'name': 'sccache cache_write_errors',
+            'value': stats['stats']['cache_write_errors'],
+            'extraOptions': self.perfherder_resource_options(),
+            'alertThreshold': 50.0,
+            'subtests': [],
+        }
+
+        yield {
+            'name': 'sccache requests_not_cacheable',
+            'value': stats['stats']['requests_not_cacheable'],
+            'extraOptions': self.perfherder_resource_options(),
+            'alertThreshold': 50.0,
+            'subtests': [],
+        }
 
     def get_firefox_version(self):
         versionFilePath = os.path.join(

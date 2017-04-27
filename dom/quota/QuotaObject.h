@@ -23,6 +23,8 @@ class QuotaObject
   friend class OriginInfo;
   friend class QuotaManager;
 
+  class StoragePressureRunnable;
+
 public:
   void
   AddRef();

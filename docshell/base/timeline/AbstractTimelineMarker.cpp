@@ -65,8 +65,7 @@ AbstractTimelineMarker::SetCurrentTime()
 void
 AbstractTimelineMarker::SetCustomTime(const TimeStamp& aTime)
 {
-  bool isInconsistent = false;
-  mTime = (aTime - TimeStamp::ProcessCreation(isInconsistent)).ToMilliseconds();
+  mTime = (aTime - TimeStamp::ProcessCreation()).ToMilliseconds();
 }
 
 void

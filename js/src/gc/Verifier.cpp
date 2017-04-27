@@ -657,7 +657,8 @@ CheckGrayMarkingTracer::checkCell(Cell* cell)
         tenuredCell->isMarked(GRAY))
     {
         failures++;
-        fprintf(stderr, "Found black to gray edge %p\n", cell);
+        fprintf(stderr, "Found black to gray edge to %s %p\n",
+                GCTraceKindToAscii(cell->getTraceKind()), cell);
         dumpCellPath();
     }
 }

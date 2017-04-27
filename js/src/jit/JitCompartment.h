@@ -186,7 +186,7 @@ class JitRuntime
     MOZ_MUST_USE bool initialize(JSContext* cx, js::AutoLockForExclusiveAccess& lock);
 
     static void Trace(JSTracer* trc, js::AutoLockForExclusiveAccess& lock);
-    static void TraceJitcodeGlobalTable(JSTracer* trc);
+    static void TraceJitcodeGlobalTableForMinorGC(JSTracer* trc);
     static MOZ_MUST_USE bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
     static void SweepJitcodeGlobalTable(JSRuntime* rt);
 

@@ -415,7 +415,7 @@ sandbox_finalize(js::FreeOp* fop, JSObject* obj)
         return;
     }
 
-    static_cast<SandboxPrivate*>(sop)->ForgetGlobalObject();
+    static_cast<SandboxPrivate*>(sop)->ForgetGlobalObject(obj);
     DestroyProtoAndIfaceCache(obj);
     DeferredFinalize(sop);
 }

@@ -24,7 +24,7 @@
 #ifdef DEBUG
 #define ASSERT_OWNINGTHREAD(_class) \
   if (nsAutoOwningThread* owningThread = _mOwningThread.get()) {               \
-    NS_CheckThreadSafe(owningThread->GetThread(), #_class " not thread-safe"); \
+    owningThread->AssertOwnership(#_class " not thread-safe"); \
   }
 #else
 #define ASSERT_OWNINGTHREAD(_class) ((void)0)

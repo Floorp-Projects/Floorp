@@ -34,6 +34,8 @@ public:
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD GetDisplayDirectory(nsIFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsIFile * aDisplayDirectory);
+  NS_IMETHOD GetDisplaySpecialDirectory(nsAString& aDisplayDirectory);
+  NS_IMETHOD SetDisplaySpecialDirectory(const nsAString& aDisplayDirectory);
   NS_IMETHOD GetAddToRecentDocs(bool *aFlag);
   NS_IMETHOD SetAddToRecentDocs(bool aFlag);
   NS_IMETHOD GetMode(int16_t *aMode);
@@ -49,6 +51,7 @@ protected:
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
+  nsString mDisplaySpecialDirectory;
 
   nsCOMPtr<nsPIDOMWindowOuter> mParent;
   int16_t mMode;

@@ -479,9 +479,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
         mXrayExpandos.destroy();
 
     JSContext* cx = dom::danger::GetJSContext();
-    mContentXBLScope.finalize(cx);
-    for (size_t i = 0; i < mAddonScopes.Length(); i++)
-        mAddonScopes[i].finalize(cx);
     mGlobalJSObject.finalize(cx);
 }
 
@@ -532,7 +529,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(nsCycleCollectionNoteRootCallback& cb)
 
 // static
 void
-XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
+XPCWrappedNativeScope::UpdateWeakPointersInAllScopesAfterGC()
 {
     // If this is called from the finalization callback in JSGC_MARK_END then
     // JSGC_FINALIZE_END must always follow it calling
@@ -540,40 +537,100 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
     // KillDyingScopes.
     MOZ_ASSERT(!gDyingScopes, "JSGC_MARK_END without JSGC_FINALIZE_END");
 
-    XPCWrappedNativeScope* prev = nullptr;
-    XPCWrappedNativeScope* cur = gScopes;
-
-    while (cur) {
-        // Sweep waivers.
-        if (cur->mWaiverWrapperMap)
-            cur->mWaiverWrapperMap->Sweep();
-
-        XPCWrappedNativeScope* next = cur->mNext;
-
-        if (cur->mContentXBLScope)
-            cur->mContentXBLScope.updateWeakPointerAfterGC();
-        for (size_t i = 0; i < cur->mAddonScopes.Length(); i++)
-            cur->mAddonScopes[i].updateWeakPointerAfterGC();
-
-        // Check for finalization of the global object or update our pointer if
-        // it was moved.
+    XPCWrappedNativeScope** scopep = &gScopes;
+    while (*scopep) {
+        XPCWrappedNativeScope* cur = *scopep;
+        cur->UpdateWeakPointersAfterGC();
         if (cur->mGlobalJSObject) {
-            cur->mGlobalJSObject.updateWeakPointerAfterGC();
-            if (!cur->mGlobalJSObject) {
-                // Move this scope from the live list to the dying list.
-                if (prev)
-                    prev->mNext = next;
-                else
-                    gScopes = next;
-                cur->mNext = gDyingScopes;
-                gDyingScopes = cur;
-                cur = nullptr;
-            }
+            scopep = &cur->mNext;
+        } else {
+            // The scope's global is dead so move it to the dying scopes list.
+            *scopep = cur->mNext;
+            cur->mNext = gDyingScopes;
+            gDyingScopes = cur;
         }
+    }
+}
 
-        if (cur)
-            prev = cur;
-        cur = next;
+static inline void
+AssertSameCompartment(DebugOnly<JSCompartment*>& comp, JSObject* obj)
+{
+    MOZ_ASSERT_IF(obj, js::GetObjectCompartment(obj) == comp);
+}
+
+static inline void
+AssertSameCompartment(DebugOnly<JSCompartment*>& comp, const JS::ObjectPtr& obj)
+{
+#ifdef DEBUG
+    AssertSameCompartment(comp, obj.unbarrieredGet());
+#endif
+}
+
+void
+XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
+{
+    // Sweep waivers.
+    if (mWaiverWrapperMap)
+        mWaiverWrapperMap->Sweep();
+
+    if (!js::IsObjectZoneSweepingOrCompacting(mGlobalJSObject.unbarrieredGet()))
+        return;
+
+    // Update our pointer to the global object in case it was moved or
+    // finalized.
+    mGlobalJSObject.updateWeakPointerAfterGC();
+    if (!mGlobalJSObject) {
+        JSContext* cx = dom::danger::GetJSContext();
+        mContentXBLScope.finalize(cx);
+        for (size_t i = 0; i < mAddonScopes.Length(); i++)
+            mAddonScopes[i].finalize(cx);
+        GetWrappedNativeMap()->Clear();
+        mWrappedNativeProtoMap->Clear();
+        return;
+    }
+
+    DebugOnly<JSCompartment*> comp =
+        js::GetObjectCompartment(mGlobalJSObject.unbarrieredGet());
+
+#ifdef DEBUG
+    // These are traced, so no updates are necessary.
+    if (mContentXBLScope) {
+        JSObject* prev = mContentXBLScope.unbarrieredGet();
+        mContentXBLScope.updateWeakPointerAfterGC();
+        MOZ_ASSERT(prev == mContentXBLScope.unbarrieredGet());
+        AssertSameCompartment(comp, mContentXBLScope);
+    }
+    for (size_t i = 0; i < mAddonScopes.Length(); i++) {
+        JSObject* prev = mAddonScopes[i].unbarrieredGet();
+        mAddonScopes[i].updateWeakPointerAfterGC();
+        MOZ_ASSERT(prev == mAddonScopes[i].unbarrieredGet());
+        AssertSameCompartment(comp, mAddonScopes[i]);
+    }
+#endif
+
+    // Sweep mWrappedNativeMap for dying flat JS objects. Moving has already
+    // been handled by XPCWrappedNative::FlatJSObjectMoved.
+    for (auto iter = GetWrappedNativeMap()->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Native2WrappedNativeMap::Entry*>(iter.Get());
+        XPCWrappedNative* wrapper = entry->value;
+        JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
+        JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
+        MOZ_ASSERT(!obj || obj == wrapper->GetFlatJSObjectPreserveColor());
+        AssertSameCompartment(comp, obj);
+        if (!obj)
+            iter.Remove();
+    }
+
+    // Sweep mWrappedNativeProtoMap for dying prototype JSObjects. Moving has
+    // already been handled by XPCWrappedNativeProto::JSProtoObjectMoved.
+    for (auto i = mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+        auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
+        JSObject* obj = entry->value->GetJSProtoObjectPreserveColor();
+        JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
+        AssertSameCompartment(comp, obj);
+        MOZ_ASSERT(!obj || obj == entry->value->GetJSProtoObjectPreserveColor());
+        if (!obj)
+            i.Remove();
     }
 }
 

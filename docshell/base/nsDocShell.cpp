@@ -199,6 +199,7 @@
 #include "nsDocShellTransferableHooks.h"
 #include "nsICommandManager.h"
 #include "nsIDOMNode.h"
+#include "nsIClassOfService.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIHttpChannel.h"
 #include "nsIIDNService.h"
@@ -3024,9 +3025,7 @@ nsDocShell::PopProfileTimelineMarkers(
 nsresult
 nsDocShell::Now(DOMHighResTimeStamp* aWhen)
 {
-  bool ignore;
-  *aWhen =
-    (TimeStamp::Now() - TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
+  *aWhen = (TimeStamp::Now() - TimeStamp::ProcessCreation()).ToMilliseconds();
   return NS_OK;
 }
 
@@ -11343,6 +11342,17 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
       if (frameElement) {
         timedChannel->SetInitiatorType(frameElement->LocalName());
+      }
+    }
+  }
+
+  // Mark the http channel as UrgentStart for top level document loading
+  // in active tab.
+  if (mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY))) {
+    if (httpChannel && isTopLevelDoc) {
+      nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+      if (cos) {
+        cos->AddClassFlags(nsIClassOfService::UrgentStart);
       }
     }
   }

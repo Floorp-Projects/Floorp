@@ -1017,6 +1017,13 @@ FilePickerDelegate.prototype = {
   set displayDirectory(aValue) {
   },
 
+  get displaySpecialDirectory() {
+    return "";
+  },
+
+  set displaySpecialDirectory(aValue) {
+  },
+
   get addToRecentDocs() {
     return false;
   },
