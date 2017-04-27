@@ -6,10 +6,10 @@ this.EXPORTED_SYMBOLS = ["checkVersions", "addTestBlocklistClient"];
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.importGlobalProperties(["fetch"]);
-const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const PREF_SETTINGS_SERVER              = "services.settings.server";
 const PREF_SETTINGS_SERVER_BACKOFF      = "services.settings.server.backoff";
@@ -19,13 +19,18 @@ const PREF_BLOCKLIST_LAST_ETAG          = "services.blocklist.last_etag";
 const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
 
-const gBlocklistClients = {
-  [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
-  [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
-  [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
-  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient,
-  [BlocklistClients.PinningPreloadClient.collectionName]: BlocklistClients.PinningPreloadClient
-};
+XPCOMUtils.defineLazyGetter(this, "gBlocklistClients", function() {
+  const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
+  return {
+    [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
+    [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
+    [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
+    [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient,
+    [BlocklistClients.PinningPreloadClient.collectionName]: BlocklistClients.PinningPreloadClient,
+  };
+});
+
+
 
 // Add a blocklist client for testing purposes. Do not use for any other purpose
 this.addTestBlocklistClient = (name, client) => { gBlocklistClients[name] = client; }
