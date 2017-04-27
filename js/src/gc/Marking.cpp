@@ -3070,6 +3070,7 @@ CheckIsMarkedThing(T* thingp)
     JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
                   CurrentThreadCanAccessRuntime(rt) ||
+                  CurrentThreadCanAccessZone((*thingp)->zoneFromAnyThread()) ||
                   (JS::CurrentThreadIsHeapCollecting() && rt->gc.state() == State::Sweep));
 #endif
 }

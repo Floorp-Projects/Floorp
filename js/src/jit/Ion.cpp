@@ -656,17 +656,16 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
            it = BailoutReturnStubInfo();
     }
 
-    JSRuntime* rt = fop->runtime();
-    if (stringConcatStub_ && !IsMarkedUnbarriered(rt, &stringConcatStub_))
+    if (stringConcatStub_ && IsAboutToBeFinalizedUnbarriered(&stringConcatStub_))
         stringConcatStub_ = nullptr;
 
-    if (regExpMatcherStub_ && !IsMarkedUnbarriered(rt, &regExpMatcherStub_))
+    if (regExpMatcherStub_ && IsAboutToBeFinalizedUnbarriered(&regExpMatcherStub_))
         regExpMatcherStub_ = nullptr;
 
-    if (regExpSearcherStub_ && !IsMarkedUnbarriered(rt, &regExpSearcherStub_))
+    if (regExpSearcherStub_ && IsAboutToBeFinalizedUnbarriered(&regExpSearcherStub_))
         regExpSearcherStub_ = nullptr;
 
-    if (regExpTesterStub_ && !IsMarkedUnbarriered(rt, &regExpTesterStub_))
+    if (regExpTesterStub_ && IsAboutToBeFinalizedUnbarriered(&regExpTesterStub_))
         regExpTesterStub_ = nullptr;
 
     for (ReadBarrieredObject& obj : simdTemplateObjects_) {
