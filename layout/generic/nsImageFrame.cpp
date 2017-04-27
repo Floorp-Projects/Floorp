@@ -1793,6 +1793,10 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         if (!(status & imgIRequest::STATUS_DECODE_COMPLETE)) {
           MaybeDecodeForPredictedSize();
         }
+        // Increase loading priority if the image is ready to be displayed.
+        if (!(status & imgIRequest::STATUS_LOAD_COMPLETE)){
+          currentRequest->BoostPriority(imgIRequest::CATEGORY_DISPLAY);
+        }
       }
     } else {
       aLists.Content()->AppendNewToTop(new (aBuilder)

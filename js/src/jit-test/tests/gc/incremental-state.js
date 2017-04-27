@@ -27,28 +27,22 @@ while (gcstate() == "Finalize") { gcslice(1); }
 while (gcstate() == "Decommit") { gcslice(1); }
 assertEq(gcstate(), "NotActive");
 
-// Zeal mode 8: Incremental GC in two main slices:
+// Zeal mode 8: Incremental GC in two slices:
 //   1) mark roots
 //   2) mark and sweep
-//   *) finalize.
 gczeal(8, 0);
 gcslice(1);
 assertEq(gcstate(), "Mark");
 gcslice(1);
-while (gcstate() == "Finalize") { gcslice(1); }
-while (gcstate() == "Decommit") { gcslice(1); }
 assertEq(gcstate(), "NotActive");
 
-// Zeal mode 9: Incremental GC in two main slices:
+// Zeal mode 9: Incremental GC in two slices:
 //   1) mark roots and marking
 //   2) new marking and sweeping
-//   *) finalize.
 gczeal(9, 0);
 gcslice(1);
 assertEq(gcstate(), "Mark");
 gcslice(1);
-while (gcstate() == "Finalize") { gcslice(1); }
-while (gcstate() == "Decommit") { gcslice(1); }
 assertEq(gcstate(), "NotActive");
 
 // Zeal mode 10: Incremental GC in multiple slices (always yeilds before
@@ -60,4 +54,13 @@ assertEq(gcstate(), "Sweep");
 gcslice(1000000);
 while (gcstate() == "Finalize") { gcslice(1); }
 while (gcstate() == "Decommit") { gcslice(1); }
+assertEq(gcstate(), "NotActive");
+
+// Zeal mode 17: Incremental GC in two slices:
+//   1) mark everything and start sweeping
+//   2) finish sweeping
+gczeal(17, 0);
+gcslice(1);
+assertEq(gcstate(), "Sweep");
+gcslice(1);
 assertEq(gcstate(), "NotActive");

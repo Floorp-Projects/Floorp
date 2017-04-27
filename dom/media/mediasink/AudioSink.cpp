@@ -494,16 +494,16 @@ AudioSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
   if (!frames) {
     return nullptr;
   }
-  CheckedInt64 duration = FramesToUsecs(frames, mOutputRate);
-  if (!duration.isValid()) {
+  auto duration = FramesToTimeUnit(frames, mOutputRate);
+  if (!duration.IsValid()) {
     NS_WARNING("Int overflow in AudioSink");
     mErrored = true;
     return nullptr;
   }
   RefPtr<AudioData> data =
     new AudioData(aReference->mOffset,
-                  aReference->mTime.ToMicroseconds(),
-                  duration.value(),
+                  aReference->mTime,
+                  duration,
                   frames,
                   Move(aBuffer),
                   mOutputChannels,

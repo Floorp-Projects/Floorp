@@ -49,14 +49,14 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/HTMLShadowElement.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventDispatcher.h"
@@ -132,7 +132,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowUtils.h"
-#include "nsIDOMXULCommandEvent.h"
 #include "nsIDragService.h"
 #include "nsIEditor.h"
 #include "nsIFormControl.h"
@@ -6367,28 +6366,27 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 {
   NS_ENSURE_STATE(aTarget);
   nsIDocument* doc = aTarget->OwnerDoc();
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-  NS_ENSURE_STATE(domDoc);
-  nsCOMPtr<nsIDOMEvent> event;
-  domDoc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
-                      getter_AddRefs(event));
-  nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
-  nsresult rv = xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"),
-                                             true, true, doc->GetInnerWindow(),
-                                             0, aCtrl, aAlt, aShift, aMeta,
-                                             aSourceEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIPresShell* shell = doc->GetShell();
+  nsPresContext* presContext = nullptr;
+  if (shell) {
+    presContext = shell->GetPresContext();
+  }
+  RefPtr<XULCommandEvent> xulCommand = new XULCommandEvent(doc, presContext,
+                                                           nullptr);
+  xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"), true, true,
+                               doc->GetInnerWindow(), 0, aCtrl, aAlt, aShift,
+                               aMeta, aSourceEvent);
 
   if (aShell) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsCOMPtr<nsIPresShell> kungFuDeathGrip = aShell;
-    return aShell->HandleDOMEventWithTarget(aTarget, event, &status);
+    return aShell->HandleDOMEventWithTarget(aTarget, xulCommand, &status);
   }
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
   bool dummy;
-  return target->DispatchEvent(event, &dummy);
+  return target->DispatchEvent(xulCommand, &dummy);
 }
 
 // static
@@ -8035,26 +8033,25 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           }
           if (blobImpl) {
             IPCDataTransferData data;
+            IPCBlob ipcBlob;
 
             // If we failed to create the blob actor, then this blob probably
             // can't get the file size for the underlying file, ignore it for
             // now. TODO pass this through anyway.
             if (aChild) {
-              auto* child = mozilla::dom::BlobChild::GetOrCreate(aChild,
-                              static_cast<BlobImpl*>(blobImpl.get()));
-              if (!child) {
+              nsresult rv = IPCBlobUtils::Serialize(blobImpl, aChild, ipcBlob);
+              if (NS_WARN_IF(NS_FAILED(rv))) {
                 continue;
               }
 
-              data = child;
+              data = ipcBlob;
             } else if (aParent) {
-              auto* parent = mozilla::dom::BlobParent::GetOrCreate(aParent,
-                               static_cast<BlobImpl*>(blobImpl.get()));
-              if (!parent) {
+              nsresult rv = IPCBlobUtils::Serialize(blobImpl, aParent, ipcBlob);
+              if (NS_WARN_IF(NS_FAILED(rv))) {
                 continue;
               }
 
-              data = parent;
+              data = ipcBlob;
             }
 
             IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
@@ -10274,4 +10271,29 @@ nsContentUtils::IsLocalRefURL(const nsString& aString)
   }
 
   return false;
+}
+
+// Tab ID is composed in a similar manner of Window ID.
+static uint64_t gNextTabId = 0;
+static const uint64_t kTabIdProcessBits = 32;
+static const uint64_t kTabIdTabBits = 64 - kTabIdProcessBits;
+
+/* static */ uint64_t
+nsContentUtils::GenerateTabId()
+{
+  uint64_t processId = 0;
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    processId = cc->GetID();
+  }
+
+  MOZ_RELEASE_ASSERT(processId < (uint64_t(1) << kTabIdProcessBits));
+  uint64_t processBits = processId & ((uint64_t(1) << kTabIdProcessBits) - 1);
+
+  uint64_t tabId = ++gNextTabId;
+  MOZ_RELEASE_ASSERT(tabId < (uint64_t(1) << kTabIdTabBits));
+  uint64_t tabBits = tabId & ((uint64_t(1) << kTabIdTabBits) - 1);
+
+  return (processBits << kTabIdTabBits) | tabBits;
+
 }

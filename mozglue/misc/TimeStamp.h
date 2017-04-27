@@ -474,12 +474,12 @@ public:
    * the @a aIsInconsistent parameter will be set to true, the returned
    * timestamp however will still be valid though inaccurate.
    *
-   * @param aIsInconsistent Set to true if an inconsistency was detected in the
-   * process creation time
+   * @param aIsInconsistent If non-null, set to true if an inconsistency was
+   * detected in the process creation time
    * @returns A timestamp representing the time when the process was created,
    * this timestamp is always valid even when errors are reported
    */
-  static MFBT_API TimeStamp ProcessCreation(bool& aIsInconsistent);
+  static MFBT_API TimeStamp ProcessCreation(bool* aIsInconsistent = nullptr);
 
   /**
    * Records a process restart. After this call ProcessCreation() will return

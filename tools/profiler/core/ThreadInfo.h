@@ -90,8 +90,8 @@ private:
   // This is only used for the main thread.
   mozilla::Maybe<ThreadResponsiveness> mResponsiveness;
 
-  // When sampling, this holds the generation number and offset in
-  // ProfilerState::mBuffer of the most recent sample for this thread.
+  // When sampling, this holds the generation number and offset in PS::mBuffer
+  // of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
 

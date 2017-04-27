@@ -10,7 +10,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 
 using namespace mozilla::dom;
 
@@ -144,7 +144,8 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
   }
 
   SendOpen(mSelectedType, mAddToRecentDocs, mDefault, mDefaultExtension,
-           mFilters, mFilterNames, displayDirectory, mOkButtonLabel);
+           mFilters, mFilterNames, displayDirectory, mDisplaySpecialDirectory,
+           mOkButtonLabel);
 
   return NS_OK;
 }
@@ -154,10 +155,9 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
                                   const int16_t& aResult)
 {
   if (aData.type() == MaybeInputData::TInputBlobs) {
-    const InfallibleTArray<PBlobChild*>& blobs = aData.get_InputBlobs().blobsChild();
+    const InfallibleTArray<IPCBlob>& blobs = aData.get_InputBlobs().blobs();
     for (uint32_t i = 0; i < blobs.Length(); ++i) {
-      BlobChild* actor = static_cast<BlobChild*>(blobs[i]);
-      RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+      RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(blobs[i]);
       NS_ENSURE_TRUE(blobImpl, IPC_OK());
 
       if (!blobImpl->IsFile()) {

@@ -181,3 +181,15 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
 
+
+#appMenu-new-window-button {
+  list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
+}
+
+#appMenu-private-window-button {
+  list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
+}
+
+#appMenu-print-button {
+  list-style-image: url(chrome://browser/skin/menu-icons/print.svg);
+}

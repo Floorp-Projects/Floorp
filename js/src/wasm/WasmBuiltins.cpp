@@ -120,9 +120,9 @@ WasmHandleDebugTrap()
     }
 
     DebugFrame* frame = iter.debugFrame();
-    Code& code = iter.instance()->code();
-    MOZ_ASSERT(code.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
-    if (code.stepModeEnabled(frame->funcIndex())) {
+    DebugState& debug = iter.instance()->debug();
+    MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
+    if (debug.stepModeEnabled(frame->funcIndex())) {
         RootedValue result(cx, UndefinedValue());
         JSTrapStatus status = Debugger::onSingleStep(cx, &result);
         if (status == JSTRAP_RETURN) {
@@ -133,7 +133,7 @@ WasmHandleDebugTrap()
         if (status != JSTRAP_CONTINUE)
             return false;
     }
-    if (code.hasBreakpointSite(site->lineOrBytecode())) {
+    if (debug.hasBreakpointSite(site->lineOrBytecode())) {
         RootedValue result(cx, UndefinedValue());
         JSTrapStatus status = Debugger::onTrap(cx, &result);
         if (status == JSTRAP_RETURN) {
@@ -904,8 +904,8 @@ wasm::SymbolicAddressTarget(SymbolicAddress sym)
     return thunks.codeBase + thunks.codeRanges[codeRangeIndex].begin();
 }
 
-static ABIFunctionType
-ToABIFunctionType(const Sig& sig)
+static Maybe<ABIFunctionType>
+ToBuiltinABIFunctionType(const Sig& sig)
 {
     const ValTypeVector& args = sig.args();
     ExprType ret = sig.ret();
@@ -914,18 +914,21 @@ ToABIFunctionType(const Sig& sig)
     switch (ret) {
       case ExprType::F32: abiType = ArgType_Float32 << RetType_Shift; break;
       case ExprType::F64: abiType = ArgType_Double << RetType_Shift; break;
-      default:            MOZ_CRASH("unhandled ret type");
+      default: return Nothing();
     }
+
+    if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ArgType_Shift))
+        return Nothing();
 
     for (size_t i = 0; i < args.length(); i++) {
         switch (args[i]) {
           case ValType::F32: abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1))); break;
           case ValType::F64: abiType |= (ArgType_Double << (ArgType_Shift * (i + 1))); break;
-          default:           MOZ_CRASH("unhandled arg type");
+          default: return Nothing();
         }
     }
 
-    return ABIFunctionType(abiType);
+    return Some(ABIFunctionType(abiType));
 }
 
 void*
@@ -936,9 +939,11 @@ wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig, JSContext* cx)
     if (!f->isNative() || !f->jitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
         return nullptr;
 
-    InlinableNative native = f->jitInfo()->inlinableNative;
-    ABIFunctionType abiType = ToABIFunctionType(sig);
-    TypedNative typedNative(native, abiType);
+    Maybe<ABIFunctionType> abiType = ToBuiltinABIFunctionType(sig);
+    if (!abiType)
+        return nullptr;
+
+    TypedNative typedNative(f->jitInfo()->inlinableNative, *abiType);
 
     const BuiltinThunks& thunks = *builtinThunks;
     auto p = thunks.typedNativeToCodeRange.readonlyThreadsafeLookup(typedNative);

@@ -267,8 +267,9 @@ DumpBacktrace(JSContext* cx);
 namespace JS {
 
 /** Exposed for DumpJSStack */
-extern JS_FRIEND_API(char*)
-FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bool showThisProps);
+extern JS_FRIEND_API(JS::UniqueChars)
+FormatStackDump(JSContext* cx, JS::UniqueChars&& buf, bool showArgs, bool showLocals,
+                bool showThisProps);
 
 /**
  * Set all of the uninitialized lexicals on an object to undefined. Return
@@ -471,6 +472,9 @@ AreGCGrayBitsValid(JSContext* cx);
 
 extern JS_FRIEND_API(bool)
 ZoneGlobalsAreAllGray(JS::Zone* zone);
+
+extern JS_FRIEND_API(bool)
+IsObjectZoneSweepingOrCompacting(JSObject* obj);
 
 typedef void
 (*GCThingCallback)(void* closure, JS::GCCellPtr thing);
@@ -2890,6 +2894,9 @@ namespace detail {
 JS_FRIEND_API(bool)
 IsWindowSlow(JSObject* obj);
 
+JS_FRIEND_API(JSObject*)
+ToWindowProxyIfWindowSlow(JSObject* obj);
+
 } // namespace detail
 
 /**
@@ -2915,8 +2922,13 @@ IsWindowProxy(JSObject* obj);
  * wrapper if the page was navigated away from), else return `obj`. This
  * function is infallible and never returns nullptr.
  */
-extern JS_FRIEND_API(JSObject*)
-ToWindowProxyIfWindow(JSObject* obj);
+MOZ_ALWAYS_INLINE JSObject*
+ToWindowProxyIfWindow(JSObject* obj)
+{
+    if (GetObjectClass(obj)->flags & JSCLASS_IS_GLOBAL)
+        return detail::ToWindowProxyIfWindowSlow(obj);
+    return obj;
+}
 
 /**
  * If `obj` is a WindowProxy, get its associated Window (the compartment's

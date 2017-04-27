@@ -199,7 +199,7 @@ class ProfileEntry
 };
 
 JS_FRIEND_API(void)
-SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size,
+SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, mozilla::Atomic<uint32_t>* size,
                          uint32_t max);
 
 JS_FRIEND_API(void)
@@ -207,9 +207,6 @@ EnableContextProfilingStack(JSContext* cx, bool enabled);
 
 JS_FRIEND_API(void)
 RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
-
-JS_FRIEND_API(jsbytecode*)
-ProfilingGetPC(JSContext* cx, JSScript* script, void* ip);
 
 } // namespace js
 

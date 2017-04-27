@@ -3138,9 +3138,7 @@ var SessionStoreInternal = {
     };
 
     // Collect and store session cookies.
-    TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
     state.cookies = SessionCookies.collect();
-    TelemetryStopwatch.finish("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
 
     if (Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
       // get open Scratchpad window states too
@@ -3336,7 +3334,7 @@ var SessionStoreInternal = {
       }
     }
 
-    if (selectTab > 0) {
+    if (selectTab > 0 && selectTab <= tabs.length) {
       // The state we're restoring wants to select a particular tab. This
       // implies that we're overwriting tabs.
       let currentIndex = tabbrowser.tabContainer.selectedIndex;
@@ -3851,7 +3849,7 @@ var SessionStoreInternal = {
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
       {loadArguments: aLoadArguments, isRemotenessUpdate,
-       reason: aReason});
+       reason: aReason, requestTime: Services.telemetry.msSystemNow()});
   },
 
   /**
@@ -4406,8 +4404,8 @@ var SessionStoreInternal = {
           if (tIndex + 1 < window.selected)
             window.selected -= 1;
           else if (tIndex + 1 == window.selected)
-            pinnedWindowState.selected = pinnedWindowState.tabs.length + 2;
-            // + 2 because the tab isn't actually in the array yet
+            pinnedWindowState.selected = pinnedWindowState.tabs.length + 1;
+            // + 1 because the tab isn't actually in the array yet
 
           // Now add the pinned tab to our window
           pinnedWindowState.tabs =

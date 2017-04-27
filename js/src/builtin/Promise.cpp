@@ -30,8 +30,7 @@ static double
 MillisecondsSinceStartup()
 {
     auto now = mozilla::TimeStamp::Now();
-    bool ignored;
-    return (now - mozilla::TimeStamp::ProcessCreation(ignored)).ToMilliseconds();
+    return (now - mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
 }
 
 enum PromiseHandler {

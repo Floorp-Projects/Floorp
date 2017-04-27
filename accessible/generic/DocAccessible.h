@@ -342,18 +342,10 @@ public:
                        nsIContent* aEndChildNode);
 
   /**
-   * Notify the document accessible that content was removed.
+   * Update the tree on content removal.
    */
-  void ContentRemoved(Accessible* aContainer, nsIContent* aChildNode)
-  {
-    // Update the whole tree of this document accessible when the container is
-    // null (document element is removed).
-    UpdateTreeOnRemoval((aContainer ? aContainer : this), aChildNode);
-  }
-  void ContentRemoved(nsIContent* aContainerNode, nsIContent* aChildNode)
-  {
-    ContentRemoved(AccessibleOrTrueContainer(aContainerNode), aChildNode);
-  }
+  void ContentRemoved(Accessible* aContent);
+  void ContentRemoved(nsIContent* aContentNode);
 
   /**
    * Updates accessible tree when rendered text is changed.
@@ -511,11 +503,6 @@ protected:
    * invalidate their containers later.
    */
   void ProcessInvalidationList();
-
-  /**
-   * Update the accessible tree for content removal.
-   */
-  void UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode);
 
   /**
    * Validates all aria-owns connections and updates the tree accordingly.

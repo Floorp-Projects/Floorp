@@ -66,11 +66,11 @@ GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     mConfig,
     mImageContainer,
     mLastStreamOffset,
-    decodedFrame->Timestamp(),
+    media::TimeUnit::FromMicroseconds(decodedFrame->Timestamp()),
     media::TimeUnit::FromMicroseconds(decodedFrame->Duration()),
     b,
     false,
-    -1,
+    media::TimeUnit::FromMicroseconds(-1),
     pictureRegion);
   RefPtr<GMPVideoDecoder> self = this;
   if (v) {

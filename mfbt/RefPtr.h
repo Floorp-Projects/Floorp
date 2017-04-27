@@ -647,6 +647,20 @@ MakeAndAddRef(Args&&... aArgs)
   return p.forget();
 }
 
+/**
+ * Helper function to be able to conveniently write things like:
+ *
+ *   auto runnable = MakeRefPtr<ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>>(
+ *       mOnSuccess, mOnFailure, *error, mWindowID);
+ */
+template<typename T, typename... Args>
+RefPtr<T>
+MakeRefPtr(Args&&... aArgs)
+{
+  RefPtr<T> p(new T(Forward<Args>(aArgs)...));
+  return p;
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_RefPtr_h */
