@@ -11,15 +11,15 @@ const inStrings = [
 
 // ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞ
   "\uFF76\uFF9E\uFF77\uFF9E\uFF78\uFF9E\uFF79\uFF9E\uFF7A\uFF9E\uFF7B\uFF9E\uFF7C\uFF9E\uFF7D\uFF9E\uFF7E\uFF9E\uFF7F\uFF9E\uFF80\uFF9E\uFF81\uFF9E\uFF82\uFF9E\uFF83\uFF9E\uFF84\uFF9E\uFF8A\uFF9E\uFF8B\uFF9E\uFF8C\uFF9E\uFF8D\uFF9E\uFF8E\uFF9E",
-// equivalent to 
-// ガギゲゴザジズゼゾダヂヅデドバビブベボ
-// \u30AC\u30AE\u30B2\u30B4\u30B6\u30B8\u30BA\u30BC\u30BE\u30C0\u30C2\u30C5\u30C7\u30C9\u30D0\u30D3\u30D6\u30D9\u30DC
+// equivalent to
+// カ゛キ゛ク゛ケ゛コ゛サ゛シ゛ス゛セ゛ソ゛タ゛チ゛ツ゛テ゛ト゛ハ゛ヒ゛フ゛ヘ゛ホ゛
+// \u30AB\u309B\u30AD\u309B\u30AF\u309B\u30B1\u309B\u30B3\u309B\u30B5\u309B\u30B7\u309B\u30B9\u309B\u30BB\u309B\u30BD\u309B\u30BF\u309B\u30C1\u309B\u30C4\u309B\u30C6\u309B\u30C8\u309B\u30CF\u309B\u30D2\u309B\u30D5\u309B\u30D8\u309B\u30DB\u309B
 
 // ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ
   "\uFF8A\uFF9F\uFF8B\uFF9F\uFF8C\uFF9F\uFF8D\uFF9F\uFF8E\uFF9F",
-// equivalent to 
-// パピプペポ
-// \u30D1\u30D4\u30D7\u30DA\u30DD"
+// equivalent to
+// ハ゜ヒ゜フ゜ヘ゜ホ゜
+// \u30CF\u309C\u30D2\u309C\u30D5\u309C\u30D8\u309C\u30DB\u309C"
 
 // Hankaku preceded and followed by regular Katakana (no change of charset)
 // フランツ・ﾖｰｾﾞﾌ・ハイドン
@@ -36,11 +36,11 @@ const inStrings = [
 
 const expectedStrings = [
                          "\x1B$B!#!V!W!\x22!&%r%!%#%%%'%)%c%e%g%C!<%\x22%$%&%(%*%+%-%/%1%3%5%7%9%;%=%?%A%D%F%H%J%K%L%M%N%O%R%U%X%[%^%_%`%a%b%d%f%h%i%j%k%l%m%o%s!+!,\x1B(B",
-                         "\x1B$B%,%.%0%2%4%6%8%:%<%>%@%B%E%G%I%P%S%V%Y%\x5C\x1B(B",
-                         "\x1B$B%Q%T%W%Z%]\x1B(B",
-			 "\x1B$B%U%i%s%D!&%h!<%<%U!&%O%$%I%s\x1B(B",
-			 "Mozilla (\x1B$B%b%8%i\x1B(B) Foundation",
-			 "??????\x1B$B!&%G%j!<!&\x1B(B?????"
+                         "\x1B$B%+!+%-!+%/!+%1!+%3!+%5!+%7!+%9!+%;!+%=!+%?!+%A!+%D!+%F!+%H!+%O!+%R!+%U!+%X!+%[!+\x1B(B",
+                         "\x1B$B%O!,%R!,%U!,%X!,%[!,\x1B(B",
+			 "\x1B$B%U%i%s%D!&%h!<%;!+%U!&%O%$%I%s\x1B(B",
+			 "Mozilla (\x1B$B%b%7!+%i\x1B(B) Foundation",
+			 "??????\x1B$B!&%F!+%j!<!&\x1B(B?????"
 			 ];
 
 function run_test()

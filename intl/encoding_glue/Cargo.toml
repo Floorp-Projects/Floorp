@@ -1,0 +1,16 @@
+[package]
+name = "encoding_glue"
+description = "FFI functions for mozilla::Encoding that aren't appropriate to share on crates.io due to m-c dependencies"
+version = "0.1.0"
+authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+license = "MIT/Apache-2.0"
+
+[features]
+simd-accel = ["encoding_rs/simd-accel"]
+no-static-ideograph-encoder-tables = ["encoding_rs/no-static-ideograph-encoder-tables"]
+parallel-utf8 = ["encoding_rs/parallel-utf8"]
+
+[dependencies]
+encoding_rs = "0.6.5"
+nsstring = { path = "../../xpcom/rust/nsstring" }
+nserror = { path = "../../xpcom/rust/nserror" }

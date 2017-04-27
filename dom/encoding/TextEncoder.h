@@ -10,7 +10,7 @@
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/TypedArray.h"
-#include "nsIUnicodeEncoder.h"
+#include "mozilla/Encoding.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -70,8 +70,6 @@ public:
               const nsAString& aString,
               JS::MutableHandle<JSObject*> aRetval,
               ErrorResult& aRv);
-private:
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder;
 };
 
 } // namespace dom

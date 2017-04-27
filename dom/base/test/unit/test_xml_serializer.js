@@ -73,26 +73,26 @@ function test3() {
   var child = doc.createElementNS("ns2", "child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc), 
+  do_check_eq(SerializeXML(doc),
               '<root xmlns="ns1"><child xmlns="ns2"/></root>');
-  
+
   doc = ParseXML('<root xmlns="ns1"/>');
   root = doc.documentElement;
   child = doc.createElementNS("ns2", "prefix:child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc), 
+  do_check_eq(SerializeXML(doc),
               '<root xmlns="ns1"><prefix:child xmlns:prefix="ns2"/></root>');
-  
+
   doc = ParseXML('<prefix:root xmlns:prefix="ns1"/>');
   root = doc.documentElement;
   child = doc.createElementNS("ns2", "prefix:child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc), 
+  do_check_eq(SerializeXML(doc),
               '<prefix:root xmlns:prefix="ns1"><a0:child xmlns:a0="ns2"/>'+
               '</prefix:root>');
-  
+
 }
 
 function test4() {
@@ -216,7 +216,7 @@ function test6() {
   do_check_eq(SerializeXML(doc),
               '<prefix:root xmlns:prefix="ns1"><prefix:child1 xmlns:prefix="ns2">'+
               '<a0:child2 xmlns:a0="ns1"/></prefix:child1></prefix:root>');
-  
+
 
   doc = ParseXML('<root xmlns="ns1"/>');
   root = doc.documentElement;
@@ -279,56 +279,56 @@ function test7() {
 
 function test8() {
   // Test behavior of serializing with a given charset.
-  var str1 = '<?xml version="1.0" encoding="ISO-8859-1"?>'+LB+'<root/>';
-  var str2 = '<?xml version="1.0" encoding="UTF8"?>'+LB+'<root/>';
+  var str1 = '<?xml version="1.0" encoding="windows-1252"?>'+LB+'<root/>';
+  var str2 = '<?xml version="1.0" encoding="UTF-8"?>'+LB+'<root/>';
   var doc1 = ParseXML(str1);
   var doc2 = ParseXML(str2);
 
   var p = Pipe();
-  DOMSerializer().serializeToStream(doc1, p.outputStream, "ISO-8859-1");
+  DOMSerializer().serializeToStream(doc1, p.outputStream, "windows-1252");
   p.outputStream.close();
   do_check_eq(ScriptableInput(p).read(-1), str1);
 
   p = Pipe();
-  DOMSerializer().serializeToStream(doc2, p.outputStream, "ISO-8859-1");
+  DOMSerializer().serializeToStream(doc2, p.outputStream, "windows-1252");
   p.outputStream.close();
   do_check_eq(ScriptableInput(p).read(-1), str1);
 
   p = Pipe();
-  DOMSerializer().serializeToStream(doc1, p.outputStream, "UTF8");
+  DOMSerializer().serializeToStream(doc1, p.outputStream, "UTF-8");
   p.outputStream.close();
   do_check_eq(ScriptableInput(p).read(-1), str2);
 
   p = Pipe();
-  DOMSerializer().serializeToStream(doc2, p.outputStream, "UTF8");
+  DOMSerializer().serializeToStream(doc2, p.outputStream, "UTF-8");
   p.outputStream.close();
   do_check_eq(ScriptableInput(p).read(-1), str2);
 }
 
 function test9() {
   // Test behavior of serializing between given charsets, using
-  // ISO-8859-1-representable text.
+  // windows-1252-representable text.
   var contents = '<root>' +
                    '\u00BD + \u00BE == \u00BD\u00B2 + \u00BC + \u00BE' +
                  '</root>';
-  var str1 = '<?xml version="1.0" encoding="ISO-8859-1"?>'+ LB + contents;
-  var str2 = '<?xml version="1.0" encoding="UTF8"?>'+ LB + contents;
+  var str1 = '<?xml version="1.0" encoding="windows-1252"?>'+ LB + contents;
+  var str2 = '<?xml version="1.0" encoding="UTF-8"?>'+ LB + contents;
   var str3 = '<?xml version="1.0" encoding="UTF-16"?>'+ LB + contents;
   var doc1 = ParseXML(str1);
   var doc2 = ParseXML(str2);
   var doc3 = ParseXML(str3);
 
-  checkSerialization(doc1, "ISO-8859-1", str1);
-  checkSerialization(doc2, "ISO-8859-1", str1);
-  checkSerialization(doc3, "ISO-8859-1", str1);
+  checkSerialization(doc1, "windows-1252", str1);
+  checkSerialization(doc2, "windows-1252", str1);
+  checkSerialization(doc3, "windows-1252", str1);
 
-  checkSerialization(doc1, "UTF8", str2);
-  checkSerialization(doc2, "UTF8", str2);
-  checkSerialization(doc3, "UTF8", str2);
+  checkSerialization(doc1, "UTF-8", str2);
+  checkSerialization(doc2, "UTF-8", str2);
+  checkSerialization(doc3, "UTF-8", str2);
 
-  checkSerialization(doc1, "UTF-16", str3);
-  checkSerialization(doc2, "UTF-16", str3);
-  checkSerialization(doc3, "UTF-16", str3);
+  checkSerialization(doc1, "UTF-16", str2);
+  checkSerialization(doc2, "UTF-16", str2);
+  checkSerialization(doc3, "UTF-16", str2);
 }
 
 function test10() {
@@ -341,7 +341,7 @@ function test10() {
                    '\u0080 \u0398 \u03BB \u0725 ' + // U+000080 to U+0007FF
                    '\u0964 \u0F5F \u20AC \uFFFB' +  // U+000800 to U+00FFFF
                  '</root>';
-  var str1 = '<?xml version="1.0" encoding="UTF8"?>'+ LB + contents;
+  var str1 = '<?xml version="1.0" encoding="UTF-8"?>'+ LB + contents;
   var str2 = '<?xml version="1.0" encoding="UTF-16"?>'+ LB + contents;
   var doc1 = ParseXML(str1);
   var doc2 = ParseXML(str2);
@@ -349,8 +349,8 @@ function test10() {
   checkSerialization(doc1, "UTF8", str1);
   checkSerialization(doc2, "UTF8", str1);
 
-  checkSerialization(doc1, "UTF-16", str2);
-  checkSerialization(doc2, "UTF-16", str2);
+  checkSerialization(doc1, "UTF-16", str1);
+  checkSerialization(doc2, "UTF-16", str1);
 }
 
 function checkSerialization(doc, toCharset, expectedString) {
@@ -358,15 +358,16 @@ function checkSerialization(doc, toCharset, expectedString) {
   DOMSerializer().serializeToStream(doc, p.outputStream, toCharset);
   p.outputStream.close();
 
+  var inCharset = (toCharset == "UTF-16") ? "UTF-8" : toCharset;
   var cin = C["@mozilla.org/intl/converter-input-stream;1"]
              .createInstance(I.nsIConverterInputStream);
-  cin.init(p.inputStream, toCharset, 1024, 0x0);
+  cin.init(p.inputStream, inCharset, 1024, 0x0);
 
   // compare the first expectedString.length characters for equality
   var outString = {};
   var count = cin.readString(expectedString.length, outString);
-  do_check_true(count == expectedString.length);
-  do_check_true(outString.value == expectedString);
+  do_check_eq(count, expectedString.length);
+  do_check_eq(outString.value, expectedString);
 
   // if there's anything more in the stream, it's a bug
   do_check_eq(0, cin.readString(1, outString));

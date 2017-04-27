@@ -58,8 +58,10 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                               const char* aCharSet, bool aIsCopying,
+nsXHTMLContentSerializer::Init(uint32_t aFlags,
+                               uint32_t aWrapColumn,
+                               const mozilla::Encoding* aEncoding,
+                               bool aIsCopying,
                                bool aRewriteEncodingDeclaration,
                                bool* aNeedsPreformatScanning)
 {
@@ -72,9 +74,8 @@ nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   }
 
   nsresult rv;
-  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet,
-                                    aIsCopying, aRewriteEncodingDeclaration,
-                                    aNeedsPreformatScanning);
+  rv = nsXMLContentSerializer::Init(
+    aFlags, aWrapColumn, aEncoding, aIsCopying, aRewriteEncodingDeclaration, aNeedsPreformatScanning);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRewriteEncodingDeclaration = aRewriteEncodingDeclaration;
