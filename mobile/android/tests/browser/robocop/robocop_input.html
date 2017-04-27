@@ -47,7 +47,7 @@
       let getEditor, setValue, setSelection;
 
       let test = {
-        focus_input: function(val) {
+        focus_input: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(input).QueryInterface(
                 SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
@@ -58,11 +58,11 @@
           setSelection = function(pos) {
             input.setSelectionRange(pos, pos);
           };
-          setValue(val);
+          setValue(value);
           input.focus();
         },
 
-        focus_text_area: function(val) {
+        focus_text_area: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(textArea).QueryInterface(
                 SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
@@ -73,11 +73,11 @@
           setSelection = function(pos) {
             textArea.setSelectionRange(pos, pos);
           };
-          setValue(val);
+          setValue(value);
           textArea.focus();
         },
 
-        focus_content_editable: function(val) {
+        focus_content_editable: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(window).QueryInterface(
                 SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
@@ -90,11 +90,11 @@
           setSelection = function(pos) {
             window.getSelection().collapse(contentEditable.firstChild, pos);
           };
-          setValue(val);
+          setValue(value);
           contentEditable.focus();
         },
 
-        focus_design_mode: function(val) {
+        focus_design_mode: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(designMode.contentWindow).QueryInterface(
                 SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
@@ -108,7 +108,7 @@
             designMode.contentWindow.getSelection().collapse(
                 designMode.contentDocument.body.firstChild, pos);
           };
-          setValue(val);
+          setValue(value);
           designMode.contentWindow.focus();
           designMode.contentDocument.body.focus();
         },
