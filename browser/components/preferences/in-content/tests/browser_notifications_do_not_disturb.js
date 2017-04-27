@@ -12,8 +12,8 @@ add_task(function*() {
   is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
 
   let doc = gBrowser.contentDocument;
-  let notificationsDoNotDisturbRow = doc.getElementById("notificationsDoNotDisturbRow");
-  if (notificationsDoNotDisturbRow.hidden) {
+  let notificationsDoNotDisturbBox = doc.getElementById("notificationsDoNotDisturbBox");
+  if (notificationsDoNotDisturbBox.hidden) {
     todo(false, "Do not disturb is not available on this platform");
     return;
   }

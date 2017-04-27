@@ -243,10 +243,8 @@
 
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
-    <hbox align="center">
-      <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
-    </hbox>
+    <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+              label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
@@ -329,12 +327,14 @@
 </groupbox>
 
 <!-- Default Search Engine -->
-<groupbox id="defaultEngineGroup" align="start" data-category="paneGeneral" data-subcategory="search">
+<groupbox id="defaultEngineGroup" data-category="paneGeneral" data-subcategory="search">
   <caption label="&defaultSearchEngine.label;"/>
   <label>&chooseYourDefaultSearchEngine.label;</label>
-  <menulist id="defaultEngine">
-    <menupopup/>
-  </menulist>
+  <box align="start">
+    <menulist id="defaultEngine">
+      <menupopup/>
+    </menulist>
+  </box>
   <checkbox id="suggestionsInSearchFieldsCheckbox"
             label="&provideSearchSuggestions.label;"
             accesskey="&provideSearchSuggestions.accesskey;"
@@ -386,7 +386,7 @@
 
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
-          hidden="true" align="start">
+          hidden="true">
     <caption><label>&tabsGroup.label;</label></caption>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" label="&ctrlTabRecentlyUsedOrder.label;"
@@ -419,7 +419,7 @@
 </groupbox>
 
 <!-- Accessibility -->
-<groupbox data-category="paneGeneral" id="accessibilityGroup" align="start">
+<groupbox data-category="paneGeneral" id="accessibilityGroup">
   <caption><label>&accessibility.label;</label></caption>
 
 #ifdef XP_WIN
@@ -475,14 +475,12 @@
             label="&translateExceptions.label;"
             accesskey="&translateExceptions.accesskey;"/>
   </hbox>
-  <hbox>
-    <checkbox id="checkSpelling"
-            label="&checkUserSpelling.label;"
-            accesskey="&checkUserSpelling.accesskey;"
-            onsyncfrompreference="return gMainPane.readCheckSpelling();"
-            onsynctopreference="return gMainPane.writeCheckSpelling();"
-            preference="layout.spellcheckDefault"/>
-  </hbox>
+  <checkbox id="checkSpelling"
+          label="&checkUserSpelling.label;"
+          accesskey="&checkUserSpelling.accesskey;"
+          onsyncfrompreference="return gMainPane.readCheckSpelling();"
+          onsynctopreference="return gMainPane.writeCheckSpelling();"
+          preference="layout.spellcheckDefault"/>
 </groupbox>
 
 
@@ -550,7 +548,7 @@
 </groupbox>
 
 <!-- Browsing -->
-<groupbox id="browsingGroup" align="start" data-category="paneGeneral">
+<groupbox id="browsingGroup" data-category="paneGeneral">
   <caption><label>&browsing.label;</label></caption>
 
   <checkbox id="useAutoScroll"
