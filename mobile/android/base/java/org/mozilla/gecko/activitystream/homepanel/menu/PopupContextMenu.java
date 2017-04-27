@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.gecko.home.activitystream.menu;
+package org.mozilla.gecko.activitystream.homepanel.menu;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -18,7 +18,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.model.Item;
+import org.mozilla.gecko.activitystream.homepanel.model.Item;
 
 /* package-private */ class PopupContextMenu
         extends ActivityStreamContextMenu {

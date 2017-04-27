@@ -13,12 +13,10 @@ import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.activitystream.ranking.RankingUtils.Func1;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.home.activitystream.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mozilla.gecko.activitystream.ranking.RankingUtils.normalize;
 
 /**
  * A highlight candidate (Highlight object + features). Ranking will determine whether this is an

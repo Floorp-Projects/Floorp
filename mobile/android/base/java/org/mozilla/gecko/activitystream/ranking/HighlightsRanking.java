@@ -7,9 +7,8 @@ package org.mozilla.gecko.activitystream.ranking;
 
 import android.database.Cursor;
 import android.support.annotation.VisibleForTesting;
-import android.util.Log;
 
-import org.mozilla.gecko.home.activitystream.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
 import java.util.Arrays;
 import java.util.Comparator;
