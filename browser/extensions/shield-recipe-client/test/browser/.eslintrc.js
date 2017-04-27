@@ -17,5 +17,7 @@ module.exports = {
     UUID_REGEX: false,
     withSandboxManager: false,
     withDriver: false,
+    withMockNormandyApi: false,
+    withMockPreferences: false,
   },
 };
