@@ -52,11 +52,11 @@
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneAdvanced" hidden="true">
   <caption><label>&updateApplication.label;</label></caption>
+#ifdef MOZ_UPDATER
   <description>&updateApplication.description;</description>
   <hbox align="start">
     <vbox flex="1">
-#ifdef MOZ_UPDATER
-      <radiogroup id="updateRadioGroup" align="start">
+      <radiogroup id="updateRadioGroup">
         <radio id="autoDesktop"
                value="auto"
                label="&updateAuto2.label;"
@@ -68,19 +68,7 @@
               label="&updateManual2.label;"
               accesskey="&updateManual2.accesskey;"/>
       </radiogroup>
-#ifdef MOZ_MAINTENANCE_SERVICE
-      <checkbox id="useService"
-                label="&useService.label;"
-                accesskey="&useService.accesskey;"
-                preference="app.update.service.enabled"/>
-#endif
-#endif
-      <checkbox id="enableSearchUpdate"
-                label="&enableSearchUpdate2.label;"
-                accesskey="&enableSearchUpdate2.accesskey;"
-                preference="browser.search.update"/>
     </vbox>
-#ifdef MOZ_UPDATER
     <spacer flex="1"/>
     <vbox>
       <button id="showUpdateHistory"
@@ -89,6 +77,16 @@
               accesskey="&updateHistory2.accesskey;"
               preference="app.update.disable_button.showUpdateHistory"/>
     </vbox>
-#endif
   </hbox>
+#ifdef MOZ_MAINTENANCE_SERVICE
+  <checkbox id="useService"
+            label="&useService.label;"
+            accesskey="&useService.accesskey;"
+            preference="app.update.service.enabled"/>
+#endif
+#endif
+  <checkbox id="enableSearchUpdate"
+            label="&enableSearchUpdate2.label;"
+            accesskey="&enableSearchUpdate2.accesskey;"
+            preference="browser.search.update"/>
 </groupbox>
