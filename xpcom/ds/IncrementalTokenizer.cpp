@@ -14,7 +14,7 @@
 
 namespace mozilla {
 
-IncrementalTokenizer::IncrementalTokenizer(Consumer aConsumer,
+IncrementalTokenizer::IncrementalTokenizer(Consumer&& aConsumer,
                                            const char * aWhitespaces,
                                            const char * aAdditionalWordChars,
                                            uint32_t aRawMinBuffered)
@@ -25,7 +25,7 @@ IncrementalTokenizer::IncrementalTokenizer(Consumer aConsumer,
   , mNeedMoreInput(false)
   , mRollback(false)
   , mInputCursor(0)
-  , mConsumer(aConsumer)
+  , mConsumer(Move(aConsumer))
 {
   mInputFinished = false;
   mMinRawDelivery = aRawMinBuffered;
