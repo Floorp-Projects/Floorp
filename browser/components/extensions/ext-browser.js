@@ -1,7 +1,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetter(global, "EventEmitter",
-                                  "resource://devtools/shared/event-emitter.js");
+                                  "resource://gre/modules/EventEmitter.jsm");
 
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
