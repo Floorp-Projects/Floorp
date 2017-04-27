@@ -435,7 +435,7 @@ static MOZ_FORMAT_PRINTF(2, 3) void Output(bool isError, const char *fmt, ... )
   va_start(ap, fmt);
 
 #if defined(XP_WIN) && !MOZ_WINCONSOLE
-  char *msg = mozilla::Vsmprintf(fmt, ap);
+  SmprintfPointer msg = mozilla::Vsmprintf(fmt, ap);
   if (msg)
   {
     UINT flags = MB_OK;
@@ -447,13 +447,12 @@ static MOZ_FORMAT_PRINTF(2, 3) void Output(bool isError, const char *fmt, ... )
     wchar_t wide_msg[1024];
     MultiByteToWideChar(CP_ACP,
                         0,
-                        msg,
+                        msg.get(),
                         -1,
                         wide_msg,
                         sizeof(wide_msg) / sizeof(wchar_t));
 
     MessageBoxW(nullptr, wide_msg, L"XULRunner", flags);
-    mozilla::SmprintfFree(msg);
   }
 #else
   vfprintf(stderr, fmt, ap);
@@ -4415,9 +4414,8 @@ XREMain::XRE_mainRun()
   // Ugly details in http://bugzil.la/1175039#c27
   char appFile[MAX_PATH];
   if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
-    char* saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
-    PR_SetEnv(saved);
-    mozilla::SmprintfFree(saved);
+    SmprintfPointer saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
+    PR_SetEnv(saved.get());
   }
 #endif
 

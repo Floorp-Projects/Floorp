@@ -116,9 +116,9 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
         format = "";
 
     if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name)
-        sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned) result, name);
+        sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned) result, name).release();
     else
-        sz = JS_smprintf("%s 0x%x", format, (unsigned) result);
+        sz = JS_smprintf("%s 0x%x", format, (unsigned) result).release();
     NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)
@@ -140,7 +140,7 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
     if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
         format = "";
 
-    sz = JS_smprintf("%s arg %d", format, paramNum);
+    sz = JS_smprintf("%s arg %d", format, paramNum).release();
     NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)
@@ -168,7 +168,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         if (!name) {
             name = "";
         }
-        sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name);
+        sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name).release();
     }
 
     if (sz) {

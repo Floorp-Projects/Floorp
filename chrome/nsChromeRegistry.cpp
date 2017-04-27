@@ -55,13 +55,12 @@ nsChromeRegistry::LogMessage(const char* aMsg, ...)
 
   va_list args;
   va_start(args, aMsg);
-  char* formatted = mozilla::Vsmprintf(aMsg, args);
+  mozilla::SmprintfPointer formatted = mozilla::Vsmprintf(aMsg, args);
   va_end(args);
   if (!formatted)
     return;
 
-  console->LogStringMessage(NS_ConvertUTF8toUTF16(formatted).get());
-  mozilla::SmprintfFree(formatted);
+  console->LogStringMessage(NS_ConvertUTF8toUTF16(formatted.get()).get());
 }
 
 void
@@ -80,7 +79,7 @@ nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint
 
   va_list args;
   va_start(args, aMsg);
-  char* formatted = mozilla::Vsmprintf(aMsg, args);
+  mozilla::SmprintfPointer formatted = mozilla::Vsmprintf(aMsg, args);
   va_end(args);
   if (!formatted)
     return;
@@ -89,11 +88,10 @@ nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint
   if (aURL)
     aURL->GetSpec(spec);
 
-  rv = error->Init(NS_ConvertUTF8toUTF16(formatted),
+  rv = error->Init(NS_ConvertUTF8toUTF16(formatted.get()),
                    NS_ConvertUTF8toUTF16(spec),
                    EmptyString(),
                    aLineNumber, 0, flags, "chrome registration");
-  mozilla::SmprintfFree(formatted);
 
   if (NS_FAILED(rv))
     return;

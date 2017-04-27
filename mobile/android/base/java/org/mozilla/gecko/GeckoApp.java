@@ -886,11 +886,11 @@ public abstract class GeckoApp
                 ListView listView = ((AlertDialog) dialog).getListView();
                 SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
 
-                // An array of the indices of the permissions we want to clear
+                // An array of the indices of the permissions we want to clear.
                 final ArrayList<Integer> permissionsToClear = new ArrayList<>();
                 for (int i = 0; i < checkedItemPositions.size(); i++) {
-                    if (checkedItemPositions.get(i)) {
-                        permissionsToClear.add(i);
+                    if (checkedItemPositions.valueAt(i)) {
+                        permissionsToClear.add(checkedItemPositions.keyAt(i));
                     }
                 }
 

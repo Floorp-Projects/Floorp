@@ -2841,14 +2841,13 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
         showThisProps = ToBoolean(v);
     }
 
-    char* buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf)
         return false;
 
     RootedString str(cx);
-    if (!(str = JS_NewStringCopyZ(cx, buf)))
+    if (!(str = JS_NewStringCopyZ(cx, buf.get())))
         return false;
-    JS_smprintf_free(buf);
 
     args.rval().setString(str);
     return true;

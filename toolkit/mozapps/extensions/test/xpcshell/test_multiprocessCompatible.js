@@ -109,6 +109,7 @@ for (let bootstrap of [false, true]) {
 add_task(async function test_disable() {
   const ID_MPC = "mpc@tests.mozilla.org";
   const ID_NON_MPC = "non-mpc@tests.mozilla.org";
+  const ID_DICTIONARY = "dictionary@tests.mozilla.org";
 
   let addonData = {
     name: "Test Add-on",
@@ -129,6 +130,17 @@ add_task(async function test_disable() {
       id: ID_NON_MPC,
       multiprocessCompatible: false,
   }, addonData));
+  let xpi3 = createTempXPIFile({
+    id: ID_DICTIONARY,
+    name: "Test Dictionary",
+    version: "1.0",
+    type: "64",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }]
+  });
 
   async function testOnce(initialAllow) {
     if (initialAllow !== undefined) {
@@ -137,9 +149,10 @@ add_task(async function test_disable() {
 
     let install1 = await AddonManager.getInstallForFile(xpi1);
     let install2 = await AddonManager.getInstallForFile(xpi2);
-    await promiseCompleteAllInstalls([install1, install2]);
+    let install3 = await AddonManager.getInstallForFile(xpi3);
+    await promiseCompleteAllInstalls([install1, install2, install3]);
 
-    let [addon1, addon2] = await AddonManager.getAddonsByIDs([ID_MPC, ID_NON_MPC]);
+    let [addon1, addon2, addon3] = await AddonManager.getAddonsByIDs([ID_MPC, ID_NON_MPC, ID_DICTIONARY]);
     do_check_neq(addon1, null);
     do_check_eq(addon1.multiprocessCompatible, true);
     do_check_eq(addon1.appDisabled, false);
@@ -147,6 +160,9 @@ add_task(async function test_disable() {
     do_check_neq(addon2, null);
     do_check_eq(addon2.multiprocessCompatible, false);
     do_check_eq(addon2.appDisabled, initialAllow === false);
+
+    do_check_neq(addon3, null);
+    do_check_eq(addon3.appDisabled, false);
 
     // Flip the allow-non-mpc preference
     let newValue = (initialAllow === true) ? false : true;
@@ -158,14 +174,19 @@ add_task(async function test_disable() {
     // The non-mpc extension should become disabled if we don't allow non-mpc
     do_check_eq(addon2.appDisabled, !newValue);
 
+    // A non-extension (eg a dictionary) should not become disabled
+    do_check_eq(addon3.appDisabled, false);
+
     // Flip the pref back and check appDisabled
     Services.prefs.setBoolPref(NON_MPC_PREF, !newValue);
 
     do_check_eq(addon1.appDisabled, false);
     do_check_eq(addon2.appDisabled, newValue);
+    do_check_eq(addon3.appDisabled, false);
 
     addon1.uninstall();
     addon2.uninstall();
+    addon3.uninstall();
   }
 
   await testOnce(undefined);

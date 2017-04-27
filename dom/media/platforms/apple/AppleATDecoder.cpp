@@ -323,8 +323,8 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   }
 
   RefPtr<AudioData> audio = new AudioData(aSample->mOffset,
-                                          aSample->mTime.ToMicroseconds(),
-                                          duration.ToMicroseconds(),
+                                          aSample->mTime,
+                                          duration,
                                           numFrames,
                                           data.Forget(),
                                           channels,

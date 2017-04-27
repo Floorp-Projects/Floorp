@@ -112,10 +112,10 @@ GamepadManager::StopMonitoring()
   mChannelChildren.Clear();
   mGamepads.Clear();
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  vm->SendControllerListenerRemoved();
-#endif
+  if (gfx::VRManagerChild::IsCreated()) {
+    gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+    vm->SendControllerListenerRemoved();
+  }
 }
 
 void
@@ -729,12 +729,14 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
   }
 
   if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
-    uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
-    gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-    vm->AddPromise(mPromiseID, promise);
-    vm->SendVibrateHaptic(index, aHapticIndex,
-                          aIntensity, aDuration,
-                          mPromiseID);
+    if (gfx::VRManagerChild::IsCreated()) {
+      const uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
+      gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+      vm->AddPromise(mPromiseID, promise);
+      vm->SendVibrateHaptic(index, aHapticIndex,
+                            aIntensity, aDuration,
+                            mPromiseID);
+    }
   } else {
     for (const auto& channelChild: mChannelChildren) {
       channelChild->AddPromise(mPromiseID, promise);
@@ -754,9 +756,11 @@ GamepadManager::StopHaptics()
   for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
     const uint32_t gamepadIndex = iter.UserData()->HashKey();
     if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {
-      const uint32_t index = gamepadIndex - VR_GAMEPAD_IDX_OFFSET;
-      gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-      vm->SendStopVibrateHaptic(index);
+      if (gfx::VRManagerChild::IsCreated()) {
+        const uint32_t index = gamepadIndex - VR_GAMEPAD_IDX_OFFSET;
+        gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+        vm->SendStopVibrateHaptic(index);
+      }
     } else {
       for (auto& channelChild : mChannelChildren) {
         channelChild->SendStopVibrateHaptic(gamepadIndex);
@@ -781,12 +785,12 @@ GamepadManager::ActorCreated(PBackgroundChild *aActor)
   child->SendGamepadListenerAdded();
   mChannelChildren.AppendElement(child);
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-  // Construct VRManagerChannel and ask adding the connected
-  // VR controllers to GamepadManager
-  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  vm->SendControllerListenerAdded();
-#endif
+  if (gfx::VRManagerChild::IsCreated()) {
+    // Construct VRManagerChannel and ask adding the connected
+    // VR controllers to GamepadManager
+    gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+    vm->SendControllerListenerAdded();
+  }
 }
 
 //Override nsIIPCBackgroundChildCreateCallback
