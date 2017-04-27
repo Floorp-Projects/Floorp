@@ -791,7 +791,6 @@ add_task(async function test_clients_not_in_fxa_list() {
   let server   = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  let user     = server.user("foo");
   let remoteId = Utils.makeGUID();
   let remoteId2 = Utils.makeGUID();
 
