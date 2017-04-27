@@ -17,6 +17,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
@@ -169,7 +170,11 @@ public:
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
   virtual PTextureChild*
-  AllocPTextureChild(const SurfaceDescriptor& aSharedData, const LayersBackend& aLayersBackend, const TextureFlags& aFlags, const uint64_t& aSerial) override;
+  AllocPTextureChild(const SurfaceDescriptor& aSharedData,
+                     const LayersBackend& aLayersBackend,
+                     const TextureFlags& aFlags,
+                     const uint64_t& aSerial,
+                     const wr::MaybeExternalImageId& aExternalImageId) override;
 
   virtual bool
   DeallocPTextureChild(PTextureChild* actor) override;
@@ -326,7 +331,8 @@ public:
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        LayersBackend aLayersBackend,
                                        TextureFlags aFlags,
-                                       uint64_t aSerial) override;
+                                       uint64_t aSerial,
+                                       wr::MaybeExternalImageId& aExternalImageId) override;
 
   virtual bool IsSameProcess() const override;
 
@@ -339,7 +345,7 @@ public:
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
-  uint64_t GetNextExternalImageId();
+  virtual wr::MaybeExternalImageId GetNextExternalImageId() override;
 
 protected:
   explicit ImageBridgeChild(uint32_t aNamespace);

@@ -5,6 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 varying vec3 vPos;
-flat varying vec4 vLocalRect;
+flat varying RectWithSize vLocalRect;
 flat varying vec4 vClipMaskUvRect;
 flat varying vec4 vClipMaskUvInnerRect;

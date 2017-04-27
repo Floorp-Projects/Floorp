@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // These are not changing.
-flat varying vec4 vVerticalColor;     // The vertical color, e.g. top/bottom
-flat varying vec4 vHorizontalColor;   // The horizontal color e.g. left/right
-flat varying vec4 vRadii;             // The border radius from CSS border-radius
-flat varying vec4 vLocalRect; // The rect of the border (x, y, w, h) in local space.
+flat varying vec4 vVerticalColor;      // The vertical color, e.g. top/bottom
+flat varying vec4 vHorizontalColor;    // The horizontal color e.g. left/right
+flat varying vec4 vRadii;              // The border radius from CSS border-radius
+flat varying RectWithSize vBorderRect; // The rect of the border in local space.
 
 // for corners, this is the beginning of the corner.
 // For the lines, this is the top left of the line.
@@ -21,6 +21,7 @@ flat varying vec4 vPieceRect;
 // These are in device space
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;     // The clamped position in local space.
+flat varying RectWithSize vLocalRect;
 flat varying float vPieceRectHypotenuseLength;
 #else
 varying vec2 vLocalPos;     // The clamped position in local space.

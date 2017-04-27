@@ -34,7 +34,7 @@ function runTests() {
   storage = t.storage;
 
   var ifr = document.getElementById("iframe");
-  ifr.src = "data:text/html,<script>" + t.key + ".setItem(\"a\",\"b\");</" + "script>";
+  ifr.srcdoc = "<script>"+ t.key + ".setItem(\"a\",\"b\");</"+"script>";
 }
 
 SimpleTest.waitForExplicitFinish();

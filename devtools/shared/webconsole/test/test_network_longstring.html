@@ -212,8 +212,8 @@ function onResponseHeaders(aState, aResponse)
   ok(aResponse.headersSize > 0, "response headersSize > 0");
 
   checkHeadersOrCookies(aResponse.headers, {
-    "Content-Type": /^application\/(json|octet-stream)$/,
-    "Content-Length": /^\d+$/,
+    "content-type": /^application\/(json|octet-stream)$/,
+    "content-length": /^\d+$/,
     "x-very-short": "hello world",
     "x-very-long": {
       "type": "longString",

@@ -52,6 +52,7 @@ pub enum TextureTarget {
     Default,
     Array,
     Rect,
+    External,
 }
 
 impl TextureTarget {
@@ -60,6 +61,7 @@ impl TextureTarget {
             TextureTarget::Default => gl::TEXTURE_2D,
             TextureTarget::Array => gl::TEXTURE_2D_ARRAY,
             TextureTarget::Rect => gl::TEXTURE_RECTANGLE,
+            TextureTarget::External => gl::TEXTURE_EXTERNAL_OES,
         }
     }
 }
@@ -932,9 +934,9 @@ impl Device {
             default_read_fbo: 0,
             default_draw_fbo: 0,
 
-            textures: HashMap::with_hasher(Default::default()),
-            programs: HashMap::with_hasher(Default::default()),
-            vaos: HashMap::with_hasher(Default::default()),
+            textures: HashMap::default(),
+            programs: HashMap::default(),
+            vaos: HashMap::default(),
 
             shader_preamble: shader_preamble,
 
@@ -1557,11 +1559,6 @@ impl Device {
         if u_noise != -1 {
             self.gl.uniform_1i(u_noise, TextureSampler::Dither as i32);
         }
-        let u_mask = self.gl.get_uniform_location(program.id, "sMask");
-        if u_mask != -1 {
-            self.gl.uniform_1i(u_mask, TextureSampler::Mask as i32);
-        }
-
         let u_cache_a8 = self.gl.get_uniform_location(program.id, "sCacheA8");
         if u_cache_a8 != -1 {
             self.gl.uniform_1i(u_cache_a8, TextureSampler::CacheA8 as i32);
@@ -1723,6 +1720,7 @@ impl Device {
             }
             ImageFormat::RGB8 => (gl::RGB, 3, data),
             ImageFormat::RGBA8 => (get_gl_format_bgra(self.gl()), 4, data),
+            ImageFormat::RG8 => (gl::RG, 2, data),
             ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
         };
 
@@ -2088,6 +2086,7 @@ impl Drop for Device {
     }
 }
 
+/// return (gl_internal_format, gl_format)
 fn gl_texture_formats_for_image_format(gl: &gl::Gl, format: ImageFormat) -> (gl::GLint, gl::GLuint) {
     match format {
         ImageFormat::A8 => {
@@ -2109,6 +2108,7 @@ fn gl_texture_formats_for_image_format(gl: &gl::Gl, format: ImageFormat) -> (gl:
             }
         }
         ImageFormat::RGBAF32 => (gl::RGBA32F as gl::GLint, gl::RGBA),
+        ImageFormat::RG8 => (gl::RG8 as gl::GLint, gl::RG),
         ImageFormat::Invalid => unreachable!(),
     }
 }

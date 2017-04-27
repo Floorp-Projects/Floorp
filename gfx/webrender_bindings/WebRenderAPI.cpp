@@ -179,6 +179,19 @@ WebRenderAPI::GenerateFrame()
 }
 
 void
+WebRenderAPI::GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
+                            const nsTArray<WrTransformProperty>& aTransformArray)
+{
+  wr_api_generate_frame_with_properties(mWrApi,
+                                        aOpacityArray.IsEmpty() ?
+                                          nullptr : aOpacityArray.Elements(),
+                                        aOpacityArray.Length(),
+                                        aTransformArray.IsEmpty() ?
+                                          nullptr : aTransformArray.Elements(),
+                                        aTransformArray.Length());
+}
+
+void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
@@ -400,7 +413,7 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 void
 WebRenderAPI::AddExternalImageHandle(ImageKey key,
                                      const ImageDescriptor& aDescriptor,
-                                     uint64_t aHandle)
+                                     ExternalImageId aHandle)
 {
   wr_api_add_external_image_handle(mWrApi,
                                    key,
@@ -411,7 +424,7 @@ WebRenderAPI::AddExternalImageHandle(ImageKey key,
 void
 WebRenderAPI::AddExternalImageBuffer(ImageKey key,
                                      const ImageDescriptor& aDescriptor,
-                                     uint64_t aHandle)
+                                     ExternalImageId aHandle)
 {
   wr_api_add_external_image_buffer(mWrApi,
                                    key,
@@ -437,9 +450,9 @@ WebRenderAPI::DeleteImage(ImageKey aKey)
 }
 
 void
-WebRenderAPI::AddRawFont(wr::FontKey key, Range<uint8_t> aBytes)
+WebRenderAPI::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
 {
-  wr_api_add_raw_font(mWrApi, key, &aBytes[0], aBytes.length());
+  wr_api_add_raw_font(mWrApi, aKey, &aBytes[0], aBytes.length(), aIndex);
 }
 
 void
@@ -526,18 +539,47 @@ DisplayListBuilder::Finalize()
 
 void
 DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
+                                        const uint64_t& aAnimationId,
+                                        const float* aOpacity,
+                                        const gfx::Matrix4x4* aTransform,
+                                        const WrMixBlendMode& aMixBlendMode)
+{
+  WrMatrix matrix;
+  if (aTransform) {
+    matrix = ToWrMatrix(*aTransform);
+  }
+  const WrMatrix* maybeTransform = aTransform ? &matrix : nullptr;
+  wr_dp_push_stacking_context(mWrState, aBounds, aAnimationId, aOpacity,
+                              maybeTransform, aMixBlendMode);
+}
+
+void
+DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const float aOpacity,
                                         const gfx::Matrix4x4& aTransform,
                                         const WrMixBlendMode& aMixBlendMode)
 {
-  wr_dp_push_stacking_context(mWrState, aBounds, aOpacity,
-                              ToWrMatrix(aTransform), aMixBlendMode);
+  PushStackingContext(aBounds, 0, &aOpacity,
+                      &aTransform, aMixBlendMode);
 }
 
 void
 DisplayListBuilder::PopStackingContext()
 {
   wr_dp_pop_stacking_context(mWrState);
+}
+
+void
+DisplayListBuilder::PushClip(const WrRect& aClipRect,
+                             const WrImageMask* aMask)
+{
+  wr_dp_push_scroll_layer(mWrState, aClipRect, aClipRect, aMask);
+}
+
+void
+DisplayListBuilder::PopClip()
+{
+  wr_dp_pop_scroll_layer(mWrState);
 }
 
 void
@@ -551,11 +593,11 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
 }
 
 void
-DisplayListBuilder::PushScrollLayer(const WrRect& aBounds,
-                                    const WrRect& aOverflow,
+DisplayListBuilder::PushScrollLayer(const WrRect& aContentRect,
+                                    const WrRect& aClipRect,
                                     const WrImageMask* aMask)
 {
-  wr_dp_push_scroll_layer(mWrState, aBounds, aOverflow, aMask);
+  wr_dp_push_scroll_layer(mWrState, aContentRect, aClipRect, aMask);
 }
 
 void

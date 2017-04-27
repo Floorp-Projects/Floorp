@@ -19,7 +19,7 @@ use frame_builder::FrameBuilderConfig;
 use gleam::gl;
 use gpu_store::{GpuStore, GpuStoreLayout};
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
-use internal_types::{ExternalImageUpdateList, TextureUpdateList, PackedVertex, RenderTargetMode};
+use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler};
 use prim_store::GradientData;
@@ -76,6 +76,8 @@ const GPU_TAG_PRIM_ANGLE_GRADIENT: GpuProfileTag = GpuProfileTag { label: "Angle
 const GPU_TAG_PRIM_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag { label: "RadialGradient", color: debug_colors::LIGHTPINK };
 const GPU_TAG_PRIM_BOX_SHADOW: GpuProfileTag = GpuProfileTag { label: "BoxShadow", color: debug_colors::CYAN };
 const GPU_TAG_PRIM_BORDER: GpuProfileTag = GpuProfileTag { label: "Border", color: debug_colors::ORANGE };
+const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag { label: "BorderCorner", color: debug_colors::DARKSLATEGREY };
+const GPU_TAG_PRIM_BORDER_EDGE: GpuProfileTag = GpuProfileTag { label: "BorderEdge", color: debug_colors::LAVENDER };
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag { label: "Blur", color: debug_colors::VIOLET };
 
@@ -470,6 +472,8 @@ pub struct Renderer {
     ps_image_rect: PrimitiveShader,
     ps_yuv_image: PrimitiveShader,
     ps_border: PrimitiveShader,
+    ps_border_corner: PrimitiveShader,
+    ps_border_edge: PrimitiveShader,
     ps_gradient: PrimitiveShader,
     ps_angle_gradient: PrimitiveShader,
     ps_radial_gradient: PrimitiveShader,
@@ -531,7 +535,7 @@ pub struct Renderer {
     external_image_handler: Option<Box<ExternalImageHandler>>,
 
     /// Map of external image IDs to native textures.
-    external_images: HashMap<ExternalImageId, TextureId, BuildHasherDefault<FnvHasher>>,
+    external_images: HashMap<(ExternalImageId, u8), TextureId, BuildHasherDefault<FnvHasher>>,
 
     // Optional trait object that handles WebVR commands.
     // Some WebVR commands such as SubmitFrame must be synced with the WebGL render thread.
@@ -694,6 +698,20 @@ impl Renderer {
                                  options.precache_shaders)
         };
 
+        let ps_border_corner = try!{
+            PrimitiveShader::new("ps_border_corner",
+                                 &mut device,
+                                 &[],
+                                 options.precache_shaders)
+        };
+
+        let ps_border_edge = try!{
+            PrimitiveShader::new("ps_border_edge",
+                                 &mut device,
+                                 &[],
+                                 options.precache_shaders)
+        };
+
         let ps_box_shadow = try!{
             PrimitiveShader::new("ps_box_shadow",
                                  &mut device,
@@ -787,14 +805,14 @@ impl Renderer {
                              ImageDescriptor::new(2, 2, ImageFormat::RGBA8, false),
                              TextureFilter::Linear,
                              ImageData::Raw(Arc::new(white_pixels)),
-                             &mut backend_profile_counters.texture_cache);
+                             &mut backend_profile_counters.resources.texture_cache);
 
         let dummy_mask_image_id = texture_cache.new_item_id();
         texture_cache.insert(dummy_mask_image_id,
                              ImageDescriptor::new(2, 2, ImageFormat::A8, false),
                              TextureFilter::Linear,
                              ImageData::Raw(Arc::new(mask_pixels)),
-                             &mut backend_profile_counters.texture_cache);
+                             &mut backend_profile_counters.resources.texture_cache);
 
         let dummy_cache_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
         device.init_texture(dummy_cache_texture_id,
@@ -829,7 +847,6 @@ impl Renderer {
         let x1 = 1.0;
         let y1 = 1.0;
 
-        // TODO(gw): Consider separate VBO for quads vs border corners if VS ever shows up in profile!
         let quad_indices: [u16; 6] = [ 0, 1, 2, 2, 1, 3 ];
         let quad_vertices = [
             PackedVertex {
@@ -925,6 +942,8 @@ impl Renderer {
             ps_image_rect: ps_image_rect,
             ps_yuv_image: ps_yuv_image,
             ps_border: ps_border,
+            ps_border_corner: ps_border_corner,
+            ps_border_edge: ps_border_edge,
             ps_box_shadow: ps_box_shadow,
             ps_gradient: ps_gradient,
             ps_angle_gradient: ps_angle_gradient,
@@ -952,13 +971,13 @@ impl Renderer {
             clip_vao_id: clip_vao_id,
             gdt_index: 0,
             gpu_data_textures: gpu_data_textures,
-            pipeline_epoch_map: HashMap::with_hasher(Default::default()),
+            pipeline_epoch_map: HashMap::default(),
             main_thread_dispatcher: main_thread_dispatcher,
             cache_texture_id_map: Vec::new(),
             dummy_cache_texture_id: dummy_cache_texture_id,
             dither_matrix_texture_id: dither_matrix_texture_id,
             external_image_handler: None,
-            external_images: HashMap::with_hasher(Default::default()),
+            external_images: HashMap::default(),
             vr_compositor_handler: vr_compositor,
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
@@ -1006,7 +1025,7 @@ impl Renderer {
     /// Returns a HashMap containing the pipeline ids that have been received by the renderer and
     /// their respective epochs since the last time the method was called.
     pub fn flush_rendered_epochs(&mut self) -> HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>> {
-        mem::replace(&mut self.pipeline_epoch_map, HashMap::with_hasher(Default::default()))
+        mem::replace(&mut self.pipeline_epoch_map, HashMap::default())
     }
 
     /// Processes the result queue.
@@ -1018,12 +1037,8 @@ impl Renderer {
         // Pull any pending results and return the most recent.
         while let Ok(msg) = self.result_rx.try_recv() {
             match msg {
-                ResultMsg::NewFrame(frame, texture_update_list, external_image_update_list, profile_counters) => {
+                ResultMsg::NewFrame(frame, texture_update_list, profile_counters) => {
                     self.pending_texture_updates.push(texture_update_list);
-
-                    // When a new frame is ready, we could start to update all pending external image requests here.
-                    self.release_external_images(external_image_update_list);
-
                     self.backend_profile_counters = profile_counters;
 
                     // Update the list of available epochs for use during reftests.
@@ -1053,7 +1068,7 @@ impl Renderer {
             SourceTexture::WebGL(id) => TextureId::new(id, TextureTarget::Default),
             SourceTexture::External(external_image) => {
                 *self.external_images
-                     .get(&external_image.id)
+                     .get(&(external_image.id, external_image.channel_index))
                      .expect("BUG: External image should be resolved by now!")
             }
             SourceTexture::TextureCache(index) => {
@@ -1211,7 +1226,7 @@ impl Renderer {
                                                               .as_mut()
                                                               .expect("Found external image, but no handler set!");
 
-                                            match handler.lock(ext_image.id).source {
+                                            match handler.lock(ext_image.id, ext_image.channel_index).source {
                                                 ExternalImageSource::RawData(raw) => {
                                                     self.device.init_texture(texture_id,
                                                                              width,
@@ -1223,7 +1238,7 @@ impl Renderer {
                                                 }
                                                 _ => panic!("No external buffer found"),
                                             };
-                                            handler.unlock(ext_image.id);
+                                            handler.unlock(ext_image.id, ext_image.channel_index);
                                         }
                                         _ => {
                                             panic!("External texture handle should not use TextureUpdateOp::Create.");
@@ -1261,25 +1276,26 @@ impl Renderer {
                                                    width, height, stride,
                                                    &data[offset as usize..]);
                     }
-                    TextureUpdateOp::UpdateForExternalBuffer { rect, id, stride } => {
+                    TextureUpdateOp::UpdateForExternalBuffer { rect, id, channel_index, stride, offset } => {
                         let handler = self.external_image_handler
                                           .as_mut()
                                           .expect("Found external image, but no handler set!");
                         let device = &mut self.device;
                         let cached_id = self.cache_texture_id_map[update.id.0];
 
-                        match handler.lock(id).source {
+                        match handler.lock(id, channel_index).source {
                             ExternalImageSource::RawData(data) => {
                                 device.update_texture(cached_id,
                                                       rect.origin.x,
                                                       rect.origin.y,
                                                       rect.size.width,
                                                       rect.size.height,
-                                                      stride, data);
+                                                      stride,
+                                                      &data[offset as usize..]);
                             }
                             _ => panic!("No external buffer found"),
                         };
-                        handler.unlock(id);
+                        handler.unlock(id, channel_index);
                     }
                     TextureUpdateOp::Free => {
                         let texture_id = self.cache_texture_id_map[update.id.0];
@@ -1369,6 +1385,14 @@ impl Renderer {
             AlphaBatchKind::Border => {
                 let shader = self.ps_border.get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_BORDER, shader)
+            }
+            AlphaBatchKind::BorderCorner => {
+                let shader = self.ps_border_corner.get(&mut self.device, transform_kind);
+                (GPU_TAG_PRIM_BORDER_CORNER, shader)
+            }
+            AlphaBatchKind::BorderEdge => {
+                let shader = self.ps_border_edge.get(&mut self.device, transform_kind);
+                (GPU_TAG_PRIM_BORDER_EDGE, shader)
             }
             AlphaBatchKind::AlignedGradient => {
                 let shader = self.ps_gradient.get(&mut self.device, transform_kind);
@@ -1490,13 +1514,6 @@ impl Renderer {
                 None => {
                     self.device.clear_target(clear_color, Some(1.0));
                 }
-            }
-
-            let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
-            for isolate_clear in &target.isolate_clears {
-                self.device.clear_target_rect(isolate_clear_color,
-                                              None,
-                                              *isolate_clear);
             }
 
             self.device.disable_depth_write();
@@ -1657,13 +1674,18 @@ impl Renderer {
             // draw image masks
             for (mask_texture_id, items) in target.clip_batcher.images.iter() {
                 let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip images");
-                let texture_id = self.resolve_source_texture(mask_texture_id);
-                self.device.bind_texture(TextureSampler::Mask, texture_id);
+                let textures = BatchTextures {
+                    colors: [
+                        mask_texture_id.clone(),
+                        SourceTexture::Invalid,
+                        SourceTexture::Invalid,
+                    ]
+                };
                 let shader = self.cs_clip_image.get(&mut self.device).unwrap();
                 self.draw_instanced_batch(items,
                                           vao,
                                           shader,
-                                          &BatchTextures::no_texture(),
+                                          &textures,
                                           &projection);
             }
         }
@@ -1684,10 +1706,11 @@ impl Renderer {
                 let props = &deferred_resolve.image_properties;
                 let ext_image = props.external_image
                                      .expect("BUG: Deferred resolves must be external images!");
-                let image = handler.lock(ext_image.id);
+                let image = handler.lock(ext_image.id, ext_image.channel_index);
                 let texture_target = match ext_image.image_type {
                     ExternalImageType::Texture2DHandle => TextureTarget::Default,
                     ExternalImageType::TextureRectHandle => TextureTarget::Rect,
+                    ExternalImageType::TextureExternalHandle => TextureTarget::External,
                     _ => {
                         panic!("{:?} is not a suitable image type in update_deferred_resolves().",
                             ext_image.image_type);
@@ -1699,7 +1722,7 @@ impl Renderer {
                     _ => panic!("No native texture found."),
                 };
 
-                self.external_images.insert(ext_image.id, texture_id);
+                self.external_images.insert((ext_image.id, ext_image.channel_index), texture_id);
                 let resource_rect_index = deferred_resolve.resource_address.0 as usize;
                 let resource_rect = &mut frame.gpu_resource_rects[resource_rect_index];
                 resource_rect.uv0 = DevicePoint::new(image.u0, image.v0);
@@ -1714,20 +1737,8 @@ impl Renderer {
                               .as_mut()
                               .expect("Found external image, but no handler set!");
 
-            for (external_id, _) in self.external_images.drain() {
-                handler.unlock(external_id);
-            }
-        }
-    }
-
-    fn release_external_images(&mut self, mut pending_external_image_updates: ExternalImageUpdateList) {
-        if !pending_external_image_updates.is_empty() {
-            let handler = self.external_image_handler
-                              .as_mut()
-                              .expect("found external image updates, but no handler set!");
-
-            for external_id in pending_external_image_updates.drain(..) {
-                handler.release(external_id);
+            for (ext_data, _) in self.external_images.drain() {
+                handler.unlock(ext_data.0, ext_data.1);
             }
         }
     }
@@ -1831,7 +1842,7 @@ impl Renderer {
                                                  ORTHO_FAR_PLANE)
                 } else {
                     size = &frame.cache_size;
-                    clear_color = Some([1.0, 1.0, 1.0, 0.0]);
+                    clear_color = Some([0.0, 0.0, 0.0, 0.0]);
                     projection = Matrix4D::ortho(0.0,
                                                  size.width as f32,
                                                  0.0,
@@ -1969,17 +1980,17 @@ pub struct ExternalImage<'a> {
 /// The interfaces that an application can implement to support providing
 /// external image buffers.
 /// When the the application passes an external image to WR, it should kepp that
-/// external image life time untile the release() call.
+/// external image life time. People could check the epoch id in RenderNotifier
+/// at the client side to make sure that the external image is not used by WR.
+/// Then, do the clean up for that external image.
 pub trait ExternalImageHandler {
     /// Lock the external image. Then, WR could start to read the image content.
     /// The WR client should not change the image content until the unlock()
     /// call.
-    fn lock(&mut self, key: ExternalImageId) -> ExternalImage;
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage;
     /// Unlock the external image. The WR should not read the image content
     /// after this call.
-    fn unlock(&mut self, key: ExternalImageId);
-    /// Tell the WR client that it could start to release this external image.
-    fn release(&mut self, key: ExternalImageId);
+    fn unlock(&mut self, key: ExternalImageId, channel_index: u8);
 }
 
 pub struct RendererOptions {

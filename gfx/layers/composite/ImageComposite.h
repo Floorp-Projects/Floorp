@@ -20,6 +20,8 @@ namespace layers {
 class ImageComposite
 {
 public:
+  static const float BIAS_TIME_MS;
+
   explicit ImageComposite();
   ~ImageComposite();
 
@@ -46,6 +48,8 @@ public:
     // Apply a positive bias to frame times to keep them after the vsync time
     BIAS_POSITIVE,
   };
+
+  static TimeStamp GetBiasedTime(const TimeStamp& aInput, ImageComposite::Bias aBias);
 
 protected:
   static Bias UpdateBias(const TimeStamp& aCompositionTime,

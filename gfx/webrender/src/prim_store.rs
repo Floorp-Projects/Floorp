@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::{Point2D, Size2D};
+use euclid::{Size2D};
 use gpu_store::GpuStoreAddress;
 use internal_types::{SourceTexture, PackedTexel};
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo};
@@ -12,13 +12,13 @@ use render_task::{RenderTask, RenderTaskLocation};
 use resource_cache::{CacheItem, ImageProperties, ResourceCache};
 use std::mem;
 use std::usize;
-use util::TransformedRect;
+use util::{TransformedRect, recycle_vec};
 use webrender_traits::{AuxiliaryLists, ColorF, ImageKey, ImageRendering, YuvColorSpace};
 use webrender_traits::{ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
 use webrender_traits::{FontKey, FontRenderMode, WebGLContextId};
 use webrender_traits::{device_length, DeviceIntRect, DeviceIntSize};
 use webrender_traits::{DeviceRect, DevicePoint, DeviceSize};
-use webrender_traits::{LayerRect, LayerSize, LayerPoint};
+use webrender_traits::{LayerRect, LayerSize, LayerPoint, LayoutPoint};
 use webrender_traits::{LayerToWorldTransform, GlyphInstance, GlyphOptions};
 use webrender_traits::{ExtendMode, GradientStop, TileOffset};
 
@@ -191,6 +191,9 @@ impl YuvImagePrimitiveGpu {
 
 #[derive(Debug, Clone)]
 pub struct BorderPrimitiveCpu {
+    // TODO(gw): Remove this when all border kinds are switched
+    //           over to the new border path!
+    pub use_new_border_path: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -597,6 +600,7 @@ impl PrimitiveStore {
             cpu_gradients: Vec::new(),
             cpu_radial_gradients: Vec::new(),
             cpu_borders: Vec::new(),
+            prims_to_resolve: Vec::new(),
             gpu_geometry: VertexDataStore::new(),
             gpu_data16: VertexDataStore::new(),
             gpu_data32: VertexDataStore::new(),
@@ -604,7 +608,27 @@ impl PrimitiveStore {
             gpu_data128: VertexDataStore::new(),
             gpu_gradient_data: GradientDataStore::new(),
             gpu_resource_rects: VertexDataStore::new(),
-            prims_to_resolve: Vec::new(),
+        }
+    }
+
+    pub fn recycle(self) -> Self {
+        PrimitiveStore {
+            cpu_metadata: recycle_vec(self.cpu_metadata),
+            cpu_bounding_rects: recycle_vec(self.cpu_bounding_rects),
+            cpu_text_runs: recycle_vec(self.cpu_text_runs),
+            cpu_images: recycle_vec(self.cpu_images),
+            cpu_yuv_images: recycle_vec(self.cpu_yuv_images),
+            cpu_gradients: recycle_vec(self.cpu_gradients),
+            cpu_radial_gradients: recycle_vec(self.cpu_radial_gradients),
+            cpu_borders: recycle_vec(self.cpu_borders),
+            prims_to_resolve: recycle_vec(self.prims_to_resolve),
+            gpu_geometry: self.gpu_geometry.recycle(),
+            gpu_data16: self.gpu_data16.recycle(),
+            gpu_data32: self.gpu_data32.recycle(),
+            gpu_data64: self.gpu_data64.recycle(),
+            gpu_data128: self.gpu_data128.recycle(),
+            gpu_gradient_data: self.gpu_gradient_data.recycle(),
+            gpu_resource_rects: self.gpu_resource_rects.recycle(),
         }
     }
 
@@ -1159,7 +1183,7 @@ impl PrimitiveStore {
 
                         text.glyph_instances.push(GlyphInstance {
                             index: src.index,
-                            point: Point2D::new(src.point.x, src.point.y),
+                            point: LayoutPoint::new(src.point.x, src.point.y),
                         });
 
                         actual_glyph_count += 1;
@@ -1279,173 +1303,47 @@ impl PrimitiveStore {
     }
 }
 
-#[derive(Clone)]
-#[repr(C)]
-pub struct GpuBlock16 {
-    data: [f32; 4],
-}
 
-impl Default for GpuBlock16 {
-    fn default() -> GpuBlock16 {
-        GpuBlock16 {
-            data: unsafe { mem::uninitialized() }
+macro_rules! define_gpu_block {
+    ($name:ident: $ty:ty = $($derive:ident),* ) => (
+        #[derive(Clone)]
+        #[repr(C)]
+        pub struct $name {
+            data: $ty,
         }
-    }
-}
 
-impl From<TextRunPrimitiveGpu> for GpuBlock16 {
-    fn from(data: TextRunPrimitiveGpu) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<TextRunPrimitiveGpu, GpuBlock16>(data)
+        impl Default for $name {
+            fn default() -> $name {
+                $name {
+                    data: unsafe { mem::uninitialized() }
+                }
+            }
         }
-    }
+
+        $(
+            impl From<$derive> for $name {
+                fn from(data: $derive) -> $name {
+                    unsafe { mem::transmute(data) }
+                }
+            }
+        )*
+    )
 }
 
-impl From<RectanglePrimitive> for GpuBlock16 {
-    fn from(data: RectanglePrimitive) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<RectanglePrimitive, GpuBlock16>(data)
-        }
-    }
-}
+define_gpu_block!(GpuBlock16: [f32; 4] =
+    RectanglePrimitive, InstanceRect, GlyphPrimitive,
+    TextRunPrimitiveGpu, ImagePrimitiveGpu, YuvImagePrimitiveGpu
+);
+define_gpu_block!(GpuBlock32: [f32; 8] =
+    GradientStopGpu, ClipCorner, ClipRect, ImageMaskData
+);
+define_gpu_block!(GpuBlock64: [f32; 16] =
+    GradientPrimitiveGpu, RadialGradientPrimitiveGpu, BoxShadowPrimitiveGpu
+);
+define_gpu_block!(GpuBlock128: [f32; 32] =
+    BorderPrimitiveGpu
+);
 
-impl From<InstanceRect> for GpuBlock16 {
-    fn from(data: InstanceRect) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<InstanceRect, GpuBlock16>(data)
-        }
-    }
-}
-
-impl From<ImagePrimitiveGpu> for GpuBlock16 {
-    fn from(data: ImagePrimitiveGpu) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<ImagePrimitiveGpu, GpuBlock16>(data)
-        }
-    }
-}
-
-impl From<GlyphPrimitive> for GpuBlock16 {
-    fn from(data: GlyphPrimitive) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<GlyphPrimitive, GpuBlock16>(data)
-        }
-    }
-}
-
-#[derive(Clone)]
-#[repr(C)]
-pub struct GpuBlock32 {
-    data: [f32; 8],
-}
-
-impl Default for GpuBlock32 {
-    fn default() -> GpuBlock32 {
-        GpuBlock32 {
-            data: unsafe { mem::uninitialized() }
-        }
-    }
-}
-
-impl From<GradientStopGpu> for GpuBlock32 {
-    fn from(data: GradientStopGpu) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<GradientStopGpu, GpuBlock32>(data)
-        }
-    }
-}
-
-impl From<YuvImagePrimitiveGpu> for GpuBlock16 {
-    fn from(data: YuvImagePrimitiveGpu) -> GpuBlock16 {
-        unsafe {
-            mem::transmute::<YuvImagePrimitiveGpu, GpuBlock16>(data)
-        }
-    }
-}
-
-impl From<ClipRect> for GpuBlock32 {
-    fn from(data: ClipRect) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<ClipRect, GpuBlock32>(data)
-        }
-    }
-}
-
-impl From<ImageMaskData> for GpuBlock32 {
-    fn from(data: ImageMaskData) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<ImageMaskData, GpuBlock32>(data)
-        }
-    }
-}
-
-impl From<ClipCorner> for GpuBlock32 {
-    fn from(data: ClipCorner) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<ClipCorner, GpuBlock32>(data)
-        }
-    }
-}
-
-#[derive(Clone)]
-#[repr(C)]
-pub struct GpuBlock64 {
-    data: [f32; 16],
-}
-
-impl Default for GpuBlock64 {
-    fn default() -> GpuBlock64 {
-        GpuBlock64 {
-            data: unsafe { mem::uninitialized() }
-        }
-    }
-}
-
-impl From<GradientPrimitiveGpu> for GpuBlock64 {
-    fn from(data: GradientPrimitiveGpu) -> GpuBlock64 {
-        unsafe {
-            mem::transmute::<GradientPrimitiveGpu, GpuBlock64>(data)
-        }
-    }
-}
-
-impl From<RadialGradientPrimitiveGpu> for GpuBlock64 {
-    fn from(data: RadialGradientPrimitiveGpu) -> GpuBlock64 {
-        unsafe {
-            mem::transmute::<RadialGradientPrimitiveGpu, GpuBlock64>(data)
-        }
-    }
-}
-
-impl From<BoxShadowPrimitiveGpu> for GpuBlock64 {
-    fn from(data: BoxShadowPrimitiveGpu) -> GpuBlock64 {
-        unsafe {
-            mem::transmute::<BoxShadowPrimitiveGpu, GpuBlock64>(data)
-        }
-    }
-}
-
-#[derive(Clone)]
-#[repr(C)]
-pub struct GpuBlock128 {
-    data: [f32; 32],
-}
-
-impl Default for GpuBlock128 {
-    fn default() -> GpuBlock128 {
-        GpuBlock128 {
-            data: unsafe { mem::uninitialized() }
-        }
-    }
-}
-
-impl From<BorderPrimitiveGpu> for GpuBlock128 {
-    fn from(data: BorderPrimitiveGpu) -> GpuBlock128 {
-        unsafe {
-            mem::transmute::<BorderPrimitiveGpu, GpuBlock128>(data)
-        }
-    }
-}
 
 //Test for one clip region contains another
 trait InsideTest<T> {
