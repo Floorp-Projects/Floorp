@@ -116,7 +116,8 @@ add_task(function* () {
   is(grids.length, 1, "One grid was returned.");
   is(gridFragments.length, 1, "One grid fragment was returned.");
   ok(Array.isArray(gridFragments), "An array of grid fragments was returned.");
-  Assert.deepEqual(gridFragments[0], GRID_FRAGMENT_DATA, "Got the correct grid fragment data.");
+  Assert.deepEqual(gridFragments[0], GRID_FRAGMENT_DATA,
+    "Got the correct grid fragment data.");
 
   info("Get the grid container node front.");
 
