@@ -66,6 +66,7 @@ function* initAnimationsFrontForUrl(url) {
 }
 
 function* initLayoutFrontForUrl(url) {
+  const {LayoutFront} = require("devtools/shared/fronts/layout");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
   yield addTab(url);
