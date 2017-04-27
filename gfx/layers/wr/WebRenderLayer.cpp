@@ -131,18 +131,11 @@ WebRenderLayer::GetWrBoundsRect()
 gfx::Rect
 WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
 {
-  gfx::Rect clip;
-  Layer* layer = GetLayer();
-  Matrix4x4 transform = layer->GetTransform();
-  if (layer->GetClipRect().isSome()) {
-    clip = RelativeToVisible(transform.Inverse().TransformBounds(
-             IntRectToRect(layer->GetClipRect().ref().ToUnknownRect()))
-           );
-  } else {
-    clip = aRect;
+  Maybe<LayerRect> clip = ClipRect();
+  if (clip) {
+    return RelativeToVisible(clip.ref().ToUnknownRect());
   }
-
-  return clip;
+  return aRect;
 }
 
 LayerRect
@@ -172,6 +165,18 @@ WebRenderLayer::BoundsForStackingContext()
   }
 
   return bounds;
+}
+
+Maybe<LayerRect>
+WebRenderLayer::ClipRect()
+{
+  Layer* layer = GetLayer();
+  if (!layer->GetClipRect()) {
+    return Nothing();
+  }
+  ParentLayerRect clip(layer->GetClipRect().ref());
+  LayerToParentLayerMatrix4x4 transform = layer->GetLocalTransformTyped();
+  return Some(transform.Inverse().TransformBounds(clip));
 }
 
 gfx::Rect
