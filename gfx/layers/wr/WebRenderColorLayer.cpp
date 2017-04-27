@@ -20,7 +20,7 @@ void
 WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = GetWrRelBounds();
+  LayerRect relBounds = GetWrRelBounds();
   LayerRect rect = GetWrBoundsRect();
 
   LayerRect clipRect = GetWrClipRect(rect);

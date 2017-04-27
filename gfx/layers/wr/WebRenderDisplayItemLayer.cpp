@@ -168,7 +168,7 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
     return false;
   }
 
-  gfx::Rect dest = RelativeToParent(imageRect.ToUnknownRect()) + offset.ToUnknownPoint();
+  LayerRect dest = RelativeToParent(imageRect) + offset;
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
   WrImageKey key = GetImageKey();
   aParentCommands.AppendElement(layers::OpAddExternalImage(

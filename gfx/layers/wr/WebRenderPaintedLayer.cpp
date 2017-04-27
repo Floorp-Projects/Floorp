@@ -95,7 +95,7 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
   LayerIntSize size = bounds.Size();
 
   gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = GetWrRelBounds();
+  LayerRect relBounds = GetWrRelBounds();
   LayerRect rect(0, 0, size.width, size.height);
 
   LayerRect clipRect = GetWrClipRect(rect);

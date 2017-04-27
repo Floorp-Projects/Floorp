@@ -178,7 +178,7 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 
 void
 WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
-                                 gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                                 gfx::ScaledFont* aFont, const LayerPoint& aOffset, const gfx::Rect& aBounds,
                                  const gfx::Rect& aClip)
 {
   MOZ_ASSERT(aFont);
