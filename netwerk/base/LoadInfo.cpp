@@ -269,7 +269,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
   , mPrincipalToInherit(rhs.mPrincipalToInherit)
   , mSandboxedLoadingPrincipal(rhs.mSandboxedLoadingPrincipal)
-  , mResultPrincipalURI(rhs.mResultPrincipalURI)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
@@ -934,20 +933,6 @@ LoadInfo::GetIsTopLevelLoad(bool *aResult)
 {
   *aResult = mFrameOuterWindowID ? mFrameOuterWindowID == mOuterWindowID
                                  : mParentOuterWindowID == mOuterWindowID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetResultPrincipalURI(nsIURI **aURI)
-{
-  NS_IF_ADDREF(*aURI = mResultPrincipalURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetResultPrincipalURI(nsIURI *aURI)
-{
-  mResultPrincipalURI = aURI;
   return NS_OK;
 }
 
