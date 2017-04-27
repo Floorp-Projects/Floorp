@@ -5919,20 +5919,9 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
                 if (!emitNumberOp(key->pn_dval))                  // ... *SET RHS *LREF RHS KEY
                     return false;
             } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
-                PropertyName* name = key->pn_atom->asPropertyName();
-
-                // The parser already checked for atoms representing indexes and
-                // used PNK_NUMBER instead, but also watch for ids which TI treats
-                // as indexes for simplification of downstream analysis.
-                jsid id = NameToId(name);
-                if (id != IdToTypeId(id)) {
-                    if (!emitTree(key))                           // ... *SET RHS *LREF RHS KEY
-                        return false;
-                } else {
-                    if (!emitAtomOp(name, JSOP_GETPROP))          // ... *SET RHS *LREF PROP
-                        return false;
-                    needsGetElem = false;
-                }
+                if (!emitAtomOp(key->pn_atom, JSOP_GETPROP))      // ... *SET RHS *LREF PROP
+                    return false;
+                needsGetElem = false;
             } else {
                 if (!emitComputedPropertyName(key))               // ... *SET RHS *LREF RHS KEY
                     return false;
@@ -6009,17 +5998,7 @@ BytecodeEmitter::emitDestructuringObjRestExclusionSet(ParseNode* pattern)
                     return false;
                 isIndex = true;
             } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
-                // The parser already checked for atoms representing indexes and
-                // used PNK_NUMBER instead, but also watch for ids which TI treats
-                // as indexes for simplification of downstream analysis.
-                jsid id = NameToId(key->pn_atom->asPropertyName());
-                if (id != IdToTypeId(id)) {
-                    if (!emitTree(key))
-                        return false;
-                    isIndex = true;
-                } else {
-                    pnatom.set(key->pn_atom);
-                }
+                pnatom.set(key->pn_atom);
             } else {
                 // Otherwise this is a computed property name which needs to
                 // be added dynamically.
@@ -9905,16 +9884,6 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 !propdef->as<ClassMethod>().isStatic())
             {
                 continue;
-            }
-
-            // The parser already checked for atoms representing indexes and
-            // used PNK_NUMBER instead, but also watch for ids which TI treats
-            // as indexes for simplification of downstream analysis.
-            jsid id = NameToId(key->pn_atom->asPropertyName());
-            if (id != IdToTypeId(id)) {
-                if (!emitTree(key))
-                    return false;
-                isIndex = true;
             }
         } else {
             if (!emitComputedPropertyName(key))
