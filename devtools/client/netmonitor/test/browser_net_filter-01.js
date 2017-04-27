@@ -325,14 +325,15 @@ add_task(function* () {
     const visibleItems = getDisplayedRequests(gStore.getState());
 
     is(items.size, visibility.length,
-      "There should be a specific amount of items in the requests menu.");
+       "There should be a specific amount of items in the requests menu.");
     is(visibleItems.size, visibility.filter(e => e).length,
-      "There should be a specific amount of visible items in the requests menu.");
+       "There should be a specific amount of visible items in the requests menu.");
 
     for (let i = 0; i < visibility.length; i++) {
       let itemId = items.get(i).id;
       let shouldBeVisible = !!visibility[i];
       let isThere = visibleItems.some(r => r.id == itemId);
+
       is(isThere, shouldBeVisible,
         `The item at index ${i} has visibility=${shouldBeVisible}`);
 
