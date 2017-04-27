@@ -259,8 +259,7 @@ var gCSSProperties = {
   },
   'border-spacing': {
     // https://drafts.csswg.org/css-tables/#propdef-border-spacing
-    types: [
-    ]
+    types: [ 'lengthPair' ]
   },
   'border-top-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-color
