@@ -108,9 +108,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
 
-        final ViewGroup backgroundView = (ViewGroup) view.findViewById(R.id.background);
-        backgroundView.setOnClickListener(this);
-
         dismissView = view.findViewById(R.id.dismiss);
         dismissView.setOnClickListener(this);
 
