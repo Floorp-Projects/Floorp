@@ -36,8 +36,7 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_transitions_and_reframes.html: pseudo frames bug 1331047 [4]
-  * test_animations.html: 6 of them bug 1331047 [25]
+  * test_animations.html [19]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -71,7 +70,7 @@ to mochitest command.
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
   * test_compute_data_with_start_struct.html `transition` [2]
-  * test_transitions.html: pseudo elements [10]
+  * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
