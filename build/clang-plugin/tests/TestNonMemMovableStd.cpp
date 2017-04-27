@@ -6,10 +6,10 @@ class MOZ_NEEDS_MEMMOVABLE_TYPE Mover { T mForceInst; }; // expected-error-re 4 
 namespace std {
 // In theory defining things in std:: like this invokes undefined
 // behavior, but in practice it's good enough for this test case.
-template<class C> class basic_string { };
+template<class C> class basic_string { }; // expected-note 2 {{'std::basic_string<char>' is a non-memmove()able type because it is an stl-provided type not guaranteed to be memmove-able}} expected-note {{'std::string' (aka 'basic_string<char>') is a non-memmove()able type because it is an stl-provided type not guaranteed to be memmove-able}}
 typedef basic_string<char> string;
 template<class T, class U> class pair { T mT; U mU; }; // expected-note {{std::pair<bool, std::basic_string<char> >' is a non-memmove()able type because member 'mU' is a non-memmove()able type 'std::basic_string<char>'}}
-class arbitrary_name { };
+class arbitrary_name { }; // expected-note {{'std::arbitrary_name' is a non-memmove()able type because it is an stl-provided type not guaranteed to be memmove-able}}
 }
 
 class HasString { std::string m; }; // expected-note {{'HasString' is a non-memmove()able type because member 'm' is a non-memmove()able type 'std::string' (aka 'basic_string<char>')}}
