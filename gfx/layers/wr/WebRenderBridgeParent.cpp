@@ -21,7 +21,9 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositableHolder.h"
+#include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
@@ -401,6 +403,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 const ByteBuffer& aux,
                                                 const WrAuxiliaryListsDescriptor& auxDesc)
 {
+  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
 
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
@@ -412,13 +415,13 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
         mActiveKeys.Put(wr::AsUint64(key), key);
 
-        RefPtr<CompositableHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
+        RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
         if (!host) {
           NS_ERROR("CompositableHost does not exist");
           break;
         }
         // XXX select Texture for video in CompositeToTarget().
-        TextureHost* texture = host->GetAsTextureHost();
+        TextureHost* texture = host->GetAsTextureHostForComposite();
         if (!texture) {
           NS_ERROR("TextureHost does not exist");
           break;
@@ -587,12 +590,14 @@ WebRenderBridgeParent::RecvAddExternalImageId(const ExternalImageId& aImageId,
     return IPC_FAIL_NO_REASON(this);
   }
   MOZ_ASSERT(host->AsWebRenderImageHost());
-  if (!host->AsWebRenderImageHost()) {
+  WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
+  if (!wrHost) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
 
-  mExternalImageIds.Put(wr::AsUint64(aImageId), host);
+  wrHost->SetWrCompositableHolder(mCompositableHolder);
+  mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
 
   return IPC_OK();
 }
@@ -608,12 +613,14 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImage
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
   MOZ_ASSERT(host->AsWebRenderImageHost());
-  if (!host->AsWebRenderImageHost()) {
+  WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
+  if (!wrHost) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
 
-  mExternalImageIds.Put(wr::AsUint64(aImageId), host);
+  wrHost->SetWrCompositableHolder(mCompositableHolder);
+  mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
 
   return IPC_OK();
 }
@@ -625,6 +632,10 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId
     return IPC_OK();
   }
   MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
+  WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
+  if (wrHost) {
+    wrHost->SetWrCompositableHolder(nullptr);
+  }
   mExternalImageIds.Remove(wr::AsUint64(aImageId));
 
   return IPC_OK();
@@ -708,6 +719,11 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   }
 
   mApi->GenerateFrame();
+
+  // XXX Enable it when async video is supported.
+  // if (!mCompositableHolder->GetCompositeUntilTime().IsNull()) {
+  //   ScheduleComposition();
+  // }
 }
 
 void
@@ -828,6 +844,9 @@ WebRenderBridgeParent::ClearResources()
     }
   }
   mCompositableHolder->RemovePipeline(mPipelineId);
+  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->SetWrCompositableHolder(nullptr);
+  }
   mExternalImageIds.Clear();
 
   if (mWidget && mCompositorScheduler) {
