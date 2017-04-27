@@ -240,6 +240,8 @@ public:
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
 
+  JSRuntime* Runtime() { return mJSRuntime; }
+
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
   void RemoveJSHolder(void* aHolder);
