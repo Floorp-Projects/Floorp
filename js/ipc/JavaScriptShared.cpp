@@ -501,6 +501,30 @@ JavaScriptShared::ConvertID(const JSIID& from, nsID* to)
 }
 
 JSObject*
+JavaScriptShared::findCPOWById(const ObjectId& objId)
+{
+    JSObject* obj = findCPOWByIdPreserveColor(objId);
+    if (obj)
+        JS::ExposeObjectToActiveJS(obj);
+    return obj;
+}
+
+JSObject*
+JavaScriptShared::findCPOWByIdPreserveColor(const ObjectId& objId)
+{
+    JSObject* obj = cpows_.findPreserveColor(objId);
+    if (!obj)
+        return nullptr;
+
+    if (js::gc::EdgeNeedsSweepUnbarriered(&obj)) {
+        cpows_.remove(objId);
+        return nullptr;
+    }
+
+    return obj;
+}
+
+JSObject*
 JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
 {
     RootedObject obj(cx, objects_.find(objId));

@@ -52,6 +52,7 @@ class FilePickerParent : public PFilePickerParent
                                            InfallibleTArray<nsString>&& aFilters,
                                            InfallibleTArray<nsString>&& aFilterNames,
                                            const nsString& aDisplayDirectory,
+                                           const nsString& aDisplaySpecialDirectory,
                                            const nsString& aOkButtonLabel) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

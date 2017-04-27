@@ -170,7 +170,10 @@ MockFilePicker.showCallback = function(filepicker) {
   var test = tests[testIndex];
   var returned = -1;
   for (var i = 0; i < dirs.length; i++) {
-    if (dirs[i].path == MockFilePicker.displayDirectory.path) {
+     var dir = MockFilePicker.displayDirectory
+                 ? MockFilePicker.displayDirectory
+                 : Services.dirsvc.get(MockFilePicker.displaySpecialDirectory, Ci.nsILocalFile);
+    if (dirs[i].path == dir.path) {
       returned = i;
       break;
     }

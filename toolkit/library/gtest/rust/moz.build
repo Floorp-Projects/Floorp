@@ -4,20 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-features = []
-if CONFIG['MOZ_STYLO']:
-    features += ['servo']
+include('../../rust/gkrust-features.mozbuild')
 
-    if CONFIG['MOZ_STYLO_BINDGEN']:
-        features += ['bindgen']
-
-    if CONFIG['MOZ_DEBUG']:
-        features += ['gecko_debug']
-
-if CONFIG['MOZ_BUILD_WEBRENDER']:
-    features += ['quantum_render']
-
-if CONFIG['MOZ_PULSEAUDIO']:
-    features += ['cubeb_pulse_rust']
-
-RustLibrary('gkrust-gtest', features, '../..')
+RustLibrary('gkrust-gtest', gkrust_features, '../..')

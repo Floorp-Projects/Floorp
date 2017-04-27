@@ -31,6 +31,7 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
+#include "nsWrapperCacheInlines.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "NetStatistics.h"

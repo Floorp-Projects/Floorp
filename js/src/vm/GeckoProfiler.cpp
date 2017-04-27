@@ -571,12 +571,6 @@ js::RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*))
     cx->runtime()->geckoProfiler().setEventMarker(fn);
 }
 
-JS_FRIEND_API(jsbytecode*)
-js::ProfilingGetPC(JSContext* cx, JSScript* script, void* ip)
-{
-    return cx->runtime()->geckoProfiler().ipToPC(script, size_t(ip));
-}
-
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),

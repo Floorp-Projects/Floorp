@@ -36,9 +36,11 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext,
                                   nsIContent* aContent,
                                   nsStyleContext* aContext,
-                                  nsIAtom* aPseudoElement,
+                                  nsICSSAnonBoxPseudo* aPseudoElement,
                                   const AtomArray & aInputWord)
 {
+  MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoElement));
+
   uint32_t count = aInputWord.Length();
 
   // Go ahead and init the transition table.

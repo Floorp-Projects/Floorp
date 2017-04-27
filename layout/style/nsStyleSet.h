@@ -298,7 +298,7 @@ class nsStyleSet final
   // non-null.  aComparator must be non-null.
   already_AddRefed<nsStyleContext>
   ResolveXULTreePseudoStyle(mozilla::dom::Element* aParentElement,
-                            nsIAtom* aPseudoTag,
+                            nsICSSAnonBoxPseudo* aPseudoTag,
                             nsStyleContext* aParentContext,
                             nsICSSPseudoComparator* aComparator);
 #endif

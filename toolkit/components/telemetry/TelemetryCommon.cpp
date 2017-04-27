@@ -83,7 +83,7 @@ MsSinceProcessStart(double* aResult)
 {
   bool error;
   *aResult = (TimeStamp::NowLoRes() -
-              TimeStamp::ProcessCreation(error)).ToMilliseconds();
+              TimeStamp::ProcessCreation(&error)).ToMilliseconds();
   if (error) {
     return NS_ERROR_NOT_AVAILABLE;
   }

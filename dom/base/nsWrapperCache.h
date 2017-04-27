@@ -95,12 +95,25 @@ public:
    * object returned is not guaranteed to be kept alive past the next CC.
    *
    * This should only be called if you are certain that the return value won't
-   * be passed into a JS API function and that it won't be stored without being
+   * be passed into a JSAPI function and that it won't be stored without being
    * rooted (or otherwise signaling the stored value to the CC).
    */
-  JSObject* GetWrapperPreserveColor() const
+  JSObject* GetWrapperPreserveColor() const;
+
+  /**
+   * Get the cached wrapper.
+   *
+   * This getter does not check whether the wrapper is dead and in the process
+   * of being finalized.
+   *
+   * This should only be called if you really need to see the raw contents of
+   * this cache, for example as part of finalization. Don't store the result
+   * anywhere or pass it into JSAPI functions that may cause the value to
+   * escape.
+   */
+  JSObject* GetWrapperMaybeDead() const
   {
-    return GetWrapperJSObject();
+    return mWrapper;
   }
 
 #ifdef DEBUG
@@ -121,14 +134,23 @@ public:
   }
 
   /**
-   * Clear the wrapper. This should be called from the finalizer for the
-   * wrapper.
+   * Clear the cache.
    */
   void ClearWrapper()
   {
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
-
     SetWrapperJSObject(nullptr);
+  }
+
+  /**
+   * Clear the cache if it still contains a specific wrapper object. This should
+   * be called from the finalizer for the wrapper.
+   */
+  void ClearWrapper(JSObject* obj)
+  {
+    if (obj == mWrapper) {
+      ClearWrapper();
+    }
   }
 
   /**
@@ -292,11 +314,6 @@ private:
     MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_NOT_DOM_BINDING),
                "This flag should be set before creating any wrappers.");
     SetWrapperFlags(WRAPPER_IS_NOT_DOM_BINDING);
-  }
-
-  JSObject *GetWrapperJSObject() const
-  {
-    return mWrapper;
   }
 
   void SetWrapperJSObject(JSObject* aWrapper);

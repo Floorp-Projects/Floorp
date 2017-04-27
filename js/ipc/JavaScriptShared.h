@@ -173,14 +173,14 @@ class JavaScriptShared : public CPOWManager
     static void ConvertID(const nsID& from, JSIID* to);
     static void ConvertID(const JSIID& from, nsID* to);
 
-    JSObject* findCPOWById(const ObjectId& objId) {
-        return cpows_.find(objId);
-    }
+    JSObject* findCPOWById(const ObjectId& objId);
+    JSObject* findCPOWByIdPreserveColor(const ObjectId& objId);
     JSObject* findObjectById(JSContext* cx, const ObjectId& objId);
 
 #ifdef DEBUG
     bool hasCPOW(const ObjectId& objId, const JSObject* obj) {
-        return cpows_.has(objId, obj);
+        MOZ_ASSERT(obj);
+        return findCPOWByIdPreserveColor(objId) == obj;
     }
 #endif
 
