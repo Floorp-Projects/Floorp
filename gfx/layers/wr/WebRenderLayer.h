@@ -17,6 +17,8 @@ class ImageClientSingle;
 class WebRenderBridgeChild;
 class WebRenderLayerManager;
 
+typedef gfx::Matrix4x4Typed<LayerPixel, LayerPixel> BoundsTransformMatrix;
+
 class WebRenderLayer
 {
 public:
@@ -52,10 +54,13 @@ public:
   gfx::Point GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
+  LayerRect Bounds();
+  BoundsTransformMatrix BoundsTransform();
+  LayerRect BoundsForStackingContext();
+
   gfx::Rect GetWrBoundsRect();
   gfx::Rect GetWrRelBounds();
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
-  gfx::Matrix4x4 GetWrBoundTransform();
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
 };

@@ -11,6 +11,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "nsThreadUtils.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 
@@ -144,27 +145,39 @@ WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
   return clip;
 }
 
-gfx::Matrix4x4
-WebRenderLayer::GetWrBoundTransform()
+LayerRect
+WebRenderLayer::Bounds()
+{
+  return LayerRect(GetLayer()->GetVisibleRegion().GetBounds());
+}
+
+BoundsTransformMatrix
+WebRenderLayer::BoundsTransform()
 {
   gfx::Matrix4x4 transform = GetLayer()->GetTransform();
   transform._41 = 0.0f;
   transform._42 = 0.0f;
   transform._43 = 0.0f;
-  return transform;
+  return ViewAs<BoundsTransformMatrix>(transform);
 }
 
-gfx::Rect
-WebRenderLayer::GetWrRelBounds()
+LayerRect
+WebRenderLayer::BoundsForStackingContext()
 {
-  gfx::Rect bounds = IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect());
-  gfx::Matrix4x4 transform = GetWrBoundTransform();
+  LayerRect bounds = Bounds();
+  BoundsTransformMatrix transform = BoundsTransform();
   if (!transform.IsIdentity()) {
     // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
     bounds.MoveTo(transform.TransformPoint(bounds.TopLeft()));
   }
 
-  return RelativeToParent(bounds);
+  return bounds;
+}
+
+gfx::Rect
+WebRenderLayer::GetWrRelBounds()
+{
+  return RelativeToParent(BoundsForStackingContext().ToUnknownRect());
 }
 
 Maybe<wr::ImageKey>
