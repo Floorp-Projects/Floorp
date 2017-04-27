@@ -6,20 +6,21 @@
 
 #include "nsSHEntryShared.h"
 
-#include "nsIDOMDocument.h"
-#include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
-#include "nsIDocument.h"
-#include "nsIWebNavigation.h"
+#include "nsArray.h"
+#include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsDocShellEditorData.h"
-#include "nsThreadUtils.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsILayoutHistoryState.h"
+#include "nsISHistory.h"
+#include "nsISHistoryInternal.h"
+#include "nsIWebNavigation.h"
+#include "nsThreadUtils.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
-#include "nsArray.h"
 
 namespace dom = mozilla::dom;
 
@@ -73,14 +74,14 @@ nsSHEntryShared::Shutdown()
 
 nsSHEntryShared::nsSHEntryShared()
   : mDocShellID({0})
+  , mLastTouched(0)
+  , mID(gSHEntrySharedID++)
+  , mViewerBounds(0, 0, 0, 0)
   , mIsFrameNavigation(false)
   , mSaveLayoutState(true)
   , mSticky(true)
   , mDynamicallyCreated(false)
-  , mLastTouched(0)
-  , mID(gSHEntrySharedID++)
   , mExpired(false)
-  , mViewerBounds(0, 0, 0, 0)
 {
 }
 

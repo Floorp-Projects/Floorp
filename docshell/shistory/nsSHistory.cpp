@@ -5,36 +5,33 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSHistory.h"
+
 #include <algorithm>
 
-// Helper Classes
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPtr.h"
-
-// Interfaces Needed
-#include "nsILayoutHistoryState.h"
+#include "nsCOMArray.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDocShell.h"
+#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIURI.h"
-#include "nsIContentViewer.h"
+#include "nsILayoutHistoryState.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
+#include "nsISHContainer.h"
+#include "nsISHEntry.h"
+#include "nsISHistoryListener.h"
+#include "nsISHTransaction.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsTArray.h"
-#include "nsCOMArray.h"
-#include "nsDocShell.h"
+#include "prsystem.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
-#include "nsISHEntry.h"
-#include "nsISHTransaction.h"
-#include "nsISHistoryListener.h"
-#include "nsComponentManagerUtils.h"
-#include "nsNetUtil.h"
-
-// For calculating max history entries and max cachable contentviewers
-#include "prsystem.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 
@@ -233,10 +230,10 @@ nsSHistory::nsSHistory()
   : mIndex(-1)
   , mLength(0)
   , mRequestedIndex(-1)
-  , mIsPartial(false)
   , mGlobalIndexOffset(0)
   , mEntriesInFollowingPartialHistories(0)
   , mRootDocShell(nullptr)
+  , mIsPartial(false)
 {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);

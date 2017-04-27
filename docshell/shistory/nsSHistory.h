@@ -8,13 +8,15 @@
 #define nsSHistory_h
 
 #include "nsCOMPtr.h"
+#include "nsExpirationTracker.h"
+#include "nsIPartialSHistoryListener.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
-#include "nsIWebNavigation.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIWebNavigation.h"
+#include "nsSHEntryShared.h"
 #include "nsTObserverArray.h"
 #include "nsWeakPtr.h"
-#include "nsIPartialSHistoryListener.h"
 
 #include "mozilla/LinkedList.h"
 
@@ -90,9 +92,6 @@ private:
   int32_t mLength;
   int32_t mRequestedIndex;
 
-  // Set to true if attached to a grouped session history.
-  bool mIsPartial;
-
   // The number of entries before this session history object.
   int32_t mGlobalIndexOffset;
 
@@ -107,6 +106,9 @@ private:
 
   // Weak reference. Do not refcount this.
   nsIDocShell* mRootDocShell;
+
+  // Set to true if attached to a grouped session history.
+  bool mIsPartial;
 
   // Max viewers allowed total, across all SHistory objects
   static int32_t sHistoryMaxTotalViewers;

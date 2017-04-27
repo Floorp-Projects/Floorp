@@ -7,14 +7,15 @@
 #ifndef nsSHEntryShared_h__
 #define nsSHEntryShared_h__
 
-#include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsExpirationTracker.h"
 #include "nsIBFCacheEntry.h"
 #include "nsIMutationObserver.h"
-#include "nsExpirationTracker.h"
 #include "nsRect.h"
 #include "nsString.h"
+
 #include "mozilla/Attributes.h"
 
 class nsSHEntry;
@@ -73,10 +74,7 @@ private:
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCString mContentType;
-  bool mIsFrameNavigation;
-  bool mSaveLayoutState;
-  bool mSticky;
-  bool mDynamicallyCreated;
+
   nsCOMPtr<nsISupports> mCacheKey;
   uint32_t mLastTouched;
 
@@ -86,12 +84,17 @@ private:
   nsCOMPtr<nsIContentViewer> mContentViewer;
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-  bool mExpired;
   nsCOMPtr<nsISupports> mWindowState;
   nsIntRect mViewerBounds;
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsExpirationState mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
+
+  bool mIsFrameNavigation;
+  bool mSaveLayoutState;
+  bool mSticky;
+  bool mDynamicallyCreated;
+  bool mExpired;
 };
 
 #endif
