@@ -694,7 +694,7 @@ unsafe extern "C" fn pulse_subscribe_callback(_ctx: *mut pa_context,
         PA_SUBSCRIPTION_EVENT_SOURCE |
         PA_SUBSCRIPTION_EVENT_SINK => {
 
-            if cubeb::g_cubeb_log_level != cubeb::LogLevel::Disabled {
+            if cubeb::log_enabled() {
                 if (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
                    (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE {
                     log!("Removing sink index %d", index);

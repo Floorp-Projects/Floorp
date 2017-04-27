@@ -53,6 +53,10 @@ extern "C" {
     pub static g_cubeb_log_callback: LogCallback;
 }
 
+pub fn log_enabled() -> bool {
+    unsafe { g_cubeb_log_level != LogLevel::Disabled }
+}
+
 #[test]
 fn test_normal_logging() {
     log!("This is log at normal level");
@@ -63,4 +67,9 @@ fn test_normal_logging() {
 fn test_verbose_logging() {
     logv!("This is a log at verbose level");
     logv!("Formatted log %d", 1);
+}
+
+#[test]
+fn test_logging_disabled_by_default() {
+    assert!(!log_enabled());
 }
