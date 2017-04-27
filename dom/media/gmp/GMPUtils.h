@@ -90,7 +90,7 @@ GetGMPAbstractThread();
 
 // Returns the number of bytes required to store an aWidth x aHeight image in
 // I420 format, padded so that the width and height are multiples of 16.
-int32_t
+size_t
 I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight);
 
 } // namespace mozilla
