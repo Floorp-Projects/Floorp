@@ -81,14 +81,14 @@ CacheIRSpewer::beginCache(LockGuard<Mutex>&, const IRGenerator& gen)
     JSONPrinter& j = json.ref();
 
     j.beginObject();
-    j.property("name", "%s", CacheKindNames[uint8_t(gen.cacheKind_)]);
-    j.property("file", "%s", gen.script_->filename());
-    j.property("mode", int(gen.mode_));
+    j.stringProperty("name", "%s", CacheKindNames[uint8_t(gen.cacheKind_)]);
+    j.stringProperty("file", "%s", gen.script_->filename());
+    j.integerProperty("mode", int(gen.mode_));
     if (jsbytecode* pc = gen.pc_) {
         unsigned column;
-        j.property("line", PCToLineNumber(gen.script_, pc, &column));
-        j.property("column", column);
-        j.property("pc", "%p", pc);
+        j.integerProperty("line", PCToLineNumber(gen.script_, pc, &column));
+        j.integerProperty("column", column);
+        j.stringProperty("pc", "%p", pc);
     }
 }
 
@@ -133,12 +133,12 @@ CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, HandleValue v)
     const char* type = InformalValueTypeName(v);
     if (v.isInt32())
         type = "int32";
-    j.property("type", "%s", type);
+    j.stringProperty("type", "%s", type);
 
     if (v.isInt32()) {
-        j.property("value", v.toInt32());
+        j.integerProperty("value", v.toInt32());
     } else if (v.isDouble()) {
-        j.property("value", v.toDouble());
+        j.doubleProperty("value", v.toDouble());
     } else if (v.isString() || v.isSymbol()) {
         JSString* str = v.isString() ? v.toString() : v.toSymbol()->description();
         if (str && str->isLinear()) {
@@ -147,7 +147,7 @@ CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, HandleValue v)
             j.endStringProperty();
         }
     } else if (v.isObject()) {
-        j.property("value", "%p (shape: %p)", &v.toObject(),
+        j.stringProperty("value", "%p (shape: %p)", &v.toObject(),
                          v.toObject().maybeShape());
     }
 
@@ -158,7 +158,7 @@ void
 CacheIRSpewer::attached(LockGuard<Mutex>&, const char* name)
 {
     MOZ_ASSERT(enabled());
-    json.ref().property("attached", "%s", name);
+    json.ref().stringProperty("attached", "%s", name);
 }
 
 void
