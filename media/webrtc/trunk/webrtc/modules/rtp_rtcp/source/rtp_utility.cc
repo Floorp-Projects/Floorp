@@ -444,12 +444,9 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
             return;
           }
 
-          // TODO(jesup) - avoid allocating on each packet - high watermark the
-          // RID buffer?
-          char* ptrRID = new char[len + 2];
-          memcpy(ptrRID, ptr, len + 1);
-          ptrRID[len + 1] = '\0';
-          header->extension.rid = ptrRID;
+          header->extension.rid.reset(new char[len + 2]);
+          memcpy(header->extension.rid.get(), ptr, len + 1);
+          header->extension.rid.get()[len + 1] = '\0';
           header->extension.hasRID = true;
           break;
         }

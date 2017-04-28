@@ -100,12 +100,10 @@
 #endif
         />
       </hbox>
-      <hbox>
-        <radio id="alwaysAsk"
-              value="false"
-              label="&alwaysAskWhere.label;"
-              accesskey="&alwaysAskWhere.accesskey;"/>
-      </hbox>
+      <radio id="alwaysAsk"
+            value="false"
+            label="&alwaysAskWhere.label;"
+            accesskey="&alwaysAskWhere.accesskey;"/>
     </radiogroup>
   </groupbox>
 

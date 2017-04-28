@@ -475,21 +475,21 @@ add_task(function*() {
   yield check_normal(true);
 });
 
-// Test non-restarless add-on's should not block multi
+// Test non-restarless add-on should block multi
 add_task(function*() {
   yield promiseInstallAllFiles([do_get_addon("test_install1")], true);
 
   let non_restartless_ID = "addon1@tests.mozilla.org";
-
-  restartManager();
-
   let addon = yield promiseAddonByID(non_restartless_ID);
 
   // non-restartless add-on is installed and started
-  do_check_neq(addon, null);
+  do_check_eq(addon, null);
 
-  do_check_false(check_multi_disabled());
+  yield promiseRestartManager();
 
+  do_check_true(check_multi_disabled());
+
+  addon = yield promiseAddonByID(non_restartless_ID);
   addon.uninstall();
 
   BootstrapMonitor.checkAddonNotInstalled(non_restartless_ID);

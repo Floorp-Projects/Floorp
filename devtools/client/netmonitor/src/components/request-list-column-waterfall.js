@@ -38,16 +38,17 @@ const RequestListColumnWaterfall = createClass({
 
   render() {
     let { firstRequestStartedMillis, item } = this.props;
+    const { boxes, tooltip } = timingBoxes(item);
 
     return (
-      div({ className: "requests-list-column requests-list-waterfall" },
+      div({ className: "requests-list-column requests-list-waterfall", title: tooltip },
         div({
           className: "requests-list-timings",
           style: {
             paddingInlineStart: `${item.startedMillis - firstRequestStartedMillis}px`,
           },
         },
-          timingBoxes(item),
+          boxes,
         )
       )
     );
@@ -57,9 +58,10 @@ const RequestListColumnWaterfall = createClass({
 function timingBoxes(item) {
   let { eventTimings, fromCache, fromServiceWorker, totalTime } = item;
   let boxes = [];
+  let tooltip = [];
 
   if (fromCache || fromServiceWorker) {
-    return boxes;
+    return { boxes, tooltip };
   }
 
   if (eventTimings) {
@@ -77,6 +79,7 @@ function timingBoxes(item) {
             style: { width },
           })
         );
+        tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip." + key, width));
       }
     }
   }
@@ -90,9 +93,10 @@ function timingBoxes(item) {
         title,
       }, title)
     );
+    tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip.total", totalTime));
   }
 
-  return boxes;
+  return { boxes, tooltip: tooltip.join(", ") };
 }
 
 module.exports = RequestListColumnWaterfall;

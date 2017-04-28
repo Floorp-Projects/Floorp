@@ -83,6 +83,8 @@ devtools/client/canvasdebugger/**
 devtools/client/commandline/**
 devtools/client/debugger/**
 devtools/client/framework/**
+!devtools/client/framework/devtools.js
+!devtools/client/framework/devtools-browser.js
 !devtools/client/framework/selection.js
 !devtools/client/framework/target*
 !devtools/client/framework/toolbox*
