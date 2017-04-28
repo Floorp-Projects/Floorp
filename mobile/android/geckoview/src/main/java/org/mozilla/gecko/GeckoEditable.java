@@ -488,7 +488,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
             // Because we get composition styling here essentially for free,
             // we don't need to check if we're in batch mode.
             if (!icMaybeSendComposition(
-                    action.mSequence, /* useEntireText */ true, /* notifyGecko */ false)) {
+                    action.mSequence, SEND_COMPOSITION_USE_ENTIRE_TEXT)) {
                 // Since we don't have a composition, we can try sending key events.
                 sendCharKeyEvents(action);
             }
@@ -637,31 +637,26 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         }
     }
 
-    /**
-     * Send composition ranges to Gecko for the entire shadow text.
-     */
-    private void icMaybeSendComposition() throws RemoteException {
-        if (!mNeedUpdateComposition) {
-            return;
-        }
-
-        icMaybeSendComposition(mText.getShadowText(),
-                               /* useEntireText */ false, /* notifyGecko */ true);
-    }
+    // Flags for icMaybeSendComposition
+    // If text has composing spans, treat the entire text as a Gecko composition,
+    // instead of just the spanned part.
+    private static final int SEND_COMPOSITION_USE_ENTIRE_TEXT = 1;
+    // Notify Gecko of the new composition ranges;
+    // otherwise, the caller is responsible for notifying Gecko.
+    private static final int SEND_COMPOSITION_NOTIFY_GECKO = 2;
 
     /**
      * Send composition ranges to Gecko if the text has composing spans.
      *
      * @param sequence Text with possible composing spans
-     * @param useEntireText If text has composing spans, treat the entire text as
-     *                      a Gecko composition, instead of just the spanned part.
-     * @param notifyGecko Notify Gecko of the new composition ranges;
-     *                    otherwise, the caller is responsible for notifying Gecko.
+     * @param flags Bitmask of SEND_COMPOSITION_* flags for updating composition.
      * @return Whether there was a composition
      */
     private boolean icMaybeSendComposition(final CharSequence sequence,
-                                           final boolean useEntireText,
-                                           final boolean notifyGecko) throws RemoteException {
+                                           final int flags) throws RemoteException {
+        final boolean useEntireText = (flags & SEND_COMPOSITION_USE_ENTIRE_TEXT) != 0;
+        final boolean notifyGecko = (flags & SEND_COMPOSITION_NOTIFY_GECKO) != 0;
+
         mNeedUpdateComposition = false;
 
         int selStart = Selection.getSelectionStart(sequence);
@@ -841,7 +836,9 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
             }
 
             // Focused; key event may go to chrome window or to content window.
-            icMaybeSendComposition();
+            if (mNeedUpdateComposition) {
+                icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO);
+            }
             onKeyEvent(mFocusedChild, event, action, metaState,
                        /* isSynthesizedImeKey */ false);
             icOfferAction(new Action(Action.TYPE_EVENT));
