@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         // The service will track the foreground/background state of our activity. If we are erasing
         // while the activity is in the background then we want to finish it immediately again.
         if (finishActivity) {
-            finish();
+            finishAndRemoveTask();
             overridePendingTransition(0, 0); // This activity should be visible - avoid any animations.
         }
 
