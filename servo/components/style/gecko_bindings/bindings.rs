@@ -191,6 +191,7 @@ use gecko_bindings::structs::ServoStyleSheet;
 use gecko_bindings::structs::EffectCompositor_CascadeLevel;
 use gecko_bindings::structs::UpdateAnimationsTasks;
 use gecko_bindings::structs::LengthParsingMode;
+use gecko_bindings::structs::InheritTarget;
 pub type nsTArrayBorrowed_uintptr_t<'a> = &'a mut ::gecko_bindings::structs::nsTArray<usize>;
 pub type ServoCssRulesStrong = ::gecko_bindings::sugar::ownership::Strong<ServoCssRules>;
 pub type ServoCssRulesBorrowed<'a> = &'a ServoCssRules;
@@ -244,6 +245,11 @@ pub type RawServoPageRuleBorrowed<'a> = &'a RawServoPageRule;
 pub type RawServoPageRuleBorrowedOrNull<'a> = Option<&'a RawServoPageRule>;
 enum RawServoPageRuleVoid { }
 pub struct RawServoPageRule(RawServoPageRuleVoid);
+pub type RawServoSupportsRuleStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoSupportsRule>;
+pub type RawServoSupportsRuleBorrowed<'a> = &'a RawServoSupportsRule;
+pub type RawServoSupportsRuleBorrowedOrNull<'a> = Option<&'a RawServoSupportsRule>;
+enum RawServoSupportsRuleVoid { }
+pub struct RawServoSupportsRule(RawServoSupportsRuleVoid);
 pub type RawServoStyleSetOwned = ::gecko_bindings::sugar::ownership::Owned<RawServoStyleSet>;
 pub type RawServoStyleSetOwnedOrNull = ::gecko_bindings::sugar::ownership::OwnedOrNull<RawServoStyleSet>;
 pub type RawServoStyleSetBorrowed<'a> = &'a RawServoStyleSet;
@@ -398,6 +404,12 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_PageRule_Release(ptr: RawServoPageRuleBorrowed);
+}
+extern "C" {
+    pub fn Servo_SupportsRule_AddRef(ptr: RawServoSupportsRuleBorrowed);
+}
+extern "C" {
+    pub fn Servo_SupportsRule_Release(ptr: RawServoSupportsRuleBorrowed);
 }
 extern "C" {
     pub fn Servo_StyleSet_Drop(ptr: RawServoStyleSetOwned);
@@ -1666,6 +1678,10 @@ extern "C" {
                                       result: *mut nsAString);
 }
 extern "C" {
+    pub fn Servo_MediaRule_GetRules(rule: RawServoMediaRuleBorrowed)
+     -> ServoCssRulesStrong;
+}
+extern "C" {
     pub fn Servo_CssRules_GetNamespaceRuleAt(rules: ServoCssRulesBorrowed,
                                              index: u32)
      -> RawServoNamespaceRuleStrong;
@@ -1691,6 +1707,23 @@ extern "C" {
                                      result: *mut nsAString);
 }
 extern "C" {
+    pub fn Servo_CssRules_GetSupportsRuleAt(rules: ServoCssRulesBorrowed,
+                                            index: u32)
+     -> RawServoSupportsRuleStrong;
+}
+extern "C" {
+    pub fn Servo_SupportsRule_Debug(rule: RawServoSupportsRuleBorrowed,
+                                    result: *mut nsACString);
+}
+extern "C" {
+    pub fn Servo_SupportsRule_GetCssText(rule: RawServoSupportsRuleBorrowed,
+                                         result: *mut nsAString);
+}
+extern "C" {
+    pub fn Servo_SupportsRule_GetRules(rule: RawServoSupportsRuleBorrowed)
+     -> ServoCssRulesStrong;
+}
+extern "C" {
     pub fn Servo_CssRules_GetFontFaceRuleAt(rules: ServoCssRulesBorrowed,
                                             index: u32)
      -> *mut nsCSSFontFaceRule;
@@ -1713,10 +1746,6 @@ extern "C" {
      -> RawServoMediaListStrong;
 }
 extern "C" {
-    pub fn Servo_MediaRule_GetRules(rule: RawServoMediaRuleBorrowed)
-     -> ServoCssRulesStrong;
-}
-extern "C" {
     pub fn Servo_NamespaceRule_GetPrefix(rule: RawServoNamespaceRuleBorrowed)
      -> *mut nsIAtom;
 }
@@ -1732,6 +1761,11 @@ extern "C" {
     pub fn Servo_PageRule_SetStyle(rule: RawServoPageRuleBorrowed,
                                    declarations:
                                        RawServoDeclarationBlockBorrowed);
+}
+extern "C" {
+    pub fn Servo_SupportsRule_GetConditionText(rule:
+                                                   RawServoSupportsRuleBorrowed,
+                                               result: *mut nsAString);
 }
 extern "C" {
     pub fn Servo_ParseProperty(property: nsCSSPropertyID,
@@ -2074,7 +2108,8 @@ extern "C" {
 extern "C" {
     pub fn Servo_ComputedValues_Inherit(set: RawServoStyleSetBorrowed,
                                         parent_style:
-                                            ServoComputedValuesBorrowedOrNull)
+                                            ServoComputedValuesBorrowedOrNull,
+                                        target: InheritTarget)
      -> ServoComputedValuesStrong;
 }
 extern "C" {

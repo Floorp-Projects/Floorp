@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 #if defined(_MSC_VER)
@@ -830,6 +831,8 @@ struct PacketTime {
 
 struct RTPHeaderExtension {
   RTPHeaderExtension();
+  RTPHeaderExtension(const RTPHeaderExtension& rhs);
+  RTPHeaderExtension& operator=(const RTPHeaderExtension& rhs);
 
   bool hasTransmissionTimeOffset;
   int32_t transmissionTimeOffset;
@@ -852,7 +855,7 @@ struct RTPHeaderExtension {
 
   // RID values for simulcast; see draft-roach-avtext-rid
   bool hasRID;
-  char *rid; // UTF8 string
+  rtc::scoped_ptr<char[]> rid; // UTF8 string
 };
 
 struct RTPHeader {

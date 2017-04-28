@@ -1345,10 +1345,17 @@ nsUrlClassifierLookupCallback::HandleResults()
     MatchThreatType types = MatchThreatType::eIdentical;
 
     // Check all the results because there may be multiple matches being returned.
+    bool foundV2Result = false, foundV4Result = false;
     for (uint32_t i = 0; i < mCacheResults->Length(); i++) {
       CacheResult* c = mCacheResults->ElementAt(i).get();
+      bool isV2 = CacheResult::V2 == c->Ver();
+      if (isV2) {
+        foundV2Result = true;
+      } else {
+        foundV4Result = true;
+      }
       for (LookupResult& l : *(mResults.get())) {
-        if (l.hash.fixedLengthPrefix != c->prefix) {
+        if (l.mProtocolV2 != isV2 || l.hash.fixedLengthPrefix != c->prefix) {
           continue;
         }
 
@@ -1360,18 +1367,23 @@ nsUrlClassifierLookupCallback::HandleResults()
       }
     }
 
-    auto fnIsMatchSameThreatType = [&](const MatchThreatType& aTypeMask) {
-      uint8_t val = static_cast<uint8_t>(types & aTypeMask);
-      return val == 0 || val == static_cast<uint8_t>(aTypeMask);
-    };
-    if (fnIsMatchSameThreatType(MatchThreatType::ePhishingMask) &&
-        fnIsMatchSameThreatType(MatchThreatType::eMalwareMask) &&
-        fnIsMatchSameThreatType(MatchThreatType::eUnwantedMask)) {
-      types = MatchThreatType::eIdentical;
-    }
+    // We don't want to record telemetry when one of the results is from cache
+    // because finding an unexpired cache entry will prevent us from doing gethash
+    // requests that would otherwise be required.
+    if (foundV2Result && foundV4Result) {
+      auto fnIsMatchSameThreatType = [&](const MatchThreatType& aTypeMask) {
+        uint8_t val = static_cast<uint8_t>(types & aTypeMask);
+        return val == 0 || val == static_cast<uint8_t>(aTypeMask);
+      };
+      if (fnIsMatchSameThreatType(MatchThreatType::ePhishingMask) &&
+          fnIsMatchSameThreatType(MatchThreatType::eMalwareMask) &&
+          fnIsMatchSameThreatType(MatchThreatType::eUnwantedMask)) {
+        types = MatchThreatType::eIdentical;
+      }
 
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT,
-                          static_cast<uint8_t>(types));
+      Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT,
+                            static_cast<uint8_t>(types));
+    }
   }
 
   if (matchResult != MatchResult::eTelemetryDisabled) {

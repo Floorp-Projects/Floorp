@@ -20,26 +20,26 @@
 }
 
 @keyframes anim-simple {
-  from { color: black; }
-  to   { color: white; }
+  from { color: rgb(0, 0, 0); }
+  to   { color: rgb(255, 255, 255); }
 }
 
 @keyframes anim-simple-three {
-  from { color: black; }
-  50%  { color: blue; }
-  to   { color: white; }
+  from { color: rgb(0, 0, 0); }
+  50%  { color: rgb(0, 0, 255); }
+  to   { color: rgb(255, 255, 255); }
 }
 
 @keyframes anim-simple-timing {
-  from { color: black; animation-timing-function: linear; }
-  50%  { color: blue;  animation-timing-function: ease-in-out; }
-  to   { color: white; animation-timing-function: step-end; }
+  from { color: rgb(0, 0, 0); animation-timing-function: linear; }
+  50%  { color: rgb(0, 0, 255);  animation-timing-function: ease-in-out; }
+  to   { color: rgb(255, 255, 255); animation-timing-function: step-end; }
 }
 
 @keyframes anim-simple-timing-some {
-  from { color: black; animation-timing-function: linear; }
-  50%  { color: blue; }
-  to   { color: white; }
+  from { color: rgb(0, 0, 0); animation-timing-function: linear; }
+  50%  { color: rgb(0, 0, 255); }
+  to   { color: rgb(255, 255, 255); }
 }
 
 @keyframes anim-simple-shorthand {
@@ -48,15 +48,15 @@
 }
 
 @keyframes anim-omit-to {
-  from { color: blue; }
+  from { color: rgb(0, 0, 255); }
 }
 
 @keyframes anim-omit-from {
-  to   { color: blue; }
+  to   { color: rgb(0, 0, 255); }
 }
 
 @keyframes anim-omit-from-to {
-  50%  { color: blue; }
+  50%  { color: rgb(0, 0, 255); }
 }
 
 @keyframes anim-partially-omit-to {
@@ -67,29 +67,29 @@
 }
 
 @keyframes anim-different-props {
-  from { color: black; margin-top: 8px; }
-  25%  { color: blue; }
+  from { color: rgb(0, 0, 0); margin-top: 8px; }
+  25%  { color: rgb(0, 0, 255); }
   75%  { margin-top: 12px; }
-  to   { color: white; margin-top: 16px }
+  to   { color: rgb(255, 255, 255); margin-top: 16px }
 }
 
 @keyframes anim-different-props-and-easing {
-  from { color: black; margin-top: 8px; animation-timing-function: linear; }
-  25%  { color: blue; animation-timing-function: step-end; }
+  from { color: rgb(0, 0, 0); margin-top: 8px; animation-timing-function: linear; }
+  25%  { color: rgb(0, 0, 255); animation-timing-function: step-end; }
   75%  { margin-top: 12px; animation-timing-function: ease-in; }
-  to   { color: white; margin-top: 16px }
+  to   { color: rgb(255, 255, 255); margin-top: 16px }
 }
 
 @keyframes anim-merge-offset {
-  from { color: black; }
-  to   { color: white; }
+  from { color: rgb(0, 0, 0); }
+  to   { color: rgb(255, 255, 255); }
   from { margin-top: 8px; }
   to   { margin-top: 16px; }
 }
 
 @keyframes anim-merge-offset-and-easing {
-  from { color: black; animation-timing-function: step-end; }
-  to   { color: white; }
+  from { color: rgb(0, 0, 0); animation-timing-function: step-end; }
+  to   { color: rgb(255, 255, 255); }
   from { margin-top: 8px; animation-timing-function: linear; }
   to   { margin-top: 16px; }
   from { font-size: 16px; animation-timing-function: step-end; }
@@ -300,7 +300,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.animation = 'anim-omit-to 100s';
-  div.style.color = 'white';
+  div.style.color = 'rgb(255, 255, 255)';
   var frames = getKeyframes(div);
 
   assert_equals(frames.length, 2, "number of frames");
@@ -322,7 +322,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.animation = 'anim-omit-from 100s';
-  div.style.color = 'white';
+  div.style.color = 'rgb(255, 255, 255)';
   var frames = getKeyframes(div);
 
   assert_equals(frames.length, 2, "number of frames");
@@ -344,7 +344,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.animation = 'anim-omit-from-to 100s';
-  div.style.color = 'white';
+  div.style.color = 'rgb(255, 255, 255)';
   var frames = getKeyframes(div);
 
   assert_equals(frames.length, 3, "number of frames");
@@ -570,7 +570,9 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t);
 
-  div.style.textShadow = '1px 1px 2px black, 0 0 16px blue, 0 0 3.2px blue';
+  div.style.textShadow = '1px 1px 2px rgb(0, 0, 0), ' +
+                         '0 0 16px rgb(0, 0, 255), ' +
+                         '0 0 3.2px rgb(0, 0, 255)';
   div.style.animation = 'anim-text-shadow 100s';
   var frames = getKeyframes(div);
 

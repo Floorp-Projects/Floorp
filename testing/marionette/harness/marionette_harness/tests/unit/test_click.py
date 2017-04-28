@@ -7,7 +7,7 @@ import urllib
 from marionette_driver.by import By
 from marionette_driver import errors
 
-from marionette_harness import MarionetteTestCase, run_if_e10s
+from marionette_harness import MarionetteTestCase, run_if_e10s, skip
 
 
 def inline(doc):
@@ -92,6 +92,7 @@ class TestLegacyClick(MarionetteTestCase):
         button.click()
         self.assertEqual(1, self.marionette.execute_script("return window.clicks", sandbox=None))
 
+    @skip("Bug 1357634 - NoSuchElementException: Unable to locate element: username")
     def test_click_number_link(self):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
@@ -106,6 +107,7 @@ class TestLegacyClick(MarionetteTestCase):
         with self.assertRaises(errors.ElementNotInteractableException):
             self.marionette.find_element(By.ID, "child").click()
 
+    @skip("Bug 1357696 - NoSuchElementException: Unable to locate element: username")
     def test_clicking_on_a_multiline_link(self):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
@@ -338,6 +340,7 @@ class TestClickNavigation(MarionetteTestCase):
 
         self.marionette.go_back()
         self.marionette.find_element(By.ID, "anchor")
+
         self.marionette.find_element(By.ID, "history-back").click()
         with self.assertRaises(errors.NoSuchElementException):
             self.marionette.find_element(By.ID, "anchor")
