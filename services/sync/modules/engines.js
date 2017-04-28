@@ -1365,9 +1365,9 @@ SyncEngine.prototype = {
 
   /**
    * Called before a remote record is discarded due to failed reconciliation.
-   * Used by bookmark sync to note the child ordering of special folders.
+   * Used by bookmark sync to merge folder child orders.
    */
-  beforeRecordDiscard(record) {
+  beforeRecordDiscard(localRecord, remoteRecord, remoteIsNewer) {
   },
 
   // Called when the server has a record marked as deleted, but locally we've
@@ -1580,7 +1580,7 @@ SyncEngine.prototype = {
     this._log.warn("DATA LOSS: Both local and remote changes to record: " +
                    item.id);
     if (!remoteIsNewer) {
-      this.beforeRecordDiscard(item);
+      this.beforeRecordDiscard(localRecord, item, remoteIsNewer);
     }
     return remoteIsNewer;
   },
