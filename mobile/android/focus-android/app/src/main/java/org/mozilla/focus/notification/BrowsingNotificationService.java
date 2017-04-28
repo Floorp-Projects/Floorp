@@ -36,7 +36,6 @@ public class BrowsingNotificationService extends Service {
     private static final String ACTION_FOREGROUND = "foreground";
     private static final String ACTION_BACKGROUND = "background";
 
-    private boolean active;
     private boolean foreground;
 
     public static void start(Context context) {
@@ -71,23 +70,21 @@ public class BrowsingNotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         switch (intent.getAction()) {
             case ACTION_START:
-                active = true;
-                showNotification();
-                return Service.START_STICKY;
+                startForeground(NOTIFICATION_ID, buildNotification());
+                break;
 
             case ACTION_STOP:
-                active = false;
-                clearNotification();
+                stopForeground(true);
                 stopSelf();
-                return Service.START_NOT_STICKY;
+                break;
 
             case ACTION_FOREGROUND:
                 foreground = true;
-                return active ? Service.START_STICKY : Service.START_NOT_STICKY;
+                break;
 
             case ACTION_BACKGROUND:
                 foreground = false;
-                return active ? Service.START_STICKY : Service.START_NOT_STICKY;
+                break;
 
             case ACTION_ERASE:
                 final Intent activityIntent = new Intent(this, MainActivity.class);
@@ -105,31 +102,32 @@ public class BrowsingNotificationService extends Service {
                 startActivity(activityIntent);
 
                 TelemetryWrapper.eraseNotificationEvent();
-                return Service.START_NOT_STICKY;
+                break;
 
             default:
                 throw new IllegalStateException("Unknown intent: " + intent);
         }
+
+        return START_NOT_STICKY;
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        clearNotification();
-
         // If our task got removed then we might have been killed in the task switcher. In this case
         // our activity had no chance to cleanup the browsing data. Let's try to do it from here.
         WebViewProvider.performCleanup(this);
 
+        stopForeground(true);
         stopSelf();
     }
 
-    private void showNotification() {
+    private Notification buildNotification() {
         final Intent intent = new Intent(this, BrowsingNotificationService.class);
         intent.setAction(ACTION_ERASE);
 
         final PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
 
-        final Notification notification = new NotificationCompat.Builder(this)
+        return new NotificationCompat.Builder(this)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(getString(R.string.app_name))
@@ -139,14 +137,6 @@ public class BrowsingNotificationService extends Service {
                 .setShowWhen(false)
                 .setLocalOnly(true)
                 .build();
-
-        NotificationManagerCompat.from(this)
-                .notify(NOTIFICATION_ID, notification);
-    }
-
-    private void clearNotification() {
-        NotificationManagerCompat.from(this)
-                .cancel(NOTIFICATION_ID);
     }
 
     @Nullable
