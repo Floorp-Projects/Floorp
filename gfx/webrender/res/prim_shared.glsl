@@ -747,21 +747,13 @@ Image fetch_image(int index) {
     return Image(data);
 }
 
-// YUV color spaces
-#define YUV_REC601 1
-#define YUV_REC709 2
-
 struct YuvImage {
-    vec4 y_st_rect;
-    vec4 u_st_rect;
-    vec4 v_st_rect;
     vec2 size;
-    int color_space;
 };
 
 YuvImage fetch_yuv_image(int index) {
     vec4 data = fetch_data_1(index);
-    return YuvImage(vec4(0.0), vec4(0.0), vec4(0.0), data.xy, int(data.z));
+    return YuvImage(data.xy);
 }
 
 struct BoxShadow {
@@ -828,6 +820,7 @@ float do_clip() {
         all(inside) ? textureLod(sCacheA8, vClipMaskUv, 0.0).r : 0.0;
 }
 
+#ifdef WR_FEATURE_DITHERING
 vec4 dither(vec4 color) {
     const int matrix_mask = 7;
 
@@ -837,4 +830,10 @@ vec4 dither(vec4 color) {
 
     return color + vec4(noise, noise, noise, 0);
 }
+#else
+vec4 dither(vec4 color) {
+    return color;
+}
+#endif
+
 #endif //WR_FRAGMENT_SHADER

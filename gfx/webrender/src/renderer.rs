@@ -54,6 +54,8 @@ use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize
 use webrender_traits::{ImageDescriptor, BlobImageRenderer};
 use webrender_traits::channel;
 use webrender_traits::VRCompositorHandler;
+use webrender_traits::{YuvColorSpace, YuvFormat};
+use webrender_traits::{YUV_COLOR_SPACES, YUV_FORMATS};
 
 pub const GPU_DATA_TEXTURE_POOL: usize = 5;
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
@@ -65,7 +67,6 @@ const GPU_TAG_INIT: GpuProfileTag = GpuProfileTag { label: "Init", color: debug_
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag { label: "Target", color: debug_colors::SLATEGREY };
 const GPU_TAG_PRIM_RECT: GpuProfileTag = GpuProfileTag { label: "Rect", color: debug_colors::RED };
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag { label: "Image", color: debug_colors::GREEN };
-const GPU_TAG_PRIM_IMAGE_RECT: GpuProfileTag = GpuProfileTag { label: "ImageRect", color: debug_colors::GREENYELLOW };
 const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag { label: "YuvImage", color: debug_colors::DARKGREEN };
 const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag { label: "Blend", color: debug_colors::LIGHTBLUE };
 const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "HwComposite", color: debug_colors::DODGERBLUE };
@@ -80,6 +81,47 @@ const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag { label: "Border
 const GPU_TAG_PRIM_BORDER_EDGE: GpuProfileTag = GpuProfileTag { label: "BorderEdge", color: debug_colors::LAVENDER };
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag { label: "Blur", color: debug_colors::VIOLET };
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub enum ImageBufferKind {
+    Texture2D = 0,
+    TextureRect = 1,
+    TextureExternal = 2,
+}
+pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 3] = [
+    ImageBufferKind::Texture2D,
+    ImageBufferKind::TextureRect,
+    ImageBufferKind::TextureExternal
+];
+
+impl ImageBufferKind {
+    pub fn get_feature_string(&self) -> &'static str {
+        match *self {
+            ImageBufferKind::Texture2D => "",
+            ImageBufferKind::TextureRect => "TEXTURE_RECT",
+            ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
+        }
+    }
+
+    pub fn has_platform_support(&self, gl_type: &gl::GlType) -> bool {
+        match *gl_type {
+            gl::GlType::Gles => {
+                match *self {
+                    ImageBufferKind::Texture2D => true,
+                    ImageBufferKind::TextureRect => true,
+                    ImageBufferKind::TextureExternal => true,
+                }
+            }
+            gl::GlType::Gl => {
+                match *self {
+                    ImageBufferKind::Texture2D => true,
+                    ImageBufferKind::TextureRect => true,
+                    ImageBufferKind::TextureExternal => false,
+                }
+            }
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub enum RendererKind {
@@ -226,7 +268,6 @@ pub type GradientDataStore = GpuStore<GradientData, GradientDataTextureLayout>;
 const TRANSFORM_FEATURE: &'static str = "TRANSFORM";
 const SUBPIXEL_AA_FEATURE: &'static str = "SUBPIXEL_AA";
 const CLIP_FEATURE: &'static str = "CLIP";
-const TEXTURE_RECT_FEATURE: &'static str = "TEXTURE_RECT";
 
 enum ShaderKind {
     Primitive,
@@ -468,9 +509,8 @@ pub struct Renderer {
     ps_rectangle_clip: PrimitiveShader,
     ps_text_run: PrimitiveShader,
     ps_text_run_subpixel: PrimitiveShader,
-    ps_image: PrimitiveShader,
-    ps_image_rect: PrimitiveShader,
-    ps_yuv_image: PrimitiveShader,
+    ps_image: Vec<Option<PrimitiveShader>>,
+    ps_yuv_image: Vec<Option<PrimitiveShader>>,
     ps_border: PrimitiveShader,
     ps_border_corner: PrimitiveShader,
     ps_border_edge: PrimitiveShader,
@@ -528,7 +568,7 @@ pub struct Renderer {
     /// when no target is yet provided as a cache texture input.
     dummy_cache_texture_id: TextureId,
 
-    dither_matrix_texture_id: TextureId,
+    dither_matrix_texture_id: Option<TextureId>,
 
     /// Optional trait object that allows the client
     /// application to provide external buffers for image data.
@@ -586,6 +626,7 @@ impl Renderer {
         let (api_tx, api_rx) = try!{ channel::msg_channel() };
         let (payload_tx, payload_rx) = try!{ channel::payload_channel() };
         let (result_tx, result_rx) = channel();
+        let gl_type = gl.get_type();
 
         register_thread_with_profiler("Compositor".to_owned());
 
@@ -670,26 +711,72 @@ impl Renderer {
                                  options.precache_shaders)
         };
 
-        let ps_image = try!{
-            PrimitiveShader::new("ps_image",
-                                 &mut device,
-                                 &[],
-                                 options.precache_shaders)
-        };
+        // All image configuration.
+        let mut image_features = Vec::new();
+        let mut ps_image: Vec<Option<PrimitiveShader>> = Vec::new();
+        // PrimitiveShader is not clonable. Use push() to initialize the vec.
+        for _ in 0..IMAGE_BUFFER_KINDS.len() {
+            ps_image.push(None);
+        }
+        for buffer_kind in 0..IMAGE_BUFFER_KINDS.len() {
+            if IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
+                let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
+                if feature_string != "" {
+                    image_features.push(feature_string);
+                }
+                let shader = try!{
+                    PrimitiveShader::new("ps_image",
+                                         &mut device,
+                                         &image_features,
+                                         options.precache_shaders)
+                };
+                ps_image[buffer_kind] = Some(shader);
+            }
+            image_features.clear();
+        }
 
-        let ps_image_rect = try!{
-            PrimitiveShader::new("ps_image",
-                                 &mut device,
-                                 &[ TEXTURE_RECT_FEATURE ],
-                                 options.precache_shaders)
-        };
+        // All yuv_image configuration.
+        let mut yuv_features = Vec::new();
+        let yuv_shader_num = IMAGE_BUFFER_KINDS.len() *
+                             YUV_FORMATS.len() *
+                             YUV_COLOR_SPACES.len();
+        let mut ps_yuv_image: Vec<Option<PrimitiveShader>> = Vec::new();
+        // PrimitiveShader is not clonable. Use push() to initialize the vec.
+        for _ in 0..yuv_shader_num {
+            ps_yuv_image.push(None);
+        }
+        for buffer_kind in 0..IMAGE_BUFFER_KINDS.len() {
+            if IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
+                for format_kind in 0..YUV_FORMATS.len() {
+                    for color_space_kind in 0..YUV_COLOR_SPACES.len() {
+                        let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
+                        if feature_string != "" {
+                            yuv_features.push(feature_string);
+                        }
+                        let feature_string = YUV_FORMATS[format_kind].get_feature_string();
+                        if feature_string != "" {
+                            yuv_features.push(feature_string);
+                        }
+                        let feature_string = YUV_COLOR_SPACES[color_space_kind].get_feature_string();
+                        if feature_string != "" {
+                            yuv_features.push(feature_string);
+                        }
 
-        let ps_yuv_image = try!{
-            PrimitiveShader::new("ps_yuv_image",
-                                 &mut device,
-                                 &[],
-                                 options.precache_shaders)
-        };
+                        let shader = try!{
+                            PrimitiveShader::new("ps_yuv_image",
+                                                 &mut device,
+                                                 &yuv_features,
+                                                 options.precache_shaders)
+                        };
+                        let index = Renderer::get_yuv_shader_index(IMAGE_BUFFER_KINDS[buffer_kind],
+                                                                   YUV_FORMATS[format_kind],
+                                                                   YUV_COLOR_SPACES[color_space_kind]);
+                        ps_yuv_image[index] = Some(shader);
+                        yuv_features.clear();
+                    }
+                }
+            }
+        }
 
         let ps_border = try!{
             PrimitiveShader::new("ps_border",
@@ -719,24 +806,38 @@ impl Renderer {
                                  options.precache_shaders)
         };
 
+        let dithering_feature = ["DITHERING"];
+
         let ps_gradient = try!{
             PrimitiveShader::new("ps_gradient",
                                  &mut device,
-                                 &[],
+                                 if options.enable_dithering {
+                                    &dithering_feature
+                                 } else {
+                                    &[]
+                                 },
                                  options.precache_shaders)
         };
 
         let ps_angle_gradient = try!{
             PrimitiveShader::new("ps_angle_gradient",
                                  &mut device,
-                                 &[],
+                                 if options.enable_dithering {
+                                    &dithering_feature
+                                 } else {
+                                    &[]
+                                 },
                                  options.precache_shaders)
         };
 
         let ps_radial_gradient = try!{
             PrimitiveShader::new("ps_radial_gradient",
                                  &mut device,
-                                 &[],
+                                 if options.enable_dithering {
+                                    &dithering_feature
+                                 } else {
+                                    &[]
+                                 },
                                  options.precache_shaders)
         };
 
@@ -788,17 +889,6 @@ impl Renderer {
             0xff, 0xff,
         ];
 
-        let dither_matrix: [u8; 64] = [
-            00, 48, 12, 60, 03, 51, 15, 63,
-            32, 16, 44, 28, 35, 19, 47, 31,
-            08, 56, 04, 52, 11, 59, 07, 55,
-            40, 24, 36, 20, 43, 27, 39, 23,
-            02, 50, 14, 62, 01, 49, 13, 61,
-            34, 18, 46, 30, 33, 17, 45, 29,
-            10, 58, 06, 54, 09, 57, 05, 53,
-            42, 26, 38, 22, 41, 25, 37, 21
-        ];
-
         // TODO: Ensure that the white texture can never get evicted when the cache supports LRU eviction!
         let white_image_id = texture_cache.new_item_id();
         texture_cache.insert(white_image_id,
@@ -823,14 +913,31 @@ impl Renderer {
                             RenderTargetMode::LayerRenderTarget(1),
                             None);
 
-        let dither_matrix_texture_id = device.create_texture_ids(1, TextureTarget::Default)[0];
-        device.init_texture(dither_matrix_texture_id,
-                            8,
-                            8,
-                            ImageFormat::A8,
-                            TextureFilter::Nearest,
-                            RenderTargetMode::None,
-                            Some(&dither_matrix));
+        let dither_matrix_texture_id = if options.enable_dithering {
+            let dither_matrix: [u8; 64] = [
+                00, 48, 12, 60, 03, 51, 15, 63,
+                32, 16, 44, 28, 35, 19, 47, 31,
+                08, 56, 04, 52, 11, 59, 07, 55,
+                40, 24, 36, 20, 43, 27, 39, 23,
+                02, 50, 14, 62, 01, 49, 13, 61,
+                34, 18, 46, 30, 33, 17, 45, 29,
+                10, 58, 06, 54, 09, 57, 05, 53,
+                42, 26, 38, 22, 41, 25, 37, 21
+            ];
+
+            let id = device.create_texture_ids(1, TextureTarget::Default)[0];
+            device.init_texture(id,
+                                8,
+                                8,
+                                ImageFormat::A8,
+                                TextureFilter::Nearest,
+                                RenderTargetMode::None,
+                                Some(&dither_matrix));
+
+            Some(id)
+        } else {
+            None
+        };
 
         let debug_renderer = DebugRenderer::new(&mut device);
 
@@ -939,7 +1046,6 @@ impl Renderer {
             ps_text_run: ps_text_run,
             ps_text_run_subpixel: ps_text_run_subpixel,
             ps_image: ps_image,
-            ps_image_rect: ps_image_rect,
             ps_yuv_image: ps_yuv_image,
             ps_border: ps_border,
             ps_border_corner: ps_border_corner,
@@ -985,6 +1091,10 @@ impl Renderer {
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
         Ok((renderer, sender))
+    }
+
+    fn get_yuv_shader_index(buffer_kind: ImageBufferKind, format: YuvFormat, color_space: YuvColorSpace) -> usize {
+        ((buffer_kind as usize) * YUV_FORMATS.len() + (format as usize)) * YUV_COLOR_SPACES.len() + (color_space as usize)
     }
 
     pub fn gl(&self) -> &gl::Gl {
@@ -1240,7 +1350,9 @@ impl Renderer {
                                             };
                                             handler.unlock(ext_image.id, ext_image.channel_index);
                                         }
-                                        _ => {
+                                        ExternalImageType::Texture2DHandle |
+                                        ExternalImageType::TextureRectHandle |
+                                        ExternalImageType::TextureExternalHandle => {
                                             panic!("External texture handle should not use TextureUpdateOp::Create.");
                                         }
                                     }
@@ -1321,7 +1433,9 @@ impl Renderer {
         }
 
         // TODO: this probably isn't the best place for this.
-        self.device.bind_texture(TextureSampler::Dither, self.dither_matrix_texture_id);
+        if let Some(id) = self.dither_matrix_texture_id {
+            self.device.bind_texture(TextureSampler::Dither, id);
+        }
 
         self.device.update_vao_instances(vao, data, VertexUsageHint::Stream);
         self.device.draw_indexed_triangles_instanced_u16(6, data.len() as i32);
@@ -1370,16 +1484,15 @@ impl Renderer {
                 };
                 (GPU_TAG_PRIM_TEXT_RUN, shader)
             }
-            AlphaBatchKind::Image => {
-                let shader = self.ps_image.get(&mut self.device, transform_kind);
+            AlphaBatchKind::Image(image_buffer_kind) => {
+                let shader = self.ps_image[image_buffer_kind as usize].as_mut().unwrap().get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_IMAGE, shader)
             }
-            AlphaBatchKind::ImageRect => {
-                let shader = self.ps_image_rect.get(&mut self.device, transform_kind);
-                (GPU_TAG_PRIM_IMAGE_RECT, shader)
-            }
-            AlphaBatchKind::YuvImage => {
-                let shader = self.ps_yuv_image.get(&mut self.device, transform_kind);
+            AlphaBatchKind::YuvImage(image_buffer_kind, format, color_space) => {
+                let shader_index = Renderer::get_yuv_shader_index(image_buffer_kind,
+                                                                  format,
+                                                                  color_space);
+                let shader = self.ps_yuv_image[shader_index].as_mut().unwrap().get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_YUV_IMAGE, shader)
             }
             AlphaBatchKind::Border => {
@@ -1711,7 +1824,7 @@ impl Renderer {
                     ExternalImageType::Texture2DHandle => TextureTarget::Default,
                     ExternalImageType::TextureRectHandle => TextureTarget::Rect,
                     ExternalImageType::TextureExternalHandle => TextureTarget::External,
-                    _ => {
+                    ExternalImageType::ExternalBuffer => {
                         panic!("{:?} is not a suitable image type in update_deferred_resolves().",
                             ext_image.image_type);
                     }
@@ -1997,6 +2110,7 @@ pub struct RendererOptions {
     pub device_pixel_ratio: f32,
     pub resource_override_path: Option<PathBuf>,
     pub enable_aa: bool,
+    pub enable_dithering: bool,
     pub enable_profiler: bool,
     pub max_recorded_profiles: usize,
     pub debug: bool,
@@ -2019,6 +2133,7 @@ impl Default for RendererOptions {
             device_pixel_ratio: 1.0,
             resource_override_path: None,
             enable_aa: true,
+            enable_dithering: true,
             enable_profiler: false,
             max_recorded_profiles: 0,
             debug: false,

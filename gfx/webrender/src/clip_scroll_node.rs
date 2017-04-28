@@ -91,7 +91,7 @@ pub struct ClipScrollNode {
     pub local_clip_rect: LayerRect,
 
     /// Viewport rectangle clipped against parent layer(s) viewport rectangles.
-    /// This is in the coordinate system of the parent reference frame.
+    /// This is in the coordinate system which starts at our origin.
     pub combined_local_viewport_rect: LayerRect,
 
     /// World transform for the viewport rect itself. This is the parent
@@ -101,6 +101,11 @@ pub struct ClipScrollNode {
 
     /// World transform for content transformed by this node.
     pub world_content_transform: LayerToWorldTransform,
+
+    /// The scroll offset of all the nodes between us and our parent reference frame.
+    /// This is used to calculate intersections between us and content or nodes that
+    /// are also direct children of our reference frame.
+    pub reference_frame_relative_scroll_offset: LayerPoint,
 
     /// Pipeline that this layer belongs to
     pub pipeline_id: PipelineId,
@@ -133,6 +138,7 @@ impl ClipScrollNode {
             combined_local_viewport_rect: LayerRect::zero(),
             world_viewport_transform: LayerToWorldTransform::identity(),
             world_content_transform: LayerToWorldTransform::identity(),
+            reference_frame_relative_scroll_offset: LayerPoint::zero(),
             parent: Some(parent_id),
             children: Vec::new(),
             pipeline_id: pipeline_id,
@@ -154,6 +160,7 @@ impl ClipScrollNode {
             combined_local_viewport_rect: LayerRect::zero(),
             world_viewport_transform: LayerToWorldTransform::identity(),
             world_content_transform: LayerToWorldTransform::identity(),
+            reference_frame_relative_scroll_offset: LayerPoint::zero(),
             parent: parent_id,
             children: Vec::new(),
             pipeline_id: pipeline_id,
@@ -224,6 +231,11 @@ impl ClipScrollNode {
                             parent_combined_viewport_rect: &ScrollLayerRect,
                             parent_scroll_offset: LayerPoint,
                             parent_accumulated_scroll_offset: LayerPoint) {
+        self.reference_frame_relative_scroll_offset = match self.node_type {
+            NodeType::ReferenceFrame(_) => LayerPoint::zero(),
+            NodeType::Clip(_) => parent_accumulated_scroll_offset,
+        };
+
         let local_transform = match self.node_type {
             NodeType::ReferenceFrame(transform) => transform,
             NodeType::Clip(_) => LayerToScrollTransform::identity(),
@@ -398,6 +410,14 @@ impl ClipScrollNode {
             return false;
         }
         ray_intersects_rect(p0, p1, self.local_viewport_rect.to_untyped())
+    }
+
+    pub fn scroll_offset(&self) -> Option<LayerPoint> {
+        match self.node_type {
+            NodeType::Clip(_) if self.scrollable_width() > 0. || self.scrollable_height() > 0. =>
+                Some(self.scrolling.offset),
+            _ => None,
+        }
     }
 }
 

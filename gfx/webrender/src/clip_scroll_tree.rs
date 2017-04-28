@@ -109,10 +109,9 @@ impl ClipScrollTree {
     pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let mut result = vec![];
         for (id, node) in self.nodes.iter() {
-            match node.node_type {
-                NodeType::Clip(_) => result.push(
-                    ScrollLayerState { id: *id, scroll_offset: node.scrolling.offset }),
-                _ => {},
+            match node.scroll_offset() {
+                Some(offset) => result.push(ScrollLayerState { id: *id, scroll_offset: offset }),
+                None => {}
             }
         }
         result

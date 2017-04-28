@@ -6,8 +6,8 @@ use frame_builder::FrameBuilder;
 use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, PrimitiveContainer};
 use tiling::PrimitiveFlags;
 use util::pack_as_float;
-use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ColorF, NormalBorder};
-use webrender_traits::{ClipId, ClipRegion, LayerPoint, LayerRect, LayerSize};
+use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ClipRegion};
+use webrender_traits::{ColorF, LayerPoint, LayerRect, LayerSize, NormalBorder};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BorderCornerKind {
@@ -121,7 +121,7 @@ impl FrameBuilder {
                                    rect: &LayerRect,
                                    border: &NormalBorder,
                                    widths: &BorderWidths,
-                                   clip_id: ClipId,
+                                   clip_and_scroll: ClipAndScrollInfo,
                                    clip_region: &ClipRegion,
                                    use_new_border_path: bool) {
         let radius = &border.radius;
@@ -160,7 +160,7 @@ impl FrameBuilder {
             ],
         };
 
-        self.add_primitive(clip_id,
+        self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
@@ -175,7 +175,7 @@ impl FrameBuilder {
                              rect: &LayerRect,
                              border: &NormalBorder,
                              widths: &BorderWidths,
-                             clip_id: ClipId,
+                             clip_and_scroll: ClipAndScrollInfo,
                              clip_region: &ClipRegion) {
         // The border shader is quite expensive. For simple borders, we can just draw
         // the border with a few rectangles. This generally gives better batching, and
@@ -204,7 +204,7 @@ impl FrameBuilder {
             self.add_normal_border_primitive(rect,
                                              border,
                                              widths,
-                                             clip_id,
+                                             clip_and_scroll,
                                              clip_region,
                                              false);
             return;
@@ -227,7 +227,7 @@ impl FrameBuilder {
             self.add_normal_border_primitive(rect,
                                              border,
                                              widths,
-                                             clip_id,
+                                             clip_and_scroll,
                                              clip_region,
                                              false);
             return;
@@ -250,15 +250,14 @@ impl FrameBuilder {
 
             // Add a solid rectangle for each visible edge/corner combination.
             if top_edge == BorderEdgeKind::Solid {
-                self.add_solid_rectangle(clip_id,
-                                         &LayerRect::new(p0,
-                                                         LayerSize::new(rect_width, top_len)),
+                self.add_solid_rectangle(clip_and_scroll,
+                                         &LayerRect::new(p0, LayerSize::new(rect_width, top_len)),
                                          clip_region,
                                          &border.top.color,
                                          PrimitiveFlags::None);
             }
             if left_edge == BorderEdgeKind::Solid {
-                self.add_solid_rectangle(clip_id,
+                self.add_solid_rectangle(clip_and_scroll,
                                          &LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
                                                          LayerSize::new(left_len,
                                                                         rect_height - top_len - bottom_len)),
@@ -267,7 +266,7 @@ impl FrameBuilder {
                                          PrimitiveFlags::None);
             }
             if right_edge == BorderEdgeKind::Solid {
-                self.add_solid_rectangle(clip_id,
+                self.add_solid_rectangle(clip_and_scroll,
                                          &LayerRect::new(LayerPoint::new(p1.x - right_len,
                                                                          p0.y + top_len),
                                                          LayerSize::new(right_len,
@@ -277,7 +276,7 @@ impl FrameBuilder {
                                          PrimitiveFlags::None);
             }
             if bottom_edge == BorderEdgeKind::Solid {
-                self.add_solid_rectangle(clip_id,
+                self.add_solid_rectangle(clip_and_scroll,
                                          &LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
                                                          LayerSize::new(rect_width, bottom_len)),
                                          clip_region,
@@ -288,7 +287,7 @@ impl FrameBuilder {
             self.add_normal_border_primitive(rect,
                                              border,
                                              widths,
-                                             clip_id,
+                                             clip_and_scroll,
                                              clip_region,
                                              true);
         }
