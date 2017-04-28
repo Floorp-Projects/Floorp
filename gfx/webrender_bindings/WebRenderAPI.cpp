@@ -674,6 +674,38 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
+                                         const WrClipRegion& aClip,
+                                         wr::ImageKey aImageChannel0,
+                                         wr::ImageKey aImageChannel1,
+                                         wr::ImageKey aImageChannel2,
+                                         WrYuvColorSpace aColorSpace)
+{
+  wr_dp_push_yuv_planar_image(mWrState,
+                              aBounds,
+                              aClip,
+                              aImageChannel0,
+                              aImageChannel1,
+                              aImageChannel2,
+                              aColorSpace);
+}
+
+void
+DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
+                                  const WrClipRegion& aClip,
+                                  wr::ImageKey aImageChannel0,
+                                  wr::ImageKey aImageChannel1,
+                                  WrYuvColorSpace aColorSpace)
+{
+  wr_dp_push_yuv_NV12_image(mWrState,
+                            aBounds,
+                            aClip,
+                            aImageChannel0,
+                            aImageChannel1,
+                            aColorSpace);
+}
+
+void
 DisplayListBuilder::PushIFrame(const WrRect& aBounds,
                                const WrClipRegion& aClip,
                                PipelineId aPipeline)

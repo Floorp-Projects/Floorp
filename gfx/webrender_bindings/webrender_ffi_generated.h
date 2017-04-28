@@ -95,8 +95,8 @@ enum class WrRepeatMode : uint32_t {
 };
 
 enum class WrYuvColorSpace : uint32_t {
-  Rec601 = 1,
-  Rec709 = 2,
+  Rec601 = 0,
+  Rec709 = 1,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -813,11 +813,21 @@ wr_dp_push_text(WrState* state,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_yuv_image(WrState* state,
+wr_dp_push_yuv_NV12_image(WrState* state,
     WrRect bounds,
     WrClipRegion clip,
-    const WrImageKey* image_keys,
-    uint8_t key_num,
+    WrImageKey image_key_0,
+    WrImageKey image_key_1,
+    WrYuvColorSpace color_space)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_yuv_planar_image(WrState* state,
+    WrRect bounds,
+    WrClipRegion clip,
+    WrImageKey image_key_0,
+    WrImageKey image_key_1,
+    WrImageKey image_key_2,
     WrYuvColorSpace color_space)
 WR_FUNC;
 
