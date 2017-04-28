@@ -926,3 +926,5 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY updateRestart.cancelButton.label "Not Now">
 <!ENTITY updateRestart.cancelButton.accesskey "N">
 <!ENTITY updateRestart.panelUI.label "Restart &brandShorterName; to apply the update">
+
+<!ENTITY pageActionButton.tooltip "Page actions">
