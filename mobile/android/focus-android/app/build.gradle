@@ -84,6 +84,19 @@ android {
                 srcDir "${projectDir}/src/main/assets/"
             }
         }
+
+        focusWebkitRelease {
+            java.srcDir 'src/focusRelease/java'
+        }
+        focusGeckoRelease {
+            java.srcDir 'src/focusRelease/java'
+        }
+        klarWebkitRelease {
+            java.srcDir 'src/klarRelease/java'
+        }
+        klarGeckoRelease {
+            java.srcDir 'src/klarRelease/java'
+        }
     }
 }
 
