@@ -261,8 +261,6 @@ struct Cell
     // May be overridden by GC thing kinds that have a compartment pointer.
     inline JSCompartment* maybeCompartment() const { return nullptr; }
 
-    // The StoreBuffer used to record incoming pointers from the tenured heap.
-    // This will return nullptr for a tenured cell.
     inline StoreBuffer* storeBuffer() const;
 
     inline JS::TraceKind getTraceKind() const;
@@ -771,26 +769,25 @@ FreeSpan::checkRange(uintptr_t first, uintptr_t last, const Arena* arena) const
  */
 struct ChunkTrailer
 {
-    // Construct a Nursery ChunkTrailer.
+    /* Construct a Nursery ChunkTrailer. */
     ChunkTrailer(JSRuntime* rt, StoreBuffer* sb)
       : location(ChunkLocation::Nursery), storeBuffer(sb), runtime(rt)
     {}
 
-    // Construct a Tenured heap ChunkTrailer.
+    /* Construct a Tenured heap ChunkTrailer. */
     explicit ChunkTrailer(JSRuntime* rt)
       : location(ChunkLocation::TenuredHeap), storeBuffer(nullptr), runtime(rt)
     {}
 
   public:
-    // The index of the chunk in the nursery, or LocationTenuredHeap.
+    /* The index the chunk in the nursery, or LocationTenuredHeap. */
     ChunkLocation   location;
     uint32_t        padding;
 
-    // The store buffer for pointers from tenured things to things in this
-    // chunk. Will be non-null only for nursery chunks.
+    /* The store buffer for writes to things in this chunk or nullptr. */
     StoreBuffer*    storeBuffer;
 
-    // Provide quick access to the runtime from absolutely anywhere.
+    /* This provides quick access to the runtime from absolutely anywhere. */
     JSRuntime*      runtime;
 };
 
