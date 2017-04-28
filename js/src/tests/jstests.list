@@ -216,6 +216,10 @@ skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-throws.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
 skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317383
+skip script test262/built-ins/TypedArrays/buffer-arg-byteoffset-is-negative-throws.js
+skip script test262/built-ins/TypedArrays/buffer-arg-defined-negative-length.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=924058
 skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A2_T2.js
 skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A3_T1.js
