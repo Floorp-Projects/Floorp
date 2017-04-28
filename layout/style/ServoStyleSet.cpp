@@ -366,7 +366,9 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   const ServoComputedValues* parentComputedValues =
     aParentContext->StyleSource().AsServoComputedValues();
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(), parentComputedValues).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(),
+                                 parentComputedValues,
+                                 InheritTarget::Text).Consume();
 
   return GetContext(computedValues.forget(), aParentContext,
                     nsCSSAnonBoxes::mozText,
@@ -377,9 +379,13 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
-  const ServoComputedValues* parent = aParentContext->StyleSource().AsServoComputedValues();
+  const ServoComputedValues* parent =
+    aParentContext->StyleSource().AsServoComputedValues();
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(), parent).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(),
+                                 parent,
+                                 InheritTarget::FirstLetterContinuation)
+                                 .Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -399,7 +405,10 @@ ServoStyleSet::ResolveStyleForPlaceholder()
   }
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(), nullptr).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(),
+                                 nullptr,
+                                 InheritTarget::PlaceholderFrame)
+                                 .Consume();
   MOZ_ASSERT(computedValues);
 
   RefPtr<nsStyleContext> retval =
