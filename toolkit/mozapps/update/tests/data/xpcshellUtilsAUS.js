@@ -39,7 +39,7 @@ const URL_HTTP_UPDATE_SJS = "http://test_details/";
 /* global INSTALL_LOCALE, MOZ_APP_NAME, BIN_SUFFIX, MOZ_APP_VENDOR */
 /* global MOZ_APP_BASENAME, APP_BIN_SUFFIX, APP_INFO_NAME, APP_INFO_VENDOR */
 /* global IS_WIN, IS_MACOSX, IS_UNIX, MOZ_VERIFY_MAR_SIGNATURE */
-/* global MOZ_VERIFY_MAR_SIGNATURE, IS_AUTHENTICODE_CHECK_ENABLED */
+/* global IS_AUTHENTICODE_CHECK_ENABLED */
 load("../data/xpcshellConstantsPP.js");
 
 function getLogSuffix() {
@@ -158,8 +158,6 @@ var gHandle;
 var gGREDirOrig;
 var gGREBinDirOrig;
 var gAppDirOrig;
-
-var gApplyToDirOverride;
 
 // Variables are used instead of contants so tests can override these values if
 // necessary.
@@ -1135,18 +1133,6 @@ function getAppVersion() {
 }
 
 /**
- * Override the apply-to directory parameter to be passed to the updater.
- * This ought to cause the updater to fail when using any value that isn't the
- * default, automatically computed one.
- *
- * @param dir
- *        Complete string to use as the apply-to directory parameter.
- */
-function overrideApplyToDir(dir) {
-  gApplyToDirOverride = dir;
-}
-
-/**
  * Helper function for getting the relative path to the directory where the
  * application binary is located (e.g. <test_file_leafname>/dir.app/).
  *
@@ -1673,9 +1659,20 @@ function readServiceLogFile() {
  *          tests.
  * @param   aCheckSvcLog
  *          Whether the service log should be checked for service tests.
+ * @param   aPatchDirPath (optional)
+ *          When specified the patch directory path to use for invalid argument
+ *          tests otherwise the normal path will be used.
+ * @param   aInstallDirPath (optional)
+ *          When specified the install directory path to use for invalid
+ *          argument tests otherwise the normal path will be used.
+ * @param   aApplyToDirPath (optional)
+ *          When specified the apply to / working directory path to use for
+ *          invalid argument tests otherwise the normal path will be used.
  */
-function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue,
-                   aCheckSvcLog) {
+function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog,
+                   aPatchDirPath, aInstallDirPath, aApplyToDirPath) {
+  let isInvalidArgTest = !!aPatchDirPath || !!aInstallDirPath || !!aApplyToDirPath;
+
   let svcOriginalLog;
   if (IS_SERVICE_TEST) {
     copyFileToTestAppDir(FILE_MAINTENANCE_SERVICE_BIN, false);
@@ -1690,28 +1687,37 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue,
   Assert.ok(updateBin.exists(),
             MSG_SHOULD_EXIST + getMsgPath(updateBin.path));
 
-  let updatesDirPath = getUpdatesPatchDir().path;
-  let applyToDirPath = getApplyDirFile(null, true).path;
-  let stageDirPath = getStageDirFile(null, true).path;
+  let updatesDirPath = aPatchDirPath || getUpdatesPatchDir().path;
+  let installDirPath = aInstallDirPath || getApplyDirFile(null, true).path;
+  let applyToDirPath = aApplyToDirPath || getApplyDirFile(null, true).path;
+  let stageDirPath = aApplyToDirPath || getStageDirFile(null, true).path;
 
   let callbackApp = getApplyDirFile(DIR_RESOURCES + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
 
   setAppBundleModTime();
 
-  let args = [updatesDirPath, applyToDirPath];
+  let args = [updatesDirPath, installDirPath];
   if (aSwitchApp) {
-    args[2] = gApplyToDirOverride || stageDirPath;
+    args[2] = stageDirPath;
     args[3] = "0/replace";
   } else {
-    args[2] = gApplyToDirOverride || applyToDirPath;
+    args[2] = applyToDirPath;
     args[3] = "0";
   }
-  args = args.concat([callbackApp.parent.path, callbackApp.path]);
-  args = args.concat(gCallbackArgs);
-  debugDump("running the updater: " + updateBin.path + " " + args.join(" "));
 
-  if (aSwitchApp) {
+  let launchBin = IS_SERVICE_TEST && isInvalidArgTest ? callbackApp : updateBin;
+
+  if (!isInvalidArgTest) {
+    args = args.concat([callbackApp.parent.path, callbackApp.path]);
+    args = args.concat(gCallbackArgs);
+  } else if (IS_SERVICE_TEST) {
+    args = ["launch-service", updateBin.path].concat(args);
+  }
+
+  debugDump("launching the program: " + launchBin.path + " " + args.join(" "));
+
+  if (aSwitchApp && !isInvalidArgTest) {
     // We want to set the env vars again
     gShouldResetEnv = undefined;
   }
@@ -1720,7 +1726,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue,
 
   let process = Cc["@mozilla.org/process/util;1"].
                 createInstance(Ci.nsIProcess);
-  process.init(updateBin);
+  process.init(launchBin);
   process.run(true, args, args.length);
 
   resetEnvironment();
@@ -1751,9 +1757,11 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue,
     Assert.notEqual(contents, svcOriginalLog,
                     "the contents of the maintenanceservice.log should not " +
                     "be the same as the original contents");
-    Assert.notEqual(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1,
-                    "the contents of the maintenanceservice.log should " +
-                    "contain the successful launch string");
+    if (!isInvalidArgTest) {
+      Assert.notEqual(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1,
+                      "the contents of the maintenanceservice.log should " +
+                      "contain the successful launch string");
+    }
   }
 
   do_execute_soon(runUpdateFinished);
@@ -2581,8 +2589,12 @@ function waitForHelperExit() {
  * @param   aPostUpdateAsync
  *          When null the updater.ini is not created otherwise this parameter
  *          is passed to createUpdaterINI.
+ * @param   aPostUpdateExeRelPathPrefix
+ *          When aPostUpdateAsync null this value is ignored otherwise it is
+ *          passed to createUpdaterINI.
  */
-function setupUpdaterTest(aMarFile, aPostUpdateAsync) {
+function setupUpdaterTest(aMarFile, aPostUpdateAsync,
+                          aPostUpdateExeRelPathPrefix = "") {
   let updatesPatchDir = getUpdatesPatchDir();
   if (!updatesPatchDir.exists()) {
     updatesPatchDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
@@ -2667,7 +2679,7 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync) {
   setupActiveUpdate();
 
   if (aPostUpdateAsync !== null) {
-    createUpdaterINI(aPostUpdateAsync);
+    createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
   setupAppFilesAsync();
@@ -2690,8 +2702,10 @@ function createUpdateSettingsINI() {
  *          True or undefined if the post update process should be async. If
  *          undefined ExeAsync will not be added to the updater.ini file in
  *          order to test the default launch behavior which is async.
+ * @param   aExeRelPathPrefix
+ *          A string to prefix the ExeRelPath values in the updater.ini.
  */
-function createUpdaterINI(aIsExeAsync) {
+function createUpdaterINI(aIsExeAsync, aExeRelPathPrefix) {
   let exeArg = "ExeArg=post-update-async\n";
   let exeAsync = "";
   if (aIsExeAsync !== undefined) {
@@ -2703,16 +2717,23 @@ function createUpdaterINI(aIsExeAsync) {
     }
   }
 
+  if (aExeRelPathPrefix && IS_WIN) {
+    aExeRelPathPrefix = aExeRelPathPrefix.replace("/", "\\");
+  }
+
+  let exeRelPathMac = "ExeRelPath=" + aExeRelPathPrefix + DIR_RESOURCES +
+                      gPostUpdateBinFile + "\n";
+  let exeRelPathWin = "ExeRelPath=" + aExeRelPathPrefix + gPostUpdateBinFile + "\n";
   let updaterIniContents = "[Strings]\n" +
                            "Title=Update Test\n" +
                            "Info=Running update test " + gTestID + "\n\n" +
                            "[PostUpdateMac]\n" +
-                           "ExeRelPath=" + DIR_RESOURCES + gPostUpdateBinFile + "\n" +
+                           exeRelPathMac +
                            exeArg +
                            exeAsync +
                            "\n" +
                            "[PostUpdateWin]\n" +
-                           "ExeRelPath=" + gPostUpdateBinFile + "\n" +
+                           exeRelPathWin +
                            exeArg +
                            exeAsync;
   let updaterIni = getApplyDirFile(DIR_RESOURCES + FILE_UPDATER_INI, true);
