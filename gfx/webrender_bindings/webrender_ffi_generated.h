@@ -485,9 +485,9 @@ struct WrExternalImage {
   }
 };
 
-typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
+typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId, uint8_t);
 
-typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
+typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId, uint8_t);
 
 struct WrExternalImageHandler {
   void* external_image_obj;
