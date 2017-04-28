@@ -92,13 +92,27 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
     });
 
-    it("renders a timestamp", () => {
+    it("renders a timestamp when passed a truthy timestampsVisible prop", () => {
       const message = stubPreparedMessages.get("console.log('foobar', 'test')");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      const wrapper = render(ConsoleApiCall({
+        message,
+        serviceContainer,
+        timestampsVisible: true,
+      }));
       const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
       const { timestampString } = new L10n();
 
       expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
+    });
+
+    it("does not render a timestamp when not asked to", () => {
+      const message = stubPreparedMessages.get("console.log('foobar', 'test')");
+      const wrapper = render(ConsoleApiCall({
+        message,
+        serviceContainer,
+      }));
+
+      expect(wrapper.find(".timestamp").length).toBe(0);
     });
   });
 

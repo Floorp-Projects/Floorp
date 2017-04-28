@@ -6,11 +6,10 @@
 const expect = require("expect");
 const {
   renderComponent,
-  shallowRenderComponent
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
-const { MessageContainer } = require("devtools/client/webconsole/new-console-output/components/message-container");
+const { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/new-console-output/components/message-container");
 const ConsoleApiCall = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
 const EvaluationResult = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
@@ -50,11 +49,7 @@ describe("MessageContainer component:", () => {
 
     messageTypes.forEach(info => {
       const { component, message } = info;
-      const rendered = shallowRenderComponent(MessageContainer, {
-        message,
-        serviceContainer,
-      });
-      expect(rendered.type).toBe(component);
+      expect(getMessageComponent(message)).toBe(component);
     });
   });
 });
