@@ -19,6 +19,7 @@ PageError.propTypes = {
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
   indent: PropTypes.number.isRequired,
+  timestampsVisible: PropTypes.bool.isRequired,
 };
 
 PageError.defaultProps = {
@@ -33,6 +34,7 @@ function PageError(props) {
     open,
     serviceContainer,
     indent,
+    timestampsVisible,
   } = props;
   const {
     id: messageId,
@@ -55,7 +57,7 @@ function PageError(props) {
     messageBody = `${message.messageText.initial}…`;
   }
 
-  const childProps = {
+  return Message({
     dispatch,
     messageId,
     open,
@@ -73,8 +75,8 @@ function PageError(props) {
     exceptionDocURL,
     timeStamp,
     notes,
-  };
-  return Message(childProps);
+    timestampsVisible,
+  });
 }
 
 module.exports = PageError;
