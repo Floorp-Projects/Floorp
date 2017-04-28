@@ -377,10 +377,6 @@ struct Statistics
     /* Allocated space before the GC started. */
     size_t preBytes;
 
-    /* GC numbers as of the beginning of the collection. */
-    uint64_t startingMinorGCNumber;
-    uint64_t startingMajorGCNumber;
-
     /* Records the maximum GC pause in an API-controlled interval (in us). */
     mutable TimeDuration maxPauseInInterval;
 

@@ -736,9 +736,7 @@ Statistics::formatJsonDescription(uint64_t timestamp) const
         "\"nonincremental_reason\":\"%s\","
         "\"allocated\":%u,"
         "\"added_chunks\":%d,"
-        "\"removed_chunks\":%d,"
-        "\"major_gc_number\":%llu,"
-        "\"minor_gc_number\":%llu,";
+        "\"removed_chunks\":%d,";
     char buffer[1024];
     SprintfLiteral(buffer, format,
                    (unsigned long long)timestamp,
@@ -757,9 +755,7 @@ Statistics::formatJsonDescription(uint64_t timestamp) const
                    ExplainAbortReason(nonincrementalReason_),
                    unsigned(preBytes / 1024 / 1024),
                    counts[STAT_NEW_CHUNK],
-                   counts[STAT_DESTROY_CHUNK],
-                   startingMajorGCNumber,
-                   startingMinorGCNumber);
+                   counts[STAT_DESTROY_CHUNK]);
     return DuplicateString(buffer);
 }
 
@@ -1071,7 +1067,6 @@ Statistics::beginGC(JSGCInvocationKind kind)
     nonincrementalReason_ = gc::AbortReason::None;
 
     preBytes = runtime->gc.usage.gcBytes();
-    startingMajorGCNumber = runtime->gc.majorGCCount();
 }
 
 void
@@ -1125,7 +1120,6 @@ void
 Statistics::beginNurseryCollection(JS::gcreason::Reason reason)
 {
     count(STAT_MINOR_GC);
-    startingMinorGCNumber = runtime->gc.minorGCCount();
     if (nurseryCollectionCallback) {
         (*nurseryCollectionCallback)(TlsContext.get(),
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START,
