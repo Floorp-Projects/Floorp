@@ -153,7 +153,7 @@ FormAutofillParent.prototype = {
       return false;
     }
 
-    return profileStorage.getAll().length > 0;
+    return profileStorage.addresses.getAll({noComputedFields: true}).length > 0;
   },
 
   /**
@@ -181,14 +181,14 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:SaveAddress": {
         if (data.guid) {
-          profileStorage.update(data.guid, data.address);
+          profileStorage.addresses.update(data.guid, data.address);
         } else {
-          profileStorage.add(data.address);
+          profileStorage.addresses.add(data.address);
         }
         break;
       }
       case "FormAutofill:RemoveAddresses": {
-        data.guids.forEach(guid => profileStorage.remove(guid));
+        data.guids.forEach(guid => profileStorage.addresses.remove(guid));
         break;
       }
     }
@@ -225,9 +225,9 @@ FormAutofillParent.prototype = {
     let addresses = [];
 
     if (info && info.fieldName) {
-      addresses = profileStorage.getByFilter({searchString, info});
+      addresses = profileStorage.addresses.getByFilter({searchString, info});
     } else {
-      addresses = profileStorage.getAll();
+      addresses = profileStorage.addresses.getAll();
     }
 
     target.sendAsyncMessage("FormAutofill:Addresses", addresses);
@@ -240,7 +240,7 @@ FormAutofillParent.prototype = {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
-    profileStorage.getAll().forEach((address) => {
+    profileStorage.addresses.getAll().forEach((address) => {
       Object.keys(address).forEach((fieldName) => {
         if (!address[fieldName]) {
           return;
