@@ -243,18 +243,6 @@ bool TestLdrUnloadDll(void* aFunc)
   return patchedLdrUnloadDll(0) != 0;
 }
 
-bool TestLdrResolveDelayLoadedAPI(void* aFunc)
-{
-  // These pointers are disguised as PVOID to avoid pulling in obscure headers
-  typedef PVOID (WINAPI *LdrResolveDelayLoadedAPIType)(PVOID, PVOID, PVOID,
-                                                       PVOID, PVOID, ULONG);
-  auto patchedLdrResolveDelayLoadedAPI =
-    reinterpret_cast<LdrResolveDelayLoadedAPIType>(aFunc);
-  // No idea how to call this API. Flags==99 is just an arbitrary number that
-  // doesn't crash when the other params are null.
-  return patchedLdrResolveDelayLoadedAPI(0, 0, 0, 0, 0, 99) == 0;
-}
-
 bool TestSetUnhandledExceptionFilter(void* aFunc)
 {
   auto patchedSetUnhandledExceptionFilter =
@@ -483,7 +471,6 @@ int main()
 #ifdef _M_X64
       TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
       TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
-      TestHook(TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
