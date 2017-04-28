@@ -1,4 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == input-submit.html input-submit.html
-== input-image.html input-image.html
-fails == button-submit.html button-submit.html

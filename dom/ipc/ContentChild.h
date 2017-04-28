@@ -664,7 +664,7 @@ public:
                       bool aExistenceCheck, bool aIsFromNsIFile);
 
   typedef std::function<void(PRFileDesc*)> AnonymousTemporaryFileCallback;
-  nsresult AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCallback);
+  nsresult AsyncOpenAnonymousTemporaryFile(const AnonymousTemporaryFileCallback& aCallback);
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);

@@ -3,15 +3,15 @@
 fuzzy-if(Android,1,2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
 fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
 fuzzy-if(Android,3,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
-fuzzy-if(Android,1,2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
-fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
-fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
+fuzzy-if(Android,1,2) skip-if(!Android) pref(apz.allow_zooming,true) fails-if(stylo) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
+fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) fails-if(stylo) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
+fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) fails-if(stylo) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
 
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-fuzzy-if(Android,54,18) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
-fuzzy-if(Android,45,21) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
+fuzzy-if(Android,54,18) skip-if(!Android) pref(apz.allow_zooming,true) fails-if(stylo) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
+fuzzy-if(Android,45,21) skip-if(!Android) pref(apz.allow_zooming,true) fails-if(stylo) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
 
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html

@@ -811,22 +811,6 @@ TypeSet::IsTypeMarked(JSRuntime* rt, TypeSet::Type* v)
     return rv;
 }
 
-/* static */ bool
-TypeSet::IsTypeAllocatedDuringIncremental(TypeSet::Type v)
-{
-    bool rv;
-    if (v.isSingletonUnchecked()) {
-        JSObject* obj = v.singletonNoBarrier();
-        rv = obj->isTenured() && obj->asTenured().arena()->allocatedDuringIncremental;
-    } else if (v.isGroupUnchecked()) {
-        ObjectGroup* group = v.groupNoBarrier();
-        rv = group->arena()->allocatedDuringIncremental;
-    } else {
-        rv = false;
-    }
-    return rv;
-}
-
 static inline bool
 IsObjectKeyAboutToBeFinalized(TypeSet::ObjectKey** keyp)
 {

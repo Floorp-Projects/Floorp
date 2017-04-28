@@ -7,7 +7,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 namespace mozilla {
 namespace cyclecollector {
@@ -15,9 +15,9 @@ namespace cyclecollector {
 void
 HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(cx, "Should have a CycleCollectedJSContext by now");
-  cx->AddJSHolder(aHolder, aTracer);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->AddJSHolder(aHolder, aTracer);
 }
 
 void
@@ -35,9 +35,9 @@ HoldJSObjectsImpl(nsISupports* aHolder)
 void
 DropJSObjectsImpl(void* aHolder)
 {
-  CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(cx, "Should have a CycleCollectedJSContext by now");
-  cx->RemoveJSHolder(aHolder);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->RemoveJSHolder(aHolder);
 }
 
 void
@@ -59,9 +59,9 @@ DropJSObjectsImpl(nsISupports* aHolder)
 bool
 IsJSHolder(void* aHolder)
 {
-  CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(cx, "Should have a CycleCollectedJSContext by now");
-  return cx->IsJSHolder(aHolder);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  return rt->IsJSHolder(aHolder);
 }
 #endif
 

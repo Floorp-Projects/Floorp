@@ -5,7 +5,7 @@ include vector/reftest.list
 == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
-== layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
+fails-if(stylo) == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
 fuzzy-if(Android,9,600000) fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
 fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
 fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
@@ -110,23 +110,23 @@ pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-clon
 # other
 pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-slice.html background-size-cover-clone.html
 
-random-if(OSX==1010) == background-size-monster-ch.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) fails-if(stylo) == background-size-monster-ch.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-cm.html background-size-monster-ref.html # bug 1129300
-random-if(OSX==1010) == background-size-monster-em.html background-size-monster-ref.html # bug 1129300
-random-if(OSX==1010) == background-size-monster-ex.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) fails-if(stylo) == background-size-monster-em.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) fails-if(stylo) == background-size-monster-ex.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-inches.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-mm.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-pc.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-pt.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-px.html background-size-monster-ref.html # bug 1129300
-random-if(OSX==1010) == background-size-monster-rem.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) fails-if(stylo) == background-size-monster-rem.html background-size-monster-ref.html # bug 1129300
 
 # There seems to be a pixel-snapping problem here, where the repeated background
 # image isn't being snapped at its boundaries.  Note that the boundaries within
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails-if(!stylo) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
@@ -137,7 +137,7 @@ fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
 
-== really-big-background.html really-big-background-ref.html
+fails-if(stylo) == really-big-background.html really-big-background-ref.html
 == body-background.html body-background-ref.html
 == table-background.html table-background-ref.html
 == table-background-print.html table-background-print-ref.html
@@ -183,6 +183,6 @@ pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) 
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-text-1c.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-text-1d.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-text-1e.html background-clip-text-1-ref.html
-pref(layout.css.background-clip-text.enabled,false) != background-clip-text-1a.html background-clip-text-1-ref.html
+pref(layout.css.background-clip-text.enabled,false) fails-if(stylo) != background-clip-text-1a.html background-clip-text-1-ref.html
 
 pref(layout.css.background-clip-text.enabled,true) == background-clip-text-2.html background-clip-text-2-ref.html
