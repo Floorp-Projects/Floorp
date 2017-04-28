@@ -187,6 +187,7 @@ LINTER = {
         'testing/mozbase',
         'testing/mochitest',
         'testing/talos/',
+        'tools/git',
         'tools/lint',
         'tools/mercurial',
         'toolkit/components/telemetry',
