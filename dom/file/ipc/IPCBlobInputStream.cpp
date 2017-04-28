@@ -6,6 +6,7 @@
 
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
+#include "IPCBlobInputStreamStorage.h"
 #include "nsIAsyncInputStream.h"
 #include "mozilla/SystemGroup.h"
 
@@ -76,6 +77,16 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
   , mState(eInit)
 {
   MOZ_ASSERT(aActor);
+
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIInputStream> stream;
+    IPCBlobInputStreamStorage::Get()->GetStream(mActor->ID(),
+                                                getter_AddRefs(stream));
+    if (stream) {
+      mState = eRunning;
+      mRemoteStream = stream;
+    }
+  }
 }
 
 IPCBlobInputStream::~IPCBlobInputStream()
