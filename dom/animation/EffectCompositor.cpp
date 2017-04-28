@@ -960,24 +960,65 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  using ElementsToRestyleIterType =
+    nsDataHashtable<PseudoElementHashEntry, bool>::Iterator;
+  auto getNeededRestyleTarget = [&](const ElementsToRestyleIterType& aIter)
+                                -> NonOwningAnimationTarget {
+    NonOwningAnimationTarget returnTarget;
+
+    // Ignore throttled restyle.
+    if (!aIter.Data()) {
+      return returnTarget;
+    }
+
+    const NonOwningAnimationTarget& target = aIter.Key();
+
+    // Ignore restyles that aren't in the flattened tree subtree rooted at
+    // aRoot.
+    if (aRoot &&
+        !nsContentUtils::ContentIsFlattenedTreeDescendantOf(target.mElement,
+                                                            aRoot)) {
+      return returnTarget;
+    }
+
+    returnTarget = target;
+    return returnTarget;
+  };
+
   bool foundElementsNeedingRestyle = false;
+
+  nsTArray<NonOwningAnimationTarget> elementsWithCascadeUpdates;
   for (size_t i = 0; i < kCascadeLevelCount; ++i) {
     CascadeLevel cascadeLevel = CascadeLevel(i);
-    for (auto iter = mElementsToRestyle[cascadeLevel].Iter();
-         !iter.Done(); iter.Next()) {
-      bool postedRestyle = iter.Data();
-      // Ignore throttled restyle.
-      if (!postedRestyle) {
+    auto& elementSet = mElementsToRestyle[cascadeLevel];
+    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
+      const NonOwningAnimationTarget& target = getNeededRestyleTarget(iter);
+      if (!target.mElement) {
         continue;
       }
 
-      NonOwningAnimationTarget target = iter.Key();
+      EffectSet* effects = EffectSet::GetEffectSet(target.mElement,
+                                                   target.mPseudoType);
+      if (!effects || !effects->CascadeNeedsUpdate()) {
+        continue;
+      }
 
-      // Ignore restyles that aren't in the flattened tree subtree rooted at
-      // aRoot.
-      if (aRoot &&
-          !nsContentUtils::ContentIsFlattenedTreeDescendantOf(target.mElement,
-                                                              aRoot)) {
+      elementsWithCascadeUpdates.AppendElement(target);
+    }
+  }
+
+  for (const NonOwningAnimationTarget& target: elementsWithCascadeUpdates) {
+      MaybeUpdateCascadeResults(target.mElement,
+                                target.mPseudoType);
+  }
+  elementsWithCascadeUpdates.Clear();
+
+  for (size_t i = 0; i < kCascadeLevelCount; ++i) {
+    CascadeLevel cascadeLevel = CascadeLevel(i);
+    auto& elementSet = mElementsToRestyle[cascadeLevel];
+    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
+      const NonOwningAnimationTarget& target = getNeededRestyleTarget(iter);
+      if (!target.mElement) {
         continue;
       }
 
@@ -993,15 +1034,13 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
 
       foundElementsNeedingRestyle = true;
 
-      EffectSet* effects =
-        EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+      EffectSet* effects = EffectSet::GetEffectSet(target.mElement,
+                                                   target.mPseudoType);
       if (!effects) {
         // Drop EffectSets that have been destroyed.
         iter.Remove();
         continue;
       }
-
-      MaybeUpdateCascadeResults(target.mElement, target.mPseudoType);
 
       for (KeyframeEffectReadOnly* effect : *effects) {
         effect->GetAnimation()->WillComposeStyle();
