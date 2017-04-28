@@ -2824,10 +2824,10 @@ GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj, uint32_t begin, uin
             for (; !r.empty(); r.popFront()) {
                 Shape& shape = r.front();
                 jsid id = shape.propid();
-                if (!JSID_IS_INT(id))
+                uint32_t i;
+                if (!IdIsIndex(id, &i))
                     continue;
 
-                uint32_t i = uint32_t(JSID_TO_INT(id));
                 if (!(begin <= i && i < end))
                     continue;
 
