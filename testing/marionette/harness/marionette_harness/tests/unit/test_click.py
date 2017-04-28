@@ -340,6 +340,7 @@ class TestClickNavigation(MarionetteTestCase):
 
         self.marionette.go_back()
         self.marionette.find_element(By.ID, "anchor")
+
         self.marionette.find_element(By.ID, "history-back").click()
         with self.assertRaises(errors.NoSuchElementException):
             self.marionette.find_element(By.ID, "anchor")
