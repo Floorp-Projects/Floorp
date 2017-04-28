@@ -8,7 +8,7 @@ const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm",
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const COMPUTE_TESTCASES = [
+const ADDRESS_COMPUTE_TESTCASES = [
   // Empty
   {
     description: "Empty address",
@@ -83,7 +83,7 @@ const COMPUTE_TESTCASES = [
   },
 ];
 
-const NORMALIZE_TESTCASES = [
+const ADDRESS_NORMALIZE_TESTCASES = [
   // Empty
   {
     description: "Empty address",
@@ -186,42 +186,42 @@ let do_check_record_matches = (expectedRecord, record) => {
   }
 };
 
-add_task(async function test_computeFields() {
+add_task(async function test_computeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  COMPUTE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
+  ADDRESS_COMPUTE_TESTCASES.forEach(testcase => profileStorage.addresses.add(testcase.address));
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let addresses = profileStorage.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   for (let i in addresses) {
-    do_print("Verify testcase: " + COMPUTE_TESTCASES[i].description);
-    do_check_record_matches(COMPUTE_TESTCASES[i].expectedResult, addresses[i]);
+    do_print("Verify testcase: " + ADDRESS_COMPUTE_TESTCASES[i].description);
+    do_check_record_matches(ADDRESS_COMPUTE_TESTCASES[i].expectedResult, addresses[i]);
   }
 });
 
-add_task(async function test_normalizeFields() {
+add_task(async function test_normalizeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  NORMALIZE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
+  ADDRESS_NORMALIZE_TESTCASES.forEach(testcase => profileStorage.addresses.add(testcase.address));
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let addresses = profileStorage.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   for (let i in addresses) {
-    do_print("Verify testcase: " + NORMALIZE_TESTCASES[i].description);
-    do_check_record_matches(NORMALIZE_TESTCASES[i].expectedResult, addresses[i]);
+    do_print("Verify testcase: " + ADDRESS_NORMALIZE_TESTCASES[i].description);
+    do_check_record_matches(ADDRESS_NORMALIZE_TESTCASES[i].expectedResult, addresses[i]);
   }
 });
