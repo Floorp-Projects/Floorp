@@ -538,13 +538,13 @@ function _execute_test() {
       run_next_test();
     }
 
-    if (coverageCollector != null) {
-      coverageCollector.recordTestCoverage(_TEST_FILE[0]);
-    }
-
     do_test_finished("MAIN run_test");
     _do_main();
     _PromiseTestUtils.assertNoUncaughtRejections();
+
+    if (coverageCollector != null) {
+      coverageCollector.recordTestCoverage(_TEST_FILE[0]);
+    }
   } catch (e) {
     _passed = false;
     // do_check failures are already logged and set _quit to true and throw
