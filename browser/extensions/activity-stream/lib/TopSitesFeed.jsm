@@ -1,13 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- /* globals PlacesProvider, PreviewProvider */
+ /* globals NewTabUtils, PreviewProvider */
 "use strict";
 
 const {utils: Cu} = Components;
 const {actionTypes: at, actionCreators: ac} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
-Cu.import("resource:///modules/PlacesProvider.jsm");
+Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource:///modules/PreviewProvider.jsm");
 
 const TOP_SITES_SHOWMORE_LENGTH = 12;
@@ -31,7 +31,7 @@ this.TopSitesFeed = class TopSitesFeed {
     this.store.dispatch(ac.BroadcastToContent(action));
   }
   async getLinksWithDefaults(action) {
-    let links = await PlacesProvider.links.getLinks();
+    let links = await NewTabUtils.activityStreamLinks.getTopSites();
 
     if (!links) {
       links = [];
