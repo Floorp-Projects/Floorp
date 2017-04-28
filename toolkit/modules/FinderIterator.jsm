@@ -14,6 +14,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 
 const kDebug = false;
 const kIterationSizeMax = 100;
@@ -580,17 +581,13 @@ this.FinderIterator = {
 
     // Casting `window.frames` to an Iterator doesn't work, so we're stuck with
     // a plain, old for-loop.
+    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     for (let i = 0, l = window.frames.length; i < l; ++i) {
       let frame = window.frames[i];
-      // Don't count matches in hidden frames.
+      // Don't count matches in hidden frames; get the frame element rect and
+      // check if it's empty. We shan't flush!
       let frameEl = frame && frame.frameElement;
-      if (!frameEl)
-        continue;
-      // Construct a range around the frame element to check its visiblity.
-      let range = window.document.createRange();
-      range.setStart(frameEl, 0);
-      range.setEnd(frameEl, 0);
-      if (!finder._fastFind.isRangeVisible(range, false))
+      if (!frameEl || Rect.fromRect(dwu.getBoundsWithoutFlushing(frameEl)).isEmpty())
         continue;
       // All conditions pass, so push the current frame and its children on the
       // stack.
