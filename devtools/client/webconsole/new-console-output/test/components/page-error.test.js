@@ -27,7 +27,11 @@ const serviceContainer = require("devtools/client/webconsole/new-console-output/
 describe("PageError component:", () => {
   it("renders", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const wrapper = render(PageError({ message, serviceContainer }));
+    const wrapper = render(PageError({
+      message,
+      serviceContainer,
+      timestampsVisible: true,
+    }));
     const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
     const { timestampString } = new L10n();
 
@@ -45,6 +49,17 @@ describe("PageError component:", () => {
     expect(locationLink.length).toBe(1);
     // @TODO Will likely change. See bug 1307952
     expect(locationLink.text()).toBe("test-console-api.html:3:5");
+  });
+
+  it("does not have a timestamp when timestampsVisible prop is falsy", () => {
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const wrapper = render(PageError({
+      message,
+      serviceContainer,
+      timestampsVisible: false,
+    }));
+
+    expect(wrapper.find(".timestamp").length).toBe(0);
   });
 
   it("renders an error with a longString exception message", () => {

@@ -91,12 +91,25 @@ describe("EvaluationResult component:", () => {
     expect(locationLink.text()).toBe("debugger eval code:1:4");
   });
 
-  it("has a timestamp", () => {
+  it("has a timestamp when passed a truthy timestampsVisible prop", () => {
     const message = stubPreparedMessages.get("new Date(0)");
-    const wrapper = render(EvaluationResult({ message }));
+    const wrapper = render(EvaluationResult({
+      message,
+      timestampsVisible: true,
+    }));
     const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
     const { timestampString } = new L10n();
 
     expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
+  });
+
+  it("does not have a timestamp when timestampsVisible prop is falsy", () => {
+    const message = stubPreparedMessages.get("new Date(0)");
+    const wrapper = render(EvaluationResult({
+      message,
+      timestampsVisible: false,
+    }));
+
+    expect(wrapper.find(".timestamp").length).toBe(0);
   });
 });
