@@ -71,7 +71,7 @@ HTTP(..) == unicoderange-4.html unicoderange-4-ref.html
 skip-if(stylo) HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
 skip skip-if(stylo) HTTP(..) == enable-sheet-2.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-3.html multiple-in-family-1-ref.html
-HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html
+fails-if(stylo) HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html # bug 1321769
 skip-if(stylo) HTTP(..) == enable-sheet-5.html enable-sheet-4-ref.html
 skip HTTP(..) == enable-sheet-6.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-7.html multiple-in-family-1-ref.html
@@ -79,7 +79,7 @@ fails-if(stylo) HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 # We're missing disable-sheet-{2,3,6,7} (analogs to
 # enable-sheet{2,3,6,7}) because I don't know how to detect test
 # completion for those cases.
-HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
+fails-if(stylo) HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html # bug 1321769
 skip-if(stylo) HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
 random-if(cocoaWidget) skip-if(stylo) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217

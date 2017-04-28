@@ -325,7 +325,7 @@ fails-if(stylo) == 300691-1d.html 300691-1-ref.html
 fails-if(stylo) == 300691-1e.html 300691-1-ref.html
 fails-if(stylo) == 300691-1f.html 300691-1-ref.html
 fails-if(stylo) == 301726-1.html 301726-1-ref.html
-fails-if(Android) fails-if(stylo) != 301726-2.html 301726-2-ref.html
+fails-if(Android) != 301726-2.html 301726-2-ref.html
 fails-if(stylo) == 302379.html 302379-ref.html
 == 306630-1.html 306630-1-ref.html
 == 306660-1.html 306660-1-ref.html
@@ -983,7 +983,7 @@ fails-if(stylo) == 413840-pushed-line-bullet.html 413840-pushed-line-bullet-ref.
 == 414638.html 414638-ref.html
 fails-if(stylo) == 414851-1.html 414851-1-ref.html
 fails-if(stylo) == 416106-1.xhtml 416106-1-ref.xhtml
-== 416752-1.html 416752-1-ref.html
+fails-if(stylo) == 416752-1.html 416752-1-ref.html
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
@@ -1581,7 +1581,7 @@ fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,6436) =
 == 582037-1b.html 582037-1-ref.html
 fuzzy-if(Android,3,256) == 582037-2a.html 582037-2-ref.html
 fuzzy-if(Android,3,256) == 582037-2b.html 582037-2-ref.html
-asserts(1-2) asserts-if(stylo,3) == 582146-1.html about:blank
+asserts(1-2) asserts-if(stylo,4) == 582146-1.html about:blank
 fails-if(stylo) == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
@@ -1951,7 +1951,7 @@ fails-if(stylo) == 1202512-2.html 1202512-2-ref.html
 == 1209994-1.html 1209994-1-ref.html
 == 1209994-2.html 1209994-2-ref.html
 == 1209994-3.html 1209994-3-ref.html
-fails-if(stylo) == 1209994-4.html 1209994-4-ref.html
+== 1209994-4.html 1209994-4-ref.html
 == 1222226-1.html 1222226-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) fails-if(stylo) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
