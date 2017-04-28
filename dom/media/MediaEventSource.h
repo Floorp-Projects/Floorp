@@ -234,43 +234,64 @@ template <EventPassMode Mode, typename... As>
 class Listener : public ListenerBase
 {
 public:
-  virtual void Dispatch(const As&... aEvents) = 0;
-};
+  template <typename... Ts>
+  void Dispatch(Ts&&... aEvents)
+  {
+    DispatchTask(NewRunnableMethod<typename Decay<Ts>::Type&&...>(
+      this, &Listener::Apply, Forward<Ts>(aEvents)...));
+  }
 
-template <typename... As>
-class Listener<EventPassMode::Move, As...> : public ListenerBase
-{
-public:
-  virtual void Dispatch(As... aEvents) = 0;
+private:
+  virtual void DispatchTask(already_AddRefed<nsIRunnable> aTask) = 0;
+  virtual void Apply(As&&... aEvents) = 0;
 };
 
 /**
  * Store the registered target thread and function so it knows where and to
  * whom to send the event data.
  */
-template <typename Target, typename Function, EventPassMode, typename... As>
-class ListenerImpl : public Listener<EventPassMode::Copy, As...> {
+template <typename Target, typename Function, EventPassMode Mode, typename... As>
+class ListenerImpl : public Listener<Mode, As...>
+{
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
-    : mHelper(this, aTarget, aFunction) {}
-  void Dispatch(const As&... aEvents) override {
-    mHelper.Dispatch(aEvents...);
+    : mTarget(aTarget)
+    , mFunction(aFunction)
+  {
   }
-private:
-  ListenerHelper<Target, Function> mHelper;
-};
 
-template <typename Target, typename Function, typename... As>
-class ListenerImpl<Target, Function, EventPassMode::Move, As...>
-  : public Listener<EventPassMode::Move, As...> {
-public:
-  ListenerImpl(Target* aTarget, const Function& aFunction)
-    : mHelper(this, aTarget, aFunction) {}
-  void Dispatch(As... aEvents) override {
-    mHelper.Dispatch(Move(aEvents)...);
-  }
 private:
-  ListenerHelper<Target, Function> mHelper;
+  void DispatchTask(already_AddRefed<nsIRunnable> aTask) override
+  {
+    EventTarget<Target>::Dispatch(mTarget.get(), Move(aTask));
+  }
+
+  // |F| takes one or more arguments.
+  template <typename F>
+  typename EnableIf<TakeArgs<F>::value, void>::Type
+  ApplyImpl(const F& aFunc, As&&... aEvents)
+  {
+    aFunc(Move(aEvents)...);
+  }
+
+  // |F| takes no arguments. Don't bother passing aEvent.
+  template <typename F>
+  typename EnableIf<!TakeArgs<F>::value, void>::Type
+  ApplyImpl(const F& aFunc, As&&... aEvents)
+  {
+    aFunc();
+  }
+
+  void Apply(As&&... aEvents) override
+  {
+    // Don't call the listener if it is disconnected.
+    if (!RevocableToken::IsRevoked()) {
+      ApplyImpl(mFunction, Move(aEvents)...);
+    }
+  }
+
+  const RefPtr<Target> mTarget;
+  Function mFunction;
 };
 
 /**
