@@ -123,7 +123,15 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& 
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
-  MOZ_ASSERT(state.mParent);
+
+  // If the widget has shutdown its compositor, we may not have had a chance yet
+  // to unmap our layers id, and we could get here without a parent compositor.
+  // In this case return an empty APZCTM.
+  if (!state.mParent) {
+    RefPtr<APZCTreeManager> temp = new APZCTreeManager();
+    return new APZCTreeManagerParent(aLayersId, temp);
+  }
+
   MOZ_ASSERT(!state.mApzcTreeManagerParent);
   state.mApzcTreeManagerParent = new APZCTreeManagerParent(aLayersId, state.mParent->GetAPZCTreeManager());
 
