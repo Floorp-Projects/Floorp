@@ -12,7 +12,6 @@
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "LiveResizeListener.h"
 #include "nsBaseWidget.h"
@@ -1345,13 +1344,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
     bool success = false;
     if (!backendHints.IsEmpty()) {
-      shadowManager =
-        mCompositorBridgeChild->SendPLayerTransactionConstructor(backendHints, 0);
-      if (shadowManager->SendGetTextureFactoryIdentifier(&textureFactoryIdentifier) &&
-          textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
-      {
-        success = true;
-      }
+      shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
+        backendHints, 0, &textureFactoryIdentifier, &success);
     }
 
     if (!success) {
