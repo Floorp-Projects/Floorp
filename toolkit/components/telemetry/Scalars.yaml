@@ -201,6 +201,21 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
+# The following section contains the browser usage scalars.
+browser.usage:
+  graphite:
+    bug_numbers:
+      - 1331915
+    description: >
+      The number of times a graphite2 font has been loaded.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - tom@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'all'
+
 # This section is for probes used to measure use of the Webextensions storage.sync API.
 storage.sync.api.usage:
   extensions_using:
