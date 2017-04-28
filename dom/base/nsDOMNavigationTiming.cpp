@@ -80,6 +80,7 @@ nsDOMNavigationTiming::NotifyNavigationStart(DocShellState aDocShellState)
   mNavigationStartHighRes = (double)PR_Now() / PR_USEC_PER_MSEC;
   mNavigationStartTimeStamp = TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart = (aDocShellState == DocShellState::eActive);
+  PROFILER_MARKER("Navigation::Start");
 }
 
 void
@@ -108,12 +109,14 @@ void
 nsDOMNavigationTiming::NotifyUnloadEventStart()
 {
   mUnloadStart = DurationFromStart();
+  profiler_tracing("Navigation", "Unload", TRACING_INTERVAL_START);
 }
 
 void
 nsDOMNavigationTiming::NotifyUnloadEventEnd()
 {
   mUnloadEnd = DurationFromStart();
+  profiler_tracing("Navigation", "Unload", TRACING_INTERVAL_END);
 }
 
 void
@@ -122,6 +125,8 @@ nsDOMNavigationTiming::NotifyLoadEventStart()
   if (!mLoadEventStartSet) {
     mLoadEventStart = DurationFromStart();
     mLoadEventStartSet = true;
+
+    profiler_tracing("Navigation", "Load", TRACING_INTERVAL_START);
 
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_START_MS,
@@ -136,6 +141,8 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
   if (!mLoadEventEndSet) {
     mLoadEventEnd = DurationFromStart();
     mLoadEventEndSet = true;
+
+    profiler_tracing("Navigation", "Load", TRACING_INTERVAL_END);
 
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
@@ -162,6 +169,8 @@ nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI)
     mDOMLoading = DurationFromStart();
     mDOMLoadingSet = true;
 
+    PROFILER_MARKER("Navigation::DOMLoading");
+
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_LOADING_MS,
                                      mNavigationStartTimeStamp);
@@ -176,6 +185,8 @@ nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMInteractive = DurationFromStart();
     mDOMInteractiveSet = true;
+
+    PROFILER_MARKER("Navigation::DOMInteractive");
 
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_INTERACTIVE_MS,
@@ -192,6 +203,8 @@ nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI)
     mDOMComplete = DurationFromStart();
     mDOMCompleteSet = true;
 
+    PROFILER_MARKER("Navigation::DOMComplete");
+
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_COMPLETE_MS,
                                      mNavigationStartTimeStamp);
@@ -207,6 +220,8 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
     mDOMContentLoadedEventStart = DurationFromStart();
     mDOMContentLoadedEventStartSet = true;
 
+    profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_START);
+
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_START_MS,
                                      mNavigationStartTimeStamp);
@@ -221,6 +236,8 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMContentLoadedEventEnd = DurationFromStart();
     mDOMContentLoadedEventEndSet = true;
+
+    profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_END);
 
     if (IsTopLevelContentDocument()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,

@@ -32,3 +32,17 @@
 #urlbar-zoom-button > .toolbarbutton-icon {
   display: none;
 }
+
+/* Page action button */
+#urlbar-page-action-button {
+  -moz-appearance: none;
+  border-style: none;
+  list-style-image: url("chrome://browser/skin/page-action.svg");
+  margin: 0;
+  padding: 0 6px;
+  fill: currentColor;
+}
+
+#urlbar-page-action-button > .toolbarbutton-icon {
+  width: 16px;
+}

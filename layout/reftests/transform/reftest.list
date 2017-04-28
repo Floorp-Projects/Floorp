@@ -11,12 +11,12 @@
 == dynamic-addremove-1c.html dynamic-addremove-1-ref.html
 == dynamic-addremove-2.html dynamic-addremove-2-ref.html
 # translatex should act like position: relative
-== translatex-1a.html translatex-1-ref.html
-== translatex-1b.html translatex-1-ref.html
-== translatex-1c.html translatex-1-ref.html
-== translatex-1d.html translatex-1-ref.html
-== translatex-1e.html translatex-1-ref.html
-== translatex-1a.html translatex-1-ref-2.html
+fails-if(stylo) == translatex-1a.html translatex-1-ref.html
+fails-if(stylo) == translatex-1b.html translatex-1-ref.html
+fails-if(stylo) == translatex-1c.html translatex-1-ref.html
+fails-if(stylo) == translatex-1d.html translatex-1-ref.html
+fails-if(stylo) == translatex-1e.html translatex-1-ref.html
+fails-if(stylo) == translatex-1a.html translatex-1-ref-2.html
 # translatey should act like position: relative
 == translatey-1a.html translatey-1-ref.html
 == translatey-1b.html translatey-1-ref.html
@@ -24,15 +24,15 @@
 == translatey-1d.html translatey-1-ref.html
 == translatey-1e.html translatey-1-ref.html
 # matrices defined to be translations should act like position: relative
-== translatex-2.html translatex-1-ref.html
+fails-if(stylo) == translatex-2.html translatex-1-ref.html
 == translatey-2.html translatey-1-ref.html
 # translate should act like position: relative
-!= translate-1a.html translate-1-ref.html
-== translate-1b.html translate-1-ref.html
-== translate-1c.html translate-1-ref.html
-== translate-1d.html translate-1-ref.html
-== translate-1e.html translate-1-ref.html
-== translate-2a.html translate-2-ref.html
+fails-if(stylo) != translate-1a.html translate-1-ref.html
+fails-if(stylo) == translate-1b.html translate-1-ref.html
+fails-if(stylo) == translate-1c.html translate-1-ref.html
+fails-if(stylo) == translate-1d.html translate-1-ref.html
+fails-if(stylo) == translate-1e.html translate-1-ref.html
+fails-if(stylo) == translate-2a.html translate-2-ref.html
 # rotate: Several rotations of the same object should be idempotent.  These
 # tests are currently disabled because of subpixel (< 0.00001 gfx units)
 # rounding errors.
@@ -114,8 +114,8 @@ fuzzy-if(skiaContent,2,5) == stresstest-1.html stresstest-1-ref.html
 # Ensure you can't move outside an iframe
 == iframe-1.html iframe-1-ref.html
 # Bugs
-== 601894-1.html 601894-ref.html
-== 601894-2.html 601894-ref.html
+fails-if(stylo) == 601894-1.html 601894-ref.html
+fails-if(stylo) == 601894-2.html 601894-ref.html
 == 830299-1.html 830299-1-ref.html
 # Bug 722777
 == table-1a.html table-1-ref.html

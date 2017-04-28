@@ -76,8 +76,11 @@ add_task(function* test_tabContextMenu() {
       await browser.contextMenus.create({
         id: "alpha-beta-parent", title: "alpha-beta parent", contexts: ["tab"],
       });
+
       await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "alpha"});
       await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "beta"});
+
+      await browser.contextMenus.create({title: "dummy", contexts: ["page"]});
 
       browser.contextMenus.onClicked.addListener((info, tab) => {
         browser.test.sendMessage("click", {info, tab});
@@ -111,6 +114,8 @@ add_task(function* test_tabContextMenu() {
 
   is(submenu.tagName, "menu", "Correct submenu type");
   is(submenu.label, "alpha-beta parent", "Correct submenu title");
+
+  isnot(gamma.label, "dummy", "`page` context menu item should not appear here");
 
   is(gamma.tagName, "menuitem", "Third menu item type is correct");
   is(gamma.label, "gamma", "Third menu item label is correct");

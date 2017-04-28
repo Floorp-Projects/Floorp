@@ -194,14 +194,14 @@ fuzzy(18,128) == downscale-32px.html?-png-in.ico downscale-32px-ref.html
 
 # Test images taller or wider than 32767 pixels.
 == huge-1.html?100x32768.png,100,100 huge-1.html?100x100.png,100,100
-== huge-1.html?100x32768.png,100,32768 huge-1.html?100x100.png,100,32768
+fails-if(stylo) == huge-1.html?100x32768.png,100,32768 huge-1.html?100x100.png,100,32768
 == huge-1.html?32768x100.png,100,100 huge-1.html?100x100.png,100,100
-== huge-1.html?32768x100.png,32768,100 huge-1.html?100x100.png,32768,100
+fails-if(stylo) == huge-1.html?32768x100.png,32768,100 huge-1.html?100x100.png,32768,100
 == huge-1.html?100x32768.gif,100,100 huge-1.html?100x100.gif,100,100
-== huge-1.html?100x32768.gif,100,32768 huge-1.html?100x100.gif,100,32768
+fails-if(stylo) == huge-1.html?100x32768.gif,100,32768 huge-1.html?100x100.gif,100,32768
 == huge-1.html?32768x100.gif,100,100 huge-1.html?100x100.gif,100,100
-== huge-1.html?32768x100.gif,32768,100 huge-1.html?100x100.gif,32768,100
+fails-if(stylo) == huge-1.html?32768x100.gif,32768,100 huge-1.html?100x100.gif,32768,100
 == huge-1.html?100x32768.jpg,100,100 huge-1.html?100x100.jpg,100,100
-== huge-1.html?100x32768.jpg,100,32768 huge-1.html?100x100.jpg,100,32768
+fails-if(stylo) == huge-1.html?100x32768.jpg,100,32768 huge-1.html?100x100.jpg,100,32768
 == huge-1.html?32768x100.jpg,100,100 huge-1.html?100x100.jpg,100,100
-== huge-1.html?32768x100.jpg,32768,100 huge-1.html?100x100.jpg,32768,100
+fails-if(stylo) == huge-1.html?32768x100.jpg,32768,100 huge-1.html?100x100.jpg,32768,100

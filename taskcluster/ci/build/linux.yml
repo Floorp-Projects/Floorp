@@ -270,7 +270,7 @@ linux64-stylo/opt:
         secrets: true
         custom-build-variant-cfg: stylo
         tooltool-downloads: public
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central' ]
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 linux64-stylo/debug:
     description: "Linux64 Debug Stylo"
@@ -295,7 +295,7 @@ linux64-stylo/debug:
         secrets: true
         custom-build-variant-cfg: stylo-debug
         tooltool-downloads: public
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central' ]
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 linux64-jsdcov/opt:
     description: "Linux64-JSDCov Opt"

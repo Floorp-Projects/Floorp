@@ -89,5 +89,6 @@ config = {
     'enable_pymake': True,
     'src_mozconfig': 'browser\\config\\mozconfigs\\win32\\clang',
     'tooltool_manifest_src': 'browser\\config\\tooltool-manifests\\win32\\clang.manifest',
+    'artifact_flag_build_variant_in_try': None,
     #########################################################################
 }

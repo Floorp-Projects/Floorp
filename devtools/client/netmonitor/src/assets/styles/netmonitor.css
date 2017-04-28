@@ -435,6 +435,18 @@ body,
   width: 8%;
 }
 
+/* Cookies column */
+
+.requests-list-cookies {
+  width: 6%;
+}
+
+/* Set Cookies column */
+
+.requests-list-set-cookies {
+  width: 8%;
+}
+
 /* Domain column */
 
 .requests-list-domain {

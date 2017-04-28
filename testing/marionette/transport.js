@@ -9,7 +9,7 @@
 const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("chrome://marionette/content/stream-utils.js");
 const { Packet, JSONPacket, BulkPacket } =
   Cu.import("chrome://marionette/content/packets.js");

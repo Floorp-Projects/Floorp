@@ -85,72 +85,6 @@ class HelperMixin(object):
             self.make_dirs(f)
             writer(f)
 
-class TestSizeOrder(HelperMixin, unittest.TestCase):
-    def test_size_order(self):
-        """
-        Test that files are processed ordered by size on disk.
-        """
-        processed = []
-        def mock_process_file(filenames):
-            for filename in filenames:
-                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
-            return True
-        for f, size in (('a/one', 10), ('b/c/two', 30), ('c/three', 20)):
-            f = os.path.join(self.test_dir, f)
-            d = os.path.dirname(f)
-            if d and not os.path.exists(d):
-                os.makedirs(d)
-            open(f, 'wb').write('x' * size)
-        d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
-                                                  symbol_path="symbol_path")
-        d.ShouldProcess = lambda f: True
-        d.ProcessFiles = mock_process_file
-        d.Process(self.test_dir)
-        self.assertEqual(processed, ['b/c/two', 'c/three', 'a/one'])
-
-
-class TestExclude(HelperMixin, unittest.TestCase):
-    def test_exclude_wildcard(self):
-        """
-        Test that using an exclude list with a wildcard pattern works.
-        """
-        processed = []
-        def mock_process_file(filenames):
-            for filename in filenames:
-                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
-            return True
-        self.add_test_files(add_extension(["foo", "bar", "abc/xyz", "abc/fooxyz", "def/asdf", "def/xyzfoo"]))
-        d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
-                                                  symbol_path="symbol_path",
-                                                  exclude=["*foo*"])
-        d.ProcessFiles = mock_process_file
-        d.Process(self.test_dir)
-        processed.sort()
-        expected = add_extension(["bar", "abc/xyz", "def/asdf"])
-        expected.sort()
-        self.assertEqual(processed, expected)
-
-
-    def test_exclude_filenames(self):
-        """
-        Test that excluding a filename without a wildcard works.
-        """
-        processed = []
-        def mock_process_file(filenames):
-            for filename in filenames:
-                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
-            return True
-        self.add_test_files(add_extension(["foo", "bar", "abc/foo", "abc/bar", "def/foo", "def/bar"]))
-        d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
-                                                  symbol_path="symbol_path",
-                                                  exclude=add_extension(["foo"]))
-        d.ProcessFiles = mock_process_file
-        d.Process(self.test_dir)
-        processed.sort()
-        expected = add_extension(["bar", "abc/bar", "def/bar"])
-        expected.sort()
-        self.assertEqual(processed, expected)
-
 
 def mock_dump_syms(module_id, filename, extra=[]):
     return ["MODULE os x86 %s %s" % (module_id, filename)
@@ -207,7 +141,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
                                                   copy_debug=True,
                                                   archs="abc xyz")
         d.CopyDebug = mock_copy_debug
-        d.Process(self.test_dir)
+        d.Process(os.path.join(self.test_dir, add_extension(["foo"])[0]))
         self.assertEqual(1, len(copied))
 
     @patch.dict('buildconfig.substs', {'MAKECAB': 'makecab'})
@@ -230,7 +164,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
                                      symbol_path=self.symbol_dir,
                                      copy_debug=True)
         d.FixFilenameCase = lambda f: f
-        d.Process(self.test_dir)
+        d.Process(test_file)
         self.assertTrue(os.path.isfile(os.path.join(self.symbol_dir, code_file, code_id, code_file[:-1] + '_')))
 
 class TestGetVCSFilename(HelperMixin, unittest.TestCase):
@@ -377,7 +311,7 @@ if target_platform() == 'WINNT':
                                                       copy_debug=True)
             # stub out CopyDebug
             d.CopyDebug = lambda *args: True
-            d.Process(self.test_dir)
+            d.Process(os.path.join(self.test_dir, test_files[0]))
             self.assertNotEqual(srcsrv_stream, None)
             hgserver = [x.rstrip() for x in srcsrv_stream.splitlines() if x.startswith("HGSERVER=")]
             self.assertEqual(len(hgserver), 1)

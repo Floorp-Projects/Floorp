@@ -73,6 +73,8 @@
 #include <windows.h>
 #endif
 
+static MOZ_THREAD_LOCAL(XPCJSContext*) gTlsContext;
+
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
@@ -604,6 +606,8 @@ XPCJSContext::~XPCJSContext()
 #ifdef MOZ_GECKO_PROFILER
     profiler_clear_js_context();
 #endif
+
+    gTlsContext.set(nullptr);
 }
 
 XPCJSContext::XPCJSContext()
@@ -616,6 +620,14 @@ XPCJSContext::XPCJSContext()
    mTimeoutAccumulated(false),
    mPendingResult(NS_OK)
 {
+    MOZ_RELEASE_ASSERT(!gTlsContext.get());
+    gTlsContext.set(this);
+}
+
+/* static */ XPCJSContext*
+XPCJSContext::Get()
+{
+    return gTlsContext.get();
 }
 
 #ifdef XP_WIN
@@ -666,11 +678,16 @@ XPCJSContext::CreateRuntime(JSContext* aCx)
 }
 
 nsresult
-XPCJSContext::Initialize()
+XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
 {
-    nsresult rv = CycleCollectedJSContext::Initialize(nullptr,
-                                                      JS::DefaultHeapMaxBytes,
-                                                      JS::DefaultNurseryBytes);
+    nsresult rv;
+    if (aPrimaryContext) {
+        rv = CycleCollectedJSContext::InitializeNonPrimary(aPrimaryContext);
+    } else {
+        rv = CycleCollectedJSContext::Initialize(nullptr,
+                                                 JS::DefaultHeapMaxBytes,
+                                                 JS::DefaultNurseryBytes);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -778,17 +795,26 @@ XPCJSContext::Initialize()
     if (!xpc_LocalizeContext(cx))
         NS_RUNTIMEABORT("xpc_LocalizeContext failed.");
 
-    Runtime()->Initialize();
+    if (!aPrimaryContext) {
+        Runtime()->Initialize(cx);
+    }
 
     return NS_OK;
 }
 
 // static
+void
+XPCJSContext::InitTLS()
+{
+    MOZ_RELEASE_ASSERT(gTlsContext.init());
+}
+
+// static
 XPCJSContext*
-XPCJSContext::newXPCJSContext()
+XPCJSContext::NewXPCJSContext(XPCJSContext* aPrimaryContext)
 {
     XPCJSContext* self = new XPCJSContext();
-    nsresult rv = self->Initialize();
+    nsresult rv = self->Initialize(aPrimaryContext);
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
         delete self;
@@ -830,7 +856,7 @@ XPCJSContext::BeforeProcessTask(bool aMightBlock)
 
     // As we may be entering a nested event loop, we need to
     // cancel any ongoing performance measurement.
-    js::ResetPerformanceMonitoring(Get()->Context());
+    js::ResetPerformanceMonitoring(Context());
 
     CycleCollectedJSContext::BeforeProcessTask(aMightBlock);
 }
@@ -850,7 +876,7 @@ XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth)
 
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
-    js::FlushPerformanceMonitoring(Get()->Context());
+    js::FlushPerformanceMonitoring(Context());
 
     mozilla::jsipc::AfterProcessTask();
 }

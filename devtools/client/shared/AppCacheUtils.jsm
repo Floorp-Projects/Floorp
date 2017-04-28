@@ -86,7 +86,7 @@ AppCacheUtils.prototype = {
   _parseManifest: function ACU__parseManifest(uriInfo) {
     let deferred = defer();
     let manifestName = uriInfo.name;
-    let manifestLastModified = new Date(uriInfo.responseHeaders["Last-Modified"]);
+    let manifestLastModified = new Date(uriInfo.responseHeaders["last-modified"]);
 
     if (uriInfo.charset.toLowerCase() != "utf-8") {
       this._addError(0, "notUTF8", uriInfo.charset);
@@ -158,7 +158,7 @@ AppCacheUtils.prototype = {
           // Check that the resource was not modified after the manifest was last
           // modified. If it was then the manifest file should be refreshed.
           let resourceLastModified =
-            new Date(uriInfo.responseHeaders["Last-Modified"]);
+            new Date(uriInfo.responseHeaders["last-modified"]);
 
           if (manifestLastModified < resourceLastModified) {
             this._addError(parsedUri.line, "fileChangedButNotManifest",
@@ -230,12 +230,12 @@ AppCacheUtils.prototype = {
 
           result.requestHeaders = {};
           request.visitRequestHeaders(function (header, value) {
-            result.requestHeaders[header] = value;
+            result.requestHeaders[header.toLowerCase()] = value;
           });
 
           result.responseHeaders = {};
           request.visitResponseHeaders(function (header, value) {
-            result.responseHeaders[header] = value;
+            result.responseHeaders[header.toLowerCase()] = value;
           });
 
           deferred.resolve(result);

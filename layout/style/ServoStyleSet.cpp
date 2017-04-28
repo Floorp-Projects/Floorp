@@ -13,7 +13,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/ServoComputedValuesWithParent.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
@@ -21,6 +21,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIDocumentInlines.h"
 #include "nsPrintfCString.h"
+#include "nsSMILAnimationController.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 
@@ -142,10 +143,12 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
   // call flush directly, since the PresShell won't.
   if (mAuthorStyleDisabled) {
     NoteStyleSheetsChanged();
-    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
   }
   // If we've just enabled, then PresShell will trigger the notification and
   // later flush when the stylesheet objects are enabled in JS.
+  //
+  // TODO(emilio): Users can have JS disabled, can't they? Will that affect that
+  // notification on content documents?
 
   return NS_OK;
 }
@@ -263,10 +266,18 @@ ServoStyleSet::PreTraverse(Element* aRoot)
 
   // Process animation stuff that we should avoid doing during the parallel
   // traversal.
+  nsSMILAnimationController* smilController =
+    mPresContext->Document()->GetAnimationController();
   if (aRoot) {
     mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot);
+    if (smilController) {
+      smilController->PreTraverseInSubtree(aRoot);
+    }
   } else {
     mPresContext->EffectCompositor()->PreTraverse();
+    if (smilController) {
+      smilController->PreTraverse();
+    }
   }
 }
 
@@ -295,6 +306,11 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
 
   // If there are still animation restyles needed, trigger a second traversal to
   // update CSS animations or transitions' styles.
+  //
+  // We don't need to do this for SMIL since SMIL only updates its animation
+  // values once at the begin of a tick. As a result, even if the previous
+  // traversal caused, for example, the font-size to change, the SMIL style
+  // won't be updated until the next tick anyway.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
   if (forReconstruct ? compositor->PreTraverseInSubtree(root)
                      : compositor->PreTraverse()) {
@@ -441,7 +457,6 @@ ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
                                           nsIAtom* aPseudoTag)
 {
   PreTraverseSync();
-
   return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
@@ -824,6 +839,9 @@ void
 ServoStyleSet::NoteStyleSheetsChanged()
 {
   Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
+  if (!mBatching) {
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  }
 }
 
 #ifdef DEBUG
@@ -905,16 +923,46 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
-
   MOZ_ASSERT(!sInServoTraversal);
   sInServoTraversal = true;
+
+  /**
+   * NB: This is needed because we process animations and transitions on the
+   * pseudo-elements themselves, not on the parent's EagerPseudoStyles.
+   *
+   * That means that that style doesn't account for animations, and we can't do
+   * that easily from the traversal without doing wasted work.
+   *
+   * As such, we just lie here a bit, which is the entrypoint of
+   * getComputedStyle, the only API where this can be observed, to look at the
+   * style of the pseudo-element if it exists instead.
+   */
+  Element* elementForStyleResolution = aElement;
+  nsIAtom* pseudoTagForStyleResolution = aPseudoTag;
+  if (aPseudoTag == nsCSSPseudoElements::before) {
+    if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(aElement)) {
+      elementForStyleResolution = pseudo;
+      pseudoTagForStyleResolution = nullptr;
+    }
+  } else if (aPseudoTag == nsCSSPseudoElements::after) {
+    if (Element* pseudo = nsLayoutUtils::GetAfterPseudo(aElement)) {
+      elementForStyleResolution = pseudo;
+      pseudoTagForStyleResolution = nullptr;
+    }
+  }
+
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+    Servo_ResolveStyleLazily(elementForStyleResolution,
+                             pseudoTagForStyleResolution,
+                             mRawSet.get()).Consume();
 
   if (mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag)) {
     computedValues =
-      Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+      Servo_ResolveStyleLazily(elementForStyleResolution,
+                               pseudoTagForStyleResolution,
+                               mRawSet.get()).Consume();
   }
+
   sInServoTraversal = false;
 
   return computedValues.forget();

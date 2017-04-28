@@ -494,52 +494,6 @@ AllChildrenIterator::GetPreviousChild()
   return nullptr;
 }
 
-static bool
-IsNativeAnonymousImplementationOfPseudoElement(nsIContent* aContent)
-{
-  // First, we need a frame. This leads to the tricky issue of what we can
-  // infer if the frame is null.
-  //
-  // Unlike regular nodes, native anonymous content (NAC) gets created during
-  // frame construction, which happens after the main style traversal. This
-  // means that we have to manually resolve style for those nodes shortly after
-  // they're created, either by (a) invoking ResolvePseudoElementStyle (for PE
-  // NAC), or (b) handing the subtree off to Servo for a mini-traversal (for
-  // non-PE NAC). We have assertions in nsCSSFrameConstructor that we don't do
-  // both.
-  //
-  // Once that happens, the NAC has a frame. So if we have no frame here,
-  // we're either not NAC, or in the process of doing (b). Either way, this
-  // isn't a PE.
-  nsIFrame* f = aContent->GetPrimaryFrame();
-  if (!f) {
-    return false;
-  }
-
-  // Get the pseudo type.
-  CSSPseudoElementType pseudoType = f->StyleContext()->GetPseudoType();
-
-  // In general nodes never get anonymous box style. However, there are a few
-  // special cases:
-  //
-  // * We somewhat-confusingly give text nodes a style context tagged with
-  //   ":-moz-text", so we need to check for the anonymous box case here.
-  // * The primary frame for table elements is an anonymous box that inherits
-  //   from the table's style.
-  if (pseudoType == CSSPseudoElementType::InheritingAnonBox) {
-    MOZ_ASSERT(f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::mozText ||
-               f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableWrapper);
-    return false;
-  }
-
-  MOZ_ASSERT(pseudoType != CSSPseudoElementType::NonInheritingAnonBox);
-
-  // Finally check the actual pseudo type.
-  bool isImpl = pseudoType != CSSPseudoElementType::NotPseudo;
-  MOZ_ASSERT_IF(isImpl, aContent->IsRootOfNativeAnonymousSubtree());
-  return isImpl;
-}
-
 /* static */ bool
 StyleChildrenIterator::IsNeeded(const Element* aElement)
 {
@@ -558,6 +512,16 @@ StyleChildrenIterator::IsNeeded(const Element* aElement)
     }
   }
 
+  // If the node has a ::before or ::after pseudo, return true, because we want
+  // to visit those.
+  //
+  // TODO(emilio): Make this fast adding a bit? or, perhaps just using
+  // ProbePseudoElementStyle? It should be quite fast in Stylo.
+  if (aElement->GetProperty(nsGkAtoms::beforePseudoProperty) ||
+      aElement->GetProperty(nsGkAtoms::afterPseudoProperty)) {
+    return true;
+  }
+
   // If the node has native anonymous content, return true.
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
   if (ac) {
@@ -571,18 +535,7 @@ StyleChildrenIterator::IsNeeded(const Element* aElement)
 nsIContent*
 StyleChildrenIterator::GetNextChild()
 {
-  while (nsIContent* child = AllChildrenIterator::GetNextChild()) {
-    if (IsNativeAnonymousImplementationOfPseudoElement(child)) {
-      // Skip any native-anonymous children that are used to implement pseudo-
-      // elements. These match pseudo-element selectors instead of being
-      // considered a child of their host, and thus the style system needs to
-      // handle them separately.
-    } else {
-      return child;
-    }
-  }
-
-  return nullptr;
+  return AllChildrenIterator::GetNextChild();
 }
 
 } // namespace dom

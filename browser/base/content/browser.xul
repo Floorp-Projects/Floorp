@@ -405,6 +405,16 @@
       </hbox>
     </panel>
 
+    <panel id="page-action-panel"
+           role="group"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           position="bottomcenter topright"
+           noautofocus="true">
+      This space intentionally left blank.
+    </panel>
+
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
 
@@ -802,6 +812,11 @@
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
                              tooltip="dynamic-shortcut-tooltip"/>
+              <toolbarbutton id="urlbar-page-action-button"
+                             hidden="true"
+                             class="chromeclass-toolbar-additional"
+                             tooltiptext="&pageActionButton.tooltip;"
+                             onclick="gPageActionButton.onEvent(event);"/>
             </textbox>
           </hbox>
         </toolbaritem>

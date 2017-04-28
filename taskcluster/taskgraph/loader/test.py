@@ -44,6 +44,7 @@ def loader(kind, path, config, params, loaded_tasks):
             test['build-platform'] = test_platform['build-platform']
             test['test-platform'] = test_platform_name
             test['build-label'] = test_platform['build-label']
+            test['build-attributes'] = test_platform['build-attributes']
             test['test-name'] = test_name
             if test_platform['nightly']:
                 test.setdefault('attributes', {})['nightly'] = True
@@ -88,6 +89,7 @@ def get_test_platforms(test_platforms_cfg, builds_by_platform):
             'nightly': builds_by_platform[build_platform].attributes.get('nightly', False),
             'build-platform': build_platform,
             'build-label': builds_by_platform[build_platform].label,
+            'build-attributes': builds_by_platform[build_platform].attributes,
         }
         test_platforms[test_platform].update(cfg)
     return test_platforms

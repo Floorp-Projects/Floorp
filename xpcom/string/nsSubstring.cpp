@@ -419,6 +419,16 @@ bool Gecko_FallibleSetLengthCString(nsACString* aThis, uint32_t aLength)
   return aThis->SetLength(aLength, mozilla::fallible);
 }
 
+char* Gecko_BeginWritingCString(nsACString* aThis)
+{
+  return aThis->BeginWriting();
+}
+
+char* Gecko_FallibleBeginWritingCString(nsACString* aThis)
+{
+  return aThis->BeginWriting(mozilla::fallible);
+}
+
 void Gecko_FinalizeString(nsAString* aThis)
 {
   aThis->~nsAString();
@@ -452,6 +462,16 @@ bool Gecko_FallibleAppendString(nsAString* aThis, const nsAString* aOther)
 bool Gecko_FallibleSetLengthString(nsAString* aThis, uint32_t aLength)
 {
   return aThis->SetLength(aLength, mozilla::fallible);
+}
+
+char16_t* Gecko_BeginWritingString(nsAString* aThis)
+{
+  return aThis->BeginWriting();
+}
+
+char16_t* Gecko_FallibleBeginWritingString(nsAString* aThis)
+{
+  return aThis->BeginWriting(mozilla::fallible);
 }
 
 } // extern "C"

@@ -31,15 +31,16 @@ Hacking Task Graphs
 
 The recommended process for changing task graphs is this:
 
-1. Find a recent decision task on the project or branch you are working on,
-   and download its ``parameters.yml`` from the Task Inspector or you can 
-   simply take note of the ``URL`` of the file or the ``task-id``.  This file
-   contains all of the inputs to the task-graph generation process.  Its
-   contents are simple enough if you would like to modify it, and it is
-   documented in :doc:`parameters`.
+1. Find a recent decision task on the project or branch you are working on, and
+   download its ``parameters.yml`` artifact.  Alternately, you
+   can simply take note of the artifact URL, or just the decision task's
+   ``task-id``.  This file contains all of the inputs to the task-graph
+   generation process.  Its contents are simple enough if you would like to
+   modify it, and it is documented in :doc:`parameters`.
 
 2. Run one of the ``mach taskgraph`` subcommands (see :doc:`taskgraph`) to
-   generate a baseline against which to measure your changes.  For example:
+   generate a baseline against which to measure your changes, passing the
+   parameters you found in the previous step.  For example:
 
    .. code-block:: none
 

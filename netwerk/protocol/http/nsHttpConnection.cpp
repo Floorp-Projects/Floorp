@@ -556,7 +556,7 @@ npnComplete:
 void
 nsHttpConnection::OnTunnelNudged(TLSFilterTransaction *trans)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     LOG(("nsHttpConnection::OnTunnelNudged %p\n", this));
     if (trans != mTLSFilter) {
         return;
@@ -569,7 +569,7 @@ nsHttpConnection::OnTunnelNudged(TLSFilterTransaction *trans)
 nsresult
 nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     LOG(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
          this, trans, caps));
 
@@ -746,7 +746,7 @@ nsresult
 nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
                                  int32_t priority)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(mSpdySession && mUsingSpdyVersion,
                "AddTransaction to live http connection without spdy");
 
@@ -781,7 +781,7 @@ nsHttpConnection::Close(nsresult reason, bool aIsShutdown)
     LOG(("nsHttpConnection::Close [this=%p reason=%" PRIx32 "]\n",
          this, static_cast<uint32_t>(reason)));
 
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     // Ensure TCP keepalive timer is stopped.
     if (mTCPKeepaliveTransitionTimer) {
@@ -844,7 +844,7 @@ nsHttpConnection::InitSSLParams(bool connectingToProxy, bool proxyStartSSL)
 {
     LOG(("nsHttpConnection::InitSSLParams [this=%p] connectingToProxy=%d\n",
          this, connectingToProxy));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     nsresult rv;
     nsCOMPtr<nsISupports> securityInfo;
@@ -1012,7 +1012,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     LOG(("nsHttpConnection::OnHeadersAvailable [this=%p trans=%p response-head=%p]\n",
         this, trans, responseHead));
 
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     NS_ENSURE_ARG_POINTER(trans);
     MOZ_ASSERT(responseHead, "No response head?");
 
@@ -1261,7 +1261,7 @@ nsHttpConnection::TakeTransport(nsISocketTransport  **aTransport,
 uint32_t
 nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     // make sure timer didn't tick before Activate()
     if (!mTransaction)
@@ -1328,7 +1328,7 @@ nsHttpConnection::UpdateTCPKeepalive(nsITimer *aTimer, void *aClosure)
 void
 nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     LOG(("nsHttpConnection::GetSecurityInfo trans=%p tlsfilter=%p socket=%p\n",
          mTransaction.get(), mTLSFilter.get(), mSocketTransport.get()));
 
@@ -1380,7 +1380,7 @@ nsHttpConnection::ResumeSend()
 {
     LOG(("nsHttpConnection::ResumeSend [this=%p]\n", this));
 
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (mSocketOut)
         return mSocketOut->AsyncWait(this, 0, 0, nullptr);
@@ -1394,7 +1394,7 @@ nsHttpConnection::ResumeRecv()
 {
     LOG(("nsHttpConnection::ResumeRecv [this=%p]\n", this));
 
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     // mResponseThrottled is an indication from above layers to stop reading
     // the socket.
@@ -1437,7 +1437,7 @@ public:
 
     NS_IMETHOD Run() override
     {
-        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
         if (mDoRecv) {
             if (!mConn->mSocketIn)
@@ -1460,7 +1460,7 @@ private:
 void
 nsHttpConnection::ForceSendIO(nsITimer *aTimer, void *aClosure)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     nsHttpConnection *self = static_cast<nsHttpConnection *>(aClosure);
     MOZ_ASSERT(aTimer == self->mForceSendTimer);
     self->mForceSendTimer = nullptr;
@@ -1470,7 +1470,7 @@ nsHttpConnection::ForceSendIO(nsITimer *aTimer, void *aClosure)
 nsresult
 nsHttpConnection::MaybeForceSendIO()
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     // due to bug 1213084 sometimes real I/O events do not get serviced when
     // NSPR derived I/O events are ready and this can cause a deadlock with
     // https over https proxying. Normally we would expect the write callback to
@@ -1493,7 +1493,7 @@ nsresult
 nsHttpConnection::ForceRecv()
 {
     LOG(("nsHttpConnection::ForceRecv [this=%p]\n", this));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     return NS_DispatchToCurrentThread(new HttpConnectionForceIO(this, true));
 }
@@ -1503,7 +1503,7 @@ nsresult
 nsHttpConnection::ForceSend()
 {
     LOG(("nsHttpConnection::ForceSend [this=%p]\n", this));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (mTLSFilter) {
         return mTLSFilter->NudgeTunnel(this);
@@ -1515,7 +1515,7 @@ void
 nsHttpConnection::BeginIdleMonitoring()
 {
     LOG(("nsHttpConnection::BeginIdleMonitoring [this=%p]\n", this));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(!mTransaction, "BeginIdleMonitoring() while active");
     MOZ_ASSERT(!mUsingSpdyVersion, "Idle monitoring of spdy not allowed");
 
@@ -1529,7 +1529,7 @@ void
 nsHttpConnection::EndIdleMonitoring()
 {
     LOG(("nsHttpConnection::EndIdleMonitoring [this=%p]\n", this));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(!mTransaction, "EndIdleMonitoring() while active");
 
     if (mIdleMonitoring) {
@@ -1559,7 +1559,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason,
 
     MOZ_ASSERT((trans == mTransaction) ||
                (mTLSFilter && mTLSFilter->Transaction() == trans));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (mCurrentBytesRead > mMaxBytesRead)
         mMaxBytesRead = mCurrentBytesRead;
@@ -1860,7 +1860,7 @@ nsHttpConnection::OnSocketReadable()
 void
 nsHttpConnection::SetupSecondaryTLS()
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(!mTLSFilter);
     LOG(("nsHttpConnection %p SetupSecondaryTLS %s %d\n",
          this, mConnInfo->Origin(), mConnInfo->OriginPort()));
@@ -2108,7 +2108,7 @@ nsHttpConnection::DisableTCPKeepalives()
 void nsHttpConnection::ThrottleResponse(bool aThrottle)
 {
     LOG(("nsHttpConnection::ThrottleResponse this=%p, throttle=%d", this, aThrottle));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (aThrottle) {
         mResponseThrottled = true;
@@ -2161,7 +2161,7 @@ NS_IMETHODIMP
 nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 {
     MOZ_ASSERT(in == mSocketIn, "unexpected stream");
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (mIdleMonitoring) {
         MOZ_ASSERT(!mTransaction, "Idle Input Event While Active");
@@ -2202,7 +2202,7 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 NS_IMETHODIMP
 nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(out == mSocketOut, "unexpected socket");
     // if the transaction was dropped...
     if (!mTransaction) {
@@ -2249,7 +2249,7 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     // nss thread, not the ui thread as the above comment says. So there is
     // indeed a chance of mTransaction going away. bug 615342
 
-    MOZ_ASSERT(PR_GetCurrentThread() != gSocketThread);
+    MOZ_ASSERT(!OnSocketThread(), "on socket thread");
 
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     {

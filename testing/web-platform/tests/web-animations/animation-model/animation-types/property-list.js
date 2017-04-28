@@ -259,8 +259,7 @@ var gCSSProperties = {
   },
   'border-spacing': {
     // https://drafts.csswg.org/css-tables/#propdef-border-spacing
-    types: [
-    ]
+    types: [ 'lengthPair' ]
   },
   'border-top-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-color
@@ -331,6 +330,11 @@ var gCSSProperties = {
   'clip': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-clip
     types: [
+      'rect',
+      { type: 'discrete', options: [ [ 'rect(10px, 10px, 10px, 10px)',
+                                       'auto' ],
+                                     [ 'rect(10px, 10px, 10px, 10px)',
+                                       'rect(10px, 10px, 10px, auto)'] ] }
     ]
   },
   'clip-path': {

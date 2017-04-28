@@ -3708,6 +3708,7 @@ var SessionStoreInternal = {
       formdata: tabData.formdata || null,
       disallow: tabData.disallow || null,
       pageStyle: tabData.pageStyle || null,
+      userContextId: tabData.userContextId || 0,
 
       // This information is only needed until the tab has finished restoring.
       // When that's done it will be removed from the cache and we always

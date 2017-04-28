@@ -42,6 +42,11 @@ public abstract class GeckoActivity extends AppCompatActivity implements GeckoAc
     }
 
     @Override
+    protected void onNewIntent(Intent externalIntent) {
+        GeckoActivityMonitor.getInstance().onActivityNewIntent(this);
+    }
+
+    @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (AppConstants.MOZ_ANDROID_ANR_REPORTER) {

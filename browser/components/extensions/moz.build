@@ -15,6 +15,8 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'ExtensionPopups.jsm',
+    'ParseSymbols-worker.js',
+    'ParseSymbols.jsm',
 ]
 
 DIRS += ['schemas']

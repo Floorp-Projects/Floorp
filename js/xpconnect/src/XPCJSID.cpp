@@ -715,12 +715,12 @@ nsJSCID::Construct(nsIXPConnectWrappedNative* wrapper,
                    const CallArgs& args, bool* _retval)
 {
     RootedObject obj(cx, objArg);
-    XPCJSContext* xpccx = nsXPConnect::GetContextInstance();
-    if (!xpccx)
+    XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
+    if (!xpcrt)
         return NS_ERROR_FAILURE;
 
     // 'push' a call context and call on it
-    RootedId name(cx, xpccx->GetStringID(XPCJSContext::IDX_CREATE_INSTANCE));
+    RootedId name(cx, xpcrt->GetStringID(XPCJSContext::IDX_CREATE_INSTANCE));
     XPCCallContext ccx(cx, obj, nullptr, name, args.length(), args.array(),
                        args.rval().address());
 

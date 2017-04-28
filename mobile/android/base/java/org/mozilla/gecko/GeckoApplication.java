@@ -33,9 +33,11 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UUIDUtil;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class GeckoApplication extends Application
     implements ContextGetter {
@@ -49,6 +51,8 @@ public class GeckoApplication extends Application
     private LightweightTheme mLightweightTheme;
 
     private RefWatcher mRefWatcher;
+
+    private static String sSessionUUID = null;
 
     public GeckoApplication() {
         super();
@@ -65,6 +69,13 @@ public class GeckoApplication extends Application
         }
 
         getRefWatcher(context).watch(object);
+    }
+
+    /**
+     * @return The string representation of an UUID that changes on each application startup.
+     */
+    public static String getSessionUUID() {
+        return sSessionUUID;
     }
 
     @Override
@@ -165,6 +176,10 @@ public class GeckoApplication extends Application
         mIsInitialResume = true;
 
         mRefWatcher = LeakCanary.install(this);
+
+        sSessionUUID = UUID.randomUUID().toString();
+
+        registerActivityLifecycleCallbacks(GeckoActivityMonitor.getInstance());
 
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);

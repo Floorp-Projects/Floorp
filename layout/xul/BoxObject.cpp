@@ -217,7 +217,7 @@ BoxObject::GetScreenPosition(nsIntPoint& aPoint)
 
   nsIFrame* frame = GetFrame(true);
   if (frame) {
-    nsIntRect rect = frame->GetScreenRect();
+    CSSIntRect rect = frame->GetScreenRect();
     aPoint.x = rect.x;
     aPoint.y = rect.y;
   }
