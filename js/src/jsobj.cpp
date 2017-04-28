@@ -1125,12 +1125,14 @@ CopyProxyObject(JSContext* cx, Handle<ProxyObject*> from, Handle<ProxyObject*> t
         to->setSameCompartmentPrivate(v);
     }
 
+    MOZ_ASSERT(from->numReservedSlots() == to->numReservedSlots());
+
     RootedValue v(cx);
-    for (size_t n = 0; n < js::detail::PROXY_EXTRA_SLOTS; n++) {
-        v = GetProxyExtra(from, n);
+    for (size_t n = 0; n < from->numReservedSlots(); n++) {
+        v = GetProxyReservedSlot(from, n);
         if (!cx->compartment()->wrap(cx, &v))
             return false;
-        SetProxyExtra(to, n, v);
+        SetProxyReservedSlot(to, n, v);
     }
 
     return true;
@@ -1528,13 +1530,58 @@ JSObject::fixDictionaryShapeAfterSwap()
         as<NativeObject>().shape_->listp = &as<NativeObject>().shape_;
 }
 
-static void
-RemoveFromStoreBuffer(JSContext* cx, js::detail::ProxyValueArray* values)
+static MOZ_MUST_USE bool
+CopyProxyValuesBeforeSwap(ProxyObject* proxy, Vector<Value>& values)
 {
-    StoreBuffer& sb = cx->zone()->group()->storeBuffer();
-    sb.unputValue(&values->privateSlot);
-    for (size_t i = 0; i < js::detail::PROXY_EXTRA_SLOTS; i++)
-        sb.unputValue(&values->extraSlots[i]);
+    MOZ_ASSERT(values.empty());
+
+    // Remove the GCPtrValues we're about to swap from the store buffer, to
+    // ensure we don't trace bogus values.
+    StoreBuffer& sb = proxy->zone()->group()->storeBuffer();
+
+    // Reserve space for the private slot and the reserved slots.
+    if (!values.reserve(1 + proxy->numReservedSlots()))
+        return false;
+
+    js::detail::ProxyValueArray* valArray = js::detail::GetProxyDataLayout(proxy)->values();
+    sb.unputValue(&valArray->privateSlot);
+    values.infallibleAppend(valArray->privateSlot);
+
+    for (size_t i = 0; i < proxy->numReservedSlots(); i++) {
+        sb.unputValue(&valArray->reservedSlots.slots[i]);
+        values.infallibleAppend(valArray->reservedSlots.slots[i]);
+    }
+
+    return true;
+}
+
+bool
+ProxyObject::initExternalValueArrayAfterSwap(JSContext* cx, const Vector<Value>& values)
+{
+    MOZ_ASSERT(getClass()->isProxy());
+
+    size_t nreserved = numReservedSlots();
+
+    // |values| contains the private slot and the reserved slots.
+    MOZ_ASSERT(values.length() == 1 + nreserved);
+
+    size_t nbytes = js::detail::ProxyValueArray::sizeOf(nreserved);
+
+    auto* valArray =
+        reinterpret_cast<js::detail::ProxyValueArray*>(cx->zone()->pod_malloc<uint8_t>(nbytes));
+    if (!valArray)
+        return false;
+
+    valArray->privateSlot = values[0];
+
+    for (size_t i = 0; i < nreserved; i++)
+        valArray->reservedSlots.slots[i] = values[i + 1];
+
+    // Note: we allocate external slots iff the proxy had an inline
+    // ProxyValueArray, so at this point reservedSlots points into the
+    // old object and we don't have to free anything.
+    data.reservedSlots = &valArray->reservedSlots;
+    return true;
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
@@ -1640,16 +1687,13 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
         ProxyObject* proxyA = a->is<ProxyObject>() ? &a->as<ProxyObject>() : nullptr;
         ProxyObject* proxyB = b->is<ProxyObject>() ? &b->as<ProxyObject>() : nullptr;
 
-        Maybe<js::detail::ProxyValueArray> proxyAVals, proxyBVals;
         if (aIsProxyWithInlineValues) {
-            js::detail::ProxyValueArray* values = js::detail::GetProxyDataLayout(proxyA)->values;
-            proxyAVals.emplace(*values);
-            RemoveFromStoreBuffer(cx, values);
+            if (!CopyProxyValuesBeforeSwap(proxyA, avals))
+                oomUnsafe.crash("CopyProxyValuesBeforeSwap");
         }
         if (bIsProxyWithInlineValues) {
-            js::detail::ProxyValueArray* values = js::detail::GetProxyDataLayout(proxyB)->values;
-            proxyBVals.emplace(*values);
-            RemoveFromStoreBuffer(cx, values);
+            if (!CopyProxyValuesBeforeSwap(proxyB, bvals))
+                oomUnsafe.crash("CopyProxyValuesBeforeSwap");
         }
 
         // Swap the main fields of the objects, whether they are native objects or proxies.
@@ -1670,11 +1714,11 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
                 oomUnsafe.crash("fillInAfterSwap");
         }
         if (aIsProxyWithInlineValues) {
-            if (!b->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, proxyAVals.ref()))
+            if (!b->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, avals))
                 oomUnsafe.crash("initExternalValueArray");
         }
         if (bIsProxyWithInlineValues) {
-            if (!a->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, proxyBVals.ref()))
+            if (!a->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, bvals))
                 oomUnsafe.crash("initExternalValueArray");
         }
     }
@@ -4078,11 +4122,11 @@ JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape, js::gc::AllocKin
 
     MOZ_ASSERT(!group->compartment()->hasObjectPendingMetadata());
 
-    // Non-native classes cannot have reserved slots or private data, and the
-    // objects can't have any fixed slots, for compatibility with
-    // GetReservedOrProxyPrivateSlot.
+    // Non-native classes manage their own data and slots, so numFixedSlots and
+    // slotSpan are always 0. Note that proxy classes can have reserved slots
+    // but they're also not included in numFixedSlots/slotSpan.
     if (!clasp->isNative()) {
-        MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(clasp) == 0);
+        MOZ_ASSERT_IF(!clasp->isProxy(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
         MOZ_ASSERT(!clasp->hasPrivate());
         MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);
         MOZ_ASSERT_IF(shape, shape->slotSpan() == 0);
