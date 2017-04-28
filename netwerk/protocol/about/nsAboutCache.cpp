@@ -491,7 +491,18 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
 
     // Expires time
     mBuffer.AppendLiteral("    <td>");
-    if (aExpirationTime < 0xFFFFFFFF) {
+
+    // Bug - 633747.
+    // It says in the bug that the odd expiration time is: 1970-01-01 01:00:00
+    // However, that time is in local time(Africa in the bug).
+    // variable 'mExpirationTime' gets the conversion:
+    // 1970-01-01 01:00:00 --> 1970-01-01 00:00:00 GMT which is 0 in hex
+    // So, 0 represents the UNIX timestamp 1970-01-01 00:00:00 GMT.
+    // We just find out if the expiration time is equal
+    // to 0 and if so, we simply show "expired immediately"
+    if (aExpirationTime == 0) {
+        mBuffer.AppendLiteral("Expired Immediately");
+    } else if (aExpirationTime < 0xFFFFFFFF) {
         PrintTimeString(buf, sizeof(buf), aExpirationTime);
         mBuffer.Append(buf);
     } else {
