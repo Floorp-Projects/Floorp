@@ -3881,6 +3881,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
            nsChangeHint_NeutralChange |
            nsChangeHint_RepaintFrame |
            nsChangeHint_UpdateBackgroundPosition |
+           nsChangeHint_UpdateContainingBlock |
            NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
