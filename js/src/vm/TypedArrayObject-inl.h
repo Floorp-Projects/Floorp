@@ -28,6 +28,38 @@
 
 namespace js {
 
+// ValueIsLength happens not to be according to ES6, which mandates
+// the use of ToLength, which in turn includes ToNumber, ToInteger,
+// and clamping.  ValueIsLength is used in the current TypedArray code
+// but will disappear when that code is made spec-compliant.
+
+inline bool
+ValueIsLength(const Value& v, uint32_t* len)
+{
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        if (i < 0)
+            return false;
+        *len = i;
+        return true;
+    }
+
+    if (v.isDouble()) {
+        double d = v.toDouble();
+        if (mozilla::IsNaN(d))
+            return false;
+
+        uint32_t length = uint32_t(d);
+        if (d != double(length))
+            return false;
+
+        *len = length;
+        return true;
+    }
+
+    return false;
+}
+
 template<typename To, typename From>
 inline To
 ConvertNumber(From src);

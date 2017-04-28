@@ -3,7 +3,7 @@
 new Function(`
   while (true) {
     try {
-        var buf = new Uint8ClampedArray(-1);
+        var buf = new Uint8ClampedArray(a);
     } catch (e) {
         break;
     }

@@ -1798,7 +1798,7 @@ js::ToUint16Slow(JSContext* cx, const HandleValue v, uint16_t* out)
 
 // ES2017 draft 7.1.17 ToIndex
 bool
-js::ToIndex(JSContext* cx, JS::HandleValue v, const unsigned errorNumber, uint64_t* index)
+js::ToIndex(JSContext* cx, JS::HandleValue v, uint64_t* index)
 {
     // Step 1.
     if (v.isUndefined()) {
@@ -1816,7 +1816,7 @@ js::ToIndex(JSContext* cx, JS::HandleValue v, const unsigned errorNumber, uint64
     // 2. Step eliminates < 0, +0 == -0 with SameValueZero.
     // 3/4. Limit to <= 2^53-1, so everything above should fail.
     if (integerIndex < 0 || integerIndex >= DOUBLE_INTEGRAL_PRECISION_LIMIT) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
         return false;
     }
 
