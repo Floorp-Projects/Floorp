@@ -709,9 +709,7 @@ gfxPlatform::Init()
     #error "No gfxPlatform implementation available"
 #endif
     gPlatform->InitAcceleration();
-    if (XRE_IsParentProcess()) {
-      gPlatform->InitWebRenderConfig();
-    }
+    gPlatform->InitWebRenderConfig();
 
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
@@ -2336,6 +2334,19 @@ gfxPlatform::InitCompositorAccelerationPrefs()
 void
 gfxPlatform::InitWebRenderConfig()
 {
+  bool prefEnabled = Preferences::GetBool("gfx.webrender.enabled", false);
+
+  ScopedGfxFeatureReporter reporter("WR", prefEnabled);
+  if (!XRE_IsParentProcess()) {
+    // The parent process runs through all the real decision-making code
+    // later in this function. For other processes we still want to report
+    // the state of the feature for crash reports.
+    if (gfxVars::UseWebRender()) {
+      reporter.SetSuccessful();
+    }
+    return;
+  }
+
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
   featureWebRender.DisableByDefault(
@@ -2343,12 +2354,9 @@ gfxPlatform::InitWebRenderConfig()
       "WebRender is an opt-in feature",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
 
-  bool prefEnabled = Preferences::GetBool("gfx.webrender.enabled", false);
   if (prefEnabled) {
     featureWebRender.UserEnable("Enabled by pref");
   }
-
-  ScopedGfxFeatureReporter reporter("WR", prefEnabled);
 
   // WebRender relies on the GPU process when on Windows
 #ifdef XP_WIN

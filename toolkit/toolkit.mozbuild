@@ -49,7 +49,6 @@ DIRS += [
 if CONFIG['MOZ_PERMISSIONS']:
     DIRS += [
         '/extensions/cookie',
-        '/extensions/permissions',
     ]
 
 DIRS += [

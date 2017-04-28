@@ -168,6 +168,8 @@ document.head.appendChild(extraStyle);
 var sheet = extraStyle.sheet;
 sheet.insertRule('#div0::after { animation: anim 10s }', 0);
 sheet.insertRule('#div0::before { animation: anim 10s }', 1);
+sheet.insertRule('#div0::after, #div0::before { ' +
+                 ' content: " " }', 2);
 getComputedStyle(divs[0]).animationName; // build animation
 getComputedStyle(divs[1]).animationName; // build animation
 

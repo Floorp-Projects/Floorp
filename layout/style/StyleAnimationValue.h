@@ -570,6 +570,12 @@ private:
 
 struct AnimationValue
 {
+  explicit AnimationValue(const StyleAnimationValue& aValue)
+    : mGecko(aValue) { }
+  explicit AnimationValue(const RefPtr<RawServoAnimationValue>& aValue)
+    : mServo(aValue) { }
+  AnimationValue() = default;
+
   // mGecko and mServo are mutually exclusive: only one or the other should
   // ever be set.
   // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and

@@ -185,7 +185,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
     aSample.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
     aSample.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
 
-    Tick(aLock, gPS->Buffer(aLock), aSample);
+    Tick(aLock, ActivePS::Buffer(aLock), aSample);
   }
 
 #undef REGISTER_FIELD

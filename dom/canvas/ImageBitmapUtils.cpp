@@ -326,7 +326,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToSimpleImg(Utils* aSrcUtils, const SrcType* aSrcBuffer,
                         const ImagePixelLayout* aSrcLayout, DstType* aDstBuffer,
                         ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                        std::function<int (const SrcType*, int, DstType*, int, int, int)> converter)
+                        const std::function<int (const SrcType*, int, DstType*, int, int, int)>& converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -354,7 +354,7 @@ static UniquePtr<ImagePixelLayout>
 CvtYUVImgToSimpleImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                      const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                      ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                     std::function<int (const uint8_t*, int, const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
+                     const std::function<int (const uint8_t*, int, const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)>& converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -384,7 +384,7 @@ static UniquePtr<ImagePixelLayout>
 CvtNVImgToSimpleImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                     const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                     ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                    std::function<int (const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
+                    const std::function<int (const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)>& converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -413,7 +413,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToYUVImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                      const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                      ImageBitmapFormat aDstFormat,
-                     std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
+                     const std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)>& converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -445,7 +445,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToNVImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                     const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                     ImageBitmapFormat aDstFormat,
-                    std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
+                    const std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)>& converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");

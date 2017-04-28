@@ -90,11 +90,7 @@ public class IOUtils {
         } catch (IOException e) {
             Log.e(LOGTAG, "Error consuming input stream.", e);
         } finally {
-            try {
-                iStream.close();
-            } catch (IOException e) {
-                Log.e(LOGTAG, "Error closing input stream.", e);
-            }
+            IOUtils.safeStreamClose(iStream);
         }
 
         return null;

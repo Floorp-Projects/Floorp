@@ -85,14 +85,13 @@ add_task(function* test_sessions_restore() {
   yield assertNotificationCount(2);
   let restored = yield extension.awaitMessage("restored");
 
-  is(restored.length, 1, "restore returned the expected number of sessions");
-  is(restored[0].window.tabs.length, 3, "restore returned a window with the expected number of tabs");
-  checkLocalTab(restored[0].window.tabs[0], "about:config");
-  checkLocalTab(restored[0].window.tabs[1], "about:robots");
-  checkLocalTab(restored[0].window.tabs[2], "about:mozilla");
+  is(restored.window.tabs.length, 3, "restore returned a window with the expected number of tabs");
+  checkLocalTab(restored.window.tabs[0], "about:config");
+  checkLocalTab(restored.window.tabs[1], "about:robots");
+  checkLocalTab(restored.window.tabs[2], "about:mozilla");
 
   // Close the window again.
-  let window = windowTracker.getWindow(restored[0].window.id);
+  let window = windowTracker.getWindow(restored.window.id);
   yield BrowserTestUtils.closeWindow(window);
   yield assertNotificationCount(3);
 
@@ -103,14 +102,13 @@ add_task(function* test_sessions_restore() {
   yield assertNotificationCount(4);
   restored = yield extension.awaitMessage("restored");
 
-  is(restored.length, 1, "restore returned the expected number of sessions");
-  is(restored[0].window.tabs.length, 3, "restore returned a window with the expected number of tabs");
-  checkLocalTab(restored[0].window.tabs[0], "about:config");
-  checkLocalTab(restored[0].window.tabs[1], "about:robots");
-  checkLocalTab(restored[0].window.tabs[2], "about:mozilla");
+  is(restored.window.tabs.length, 3, "restore returned a window with the expected number of tabs");
+  checkLocalTab(restored.window.tabs[0], "about:config");
+  checkLocalTab(restored.window.tabs[1], "about:robots");
+  checkLocalTab(restored.window.tabs[2], "about:mozilla");
 
   // Close the window again.
-  window = windowTracker.getWindow(restored[0].window.id);
+  window = windowTracker.getWindow(restored.window.id);
   yield BrowserTestUtils.closeWindow(window);
   // notificationCount = yield extension.awaitMessage("notificationCount");
   yield assertNotificationCount(5);
@@ -126,8 +124,7 @@ add_task(function* test_sessions_restore() {
   yield assertNotificationCount(7);
   restored = yield extension.awaitMessage("restored");
 
-  is(restored.length, 1, "restore returned the expected number of sessions");
-  tab = restored[0].tab;
+  tab = restored.tab;
   ok(tab, "restore returned a tab");
   checkLocalTab(tab, "about:robots");
 
@@ -143,8 +140,7 @@ add_task(function* test_sessions_restore() {
   yield assertNotificationCount(9);
   restored = yield extension.awaitMessage("restored");
 
-  is(restored.length, 1, "restore returned the expected number of sessions");
-  tab = restored[0].tab;
+  tab = restored.tab;
   ok(tab, "restore returned a tab");
   checkLocalTab(tab, "about:robots");
 

@@ -1604,6 +1604,8 @@ var gBrowserInit = {
       }
     });
 
+    gPageActionButton.init();
+
     this.delayedStartupFinished = true;
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
@@ -7754,6 +7756,38 @@ var gIdentityHandler = {
 
     return container;
   }
+};
+
+
+var gPageActionButton = {
+  get button() {
+    delete this.button;
+    return this.button = document.getElementById("urlbar-page-action-button");
+  },
+
+  get panel() {
+    delete this.panel;
+    return this.panel = document.getElementById("page-action-panel");
+  },
+
+  init() {
+    if (getBoolPref("browser.photon.structure.enabled")) {
+      this.button.hidden = false;
+    }
+  },
+
+  onEvent(event) {
+    event.stopPropagation();
+
+    if ((event.type == "click" && event.button != 0) ||
+        (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
+         event.keyCode != KeyEvent.DOM_VK_RETURN)) {
+      return; // Left click, space or enter only
+    }
+
+    this.panel.hidden = false;
+    this.panel.openPopup(this.button, "bottomcenter topright");
+  },
 };
 
 function getNotificationBox(aWindow) {

@@ -37,9 +37,9 @@ add_test(function filepicker_open() {
 
       let e = fp.domFileOrDirectoryEnumerator;
       while (e.hasMoreElements()) {
-        let file = e.getNext();
-        do_print("DOMFile: " + file.mozFullPath);
-        is(file.mozFullPath, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian file from domFileOrDirectoryEnumerator array!");
+        let domFile = e.getNext();
+        do_print("DOMFile: " + domFile.mozFullPath);
+        is(domFile.mozFullPath, "/mnt/sdcard/my-favorite-martian.png", "Retrieve the right martian file from domFileOrDirectoryEnumerator array!");
       }
 
       do_test_finished();

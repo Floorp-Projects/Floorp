@@ -43,7 +43,7 @@ public:
    *    the raw data to preserve streaming and to save memory.  This only has effect
    *    in OnlyCustomTokenizing mode.
    */
-  explicit IncrementalTokenizer(Consumer aConsumer,
+  explicit IncrementalTokenizer(Consumer&& aConsumer,
                                 const char* aWhitespaces = nullptr,
                                 const char* aAdditionalWordChars = nullptr,
                                 uint32_t aRawMinBuffered = 1024);

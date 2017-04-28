@@ -57,7 +57,7 @@ function queryElement(contentWindow, data) {
 
 function dispatchUIEvent(input, type) {
   let event = input.ownerDocument.createEvent("UIEvents");
-  event.initUIEvent(type, true, true, input.ownerDocument.defaultView, 0);
+  event.initUIEvent(type, true, true, input.ownerGlobal, 0);
   input.dispatchEvent(event);
 }
 

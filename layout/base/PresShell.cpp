@@ -34,6 +34,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -565,6 +566,9 @@ private:
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 mozilla::LazyLogModule PresShell::gLog("PresShell");
+
+mozilla::TimeStamp PresShell::sLastInputCreated;
+mozilla::TimeStamp PresShell::sLastInputProcessed;
 
 #ifdef DEBUG
 static void
@@ -4559,19 +4563,6 @@ nsIPresShell::RestyleForCSSRuleChanges()
     mPresContext->RebuildCounterStyles();
   }
 
-  // Tell Servo that the contents of style sheets have changed.
-  //
-  // NB: It's important to do so before bailing out.
-  //
-  // Even if we have no frames, we can end up styling those when creating
-  // them, and it's important for Servo to know that it needs to use the
-  // correct styles.
-  // We don't do this notification if author styles are disabled, because
-  // the ServoStyleSet has already taken care of it.
-  if (mStyleSet->IsServo() && !mStyleSet->AsServo()->GetAuthorStyleDisabled()) {
-    mStyleSet->AsServo()->NoteStyleSheetsChanged();
-  }
-
   Element* root = mDocument->GetRootElement();
   if (!mDidInitialize) {
     // Nothing to do here, since we have no frames yet
@@ -4607,6 +4598,11 @@ PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet)
 
   if (mStylesHaveChanged)
     return;
+
+  // Tell Servo that the contents of style sheets have changed.
+  if (ServoStyleSet* set = mStyleSet->GetAsServo()) {
+    set->NoteStyleSheetsChanged();
+  }
 
   if (aStyleSheet->IsGecko()) {
     // XXXheycam ServoStyleSheets don't support <style scoped> yet.
@@ -8214,11 +8210,24 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       !aEvent->mTimeStamp.IsNull() &&
       aEvent->mTimeStamp > mLastOSWake &&
       aEvent->AsInputEvent()) {
-    double millis = (TimeStamp::Now() - aEvent->mTimeStamp).ToMilliseconds();
+    TimeStamp now = TimeStamp::Now();
+    double millis = (now - aEvent->mTimeStamp).ToMilliseconds();
     Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
     if (mDocument && mDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
       Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_MS, millis);
     }
+
+    if (!sLastInputProcessed || sLastInputProcessed < aEvent->mTimeStamp) {
+      if (sLastInputProcessed) {
+        // This input event was created after we handled the last one.
+        // Accumulate the previous events' coalesced duration.
+        double lastMillis = (sLastInputProcessed - sLastInputCreated).ToMilliseconds();
+        Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_COALESCED_MS,
+                              lastMillis);
+      }
+      sLastInputCreated = aEvent->mTimeStamp;
+    }
+    sLastInputProcessed = now;
   }
 
   return rv;
@@ -8449,8 +8458,9 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
       nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
       aEvent->mWidget = widget;
       LayoutDeviceIntPoint widgetPoint = widget->WidgetToScreenOffset();
-      aEvent->mRefPoint = LayoutDeviceIntPoint::FromUnknownPoint(
-        itemFrame->GetScreenRect().BottomLeft()) - widgetPoint;
+      aEvent->mRefPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(
+        itemFrame->GetScreenRectInAppUnits().BottomLeft(),
+        itemFrame->PresContext()->AppUnitsPerDevPixel()) - widgetPoint;
 
       mCurrentEventContent = itemFrame->GetContent();
       mCurrentEventFrame = itemFrame;

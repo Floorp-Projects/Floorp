@@ -1,0 +1,129 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "geckoProfiler"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "geckoProfiler",
+    "description": "Exposes the browser's profiler.",
+
+    "permissions": ["geckoProfiler"],
+    "functions": [
+      {
+       "name": "start",
+       "type": "function",
+       "description": "Starts the profiler with the specified settings.",
+       "async": true,
+       "parameters": [
+          {
+            "name": "settings",
+            "type": "object",
+            "properties": {
+              "bufferSize": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The size in bytes of the buffer used to store profiling data. A larger value allows capturing a profile that covers a greater amount of time."
+              },
+              "interval": {
+                "type": "number",
+                "description": "Interval in milliseconds between samples of profiling data. A smaller value will increase the detail of the profiles captured."
+              },
+              "features": {
+                "type": "array",
+                "description": "A list of active features for the profiler.",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "js",
+                    "stackwalk",
+                    "tasktracer",
+                    "leaf",
+                    "threads"
+                  ]
+                }
+              },
+              "threads": {
+                "type": "array",
+                "description": "A list of thread names for which to capture profiles.",
+                "optional": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "stop",
+        "type": "function",
+        "description": "Stops the profiler and discards any captured profile data.",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "pause",
+        "type": "function",
+        "description": "Pauses the profiler, keeping any profile data that is already written.",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "resume",
+        "type": "function",
+        "description": "Resumes the profiler with the settings that were initially used to start it.",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "getProfile",
+        "type": "function",
+        "description": "Gathers the profile data from the current profiling session.",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "getSymbols",
+        "type": "function",
+        "description": "Gets the debug symbols for a particular library.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "string",
+            "name": "debugName",
+            "description": "The name of the library's debug file. For example, 'xul.pdb"
+          },
+          {
+            "type": "string",
+            "name": "breakpadId",
+            "description": "The Breakpad ID of the library"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onRunning",
+        "type": "function",
+        "description": "Fires when the profiler starts/stops running.",
+        "parameters": [
+          {
+            "name": "isRunning",
+            "type": "boolean",
+            "description": "Whether the profiler is running or not. Pausing the profiler will not affect this value."
+          }
+        ]
+      }
+    ]
+  }
+]

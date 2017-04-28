@@ -19,8 +19,8 @@
 
 <!-- Device Settings -->
 <!ENTITY fxaSyncDeviceName.label       "Device Name">
-<!ENTITY changeSyncDeviceName1.label "Change Device Name">
-<!ENTITY changeSyncDeviceName1.accesskey "h">
+<!ENTITY changeSyncDeviceName2.label "Change Device Name…">
+<!ENTITY changeSyncDeviceName2.accesskey "h">
 <!ENTITY cancelChangeSyncDeviceName.label "Cancel">
 <!ENTITY cancelChangeSyncDeviceName.accesskey "n">
 <!ENTITY saveChangeSyncDeviceName.label "Save">
@@ -52,8 +52,8 @@ both, to better adapt this sentence to their language.
 <!ENTITY profilePicture.tooltip      "Change profile picture">
 <!ENTITY verifiedManage.label        "Manage Account">
 <!ENTITY verifiedManage.accesskey    "o">
-<!ENTITY disconnect2.label           "Disconnect">
-<!ENTITY disconnect2.accesskey       "D">
+<!ENTITY disconnect3.label           "Disconnect…">
+<!ENTITY disconnect3.accesskey       "D">
 <!ENTITY verify.label                "Verify Email">
 <!ENTITY verify.accesskey            "V">
 <!ENTITY forget.label                "Forget this Email">

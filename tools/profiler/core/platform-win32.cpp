@@ -213,7 +213,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 
   aSample.mContext = &context;
 
-  Tick(aLock, gPS->Buffer(aLock), aSample);
+  Tick(aLock, ActivePS::Buffer(aLock), aSample);
 
   //----------------------------------------------------------------//
   // Resume the target thread.

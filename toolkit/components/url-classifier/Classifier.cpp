@@ -724,7 +724,7 @@ void Classifier::FlushAndDisableAsyncUpdate()
 
 nsresult
 Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
-                              AsyncUpdateCallback aCallback)
+                              const AsyncUpdateCallback& aCallback)
 {
   LOG(("Classifier::AsyncApplyUpdates"));
 

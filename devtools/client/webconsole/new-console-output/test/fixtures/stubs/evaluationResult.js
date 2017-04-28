@@ -90,6 +90,31 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
   "notes": null
 }));
 
+stubPreparedMessages.set("longString message Error", new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "javascript",
+  "timeStamp": 1493108241073,
+  "type": "result",
+  "level": "error",
+  "messageText": {
+    "type": "longString",
+    "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon",
+    "length": 110007,
+    "actor": "server1.conn0.child1/longString37"
+  },
+  "parameters": {
+    "type": "undefined"
+  },
+  "repeat": 1,
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1493108241073,\"type\":\"result\",\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
+  "stacktrace": null,
+  "frame": null,
+  "groupId": null,
+  "userProvidedStyles": null,
+  "notes": null
+}));
+
 stubPackets.set("new Date(0)", {
   "from": "server1.conn0.child1/consoleActor2",
   "input": "new Date(0)",
@@ -179,6 +204,47 @@ stubPackets.set("1 + @", {
     "line": 1,
     "column": 4
   },
+  "helperResult": null,
+  "notes": null
+});
+
+stubPackets.set("longString message Error", {
+  "from": "server1.conn0.child1/consoleActor2",
+  "input": "throw new Error(\"Long error \".repeat(10000))",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1493108241073,
+  "exception": {
+    "type": "object",
+    "actor": "server1.conn0.child1/obj35",
+    "class": "Error",
+    "extensible": true,
+    "frozen": false,
+    "sealed": false,
+    "ownPropertyLength": 4,
+    "preview": {
+      "kind": "Error",
+      "name": "Error",
+      "message": {
+        "type": "longString",
+        "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error",
+        "length": 110000,
+        "actor": "server1.conn0.child1/longString36"
+      },
+      "stack": "@debugger eval code:1:7\n",
+      "fileName": "debugger eval code",
+      "lineNumber": 1,
+      "columnNumber": 7
+    }
+  },
+  "exceptionMessage": {
+    "type": "longString",
+    "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon",
+    "length": 110007,
+    "actor": "server1.conn0.child1/longString37"
+  },
+  "frame": null,
   "helperResult": null,
   "notes": null
 });

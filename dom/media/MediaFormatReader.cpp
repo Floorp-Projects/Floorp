@@ -738,7 +738,8 @@ class MediaFormatReader::DemuxerProxy
 public:
   explicit DemuxerProxy(MediaDataDemuxer* aDemuxer)
     : mTaskQueue(new AutoTaskQueue(
-                   GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER)))
+        GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+        "DemuxerProxy::mTaskQueue"))
     , mData(new Data(aDemuxer))
   {
     MOZ_COUNT_CTOR(DemuxerProxy);
@@ -1220,10 +1221,13 @@ MediaFormatReader::InitInternal()
 
   InitLayersBackendType();
 
-  mAudio.mTaskQueue =
-    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-  mVideo.mTaskQueue =
-    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  mAudio.mTaskQueue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+    "MFR::mAudio::mTaskQueue");
+
+  mVideo.mTaskQueue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+    "MFR::mVideo::mTaskQueue");
 
   if (mDecoder) {
     // Note: GMPCrashHelper must be created on main thread, as it may use

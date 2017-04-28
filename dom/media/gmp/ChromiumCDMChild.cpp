@@ -45,7 +45,7 @@ ChromiumCDMChild::TimerExpired(void* aContext)
   }
 }
 
-class CDMShmemBuffer : public cdm::Buffer
+class CDMShmemBuffer : public CDMBuffer
 {
 public:
   CDMShmemBuffer(ChromiumCDMChild* aProtocol, ipc::Shmem aShmem)
@@ -55,6 +55,17 @@ public:
   {
     CDM_LOG("CDMShmemBuffer(size=%" PRIu32 ") created", Size());
     // Note: Chrome initializes the size of a buffer to it capacity. We do the same.
+  }
+
+  CDMShmemBuffer(ChromiumCDMChild* aProtocol,
+                 ipc::Shmem aShmem,
+                 WidevineBuffer* aLocalBuffer)
+    : CDMShmemBuffer(aProtocol, aShmem)
+  {
+    MOZ_ASSERT(aLocalBuffer->Size() == Size());
+    memcpy(Data(),
+           aLocalBuffer->Data(),
+           std::min<uint32_t>(aLocalBuffer->Size(), Size()));
   }
 
   ~CDMShmemBuffer() override
@@ -96,6 +107,8 @@ public:
     mShmem = ipc::Shmem();
     return shmem;
   }
+
+  CDMShmemBuffer* AsShmemBuffer() override { return this; }
 
 private:
   RefPtr<ChromiumCDMChild> mProtocol;
@@ -143,9 +156,10 @@ ChromiumCDMChild::Allocate(uint32_t aCapacity)
   }
   if (best == invalid) {
     // The parent process should have bestowed upon us a shmem of appropriate
-    // size, but did not!
-    MOZ_ASSERT(false);
-    return nullptr;
+    // size, but did not! Do a "dive and catch", and create an non-shared
+    // memory buffer. The parent will detect this and send us an extra shmem
+    // so future frames can be in shmems, i.e. returned on the fast path.
+    return new WidevineBuffer(aCapacity);
   }
   ipc::Shmem shmem = mBuffers[best];
   mBuffers.RemoveElementAt(best);
@@ -355,6 +369,22 @@ bool
 ChromiumCDMChild::IsOnMessageLoopThread()
 {
   return mPlugin && mPlugin->GMPMessageLoop() == MessageLoop::current();
+}
+
+void
+ChromiumCDMChild::PurgeShmems()
+{
+  for (ipc::Shmem& shmem : mBuffers) {
+    DeallocShmem(shmem);
+  }
+  mBuffers.Clear();
+}
+
+ipc::IPCResult
+ChromiumCDMChild::RecvPurgeShmems()
+{
+  PurgeShmems();
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -571,8 +601,9 @@ ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
   // CDM should have allocated a cdm::Buffer for output.
   CDMShmemBuffer* buffer =
     output.DecryptedBuffer()
-      ? reinterpret_cast<CDMShmemBuffer*>(output.DecryptedBuffer())
+      ? static_cast<CDMShmemBuffer*>(output.DecryptedBuffer())
       : nullptr;
+  MOZ_ASSERT(buffer->AsShmemBuffer());
   if (status != cdm::kSuccess || !buffer) {
     Unused << SendDecryptFailed(aId, status);
     return IPC_OK();
@@ -624,10 +655,7 @@ ChromiumCDMChild::RecvDeinitializeVideoDecoder()
     mDecoderInitialized = false;
     mCDM->DeinitializeDecoder(cdm::kStreamTypeVideo);
   }
-  for (ipc::Shmem& shmem : mBuffers) {
-    DeallocShmem(shmem);
-  }
-  mBuffers.Clear();
+  PurgeShmems();
   return IPC_OK();
 }
 
@@ -650,7 +678,6 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
   GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() t=%" PRId64 ")",
           aBuffer.mTimestamp());
   MOZ_ASSERT(mDecoderInitialized);
-  MOZ_ASSERT(!mBuffers.IsEmpty());
 
   RefPtr<ChromiumCDMChild> self = this;
   auto autoDeallocateShmem = MakeScopeExit([&, self] {
@@ -676,6 +703,9 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
           rv);
 
   switch (rv) {
+    case cdm::kNeedMoreData:
+      Unused << SendDecodeFailed(rv);
+      break;
     case cdm::kNoKey:
       GMP_LOG("NoKey for sample at time=%" PRId64 "!", input.timestamp);
       // Somehow our key became unusable. Typically this would happen when
@@ -688,11 +718,12 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
       frame.InitToBlack(mCodedSize.width, mCodedSize.height, input.timestamp);
       MOZ_FALLTHROUGH;
     case cdm::kSuccess:
-      ReturnOutput(frame);
-      break;
-    case cdm::kNeedMoreData:
-      Unused << SendDecodeFailed(rv);
-      break;
+      if (frame.FrameBuffer()) {
+        ReturnOutput(frame);
+        break;
+      }
+      // CDM didn't set a frame buffer on the sample, report it as an error.
+      MOZ_FALLTHROUGH;
     default:
       Unused << SendDecodeFailed(rv);
       break;
@@ -705,13 +736,11 @@ void
 ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
+  MOZ_ASSERT(aFrame.FrameBuffer());
   gmp::CDMVideoFrame output;
   output.mFormat() = static_cast<cdm::VideoFormat>(aFrame.Format());
   output.mImageWidth() = aFrame.Size().width;
   output.mImageHeight() = aFrame.Size().height;
-  CDMShmemBuffer* cdmSharedBuffer =
-    reinterpret_cast<CDMShmemBuffer*>(aFrame.FrameBuffer());
-  output.mData() = cdmSharedBuffer->ExtractShmem();
   output.mYPlane() = { aFrame.PlaneOffset(cdm::VideoFrame::kYPlane),
                        aFrame.Stride(cdm::VideoFrame::kYPlane) };
   output.mUPlane() = { aFrame.PlaneOffset(cdm::VideoFrame::kUPlane),
@@ -725,14 +754,20 @@ ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame)
     output.mDuration() = duration;
   }
 
-  Unused << SendDecoded(output);
+  CDMBuffer* base = reinterpret_cast<CDMBuffer*>(aFrame.FrameBuffer());
+  if (base->AsShmemBuffer()) {
+    ipc::Shmem shmem = base->AsShmemBuffer()->ExtractShmem();
+    Unused << SendDecodedShmem(output, shmem);
+  } else {
+    MOZ_ASSERT(base->AsArrayBuffer());
+    Unused << SendDecodedData(output, base->AsArrayBuffer()->ExtractBuffer());
+  }
 }
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDrain()
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
-  MOZ_ASSERT(!mBuffers.IsEmpty());
   WidevineVideoFrame frame;
   cdm::InputBuffer sample;
   cdm::Status rv = mCDM->DecryptAndDecodeFrame(sample, &frame);

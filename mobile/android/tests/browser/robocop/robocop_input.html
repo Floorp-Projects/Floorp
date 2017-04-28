@@ -28,6 +28,8 @@
 
       // Spatial navigation interferes with design-mode key event tests.
       SpecialPowers.setBoolPref("snav.enabled", false);
+      // Enable "selectionchange" events for input/textarea.
+      SpecialPowers.setBoolPref("dom.select_events.textcontrols.enabled", true);
 
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
@@ -46,8 +48,40 @@
 
       let getEditor, setValue, setSelection;
 
+      let events_log;
+      function log_event(event) {
+        switch (event.type) {
+          case "compositionstart":
+            events_log += "<";
+            break;
+          case "compositionupdate":
+            events_log += "=";
+            break;
+          case "compositionend":
+            events_log += ">";
+            break;
+          case "selectionchange":
+            events_log += "|";
+            break;
+          default:
+            events_log += "?";
+            break;
+        }
+      }
+
+      function get_event_target() {
+        var editor = getEditor();
+        var parent = SpecialPowers.unwrap(editor.rootElement.parentElement);
+        if (parent instanceof HTMLInputElement || parent instanceof HTMLTextAreaElement) {
+          // "selectionchange" is only dispatched to the element itself,
+          // so use the element as the target instead of using the document.
+          return parent;
+        }
+        return editor.document;
+      }
+
       let test = {
-        focus_input: function(val) {
+        focus_input: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(input).QueryInterface(
                 SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
@@ -58,11 +92,11 @@
           setSelection = function(pos) {
             input.setSelectionRange(pos, pos);
           };
-          setValue(val);
+          setValue(value);
           input.focus();
         },
 
-        focus_text_area: function(val) {
+        focus_text_area: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(textArea).QueryInterface(
                 SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
@@ -73,11 +107,11 @@
           setSelection = function(pos) {
             textArea.setSelectionRange(pos, pos);
           };
-          setValue(val);
+          setValue(value);
           textArea.focus();
         },
 
-        focus_content_editable: function(val) {
+        focus_content_editable: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(window).QueryInterface(
                 SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
@@ -90,11 +124,11 @@
           setSelection = function(pos) {
             window.getSelection().collapse(contentEditable.firstChild, pos);
           };
-          setValue(val);
+          setValue(value);
           contentEditable.focus();
         },
 
-        focus_design_mode: function(val) {
+        focus_design_mode: function(value) {
           getEditor = function() {
             return SpecialPowers.wrap(designMode.contentWindow).QueryInterface(
                 SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
@@ -108,7 +142,7 @@
             designMode.contentWindow.getSelection().collapse(
                 designMode.contentDocument.body.firstChild, pos);
           };
-          setValue(val);
+          setValue(value);
           designMode.contentWindow.focus();
           designMode.contentDocument.body.focus();
         },
@@ -128,6 +162,27 @@
           // Ending the composition then setting the selection triggers the bug.
           getEditor().forceCompositionEnd();
           setSelection(3); // Offsets that testInputConnection.java expects.
+        },
+
+        start_events_log: function() {
+          // Reset the log
+          events_log = "";
+
+          let target = get_event_target();
+          target.addEventListener("compositionstart", log_event);
+          target.addEventListener("compositionupdate", log_event);
+          target.addEventListener("compositionend", log_event);
+          target.addEventListener("selectionchange", log_event);
+        },
+
+        end_events_log: function() {
+          java.asyncCall("setEventsLog", events_log);
+
+          let target = get_event_target();
+          target.removeEventListener("compositionstart", log_event);
+          target.removeEventListener("compositionupdate", log_event);
+          target.removeEventListener("compositionend", log_event);
+          target.removeEventListener("selectionchange", log_event);
         },
 
         test_bug1123514: function() {

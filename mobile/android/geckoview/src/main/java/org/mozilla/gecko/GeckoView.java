@@ -33,6 +33,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -129,6 +130,11 @@ public class GeckoView extends LayerView
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void setState(final State newState) {
+            if (mNativeQueue.getState() != State.READY &&
+                newState == State.READY) {
+                Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                      " - chrome startup finished");
+            }
             mNativeQueue.setState(newState);
         }
 

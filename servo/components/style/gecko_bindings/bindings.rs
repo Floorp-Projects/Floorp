@@ -615,13 +615,17 @@ extern "C" {
      -> RawServoDeclarationBlockStrongBorrowedOrNull;
 }
 extern "C" {
-    pub fn Gecko_GetAnimationRule(aElement: RawGeckoElementBorrowed,
-                                  aPseudoTag: *mut nsIAtom,
+    pub fn Gecko_GetAnimationRule(aElementOrPseudo: RawGeckoElementBorrowed,
                                   aCascadeLevel:
                                       EffectCompositor_CascadeLevel,
                                   aAnimationValues:
                                       RawServoAnimationValueMapBorrowed)
      -> bool;
+}
+extern "C" {
+    pub fn Gecko_GetSMILOverrideDeclarationBlock(element:
+                                                     RawGeckoElementBorrowed)
+     -> RawServoDeclarationBlockStrongBorrowedOrNull;
 }
 extern "C" {
     pub fn Gecko_StyleAnimationsEquals(arg1:
@@ -631,46 +635,42 @@ extern "C" {
      -> bool;
 }
 extern "C" {
-    pub fn Gecko_UpdateAnimations(aElement: RawGeckoElementBorrowed,
-                                  aPseudoTagOrNull: *mut nsIAtom,
+    pub fn Gecko_UpdateAnimations(aElementOrPseudo: RawGeckoElementBorrowed,
                                   aOldComputedValues:
                                       ServoComputedValuesBorrowedOrNull,
                                   aComputedValues:
                                       ServoComputedValuesBorrowedOrNull,
                                   aParentComputedValues:
                                       ServoComputedValuesBorrowedOrNull,
-                                  aTaskBits: UpdateAnimationsTasks);
+                                  aTasks: UpdateAnimationsTasks);
 }
 extern "C" {
-    pub fn Gecko_ElementHasAnimations(aElement: RawGeckoElementBorrowed,
-                                      aPseudoTagOrNull: *mut nsIAtom) -> bool;
+    pub fn Gecko_ElementHasAnimations(aElementOrPseudo:
+                                          RawGeckoElementBorrowed) -> bool;
 }
 extern "C" {
-    pub fn Gecko_ElementHasCSSAnimations(aElement: RawGeckoElementBorrowed,
-                                         aPseudoTagOrNull: *mut nsIAtom)
+    pub fn Gecko_ElementHasCSSAnimations(aElementOrPseudo:
+                                             RawGeckoElementBorrowed) -> bool;
+}
+extern "C" {
+    pub fn Gecko_ElementHasCSSTransitions(aElementOrPseudo:
+                                              RawGeckoElementBorrowed)
      -> bool;
 }
 extern "C" {
-    pub fn Gecko_ElementHasCSSTransitions(aElement: RawGeckoElementBorrowed,
-                                          aPseudoTagOrNull: *mut nsIAtom)
-     -> bool;
-}
-extern "C" {
-    pub fn Gecko_ElementTransitions_Length(aElement: RawGeckoElementBorrowed,
-                                           aPseudoTagOrNull: *mut nsIAtom)
+    pub fn Gecko_ElementTransitions_Length(aElementOrPseudo:
+                                               RawGeckoElementBorrowed)
      -> usize;
 }
 extern "C" {
-    pub fn Gecko_ElementTransitions_PropertyAt(aElement:
+    pub fn Gecko_ElementTransitions_PropertyAt(aElementOrPseudo:
                                                    RawGeckoElementBorrowed,
-                                               aPseudoTagOrNull: *mut nsIAtom,
                                                aIndex: usize)
      -> nsCSSPropertyID;
 }
 extern "C" {
-    pub fn Gecko_ElementTransitions_EndValueAt(aElement:
+    pub fn Gecko_ElementTransitions_EndValueAt(aElementOrPseudo:
                                                    RawGeckoElementBorrowed,
-                                               aPseudoTagOrNull: *mut nsIAtom,
                                                aIndex: usize)
      -> RawServoAnimationValueBorrowedOrNull;
 }
@@ -855,9 +855,13 @@ extern "C" {
                                                      RawGeckoElementBorrowed);
 }
 extern "C" {
-    pub fn Gecko_GetStyleContext(node: RawGeckoNodeBorrowed,
+    pub fn Gecko_GetStyleContext(element: RawGeckoElementBorrowed,
                                  aPseudoTagOrNull: *mut nsIAtom)
      -> *mut nsStyleContext;
+}
+extern "C" {
+    pub fn Gecko_GetImplementedPseudo(element: RawGeckoElementBorrowed)
+     -> *mut nsIAtom;
 }
 extern "C" {
     pub fn Gecko_CalcStyleDifference(oldstyle: *mut nsStyleContext,

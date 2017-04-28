@@ -262,11 +262,11 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
     // reopen the menu.
     if ((consumeResult == ConsumeOutsideClicks_ParentOnly || noRollupOnAnchor) && pos) {
       nsMenuPopupFrame* popupFrame = item->Frame();
-      nsIntRect anchorRect;
+      CSSIntRect anchorRect;
       if (popupFrame->IsAnchored()) {
         // Check if the popup has a screen anchor rectangle. If not, get the rectangle
         // from the anchor element.
-        anchorRect = popupFrame->GetScreenAnchorRect();
+        anchorRect = CSSIntRect::FromUnknownRect(popupFrame->GetScreenAnchorRect());
         if (anchorRect.x == -1 || anchorRect.y == -1) {
           nsCOMPtr<nsIContent> anchor = popupFrame->GetAnchor();
 
@@ -298,8 +298,8 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
       // event will get consumed, so here only a quick coordinates check is
       // done rather than a slower complete check of what is at that location.
       nsPresContext* presContext = item->Frame()->PresContext();
-      nsIntPoint posCSSPixels(presContext->DevPixelsToIntCSSPixels(pos->x),
-                              presContext->DevPixelsToIntCSSPixels(pos->y));
+      CSSIntPoint posCSSPixels(presContext->DevPixelsToIntCSSPixels(pos->x),
+                               presContext->DevPixelsToIntCSSPixels(pos->y));
       if (anchorRect.Contains(posCSSPixels)) {
         if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
           consume = true;

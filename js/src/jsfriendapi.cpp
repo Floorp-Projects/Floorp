@@ -607,9 +607,9 @@ js::TraceWeakMaps(WeakMapTracer* trc)
 }
 
 extern JS_FRIEND_API(bool)
-js::AreGCGrayBitsValid(JSContext* cx)
+js::AreGCGrayBitsValid(JSRuntime* rt)
 {
-    return cx->runtime()->gc.areGrayBitsValid();
+    return rt->gc.areGrayBitsValid();
 }
 
 JS_FRIEND_API(bool)
@@ -1102,7 +1102,7 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 
     DumpHeapTracer(FILE* fp, JSContext* cx)
       : JS::CallbackTracer(cx, DoNotTraceWeakMaps),
-        js::WeakMapTracer(cx), prefix(""), output(fp)
+        js::WeakMapTracer(cx->runtime()), prefix(""), output(fp)
     {}
 
   private:

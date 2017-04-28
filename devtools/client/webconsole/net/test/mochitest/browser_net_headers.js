@@ -26,11 +26,11 @@ add_task(function* () {
   // Select "Headers" tab
   let tabBody = yield selectNetInfoTab(hud, netInfoBody, "headers");
   let paramName = tabBody.querySelector(
-    ".netInfoParamName > span[title='Content-Type']");
+    ".netInfoParamName > span[title='content-type']");
 
   // Verify "Content-Type" header (name and value)
   ok(paramName, "Header name must exist");
-  is(paramName.textContent, "Content-Type",
+  is(paramName.textContent, "content-type",
     "The header name must have proper value");
 
   let paramValue = paramName.parentNode.nextSibling;

@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101364
 </head>
 <body id='body'>
 
-<iframe id="test1" src="data:text/html,<h1 id='test1' style='-moz-user-select:none'>Header</h1><div id='testDiv'>test1</div>"></iframe>
-<iframe id="test2" src="data:text/html,<div contenteditable id='test2'>AAA<span id='test2Inner'>BBB</span></div>"></iframe>
+<iframe id="test1" srcdoc="<h1 id='test1' style='-moz-user-select:none'>Header</h1><div id='testDiv'>test1</div>"></iframe>
+<iframe id="test2" srcdoc="<div contenteditable id='test2'>AAA<span id='test2Inner'>BBB</span></div>"></iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 

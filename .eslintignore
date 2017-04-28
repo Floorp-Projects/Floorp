@@ -261,7 +261,7 @@ js/src/jit-test/**
 js/src/tests/**
 
 # mobile/android/ exclusions
-mobile/android/tests/
+mobile/android/tests/browser/chrome/tp5/**
 
 # Uses `#filter substitution`
 mobile/android/b2gdroid/app/b2gdroid.js

@@ -23,6 +23,7 @@ browser.jar:
     content/browser/ext-devtools-inspectedWindow.js
     content/browser/ext-devtools-network.js
     content/browser/ext-devtools-panels.js
+    content/browser/ext-geckoProfiler.js
     content/browser/ext-history.js
     content/browser/ext-omnibox.js
     content/browser/ext-pageAction.js

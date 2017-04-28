@@ -5,6 +5,8 @@ const ID_ICON = "update_icon2@tests.mozilla.org";
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
 
+requestLongerTimeout(2);
+
 function promiseViewLoaded(tab, viewid) {
   let win = tab.linkedBrowser.contentWindow;
   if (win.gViewController && !win.gViewController.isLoading &&

@@ -1,0 +1,18 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=UTF-8>
+  <title>Test page for link clicking</title>
+  <script type="text/javascript; version=1.8">
+    function launch_download() {
+      window.open("download.bin", "_blank", "height=100,width=100");
+    }
+  </script>
+</head>
+<body>
+  <a href="download.bin" id="regular_load">regular load</a>
+  <a href="download.bin" id="target_blank" target="_blank">target blank</a>
+  <a href="#" onclick="launch_download(); return false" id="new_window">new window</a>
+</body>

@@ -743,7 +743,7 @@ function* runTest() {
             is(res.responseHeaders[header], test.responseHeaders[header],
                "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
                test.toSource());
-            is(res.allResponseHeaders[header], test.responseHeaders[header],
+            is(res.allResponseHeaders[header.toLowerCase()], test.responseHeaders[header],
               "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
               test.toSource());
           }

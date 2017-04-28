@@ -297,7 +297,11 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
                 userCursor = mDB.getBookmarksInFolder(contentResolver, mFolderInfo.id);
             }
 
-
+            // MergeCursor is only partly capable of handling null cursors, hence the complicated
+            // logic here. The main issue is CursorAdapter always queries the _id column when
+            // swapping a cursor. If you haven't started iterating over the cursor, MergeCursor will
+            // try to fetch columns from the first Cursor in the list - if that item is null,
+            // we can't getColumnIndexOrThrow("_id"), and CursorAdapter crashes.
             if (partnerCursor == null && userCursor == null) {
                 return null;
             } else if (partnerCursor == null) {
@@ -305,8 +309,10 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
             } else if (userCursor == null) {
                 return partnerCursor;
             } else {
-                return new MergeCursor(new Cursor[] { partnerCursor, userCursor });
+                return new MergeCursor(new Cursor[]{ partnerCursor, userCursor });
             }
+
+
         }
 
         @Override

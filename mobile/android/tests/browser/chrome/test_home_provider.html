@@ -107,8 +107,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     for (let row of invalidRows) {
       try {
         yield storage.save([row]);
-      } catch (e if e instanceof HomeProvider.ValidationError) {
+      } catch (e) {
         // Just catch and ignore validation errors
+        if (!(e instanceof HomeProvider.ValidationError)) {
+          throw e;
+        }
       }
     }
 
@@ -135,8 +138,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     // Try to save all the rows at once
     try {
       yield storage.save(rows);
-    } catch (e if e instanceof HomeProvider.ValidationError) {
+    } catch (e) {
       // Just catch and ignore validation errors
+      if (!(e instanceof HomeProvider.ValidationError)) {
+        throw e;
+      }
     }
 
     // Peek in the DB to make sure we have the right data.

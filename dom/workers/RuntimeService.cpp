@@ -1059,7 +1059,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
   }
 
-  void Shutdown() override
+  void Shutdown(JSContext* cx) override
   {
     // The CC is shut down, and the superclass destructor will GC, so make sure
     // we don't try to CC again.

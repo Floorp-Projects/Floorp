@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+  const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
   return EventEmitter;
 });
 

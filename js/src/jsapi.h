@@ -1043,6 +1043,9 @@ JS_SetContextPrivate(JSContext* cx, void* data);
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetParentRuntime(JSContext* cx);
 
+extern JS_PUBLIC_API(JSRuntime*)
+JS_GetRuntime(JSContext* cx);
+
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext* cx);
 

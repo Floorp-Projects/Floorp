@@ -202,10 +202,12 @@ function testClassList(e, desc) {
   function checkAdd(before, argument, after, expectedException) {
     checkModification(e, "add", argument, undefined, before, after,
                       expectedException, desc);
-    if (!Array.isArray(argument)) {
-      checkModification(e, "toggle", [argument, true], true, before, after,
-                        expectedException, desc);
-    }
+    // Also check force toggle
+    // XXX https://github.com/whatwg/dom/issues/443
+    //if (!Array.isArray(argument)) {
+    //  checkModification(e, "toggle", [argument, true], true, before, after,
+    //                    expectedException);
+    //}
   }
 
   checkAdd(null, "", null, "SyntaxError");
@@ -255,10 +257,12 @@ function testClassList(e, desc) {
   function checkRemove(before, argument, after, expectedException) {
     checkModification(e, "remove", argument, undefined, before, after,
                       expectedException, desc);
-    if (!Array.isArray(argument)) {
-      checkModification(e, "toggle", [argument, false], false, before, after,
-                        expectedException, desc);
-    }
+    // Also check force toggle
+    // XXX https://github.com/whatwg/dom/issues/443
+    //if (!Array.isArray(argument)) {
+    //  checkModification(e, "toggle", [argument, false], false, before, after,
+    //                    expectedException);
+    //}
   }
 
   checkRemove(null, "", null, "SyntaxError");
@@ -351,6 +355,24 @@ function testClassList(e, desc) {
   checkToggle("", undefined, true, "undefined");
 
 
+  // tests for the force argument handling
+  // XXX Remove these if https://github.com/whatwg/dom/issues/443 is fixed
+
+  function checkForceToggle(before, argument, force, expectedRes, after, expectedException) {
+    checkModification(e, "toggle", [argument, force], expectedRes, before,
+                      after, expectedException, desc);
+  }
+
+  checkForceToggle("", "a", true, true, "a");
+  checkForceToggle("a", "a", true, true, "a");
+  checkForceToggle("a", "b", true, true, "a b");
+  checkForceToggle("a b", "b", true, true, "a b");
+  checkForceToggle("", "a", false, false, "");
+  checkForceToggle("a", "a", false, false, "");
+  checkForceToggle("a", "b", false, false, "a");
+  checkForceToggle("a b", "b", false, false, "a");
+
+
   // replace() method
   function checkReplace(before, token, newToken, after, expectedException) {
     checkModification(e, "replace", [token, newToken], undefined, before,
@@ -390,15 +412,19 @@ function testClassList(e, desc) {
   checkReplace("a", "A", "b", "a");
   checkReplace("a b", "b", "A", "a A");
   checkReplace("a b c", "d", "e", "a b c");
+  // https://github.com/whatwg/dom/issues/443
   checkReplace("a a a  b", "a", "a", "a b");
-  checkReplace("a a a  b", "c", "d", "a b");
+  checkReplace("a a a  b", "c", "d", "a a a  b");
   checkReplace(null, "a", "b", null);
   checkReplace("", "a", "b", "");
-  checkReplace(" ", "a", "b", "");
+  checkReplace(" ", "a", "b", " ");
   checkReplace(" a  \f", "a", "b", "b");
   checkReplace("a b c", "b", "d", "a d c");
+  // https://github.com/whatwg/dom/issues/442
+  // Implementations agree on the first one here, so I test it, but disagree on
+  // the second, so no test until the spec decides what to say.
   checkReplace("a b c", "c", "a", "a b");
-  checkReplace("c b a", "c", "a", "a b");
+  //checkReplace("c b a", "c", "a", ???);
   checkReplace("a b a", "a", "c", "c b");
   checkReplace("a b a", "b", "c", "a c");
   checkReplace("   a  a b", "a", "c", "c b");

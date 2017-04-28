@@ -239,14 +239,14 @@ GetGMPAbstractThread()
   return service ? service->GetAbstractGMPThread() : nullptr;
 }
 
-static int32_t
-Align16(int32_t aNumber)
+static size_t
+Align16(size_t aNumber)
 {
-  const uint32_t mask = 15; // Alignment - 1.
+  const size_t mask = 15; // Alignment - 1.
   return (aNumber + mask) & ~mask;
 }
 
-int32_t
+size_t
 I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight)
 {
   if (aWidth <= 0 || aHeight <= 0 || aWidth > MAX_VIDEO_WIDTH ||
@@ -254,7 +254,7 @@ I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight)
     return 0;
   }
 
-  int32_t ySize = Align16(aWidth) * Align16(aHeight);
+  size_t ySize = Align16(aWidth) * Align16(aHeight);
   return ySize + (ySize / 4) * 2;
 }
 

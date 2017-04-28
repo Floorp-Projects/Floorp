@@ -45,11 +45,11 @@ function createSession(restored, extension, sessionId) {
   if (restored instanceof Ci.nsIDOMChromeWindow) {
     return promiseObserved("sessionstore-single-window-restored", subject => subject == restored).then(() => {
       sessionObj.window = extension.windowManager.convert(restored, {populate: true});
-      return Promise.resolve([sessionObj]);
+      return Promise.resolve(sessionObj);
     });
   }
   sessionObj.tab = extension.tabManager.convert(restored);
-  return Promise.resolve([sessionObj]);
+  return Promise.resolve(sessionObj);
 }
 
 this.sessions = class extends ExtensionAPI {

@@ -15,6 +15,9 @@
  *       guid,             // 12 character...
  *
  *       // profile
+ *       given-name,
+ *       additional-name,
+ *       family-name,
  *       organization,     // Company
  *       street-address,    // (Multiline)
  *       address-level2,    // City/Town
@@ -51,6 +54,8 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
+                                  "resource://formautofill/FormAutofillNameUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
@@ -63,6 +68,9 @@ const SCHEMA_VERSION = 1;
 
 // Name-related fields will be handled in follow-up bugs due to the complexity.
 const VALID_FIELDS = [
+  "given-name",
+  "additional-name",
+  "family-name",
   "organization",
   "street-address",
   "address-level2",

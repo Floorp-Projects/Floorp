@@ -420,8 +420,6 @@ private:
         EARLY_SENT,
         EARLY_ACCEPTED
     } mEarlyDataDisposition;
-
-    nsresult                        mTransportStatus;
 };
 
 } // namespace net

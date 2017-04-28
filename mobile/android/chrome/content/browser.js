@@ -2201,12 +2201,16 @@ var BrowserApp = {
   },
 };
 
-async function notifyManifestStatus(browser) {
+async function notifyManifestStatus(tab) {
   try {
-    const manifest = await Manifests.getManifest(browser);
+    const manifest = await Manifests.getManifest(tab.browser);
     const evtType = (manifest && manifest.installed) ?
       "Website:AppEntered" : "Website:AppLeft";
-    GlobalEventDispatcher.sendRequest({type: evtType});
+
+    GlobalEventDispatcher.sendRequest({
+      type: evtType,
+      tabId: tab.id,
+    });
   } catch (err) {
     Cu.reportError("Error sending status: " + err.message);
   }
@@ -3660,7 +3664,8 @@ Tab.prototype = {
       desktopMode: this.desktopMode,
       isPrivate: isPrivate,
       tabId: this.id,
-      parentId: this.parentId
+      parentId: this.parentId,
+      type: this.type
     };
 
     if (aParams.delayLoad) {
@@ -4513,7 +4518,7 @@ Tab.prototype = {
 
     GlobalEventDispatcher.sendRequest(message);
 
-    notifyManifestStatus(this.browser);
+    notifyManifestStatus(this);
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which

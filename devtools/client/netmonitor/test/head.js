@@ -15,6 +15,9 @@ Services.scriptloader.loadSubScript(
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const {
+  getFormattedIPAndPort
+} = require("devtools/client/netmonitor/src/utils/format-utils");
+const {
   decodeUnicodeUrl,
   getUrlBaseName,
   getUrlQuery,
@@ -376,9 +379,10 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let unicodeUrl = decodeUnicodeUrl(url);
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
-  let hostPort = getUrlHost(url);
+  let host = getUrlHost(url);
   let { httpVersion = "", remoteAddress, remotePort } = requestItem;
-  let remoteIP = remoteAddress ? `${remoteAddress}:${remotePort}` : "unknown";
+  let formattedIPPort = getFormattedIPAndPort(remoteAddress, remotePort);
+  let remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
 
   if (fuzzyUrl) {
     ok(requestItem.method.startsWith(method), "The attached method is correct.");
@@ -411,9 +415,9 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     httpVersion, "The tooltip protocol is correct.");
 
   is(target.querySelector(".requests-list-domain").textContent,
-    hostPort, "The displayed domain is correct.");
+    host, "The displayed domain is correct.");
 
-  let domainTooltip = hostPort + (remoteAddress ? " (" + remoteAddress + ")" : "");
+  let domainTooltip = host + (remoteAddress ? " (" + formattedIPPort + ")" : "");
   is(target.querySelector(".requests-list-domain").getAttribute("title"),
     domainTooltip, "The tooltip domain is correct.");
 

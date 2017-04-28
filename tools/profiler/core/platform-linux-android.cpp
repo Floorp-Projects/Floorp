@@ -295,10 +295,10 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   mozilla::EHABIStackWalkInit();
 #elif defined(USE_LUL_STACKWALK)
   bool createdLUL = false;
-  lul::LUL* lul = gPS->LUL(aLock);
+  lul::LUL* lul = CorePS::Lul(aLock);
   if (!lul) {
     lul = new lul::LUL(logging_sink_for_LUL);
-    gPS->SetLUL(aLock, lul);
+    CorePS::SetLul(aLock, lul);
     // Read all the unwind info currently available.
     read_procmaps(lul);
     createdLUL = true;
@@ -409,7 +409,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // Extract the current PC and sp.
   FillInSample(aSample, &sSigHandlerCoordinator->mUContext);
 
-  Tick(aLock, gPS->Buffer(aLock), aSample);
+  Tick(aLock, ActivePS::Buffer(aLock), aSample);
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -464,12 +464,14 @@ paf_prepare()
 {
   // This function can run off the main thread.
 
-  MOZ_RELEASE_ASSERT(gPS);
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
-  gPS->SetWasPaused(lock, gPS->IsPaused(lock));
-  gPS->SetIsPaused(lock, true);
+  if (ActivePS::Exists(lock)) {
+    ActivePS::SetWasPaused(lock, ActivePS::IsPaused(lock));
+    ActivePS::SetIsPaused(lock, true);
+  }
 }
 
 // In the parent, after the fork, return IsPaused to the pre-fork state.
@@ -478,12 +480,14 @@ paf_parent()
 {
   // This function can run off the main thread.
 
-  MOZ_RELEASE_ASSERT(gPS);
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
-  gPS->SetIsPaused(lock, gPS->WasPaused(lock));
-  gPS->SetWasPaused(lock, false);
+  if (ActivePS::Exists(lock)) {
+    ActivePS::SetIsPaused(lock, ActivePS::WasPaused(lock));
+    ActivePS::SetWasPaused(lock, false);
+  }
 }
 
 static void

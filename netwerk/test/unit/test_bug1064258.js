@@ -133,7 +133,7 @@ function cacheCheck2(status, entry)
   do_check_eq(entry.dataSize, 0);
   try {
     do_check_neq(entry.getMetaDataElement("response-head"), null);
-    do_check_true(entry.getMetaDataElement("response-head").match('Etag: testetag'));
+    do_check_true(entry.getMetaDataElement("response-head").match('etag: testetag'));
   }
   catch (ex) {
     do_throw("Missing response head");

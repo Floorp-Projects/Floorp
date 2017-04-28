@@ -14,7 +14,7 @@
 != outline-square.html outline-ellips.html
 != outline-circle.html outline-ellips.html
 == border-value-interpret.html border-value-interpret-ref.html
-!= curved-borders-all-styles.html about:blank # no way to generate reference for dotted/dashed/inset/outset
+fails-if(stylo) != curved-borders-all-styles.html about:blank # no way to generate reference for dotted/dashed/inset/outset
 # ridge/groove borders
 
 # percent units
@@ -37,7 +37,7 @@ fuzzy-if(skiaContent,1,2728) == corner-4.html corner-4-ref.svg
 skip-if(!webrender) pref(layers.advanced.border-layers,1) == border-reduce-height.html border-reduce-height-ref.html
 
 # Tests for border clipping
-fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
+fails-if(!stylo) == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
 fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
@@ -72,8 +72,8 @@ fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1-ref.html
 fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent&&!Android,1,50) fuzzy-if(gtkWidget&&layersGPUAccelerated,12,12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
-fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
+fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent&&!Android,1,50) fuzzy-if(gtkWidget&&layersGPUAccelerated,12,12) fails-if(stylo) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+fails-if(Android) fails-if(stylo) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml

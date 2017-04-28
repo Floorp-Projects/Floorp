@@ -539,9 +539,9 @@ class RustLibrary(StaticLibrary):
         # filenames. But we need to keep the basename consistent because
         # many other things in the build system depend on that.
         assert self.crate_type == 'staticlib'
-        self.lib_name = '%s%s%s' % (context.config.lib_prefix,
+        self.lib_name = '%s%s%s' % (context.config.rust_lib_prefix,
                                      basename.replace('-', '_'),
-                                     context.config.lib_suffix)
+                                     context.config.rust_lib_suffix)
         self.dependencies = dependencies
         build_dir = mozpath.join(target_dir,
                                  cargo_output_directory(context, self.TARGET_SUBST_VAR))
