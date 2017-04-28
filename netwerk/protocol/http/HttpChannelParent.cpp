@@ -1148,7 +1148,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     PContentParent* pcp = Manager()->Manager();
     MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
     DebugOnly<nsresult> rv =
-      static_cast<ContentParent*>(pcp)->TransmitPermissionsFor(chan);
+      static_cast<ContentParent*>(pcp)->AboutToLoadDocumentForChild(chan);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
