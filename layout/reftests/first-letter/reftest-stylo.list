@@ -25,8 +25,8 @@ fails == parent-style-1.html parent-style-1.html
 == quote-1f.html quote-1f.html
 fails == dynamic-1.html dynamic-1.html
 random-if(d2d) == dynamic-2.html dynamic-2.html
-== dynamic-3a.html dynamic-3a.html
-== dynamic-3b.html dynamic-3b.html
+fails == dynamic-3a.html dynamic-3a.html
+fails == dynamic-3b.html dynamic-3b.html
 == 23605-1.html 23605-1.html
 == 23605-2.html 23605-2.html
 == 23605-3.html 23605-3.html
@@ -41,7 +41,7 @@ fails == 229764-2.html 229764-2.html # Bug 1324618
 == 329069-4.html 329069-4.html
 HTTP(..) == 329069-5.html 329069-5.html
 == 342120-1.xhtml 342120-1.xhtml
-== 379799-1.html 379799-1.html
+fails == 379799-1.html 379799-1.html
 == 399941-1.html 399941-1.html
 == 399941-2.html 399941-2.html
 == 399941-3.html 399941-3.html
