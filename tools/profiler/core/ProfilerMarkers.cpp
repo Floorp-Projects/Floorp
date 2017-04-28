@@ -270,3 +270,31 @@ VsyncPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                          (mVsyncTimestamp - aStartTime).ToMilliseconds());
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
+
+void
+GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                    const mozilla::TimeStamp& aStartTime,
+                                    UniqueStacks& aUniqueStacks)
+{
+  MOZ_ASSERT(mTimingJSON);
+  streamCommonProps("GCSlice", aWriter, aStartTime, aUniqueStacks);
+  if (mTimingJSON) {
+    aWriter.SplicedJSONProperty("timings", mTimingJSON.get());
+  } else {
+    aWriter.NullProperty("timings");
+  }
+}
+
+void
+GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                    const mozilla::TimeStamp& aStartTime,
+                                    UniqueStacks& aUniqueStacks)
+{
+  MOZ_ASSERT(mTimingJSON);
+  streamCommonProps("GCMajor", aWriter, aStartTime, aUniqueStacks);
+  if (mTimingJSON) {
+    aWriter.SplicedJSONProperty("timings", mTimingJSON.get());
+  } else {
+    aWriter.NullProperty("timings");
+  }
+}

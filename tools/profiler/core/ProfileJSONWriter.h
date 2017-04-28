@@ -102,6 +102,13 @@ public:
   void Splice(const ChunkedJSONWriteFunc* aFunc);
   void Splice(const char* aStr);
 
+  // Splice the given JSON directly in, without quoting.
+  void SplicedJSONProperty(const char* aMaybePropertyName,
+                           const char* aJsonValue)
+  {
+    Scalar(aMaybePropertyName, aJsonValue);
+  }
+
   // Takes the chunks from aFunc and write them. If move is not possible
   // (e.g., using OStreamJSONWriteFunc), aFunc's chunks are copied and its
   // storage cleared.
