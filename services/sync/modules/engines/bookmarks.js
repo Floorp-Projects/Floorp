@@ -634,15 +634,27 @@ BookmarksEngine.prototype = {
            FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
   },
 
-  beforeRecordDiscard(record) {
-    let isSpecial = PlacesSyncUtils.bookmarks.ROOTS.includes(record.id);
-    if (isSpecial && record.children && !this._store._childrenToOrder[record.id]) {
-      if (this._modified.getStatus(record.id) != PlacesUtils.bookmarks.SYNC_STATUS.NEW) {
-        return;
-      }
-      this._log.debug("Recording children of " + record.id + " as " + JSON.stringify(record.children));
-      this._store._childrenToOrder[record.id] = record.children;
+  beforeRecordDiscard(localRecord, remoteRecord, remoteIsNewer) {
+    if (localRecord.type != "folder" || remoteRecord.type != "folder") {
+      return;
     }
+    // Resolve child order conflicts by taking the chronologically newer list,
+    // then appending any missing items from the older list. This preserves the
+    // order of those missing items relative to each other, but not relative to
+    // the items that appear in the newer list.
+    let newRecord = remoteIsNewer ? remoteRecord : localRecord;
+    let newChildren = new Set(newRecord.children);
+
+    let oldChildren = (remoteIsNewer ? localRecord : remoteRecord).children;
+    let missingChildren = oldChildren ? oldChildren.filter(
+      child => !newChildren.has(child)) : [];
+
+    // Some of the children in `order` might have been deleted, or moved to
+    // other folders. `PlacesSyncUtils.bookmarks.order` ignores them.
+    let order = newRecord.children ?
+                [...newRecord.children, ...missingChildren] : missingChildren;
+    this._log.debug("Recording children of " + localRecord.id, order);
+    this._store._childrenToOrder[localRecord.id] = order;
   },
 
   getValidator() {
