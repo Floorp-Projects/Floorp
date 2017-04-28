@@ -828,6 +828,20 @@ CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
 
+#ifdef MOZ_GECKO_PROFILER
+  if (aProgress == JS::GC_CYCLE_END) {
+    auto payload = new GCSliceMarkerPayload(aDesc.lastSliceStart(aContext),
+                                            aDesc.lastSliceEnd(aContext),
+                                            aDesc.sliceToJSON(aContext));
+    PROFILER_MARKER_PAYLOAD("GCSlice", payload);
+  } else if (aProgress == JS::GC_SLICE_END) {
+    auto payload = new GCMajorMarkerPayload(aDesc.startTime(aContext),
+                                            aDesc.endTime(aContext),
+                                            aDesc.summaryToJSON(aContext));
+    PROFILER_MARKER_PAYLOAD("GCMajor", payload);
+  }
+#endif
+
   if (aProgress == JS::GC_CYCLE_END) {
     JS::gcreason::Reason reason = aDesc.reason_;
     Unused <<
