@@ -19009,6 +19009,10 @@ Maintenance::Finish()
 
   mDirectoryLock = nullptr;
 
+  // It can happen that we are only referenced by mCurrentMaintenance which is
+  // cleared in NoteFinishedMaintenance()
+  RefPtr<Maintenance> kungFuDeathGrip = this;
+
   mQuotaClient->NoteFinishedMaintenance(this);
 
   mState = State::Complete;
