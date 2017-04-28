@@ -20,9 +20,6 @@ public abstract class SingleTabActivity extends GeckoApp {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         final Intent externalIntent = getIntent();
-        // We need the current activity to already be up-to-date before
-        // calling into the superclass.
-        GeckoActivityMonitor.getInstance().setCurrentActivity(this);
 
         decideTabAction(new SafeIntent(externalIntent), savedInstanceState);
 
@@ -35,9 +32,6 @@ public abstract class SingleTabActivity extends GeckoApp {
     @Override
     protected void onNewIntent(Intent externalIntent) {
         final SafeIntent intent = new SafeIntent(externalIntent);
-        // We need the current activity to already be up-to-date before
-        // calling into the superclass.
-        GeckoActivityMonitor.getInstance().setCurrentActivity(this);
 
         if (decideTabAction(intent, null)) {
             // GeckoApp will handle tab selection.
