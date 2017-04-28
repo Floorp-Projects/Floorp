@@ -264,15 +264,18 @@ endif
 
 .PHONY: symbolsfullarchive
 symbolsfullarchive: prepsymbolsarchive
-	$(RM) '$(DIST)/$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
-	cd $(DIST)/crashreporter-symbols && \
-          zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' . -x '*test*' -x '*Test*'
+	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
+	$(call py_action,symbols_archive,$(abspath '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip') \
+                                     $(abspath $(DIST)/crashreporter-symbols) \
+                                     --exclude '*test*' \
+                                     --exclude '*Test*')
 
 .PHONY: symbolsarchive
 symbolsarchive: prepsymbolsarchive
-	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
-	cd $(DIST)/crashreporter-symbols && \
-          zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym'
+	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip'
+	$(call py_action,symbols_archive,$(abspath '$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip') \
+                                     $(abspath $(DIST)/crashreporter-symbols) \
+                                     --include '**/*.sym')
 
 ifdef MOZ_CRASHREPORTER
 buildsymbols: symbolsfullarchive symbolsarchive
