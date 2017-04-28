@@ -3499,21 +3499,21 @@ def CreateBindingJSObject(descriptor, properties):
     # We don't always need to root obj, but there are a variety
     # of cases where we do, so for simplicity, just always root it.
     if descriptor.proxy:
-        create = dedent(
+        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
+            expandoValue = "JS::PrivateValue(&aObject->mExpandoAndGeneration)"
+        else:
+            expandoValue = "JS::UndefinedValue()"
+        create = fill(
             """
+            JS::Rooted<JS::Value> expandoValue(aCx, ${expandoValue});
             creator.CreateProxyObject(aCx, &sClass.mBase, DOMProxyHandler::getInstance(),
-                                      proto, aObject, aReflector);
+                                      proto, aObject, expandoValue, aReflector);
             if (!aReflector) {
               return false;
             }
 
-            """)
-        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            create += dedent("""
-                js::SetProxyExtra(aReflector, JSPROXYSLOT_EXPANDO,
-                                  JS::PrivateValue(&aObject->mExpandoAndGeneration));
-
-                """)
+            """,
+            expandoValue=expandoValue)
     else:
         create = dedent(
             """
@@ -11507,7 +11507,7 @@ class CGProxyUnwrap(CGAbstractMethod):
               obj = js::UncheckedUnwrap(obj);
             }
             MOZ_ASSERT(IsProxy(obj));
-            return static_cast<${type}*>(js::GetProxyPrivate(obj).toPrivate());
+            return static_cast<${type}*>(js::GetProxyReservedSlot(obj, DOM_OBJECT_SLOT).toPrivate());
             """,
             type=self.descriptor.nativeType)
 

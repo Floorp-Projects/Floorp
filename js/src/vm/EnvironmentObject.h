@@ -872,13 +872,13 @@ class DebugEnvironmentProxy : public ProxyObject
      * The enclosing environment on the dynamic environment chain. This slot is analogous
      * to the ENCLOSING_ENV_SLOT of a EnvironmentObject.
      */
-    static const unsigned ENCLOSING_EXTRA = 0;
+    static const unsigned ENCLOSING_SLOT = 0;
 
     /*
      * NullValue or a dense array holding the unaliased variables of a function
      * frame that has been popped.
      */
-    static const unsigned SNAPSHOT_EXTRA = 1;
+    static const unsigned SNAPSHOT_SLOT = 1;
 
   public:
     static DebugEnvironmentProxy* create(JSContext* cx, EnvironmentObject& env,
