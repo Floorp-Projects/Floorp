@@ -4521,6 +4521,8 @@ this.XPIProvider = {
    * @return true if enabling the add-on should block multiple content processes.
    */
   isBlockingE10sMulti(aAddon) {
+    // WebExtensions have type = "webextension" or type="webextension-theme",
+    // so they won't block multi.
     if (aAddon.type != "extension")
       return false;
 
@@ -4536,7 +4538,7 @@ this.XPIProvider = {
         locName == KEY_APP_SYSTEM_ADDONS)
       return false;
 
-    return aAddon.bootstrap;
+    return true;
   },
 
   /**
