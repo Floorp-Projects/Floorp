@@ -90,7 +90,7 @@ load 391898-1.html
 load 391901-1.html
 load 392132-1.xhtml
 load 397448-1.html
-load 398157-1.xhtml
+skip-if(stylo) load 398157-1.xhtml # bug 1361235
 load 399209-1.xhtml
 load 403249-1.html
 load 403579-1.html
@@ -113,7 +113,7 @@ load 444702-1.html
 asserts-if(stylo,1) load 448988-1.xhtml # bug 1324681
 load 450311-1.html
 load 451170.html
-load 451355-1.html
+skip-if(stylo) load 451355-1.html # bug 1361235
 load 456041.html
 load 457115.html
 load 460637-1.xhtml

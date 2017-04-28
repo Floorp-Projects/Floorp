@@ -46,7 +46,7 @@ load 367368-1.xhtml
 load 369233-1.svg
 load 369438-1.svg
 load 369438-2.svg
-load 371463-1.xhtml
+skip-if(stylo) load 371463-1.xhtml # bug 1361235
 load 371563-1.xhtml
 load 375775-1.svg
 load 378716.svg
