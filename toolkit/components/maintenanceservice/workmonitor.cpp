@@ -25,6 +25,8 @@
 #include "pathhash.h"
 #include "errors.h"
 
+#define PATCH_DIR_PATH L"\\updates\\0"
+
 // Wait 15 minutes for an update operation to run at most.
 // Updates usually take less than a minute so this seems like a
 // significantly large and safe amount of time to wait.
@@ -593,6 +595,20 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
       // Since the status file is written to the patch directory and the patch
       // directory is invalid don't write the status file.
       LOG_WARN(("The patch directory path is not valid for this application."));
+      return FALSE;
+    }
+
+    // The patch directory path must end with updates\0 to use the maintenance
+    // service.
+    size_t fullPathLen = NS_tstrlen(argv[4]);
+    size_t relPathLen = NS_tstrlen(PATCH_DIR_PATH);
+    if (relPathLen > fullPathLen) {
+      LOG_WARN(("The patch directory path length is not valid for this application."));
+      return FALSE;
+    }
+
+    if (_wcsnicmp(argv[4] + fullPathLen - relPathLen, PATCH_DIR_PATH, relPathLen) != 0) {
+      LOG_WARN(("The patch directory path subdirectory is not valid for this application."));
       return FALSE;
     }
 
