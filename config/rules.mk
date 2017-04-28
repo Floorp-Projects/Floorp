@@ -984,6 +984,26 @@ env $(environment_cleaner) $(rustflags_override) \
 	$(CARGO) build $(cargo_build_flags)
 endef
 
+cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
+
+# Don't define a custom linker on Windows, as it's difficult to have a
+# non-binary file that will get executed correctly by Cargo.  We don't
+# have to worry about a cross-compiling (besides x86-64 -> x86, which
+# already works with the current setup) setup on Windows, and we don't
+# have to pass in any special linker options on Windows.
+ifneq (WINNT,$(OS_ARCH))
+
+# Defining all of this for ASan builds results in crashes while running
+# some crates's build scripts (!), so disable it for now.
+ifndef MOZ_ASAN
+target_cargo_env_vars := \
+	MOZ_CARGO_WRAP_LDFLAGS="$(LDFLAGS)" \
+	MOZ_CARGO_WRAP_LD="$(CC)" \
+	$(cargo_linker_env_var)=$(topsrcdir)/build/cargo-linker
+endif # MOZ_ASAN
+
+endif # ifneq WINNT
+
 ifdef RUST_LIBRARY_FILE
 
 ifdef RUST_LIBRARY_FEATURES
@@ -997,7 +1017,7 @@ endif
 # build.
 force-cargo-library-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag)
+	$(call CARGO_BUILD,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag)
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 endif # RUST_LIBRARY_FILE
@@ -1018,7 +1038,7 @@ endif # HOST_RUST_LIBRARY_FILE
 ifdef RUST_PROGRAMS
 force-cargo-program-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+	$(call CARGO_BUILD,$(target_cargo_env_vars)) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 
 $(RUST_PROGRAMS): force-cargo-program-build
 endif # RUST_PROGRAMS
