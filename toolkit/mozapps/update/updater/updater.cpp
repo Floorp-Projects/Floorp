@@ -2867,6 +2867,37 @@ int NS_main(int argc, NS_tchar **argv)
     *slash = NS_T('\0');
   }
 
+  if (argc > callbackIndex) {
+    if (!IsValidFullPath(argv[callbackIndex])) {
+      WriteStatusFile(INVALID_CALLBACK_PATH_ERROR);
+      fprintf(stderr, "The callback file path is not valid for this "  \
+              "application (" LOG_S ")\n", argv[callbackIndex]);
+#ifdef XP_MACOSX
+      if (isElevated) {
+        freeArguments(argc, argv);
+        CleanupElevatedMacUpdate(true);
+      }
+#endif
+      return 1;
+    }
+
+    size_t len = NS_tstrlen(gInstallDirPath);
+    NS_tchar callbackInstallDir[MAXPATHLEN] = { NS_T('\0') };
+    NS_tstrncpy(callbackInstallDir, argv[callbackIndex], len);
+    if (NS_tstrcmp(gInstallDirPath, callbackInstallDir) != 0) {
+      WriteStatusFile(INVALID_CALLBACK_DIR_ERROR);
+      fprintf(stderr, "The callback file must be located in the "  \
+              "installation directory (" LOG_S ")\n", argv[callbackIndex]);
+#ifdef XP_MACOSX
+      if (isElevated) {
+        freeArguments(argc, argv);
+        CleanupElevatedMacUpdate(true);
+      }
+#endif
+      return 1;
+    }
+  }
+
 #ifdef XP_MACOSX
   if (!isElevated && !IsRecursivelyWritable(argv[2])) {
     // If the app directory isn't recursively writeable, an elevated update is
