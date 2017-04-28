@@ -762,6 +762,7 @@ class bloom_basic(PageloaderTest):
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = 'ms'
     lower_is_better = True
+    alert_threshold = 5.0
 
 
 @register_test()
@@ -777,3 +778,4 @@ class bloom_basic_ref(PageloaderTest):
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = 'ms'
     lower_is_better = True
+    alert_threshold = 5.0
