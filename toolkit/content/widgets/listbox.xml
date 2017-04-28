@@ -687,6 +687,8 @@
 
       <!-- ///////////////// private listbox members ///////////////// -->
 
+      <field name="_touchY">-1</field>
+
       <method name="_fireOnSelect">
         <body>
         <![CDATA[
@@ -870,6 +872,42 @@
           }
         ]]>
       </handler>
+
+      <handler event="touchstart">
+        <![CDATA[
+          if (event.touches.length > 1) {
+            // Multiple touch points detected, abort. In particular this aborts
+            // the panning gesture when the user puts a second finger down after
+            // already panning with one finger. Aborting at this point prevents
+            // the pan gesture from being resumed until all fingers are lifted
+            // (as opposed to when the user is back down to one finger).
+            this._touchY = -1;
+          } else {
+            this._touchY = event.touches[0].screenY;
+          }
+        ]]>
+      </handler>
+      <handler event="touchmove">
+        <![CDATA[
+          if (event.touches.length == 1 &&
+              this._touchY >= 0) {
+            let deltaY = this._touchY - event.touches[0].screenY;
+            let lines = Math.trunc(deltaY / this.listBoxObject.getRowHeight());
+            if (Math.abs(lines) > 0) {
+              this.listBoxObject.scrollByLines(lines);
+              deltaY -= lines * this.listBoxObject.getRowHeight();
+              this._touchY = event.touches[0].screenY + deltaY;
+            }
+            event.preventDefault();
+          }
+        ]]>
+      </handler>
+      <handler event="touchend">
+        <![CDATA[
+          this._touchY = -1;
+        ]]>
+      </handler>
+
     </handlers>
   </binding>
 

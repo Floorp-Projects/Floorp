@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = [
   "TelemetrySend",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -40,6 +40,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
+                                  "resource://gre/modules/TelemetryLog.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -89,6 +91,9 @@ const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 
 // The age of a pending ping to be considered overdue (in milliseconds).
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
+
+// TelemetryLog Key for logging failures to send Telemetry
+const LOG_FAILURE_KEY = "TELEMETRY_SEND_FAILURE";
 
 function monotonicNow() {
   try {
@@ -279,6 +284,27 @@ this.TelemetrySend = {
    */
   getShutdownState() {
     return TelemetrySendImpl.getShutdownState();
+  },
+
+  /**
+   * Send a ping using the ping sender.
+   * This method will not wait for the ping to be sent, instead it will return
+   * as soon as the pingsender program has been launched.
+   *
+   * This method is currently exposed here only for testing purposes as it's
+   * only used internally.
+   *
+   * @param {String} aUrl The telemetry server URL
+   * @param {String} aPingFilePath The path to the file holding the ping
+   *        contents, if if sent successfully the pingsender will delete it.
+   *
+   * @throws NS_ERROR_FAILURE if we couldn't find or run the pingsender
+   *         executable.
+   * @throws NS_ERROR_NOT_IMPLEMENTED on Android as the pingsender is not
+   *         available.
+   */
+  testRunPingSender(url, pingPath) {
+    TelemetrySendImpl.runPingSender(url, pingPath);
   },
 };
 
@@ -784,7 +810,7 @@ var TelemetrySendImpl = {
     this._log.trace("_sendWithPingSender - sending " + pingId + " to " + submissionURL);
     try {
       const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
-      Telemetry.runPingSender(submissionURL, pingPath);
+      this.runPingSender(submissionURL, pingPath);
     } catch (e) {
       this._log.error("_sendWithPingSender - failed to submit shutdown ping", e);
     }
@@ -1054,6 +1080,7 @@ var TelemetrySendImpl = {
     };
 
     let errorhandler = (event) => {
+      TelemetryLog.log(LOG_FAILURE_KEY, ["errorhandler", event.type]);
       this._log.error("_doPing - error making request to " + url + ": " + event.type);
       onRequestFinished(false, event);
     };
@@ -1077,15 +1104,18 @@ var TelemetrySendImpl = {
         Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").add();
         // TODO: we should handle this better, but for now we should avoid resubmitting
         // broken requests by pretending success.
+        TelemetryLog.log(LOG_FAILURE_KEY, ["4xx 'failure'", status]);
         success = true;
       } else if (statusClass === 500) {
         // 5XX means there was a server-side error and we should try again later.
         this._log.error("_doPing - error submitting to " + url + ", status: " + status
                         + " - server error, should retry later");
+        TelemetryLog.log(LOG_FAILURE_KEY, ["5xx failure", status]);
       } else {
         // We received an unexpected status code.
         this._log.error("_doPing - error submitting to " + url + ", status: " + status
                         + ", type: " + event.type);
+        TelemetryLog.log(LOG_FAILURE_KEY, ["Unhandled HTTP failure", status]);
       }
 
       onRequestFinished(success, event);
@@ -1225,5 +1255,22 @@ var TelemetrySendImpl = {
       persistedPingCount: TelemetryStorage.getPendingPingList().length,
       schedulerState: SendScheduler.getShutdownState(),
     };
+  },
+
+  runPingSender(url, pingPath) {
+    if (AppConstants.platform === "android") {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    const exeName = AppConstants.platform === "win" ? "pingsender.exe"
+                                                    : "pingsender";
+
+    let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+    exe.append(exeName);
+
+    let process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
+    process.init(exe);
+    process.run(/* blocking */ false, [url, pingPath], 2);
   },
 };

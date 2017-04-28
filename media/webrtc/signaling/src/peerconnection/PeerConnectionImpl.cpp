@@ -2348,9 +2348,8 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   return NS_OK;
 }
 
-nsresult
-PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
-                               unsigned short aSsrcIndex)
+RefPtr<MediaPipeline>
+PeerConnectionImpl::GetMediaPipelineForTrack(MediaStreamTrack& aRecvTrack)
 {
   for (size_t i = 0; i < mMedia->RemoteStreamsLength(); ++i) {
     if (mMedia->GetRemoteStreamByIndex(i)->GetMediaStream()->
@@ -2359,9 +2358,43 @@ PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
       std::string trackId = PeerConnectionImpl::GetTrackId(aRecvTrack);
       auto it = pipelines.find(trackId);
       if (it != pipelines.end()) {
-        it->second->SelectSsrc_m(aSsrcIndex);
+        return it->second;
       }
     }
+  }
+
+  return nullptr;
+}
+
+nsresult
+PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
+                               unsigned short aSsrcIndex)
+{
+  RefPtr<MediaPipeline> pipeline = GetMediaPipelineForTrack(aRecvTrack);
+  if (pipeline) {
+    pipeline->SelectSsrc_m(aSsrcIndex);
+  }
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::AddRIDExtension(MediaStreamTrack& aRecvTrack,
+                                    unsigned short aExtensionId)
+{
+  RefPtr<MediaPipeline> pipeline = GetMediaPipelineForTrack(aRecvTrack);
+  if (pipeline) {
+    pipeline->AddRIDExtension_m(aExtensionId);
+  }
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::AddRIDFilter(MediaStreamTrack& aRecvTrack,
+                                 const nsAString& aRid)
+{
+  RefPtr<MediaPipeline> pipeline = GetMediaPipelineForTrack(aRecvTrack);
+  if (pipeline) {
+    pipeline->AddRIDFilter_m(NS_ConvertUTF16toUTF8(aRid).get());
   }
   return NS_OK;
 }

@@ -16,7 +16,7 @@ struct nsCSSSelector;
 
 // Defines for various style related constants
 
-enum nsChangeHint {
+enum nsChangeHint : uint32_t {
   nsChangeHint_Empty = 0,
 
   // change was visual only (e.g., COLOR=)
@@ -472,7 +472,7 @@ NS_RemoveSubsumedHints(nsChangeHint aOurChange, nsChangeHint aHintsHandled)
  * NOTE: When adding new restyle hints, please also add them to
  * RestyleManager::RestyleHintToString.
  */
-enum nsRestyleHint {
+enum nsRestyleHint : uint32_t {
   // Rerun selector matching on the element.  If a new style context
   // results, update the style contexts of descendants.  (Irrelevant if
   // eRestyle_Subtree is also set, since that implies a superset of the

@@ -12,6 +12,8 @@
 
 <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
 
+<stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
+
 <preferences id="mainPreferences" hidden="true" data-category="paneGeneral">
 
 #ifdef E10S_TESTING_ONLY
@@ -177,10 +179,6 @@
   <preference id="general.smoothScroll"
               name="general.smoothScroll"
               type="bool"/>
-  <preference id="layers.acceleration.disabled"
-              name="layers.acceleration.disabled"
-              type="bool"
-              inverted="true"/>
 #ifdef XP_WIN
   <preference id="gfx.direct2d.disabled"
               name="gfx.direct2d.disabled"
@@ -196,6 +194,19 @@
               name="toolkit.telemetry.enabled"
               type="bool"/>
 #endif
+
+  <preference id="browser.preferences.defaultPerformanceSettings.enabled"
+              name="browser.preferences.defaultPerformanceSettings.enabled"
+              type="bool"/>
+
+  <preference id="dom.ipc.processCount"
+              name="dom.ipc.processCount"
+              type="int"/>
+
+  <preference id="layers.acceleration.disabled"
+              name="layers.acceleration.disabled"
+              type="bool"
+              inverted="true"/>
 </preferences>
 
 <hbox id="header-general"
@@ -232,10 +243,8 @@
 
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
-    <hbox align="center">
-      <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
-    </hbox>
+    <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+              label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
@@ -318,12 +327,14 @@
 </groupbox>
 
 <!-- Default Search Engine -->
-<groupbox id="defaultEngineGroup" align="start" data-category="paneGeneral" data-subcategory="search">
+<groupbox id="defaultEngineGroup" data-category="paneGeneral" data-subcategory="search">
   <caption label="&defaultSearchEngine.label;"/>
   <label>&chooseYourDefaultSearchEngine.label;</label>
-  <menulist id="defaultEngine">
-    <menupopup/>
-  </menulist>
+  <box align="start">
+    <menulist id="defaultEngine">
+      <menupopup/>
+    </menulist>
+  </box>
   <checkbox id="suggestionsInSearchFieldsCheckbox"
             label="&provideSearchSuggestions.label;"
             accesskey="&provideSearchSuggestions.accesskey;"
@@ -375,7 +386,7 @@
 
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
-          hidden="true" align="start">
+          hidden="true">
     <caption><label>&tabsGroup.label;</label></caption>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" label="&ctrlTabRecentlyUsedOrder.label;"
@@ -408,7 +419,7 @@
 </groupbox>
 
 <!-- Accessibility -->
-<groupbox data-category="paneGeneral" id="accessibilityGroup" align="start">
+<groupbox data-category="paneGeneral" id="accessibilityGroup">
   <caption><label>&accessibility.label;</label></caption>
 
 #ifdef XP_WIN
@@ -464,14 +475,12 @@
             label="&translateExceptions.label;"
             accesskey="&translateExceptions.accesskey;"/>
   </hbox>
-  <hbox>
-    <checkbox id="checkSpelling"
-            label="&checkUserSpelling.label;"
-            accesskey="&checkUserSpelling.accesskey;"
-            onsyncfrompreference="return gMainPane.readCheckSpelling();"
-            onsynctopreference="return gMainPane.writeCheckSpelling();"
-            preference="layout.spellcheckDefault"/>
-  </hbox>
+  <checkbox id="checkSpelling"
+          label="&checkUserSpelling.label;"
+          accesskey="&checkUserSpelling.accesskey;"
+          onsyncfrompreference="return gMainPane.readCheckSpelling();"
+          onsynctopreference="return gMainPane.writeCheckSpelling();"
+          preference="layout.spellcheckDefault"/>
 </groupbox>
 
 
@@ -539,7 +548,7 @@
 </groupbox>
 
 <!-- Browsing -->
-<groupbox id="browsingGroup" align="start" data-category="paneGeneral">
+<groupbox id="browsingGroup" data-category="paneGeneral">
   <caption><label>&browsing.label;</label></caption>
 
   <checkbox id="useAutoScroll"
@@ -550,8 +559,37 @@
             label="&useSmoothScrolling.label;"
             accesskey="&useSmoothScrolling.accesskey;"
             preference="general.smoothScroll"/>
-  <checkbox id="allowHWAccel"
-            label="&allowHWAccel.label;"
-            accesskey="&allowHWAccel.accesskey;"
-            preference="layers.acceleration.disabled"/>
+</groupbox>
+
+<!-- Performance -->
+<groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&performance.label;</label></caption>
+
+  <checkbox id="useRecommendedPerformanceSettings"
+            label="&useRecommendedPerformanceSettings.label;"
+            accesskey="&useRecommendedPerformanceSettings.accesskey;"
+            preference="browser.preferences.defaultPerformanceSettings.enabled"/>
+  <description class="indent">&useRecommendedPerformanceSettings.description;</description>
+
+  <vbox id="performanceSettings" class="indent" hidden="true">
+    <checkbox id="allowHWAccel"
+              label="&allowHWAccel.label;"
+              accesskey="&allowHWAccel.accesskey;"
+              preference="layers.acceleration.disabled"/>
+    <hbox align="center">
+      <label id="limitContentProcess" accesskey="&limitContentProcess.accesskey;" control="contentProcessCount">&limitContentProcess.label;</label>
+      <menulist id="contentProcessCount" preference="dom.ipc.processCount">
+        <menupopup>
+          <menuitem label="1" value="1"/>
+          <menuitem label="2" value="2"/>
+          <menuitem label="3" value="3"/>
+          <menuitem label="4" value="4"/>
+          <menuitem label="5" value="5"/>
+          <menuitem label="6" value="6"/>
+          <menuitem label="7" value="7"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+    <description>&limitContentProcess.description;</description>
+  </vbox>
 </groupbox>

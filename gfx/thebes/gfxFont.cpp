@@ -2713,6 +2713,7 @@ gfxFont::ShapeText(DrawTarget      *aDrawTarget,
         if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
             if (!mGraphiteShaper) {
                 mGraphiteShaper = MakeUnique<gfxGraphiteShaper>(this);
+                Telemetry::ScalarAdd(Telemetry::ScalarID::BROWSER_USAGE_GRAPHITE, 1);
             }
             ok = mGraphiteShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
                                             aScript, aVertical, aRounding,
