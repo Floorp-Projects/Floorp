@@ -473,7 +473,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 }
 
 #bookmarked-notification-dropmarker-icon {
-  -moz-context-properties: fill;
   width: 18px;
   height: 18px;
   visibility: hidden;
@@ -487,8 +486,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 #bookmarks-menu-button[notification="finish"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: none !important;
-  min-width: 32px;
-  min-height: 28px;
 }
 
 #bookmarked-notification-dropmarker-anchor[notification="finish"] > #bookmarked-notification-dropmarker-icon {
