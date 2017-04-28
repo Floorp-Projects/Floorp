@@ -5,37 +5,7 @@
   margin: 0;
 }
 
-#pocket-button[cui-areatype="toolbar"][open] {
-  -moz-image-region: rect(36px, 18px, 54px, 0);
-}
 
-@media (min-resolution: 2dppx) {
-  #panelMenu_pocket,
-  #menu_pocket,
-  #BMB_pocket {
-    list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16@2x.png");
-  }
-
-  #panelMenu_pocket > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
-@media not all and (min-resolution: 1.1dppx) {
-  #pocket-button:hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"]) {
-    -moz-image-region: rect(18px, 18px, 36px, 0);
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  #pocket-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 36px, 108px, 0);
-  }
-
-  #pocket-button:hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"]) {
-    -moz-image-region: rect(36px, 36px, 72px, 0);
-  }
-}
 
 #PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
   border-radius: var(--arrowpanel-border-radius);
