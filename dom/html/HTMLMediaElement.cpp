@@ -1164,6 +1164,10 @@ public:
     if (aElement->mUseUrgentStartForChannel &&
         (cos = do_QueryInterface(channel))) {
       cos->AddClassFlags(nsIClassOfService::UrgentStart);
+
+      // Reset the flag to avoid loading again without initiated by user
+      // interaction.
+      aElement->mUseUrgentStartForChannel = false;
     }
 
     // The listener holds a strong reference to us.  This creates a
@@ -1877,6 +1881,12 @@ void HTMLMediaElement::DoLoad()
   // view" of a gallery of videos.
   if (EventStateManager::IsHandlingUserInput()) {
     mHasUserInteraction = true;
+
+    // Mark the channel as urgent-start when autopaly so that it will play the
+    // media from src after loading enough resource.
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
+      mUseUrgentStartForChannel = true;
+    }
   }
 
   SetPlayedOrSeeked(false);
