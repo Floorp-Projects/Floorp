@@ -56,7 +56,7 @@ public:
    */
   bool IsMapped(uint64_t aLayersId, base::ProcessId aProcessId);
 
-  void Iterate(std::function<void(uint64_t aLayersId, base::ProcessId aProcessId)> aCallback);
+  void Iterate(const std::function<void(uint64_t aLayersId, base::ProcessId aProcessId)>& aCallback);
 
 private:
   LayerTreeOwnerTracker();

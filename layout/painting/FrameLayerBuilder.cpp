@@ -1284,7 +1284,7 @@ protected:
   struct MaskLayerKey;
   already_AddRefed<ImageLayer>
   CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                   std::function<void(Layer* aLayer)> aSetUserData);
+                                   const std::function<void(Layer* aLayer)>& aSetUserData);
   /**
    * Grabs all PaintedLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
@@ -2220,7 +2220,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 
 already_AddRefed<ImageLayer>
 ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                                 std::function<void(Layer* aLayer)> aSetUserData)
+                                                 const std::function<void(Layer* aLayer)>& aSetUserData)
 {
   RefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aKey);
   if (result) {

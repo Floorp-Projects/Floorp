@@ -278,7 +278,7 @@ NetworkActivityMonitor::AttachIOLayer(PRFileDesc *fd)
 nsresult
 NetworkActivityMonitor::DataInOut(Direction direction)
 {
-  NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (gInstance) {
     PRIntervalTime now = PR_IntervalNow();

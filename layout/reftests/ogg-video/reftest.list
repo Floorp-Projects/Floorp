@@ -1,12 +1,12 @@
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
-fuzzy(255,5000) == 444-1.html 444-1-ref.html
+fuzzy(255,5000) fails-if(stylo) == 444-1.html 444-1-ref.html
 fails-if(Android) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
 fails-if(Android) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-fails-if(Android) random-if(layersGPUAccelerated) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
+fails-if(Android) random-if(layersGPUAccelerated) fails-if(stylo) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
 fails-if(Android) HTTP(..) == basic-1.xhtml basic-1-ref.html
 skip-if(Android) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
 fails-if(Android) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
@@ -20,8 +20,8 @@ skip-if(Android) HTTP(..) == offset-1.xhtml offset-1-ref.html
 random skip-if(Android) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
-skip-if(Android) == poster-1.html poster-ref-blue250x200.html
-skip-if(Android) == poster-2.html poster-ref-black140x100.html
+skip-if(Android) fails-if(stylo) == poster-1.html poster-ref-blue250x200.html
+skip-if(Android) fails-if(stylo) == poster-2.html poster-ref-black140x100.html
 skip-if(Android) == poster-3.html poster-ref-black140x100.html
 skip-if(Android) == poster-4.html poster-ref-black140x100.html
 skip-if(Android) == poster-5.html poster-ref-black140x100.html
@@ -29,7 +29,7 @@ skip-if(Android) == poster-6.html poster-ref-black140x100.html
 skip-if(Android) == poster-7.html poster-ref-red140x100.html
 skip-if(Android) == poster-8.html poster-ref-black140x100.html
 random skip-if(Android) == poster-10.html poster-ref-blue125x100.html
-random skip-if(Android) == poster-11.html poster-ref-blue140x100.html
-random skip-if(Android) == poster-12.html poster-ref-blue140x100.html
+random skip-if(Android) fails-if(stylo) == poster-11.html poster-ref-blue140x100.html
+random skip-if(Android) fails-if(stylo) == poster-12.html poster-ref-blue140x100.html
 skip-if(Android) == poster-13.html poster-ref-blue400x300.html
 skip-if(Android) == poster-15.html poster-ref-green70x30.html

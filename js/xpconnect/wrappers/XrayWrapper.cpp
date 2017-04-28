@@ -1406,7 +1406,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext* cx, HandleObject wr
     }
 
     if (!(iface = ccx.GetInterface()) || !(member = ccx.GetMember())) {
-        if (id != nsXPConnect::GetContextInstance()->GetStringID(XPCJSContext::IDX_TO_STRING))
+        if (id != XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_TO_STRING))
             return true;
 
         JSFunction* toString = JS_NewFunction(cx, XrayToString, 0, 0, "toString");

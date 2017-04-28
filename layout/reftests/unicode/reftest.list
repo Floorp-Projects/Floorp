@@ -4,4 +4,4 @@
 == unicode-media-query-media-type.html unicode-ref-print.html
 == unicode-media-query-query.html unicode-ref-print.html
 == unicode-pseudo-selector.html unicode-ref.html
-== langattribute.html langattribute-ref.html
+fails-if(stylo) == langattribute.html langattribute-ref.html

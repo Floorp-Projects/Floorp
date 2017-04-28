@@ -1,43 +1,43 @@
 # Basic <summary> handling
-== multiple-summary.html single-summary.html
-== open-multiple-summary.html open-multiple-summary-ref.html
-== summary-not-first-child.html single-summary.html
-== open-summary-not-first-child.html open-single-summary.html
+fails-if(stylo) == multiple-summary.html single-summary.html
+fails-if(stylo) == open-multiple-summary.html open-multiple-summary-ref.html
+fails-if(stylo) == summary-not-first-child.html single-summary.html
+fails-if(stylo) == open-summary-not-first-child.html open-single-summary.html
 == open-summary-block-style.html open-summary-block-style-ref.html
 == open-summary-inline-style.html open-summary-inline-style-ref.html
 == open-summary-table-cell-style.html open-summary-table-cell-style-ref.html
-== no-summary.html no-summary-ref.html
-== open-no-summary.html open-no-summary-ref.html
+fails-if(stylo) == no-summary.html no-summary-ref.html
+fails-if(stylo) == open-no-summary.html open-no-summary-ref.html
 == summary-not-in-details.html summary-not-in-details-ref.html
-== summary-not-direct-child.html summary-not-direct-child-ref.html
+fails-if(stylo) == summary-not-direct-child.html summary-not-direct-child-ref.html
 == float-in-summary.html float-in-summary-ref.html
 
 # Add elements dynamically
-== dynamic-add-single-summary.html open-single-summary.html
-== dynamic-add-summary-not-first-child.html open-single-summary.html
-== dynamic-add-summary-and-paragraph.html open-single-summary.html
-== dynamic-add-paragraph-before-summary.html open-single-summary.html
-== dynamic-add-paragraph-before-summary-close.html single-summary.html
-== dynamic-add-paragraph-after-summary.html open-single-summary.html
-== dynamic-add-paragraph-after-summary-close.html single-summary.html
-== dynamic-add-details.html open-single-summary.html
-== dynamic-add-first-summary.html open-multiple-summary.html
-== dynamic-add-second-summary.html open-multiple-summary.html
+fails-if(stylo) == dynamic-add-single-summary.html open-single-summary.html
+fails-if(stylo) == dynamic-add-summary-not-first-child.html open-single-summary.html
+fails-if(stylo) == dynamic-add-summary-and-paragraph.html open-single-summary.html
+fails-if(stylo) == dynamic-add-paragraph-before-summary.html open-single-summary.html
+fails-if(stylo) == dynamic-add-paragraph-before-summary-close.html single-summary.html
+fails-if(stylo) == dynamic-add-paragraph-after-summary.html open-single-summary.html
+fails-if(stylo) == dynamic-add-paragraph-after-summary-close.html single-summary.html
+fails-if(stylo) == dynamic-add-details.html open-single-summary.html
+fails-if(stylo) == dynamic-add-first-summary.html open-multiple-summary.html
+fails-if(stylo) == dynamic-add-second-summary.html open-multiple-summary.html
 
 # Remove elements dynamically
-== dynamic-remove-single-summary.html open-no-summary.html
-== dynamic-remove-summary-not-first-child.html open-no-summary.html
-== dynamic-remove-first-summary.html open-single-summary.html
-== dynamic-remove-second-summary.html open-single-summary.html
+fails-if(stylo) == dynamic-remove-single-summary.html open-no-summary.html
+fails-if(stylo) == dynamic-remove-summary-not-first-child.html open-no-summary.html
+fails-if(stylo) == dynamic-remove-first-summary.html open-single-summary.html
+fails-if(stylo) == dynamic-remove-second-summary.html open-single-summary.html
 
 # Toggle details by open attribute
-== close-nested-details.html close-nested-details-ref.html
-== open-nested-details.html open-nested-details-ref.html
+fails-if(stylo) == close-nested-details.html close-nested-details-ref.html
+fails-if(stylo) == open-nested-details.html open-nested-details-ref.html
 
 # With 'overflow' property
 == overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
-== overflow-auto-open-details.html overflow-auto-open-details-ref.html
-== overflow-scroll-details.html overflow-scroll-details-ref.html
+fails-if(stylo) == overflow-auto-open-details.html overflow-auto-open-details-ref.html
+fails-if(stylo) == overflow-scroll-details.html overflow-scroll-details-ref.html
 
 # With pagination property
 == details-page-break-after-1.html details-two-pages.html
@@ -62,42 +62,42 @@
 == details-percentage-height-children.html details-percentage-height-children-ref.html
 == details-absolute-children.html details-absolute-children-ref.html
 == details-three-columns.html details-three-columns-ref.html
-== details-writing-mode.html details-writing-mode-ref.html
+fails-if(stylo) == details-writing-mode.html details-writing-mode-ref.html
 == details-in-ol.html details-in-ol-ref.html
 == summary-three-columns.html summary-three-columns-ref.html
-== details-first-line.html details-first-line-ref.html
-== open-details-first-line-1.html open-details-first-line-ref.html
-== open-details-first-line-2.html open-details-first-line-ref.html
+fails-if(stylo) == details-first-line.html details-first-line-ref.html
+fails-if(stylo) == open-details-first-line-1.html open-details-first-line-ref.html
+fails-if(stylo) == open-details-first-line-2.html open-details-first-line-ref.html
 
 # Dispatch mouse click to summary
-== mouse-click-single-summary.html open-single-summary.html
-== mouse-click-twice-single-summary.html single-summary.html
-== mouse-click-open-single-summary.html single-summary.html
-== mouse-click-twice-open-single-summary.html open-single-summary.html
-== mouse-click-open-second-summary.html open-multiple-summary.html
-== mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
+fails-if(stylo) == mouse-click-single-summary.html open-single-summary.html
+fails-if(stylo) == mouse-click-twice-single-summary.html single-summary.html
+fails-if(stylo) == mouse-click-open-single-summary.html single-summary.html
+fails-if(stylo) == mouse-click-twice-open-single-summary.html open-single-summary.html
+fails-if(stylo) == mouse-click-open-second-summary.html open-multiple-summary.html
+fails-if(stylo) == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
 == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
-fuzzy-if(gtkWidget,1,20) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
-== mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
-== mouse-click-display-none-details.html open-single-summary.html
-== mouse-click-change-details-to-display-none.html open-single-summary.html
+fuzzy-if(gtkWidget,1,20) fails-if(stylo) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
+fails-if(stylo) == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
+fails-if(stylo) == mouse-click-display-none-details.html open-single-summary.html
+fails-if(stylo) == mouse-click-change-details-to-display-none.html open-single-summary.html
 == mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none-ref.html
-== mouse-click-move-summary-to-different-details.html mouse-click-move-summary-to-different-details-ref.html
+fails-if(stylo) == mouse-click-move-summary-to-different-details.html mouse-click-move-summary-to-different-details-ref.html
 
 # Dispatch mouse click to out-of-flow details or summary
-== mouse-click-fixed-summary.html open-fixed-summary.html
-== mouse-click-twice-fixed-summary.html fixed-summary.html
-== mouse-click-float-details.html open-float-details.html
-fuzzy(1,1) == mouse-click-twice-float-details.html float-details.html # Bug 1316430
+fails-if(stylo) == mouse-click-fixed-summary.html open-fixed-summary.html
+fails-if(stylo) == mouse-click-twice-fixed-summary.html fixed-summary.html
+fails-if(stylo) == mouse-click-float-details.html open-float-details.html
+fuzzy(1,1) fails-if(stylo) == mouse-click-twice-float-details.html float-details.html # Bug 1316430
 
 # Dispatch keyboard event to summary
-== key-enter-single-summary.html open-single-summary.html
-== key-enter-open-second-summary.html open-multiple-summary.html
-== key-enter-prevent-default.html single-summary.html
-== key-space-single-summary.html open-single-summary.html
+fails-if(stylo) == key-enter-single-summary.html open-single-summary.html
+fails-if(stylo) == key-enter-open-second-summary.html open-multiple-summary.html
+fails-if(stylo) == key-enter-prevent-default.html single-summary.html
+fails-if(stylo) == key-space-single-summary.html open-single-summary.html
 
 # Generated content bits
-== details-after.html single-summary.html
-== details-before.html single-summary.html
-== open-details-after.html open-single-summary.html
-== open-details-before.html open-single-summary.html
+fails-if(stylo) == details-after.html single-summary.html
+fails-if(stylo) == details-before.html single-summary.html
+fails-if(stylo) == open-details-after.html open-single-summary.html
+fails-if(stylo) == open-details-before.html open-single-summary.html

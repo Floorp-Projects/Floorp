@@ -1,3 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == reftest1.html reftest1.html
-include included-reftest-stylo.list

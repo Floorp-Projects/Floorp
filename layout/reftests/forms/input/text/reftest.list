@@ -1,10 +1,10 @@
 == bounds-1.html bounds-1-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,140,111) == size-1.html size-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,140,111) fails-if(stylo) == size-1.html size-1-ref.html
 == size-2.html size-2-ref.html
-HTTP(..) == baseline-1.html baseline-1-ref.html
+fails-if(stylo) HTTP(..) == baseline-1.html baseline-1-ref.html
 HTTP(..) == centering-1.xul centering-1-ref.xul
 == dynamic-height-1.xul dynamic-height-1-ref.xul
-fuzzy-if(skiaContent,1,500) needs-focus == select.html select-ref.html
+fuzzy-if(skiaContent,1,500) needs-focus fails-if(stylo) == select.html select-ref.html
 == intrinsic-size.html intrinsic-size-ref.html
-== line-height-0.5.html line-height-1.0.html
-!= line-height-1.5.html line-height-1.0.html
+fails-if(stylo) == line-height-0.5.html line-height-1.0.html
+fails-if(stylo) != line-height-1.5.html line-height-1.0.html
