@@ -236,69 +236,6 @@ function GetInternalError(msg) {
 // To be used when a function is required but calling it shouldn't do anything.
 function NullFunction() {}
 
-// Object Rest/Spread Properties proposal
-// Abstract operation: CopyDataProperties (target, source, excluded)
-function CopyDataProperties(target, source, excluded) {
-    // Step 1.
-    assert(IsObject(target), "target is an object");
-
-    // Step 2.
-    assert(IsObject(excluded), "excluded is an object");
-
-    // Steps 3, 6.
-    if (source === undefined || source === null)
-        return;
-
-    // Step 4.a.
-    source = ToObject(source);
-
-    // Step 4.b.
-    var keys = OwnPropertyKeys(source, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
-
-    // Step 5.
-    for (var index = 0; index < keys.length; index++) {
-        var key = keys[index];
-
-        // We abbreviate this by calling propertyIsEnumerable which is faster
-        // and returns false for not defined properties.
-        if (!hasOwn(key, excluded) && callFunction(std_Object_propertyIsEnumerable, source, key))
-            _DefineDataProperty(target, key, source[key]);
-    }
-
-    // Step 6 (Return).
-}
-
-// Object Rest/Spread Properties proposal
-// Abstract operation: CopyDataProperties (target, source, excluded)
-function CopyDataPropertiesUnfiltered(target, source) {
-    // Step 1.
-    assert(IsObject(target), "target is an object");
-
-    // Step 2 (Not applicable).
-
-    // Steps 3, 6.
-    if (source === undefined || source === null)
-        return;
-
-    // Step 4.a.
-    source = ToObject(source);
-
-    // Step 4.b.
-    var keys = OwnPropertyKeys(source, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
-
-    // Step 5.
-    for (var index = 0; index < keys.length; index++) {
-        var key = keys[index];
-
-        // We abbreviate this by calling propertyIsEnumerable which is faster
-        // and returns false for not defined properties.
-        if (callFunction(std_Object_propertyIsEnumerable, source, key))
-            _DefineDataProperty(target, key, source[key]);
-    }
-
-    // Step 6 (Return).
-}
-
 /*************************************** Testing functions ***************************************/
 function outer() {
     return function inner() {
