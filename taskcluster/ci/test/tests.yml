@@ -803,6 +803,7 @@ mochitest-media:
     treeherder-symbol: tc-M(mda)
     max-run-time: 5400
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     e10s:
       by-test-platform:
         macosx64/debug: true
