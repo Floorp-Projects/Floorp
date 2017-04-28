@@ -686,18 +686,17 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return obj;
     }
 
-    // ES2018 draft rev 8340bf9a8427ea81bb0d1459471afbcc91d18add
-    // 22.2.4.1 TypedArray ( )
-    // 22.2.4.2 TypedArray ( length )
-    // 22.2.4.3 TypedArray ( typedArray )
-    // 22.2.4.4 TypedArray ( object )
-    // 22.2.4.5 TypedArray ( buffer [ , byteOffset [ , length ] ] )
+    /*
+     * new [Type]Array(length)
+     * new [Type]Array(otherTypedArray)
+     * new [Type]Array(JSArray)
+     * new [Type]Array(ArrayBuffer, [optional] byteOffset, [optional] length)
+     */
     static bool
     class_constructor(JSContext* cx, unsigned argc, Value* vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
 
-        // Step 1 (22.2.4.1) or 2 (22.2.4.2-5).
         if (!ThrowIfNotConstructing(cx, args, "typed array"))
             return false;
 
@@ -715,10 +714,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         MOZ_ASSERT(args.isConstructing());
         RootedObject newTarget(cx, &args.newTarget().toObject());
 
-        // 22.2.4.1 TypedArray ( )
-        // 22.2.4.2 TypedArray ( length )
+        /* () or (length) */
         if (args.length() == 0 || !args[0].isObject()) {
-            // 22.2.4.2, step 3.
             uint64_t len;
             if (!ToIndex(cx, args.get(0), JSMSG_BAD_ARRAY_LENGTH, &len))
                 return nullptr;
@@ -728,8 +725,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         RootedObject dataObj(cx, &args[0].toObject());
 
-        // 22.2.4.3 TypedArray ( typedArray )
-        // 22.2.4.4 TypedArray ( object )
+        /*
+         * (typedArray)
+         * (sharedTypedArray)
+         * (type[] array)
+         *
+         * Otherwise create a new typed array and copy elements 0..len-1
+         * properties from the object, treating it as some sort of array.
+         * Note that offset and length will be ignored.  Note that a
+         * shared array's values are copied here.
+         */
         if (!UncheckedUnwrap(dataObj)->is<ArrayBufferObjectMaybeShared>())
             return fromArray(cx, dataObj, newTarget);
 
@@ -962,16 +967,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return true;
     }
 
-    // 22.2.4.1 TypedArray ( )
-    // 22.2.4.2 TypedArray ( length )
     static JSObject*
     fromLength(JSContext* cx, uint64_t nelements, HandleObject newTarget = nullptr)
     {
-        // 22.2.4.1, step 1 and 22.2.4.2, steps 1-3 (performed in caller).
-        // 22.2.4.1, step 2 and 22.2.4.2, step 4 (implicit).
-
-        // 22.2.4.1, step 3 and 22.2.4.2, step 5.
-        // 22.2.4.2.1 AllocateTypedArray, step 1.
         RootedObject proto(cx);
         if (!GetPrototypeForInstance(cx, newTarget, &proto))
             return nullptr;
