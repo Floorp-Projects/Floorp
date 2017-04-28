@@ -53,14 +53,6 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
         currentActivity = activity;
     }
 
-    /**
-     * Intended to be used if the current activity is required to be up-to-date for code that
-     * executes in onCreate/onStart/... before calling the corresponding superclass method.
-     */
-    public void setCurrentActivity(Activity activity) {
-        currentActivity = activity;
-    }
-
     @Override
     public void onActivityPaused(Activity activity) {
         releaseIfCurrentActivity(activity);
