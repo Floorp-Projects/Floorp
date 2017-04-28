@@ -457,6 +457,18 @@ button.warning {
   -moz-box-flex: 1;
 }
 
+.legacy-warning {
+  background-color: #FFE900;
+  color: #3E2800;
+  padding: 4px 5px 3px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+#detail-view .legacy-warning {
+  margin-top: 0.78rem;
+}
+
 .creator {
   font-weight: bold;
 }
