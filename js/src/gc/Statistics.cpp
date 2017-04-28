@@ -303,10 +303,10 @@ void
 Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const
 {
     *total = *maxPause = 0;
-    for (auto& slice : slices_) {
-        *total += slice.duration();
-        if (slice.duration() > *maxPause)
-            *maxPause = slice.duration();
+    for (const SliceData* slice = slices.begin(); slice != slices.end(); slice++) {
+        *total += slice->duration();
+        if (slice->duration() > *maxPause)
+            *maxPause = slice->duration();
     }
     if (*maxPause > maxPauseInInterval)
         maxPauseInInterval = *maxPause;
@@ -379,11 +379,11 @@ UniqueChars
 Statistics::formatCompactSliceMessage() const
 {
     // Skip if we OOM'ed.
-    if (slices_.length() == 0)
+    if (slices.length() == 0)
         return UniqueChars(nullptr);
 
-    const size_t index = slices_.length() - 1;
-    const SliceData& slice = slices_.back();
+    const size_t index = slices.length() - 1;
+    const SliceData& slice = slices[index];
 
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
@@ -392,14 +392,14 @@ Statistics::formatCompactSliceMessage() const
         "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Times: ";
     char buffer[1024];
     SprintfLiteral(buffer, format, index,
-                   t(slice.duration()), budgetDescription, t(slice.start - slices_[0].start),
+                   t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
                    ExplainReason(slice.reason),
                    slice.wasReset() ? "yes - " : "no",
                    slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "");
 
     FragmentVector fragments;
     if (!fragments.append(DuplicateString(buffer)) ||
-        !fragments.append(formatCompactSlicePhaseTimes(slices_[index].phaseTimes)))
+        !fragments.append(formatCompactSlicePhaseTimes(slices[index].phaseTimes)))
     {
         return UniqueChars(nullptr);
     }
@@ -498,11 +498,11 @@ Statistics::formatDetailedMessage() const
     if (!fragments.append(formatDetailedDescription()))
         return UniqueChars(nullptr);
 
-    if (!slices_.empty()) {
-        for (unsigned i = 0; i < slices_.length(); i++) {
-            if (!fragments.append(formatDetailedSliceDescription(i, slices_[i])))
+    if (slices.length() > 1) {
+        for (unsigned i = 0; i < slices.length(); i++) {
+            if (!fragments.append(formatDetailedSliceDescription(i, slices[i])))
                 return UniqueChars(nullptr);
-            if (!fragments.append(formatDetailedPhaseTimes(slices_[i].phaseTimes)))
+            if (!fragments.append(formatDetailedPhaseTimes(slices[i].phaseTimes)))
                 return UniqueChars(nullptr);
         }
     }
@@ -543,7 +543,7 @@ Statistics::formatDetailedDescription() const
     char buffer[1024];
     SprintfLiteral(buffer, format,
                    ExplainInvocationKind(gckind),
-                   ExplainReason(slices_[0].reason),
+                   ExplainReason(slices[0].reason),
                    nonincremental() ? "no - " : "yes",
                    nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
                    zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
@@ -581,7 +581,7 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice) c
                    slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "",
                    gc::StateName(slice.initialState), gc::StateName(slice.finalState),
                    uint64_t(slice.endFaults - slice.startFaults),
-                   t(slice.duration()), budgetDescription, t(slice.start - slices_[0].start));
+                   t(slice.duration()), budgetDescription, t(slice.start - slices[0].start));
     return DuplicateString(buffer);
 }
 
@@ -638,52 +638,32 @@ Statistics::formatDetailedTotals() const
 }
 
 UniqueChars
-Statistics::formatJsonSlice(size_t sliceNum) const
+Statistics::formatJsonMessage(uint64_t timestamp) const
 {
-    FragmentVector fragments;
-
-    if (!fragments.append(DuplicateString("{")) ||
-        !fragments.append(formatJsonSliceDescription(sliceNum, slices_[sliceNum])) ||
-        !fragments.append(DuplicateString("\"times\":{")) ||
-        !fragments.append(formatJsonPhaseTimes(slices_[sliceNum].phaseTimes)) ||
-        !fragments.append(DuplicateString("}}")))
-    {
-        return UniqueChars(nullptr);
-    }
-
-    return Join(fragments);
-}
-
-UniqueChars
-Statistics::formatJsonMessage(uint64_t timestamp, bool includeSlices) const
-{
-    if (aborted)
-        return DuplicateString("{status:\"aborted\"}"); // May return nullptr
+    MOZ_ASSERT(!aborted);
 
     FragmentVector fragments;
 
     if (!fragments.append(DuplicateString("{")) ||
-        !fragments.append(formatJsonDescription(timestamp)))
+        !fragments.append(formatJsonDescription(timestamp)) ||
+        !fragments.append(DuplicateString("\"slices\":[")))
     {
         return UniqueChars(nullptr);
     }
 
-    if (includeSlices) {
-        if (!fragments.append(DuplicateString("\"slices\":[")))
+    for (unsigned i = 0; i < slices.length(); i++) {
+        if (!fragments.append(DuplicateString("{")) ||
+            !fragments.append(formatJsonSliceDescription(i, slices[i])) ||
+            !fragments.append(DuplicateString("\"times\":{")) ||
+            !fragments.append(formatJsonPhaseTimes(slices[i].phaseTimes)) ||
+            !fragments.append(DuplicateString("}}")) ||
+            (i < (slices.length() - 1) && !fragments.append(DuplicateString(","))))
+        {
             return UniqueChars(nullptr);
-
-        for (unsigned i = 0; i < slices_.length(); i++) {
-            if (!fragments.append(formatJsonSlice(i)))
-                return UniqueChars(nullptr);
-            if ((i < (slices_.length() - 1) && !fragments.append(DuplicateString(","))))
-                return UniqueChars(nullptr);
         }
-
-        if (!fragments.append(DuplicateString("],")))
-            return UniqueChars(nullptr);
     }
 
-    if (!fragments.append(DuplicateString("\"totals\":{")) ||
+    if (!fragments.append(DuplicateString("],\"totals\":{")) ||
         !fragments.append(formatJsonPhaseTimes(phaseTimes)) ||
         !fragments.append(DuplicateString("}}")))
     {
@@ -723,7 +703,6 @@ Statistics::formatJsonDescription(uint64_t timestamp) const
         "\"timestamp\":%llu,"
         "\"max_pause\":%llu.%03llu,"
         "\"total_time\":%llu.%03llu,"
-        "\"reason\":\"%s\","
         "\"zones_collected\":%d,"
         "\"total_zones\":%d,"
         "\"total_compartments\":%d,"
@@ -742,7 +721,6 @@ Statistics::formatJsonDescription(uint64_t timestamp) const
                    (unsigned long long)timestamp,
                    longestParts.quot, longestParts.rem,
                    totalParts.quot, totalParts.rem,
-                   ExplainReason(slices_[0].reason),
                    zoneStats.collectedZoneCount,
                    zoneStats.zoneCount,
                    zoneStats.compartmentCount,
@@ -764,7 +742,7 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice) const
 {
     TimeDuration duration = slice.duration();
     lldiv_t durationParts = SplitDurationMS(duration);
-    TimeDuration when = slice.start - slices_[0].start;
+    TimeDuration when = slice.start - slices[0].start;
     lldiv_t whenParts = SplitDurationMS(when);
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
@@ -1061,7 +1039,7 @@ Statistics::printStats()
 void
 Statistics::beginGC(JSGCInvocationKind kind)
 {
-    slices_.clearAndFree();
+    slices.clearAndFree();
     sccTimes.clearAndFree();
     gckind = kind;
     nonincrementalReason_ = gc::AbortReason::None;
@@ -1147,11 +1125,11 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     if (first)
         beginGC(gckind);
 
-    if (!slices_.emplaceBack(budget,
-                             reason,
-                             TimeStamp::Now(),
-                             GetPageFaultCount(),
-                             runtime->gc.state()))
+    if (!slices.emplaceBack(budget,
+                            reason,
+                            TimeStamp::Now(),
+                            GetPageFaultCount(),
+                            runtime->gc.state()))
     {
         // If we are OOM, set a flag to indicate we have missing slice data.
         aborted = true;
@@ -1172,25 +1150,25 @@ void
 Statistics::endSlice()
 {
     if (!aborted) {
-        slices_.back().end = TimeStamp::Now();
-        slices_.back().endFaults = GetPageFaultCount();
-        slices_.back().finalState = runtime->gc.state();
+        slices.back().end = TimeStamp::Now();
+        slices.back().endFaults = GetPageFaultCount();
+        slices.back().finalState = runtime->gc.state();
 
-        TimeDuration sliceTime = slices_.back().end - slices_.back().start;
+        TimeDuration sliceTime = slices.back().end - slices.back().start;
         runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
-        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slices_.back().wasReset());
-        if (slices_.back().wasReset())
-            runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON, uint32_t(slices_.back().resetReason));
+        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slices.back().wasReset());
+        if (slices.back().wasReset())
+            runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON, uint32_t(slices.back().resetReason));
 
-        if (slices_.back().budget.isTimeBudget()) {
-            int64_t budget_ms = slices_.back().budget.timeBudget.budget;
+        if (slices.back().budget.isTimeBudget()) {
+            int64_t budget_ms = slices.back().budget.timeBudget.budget;
             runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
             if (budget_ms == runtime->gc.defaultSliceBudget())
                 runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
 
             // Record any phase that goes more than 2x over its budget.
             if (sliceTime.ToMilliseconds() > 2 * budget_ms) {
-                Phase longest = LongestPhaseSelfTime(slices_.back().phaseTimes);
+                Phase longest = LongestPhaseSelfTime(slices.back().phaseTimes);
                 runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, phases[longest].telemetryBucket);
             }
         }
@@ -1202,7 +1180,7 @@ Statistics::endSlice()
     if (last)
         endGC();
 
-    if (enableProfiling_ && !aborted && slices_.back().duration() >= profileThreshold_)
+    if (enableProfiling_ && !aborted && slices.back().duration() >= profileThreshold_)
         printSliceProfile();
 
     // Slice callbacks should only fire for the outermost level.
@@ -1211,7 +1189,7 @@ Statistics::endSlice()
         if (sliceCallback)
             (*sliceCallback)(TlsContext.get(),
                              last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
-                             JS::GCDescription(!wasFullGC, gckind, slices_.back().reason));
+                             JS::GCDescription(!wasFullGC, gckind, slices.back().reason));
     }
 
     // Do this after the slice callback since it uses these values.
@@ -1335,8 +1313,8 @@ Statistics::recordPhaseEnd(Phase phase)
     phaseNestingDepth--;
 
     TimeDuration t = now - phaseStartTimes[phase];
-    if (!slices_.empty())
-        slices_.back().phaseTimes[activeDagSlot][phase] += t;
+    if (!slices.empty())
+        slices.back().phaseTimes[activeDagSlot][phase] += t;
     phaseTimes[activeDagSlot][phase] += t;
     phaseStartTimes[phase] = TimeStamp();
 }
@@ -1360,8 +1338,8 @@ Statistics::endParallelPhase(Phase phase, const GCParallelTask* task)
 {
     phaseNestingDepth--;
 
-    if (!slices_.empty())
-        slices_.back().phaseTimes[PHASE_DAG_NONE][phase] += task->duration();
+    if (!slices.empty())
+        slices.back().phaseTimes[PHASE_DAG_NONE][phase] += task->duration();
     phaseTimes[PHASE_DAG_NONE][phase] += task->duration();
     phaseStartTimes[phase] = TimeStamp();
 }
@@ -1393,28 +1371,26 @@ Statistics::endSCC(unsigned scc, TimeStamp start)
 double
 Statistics::computeMMU(TimeDuration window) const
 {
-    MOZ_ASSERT(!slices_.empty());
+    MOZ_ASSERT(!slices.empty());
 
-    TimeDuration gc = slices_[0].end - slices_[0].start;
+    TimeDuration gc = slices[0].end - slices[0].start;
     TimeDuration gcMax = gc;
 
     if (gc >= window)
         return 0.0;
 
     int startIndex = 0;
-    for (size_t endIndex = 1; endIndex < slices_.length(); endIndex++) {
-        auto& startSlice = slices_[startIndex];
-        auto& endSlice = slices_[endIndex];
-        gc += endSlice.end - endSlice.start;
+    for (size_t endIndex = 1; endIndex < slices.length(); endIndex++) {
+        gc += slices[endIndex].end - slices[endIndex].start;
 
-        while (endSlice.end - startSlice.end >= window) {
-            gc -= startSlice.end - startSlice.start;
+        while (slices[endIndex].end - slices[startIndex].end >= window) {
+            gc -= slices[startIndex].end - slices[startIndex].start;
             startIndex++;
         }
 
         TimeDuration cur = gc;
-        if (endSlice.end - startSlice.start > window)
-            cur -= (endSlice.end - startSlice.start - window);
+        if (slices[endIndex].end - slices[startIndex].start > window)
+            cur -= (slices[endIndex].end - slices[startIndex].start - window);
         if (cur > gcMax)
             gcMax = cur;
     }
@@ -1463,7 +1439,7 @@ Statistics::printProfileTimes(const ProfileDurations& times)
 void
 Statistics::printSliceProfile()
 {
-    const SliceData& slice = slices_.back();
+    const SliceData& slice = slices.back();
 
     maybePrintProfileHeaders();
 
