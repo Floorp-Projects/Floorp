@@ -5526,7 +5526,7 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
   nsStyleContext* styleContext = StyleContext();
   bool isTextCombined = styleContext->IsTextCombined();
   if (isTextCombined) {
-    styleContext = styleContext->GetParent();
+    styleContext = GetParent()->StyleContext();
   }
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::
     GetFontMetricsOfEmphasisMarks(styleContext, GetFontSizeInflation());
