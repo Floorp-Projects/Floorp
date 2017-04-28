@@ -31,23 +31,21 @@
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
-using namespace js;
-using namespace js::frontend;
-
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodAssign;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-struct ReservedWordInfo {
+struct ReservedWordInfo
+{
     const char* chars;         // C string with reserved word text
-    TokenKind   tokentype;
+    js::frontend::TokenKind tokentype;
 };
 
 static const ReservedWordInfo reservedWords[] = {
 #define RESERVED_WORD_INFO(word, name, type) \
-    {js_##word##_str, type},
+    {js_##word##_str, js::frontend::type},
     FOR_EACH_JAVASCRIPT_RESERVED_WORD(RESERVED_WORD_INFO)
 #undef RESERVED_WORD_INFO
 };
@@ -105,6 +103,8 @@ template <typename CharT>
 static bool
 IsIdentifier(const CharT* chars, size_t length)
 {
+    using namespace js;
+
     if (length == 0)
         return false;
 
@@ -123,6 +123,8 @@ IsIdentifier(const CharT* chars, size_t length)
 static uint32_t
 GetSingleCodePoint(const char16_t** p, const char16_t* end)
 {
+    using namespace js;
+
     uint32_t codePoint;
     if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(**p)) && *p + 1 < end) {
         char16_t lead = **p;
@@ -141,6 +143,8 @@ GetSingleCodePoint(const char16_t** p, const char16_t* end)
 static bool
 IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
 {
+    using namespace js;
+
     if (IsIdentifier(chars, length))
         return true;
 
@@ -164,8 +168,12 @@ IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
     return true;
 }
 
+namespace js {
+
+namespace frontend {
+
 bool
-frontend::IsIdentifier(JSLinearString* str)
+IsIdentifier(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
@@ -174,19 +182,19 @@ frontend::IsIdentifier(JSLinearString* str)
 }
 
 bool
-frontend::IsIdentifier(const char* chars, size_t length)
+IsIdentifier(const char* chars, size_t length)
 {
     return ::IsIdentifier(chars, length);
 }
 
 bool
-frontend::IsIdentifier(const char16_t* chars, size_t length)
+IsIdentifier(const char16_t* chars, size_t length)
 {
     return ::IsIdentifier(chars, length);
 }
 
 bool
-frontend::IsKeyword(JSLinearString* str)
+IsKeyword(JSLinearString* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return TokenKindIsKeyword(rw->tokentype);
@@ -195,7 +203,7 @@ frontend::IsKeyword(JSLinearString* str)
 }
 
 TokenKind
-frontend::ReservedWordTokenKind(PropertyName* str)
+ReservedWordTokenKind(PropertyName* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return rw->tokentype;
@@ -204,7 +212,7 @@ frontend::ReservedWordTokenKind(PropertyName* str)
 }
 
 const char*
-frontend::ReservedWordToCharZ(PropertyName* str)
+ReservedWordToCharZ(PropertyName* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return ReservedWordToCharZ(rw->tokentype);
@@ -213,7 +221,7 @@ frontend::ReservedWordToCharZ(PropertyName* str)
 }
 
 const char*
-frontend::ReservedWordToCharZ(TokenKind tt)
+ReservedWordToCharZ(TokenKind tt)
 {
     MOZ_ASSERT(tt != TOK_NAME);
     switch (tt) {
@@ -2184,36 +2192,8 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
     return true;
 }
 
-JS_FRIEND_API(int)
-js_fgets(char* buf, int size, FILE* file)
-{
-    int n, i, c;
-    bool crflag;
-
-    n = size - 1;
-    if (n < 0)
-        return -1;
-
-    crflag = false;
-    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
-        buf[i] = c;
-        if (c == '\n') {        // any \n ends a line
-            i++;                // keep the \n; we know there is room for \0
-            break;
-        }
-        if (crflag) {           // \r not followed by \n ends line at the \r
-            ungetc(c, file);
-            break;              // and overwrite c in buf with \0
-        }
-        crflag = (c == '\r');
-    }
-
-    buf[i] = '\0';
-    return i;
-}
-
 const char*
-frontend::TokenKindToDesc(TokenKind tt)
+TokenKindToDesc(TokenKind tt)
 {
     switch (tt) {
 #define EMIT_CASE(name, desc) case TOK_##name: return desc;
@@ -2241,3 +2221,36 @@ TokenKindToString(TokenKind tt)
     return "<bad TokenKind>";
 }
 #endif
+
+} // namespace frontend
+
+} // namespace js
+
+
+JS_FRIEND_API(int)
+js_fgets(char* buf, int size, FILE* file)
+{
+    int n, i, c;
+    bool crflag;
+
+    n = size - 1;
+    if (n < 0)
+        return -1;
+
+    crflag = false;
+    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
+        buf[i] = c;
+        if (c == '\n') {        // any \n ends a line
+            i++;                // keep the \n; we know there is room for \0
+            break;
+        }
+        if (crflag) {           // \r not followed by \n ends line at the \r
+            ungetc(c, file);
+            break;              // and overwrite c in buf with \0
+        }
+        crflag = (c == '\r');
+    }
+
+    buf[i] = '\0';
+    return i;
+}
