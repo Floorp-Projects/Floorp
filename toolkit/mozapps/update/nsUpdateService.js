@@ -1285,7 +1285,6 @@ function Update(update) {
   this._properties = {};
   this._patches = [];
   this.isCompleteUpdate = false;
-  this.isOSUpdate = false;
   this.showPrompt = false;
   this.showNeverForVersion = false;
   this.unsupported = false;
@@ -1343,8 +1342,6 @@ function Update(update) {
       this.isCompleteUpdate = attr.value == "true";
     } else if (attr.name == "isSecurityUpdate") {
       this.isSecurityUpdate = attr.value == "true";
-    } else if (attr.name == "isOSUpdate") {
-      this.isOSUpdate = attr.value == "true";
     } else if (attr.name == "showNeverForVersion") {
       this.showNeverForVersion = attr.value == "true";
     } else if (attr.name == "showPrompt") {
@@ -1486,7 +1483,6 @@ Update.prototype = {
     update.setAttribute("displayVersion", this.displayVersion);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
-    update.setAttribute("isOSUpdate", this.isOSUpdate);
     update.setAttribute("name", this.name);
     update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
