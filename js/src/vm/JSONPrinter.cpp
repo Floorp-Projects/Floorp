@@ -145,22 +145,6 @@ JSONPrinter::property(const char* name, double value)
 }
 
 void
-JSONPrinter::property(const char* name, const mozilla::TimeDuration& dur, TimePrecision precision)
-{
-    propertyName(name);
-    lldiv_t split;
-    switch (precision) {
-      case SECONDS:
-        split = lldiv(static_cast<int64_t>(dur.ToMilliseconds()), 1000);
-        break;
-      case MILLISECONDS:
-        split = lldiv(static_cast<int64_t>(dur.ToMicroseconds()), 1000);
-        break;
-    };
-    out_.printf("%llu.%03llu", split.quot, split.rem);
-}
-
-void
 JSONPrinter::endObject()
 {
     indentLevel_--;
