@@ -223,10 +223,10 @@ bool RtpReceiverImpl::IncomingRtpPacket(
     last_received_payload_length_ = payload_data_length;
     // RID rarely if ever changes
     if (rtp_header.extension.hasRID &&
-        (!rid_ || strcmp(rtp_header.extension.rid, rid_) != 0)) {
+        (!rid_ || strcmp(rtp_header.extension.rid.get(), rid_) != 0)) {
       delete [] rid_;
-      rid_ = new char[strlen(rtp_header.extension.rid)+1];
-      strcpy(rid_, rtp_header.extension.rid);
+      rid_ = new char[strlen(rtp_header.extension.rid.get())+1];
+      strcpy(rid_, rtp_header.extension.rid.get());
     }
     if (in_order) {
       if (last_received_timestamp_ != rtp_header.timestamp) {

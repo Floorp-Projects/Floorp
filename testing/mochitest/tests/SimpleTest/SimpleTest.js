@@ -280,6 +280,8 @@ SimpleTest.ok = function (condition, name, diag, stack = null) {
     } else if (!test.result && usesFailurePatterns()) {
       if (recordIfMatchesFailurePattern(name, diag)) {
         test.result = true;
+        // Add a mark for unexpected failures suppressed by failure pattern.
+        name = '[suppressed] ' + name;
       }
       var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
@@ -344,6 +346,8 @@ SimpleTest.todo = function(condition, name, diag) {
       // in which case, tagging it as KNOWN-FAIL probably makes more sense than
       // marking it PASS.
       test.result = false;
+      // Add a mark for unexpected failures suppressed by failure pattern.
+      name = '[suppressed] ' + name;
     }
     var successInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
     var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
@@ -1701,4 +1705,10 @@ function getAndroidSdk() {
         document.documentElement.removeChild(iframe);
     }
     return gAndroidSdk;
+}
+
+// Request complete log when using failure patterns so that failure info
+// from infra can be useful.
+if (usesFailurePatterns()) {
+  SimpleTest.requestCompleteLog();
 }

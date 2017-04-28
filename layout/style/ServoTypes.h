@@ -71,6 +71,8 @@ enum class UpdateAnimationsTasks : uint8_t {
   CascadeResults   = 1 << 3,
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)
+
 // The mode to use when parsing lengths.
 enum class LengthParsingMode {
   // In CSS, lengths must have units, except for zero values, where the unit can
@@ -83,7 +85,16 @@ enum class LengthParsingMode {
   SVG,
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)
+// The kind of style we're generating when requesting Servo to give us an
+// inherited style.
+enum class InheritTarget {
+  // We're requesting a text style.
+  Text,
+  // We're requesting a first-letter continuation frame style.
+  FirstLetterContinuation,
+  // We're requesting a style for a placeholder frame.
+  PlaceholderFrame,
+};
 
 } // namespace mozilla
 

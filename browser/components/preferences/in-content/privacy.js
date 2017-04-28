@@ -239,9 +239,9 @@ var gPrivacyPane = {
       gPrivacyPane.toggleDoNotDisturbNotifications);
 
     if (AlertsServiceDND) {
-      let notificationsDoNotDisturbRow =
-        document.getElementById("notificationsDoNotDisturbRow");
-      notificationsDoNotDisturbRow.removeAttribute("hidden");
+      let notificationsDoNotDisturbBox =
+        document.getElementById("notificationsDoNotDisturbBox");
+      notificationsDoNotDisturbBox.removeAttribute("hidden");
       if (AlertsServiceDND.manualDoNotDisturb) {
         let notificationsDoNotDisturb =
           document.getElementById("notificationsDoNotDisturb");
