@@ -3,6 +3,6 @@ git repository using the update.sh script.  The only changes
 made were those applied by update.sh and the addition of
 Makefile.in build files for the Mozilla build system.
 
-The nestegg git repository is: git://github.com/kinetiknz/nestegg.git
+The nestegg git repository is: https://github.com/kinetiknz/nestegg
 
-The git commit ID used was 5e2fb721d5808785475d68f63fc97d45b8a4ef03.
+The git commit ID used was af26fc354ec9eadf5fcd34fb01223be3f6f8a773.
