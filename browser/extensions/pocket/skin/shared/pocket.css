@@ -14,66 +14,11 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button {
-  list-style-image: url("chrome://pocket/skin/Toolbar.png");
-  -moz-image-region: rect(0, 18px, 18px, 0);
+  list-style-image: url("chrome://browser/skin/pocket.svg");
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill);
 }
 
 toolbar[brighttext] #pocket-button {
-  list-style-image: url(chrome://pocket/skin/Toolbar-inverted.png);
-}
-
-@media not all and (min-resolution: 1.1dppx) {
-  #pocket-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #pocket-button {
-    list-style-image: url(chrome://pocket/skin/menuPanel.png);
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(32px, 32px, 64px, 0);
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  #pocket-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #pocket-button {
-    list-style-image: url(chrome://pocket/skin/menuPanel@2x.png);
-    -moz-image-region: rect(0px, 64px, 64px, 0);
-  }
-
-  #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 64px, 128px, 0);
-  }
-}
-
-#pocket-button[cui-areatype="toolbar"] {
-  -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-#pocket-button[cui-areatype="toolbar"][open] {
-  -moz-image-region: rect(18px, 18px, 36px, 0);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #pocket-button {
-    list-style-image: url("chrome://pocket/skin/Toolbar@2x.png");
-  }
-
-  toolbar[brighttext] #pocket-button {
-    list-style-image: url("chrome://pocket/skin/Toolbar-inverted@2x.png");
-  }
-
-  #pocket-button[cui-areatype="toolbar"] {
-    -moz-image-region: rect(0, 36px, 36px, 0px);
-  }
-
-  #pocket-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(36px, 36px, 72px, 0px);
-  }
-}
-
-#panelMenu_pocket,
-#menu_pocket,
-#BMB_pocket {
-  list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16.png");
+  fill: var(--toolbarbutton-icon-fill-inverted);
 }
