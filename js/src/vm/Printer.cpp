@@ -150,18 +150,16 @@ Sprinter::checkInvariants() const
     MOZ_ASSERT(base[size - 1] == 0);
 }
 
-char*
-Sprinter::release()
+const char*
+Sprinter::string() const
 {
-    checkInvariants();
-    if (hadOOM_)
-        return nullptr;
+    return base;
+}
 
-    char* str = base;
-    base = nullptr;
-    offset = size = 0;
-    initialized = false;
-    return str;
+const char*
+Sprinter::stringEnd() const
+{
+    return base + offset;
 }
 
 char*
