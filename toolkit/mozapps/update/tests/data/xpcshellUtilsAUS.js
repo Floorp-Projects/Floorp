@@ -3199,16 +3199,6 @@ function checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
     applyToDir = getApplyDirFile(null, true);
     checkFilesInDirRecursive(stageDir, checkForBackupFiles);
   }
-
-  debugDump("testing patch files should not be left behind");
-  let updatesDir = getUpdatesPatchDir();
-  let entries = updatesDir.QueryInterface(Ci.nsIFile).directoryEntries;
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-    Assert.notEqual(getFileExtension(entry), "patch",
-                    "the file's extension should not equal patch" +
-                    getMsgPath(entry.path));
-  }
 }
 
 /**
@@ -3864,20 +3854,27 @@ function runUpdateUsingApp(aExpectedStatus) {
                  aExpectedStatus +
                  ", current status: " + status);
       } else {
-        do_execute_soon(afterAppExits);
+        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
       }
       return;
     }
 
-    // Don't proceed until the update log has been created.
-    let log = getUpdateLog(FILE_UPDATE_LOG);
-    if (!log.exists()) {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update log " +
-                 "to be created. Path: " + log.path);
+    // Don't check for an update log when the code in nsUpdateDriver.cpp skips
+    // updating.
+    if (aExpectedStatus != STATE_PENDING &&
+        aExpectedStatus != STATE_PENDING_SVC &&
+        aExpectedStatus != STATE_APPLIED &&
+        aExpectedStatus != STATE_APPLIED_SVC) {
+      // Don't proceed until the update log has been created.
+      let log = getUpdateLog(FILE_UPDATE_LOG);
+      if (!log.exists()) {
+        if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+          do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
+                   "log to be created. Path: " + log.path);
+        }
+        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
+        return;
       }
-      do_execute_soon(afterAppExits);
-      return;
     }
 
     do_execute_soon(runUpdateFinished);
