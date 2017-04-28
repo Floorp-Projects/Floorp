@@ -11,7 +11,6 @@
 
 #include "GeckoProfiler.h"
 
-#include "js/Utility.h"
 #include "gfxASurface.h"
 
 namespace mozilla {
@@ -234,46 +233,6 @@ private:
   mozilla::TimeStamp mCpuTimeEnd;
   uint64_t mGpuTimeStart;
   uint64_t mGpuTimeEnd;
-};
-
-class GCSliceMarkerPayload : public ProfilerMarkerPayload
-{
-public:
-  GCSliceMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                       const mozilla::TimeStamp& aEndTime,
-                       JS::UniqueChars&& aTimingJSON)
-   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
-     mTimingJSON(mozilla::Move(aTimingJSON))
-  {}
-
-  virtual ~GCSliceMarkerPayload() {}
-
-  void StreamPayload(SpliceableJSONWriter& aWriter,
-                     const mozilla::TimeStamp& aStartTime,
-                     UniqueStacks& aUniqueStacks) override;
-
-private:
-  JS::UniqueChars mTimingJSON;
-};
-
-class GCMajorMarkerPayload : public ProfilerMarkerPayload
-{
-public:
-  GCMajorMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                       const mozilla::TimeStamp& aEndTime,
-                       JS::UniqueChars&& aTimingJSON)
-   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
-     mTimingJSON(mozilla::Move(aTimingJSON))
-  {}
-
-  virtual ~GCMajorMarkerPayload() {}
-
-  void StreamPayload(SpliceableJSONWriter& aWriter,
-                     const mozilla::TimeStamp& aStartTime,
-                     UniqueStacks& aUniqueStacks) override;
-
-private:
-  JS::UniqueChars mTimingJSON;
 };
 
 #endif // PROFILER_MARKERS_H
