@@ -78,5 +78,5 @@ ImageBlocker::ShouldProcess(uint32_t aContentType,
 
   return ShouldLoad(aContentType, aContentLocation, aRequestOrigin,
                     aRequestingContext, aMimeTypeGuess, aExtra,
-		    aRequestPrincipal, aShouldProcess);
+                    aRequestPrincipal, aShouldProcess);
 }
