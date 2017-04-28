@@ -2096,7 +2096,7 @@ profiler_init(void* aStackTop)
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
-    int entries = PROFILE_DEFAULT_ENTRIES;
+    int entries = PROFILER_DEFAULT_ENTRIES;
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
     if (startupEntries) {
       errno = 0;
@@ -2108,7 +2108,7 @@ profiler_init(void* aStackTop)
       }
     }
 
-    int interval = PROFILE_DEFAULT_INTERVAL;
+    int interval = PROFILER_DEFAULT_INTERVAL;
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
     if (startupInterval) {
       errno = 0;
@@ -2127,7 +2127,7 @@ profiler_init(void* aStackTop)
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  NotifyProfilerStarted(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                         features, MOZ_ARRAY_LENGTH(features),
                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
 }
@@ -2376,8 +2376,8 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  int entries = aEntries > 0 ? aEntries : PROFILE_DEFAULT_ENTRIES;
-  double interval = aInterval > 0 ? aInterval : PROFILE_DEFAULT_INTERVAL;
+  int entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
+  double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, entries, interval, aFeatures, aFeatureCount,
                    aFilters, aFilterCount);
@@ -2798,7 +2798,7 @@ profiler_get_backtrace()
 
   Thread::tid_t tid = Thread::GetCurrentId();
 
-  ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
+  ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
 
   UniquePlatformData platformData = AllocPlatformData(tid);
 
