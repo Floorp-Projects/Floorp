@@ -57,10 +57,17 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
       !GetAnimations().IsEmpty()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
-    if (!HasOpacityAnimation()) {
+    // Update opacity as nullptr in stacking context if there exists
+    // opacity animation, the opacity value will be resolved
+    // after animation sampling on the compositor
+    if (HasOpacityAnimation()) {
       maybeOpacity = nullptr;
     }
-    if (!HasTransformAnimation()) {
+
+    // Update transfrom as nullptr in stacking context if there exists
+    // transform animation, the transform value will be resolved
+    // after animation sampling on the compositor
+    if (HasTransformAnimation()) {
       maybeTransform = nullptr;
       UpdateTransformDataForAnimation();
     }
