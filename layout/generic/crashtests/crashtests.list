@@ -82,7 +82,7 @@ load 369150-1.html
 load 369150-2.html
 load 369227-1.xhtml
 load 369542-1.html
-asserts-if(stylo,2) load 369542-2.html # bug 1324646
+load 369542-2.html
 load 369547-1.html
 load 370174-1.html
 load 370174-2.html
@@ -415,7 +415,7 @@ load 570289-1.html
 load 571618-1.svg
 asserts(1) asserts-if(stylo,0-1) load 571975-1.html # bug 574889
 load 571995.xhtml
-asserts-if(stylo,2) load 574958.xhtml # bug 1324646
+load 574958.xhtml
 asserts(0-4) load 578977.html # bug 757305
 load 580504-1.xhtml
 load 585598-1.xhtml
@@ -636,7 +636,7 @@ load 1233191.html
 asserts-if(stylo,0-15) load 1271765.html # bug 1324684
 asserts(2) load 1272983-1.html # bug 586628
 asserts(2) load 1272983-2.html # bug 586628
-load 1275059.html
+asserts-if(stylo,2) load 1275059.html # Bug 1360221
 load 1278007.html
 load 1278080.html
 load 1279814.html

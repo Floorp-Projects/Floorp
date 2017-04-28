@@ -45,6 +45,9 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.ViewUtil;
+import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.gecko.widget.AnchoredPopup;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -108,9 +111,6 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.util.ViewUtil;
-import org.mozilla.gecko.widget.AnchoredPopup;
-import org.mozilla.gecko.widget.ActionModePresenter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -128,6 +128,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 
 public abstract class GeckoApp
     extends GeckoActivity
@@ -158,10 +160,13 @@ public abstract class GeckoApp
 
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
-    public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
+    protected static final String LAST_SELECTED_TAB        = "lastSelectedTab";
+    protected static final String LAST_SESSION_UUID        = "lastSessionUUID";
+    protected static final String STARTUP_SELECTED_TAB     = "restoredSelectedTab";
+    protected static final String STARTUP_SESSION_UUID     = "restorationSessionUUID";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
-    public static final String PREFS_FLASH_USAGE = "playFlashCount";
+    public static final String PREFS_FLASH_USAGE           = "playFlashCount";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
@@ -180,7 +185,8 @@ public abstract class GeckoApp
 
     private static boolean sAlreadyLoaded;
 
-    private static WeakReference<GeckoApp> lastActiveGeckoApp;
+    protected boolean mResumingAfterOnCreate;
+    protected static WeakReference<GeckoApp> mLastActiveGeckoApp;
 
     protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
@@ -214,7 +220,9 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
-    protected int lastSelectedTabId = -1;
+    protected int mLastSelectedTabId = INVALID_TAB_ID;
+    protected String mLastSessionUUID = null;
+    protected boolean mCheckTabSelectionOnResume = false;
 
     private boolean foregrounded = false;
 
@@ -222,6 +230,8 @@ public abstract class GeckoApp
         private JSONArray tabs;
         private JSONObject windowObject;
         private boolean isExternalURL;
+
+        private int selectedTabId = INVALID_TAB_ID;
 
         private boolean selectNextTab;
         private boolean tabsWereSkipped;
@@ -242,7 +252,16 @@ public abstract class GeckoApp
         }
 
         public int getNewTabId(int oldTabId) {
-            return tabIdMap.get(oldTabId, -1);
+            return tabIdMap.get(oldTabId, INVALID_TAB_ID);
+        }
+
+        /**
+         * @return The index of the tab that should be selected according to the session store data.
+         *         In conjunction with opening external tabs, this might not be the tab that
+         *         actually gets selected in the end, though.
+         */
+        public int getStoredSelectedTabId() {
+            return selectedTabId;
         }
 
         @Override
@@ -280,6 +299,9 @@ public abstract class GeckoApp
 
             final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
 
+            if (sessionTab.isSelected() || selectNextTab) {
+                selectedTabId = tab.getId();
+            }
             if (selectNextTab) {
                 // We did not restore the selected tab previously. Now let's select this tab.
                 Tabs.getInstance().selectTab(tab.getId());
@@ -294,7 +316,7 @@ public abstract class GeckoApp
             });
 
             try {
-                int oldTabId = tabObject.optInt("tabId", -1);
+                int oldTabId = tabObject.optInt("tabId", INVALID_TAB_ID);
                 int newTabId = tab.getId();
                 tabObject.put("tabId", newTabId);
                 if  (oldTabId >= 0) {
@@ -408,26 +430,65 @@ public abstract class GeckoApp
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.
+        // When we're switching activities because of differing tab types,
+        // the first statement is not true.
         switch (msg) {
             case UNSELECTED:
                 break;
 
             case LOCATION_CHANGE:
                 // We only care about location change for the selected tab.
-                if (!Tabs.getInstance().isSelectedTab(tab))
-                    break;
-                // Fall through...
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    resetOptionsMenu();
+                    resetFormAssistPopup();
+                }
+                break;
+
             case SELECTED:
-                invalidateOptionsMenu();
-                if (mFormAssistPopup != null)
-                    mFormAssistPopup.hide();
+                resetOptionsMenu();
+                resetFormAssistPopup();
+
+                if (saveAsLastSelectedTab(tab)) {
+                    mLastSelectedTabId = tab.getId();
+                    mLastSessionUUID = GeckoApplication.getSessionUUID();
+                }
+                break;
+
+            case CLOSED:
+                if (saveAsLastSelectedTab(tab)) {
+                    if (mLastSelectedTabId == tab.getId() &&
+                            GeckoApplication.getSessionUUID().equals(mLastSessionUUID)) {
+                        mLastSelectedTabId = Tabs.INVALID_TAB_ID;
+                        mLastSessionUUID = null;
+                    }
+                }
                 break;
 
             case DESKTOP_MODE_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab))
-                    invalidateOptionsMenu();
+                    resetOptionsMenu();
                 break;
         }
+    }
+
+    private void resetOptionsMenu() {
+        if (mInitialized) {
+            invalidateOptionsMenu();
+        }
+    }
+
+    private void resetFormAssistPopup() {
+        if (mInitialized && mFormAssistPopup != null) {
+            mFormAssistPopup.hide();
+        }
+    }
+
+    /**
+     * Called on tab selection and tab close - return true to allow updating of this activity's
+     * last selected tab.
+     */
+    protected boolean saveAsLastSelectedTab(Tab tab) {
+        return false;
     }
 
     public void refreshChrome() { }
@@ -635,12 +696,8 @@ public abstract class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-        outState.putInt(LAST_SELECTED_TAB, lastSelectedTabId);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(final Bundle inState) {
-        lastSelectedTabId = inState.getInt(LAST_SELECTED_TAB);
+        outState.putInt(LAST_SELECTED_TAB, mLastSelectedTabId);
+        outState.putString(LAST_SESSION_UUID, mLastSessionUUID);
     }
 
     public void addTab() { }
@@ -1190,6 +1247,11 @@ public abstract class GeckoApp
         mJavaUiStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_JAVAUI");
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
+        if (savedInstanceState != null) {
+            mLastSelectedTabId = savedInstanceState.getInt(LAST_SELECTED_TAB);
+            mLastSessionUUID = savedInstanceState.getString(LAST_SESSION_UUID);
+        }
+
         final SafeIntent intent = new SafeIntent(getIntent());
 
         earlyStartJavaSampler(intent);
@@ -1237,9 +1299,13 @@ public abstract class GeckoApp
             return;
         }
 
+        mResumingAfterOnCreate = true;
+
         if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
+            // Now that we've got multiple GeckoApp-based activities, this can
+            // also happen if we're not the first activity to run within a session.
             mIsRestoringActivity = true;
             Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
 
@@ -1337,6 +1403,7 @@ public abstract class GeckoApp
             null);
 
         Tabs.getInstance().attachToContext(this, mLayerView);
+        Tabs.registerOnTabsChangedListener(this);
 
         // Use global layout state change to kick off additional initialization
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -1624,8 +1691,7 @@ public abstract class GeckoApp
                 // to the Recent Tabs folder of the Combined History panel.
                 Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.DEPRECATED_RECENT_TABS), flags);
             } else {
-                final String homepage = Tabs.getHomepage(this);
-                Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
+                Tabs.getInstance().loadUrl(Tabs.getHomepageForStartupTab(this), flags);
             }
         }
     }
@@ -1645,10 +1711,20 @@ public abstract class GeckoApp
             return;
         }
 
-        Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+        final Tab newTab = Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+        if (ThreadUtils.isOnUiThread()) {
+            onTabOpenFromIntent(newTab);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    onTabOpenFromIntent(newTab);
+                }
+            });
+        }
     }
 
-    private String getIntentURI(SafeIntent intent) {
+    protected String getIntentURI(SafeIntent intent) {
         final String passedUri;
         final String uri = getURIFromIntent(intent);
 
@@ -1697,8 +1773,6 @@ public abstract class GeckoApp
         // parallel with Gecko load.
         checkMigrateProfile();
 
-        Tabs.registerOnTabsChangedListener(this);
-
         initializeChrome();
 
         // We need to wait here because mShouldRestore can revert back to
@@ -1714,9 +1788,12 @@ public abstract class GeckoApp
             }
         }
 
+        if (mIsRestoringActivity && hasGeckoTab(intent)) {
+            Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
+            handleSelectTabIntent(intent);
         // External URLs should always be loaded regardless of whether Gecko is
         // already running.
-        if (isExternalURL) {
+        } else if (isExternalURL) {
             // Restore tabs before opening an external URL so that the new tab
             // is animated properly.
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
@@ -1786,6 +1863,10 @@ public abstract class GeckoApp
             }
         }
     }
+
+    protected void onTabOpenFromIntent(Tab tab) { }
+
+    protected void onTabSelectFromIntent(Tab tab) { }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -1860,6 +1941,11 @@ public abstract class GeckoApp
                 parser.updateParentId(closedTabs);
                 windowObject.putOpt("closedTabs", closedTabs);
 
+                if (isExternalURL) {
+                    // Pass on the tab we would have selected if we weren't going to open an
+                    // external URL later on.
+                    windowObject.put("selectedTabId", parser.getStoredSelectedTabId());
+                }
                 sessionString = new JSONObject().put(
                         "windows", new JSONArray().put(windowObject)).toString();
             } catch (final JSONException e) {
@@ -1877,9 +1963,27 @@ public abstract class GeckoApp
             throw new SessionRestoreException("No tabs could be read from session file");
         }
 
+        if (saveSelectedStartupTab()) {
+            // This activity is something other than our normal tabbed browsing interface and is
+            // going to overwrite our tab selection. Therefore we should stash it away for later, so
+            // e.g. BrowserApp can display the correct tab if starting up later during this session.
+            SharedPreferences.Editor prefs = getSharedPreferencesForProfile().edit();
+            prefs.putInt(STARTUP_SELECTED_TAB, parser.getStoredSelectedTabId());
+            prefs.putString(STARTUP_SESSION_UUID, GeckoApplication.getSessionUUID());
+            prefs.apply();
+        }
+
         final GeckoBundle restoreData = new GeckoBundle(1);
         restoreData.putString("sessionString", sessionString);
         return restoreData;
+    }
+
+    /**
+     * Activities that don't implement a normal tabbed browsing UI and overwrite the tab selection
+     * made by session restoring should probably override this and return true.
+     */
+    protected boolean saveSelectedStartupTab() {
+        return false;
     }
 
     @RobocopTarget
@@ -2178,6 +2282,8 @@ public abstract class GeckoApp
 
     @Override
     protected void onNewIntent(Intent externalIntent) {
+        super.onNewIntent(externalIntent);
+
         final SafeIntent intent = new SafeIntent(externalIntent);
 
         final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
@@ -2200,9 +2306,11 @@ public abstract class GeckoApp
             passedUri = null;
         }
 
-        if (ACTION_LOAD.equals(action)) {
+        if (hasGeckoTab(intent)) {
+            // This also covers ACTION_SWITCH_TAB.
+            handleSelectTabIntent(intent);
+        } else if (ACTION_LOAD.equals(action)) {
             Tabs.getInstance().loadUrl(intent.getDataString());
-            lastSelectedTabId = -1;
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -2215,7 +2323,6 @@ public abstract class GeckoApp
                     Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
                 }
             });
-            lastSelectedTabId = -1;
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
@@ -2228,13 +2335,37 @@ public abstract class GeckoApp
             // Copy extras.
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
-        } else if (ACTION_SWITCH_TAB.equals(action)) {
-            final int tabId = intent.getIntExtra("TabId", -1);
-            Tabs.getInstance().selectTab(tabId);
-            lastSelectedTabId = -1;
         }
 
         recordStartupActionTelemetry(passedUri, action);
+    }
+
+    /**
+     * Check whether an intent with tab switch extras refers to a tab that
+     * is actually existing at the moment.
+     *
+     * @param intent The intent to be checked.
+     * @return True if the tab specified in the intent is existing in our Tabs list.
+     */
+    protected boolean hasGeckoTab(SafeIntent intent) {
+        final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
+        final String intentSessionUUID = intent.getStringExtra(Tabs.INTENT_EXTRA_SESSION_UUID);
+        final Tab tabToCheck = Tabs.getInstance().getTab(tabId);
+
+        // We only care about comparing session UUIDs if one was specified in the intent.
+        // Otherwise, we just try matching the tab ID with one of our open tabs.
+        return tabToCheck != null && (!intent.hasExtra(Tabs.INTENT_EXTRA_SESSION_UUID) ||
+                GeckoApplication.getSessionUUID().equals(intentSessionUUID));
+    }
+
+    protected void handleSelectTabIntent(SafeIntent intent) {
+        final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
+        final Tab selectedTab = Tabs.getInstance().selectTab(tabId);
+        // If the tab selection has been redirected to a different activity,
+        // the selectedTab within Tabs will not have been updated yet.
+        if (selectedTab == Tabs.getInstance().getSelectedTab()) {
+            onTabSelectFromIntent(selectedTab);
+        }
     }
 
     /**
@@ -2278,7 +2409,11 @@ public abstract class GeckoApp
         GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        restoreLastSelectedTab();
+        if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this ||
+                mCheckTabSelectionOnResume) {
+            mCheckTabSelectionOnResume = false;
+            restoreLastSelectedTab();
+        }
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2328,13 +2463,15 @@ public abstract class GeckoApp
         });
 
         Restrictions.update(this);
+
+        mResumingAfterOnCreate = false;
     }
 
-    protected void restoreLastSelectedTab() {
-        if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
-            Tabs.getInstance().selectTab(lastSelectedTabId);
-        }
-    }
+    /**
+     * Called on activity resume if a different (or no) GeckoApp-based activity was previously
+     * active within our application.
+     */
+    protected void restoreLastSelectedTab() { }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -2364,11 +2501,7 @@ public abstract class GeckoApp
 
         foregrounded = false;
 
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab != null) {
-            lastSelectedTabId = selectedTab.getId();
-        }
-        lastActiveGeckoApp = new WeakReference<GeckoApp>(this);
+        mLastActiveGeckoApp = new WeakReference<GeckoApp>(this);
 
         final HealthRecorder rec = mHealthRecorder;
         final Context context = this;
@@ -2722,12 +2855,15 @@ public abstract class GeckoApp
                 if (tab.isExternal()) {
                     onDone();
                     Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
-                    if (nextSelectedTab != null) {
+                    // Closing the tab will select the next tab. There's no need to unzombify it
+                    // if we're really exiting - switching activities is a different matter, though.
+                    if (nextSelectedTab != null && nextSelectedTab.getType() == tab.getType()) {
                         final GeckoBundle data = new GeckoBundle(1);
                         data.putInt("nextSelectedTabId", nextSelectedTab.getId());
                         EventDispatcher.getInstance().dispatch("Tab:KeepZombified", data);
                     }
-                    tabs.closeTab(tab);
+                    tabs.closeTabNoActivitySwitch(tab);
+                    mCheckTabSelectionOnResume = true;
                     return;
                 }
 

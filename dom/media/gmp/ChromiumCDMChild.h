@@ -82,7 +82,8 @@ protected:
   bool IsOnMessageLoopThread();
 
   ipc::IPCResult RecvGiveBuffer(ipc::Shmem&& aShmem) override;
-
+  ipc::IPCResult RecvPurgeShmems() override;
+  void PurgeShmems();
   ipc::IPCResult RecvInit(const bool& aAllowDistinctiveIdentifier,
                           const bool& aAllowPersistentState) override;
   ipc::IPCResult RecvSetServerCertificate(

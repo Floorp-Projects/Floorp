@@ -13,7 +13,7 @@ const React = require("react");
 const ReactDOM = require("react-dom");
 const { bindActionCreators } = require("redux");
 const { bootstrap, renderRoot } = require("devtools-launchpad");
-const { EventEmitter } = require("devtools-modules");
+const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 const { Services: { appinfo, pref }} = require("devtools-modules");
 const { configureStore } = require("./src/utils/create-store");
 
@@ -23,7 +23,8 @@ EventEmitter.decorate(window);
 
 pref("devtools.netmonitor.enabled", true);
 pref("devtools.netmonitor.filters", "[\"all\"]");
-pref("devtools.netmonitor.hiddenColumns", "[]");
+pref("devtools.netmonitor.hiddenColumns",
+     "[\"cookies\",\"protocol\",\"remoteip\",\"setCookies\"]");
 pref("devtools.netmonitor.panes-network-details-width", 550);
 pref("devtools.netmonitor.panes-network-details-height", 450);
 pref("devtools.netmonitor.har.defaultLogDir", "");

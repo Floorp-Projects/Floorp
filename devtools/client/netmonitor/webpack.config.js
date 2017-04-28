@@ -39,7 +39,7 @@ let webpackConfig = {
     alias: {
       "react": path.join(__dirname, "node_modules/react"),
       "devtools/client/framework/devtools": path.join(__dirname, "../../client/shims/devtools"),
-      "devtools/client/framework/menu": "devtools-modules/client/framework/menu",
+      "devtools/client/framework/menu": "devtools-modules/src/menu",
       "devtools/client/framework/menu-item": path.join(__dirname, "../../client/framework/menu-item"),
       "devtools/client/locales": path.join(__dirname, "../../client/locales/en-US"),
       "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
@@ -72,7 +72,7 @@ let webpackConfig = {
       "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
       "devtools/shared/async-utils": path.join(__dirname, "../../shared/async-utils"),
       "devtools/shared/defer": path.join(__dirname, "../../shared/defer"),
-      "devtools/shared/event-emitter": "devtools-modules/shared/event-emitter",
+      "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
       "devtools/shared/fronts/timeline": path.join(__dirname, "../../shared/shims/fronts/timeline"),
       "devtools/shared/l10n": path.join(__dirname, "../../shared/l10n"),
       "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
@@ -80,7 +80,7 @@ let webpackConfig = {
       "devtools/shared/plural-form": path.join(__dirname, "../../shared/plural-form"),
       "devtools/shared/task": path.join(__dirname, "../../shared/task"),
       "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
-      "Services": "devtools-modules/client/shared/shim/Services",
+      "Services": "devtools-modules/src/Services",
     },
   },
 };

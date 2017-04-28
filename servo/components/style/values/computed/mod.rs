@@ -4,6 +4,7 @@
 
 //! Computed values.
 
+use context::QuirksMode;
 use euclid::size::Size2D;
 use font_metrics::FontMetricsProvider;
 use media_queries::Device;
@@ -17,8 +18,8 @@ use super::specified::grid::{TrackBreadth as GenericTrackBreadth, TrackSize as G
 
 pub use app_units::Au;
 pub use cssparser::Color as CSSColor;
-pub use self::image::{AngleOrCorner, EndingShape as GradientShape, Gradient, GradientKind, Image, ImageRect};
-pub use self::image::{LengthOrKeyword, LengthOrPercentageOrKeyword};
+pub use self::image::{AngleOrCorner, EndingShape as GradientShape, Gradient, GradientItem};
+pub use self::image::{GradientKind, Image, ImageRect, LengthOrKeyword, LengthOrPercentageOrKeyword};
 pub use super::{Auto, Either, None_};
 #[cfg(feature = "gecko")]
 pub use super::specified::{AlignItems, AlignJustifyContent, AlignJustifySelf, JustifyItems};
@@ -63,6 +64,9 @@ pub struct Context<'a> {
 
     /// Whether or not we are computing the media list in a media query
     pub in_media_query: bool,
+
+    /// The quirks mode of this context.
+    pub quirks_mode: QuirksMode,
 }
 
 impl<'a> Context<'a> {

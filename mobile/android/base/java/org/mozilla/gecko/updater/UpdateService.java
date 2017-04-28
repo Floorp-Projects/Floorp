@@ -12,6 +12,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.apache.commons.codec.binary.Hex;
 
 import org.mozilla.gecko.permissions.Permissions;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -48,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -373,6 +375,7 @@ public class UpdateService extends IntentService {
     }
 
     private UpdateInfo findUpdate(boolean force) {
+        URLConnection conn = null;
         try {
             URI uri = getUpdateURI(force);
 
@@ -382,7 +385,8 @@ public class UpdateService extends IntentService {
             }
 
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document dom = builder.parse(ProxySelector.openConnectionWithProxy(uri).getInputStream());
+            conn = ProxySelector.openConnectionWithProxy(uri);
+            Document dom = builder.parse(conn.getInputStream());
 
             NodeList nodes = dom.getElementsByTagName("update");
             if (nodes == null || nodes.getLength() == 0)
@@ -432,6 +436,14 @@ public class UpdateService extends IntentService {
         } catch (Exception e) {
             Log.e(LOGTAG, "failed to check for update: ", e);
             return null;
+        } finally {
+            // conn isn't guaranteed to be an HttpURLConnection, hence we don't want to cast earlier
+            // in this method. However in our current implementation it usually is, so we need to
+            // make sure we close it in that case:
+            final HttpURLConnection httpConn = (HttpURLConnection) conn;
+            if (httpConn != null) {
+                httpConn.disconnect();
+            }
         }
     }
 
@@ -551,6 +563,7 @@ public class UpdateService extends IntentService {
 
         OutputStream output = null;
         InputStream input = null;
+        URLConnection conn = null;
 
         mDownloading = true;
         mCancelDownload = false;
@@ -563,7 +576,7 @@ public class UpdateService extends IntentService {
                 mWifiLock.acquire();
             }
 
-            URLConnection conn = ProxySelector.openConnectionWithProxy(info.uri);
+            conn = ProxySelector.openConnectionWithProxy(info.uri);
             int length = conn.getContentLength();
 
             output = new BufferedOutputStream(new FileOutputStream(downloadFile));
@@ -606,20 +619,21 @@ public class UpdateService extends IntentService {
             Log.e(LOGTAG, "failed to download update: ", e);
             return null;
         } finally {
-            try {
-                if (input != null)
-                    input.close();
-            } catch (java.io.IOException e) { }
-
-            try {
-                if (output != null)
-                    output.close();
-            } catch (java.io.IOException e) { }
+            IOUtils.safeStreamClose(input);
+            IOUtils.safeStreamClose(output);
 
             mDownloading = false;
 
             if (mWifiLock.isHeld()) {
                 mWifiLock.release();
+            }
+
+            // conn isn't guaranteed to be an HttpURLConnection, hence we don't want to cast earlier
+            // in this method. However in our current implementation it usually is, so we need to
+            // make sure we close it in that case:
+            final HttpURLConnection httpConn = (HttpURLConnection) conn;
+            if (httpConn != null) {
+                httpConn.disconnect();
             }
         }
     }

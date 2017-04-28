@@ -112,7 +112,6 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
-
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
@@ -184,6 +183,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 import java.util.regex.Pattern;
+
+import static org.mozilla.gecko.Tab.TabType;
+import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 
 public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
@@ -354,6 +356,11 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabChanged(Tab tab, TabEvents msg, String data) {
+        if (!mInitialized) {
+            super.onTabChanged(tab, msg, data);
+            return;
+        }
+
         if (tab == null) {
             // Only RESTORED is allowed a null tab: it's the only event that
             // isn't tied to a specific tab.
@@ -432,6 +439,11 @@ public class BrowserApp extends GeckoApp
         }
 
         super.onTabChanged(tab, msg, data);
+    }
+
+    @Override
+    protected boolean saveAsLastSelectedTab(Tab tab) {
+        return tab.getType() == TabType.BROWSING;
     }
 
     private void updateEditingModeForTab(final Tab selectedTab) {
@@ -1146,6 +1158,43 @@ public class BrowserApp extends GeckoApp
 
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onResume(this);
+        }
+    }
+
+    @Override
+    protected void restoreLastSelectedTab() {
+        if (mResumingAfterOnCreate && !mIsRestoringActivity) {
+            // We're the first activity to run, so our startup code will (have) handle(d) tab selection.
+            return;
+        }
+
+        if (mLastSelectedTabId < 0) {
+            // Normally, session restore will select the correct tab when starting up, however this
+            // is linked to Gecko powering up. If we're not the first activity to launch, the
+            // previously running activity might have already overwritten this by selecting a tab of
+            // its own.
+            // Therefore we check whether the session file parser has left a note for us with the
+            // correct tab to be initially selected on *BrowserApp* startup.
+            SharedPreferences prefs = getSharedPreferencesForProfile();
+            mLastSelectedTabId = prefs.getInt(STARTUP_SELECTED_TAB, INVALID_TAB_ID);
+            mLastSessionUUID = prefs.getString(STARTUP_SESSION_UUID, null);
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.remove(STARTUP_SELECTED_TAB);
+            editor.remove(STARTUP_SESSION_UUID);
+            editor.apply();
+        }
+
+        final Tabs tabs = Tabs.getInstance();
+        final Tab tabToSelect = tabs.getTab(mLastSelectedTabId);
+
+        if (tabToSelect != null && GeckoApplication.getSessionUUID().equals(mLastSessionUUID) &&
+                tabToSelect.getType() == TabType.BROWSING) {
+            tabs.selectTab(mLastSelectedTabId);
+        } else {
+            if (!tabs.selectLastTab(TabType.BROWSING)) {
+                tabs.loadUrl(Tabs.getHomepageForStartupTab(this), Tabs.LOADURL_NEW_TAB);
+            }
         }
     }
 
@@ -1983,7 +2032,7 @@ public class BrowserApp extends GeckoApp
                 Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT",
                         (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
                 Telemetry.addToHistogram("FENNEC_CUSTOM_HOMEPAGE",
-                        (TextUtils.isEmpty(Tabs.getHomepage(this)) ? 0 : 1));
+                        (Tabs.hasHomepage(this) ? 1 : 0));
 
                 final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
                 final boolean hasCustomHomepanels =
@@ -2763,7 +2812,7 @@ public class BrowserApp extends GeckoApp
                 @Override
                 public void onFinish() {
                     if (mFirstrunAnimationContainer.showBrowserHint() &&
-                        TextUtils.isEmpty(Tabs.getHomepage(BrowserApp.this))) {
+                        !Tabs.hasHomepage(BrowserApp.this)) {
                         enterEditingMode();
                     }
                 }

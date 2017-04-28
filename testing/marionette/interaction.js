@@ -157,7 +157,7 @@ function* webdriverClickElement (el, a11y) {
   let rects = containerEl.getClientRects();
   let clickPoint = element.getInViewCentrePoint(rects[0], win);
 
-  if (!element.isPointerInteractable(containerEl)) {
+  if (element.isObscured(containerEl)) {
     throw new ElementClickInterceptedError(containerEl, clickPoint);
   }
 

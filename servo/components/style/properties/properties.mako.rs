@@ -21,6 +21,7 @@ use cssparser::{Parser, TokenSerializationType};
 use error_reporting::ParseErrorReporter;
 #[cfg(feature = "servo")] use euclid::side_offsets::SideOffsets2D;
 use computed_values;
+use context::QuirksMode;
 use font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")] use gecko_bindings::bindings;
 #[cfg(feature = "gecko")] use gecko_bindings::structs::{self, nsCSSPropertyID};
@@ -29,6 +30,7 @@ use logical_geometry::WritingMode;
 use media_queries::Device;
 use parser::{LengthParsingMode, Parse, ParserContext};
 use properties::animated_properties::TransitionProperty;
+use selector_parser::PseudoElement;
 #[cfg(feature = "servo")] use servo_config::prefs::PREFS;
 use shared_lock::StylesheetGuards;
 use style_traits::ToCss;
@@ -327,7 +329,8 @@ impl PropertyDeclarationIdSet {
             % endif
             custom_properties: &Option<Arc<::custom_properties::ComputedValuesMap>>,
             f: F,
-            error_reporter: &ParseErrorReporter)
+            error_reporter: &ParseErrorReporter,
+            quirks_mode: QuirksMode)
             % if property.boxed:
                 where F: FnOnce(&DeclaredValue<Box<longhands::${property.ident}::SpecifiedValue>>)
             % else:
@@ -341,7 +344,8 @@ impl PropertyDeclarationIdSet {
                                                             with_variables.from_shorthand,
                                                             custom_properties,
                                                             f,
-                                                            error_reporter);
+                                                            error_reporter,
+                                                            quirks_mode);
             } else {
                 f(value);
             }
@@ -356,7 +360,8 @@ impl PropertyDeclarationIdSet {
                 from_shorthand: Option<ShorthandId>,
                 custom_properties: &Option<Arc<::custom_properties::ComputedValuesMap>>,
                 f: F,
-                error_reporter: &ParseErrorReporter)
+                error_reporter: &ParseErrorReporter,
+                quirks_mode: QuirksMode)
                 % if property.boxed:
                     where F: FnOnce(&DeclaredValue<Box<longhands::${property.ident}::SpecifiedValue>>)
                 % else:
@@ -374,7 +379,8 @@ impl PropertyDeclarationIdSet {
                                                      url_data,
                                                      error_reporter,
                                                      None,
-                                                     LengthParsingMode::Default);
+                                                     LengthParsingMode::Default,
+                                                     quirks_mode);
                     Parser::new(&css).parse_entirely(|input| {
                         match from_shorthand {
                             None => {
@@ -2108,13 +2114,15 @@ bitflags! {
 ///
 pub fn cascade(device: &Device,
                rule_node: &StrongRuleNode,
+               pseudo: Option<<&PseudoElement>,
                guards: &StylesheetGuards,
                parent_style: Option<<&ComputedValues>,
                layout_parent_style: Option<<&ComputedValues>,
                cascade_info: Option<<&mut CascadeInfo>,
                error_reporter: &ParseErrorReporter,
                font_metrics_provider: &FontMetricsProvider,
-               flags: CascadeFlags)
+               flags: CascadeFlags,
+               quirks_mode: QuirksMode)
                -> ComputedValues {
     debug_assert_eq!(parent_style.is_some(), layout_parent_style.is_some());
     let (is_root_element, inherited_style, layout_parent_style) = match parent_style {
@@ -2153,13 +2161,15 @@ pub fn cascade(device: &Device,
     };
     apply_declarations(device,
                        is_root_element,
+                       pseudo,
                        iter_declarations,
                        inherited_style,
                        layout_parent_style,
                        cascade_info,
                        error_reporter,
                        font_metrics_provider,
-                       flags)
+                       flags,
+                       quirks_mode)
 }
 
 /// NOTE: This function expects the declaration with more priority to appear
@@ -2167,13 +2177,15 @@ pub fn cascade(device: &Device,
 #[allow(unused_mut)] // conditionally compiled code for "position"
 pub fn apply_declarations<'a, F, I>(device: &Device,
                                     is_root_element: bool,
+                                    pseudo: Option<<&PseudoElement>,
                                     iter_declarations: F,
                                     inherited_style: &ComputedValues,
                                     layout_parent_style: &ComputedValues,
                                     mut cascade_info: Option<<&mut CascadeInfo>,
                                     error_reporter: &ParseErrorReporter,
                                     font_metrics_provider: &FontMetricsProvider,
-                                    flags: CascadeFlags)
+                                    flags: CascadeFlags,
+                                    quirks_mode: QuirksMode)
                                     -> ComputedValues
     where F: Fn() -> I,
           I: Iterator<Item = &'a PropertyDeclaration>,
@@ -2226,6 +2238,7 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
         style: starting_style,
         font_metrics_provider: font_metrics_provider,
         in_media_query: false,
+        quirks_mode: quirks_mode,
     };
 
     // Set computed values, overwriting earlier declarations for the same
@@ -2373,7 +2386,7 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
 
     let mut style = context.style;
 
-    StyleAdjuster::new(&mut style, is_root_element)
+    StyleAdjuster::new(&mut style, is_root_element, pseudo)
         .adjust(context.layout_parent_style,
                 flags.contains(SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP));
 

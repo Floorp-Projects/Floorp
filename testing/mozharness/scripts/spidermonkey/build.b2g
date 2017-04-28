@@ -1,8 +1,0 @@
-#!/bin/bash -e
-
-cd $SOURCE
-TOP=$(cd .. && echo $PWD)
-export MOZBUILD_STATE_PATH=$TOP/mozbuild-state
-[ -d $MOZBUILD_STATE_PATH ] || mkdir $MOZBUILD_STATE_PATH
-
-exec ./mach build -v -j8

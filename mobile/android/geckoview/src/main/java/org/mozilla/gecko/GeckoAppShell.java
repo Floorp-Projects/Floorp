@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import android.annotation.SuppressLint;
 import org.mozilla.gecko.annotation.JNITarget;
@@ -31,13 +30,11 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.process.GeckoProcessManager;
-import org.mozilla.gecko.process.GeckoServiceChildProcess;
-import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -1206,11 +1203,14 @@ public class GeckoAppShell
         int pidColumn = -1;
         int userColumn = -1;
 
+        Process ps = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader in = null;
         try {
             // run ps and parse its output
-            java.lang.Process ps = Runtime.getRuntime().exec("ps");
-            BufferedReader in = new BufferedReader(new InputStreamReader(ps.getInputStream()),
-                                                   2048);
+            ps = Runtime.getRuntime().exec("ps");
+            inputStreamReader = new InputStreamReader(ps.getInputStream());
+            in = new BufferedReader(inputStreamReader, 2048);
 
             String headerOutput = in.readLine();
 
@@ -1242,10 +1242,14 @@ public class GeckoAppShell
                         break;
                 }
             }
-            in.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.w(LOGTAG, "Failed to enumerate Gecko processes.",  e);
+        } finally {
+            IOUtils.safeStreamClose(in);
+            IOUtils.safeStreamClose(inputStreamReader);
+            if (ps != null) {
+                ps.destroy();
+            }
         }
     }
 
@@ -1261,11 +1265,7 @@ public class GeckoAppShell
         } catch (Exception ex) {
             return "";
         } finally {
-            if (null != cmdlineReader) {
-                try {
-                    cmdlineReader.close();
-                } catch (Exception e) { }
-            }
+            IOUtils.safeStreamClose(cmdlineReader);
         }
     }
 
@@ -1273,13 +1273,17 @@ public class GeckoAppShell
         int pidColumn = -1;
         int nameColumn = -1;
 
+        // run lsof and parse its output
+        Process process = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader in = null;
         try {
             String filter = GeckoProfile.get(getApplicationContext()).getDir().toString();
             Log.d(LOGTAG, "[OPENFILE] Filter: " + filter);
 
-            // run lsof and parse its output
-            java.lang.Process lsof = Runtime.getRuntime().exec("lsof");
-            BufferedReader in = new BufferedReader(new InputStreamReader(lsof.getInputStream()), 2048);
+            process = Runtime.getRuntime().exec("lsof");
+            inputStreamReader = new InputStreamReader(process.getInputStream());
+            in = new BufferedReader(inputStreamReader, 2048);
 
             String headerOutput = in.readLine();
             StringTokenizer st = new StringTokenizer(headerOutput);
@@ -1310,8 +1314,14 @@ public class GeckoAppShell
                 if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(file) && file.startsWith(filter))
                     Log.d(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + file);
             }
-            in.close();
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        } finally {
+            IOUtils.safeStreamClose(in);
+            IOUtils.safeStreamClose(inputStreamReader);
+            if (process != null) {
+                process.destroy();
+            }
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -2087,14 +2097,16 @@ public class GeckoAppShell
 
                 final PipedOutputStream output = new PipedOutputStream();
                 connect(output);
+
                 ThreadUtils.postToBackgroundThread(
                     new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-                                output.close();
-                            } catch (IOException ioe) { }
+                            } finally {
+                                IOUtils.safeStreamClose(output);
+                            }
                         }
                     });
                 mHaveConnected = true;

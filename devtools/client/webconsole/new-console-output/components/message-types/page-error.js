@@ -39,7 +39,7 @@ function PageError(props) {
     source,
     type,
     level,
-    messageText: messageBody,
+    messageText,
     repeat,
     stacktrace,
     frame,
@@ -47,6 +47,13 @@ function PageError(props) {
     timeStamp,
     notes,
   } = message;
+
+  let messageBody;
+  if (typeof messageText === "string") {
+    messageBody = messageText;
+  } else if (typeof messageText === "object" && messageText.type === "longString") {
+    messageBody = `${message.messageText.initial}…`;
+  }
 
   const childProps = {
     dispatch,
