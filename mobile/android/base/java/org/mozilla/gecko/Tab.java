@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -26,8 +27,10 @@ import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.widget.SiteLogins;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -798,6 +801,32 @@ public class Tab {
         BROWSING,
         CUSTOMTAB,
         WEBAPP
+    }
+
+    /**
+     * @return False if the tab is not matching the activity passed as argument.
+     */
+    public boolean matchesActivity(final Activity activity) {
+        final String activityName = activity.getClass().getName();
+        return activityName.equals(getTargetClassNameForTab());
+    }
+
+    /**
+     * @return The class name of the activity that should preferably be displaying this tab.
+     */
+    public String getTargetClassNameForTab() {
+        final TabType type = getType();
+
+        switch (type) {
+            case CUSTOMTAB:
+                return CustomTabsActivity.class.getName();
+            case WEBAPP:
+                final int index =  WebAppIndexer.getInstance().getIndexForManifest(
+                        getManifestPath(), mAppContext);
+                return WebAppIndexer.WEBAPP_CLASS + index;
+            default:
+                return AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
+        }
     }
 
     /**
