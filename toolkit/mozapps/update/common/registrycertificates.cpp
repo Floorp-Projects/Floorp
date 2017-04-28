@@ -8,7 +8,7 @@
 
 #include "registrycertificates.h"
 #include "pathhash.h"
-#include "updatelogging.h"
+#include "updatecommon.h"
 #include "updatehelper.h"
 #define MAX_KEY_LENGTH 255
 
