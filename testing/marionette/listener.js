@@ -214,7 +214,7 @@ var loadListener = {
         break;
 
       case "pagehide":
-        if (event.originalTarget === curContainer.frame.document) {
+        if (event.target === curContainer.frame.document) {
           this.seenUnload = true;
 
           removeEventListener("hashchange", this);
@@ -232,25 +232,25 @@ var loadListener = {
         break;
 
       case "DOMContentLoaded":
-        if (event.originalTarget.baseURI.startsWith("about:certerror")) {
+        if (event.target.baseURI.startsWith("about:certerror")) {
           this.stop();
           sendError(new InsecureCertificateError(), this.command_id);
 
-        } else if (/about:.*(error)\?/.exec(event.originalTarget.baseURI)) {
+        } else if (/about:.*(error)\?/.exec(event.target.baseURI)) {
           this.stop();
           sendError(new UnknownError("Reached error page: " +
-              event.originalTarget.baseURI), this.command_id);
+              event.target.baseURI), this.command_id);
 
         // Special-case about:blocked pages which should be treated as non-error
         // pages but do not raise a pageshow event.
-        } else if (/about:blocked\?/.exec(event.originalTarget.baseURI)) {
+        } else if (/about:blocked\?/.exec(event.target.baseURI)) {
           this.stop();
           sendOk(this.command_id);
         }
         break;
 
       case "pageshow":
-        if (event.originalTarget === curContainer.frame.document) {
+        if (event.target === curContainer.frame.document) {
           this.stop();
           sendOk(this.command_id);
         }
