@@ -5838,6 +5838,11 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
         return false;
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
+        if (member->isKind(PNK_SPREAD)) {
+            // FIXME: Implement
+            continue;
+        }
+
         ParseNode* subpattern;
         if (member->isKind(PNK_MUTATEPROTO))
             subpattern = member->pn_kid;
@@ -9663,6 +9668,13 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
             objp.set(nullptr);
             if (!emit1(JSOP_MUTATEPROTO))
                 return false;
+            continue;
+        }
+
+        if (propdef->isKind(PNK_SPREAD)) {
+            MOZ_ASSERT(type == ObjectLiteral);
+            objp.set(nullptr);
+            // FIXME: implement
             continue;
         }
 
