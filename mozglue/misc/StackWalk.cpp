@@ -245,6 +245,26 @@ patched_LdrUnloadDll(HMODULE module)
   ReleaseStackWalkWorkaroundLock();
   return ret;
 }
+
+// These pointers are disguised as PVOID to avoid pulling in obscure headers
+typedef PVOID (WINAPI *LdrResolveDelayLoadedAPI_func)(PVOID ParentModuleBase,
+  PVOID DelayloadDescriptor, PVOID FailureDllHook, PVOID FailureSystemHook,
+  PVOID ThunkAddress, ULONG Flags);
+static LdrResolveDelayLoadedAPI_func stub_LdrResolveDelayLoadedAPI;
+
+static PVOID WINAPI patched_LdrResolveDelayLoadedAPI(PVOID ParentModuleBase,
+  PVOID DelayloadDescriptor, PVOID FailureDllHook, PVOID FailureSystemHook,
+  PVOID ThunkAddress, ULONG Flags)
+{
+  // Prevent the stack walker from suspending this thread when
+  // LdrResolveDelayLoadAPI holds the RtlLookupFunctionEntry lock.
+  AcquireStackWalkWorkaroundLock();
+  PVOID ret = stub_LdrResolveDelayLoadedAPI(ParentModuleBase, DelayloadDescriptor,
+                                            FailureDllHook, FailureSystemHook,
+                                            ThunkAddress, Flags);
+  ReleaseStackWalkWorkaroundLock();
+  return ret;
+}
 #endif
 #endif
 
@@ -326,6 +346,9 @@ EnsureWalkThreadReady()
   NtDllInterceptor.AddHook("LdrUnloadDll",
                            reinterpret_cast<intptr_t>(patched_LdrUnloadDll),
                            (void**)&stub_LdrUnloadDll);
+  NtDllInterceptor.AddHook("LdrResolveDelayLoadedAPI",
+                           reinterpret_cast<intptr_t>(patched_LdrResolveDelayLoadedAPI),
+                           (void**)&stub_LdrResolveDelayLoadedAPI);
 #endif
 
   ::InitializeCriticalSection(&gDbgHelpCS);
