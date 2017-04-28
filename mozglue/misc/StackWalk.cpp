@@ -191,6 +191,11 @@ StackWalkInitCriticalAddress()
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/StackWalk_windows.h"
 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsWindowsDllInterceptor.h"
+#define STACKWALK_HAS_DLL_INTERCEPTOR
+#endif
+
 #include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we
 // need to use the newer 64-bit APIs. API_VERSION_NUMBER seems to fit the bill.
@@ -225,6 +230,22 @@ CRITICAL_SECTION gDbgHelpCS;
 #ifdef _M_AMD64
 static uint8_t* sJitCodeRegionStart;
 static size_t sJitCodeRegionSize;
+
+#ifdef STACKWALK_HAS_DLL_INTERCEPTOR
+static WindowsDllInterceptor NtDllInterceptor;
+typedef NTSTATUS (NTAPI *LdrUnloadDll_func)(HMODULE module);
+static LdrUnloadDll_func stub_LdrUnloadDll;
+static NTSTATUS NTAPI
+patched_LdrUnloadDll(HMODULE module)
+{
+  // Prevent the stack walker from suspending this thread when LdrUnloadDll
+  // holds the RtlLookupFunctionEntry lock.
+  AcquireStackWalkWorkaroundLock();
+  NTSTATUS ret = stub_LdrUnloadDll(module);
+  ReleaseStackWalkWorkaroundLock();
+  return ret;
+}
+#endif
 #endif
 
 // Routine to print an error message to standard error.
@@ -300,6 +321,12 @@ EnsureWalkThreadReady()
   stackWalkThread = nullptr;
   readyEvent = nullptr;
 
+#if defined(_M_AMD64) && defined(STACKWALK_HAS_DLL_INTERCEPTOR)
+  NtDllInterceptor.Init("ntdll.dll");
+  NtDllInterceptor.AddHook("LdrUnloadDll",
+                           reinterpret_cast<intptr_t>(patched_LdrUnloadDll),
+                           (void**)&stub_LdrUnloadDll);
+#endif
 
   ::InitializeCriticalSection(&gDbgHelpCS);
 
