@@ -457,6 +457,20 @@ public:
     rv = SelectSsrc(aRecvTrack, aSsrcIndex);
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(AddRIDExtension, ErrorResult &rv,
+                               dom::MediaStreamTrack& aRecvTrack,
+                               unsigned short aExtensionId)
+  {
+    rv = AddRIDExtension(aRecvTrack, aExtensionId);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(AddRIDFilter, ErrorResult& rv,
+                               dom::MediaStreamTrack& aRecvTrack,
+                               const nsAString& aRid)
+  {
+    rv = AddRIDFilter(aRecvTrack, aRid);
+  }
+
   nsresult GetPeerIdentity(nsAString& peerIdentity)
   {
     if (mPeerIdentity) {
@@ -650,6 +664,9 @@ private:
     NS_ENSURE_TRUE(on, false);
     return true;
   }
+
+  RefPtr<MediaPipeline> GetMediaPipelineForTrack(
+      dom::MediaStreamTrack& aRecvTrack);
 
   nsresult GetTimeSinceEpoch(DOMHighResTimeStamp *result);
 

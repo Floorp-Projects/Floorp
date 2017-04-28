@@ -15,7 +15,6 @@ DIRS = [
 ]
 
 DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
-DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
 LOCAL_INCLUDES += [
     '/xpcom/build',

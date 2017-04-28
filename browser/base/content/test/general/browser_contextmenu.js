@@ -90,7 +90,9 @@ add_task(function* test_plaintext() {
                     "context-viewsource",   true,
                     "context-viewinfo",     true
                    ];
-  yield test_contextmenu("#test-text", plainTextItems);
+  yield test_contextmenu("#test-text", plainTextItems, {
+    maybeScreenshotsPresent: true
+  });
 });
 
 add_task(function* test_link() {
@@ -139,7 +141,9 @@ add_task(function* test_canvas() {
     ["context-viewimage",    true,
      "context-saveimage",    true,
      "context-selectall",    true
-    ]
+    ], {
+      maybeScreenshotsPresent: true
+    }
   );
 });
 
@@ -433,7 +437,9 @@ add_task(function* test_textarea_spellcheck() {
 });
 
 add_task(function* test_plaintext2() {
-  yield test_contextmenu("#test-text", plainTextItems);
+  yield test_contextmenu("#test-text", plainTextItems, {
+    maybeScreenshotsPresent: true
+  });
 });
 
 add_task(function* test_undo_add_to_dictionary() {
@@ -569,7 +575,8 @@ add_task(function* test_pagemenu() {
         let pagemenu = content.document.getElementById("test-pagemenu");
         Assert.ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
       });
-    }
+    },
+    maybeScreenshotsPresent: true
   });
 });
 
@@ -593,6 +600,7 @@ add_task(function* test_dom_full_screen() {
      "context-viewinfo",             true
     ],
     {
+      maybeScreenshotsPresent: true,
       shiftkey: true,
       *preCheckContextMenuFn() {
         yield pushPrefs(["full-screen-api.allow-trusted-requests-only", false],
@@ -638,7 +646,8 @@ add_task(function* test_pagemenu2() {
      "context-viewsource",   true,
      "context-viewinfo",     true
     ],
-    {shiftkey: true}
+    {maybeScreenshotsPresent: true,
+     shiftkey: true}
   );
 });
 
@@ -817,6 +826,7 @@ add_task(function* test_click_to_play_blocked_plugin() {
      "context-viewinfo",     true
     ],
     {
+      maybeScreenshotsPresent: true,
       *preCheckContextMenuFn() {
         pushPrefs(["plugins.click_to_play", true]);
         setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
@@ -922,6 +932,7 @@ add_task(function* test_plaintext_sendpagetodevice() {
                     "context-viewinfo",     true
                    ];
   yield test_contextmenu("#test-text", plainTextItemsWithSendPage, {
+      maybeScreenshotsPresent: true,
       *onContextMenuShown() {
         yield openMenuItemSubmenu("context-sendpagetodevice");
       }

@@ -69,7 +69,10 @@ function getVisibleMenuItems(aMenu, aData) {
                        item.id != "spell-add-dictionaries-main" &&
                        item.id != "context-savelinktopocket" &&
                        item.id != "fill-login-saved-passwords" &&
-                       item.id != "fill-login-no-logins") {
+                       item.id != "fill-login-no-logins" &&
+                       // XXX Screenshots doesn't have an access key. This needs
+                       // at least bug 1320462 fixing first.
+                       item.id != "screenshots_mozilla_org_create-screenshot") {
               ok(key, "menuitem " + item.id + " has an access key");
               if (accessKeys[key])
                   ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
@@ -246,6 +249,9 @@ let lastElementSelector = null;
  *                  to true if offsetX and offsetY are not provided
  *        waitForSpellCheck: wait until spellcheck is initialized before
  *                           starting test
+ *        maybeScreenshotsPresent: if true, the screenshots menu entry is
+ *                                 expected to be present in the menu if
+ *                                 screenshots is enabled, optional
  *        preCheckContextMenuFn: callback to run before opening menu
  *        onContextMenuShown: callback to run when the context menu is shown
  *        postCheckContextMenuFn: callback to run after opening menu
@@ -313,6 +319,17 @@ function* test_contextmenu(selector, menuItems, options = {}) {
       let inspectItems = ["---", null,
                           "context-inspect", true];
       menuItems = menuItems.concat(inspectItems);
+    }
+
+    if (options.maybeScreenshotsPresent &&
+        !Services.prefs.getBoolPref("extensions.screenshots.disabled", false) &&
+        !Services.prefs.getBoolPref("extensions.screenshots.system-disabled", false)) {
+      let screenshotItems = [
+        "---", null,
+        "screenshots_mozilla_org_create-screenshot", true
+      ];
+
+      menuItems = menuItems.concat(screenshotItems);
     }
 
     checkContextMenu(menuItems);

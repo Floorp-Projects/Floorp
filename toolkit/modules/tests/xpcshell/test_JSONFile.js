@@ -5,11 +5,6 @@
 "use strict";
 
 // Globals
-
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
