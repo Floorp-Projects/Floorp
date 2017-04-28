@@ -72,9 +72,7 @@ try {
 
 test(function(t) {
   addStyle(t,
-    { 'dummy': '', // XXX bug 1336863 hackaround: a single insertRule is broken
-                   // on stylo.
-      '@-webkit-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+    { '@-webkit-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
 
   var div = addDiv(t, { style: 'animation: anim 100s' });
 
@@ -83,8 +81,7 @@ test(function(t) {
 
 test(function(t) {
   addStyle(t,
-    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
-      '@-moz-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+    { '@-moz-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
 
   var div = addDiv(t, { style: 'animation: anim 100s' });
 
@@ -93,8 +90,7 @@ test(function(t) {
 
 test(function(t) {
   addStyle(t,
-    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
-      '@-WEBKIT-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+    { '@-WEBKIT-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
 
   var div = addDiv(t, { style: 'animation: anim 100s' });
 
@@ -103,8 +99,7 @@ test(function(t) {
 
 test(function(t) {
   addStyle(t,
-    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
-      '@-MOZ-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
+    { '@-MOZ-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
 
   var div = addDiv(t, { style: 'animation: anim 100s' });
 
@@ -113,8 +108,7 @@ test(function(t) {
 
 test(function(t) {
   addStyle(t,
-    { 'dummy': '', // XXX bug 1336863 hackaround, as above.
-      '@-webkit-KEYFRAMES anim': 'from,to { color: rgb(0, 255, 0); }' });
+    { '@-webkit-KEYFRAMES anim': 'from,to { color: rgb(0, 255, 0); }' });
 
   var div = addDiv(t, { style: 'animation: anim 100s' });
 
