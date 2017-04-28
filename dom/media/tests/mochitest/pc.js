@@ -1004,13 +1004,13 @@ PeerConnectionWrapper.prototype = {
     return Promise.all(constraintsList.map(constraints => {
       return getUserMedia(constraints).then(stream => {
         if (constraints.audio) {
-          stream.getAudioTracks().map(track => {
+          stream.getAudioTracks().forEach(track => {
             info(this + " gUM local stream " + stream.id +
               " with audio track " + track.id);
           });
         }
         if (constraints.video) {
-          stream.getVideoTracks().map(track => {
+          stream.getVideoTracks().forEach(track => {
             info(this + " gUM local stream " + stream.id +
               " with video track " + track.id);
           });
