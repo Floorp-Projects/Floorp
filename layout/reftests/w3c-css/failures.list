@@ -72,7 +72,7 @@ fuzzy-if(winWidget,110,1200) css-writing-modes-3/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes-3/table-column-order-srl-006.xht
 fuzzy-if(OSX||winWidget,75,404)   css-writing-modes-3/text-align-v??-0??.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes-3/text-baseline-???-00?.xht
-fuzzy-if(OSX,15,16)    css-writing-modes-3/text-combine-upright-decorations-001.html
+skip-if(stylo) fuzzy-if(OSX,15,16)    css-writing-modes-3/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes-3/text-indent-v??-0??.xht
 fuzzy-if(OSX||winWidget,226,960)  css-writing-modes-3/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes-3/vertical-alignment-*.xht
@@ -144,7 +144,7 @@ fails-if(stylo) css-writing-modes-3/full-width-001.html
 fails-if(stylo) css-writing-modes-3/full-width-002.html
 fails-if(stylo) css-writing-modes-3/text-combine-upright-inherit-all-001.html
 fails-if(stylo) css-writing-modes-3/text-combine-upright-inherit-all-002.html
-fails-if(stylo) css-writing-modes-3/text-combine-upright-layout-rules-001.html
+css-writing-modes-3/text-combine-upright-layout-rules-001.html
 fails-if(stylo) css-writing-modes-3/text-combine-upright-line-breaking-rules-001.html
 
 #### CSS Multi-column 1 ##############################################
