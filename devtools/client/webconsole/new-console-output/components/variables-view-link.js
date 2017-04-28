@@ -19,8 +19,8 @@ VariablesViewLink.propTypes = {
   object: PropTypes.object.isRequired
 };
 
-function VariablesViewLink(props) {
-  const { className, object, children } = props;
+function VariablesViewLink(props, ...children) {
+  const { className, object } = props;
   const classes = ["cm-variable"];
   if (className) {
     classes.push(className);
@@ -32,7 +32,7 @@ function VariablesViewLink(props) {
       "data-link-actor-id": object.actor,
       className: classes.join(" "),
       draggable: false,
-    }, children)
+    }, ...children)
   );
 }
 
