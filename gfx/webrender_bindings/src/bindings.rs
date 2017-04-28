@@ -2,7 +2,6 @@ use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
-use std::sync::Arc;
 use std::collections::HashMap;
 use gleam::gl;
 
@@ -1340,29 +1339,40 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                      key);
 }
 
+/// Push a 3 planar yuv image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_image(state: &mut WrState,
-                                       bounds: WrRect,
-                                       clip: WrClipRegion,
-                                       image_keys: *const WrImageKey,
-                                       key_num: u8,
-                                       color_space: WrYuvColorSpace) {
+pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
+                                              bounds: WrRect,
+                                              clip: WrClipRegion,
+                                              image_key_0: WrImageKey,
+                                              image_key_1: WrImageKey,
+                                              image_key_2: WrImageKey,
+                                              color_space: WrYuvColorSpace) {
     assert!(unsafe { is_in_main_thread() });
-    assert!(key_num == 3);
-    unsafe {
-        for key_index in 0..key_num {
-            assert!(!image_keys.offset(key_index as isize).is_null());
-        }
-    }
-    let key_slice = make_slice(image_keys, key_num as usize);
 
     state.frame_builder
          .dl_builder
          .push_yuv_image(bounds.into(),
                          clip.into(),
-                         key_slice[0],
-                         key_slice[1],
-                         key_slice[2],
+                         YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
+                         color_space);
+}
+
+/// PUsh a 2 planar NV12 image.
+#[no_mangle]
+pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
+                                            bounds: WrRect,
+                                            clip: WrClipRegion,
+                                            image_key_0: WrImageKey,
+                                            image_key_1: WrImageKey,
+                                            color_space: WrYuvColorSpace) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder
+         .dl_builder
+         .push_yuv_image(bounds.into(),
+                         clip.into(),
+                         YuvData::NV12(image_key_0, image_key_1),
                          color_space);
 }
 
@@ -1626,68 +1636,53 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 }
 
 struct Moz2dImageRenderer {
-    images: HashMap<WrImageKey, BlobImageResult>,
+    _images: HashMap<WrImageKey, BlobImageResult>,
 }
 
 impl BlobImageRenderer for Moz2dImageRenderer {
-    fn request_blob_image(&mut self,
-                          key: WrImageKey,
-                          data: Arc<BlobImageData>,
-                          descriptor: &BlobImageDescriptor,
-                          _dirty_rect: Option<DeviceUintRect>) {
-        let result = self.render_blob_image(data, descriptor);
-        self.images.insert(key, result);
+    fn add(&mut self, _key: ImageKey, _data: BlobImageData, _tiling: Option<TileSize>) {
+        // Not implemented yet.
     }
 
-    fn resolve_blob_image(&mut self,
-                          key: WrImageKey)
-                          -> BlobImageResult {
-        return match self.images.remove(&key) {
-                   Some(result) => result,
-                   None => Err(BlobImageError::InvalidKey),
-               };
+    fn update(&mut self, _key: ImageKey, _data: BlobImageData) {
+        // Not implemented yet.
+    }
+
+    fn delete(&mut self, _key: ImageKey) {
+        // Not implemented yet.
+    }
+
+    fn request(&mut self,
+               _key: BlobImageRequest,
+               _descriptor: &BlobImageDescriptor,
+               _dirty_rect: Option<DeviceUintRect>,
+               _images: &ImageStore) {
+        // Not implemented yet.
+    }
+
+    fn resolve(&mut self, _key: BlobImageRequest) -> BlobImageResult {
+        // Not implemented yet.
+        Err(BlobImageError::Other("unimplemented!".to_string()))
     }
 }
 
 impl Moz2dImageRenderer {
     fn new() -> Self {
         Moz2dImageRenderer {
-            images: HashMap::new(),
+            _images: HashMap::new(),
         }
-    }
-
-    fn render_blob_image(&mut self,
-                         data: Arc<BlobImageData>,
-                         descriptor: &BlobImageDescriptor)
-                         -> BlobImageResult {
-        let mut output = Vec::with_capacity((descriptor.width * descriptor.height *
-                                             descriptor.format.bytes_per_pixel().unwrap()) as
-                                            usize);
-
-        unsafe {
-            if wr_moz2d_render_cb(WrByteSlice::new(&data[..]),
-                                  descriptor.width,
-                                  descriptor.height,
-                                  descriptor.format,
-                                  MutByteSlice::new(output.as_mut_slice())) {
-                return Ok(RasterizedBlobImage {
-                              width: descriptor.width,
-                              height: descriptor.height,
-                              data: output,
-                          });
-            }
-        }
-
-        Err(BlobImageError::Other("unimplemented!".to_string()))
     }
 }
 
-extern "C" {
-    // TODO: figure out the API for tiled blob images.
-    fn wr_moz2d_render_cb(blob: WrByteSlice,
-                          width: u32,
-                          height: u32,
-                          format: WrImageFormat,
-                          output: MutByteSlice)
-                          -> bool;
-}
+// TODO: nical
+// Update for the new blob image interface changes.
+//
+// extern "C" {
+//     // TODO: figure out the API for tiled blob images.
+//     fn wr_moz2d_render_cb(blob: WrByteSlice,
+//                           width: u32,
+//                           height: u32,
+//                           format: WrImageFormat,
+//                           output: MutByteSlice)
+//                           -> bool;
+// }
