@@ -319,9 +319,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'ALLOW_COMPILER_WARNINGS': [
                 'ALLOW_COMPILER_WARNINGS := 1',
             ],
-            'DISABLE_STL_WRAPPING': [
-                'DISABLE_STL_WRAPPING := 1',
-            ],
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],

@@ -146,6 +146,10 @@ def HostRustLibrary(name, features=None):
     if features:
         HOST_RUST_LIBRARY_FEATURES = features
 
+@template
+def DisableStlWrapping():
+    COMPILE_FLAGS['STL'] = []
+
 
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
