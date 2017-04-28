@@ -13,7 +13,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/UniquePtr.h"
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -44,8 +43,12 @@ public:
     return mRevoked;
   }
 
+protected:
+  // Virtual destructor is required since we might delete a Listener object
+  // through its base type pointer.
+  virtual ~RevocableToken() { }
+
 private:
-  ~RevocableToken() {}
   Atomic<bool> mRevoked;
 };
 
@@ -213,17 +216,13 @@ enum class EventPassMode : int8_t {
   Move
 };
 
-class ListenerBase {
-public:
-  ListenerBase() : mToken(new RevocableToken()) {}
-  ~ListenerBase() {
-    MOZ_ASSERT(Token()->IsRevoked(), "Must disconnect the listener.");
+class ListenerBase : public RevocableToken
+{
+protected:
+  virtual ~ListenerBase()
+  {
+    MOZ_ASSERT(IsRevoked(), "Must disconnect the listener.");
   }
-  RevocableToken* Token() const {
-    return mToken;
-  }
-private:
-  const RefPtr<RevocableToken> mToken;
 };
 
 /**
@@ -232,16 +231,16 @@ private:
  * to provide different Dispatch() overloads depending on EventPassMode.
  */
 template <EventPassMode Mode, typename... As>
-class Listener : public ListenerBase {
+class Listener : public ListenerBase
+{
 public:
-  virtual ~Listener() {}
   virtual void Dispatch(const As&... aEvents) = 0;
 };
 
 template <typename... As>
-class Listener<EventPassMode::Move, As...> : public ListenerBase {
+class Listener<EventPassMode::Move, As...> : public ListenerBase
+{
 public:
-  virtual ~Listener() {}
   virtual void Dispatch(As... aEvents) = 0;
 };
 
@@ -253,7 +252,7 @@ template <typename Target, typename Function, EventPassMode, typename... As>
 class ListenerImpl : public Listener<EventPassMode::Copy, As...> {
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
-    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+    : mHelper(this, aTarget, aFunction) {}
   void Dispatch(const As&... aEvents) override {
     mHelper.Dispatch(aEvents...);
   }
@@ -266,7 +265,7 @@ class ListenerImpl<Target, Function, EventPassMode::Move, As...>
   : public Listener<EventPassMode::Move, As...> {
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
-    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+    : mHelper(this, aTarget, aFunction) {}
   void Dispatch(As... aEvents) override {
     mHelper.Dispatch(Move(aEvents)...);
   }
@@ -378,7 +377,7 @@ class MediaEventSourceImpl {
   void PruneListeners() {
     int32_t last = static_cast<int32_t>(mListeners.Length()) - 1;
     for (int32_t i = last; i >= 0; --i) {
-      if (mListeners[i]->Token()->IsRevoked()) {
+      if (mListeners[i]->IsRevoked()) {
         mListeners.RemoveElementAt(i);
       }
     }
@@ -391,8 +390,8 @@ class MediaEventSourceImpl {
     PruneListeners();
     MOZ_ASSERT(Lp == ListenerPolicy::NonExclusive || mListeners.IsEmpty());
     auto l = mListeners.AppendElement();
-    l->reset(new ListenerImpl<Target, Function>(aTarget, aFunction));
-    return MediaEventListener((*l)->Token());
+    *l = new ListenerImpl<Target, Function>(aTarget, aFunction);
+    return MediaEventListener(*l);
   }
 
   // |Method| takes one or more arguments.
@@ -472,7 +471,7 @@ protected:
       auto&& l = mListeners[i];
       // Remove disconnected listeners.
       // It is not optimal but is simple and works well.
-      if (l->Token()->IsRevoked()) {
+      if (l->IsRevoked()) {
         mListeners.RemoveElementAt(i);
         continue;
       }
@@ -482,7 +481,7 @@ protected:
 
 private:
   Mutex mMutex;
-  nsTArray<UniquePtr<Listener>> mListeners;
+  nsTArray<RefPtr<Listener>> mListeners;
 };
 
 template <typename... Es>
