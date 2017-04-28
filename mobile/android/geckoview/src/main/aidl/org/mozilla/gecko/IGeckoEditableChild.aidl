@@ -26,7 +26,7 @@ interface IGeckoEditableChild {
                                   int rangeForeColor, int rangeBackColor, int rangeLineColor);
 
     // Change to a new composition using previously added ranges.
-    void onImeUpdateComposition(int start, int end);
+    void onImeUpdateComposition(int start, int end, int flags);
 
     // Request cursor updates from the child.
     void onImeRequestCursorUpdates(int requestMode);
