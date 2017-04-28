@@ -28,10 +28,5 @@ void main(void) {
 
     alpha = alpha * float(all(bvec2(step(position_in_tile, vStretchSize))));
 
-#ifdef WR_FEATURE_TEXTURE_RECT
-    // textureLod doesn't support sampler2DRect. Use texture() instead.
-    oFragColor = vec4(alpha) * texture(sColor0, st);
-#else
-    oFragColor = vec4(alpha) * textureLod(sColor0, st, 0.0);
-#endif
+    oFragColor = vec4(alpha) * TEX_SAMPLE(sColor0, st);
 }

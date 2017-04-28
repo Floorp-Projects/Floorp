@@ -49,4 +49,10 @@ core-text = "4.0"
 name = "basic"
 
 [[example]]
+name = "blob"
+
+[[example]]
 name = "scrolling"
+
+[[example]]
+name = "yuv"
