@@ -5313,8 +5313,10 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
-  bool addedScrollingBackgroundColor = false;
-  if (!aFrame->GetParent()) {
+  // If we're only adding an unscrolled item, then pretend that we've
+  // already done it.
+  bool addedScrollingBackgroundColor = (aFlags & APPEND_UNSCROLLED_ONLY);
+  if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
     nsIScrollableFrame* sf =
       aFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
@@ -5326,13 +5328,21 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
     }
   }
 
-  if (!addedScrollingBackgroundColor ||
-      (nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255)) {
-    // With async scrolling, we'd like to have two instances of the background
-    // color: one that scrolls with the content (for the reasons stated above),
-    // and one underneath which does not scroll with the content, but which can
-    // be shown during checkerboarding and overscroll.
-    // We can only do that if the color is opaque.
+  // With async scrolling, we'd like to have two instances of the background
+  // color: one that scrolls with the content (for the reasons stated above),
+  // and one underneath which does not scroll with the content, but which can
+  // be shown during checkerboarding and overscroll.
+  // We can only do that if the color is opaque.
+  bool forceUnscrolledItem = nsLayoutUtils::UsesAsyncScrolling(aFrame) &&
+                             NS_GET_A(bgcolor) == 255;
+  if ((aFlags & ADD_FOR_SUBDOC) && gfxPrefs::LayoutUseContainersForRootFrames()) {
+    // If we're using ContainerLayers for a subdoc, then any items we add here will
+    // still be scrolled (since we're inside the container at this point), so don't
+    // bother and we will do it manually later.
+    forceUnscrolledItem = false;
+  }
+
+  if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
     aList.AppendNewToBottom(
       new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
   }
