@@ -379,7 +379,6 @@ IPCBlobInputStream::IsSeekableStream() const
 NS_IMETHODIMP
 IPCBlobInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
-  MOZ_ASSERT(mRemoteStream);
   nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mRemoteStream);
   if (!seekableStream) {
     return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
@@ -391,7 +390,6 @@ IPCBlobInputStream::Seek(int32_t aWhence, int64_t aOffset)
 NS_IMETHODIMP
 IPCBlobInputStream::Tell(int64_t *aResult)
 {
-  MOZ_ASSERT(mRemoteStream);
   nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mRemoteStream);
   if (!seekableStream) {
     return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
