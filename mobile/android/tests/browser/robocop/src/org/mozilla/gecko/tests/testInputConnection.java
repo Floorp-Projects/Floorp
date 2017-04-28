@@ -25,6 +25,8 @@ public class testInputConnection extends JavascriptBridgeTest {
 
     private static final String INITIAL_TEXT = "foo";
 
+    private String mEventsLog;
+
     public void testInputConnection() throws InterruptedException {
         GeckoHelper.blockForReady();
 
@@ -69,6 +71,14 @@ public class testInputConnection extends JavascriptBridgeTest {
             .testInputConnection(new HidingInputConnectionTest());
 
         getJS().syncCall("finish_test");
+    }
+
+    public void setEventsLog(final String log) {
+        mEventsLog = log;
+    }
+
+    public String getEventsLog() {
+        return mEventsLog;
     }
 
     private class BasicInputConnectionTest extends InputConnectionTest {
@@ -267,6 +277,46 @@ public class testInputConnection extends JavascriptBridgeTest {
             }
 
             ic.deleteSurroundingText(2, 1);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
+            // Bug 1307816 - Don't end then start composition when setting
+            // composing text, which can confuse the Facebook comment box.
+            getJS().syncCall("start_events_log");
+            ic.setComposingText("f", 1);
+            processGeckoEvents();
+            ic.setComposingText("fo", 1);
+            processGeckoEvents();
+            ic.setComposingText("foo", 1);
+            processGeckoEvents();
+            ic.finishComposingText();
+            assertTextAndSelectionAt("Can reuse composition in Java", ic, "foo", 3);
+
+            getJS().syncCall("end_events_log");
+            if (mType.equals("textarea")) {
+                // textarea has a buggy selectionchange behavior.
+                fAssertEquals("Can reuse composition in Gecko", "<=|==", getEventsLog());
+            } else {
+                // compositionstart > (compositionchange > selectionchange) x3
+                fAssertEquals("Can reuse composition in Gecko", "<=|=|=|", getEventsLog());
+            }
+
+            ic.deleteSurroundingText(3, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
+            // Bug 1353799 - Can set selection while having a composition, so
+            // the caret can be moved to the start of the composition.
+            getJS().syncCall("start_events_log");
+            ic.setComposingText("foo", 1);
+            assertTextAndSelectionAt("Can set composition before selection", ic, "foo", 3);
+            ic.setSelection(0, 0);
+            assertTextAndSelectionAt("Can set selection after composition", ic, "foo", 0);
+
+            getJS().syncCall("end_events_log");
+            // compositionstart > compositionchange > selectionchange x2
+            fAssertEquals("Can update composition caret", "<=||", getEventsLog());
+
+            ic.finishComposingText();
+            ic.deleteSurroundingText(0, 3);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Make sure we don't leave behind stale events for the following test.
