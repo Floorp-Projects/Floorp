@@ -105,9 +105,6 @@ public:
 };
 #endif
 
-// Per-thread state.
-MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-
 class PSMutex : public mozilla::StaticMutex {};
 
 typedef mozilla::BaseAutoLock<PSMutex> PSAutoLock;
@@ -136,8 +133,8 @@ typedef const PSAutoLock& PSLockRef;
 // this mechanism, but please don't do so without *very* good reason and a
 // detailed explanation.
 //
-// The exception to this rule is each thread's PseudoStack object, which is
-// accessible without locking via tlsPseudoStack.
+// The exception to this rule is each thread's RacyThreadInfo object, which is
+// accessible without locking via TLSInfo::RacyThreadInfo().
 //
 class CorePS
 {
@@ -517,6 +514,34 @@ uint32_t ActivePS::sNextGeneration = 0;
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
 
+// Each live thread has a ThreadInfo, and we store a reference to it in TLS.
+// This class encapsulates that TLS.
+class TLSInfo
+{
+public:
+  static bool Init(PSLockRef) { return sThreadInfo.init(); }
+
+  // Get the entire ThreadInfo. Accesses are guarded by gPSMutex.
+  static ThreadInfo* Info(PSLockRef) { return sThreadInfo.get(); }
+
+  // Get only the RacyThreadInfo. Accesses are not guarded by gPSMutex.
+  static RacyThreadInfo* RacyInfo()
+  {
+    ThreadInfo* info = sThreadInfo.get();
+    return info ? info->RacyInfo().get() : nullptr;
+  }
+
+  static void SetInfo(PSLockRef, ThreadInfo* aInfo) { sThreadInfo.set(aInfo); }
+
+private:
+  // This is a non-owning reference to the ThreadInfo; CorePS::mLiveThreads is
+  // the owning reference. On thread destruction, this reference is cleared and
+  // the ThreadInfo is destroyed or transferred to CorePS::mDeadThreads.
+  static MOZ_THREAD_LOCAL(ThreadInfo*) sThreadInfo;
+};
+
+MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
+
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
 
@@ -548,7 +573,8 @@ public:
     : mIsSynchronous(false)
     , mTimeStamp(mozilla::TimeStamp::Now())
     , mThreadId(aThreadInfo->ThreadId())
-    , mPseudoStack(aThreadInfo->Stack())
+    , mRacyInfo(aThreadInfo->RacyInfo())
+    , mJSContext(aThreadInfo->mContext)
     , mStackTop(aThreadInfo->StackTop())
     , mLastSample(&aThreadInfo->LastSample())
     , mPlatformData(aThreadInfo->GetPlatformData())
@@ -567,11 +593,13 @@ public:
   // This constructor is for synchronous samples, i.e. those performed in
   // response to an explicit sampling request via the API. Synchronous samples
   // are performed on-thread, i.e. the thread samples itself.
-  TickSample(NotNull<PseudoStack*> aPseudoStack, PlatformData* aPlatformData)
+  TickSample(NotNull<RacyThreadInfo*> aRacyInfo, JSContext* aJSContext,
+             PlatformData* aPlatformData)
     : mIsSynchronous(true)
     , mTimeStamp(mozilla::TimeStamp::Now())
     , mThreadId(Thread::GetCurrentId())
-    , mPseudoStack(aPseudoStack)
+    , mRacyInfo(aRacyInfo)
+    , mJSContext(aJSContext)
     , mStackTop(nullptr)
     , mLastSample(nullptr)
     , mPlatformData(aPlatformData)
@@ -597,7 +625,9 @@ public:
 
   const int mThreadId;
 
-  const NotNull<PseudoStack*> mPseudoStack;
+  const NotNull<RacyThreadInfo*> mRacyInfo;
+
+  JSContext* const mJSContext;
 
   void* const mStackTop;
 
@@ -649,7 +679,8 @@ static const int SAMPLER_MAX_STRING_LENGTH = 128;
 
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
-               volatile js::ProfileEntry& entry, PseudoStack* stack)
+               volatile js::ProfileEntry& entry,
+               NotNull<RacyThreadInfo*> aRacyInfo)
 {
   // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations and
   // should not be recorded in the profile.
@@ -683,7 +714,8 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
       if (script) {
         if (!entry.pc()) {
           // The JIT only allows the top-most entry to have a nullptr pc.
-          MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
+          MOZ_ASSERT(&entry ==
+                     &aRacyInfo->mStack[aRacyInfo->stackSize() - 1]);
         } else {
           lineno = JS_PCToLineNumber(script, entry.pc());
         }
@@ -743,9 +775,10 @@ static void
 MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
                        const TickSample& aSample, NativeStack& aNativeStack)
 {
-  NotNull<PseudoStack*> pseudoStack = aSample.mPseudoStack;
-  volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
-  uint32_t pseudoCount = pseudoStack->stackSize();
+  NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
+  volatile js::ProfileEntry* pseudoFrames = racyInfo->mStack;
+  uint32_t pseudoCount = racyInfo->stackSize();
+  JSContext* context = aSample.mJSContext;
 
   // Make a copy of the JS stack into a JSFrame array. This is necessary since,
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
@@ -763,8 +796,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
 
   // Only walk jit stack if profiling frame iterator is turned on.
-  if (pseudoStack->mContext &&
-      JS::IsProfilingEnabledForContext(pseudoStack->mContext)) {
+  if (context && JS::IsProfilingEnabledForContext(context)) {
     AutoWalkJSStack autoWalkJSStack;
     const uint32_t maxFrames = mozilla::ArrayLength(jsFrames);
 
@@ -775,8 +807,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
       registerState.lr = aSample.mLR;
       registerState.fp = aSample.mFP;
 
-      JS::ProfilingFrameIterator jsIter(pseudoStack->mContext,
-                                        registerState,
+      JS::ProfilingFrameIterator jsIter(context, registerState,
                                         startBufferGen);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
         // See note below regarding 'J' entries.
@@ -872,7 +903,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
-      AddPseudoEntry(aLock, aBuffer, pseudoFrame, pseudoStack);
+      AddPseudoEntry(aLock, aBuffer, pseudoFrame, racyInfo);
       pseudoIndex++;
       continue;
     }
@@ -925,11 +956,10 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
   //
   // Do not do this for synchronous samples, which use their own
   // ProfileBuffers instead of the global one in CorePS.
-  if (!aSample.mIsSynchronous && pseudoStack->mContext) {
+  if (!aSample.mIsSynchronous && context) {
     MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
     uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
-    JS::UpdateJSContextProfilerSampleBufferGen(pseudoStack->mContext,
-                                               aBuffer->mGeneration,
+    JS::UpdateJSContextProfilerSampleBufferGen(context, aBuffer->mGeneration,
                                                lapCount);
   }
 }
@@ -1007,16 +1037,16 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   const mcontext_t* mcontext =
     &reinterpret_cast<ucontext_t*>(aSample.mContext)->uc_mcontext;
   mcontext_t savedContext;
-  NotNull<PseudoStack*> pseudoStack = aSample.mPseudoStack;
+  NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
 
   // The pseudostack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
   // the saved registers.  We use this to unwind resume unwinding
   // after encounting JIT code.
-  for (uint32_t i = pseudoStack->stackSize(); i > 0; --i) {
+  for (uint32_t i = racyInfo->stackSize(); i > 0; --i) {
     // The pseudostack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
-    volatile js::ProfileEntry& entry = pseudoStack->mStack[i - 1];
+    volatile js::ProfileEntry& entry = racyInfo->mStack[i - 1];
     if (!entry.isJs() && strcmp(entry.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
@@ -1248,8 +1278,6 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
     aSample.mTimeStamp - CorePS::ProcessStartTime(aLock);
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  NotNull<PseudoStack*> pseudoStack = aSample.mPseudoStack;
-
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
     DoNativeBacktrace(aLock, aBuffer, aSample);
@@ -1263,7 +1291,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
   // the current thread.
   if (!aSample.mIsSynchronous) {
     ProfilerMarkerLinkedList* pendingMarkersList =
-      pseudoStack->getPendingMarkers();
+      aSample.mRacyInfo->GetPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
       aBuffer->addStoredMarker(marker);
@@ -1828,7 +1856,7 @@ SamplerThread::Run()
           // If the thread is asleep and has been sampled before in the same
           // sleep episode, find and copy the previous sample, as that's
           // cheaper than taking a new sample.
-          if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
+          if (info->RacyInfo()->CanDuplicateLastSampleDueToSleep()) {
             bool dup_ok =
               ActivePS::Buffer(lock)->DuplicateLastSample(
                 info->ThreadId(), CorePS::ProcessStartTime(lock),
@@ -1958,13 +1986,15 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
-// Find the ThreadInfo for the current thread. On success, *aIndexOut is set to
-// the index if it is non-null.
+// Find the ThreadInfo for the current thread. This should only be called in
+// places where TLSInfo can't be used. On success, *aIndexOut is set to the
+// index if it is non-null.
 static ThreadInfo*
 FindLiveThreadInfo(PSLockRef aLock, int* aIndexOut = nullptr)
 {
   // This function runs both on and off the main thread.
 
+  ThreadInfo* ret = nullptr;
   Thread::tid_t id = Thread::GetCurrentId();
   const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
   for (uint32_t i = 0; i < liveThreads.size(); i++) {
@@ -1973,10 +2003,12 @@ FindLiveThreadInfo(PSLockRef aLock, int* aIndexOut = nullptr)
       if (aIndexOut) {
         *aIndexOut = i;
       }
-      return info;
+      ret = info;
+      break;
     }
   }
-  return nullptr;
+
+  return ret;
 }
 
 static void
@@ -1988,23 +2020,21 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 
   MOZ_RELEASE_ASSERT(!FindLiveThreadInfo(aLock));
 
-  if (!tlsPseudoStack.init()) {
+  if (!TLSInfo::Init(aLock)) {
     return;
   }
 
   ThreadInfo* info = new ThreadInfo(aName, Thread::GetCurrentId(),
                                     NS_IsMainThread(), stackTop);
-  NotNull<PseudoStack*> pseudoStack = info->Stack();
-
-  tlsPseudoStack.set(pseudoStack.get());
+  TLSInfo::SetInfo(aLock, info);
 
   if (ActivePS::Exists(aLock) && ActivePS::ShouldProfileThread(aLock, info)) {
     info->StartProfiling();
     if (ActivePS::FeatureJS(aLock)) {
-      // This startJSSampling() call is on-thread, so we can poll manually to
+      // This StartJSSampling() call is on-thread, so we can poll manually to
       // start JS sampling immediately.
-      pseudoStack->startJSSampling();
-      pseudoStack->pollJSSampling();
+      info->StartJSSampling();
+      info->PollJSSampling();
     }
   }
 
@@ -2187,9 +2217,9 @@ profiler_shutdown()
 
     CorePS::Destroy(lock);
 
-    // We just destroyed CorePS and the ThreadInfos (and PseudoStacks) it
-    // contains, so we can clear this thread's tlsPseudoStack.
-    tlsPseudoStack.set(nullptr);
+    // We just destroyed CorePS and the ThreadInfos it contains, so we can
+    // clear this thread's TLSInfo.
+    TLSInfo::SetInfo(lock, nullptr);
 
 #ifdef MOZ_TASK_TRACER
     mozilla::tasktracer::ShutdownTaskTracer();
@@ -2406,6 +2436,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
                    aFilters, aFilterCount);
 
   // Set up profiling for each registered thread, if appropriate.
+  Thread::tid_t tid = Thread::GetCurrentId();
   const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
   for (uint32_t i = 0; i < liveThreads.size(); i++) {
     ThreadInfo* info = liveThreads.at(i);
@@ -2413,7 +2444,12 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     if (ActivePS::ShouldProfileThread(aLock, info)) {
       info->StartProfiling();
       if (ActivePS::FeatureJS(aLock)) {
-        info->Stack()->startJSSampling();
+        info->StartJSSampling();
+        if (info->ThreadId() == tid) {
+          // We can manually poll the current thread so it starts sampling
+          // immediately.
+          info->PollJSSampling();
+        }
       }
     }
   }
@@ -2422,14 +2458,6 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   // aren't saved when the profiler is inactive. Therefore the dead threads
   // vector should be empty here.
   MOZ_RELEASE_ASSERT(CorePS::DeadThreads(aLock).empty());
-
-  if (ActivePS::FeatureJS(aLock)) {
-    // We just called startJSSampling() on all relevant threads. We can also
-    // manually poll the current thread so it starts sampling immediately.
-    if (PseudoStack* pseudoStack = tlsPseudoStack.get()) {
-      pseudoStack->pollJSSampling();
-    }
-  }
 
 #ifdef MOZ_TASK_TRACER
   if (featureTaskTracer) {
@@ -2501,12 +2529,18 @@ locked_profiler_stop(PSLockRef aLock)
 #endif
 
   // Stop sampling live threads.
+  Thread::tid_t tid = Thread::GetCurrentId();
   CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
   for (uint32_t i = 0; i < liveThreads.size(); i++) {
     ThreadInfo* info = liveThreads.at(i);
     if (info->IsBeingProfiled()) {
       if (ActivePS::FeatureJS(aLock)) {
-        info->Stack()->stopJSSampling();
+        info->StopJSSampling();
+        if (info->ThreadId() == tid) {
+          // We can manually poll the current thread so it stops profiling
+          // immediately.
+          info->PollJSSampling();
+        }
       }
       info->StopProfiling();
     }
@@ -2517,15 +2551,6 @@ locked_profiler_stop(PSLockRef aLock)
   while (deadThreads.size() > 0) {
     delete deadThreads.back();
     deadThreads.pop_back();
-  }
-
-  if (ActivePS::FeatureJS(aLock)) {
-    // We just called stopJSSampling() (through ThreadInfo::StopProfiling) on
-    // all relevant threads. We can also manually poll the current thread so
-    // it stops profiling immediately.
-    if (PseudoStack* stack = tlsPseudoStack.get()) {
-      stack->pollJSSampling();
-    }
   }
 
   // The Stop() call doesn't actually stop Run(); that happens in this
@@ -2698,11 +2723,12 @@ profiler_unregister_thread()
 
   PSAutoLock lock(gPSMutex);
 
-  // We don't call PseudoStack::stopJSSampling() here; there's no point doing
+  // We don't call ThreadInfo::StopJSSampling() here; there's no point doing
   // that for a JS thread that is in the process of disappearing.
 
   int i;
   ThreadInfo* info = FindLiveThreadInfo(lock, &i);
+  MOZ_RELEASE_ASSERT(info == TLSInfo::Info(lock));
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
     if (ActivePS::Exists(lock) && info->IsBeingProfiled()) {
@@ -2713,20 +2739,20 @@ profiler_unregister_thread()
     CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(lock);
     liveThreads.erase(liveThreads.begin() + i);
 
-    // Whether or not we just destroyed the PseudoStack (via its owning
-    // ThreadInfo), we no longer need to access it via TLS.
-    tlsPseudoStack.set(nullptr);
+    // Whether or not we just destroyed the ThreadInfo or transferred it to the
+    // dead thread vector, we no longer need to access it via TLS.
+    TLSInfo::SetInfo(lock, nullptr);
 
   } else {
-    // There are two ways FindLiveThreadInfo() can fail.
+    // There are two ways FindLiveThreadInfo() might have failed.
     //
-    // - tlsPseudoStack.init() failed in locked_register_thread().
+    // - TLSInfo::Init() failed in locked_register_thread().
     //
     // - We've already called profiler_unregister_thread() for this thread.
     //   (Whether or not it should, this does happen in practice.)
     //
-    // Either way, tlsPseudoStack should be empty.
-    MOZ_RELEASE_ASSERT(!tlsPseudoStack.get());
+    // Either way, TLSInfo should be empty.
+    MOZ_RELEASE_ASSERT(!TLSInfo::Info(lock));
   }
 }
 
@@ -2737,11 +2763,12 @@ profiler_thread_sleep()
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
+  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
+  if (!racyInfo) {
     return;
   }
-  stack->setSleeping();
+
+  racyInfo->SetSleeping();
 }
 
 void
@@ -2751,11 +2778,12 @@ profiler_thread_wake()
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
+  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
+  if (!racyInfo) {
     return;
   }
-  stack->setAwake();
+
+  racyInfo->SetAwake();
 }
 
 bool
@@ -2764,11 +2792,11 @@ profiler_thread_is_sleeping()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
+  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
+  if (!racyInfo) {
     return false;
   }
-  return stack->isSleeping();
+  return racyInfo->IsSleeping();
 }
 
 void
@@ -2779,12 +2807,14 @@ profiler_js_interrupt_callback()
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
+  PSAutoLock lock(gPSMutex);
+
+  ThreadInfo* info = TLSInfo::Info(lock);
+  if (!info) {
     return;
   }
 
-  stack->pollJSSampling();
+  info->PollJSSampling();
 }
 
 double
@@ -2813,9 +2843,9 @@ profiler_get_backtrace()
     return nullptr;
   }
 
-  PseudoStack* stack = tlsPseudoStack.get();
-  if (!stack) {
-    MOZ_ASSERT(stack);
+  ThreadInfo* info = TLSInfo::Info(lock);
+  if (!info) {
+    MOZ_ASSERT(info);
     return nullptr;
   }
 
@@ -2825,7 +2855,7 @@ profiler_get_backtrace()
 
   UniquePlatformData platformData = AllocPlatformData(tid);
 
-  TickSample sample(WrapNotNull(stack), platformData.get());
+  TickSample sample(info->RacyInfo(), info->mContext, platformData.get());
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2869,15 +2899,15 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
     return;
   }
 
-  PseudoStack *pseudoStack = tlsPseudoStack.get();
-  if (!pseudoStack) {
+  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
+  if (!racyInfo) {
     return;
   }
 
   bool includeDynamicString = !ActivePS::FeaturePrivacy(lock);
 
-  volatile js::ProfileEntry *pseudoFrames = pseudoStack->mStack;
-  uint32_t pseudoCount = pseudoStack->stackSize();
+  volatile js::ProfileEntry* pseudoFrames = racyInfo->mStack;
+  uint32_t pseudoCount = racyInfo->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
     const char* label = pseudoFrames[i].label();
@@ -2921,8 +2951,8 @@ locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
   // aPayload must be freed if we return early.
   mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
+  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
+  if (!racyInfo) {
     return;
   }
 
@@ -2930,7 +2960,8 @@ locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
                             ? payload->GetStartTime()
                             : mozilla::TimeStamp::Now();
   mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime(aLock);
-  stack->addMarker(aMarker, payload.release(), delta.ToMilliseconds());
+  racyInfo->AddPendingMarker(aMarker, payload.release(),
+                             delta.ToMilliseconds());
 }
 
 void
@@ -2996,6 +3027,14 @@ profiler_log(const char* aStr)
   profiler_tracing("log", aStr);
 }
 
+PseudoStack*
+profiler_get_pseudo_stack()
+{
+  // This function runs both on and off the main thread.
+
+  return TLSInfo::RacyInfo();
+}
+
 void
 profiler_set_js_context(JSContext* aCx)
 {
@@ -3003,12 +3042,14 @@ profiler_set_js_context(JSContext* aCx)
 
   MOZ_ASSERT(aCx);
 
-  PseudoStack* stack = tlsPseudoStack.get();
-  if (!stack) {
+  PSAutoLock lock(gPSMutex);
+
+  ThreadInfo* info = TLSInfo::Info(lock);
+  if (!info) {
     return;
   }
 
-  stack->setJSContext(aCx);
+  info->SetJSContext(aCx);
 }
 
 void
@@ -3018,26 +3059,20 @@ profiler_clear_js_context()
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PseudoStack* stack = tlsPseudoStack.get();
-  if (!stack) {
-    return;
-  }
+  PSAutoLock lock(gPSMutex);
 
-  if (!stack->mContext) {
+  ThreadInfo* info = TLSInfo::Info(lock);
+  if (!info || !info->mContext) {
     return;
   }
 
   // On JS shut down, flush the current buffer as stringifying JIT samples
   // requires a live JSContext.
 
-  PSAutoLock lock(gPSMutex);
-
   if (ActivePS::Exists(lock)) {
     ActivePS::SetIsPaused(lock, true);
 
     // Flush this thread's ThreadInfo, if it is being profiled.
-    ThreadInfo* info = FindLiveThreadInfo(lock);
-    MOZ_RELEASE_ASSERT(info);
     if (info->IsBeingProfiled()) {
       info->FlushSamplesAndMarkers(ActivePS::Buffer(lock),
                                    CorePS::ProcessStartTime(lock));
@@ -3046,10 +3081,49 @@ profiler_clear_js_context()
     ActivePS::SetIsPaused(lock, false);
   }
 
-  // We don't call stack->stopJSSampling() here; there's no point doing
-  // that for a JS thread that is in the process of disappearing.
+  // We don't call info->StopJSSampling() here; there's no point doing that for
+  // a JS thread that is in the process of disappearing.
 
-  stack->mContext = nullptr;
+  info->mContext = nullptr;
+}
+
+// A short-lived, non-owning PseudoStack reference is created between each
+// profiler_call_enter() / profiler_call_exit() call pair. RAII objects (e.g.
+// SamplerStackFrameRAII) ensure that these calls are balanced. Furthermore,
+// the RAII objects exist within the thread itself, which means they are
+// necessarily bounded by the lifetime of the thread, which ensures that the
+// references held can't be used after the PseudoStack is destroyed.
+void*
+profiler_call_enter(const char* aInfo,
+                    js::ProfileEntry::Category aCategory,
+                    void* aFrameAddress, bool aCopy, uint32_t aLine,
+                    const char* aDynamicString)
+{
+  // This function runs both on and off the main thread.
+
+  PseudoStack* pseudoStack = TLSInfo::RacyInfo();   // an upcast
+  if (!pseudoStack) {
+    return pseudoStack;
+  }
+  pseudoStack->push(aInfo, aCategory, aFrameAddress, aCopy, aLine,
+                    aDynamicString);
+
+  // The handle is meant to support future changes but for now it is simply
+  // used to avoid having to call TLSInfo::RacyInfo() in profiler_call_exit().
+  return pseudoStack;
+}
+
+void
+profiler_call_exit(void* aHandle)
+{
+  // This function runs both on and off the main thread.
+
+  if (!aHandle) {
+    return;
+  }
+
+  PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
+  pseudoStack->pop();
 }
 
 // END externally visible functions
