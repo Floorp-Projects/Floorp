@@ -15,14 +15,14 @@
 
   var test;
   runNetworkTest(function (options) {
-    var helper;
+    const emitter = new VideoFrameEmitter();
+    const helper = new VideoStreamHelper();
 
     test = new PeerConnectionTest(options);
 
     test.chain.replace("PC_LOCAL_GUM", [
       function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
-        helper = new VideoStreamHelper();
-        test.pcLocal.attachLocalStream(helper.stream());
+        test.pcLocal.attachLocalStream(emitter.stream());
       }
     ]);
 
@@ -30,7 +30,9 @@
       function PC_REMOTE_WAIT_FOR_FRAMES() {
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
-        return helper.waitForFrames(vremote);
+        emitter.start();
+        return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+            .finally(() => emitter.stop());
       }
     ]);
 
@@ -47,7 +49,9 @@
       function PC_REMOTE_ENSURE_NO_FRAMES() {
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
-        return helper.verifyNoFrames(vremote);
+        emitter.start();
+        return addFinallyToPromise(helper.checkVideoPaused(vremote, 10, 10, 16, 5000))
+            .finally(() => emitter.stop());
       },
     ]);
 
@@ -60,7 +64,9 @@
       function PC_REMOTE_WAIT_FOR_FRAMES_2() {
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
-        return helper.waitForFrames(vremote);
+        emitter.start();
+        return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+            .finally(() => emitter.stop());
       }
     ]);
 
