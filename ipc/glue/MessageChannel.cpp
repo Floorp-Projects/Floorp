@@ -1207,7 +1207,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
 }
 
 void
-MessageChannel::PeekMessages(std::function<bool(const Message& aMsg)> aInvoke)
+MessageChannel::PeekMessages(const std::function<bool(const Message& aMsg)>& aInvoke)
 {
     // FIXME: We shouldn't be holding the lock for aInvoke!
     MonitorAutoLock lock(*mMonitor);

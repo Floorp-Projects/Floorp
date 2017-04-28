@@ -113,7 +113,7 @@ AddStaticElement(const nsCString &name)
 static void
 InitializeStaticHeaders()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!gStaticHeaders) {
     gStaticHeaders = new nsDeque();
     gStaticReporter = new HpackStaticTableReporter();

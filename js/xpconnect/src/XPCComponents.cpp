@@ -2572,7 +2572,7 @@ nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext* cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC()
 {
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+    JSContext* cx = XPCJSContext::Get()->Context();
     PrepareForFullGC(cx);
     GCForReason(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
     return NS_OK;

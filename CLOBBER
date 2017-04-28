@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1356927 - Mac builds in automation require a clobber for a change in which ranlib they use
+Bug 1357107 - Removing a directory from extensions/ requires re-running configure to update MOZ_EXTENSIONS

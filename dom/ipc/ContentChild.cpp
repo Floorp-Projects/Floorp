@@ -3370,7 +3370,7 @@ ContentChild::RecvProvideAnonymousTemporaryFile(const uint64_t& aID,
 }
 
 nsresult
-ContentChild::AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCallback)
+ContentChild::AsyncOpenAnonymousTemporaryFile(const AnonymousTemporaryFileCallback& aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

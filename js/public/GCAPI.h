@@ -424,6 +424,13 @@ IsIncrementalGCEnabled(JSContext* cx);
 extern JS_PUBLIC_API(bool)
 IsIncrementalGCInProgress(JSContext* cx);
 
+/**
+ * Returns true while an incremental GC is ongoing, both when actively
+ * collecting and between slices.
+ */
+extern JS_PUBLIC_API(bool)
+IsIncrementalGCInProgress(JSRuntime* rt);
+
 /*
  * Returns true when writes to GC thing pointers (and reads from weak pointers)
  * must call an incremental barrier. This is generally only true when running
@@ -451,7 +458,7 @@ IncrementalReadBarrier(GCCellPtr thing);
  * Returns true if the most recent GC ran incrementally.
  */
 extern JS_PUBLIC_API(bool)
-WasIncrementalGC(JSContext* cx);
+WasIncrementalGC(JSRuntime* rt);
 
 /*
  * Generational GC:

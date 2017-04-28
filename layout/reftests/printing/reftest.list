@@ -23,12 +23,12 @@
 == 626395-2c.html 626395-2-ref.html
 == 626395-2d.html 626395-2-ref.html
 == 652178-1.html 652178-1-ref.html
-== 115199-1.html 115199-1-ref.html
+fails-if(stylo) == 115199-1.html 115199-1-ref.html
 == 115199-2a.html 115199-2-ref.html
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html
 fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.html
-== 820496-1.html 820496-1-ref.html
+fails-if(stylo) == 820496-1.html 820496-1-ref.html
 
 # NOTE: These tests don't yet rigorously test what they're
 # trying to test (shrink-to-fit behavior), due to bug 967311.

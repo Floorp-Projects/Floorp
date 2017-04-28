@@ -5,6 +5,42 @@
 #include "NonParamInsideFunctionDeclChecker.h"
 #include "CustomMatchers.h"
 
+class NonParamAnnotation : public CustomTypeAnnotation
+{
+public:
+  NonParamAnnotation() : CustomTypeAnnotation("moz_non_param", "non-param") {};
+
+protected:
+  // Adding alignas(_) on a struct implicitly marks it as MOZ_NON_PARAM, due to
+  // MSVC limitations which prevent passing explcitly aligned types by value as
+  // parameters. This overload of hasFakeAnnotation injects fake MOZ_NON_PARAM
+  // annotations onto these types.
+  std::string getImplicitReason(const TagDecl *D) const override {
+    // Check if the decl itself has an AlignedAttr on it.
+    for (const Attr *A : D->attrs()) {
+      if (isa<AlignedAttr>(A)) {
+        return "it has an alignas(_) annotation";
+      }
+    }
+
+    // Check if any of the decl's fields have an AlignedAttr on them.
+    if (auto RD = dyn_cast<RecordDecl>(D)) {
+      for (auto F : RD->fields()) {
+        for (auto A : F->attrs()) {
+          if (isa<AlignedAttr>(A)) {
+            return ("member '" + F->getName() + "' has an alignas(_) annotation").str();
+          }
+        }
+      }
+    }
+
+    // We don't need to check the types of fields, as the CustomTypeAnnotation
+    // infrastructure will handle that for us.
+    return "";
+  }
+};
+NonParamAnnotation NonParam;
+
 void NonParamInsideFunctionDeclChecker::registerMatchers(MatchFinder* AstMatcher) {
   AstMatcher->addMatcher(
       functionDecl(anyOf(allOf(isDefinition(),
@@ -38,6 +74,17 @@ void NonParamInsideFunctionDeclChecker::check(
     return;
   }
 
+  // We need to skip decls which have these types as parameters in system
+  // headers, because presumably those headers act like an assertion that the
+  // alignment will be preserved in that situation.
+  if (getDeclarationNamespace(func) == "std") {
+    return;
+  }
+
+  if (inThirdPartyPath(func)) {
+    return;
+  }
+
   // Don't report errors on the same declarations more than once.
   if (CheckedFunctionDecls.count(func)) {
     return;
@@ -61,6 +108,8 @@ void NonParamInsideFunctionDeclChecker::check(
              DiagnosticIDs::Note)
           << Spec->getSpecializedTemplate();
       }
+
+      NonParam.dumpAnnotationReason(*this, T, p->getLocation());
     }
   }
 }

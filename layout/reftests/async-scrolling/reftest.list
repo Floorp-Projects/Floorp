@@ -21,41 +21,41 @@ skip-if(!asyncPan) == position-fixed-body.html position-fixed-body-ref.html
 skip-if(!asyncPan) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
 skip-if(!asyncPan) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
 skip-if(!asyncPan) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
-fuzzy-if(Android,5,4) skip-if(!asyncPan) == position-fixed-transformed-1.html position-fixed-transformed-1-ref.html
+fuzzy-if(Android,5,4) skip-if(!asyncPan) fails-if(stylo) == position-fixed-transformed-1.html position-fixed-transformed-1-ref.html
 skip-if(!asyncPan) == split-layers-1.html split-layers-1-ref.html
 skip-if(!asyncPan) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
 fuzzy-if(skiaContent,2,240000) fuzzy-if(browserIsRemote&&!skiaContent&&(cocoaWidget||winWidget),1,240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-2.html sticky-pos-scrollable-2-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html
-skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fails-if(stylo) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
-fuzzy-if(skiaContent,1,11300) skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
+fuzzy-if(skiaContent,1,11300) skip-if(!asyncPan) fails-if(stylo) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-1.html position-fixed-inside-sticky-1-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-2.html position-fixed-inside-sticky-2-ref.html
 fuzzy(1,60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
 skip-if(!asyncPan) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
-fuzzy-if(Android,6,4) fuzzy-if(skiaContent&&!Android,1,34) skip-if(!asyncPan) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
-fuzzy-if(Android,6,4) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,6,4) fuzzy-if(skiaContent&&!Android,1,34) skip-if(!asyncPan) fails-if(stylo) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,6,4) skip-if(!asyncPan) fails-if(stylo) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,6,4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
-fuzzy-if(Android,6,4) skip-if(!asyncPan) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
-fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
-fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
-fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
-fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
-pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
+fuzzy-if(Android,6,4) skip-if(!asyncPan) fails-if(stylo) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
+fuzzy-if(Android,7,4) skip-if(!asyncPan) fails-if(stylo) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
+pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) fails-if(stylo) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
 fuzzy-if(browserIsRemote&&d2d,1,19) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
-skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
-skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
-fuzzy-if(Android,6,4) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html
-fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html
-fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html
-fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html
-fuzzy-if(Android,6,4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
-fuzzy-if(Android,6,4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
+skip-if(Android||!asyncPan) fails-if(stylo) != opaque-fractional-displayport-1.html about:blank
+skip-if(Android||!asyncPan) fails-if(stylo) != opaque-fractional-displayport-2.html about:blank
+fuzzy-if(Android,6,4) skip-if(!asyncPan) fails-if(stylo) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) fails-if(stylo) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) fails-if(stylo) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) fails-if(stylo) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html
+fuzzy-if(Android,6,4) skip-if(!asyncPan) fails-if(stylo) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
+fuzzy-if(Android,6,4) skip fails-if(stylo) == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in

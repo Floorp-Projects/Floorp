@@ -1,7 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails-if(Android) == textbox-multiline-noresize.xul textbox-multiline-noresize.xul
-== textbox-multiline-resize.xul textbox-multiline-resize.xul
-== popup-explicit-size.xul popup-explicit-size.xul
-random-if(Android) == image-size.xul image-size.xul
-== image-scaling-min-height-1.xul image-scaling-min-height-1.xul
-== textbox-text-transform.xul textbox-text-transform.xul

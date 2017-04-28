@@ -23,6 +23,7 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSocketTransportService2.h"
 
 namespace mozilla {
 namespace net {
@@ -44,7 +45,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
   , mForce(false)
   , mNudgeCounter(0)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction ctor %p\n", this));
 
   nsCOMPtr<nsISocketProvider> provider;
@@ -257,7 +258,7 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
                                      uint32_t *outCountRead)
 {
 
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentWriter);
   LOG(("TLSFilterTransaction::OnWriteSegment %p max=%d\n", this, aCount));
   if (!mSecInfo) {
@@ -291,7 +292,7 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
 int32_t
 TLSFilterTransaction::FilterInput(char *aBuf, int32_t aAmount)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentWriter);
   LOG(("TLSFilterTransaction::FilterInput max=%d\n", aAmount));
 
@@ -316,7 +317,7 @@ nsresult
 TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader *aReader,
                                    uint32_t aCount, uint32_t *outCountRead)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction::ReadSegments %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
@@ -342,7 +343,7 @@ nsresult
 TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
                                     uint32_t aCount, uint32_t *outCountWritten)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction::WriteSegments %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
@@ -378,7 +379,7 @@ TLSFilterTransaction::GetTransactionSecurityInfo(nsISupports **outSecInfo)
 nsresult
 TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction %p NudgeTunnel\n", this));
   mNudgeCallback = nullptr;
 
@@ -434,7 +435,7 @@ TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
 NS_IMETHODIMP
 TLSFilterTransaction::Notify(nsITimer *timer)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction %p NudgeTunnel notify\n", this));
 
   if (timer != mTimer) {
@@ -984,7 +985,7 @@ SpdyConnectTransaction::~SpdyConnectTransaction()
 void
 SpdyConnectTransaction::ForcePlainText()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mInputDataUsed && !mInputDataSize && !mInputDataOffset);
   MOZ_ASSERT(!mForcePlainText);
   MOZ_ASSERT(!mTunnelTransport, "call before mapstreamtohttpconnection");
@@ -1044,7 +1045,7 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
 nsresult
 SpdyConnectTransaction::Flush(uint32_t count, uint32_t *countRead)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("SpdyConnectTransaction::Flush %p count %d avail %d\n",
        this, count, mOutputDataUsed - mOutputDataOffset));
 
@@ -1088,7 +1089,7 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                                      uint32_t count,
                                      uint32_t *countRead)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("SpdyConnectTransaction::ReadSegments %p count %d conn %p\n",
        this, count, mTunneledConn.get()));
 
@@ -1152,7 +1153,7 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
 void
 SpdyConnectTransaction::CreateShimError(nsresult code)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(NS_FAILED(code));
 
   if (mTunnelStreamOut && NS_SUCCEEDED(mTunnelStreamOut->mStatus)) {
@@ -1177,7 +1178,7 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                       uint32_t count,
                                       uint32_t *countWritten)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("SpdyConnectTransaction::WriteSegments %p max=%d cb=%p\n",
        this, count, mTunneledConn ? mTunnelStreamIn->mCallback : nullptr));
 
@@ -1245,7 +1246,7 @@ NS_IMETHODIMP
 OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
                             unsigned int, unsigned int, nsIEventTarget *target)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   bool currentThread;
 
   if (target &&
@@ -1322,7 +1323,7 @@ OutputStreamShim::Flush()
 NS_IMETHODIMP
 OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (NS_FAILED(mStatus)) {
     return mStatus;
@@ -1379,7 +1380,7 @@ NS_IMETHODIMP
 InputStreamShim::AsyncWait(nsIInputStreamCallback *callback,
                            unsigned int, unsigned int, nsIEventTarget *target)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   bool currentThread;
 
   if (target &&
@@ -1435,7 +1436,7 @@ InputStreamShim::Available(uint64_t *_retval)
 NS_IMETHODIMP
 InputStreamShim::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (NS_FAILED(mStatus)) {
     return mStatus;

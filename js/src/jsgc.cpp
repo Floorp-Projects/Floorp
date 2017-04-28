@@ -7407,8 +7407,7 @@ AutoAssertNoNurseryAlloc::~AutoAssertNoNurseryAlloc()
     TlsContext.get()->allowNurseryAlloc();
 }
 
-JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSContext* cx)
-  : runtime(cx->runtime())
+JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSRuntime* rt)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
     TlsContext.get()->heapState = HeapState::CycleCollecting;
@@ -7664,6 +7663,12 @@ JS::IsIncrementalGCInProgress(JSContext* cx)
 }
 
 JS_PUBLIC_API(bool)
+JS::IsIncrementalGCInProgress(JSRuntime* rt)
+{
+    return rt->gc.isIncrementalGCInProgress() && !rt->gc.isVerifyPreBarriersEnabled();
+}
+
+JS_PUBLIC_API(bool)
 JS::IsIncrementalBarrierNeeded(JSContext* cx)
 {
     if (JS::CurrentThreadIsHeapBusy())
@@ -7698,9 +7703,9 @@ JS::IncrementalReadBarrier(GCCellPtr thing)
 }
 
 JS_PUBLIC_API(bool)
-JS::WasIncrementalGC(JSContext* cx)
+JS::WasIncrementalGC(JSRuntime* rt)
 {
-    return cx->runtime()->gc.isIncrementalGc();
+    return rt->gc.isIncrementalGc();
 }
 
 uint64_t

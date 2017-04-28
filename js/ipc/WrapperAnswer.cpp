@@ -37,7 +37,7 @@ MaybeForceDebugGC()
         sDebugGCs = !!PR_GetEnv("MOZ_DEBUG_DEAD_CPOWS");
 
     if (sDebugGCs) {
-        JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+        JSContext* cx = XPCJSContext::Get()->Context();
         PrepareForFullGC(cx);
         GCForReason(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
     }

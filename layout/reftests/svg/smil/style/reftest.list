@@ -52,7 +52,7 @@ fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-rgb-ident.svg    anim-css
 # us to clamp -- we're only supposed to clamp *final presentation values*.
 # (Reference: SVG 1.1 Appendix F.4)
 == anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
-fails == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
+fails-if(!stylo) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
 
 # 'fill-opacity' property
 fuzzy-if(skiaContent,1,885) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
@@ -60,7 +60,7 @@ fuzzy-if(skiaContent,1,210) == anim-css-fillopacity-1-from-by.svg       anim-css
 == anim-css-fillopacity-1-from-to.svg       anim-css-fillopacity-1-ref.svg
 fuzzy-if(skiaContent,1,550) == anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
 == anim-css-fillopacity-2-paced.svg         anim-css-fillopacity-2-ref.svg
-fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg # bug 501188
+fails-if(!stylo) == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg # bug 501188
 fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
@@ -94,7 +94,7 @@ fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css
 == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
-fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
+fails-if(!stylo) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 
 # 'stroke-width' property, from/by/to with pixel values only
 == anim-css-strokewidth-1-by-px-px.svg        anim-css-strokewidth-1-ref.svg
@@ -113,17 +113,17 @@ fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 # in order to interpolate between pct and non-pct values, and we don't yet
 # support calc() for stroke-width & other SVG-specific properties (Bug 594933).
 == anim-css-strokewidth-1-by-pct-pct.svg      anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-by-pct-px.svg       anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-by-pct-px.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-from-by-pct-pct.svg anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-from-by-pct-px.svg  anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-from-by-px-pct.svg  anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-from-by-pct-px.svg  anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-from-by-px-pct.svg  anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-from-to-pct-px.svg  anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-from-to-px-pct.svg  anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-from-to-pct-px.svg  anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-from-to-px-pct.svg  anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-to-pct-pct.svg      anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
-fails == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with em values
 == anim-css-strokewidth-1-by-px-em.svg        anim-css-strokewidth-1-ref.svg

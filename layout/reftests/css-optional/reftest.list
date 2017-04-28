@@ -1,10 +1,10 @@
 # Checking if these elements support :optional.
-== css-optional-textarea.html css-optional-textarea-ref.html
-== css-optional-input.html css-optional-input-ref.html
-== css-optional-select.html css-optional-select-ref.html
+fails-if(stylo) == css-optional-textarea.html css-optional-textarea-ref.html
+fails-if(stylo) == css-optional-input.html css-optional-input-ref.html
+fails-if(stylo) == css-optional-select.html css-optional-select-ref.html
 == css-optional-button.html about:blank
 
 # Checking dynamic behavior.
-== css-optional-dyn-1.html css-optional-input-ref.html
+fails-if(stylo) == css-optional-dyn-1.html css-optional-input-ref.html
 == css-optional-dyn-2.html about:blank
 

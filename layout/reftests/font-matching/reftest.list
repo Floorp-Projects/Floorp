@@ -1,4 +1,4 @@
-== CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
+fails-if(stylo) == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
 # basic tests for bug 538730
 != synthetic-bold-1.html synthetic-bold-1-ref.html
@@ -44,13 +44,13 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 == arial-variations-6.html arial-variations-6-ref.html
 
 # localized font family names should always match just as English names do
-== localized-family-names-001.html localized-family-names-001-ref.html
-== localized-family-names-002.html localized-family-names-002-ref.html
-== localized-family-names-003.html localized-family-names-003-ref.html
-== localized-family-names-004.html localized-family-names-004-ref.html
+fails-if(stylo) == localized-family-names-001.html localized-family-names-001-ref.html
+fails-if(stylo) == localized-family-names-002.html localized-family-names-002-ref.html
+fails-if(stylo) == localized-family-names-003.html localized-family-names-003-ref.html
+fails-if(stylo) == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
-fails-if(gtkWidget) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
+fails-if(gtkWidget&&!stylo) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
 
 # weight mapping tests
 HTTP(..) == normalmedium.html normalmedium-ref.html

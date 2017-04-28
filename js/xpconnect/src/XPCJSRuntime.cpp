@@ -662,10 +662,11 @@ bool XPCJSRuntime::UsefulToMergeZones() const
 
 void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 {
-    // For now we only have one context. Eventually we'll need to iterate over
-    // all contexts.
-    if (AutoMarkingPtr* roots = XPCJSContext::GetOnly()->mAutoRoots)
-        roots->TraceJSAll(trc);
+    for (CycleCollectedJSContext* ccx : Contexts()) {
+        auto* cx = static_cast<const XPCJSContext*>(ccx);
+        if (AutoMarkingPtr* roots = cx->mAutoRoots)
+            roots->TraceJSAll(trc);
+    }
 
     // XPCJSObjectHolders don't participate in cycle collection, so always
     // trace them here.
@@ -673,7 +674,8 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
     for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(MainContext(), JSGC_NUMBER),
+    JSContext* cx = XPCJSContext::Get()->Context();
+    dom::TraceBlackJS(trc, JS_GetGCParameter(cx, JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
 }
 
@@ -848,36 +850,37 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             MOZ_ASSERT(!self->mGCIsRunning, "bad state");
             self->mGCIsRunning = true;
 
-            // For now we only have one context. Eventually we'll need to
-            // iterate over all contexts.
-            if (AutoMarkingPtr* roots = XPCJSContext::GetOnly()->mAutoRoots)
-                roots->MarkAfterJSFinalizeAll();
+            for (CycleCollectedJSContext* ccx : self->Contexts()) {
+                auto* cx = static_cast<const XPCJSContext*>(ccx);
+                if (AutoMarkingPtr* roots = cx->mAutoRoots)
+                    roots->MarkAfterJSFinalizeAll();
 
-            // Now we are going to recycle any unused WrappedNativeTearoffs.
-            // We do this by iterating all the live callcontexts
-            // and marking the tearoffs in use. And then we
-            // iterate over all the WrappedNative wrappers and sweep their
-            // tearoffs.
-            //
-            // This allows us to perhaps minimize the growth of the
-            // tearoffs. And also makes us not hold references to interfaces
-            // on our wrapped natives that we are not actually using.
-            //
-            // XXX We may decide to not do this on *every* gc cycle.
+                // Now we are going to recycle any unused WrappedNativeTearoffs.
+                // We do this by iterating all the live callcontexts
+                // and marking the tearoffs in use. And then we
+                // iterate over all the WrappedNative wrappers and sweep their
+                // tearoffs.
+                //
+                // This allows us to perhaps minimize the growth of the
+                // tearoffs. And also makes us not hold references to interfaces
+                // on our wrapped natives that we are not actually using.
+                //
+                // XXX We may decide to not do this on *every* gc cycle.
 
-            XPCCallContext* ccxp = XPCJSContext::GetOnly()->GetCallContext();
-            while (ccxp) {
-                // Deal with the strictness of callcontext that
-                // complains if you ask for a tearoff when
-                // it is in a state where the tearoff could not
-                // possibly be valid.
-                if (ccxp->CanGetTearOff()) {
-                    XPCWrappedNativeTearOff* to =
-                        ccxp->GetTearOff();
-                    if (to)
-                        to->Mark();
+                XPCCallContext* ccxp = cx->GetCallContext();
+                while (ccxp) {
+                    // Deal with the strictness of callcontext that
+                    // complains if you ask for a tearoff when
+                    // it is in a state where the tearoff could not
+                    // possibly be valid.
+                    if (ccxp->CanGetTearOff()) {
+                        XPCWrappedNativeTearOff* to =
+                            ccxp->GetTearOff();
+                        if (to)
+                            to->Mark();
+                    }
+                    ccxp = ccxp->GetPrevCallContext();
                 }
-                ccxp = ccxp->GetPrevCallContext();
             }
 
             XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
@@ -1075,8 +1078,7 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 static void
 ReloadPrefsCallback(const char* pref, void* data)
 {
-    XPCJSRuntime* xpcrt = reinterpret_cast<XPCJSRuntime*>(data);
-    JSContext* cx = xpcrt->MainContext();
+    JSContext* cx = XPCJSContext::Get()->Context();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -1168,21 +1170,17 @@ ReloadPrefsCallback(const char* pref, void* data)
 }
 
 void
-XPCJSRuntime::Shutdown()
+XPCJSRuntime::Shutdown(JSContext* cx)
 {
-    // Elsewhere we abort immediately if XPCJSRuntime initialization fails.
-    // Therefore the context must be non-null.
-    MOZ_ASSERT(MainContext());
-
     // This destructor runs before ~CycleCollectedJSContext, which does the
     // actual JS_DestroyContext() call. But destroying the context triggers
     // one final GC, which can call back into the context with various
     // callbacks if we aren't careful. Null out the relevant callbacks.
-    JS_RemoveFinalizeCallback(MainContext(), FinalizeCallback);
-    JS_RemoveWeakPointerZonesCallback(MainContext(), WeakPointerZonesCallback);
-    JS_RemoveWeakPointerCompartmentCallback(MainContext(), WeakPointerCompartmentCallback);
+    JS_RemoveFinalizeCallback(cx, FinalizeCallback);
+    JS_RemoveWeakPointerZonesCallback(cx, WeakPointerZonesCallback);
+    JS_RemoveWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback);
 
-    JS::SetGCSliceCallback(MainContext(), mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
 
     // We don't want to track wrapped JS roots after this point since we're
     // making them !IsValid anyway through SystemIsBeingShutDown.
@@ -1212,11 +1210,13 @@ XPCJSRuntime::Shutdown()
     mDyingWrappedNativeProtoMap = nullptr;
 
     Preferences::UnregisterPrefixCallback(ReloadPrefsCallback,
-                                          JS_OPTIONS_DOT_STR, this);
+                                          JS_OPTIONS_DOT_STR);
 
 #ifdef FUZZING
-    Preferences::UnregisterCallback(ReloadPrefsCallback, "fuzzing.enabled", this);
+    Preferences::UnregisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
 #endif
+
+    CycleCollectedJSRuntime::Shutdown(cx);
 }
 
 XPCJSRuntime::~XPCJSRuntime()
@@ -1357,7 +1357,7 @@ JSMainRuntimeCompartmentsSystemDistinguishedAmount()
 static int64_t
 JSMainRuntimeCompartmentsUserDistinguishedAmount()
 {
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+    JSContext* cx = XPCJSContext::Get()->Context();
     return JS::UserCompartmentCount(cx);
 }
 
@@ -2247,7 +2247,7 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
 
         Data d;
         d.anonymizeID = anonymize ? 1 : 0;
-        JS_IterateCompartments(nsXPConnect::GetContextInstance()->Context(),
+        JS_IterateCompartments(XPCJSContext::Get()->Context(),
                                &d, CompartmentCallback);
 
         for (size_t i = 0; i < d.paths.length(); i++)
@@ -2472,7 +2472,8 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations,
                               anonymize);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->MainContext(), &rtStats, &orphanReporter,
+    JSContext* cx = XPCJSContext::Get()->Context();
+    if (!JS::CollectRuntimeStats(cx, &rtStats, &orphanReporter,
                                  anonymize))
     {
         return;
@@ -2673,7 +2674,7 @@ static nsresult
 JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize, size_t* jsStringsSize,
             size_t* jsPrivateSize, size_t* jsOtherSize)
 {
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
+    JSContext* cx = XPCJSContext::Get()->Context();
     JS::RootedObject obj(cx, objArg);
 
     TabSizes sizes;
@@ -2957,15 +2958,12 @@ XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
 XPCJSRuntime*
 XPCJSRuntime::Get()
 {
-    return nsXPConnect::XPConnect()->GetContext()->Runtime();
+    return nsXPConnect::GetRuntimeInstance();
 }
 
 void
-XPCJSRuntime::Initialize()
+XPCJSRuntime::Initialize(JSContext* cx)
 {
-    MOZ_ASSERT(MainContext());
-    JSContext* cx = MainContext();
-
     mUnprivilegedJunkScope.init(cx, nullptr);
     mPrivilegedJunkScope.init(cx, nullptr);
     mCompilationScope.init(cx, nullptr);
@@ -3025,12 +3023,12 @@ XPCJSRuntime::Initialize()
     mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
 
     // Watch for the JS boolean options.
-    ReloadPrefsCallback(nullptr, this);
+    ReloadPrefsCallback(nullptr, nullptr);
     Preferences::RegisterPrefixCallback(ReloadPrefsCallback,
-                                        JS_OPTIONS_DOT_STR, this);
+                                        JS_OPTIONS_DOT_STR);
 
 #ifdef FUZZING
-    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled", this);
+    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
 #endif
 }
 
@@ -3108,7 +3106,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     depth--;
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %p", this));
         XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mJSContext @ %p", MainContext()));
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %p with %d wrapperclasses(s)",
                         mWrappedJSClassMap, mWrappedJSClassMap->Count()));
@@ -3178,8 +3175,7 @@ XPCRootSetElem::AddToRootSet(XPCRootSetElem** listHead)
 void
 XPCRootSetElem::RemoveFromRootSet()
 {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetContext()->Context());
+    JS::PokeGC(XPCJSContext::Get()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 
@@ -3214,7 +3210,7 @@ void
 XPCJSRuntime::InitSingletonScopes()
 {
     // This all happens very early, so we don't bother with cx pushing.
-    JSContext* cx = MainContext();
+    JSContext* cx = XPCJSContext::Get()->Context();
     JSAutoRequest ar(cx);
     RootedValue v(cx);
     nsresult rv;

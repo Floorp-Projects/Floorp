@@ -252,12 +252,17 @@ def vc_path(c_compiler):
     return result
 
 
-@depends(vc_path)
+@depends(vc_path, c_compiler)
 @checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
-def dia_sdk_dir(vc_path):
+def dia_sdk_dir(vc_path, c_compiler):
     if vc_path:
-        path = os.path.join(os.path.dirname(vc_path), 'DIA SDK')
+        if c_compiler.version < '19.10':
+            path = os.path.join(os.path.dirname(vc_path), 'DIA SDK')
+        else:
+            # This would be easier if we had the installationPath that
+            # get_vc_paths works with, since 'DIA SDK' is relative to that.
+             path = os.path.normpath(os.path.join(vc_path, r'..\..\..\..\..\..\..\DIA SDK'))
         if isdir(path):
             return path
 
@@ -299,37 +304,40 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
 set_config('INCLUDE', include_path)
 
 
-@depends(target, vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
+@depends(target, c_compiler, vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
 @imports('os')
-def lib_path(target, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
+def lib_path(target, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if not vc_path:
         return
-    vc_target = {
-        'x86': '',
-        'x86_64': 'amd64',
-        'arm': 'arm',
-    }.get(target.cpu)
-    if vc_target is None:
-        return
-    # As vc_target can be '', and os.path.join will happily use the empty
-    # string, leading to a string ending with a backslash, that Make will
-    # interpret as a "string continues on next line" indicator, use variable
-    # args.
-    vc_target = (vc_target,) if vc_target else ()
     sdk_target = {
         'x86': 'x86',
         'x86_64': 'x64',
         'arm': 'arm',
     }.get(target.cpu)
 
+    old_target = {
+        'x86': '',
+        'x86_64': 'amd64',
+        'arm': 'arm',
+    }.get(target.cpu)
+    if old_target is None:
+        return
+    # As old_target can be '', and os.path.join will happily use the empty
+    # string, leading to a string ending with a backslash, that Make will
+    # interpret as a "string continues on next line" indicator, use variable
+    # args.
+    old_target = (old_target,) if old_target else ()
+    if c_compiler.version < '19.10':
+        # MSVC2015
+        vc_target = old_target
+    else:
+        # MSVC2017 switched to use the same target naming as the sdk.
+        vc_target = (sdk_target,)
+
     atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', *vc_target)
     if not os.path.isdir(atlmfc_dir):
-        # For Visual Studio 2017
-        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', sdk_target)
-        if not os.path.isdir(atlmfc_dir):
-            die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
-                '(%s). Please install them.' % vc_path)
-
+        die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
+            '(%s). Please install them.' % vc_path)
 
     libs = []
     lib_env = os.environ.get('LIB')
@@ -342,7 +350,9 @@ def lib_path(target, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
         os.path.join(ucrt_sdk_dir.lib, 'ucrt', sdk_target),
     ))
     if dia_sdk_dir:
-        libs.append(os.path.join(dia_sdk_dir, 'lib', *vc_target))
+        # For some reason the DIA SDK still uses the old-style targets
+        # even in a newer MSVC.
+        libs.append(os.path.join(dia_sdk_dir, 'lib', *old_target))
     # Set in the environment for old-configure
     libs = os.pathsep.join(libs)
     os.environ['LIB'] = libs
