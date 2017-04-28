@@ -1,7 +1,7 @@
-fuzzy-if(webrender,1,34) fails-if(Android) == simple.html simple-ref.xul
-fuzzy-if(webrender,1,17) fails-if(Android) == rtl.html rtl-ref.xul
-fuzzy-if(webrender,1,34) fails-if(Android) == size.html simple-ref.xul
-fuzzy-if(webrender,1,10) fails-if(Android) == background.html background-ref.xul
-fails-if(Android) == style.html style-ref.xul
-!= width-clip.html width-clip-ref.html
-fails-if(Android) == color-inherit.html color-inherit-ref.html
+fuzzy-if(webrender,1,34) fails-if(Android) fails-if(stylo) == simple.html simple-ref.xul
+fuzzy-if(webrender,1,17) fails-if(Android) fails-if(stylo) == rtl.html rtl-ref.xul
+fuzzy-if(webrender,1,34) fails-if(Android) fails-if(stylo) == size.html simple-ref.xul
+fuzzy-if(webrender,1,10) fails-if(Android) fails-if(stylo) == background.html background-ref.xul
+fails-if(Android) fails-if(stylo) == style.html style-ref.xul
+fails-if(stylo) != width-clip.html width-clip-ref.html
+fails-if(Android) fails-if(stylo) == color-inherit.html color-inherit-ref.html

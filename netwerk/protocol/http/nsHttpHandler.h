@@ -33,7 +33,7 @@ class nsIThrottlingService;
 namespace mozilla {
 namespace net {
 
-extern Atomic<PRThread*, Relaxed> gSocketThread;
+bool OnSocketThread();
 
 class ATokenBucketEvent;
 class EventTokenBucket;
@@ -593,7 +593,7 @@ public:
     MOZ_MUST_USE nsresult SubmitPacedRequest(ATokenBucketEvent *event,
                                              nsICancelable **cancel)
     {
-        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
         if (!mRequestTokenBucket) {
             return NS_ERROR_NOT_AVAILABLE;
         }
@@ -603,13 +603,13 @@ public:
     // Socket thread only
     void SetRequestTokenBucket(EventTokenBucket *aTokenBucket)
     {
-        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
         mRequestTokenBucket = aTokenBucket;
     }
 
     void StopRequestTokenBucket()
     {
-        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
         if (mRequestTokenBucket) {
             mRequestTokenBucket->Stop();
             mRequestTokenBucket = nullptr;

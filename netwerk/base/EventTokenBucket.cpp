@@ -55,7 +55,7 @@ TokenBucketCancelable::TokenBucketCancelable(ATokenBucketEvent *event)
 NS_IMETHODIMP
 TokenBucketCancelable::Cancel(nsresult reason)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mEvent = nullptr;
   return NS_OK;
 }
@@ -171,7 +171,7 @@ EventTokenBucket::SetRate(uint32_t eventsPerSecond,
 void
 EventTokenBucket::ClearCredits()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::ClearCredits %p\n", this));
   mCredit = 0;
 }
@@ -179,21 +179,21 @@ EventTokenBucket::ClearCredits()
 uint32_t
 EventTokenBucket::BurstEventsAvailable()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   return static_cast<uint32_t>(mCredit / mUnitCost);
 }
 
 uint32_t
 EventTokenBucket::QueuedEvents()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   return mEvents.GetSize();
 }
 
 void
 EventTokenBucket::Pause()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::Pause %p\n", this));
   if (mPaused || mStopped)
     return;
@@ -208,7 +208,7 @@ EventTokenBucket::Pause()
 void
 EventTokenBucket::UnPause()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::UnPause %p\n", this));
   if (!mPaused || mStopped)
     return;
@@ -221,7 +221,7 @@ EventTokenBucket::UnPause()
 void
 EventTokenBucket::Stop()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::Stop %p armed=%d\n", this, mTimerArmed));
   mStopped = true;
   CleanupTimers();
@@ -237,7 +237,7 @@ EventTokenBucket::Stop()
 nsresult
 EventTokenBucket::SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelable)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::SubmitEvent %p\n", this));
 
   if (mStopped || !mTimer)
@@ -278,7 +278,7 @@ EventTokenBucket::TryImmediateDispatch(TokenBucketCancelable *cancelable)
 void
 EventTokenBucket::DispatchEvents()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::DispatchEvents %p %d\n", this, mPaused));
   if (mPaused || mStopped)
     return;
@@ -304,7 +304,7 @@ EventTokenBucket::DispatchEvents()
 void
 EventTokenBucket::UpdateTimer()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mTimerArmed || mPaused || mStopped || !mEvents.GetSize() || !mTimer)
     return;
 
@@ -337,7 +337,7 @@ EventTokenBucket::UpdateTimer()
 NS_IMETHODIMP
 EventTokenBucket::Notify(nsITimer *timer)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
 #ifdef XP_WIN
   if (timer == mFineGrainResetTimer) {
@@ -361,7 +361,7 @@ EventTokenBucket::Notify(nsITimer *timer)
 void
 EventTokenBucket::UpdateCredits()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   TimeStamp now = TimeStamp::Now();
   TimeDuration elapsed = now - mLastUpdate;

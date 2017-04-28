@@ -62,19 +62,27 @@ const char XPC_XPCONNECT_CONTRACTID[]     = "@mozilla.org/js/xpc/XPConnect;1";
 
 /***************************************************************************/
 
+// This global should be used very sparingly: only to create and destroy
+// nsXPConnect and when creating a new cooperative (non-primary) XPCJSContext.
+static XPCJSContext* gPrimaryContext;
+
 nsXPConnect::nsXPConnect()
-    :   mContext(nullptr),
-        mShuttingDown(false)
+    : mShuttingDown(false)
 {
-    mContext = XPCJSContext::newXPCJSContext();
-    if (!mContext) {
+    XPCJSContext::InitTLS();
+
+    XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext(nullptr);
+    if (!xpccx) {
         NS_RUNTIMEABORT("Couldn't create XPCJSContext.");
     }
-    mRuntime = mContext->Runtime();
+    gPrimaryContext = xpccx;
+    mRuntime = xpccx->Runtime();
 }
 
 nsXPConnect::~nsXPConnect()
 {
+    MOZ_ASSERT(XPCJSContext::Get() == gPrimaryContext);
+
     mRuntime->DeleteSingletonScopes();
 
     // In order to clean up everything properly, we need to GC twice: once now,
@@ -100,7 +108,7 @@ nsXPConnect::~nsXPConnect()
     // shutdown the logging system
     XPC_LOG_FINISH();
 
-    delete mContext;
+    delete gPrimaryContext;
 
     gSelf = nullptr;
     gOnceAliveNowDead = true;
@@ -112,9 +120,6 @@ nsXPConnect::InitStatics()
 {
     gSelf = new nsXPConnect();
     gOnceAliveNowDead = false;
-    if (!gSelf->mContext) {
-        NS_RUNTIMEABORT("Couldn't create XPCJSContext.");
-    }
 
     // Initial extra ref to keep the singleton alive
     // balanced by explicit call to ReleaseXPConnectSingleton()
@@ -126,9 +131,10 @@ nsXPConnect::InitStatics()
     gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
     MOZ_RELEASE_ASSERT(gSystemPrincipal);
 
-    if (!JS::InitSelfHostedCode(gSelf->mContext->Context()))
+    JSContext* cx = XPCJSContext::Get()->Context();
+    if (!JS::InitSelfHostedCode(cx))
         MOZ_CRASH("InitSelfHostedCode failed");
-    if (!gSelf->mRuntime->InitializeStrings(gSelf->mContext->Context()))
+    if (!gSelf->mRuntime->InitializeStrings(cx))
         MOZ_CRASH("InitializeStrings failed");
 
     // Initialize our singleton scopes.
@@ -155,19 +161,11 @@ nsXPConnect::ReleaseXPConnectSingleton()
 }
 
 // static
-XPCJSContext*
-nsXPConnect::GetContextInstance()
-{
-    nsXPConnect* xpc = XPConnect();
-    return xpc->GetContext();
-}
-
-// static
 XPCJSRuntime*
 nsXPConnect::GetRuntimeInstance()
 {
-    nsXPConnect* xpc = XPConnect();
-    return xpc->GetContext()->Runtime();
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    return gSelf->mRuntime;
 }
 
 // static
@@ -406,7 +404,7 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 NS_IMETHODIMP
 nsXPConnect::GarbageCollect(uint32_t reason)
 {
-    GetContext()->GarbageCollect(reason);
+    mRuntime->GarbageCollect(reason);
     return NS_OK;
 }
 
@@ -938,13 +936,6 @@ nsXPConnect::DebugDump(int16_t depth)
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gSelf @ %p", gSelf));
         XPC_LOG_ALWAYS(("gOnceAliveNowDead is %d", (int)gOnceAliveNowDead));
-        if (GetRuntimeInstance()) {
-            if (depth)
-                GetRuntimeInstance()->DebugDump(depth);
-            else
-                XPC_LOG_ALWAYS(("XPCJSContext @ %p", mContext));
-        } else
-            XPC_LOG_ALWAYS(("mContext is null"));
         XPCWrappedNativeScope::DebugDumpAllScopes(depth);
     XPC_LOG_OUTDENT();
 #endif
@@ -1146,7 +1137,7 @@ SetLocationForGlobal(JSObject* global, nsIURI* locationURI)
 NS_IMETHODIMP
 nsXPConnect::NotifyDidPaint()
 {
-    JS::NotifyDidPaint(GetContext()->Context());
+    JS::NotifyDidPaint(XPCJSContext::Get()->Context());
     return NS_OK;
 }
 
@@ -1417,3 +1408,29 @@ ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj)
 
 } // namespace dom
 } // namespace mozilla
+
+void
+xpc::CreateCooperativeContext()
+{
+    MOZ_ASSERT(gPrimaryContext);
+    XPCJSContext::NewXPCJSContext(gPrimaryContext);
+}
+
+void
+xpc::DestroyCooperativeContext()
+{
+    MOZ_ASSERT(XPCJSContext::Get() != gPrimaryContext);
+    delete XPCJSContext::Get();
+}
+
+void
+xpc::YieldCooperativeContext()
+{
+    JS_YieldCooperativeContext(XPCJSContext::Get()->Context());
+}
+
+void
+xpc::ResumeCooperativeContext()
+{
+    JS_ResumeCooperativeContext(XPCJSContext::Get()->Context());
+}

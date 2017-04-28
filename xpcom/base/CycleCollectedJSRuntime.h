@@ -11,6 +11,7 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SegmentedVector.h"
@@ -110,7 +111,7 @@ protected:
   CycleCollectedJSRuntime(JSContext* aMainContext);
   virtual ~CycleCollectedJSRuntime();
 
-  virtual void Shutdown();
+  virtual void Shutdown(JSContext* cx);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
@@ -121,6 +122,11 @@ protected:
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual void CustomOutOfMemoryCallback() {}
+
+  LinkedList<CycleCollectedJSContext>& Contexts()
+  {
+    return mContexts;
+  }
 
 private:
   void
@@ -234,6 +240,8 @@ public:
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
 
+  JSRuntime* Runtime() { return mJSRuntime; }
+
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
   void RemoveJSHolder(void* aHolder);
@@ -275,24 +283,21 @@ public:
   // full GC.
   void PrepareWaitingZonesForGC();
 
-  // The main context is the first one created in the runtime and the last one
-  // destroyed.
-  JSContext* MainContext() const
-  {
-    MOZ_ASSERT(mJSContext);
-    return mJSContext;
-  }
-
   // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
   // isn't one.
   static CycleCollectedJSRuntime* Get();
 
+  void AddContext(CycleCollectedJSContext* aContext);
+  void RemoveContext(CycleCollectedJSContext* aContext);
+
 private:
+  LinkedList<CycleCollectedJSContext> mContexts;
+
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
-  JSContext* mJSContext;
+  JSRuntime* mJSRuntime;
 
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;

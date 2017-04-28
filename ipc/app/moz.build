@@ -53,8 +53,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'xul.dll',
     ]
 
-    RCINCLUDE = 'plugin-container.rc'
-
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [

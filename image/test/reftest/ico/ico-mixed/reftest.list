@@ -1,3 +1,3 @@
 # ICO BMP and PNG mixed tests
 
-== mixed-bmp-png.ico mixed-bmp-png48.png
+fails-if(stylo) == mixed-bmp-png.ico mixed-bmp-png48.png

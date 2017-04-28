@@ -36,6 +36,7 @@ interface nsIPrincipal;
 interface mozIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
+interface nsIRunnable;
 
 %{ C++
 namespace IPC {
@@ -326,6 +327,22 @@ interface nsIPermissionManager : nsISupports
    * @param aPrincipal The principal to broadcast permissions for.
    */
   void broadcastPermissionsForPrincipalToAllContentProcesses(in nsIPrincipal aPrincipal);
+
+  /**
+   * Add a callback which should be run when all permissions are available for
+   * the given nsIPrincipal. This method invokes the callback runnable
+   * synchronously when the permissions are already available.
+   *
+   * NOTE: This method will not request the permissions be sent by the parent
+   * process. This should only be used to wait for permissions which may not
+   * have arrived yet in order to ensure they are present.
+   *
+   * @param aPrincipal The principal to wait for permissions to be available for.
+   * @param aRunnable  The runnable to run when permissions are available for the
+   *                   given principal.
+   */
+  void whenPermissionsAvailable(in nsIPrincipal aPrincipal,
+                                in nsIRunnable aRunnable);
 };
 
 %{ C++

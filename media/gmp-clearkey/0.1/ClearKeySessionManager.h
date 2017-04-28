@@ -84,7 +84,7 @@ private:
   ~ClearKeySessionManager();
 
   void ClearInMemorySessionData(ClearKeySession* aSession);
-  bool MaybeDeferTillInitialized(std::function<void()> aMaybeDefer);
+  bool MaybeDeferTillInitialized(std::function<void()>&& aMaybeDefer);
   void Serialize(const ClearKeySession* aSession,
                  std::vector<uint8_t>& aOutKeyData);
 

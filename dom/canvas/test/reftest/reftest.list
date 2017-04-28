@@ -17,7 +17,7 @@ skip-if(Android) == webgl-clear-test.html?stencil wrapper.html?green.png
 skip-if(Android) == webgl-clear-test.html?depth&stencil wrapper.html?green.png
 
 # Check that resize works:
-skip-if(Android) == webgl-resize-test.html  wrapper.html?green.png
+skip-if(Android) fails-if(stylo) == webgl-resize-test.html  wrapper.html?green.png
 
 # Check that captureStream() displays in a local video element
 skip-if(Android) == webgl-capturestream-test.html?preserve wrapper.html?green.png

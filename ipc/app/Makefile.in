@@ -25,11 +25,7 @@ endif
 ifeq ($(OS_ARCH),WINNT) #{
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
-ifdef HAVE_64BIT_BUILD
-$(RESFILE): plugin-container.exe.64.manifest
-else
-$(RESFILE): plugin-container.exe.32.manifest
-endif
+EXTRA_DEPS += plugin-container.exe.manifest
 endif #}
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{

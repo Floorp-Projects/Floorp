@@ -8,21 +8,21 @@
 # ::value (bug 648643), depending of the ::value behaviour (it could change the
 # caret colour and the text colour or just the text colour).
 
-== placeholder-simple.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-simple.html placeholder-simple-ref.html
 # needs-focus == placeholder-focus.html placeholder-focus-ref.html
-needs-focus == placeholder-blur.html placeholder-simple-ref.html
-== placeholder-value.html placeholder-value-ref.html
-== placeholder-empty-string.html placeholder-empty-string-ref.html
-== placeholder-add.html placeholder-simple-ref.html
-== placeholder-removal.html input-ref.html
-== placeholder-value-set.html placeholder-value-ref.html
-== placeholder-value-unset.html placeholder-simple-ref.html
-== placeholder-value-reset.html placeholder-simple-ref.html
-== placeholder-type-change-1.html placeholder-simple-ref.html
-== placeholder-type-change-2.html placeholder-button-ref.html
+needs-focus fails-if(stylo) == placeholder-blur.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-value.html placeholder-value-ref.html
+fails-if(stylo) == placeholder-empty-string.html placeholder-empty-string-ref.html
+fails-if(stylo) == placeholder-add.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-removal.html input-ref.html
+fails-if(stylo) == placeholder-value-set.html placeholder-value-ref.html
+fails-if(stylo) == placeholder-value-unset.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-value-reset.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-type-change-1.html placeholder-simple-ref.html
+fails-if(stylo) == placeholder-type-change-2.html placeholder-button-ref.html
 == placeholdershown.html placeholdershown-ref.html
-== css-display.html placeholder-simple-ref.html
+fails-if(stylo) == css-display.html placeholder-simple-ref.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.
-!= css-opacity.html placeholder-simple-ref.html
-!= css-text-align.html placeholder-simple-ref.html
+fails-if(stylo) != css-opacity.html placeholder-simple-ref.html
+fails-if(stylo) != css-text-align.html placeholder-simple-ref.html

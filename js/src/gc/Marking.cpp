@@ -3070,6 +3070,7 @@ CheckIsMarkedThing(T* thingp)
     JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
                   CurrentThreadCanAccessRuntime(rt) ||
+                  CurrentThreadCanAccessZone((*thingp)->zoneFromAnyThread()) ||
                   (JS::CurrentThreadIsHeapCollecting() && rt->gc.state() == State::Sweep));
 #endif
 }
@@ -3081,12 +3082,17 @@ IsMarkedInternalCommon(T* thingp)
     CheckIsMarkedThing(thingp);
     MOZ_ASSERT(!IsInsideNursery(*thingp));
 
-    Zone* zone = (*thingp)->asTenured().zoneFromAnyThread();
+    TenuredCell& thing = (*thingp)->asTenured();
+    Zone* zone = thing.zoneFromAnyThread();
     if (!zone->isCollectingFromAnyThread() || zone->isGCFinished())
         return true;
-    if (zone->isGCCompacting() && IsForwarded(*thingp))
+
+    if (zone->isGCCompacting() && IsForwarded(*thingp)) {
         *thingp = Forwarded(*thingp);
-    return (*thingp)->asTenured().isMarked();
+        return true;
+    }
+
+    return thing.isMarked() || thing.arena()->allocatedDuringIncremental;
 }
 
 template <typename T>

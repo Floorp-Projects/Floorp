@@ -164,9 +164,7 @@ PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child
             Shape* tmp = existingShape;
             TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
             MOZ_ASSERT(tmp == existingShape);
-        } else if (zone->isGCSweeping() && !existingShape->isMarked() &&
-                   !existingShape->arena()->allocatedDuringIncremental)
-        {
+        } else if (IsAboutToBeFinalizedUnbarriered(&existingShape)) {
             /*
              * The shape we've found is unreachable and due to be finalized, so
              * remove our weak reference to it and don't use it.

@@ -35,4 +35,4 @@
 == border-image-repeat-1.html border-image-repeat-1-ref.html
 
 # background-attachment test cases
-== background-attachment-fixed-inside-transform-1.html background-attachment-fixed-inside-transform-1-ref.html
+fails-if(stylo) == background-attachment-fixed-inside-transform-1.html background-attachment-fixed-inside-transform-1-ref.html

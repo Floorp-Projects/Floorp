@@ -893,7 +893,8 @@ GeckoEditableSupport::OnImeAddCompositionRange(
 }
 
 void
-GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
+GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
+                                             int32_t aFlags)
 {
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
@@ -904,8 +905,16 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
     nsEventStatus status = nsEventStatus_eIgnore;
     NS_ENSURE_TRUE_VOID(mDispatcher && widget);
 
+    const bool keepCurrent = !!(aFlags &
+            java::GeckoEditableChild::FLAG_KEEP_CURRENT_COMPOSITION);
+
     // A composition with no ranges means we want to set the selection.
     if (mIMERanges->IsEmpty()) {
+        if (keepCurrent && mDispatcher->IsComposing()) {
+            // Don't set selection if we want to keep current composition.
+            return;
+        }
+
         MOZ_ASSERT(aStart >= 0 && aEnd >= 0);
         RemoveComposition();
 
@@ -933,6 +942,12 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
         uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
         uint32_t(aEnd) != composition->NativeOffsetOfStartComposition() +
                           composition->String().Length()) {
+        if (keepCurrent) {
+            // Don't start a new composition if we want to keep the current one.
+            mIMERanges->Clear();
+            return;
+        }
+
         // Only start new composition if we don't have an existing one,
         // or if the existing composition doesn't match the new one.
         RemoveComposition();
@@ -965,7 +980,10 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
             text, event.mData.Length(), event.mRanges->Length());
 #endif // DEBUG_ANDROID_IME
 
-    NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
+    if (NS_WARN_IF(NS_FAILED(BeginInputTransaction(mDispatcher)))) {
+        mIMERanges->Clear();
+        return;
+    }
     mDispatcher->SetPendingComposition(string, mIMERanges);
     mDispatcher->FlushPendingComposition(status);
     mIMERanges->Clear();
