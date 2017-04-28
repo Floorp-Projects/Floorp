@@ -206,7 +206,8 @@ var loadListener = {
    * Callback for registered DOM events.
    */
   handleEvent: function (event) {
-    logger.debug(`Received DOM event "${event.type}" for "${event.originalTarget.baseURI}"`);
+    let location = event.target.baseURI || event.target.location.href;
+    logger.debug(`Received DOM event "${event.type}" for "${location}"`);
 
     switch (event.type) {
       case "unload":
@@ -227,8 +228,10 @@ var loadListener = {
         break;
 
       case "hashchange":
-        this.stop();
-        sendOk(this.command_id);
+        if (event.target === curContainer.frame) {
+          this.stop();
+          sendOk(this.command_id);
+        }
         break;
 
       case "DOMContentLoaded":
