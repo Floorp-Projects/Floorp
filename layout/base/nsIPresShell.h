@@ -1272,9 +1272,21 @@ public:
    * canvas frame (if the FORCE_DRAW flag is passed then this check is skipped).
    * aBackstopColor is composed behind the background color of the canvas, it is
    * transparent by default.
+   * We attempt to make the background color part of the scrolled canvas (to reduce
+   * transparent layers), and if async scrolling is enabled (and the background
+   * is opaque) then we add a second, unscrolled item to handle the checkerboarding
+   * case.
+   * ADD_FOR_SUBDOC shoud be specified when calling this for a subdocument, and
+   * LayoutUseContainersForRootFrame might cause the whole list to be scrolled. In
+   * that case the second unscrolled item will be elided.
+   * APPEND_UNSCROLLED_ONLY only attempts to add the unscrolled item, so that we
+   * can add it manually after LayoutUseContainersForRootFrame has built the
+   * scrolling ContainerLayer.
    */
   enum {
-    FORCE_DRAW = 0x01
+    FORCE_DRAW = 0x01,
+    ADD_FOR_SUBDOC = 0x02,
+    APPEND_UNSCROLLED_ONLY = 0x04,
   };
   virtual void AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                             nsDisplayList& aList,
