@@ -8,6 +8,7 @@ package org.mozilla.focus.telemetry;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 
 import org.mozilla.focus.BuildConfig;
@@ -31,9 +32,6 @@ import org.mozilla.telemetry.serialize.JSONPingSerializer;
 import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
 import org.mozilla.telemetry.storage.FileTelemetryStorage;
 import org.mozilla.telemetry.storage.TelemetryStorage;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public final class TelemetryWrapper {
     private static final String TELEMETRY_APP_NAME = "Focus";
@@ -81,11 +79,17 @@ public final class TelemetryWrapper {
     }
 
     public static boolean isTelemetryEnabled(Context context) {
-        final Resources resources = context.getResources();
-        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        // The first access to shared preferences will require a disk read.
+        final StrictMode.ThreadPolicy threadPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            final Resources resources = context.getResources();
+            final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-        return preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), isEnabledByDefault())
-                && !AppConstants.isDevBuild();
+            return preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), isEnabledByDefault())
+                    && !AppConstants.isDevBuild();
+        } finally {
+            StrictMode.setThreadPolicy(threadPolicy);
+        }
     }
 
     public static void setTelemetryEnabled(Context context, boolean enabled) {
@@ -107,33 +111,40 @@ public final class TelemetryWrapper {
     }
 
     public static void init(Context context) {
-        final Resources resources = context.getResources();
+        // When initializing the telemetry library it will make sure that all directories exist and
+        // are readable/writable.
+        final StrictMode.ThreadPolicy threadPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            final Resources resources = context.getResources();
 
-        final boolean telemetryEnabled = isTelemetryEnabled(context);
+            final boolean telemetryEnabled = isTelemetryEnabled(context);
 
-        final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
-                .setServerEndpoint("https://incoming.telemetry.mozilla.org")
-                .setAppName(TELEMETRY_APP_NAME)
-                .setUpdateChannel(BuildConfig.BUILD_TYPE)
-                .setPreferencesImportantForTelemetry(
-                        resources.getString(R.string.pref_key_search_engine),
-                        resources.getString(R.string.pref_key_privacy_block_ads),
-                        resources.getString(R.string.pref_key_privacy_block_analytics),
-                        resources.getString(R.string.pref_key_privacy_block_social),
-                        resources.getString(R.string.pref_key_privacy_block_other),
-                        resources.getString(R.string.pref_key_performance_block_webfonts))
-                .setCollectionEnabled(telemetryEnabled)
-                .setUploadEnabled(telemetryEnabled);
+            final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
+                    .setServerEndpoint("https://incoming.telemetry.mozilla.org")
+                    .setAppName(TELEMETRY_APP_NAME)
+                    .setUpdateChannel(BuildConfig.BUILD_TYPE)
+                    .setPreferencesImportantForTelemetry(
+                            resources.getString(R.string.pref_key_search_engine),
+                            resources.getString(R.string.pref_key_privacy_block_ads),
+                            resources.getString(R.string.pref_key_privacy_block_analytics),
+                            resources.getString(R.string.pref_key_privacy_block_social),
+                            resources.getString(R.string.pref_key_privacy_block_other),
+                            resources.getString(R.string.pref_key_performance_block_webfonts))
+                    .setCollectionEnabled(telemetryEnabled)
+                    .setUploadEnabled(telemetryEnabled);
 
-        final TelemetryPingSerializer serializer = new JSONPingSerializer();
-        final TelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
-        final TelemetryClient client = new HttpURLConnectionTelemetryClient();
-        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+            final TelemetryPingSerializer serializer = new JSONPingSerializer();
+            final TelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+            final TelemetryClient client = new HttpURLConnectionTelemetryClient();
+            final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
-        TelemetryHolder.set(new Telemetry(configuration, storage, client, scheduler)
-                .addPingBuilder(new TelemetryCorePingBuilder(configuration))
-                .addPingBuilder(new TelemetryEventPingBuilder(configuration))
-                .setDefaultSearchProvider(createDefaultSearchProvider(context)));
+            TelemetryHolder.set(new Telemetry(configuration, storage, client, scheduler)
+                    .addPingBuilder(new TelemetryCorePingBuilder(configuration))
+                    .addPingBuilder(new TelemetryEventPingBuilder(configuration))
+                    .setDefaultSearchProvider(createDefaultSearchProvider(context)));
+        } finally {
+            StrictMode.setThreadPolicy(threadPolicy);
+        }
     }
 
     private static DefaultSearchMeasurement.DefaultSearchEngineProvider createDefaultSearchProvider(final Context context) {
