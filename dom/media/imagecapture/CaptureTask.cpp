@@ -128,11 +128,8 @@ CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
     RefPtr<CaptureTask> mTask;
   };
 
-  VideoSegment::ConstChunkIterator iter(aSegment);
-
-
-
-  while (!iter.IsEnded()) {
+  for (VideoSegment::ConstChunkIterator iter(aSegment);
+       !iter.IsEnded(); iter.Next()) {
     VideoChunk chunk = *iter;
 
     // Extract the first valid video frame.
@@ -145,7 +142,10 @@ CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
       } else {
         image = chunk.mFrame.GetImage();
       }
-      MOZ_ASSERT(image);
+      if (!image) {
+        MOZ_ASSERT(image);
+        continue;
+      }
       mImageGrabbedOrTrackEnd = true;
 
       // Encode image.
@@ -163,7 +163,6 @@ CaptureTask::SetCurrentFrames(const VideoSegment& aSegment)
       }
       return;
     }
-    iter.Next();
   }
 }
 
