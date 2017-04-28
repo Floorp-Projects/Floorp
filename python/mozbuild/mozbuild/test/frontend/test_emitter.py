@@ -17,6 +17,7 @@ from mozbuild.frontend.data import (
     AndroidResDirs,
     BrandingFiles,
     ChromeManifestEntry,
+    ComputedFlags,
     ConfigFileSubstitution,
     Defines,
     DirectoryTraversal,
@@ -180,7 +181,6 @@ class TestEmitterBasic(unittest.TestCase):
 
         wanted = {
             'ALLOW_COMPILER_WARNINGS': True,
-            'DISABLE_STL_WRAPPING': True,
             'NO_DIST_INSTALL': True,
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',
@@ -202,6 +202,32 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(wanted, variables)
         self.maxDiff = maxDiff
+
+    def test_compile_flags(self):
+        reader = self.reader('compile-flags',
+                             extra_substs={'STL_FLAGS': ['-I/path/to/objdir/dist/stl_wrappers']})
+        sources, flags, lib = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['STL'], reader.config.substs['STL_FLAGS'])
+
+    def test_compile_flags_validation(self):
+        reader = self.reader('compile-flags-field-validation')
+
+        with self.assertRaisesRegexp(BuildReaderError, 'Invalid value.'):
+            self.read_topsrcdir(reader)
+
+        reader = self.reader('compile-flags-type-validation')
+        with self.assertRaisesRegexp(BuildReaderError,
+                                     'A list of strings must be provided'):
+            self.read_topsrcdir(reader)
+
+
+    def test_disable_stl_wrapping(self):
+        reader = self.reader('disable-stl-wrapping',
+                             extra_substs={'STL_FLAGS': ['-I/path/to/objdir/dist/stl_wrappers']})
+        sources, flags, lib = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['STL'], [])
 
     def test_use_yasm(self):
         # When yasm is not available, this should raise.
@@ -386,14 +412,15 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('program')
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        self.assertIsInstance(objs[0], Program)
-        self.assertIsInstance(objs[1], SimpleProgram)
+        self.assertEqual(len(objs), 4)
+        self.assertIsInstance(objs[0], ComputedFlags)
+        self.assertIsInstance(objs[1], Program)
         self.assertIsInstance(objs[2], SimpleProgram)
+        self.assertIsInstance(objs[3], SimpleProgram)
 
-        self.assertEqual(objs[0].program, 'test_program.prog')
-        self.assertEqual(objs[1].program, 'test_program1.prog')
-        self.assertEqual(objs[2].program, 'test_program2.prog')
+        self.assertEqual(objs[1].program, 'test_program.prog')
+        self.assertEqual(objs[2].program, 'test_program1.prog')
+        self.assertEqual(objs[3].program, 'test_program2.prog')
 
     def test_test_manifest_missing_manifest(self):
         """A missing manifest file should result in an error."""
@@ -816,6 +843,8 @@ class TestEmitterBasic(unittest.TestCase):
         # The last object is a Linkable.
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
+        computed_flags = objs.pop()
+        self.assertIsInstance(computed_flags, ComputedFlags)
         self.assertEqual(len(objs), 6)
         for o in objs:
             self.assertIsInstance(o, Sources)
@@ -868,7 +897,7 @@ class TestEmitterBasic(unittest.TestCase):
         # The last object is a Linkable.
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
-        self.assertEqual(len(objs), 6)
+        self.assertEqual(len(objs), 7)
 
         generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
         self.assertEqual(len(generated_sources), 6)
@@ -898,6 +927,8 @@ class TestEmitterBasic(unittest.TestCase):
         # The last object is a Linkable
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
+        computed_flags = objs.pop()
+        self.assertIsInstance(computed_flags, ComputedFlags)
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, HostSources)
@@ -921,8 +952,9 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('unified-sources')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, ignore it
-        objs = objs[:-1]
+        # The last object is a Linkable, the second to last ComputedFlags,
+        # ignore them.
+        objs = objs[:-2]
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, UnifiedSources)
@@ -947,8 +979,9 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('unified-sources-non-unified')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, ignore it
-        objs = objs[:-1]
+        # The last object is a Linkable, the second to last ComputedFlags,
+        # ignore them.
+        objs = objs[:-2]
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, UnifiedSources)
@@ -1048,8 +1081,9 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        lib = objs[0]
+        self.assertEqual(len(objs), 2)
+        flags, lib = objs
+        self.assertIsInstance(flags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertRegexpMatches(lib.lib_name, "random_crate")
         self.assertRegexpMatches(lib.import_name, "random_crate")
@@ -1068,8 +1102,9 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('rust-library-features',
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
-        self.assertEqual(len(objs), 1)
-        lib = objs[0]
+        self.assertEqual(len(objs), 2)
+        flags, lib = objs
+        self.assertIsInstance(flags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertEqual(lib.features, ['musthave', 'cantlivewithout'])
 
@@ -1138,10 +1173,10 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_HOST_TARGET='i686-pc-windows-msvc',
                                                HOST_BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], HostRustLibrary)
-        self.assertRegexpMatches(objs[0].lib_name, 'host_lib')
-        self.assertRegexpMatches(objs[0].import_name, 'host_lib')
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[1], HostRustLibrary)
+        self.assertRegexpMatches(objs[1].lib_name, 'host_lib')
+        self.assertRegexpMatches(objs[1].import_name, 'host_lib')
 
     def test_crate_dependency_path_resolution(self):
         '''Test recursive dependencies resolve with the correct paths.'''
@@ -1149,8 +1184,8 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], RustLibrary)
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[1], RustLibrary)
 
     def test_android_res_dirs(self):
         """Test that ANDROID_RES_DIRS works properly."""
@@ -1174,7 +1209,8 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
         self.assertIsInstance(objs[0], TestHarnessFiles)
         self.assertIsInstance(objs[1], VariablePassthru)
-        self.assertIsInstance(objs[2], SharedLibrary)
+        self.assertIsInstance(objs[2], ComputedFlags)
+        self.assertIsInstance(objs[3], SharedLibrary)
         for path, files in objs[0].files.walk():
             for f in files:
                 self.assertEqual(str(f), '!libfoo.so')
@@ -1183,8 +1219,9 @@ class TestEmitterBasic(unittest.TestCase):
     def test_symbols_file(self):
         """Test that SYMBOLS_FILE works"""
         reader = self.reader('test-symbols-file')
-        genfile, shlib = self.read_topsrcdir(reader)
+        genfile, flags, shlib = self.read_topsrcdir(reader)
         self.assertIsInstance(genfile, GeneratedFile)
+        self.assertIsInstance(flags, ComputedFlags)
         self.assertIsInstance(shlib, SharedLibrary)
         # This looks weird but MockConfig sets DLL_{PREFIX,SUFFIX} and
         # the reader method in this class sets OS_TARGET=WINNT.
@@ -1193,10 +1230,11 @@ class TestEmitterBasic(unittest.TestCase):
     def test_symbols_file_objdir(self):
         """Test that a SYMBOLS_FILE in the objdir works"""
         reader = self.reader('test-symbols-file-objdir')
-        genfile, shlib = self.read_topsrcdir(reader)
+        genfile, flags, shlib = self.read_topsrcdir(reader)
         self.assertIsInstance(genfile, GeneratedFile)
         self.assertEqual(genfile.script,
                          mozpath.join(reader.config.topsrcdir, 'foo.py'))
+        self.assertIsInstance(flags, ComputedFlags)
         self.assertIsInstance(shlib, SharedLibrary)
         self.assertEqual(shlib.symbols_file, 'foo.symbols')
 
