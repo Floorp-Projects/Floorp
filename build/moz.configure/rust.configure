@@ -223,6 +223,15 @@ rust_host_triple = rust_triple_alias(host)
 set_config('RUST_TARGET', rust_target_triple)
 set_config('RUST_HOST_TARGET', rust_host_triple)
 
+@depends(rust_target_triple)
+def rust_target_env_name(triple):
+    return triple.upper().replace('-','_')
+
+# We need this to form various Cargo environment variables, as there is no
+# uppercase function in make, and we don't want to shell out just for
+# converting a string to uppercase.
+set_config('RUST_TARGET_ENV_NAME', rust_target_env_name)
+
 # Until we remove all the other Rust checks in old-configure.
 add_old_configure_assignment('MOZ_RUST', rust_compiler)
 add_old_configure_assignment('RUSTC', rustc)
