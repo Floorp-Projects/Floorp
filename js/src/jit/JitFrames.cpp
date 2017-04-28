@@ -348,7 +348,8 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
     for (unsigned i = 0; i < skipSlots; i++)
         si.skip();
 
-    Value v = si.read();
+    MaybeReadFallback recover(cx, cx->activation()->asJit(), &frame.frame(), MaybeReadFallback::Fallback_DoNothing);
+    Value v = si.maybeRead(recover);
     RootedObject iterObject(cx, &v.toObject());
 
     if (isDestructuring) {
