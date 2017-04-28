@@ -156,7 +156,7 @@ load 378682.html
 load 379105-1.xhtml
 load 379419-1.xhtml
 load 379768-1.html
-asserts-if(stylo,6) load 379799-1.html # bug 1324977
+load 379799-1.html
 load 379920-1.svg
 load 379920-2.svg
 load 379975.html
@@ -326,7 +326,7 @@ load 499841-1.xhtml
 load 499858-1.xhtml
 load 500467-1.html
 load 501878-1.html
-asserts-if(stylo,4) load 503936-1.html # bug 1324658
+load 503936-1.html
 load 507119.html
 load 514104-1.xul
 load 522374-1.html

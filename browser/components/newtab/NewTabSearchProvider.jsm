@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+  const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
   return EventEmitter;
 });
 

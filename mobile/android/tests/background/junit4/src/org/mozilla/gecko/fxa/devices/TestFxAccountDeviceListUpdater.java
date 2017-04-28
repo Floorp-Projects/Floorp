@@ -27,6 +27,7 @@ import org.mozilla.gecko.fxa.login.State;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.Objects.deepEquals;
 import static org.junit.Assert.assertEquals;
@@ -176,7 +177,7 @@ public class TestFxAccountDeviceListUpdater {
     private ContentValues createMockRemoteClientValues(String name) {
         final long now = System.currentTimeMillis();
         ContentValues cli = new ContentValues();
-        cli.put(BrowserContract.RemoteDevices.GUID, "R" + Math.floor(Math.random() * 10));
+        cli.put(BrowserContract.RemoteDevices.GUID, UUID.randomUUID().toString());
         cli.put(BrowserContract.RemoteDevices.NAME, name);
         cli.put(BrowserContract.RemoteDevices.TYPE, "mobile");
         cli.put(BrowserContract.RemoteDevices.IS_CURRENT_DEVICE, false);

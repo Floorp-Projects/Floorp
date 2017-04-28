@@ -47,6 +47,14 @@ describe("PageError component:", () => {
     expect(locationLink.text()).toBe("test-console-api.html:3:5");
   });
 
+  it("renders an error with a longString exception message", () => {
+    const message = stubPreparedMessages.get("TypeError longString message");
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = wrapper.find(".message-body").text();
+    expect(text.startsWith("Error: Long error Long error")).toBe(true);
+  });
+
   it("displays a [Learn more] link", () => {
     const store = setupStore([]);
 

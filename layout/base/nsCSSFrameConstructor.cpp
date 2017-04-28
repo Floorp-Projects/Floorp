@@ -8541,6 +8541,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
              "display:contents nodes shouldn't have a frame");
   if (!childFrame && GetDisplayContentsStyleFor(aChild)) {
     nsIContent* ancestor = aContainer;
+    MOZ_ASSERT(ancestor, "display: contents on the root?");
     while (!ancestor->GetPrimaryFrame()) {
       // FIXME(emilio): Should this use the flattened tree parent instead?
       ancestor = ancestor->GetParent();

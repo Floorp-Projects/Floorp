@@ -6,7 +6,7 @@
 
 const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const IOUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);

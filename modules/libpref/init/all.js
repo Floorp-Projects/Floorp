@@ -999,6 +999,9 @@ pref("devtools.defaultColorUnit", "authored");
 // Used for devtools debugging
 pref("devtools.dump.emit", false);
 
+// Controls whether EventEmitter module throws dump message on each emit
+pref("toolkit.dump.emit", false);
+
 // Disable device discovery logging
 pref("devtools.discovery.log", false);
 // Whether to scan for DevTools devices via WiFi

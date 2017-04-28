@@ -8,7 +8,7 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 this.EXPORTED_SYMBOLS = ["ExtensionsUI"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
