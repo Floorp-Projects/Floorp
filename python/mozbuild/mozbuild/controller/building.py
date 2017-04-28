@@ -172,8 +172,17 @@ class BuildMonitor(MozbuildObject):
             except ValueError:
                 os.remove(warnings_path)
 
-        self._warnings_collector = WarningsCollector(
-            database=self.warnings_database, objdir=self.topobjdir)
+        def on_warning(warning):
+            filename = warning['filename']
+
+            if not os.path.exists(filename):
+                raise Exception('Could not find file containing warning: %s' %
+                                filename)
+
+            self.warnings_database.insert(warning)
+
+        self._warnings_collector = WarningsCollector(on_warning,
+                                                     objdir=self.topobjdir)
 
         self.build_objects = []
 
