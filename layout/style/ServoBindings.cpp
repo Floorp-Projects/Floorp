@@ -1678,22 +1678,6 @@ Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed aCSSValue)
 }
 
 void
-Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut aCSSValue, float aRadians)
-{
-  aCSSValue->SetFloatValue(aRadians, eCSSUnit_Radian);
-}
-
-float
-Gecko_CSSValue_GetAngle(nsCSSValueBorrowed aCSSValue)
-{
-  // Unfortunately nsCSSValue.GetAngleValueInRadians() returns double,
-  // so we use GetAngleValue() instead.
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Radian,
-             "The unit should be eCSSUnit_Radian");
-  return aCSSValue->GetAngleValue();
-}
-
-void
 Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut aCSSValue, nsStyleCoord::CalcValue aCalc)
 {
   aCSSValue->SetCalcValue(&aCalc);
