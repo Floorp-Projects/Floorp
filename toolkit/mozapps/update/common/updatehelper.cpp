@@ -273,7 +273,9 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   // The temp file is not removed on failure since there is client code that
   // will remove it.
   WCHAR tmpUpdateStatusFilePath[MAX_PATH + 1] = { L'\0' };
-  GetTempFileNameW(updateDirPath, L"svc", 0, tmpUpdateStatusFilePath);
+  if (GetTempFileNameW(updateDirPath, L"svc", 0, tmpUpdateStatusFilePath) == 0) {
+    return FALSE;
+  }
 
   HANDLE tmpStatusFile = CreateFileW(tmpUpdateStatusFilePath, GENERIC_WRITE, 0,
                                      nullptr, CREATE_ALWAYS, 0, nullptr);
