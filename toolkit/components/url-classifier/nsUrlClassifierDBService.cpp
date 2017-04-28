@@ -144,10 +144,12 @@ nsUrlClassifierDBServiceWorker::~nsUrlClassifierDBServiceWorker()
 
 nsresult
 nsUrlClassifierDBServiceWorker::Init(uint32_t aGethashNoise,
-                                     nsCOMPtr<nsIFile> aCacheDir)
+                                     nsCOMPtr<nsIFile> aCacheDir,
+                                     nsUrlClassifierDBService *aDBService)
 {
   mGethashNoise = aGethashNoise;
   mCacheDir = aCacheDir;
+  mDBService = aDBService;
 
   ResetUpdate();
 
@@ -276,7 +278,9 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   }
 
   for (uint32_t i = 0; i < completes->Length(); i++) {
-    if (!completes->ElementAt(i).Confirmed()) {
+    if (!completes->ElementAt(i).Confirmed() &&
+        mDBService->CanComplete(completes->ElementAt(i).mTableName)) {
+
       // We're going to be doing a gethash request, add some extra entries.
       // Note that we cannot pass the first two by reference, because we
       // add to completes, whicah can cause completes to reallocate and move.
@@ -1719,7 +1723,7 @@ nsUrlClassifierDBService::Init()
   if (!mWorker)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mWorker->Init(sGethashNoise, cacheDir);
+  rv = mWorker->Init(sGethashNoise, cacheDir, this);
   if (NS_FAILED(rv)) {
     mWorker = nullptr;
     return rv;
@@ -2262,6 +2266,13 @@ nsUrlClassifierDBService::CacheMisses(PrefixArray *results)
 }
 
 bool
+nsUrlClassifierDBService::CanComplete(const nsACString &aTableName)
+{
+  return mGethashTables.Contains(aTableName) &&
+    !mDisallowCompletionsTables.Contains(aTableName);
+}
+
+bool
 nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
                                        nsIUrlClassifierHashCompleter **completer)
 {
@@ -2271,10 +2282,7 @@ nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
     return true;
   }
 
-  // If we don't know about this table at all, or are disallowing completions
-  // for it, skip completion checks.
-  if (!mGethashTables.Contains(tableName) ||
-      mDisallowCompletionsTables.Contains(tableName)) {
+  if (!CanComplete(tableName)) {
     return false;
   }
 
@@ -2371,6 +2379,8 @@ nsUrlClassifierDBService::Shutdown()
     backgroundThread->Shutdown();
     NS_RELEASE(backgroundThread);
   }
+
+  mWorker = nullptr;
   return NS_OK;
 }
 
