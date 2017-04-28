@@ -5,6 +5,7 @@
 "use strict";
 
 const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.importGlobalProperties(["crypto", "TextEncoder"]);
 
 this.EXPORTED_SYMBOLS = ["Sampling"];
@@ -72,14 +73,14 @@ this.Sampling = {
   /**
    * @promise A hash of `data`, truncated to the 12 most significant characters.
    */
-  async truncatedHash(data) {
+  truncatedHash: Task.async(function* (data) {
     const hasher = crypto.subtle;
     const input = new TextEncoder("utf-8").encode(JSON.stringify(data));
-    const hash = await hasher.digest("SHA-256", input);
+    const hash = yield hasher.digest("SHA-256", input);
     // truncate hash to 12 characters (2^48), because the full hash is larger
     // than JS can meaningfully represent as a number.
     return Sampling.bufferToHex(hash).slice(0, 12);
-  },
+  }),
 
   /**
    * Sample by splitting the input into two buckets, one with a size (rate) and
@@ -91,12 +92,12 @@ this.Sampling = {
    *                           0.25 returns true 25% of the time.
    * @promises {boolean} True if the input is in the sample.
    */
-  async stableSample(input, rate) {
-    const inputHash = await Sampling.truncatedHash(input);
+  stableSample: Task.async(function* (input, rate) {
+    const inputHash = yield Sampling.truncatedHash(input);
     const samplePoint = Sampling.fractionToKey(rate);
 
     return inputHash < samplePoint;
-  },
+  }),
 
   /**
    * Sample by splitting the input space into a series of buckets, and checking
@@ -113,8 +114,8 @@ this.Sampling = {
    * @param {integer}    total Total number of buckets to group inputs into.
    * @promises {boolean} True if the given input is within the range of buckets
    *                     we're checking. */
-  async bucketSample(input, start, count, total) {
-    const inputHash = await Sampling.truncatedHash(input);
+  bucketSample: Task.async(function* (input, start, count, total) {
+    const inputHash = yield Sampling.truncatedHash(input);
     const wrappedStart = start % total;
     const end = wrappedStart + count;
 
@@ -128,46 +129,5 @@ this.Sampling = {
     }
 
     return Sampling.isHashInBucket(inputHash, wrappedStart, end, total);
-  },
-
-  /**
-   * Sample over a list of ratios such that, over the input space, each ratio
-   * has a number of matches in correct proportion to the other ratios.
-   *
-   * For example, given the ratios:
-   *
-   * [1, 2, 3, 4]
-   *
-   * 10% of all inputs will return 0, 20% of all inputs will return 1, 30% will
-   * return 2, and 40% will return 3. You can determine the percent of inputs
-   * that will return an index by dividing the ratio by the sum of all ratios
-   * passed in. In the case above, 4 / (1 + 2 + 3 + 4) == 0.4, or 40% of the
-   * inputs.
-   *
-   * @param {object} input
-   * @param {Array<integer>} ratios
-   * @promises {integer}
-   *   Index of the ratio that matched the input
-   * @rejects {Error}
-   *   If the list of ratios doesn't have at least one element
-   */
-  async ratioSample(input, ratios) {
-    if (ratios.length < 1) {
-      throw new Error(`ratios must be at least 1 element long (got length: ${ratios.length})`);
-    }
-
-    const inputHash = await Sampling.truncatedHash(input);
-    const ratioTotal = ratios.reduce((acc, ratio) => acc + ratio);
-
-    let samplePoint = 0;
-    for (let k = 0; k < ratios.length - 1; k++) {
-      samplePoint += ratios[k];
-      if (inputHash <= Sampling.fractionToKey(samplePoint / ratioTotal)) {
-        return k;
-      }
-    }
-
-    // No need to check the last bucket if the others didn't match.
-    return ratios.length - 1;
-  },
+  }),
 };
