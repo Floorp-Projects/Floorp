@@ -61,7 +61,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  parseURLEncodedText,
 	  parseURLParams,
 	  getSelectableInInspectorGrips,
-	  maybeEscapePropertyName
+	  maybeEscapePropertyName,
+	  getGripPreviewItems
 	} = __webpack_require__(3);
 	
 	module.exports = {
@@ -72,7 +73,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  maybeEscapePropertyName,
 	  parseURLEncodedText,
 	  parseURLParams,
-	  getSelectableInInspectorGrips
+	  getSelectableInInspectorGrips,
+	  getGripPreviewItems
 	};
 
 /***/ },
@@ -576,12 +578,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  // Event Grip
 	  if (grip.preview && grip.preview.target) {
-	    return [grip.preview.target];
+	    let keys = Object.keys(grip.preview.properties);
+	    let values = Object.values(grip.preview.properties);
+	    return [grip.preview.target, ...keys, ...values];
+	  }
+	
+	  // RegEx Grip
+	  if (grip.displayString) {
+	    return [grip.displayString];
 	  }
 	
 	  // Generic Grip
 	  if (grip.preview && grip.preview.ownProperties) {
 	    let propertiesValues = Object.values(grip.preview.ownProperties).map(property => property.value || property);
+	
+	    let propertyKeys = Object.keys(grip.preview.ownProperties);
+	    propertiesValues = propertiesValues.concat(propertyKeys);
 	
 	    // ArrayBuffer Grip
 	    if (grip.preview.safeGetterValues) {
@@ -596,7 +608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	/**
 	 * Returns a new element wrapped with a component, props.objectLink if it exists,
-	 * or a span if there are multiple childs, or directly the child if only one is passed.
+	 * or a span if there are multiple children, or directly the child if only one is passed.
 	 *
 	 * @param {Object} props A Rep "props" object that may contain `objectLink`
 	 *                 and `object` properties.
@@ -639,7 +651,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getURLDisplayString,
 	  getSelectableInInspectorGrips,
 	  maybeEscapePropertyName,
-	  safeObjectLink
+	  safeObjectLink,
+	  getGripPreviewItems
 	};
 
 /***/ },
