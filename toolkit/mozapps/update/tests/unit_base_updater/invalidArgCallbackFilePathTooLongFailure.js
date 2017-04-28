@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* Install directory path traversal failure test */
+/* Too long callback file path failure test */
 
-const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR
-                  : STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
+const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_PATH_ERROR;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -25,12 +23,15 @@ function run_test() {
 function setupUpdaterTestFinished() {
   let path = "123456789";
   if (IS_WIN) {
-    path = "C:\\" + path + "\\..\\" + path;
+    path = "\\" + path;
+    path = path.repeat(30); // 300 characters
+    path = "C:" + path;
   } else {
-    path = "/" + path + "/../" + path;
+    path = "/" + path;
+    path = path.repeat(1000); // 10000 characters
   }
 
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, null, path);
 }
 
 /**
