@@ -17,7 +17,7 @@ describe("Top Sites Feed", () => {
     sandbox = globals.sandbox;
   });
   beforeEach(() => {
-    globals.set("PlacesProvider", {links: {getLinks: sandbox.spy(() => Promise.resolve(links))}});
+    globals.set("NewTabUtils", {activityStreamLinks: {getTopSites: sandbox.spy(() => Promise.resolve(links))}});
     globals.set("PreviewProvider", {getThumbnail: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT))});
     feed = new TopSitesFeed();
     feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: Array(12).fill("site")}}; }};
@@ -34,10 +34,10 @@ describe("Top Sites Feed", () => {
   });
 
   describe("#getLinksWithDefaults", () => {
-    it("should get the links from Places Provider", async () => {
+    it("should get the links from NewTabUtils", async () => {
       const result = await feed.getLinksWithDefaults();
       assert.deepEqual(result, links);
-      assert.calledOnce(global.PlacesProvider.links.getLinks);
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
     });
     it("should add defaults if there are are not enough links", async () => {
       links = [{url: "foo.com"}];
@@ -50,7 +50,7 @@ describe("Top Sites Feed", () => {
       assert.lengthOf(result, TOP_SITES_SHOWMORE_LENGTH);
       assert.deepEqual(result, [...links, DEFAULT_TOP_SITES[0]]);
     });
-    it("should not throw if PlacesProvider returns null", () => {
+    it("should not throw if NewTabUtils returns null", () => {
       links = null;
       assert.doesNotThrow(() => {
         feed.getLinksWithDefaults(action);

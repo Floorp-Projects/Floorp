@@ -1,6 +1,4 @@
-const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 const { FinderIterator } = Cu.import("resource://gre/modules/FinderIterator.jsm", {});
-Cu.import("resource://gre/modules/Promise.jsm");
 
 var gFindResults = [];
 // Stub the method that instantiates nsIFind and does all the interaction with
