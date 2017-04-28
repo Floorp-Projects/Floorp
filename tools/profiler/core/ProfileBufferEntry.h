@@ -12,6 +12,7 @@
 #include "platform.h"
 #include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
+#include "PseudoStack.h"
 #include "mozilla/RefPtr.h"
 #include <string>
 #include <map>
