@@ -29,7 +29,7 @@ function setupUpdaterTestFinished() {
     path = path + "/../";
   }
 
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null);
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
 }
 
 /**
