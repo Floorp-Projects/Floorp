@@ -18,7 +18,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
@@ -193,7 +192,7 @@ public class WebViewProvider {
         return uaBuilder.toString();
     }
 
-    private static class LinkHandler implements View.OnLongClickListener, View.OnTouchListener {
+    private static class LinkHandler implements View.OnLongClickListener {
         private final WebView webView;
         private @Nullable IWebView.Callback callback = null;
 
@@ -203,16 +202,6 @@ public class WebViewProvider {
 
         public void setCallback(final @Nullable IWebView.Callback callback) {
             this.callback = callback;
-        }
-
-        private float lastX;
-        private float lastY;
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            lastX = event.getX();
-            lastY = event.getY();
-            return false;
         }
 
         @Override
@@ -226,7 +215,7 @@ public class WebViewProvider {
             switch (hitTestResult.getType()) {
                 case WebView.HitTestResult.SRC_ANCHOR_TYPE:
                     final String linkURL = hitTestResult.getExtra();
-                    callback.onLongPress(new IWebView.ClickTarget(true, linkURL, false, null), lastX, lastY);
+                    callback.onLongPress(new IWebView.HitTarget(true, linkURL, false, null));
                     return true;
 
                 case WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
@@ -245,16 +234,11 @@ public class WebViewProvider {
                                 throw new IllegalStateException("WebView did not supply url or src for image link");
                             }
 
-                            callback.onLongPress(new IWebView.ClickTarget(true, url, true, src), lastX, lastY);
+                            callback.onLongPress(new IWebView.HitTarget(true, url, true, src));
                         }
                     });
 
                     webView.requestFocusNodeHref(message);
-                    return true;
-
-                case WebView.HitTestResult.IMAGE_TYPE:
-                    final String imageURL = hitTestResult.getExtra();
-                    callback.onLongPress(new IWebView.ClickTarget(false, null, true, imageURL), lastX, lastY);
                     return true;
             }
 
@@ -285,7 +269,6 @@ public class WebViewProvider {
 
             linkHandler = new LinkHandler(this);
             setOnLongClickListener(linkHandler);
-            setOnTouchListener(linkHandler);
         }
 
         @Override

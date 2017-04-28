@@ -8,20 +8,20 @@ package org.mozilla.focus.web;
 import android.os.Bundle;
 
 public interface IWebView {
-    public class ClickTarget {
+    class HitTarget {
         public final boolean isLink;
         public final String linkURL;
 
         public final boolean isImage;
         public final String imageURL;
 
-        public ClickTarget(final boolean isLink, final String linkURL, final boolean isImage, final String imageURL) {
+        public HitTarget(final boolean isLink, final String linkURL, final boolean isImage, final String imageURL) {
             if (isLink && linkURL == null) {
-                throw new IllegalStateException("link clicktarget must contain URL");
+                throw new IllegalStateException("link hittarget must contain URL");
             }
 
             if (isImage && imageURL == null) {
-                throw new IllegalStateException("image clicktarget must contain URL");
+                throw new IllegalStateException("image hittarget must contain URL");
             }
 
             this.isLink = isLink;
@@ -44,7 +44,7 @@ public interface IWebView {
 
         void onDownloadStart(Download download);
 
-        void onLongPress(final ClickTarget clickTarget, float x, float y);
+        void onLongPress(final HitTarget hitTarget);
     }
 
     void setCallback(Callback callback);
