@@ -9,18 +9,16 @@ extern crate glutin;
 extern crate webrender;
 extern crate webrender_traits;
 
-use app_units::Au;
 use gleam::gl;
 use glutin::TouchPhase;
 use std::collections::HashMap;
 use std::env;
-use std::fs::File;
-use std::io::Read;
 use std::path::PathBuf;
-use webrender_traits::{ColorF, Epoch, GlyphInstance};
+use webrender_traits::{ClipRegion, ColorF, Epoch};
 use webrender_traits::{DeviceIntPoint, DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_traits::{ImageData, ImageDescriptor, ImageFormat};
-use webrender_traits::{PipelineId, TransformStyle, BoxShadowClipMode};
+use webrender_traits::{PipelineId, TransformStyle};
+use webrender_traits::{YuvColorSpace, YuvData};
 
 #[derive(Debug)]
 enum Gesture {
@@ -160,13 +158,6 @@ impl TouchState {
     }
 }
 
-fn load_file(name: &str) -> Vec<u8> {
-    let mut file = File::open(name).unwrap();
-    let mut buffer = vec![];
-    file.read_to_end(&mut buffer).unwrap();
-    buffer
-}
-
 struct Notifier {
     window_proxy: glutin::WindowProxy,
 }
@@ -227,6 +218,7 @@ fn main() {
         resource_override_path: res_path,
         debug: true,
         precache_shaders: true,
+        blob_image_renderer: None,
         device_pixel_ratio: window.hidpi_factor(),
         .. Default::default()
     };
@@ -252,145 +244,50 @@ fn main() {
                                   None,
                                   webrender_traits::MixBlendMode::Normal,
                                   Vec::new());
-    let sub_clip = {
-        let mask_image = api.generate_image_key();
-        api.add_image(
-            mask_image,
-            ImageDescriptor::new(2, 2, ImageFormat::A8, true),
-            ImageData::new(vec![0, 80, 180, 255]),
-            None,
-        );
-        let mask = webrender_traits::ImageMask {
-            image: mask_image,
-            rect: LayoutRect::new(LayoutPoint::new(75.0, 75.0), LayoutSize::new(100.0, 100.0)),
-            repeat: false,
-        };
-        let complex = webrender_traits::ComplexClipRegion::new(
-            LayoutRect::new(LayoutPoint::new(50.0, 50.0), LayoutSize::new(100.0, 100.0)),
-            webrender_traits::BorderRadius::uniform(20.0));
-
-        builder.new_clip_region(&bounds, vec![complex], Some(mask))
-    };
-
-    builder.push_rect(LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                      sub_clip,
-                      ColorF::new(0.0, 1.0, 0.0, 1.0));
-    builder.push_rect(LayoutRect::new(LayoutPoint::new(250.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                      sub_clip,
-                      ColorF::new(0.0, 1.0, 0.0, 1.0));
-    let border_side = webrender_traits::BorderSide {
-        color: ColorF::new(0.0, 0.0, 1.0, 1.0),
-        style: webrender_traits::BorderStyle::Groove,
-    };
-    let border_widths = webrender_traits::BorderWidths {
-        top: 10.0,
-        left: 10.0,
-        bottom: 10.0,
-        right: 10.0,
-    };
-    let border_details = webrender_traits::BorderDetails::Normal(webrender_traits::NormalBorder {
-        top: border_side,
-        right: border_side,
-        bottom: border_side,
-        left: border_side,
-        radius: webrender_traits::BorderRadius::uniform(20.0),
-    });
-    builder.push_border(LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                        sub_clip,
-                        border_widths,
-                        border_details);
 
 
-    if false { // draw text?
-        let font_key = api.generate_font_key();
-        let font_bytes = load_file("res/FreeSans.ttf");
-        api.add_raw_font(font_key, font_bytes, 0);
+    let yuv_chanel1 = api.generate_image_key();
+    let yuv_chanel2 = api.generate_image_key();
+    let yuv_chanel2_1 = api.generate_image_key();
+    let yuv_chanel3 = api.generate_image_key();
+    api.add_image(
+        yuv_chanel1,
+        ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+        ImageData::new(vec![127; 100 * 100]),
+        None,
+    );
+    api.add_image(
+        yuv_chanel2,
+        ImageDescriptor::new(100, 100, ImageFormat::RG8, true),
+        ImageData::new(vec![0; 100 * 100 * 2]),
+        None,
+    );
+    api.add_image(
+        yuv_chanel2_1,
+        ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+        ImageData::new(vec![127; 100 * 100]),
+        None,
+    );
+    api.add_image(
+        yuv_chanel3,
+        ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+        ImageData::new(vec![127; 100 * 100]),
+        None,
+    );
 
-        let text_bounds = LayoutRect::new(LayoutPoint::new(100.0, 200.0), LayoutSize::new(700.0, 300.0));
+    builder.push_yuv_image(
+        LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
+        ClipRegion::simple(&bounds),
+        YuvData::NV12(yuv_chanel1, yuv_chanel2),
+        YuvColorSpace::Rec601,
+    );
 
-        let glyphs = vec![
-            GlyphInstance {
-                index: 48,
-                point: LayoutPoint::new(100.0, 100.0),
-            },
-            GlyphInstance {
-                index: 68,
-                point: LayoutPoint::new(150.0, 100.0),
-            },
-            GlyphInstance {
-                index: 80,
-                point: LayoutPoint::new(200.0, 100.0),
-            },
-            GlyphInstance {
-                index: 82,
-                point: LayoutPoint::new(250.0, 100.0),
-            },
-            GlyphInstance {
-                index: 81,
-                point: LayoutPoint::new(300.0, 100.0),
-            },
-            GlyphInstance {
-                index: 3,
-                point: LayoutPoint::new(350.0, 100.0),
-            },
-            GlyphInstance {
-                index: 86,
-                point: LayoutPoint::new(400.0, 100.0),
-            },
-            GlyphInstance {
-                index: 79,
-                point: LayoutPoint::new(450.0, 100.0),
-            },
-            GlyphInstance {
-                index: 72,
-                point: LayoutPoint::new(500.0, 100.0),
-            },
-            GlyphInstance {
-                index: 83,
-                point: LayoutPoint::new(550.0, 100.0),
-            },
-            GlyphInstance {
-                index: 87,
-                point: LayoutPoint::new(600.0, 100.0),
-            },
-            GlyphInstance {
-                index: 17,
-                point: LayoutPoint::new(650.0, 100.0),
-            },
-        ];
-
-        builder.push_text(text_bounds,
-                          webrender_traits::ClipRegion::simple(&bounds),
-                          &glyphs,
-                          font_key,
-                          ColorF::new(1.0, 1.0, 0.0, 1.0),
-                          Au::from_px(32),
-                          Au::from_px(0),
-                          None);
-    }
-
-    if false { // draw box shadow?
-        let rect = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(0.0, 0.0));
-        let simple_box_bounds = LayoutRect::new(LayoutPoint::new(20.0, 200.0),
-                                                LayoutSize::new(50.0, 50.0));
-        let offset = LayoutPoint::new(10.0, 10.0);
-        let color = ColorF::new(1.0, 1.0, 1.0, 1.0);
-        let blur_radius = 0.0;
-        let spread_radius = 0.0;
-        let simple_border_radius = 8.0;
-        let box_shadow_type = BoxShadowClipMode::Inset;
-        let full_screen_clip = builder.new_clip_region(&bounds, Vec::new(), None);
-
-        builder.push_box_shadow(rect,
-                                full_screen_clip,
-                                simple_box_bounds,
-                                offset,
-                                color,
-                                blur_radius,
-                                spread_radius,
-                                simple_border_radius,
-                                box_shadow_type);
-    }
+    builder.push_yuv_image(
+        LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
+        ClipRegion::simple(&bounds),
+        YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
+        YuvColorSpace::Rec601,
+    );
 
     builder.pop_stacking_context();
 
@@ -446,3 +343,4 @@ fn main() {
         window.swap_buffers().ok();
     }
 }
+

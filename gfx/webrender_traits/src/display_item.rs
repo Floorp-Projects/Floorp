@@ -9,12 +9,38 @@ use {ColorF, FontKey, ImageKey, PipelineId, WebGLContextId};
 use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use {PropertyBinding};
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ClipAndScrollInfo {
+    pub scroll_node_id: ClipId,
+    pub clip_node_id: Option<ClipId>,
+}
+
+impl ClipAndScrollInfo {
+    pub fn simple(node_id: ClipId) -> ClipAndScrollInfo {
+        ClipAndScrollInfo {
+            scroll_node_id: node_id,
+            clip_node_id: None,
+        }
+    }
+
+    pub fn new(scroll_node_id: ClipId, clip_node_id: ClipId) -> ClipAndScrollInfo {
+        ClipAndScrollInfo {
+            scroll_node_id: scroll_node_id,
+            clip_node_id: Some(clip_node_id),
+        }
+    }
+
+    pub fn clip_node_id(&self) -> ClipId {
+        self.clip_node_id.unwrap_or(self.scroll_node_id)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
     pub rect: LayoutRect,
     pub clip: ClipRegion,
-    pub clip_id: ClipId,
+    pub clip_and_scroll: ClipAndScrollInfo,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -310,7 +336,6 @@ pub struct IframeDisplayItem {
     pub pipeline_id: PipelineId,
 }
 
-
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageDisplayItem {
     pub image_key: ImageKey,
@@ -329,17 +354,63 @@ pub enum ImageRendering {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct YuvImageDisplayItem {
-    pub y_image_key: ImageKey,
-    pub u_image_key: ImageKey,
-    pub v_image_key: ImageKey,
+    pub yuv_data: YuvData,
     pub color_space: YuvColorSpace,
 }
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum YuvColorSpace {
-    Rec601 = 1, // The values must match the ones in prim_shared.glsl
-    Rec709 = 2,
+    Rec601 = 0,
+    Rec709 = 1,
+}
+pub const YUV_COLOR_SPACES: [YuvColorSpace; 2] = [YuvColorSpace::Rec601, YuvColorSpace::Rec709];
+
+impl YuvColorSpace {
+    pub fn get_feature_string(&self) -> &'static str {
+        match *self {
+            YuvColorSpace::Rec601 => "YUV_REC601",
+            YuvColorSpace::Rec709 => "YUV_REC709",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum YuvData {
+    NV12(ImageKey, ImageKey),
+    PlanarYCbCr(ImageKey, ImageKey, ImageKey),
+}
+
+impl YuvData {
+    pub fn get_format(&self) -> YuvFormat {
+        match *self {
+            YuvData::NV12(..) => YuvFormat::NV12,
+            YuvData::PlanarYCbCr(..) => YuvFormat::PlanarYCbCr,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum YuvFormat {
+    NV12 = 0,
+    PlanarYCbCr = 1,
+}
+pub const YUV_FORMATS: [YuvFormat; 2] = [YuvFormat::NV12, YuvFormat::PlanarYCbCr];
+
+impl YuvFormat {
+    pub fn get_plane_num(&self) -> usize {
+        match *self {
+            YuvFormat::NV12 => 2,
+            YuvFormat::PlanarYCbCr => 3,
+        }
+    }
+
+    pub fn get_feature_string(&self) -> &'static str {
+        match *self {
+            YuvFormat::NV12 => "NV12",
+            YuvFormat::PlanarYCbCr => "",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
