@@ -25,6 +25,7 @@ class nsCSSPropertyIDSet;
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 struct Keyframe;
+struct ServoComputedValuesWithParent;
 struct StyleTransition;
 } // namespace mozilla
 

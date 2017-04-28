@@ -11,7 +11,10 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { NetMonitorController } = require("../netmonitor-controller");
-const { getFormattedSize } = require("../utils/format-utils");
+const {
+  getFormattedIPAndPort,
+  getFormattedSize,
+} = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const {
   getHeadersURL,
@@ -162,7 +165,7 @@ const HeadersPanel = createClass({
 
     let summaryAddress = remoteAddress ?
       this.renderSummary(SUMMARY_ADDRESS,
-        remotePort ? `${remoteAddress}:${remotePort}` : remoteAddress) : null;
+        getFormattedIPAndPort(remoteAddress, remotePort)) : null;
 
     let summaryStatus;
 

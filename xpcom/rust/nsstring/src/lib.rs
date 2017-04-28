@@ -165,6 +165,7 @@ macro_rules! define_string_types {
         assign = $assign: ident, $fallible_assign: ident;
         append = $append: ident, $fallible_append: ident;
         set_length = $set_length: ident, $fallible_set_length: ident;
+        begin_writing = $begin_writing: ident, $fallible_begin_writing: ident;
     } => {
         /// The representation of a ns[C]String type in C++. This type is
         /// used internally by our definition of ns[C]String to ensure layout
@@ -283,6 +284,45 @@ macro_rules! define_string_types {
                     self.set_length(0);
                 }
             }
+
+            /// Get a `&mut` reference to the backing data for this string.
+            /// This method will allocate and copy if the current backing buffer
+            /// is immutable or shared.
+            pub fn to_mut(&mut self) -> &mut [$char_t] {
+                unsafe {
+                    let len = self.len();
+                    if len == 0 {
+                        // Use an arbitrary non-null value as the pointer
+                        slice::from_raw_parts_mut(0x1 as *mut $char_t, 0)
+                    } else {
+                        slice::from_raw_parts_mut($begin_writing(self), len)
+                    }
+                }
+            }
+
+            /// Get a `&mut` reference to the backing data for this string.
+            /// This method will allocate and copy if the current backing buffer
+            /// is immutable or shared.
+            ///
+            /// Returns `Ok(&mut [T])` on success, and `Err(())` if the
+            /// allocation failed.
+            pub fn fallible_to_mut(&mut self) -> Result<&mut [$char_t], ()> {
+                unsafe {
+                    let len = self.len();
+                    if len == 0 {
+                        // Use an arbitrary non-null value as the pointer
+                        Ok(slice::from_raw_parts_mut(0x1 as *mut $char_t, 0))
+                    } else {
+                        let ptr = $fallible_begin_writing(self);
+                        if ptr.is_null() {
+                            Err(())
+                        } else {
+                            Ok(slice::from_raw_parts_mut(ptr, len))
+                        }
+                    }
+                }
+            }
+
         }
 
         impl Deref for $AString {
@@ -706,6 +746,7 @@ define_string_types! {
     assign = Gecko_AssignCString, Gecko_FallibleAssignCString;
     append = Gecko_AppendCString, Gecko_FallibleAppendCString;
     set_length = Gecko_SetLengthCString, Gecko_FallibleSetLengthCString;
+    begin_writing = Gecko_BeginWritingCString, Gecko_FallibleBeginWritingCString;
 }
 
 impl nsACString {
@@ -828,6 +869,7 @@ define_string_types! {
     assign = Gecko_AssignString, Gecko_FallibleAssignString;
     append = Gecko_AppendString, Gecko_FallibleAppendString;
     set_length = Gecko_SetLengthString, Gecko_FallibleSetLengthString;
+    begin_writing = Gecko_BeginWritingString, Gecko_FallibleBeginWritingString;
 }
 
 impl nsAString {
@@ -914,18 +956,22 @@ extern "C" {
     fn Gecko_AssignCString(this: *mut nsACString, other: *const nsACString);
     fn Gecko_AppendCString(this: *mut nsACString, other: *const nsACString);
     fn Gecko_SetLengthCString(this: *mut nsACString, length: u32);
+    fn Gecko_BeginWritingCString(this: *mut nsACString) -> *mut u8;
     fn Gecko_FallibleAssignCString(this: *mut nsACString, other: *const nsACString) -> bool;
     fn Gecko_FallibleAppendCString(this: *mut nsACString, other: *const nsACString) -> bool;
     fn Gecko_FallibleSetLengthCString(this: *mut nsACString, length: u32) -> bool;
+    fn Gecko_FallibleBeginWritingCString(this: *mut nsACString) -> *mut u8;
 
     fn Gecko_FinalizeString(this: *mut nsAString);
 
     fn Gecko_AssignString(this: *mut nsAString, other: *const nsAString);
     fn Gecko_AppendString(this: *mut nsAString, other: *const nsAString);
     fn Gecko_SetLengthString(this: *mut nsAString, length: u32);
+    fn Gecko_BeginWritingString(this: *mut nsAString) -> *mut u16;
     fn Gecko_FallibleAssignString(this: *mut nsAString, other: *const nsAString) -> bool;
     fn Gecko_FallibleAppendString(this: *mut nsAString, other: *const nsAString) -> bool;
     fn Gecko_FallibleSetLengthString(this: *mut nsAString, length: u32) -> bool;
+    fn Gecko_FallibleBeginWritingString(this: *mut nsAString) -> *mut u16;
 
     // Gecko implementation in nsReadableUtils.cpp
     fn Gecko_AppendUTF16toCString(this: *mut nsACString, other: *const nsAString);

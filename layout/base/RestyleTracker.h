@@ -350,7 +350,9 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
       // to reach aElement in the case the PresShell posts a restyle event from
       // PostRecreateFramesFor, so we need to track it here.
       MOZ_ASSERT(curData, "expected to find a RestyleData for cur");
-      curData->mDescendants.AppendElement(aElement);
+      if (curData) {
+        curData->mDescendants.AppendElement(aElement);
+      }
     }
   }
 

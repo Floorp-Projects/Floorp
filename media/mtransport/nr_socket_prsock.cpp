@@ -243,7 +243,7 @@ public:
     MOZ_ASSERT(mParentThread == NS_GetCurrentThread());
     nsrefcnt count = --mUseCount;
     MOZ_ASSERT(int32_t(mUseCount) >= 0, "illegal refcnt");
-    if (count == 0) {
+    if (mThread && count == 0) {
       // in-use -> idle -- no one forcing it to remain instantiated
       r_log(LOG_GENERIC,LOG_DEBUG,"Shutting down wrapped SingletonThread %p",
             mThread.get());

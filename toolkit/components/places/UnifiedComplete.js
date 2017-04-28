@@ -37,7 +37,7 @@ const PREF_RESTRICT_BOOKMARKS =     [ "restrict.bookmark",      "*" ];
 const PREF_RESTRICT_TYPED =         [ "restrict.typed",         "~" ];
 const PREF_RESTRICT_TAG =           [ "restrict.tag",           "+" ];
 const PREF_RESTRICT_SWITCHTAB =     [ "restrict.openpage",      "%" ];
-const PREF_RESTRICT_SEARCHES =      [ "restrict.searces",       "$" ];
+const PREF_RESTRICT_SEARCHES =      [ "restrict.searches",      "$" ];
 const PREF_MATCH_TITLE =            [ "match.title",            "#" ];
 const PREF_MATCH_URL =              [ "match.url",              "@" ];
 

@@ -31,7 +31,7 @@ static PRIOMethods   *sPollableEventLayerMethodsPtr = nullptr;
 
 static void LazyInitSocket()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (sPollableEventLayerMethodsPtr) {
     return;
   }
@@ -140,7 +140,7 @@ PollableEvent::PollableEvent()
   , mSignaled(false)
 {
   MOZ_COUNT_CTOR(PollableEvent);
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // create pair of prfiledesc that can be used as a poll()ble
   // signal. on windows use a localhost socket pair, and on
   // unix use a pipe.
@@ -257,7 +257,7 @@ PollableEvent::Signal()
   // behavior on windows to be as before bug 698882, e.g. write to the socket
   // also if an event dispatch is on the socket thread and writing to the
   // socket for each event. See bug 1292181.
-  if (PR_GetCurrentThread() == gSocketThread) {
+  if (OnSocketThread()) {
     SOCKET_LOG(("PollableEvent::Signal OnSocketThread nop\n"));
     return true;
   }
@@ -287,7 +287,7 @@ bool
 PollableEvent::Clear()
 {
   // necessary because of the "dont signal on socket thread" optimization
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   SOCKET_LOG(("PollableEvent::Clear\n"));
   mSignaled = false;

@@ -523,6 +523,7 @@ ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
 {
   mLookAndFeelCache = aLookAndFeelIntCache;
+  gfx::gfxVars::GotInitialVarUpdates(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
 
@@ -957,8 +958,6 @@ ContentChild::AppendProcessId(nsACString& aName)
 void
 ContentChild::InitGraphicsDeviceData(const ContentDeviceData& aData)
 {
-  // Initialize the graphics platform. This may contact the parent process
-  // to read device preferences.
   gfxPlatform::InitChild(aData);
 }
 
@@ -3371,7 +3370,7 @@ ContentChild::RecvProvideAnonymousTemporaryFile(const uint64_t& aID,
 }
 
 nsresult
-ContentChild::AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCallback)
+ContentChild::AsyncOpenAnonymousTemporaryFile(const AnonymousTemporaryFileCallback& aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

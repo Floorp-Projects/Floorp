@@ -252,17 +252,6 @@ public:
 
   already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
 
-protected:
-  // Updates the media duration. This is called while the media is being
-  // played, calls before the media has reached loaded metadata are ignored.
-  // The duration is assumed to be an estimate, and so a degree of
-  // instability is expected; if the incoming duration is not significantly
-  // different from the existing duration, the change request is ignored.
-  // If the incoming duration is significantly different, the duration is
-  // changed, this causes a durationchanged event to fire to the media
-  // element.
-  void UpdateEstimatedMediaDuration(int64_t aDuration) override;
-
 public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
@@ -568,9 +557,9 @@ protected:
   // This corresponds to the "current position" in HTML5.
   // We allow omx subclasses to substitute an alternative current position for
   // usage with the audio offload player.
-  virtual int64_t CurrentPosition()
+  virtual media::TimeUnit CurrentPosition()
   {
-    return mCurrentPosition.Ref().ToMicroseconds();
+    return mCurrentPosition.Ref();
   }
 
   // Official duration of the media resource as observed by script.
@@ -775,13 +764,6 @@ protected:
 
   Canonical<bool> mPreservesPitch;
 
-  // Media duration according to the demuxer's current estimate.
-  // Note that it's quite bizarre for this to live on the main thread - it would
-  // make much more sense for this to be owned by the demuxer's task queue. But
-  // currently this is only every changed in NotifyDataArrived, which runs on
-  // the main thread. That will need to be cleaned up at some point.
-  Canonical<media::NullableTimeUnit> mEstimatedDuration;
-
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
   Canonical<Maybe<double>> mExplicitDuration;
@@ -826,10 +808,6 @@ public:
   AbstractCanonical<bool>* CanonicalPreservesPitch()
   {
     return &mPreservesPitch;
-  }
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalEstimatedDuration()
-  {
-    return &mEstimatedDuration;
   }
   AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration()
   {

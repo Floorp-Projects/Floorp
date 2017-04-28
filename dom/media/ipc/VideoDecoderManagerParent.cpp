@@ -91,7 +91,8 @@ VideoDecoderManagerParent::StartupThreads()
     layers::VideoBridgeChild::Startup();
   }), NS_DISPATCH_NORMAL);
 
-  sManagerTaskQueue = new TaskQueue(managerThread.forget());
+  sManagerTaskQueue = new TaskQueue(
+    managerThread.forget(), "VideoDecoderManagerParent::sManagerTaskQueue");
 
   auto* obs = new ManagerThreadShutdownObserver();
   observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
@@ -159,9 +160,13 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
                                                     const layers::TextureFactoryIdentifier& aIdentifier,
                                                     bool* aSuccess)
 {
-  return new VideoDecoderParent(this, aVideoInfo, aIdentifier, sManagerTaskQueue,
-                                new TaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4)),
-                                aSuccess);
+  RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
+    SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4),
+    "VideoDecoderParent::mDecodeTaskQueue");
+
+  return new VideoDecoderParent(
+    this, aVideoInfo, aIdentifier,
+    sManagerTaskQueue, decodeTaskQueue, aSuccess);
 }
 
 bool

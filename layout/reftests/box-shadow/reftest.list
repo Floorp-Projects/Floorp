@@ -1,8 +1,8 @@
 == boxshadow-basic.html boxshadow-basic-ref.html
 != boxshadow-blur.html boxshadow-blur-notref.html
 != boxshadow-blur.html boxshadow-blur-notref2.html
-random == boxshadow-blur-2.html boxshadow-blur-2-ref.html # fixedpoint division in blur code makes this fail
-random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
+random fails-if(stylo) == boxshadow-blur-2.html boxshadow-blur-2-ref.html # fixedpoint division in blur code makes this fail
+random fails-if(stylo) != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
 == tableboxshadow-basic.html tableboxshadow-basic-ref.html
@@ -13,7 +13,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 fails-if(Android) fuzzy-if(webrender,20,3310) == boxshadow-button.html boxshadow-button-ref.html
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) fuzzy-if(webrender,19,1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
-fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
+fails-if(Android) fails-if(stylo) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -28,7 +28,7 @@ fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 fuzzy(3,500) fuzzy-if(d2d,2,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
-fuzzy(26,3610) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
+fuzzy(26,3610) fails-if(stylo) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
@@ -43,5 +43,5 @@ fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset-r
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
-fuzzy(159,2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html
-== boxshadow-large-offset.html boxshadow-large-offset-ref.html
+fuzzy(159,2) fails-if(!dwrite) fails-if(stylo) == 1212823-1.html 1212823-1-ref.html
+fails-if(stylo) == boxshadow-large-offset.html boxshadow-large-offset-ref.html

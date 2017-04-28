@@ -53,6 +53,10 @@ public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      bool aSupportsTailDispatch = false);
 
+  TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+            const char* aName,
+            bool aSupportsTailDispatch = false);
+
   TaskDispatcher& TailDispatcher() override;
 
   TaskQueue* AsTaskQueue() override { return this; }
@@ -65,7 +69,11 @@ public:
     {
       MonitorAutoLock mon(mQueueMonitor);
       nsresult rv = DispatchLocked(/* passed by ref */r, aFailureHandling, aReason);
-      MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA) || defined(EARLY_BETA_OR_EARLIER)
+      if (NS_FAILED(rv) && aFailureHandling == AssertDispatchSuccess) {
+        MOZ_CRASH_UNSAFE_PRINTF("%s: Dispatch failed. rv=%x", mName, uint32_t(rv));
+      }
+#endif
       Unused << rv;
     }
     // If the ownership of |r| is not transferred in DispatchLocked() due to
@@ -185,6 +193,9 @@ protected:
   // True if we've started our shutdown process.
   bool mIsShutdown;
   MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+
+  // The name of this TaskQueue. Useful when debugging dispatch failures.
+  const char* const mName;
 
   class Runner : public Runnable {
   public:

@@ -1228,7 +1228,7 @@ struct nsGridContainerFrame::Tracks
   nscoord GrowTracksToLimit(nscoord                   aAvailableSpace,
                             nsTArray<TrackSize>&      aPlan,
                             const nsTArray<uint32_t>& aGrowableTracks,
-                            FitContentClamper         aFitContentClamper) const
+                            const FitContentClamper&  aFitContentClamper) const
   {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
     nscoord space = aAvailableSpace;
@@ -1323,7 +1323,7 @@ struct nsGridContainerFrame::Tracks
                                    nsTArray<TrackSize>&      aPlan,
                                    const nsTArray<uint32_t>& aGrowableTracks,
                                    TrackSize::StateBits      aSelector,
-                                   FitContentClamper aFitContentClamper) const
+                                   const FitContentClamper&  aFitContentClamper) const
   {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
     uint32_t numGrowable = aGrowableTracks.Length();

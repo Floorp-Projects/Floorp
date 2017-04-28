@@ -31,6 +31,7 @@
 "use strict";
 
 const { HEADERS } = require("../constants");
+const { getFormattedIPAndPort } = require("./format-utils");
 const HEADER_FILTERS = HEADERS
   .filter(h => h.canFilter)
   .map(h => h.filterKey || h.name);
@@ -132,7 +133,8 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       match = item.urlDetails.host.toLowerCase().includes(value);
       break;
     case "remote-ip":
-      match = `${item.remoteAddress}:${item.remotePort}`.toLowerCase().includes(value);
+      match = getFormattedIPAndPort(item.remoteAddress, item.remotePort)
+        .toLowerCase().includes(value);
       break;
     case "has-response-header":
       if (typeof item.responseHeaders === "object") {

@@ -25,6 +25,7 @@ class nsIDocument;
 namespace mozilla {
 class RestyleTracker;
 namespace dom {
+class Element;
 class SVGAnimationElement;
 } // namespace dom
 } // namespace mozilla
@@ -112,6 +113,9 @@ public:
   {
     return mMightHavePendingStyleUpdates;
   }
+
+  bool PreTraverse();
+  bool PreTraverseInSubtree(mozilla::dom::Element* aRoot);
 
 protected:
   ~nsSMILAnimationController();

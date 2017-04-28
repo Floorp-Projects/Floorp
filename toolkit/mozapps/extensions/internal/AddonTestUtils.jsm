@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
 const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",

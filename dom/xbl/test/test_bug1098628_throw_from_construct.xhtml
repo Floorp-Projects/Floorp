@@ -11,7 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098628
 
   /** Test for Bug 1098628 **/
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.expectUncaughtException();
   SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('flimfniffle')}]);
   addLoadEvent(function() {
     SimpleTest.executeSoon(SimpleTest.endMonitorConsole);

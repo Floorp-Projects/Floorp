@@ -590,20 +590,6 @@ XPCWrappedNative::Destroy()
     mMaybeScope = nullptr;
 }
 
-void
-XPCWrappedNative::SetProto(XPCWrappedNativeProto* p)
-{
-    MOZ_ASSERT(!IsWrapperExpired(), "bad ptr!");
-
-    MOZ_ASSERT(HasProto());
-
-    // Write barrier for incremental GC.
-    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
-    GetProto()->WriteBarrierPre(cx);
-
-    mMaybeProto = p;
-}
-
 // This is factored out so that it can be called publicly.
 // static
 nsIXPCScriptable*
@@ -1301,7 +1287,7 @@ CallMethodHelper::Call()
 {
     mCallContext.SetRetVal(JS::UndefinedValue());
 
-    XPCJSContext::Get()->SetPendingException(nullptr);
+    mCallContext.GetContext()->SetPendingException(nullptr);
 
     if (mVTableIndex == 0) {
         return QueryInterfaceFastPath();
@@ -1955,11 +1941,11 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
             break;
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
-            nsXPConnect::GetContextInstance()->mScratchStrings.Destroy((nsString*)param.val.p);
+            mCallContext.GetContext()->mScratchStrings.Destroy((nsString*)param.val.p);
             break;
         case nsXPTType::T_UTF8STRING:
         case nsXPTType::T_CSTRING:
-            nsXPConnect::GetContextInstance()->mScratchCStrings.Destroy((nsCString*)param.val.p);
+            mCallContext.GetContext()->mScratchCStrings.Destroy((nsCString*)param.val.p);
             break;
         default:
             MOZ_ASSERT(!type.IsArithmetic(), "Cleanup requested on unexpected type.");
@@ -1985,9 +1971,9 @@ CallMethodHelper::AllocateStringClass(nsXPTCVariant* dp,
     // ASTRING and DOMSTRING are very similar, and both use nsString.
     // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
     if (type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-        dp->val.p = nsXPConnect::GetContextInstance()->mScratchStrings.Create();
+        dp->val.p = mCallContext.GetContext()->mScratchStrings.Create();
     else
-        dp->val.p = nsXPConnect::GetContextInstance()->mScratchCStrings.Create();
+        dp->val.p = mCallContext.GetContext()->mScratchCStrings.Create();
 
     // Check for OOM, in either case.
     if (!dp->val.p) {

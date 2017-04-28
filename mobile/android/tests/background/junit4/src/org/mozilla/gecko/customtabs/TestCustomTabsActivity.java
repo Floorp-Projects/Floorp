@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.fakes.RoboMenu;
 
@@ -65,7 +66,7 @@ public class TestCustomTabsActivity {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         final Intent i = builder.build().intent;
 
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
+        doReturn(i).when(spyActivity).getIntent();
 
         spyActivity.finish();
         verify(spyActivity, times(0)).overridePendingTransition(anyInt(), anyInt());
@@ -80,7 +81,7 @@ public class TestCustomTabsActivity {
         builder.setExitAnimations(spyContext, enterRes, exitRes);
         final Intent i = builder.build().intent;
 
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
+        doReturn(i).when(spyActivity).getIntent();
 
         spyActivity.finish();
         verify(spyActivity, times(1)).overridePendingTransition(eq(enterRes), eq(exitRes));
@@ -95,8 +96,8 @@ public class TestCustomTabsActivity {
         builder.setExitAnimations(spyContext, enterRes, exitRes);
         final Intent i = builder.build().intent;
 
+        doReturn(i).when(spyActivity).getIntent();
         Whitebox.setInternalState(spyActivity, "usingCustomAnimation", true);
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
 
         Assert.assertEquals(THIRD_PARTY_PACKAGE_NAME, spyActivity.getPackageName());
     }

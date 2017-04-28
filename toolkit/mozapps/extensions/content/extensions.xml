@@ -1283,7 +1283,8 @@
               );
               this._warningLink.hidden = true;
               this._warningBtn.hidden = true;
-            } else if (!isUpgrade && !this.mAddon.multiprocessCompatible &&
+            } else if (!isUpgrade && this.mAddon.appDisabled &&
+                       !this.mAddon.multiprocessCompatible &&
                        !Services.prefs.getBoolPref("extensions.allow-non-mpc-extensions", true)) {
               this.setAttribute("notification", "error");
               this._error.textContent = gStrings.ext.formatStringFromName(

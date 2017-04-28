@@ -38,13 +38,13 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:addons");
+  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   let expectedTabs = [];
   let tab = win.gBrowser.selectedTab;
   expectedTabs.push(expectedTabInfo(tab, win));
 
-  for (let url of ["about:robots", "about:mozilla"]) {
+  for (let url of ["about:robots", "about:buildconfig"]) {
     tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
     expectedTabs.push(expectedTabInfo(tab, win));
   }

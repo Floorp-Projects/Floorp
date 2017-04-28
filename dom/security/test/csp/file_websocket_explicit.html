@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1345615: Allow websocket schemes when using 'self' in CSP</title>
+  <meta http-equiv="Content-Security-Policy" content="connect-src ws:">
+</head>
+<body>
+  <script type="application/javascript">
+    /* load socket using ws */
+    var wsSocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_websocket_self");
+    wsSocket.onopen = function(e) {
+      window.parent.postMessage({result: "explicit-ws-loaded"}, "*");
+      wsSocket.close();
+    };
+    wsSocket.onerror = function(e) {
+      window.parent.postMessage({result: "explicit-ws-blocked"}, "*");
+    };
+
+    /* load socket using wss */
+    var wssSocket = new WebSocket("wss://example.com/tests/dom/security/test/csp/file_websocket_self");
+    wssSocket.onopen = function(e) {
+      window.parent.postMessage({result: "explicit-wss-loaded"}, "*");
+      wssSocket.close();
+    };
+    wssSocket.onerror = function(e) {
+      window.parent.postMessage({result: "explicit-wss-blocked"}, "*");
+    };
+  </script>
+</body>
+</html>

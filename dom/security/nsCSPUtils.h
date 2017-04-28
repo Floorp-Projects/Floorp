@@ -186,7 +186,7 @@ nsresult CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
 
 class nsCSPHostSrc;
 
-nsCSPHostSrc* CSP_CreateHostSrcFromURI(nsIURI* aURI);
+nsCSPHostSrc* CSP_CreateHostSrcFromSelfURI(nsIURI* aSelfURI);
 bool CSP_IsValidDirective(const nsAString& aDir);
 bool CSP_IsDirective(const nsAString& aValue, CSPDirective aDir);
 bool CSP_IsKeyword(const nsAString& aValue, enum CSPKeyword aKey);
@@ -256,6 +256,9 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     void setPort(const nsAString& aPort);
     void appendPath(const nsAString &aPath);
 
+    inline void setGeneratedFromSelfKeyword() const
+      { mGeneratedFromSelfKeyword = true;}
+
     inline void getScheme(nsAString& outStr) const
       { outStr.Assign(mScheme); };
 
@@ -273,6 +276,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     nsString mHost;
     nsString mPort;
     nsString mPath;
+    mutable bool mGeneratedFromSelfKeyword;
 };
 
 /* =============== nsCSPKeywordSrc ============ */

@@ -949,15 +949,19 @@ element.isVisible = function (el, x = undefined, y = undefined) {
  * point of its rectangle that is inside the viewport, excluding the size
  * of any rendered scrollbars.
  *
+ * An element is obscured if the pointer-interactable paint tree at its
+ * centre point is empty, or the first element in this tree is not an
+ * inclusive descendant of itself.
+ *
  * @param {DOMElement} el
  *     Element determine if is pointer-interactable.
  *
  * @return {boolean}
- *     True if interactable, false otherwise.
+ *     True if element is obscured, false otherwise.
  */
-element.isPointerInteractable = function (el) {
+element.isObscured = function (el) {
   let tree = element.getPointerInteractablePaintTree(el);
-  return tree[0] === el;
+  return !el.contains(tree[0]);
 };
 
 /**

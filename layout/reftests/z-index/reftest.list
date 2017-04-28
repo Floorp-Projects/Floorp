@@ -1,12 +1,12 @@
-== 480053-1.html 480053-1-ref.html
+fails-if(stylo) == 480053-1.html 480053-1-ref.html
 == z-index-1.html z-index-1-ref.html
 != stacking-context-yes.html stacking-context-no.html
 fuzzy-if(skiaContent,1,1500) == stacking-context-perspective.html stacking-context-yes.html
 == stacking-context-backface-visibility.html stacking-context-no.html
 
-fails-if(Android&&!asyncPan) != overlayscrollbar-sorting-ref-visible.html overlayscrollbar-sorting-ref-hidden.html
-random-if(transparentScrollbars) == overlayscrollbar-sorting-1.html overlayscrollbar-sorting-ref-visible.html
-== overlayscrollbar-sorting-2.html overlayscrollbar-sorting-ref-visible.html
+fails-if(Android&&!asyncPan) fails-if(stylo) != overlayscrollbar-sorting-ref-visible.html overlayscrollbar-sorting-ref-hidden.html
+random-if(transparentScrollbars) fails-if(stylo) == overlayscrollbar-sorting-1.html overlayscrollbar-sorting-ref-visible.html
+fails-if(stylo) == overlayscrollbar-sorting-2.html overlayscrollbar-sorting-ref-visible.html
 == overlayscrollbar-sorting-3.html overlayscrollbar-sorting-ref-hidden.html
 == overlayscrollbar-sorting-4.html overlayscrollbar-sorting-ref-hidden.html
-random-if(transparentScrollbars) == overlayscrollbar-sorting-5.html overlayscrollbar-sorting-ref-visible.html
+random-if(transparentScrollbars) fails-if(stylo) == overlayscrollbar-sorting-5.html overlayscrollbar-sorting-ref-visible.html

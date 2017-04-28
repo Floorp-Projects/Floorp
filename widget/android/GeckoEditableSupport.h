@@ -241,7 +241,7 @@ public:
             int32_t aRangeBackColor, int32_t aRangeLineColor);
 
     // Update styling for the active composition using previous-added ranges.
-    void OnImeUpdateComposition(int32_t aStart, int32_t aEnd);
+    void OnImeUpdateComposition(int32_t aStart, int32_t aEnd, int32_t aFlags);
 
     // Set cursor mode whether IME requests
     void OnImeRequestCursorUpdates(int aRequestMode);

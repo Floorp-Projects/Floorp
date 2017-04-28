@@ -1227,6 +1227,8 @@ InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules)
   if (!loadPKCS11Modules) {
     flags |= NSS_INIT_NOMODDB;
   }
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+          ("InitializeNSS(%s, %d, %d)", dir, readOnly, loadPKCS11Modules));
   return ::NSS_Initialize(dir, "", "", SECMOD_DB, flags);
 }
 

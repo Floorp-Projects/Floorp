@@ -58,8 +58,8 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
         }
 
         @Override // IGeckoEditableChild
-        public void onImeUpdateComposition(int start, int end) {
-            GeckoEditableChild.this.onImeUpdateComposition(start, end);
+        public void onImeUpdateComposition(int start, int end, int flags) {
+            GeckoEditableChild.this.onImeUpdateComposition(start, end, flags);
         }
 
         @Override // IGeckoEditableChild
@@ -105,8 +105,12 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
                                                 boolean rangeBoldLine, int rangeForeColor,
                                                 int rangeBackColor, int rangeLineColor);
 
+    // Don't update to the new composition if it's different than the current composition.
+    @WrapForJNI
+    public static final int FLAG_KEEP_CURRENT_COMPOSITION = 1;
+
     @WrapForJNI(dispatchTo = "proxy") @Override // IGeckoEditableChild
-    public native void onImeUpdateComposition(int start, int end);
+    public native void onImeUpdateComposition(int start, int end, int flags);
 
     @WrapForJNI(dispatchTo = "proxy") @Override // IGeckoEditableChild
     public native void onImeRequestCursorUpdates(int requestMode);

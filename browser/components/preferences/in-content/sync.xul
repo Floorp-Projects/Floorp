@@ -95,7 +95,7 @@
                 <label id="fxaDisplayName" hidden="true"/>
                 <label id="fxaEmailAddress1"/>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="fxaUnlinkButton" label="&disconnect2.label;" accesskey="&disconnect2.accesskey;"/>
+                  <button id="fxaUnlinkButton" label="&disconnect3.label;" accesskey="&disconnect3.accesskey;"/>
                   <html:a id="verifiedManage" target="_blank"
                          accesskey="&verifiedManage.accesskey;"
                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
@@ -191,8 +191,8 @@
         <textbox id="fxaSyncComputerName" disabled="true"/>
         <hbox>
           <button id="fxaChangeDeviceName"
-                  label="&changeSyncDeviceName1.label;"
-                  accesskey="&changeSyncDeviceName1.accesskey;"/>
+                  label="&changeSyncDeviceName2.label;"
+                  accesskey="&changeSyncDeviceName2.accesskey;"/>
           <button id="fxaCancelChangeDeviceName"
                   label="&cancelChangeSyncDeviceName.label;"
                   accesskey="&cancelChangeSyncDeviceName.accesskey;"

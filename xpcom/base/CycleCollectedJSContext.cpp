@@ -51,7 +51,8 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 CycleCollectedJSContext::CycleCollectedJSContext()
-  : mRuntime(nullptr)
+  : mIsPrimaryContext(true)
+  , mRuntime(nullptr)
   , mJSContext(nullptr)
   , mDoingStableStates(false)
   , mDisableMicroTaskCheckpoint(false)
@@ -68,7 +69,11 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
     return;
   }
 
-  mRuntime->Shutdown();
+  mRuntime->RemoveContext(this);
+
+  if (mIsPrimaryContext) {
+    mRuntime->Shutdown(mJSContext);
+  }
 
   // Last chance to process any events.
   ProcessMetastableStateQueue(mBaseRecursionDepth);
@@ -88,35 +93,32 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
 
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
-  nsCycleCollector_forgetJSContext();
+
+  if (mIsPrimaryContext) {
+    nsCycleCollector_forgetJSContext();
+  } else {
+    nsCycleCollector_forgetNonPrimaryContext();
+  }
 
   mozilla::dom::DestroyScriptSettings();
 
   mOwningThread->SetScriptObserver(nullptr);
   NS_RELEASE(mOwningThread);
 
-  delete mRuntime;
+  if (mIsPrimaryContext) {
+    delete mRuntime;
+  }
   mRuntime = nullptr;
 }
 
-nsresult
-CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
-                                    uint32_t aMaxBytes,
-                                    uint32_t aMaxNurseryBytes)
+void
+CycleCollectedJSContext::InitializeCommon()
 {
-  MOZ_ASSERT(!mJSContext);
+  mRuntime->AddContext(this);
 
   mOwningThread->SetScriptObserver(this);
   // The main thread has a base recursion depth of 0, workers of 1.
   mBaseRecursionDepth = RecursionDepth();
-
-  mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
-  if (!mJSContext) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mRuntime = CreateRuntime(mJSContext);
 
   NS_GetCurrentThread()->SetCanInvokeJS(true);
 
@@ -126,8 +128,48 @@ CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
   JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
+}
+
+nsresult
+CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
+                                    uint32_t aMaxBytes,
+                                    uint32_t aMaxNurseryBytes)
+{
+  MOZ_ASSERT(!mJSContext);
+
+  mozilla::dom::InitScriptSettings();
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
+  if (!mJSContext) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mRuntime = CreateRuntime(mJSContext);
+
+  InitializeCommon();
 
   nsCycleCollector_registerJSContext(this);
+
+  return NS_OK;
+}
+
+nsresult
+CycleCollectedJSContext::InitializeNonPrimary(CycleCollectedJSContext* aPrimaryContext)
+{
+  MOZ_ASSERT(!mJSContext);
+
+  mIsPrimaryContext = false;
+
+  mozilla::dom::InitScriptSettings();
+  mJSContext = JS_NewCooperativeContext(aPrimaryContext->mJSContext);
+  if (!mJSContext) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mRuntime = aPrimaryContext->mRuntime;
+
+  InitializeCommon();
+
+  nsCycleCollector_registerNonPrimaryContext(this);
 
   return NS_OK;
 }
@@ -386,156 +428,6 @@ CycleCollectedJSContext::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunn
   MOZ_ASSERT(runnable);
 
   mPromiseMicroTaskQueue.push(runnable.forget());
-}
-
-// All these functions just delegate to the runtime.
-
-void
-CycleCollectedJSContext::FinalizeDeferredThings(DeferredFinalizeType aType)
-{
-  Runtime()->FinalizeDeferredThings(aType);
-}
-
-void
-CycleCollectedJSContext::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
-{
-  Runtime()->AddJSHolder(aHolder, aTracer);
-}
-
-void
-CycleCollectedJSContext::RemoveJSHolder(void* aHolder)
-{
-  Runtime()->RemoveJSHolder(aHolder);
-}
-
-#ifdef DEBUG
-bool
-CycleCollectedJSContext::IsJSHolder(void* aHolder)
-{
-  return Runtime()->IsJSHolder(aHolder);
-}
-
-void
-CycleCollectedJSContext::AssertNoObjectsToTrace(void* aPossibleJSHolder)
-{
-  Runtime()->AssertNoObjectsToTrace(aPossibleJSHolder);
-}
-#endif
-
-nsCycleCollectionParticipant*
-CycleCollectedJSContext::GCThingParticipant()
-{
-  return Runtime()->GCThingParticipant();
-}
-
-nsCycleCollectionParticipant*
-CycleCollectedJSContext::ZoneParticipant()
-{
-  return Runtime()->ZoneParticipant();
-}
-
-nsresult
-CycleCollectedJSContext::TraverseRoots(nsCycleCollectionNoteRootCallback& aCb)
-{
-  return Runtime()->TraverseRoots(aCb);
-}
-
-bool
-CycleCollectedJSContext::UsefulToMergeZones() const
-{
-  return Runtime()->UsefulToMergeZones();
-}
-
-void
-CycleCollectedJSContext::FixWeakMappingGrayBits() const
-{
-  Runtime()->FixWeakMappingGrayBits();
-}
-
-bool
-CycleCollectedJSContext::AreGCGrayBitsValid() const
-{
-  return Runtime()->AreGCGrayBitsValid();
-}
-
-void
-CycleCollectedJSContext::GarbageCollect(uint32_t aReason) const
-{
-  Runtime()->GarbageCollect(aReason);
-}
-
-void
-CycleCollectedJSContext::NurseryWrapperAdded(nsWrapperCache* aCache)
-{
-  Runtime()->NurseryWrapperAdded(aCache);
-}
-
-void
-CycleCollectedJSContext::NurseryWrapperPreserved(JSObject* aWrapper)
-{
-  Runtime()->NurseryWrapperPreserved(aWrapper);
-}
-
-void
-CycleCollectedJSContext::JSObjectsTenured()
-{
-  Runtime()->JSObjectsTenured();
-}
-
-void
-CycleCollectedJSContext::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                                          DeferredFinalizeFunction aFunc,
-                                          void* aThing)
-{
-  Runtime()->DeferredFinalize(aAppendFunc, aFunc, aThing);
-}
-
-void
-CycleCollectedJSContext::DeferredFinalize(nsISupports* aSupports)
-{
-  Runtime()->DeferredFinalize(aSupports);
-}
-
-void
-CycleCollectedJSContext::DumpJSHeap(FILE* aFile)
-{
-  Runtime()->DumpJSHeap(aFile);
-}
-
-void
-CycleCollectedJSContext::AddZoneWaitingForGC(JS::Zone* aZone)
-{
-  Runtime()->AddZoneWaitingForGC(aZone);
-}
-
-void
-CycleCollectedJSContext::PrepareWaitingZonesForGC()
-{
-  Runtime()->PrepareWaitingZonesForGC();
-}
-
-void
-CycleCollectedJSContext::PrepareForForgetSkippable()
-{
-  Runtime()->PrepareForForgetSkippable();
-}
-
-void
-CycleCollectedJSContext::BeginCycleCollectionCallback()
-{
-  Runtime()->BeginCycleCollectionCallback();
-}
-
-void
-CycleCollectedJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
-{
-  Runtime()->EndCycleCollectionCallback(aResults);
-}
-
-void
-CycleCollectedJSContext::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
-{
-  Runtime()->DispatchDeferredDeletion(aContinuation, aPurge);
 }
 
 } // namespace mozilla

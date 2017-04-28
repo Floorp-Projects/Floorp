@@ -315,8 +315,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
             expected_length = [1, 2, 3]
             if c.get("require_test_zip") and not self.test_url:
                 expected_length = [2, 3]
-            if buildbot_prop_branch.startswith('gaia-try'):
-                expected_length = range(1, 1000)
             actual_length = len(files)
             if actual_length not in expected_length:
                 self.fatal("Unexpected number of files in buildbot config %s.\nExpected these number(s) of files: %s, but got: %d" %

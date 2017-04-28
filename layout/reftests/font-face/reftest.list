@@ -7,14 +7,14 @@ HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
 random-if(winWidget||gtkWidget) HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
-asserts-if(Android&&!asyncPan,1-8) HTTP(..) != download-3-notref.html download-3.html # bug 1019192
-asserts-if(Android,0-8) HTTP(..) == download-3-ref.html download-3.html # same bugs as above
+asserts-if(Android&&!asyncPan,1-8) fails-if(stylo) HTTP(..) != download-3-notref.html download-3.html # bug 1019192
+asserts-if(Android,0-8) fails-if(stylo) HTTP(..) == download-3-ref.html download-3.html # same bugs as above
 asserts-if(Android,0-8) HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html # just delayed assertions from above tests
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
-fails HTTP(..) == name-override-1.html name-override-1-ref.html
-HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
-HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
+fails-if(!stylo) HTTP(..) == name-override-1.html name-override-1-ref.html
+fails-if(stylo) HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
+fails-if(stylo) HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
 random-if(winWidget||gtkWidget) HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
@@ -58,7 +58,7 @@ HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
 HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
 HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
 HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
-HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
+fails-if(stylo) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
 
 # unicode-range
 HTTP(..) == unicoderange-1.html unicoderange-1-ref.html
@@ -68,40 +68,40 @@ HTTP(..) == unicoderange-4.html unicoderange-4-ref.html
 
 # Dynamic changes
 # we need to skip these because of the bug that's causing order-2.html to fail
-HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
-skip HTTP(..) == enable-sheet-2.html multiple-in-family-1-ref.html
+skip-if(stylo) HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
+skip skip-if(stylo) HTTP(..) == enable-sheet-2.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-3.html multiple-in-family-1-ref.html
 HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html
-HTTP(..) == enable-sheet-5.html enable-sheet-4-ref.html
+skip-if(stylo) HTTP(..) == enable-sheet-5.html enable-sheet-4-ref.html
 skip HTTP(..) == enable-sheet-6.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-7.html multiple-in-family-1-ref.html
-HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
+fails-if(stylo) HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 # We're missing disable-sheet-{2,3,6,7} (analogs to
 # enable-sheet{2,3,6,7}) because I don't know how to detect test
 # completion for those cases.
 HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
-HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
+skip-if(stylo) HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
-random-if(cocoaWidget) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
-HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
-HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
-HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
-HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
-HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
+random-if(cocoaWidget) skip-if(stylo) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
+skip-if(stylo) HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
+skip-if(stylo) HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
+skip-if(stylo) HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
+random-if(stylo) HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
+fails-if(stylo) HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
-HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
-HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
+skip-if(stylo) HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
+skip-if(stylo) HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
 == local-1.html local-1-ref.html
 == local-styled-1.html local-styled-1-ref.html
 
 HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
-HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
+fails-if(stylo) HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
 
 # Leak test
-HTTP(..) load 486974-1.html
+skip-if(stylo) HTTP(..) load 486974-1.html
 
 # compare fonts with and without bad head checksum
 HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
@@ -131,9 +131,9 @@ HTTP(..) != 507960-1-bad-offset-woff.html 507960-1-ref.html
 HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html
 
 # Tests for bug 523717
-HTTP(..) == underline-offset-change-1.html underline-offset-change-1-ref.html
-HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
-fails-if(cocoaWidget) fails-if(winWidget) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
+skip-if(stylo) HTTP(..) == underline-offset-change-1.html underline-offset-change-1-ref.html
+skip-if(stylo) HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
+fails-if(cocoaWidget) fails-if(winWidget) fails-if(stylo) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
 
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 HTTP(..) == bug533251.html bug533251-ref.html
