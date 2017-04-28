@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -11,33 +12,74 @@
     title: "Renegotiation: replaceTrack followed by adding a second video stream"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{video:true}], [{video:true}]);
+    const helper = new VideoStreamHelper();
+    const emitter1 = new VideoFrameEmitter(CaptureStreamTestHelper.prototype.red,
+                                           CaptureStreamTestHelper.prototype.green);
+    const emitter2 = new VideoFrameEmitter(CaptureStreamTestHelper.prototype.blue,
+                                           CaptureStreamTestHelper.prototype.grey);
+    test.chain.replace("PC_LOCAL_GUM", [
+      function PC_LOCAL_ADDTRACK(test) {
+        test.pcLocal.attachLocalStream(emitter1.stream());
+        emitter1.start();
+      },
+    ]);
     addRenegotiation(test.chain,
       [
         function PC_LOCAL_REPLACE_VIDEO_TRACK_THEN_ADD_SECOND_STREAM(test) {
-          var oldstream = test.pcLocal._pc.getLocalStreams()[0];
-          var oldtrack = oldstream.getVideoTracks()[0];
-          var sender = test.pcLocal._pc.getSenders()[0];
-          return navigator.mediaDevices.getUserMedia({video:true})
-            .then(newstream => {
-              var newtrack = newstream.getVideoTracks()[0];
-              return test.pcLocal.senderReplaceTrack(0, newtrack, newstream.id);
-            })
+          emitter1.stop();
+          emitter2.start();
+          const newstream = emitter2.stream();
+          const newtrack = newstream.getVideoTracks()[0];
+          return test.pcLocal.senderReplaceTrack(0, newtrack, newstream.id)
             .then(() => {
               test.setMediaConstraints([{video: true}, {video: true}],
                                        [{video: true}]);
-              return test.pcLocal.getAllUserMedia([{video: true}]);
+              // Use fake:true here since the native fake device on linux
+              // doesn't change color as needed by checkVideoPlaying() below.
+              return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
             });
+        },
+      ],
+      [
+        function PC_REMOTE_CHECK_ORIGINAL_TRACK_ENDED(test) {
+          const vremote = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(emitter1.stream().getTracks()[0].id));
+          if (!vremote) {
+            return Promise.reject(new Error("Couldn't find video element"));
+          }
+          ok(vremote.ended, "Original track should have ended after renegotiation");
+        },
+        function PC_REMOTE_CHECK_REPLACED_TRACK_FLOW(test) {
+          const vremote = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(test.pcLocal._pc.getSenders()[0].track.id));
+          if (!vremote) {
+            return Promise.reject(new Error("Couldn't find video element"));
+          }
+          return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+            .finally(() => emitter2.stop())
+            .then(() => {
+              const px = helper._helper.getPixel(vremote, 10, 10);
+              const isBlue = helper._helper.isPixel(
+                  px, CaptureStreamTestHelper.prototype.blue, 5);
+              const isGrey = helper._helper.isPixel(
+                  px, CaptureStreamTestHelper.prototype.grey, 5);
+              ok(isBlue || isGrey, "replaced track should be blue or grey");
+            });
+        },
+        function PC_REMOTE_CHECK_ADDED_TRACK_FLOW(test) {
+          const vremote = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(test.pcLocal._pc.getSenders()[1].track.id));
+          if (!vremote) {
+            return Promise.reject(new Error("Couldn't find video element"));
+          }
+          return helper.checkVideoPlaying(vremote, 10, 10, 16);
         },
       ]
     );
 
-    // TODO(bug 1093835):
-    // figure out how to verify if media flows through the new stream
-    // figure out how to verify that media stopped flowing from old stream
     test.run();
   });
 </script>
