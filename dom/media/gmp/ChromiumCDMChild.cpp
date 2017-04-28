@@ -371,6 +371,22 @@ ChromiumCDMChild::IsOnMessageLoopThread()
   return mPlugin && mPlugin->GMPMessageLoop() == MessageLoop::current();
 }
 
+void
+ChromiumCDMChild::PurgeShmems()
+{
+  for (ipc::Shmem& shmem : mBuffers) {
+    DeallocShmem(shmem);
+  }
+  mBuffers.Clear();
+}
+
+ipc::IPCResult
+ChromiumCDMChild::RecvPurgeShmems()
+{
+  PurgeShmems();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
                            const bool& aAllowPersistentState)
@@ -639,10 +655,7 @@ ChromiumCDMChild::RecvDeinitializeVideoDecoder()
     mDecoderInitialized = false;
     mCDM->DeinitializeDecoder(cdm::kStreamTypeVideo);
   }
-  for (ipc::Shmem& shmem : mBuffers) {
-    DeallocShmem(shmem);
-  }
-  mBuffers.Clear();
+  PurgeShmems();
   return IPC_OK();
 }
 

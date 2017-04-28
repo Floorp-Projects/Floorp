@@ -98,6 +98,19 @@ function testVideoResumesWhenShown(video) {
 }
 
 /**
+ * @param {HTMLMediaElement} video Video element under test.
+ * @returns {Promise} Promise that is resolved when video decode resumes.
+ */
+function testVideoOnlySeekCompletedWhenShown(video) {
+  var p  = once(video, 'mozvideoonlyseekcompleted').then(() => {
+    ok(true, `${video.token} resumes`);
+  });
+  Log(video.token, "Set visible");
+  video.setVisible(true);
+  return p;
+}
+
+/**
  * @param {HTMLVideoElement} video Video element under test.
  * @returns {Promise} Promise that is resolved if video ends and rejects if video suspends.
  */

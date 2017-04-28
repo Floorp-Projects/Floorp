@@ -40,6 +40,15 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.find(".message.error").length).toBe(1);
   });
 
+  it("renders an error with a longString exception message", () => {
+    const message = stubPreparedMessages.get("longString message Error");
+    const wrapper = render(EvaluationResult({ message }));
+
+    const text = wrapper.find(".message-body").text();
+    expect(text.startsWith("Error: Long error Long error")).toBe(true);
+    expect(wrapper.find(".message.error").length).toBe(1);
+  });
+
   it("displays a [Learn more] link", () => {
     const store = setupStore([]);
 

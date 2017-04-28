@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 
 import android.content.Context;
@@ -378,27 +379,36 @@ public class SwitchBoard {
      * @return Returns String from server or null when failed.
      */
     @Nullable private static String readFromUrlGET(URL url) {
+        HttpURLConnection connection = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader bufferReader = null;
         try {
-            HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
+            connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
             connection.setRequestProperty("User-Agent", HardwareUtils.isTablet() ?
                     AppConstants.USER_AGENT_FENNEC_TABLET :
                     AppConstants.USER_AGENT_FENNEC_MOBILE);
             connection.setRequestMethod("GET");
             connection.setUseCaches(false);
 
-            InputStream is = connection.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(is);
-            BufferedReader bufferReader = new BufferedReader(inputStreamReader, 8192);
+            // BufferedReader(Reader, int) can throw, hence we need to keep a separate reference
+            // to the InputStreamReader in order to always be able to close it:
+            inputStreamReader = new InputStreamReader(connection.getInputStream());
+            bufferReader = new BufferedReader(inputStreamReader, 8192);
             String line;
             StringBuilder resultContent = new StringBuilder();
             while ((line = bufferReader.readLine()) != null) {
                 resultContent.append(line);
             }
-            bufferReader.close();
 
             return resultContent.toString();
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
+        } finally {
+            IOUtils.safeStreamClose(bufferReader);
+            IOUtils.safeStreamClose(inputStreamReader);
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
 
         return null;

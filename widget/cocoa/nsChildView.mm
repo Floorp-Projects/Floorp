@@ -5511,9 +5511,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 - (void)insertNewline:(id)sender
 {
   if (mTextInputHandler) {
-    NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:@"\n"];
-    mTextInputHandler->InsertText(attrStr);
-    [attrStr release];
+    mTextInputHandler->InsertNewline();
   }
 }
 

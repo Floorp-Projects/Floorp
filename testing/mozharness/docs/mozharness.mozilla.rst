@@ -29,14 +29,6 @@ mozharness.mozilla.buildbot module
     :undoc-members:
     :show-inheritance:
 
-mozharness.mozilla.gaia module
-------------------------------
-
-.. automodule:: mozharness.mozilla.gaia
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.mozilla.mapper module
 --------------------------------
 

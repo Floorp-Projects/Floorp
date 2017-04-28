@@ -20,6 +20,7 @@ import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequestBuilder;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -58,7 +59,9 @@ public class Tab {
     private Future<IconResponse> mRunningIconRequest;
 
     private boolean mHasFeeds;
+    private SafeIntent mCustomTabIntent;
     private String mManifestUrl;
+    private String mManifestPath;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
     private SiteLogins mSiteLogins;
@@ -297,8 +300,20 @@ public class Tab {
         return mHasFeeds;
     }
 
+    public SafeIntent getCustomTabIntent() {
+        return mCustomTabIntent;
+    }
+
     public String getManifestUrl() {
         return mManifestUrl;
+    }
+
+    /**
+     * @return If not empty, the path to a locally installed copy of the Progressive Web App
+     *         manifest file for this tab.
+     */
+    public String getManifestPath() {
+        return mManifestPath;
     }
 
     public boolean hasOpenSearch() {
@@ -470,8 +485,16 @@ public class Tab {
         mHasFeeds = hasFeeds;
     }
 
+    public void setCustomTabIntent(SafeIntent intent) {
+        mCustomTabIntent = intent;
+    }
+
     public void setManifestUrl(String manifestUrl) {
         mManifestUrl = manifestUrl;
+    }
+
+    public void setManifestPath(String manifestPath) {
+        mManifestPath = manifestPath;
     }
 
     public void setHasOpenSearch(boolean hasOpenSearch) {

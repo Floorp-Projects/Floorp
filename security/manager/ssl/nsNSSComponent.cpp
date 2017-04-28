@@ -1635,6 +1635,185 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
   return NS_OK;
 }
 
+#ifndef ANDROID
+// Given a profile path, attempt to rename the PKCS#11 module DB to
+// "<original name>.fips". In the case of a catastrophic failure (e.g. out of
+// memory), returns a failing nsresult. If execution could conceivably proceed,
+// returns NS_OK even if renaming the file didn't work. This simplifies the
+// logic of the calling code.
+static nsresult
+AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath)
+{
+  // profilePath may come from the environment variable
+  // MOZPSM_NSSDBDIR_OVERRIDE. If so, the user's NSS DBs are most likely not in
+  // their profile directory and we shouldn't mess with them.
+  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
+  if (dbDirOverride && strlen(dbDirOverride) > 0) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("MOZPSM_NSSDBDIR_OVERRIDE set - not renaming PKCS#11 module DB"));
+    return NS_OK;
+  }
+  NS_NAMED_LITERAL_CSTRING(moduleDBFilename, "secmod.db");
+  NS_NAMED_LITERAL_CSTRING(destModuleDBFilename, "secmod.db.fips");
+  nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!dbFile) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = dbFile->InitWithNativePath(profilePath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = dbFile->AppendNative(moduleDBFilename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // If the PKCS#11 module DB doesn't exist, renaming it won't help.
+  bool exists;
+  rv = dbFile->Exists(&exists);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // This is strange, but not a catastrophic failure.
+  if (!exists) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("%s doesn't exist?", moduleDBFilename.get()));
+    return NS_OK;
+  }
+  nsCOMPtr<nsIFile> destDBFile = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!destDBFile) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = destDBFile->InitWithNativePath(profilePath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = destDBFile->AppendNative(destModuleDBFilename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // If the destination exists, presumably we've already tried this. Doing it
+  // again won't help.
+  rv = destDBFile->Exists(&exists);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // Unfortunate, but not a catastrophic failure.
+  if (exists) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("%s already exists - not overwriting",
+             destModuleDBFilename.get()));
+    return NS_OK;
+  }
+  // Now do the actual move.
+  nsCOMPtr<nsIFile> profileDir = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!profileDir) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = profileDir->InitWithNativePath(profilePath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // This may fail on, e.g., a read-only file system. This would be unfortunate,
+  // but again it isn't catastropic and we would want to fall back to
+  // initializing NSS in no-DB mode.
+  Unused << dbFile->MoveToNative(profileDir, destModuleDBFilename);
+  return NS_OK;
+}
+#endif // ifndef ANDROID
+
+// Given a profile directory, attempt to initialize NSS. If nocertdb is true,
+// (or if we don't have a profile directory) simply initialize NSS in no DB mode
+// and return. Otherwise, first attempt to initialize in read/write mode, and
+// then read-only mode if that fails. If both attempts fail, we may be failing
+// to initialize an NSS DB collection that has FIPS mode enabled. Attempt to
+// ascertain if this is the case, and if so, rename the offending PKCS#11 module
+// DB so we can (hopefully) initialize NSS in read-write mode. Again attempt
+// read-only mode if that fails. Finally, fall back to no DB mode. On Android
+// we can skip the FIPS workaround since it was never possible to enable FIPS
+// there anyway.
+static nsresult
+InitializeNSSWithFallbacks(const nsACString& profilePath, bool nocertdb,
+                           bool safeMode)
+{
+  if (nocertdb || profilePath.IsEmpty()) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nocertdb mode or empty profile path -> NSS_NoDB_Init"));
+    SECStatus srv = NSS_NoDB_Init(nullptr);
+    return srv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  const char* profilePathCStr = PromiseFlatCString(profilePath).get();
+  // Try read/write mode. If we're in safeMode, we won't load PKCS#11 modules.
+#ifndef ANDROID
+  PRErrorCode savedPRErrorCode1;
+#endif // ifndef ANDROID
+  SECStatus srv = ::mozilla::psm::InitializeNSS(profilePathCStr, false,
+                                                !safeMode);
+  if (srv == SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r/w mode"));
+    return NS_OK;
+  }
+#ifndef ANDROID
+  savedPRErrorCode1 = PR_GetError();
+  PRErrorCode savedPRErrorCode2;
+#endif // ifndef ANDROID
+  // That failed. Try read-only mode.
+  srv = ::mozilla::psm::InitializeNSS(profilePathCStr, true, !safeMode);
+  if (srv == SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r-o mode"));
+    return NS_OK;
+  }
+#ifndef ANDROID
+  savedPRErrorCode2 = PR_GetError();
+#endif // ifndef ANDROID
+
+#ifndef ANDROID
+  // That failed as well. Maybe we're trying to load a PKCS#11 module DB that is
+  // in FIPS mode, but we don't support FIPS? Test load NSS without PKCS#11
+  // modules. If that succeeds, that's probably what's going on.
+  if (!safeMode && (savedPRErrorCode1 == SEC_ERROR_LEGACY_DATABASE ||
+                    savedPRErrorCode2 == SEC_ERROR_LEGACY_DATABASE)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("attempting no-module db init"));
+    // It would make sense to initialize NSS in read-only mode here since this
+    // is just a test to see if the PKCS#11 module DB being in FIPS mode is the
+    // problem, but for some reason the combination of read-only and no-moddb
+    // flags causes NSS initialization to fail, so unfortunately we have to use
+    // read-write mode.
+    srv = ::mozilla::psm::InitializeNSS(profilePathCStr, false, false);
+    if (srv == SECSuccess) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("FIPS may be the problem"));
+      // Unload NSS so we can attempt to fix this situation for the user.
+      srv = NSS_Shutdown();
+      if (srv != SECSuccess) {
+        return NS_ERROR_FAILURE;
+      }
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("trying to rename module db"));
+      // If this fails non-catastrophically, we'll attempt to initialize NSS
+      // again in r/w then r-o mode (both of which will fail), and then we'll
+      // fall back to NSS_NoDB_Init, which is the behavior we want.
+      nsresult rv = AttemptToRenamePKCS11ModuleDB(profilePath);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      srv = ::mozilla::psm::InitializeNSS(profilePathCStr, false, true);
+      if (srv == SECSuccess) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r/w mode"));
+        return NS_OK;
+      }
+      srv = ::mozilla::psm::InitializeNSS(profilePathCStr, true, true);
+      if (srv == SECSuccess) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r-o mode"));
+        return NS_OK;
+      }
+    }
+  }
+#endif
+
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("last-resort NSS_NoDB_Init"));
+  srv = NSS_NoDB_Init(nullptr);
+  return srv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
+}
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -1664,7 +1843,6 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  SECStatus init_rv = SECFailure;
   bool nocertdb = Preferences::GetBool("security.nocertdb", false);
   bool inSafeMode = true;
   nsCOMPtr<nsIXULRuntime> runtime(do_GetService("@mozilla.org/xre/runtime;1"));
@@ -1679,39 +1857,10 @@ nsNSSComponent::InitializeNSS()
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
-  PRErrorCode savedPRErrorCode1 = 0;
-  PRErrorCode savedPRErrorCode2 = 0;
-
-  if (!nocertdb && !profileStr.IsEmpty()) {
-    // First try to initialize the NSS DB in read/write mode.
-    // Only load PKCS11 modules if we're not in safe mode.
-    init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false, !inSafeMode);
-    // If that fails, attempt read-only mode.
-    if (init_rv != SECSuccess) {
-      savedPRErrorCode1 = PR_GetError();
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init NSS r/w in %s\n", profileStr.get()));
-      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true, !inSafeMode);
-    }
-    if (init_rv != SECSuccess) {
-      savedPRErrorCode2 = PR_GetError();
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init in r/o either\n"));
-    }
-  }
-  // If we haven't succeeded in initializing the DB in our profile
-  // directory or we don't have a profile at all, or the "security.nocertdb"
-  // pref has been set to "true", attempt to initialize with no DB.
-  if (nocertdb || init_rv != SECSuccess) {
-    init_rv = NSS_NoDB_Init(nullptr);
-    if (init_rv != SECSuccess) {
-      PRErrorCode savedPRErrorCode3 = PR_GetError();
-      MOZ_CRASH_UNSAFE_PRINTF("NSS initialization failed PRErrorCodes %d %d %d",
-                              savedPRErrorCode1, savedPRErrorCode2,
-                              savedPRErrorCode3);
-    }
-  }
-  if (init_rv != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("could not initialize NSS - panicking\n"));
-    return NS_ERROR_NOT_AVAILABLE;
+  rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to initialize NSS"));
+    return rv;
   }
 
   // ensure we have an initial value for the content signer root

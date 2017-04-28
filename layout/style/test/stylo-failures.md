@@ -190,8 +190,6 @@ to mochitest command.
     * test_value_storage.html `pointer-events` [1]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
     * test_computed_style.html `css-color-4` [2]
-  * color interpolation hint not supported servo/servo#15166
-    * test_value_storage.html `'linear-gradient` [50]
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]

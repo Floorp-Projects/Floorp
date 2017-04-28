@@ -45,12 +45,13 @@ public final class INIParser extends INISection {
             e1.printStackTrace();
         }
 
-        BufferedWriter writer = new BufferedWriter(outputStream);
+        final BufferedWriter writer = new BufferedWriter(outputStream);
         try {
             write(writer);
-            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            IOUtils.safeStreamClose(writer);
         }
     }
 
