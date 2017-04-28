@@ -133,8 +133,12 @@ public:
   template <typename... Ts>
   void Dispatch(Ts&&... aEvents)
   {
-    DispatchTask(NewRunnableMethod<typename Decay<Ts>::Type&&...>(
-      this, &Listener::Apply, Forward<Ts>(aEvents)...));
+    if (CanTakeArgs()) {
+      DispatchTask(NewRunnableMethod<typename Decay<Ts>::Type&&...>(
+        this, &Listener::ApplyWithArgs, Forward<Ts>(aEvents)...));
+    } else {
+      DispatchTask(NewRunnableMethod(this, &Listener::ApplyWithNoArgs));
+    }
   }
 
 protected:
@@ -145,7 +149,15 @@ protected:
 
 private:
   virtual void DispatchTask(already_AddRefed<nsIRunnable> aTask) = 0;
-  virtual void Apply(As&&... aEvents) = 0;
+
+  // True if the underlying listener function takes non-zero arguments.
+  virtual bool CanTakeArgs() const = 0;
+  // Pass the event data to the underlying listener function. Should be called
+  // only when CanTakeArgs() returns true.
+  virtual void ApplyWithArgs(As&&... aEvents) = 0;
+  // Invoke the underlying listener function. Should be called only when
+  // CanTakeArgs() returns false.
+  virtual void ApplyWithNoArgs() = 0;
 };
 
 /**
@@ -168,27 +180,58 @@ private:
     EventTarget<Target>::Dispatch(mTarget.get(), Move(aTask));
   }
 
+  bool CanTakeArgs() const override
+  {
+    return TakeArgs<Function>::value;
+  }
+
   // |F| takes one or more arguments.
   template <typename F>
   typename EnableIf<TakeArgs<F>::value, void>::Type
-  ApplyImpl(const F& aFunc, As&&... aEvents)
+  ApplyWithArgsImpl(const F& aFunc, As&&... aEvents)
   {
     aFunc(Move(aEvents)...);
   }
 
-  // |F| takes no arguments. Don't bother passing aEvent.
+  // |F| takes no arguments.
   template <typename F>
   typename EnableIf<!TakeArgs<F>::value, void>::Type
-  ApplyImpl(const F& aFunc, As&&... aEvents)
+  ApplyWithArgsImpl(const F& aFunc, As&&... aEvents)
+  {
+    MOZ_CRASH("Call ApplyWithNoArgs instead.");
+  }
+
+  void ApplyWithArgs(As&&... aEvents) override
+  {
+    MOZ_RELEASE_ASSERT(TakeArgs<Function>::value);
+    // Don't call the listener if it is disconnected.
+    if (!RevocableToken::IsRevoked()) {
+      ApplyWithArgsImpl(mFunction, Move(aEvents)...);
+    }
+  }
+
+  // |F| takes one or more arguments.
+  template <typename F>
+  typename EnableIf<TakeArgs<F>::value, void>::Type
+  ApplyWithNoArgsImpl(const F& aFunc)
+  {
+    MOZ_CRASH("Call ApplyWithArgs instead.");
+  }
+
+  // |F| takes no arguments.
+  template <typename F>
+  typename EnableIf<!TakeArgs<F>::value, void>::Type
+  ApplyWithNoArgsImpl(const F& aFunc)
   {
     aFunc();
   }
 
-  void Apply(As&&... aEvents) override
+  virtual void ApplyWithNoArgs() override
   {
+    MOZ_RELEASE_ASSERT(!TakeArgs<Function>::value);
     // Don't call the listener if it is disconnected.
     if (!RevocableToken::IsRevoked()) {
-      ApplyImpl(mFunction, Move(aEvents)...);
+      ApplyWithNoArgsImpl(mFunction);
     }
   }
 
