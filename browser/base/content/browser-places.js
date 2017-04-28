@@ -1795,8 +1795,8 @@ var BookmarkingUI = {
       this.dropmarkerNotifier.style.transform = dropmarkerTransform;
 
       let dropmarkerAnimationNode = this.dropmarkerNotifier.firstChild;
+      dropmarkerAnimationNode.style.MozImageRegion = dropmarkerStyle.MozImageRegion;
       dropmarkerAnimationNode.style.listStyleImage = dropmarkerStyle.listStyleImage;
-      dropmarkerAnimationNode.style.fill = dropmarkerStyle.fill;
     }
 
     let isInOverflowPanel = this.button.getAttribute("overflowedItem") == "true";
