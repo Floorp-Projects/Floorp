@@ -188,6 +188,7 @@ LINTER = {
         'testing/mochitest',
         'testing/talos/',
         'tools/lint',
+        'tools/mercurial',
         'toolkit/components/telemetry',
     ],
     'exclude': ['testing/mochitest/pywebsocket'],

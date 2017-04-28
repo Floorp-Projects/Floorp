@@ -2,7 +2,6 @@
 # GNU General Public License version 2 or any later version.
 
 import os
-import sys
 import re
 import json
 from subprocess import check_output, CalledProcessError
@@ -10,8 +9,10 @@ from subprocess import check_output, CalledProcessError
 lintable = re.compile(r'.+\.(?:js|jsm|jsx|xml|html)$')
 ignored = 'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.'
 
+
 def is_lintable(filename):
     return lintable.match(filename)
+
 
 def display(ui, output):
     results = json.loads(output)
@@ -22,9 +23,11 @@ def display(ui, output):
                 continue
 
             if "line" in message:
-                ui.warn("%s:%d:%d %s\n" % (path, message["line"], message["column"], message["message"]))
+                ui.warn("%s:%d:%d %s\n" % (path, message["line"], message["column"],
+                        message["message"]))
             else:
                 ui.warn("%s: %s\n" % (path, message["message"]))
+
 
 def eslinthook(ui, repo, node=None, **opts):
     ctx = repo[node]
@@ -50,14 +53,16 @@ def eslinthook(ui, repo, node=None, **opts):
             eslint_path = os.path.join(dir, "eslint.cmd")
         output = check_output([eslint_path,
                                "--format", "json", "--plugin", "html"] + files,
-                               cwd=basepath)
+                              cwd=basepath)
         display(ui, output)
     except CalledProcessError as ex:
         display(ui, ex.output)
         ui.warn("ESLint found problems in your changes, please correct them.\n")
 
+
 def reposetup(ui, repo):
     ui.setconfig('hooks', 'commit.eslint', eslinthook)
+
 
 def get_project_root():
     file_found = False
