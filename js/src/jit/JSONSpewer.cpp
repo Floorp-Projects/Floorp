@@ -26,9 +26,9 @@ JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
     if (script)
-        property("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
+        stringProperty("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
     else
-        property("name", "wasm compilation");
+        stringProperty("name", "wasm compilation");
     beginListProperty("passes");
 }
 
@@ -36,7 +36,7 @@ void
 JSONSpewer::beginPass(const char* pass)
 {
     beginObject();
-    property("name", "%s", pass);
+    stringProperty("name", "%s", pass);
 }
 
 void
@@ -48,26 +48,26 @@ JSONSpewer::spewMResumePoint(MResumePoint* rp)
     beginObjectProperty("resumePoint");
 
     if (rp->caller())
-        property("caller", rp->caller()->block()->id());
+        integerProperty("caller", rp->caller()->block()->id());
 
     switch (rp->mode()) {
       case MResumePoint::ResumeAt:
-        property("mode", "%s", "At");
+        stringProperty("mode", "%s", "At");
         break;
       case MResumePoint::ResumeAfter:
-        property("mode", "%s", "After");
+        stringProperty("mode", "%s", "After");
         break;
       case MResumePoint::Outer:
-        property("mode", "%s", "Outer");
+        stringProperty("mode", "%s", "Outer");
         break;
     }
 
     beginListProperty("operands");
     for (MResumePoint* iter = rp; iter; iter = iter->caller()) {
         for (int i = iter->numOperands() - 1; i >= 0; i--)
-            value(iter->getOperand(i)->id());
+            integerValue(iter->getOperand(i)->id());
         if (iter->caller())
-            value("|");
+            stringValue("|");
     }
     endList();
 
@@ -79,33 +79,33 @@ JSONSpewer::spewMDef(MDefinition* def)
 {
     beginObject();
 
-    property("id", def->id());
+    integerProperty("id", def->id());
 
-    propertyName("opcode");
+    property("opcode");
     out_.printf("\"");
     def->printOpcode(out_);
     out_.printf("\"");
 
     beginListProperty("attributes");
-#define OUTPUT_ATTRIBUTE(X) do{ if(def->is##X()) value(#X); } while(0);
+#define OUTPUT_ATTRIBUTE(X) do{ if(def->is##X()) stringValue(#X); } while(0);
     MIR_FLAG_LIST(OUTPUT_ATTRIBUTE);
 #undef OUTPUT_ATTRIBUTE
     endList();
 
     beginListProperty("inputs");
     for (size_t i = 0, e = def->numOperands(); i < e; i++)
-        value(def->getOperand(i)->id());
+        integerValue(def->getOperand(i)->id());
     endList();
 
     beginListProperty("uses");
     for (MUseDefIterator use(def); use; use++)
-        value(use.def()->id());
+        integerValue(use.def()->id());
     endList();
 
     if (!def->isLowered()) {
         beginListProperty("memInputs");
         if (def->dependency())
-            value(def->dependency()->id());
+            integerValue(def->dependency()->id());
         endList();
     }
 
@@ -119,7 +119,7 @@ JSONSpewer::spewMDef(MDefinition* def)
         out_.printf(" : %s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
         endStringProperty();
     } else {
-        property("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
+        stringProperty("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
     }
 
     if (def->isInstruction()) {
@@ -139,30 +139,30 @@ JSONSpewer::spewMIR(MIRGraph* mir)
     for (MBasicBlockIterator block(mir->begin()); block != mir->end(); block++) {
         beginObject();
 
-        property("number", block->id());
+        integerProperty("number", block->id());
         if (block->getHitState() == MBasicBlock::HitState::Count)
-            property("count", block->getHitCount());
+            integerProperty("count", block->getHitCount());
 
         beginListProperty("attributes");
         if (block->hasLastIns()) {
             if (block->isLoopBackedge())
-                value("backedge");
+                stringValue("backedge");
             if (block->isLoopHeader())
-                value("loopheader");
+                stringValue("loopheader");
             if (block->isSplitEdge())
-                value("splitedge");
+                stringValue("splitedge");
         }
         endList();
 
         beginListProperty("predecessors");
         for (size_t i = 0; i < block->numPredecessors(); i++)
-            value(block->getPredecessor(i)->id());
+            integerValue(block->getPredecessor(i)->id());
         endList();
 
         beginListProperty("successors");
         if (block->hasLastIns()) {
             for (size_t i = 0; i < block->numSuccessors(); i++)
-                value(block->getSuccessor(i)->id());
+                integerValue(block->getSuccessor(i)->id());
         }
         endList();
 
@@ -187,16 +187,16 @@ JSONSpewer::spewLIns(LNode* ins)
 {
     beginObject();
 
-    property("id", ins->id());
+    integerProperty("id", ins->id());
 
-    propertyName("opcode");
+    property("opcode");
     out_.printf("\"");
     ins->dump(out_);
     out_.printf("\"");
 
     beginListProperty("defs");
     for (size_t i = 0; i < ins->numDefs(); i++)
-        value(ins->getDef(i)->virtualRegister());
+        integerValue(ins->getDef(i)->virtualRegister());
     endList();
 
     endObject();
@@ -214,7 +214,7 @@ JSONSpewer::spewLIR(MIRGraph* mir)
             continue;
 
         beginObject();
-        property("number", i->id());
+        integerProperty("number", i->id());
 
         beginListProperty("instructions");
         for (size_t p = 0; p < block->numPhis(); p++)
@@ -238,7 +238,7 @@ JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
 
     for (size_t bno = 0; bno < regalloc->graph.numBlocks(); bno++) {
         beginObject();
-        property("number", bno);
+        integerProperty("number", bno);
         beginListProperty("vregs");
 
         LBlock* lir = regalloc->graph.getBlock(bno);
@@ -248,16 +248,16 @@ JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
                 VirtualRegister* vreg = &regalloc->vregs[id];
 
                 beginObject();
-                property("vreg", id);
+                integerProperty("vreg", id);
                 beginListProperty("ranges");
 
                 for (LiveRange::RegisterLinkIterator iter = vreg->rangesBegin(); iter; iter++) {
                     LiveRange* range = LiveRange::get(*iter);
 
                     beginObject();
-                    property("allocation", "%s", range->bundle()->allocation().toString().get());
-                    property("start", range->from().bits());
-                    property("end", range->to().bits());
+                    stringProperty("allocation", "%s", range->bundle()->allocation().toString().get());
+                    integerProperty("start", range->from().bits());
+                    integerProperty("end", range->to().bits());
                     endObject();
                 }
 

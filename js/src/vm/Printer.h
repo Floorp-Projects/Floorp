@@ -47,7 +47,9 @@ class GenericPrinter
     bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
     bool vprintf(const char* fmt, va_list ap);
 
-    // Report that a string operation failed to get the memory it requested.
+    // Report that a string operation failed to get the memory it requested. The
+    // first call to this function calls JS_ReportOutOfMemory, and sets this
+    // Sprinter's outOfMemory flag; subsequent calls do nothing.
     virtual void reportOutOfMemory();
 
     // Return true if this Sprinter ran out of memory.
@@ -193,6 +195,14 @@ class LSprinter final : public GenericPrinter
     // return true on success, false on failure.
     virtual bool put(const char* s, size_t len) override;
     using GenericPrinter::put; // pick up |inline bool put(const char* s);|
+
+    // Report that a string operation failed to get the memory it requested. The
+    // first call to this function calls JS_ReportOutOfMemory, and sets this
+    // Sprinter's outOfMemory flag; subsequent calls do nothing.
+    virtual void reportOutOfMemory() override;
+
+    // Return true if this Sprinter ran out of memory.
+    virtual bool hadOutOfMemory() const override;
 };
 
 // Map escaped code to the letter/symbol escaped with a backslash.
