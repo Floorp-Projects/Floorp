@@ -24,7 +24,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
@@ -40,7 +39,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
-import org.mozilla.gecko.webapps.WebAppIndexer;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -360,12 +358,7 @@ public class Tabs implements BundleEventListener {
      */
     public boolean currentActivityMatchesTab(Tab tab) {
         final Activity currentActivity = GeckoActivityMonitor.getInstance().getCurrentActivity();
-
-        if (currentActivity == null) {
-            return false;
-        }
-        String currentActivityName = currentActivity.getClass().getName();
-        return currentActivityName.equals(getClassNameForTab(tab));
+        return currentActivity != null && tab.matchesActivity(currentActivity);
     }
 
     private void launchActivityForTab(Tab tab) {
@@ -395,7 +388,7 @@ public class Tabs implements BundleEventListener {
                 break;
         }
 
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, getClassNameForTab(tab));
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, tab.getTargetClassNameForTab());
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
         intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
@@ -411,24 +404,6 @@ public class Tabs implements BundleEventListener {
         final JSONObject manifestField = manifest.getJSONObject("manifest");
 
         return Uri.parse(manifestField.getString("start_url"));
-    }
-
-    /**
-     * Get the class name of the activity that should be displaying this tab.
-     */
-    private String getClassNameForTab(Tab tab) {
-        TabType type = tab.getType();
-
-        switch (type) {
-            case CUSTOMTAB:
-                return CustomTabsActivity.class.getName();
-            case WEBAPP:
-                final int index =  WebAppIndexer.getInstance().getIndexForManifest(
-                        tab.getManifestPath(), mAppContext);
-                return WebAppIndexer.WEBAPP_CLASS + index;
-            default:
-                return AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
-        }
     }
 
     public synchronized boolean selectLastTab() {
