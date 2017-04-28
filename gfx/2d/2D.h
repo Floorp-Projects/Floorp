@@ -504,6 +504,9 @@ public:
   /**
    * Returns a DataSourceSurface with the same data as this one, but
    * guaranteed to have surface->GetType() == SurfaceType::DATA.
+   *
+   * The returning surface might be null, because of OOM or gfx device reset.
+   * The caller needs to do null-check before using it.
    */
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
