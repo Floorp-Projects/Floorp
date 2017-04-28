@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,11 +18,8 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.gfx.LayerView;
@@ -34,7 +29,6 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -362,48 +356,8 @@ public class Tabs implements BundleEventListener {
     }
 
     private void launchActivityForTab(Tab tab) {
-        final Intent intent;
-        switch (tab.getType()) {
-            case CUSTOMTAB:
-                if (tab.getCustomTabIntent() != null) {
-                    intent = tab.getCustomTabIntent().getUnsafe();
-                } else {
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                break;
-            case WEBAPP:
-                intent = new Intent(GeckoApp.ACTION_WEBAPP);
-                final String manifestPath = tab.getManifestPath();
-                try {
-                    intent.setData(getStartUriFromManifest(manifestPath));
-                } catch (IOException | JSONException e) {
-                    Log.e(LOGTAG, "Failed to get start URI from manifest", e);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                intent.putExtra(WebAppActivity.MANIFEST_PATH, manifestPath);
-                break;
-            default:
-                intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
-                break;
-        }
-
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, tab.getTargetClassNameForTab());
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
-        intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
-        intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
+        final Intent intent = IntentHelper.getTabSwitchIntent(tab);
         mAppContext.startActivity(intent);
-    }
-
-    // TODO: When things have settled down a bit, we should split this and everything similar
-    // TODO: in the WebAppActivity into a dedicated WebAppManifest class (bug 1353868).
-    private Uri getStartUriFromManifest(String manifestPath) throws IOException, JSONException {
-        File manifestFile = new File(manifestPath);
-        final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-        final JSONObject manifestField = manifest.getJSONObject("manifest");
-
-        return Uri.parse(manifestField.getString("start_url"));
     }
 
     public synchronized boolean selectLastTab() {
