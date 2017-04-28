@@ -686,7 +686,9 @@ nsFileInputStream::ExpectedSerializedLength()
 bool
 nsFileInputStream::IsCloneable() const
 {
-    return XRE_IsParentProcess();
+    // This inputStream is cloneable only if has been created using Init() and
+    // it owns a nsIFile. This is not true when it is deserialized from IPC.
+    return XRE_IsParentProcess() && mFile;
 }
 
 NS_IMETHODIMP

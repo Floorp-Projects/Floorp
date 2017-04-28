@@ -76,6 +76,8 @@ public:
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent, nsIEditor* aEditor);
   void Destroy();
+  bool Destroyed() const;
+
   /**
    * IMEContentObserver is stored by EventStateManager during observing.
    * DisconnectFromEventStateManager() is called when EventStateManager stops
