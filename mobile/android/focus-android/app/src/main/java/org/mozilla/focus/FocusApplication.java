@@ -19,9 +19,9 @@ public class FocusApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        enableStrictMode();
-
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+
+        enableStrictMode();
 
         SearchEngineManager.getInstance().init(this);
 
