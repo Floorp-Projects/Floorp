@@ -387,17 +387,6 @@ private:
   // change. Call on the main thread only.
   virtual void ChangeState(PlayState aState);
 
-  // Called from MetadataLoaded(). Ask its owner to create audio/video tracks
-  // and adds them to its owner's audio/video track list.
-  // Call on the main thread only.
-  void ConstructMediaTracks();
-
-  // Ask its owner to remove all audio tracks and video tracks that are
-  // previously added into the track list.
-  // Call on the main thread only.
-  void RemoveMediaTracks();
-
-
   // Called when the video has completed playing.
   // Call on the main thread only.
   void PlaybackEnded();
@@ -684,11 +673,6 @@ protected:
   // to minimize preroll, as we assume the user is likely to keep playing,
   // or play the media again.
   bool mMinimizePreroll;
-
-  // True if audio tracks and video tracks are constructed and added into the
-  // owenr's track list, false if all tracks are removed from the owner's track
-  // list.
-  bool mMediaTracksConstructed;
 
   // True if we've already fired metadataloaded.
   bool mFiredMetadataLoaded;

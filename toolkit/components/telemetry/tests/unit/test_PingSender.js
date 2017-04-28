@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
@@ -83,8 +84,8 @@ add_task(function* test_pingSender() {
 
   // Try to send the ping twice using the pingsender (we expect 404 both times).
   const errorUrl = "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
-  Telemetry.runPingSender(errorUrl, pingPath);
-  Telemetry.runPingSender(errorUrl, pingPath);
+  TelemetrySend.testRunPingSender(errorUrl, pingPath);
+  TelemetrySend.testRunPingSender(errorUrl, pingPath);
 
   // Wait until we hit the 404 server twice. After that, make sure that the ping
   // still exists locally.
@@ -94,7 +95,7 @@ add_task(function* test_pingSender() {
 
   // Try to send it using the pingsender.
   const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
-  Telemetry.runPingSender(url, pingPath);
+  TelemetrySend.testRunPingSender(url, pingPath);
 
   let req = yield PingServer.promiseNextRequest();
   let ping = decodeRequestPayload(req);

@@ -84,7 +84,6 @@
 #include "mozilla/HangMonitor.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsProxyRelease.h"
-#include "nsDirectoryServiceDefs.h"
 
 #if defined(MOZ_GECKO_PROFILER)
 #include "shared-libraries.h"
@@ -2869,78 +2868,6 @@ TelemetryImpl::FlushBatchedChildTelemetry()
 {
   TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
   return NS_OK;
-}
-
-#ifndef MOZ_WIDGET_ANDROID
-
-static nsresult
-LocatePingSender(nsAString& aPath)
-{
-  nsCOMPtr<nsIFile> xreGreBinDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_GRE_BIN_DIR,
-                                       getter_AddRefs(xreGreBinDir));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Make sure that the executable exists. Otherwise, quit.
-  bool exists = false;
-  if (NS_FAILED(xreGreBinDir->Exists(&exists)) || !exists) {
-    return NS_ERROR_FAILURE;
-  }
-
-  xreGreBinDir->AppendNative(NS_LITERAL_CSTRING("pingsender" BIN_SUFFIX));
-  xreGreBinDir->GetPath(aPath);
-  return NS_OK;
-}
-
-#endif // MOZ_WIDGET_ANDROID
-
-NS_IMETHODIMP
-TelemetryImpl::RunPingSender(const nsACString& aUrl,
-                             const nsACString& aPingFilePath)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  Unused << aUrl;
-  Unused << aPingFilePath;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else // Windows, Mac, Linux, etc...
-  // Obtain the path of the pingsender executable
-  nsAutoString path;
-  nsresult rv = LocatePingSender(path);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  PRProcessAttr* attr = PR_NewProcessAttr();
-  if (!attr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We pretend we're redirecting stdout to force NSPR not to show a
-  // command prompt when launching the program.
-  PR_ProcessAttrSetStdioRedirect(attr, PR_StandardOutput, PR_STDOUT);
-
-  UniquePtr<char[]> asciiPath(ToNewCString(aPingFilePath));
-  UniquePtr<char[]> pingSenderPath(ToNewCString(path));
-  UniquePtr<char[]> serverURL(ToNewCString(aUrl));
-
-  // The next lines are needed as |args| is not const.
-  char* args[] = {
-    pingSenderPath.get(),
-    serverURL.get(),
-    asciiPath.get(),
-    nullptr,
-  };
-
-  Unused << NS_WARN_IF(PR_CreateProcessDetached(args[0], args, nullptr, attr));
-  PR_DestroyProcessAttr(attr);
-
-  return NS_OK;
-#endif
 }
 
 size_t

@@ -16,12 +16,20 @@
   var test;
   var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
-  function selectRecvSsrc(pc, index) {
+  function addRIDExtension(pc, extensionId) {
     var receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");
     var receiver = receivers[0];
 
-    SpecialPowers.wrap(pc._pc).mozSelectSsrc(receiver, index);
+    SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
+  }
+
+  function selectRecvRID(pc, rid) {
+    var receivers = pc._pc.getReceivers();
+    is(receivers.length, 1, "We have exactly one RTP receiver");
+    var receiver = receivers[0];
+
+    SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
   }
 
   runNetworkTest(() =>
@@ -76,11 +84,17 @@
         }
       ]);
 
-      test.chain.insertAfter('PC_REMOTE_WAIT_FOR_MEDIA_FLOW',[
-        function PC_REMOTE_SET_RTP_FIRST_RID(test) {
-          // Cause pcLocal to filter out everything but the first SSRC. This
-          // lets only one of the simulcast streams through.
-          selectRecvSsrc(test.pcLocal, 0);
+      // do this after set remote description so the MediaPipeline
+      // has been created.
+      test.chain.insertAfter('PC_LOCAL_SET_REMOTE_DESCRIPTION',[
+        function PC_LOCAL_SET_RTP_FIRST_RID(test) {
+          var extmap_id = test._local_offer.sdp.match(
+              "a=extmap:([0-9+])/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+          ok(extmap_id, "Local offer has extmap id for simulcast: " + extmap_id[1]);
+          // Cause pcLocal to filter out everything but RID "bar", only
+          // allowing one of the simulcast streams through.
+          addRIDExtension(test.pcLocal, extmap_id[1]);
+          selectRecvRID(test.pcLocal, "bar");
         }
       ]);
 
@@ -101,9 +115,9 @@
           is(vremote.videoHeight, vlocal.videoHeight / 2, "sink is 1/2 height of source");
         },
         function PC_LOCAL_SET_RTP_SECOND_RID(test) {
-          // Now, cause pcLocal to filter out everything but the second SSRC.
-          // This lets only the other simulcast stream through.
-          selectRecvSsrc(test.pcLocal, 1);
+          // Now, cause pcLocal to filter out everything but RID "foo", only
+          // allowing the other simulcast stream through.
+          selectRecvRID(test.pcLocal, "foo");
         },
         function PC_LOCAL_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
           return test.pcLocal.waitForMediaFlow();

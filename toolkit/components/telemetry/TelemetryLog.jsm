@@ -8,10 +8,16 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+
+const LOG_ENTRY_MAX_COUNT = 1000;
+
 var gLogEntries = [];
 
 this.TelemetryLog = Object.freeze({
   log(id, data) {
+    if (gLogEntries.length >= LOG_ENTRY_MAX_COUNT) {
+      return;
+    }
     id = String(id);
     var ts;
     try {
