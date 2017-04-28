@@ -9,15 +9,13 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.try_job:transforms
    - taskgraph.transforms.android_stuff:transforms
    - taskgraph.transforms.task:transforms
 
 jobs:
     android-api-15-gradle-dependencies:
         description: "Android armv7 API 15+ gradle dependencies"
-        attributes:
-            build_platform: android-api-15-gradle-dependencies
-            build_type: opt
         index:
             product: mobile
             job-name: android-api-15-gradle-dependencies-opt
@@ -66,9 +64,6 @@ jobs:
 
     android-test:
         description: "Android armv7 unit tests"
-        attributes:
-            build_platform: android-test
-            build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: test
@@ -115,9 +110,6 @@ jobs:
 
     android-lint:
         description: "Android lint"
-        attributes:
-            build_platform: android-lint
-            build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: test
@@ -186,9 +178,6 @@ jobs:
 
     android-checkstyle:
         description: "Android checkstyle"
-        attributes:
-            build_platform: android-checkstyle
-            build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: test
@@ -238,9 +227,6 @@ jobs:
 
     android-findbugs:
         description: "Android findbugs"
-        attributes:
-            build_platform: android-findbugs
-            build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: test
