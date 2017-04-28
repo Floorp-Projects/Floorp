@@ -171,7 +171,7 @@ NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension
     this, asciiSpec, aIdExtension, aResult);
 }
 
-nsresult
+NS_IMETHODIMP
 CacheStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
                                       const nsACString &aIdExtension,
                                       bool *aHasAltData,
