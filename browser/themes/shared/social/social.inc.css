@@ -5,9 +5,8 @@
 %endif
 
 #manage-share-providers {
-  list-style-image: url("chrome://browser/skin/settings.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0, 468px, 18px, 450px);
 }
 
 #manage-share-providers > .toolbarbutton-icon {
