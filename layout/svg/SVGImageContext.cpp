@@ -9,6 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxUtils.h"
+#include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
@@ -21,10 +22,24 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
                                         nsIFrame* aFromFrame,
                                         imgIContainer* aImgContainer)
 {
-  // This check is cheap, so we put it first:
+  static bool sEnabledForContent = false;
+  static bool sEnabledForContentCached = false;
+
+  if (!sEnabledForContentCached) {
+    Preferences::AddBoolVarCache(&sEnabledForContent,
+                                 "svg.context-properties.content.enabled", false);
+    sEnabledForContentCached = true;
+  }
+
   if (!aFromFrame->StyleSVG()->ExposesContextProperties()) {
     // Content must have '-moz-context-properties' set to the names of the
     // properties it wants to expose to images it links to.
+    return;
+  }
+
+  if (!sEnabledForContent &&
+      !nsContentUtils::IsChromeDoc(aFromFrame->PresContext()->Document())) {
+    // Context paint is pref'ed off for content and this is a content doc.
     return;
   }
 
