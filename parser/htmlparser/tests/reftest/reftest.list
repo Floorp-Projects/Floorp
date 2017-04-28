@@ -1,26 +1,26 @@
 == bug535530-1.html bug535530-1-ref.html
-== view-source:bug535530-2.html bug535530-2-ref.html
+fails-if(stylo) == view-source:bug535530-2.html bug535530-2-ref.html
 == bug566280-1.html bug566280-1-ref.html
 == bug569229-1.xml bug569229-1-ref.xml
 == bug577418-1.html bug577418-1-ref.html
 == bug582788-1.html bug582788-1-ref.html
-fuzzy-if(skiaContent,2,5) == bug582940-1.html bug582940-1-ref.html
+fuzzy-if(skiaContent,2,5) fails-if(stylo) == bug582940-1.html bug582940-1-ref.html
 == bug592656-1.html bug592656-1-ref.html
 fuzzy-if(skiaContent,1,5) == bug599320-1.html bug599320-1-ref.html
 fuzzy-if(skiaContent,2,5) == bug608373-1.html bug608373-1-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == view-source:bug482921-1.html bug482921-1-ref.html
-== view-source:bug482921-2.xhtml bug482921-2-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fails-if(stylo) == view-source:bug482921-1.html bug482921-1-ref.html
+fails-if(stylo) == view-source:bug482921-2.xhtml bug482921-2-ref.html
 fuzzy-if(skiaContent,2,5) == bug659763-1.html bug659763-1-ref.html
 fuzzy-if(skiaContent,1,5) == bug659763-2.html bug659763-2-ref.html
 fuzzy-if(skiaContent,1,5) == bug659763-3.html bug659763-3-ref.html
 fuzzy-if(skiaContent,2,3) == bug659763-4.html bug659763-4-ref.html
 fuzzy-if(skiaContent,1,5) == bug659763-5.html bug659763-5-ref.html
 fuzzy-if(skiaContent,1,5) == bug659763-6.html bug659763-6-ref.html
-== view-source:bug673094-1.html view-source:bug673094-1-ref.html
+fails-if(stylo) == view-source:bug673094-1.html view-source:bug673094-1-ref.html
 == bug696651-1.html bug696651-1-ref.html
 == bug696651-2.html bug696651-2-ref.html
-== view-source:bug700260-1.html view-source:bug700260-1-ref.html
-== view-source:bug704667-1.html bug704667-1-ref.html
-== view-source:bug731234-1.html bug731234-1-ref.html
+fails-if(stylo) == view-source:bug700260-1.html view-source:bug700260-1-ref.html
+fails-if(stylo) == view-source:bug704667-1.html bug704667-1-ref.html
+fails-if(stylo) == view-source:bug731234-1.html bug731234-1-ref.html
 == bug820508-1.html bug820508-1-ref.html
-== view-source:bug910588-1.html bug910588-1-ref.html
+fails-if(stylo) == view-source:bug910588-1.html bug910588-1-ref.html

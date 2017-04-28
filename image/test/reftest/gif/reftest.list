@@ -1,16 +1,16 @@
 # GIF tests
 
 # tests for bug 519589
-== 1bit-255-trans.gif 1bit-255-trans.png
-== in-colormap-trans.gif in-colormap-trans.png
-== out-of-colormap-trans.gif out-of-colormap-trans.png
+fails-if(stylo) == 1bit-255-trans.gif 1bit-255-trans.png
+fails-if(stylo) == in-colormap-trans.gif in-colormap-trans.png
+fails-if(stylo) == out-of-colormap-trans.gif out-of-colormap-trans.png
 
 # a GIF file that uses the comment extension
 == comment.gif comment.png
 
 # a GIF file with a background smaller than the size of the canvas
-== small-background-size.gif small-background-size-ref.gif
-== small-background-size-2.gif small-background-size-2-ref.gif
+fails-if(stylo) == small-background-size.gif small-background-size-ref.gif
+fails-if(stylo) == small-background-size-2.gif small-background-size-2-ref.gif
 
 # a transparent gif that disposes previous frames with clear; we must properly
 # clear each frame to pass.
@@ -20,7 +20,7 @@ random == delaytest.html?transparent-animation.gif transparent-animation-finalfr
 skip == test_bug641198.html animation2a-finalframe.gif  # Disabled; see bug 1120144.
 
 # Bug 1062886: a gif with a single color and an offset
-== one-color-offset.gif one-color-offset-ref.gif
+fails-if(stylo) == one-color-offset.gif one-color-offset-ref.gif
 
 # Bug 1068230
 == tile-transform.html tile-transform-ref.html

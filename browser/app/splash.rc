@@ -4,14 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
-#include "mozilla-config.h"
 #include "nsNativeAppSupportWin.h"
 
-#if defined(HAVE_64BIT_BUILD)
-1 24 "firefox.exe.64.manifest"
-#else
-1 24 "firefox.exe.32.manifest"
-#endif
+1 24 "firefox.exe.manifest"
 
 IDI_APPICON ICON FIREFOX_ICO
 IDI_DOCUMENT ICON DOCUMENT_ICO

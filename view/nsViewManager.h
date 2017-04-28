@@ -319,6 +319,9 @@ public:
     return mContext->AppUnitsPerDevPixel();
   }
 
+  void SetPrintRelated() { mPrintRelated = true; }
+  bool GetPrintRelated() { return mPrintRelated; }
+
 private:
   static uint32_t gLastUserEventTime;
 
@@ -407,6 +410,7 @@ private:
   bool              mPainting;
   bool              mRecursiveRefreshPending;
   bool              mHasPendingWidgetGeometryChanges;
+  bool              mPrintRelated;
 
   //from here to public should be static and locked... MMP
 

@@ -53,7 +53,7 @@ BrowseReplyRunnable::Reply(DNSServiceRef aSdRef,
                            const char* aReplyDomain,
                            void* aContext)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   BrowseOperator* obj(reinterpret_cast<BrowseOperator*>(aContext));
   if (!obj) {
@@ -116,7 +116,7 @@ RegisterReplyRunnable::Reply(DNSServiceRef aSdRef,
                              const char* domain,
                              void* aContext)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   RegisterOperator* obj(reinterpret_cast<RegisterOperator*>(aContext));
   if (!obj) {
@@ -196,7 +196,7 @@ ResolveReplyRunnable::Reply(DNSServiceRef aSdRef,
                             const unsigned char* aTxtRecord,
                             void* aContext)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   ResolveOperator* obj(reinterpret_cast<ResolveOperator*>(aContext));
   if (!obj) {
@@ -268,7 +268,7 @@ GetAddrInfoReplyRunnable::Reply(DNSServiceRef aSdRef,
                                 uint32_t aTTL,
                                 void* aContext)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   GetAddrInfoOperator* obj(reinterpret_cast<GetAddrInfoOperator*>(aContext));
   if (!obj) {

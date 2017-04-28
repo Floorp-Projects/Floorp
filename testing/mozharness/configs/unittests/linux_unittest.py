@@ -229,7 +229,7 @@ config = {
         "reftest-stylo": {
             "options": ["--suite=reftest",
                         "--setpref=reftest.compareStyloToGecko=true"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest-stylo.list"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
         },
     },
     "all_xpcshell_suites": {

@@ -10,6 +10,7 @@
 #include <queue>
 
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
 #include "jsapi.h"
@@ -66,6 +67,7 @@ struct CycleCollectorResults
 };
 
 class CycleCollectedJSContext
+  : public LinkedListElement<CycleCollectedJSContext>
 {
   friend class CycleCollectedJSRuntime;
 
@@ -78,6 +80,10 @@ protected:
                       uint32_t aMaxBytes,
                       uint32_t aMaxNurseryBytes);
 
+  // See explanation in mIsPrimaryContext.
+  MOZ_IS_CLASS_INIT
+  nsresult InitializeNonPrimary(CycleCollectedJSContext* aPrimaryContext);
+
   virtual CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) = 0;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -86,6 +92,9 @@ protected:
   std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
 
 private:
+  MOZ_IS_CLASS_INIT
+  void InitializeCommon();
+
   static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);
   static bool EnqueuePromiseJobCallback(JSContext* aCx,
                                         JS::HandleObject aJob,
@@ -109,9 +118,6 @@ public:
     FinalizeNow,
   };
 
-  void FinalizeDeferredThings(DeferredFinalizeType aType);
-
-public:
   CycleCollectedJSRuntime* Runtime() const
   {
     MOZ_ASSERT(mRuntime);
@@ -123,11 +129,6 @@ public:
 
   std::queue<nsCOMPtr<nsIRunnable>>& GetPromiseMicroTaskQueue();
   std::queue<nsCOMPtr<nsIRunnable>>& GetDebuggerPromiseMicroTaskQueue();
-
-  void PrepareForForgetSkippable();
-  void BeginCycleCollectionCallback();
-  void EndCycleCollectionCallback(CycleCollectorResults& aResults);
-  void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false);
 
   JSContext* Context() const
   {
@@ -170,42 +171,6 @@ public:
     bool mOldValue;
   };
 
-  void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
-  void RemoveJSHolder(void* aHolder);
-#ifdef DEBUG
-  bool IsJSHolder(void* aHolder);
-  void AssertNoObjectsToTrace(void* aPossibleJSHolder);
-#endif
-
-  nsCycleCollectionParticipant* GCThingParticipant();
-  nsCycleCollectionParticipant* ZoneParticipant();
-
-  nsresult TraverseRoots(nsCycleCollectionNoteRootCallback& aCb);
-  virtual bool UsefulToMergeZones() const;
-  void FixWeakMappingGrayBits() const;
-  bool AreGCGrayBitsValid() const;
-  void GarbageCollect(uint32_t aReason) const;
-
-  void NurseryWrapperAdded(nsWrapperCache* aCache);
-  void NurseryWrapperPreserved(JSObject* aWrapper);
-  void JSObjectsTenured();
-
-  void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                        DeferredFinalizeFunction aFunc,
-                        void* aThing);
-  void DeferredFinalize(nsISupports* aSupports);
-
-  void DumpJSHeap(FILE* aFile);
-
-  // Add aZone to the set of zones waiting for a GC.
-  void AddZoneWaitingForGC(JS::Zone* aZone);
-
-  // Prepare any zones for GC that have been passed to AddZoneWaitingForGC()
-  // since the last GC or since the last call to PrepareWaitingZonesForGC(),
-  // whichever was most recent. If there were no such zones, prepare for a
-  // full GC.
-  void PrepareWaitingZonesForGC();
-
 protected:
   JSContext* MaybeContext() const { return mJSContext; }
 
@@ -247,6 +212,12 @@ public:
   nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
 
 private:
+  // A primary context owns the mRuntime. Non-main-thread contexts should always
+  // be primary. On the main thread, the primary context should be the first one
+  // created and the last one destroyed. Non-primary contexts are used for
+  // cooperatively scheduled threads.
+  bool mIsPrimaryContext;
+
   CycleCollectedJSRuntime* mRuntime;
 
   JSContext* mJSContext;

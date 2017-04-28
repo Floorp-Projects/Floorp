@@ -1633,7 +1633,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                           JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                           JS::MutableHandle<JS::PropertyDescriptor> desc)
 {
-  if (id == XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS)) {
+  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS)) {
     return LookupComponentsShim(cx, obj, aWin->AsInner(), desc);
   }
 
@@ -1641,7 +1641,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   // Note: We use |obj| rather than |aWin| to get the principal here, because
   // this is called during Window setup when the Document isn't necessarily
   // hooked up yet.
-  if (id == XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) &&
+  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) &&
       !xpc::IsXrayWrapper(obj) &&
       !nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)))
   {

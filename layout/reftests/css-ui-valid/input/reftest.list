@@ -29,8 +29,8 @@ fuzzy-if(skiaContent,1,3) == input-disabled-fieldset-2.html input-fieldset-ref.h
 fuzzy-if(skiaContent,1,3) == input-fieldset-legend.html input-fieldset-legend-ref.html
 == input-checkbox-valid-changed.html success-ref.html
 == input-checkbox-valid-default.html success-ref.html
-== input-file-valid-changed.html input-file-ref.html
-== input-file-valid-default.html input-file-ref.html
+fails-if(stylo) == input-file-valid-changed.html input-file-ref.html
+fails-if(stylo) == input-file-valid-default.html input-file-ref.html
 == input-radio-required.html success-ref.html
 == input-radio-customerror.html success-ref.html
 == input-radio-dyn-valid-1.html success-ref.html
