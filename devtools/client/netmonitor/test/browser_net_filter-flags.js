@@ -183,6 +183,10 @@ add_task(function* () {
   setFreetextFilter("-mime-type:HtmL status-code:200");
   testContents([0, 1, 1, 1, 1, 1, 1, 0]);
 
+  // Test regex filter
+  setFreetextFilter("regexp:content.*?Sam");
+  testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+
   yield teardown(monitor);
 
   function testContents(visibility) {
