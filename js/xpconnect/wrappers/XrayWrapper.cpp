@@ -1318,14 +1318,14 @@ bool CloneExpandoChain(JSContext* cx, JSObject* dstArg, JSObject* srcArg)
 static JSObject*
 GetHolder(JSObject* obj)
 {
-    return &js::GetProxyExtra(obj, 0).toObject();
+    return &js::GetProxyReservedSlot(obj, 0).toObject();
 }
 
 JSObject*
 XrayTraits::getHolder(JSObject* wrapper)
 {
     MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
-    js::Value v = js::GetProxyExtra(wrapper, 0);
+    js::Value v = js::GetProxyReservedSlot(wrapper, 0);
     return v.isObject() ? &v.toObject() : nullptr;
 }
 
@@ -1337,7 +1337,7 @@ XrayTraits::ensureHolder(JSContext* cx, HandleObject wrapper)
         return holder;
     holder = createHolder(cx, wrapper); // virtual trap.
     if (holder)
-        js::SetProxyExtra(wrapper, 0, ObjectValue(*holder));
+        js::SetProxyReservedSlot(wrapper, 0, ObjectValue(*holder));
     return holder;
 }
 

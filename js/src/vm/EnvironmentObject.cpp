@@ -2268,8 +2268,8 @@ DebugEnvironmentProxy::create(JSContext* cx, EnvironmentObject& env, HandleObjec
         return nullptr;
 
     DebugEnvironmentProxy* debugEnv = &obj->as<DebugEnvironmentProxy>();
-    debugEnv->setExtra(ENCLOSING_EXTRA, ObjectValue(*enclosing));
-    debugEnv->setExtra(SNAPSHOT_EXTRA, NullValue());
+    debugEnv->setReservedSlot(ENCLOSING_SLOT, ObjectValue(*enclosing));
+    debugEnv->setReservedSlot(SNAPSHOT_SLOT, NullValue());
 
     return debugEnv;
 }
@@ -2283,13 +2283,13 @@ DebugEnvironmentProxy::environment() const
 JSObject&
 DebugEnvironmentProxy::enclosingEnvironment() const
 {
-    return extra(ENCLOSING_EXTRA).toObject();
+    return reservedSlot(ENCLOSING_SLOT).toObject();
 }
 
 ArrayObject*
 DebugEnvironmentProxy::maybeSnapshot() const
 {
-    JSObject* obj = extra(SNAPSHOT_EXTRA).toObjectOrNull();
+    JSObject* obj = reservedSlot(SNAPSHOT_SLOT).toObjectOrNull();
     return obj ? &obj->as<ArrayObject>() : nullptr;
 }
 
@@ -2297,7 +2297,7 @@ void
 DebugEnvironmentProxy::initSnapshot(ArrayObject& o)
 {
     MOZ_ASSERT(maybeSnapshot() == nullptr);
-    setExtra(SNAPSHOT_EXTRA, ObjectValue(o));
+    setReservedSlot(SNAPSHOT_SLOT, ObjectValue(o));
 }
 
 bool
