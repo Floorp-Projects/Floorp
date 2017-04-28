@@ -18,7 +18,6 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
-using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
@@ -118,9 +117,6 @@ parent:
 
   // Query a named property from the last frame
   sync RequestProperty(nsString property) returns (float value);
-
-  // Return the TextureFactoryIdentifier for this compositor.
-  sync GetTextureFactoryIdentifier() returns (TextureFactoryIdentifier aIdentifier);
 
   // Tell the compositor to notify APZ that a layer has been confirmed for an
   // input event.

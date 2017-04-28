@@ -35,7 +35,6 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layout/RenderFrameChild.h"
@@ -2710,9 +2709,11 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
     if (lf) {
       nsTArray<LayersBackend> backends;
       backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
+      bool success;
       PLayerTransactionChild* shadowManager =
-          compositorChild->SendPLayerTransactionConstructor(backends, aLayersId);
-      if (shadowManager) {
+          compositorChild->SendPLayerTransactionConstructor(backends,
+                                                            aLayersId, &mTextureFactoryIdentifier, &success);
+      if (shadowManager && success) {
         lf->SetShadowManager(shadowManager);
         lf->IdentifyTextureHost(mTextureFactoryIdentifier);
         ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
@@ -3095,17 +3096,17 @@ TabChild::ReinitRendering()
                                               wr::AsPipelineId(mLayersId),
                                               &mTextureFactoryIdentifier);
   } else {
-    bool success = false;
+    bool success;
     nsTArray<LayersBackend> ignored;
-    PLayerTransactionChild* shadowManager = cb->SendPLayerTransactionConstructor(ignored, LayersId());
-    if (shadowManager &&
-        shadowManager->SendGetTextureFactoryIdentifier(&mTextureFactoryIdentifier) &&
-        mTextureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
-    {
-      success = true;
-    }
+    PLayerTransactionChild* shadowManager =
+      cb->SendPLayerTransactionConstructor(ignored, LayersId(), &mTextureFactoryIdentifier, &success);
     if (!success) {
       NS_WARNING("failed to re-allocate layer transaction");
+      return;
+    }
+
+    if (!shadowManager) {
+      NS_WARNING("failed to re-construct LayersChild");
       return;
     }
 

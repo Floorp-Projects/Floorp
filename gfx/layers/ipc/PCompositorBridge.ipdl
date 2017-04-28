@@ -218,7 +218,8 @@ parent:
   // layersBackendHints is an ordered list of preffered backends where
   // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE
   // that hint is ignored.
-  async PLayerTransaction(LayersBackend[] layersBackendHints, uint64_t id);
+  sync PLayerTransaction(LayersBackend[] layersBackendHints, uint64_t id)
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, bool success);
 
   // Notify the compositor that a region of the screen has been invalidated.
   async NotifyRegionInvalidated(nsIntRegion region);
