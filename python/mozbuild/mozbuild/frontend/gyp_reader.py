@@ -326,7 +326,7 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
           if config.substs['OS_TARGET'] == 'WINNT':
               context['DEFINES']['UNICODE'] = True
               context['DEFINES']['_UNICODE'] = True
-        context['DISABLE_STL_WRAPPING'] = True
+        context['COMPILE_FLAGS']['STL'] = []
 
         for key, value in gyp_dir_attrs.sandbox_vars.items():
             if context.get(key) and isinstance(context[key], list):

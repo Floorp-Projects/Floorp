@@ -297,6 +297,26 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
             self.update(value)
 
 
+class CompileFlags(ContextDerivedValue, dict):
+    def __init__(self, context):
+        self.flag_variables = (
+            ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
+        )
+        self._known_keys = set(k for k, v, _ in self.flag_variables)
+
+        dict.__init__(self,
+                      ((k, TypedList(unicode)(v)) for k, v, _ in self.flag_variables))
+
+    def __setitem__(self, key, value):
+        if key not in self._known_keys:
+            raise ValueError('Invalid value. `%s` is not a compile flags '
+                             'category.' % key)
+        if not (isinstance(value, list) and all(isinstance(v, unicode) for v in value)):
+            raise ValueError('A list of strings must be provided as a value for a '
+                             'compile flags category.')
+        dict.__setitem__(self, key, value)
+
+
 class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
@@ -1686,6 +1706,11 @@ VARIABLES = {
 
     'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
         """Directories containing Python packages that Sphinx documents.
+        """),
+
+    'COMPILE_FLAGS': (CompileFlags, dict,
+        """Recipe for compile flags for this context. Not to be manipulated
+        directly.
         """),
 
     'CFLAGS': (List, list,

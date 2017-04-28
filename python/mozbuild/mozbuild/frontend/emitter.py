@@ -30,6 +30,7 @@ from .data import (
     BaseSources,
     BrandingFiles,
     ChromeManifestEntry,
+    ComputedFlags,
     ConfigFileSubstitution,
     ContextWrapped,
     Defines,
@@ -128,6 +129,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self._libs = OrderedDefaultDict(list)
         self._binaries = OrderedDict()
+        self._compile_dirs = set()
         self._linkage = []
         self._static_linking_shared = set()
         self._crate_verified_local = set()
@@ -757,6 +759,8 @@ class TreeMetadataEmitter(LoggingMixin):
         if not (linkables or host_linkables):
             return
 
+        self._compile_dirs.add(context.objdir)
+
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
         all_flags = {}
@@ -905,7 +909,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'ANDROID_APK_NAME',
             'ANDROID_APK_PACKAGE',
             'ANDROID_GENERATED_RESFILES',
-            'DISABLE_STL_WRAPPING',
             'EXTRA_DSO_LDOPTS',
             'RCFILE',
             'RESFILE',
@@ -1132,6 +1135,9 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if passthru.variables:
             yield passthru
+
+        if context.objdir in self._compile_dirs:
+            yield ComputedFlags(context, context['COMPILE_FLAGS'])
 
     def _create_substitution(self, cls, context, path):
         sub = cls(context)
