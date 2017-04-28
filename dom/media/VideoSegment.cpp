@@ -50,7 +50,6 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
     LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
   RefPtr<PlanarYCbCrImage> image = container->CreatePlanarYCbCrImage();
   if (!image) {
-    MOZ_ASSERT(false);
     return nullptr;
   }
 
@@ -82,7 +81,6 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
 
   // Copies data, so we can free data.
   if (!image->CopyData(data)) {
-    MOZ_ASSERT(false);
     return nullptr;
   }
 
