@@ -283,21 +283,23 @@ class WarningsCollector(object):
     """Collects warnings from text data.
 
     Instances of this class receive data (usually the output of compiler
-    invocations) and parse it into warnings and add these warnings to a
-    database.
+    invocations) and parse it into warnings.
 
     The collector works by incrementally receiving data, usually line-by-line
     output from the compiler. Therefore, it can maintain state to parse
     multi-line warning messages.
     """
-    def __init__(self, database=None, objdir=None, resolve_files=True):
-        self.database = database
-        self.objdir = objdir
-        self.resolve_files = resolve_files
-        self.included_from = []
+    def __init__(self, cb, objdir=None):
+        """Initialize a new collector.
 
-        if database is None:
-            self.database = WarningsDatabase()
+        ``cb`` is a callable that is called with a ``CompilerWarning``
+        instance whenever a new warning is parsed.
+
+         ``objdir`` is the object directory. Used for normalizing paths.
+         """
+        self.cb = cb
+        self.objdir = objdir
+        self.included_from = []
 
     def process_line(self, line):
         """Take a line of text and process it for a warning."""
@@ -349,13 +351,9 @@ class WarningsCollector(object):
         if not os.path.isabs(filename):
             filename = self._normalize_relative_path(filename)
 
-        if not os.path.exists(filename) and self.resolve_files:
-            raise Exception('Could not find file containing warning: %s' %
-                    filename)
-
         warning['filename'] = filename
 
-        self.database.insert(warning, compute_hash=self.resolve_files)
+        self.cb(warning)
 
         return warning
 
