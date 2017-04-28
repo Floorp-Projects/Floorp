@@ -1067,6 +1067,17 @@ ChromiumCDMParent::Shutdown()
   }
   mIsShutdown = true;
 
+  // If we're shutting down due to the plugin shutting down due to application
+  // shutdown, we should tell the CDM proxy to also shutdown. Otherwise the
+  // proxy will shutdown when the owning MediaKeys is destroyed during cycle
+  // collection, and that will not shut down cleanly as the GMP thread will be
+  // shutdown by then.
+  if (mProxy) {
+    RefPtr<Runnable> task =
+      NewRunnableMethod(mProxy, &ChromiumCDMProxy::Shutdown);
+    NS_DispatchToMainThread(task.forget());
+  }
+
   // We may be called from a task holding the last reference to the proxy, so
   // let's clear our local weak pointer to ensure it will not be used afterward
   // (including from an already-queued task, e.g.: ActorDestroy).
