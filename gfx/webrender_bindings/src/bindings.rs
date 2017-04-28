@@ -555,8 +555,8 @@ struct WrExternalImage {
     size: usize,
 }
 
-type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId) -> WrExternalImage;
-type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId);
+type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8) -> WrExternalImage;
+type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
@@ -568,9 +568,9 @@ pub struct WrExternalImageHandler {
 impl ExternalImageHandler for WrExternalImageHandler {
     fn lock(&mut self,
             id: ExternalImageId,
-            _channel_index: u8)
+            channel_index: u8)
             -> ExternalImage {
-        let image = (self.lock_func)(self.external_image_obj, id.into());
+        let image = (self.lock_func)(self.external_image_obj, id.into(), channel_index);
 
         match image.image_type {
             WrExternalImageType::NativeTexture => {
@@ -596,8 +596,8 @@ impl ExternalImageHandler for WrExternalImageHandler {
 
     fn unlock(&mut self,
               id: ExternalImageId,
-              _channel_index: u8) {
-        (self.unlock_func)(self.external_image_obj, id.into());
+              channel_index: u8) {
+        (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
     }
 }
 
