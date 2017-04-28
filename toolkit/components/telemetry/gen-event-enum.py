@@ -7,6 +7,7 @@
 # The events are defined in files provided as command-line arguments.
 
 from __future__ import print_function
+from shared_telemetry_utils import ParserError
 
 import sys
 import parse_events
@@ -34,7 +35,12 @@ def main(output, *filenames):
     # Load the events first.
     if len(filenames) > 1:
         raise Exception('We don\'t support loading from more than one file.')
-    events = parse_events.load_events(filenames[0])
+
+    try:
+        events = parse_events.load_events(filenames[0])
+    except ParserError as ex:
+        print("\nError processing events:\n" + str(ex) + "\n")
+        sys.exit(1)
 
     grouped = dict()
     index = 0
