@@ -7,14 +7,14 @@
 #include "mozilla/DeferredFinalize.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 void
 mozilla::DeferredFinalize(nsISupports* aSupports)
 {
-  CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(cx, "Should have a CycleCollectedJSContext by now");
-  cx->DeferredFinalize(aSupports);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->DeferredFinalize(aSupports);
 }
 
 void
@@ -22,7 +22,7 @@ mozilla::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                           DeferredFinalizeFunction aFunc,
                           void* aThing)
 {
-  CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(cx, "Should have a CycleCollectedJSContext by now");
-  cx->DeferredFinalize(aAppendFunc, aFunc, aThing);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
 }

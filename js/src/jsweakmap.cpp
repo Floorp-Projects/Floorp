@@ -97,7 +97,7 @@ WeakMapBase::sweepZone(JS::Zone* zone)
 void
 WeakMapBase::traceAllMappings(WeakMapTracer* tracer)
 {
-    JSRuntime* rt = tracer->context->runtime();
+    JSRuntime* rt = tracer->runtime;
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (WeakMapBase* m : zone->gcWeakMapList()) {
             // The WeakMapTracer callback is not allowed to GC.

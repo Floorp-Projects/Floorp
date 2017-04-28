@@ -32,21 +32,17 @@ CXXFLAGS += -mno-sse -mno-sse2 -mfpmath=387
 CXX += -march=pentiumpro
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+# Rebuild firefox.exe if the manifest changes - it's included by splash.rc.
+# (this dependency should really be just for firefox.exe, not other targets)
+# Note the manifest file exists in the tree, so we use the explicit filename
+# here.
+EXTRA_DEPS += firefox.exe.manifest
+endif
+
 PROGRAMS_DEST = $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-# Rebuild a .res file if the manifest changes - it's included by splash.rc.
-# (this dependency should really be just for the .res file, not other targets)
-# Note the manifest file exists in the tree, so we use the explicit filename
-# here.
-ifdef HAVE_64BIT_BUILD
-$(RESFILE): firefox.exe.64.manifest
-else
-$(RESFILE): firefox.exe.32.manifest
-endif
-endif
 
 ifneq (,$(filter-out WINNT,$(OS_ARCH)))
 

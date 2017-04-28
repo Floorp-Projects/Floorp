@@ -45,7 +45,7 @@ public:
   // nsASocketHandler methods
   virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) override
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(fd == mFD);
 
     if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL)) {
@@ -62,7 +62,7 @@ public:
 
   virtual void OnSocketDetached(PRFileDesc *fd) override
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(mThread);
     MOZ_ASSERT(fd == mFD);
 
@@ -107,7 +107,7 @@ public:
 
   nsresult Init()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() != gSocketThread);
+    MOZ_ASSERT(!OnSocketThread(), "on socket thread");
     mThread = NS_GetCurrentThread();
 
     if (!mService) {
@@ -130,7 +130,7 @@ public:
 
   void Close()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() != gSocketThread);
+    MOZ_ASSERT(!OnSocketThread(), "on socket thread");
 
     if (!gSocketTransportService) {
       Deallocate();
@@ -160,7 +160,7 @@ private:
 
   void OnMsgClose()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (NS_FAILED(mCondition)) {
       return;
@@ -179,7 +179,7 @@ private:
 
   void OnMsgAttach()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (NS_FAILED(mCondition)) {
       return;
@@ -197,7 +197,7 @@ private:
 
   nsresult TryAttach()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     nsresult rv;
 

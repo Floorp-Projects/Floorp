@@ -3,7 +3,7 @@
 skip-if(cocoaWidget||Android) != accesskey-1.xul accesskey-1-notref.xul
 skip-if(cocoaWidget||Android) == accesskey-2.xul accesskey-2-ref.xul
 # accesskey-3 fails because of defects in XUL bidi support
-fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3-ref.xul
+fails-if(!cocoaWidget&&!stylo) skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3-ref.xul
 skip-if(cocoaWidget||Android) != accesskey-3.xul accesskey-3-notref.xul
 skip-if(cocoaWidget||Android) == accesskey-4.xul accesskey-4-ref.xul
 skip-if(cocoaWidget||Android) != accesskey-4.xul accesskey-4-notref.xul

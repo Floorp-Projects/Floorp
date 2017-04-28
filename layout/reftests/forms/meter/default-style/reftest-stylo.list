@@ -1,3 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == default-style.html default-style.html
-fails == default-style-dyn.html default-style-dyn.html

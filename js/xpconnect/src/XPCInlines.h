@@ -186,28 +186,28 @@ inline jsid
 XPCCallContext::GetResolveName() const
 {
     CHECK_STATE(HAVE_CONTEXT);
-    return XPCJSContext::Get()->GetResolveName();
+    return GetContext()->GetResolveName();
 }
 
 inline jsid
 XPCCallContext::SetResolveName(JS::HandleId name)
 {
     CHECK_STATE(HAVE_CONTEXT);
-    return XPCJSContext::Get()->SetResolveName(name);
+    return GetContext()->SetResolveName(name);
 }
 
 inline XPCWrappedNative*
 XPCCallContext::GetResolvingWrapper() const
 {
     CHECK_STATE(HAVE_OBJECT);
-    return XPCJSContext::Get()->GetResolvingWrapper();
+    return GetContext()->GetResolvingWrapper();
 }
 
 inline XPCWrappedNative*
 XPCCallContext::SetResolvingWrapper(XPCWrappedNative* w)
 {
     CHECK_STATE(HAVE_OBJECT);
-    return XPCJSContext::Get()->SetResolvingWrapper(w);
+    return GetContext()->SetResolvingWrapper(w);
 }
 
 inline uint16_t
@@ -522,8 +522,8 @@ xpc_ForcePropertyResolve(JSContext* cx, JS::HandleObject obj, jsid idArg)
 inline jsid
 GetJSIDByIndex(JSContext* cx, unsigned index)
 {
-  XPCJSContext* xpcx = nsXPConnect::XPConnect()->GetContext();
-  return xpcx->GetStringID(index);
+    XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
+    return xpcrt->GetStringID(index);
 }
 
 inline

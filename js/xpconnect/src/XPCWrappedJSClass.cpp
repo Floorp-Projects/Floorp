@@ -781,7 +781,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     nsCOMPtr<nsIException> xpc_exception = aSyntheticException;
     /* this one would be set by our error reporter */
 
-    XPCJSContext* xpccx = XPCJSContext::Get();
+    XPCJSContext* xpccx = ccx.GetContext();
 
     // Get this right away in case we do something below to cause JS code
     // to run.
@@ -988,7 +988,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
 
-    XPCJSContext* xpccx = XPCJSContext::Get();
+    XPCJSContext* xpccx = ccx.GetContext();
     AutoSavePendingResult apr(xpccx);
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
@@ -1236,7 +1236,7 @@ pre_call_clean_up:
         return CheckForException(ccx, aes, name, GetInterfaceName(),
                                  syntheticException);
 
-    XPCJSContext::Get()->SetPendingException(nullptr); // XXX necessary?
+    xpccx->SetPendingException(nullptr); // XXX necessary?
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args

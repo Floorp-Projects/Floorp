@@ -694,7 +694,7 @@ AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
 
 void
 AudioChannelService::RefreshAgents(nsPIDOMWindowOuter* aWindow,
-                                   std::function<void(AudioChannelAgent*)> aFunc)
+                                   const std::function<void(AudioChannelAgent*)>& aFunc)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());

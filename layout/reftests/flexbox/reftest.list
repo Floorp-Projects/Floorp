@@ -13,11 +13,11 @@
 include pagination/reftest.list
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-pref(layout.css.moz-appearance.enabled,true) fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
+pref(layout.css.moz-appearance.enabled,true) fails fails-if(stylo) == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely) and GTK.
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref
-fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
+fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) fails-if(stylo) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 # Tests for box-sizing on flex containers and flex items.
@@ -43,11 +43,11 @@ fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == fl
 # inserted adjacent to that existing content.)
 fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,3,10) fails-if(stylo) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,3,10) fails-if(stylo) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
@@ -57,8 +57,8 @@ fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-i
 == flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
 
 # Tests for empty flexboxes (with no flex items)
-== flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
-== flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
+fails-if(stylo) == flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
+fails-if(stylo) == flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
 == flexbox-empty-container-synthesized-baseline-001.html flexbox-empty-container-synthesized-baseline-001-ref.html
 
 # Tests for handling of floated elements inside a flexbox
@@ -70,7 +70,7 @@ fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-i
 == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
 
 # Tests for the order in which we paint flex items
-fails == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
+fails-if(!stylo) == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
@@ -84,8 +84,8 @@ fuzzy-if(Android,16,400) == flexbox-position-fixed-2.xhtml     flexbox-position-
 == flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
-fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails-if(!stylo) == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails-if(!stylo) == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
 == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
@@ -94,25 +94,25 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 
 # Tests for intrinsic sizing of flexboxes
-== flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
-== flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
-== flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
-== flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+fails-if(stylo) == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+fails-if(stylo) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+fails-if(stylo) == flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+fails-if(stylo) == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
 
 # Tests for invalidation after dynamic modifications
 == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox in an iframe that gets resized.
-fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+fuzzy-if(skiaContent,1,5) fails-if(stylo) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 
 # Tests for flexbox styling on things that don't support it
 == flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
 
 # Tests with widgets as flex items
-fuzzy-if(gtkWidget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtkWidget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtkWidget,1,66) fails-if(stylo) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtkWidget,1,74) fails-if(stylo) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
 skip-if(gtkWidget) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html # bug 1260965
-fuzzy-if(gtkWidget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtkWidget,1,31) fails-if(stylo) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
 
 # Tests for table flex items
 == flexbox-table-flex-items-1.html flexbox-table-flex-items-1-ref.html

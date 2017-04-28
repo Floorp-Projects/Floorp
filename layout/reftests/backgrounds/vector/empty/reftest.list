@@ -4,10 +4,10 @@
 == wide--contain--width.html ref-wide-empty.html
 
 # These tests fail because of integer overflow; see bug 894555.
-fails == tall--cover--height.html ref-tall-lime.html
-fails == tall--cover--width.html ref-tall-lime.html
-fails == wide--cover--height.html ref-wide-lime.html
-fails == wide--cover--width.html ref-wide-lime.html
+fails-if(!stylo) == tall--cover--height.html ref-tall-lime.html
+fails-if(!stylo) == tall--cover--width.html ref-tall-lime.html
+fails-if(!stylo) == wide--cover--height.html ref-wide-lime.html
+fails-if(!stylo) == wide--cover--width.html ref-wide-lime.html
 
 == zero-height-ratio-contain.html ref-tall-empty.html
 == zero-height-ratio-cover.html ref-tall-empty.html

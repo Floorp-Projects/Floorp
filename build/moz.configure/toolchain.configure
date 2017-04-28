@@ -410,57 +410,77 @@ def check_compiler(compiler, language, target):
     )
 
 
-@imports(_from='collections', _import='defaultdict')
+@imports(_from='__builtin__', _import='open')
+@imports('json')
+@imports('subprocess')
+def get_vc_paths(topsrcdir):
+    def vswhere(args):
+        return json.loads(subprocess.check_output([os.path.join(topsrcdir, 'build/win32/vswhere.exe'), '-format', 'json'] + args))
+
+    # Can't pass -requires with -legacy, so query each separately.
+    # Legacy versions first (VS2015)
+    for install in vswhere(['-legacy', '-version', '[14.0,15.0)']):
+        version = Version(install['installationVersion'])
+        # Skip anything older than VS2015.
+        if version < '14':
+            continue
+        path = install['installationPath']
+
+        yield (Version(install['installationVersion']), {
+            'x64': [os.path.join(path, r'VC\bin\amd64')],
+            'x86': [os.path.join(path, r'VC\bin\amd64_x86')],
+        })
+    # Then VS2017 and newer.
+    for install in vswhere(['-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
+        path = install['installationPath']
+        tools_version = open(os.path.join(path, r'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'), 'rb').read().strip()
+        tools_path = os.path.join(path, r'VC\Tools\MSVC', tools_version, r'bin\HostX64')
+        yield (Version(install['installationVersion']), {
+            'x64': [os.path.join(tools_path, 'x64')],
+            # The x64->x86 cross toolchain requires DLLs from the native x64 toolchain.
+            'x86': [os.path.join(tools_path, 'x86'), os.path.join(tools_path, 'x64')],
+        })
+
+option('--with-visual-studio-version', nargs=1,
+       choices=('2015', '2017'),
+       help='Select a specific Visual Studio version to use')
+
+@depends('--with-visual-studio-version')
+def vs_major_version(value):
+    if value:
+        return {'2015': 14,
+                '2017': 15}[value[0]]
+
+@depends(host, target, vs_major_version, check_build_environment, '--with-visual-studio-version')
 @imports(_from='__builtin__', _import='sorted')
-def get_vc_paths(base):
-    vc = defaultdict(lambda: defaultdict(dict))
-    subkey = r'Microsoft\VisualStudio\VC\*\*\*\Compiler'
-    for v, h, t, p in get_registry_values(base + '\\' + subkey):
-        vc[v][h][t] = p
-    if not vc:
-        return
-    version, data = sorted(vc.iteritems(), key=lambda x: Version(x[0]))[-1]
-    return data
-
-
-@depends(host)
+@imports(_from='operator', _import='itemgetter')
 @imports('platform')
-def vc_compiler_path(host):
+def vc_compiler_path(host, target, vs_major_version, env, vs_release_name):
     if host.kernel != 'WINNT':
-        return
-    vc_host = {
-        'x86': 'x86',
-        'AMD64': 'x64',
-    }.get(platform.machine())
-    if vc_host is None:
         return
     vc_target = {
         'x86': 'x86',
         'x86_64': 'x64',
         'arm': 'arm',
-    }.get(host.cpu)
+    }.get(target.cpu)
     if vc_target is None:
         return
 
-    base_key = r'HKEY_LOCAL_MACHINE\SOFTWARE'
-    data = get_vc_paths(base_key)
-    if not data:
-        data = get_vc_paths(base_key + r'\Wow6432Node')
-    if not data:
+    all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
+    if not all_versions:
         return
-
-    path = data.get(vc_host, {}).get(vc_target)
-    if not path and vc_host == 'x64':
-        vc_host = 'x86'
-        path = data.get(vc_host, {}).get(vc_target)
-    if not path:
+    if vs_major_version:
+        versions = [d for (v, d) in all_versions if v.major == vs_major_version]
+        if not versions:
+            die('Visual Studio %s could not be found!' % vs_release_name)
+        data = versions[0]
+    else:
+        # Choose the newest version.
+        data = all_versions[-1][1]
+    paths = data.get(vc_target)
+    if not paths:
         return
-    path = os.path.dirname(path)
-    if vc_host != vc_target:
-        other_path = data.get(vc_host, {}).get(vc_host)
-        if other_path:
-            return (path, os.path.dirname(other_path))
-    return (path,)
+    return paths
 
 
 @depends(vc_compiler_path)

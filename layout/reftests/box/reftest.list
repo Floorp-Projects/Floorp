@@ -5,7 +5,7 @@
 == flexbox-abspos-container-2.html  flexbox-abspos-container-2-ref.html
 == flexbox-attributes-no-box-horizontal.xhtml flexbox-attributes-no-box-horizontal-ref.xhtml
 == flexbox-attributes-no-box-vertical.xhtml flexbox-attributes-no-box-vertical-ref.xhtml
-== flexbox-attributes-no-input-horizontal.xhtml flexbox-attributes-no-input-horizontal-ref.xhtml
-== flexbox-attributes-no-input-vertical.xhtml flexbox-attributes-no-input-vertical-ref.xhtml
+fails-if(stylo) == flexbox-attributes-no-input-horizontal.xhtml flexbox-attributes-no-input-horizontal-ref.xhtml
+fails-if(stylo) == flexbox-attributes-no-input-vertical.xhtml flexbox-attributes-no-input-vertical-ref.xhtml
 == flexbox-child-is-abspos-container-1.html flexbox-child-is-abspos-container-1-ref.html
 == flexbox-child-is-abspos-container-2.html flexbox-child-is-abspos-container-2-ref.html

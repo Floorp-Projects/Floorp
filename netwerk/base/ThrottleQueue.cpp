@@ -264,7 +264,7 @@ ThrottleQueue::~ThrottleQueue()
 NS_IMETHODIMP
 ThrottleQueue::RecordRead(uint32_t aBytesRead)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   ThrottleEntry entry;
   entry.mTime = TimeStamp::Now();
   entry.mBytesRead = aBytesRead;
@@ -276,7 +276,7 @@ ThrottleQueue::RecordRead(uint32_t aBytesRead)
 NS_IMETHODIMP
 ThrottleQueue::Available(uint32_t aRemaining, uint32_t* aAvailable)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   TimeStamp now = TimeStamp::Now();
   TimeStamp oneSecondAgo = now - TimeDuration::FromSeconds(1);
   size_t i;
@@ -338,7 +338,7 @@ ThrottleQueue::WrapStream(nsIInputStream* aInputStream, nsIAsyncInputStream** aR
 NS_IMETHODIMP
 ThrottleQueue::Notify(nsITimer* aTimer)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // A notified reader may need to push itself back on the queue.
   // Swap out the list of readers so that this works properly.
   nsTArray<RefPtr<ThrottleInputStream>> events;
@@ -357,7 +357,7 @@ ThrottleQueue::Notify(nsITimer* aTimer)
 void
 ThrottleQueue::QueueStream(ThrottleInputStream* aStream)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mAsyncEvents.IndexOf(aStream) == mAsyncEvents.NoIndex) {
     mAsyncEvents.AppendElement(aStream);
 
@@ -384,7 +384,7 @@ ThrottleQueue::QueueStream(ThrottleInputStream* aStream)
 void
 ThrottleQueue::DequeueStream(ThrottleInputStream* aStream)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mAsyncEvents.RemoveElement(aStream);
 }
 

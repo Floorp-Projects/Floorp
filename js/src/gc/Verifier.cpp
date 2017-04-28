@@ -673,9 +673,8 @@ CheckGrayMarkingTracer::check(AutoLockForExclusiveAccess& lock)
 }
 
 JS_FRIEND_API(bool)
-js::CheckGrayMarkingState(JSContext* cx)
+js::CheckGrayMarkingState(JSRuntime* rt)
 {
-    JSRuntime* rt = cx->runtime();
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
     MOZ_ASSERT(!rt->gc.isIncrementalGCInProgress());
     if (!rt->gc.areGrayBitsValid())
