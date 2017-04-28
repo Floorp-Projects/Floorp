@@ -8,6 +8,7 @@
 # The scalars are defined in files provided as command-line arguments.
 
 from __future__ import print_function
+from shared_telemetry_utils import ParserError
 
 import sys
 import parse_scalars
@@ -35,7 +36,12 @@ def main(output, *filenames):
     # Load the scalars first.
     if len(filenames) > 1:
         raise Exception('We don\'t support loading from more than one file.')
-    scalars = parse_scalars.load_scalars(filenames[0])
+
+    try:
+        scalars = parse_scalars.load_scalars(filenames[0])
+    except ParserError as ex:
+        print("\nError processing scalars:\n" + str(ex) + "\n")
+        sys.exit(1)
 
     # Write the enum file.
     print(banner, file=output)

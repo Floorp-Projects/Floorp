@@ -6,7 +6,7 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from shared_telemetry_utils import StringTable, static_assert
+from shared_telemetry_utils import StringTable, static_assert, ParserError
 
 import parse_events
 import sys
@@ -114,7 +114,11 @@ def main(output, *filenames):
     # Load the event data.
     if len(filenames) > 1:
         raise Exception('We don\'t support loading from more than one file.')
-    events = parse_events.load_events(filenames[0])
+    try:
+        events = parse_events.load_events(filenames[0])
+    except ParserError as ex:
+        print("\nError processing events:\n" + str(ex) + "\n")
+        sys.exit(1)
 
     # Write the scalar data file.
     print(banner, file=output)
