@@ -16,8 +16,8 @@
 // The profiler collects samples that include native stacks and
 // platform-independent "pseudostacks".
 
-#ifndef SAMPLER_H
-#define SAMPLER_H
+#ifndef GeckoProfiler_h
+#define GeckoProfiler_h
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -102,9 +102,19 @@ using UniqueProfilerBacktrace =
 // only recorded if a sample is collected while it is active, marker will always
 // be collected.
 #define PROFILER_MARKER(info) do {} while (0)
-#define PROFILER_MARKER_PAYLOAD(info, payload) do { mozilla::UniquePtr<ProfilerMarkerPayload> payloadDeletor(payload); } while (0)
+#define PROFILER_MARKER_PAYLOAD(info, payload) \
+  do { \
+    mozilla::UniquePtr<ProfilerMarkerPayload> payloadDeletor(payload); \
+  } while (0)
 
 #else   // defined(MOZ_GECKO_PROFILER)
+
+#if defined(__GNUC__) || defined(_MSC_VER)
+# define PROFILER_FUNCTION_NAME __FUNCTION__
+#else
+  // From C99, supported by some C++ compilers. Just the raw function name.
+# define PROFILER_FUNCTION_NAME __func__
+#endif
 
 #define PROFILER_FUNC(decl, rv)  decl;
 #define PROFILER_FUNC_VOID(decl) void decl;
@@ -112,14 +122,27 @@ using UniqueProfilerBacktrace =
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
-#define PROFILER_LABEL(name_space, info, category) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
+#define PROFILER_LABEL(name_space, info, category) \
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::SamplerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
+                                            __LINE__)
 
-#define PROFILER_LABEL_FUNC(category) MOZ_PLATFORM_TRACING(SAMPLE_FUNCTION_NAME) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(SAMPLE_FUNCTION_NAME, category, __LINE__)
+#define PROFILER_LABEL_FUNC(category) \
+  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
+  mozilla::SamplerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(PROFILER_FUNCTION_NAME, category, \
+                                            __LINE__)
 
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameDynamicRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__, str)
+#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) \
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::SamplerStackFrameDynamicRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
+                                            __LINE__, str)
 
 #define PROFILER_MARKER(info) profiler_add_marker(info)
-#define PROFILER_MARKER_PAYLOAD(info, payload) profiler_add_marker(info, payload)
+#define PROFILER_MARKER_PAYLOAD(info, payload) \
+  profiler_add_marker(info, payload)
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 
@@ -180,7 +203,8 @@ PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char *output,
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace().
 #if !defined(MOZ_GECKO_PROFILER)
-inline void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
+inline void
+ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 #endif
 
 // Is the profiler active? Note: the return value of this function can become
@@ -305,20 +329,12 @@ PROFILER_FUNC_VOID(profiler_log(const char *str))
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
 #ifdef min
-#undef min
+# undef min
 #endif
 
 class nsISupports;
 class ProfilerMarkerPayload;
 class PseudoStack;
-
-#ifndef SAMPLE_FUNCTION_NAME
-# if defined(__GNUC__) || defined(_MSC_VER)
-#  define SAMPLE_FUNCTION_NAME __FUNCTION__
-# else
-#  define SAMPLE_FUNCTION_NAME __func__  // defined in C99, supported in various C++ compilers. Just raw function name.
-# endif
-#endif
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack. Operates the same whether the profiler is active or not.
@@ -333,22 +349,24 @@ void profiler_call_exit(void* aHandle);
 void profiler_add_marker(const char *aMarker,
                          ProfilerMarkerPayload *aPayload = nullptr);
 
-#define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
-#define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
-#define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
+#define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
+#define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
+  PROFILER_APPEND_LINE_NUMBER_PASTE(id, line)
+#define PROFILER_APPEND_LINE_NUMBER(id) \
+  PROFILER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
 // Uncomment this to turn on systrace or build with
 // ac_add_options --enable-systace
 //#define MOZ_USE_SYSTRACE
 #ifdef MOZ_USE_SYSTRACE
-#ifndef ATRACE_TAG
-# define ATRACE_TAG ATRACE_TAG_ALWAYS
-#endif
+# ifndef ATRACE_TAG
+#  define ATRACE_TAG ATRACE_TAG_ALWAYS
+# endif
 // We need HAVE_ANDROID_OS to be defined for Trace.h.
 // If its not set we will set it temporary and remove it.
 # ifndef HAVE_ANDROID_OS
-#   define HAVE_ANDROID_OS
-#   define REMOVE_HAVE_ANDROID_OS
+#  define HAVE_ANDROID_OS
+#  define REMOVE_HAVE_ANDROID_OS
 # endif
 // Android source code will include <cutils/trace.h> before this. There is no
 // HAVE_ANDROID_OS defined in Firefox OS build at that time. Enabled it globally
@@ -358,44 +376,43 @@ void profiler_add_marker(const char *aMarker,
 // atrace_end with defined HAVE_ANDROID_OS again. Then there is no build-break.
 # undef _LIBS_CUTILS_TRACE_H
 # include <utils/Trace.h>
-# define MOZ_PLATFORM_TRACING(name) android::ScopedTrace SAMPLER_APPEND_LINE_NUMBER(scopedTrace)(ATRACE_TAG, name);
+# define PROFILER_PLATFORM_TRACING(name) \
+    android::ScopedTrace \
+    PROFILER_APPEND_LINE_NUMBER(scopedTrace)(ATRACE_TAG, name);
 # ifdef REMOVE_HAVE_ANDROID_OS
 #  undef HAVE_ANDROID_OS
 #  undef REMOVE_HAVE_ANDROID_OS
 # endif
 #else
-# define MOZ_PLATFORM_TRACING(name)
+# define PROFILER_PLATFORM_TRACING(name)
 #endif
 
 // FIXME/bug 789667: memory constraints wouldn't much of a problem for this
 // small a sample buffer size, except that serializing the profile data is
 // extremely, unnecessarily memory intensive.
 #ifdef MOZ_WIDGET_GONK
-# define PLATFORM_LIKELY_MEMORY_CONSTRAINED
+# define PROFILER_LIKELY_MEMORY_CONSTRAINED
 #endif
 
-#if !defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED) && !defined(ARCH_ARMV6)
-# define PROFILE_DEFAULT_ENTRIES 1000000
+#if !defined(PROFILER_LIKELY_MEMORY_CONSTRAINED) && !defined(ARCH_ARMV6)
+# define PROFILER_DEFAULT_ENTRIES 1000000
 #else
-# define PROFILE_DEFAULT_ENTRIES 100000
+# define PROFILER_DEFAULT_ENTRIES 100000
 #endif
 
 // In the case of profiler_get_backtrace we know that we only need enough space
 // for a single backtrace.
-#define GET_BACKTRACE_DEFAULT_ENTRIES 1000
+#define PROFILER_GET_BACKTRACE_ENTRIES 1000
 
-#if defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED)
 // A 1ms sampling interval has been shown to be a large perf hit (10fps) on
 // memory-constrained (low-end) platforms, and additionally to yield different
 // results from the profiler. Where this is the important case, b2g, there are
 // also many gecko processes which magnify these effects.
-# define PROFILE_DEFAULT_INTERVAL 10
+#if defined(PROFILER_LIKELY_MEMORY_CONSTRAINED)
+# define PROFILER_DEFAULT_INTERVAL 10
 #else
-#define PROFILE_DEFAULT_INTERVAL 1
+# define PROFILER_DEFAULT_INTERVAL 1
 #endif
-
-#define PROFILE_DEFAULT_FEATURES NULL
-#define PROFILE_DEFAULT_FEATURE_COUNT 0
 
 namespace mozilla {
 
@@ -554,4 +571,4 @@ private:
 
 } // namespace mozilla
 
-#endif // ifndef SAMPLER_H
+#endif  // GeckoProfiler_h
