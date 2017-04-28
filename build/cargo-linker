@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# If you want to use a custom linker with Cargo, Cargo requires that you
+# specify it in Cargo.toml or via the matching environment variable.
+# Passing extra options to the linker is possible with Cargo via
+# RUSTFLAGS='-C link-args', but testing showed that doing this reliably
+# was difficult.
+#
+# Our solution to these problems is to use this wrapper script.  We pass
+# in the LD and the LDFLAGS to use via environment variables.  Note that
+# we do *not* quote either MOZ_CARGO_WRAP variable:
+#
+# * MOZ_CARGO_WRAP_LD is equivalent to CC on Unix-y platforms, and CC
+#   frequently has additional arguments in addition to the compiler
+#   itself.
+# * MOZ_CARGO_WRAP_LDFLAGS contains space-separated arguments to pass,
+#   and not quoting it ensures that either of those arguments is passed
+#   as a separate argument to the actual LD.
+
+${MOZ_CARGO_WRAP_LD} ${MOZ_CARGO_WRAP_LDFLAGS} "$@"
