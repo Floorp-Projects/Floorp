@@ -24,6 +24,8 @@ class WrapperObject : public ProxyObject
 
 class CrossCompartmentWrapperObject : public WrapperObject
 {
+  public:
+    static const unsigned GrayLinkReservedSlot = 1;
 };
 
 } // namespace js

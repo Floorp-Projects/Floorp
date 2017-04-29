@@ -1,7 +1,7 @@
 default-preferences pref(layout.css.grid.enabled,true)
 
 fails-if(!stylo) == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
-fails-if(!stylo) == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
+fails-if(!stylo) skip-if(stylo) == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 fails-if(stylo) == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
 fails-if(stylo) == grid-placement-definite-001.html grid-placement-definite-001-ref.html
 fails-if(stylo) == grid-placement-definite-002.html grid-placement-definite-002-ref.html

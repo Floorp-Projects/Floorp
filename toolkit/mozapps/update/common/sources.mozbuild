@@ -22,7 +22,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 sources += [
     'readstrings.cpp',
-    'updatelogging.cpp',
+    'updatecommon.cpp',
 ]
 
 SOURCES += sorted(['%s/%s' % (srcdir, s) for s in sources])
