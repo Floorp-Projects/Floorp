@@ -338,7 +338,6 @@ SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn, int32_t aDBPageSize) {
     // otherwise.
     if (JOURNAL_WAL == SetJournalMode(aDBConn, JOURNAL_WAL)) {
       // Set the WAL journal size limit.
-      // For added safety we will also force checkpointing at strategic moments.
       int32_t checkpointPages =
         static_cast<int32_t>(DATABASE_MAX_WAL_BYTES / aDBPageSize);
       nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
@@ -1174,8 +1173,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  ForceWALCheckpoint();
 
   // ANY FAILURE IN THIS METHOD WILL CAUSE US TO MARK THE DATABASE AS CORRUPT
   // AND TRY TO REPLACE IT.
