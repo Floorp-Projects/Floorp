@@ -7872,4 +7872,13 @@ if (false) {
     other_values: [ "none", "menu", "tooltip", "sheet" ],
     invalid_values: []
   };
+
+  gCSSProperties["-moz-context-properties"] = {
+    //domProp: "MozContextProperties",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "fill", "stroke", "fill, stroke", "fill, stroke, fill", "fill, foo", "foo" ],
+    invalid_values: [ "default", "fill, auto", "all, stroke", "none, fill", "fill, none", "fill, default", "2px" ]
+  };
 }
