@@ -396,92 +396,53 @@ function getElevationRequired() {
  * @return true if an update can be applied, false otherwise
  */
 function getCanApplyUpdates() {
-  let useService = false;
-  if (shouldUseService()) {
-    // No need to perform directory write checks, the maintenance service will
-    // be able to write to all directories.
-    LOG("getCanApplyUpdates - bypass the write checks because we'll use the service");
-    useService = true;
+  if (AppConstants.platform == "macosx") {
+    LOG("getCanApplyUpdates - bypass the write since elevation can be used " +
+        "on Mac OS X");
+    return true;
   }
 
-  if (!useService && AppConstants.platform != "macosx") {
-    try {
-      let updateTestFile = getUpdateFile([FILE_UPDATE_TEST]);
-      LOG("getCanApplyUpdates - testing write access " + updateTestFile.path);
-      testWriteAccess(updateTestFile, false);
-      if (AppConstants.platform == "win") {
-        // Example windowsVersion:  Windows XP == 5.1
-        let windowsVersion = Services.sysinfo.getProperty("version");
-        LOG("getCanApplyUpdates - windowsVersion = " + windowsVersion);
+  if (shouldUseService()) {
+    LOG("getCanApplyUpdates - bypass the write checks because the Windows " +
+        "Maintenance Service can be used");
+    return true;
+  }
 
-        /**
-         * For Vista, updates can be performed to a location requiring admin
-         * privileges by requesting elevation via the UAC prompt when launching
-         * updater.exe if the appDir is under the Program Files directory
-         * (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
-         * (e.g. user has a split token).
-         *
-         * Note: this does note attempt to handle the case where UAC is turned on
-         * and the installation directory is in a restricted location that
-         * requires admin privileges to update other than Program Files.
-         */
-        let userCanElevate = false;
-
-        if (parseFloat(windowsVersion) >= 6) {
-          try {
-            // KEY_UPDROOT will fail and throw an exception if
-            // appDir is not under the Program Files, so we rely on that
-            Services.dirsvc.get(KEY_UPDROOT, Ci.nsIFile);
-            // appDir is under Program Files, so check if the user can elevate
-            userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).
-                             userCanElevate;
-            LOG("getCanApplyUpdates - on Vista, userCanElevate: " + userCanElevate);
-          } catch (ex) {
-            // When the installation directory is not under Program Files,
-            // fall through to checking if write access to the
-            // installation directory is available.
-            LOG("getCanApplyUpdates - on Vista, appDir is not under Program Files");
-          }
-        }
-
-        /**
-         * On Windows, we no longer store the update under the app dir.
-         *
-         * If we are on Windows (including Vista, if we can't elevate) we need to
-         * to check that we can create and remove files from the actual app
-         * directory (like C:\Program Files\Mozilla Firefox).  If we can't
-         * (because this user is not an adminstrator, for example) canUpdate()
-         * should return false.
-         *
-         * For Vista, we perform this check to enable updating the  application
-         * when the user has write access to the installation directory under the
-         * following scenarios:
-         * 1) the installation directory is not under Program Files
-         *    (e.g. C:\Program Files)
-         * 2) UAC is turned off
-         * 3) UAC is turned on and the user is not an admin
-         *    (e.g. the user does not have a split token)
-         * 4) UAC is turned on and the user is already elevated, so they can't be
-         *    elevated again
-         */
-        if (!userCanElevate) {
-          // if we're unable to create the test file this will throw an exception.
-          let appDirTestFile = getAppBaseDir();
-          appDirTestFile.append(FILE_UPDATE_TEST);
-          LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
-          if (appDirTestFile.exists()) {
-            appDirTestFile.remove(false);
-          }
-          appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  try {
+    // Test write access to the updates directory. On Linux the updates
+    // directory is located in the installation directory so this is the only
+    // write access check that is necessary to tell whether the user can apply
+    // updates. On Windows the updates directory is in the user's local
+    // application data directory so this should always succeed and additional
+    // checks are performed below.
+    let updateTestFile = getUpdateFile([FILE_UPDATE_TEST]);
+    LOG("getCanApplyUpdates - testing write access " + updateTestFile.path);
+    testWriteAccess(updateTestFile, false);
+    if (AppConstants.platform == "win") {
+      // On Windows when the maintenance service isn't used updates can still be
+      // performed in a location requiring admin privileges by the client
+      // accepting a UAC prompt from an elevation request made by the updater.
+      // Whether the client can elevate (e.g. has a split token) is determined
+      // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
+      let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).
+                           userCanElevate;
+      if (!userCanElevate) {
+        // if we're unable to create the test file this will throw an exception.
+        let appDirTestFile = getAppBaseDir();
+        appDirTestFile.append(FILE_UPDATE_TEST);
+        LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
+        if (appDirTestFile.exists()) {
           appDirTestFile.remove(false);
         }
+        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+        appDirTestFile.remove(false);
       }
-    } catch (e) {
-      LOG("getCanApplyUpdates - unable to apply updates. Exception: " + e);
-      // No write privileges to install directory
-      return false;
     }
-  } // if (!useService)
+  } catch (e) {
+    LOG("getCanApplyUpdates - unable to apply updates. Exception: " + e);
+    // No write access to the installation directory
+    return false;
+  }
 
   LOG("getCanApplyUpdates - able to apply updates");
   return true;
@@ -790,81 +751,14 @@ function shouldUseService() {
   // 1) This build was done with the maintenance service enabled
   // 2) The maintenance service is installed
   // 3) The pref for using the service is enabled
-  // 4) The Windows version is XP Service Pack 3 or above (for SHA-2 support)
-  // The maintenance service requires SHA-2 support because we sign our binaries
-  // with a SHA-2 certificate and the certificate is verified before the binary
-  // is launched.
   if (!AppConstants.MOZ_MAINTENANCE_SERVICE || !isServiceInstalled() ||
-      !getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false) ||
-      !AppConstants.isPlatformAndVersionAtLeast("win", "5.1") /* WinXP */) {
+      !getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
+    LOG("shouldUseService - returning false");
     return false;
   }
 
-  // If it's newer than XP, then the service pack doesn't matter.
-  if (Services.sysinfo.getProperty("version") != "5.1") {
-    return true;
-  }
-
-  // If the Windows version is XP, we also need to check the service pack.
-  // We'll return false if only < SP3 is installed, or if we can't tell.
-  // Check the service pack level by calling GetVersionEx via ctypes.
-  const BYTE = ctypes.uint8_t;
-  const WORD = ctypes.uint16_t;
-  const DWORD = ctypes.uint32_t;
-  const WCHAR = ctypes.char16_t;
-  const BOOL = ctypes.int;
-  // This structure is described at:
-  // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
-  const SZCSDVERSIONLENGTH = 128;
-  const OSVERSIONINFOEXW = new ctypes.StructType("OSVERSIONINFOEXW",
-    [
-      {dwOSVersionInfoSize: DWORD},
-      {dwMajorVersion: DWORD},
-      {dwMinorVersion: DWORD},
-      {dwBuildNumber: DWORD},
-      {dwPlatformId: DWORD},
-      {szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH)},
-      {wServicePackMajor: WORD},
-      {wServicePackMinor: WORD},
-      {wSuiteMask: WORD},
-      {wProductType: BYTE},
-      {wReserved: BYTE}
-    ]);
-
-  let kernel32 = false;
-  try {
-    kernel32 = ctypes.open("Kernel32");
-  } catch (e) {
-    Cu.reportError("Unable to open kernel32! " + e);
-    return false;
-  }
-
-  if (kernel32) {
-    try {
-      try {
-        let GetVersionEx = kernel32.declare("GetVersionExW",
-                                            ctypes.winapi_abi,
-                                            BOOL,
-                                            OSVERSIONINFOEXW.ptr);
-        let winVer = OSVERSIONINFOEXW();
-        winVer.dwOSVersionInfoSize = OSVERSIONINFOEXW.size;
-
-        if (0 !== GetVersionEx(winVer.address())) {
-          return winVer.wServicePackMajor >= 3;
-        }
-        Cu.reportError("Unknown failure in GetVersionEX (returned 0)");
-        return false;
-      } catch (e) {
-        Cu.reportError("Error getting service pack information. Exception: " + e);
-        return false;
-      }
-    } finally {
-      kernel32.close();
-    }
-  }
-
-  // If the service pack check couldn't be done, assume we can't use the service.
-  return false;
+  LOG("shouldUseService - returning true");
+  return true;
 }
 
 /**
@@ -873,23 +767,25 @@ function shouldUseService() {
  * @return  true if the service is installed.
  */
 function isServiceInstalled() {
-  if (AppConstants.MOZ_MAINTENANCE_SERVICE && AppConstants.platform == "win") {
-    let installed = 0;
-    try {
-      let wrk = Cc["@mozilla.org/windows-registry-key;1"].
-                createInstance(Ci.nsIWindowsRegKey);
-      wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
-               "SOFTWARE\\Mozilla\\MaintenanceService",
-               wrk.ACCESS_READ | wrk.WOW64_64);
-      installed = wrk.readIntValue("Installed");
-      wrk.close();
-    } catch (e) {
-    }
-    installed = installed == 1;  // convert to bool
-    LOG("isServiceInstalled = " + installed);
-    return installed;
+  if (!AppConstants.MOZ_MAINTENANCE_SERVICE || AppConstants.platform != "win") {
+    LOG("isServiceInstalled - returning false");
+    return false;
   }
-  return false;
+
+  let installed = 0;
+  try {
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].
+              createInstance(Ci.nsIWindowsRegKey);
+    wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
+             "SOFTWARE\\Mozilla\\MaintenanceService",
+             wrk.ACCESS_READ | wrk.WOW64_64);
+    installed = wrk.readIntValue("Installed");
+    wrk.close();
+  } catch (e) {
+  }
+  installed = installed == 1;  // convert to bool
+  LOG("isServiceInstalled - returning " + installed);
+  return installed;
 }
 
 /**
@@ -1389,7 +1285,6 @@ function Update(update) {
   this._properties = {};
   this._patches = [];
   this.isCompleteUpdate = false;
-  this.isOSUpdate = false;
   this.showPrompt = false;
   this.showNeverForVersion = false;
   this.unsupported = false;
@@ -1447,8 +1342,6 @@ function Update(update) {
       this.isCompleteUpdate = attr.value == "true";
     } else if (attr.name == "isSecurityUpdate") {
       this.isSecurityUpdate = attr.value == "true";
-    } else if (attr.name == "isOSUpdate") {
-      this.isOSUpdate = attr.value == "true";
     } else if (attr.name == "showNeverForVersion") {
       this.showNeverForVersion = attr.value == "true";
     } else if (attr.name == "showPrompt") {
@@ -1590,7 +1483,6 @@ Update.prototype = {
     update.setAttribute("displayVersion", this.displayVersion);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
-    update.setAttribute("isOSUpdate", this.isOSUpdate);
     update.setAttribute("name", this.name);
     update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
@@ -1839,6 +1731,23 @@ UpdateService.prototype = {
       LOG("UpdateService:_postUpdateProcessing - no status, no update");
       cleanupActiveUpdate();
       return;
+    }
+
+    // Handle the case when the update is the same or older than the current
+    // version and nsUpdateDriver.cpp skipped updating due to the version being
+    // older than the current version.
+    if (update && update.appVersion &&
+        (status == STATE_PENDING || status == STATE_PENDING_SERVICE ||
+         status == STATE_APPLIED || status == STATE_APPLIED_SERVICE ||
+         status == STATE_PENDING_ELEVATE)) {
+      if (Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
+          Services.vc.compare(update.appVersion, Services.appinfo.version) == 0 &&
+          update.buildID == Services.appinfo.appBuildID) {
+        LOG("UpdateService:_postUpdateProcessing - removing update for older " +
+            "or same application version");
+        cleanupActiveUpdate();
+        return;
+      }
     }
 
     if (status == STATE_DOWNLOADING) {
