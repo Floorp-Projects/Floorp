@@ -12,7 +12,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const {TextEncoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {addDebuggerToGlobal} = Cu.import("resource://gre/modules/jsdebugger.jsm",
                                         {});
 addDebuggerToGlobal(this);
@@ -33,7 +32,7 @@ this.CoverageCollector = function (prefix) {
 
   // Source -> coverage data;
   this._allCoverage = {};
-  this._encoder = new TextEncoder();
+  this._encoder = null;
   this._testIndex = 0;
 }
 
@@ -175,6 +174,10 @@ Object.prototype[Symbol.iterator] = function * () {
  * to a json file in a specified directory.
  */
 CoverageCollector.prototype.recordTestCoverage = function (testName) {
+  let ccov_scope = {};
+  const {TextEncoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", ccov_scope);
+  this._encoder = new TextEncoder();
+
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
   let methods = this._getMethodNames();
