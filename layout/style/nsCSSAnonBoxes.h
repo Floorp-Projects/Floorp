@@ -29,13 +29,13 @@ public:
            aPseudo == firstLetterContinuation;
   }
 
-#define CSS_ANON_BOX(_name, _value) static nsICSSAnonBoxPseudo* _name;
+#define CSS_ANON_BOX(_name, _value, _skips_fixup) static nsICSSAnonBoxPseudo* _name;
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 
   typedef uint8_t NonInheritingBase;
   enum class NonInheriting : NonInheritingBase {
-#define CSS_ANON_BOX(_name, _value) /* nothing */
+#define CSS_ANON_BOX(_name, _value, _skips_fixup) /* nothing */
 #define CSS_NON_INHERITING_ANON_BOX(_name, _value) _name,
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
@@ -51,8 +51,26 @@ public:
   static bool IsNonInheritingAnonBox(nsIAtom* aPseudo)
   {
     return
-#define CSS_ANON_BOX(_name, _value) /* nothing */
+#define CSS_ANON_BOX(_name, _value, _skips_fixup) /* nothing */
 #define CSS_NON_INHERITING_ANON_BOX(_name, _value) _name == aPseudo ||
+#include "nsCSSAnonBoxList.h"
+#undef CSS_NON_INHERITING_ANON_BOX
+#undef CSS_ANON_BOX
+      false;
+  }
+
+  // Returns whether the given anonymous box skips parent display-based style
+  // fixups.  Must only be called with an inheriting anonymous box.  (All
+  // non-inheriting anonymous boxes skip this fixup, since it doesn't make
+  // sense to perform the fixup with no inherited styles.)
+  static bool AnonBoxSkipsParentDisplayBasedStyleFixup(nsIAtom* aPseudo)
+  {
+    MOZ_ASSERT(!IsNonInheritingAnonBox(aPseudo),
+               "only call this for inheriting anonymous boxes");
+    return
+#define CSS_ANON_BOX(name_, value_, skips_fixup_) \
+      (skips_fixup_ && name_ == aPseudo) ||
+#define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX

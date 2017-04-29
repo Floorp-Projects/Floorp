@@ -7216,6 +7216,13 @@
     "description": "Records a value each time Fennec remote decoding process crashes unexpected while decoding media content.",
     "releaseChannelCollection": "opt-out"
   },
+  "MEDIA_EME_SECURE_CONTEXT": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
+    "bug_numbers": [1360438]
+  },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "53",

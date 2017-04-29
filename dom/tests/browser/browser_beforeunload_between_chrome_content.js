@@ -8,13 +8,15 @@ function pageScript() {
   }, true);
 }
 
-function frameScript() {
-  content.window.addEventListener("beforeunload", function (event) {
-    sendAsyncMessage("Test:OnBeforeUnloadReceived");
-    var str = "Leaving?";
-    event.returnValue = str;
-    return str;
-  }, true);
+function injectBeforeUnload(browser) {
+  return ContentTask.spawn(browser, null, function*() {
+    content.window.addEventListener("beforeunload", function (event) {
+      sendAsyncMessage("Test:OnBeforeUnloadReceived");
+      var str = "Leaving?";
+      event.returnValue = str;
+      return str;
+    }, true);
+  });
 }
 
 // Wait for onbeforeunload dialog, and dismiss it immediately.
@@ -49,9 +51,8 @@ add_task(function* () {
   let browser = tab.linkedBrowser;
 
   ok(browser.isRemoteBrowser, "Browser should be remote.");
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();", true);
 
+  yield injectBeforeUnload(browser);
   // Navigate to a chrome page.
   let dialogShown1 = awaitAndCloseBeforeUnloadDialog(false);
   yield BrowserTestUtils.loadURI(browser, "about:support");
@@ -59,6 +60,7 @@ add_task(function* () {
     dialogShown1,
     BrowserTestUtils.browserLoaded(browser)
   ]);
+
   is(beforeUnloadCount, 1, "Should have received one beforeunload event.");
   ok(!browser.isRemoteBrowser, "Browser should not be remote.");
 
@@ -66,8 +68,7 @@ add_task(function* () {
   ok(gBrowser.webNavigation.canGoBack, "Should be able to go back.");
   gBrowser.goBack();
   yield BrowserTestUtils.browserLoaded(browser);
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();", true);
+  yield injectBeforeUnload(browser);
 
   // Test that going forward triggers beforeunload prompt as well.
   ok(gBrowser.webNavigation.canGoForward, "Should be able to go forward.");

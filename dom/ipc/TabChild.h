@@ -780,6 +780,7 @@ private:
   uint32_t mChromeFlags;
   int32_t mActiveSuppressDisplayport;
   uint64_t mLayersId;
+  int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
   nscolor mLastBackgroundColor;
   bool mLayersConnected;

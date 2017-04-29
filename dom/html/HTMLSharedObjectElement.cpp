@@ -346,9 +346,9 @@ HTMLSharedObjectElement::DestroyContent()
 }
 
 nsresult
-HTMLSharedObjectElement::CopyInnerTo(Element* aDest)
+HTMLSharedObjectElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {
