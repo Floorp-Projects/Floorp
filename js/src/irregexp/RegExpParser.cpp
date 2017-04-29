@@ -252,8 +252,10 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
 
 template <typename CharT>
 void
-RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
+RegExpParser<CharT>::SyntaxError(unsigned errorNumber, va_list args)
 {
+    gc::AutoSuppressGC suppressGC(ts.context());
+
     ErrorMetadata err;
 
     ts.fillExcludingContext(&err, ts.currentToken().pos.begin);
@@ -295,20 +297,20 @@ RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
     err.lineLength = windowLength;
     err.tokenOffset = offset - (windowStart - start_);
 
-    va_list args;
-    va_start(args, errorNumber);
-
     ReportCompileError(ts.context(), Move(err), nullptr, JSREPORT_ERROR, errorNumber, args);
-
-    va_end(args);
 }
 
 template <typename CharT>
 RegExpTree*
-RegExpParser<CharT>::ReportError(unsigned errorNumber, const char* param /* = nullptr */)
+RegExpParser<CharT>::ReportError(unsigned errorNumber, ...)
 {
-    gc::AutoSuppressGC suppressGC(ts.context());
-    SyntaxError(errorNumber, param);
+    va_list args;
+    va_start(args, errorNumber);
+
+    SyntaxError(errorNumber, args);
+
+    va_end(args);
+
     return nullptr;
 }
 
