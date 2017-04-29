@@ -23,6 +23,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
@@ -9468,6 +9469,7 @@ class Maintenance final
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTArray<DirectoryInfo> mDirectoryInfos;
   nsDataHashtable<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
+  nsresult mResultCode;
   Atomic<bool> mAborted;
   State mState;
 
@@ -9475,6 +9477,7 @@ public:
   explicit Maintenance(QuotaClient* aQuotaClient)
     : mQuotaClient(aQuotaClient)
     , mStartTime(PR_Now())
+    , mResultCode(NS_OK)
     , mAborted(false)
     , mState(State::Initial)
   {
@@ -18638,21 +18641,32 @@ Maintenance::DirectoryWork()
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  if (NS_WARN_IF(NS_FAILED(quotaManager->EnsureStorageIsInitialized()))) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = quotaManager->EnsureStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   nsCOMPtr<nsIFile> storageDir = GetFileForPath(quotaManager->GetStoragePath());
-  MOZ_ASSERT(storageDir);
+  if (NS_WARN_IF(!storageDir)) {
+    return NS_ERROR_FAILURE;
+  }
 
   bool exists;
-  MOZ_ALWAYS_SUCCEEDS(storageDir->Exists(&exists));
+  rv = storageDir->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   if (!exists) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   bool isDirectory;
-  MOZ_ALWAYS_SUCCEEDS(storageDir->IsDirectory(&isDirectory));
+  rv = storageDir->IsDirectory(&isDirectory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   if (NS_WARN_IF(!isDirectory)) {
     return NS_ERROR_FAILURE;
   }
@@ -18687,25 +18701,41 @@ Maintenance::DirectoryWork()
     }
 
     nsCOMPtr<nsIFile> persistenceDir;
-    MOZ_ALWAYS_SUCCEEDS(
-      storageDir->Clone(getter_AddRefs(persistenceDir)));
-    MOZ_ALWAYS_SUCCEEDS(
-      persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString)));
+    rv = storageDir->Clone(getter_AddRefs(persistenceDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    MOZ_ALWAYS_SUCCEEDS(persistenceDir->Exists(&exists));
+    rv = persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = persistenceDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     if (!exists) {
       continue;
     }
 
-    MOZ_ALWAYS_SUCCEEDS(persistenceDir->IsDirectory(&isDirectory));
+    rv = persistenceDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     if (NS_WARN_IF(!isDirectory)) {
       continue;
     }
 
     nsCOMPtr<nsISimpleEnumerator> persistenceDirEntries;
-    MOZ_ALWAYS_SUCCEEDS(
-      persistenceDir->GetDirectoryEntries(
-        getter_AddRefs(persistenceDirEntries)));
+    rv = persistenceDir->GetDirectoryEntries(
+                                         getter_AddRefs(persistenceDirEntries));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     if (!persistenceDirEntries) {
       continue;
     }
@@ -18717,46 +18747,76 @@ Maintenance::DirectoryWork()
       }
 
       bool persistenceDirHasMoreEntries;
-      MOZ_ALWAYS_SUCCEEDS(
-        persistenceDirEntries->HasMoreElements(&persistenceDirHasMoreEntries));
+      rv = persistenceDirEntries->HasMoreElements(
+                                                 &persistenceDirHasMoreEntries);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       if (!persistenceDirHasMoreEntries) {
         break;
       }
 
       nsCOMPtr<nsISupports> persistenceDirEntry;
-      MOZ_ALWAYS_SUCCEEDS(
-        persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry)));
+      rv = persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       nsCOMPtr<nsIFile> originDir = do_QueryInterface(persistenceDirEntry);
       MOZ_ASSERT(originDir);
 
-      MOZ_ASSERT(NS_SUCCEEDED(originDir->Exists(&exists)));
+      rv = originDir->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       MOZ_ASSERT(exists);
 
-      MOZ_ALWAYS_SUCCEEDS(originDir->IsDirectory(&isDirectory));
+      rv = originDir->IsDirectory(&isDirectory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (!isDirectory) {
         continue;
       }
 
       nsCOMPtr<nsIFile> idbDir;
-      MOZ_ALWAYS_SUCCEEDS(originDir->Clone(getter_AddRefs(idbDir)));
+      rv = originDir->Clone(getter_AddRefs(idbDir));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-      MOZ_ALWAYS_SUCCEEDS(idbDir->Append(idbDirName));
+      rv = idbDir->Append(idbDirName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-      MOZ_ALWAYS_SUCCEEDS(idbDir->Exists(&exists));
+      rv = idbDir->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (!exists) {
         continue;
       }
 
-      MOZ_ALWAYS_SUCCEEDS(idbDir->IsDirectory(&isDirectory));
+      rv = idbDir->IsDirectory(&isDirectory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (NS_WARN_IF(!isDirectory)) {
         continue;
       }
 
       nsCOMPtr<nsISimpleEnumerator> idbDirEntries;
-      MOZ_ALWAYS_SUCCEEDS(
-        idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries)));
+      rv = idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (!idbDirEntries) {
         continue;
       }
@@ -18772,31 +18832,46 @@ Maintenance::DirectoryWork()
         }
 
         bool idbDirHasMoreEntries;
-        MOZ_ALWAYS_SUCCEEDS(
-          idbDirEntries->HasMoreElements(&idbDirHasMoreEntries));
+        rv = idbDirEntries->HasMoreElements(&idbDirHasMoreEntries);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
         if (!idbDirHasMoreEntries) {
           break;
         }
 
         nsCOMPtr<nsISupports> idbDirEntry;
-        MOZ_ALWAYS_SUCCEEDS(
-          idbDirEntries->GetNext(getter_AddRefs(idbDirEntry)));
+        rv = idbDirEntries->GetNext(getter_AddRefs(idbDirEntry));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
         nsCOMPtr<nsIFile> idbDirFile = do_QueryInterface(idbDirEntry);
         MOZ_ASSERT(idbDirFile);
 
         nsString idbFilePath;
-        MOZ_ALWAYS_SUCCEEDS(idbDirFile->GetPath(idbFilePath));
+        rv = idbDirFile->GetPath(idbFilePath);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
         if (!StringEndsWith(idbFilePath, sqliteExtension)) {
           continue;
         }
 
-        MOZ_ASSERT(NS_SUCCEEDED(idbDirFile->Exists(&exists)));
+        rv = idbDirFile->Exists(&exists);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
         MOZ_ASSERT(exists);
 
-        MOZ_ALWAYS_SUCCEEDS(idbDirFile->IsDirectory(&isDirectory));
+        rv = idbDirFile->IsDirectory(&isDirectory);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
         if (isDirectory) {
           continue;
         }
@@ -18925,7 +19000,18 @@ Maintenance::Finish()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State::Finishing);
 
+  if (NS_FAILED(mResultCode)) {
+    nsCString errorName;
+    GetErrorName(mResultCode, errorName);
+
+    IDB_WARNING("Maintenance finished with error: %s", errorName.get());
+  }
+
   mDirectoryLock = nullptr;
+
+  // It can happen that we are only referenced by mCurrentMaintenance which is
+  // cleared in NoteFinishedMaintenance()
+  RefPtr<Maintenance> kungFuDeathGrip = this;
 
   mQuotaClient->NoteFinishedMaintenance(this);
 
@@ -18971,6 +19057,10 @@ Maintenance::Run()
   }
 
   if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::Finishing) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = rv;
+    }
+
     // Must set mState before dispatching otherwise we will race with the owning
     // thread.
     mState = State::Finishing;
@@ -18997,6 +19087,10 @@ Maintenance::DirectoryLockAcquired(DirectoryLock* aLock)
 
   nsresult rv = DirectoryOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = rv;
+    }
+
     mState = State::Finishing;
     Finish();
 
@@ -19010,6 +19104,10 @@ Maintenance::DirectoryLockFailed()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
+
+  if (NS_SUCCEEDED(mResultCode)) {
+    mResultCode = NS_ERROR_FAILURE;
+  }
 
   mState = State::Finishing;
   Finish();

@@ -485,6 +485,7 @@ mochitest-browser-chrome:
             default: mochitest/browser-chrome-chunked
     treeherder-symbol: tc-M(bc)
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
             linux64-jsdcov/opt: 35
@@ -802,6 +803,7 @@ mochitest-media:
     treeherder-symbol: tc-M(mda)
     max-run-time: 5400
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     e10s:
       by-test-platform:
         macosx64/debug: true

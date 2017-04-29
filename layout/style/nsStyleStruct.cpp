@@ -876,6 +876,7 @@ nsStyleSVG::nsStyleSVG(const nsPresContext* aContext)
   , mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT)
   , mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER)
   , mTextAnchor(NS_STYLE_TEXT_ANCHOR_START)
+  , mContextPropsBits(0)
   , mContextFlags((eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
                   (eStyleSVGOpacitySource_Normal << STROKE_OPACITY_SOURCE_SHIFT))
 {
@@ -894,6 +895,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   , mMarkerMid(aSource.mMarkerMid)
   , mMarkerStart(aSource.mMarkerStart)
   , mStrokeDasharray(aSource.mStrokeDasharray)
+  , mContextProps(aSource.mContextProps)
   , mStrokeDashoffset(aSource.mStrokeDashoffset)
   , mStrokeWidth(aSource.mStrokeWidth)
   , mFillOpacity(aSource.mFillOpacity)
@@ -908,6 +910,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   , mStrokeLinecap(aSource.mStrokeLinecap)
   , mStrokeLinejoin(aSource.mStrokeLinejoin)
   , mTextAnchor(aSource.mTextAnchor)
+  , mContextPropsBits(aSource.mContextPropsBits)
   , mContextFlags(aSource.mContextFlags)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
@@ -992,8 +995,15 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
        mPaintOrder            != aNewData.mPaintOrder            ||
        mShapeRendering        != aNewData.mShapeRendering        ||
        mStrokeDasharray       != aNewData.mStrokeDasharray       ||
-       mContextFlags          != aNewData.mContextFlags) {
+       mContextFlags          != aNewData.mContextFlags          ||
+       mContextPropsBits      != aNewData.mContextPropsBits) {
     return hint | nsChangeHint_RepaintFrame;
+  }
+
+  if (!hint) {
+    if (mContextProps != aNewData.mContextProps) {
+      hint = nsChangeHint_NeutralChange;
+    }
   }
 
   return hint;

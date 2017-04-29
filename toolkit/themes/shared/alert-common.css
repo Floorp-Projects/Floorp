@@ -133,7 +133,7 @@
   border-radius: 20px;
   min-width: 0;
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
-  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  -moz-context-properties: fill;
   fill: #4d4d4d;
   margin-inline-end: 0;
   margin-bottom: 0;
