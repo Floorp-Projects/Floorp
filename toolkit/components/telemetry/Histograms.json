@@ -3988,14 +3988,6 @@
     "n_buckets": 10,
     "description": "Time spent scanning filesystem for plugins (ms)"
   },
-  "CHECK_JAVA_ENABLED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time spent checking if Java is enabled (ms)"
-  },
   "PLUGIN_HANG_UI_USER_RESPONSE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

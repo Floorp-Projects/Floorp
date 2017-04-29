@@ -618,8 +618,6 @@ Navigator::GetDoNotTrack(nsAString &aResult)
 bool
 Navigator::JavaEnabled(CallerType aCallerType, ErrorResult& aRv)
 {
-  Telemetry::AutoTimer<Telemetry::CHECK_JAVA_ENABLED> telemetryTimer;
-
   // Return true if we have a handler for the java mime
   nsAutoString javaMIME;
   Preferences::GetString("plugin.java.mime", javaMIME);
