@@ -13,7 +13,7 @@ function test() {
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { document, gStore, windowRequire } = monitor.panelWin;
+    let { document, store, windowRequire } = monitor.panelWin;
     let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
     let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
     let {
@@ -22,21 +22,21 @@ function test() {
       getSortedRequests,
     } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-    gStore.dispatch(Actions.batchEnable(false));
+    store.dispatch(Actions.batchEnable(false));
 
     waitForNetworkEvents(monitor, 1)
       .then(() => teardown(monitor))
       .then(finish);
 
     monitor.panelWin.once(EVENTS.NETWORK_EVENT, () => {
-      is(getSelectedRequest(gStore.getState()), null,
+      is(getSelectedRequest(store.getState()), null,
         "There shouldn't be any selected item in the requests menu.");
-      is(gStore.getState().requests.requests.size, 1,
+      is(store.getState().requests.requests.size, 1,
         "The requests menu should not be empty after the first request.");
       is(!!document.querySelector(".network-details-panel"), false,
         "The network details panel should still be hidden after first request.");
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       is(typeof requestItem.id, "string",
         "The attached request id is incorrect.");
@@ -84,7 +84,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS
@@ -93,11 +93,11 @@ function test() {
 
     monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.requestHeaders;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.requestHeaders,
         "There should be a requestHeaders data available.");
@@ -110,7 +110,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS
@@ -119,11 +119,11 @@ function test() {
 
     monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.requestCookies;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.requestCookies,
         "There should be a requestCookies data available.");
@@ -132,7 +132,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS
@@ -145,11 +145,11 @@ function test() {
 
     monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.responseHeaders;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.responseHeaders,
         "There should be a responseHeaders data available.");
@@ -160,7 +160,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS
@@ -169,11 +169,11 @@ function test() {
 
     monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.responseCookies;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.responseCookies,
         "There should be a responseCookies data available.");
@@ -182,7 +182,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS
@@ -191,14 +191,14 @@ function test() {
 
     monitor.panelWin.once(EVENTS.STARTED_RECEIVING_RESPONSE, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.httpVersion &&
                requestItem.status &&
                requestItem.statusText &&
                requestItem.headersSize;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       is(requestItem.httpVersion, "HTTP/1.1",
         "The httpVersion data has an incorrect value.");
@@ -211,7 +211,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS,
@@ -224,14 +224,14 @@ function test() {
 
     monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.transferredSize &&
                requestItem.contentSize &&
                requestItem.mimeType &&
                requestItem.responseContent;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       is(requestItem.transferredSize, "12",
         "The transferredSize data has an incorrect value.");
@@ -257,7 +257,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS,
@@ -272,11 +272,11 @@ function test() {
 
     monitor.panelWin.once(EVENTS.UPDATING_EVENT_TIMINGS, async () => {
       await waitUntil(() => {
-        let requestItem = getSortedRequests(gStore.getState()).get(0);
+        let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem.eventTimings;
       });
 
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       is(typeof requestItem.totalTime, "number",
         "The attached totalTime is incorrect.");
@@ -285,7 +285,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS,
@@ -296,7 +296,7 @@ function test() {
     });
 
     monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS, () => {
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
+      let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.eventTimings,
         "There should be a eventTimings data available.");
@@ -317,7 +317,7 @@ function test() {
 
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
+        getDisplayedRequests(store.getState()),
         requestItem,
         "GET",
         SIMPLE_SJS,

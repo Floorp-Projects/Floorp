@@ -13,14 +13,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   // Perform first batch of requests.
   let wait = waitForNetworkEvents(monitor, 1);
@@ -60,8 +60,8 @@ add_task(function* () {
   function verifyRequest(index) {
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(index),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(index),
       "GET",
       CONTENT_TYPE_SJS + "?fmt=json-long",
       {

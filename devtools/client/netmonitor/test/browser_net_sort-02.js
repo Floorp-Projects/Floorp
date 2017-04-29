@@ -17,7 +17,7 @@ add_task(function* () {
   // of the heavy dom manipulation associated with sorting.
   requestLongerTimeout(2);
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
@@ -25,7 +25,7 @@ add_task(function* () {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   // Loading the frame script and preparing the xhr request URLs so we can
   // generate some requests later.
@@ -54,9 +54,9 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
 
-  isnot(getSelectedRequest(gStore.getState()), undefined,
+  isnot(getSelectedRequest(store.getState()), undefined,
     "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(gStore.getState()), 0,
+  is(getSelectedIndex(store.getState()), 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should be visible after toggle button was pressed.");
@@ -222,24 +222,24 @@ add_task(function* () {
   }
 
   function testContents([a, b, c, d, e]) {
-    isnot(getSelectedRequest(gStore.getState()), undefined,
+    isnot(getSelectedRequest(store.getState()), undefined,
       "There should still be a selected item after sorting.");
-    is(getSelectedIndex(gStore.getState()), a,
+    is(getSelectedIndex(store.getState()), a,
       "The first item should be still selected after sorting.");
     is(!!document.querySelector(".network-details-panel"), true,
       "The network details panel should still be visible after sorting.");
 
-    is(getSortedRequests(gStore.getState()).length, 5,
+    is(getSortedRequests(store.getState()).length, 5,
       "There should be a total of 5 items in the requests menu.");
-    is(getDisplayedRequests(gStore.getState()).length, 5,
+    is(getDisplayedRequests(store.getState()).length, 5,
       "There should be a total of 5 visible items in the requests menu.");
     is(document.querySelectorAll(".request-list-item").length, 5,
       "The visible items in the requests menu are, in fact, visible!");
 
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(a),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(a),
       "GET1", SORTING_SJS + "?index=1", {
         fuzzyUrl: true,
         status: 101,
@@ -252,8 +252,8 @@ add_task(function* () {
       });
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(b),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(b),
       "GET2", SORTING_SJS + "?index=2", {
         fuzzyUrl: true,
         status: 200,
@@ -266,8 +266,8 @@ add_task(function* () {
       });
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(c),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(c),
       "GET3", SORTING_SJS + "?index=3", {
         fuzzyUrl: true,
         status: 300,
@@ -280,8 +280,8 @@ add_task(function* () {
       });
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(d),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(d),
       "GET4", SORTING_SJS + "?index=4", {
         fuzzyUrl: true,
         status: 400,
@@ -294,8 +294,8 @@ add_task(function* () {
       });
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(e),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(e),
       "GET5", SORTING_SJS + "?index=5", {
         fuzzyUrl: true,
         status: 500,

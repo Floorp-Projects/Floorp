@@ -11,13 +11,13 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
   let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
   let clearButton = document.querySelector(".requests-list-clear-button");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   // Make sure we start in a sane state
   assertNoRequestState();
@@ -60,7 +60,7 @@ add_task(function* () {
    * Asserts the state of the network monitor when one request has loaded
    */
   function assertSingleRequestState() {
-    is(gStore.getState().requests.requests.size, 1,
+    is(store.getState().requests.requests.size, 1,
       "The request menu should have one item at this point.");
     is(detailsPanelToggleButton.hasAttribute("disabled"), false,
       "The pane toggle button should be enabled after a request is made.");
@@ -70,7 +70,7 @@ add_task(function* () {
    * Asserts the state of the network monitor when no requests have loaded
    */
   function assertNoRequestState() {
-    is(gStore.getState().requests.requests.size, 0,
+    is(store.getState().requests.requests.size, 0,
       "The request menu should be empty at this point.");
     is(detailsPanelToggleButton.hasAttribute("disabled"), true,
       "The pane toggle button should be disabled when the request menu is cleared.");

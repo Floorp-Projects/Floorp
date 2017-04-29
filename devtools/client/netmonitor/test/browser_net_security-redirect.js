@@ -10,10 +10,10 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 2);
   yield ContentTask.spawn(tab.linkedBrowser, HTTPS_REDIRECT_SJS, function* (url) {
@@ -21,7 +21,7 @@ add_task(function* () {
   });
   yield wait;
 
-  is(gStore.getState().requests.requests.size, 2,
+  is(store.getState().requests.requests.size, 2,
      "There were two requests due to redirect.");
 
   let [
