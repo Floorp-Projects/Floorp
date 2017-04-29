@@ -36,7 +36,8 @@ public:
 
   virtual bool IsDisabled() const override { return false; }
 
-  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
+  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
+                 bool aPreallocateChildren) const override;
 
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult) override;

@@ -89,7 +89,8 @@ SVGUseElement::~SVGUseElement()
 // nsIDOMNode methods
 
 nsresult
-SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                     bool aPreallocateChildren) const
 {
   *aResult = nullptr;
   already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
@@ -97,7 +98,7 @@ SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 
   nsCOMPtr<nsINode> kungFuDeathGrip(it);
   nsresult rv1 = it->Init();
-  nsresult rv2 = const_cast<SVGUseElement*>(this)->CopyInnerTo(it);
+  nsresult rv2 = const_cast<SVGUseElement*>(this)->CopyInnerTo(it, aPreallocateChildren);
 
   // SVGUseElement specific portion - record who we cloned from
   it->mOriginal = const_cast<SVGUseElement*>(this);

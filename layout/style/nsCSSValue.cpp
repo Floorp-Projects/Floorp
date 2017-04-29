@@ -873,7 +873,7 @@ nsCSSValue::GetCalcValue() const
                "Calc unit should be eCSSUnit_Calc_Plus");
 
     const nsCSSValue::Array *calcPlusArray = rootValue.GetArrayValue();
-    MOZ_ASSERT(array->Count() == 2,
+    MOZ_ASSERT(calcPlusArray->Count() == 2,
                "eCSSUnit_Calc_Plus should have a 2-length array");
 
     const nsCSSValue& length = calcPlusArray->Item(0);

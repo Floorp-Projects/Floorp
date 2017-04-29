@@ -212,13 +212,8 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
 {
   // XXXbholley: nsStyleSet does visited handling here.
 
-  // XXXbholley: Figure out the correct thing to pass here. Does this fixup
-  // duplicate something that servo already does?
-  // See bug 1344914.
-  bool skipFixup = false;
-
   RefPtr<nsStyleContext> result = NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                                                     aPseudoType, Move(aComputedValues), skipFixup);
+                                                     aPseudoType, Move(aComputedValues));
 
   // Set the body color on the pres context. See nsStyleSet::GetContext
   if (aElementForAnimation &&
@@ -469,18 +464,15 @@ ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
   return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
-// aFlags is an nsStyleSet flags bitfield
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                                  nsStyleContext* aParentContext,
-                                                  uint32_t aFlags)
+                                                  nsStyleContext* aParentContext)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
 
-  MOZ_ASSERT(aFlags == 0 ||
-             aFlags == nsStyleSet::eSkipParentDisplayBasedStyleFixup);
-  bool skipFixup = aFlags & nsStyleSet::eSkipParentDisplayBasedStyleFixup;
+  bool skipFixup =
+    nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(aPseudoTag);
 
   const ServoComputedValues* parentStyle =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
@@ -498,11 +490,8 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 #endif
 
-  // FIXME(bz, bug 1344914) We should really GetContext here and make skipFixup
-  // work there.
-  return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                            CSSPseudoElementType::InheritingAnonBox,
-                            computedValues.forget(), skipFixup);
+  return GetContext(computedValues.forget(), aParentContext, aPseudoTag,
+                    CSSPseudoElementType::InheritingAnonBox, nullptr);
 }
 
 already_AddRefed<nsStyleContext>
@@ -525,7 +514,9 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
   }
 
   // We always want to skip parent-based display fixup here.  It never makes
-  // sense for non-inheriting anonymous boxes.
+  // sense for non-inheriting anonymous boxes.  (Static assertions in
+  // nsCSSAnonBoxes.cpp ensure that all non-inheriting non-anonymous boxes
+  // are indeed annotated as skipping this fixup.)
   MOZ_ASSERT(!nsCSSAnonBoxes::IsNonInheritingAnonBox(nsCSSAnonBoxes::viewport),
              "viewport needs fixup to handle blockifying it");
   RefPtr<ServoComputedValues> computedValues =

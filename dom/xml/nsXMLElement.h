@@ -31,7 +31,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsINode interface methods
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
