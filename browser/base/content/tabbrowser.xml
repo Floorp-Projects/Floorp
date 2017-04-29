@@ -2059,6 +2059,34 @@
               let getter;
               let setter;
               switch (name) {
+                case "audioMuted":
+                  getter = () => {
+                    return false;
+                  };
+                  break;
+                case "contentTitle":
+                  getter = () => {
+                    return SessionStore.getLazyTabValue(aTab, "title");
+                  };
+                  break;
+                case "currentURI":
+                  getter = () => {
+                    let url = SessionStore.getLazyTabValue(aTab, "url");
+                    return Services.io.newURI(url);
+                  };
+                  break;
+                case "getTabBrowser":
+                  getter = () => {
+                    return () => {
+                      return this;
+                    };
+                  };
+                  break;
+                case "isRemoteBrowser":
+                  getter = () => {
+                    return browser.getAttribute("remote") == "true";
+                  };
+                  break;
                 case "permitUnload":
                   getter = () => {
                     return () => {
@@ -2077,27 +2105,6 @@
                       }, { once: true });
                       gBrowser._insertBrowser(aTab);
                     };
-                  };
-                  break;
-                case "isRemoteBrowser":
-                  getter = () => {
-                    return browser.getAttribute("remote") == "true";
-                  };
-                  break;
-                case "audioMuted":
-                  getter = () => {
-                    return false;
-                  };
-                  break;
-                case "currentURI":
-                  getter = () => {
-                    let url = SessionStore.getLazyTabValue(aTab, "url");
-                    return Services.io.newURI(url);
-                  };
-                  break;
-                case "contentTitle":
-                  getter = () => {
-                    return SessionStore.getLazyTabValue(aTab, "title");
                   };
                   break;
                 case "userTypedValue":

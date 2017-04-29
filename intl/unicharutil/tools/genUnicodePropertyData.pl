@@ -995,7 +995,7 @@ close DATA_TABLES;
 
 print HEADER "namespace mozilla {\n";
 print HEADER "namespace unicode {\n";
-print HEADER "enum class Script {\n";
+print HEADER "enum class Script : int16_t {\n";
 for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
   print HEADER "  ", $scriptCodeToName[$i], " = ", $i, ",\n";
 }

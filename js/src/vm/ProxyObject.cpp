@@ -15,12 +15,18 @@
 using namespace js;
 
 static gc::AllocKind
-GetProxyGCObjectKind(const BaseProxyHandler* handler, const Value& priv)
+GetProxyGCObjectKind(const Class* clasp, const BaseProxyHandler* handler, const Value& priv)
 {
-    static_assert(sizeof(js::detail::ProxyValueArray) % sizeof(js::HeapSlot) == 0,
-                  "ProxyValueArray must be a multiple of HeapSlot");
+    MOZ_ASSERT(clasp->isProxy());
 
-    uint32_t nslots = sizeof(js::detail::ProxyValueArray) / sizeof(HeapSlot);
+    uint32_t nreserved = JSCLASS_RESERVED_SLOTS(clasp);
+    MOZ_ASSERT(nreserved > 0);
+
+    MOZ_ASSERT(js::detail::ProxyValueArray::sizeOf(nreserved) % sizeof(Value) == 0,
+               "ProxyValueArray must be a multiple of Value");
+
+    uint32_t nslots = js::detail::ProxyValueArray::sizeOf(nreserved) / sizeof(Value);
+    MOZ_ASSERT(nslots <= NativeObject::MAX_FIXED_SLOTS);
 
     gc::AllocKind kind = gc::GetGCObjectKind(nslots);
     if (handler->finalizeInBackground(priv))
@@ -68,7 +74,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
         newKind = TenuredObject;
     }
 
-    gc::AllocKind allocKind = GetProxyGCObjectKind(handler, priv);
+    gc::AllocKind allocKind = GetProxyGCObjectKind(clasp, handler, priv);
 
     AutoSetNewObjectMetadata metadata(cx);
     // Note: this will initialize the object's |data| to strange values, but we
@@ -77,7 +83,10 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     JS_TRY_VAR_OR_RETURN_NULL(cx, proxy, create(cx, clasp, proto, allocKind, newKind));
 
     proxy->setInlineValueArray();
-    new (proxy->data.values) detail::ProxyValueArray;
+
+    detail::ProxyValueArray* values = detail::GetProxyDataLayout(proxy)->values();
+    values->init(proxy->numReservedSlots());
+
     proxy->data.handler = handler;
     proxy->setCrossCompartmentPrivate(priv);
 
@@ -93,7 +102,7 @@ ProxyObject::allocKindForTenure() const
 {
     MOZ_ASSERT(usingInlineValueArray());
     Value priv = const_cast<ProxyObject*>(this)->private_();
-    return GetProxyGCObjectKind(data.handler, priv);
+    return GetProxyGCObjectKind(getClass(), data.handler, priv);
 }
 
 void
@@ -133,7 +142,7 @@ ProxyObject::nuke()
             setHandler(DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton());
     }
 
-    // The proxy's extra slots are not cleared and will continue to be
+    // The proxy's reserved slots are not cleared and will continue to be
     // traced. This avoids the possibility of triggering write barriers while
     // nuking proxies in dead compartments which could otherwise cause those
     // compartments to be kept alive. Note that these are slots cannot hold
@@ -188,19 +197,6 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     }
 
     return pobj;
-}
-
-bool
-ProxyObject::initExternalValueArrayAfterSwap(JSContext* cx, const detail::ProxyValueArray& src)
-{
-    MOZ_ASSERT(getClass()->isProxy());
-
-    auto* values = cx->zone()->new_<detail::ProxyValueArray>(src);
-    if (!values)
-        return false;
-
-    data.values = values;
-    return true;
 }
 
 JS_FRIEND_API(void)

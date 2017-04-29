@@ -365,6 +365,7 @@ extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
         js::Class::NON_NATIVE |                                                         \
             JSCLASS_IS_PROXY |                                                          \
             JSCLASS_DELAY_METADATA_BUILDER |                                            \
+            JSCLASS_HAS_RESERVED_SLOTS(2) |                                             \
             flags,                                                                      \
         &js::ProxyClassOps,                                                             \
         JS_NULL_CLASS_SPEC,                                                             \
@@ -722,6 +723,11 @@ GetObjectPrivate(JSObject* obj)
     return *addr;
 }
 
+/**
+ * Get the value stored in an object's reserved slot. This can be used with
+ * both native objects and proxies, but if |obj| is known to be a proxy
+ * GetProxyReservedSlot is a bit more efficient.
+ */
 inline const JS::Value&
 GetReservedSlot(JSObject* obj, size_t slot)
 {
@@ -730,15 +736,20 @@ GetReservedSlot(JSObject* obj, size_t slot)
 }
 
 JS_FRIEND_API(void)
-SetReservedOrProxyPrivateSlotWithBarrier(JSObject* obj, size_t slot, const JS::Value& value);
+SetReservedSlotWithBarrier(JSObject* obj, size_t slot, const JS::Value& value);
 
+/**
+ * Store a value in an object's reserved slot. This can be used with
+ * both native objects and proxies, but if |obj| is known to be a proxy
+ * SetProxyReservedSlot is a bit more efficient.
+ */
 inline void
 SetReservedSlot(JSObject* obj, size_t slot, const JS::Value& value)
 {
     MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     shadow::Object* sobj = reinterpret_cast<shadow::Object*>(obj);
     if (sobj->slotRef(slot).isGCThing() || value.isGCThing())
-        SetReservedOrProxyPrivateSlotWithBarrier(obj, slot, value);
+        SetReservedSlotWithBarrier(obj, slot, value);
     else
         sobj->slotRef(slot) = value;
 }
@@ -1289,11 +1300,10 @@ typedef enum DOMProxyShadowsResult {
 typedef DOMProxyShadowsResult
 (* DOMProxyShadowsCheck)(JSContext* cx, JS::HandleObject object, JS::HandleId id);
 JS_FRIEND_API(void)
-SetDOMProxyInformation(const void* domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
+SetDOMProxyInformation(const void* domProxyHandlerFamily,
                        DOMProxyShadowsCheck domProxyShadowsCheck);
 
 const void* GetDOMProxyHandlerFamily();
-uint32_t GetDOMProxyExpandoSlot();
 DOMProxyShadowsCheck GetDOMProxyShadowsCheck();
 inline bool DOMProxyIsShadowing(DOMProxyShadowsResult result) {
     return result == Shadows ||

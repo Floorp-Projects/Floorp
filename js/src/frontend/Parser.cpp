@@ -9607,6 +9607,21 @@ Parser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
             return null();
         break;
 
+      case TOK_STRING: {
+        propAtom.set(tokenStream.currentToken().atom());
+        uint32_t index;
+        if (propAtom->isIndex(&index)) {
+            propName = handler.newNumber(index, NoDecimal, pos());
+            if (!propName)
+                return null();
+            break;
+        }
+        propName = stringLiteral();
+        if (!propName)
+            return null();
+        break;
+      }
+
       case TOK_LB:
         propName = computedPropertyName(yieldHandling, maybeDecl, propList);
         if (!propName)
@@ -9620,7 +9635,7 @@ Parser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
         }
 
         propAtom.set(tokenStream.currentName());
-        // Do not look for accessor syntax on generators
+        // Do not look for accessor syntax on generator or async methods.
         if (isGenerator || isAsync || !(ltok == TOK_GET || ltok == TOK_SET)) {
             propName = handler.newObjectLiteralPropertyName(propAtom, pos());
             if (!propName)
@@ -9675,21 +9690,6 @@ Parser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
             return null();
         break;
       }
-
-      case TOK_STRING: {
-        propAtom.set(tokenStream.currentToken().atom());
-        uint32_t index;
-        if (propAtom->isIndex(&index)) {
-            propName = handler.newNumber(index, NoDecimal, pos());
-            if (!propName)
-                return null();
-            break;
-        }
-        propName = stringLiteral();
-        if (!propName)
-            return null();
-        break;
-      }
     }
 
     TokenKind tt;
@@ -9697,7 +9697,7 @@ Parser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
         return null();
 
     if (tt == TOK_COLON) {
-        if (isGenerator) {
+        if (isGenerator || isAsync) {
             error(JSMSG_BAD_PROP_ID);
             return null();
         }
@@ -9708,7 +9708,7 @@ Parser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     if (TokenKindIsPossibleIdentifierName(ltok) &&
         (tt == TOK_COMMA || tt == TOK_RC || tt == TOK_ASSIGN))
     {
-        if (isGenerator) {
+        if (isGenerator || isAsync) {
             error(JSMSG_BAD_PROP_ID);
             return null();
         }

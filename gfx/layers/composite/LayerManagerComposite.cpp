@@ -1147,12 +1147,13 @@ LayerManagerComposite::RenderToolbar()
 
     EffectChain effects;
     effects.mPrimaryEffect = animator->GetToolbarEffect(mCompositor->AsCompositorOGL());
-    if (!effects.mPrimaryEffect) {
-      // No toolbar texture so just draw a red square
-      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(1, 0, 0));
+    // If GetToolbarEffect returns null, nothing is rendered for the static snapshot of the toolbar.
+    // If the real toolbar chrome is not covering this portion of the surface, the clear color
+    // of the surface will be visible. On Android the clear color is the background color of the page.
+    if (effects.mPrimaryEffect) {
+      mCompositor->DrawQuad(gfx::Rect(0, 0, mRenderBounds.width, toolbarHeight),
+                            IntRect(0, 0, mRenderBounds.width, toolbarHeight), effects, 1.0, gfx::Matrix4x4());
     }
-    mCompositor->DrawQuad(gfx::Rect(0, 0, mRenderBounds.width, toolbarHeight),
-                          IntRect(0, 0, mRenderBounds.width, toolbarHeight), effects, 1.0, gfx::Matrix4x4());
 
     // Move the content down the surface by the toolbar's height so they don't overlap
     gfx::Matrix4x4 mat = mCompositor->AsCompositorOGL()->GetProjMatrix();

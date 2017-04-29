@@ -1576,8 +1576,8 @@ CacheIRCompiler::emitLoadWrapperTarget()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Register reg = allocator.defineRegister(masm, reader.objOperandId());
 
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), reg);
-    masm.unboxObject(Address(reg, detail::ProxyValueArray::offsetOfPrivateSlot()), reg);
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), reg);
+    masm.unboxObject(Address(reg, detail::ProxyReservedSlots::offsetOfPrivateSlot()), reg);
     return true;
 }
 
@@ -1587,9 +1587,9 @@ CacheIRCompiler::emitLoadDOMExpandoValue()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());
 
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), val.scratchReg());
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), val.scratchReg());
     masm.loadValue(Address(val.scratchReg(),
-                           ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot())),
+                           detail::ProxyReservedSlots::offsetOfPrivateSlot()),
                    val);
     return true;
 }
@@ -1602,8 +1602,8 @@ CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration()
 
     // Determine the expando's Address.
     Register scratch = output.scratchReg();
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch);
-    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
+    Address expandoAddr(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
 #ifdef DEBUG
     // Private values are stored as doubles, so assert we have a double.

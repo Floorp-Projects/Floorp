@@ -150,6 +150,7 @@ protected:
   void TranslateTouchEvent(MultiTouchInput& aTouchEvent);
   ScreenIntCoord GetFixedLayerMarginsBottom();
   void NotifyControllerSnapshotFailed();
+  void CheckForResetOnNextMove(ScreenIntCoord aCurrentTouch);
 
   // Read only Compositor and Controller threads after Initialize()
   uint64_t mRootLayerTreeId;
@@ -163,6 +164,9 @@ protected:
   bool    mControllerDragThresholdReached;     // Set to true when the drag threshold has been passed in a single drag
   bool    mControllerCancelTouchTracking;      // Set to true when the UI thread requests the toolbar be made visible
   bool    mControllerDragChangedDirection;     // Set to true if the drag ever goes in more than one direction
+  bool    mControllerResetOnNextMove;          // Set to true if transitioning from multiple touches to a single touch source
+                                               // Causes mControllerStartTouch, mControllerPreviousTouch, mControllerTotalDistance,
+                                               // mControllerDragThresholdReached, and mControllerLastDragDirection to be reset on next move
   ScreenIntCoord mControllerStartTouch;        // The Y position where the touch started
   ScreenIntCoord mControllerPreviousTouch;     // The previous Y position of the touch
   ScreenIntCoord mControllerTotalDistance;     // Total distance travel during the current touch
@@ -171,6 +175,7 @@ protected:
   ScreenIntCoord mControllerSurfaceHeight;     // Current height of the render surface
   ScreenIntCoord mControllerCompositionHeight; // Current height of the visible page
   int32_t mControllerLastDragDirection;        // Direction of movement of the previous touch move event
+  int32_t mControllerTouchCount;               // Counts the number of current touches.
   uint32_t mControllerLastEventTimeStamp;      // Time stamp for the previous touch event received
   ControllerThreadState mControllerState;      // Contains the expected pending state of the mToolbarState
 

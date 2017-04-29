@@ -71,8 +71,8 @@ public class LayerView extends FrameLayout {
     private final List<DrawListener> mDrawListeners;
 
     /* This is written by the Gecko thread and the UI thread, and read by the UI thread. */
-    @WrapForJNI(stubName = "CompositorCreated", calledFrom = "ui")
     /* package */ volatile boolean mCompositorCreated;
+    /* package */ volatile boolean mCompositorControllerOpen;
 
     //
     // NOTE: These values are also defined in gfx/layers/ipc/UiCompositorControllerMessageTypes.h
@@ -102,10 +102,19 @@ public class LayerView extends FrameLayout {
         });
     }
 
+    @WrapForJNI(calledFrom = "ui")
+    /* package */ boolean isCompositorReady() {
+        ThreadUtils.assertOnUiThread();
+        return mCompositorCreated && mCompositorControllerOpen;
+    }
+
     /* package */ class Compositor extends JNIObject {
         public Compositor() {
         }
 
+        /* package */ boolean isReady() {
+            return isCompositorReady();
+        }
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         @Override protected native void disposeNative();
 
@@ -169,16 +178,10 @@ public class LayerView extends FrameLayout {
 
         @WrapForJNI(calledFrom = "gecko")
         private void reattach() {
-            mCompositorCreated = true;
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    // Make sure it is still valid
-                    if (mCompositorCreated) {
-                        mCompositor.setDefaultClearColor(mDefaultClearColor);
-                        mCompositor.enableLayerUpdateNotifications(!mDrawListeners.isEmpty());
-                        mToolbarAnimator.notifyCompositorCreated(mCompositor);
-                    }
+                    updateCompositor();
                 }
             });
         }
@@ -187,6 +190,7 @@ public class LayerView extends FrameLayout {
         private void destroy() {
             // The nsWindow has been closed. First mark our compositor as destroyed.
             LayerView.this.mCompositorCreated = false;
+            LayerView.this.mCompositorControllerOpen = false;
 
             LayerView.this.mLayerClient.setGeckoReady(false);
 
@@ -194,7 +198,6 @@ public class LayerView extends FrameLayout {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    LayerView.this.mToolbarAnimator.notifyCompositorDestroyed();
                     LayerView.this.mDrawListeners.clear();
                     disposeNative();
                 }
@@ -242,7 +245,21 @@ public class LayerView extends FrameLayout {
                 }
                 break;
             case COMPOSITOR_CONTROLLER_OPEN:
-                mToolbarAnimator.notifyCompositorControllerOpen();
+                // It is possible to get this message multiple times. Only act on it if we didn't know the compositor controller was open
+                if (mCompositorControllerOpen) {
+                    break;
+                }
+                mCompositorControllerOpen = true;
+                // updateCompositor makes a synchronous call to the compositor which will dead lock if called directly from here
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mCompositor.setDefaultClearColor(mDefaultClearColor);
+                        mCompositor.enableLayerUpdateNotifications(!mDrawListeners.isEmpty());
+                        mToolbarAnimator.updateCompositor();
+                        updateCompositor();
+                    }
+                });
                 break;
             default:
                 Log.e(LOGTAG, "Unhandled Toolbar Animator Message: " + message);
@@ -296,6 +313,7 @@ public class LayerView extends FrameLayout {
 
         mPanZoomController = mLayerClient.getPanZoomController();
         mToolbarAnimator = mLayerClient.getDynamicToolbarAnimator();
+        mToolbarAnimator.notifyCompositorCreated(mCompositor);
 
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -482,7 +500,7 @@ public class LayerView extends FrameLayout {
     }
 
     public void requestRender() {
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             mCompositor.syncInvalidateAndScheduleComposite();
         }
     }
@@ -503,7 +521,7 @@ public class LayerView extends FrameLayout {
             return;
         }
 
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             mGetPixelsResult = getPixelsResult;
             mCompositor.requestScreenPixels();
         } else {
@@ -550,7 +568,7 @@ public class LayerView extends FrameLayout {
     void updateCompositor() {
         ThreadUtils.assertOnUiThread();
 
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             // If the compositor has already been created, just resume it instead. We don't need
             // to block here because if the surface is destroyed before the compositor grabs it,
             // we can handle that gracefully (i.e. the compositor will remain paused).
@@ -570,12 +588,13 @@ public class LayerView extends FrameLayout {
         // Only try to create the compositor if we have a valid surface and gecko is up. When these
         // two conditions are satisfied, we can be relatively sure that the compositor creation will
         // happen without needing to block anywhere.
-        if (mServerSurfaceValid && getLayerClient().isGeckoReady()) {
+        if (!mCompositorCreated && mServerSurfaceValid && getLayerClient().isGeckoReady()) {
             mCompositorCreated = true;
             mCompositor.createCompositor(mWidth, mHeight, getSurface());
-            mCompositor.setDefaultClearColor(mDefaultClearColor);
-            mCompositor.enableLayerUpdateNotifications(!mDrawListeners.isEmpty());
-            mToolbarAnimator.notifyCompositorCreated(mCompositor);
+        }
+
+        if (mCompositorCreated && !mCompositorControllerOpen) {
+            mCompositor.sendToolbarAnimatorMessage(IS_COMPOSITOR_CONTROLLER_OPEN);
         }
     }
 
@@ -603,7 +622,7 @@ public class LayerView extends FrameLayout {
             return;
         }
 
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             mCompositor.syncResumeResizeCompositor(width, height, getSurface());
         }
 
@@ -639,7 +658,7 @@ public class LayerView extends FrameLayout {
         // Gecko draw events have been processed.  When this returns, composition is
         // definitely paused -- it'll synchronize with the Gecko event loop, which
         // in turn will synchronize with the compositor thread.
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             mCompositor.syncPauseCompositor();
         }
 
@@ -744,7 +763,7 @@ public class LayerView extends FrameLayout {
 
         boolean wasEmpty = mDrawListeners.isEmpty();
         mDrawListeners.add(listener);
-        if (mCompositorCreated && wasEmpty) {
+        if (isCompositorReady() && wasEmpty) {
             mCompositor.enableLayerUpdateNotifications(true);
         }
     }
@@ -763,7 +782,7 @@ public class LayerView extends FrameLayout {
 
         boolean notEmpty = mDrawListeners.isEmpty();
         mDrawListeners.remove(listener);
-        if (mCompositorCreated && notEmpty && mDrawListeners.isEmpty()) {
+        if (isCompositorReady() && notEmpty && mDrawListeners.isEmpty()) {
             mCompositor.enableLayerUpdateNotifications(false);
         }
     }
@@ -821,7 +840,7 @@ public class LayerView extends FrameLayout {
         }
 
         mDefaultClearColor = color;
-        if (mCompositorCreated) {
+        if (isCompositorReady()) {
             mCompositor.setDefaultClearColor(mDefaultClearColor);
         }
    }
