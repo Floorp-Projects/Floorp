@@ -58,6 +58,12 @@ class CompilerWarning(dict):
         self['message'] = None
         self['flag'] = None
 
+    def copy(self):
+        """Returns a copy of this compiler warning."""
+        w = CompilerWarning()
+        w.update(self)
+        return w
+
     # Since we inherit from dict, functools.total_ordering gets confused.
     # Thus, we define a key function, a generic comparison, and then
     # implement all the rich operators with those; approach is from:
