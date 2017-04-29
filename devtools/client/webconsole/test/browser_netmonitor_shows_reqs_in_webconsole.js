@@ -46,7 +46,7 @@ add_task(function* () {
   let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
   info("Network panel is open.");
 
-  testNetmonitor(toolbox);
+  yield testNetmonitor(toolbox);
 });
 
 function loadDocument(browser) {
@@ -60,18 +60,20 @@ function loadDocument(browser) {
   return deferred.promise;
 }
 
-function testNetmonitor(toolbox) {
+function* testNetmonitor(toolbox) {
   let monitor = toolbox.getCurrentPanel();
 
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getSortedRequests } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
-  is(gStore.getState().requests.requests.size, 1, "Network request appears in the network panel");
+  yield waitUntil(() => store.getState().requests.requests.size > 0);
 
-  let item = getSortedRequests(gStore.getState()).get(0);
+  is(store.getState().requests.requests.size, 1, "Network request appears in the network panel");
+
+  let item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The attached method is correct.");
   is(item.url, TEST_PATH, "The attached url is correct.");
 }

@@ -11,7 +11,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -23,7 +23,7 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  let requestItem = getSortedRequests(gStore.getState()).get(0);
+  let requestItem = getSortedRequests(store.getState()).get(0);
   let { method, httpVersion, status, statusText } = requestItem;
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },
