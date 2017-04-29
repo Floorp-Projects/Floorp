@@ -12,8 +12,16 @@ const TESTCASES = [
     document: `<form><input id="given-name"><input id="family-name">
                <input id="street-addr"><input id="city"><input id="country">
                <input id='email'><input id="tel"></form>`,
-    returnedFormat: [],
-    fieldDetails: [],
+    fieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+    ],
+    ids: ["given-name", "family-name", "street-addr", "city", "country", "email", "tel"],
   },
   {
     description: "Form with autocomplete properties and 1 token",
@@ -84,9 +92,14 @@ for (let tc of TESTCASES) {
                                                 testcase.document);
       let form = doc.querySelector("form");
 
-      testcase.fieldDetails.forEach((detail) => {
-        detail.elementWeakRef = Cu.getWeakReference(doc.querySelector(
-          "input[autocomplete*='" + detail.fieldName + "']"));
+      testcase.fieldDetails.forEach((detail, index) => {
+        let elementRef;
+        if (testcase.ids && testcase.ids[index]) {
+          elementRef = doc.getElementById(testcase.ids[index]);
+        } else {
+          elementRef = doc.querySelector("input[autocomplete*='" + detail.fieldName + "']");
+        }
+        detail.elementWeakRef = Cu.getWeakReference(elementRef);
       });
       let handler = new FormAutofillHandler(form);
 
