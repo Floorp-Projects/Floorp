@@ -16,14 +16,13 @@ function* throttleUploadTest(actuallyThrottle) {
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
-  let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
+  let { actions, windowRequire } = monitor.panelWin;
+  let { setPreferences } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  actions.batchEnable(false);
 
   const size = 4096;
   const uploadSize = actuallyThrottle ? size / 3 : 0;
@@ -38,11 +37,10 @@ function* throttleUploadTest(actuallyThrottle) {
       uploadBPSMax: uploadSize,
     },
   };
-  let client = NetMonitorController.webConsoleClient;
 
   info("sending throttle request");
   yield new Promise((resolve) => {
-    client.setPreferences(request, response => {
+    setPreferences(request, (response) => {
       resolve(response);
     });
   });

@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { sendHTTPRequest } = require("../connector/index");
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
@@ -12,7 +13,6 @@ const {
   SEND_CUSTOM_REQUEST,
   UPDATE_REQUEST,
 } = require("../constants");
-const { NetMonitorController } = require("../netmonitor-controller");
 const { getSelectedRequest } = require("../selectors/index");
 
 function addRequest(id, data, batch) {
@@ -47,10 +47,6 @@ function cloneSelectedRequest() {
  * Send a new HTTP request using the data in the custom request form.
  */
 function sendCustomRequest() {
-  if (!NetMonitorController.supportsCustomRequest) {
-    return cloneSelectedRequest();
-  }
-
   return (dispatch, getState) => {
     const selected = getSelectedRequest(getState());
 
@@ -71,7 +67,7 @@ function sendCustomRequest() {
       data.body = selected.requestPostData.postData.text;
     }
 
-    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
+    sendHTTPRequest(data, (response) => {
       return dispatch({
         type: SEND_CUSTOM_REQUEST,
         id: response.eventActor.actor,
