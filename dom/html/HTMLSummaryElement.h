@@ -29,7 +29,8 @@ public:
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSummaryElement, summary)
 
-  nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
+  nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult,
+                 bool aPreallocateChildren) const override;
 
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 

@@ -175,9 +175,14 @@ NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElementBase)
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(Element* aDst)
+nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
 {
   nsresult rv;
+
+  rv = static_cast<nsGenericHTMLElement*>(aDst)->mAttrsAndChildren.
+       EnsureCapacityToClone(mAttrsAndChildren, aPreallocateChildren);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   int32_t i, count = GetAttrCount();
   for (i = 0; i < count; ++i) {
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);

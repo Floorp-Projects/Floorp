@@ -143,6 +143,13 @@ public:
   // Will assert off main thread
   void ClearMappedServoStyle();
 
+  // Increases capacity (if necessary) to have enough space to accomodate the
+  // unmapped attributes and children of |aOther|. If |aAllocateChildren| is not
+  // true, only enough space for unmapped attributes will be reserved.
+  // It is REQUIRED that this function be called ONLY when the array is empty.
+  nsresult EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
+                                 bool aAllocateChildren);
+
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther) = delete;
   nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther) = delete;
