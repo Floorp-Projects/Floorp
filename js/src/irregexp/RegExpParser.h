@@ -31,8 +31,6 @@
 #ifndef V8_PARSER_H_
 #define V8_PARSER_H_
 
-#include <stdarg.h>
-
 #include "irregexp/RegExpAST.h"
 
 namespace js {
@@ -213,13 +211,7 @@ class RegExpParser
     bool ParseBackReferenceIndex(int* index_out);
 
     bool ParseClassAtom(char16_t* char_class, widechar *value);
-
-  private:
-    void SyntaxError(unsigned errorNumber, va_list args);
-
-  public:
-    RegExpTree* ReportError(unsigned errorNumber, ...);
-
+    RegExpTree* ReportError(unsigned errorNumber, const char* param = nullptr);
     void Advance();
     void Advance(int dist) {
         next_pos_ += dist - 1;
@@ -299,7 +291,6 @@ class RegExpParser
     frontend::TokenStream& ts;
     LifoAlloc* alloc;
     RegExpCaptureVector* captures_;
-    const CharT* const start_;
     const CharT* next_pos_;
     const CharT* end_;
     widechar current_;

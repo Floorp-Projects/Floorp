@@ -543,13 +543,6 @@ class TokenStreamBase
         return options_;
     }
 
-    /**
-     * Fill in |err|, excepting line-of-context-related fields.  If the token
-     * stream has location information, use that and return true.  If it does
-     * not, use the caller's location information and return false.
-     */
-    bool fillExcludingContext(ErrorMetadata* err, uint32_t offset);
-
     void updateFlagsForEOL();
 
     const Token& nextToken() const {
