@@ -1163,7 +1163,7 @@ class nsWindow::PMPMSupport final
         const auto& layerView = LayerView::Ref::From(aView);
 
         LayerView::Compositor::LocalRef compositor = layerView->GetCompositor();
-        if (!layerView->CompositorCreated() || !compositor) {
+        if (!layerView->IsCompositorReady() || !compositor) {
             return nullptr;
         }
 

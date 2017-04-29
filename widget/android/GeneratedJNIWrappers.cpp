@@ -1147,17 +1147,12 @@ auto LayerView::GetCompositor() const -> mozilla::jni::Object::LocalRef
     return mozilla::jni::Method<GetCompositor_t>::Call(LayerView::mCtx, nullptr);
 }
 
-constexpr char LayerView::CompositorCreated_t::name[];
-constexpr char LayerView::CompositorCreated_t::signature[];
+constexpr char LayerView::IsCompositorReady_t::name[];
+constexpr char LayerView::IsCompositorReady_t::signature[];
 
-auto LayerView::CompositorCreated() const -> bool
+auto LayerView::IsCompositorReady() const -> bool
 {
-    return mozilla::jni::Field<CompositorCreated_t>::Get(LayerView::mCtx, nullptr);
-}
-
-auto LayerView::CompositorCreated(bool a0) const -> void
-{
-    return mozilla::jni::Field<CompositorCreated_t>::Set(LayerView::mCtx, nullptr, a0);
+    return mozilla::jni::Method<IsCompositorReady_t>::Call(LayerView::mCtx, nullptr);
 }
 
 const char LayerView::Compositor::name[] =
