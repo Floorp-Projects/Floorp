@@ -782,7 +782,9 @@ const ObjectOps js::ProxyObjectOps = {
 };
 
 const Class js::ProxyObject::proxyClass =
-    PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
+    PROXY_CLASS_DEF("Proxy",
+                    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) |
+                    JSCLASS_HAS_RESERVED_SLOTS(2));
 
 const Class* const js::ProxyClassPtr = &js::ProxyObject::proxyClass;
 

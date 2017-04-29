@@ -343,39 +343,6 @@ JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunction
 
 namespace js {
 
-extern JS_FRIEND_DATA(const js::ClassOps) ProxyClassOps;
-extern JS_FRIEND_DATA(const js::ClassExtension) ProxyClassExtension;
-extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
-
-/*
- * Helper Macros for creating JSClasses that function as proxies.
- *
- * NB: The macro invocation must be surrounded by braces, so as to
- *     allow for potential JSClass extensions.
- */
-#define PROXY_MAKE_EXT(objectMoved)                                     \
-    {                                                                   \
-        js::proxy_WeakmapKeyDelegate,                                   \
-        objectMoved                                                     \
-    }
-
-#define PROXY_CLASS_WITH_EXT(name, flags, extPtr)                                       \
-    {                                                                                   \
-        name,                                                                           \
-        js::Class::NON_NATIVE |                                                         \
-            JSCLASS_IS_PROXY |                                                          \
-            JSCLASS_DELAY_METADATA_BUILDER |                                            \
-            JSCLASS_HAS_RESERVED_SLOTS(2) |                                             \
-            flags,                                                                      \
-        &js::ProxyClassOps,                                                             \
-        JS_NULL_CLASS_SPEC,                                                             \
-        extPtr,                                                                         \
-        &js::ProxyObjectOps                                                             \
-    }
-
-#define PROXY_CLASS_DEF(name, flags) \
-  PROXY_CLASS_WITH_EXT(name, flags, &js::ProxyClassExtension)
-
 extern JS_FRIEND_API(JSObject*)
 proxy_WeakmapKeyDelegate(JSObject* obj);
 
@@ -555,6 +522,8 @@ struct Object {
     shadow::Shape*      shape;
     JS::Value*          slots;
     void*               _1;
+
+    static const size_t MAX_FIXED_SLOTS = 16;
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     JS::Value* fixedSlots() const {
