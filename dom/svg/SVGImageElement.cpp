@@ -314,12 +314,12 @@ SVGImageElement::GetStringInfo()
 }
 
 nsresult
-SVGImageElement::CopyInnerTo(Element* aDest)
+SVGImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<SVGImageElement*>(aDest));
   }
-  return SVGImageElementBase::CopyInnerTo(aDest);
+  return SVGImageElementBase::CopyInnerTo(aDest, aPreallocateChildren);
 }
 
 } // namespace dom

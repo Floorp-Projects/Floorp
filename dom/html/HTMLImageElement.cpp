@@ -810,7 +810,7 @@ HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
 }
 
 nsresult
-HTMLImageElement::CopyInnerTo(Element* aDest)
+HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 {
   bool destIsStatic = aDest->OwnerDoc()->IsStaticDocument();
   auto dest = static_cast<HTMLImageElement*>(aDest);
@@ -818,7 +818,7 @@ HTMLImageElement::CopyInnerTo(Element* aDest)
     CreateStaticImageClone(dest);
   }
 
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
   if (NS_FAILED(rv)) {
     return rv;
   }
