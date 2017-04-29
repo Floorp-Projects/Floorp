@@ -69,7 +69,6 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
@@ -80,7 +79,6 @@ to mochitest command.
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [1]
   * test_bug829816.html [8]
-* test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
   * test_counter_style.html [5]

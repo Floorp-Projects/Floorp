@@ -16,10 +16,10 @@ const {
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const {MESSAGE_SOURCE} = require("devtools/client/webconsole/new-console-output/constants");
-const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button"));
-const MessageIndent = createFactory(require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent);
-const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon"));
-const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat"));
+const CollapseButton = require("devtools/client/webconsole/new-console-output/components/collapse-button");
+const MessageIndent = require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent;
+const MessageIcon = require("devtools/client/webconsole/new-console-output/components/message-icon");
+const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/message-repeat");
 const FrameView = createFactory(require("devtools/client/shared/components/frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 
@@ -47,6 +47,7 @@ const Message = createClass({
     request: PropTypes.object,
     dispatch: PropTypes.func,
     timeStamp: PropTypes.number,
+    timestampsVisible: PropTypes.bool.isRequired,
     serviceContainer: PropTypes.shape({
       emitNewMessage: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func,
@@ -116,6 +117,7 @@ const Message = createClass({
       dispatch,
       exceptionDocURL,
       timeStamp = Date.now(),
+      timestampsVisible,
       notes,
     } = this.props;
 
@@ -124,9 +126,12 @@ const Message = createClass({
       topLevelClasses.push("open");
     }
 
-    const timestampEl = dom.span({
-      className: "timestamp devtools-monospace"
-    }, l10n.timestampString(timeStamp));
+    let timestampEl;
+    if (timestampsVisible === true) {
+      timestampEl = dom.span({
+        className: "timestamp devtools-monospace"
+      }, l10n.timestampString(timeStamp));
+    }
 
     const icon = MessageIcon({level});
 
@@ -134,13 +139,17 @@ const Message = createClass({
     let attachment = null;
     if (this.props.attachment) {
       attachment = this.props.attachment;
-    } else if (stacktrace) {
-      const child = open ? StackTrace({
-        stacktrace: stacktrace,
-        onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
-        onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
-      }) : null;
-      attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
+    } else if (stacktrace && open) {
+      attachment = dom.div(
+        {
+          className: "stacktrace devtools-monospace"
+        },
+        StackTrace({
+          stacktrace: stacktrace,
+          onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
+          onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
+        })
+      );
     }
 
     // If there is an expandable part, make it collapsible.
@@ -182,7 +191,7 @@ const Message = createClass({
       notesNodes = [];
     }
 
-    const repeat = this.props.repeat ? MessageRepeat({repeat: this.props.repeat}) : null;
+    const repeat = MessageRepeat({repeat: this.props.repeat});
 
     let onFrameClick;
     if (serviceContainer && frame) {
@@ -230,11 +239,13 @@ const Message = createClass({
       dom.span({ className: "message-body-wrapper" },
         dom.span({ className: "message-flex-body" },
           // Add whitespaces for formatting when copying to the clipboard.
-          " ", dom.span({ className: "message-body devtools-monospace" },
+          timestampEl ? " " : null,
+          dom.span({ className: "message-body devtools-monospace" },
             messageBody,
             learnMore
           ),
-          " ", repeat,
+          repeat ? " " : null,
+          repeat,
           " ", location
         ),
         // Add a newline for formatting when copying to the clipboard.

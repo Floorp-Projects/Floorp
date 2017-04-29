@@ -8,28 +8,18 @@
 
 // React & Redux
 const {
-  createClass,
   DOM: dom,
-  PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const INDENT_WIDTH = 12;
-const MessageIndent = createClass({
 
-  displayName: "MessageIndent",
-
-  propTypes: {
-    indent: PropTypes.number.isRequired,
-  },
-
-  render: function () {
-    const { indent } = this.props;
-    return dom.span({
-      className: "indent",
-      style: {"width": indent * INDENT_WIDTH}
-    });
-  }
-});
+function MessageIndent(props) {
+  const { indent } = props;
+  return dom.span({
+    className: "indent",
+    style: {"width": indent * INDENT_WIDTH}
+  });
+}
 
 module.exports.MessageIndent = MessageIndent;
 
