@@ -687,10 +687,9 @@ SessionStore.prototype = {
     let windowData = this._windows[aWindow.__SSID];
     if (windowData.selectedTabId == tab.id) {
       // Normally, we will first select another tab anyway before closing the previous tab, which
-      // would make this logic moot. However
-      // - we only update the selected tab when selecting a normal BROWSING-type tab, and
-      // - in conjunction with switching between activities, the event order as we see it can
-      //   become reversed.
+      // would make this logic moot. However we only update the selected tab when selecting a normal
+      // BROWSING-type tab, so we include this just to be on the safe side - although normally there
+      // should always be at least one BROWSING-type tab open.
       windowData.selectedTabId = INVALID_TAB_ID;
     }
 

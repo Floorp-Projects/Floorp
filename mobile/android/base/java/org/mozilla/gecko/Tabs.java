@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -305,10 +303,6 @@ public class Tabs implements BundleEventListener {
     }
 
     public synchronized Tab selectTab(int id) {
-        return selectTab(id, true);
-    }
-
-    public synchronized Tab selectTab(int id, boolean switchActivities) {
         if (!mTabs.containsKey(id))
             return null;
 
@@ -318,14 +312,6 @@ public class Tabs implements BundleEventListener {
         // This avoids a NPE below, but callers need to be careful to
         // handle this case.
         if (tab == null || oldTab == tab) {
-            return tab;
-        }
-
-        if (switchActivities && oldTab != null && oldTab.getType() != tab.getType() &&
-                !currentActivityMatchesTab(tab)) {
-            // We're in the wrong activity for this kind of tab, so launch the correct one
-            // and then try again.
-            launchActivityForTab(tab);
             return tab;
         }
 
@@ -345,19 +331,6 @@ public class Tabs implements BundleEventListener {
         data.putInt("id", tab.getId());
         EventDispatcher.getInstance().dispatch("Tab:Selected", data);
         return tab;
-    }
-
-    /**
-     * Check whether the currently active activity matches the tab type of the passed tab.
-     */
-    public boolean currentActivityMatchesTab(Tab tab) {
-        final Activity currentActivity = GeckoActivityMonitor.getInstance().getCurrentActivity();
-        return currentActivity != null && tab.matchesActivity(currentActivity);
-    }
-
-    private void launchActivityForTab(Tab tab) {
-        final Intent intent = IntentHelper.getTabSwitchIntent(tab);
-        mAppContext.startActivity(intent);
     }
 
     public synchronized boolean selectLastTab() {
@@ -469,22 +442,16 @@ public class Tabs implements BundleEventListener {
         closeTab(tab, getNextTab(tab));
     }
 
-    /** Don't switch activities even if the default next tab is of a different tab type */
-    public synchronized void closeTabNoActivitySwitch(Tab tab) {
-        closeTab(tab, getNextTab(tab), false, false);
-    }
-
     public synchronized void closeTab(Tab tab, Tab nextTab) {
-        closeTab(tab, nextTab, false, true);
+        closeTab(tab, nextTab, false);
     }
 
     public synchronized void closeTab(Tab tab, boolean showUndoToast) {
-        closeTab(tab, getNextTab(tab), showUndoToast, true);
+        closeTab(tab, getNextTab(tab), showUndoToast);
     }
 
     /** Close tab and then select nextTab */
-    public synchronized void closeTab(final Tab tab, Tab nextTab,
-                                      boolean showUndoToast, boolean switchActivities) {
+    public synchronized void closeTab(final Tab tab, Tab nextTab, boolean showUndoToast) {
         if (tab == null)
             return;
 
@@ -495,7 +462,7 @@ public class Tabs implements BundleEventListener {
             nextTab = loadUrl(getHomepageForNewTab(mAppContext), LOADURL_NEW_TAB);
         }
 
-        selectTab(nextTab.getId(), switchActivities);
+        selectTab(nextTab.getId());
 
         tab.onDestroy();
 
