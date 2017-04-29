@@ -23,7 +23,7 @@ function MessageIcon(props) {
   const { level } = props;
 
   const title = l10n.getStr("level." + level);
-  return dom.div({
+  return dom.span({
     className: "icon",
     title
   });

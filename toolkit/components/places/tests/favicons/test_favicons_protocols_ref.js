@@ -47,9 +47,23 @@ add_task(function* () {
   yield compareFavicons(PlacesUtils.urlWithSizeRef(win, PAGE_ICON_URL, -1),
                         PlacesUtils.favicons.getFaviconLinkForIcon(NetUtil.newURI(ICON32_URL)),
                         "Invalid size should return the bigger icon");
+
+  // Ass the icon also for the page with ref.
+  yield PlacesTestUtils.addVisits(PAGE_URL + "#other§=12");
+  yield setFaviconForPage(PAGE_URL + "#other§=12", ICON16_URL, false);
+  yield setFaviconForPage(PAGE_URL + "#other§=12", ICON32_URL, false);
+  yield compareFavicons(PlacesUtils.urlWithSizeRef(win, PAGE_ICON_URL + "#other§=12", 16),
+                        PlacesUtils.favicons.getFaviconLinkForIcon(NetUtil.newURI(ICON16_URL)),
+                        "Pre-existing refs should be retained");
   yield compareFavicons(PlacesUtils.urlWithSizeRef(win, PAGE_ICON_URL + "#other§=12", 32),
                         PlacesUtils.favicons.getFaviconLinkForIcon(NetUtil.newURI(ICON32_URL)),
-                        "Pre-existing refs should be ignored");
+                        "Pre-existing refs should be retained");
+
+  // If the ref-ed url is unknown, should still try to fetch icon for the unref-ed url.
+  yield compareFavicons(PlacesUtils.urlWithSizeRef(win, PAGE_ICON_URL + "#randomstuff", 32),
+                        PlacesUtils.favicons.getFaviconLinkForIcon(NetUtil.newURI(ICON32_URL)),
+                        "Non-existing refs should be ignored");
+
   win = { devicePixelRatio: 1.1 };
   yield compareFavicons(PlacesUtils.urlWithSizeRef(win, PAGE_ICON_URL, 16),
                         PlacesUtils.favicons.getFaviconLinkForIcon(NetUtil.newURI(ICON32_URL)),

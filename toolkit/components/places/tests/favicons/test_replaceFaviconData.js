@@ -7,7 +7,6 @@
 
 var iconsvc = PlacesUtils.favicons;
 var histsvc = PlacesUtils.history;
-var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 var originalFavicon = {
   file: do_get_file("favicon-normal16.png"),

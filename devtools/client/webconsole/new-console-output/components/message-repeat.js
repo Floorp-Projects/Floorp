@@ -14,6 +14,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const messageRepeatsTooltip = l10n.getStr("messageRepeats.tooltip2");
 
 MessageRepeat.displayName = "MessageRepeat";
 
@@ -23,13 +24,14 @@ MessageRepeat.propTypes = {
 
 function MessageRepeat(props) {
   const { repeat } = props;
-  const visibility = repeat > 1 ? "visible" : "hidden";
+
+  if (!repeat || repeat < 2) {
+    return null;
+  }
 
   return dom.span({
     className: "message-repeats",
-    style: {visibility},
-    title: PluralForm.get(repeat, l10n.getStr("messageRepeats.tooltip2"))
-      .replace("#1", repeat)
+    title: PluralForm.get(repeat, messageRepeatsTooltip).replace("#1", repeat)
   }, repeat);
 }
 

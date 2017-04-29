@@ -82,3 +82,16 @@ add_task(function* svg_icon() {
   Assert.equal(svgIcon.contentType, pageIcon.contentType);
   Assert.deepEqual(svgIcon.data, pageIcon.data, "Got the root favicon data");
 });
+
+add_task(function* page_with_ref() {
+  for (let url of ["http://places.test.ref/#myref",
+                   "http://places.test.ref/#!&b=16",
+                   "http://places.test.ref/#"]) {
+    yield PlacesTestUtils.addVisits(url);
+    yield setFaviconForPage(url, ICON_URI, false);
+    let {data, contentType} = yield fetchIconForSpec("page-icon:" + url);
+    Assert.equal(contentType, gFavicon.contentType);
+    Assert.deepEqual(data, gFavicon.data, "Got the favicon data");
+    yield PlacesUtils.history.remove(url);
+  }
+});

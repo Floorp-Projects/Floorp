@@ -407,6 +407,8 @@ FetchIconPerSpec(const RefPtr<Database>& aDB,
     "JOIN moz_icons_to_pages ON i.id = icon_id "
     "JOIN moz_pages_w_icons p ON p.id = page_id "
     "WHERE page_url_hash = hash(:url) AND page_url = :url "
+       "OR (:hash_idx AND page_url_hash = hash(substr(:url, 0, :hash_idx)) "
+                     "AND page_url = substr(:url, 0, :hash_idx)) "
     "UNION ALL "
     "SELECT width, icon_url, root "
     "FROM moz_icons i "
@@ -424,6 +426,9 @@ FetchIconPerSpec(const RefPtr<Database>& aDB,
   }
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("root_icon_url"),
                                   rootIconFixedUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t hashIdx = PromiseFlatCString(aPageSpec).RFind("#");
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hash_idx"), hashIdx + 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Return the biggest icon close to the preferred width. It may be bigger

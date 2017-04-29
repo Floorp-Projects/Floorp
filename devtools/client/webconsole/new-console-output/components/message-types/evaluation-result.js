@@ -12,13 +12,14 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
-const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
+const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/grip-message-body");
 
 EvaluationResult.displayName = "EvaluationResult";
 
 EvaluationResult.propTypes = {
   message: PropTypes.object.isRequired,
   indent: PropTypes.number.isRequired,
+  timestampsVisible: PropTypes.bool.isRequired,
 };
 
 EvaluationResult.defaultProps = {
@@ -26,7 +27,13 @@ EvaluationResult.defaultProps = {
 };
 
 function EvaluationResult(props) {
-  const { message, serviceContainer, indent } = props;
+  const {
+    message,
+    serviceContainer,
+    indent,
+    timestampsVisible,
+  } = props;
+
   const {
     source,
     type,
@@ -60,7 +67,7 @@ function EvaluationResult(props) {
 
   const topLevelClasses = ["cm-s-mozilla"];
 
-  const childProps = {
+  return Message({
     source,
     type,
     level,
@@ -75,8 +82,8 @@ function EvaluationResult(props) {
     timeStamp,
     parameters,
     notes,
-  };
-  return Message(childProps);
+    timestampsVisible,
+  });
 }
 
 module.exports = EvaluationResult;
