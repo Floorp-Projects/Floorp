@@ -5,6 +5,7 @@
 DIRS += [
     'actions',
     'components',
+    'connector',
     'har',
     'middleware',
     'reducers',
@@ -14,7 +15,6 @@ DIRS += [
 
 DevToolsModules(
     'constants.js',
-    'netmonitor-controller.js',
     'request-list-context-menu.js',
     'request-list-header-context-menu.js',
     'request-list-tooltip.js',

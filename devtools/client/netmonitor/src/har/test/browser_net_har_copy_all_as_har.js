@@ -11,12 +11,11 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { actions, windowRequire } = monitor.panelWin;
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  actions.batchEnable(false);
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();

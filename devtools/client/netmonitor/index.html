@@ -26,29 +26,32 @@
       const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
       const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
       const { configureStore } = require("./src/utils/create-store");
-      const store = window.gStore = configureStore();
+      const store = configureStore();
       const actions = bindActionCreators(require("./src/actions/index"), store.dispatch);
-      const { NetMonitorController } = require("./src/netmonitor-controller");
+      const { onFirefoxConnect, onDisconnect } = require("./src/connector/index");
 
       // Inject EventEmitter into global window.
       EventEmitter.decorate(window);
+      // Inject to global window for testing
+      window.store = store;
 
       window.Netmonitor = {
         bootstrap({ toolbox }) {
           this.mount = document.querySelector("#mount");
-          const App = createFactory(require("./src/components/app"));
-          render(Provider({ store }, App()), this.mount);
-          return NetMonitorController.startupNetMonitor({
+          const connection = {
             tabConnection: {
               tabTarget: toolbox.target,
             },
             toolbox,
-          }, actions);
+          };
+          const App = createFactory(require("./src/components/app"));
+          render(Provider({ store }, App()), this.mount);
+          return onFirefoxConnect(connection, actions, store.getState);
         },
 
         destroy() {
           unmountComponentAtNode(this.mount);
-          return NetMonitorController.shutdownNetMonitor();
+          return onDisconnect();
         }
       };
 
