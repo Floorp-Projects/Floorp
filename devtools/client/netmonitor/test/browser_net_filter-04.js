@@ -36,11 +36,11 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   is(Prefs.filters.length, 3,
     "All the filter types should be loaded.");

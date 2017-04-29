@@ -16,13 +16,14 @@ function* throttleUploadTest(actuallyThrottle) {
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
-  let { actions, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { setPreferences } =
     windowRequire("devtools/client/netmonitor/src/connector/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
 
-  actions.batchEnable(false);
+  store.dispatch(Actions.batchEnable(false));
 
   const size = 4096;
   const uploadSize = actuallyThrottle ? size / 3 : 0;

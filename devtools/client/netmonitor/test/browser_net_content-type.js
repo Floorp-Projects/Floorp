@@ -11,7 +11,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
   let {
@@ -19,7 +19,7 @@ add_task(function* () {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -29,8 +29,8 @@ add_task(function* () {
 
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(0),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(0),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=xml",
     {
@@ -44,8 +44,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(1),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(1),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=css",
     {
@@ -59,8 +59,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(2),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(2),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=js",
     {
@@ -74,8 +74,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(3),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(3),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=json",
     {
@@ -89,8 +89,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(4),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(4),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=bogus",
     {
@@ -104,8 +104,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(5),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(5),
     "GET",
     TEST_IMAGE,
     {
@@ -120,8 +120,8 @@ add_task(function* () {
   );
   verifyRequestItemTarget(
     document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(6),
+    getDisplayedRequests(store.getState()),
+    getSortedRequests(store.getState()).get(6),
     "GET",
     CONTENT_TYPE_SJS + "?fmt=gzip",
     {
@@ -280,14 +280,14 @@ add_task(function* () {
   function* selectIndexAndWaitForJSONView(index) {
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
-    gStore.dispatch(Actions.selectRequestByIndex(index));
+    store.dispatch(Actions.selectRequestByIndex(index));
     yield waitDOM;
   }
 
   function* selectIndexAndWaitForImageView(index) {
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
-    gStore.dispatch(Actions.selectRequestByIndex(index));
+    store.dispatch(Actions.selectRequestByIndex(index));
     let [imageNode] = yield waitDOM;
     yield once(imageNode, "load");
   }

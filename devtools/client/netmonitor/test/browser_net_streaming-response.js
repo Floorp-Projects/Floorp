@@ -12,14 +12,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
 
   info("Starting test... ");
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   const REQUESTS = [
     [ "hls-m3u8", /^#EXTM3U/ ],
@@ -38,8 +38,8 @@ add_task(function* () {
   REQUESTS.forEach(([ fmt ], i) => {
     verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(i),
+      getDisplayedRequests(store.getState()),
+      getSortedRequests(store.getState()).get(i),
       "GET",
       CONTENT_TYPE_SJS + "?fmt=" + fmt,
       {
@@ -55,7 +55,7 @@ add_task(function* () {
     document.querySelector("#response-tab"));
   yield wait;
 
-  gStore.dispatch(Actions.selectRequest(null));
+  store.dispatch(Actions.selectRequest(null));
 
   yield selectIndexAndWaitForSourceEditor(0);
   // the hls-m3u8 part
