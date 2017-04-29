@@ -500,7 +500,7 @@ TokenStream::getChar(int32_t* cp)
             break;
         }
 
-        if (MOZ_UNLIKELY(c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR))
+        if (MOZ_UNLIKELY(c == LINE_SEPARATOR || c == PARA_SEPARATOR))
             break;
 
         *cp = c;
@@ -1325,7 +1325,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     // early allows subsequent checking to be faster.
     if (MOZ_UNLIKELY(c >= 128)) {
         if (unicode::IsSpaceOrBOM2(c)) {
-            if (c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR) {
+            if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
                 if (!updateLineInfoForEOL())
                     goto error;
 
