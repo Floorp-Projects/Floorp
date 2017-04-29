@@ -54,7 +54,7 @@ let initializedModules = {};
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["ContentClick", "resource:///modules/ContentClick.jsm"],
-  ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm"],
+  ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm", "alwaysInit"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["DateTimePickerHelper", "resource://gre/modules/DateTimePickerHelper.jsm"],
   ["DirectoryLinksProvider", "resource:///modules/DirectoryLinksProvider.jsm"],
@@ -127,6 +127,11 @@ const listeners = {
   },
 
   ppmm: {
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
+    "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
+    "ContentPrefs:AddObserverForName": ["ContentPrefServiceParent"],
+    "ContentPrefs:RemoveObserverForName": ["ContentPrefServiceParent"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
     "FeedConverter:addLiveBookmark": ["Feeds"],
     "WCCR:setAutoHandler": ["Feeds"],
     "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
@@ -591,8 +596,6 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
-
-    ContentPrefServiceParent.init();
 
     LoginManagerParent.init();
     ReaderParent.init();
