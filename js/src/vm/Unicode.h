@@ -63,18 +63,16 @@ namespace CharFlag {
     const uint8_t UNICODE_ID_CONTINUE = UNICODE_ID_START + UNICODE_ID_CONTINUE_ONLY;
 }
 
-constexpr char16_t NO_BREAK_SPACE = 0x00A0;
-constexpr char16_t MICRO_SIGN = 0x00B5;
-constexpr char16_t LATIN_SMALL_LETTER_SHARP_S = 0x00DF;
-constexpr char16_t LATIN_SMALL_LETTER_Y_WITH_DIAERESIS = 0x00FF;
-constexpr char16_t LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE = 0x0130;
-constexpr char16_t LINE_SEPARATOR = 0x2028;
-constexpr char16_t PARA_SEPARATOR = 0x2029;
-constexpr char16_t COMBINING_DOT_ABOVE = 0x0307;
-constexpr char16_t GREEK_CAPITAL_LETTER_SIGMA = 0x03A3;
-constexpr char16_t GREEK_SMALL_LETTER_FINAL_SIGMA = 0x03C2;
-constexpr char16_t GREEK_SMALL_LETTER_SIGMA = 0x03C3;
-constexpr char16_t BYTE_ORDER_MARK2 = 0xFFFE;
+const char16_t NO_BREAK_SPACE = 0x00A0;
+const char16_t MICRO_SIGN = 0x00B5;
+const char16_t LATIN_SMALL_LETTER_SHARP_S = 0x00DF;
+const char16_t LATIN_SMALL_LETTER_Y_WITH_DIAERESIS = 0x00FF;
+const char16_t LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE = 0x0130;
+const char16_t COMBINING_DOT_ABOVE = 0x0307;
+const char16_t GREEK_CAPITAL_LETTER_SIGMA = 0x03A3;
+const char16_t GREEK_SMALL_LETTER_FINAL_SIGMA = 0x03C2;
+const char16_t GREEK_SMALL_LETTER_SIGMA = 0x03C3;
+const char16_t BYTE_ORDER_MARK2 = 0xFFFE;
 
 const char16_t LeadSurrogateMin = 0xD800;
 const char16_t LeadSurrogateMax = 0xDBFF;
