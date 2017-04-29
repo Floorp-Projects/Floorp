@@ -56,7 +56,6 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
 const PREF_UI_TYPE_HIDDEN = "extensions.ui.%TYPE%.hidden";
 const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
-const PREF_LEGACY_EXCEPTIONS = "extensions.legacy.exceptions";
 
 const LOADING_MSG_DELAY = 100;
 
@@ -104,10 +103,6 @@ XPCOMUtils.defineLazyGetter(this, "gInlineOptionsStylesheets", () => {
   }
   return stylesheets;
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "legacyWarningExceptions",
-                                      PREF_LEGACY_EXCEPTIONS, "",
-                                      raw => raw.split(","));
 
 document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown);
@@ -3063,32 +3058,6 @@ var gDetailView = {
     gEventManager.registerInstallListener(this);
 
     this.node.setAttribute("type", aAddon.type);
-
-    let legacy = false;
-    if (!aAddon.install) {
-      if (aAddon.type == "extension" && !aAddon.isWebExtension) {
-        legacy = true;
-      }
-      if (aAddon.type == "theme") {
-        // The logic here is kind of clunky but we want to mark complete
-        // themes as legacy.  There's no explicit flag for complete
-        // themes so explicitly check for new style themes (for which
-        // isWebExtension is true) or lightweight themes (which have
-        // ids that end with @personas.mozilla.org)
-        legacy = !(aAddon.isWebExtension || aAddon.id.endsWith("@personas.mozilla.org"));
-      }
-
-      if (legacy && aAddon.signedStatus == AddonManager.SIGNEDSTATE_PRIVILEGED) {
-        legacy = false;
-      }
-
-      // Exceptions that can slip through above: the default theme plus
-      // test pilot addons until we get SIGNEDSTATE_PRIVILEGED deployed.
-      if (legacy && legacyWarningExceptions.includes(aAddon.id)) {
-        legacy = false;
-      }
-    }
-    this.node.setAttribute("legacy", legacy);
 
     // If the search category isn't selected then make sure to select the
     // correct category
