@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
+  %editBookmarkOverlayDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Bug 1343256 - Bookmark keywords disappear from one bookmark when adding a keyword to another bookmark"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/editBookmarkOverlay.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <vbox id="editBookmarkPanelContent"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+      Task.spawn(test.bind(this))
+          .catch(ex => ok(false, ex))
+          .then(() => PlacesUtils.bookmarks.eraseEverything())
+          .then(SimpleTest.finish);
+    }
+
+    function promiseOnItemChanged() {
+      return new Promise(resolve => {
+        PlacesUtils.bookmarks.addObserver({
+          onBeginUpdateBatch() {},
+          onEndUpdateBatch() {},
+          onItemAdded() {},
+          onItemRemoved() {},
+          onItemVisited() {},
+          onItemMoved() {},
+          onItemChanged(id, property, isAnno, value) {
+            PlacesUtils.bookmarks.removeObserver(this);
+            resolve({ property, value });
+          },
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+        });
+      });
+    }
+
+    function* test() {
+      ok(gEditItemOverlay, "Sanity check: gEditItemOverlay is in context");
+      let keywordField = document.getElementById("editBMPanel_keywordField");
+
+      for (let i = 0; i < 2; ++i) {
+        let bm = yield PlacesUtils.bookmarks.insert({
+          url: `http://www.test${i}.me/`,
+          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        });
+        info(`Init panel on bookmark #${i+1}`);
+        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        gEditItemOverlay.initPanel({ node });
+        is(document.getElementById("editBMPanel_keywordField").value, "",
+          "The keyword field should be empty");
+        info("Add a keyword to the bookmark");
+        let promise = promiseOnItemChanged();
+        keywordField.focus();
+        keywordField.value = "kw";
+        synthesizeKey(i.toString(), {});
+        synthesizeKey("VK_RETURN", {});
+        keywordField.blur();
+        let {property, value} = yield promise;
+        is(property, "keyword", "The keyword should have been changed");
+        is(value, `kw${i}`, "The new keyword value is correct");
+      }
+
+      for (let i = 0; i < 2; ++i) {
+        let entry = yield PlacesUtils.keywords.fetch({ url: `http://www.test${i}.me/` });
+        is(entry.keyword, `kw${i}`, `The keyword for http://www.test${i}.me/ is correct`);
+      }
+    };
+  ]]>
+  </script>
+
+</window>
