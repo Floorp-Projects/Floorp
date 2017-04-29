@@ -12,8 +12,8 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
+const { triggerActivity } = require("../connector/index");
 const { ACTIVITY_TYPE } = require("../constants");
-const { NetMonitorController } = require("../netmonitor-controller");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
@@ -70,8 +70,6 @@ module.exports = connect(
   undefined,
   dispatch => ({
     onPerfClick: () => dispatch(Actions.openStatistics(true)),
-    onReloadClick: () =>
-      NetMonitorController
-        .triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
+    onReloadClick: () => triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);
