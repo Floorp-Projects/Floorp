@@ -20,7 +20,7 @@ static const js::ClassExtension OuterWrapperClassExtension = PROXY_MAKE_EXT(
 
 const js::Class OuterWrapperClass = PROXY_CLASS_WITH_EXT(
     "Proxy",
-    0, /* additional class flags */
+    JSCLASS_HAS_RESERVED_SLOTS(1), /* additional class flags */
     &OuterWrapperClassExtension);
 
 static JSObject*
