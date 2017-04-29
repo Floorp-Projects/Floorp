@@ -46,6 +46,7 @@ AndroidDynamicToolbarAnimator::AndroidDynamicToolbarAnimator()
   , mControllerDragThresholdReached(false)
   , mControllerCancelTouchTracking(false)
   , mControllerDragChangedDirection(false)
+  , mControllerResetOnNextMove(false)
   , mControllerStartTouch(0)
   , mControllerPreviousTouch(0)
   , mControllerTotalDistance(0)
@@ -54,6 +55,7 @@ AndroidDynamicToolbarAnimator::AndroidDynamicToolbarAnimator()
   , mControllerSurfaceHeight(0)
   , mControllerCompositionHeight(0)
   , mControllerLastDragDirection(0)
+  , mControllerTouchCount(0)
   , mControllerLastEventTimeStamp(0)
   , mControllerState(eNothingPending)
   // Compositor thread only
@@ -102,6 +104,22 @@ AndroidDynamicToolbarAnimator::ReceiveInputEvent(InputData& aEvent)
   MultiTouchInput& multiTouch = aEvent.AsMultiTouchInput();
   ScreenIntCoord currentTouch = 0;
 
+  switch (multiTouch.mType) {
+  case MultiTouchInput::MULTITOUCH_START:
+    mControllerTouchCount = multiTouch.mTouches.Length();
+    break;
+  case MultiTouchInput::MULTITOUCH_END:
+  case MultiTouchInput::MULTITOUCH_CANCEL:
+    mControllerTouchCount -= multiTouch.mTouches.Length();
+    break;
+  default:
+    break;
+  }
+
+  if (mControllerTouchCount > 1) {
+    mControllerResetOnNextMove = true;
+  }
+
   if (mPinnedFlags || !GetTouchY(multiTouch, &currentTouch)) {
     TranslateTouchEvent(multiTouch);
     return nsEventStatus_eIgnore;
@@ -121,6 +139,8 @@ AndroidDynamicToolbarAnimator::ReceiveInputEvent(InputData& aEvent)
     }
     break;
   case MultiTouchInput::MULTITOUCH_MOVE: {
+    CheckForResetOnNextMove(currentTouch);
+
     if ((mControllerState != eAnimationStartPending) &&
         (mControllerState != eAnimationStopPending) &&
         (currentToolbarState != eToolbarAnimating) &&
@@ -150,7 +170,10 @@ AndroidDynamicToolbarAnimator::ReceiveInputEvent(InputData& aEvent)
   }
   case MultiTouchInput::MULTITOUCH_END:
   case MultiTouchInput::MULTITOUCH_CANCEL:
-    HandleTouchEnd(currentToolbarState, currentTouch);
+    // last finger was lifted
+    if (mControllerTouchCount == 0) {
+      HandleTouchEnd(currentToolbarState, currentTouch);
+    }
     break;
   default:
     break;
@@ -514,6 +537,9 @@ void
 AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbarState, ScreenIntCoord aCurrentTouch)
 {
   MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+  // If there was no move before the reset flag was set and the touch ended, check for it here.
+  // if mControllerResetOnNextMove is true, it will be set to false here
+  CheckForResetOnNextMove(aCurrentTouch);
   int32_t direction = mControllerLastDragDirection;
   mControllerLastDragDirection = 0;
   bool isRoot = mControllerScrollingRootContent;
@@ -530,23 +556,41 @@ AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbar
 
   // If the last touch didn't have a drag direction, use start of touch to find direction
   if (!direction) {
-    direction = ((aCurrentTouch - mControllerStartTouch) > 0 ? MOVE_TOOLBAR_DOWN : MOVE_TOOLBAR_UP);
+    if (mControllerToolbarHeight == mControllerMaxToolbarHeight) {
+      direction = MOVE_TOOLBAR_DOWN;
+    } else if (mControllerToolbarHeight == 0) {
+      direction = MOVE_TOOLBAR_UP;
+    } else {
+      direction = ((aCurrentTouch - mControllerStartTouch) > 0 ? MOVE_TOOLBAR_DOWN : MOVE_TOOLBAR_UP);
+    }
     // If there still isn't a direction, default to show just to be safe
     if (!direction) {
       direction = MOVE_TOOLBAR_DOWN;
     }
   }
-  bool dragThresholdReached = mControllerDragThresholdReached;
   mControllerStartTouch = 0;
   mControllerPreviousTouch = 0;
   mControllerTotalDistance = 0;
   mControllerDragThresholdReached = false;
   mControllerLastEventTimeStamp = 0;
+  bool cancelTouchTracking = mControllerCancelTouchTracking;
+  mControllerCancelTouchTracking = false;
+
+  // Animation is in progress, bail out.
+  if (aCurrentToolbarState == eToolbarAnimating) {
+    return;
+  }
 
   // Received a UI thread request to show or hide the snapshot during a touch.
-  // This overrides the touch event so just return
-  if (mControllerCancelTouchTracking) {
-    mControllerCancelTouchTracking = false;
+  // This overrides the touch event so just return.
+  if (cancelTouchTracking) {
+    return;
+  }
+
+  // The toolbar is already where it needs to be so just return.
+  if (((direction == MOVE_TOOLBAR_DOWN) && (mControllerToolbarHeight == mControllerMaxToolbarHeight)) ||
+      ((direction == MOVE_TOOLBAR_UP) && (mControllerToolbarHeight == 0))) {
+    ShowToolbarIfNotVisible(aCurrentToolbarState);
     return;
   }
 
@@ -571,15 +615,7 @@ AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbar
     }
   }
 
-  // This makes sure the snapshot is not left partially visible at the end of a touch.
-  if ((aCurrentToolbarState != eToolbarAnimating) && dragThresholdReached) {
-    if (((direction == MOVE_TOOLBAR_DOWN) && (mControllerToolbarHeight != mControllerMaxToolbarHeight)) ||
-        ((direction == MOVE_TOOLBAR_UP) && (mControllerToolbarHeight != 0))) {
-      StartCompositorAnimation(direction, eAnimate, mControllerToolbarHeight);
-    }
-  } else {
-    ShowToolbarIfNotVisible(aCurrentToolbarState);
-  }
+  StartCompositorAnimation(direction, eAnimate, mControllerToolbarHeight);
 }
 
 void
@@ -908,6 +944,18 @@ AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed()
   mControllerToolbarHeight = 0;
   mControllerState = eNothingPending;
   UpdateCompositorToolbarHeight(mControllerToolbarHeight);
+}
+
+void
+AndroidDynamicToolbarAnimator::CheckForResetOnNextMove(ScreenIntCoord aCurrentTouch) {
+  MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+  if (mControllerResetOnNextMove) {
+    mControllerTotalDistance = 0;
+    mControllerLastDragDirection = 0;
+    mControllerStartTouch = mControllerPreviousTouch = aCurrentTouch;
+    mControllerDragThresholdReached = false;
+    mControllerResetOnNextMove = false;
+  }
 }
 
 } // namespace layers

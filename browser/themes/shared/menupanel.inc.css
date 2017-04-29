@@ -184,12 +184,15 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
+  -moz-context-properties: fill;
 }
 
 #appMenu-private-window-button {
   list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
+  -moz-context-properties: fill;
 }
 
 #appMenu-print-button {
   list-style-image: url(chrome://browser/skin/menu-icons/print.svg);
+  -moz-context-properties: fill;
 }
