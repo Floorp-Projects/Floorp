@@ -3376,12 +3376,18 @@ protected:
   nscoord mTwipsPerPixel;
 };
 
-enum nsStyleSVGPaintType {
+enum nsStyleSVGPaintType : uint8_t {
   eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
   eStyleSVGPaintType_Server,
   eStyleSVGPaintType_ContextFill,
   eStyleSVGPaintType_ContextStroke
+};
+
+enum nsStyleSVGFallbackType : uint8_t {
+  eStyleSVGFallbackType_NotSet,
+  eStyleSVGFallbackType_None,
+  eStyleSVGFallbackType_Color,
 };
 
 enum nsStyleSVGOpacitySource : uint8_t {
@@ -3418,6 +3424,10 @@ public:
     return mPaint.mPaintServer;
   }
 
+  nsStyleSVGFallbackType GetFallbackType() const {
+    return mFallbackType;
+  }
+
   nscolor GetFallbackColor() const {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Server ||
                mType == eStyleSVGPaintType_ContextFill ||
@@ -3439,6 +3449,7 @@ private:
     mozilla::css::URLValue* mPaintServer;
   } mPaint;
   nsStyleSVGPaintType mType;
+  nsStyleSVGFallbackType mFallbackType;
   nscolor mFallbackColor;
 };
 
