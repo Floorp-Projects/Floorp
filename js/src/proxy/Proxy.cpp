@@ -692,8 +692,11 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
          * The GC can use the second reserved slot to link the cross compartment
          * wrappers into a linked list, in which case we don't want to trace it.
          */
-        if (proxy->is<CrossCompartmentWrapperObject>() && i == 1)
+        if (proxy->is<CrossCompartmentWrapperObject>() &&
+            i == CrossCompartmentWrapperObject::GrayLinkReservedSlot)
+        {
             continue;
+        }
         TraceEdge(trc, proxy->reservedSlotPtr(i), "proxy_reserved");
     }
 
