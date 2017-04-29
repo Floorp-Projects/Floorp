@@ -652,7 +652,11 @@ public:
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 
-  nsresult TransmitPermissionsFor(nsIChannel* aChannel);
+  // This function is called when we are about to load a document from an
+  // HTTP(S), FTP or wyciwyg channel for a content process.  It is a useful
+  // place to start to kick off work as early as possible in response to such
+  // document loads.
+  nsresult AboutToLoadDocumentForChild(nsIChannel* aChannel);
 
   nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
 

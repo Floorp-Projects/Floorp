@@ -1053,6 +1053,10 @@ enum class StyleGridTrackBreadth : uint8_t {
 
 // See nsStyleSVG
 
+// -moz-context-properties
+#define NS_STYLE_CONTEXT_PROPERTY_FILL          (1 << 0)
+#define NS_STYLE_CONTEXT_PROPERTY_STROKE        (1 << 1)
+
 // dominant-baseline
 #define NS_STYLE_DOMINANT_BASELINE_AUTO              0
 #define NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT        1

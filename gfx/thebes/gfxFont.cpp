@@ -2587,7 +2587,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
     CacheHashKey key(aText, aLength, aHash,
                      aRunScript,
                      aAppUnitsPerDevUnit,
-                     aFlags);
+                     aFlags, aRounding);
 
     CacheHashEntry *entry = mWordCache->PutEntry(key);
     if (!entry) {
@@ -2621,7 +2621,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
 #endif
 
     sw = gfxShapedWord::Create(aText, aLength, aRunScript, aAppUnitsPerDevUnit,
-                               aFlags);
+                               aFlags, aRounding);
     entry->mShapedWord.reset(sw);
     if (!sw) {
         NS_WARNING("failed to create gfxShapedWord - expect missing text");
@@ -2646,6 +2646,7 @@ gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
     }
     if (sw->GetLength() != aKey->mLength ||
         sw->GetFlags() != aKey->mFlags ||
+        sw->GetRounding() != aKey->mRounding ||
         sw->GetAppUnitsPerDevUnit() != aKey->mAppUnitsPerDevUnit ||
         sw->GetScript() != aKey->mScript) {
         return false;

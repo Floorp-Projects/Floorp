@@ -73,7 +73,7 @@
 #urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
   -moz-image-region: inherit;
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
-  /* uncomment after bug 1350010 lands: context-properties: fill; */
+  -moz-context-properties: fill;
   fill: GrayText;
   width: 16px;
   height: 16px;
