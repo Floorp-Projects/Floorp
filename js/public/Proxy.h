@@ -681,6 +681,57 @@ inline void assertEnteredPolicy(JSContext* cx, JSObject* obj, jsid id,
 extern JS_FRIEND_API(JSObject*)
 InitProxyClass(JSContext* cx, JS::HandleObject obj);
 
+extern JS_FRIEND_DATA(const js::ClassOps) ProxyClassOps;
+extern JS_FRIEND_DATA(const js::ClassExtension) ProxyClassExtension;
+extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
+
+/*
+ * Helper Macros for creating JSClasses that function as proxies.
+ *
+ * NB: The macro invocation must be surrounded by braces, so as to
+ *     allow for potential JSClass extensions.
+ */
+#define PROXY_MAKE_EXT(objectMoved)                                     \
+    {                                                                   \
+        js::proxy_WeakmapKeyDelegate,                                   \
+        objectMoved                                                     \
+    }
+
+template <unsigned Flags>
+constexpr unsigned
+CheckProxyFlags()
+{
+    // For now assert each Proxy Class has at least 1 reserved slot. This is
+    // not a hard requirement, but helps catch Classes that need an explicit
+    // JSCLASS_HAS_RESERVED_SLOTS since bug 1360523.
+    static_assert(((Flags >> JSCLASS_RESERVED_SLOTS_SHIFT) & JSCLASS_RESERVED_SLOTS_MASK) > 0,
+                  "Proxy Classes must have at least 1 reserved slot");
+
+    // ProxyValueArray must fit inline in the object, so assert the number of
+    // slots does not exceed MAX_FIXED_SLOTS.
+    static_assert((offsetof(js::detail::ProxyValueArray, reservedSlots) / sizeof(Value)) +
+                  ((Flags >> JSCLASS_RESERVED_SLOTS_SHIFT) & JSCLASS_RESERVED_SLOTS_MASK)
+                  <= shadow::Object::MAX_FIXED_SLOTS,
+                  "ProxyValueArray size must not exceed max JSObject size");
+    return Flags;
+}
+
+#define PROXY_CLASS_WITH_EXT(name, flags, extPtr)                                       \
+    {                                                                                   \
+        name,                                                                           \
+        js::Class::NON_NATIVE |                                                         \
+            JSCLASS_IS_PROXY |                                                          \
+            JSCLASS_DELAY_METADATA_BUILDER |                                            \
+            js::CheckProxyFlags<flags>(),                                               \
+        &js::ProxyClassOps,                                                             \
+        JS_NULL_CLASS_SPEC,                                                             \
+        extPtr,                                                                         \
+        &js::ProxyObjectOps                                                             \
+    }
+
+#define PROXY_CLASS_DEF(name, flags) \
+  PROXY_CLASS_WITH_EXT(name, flags, &js::ProxyClassExtension)
+
 } /* namespace js */
 
 #endif /* js_Proxy_h */
