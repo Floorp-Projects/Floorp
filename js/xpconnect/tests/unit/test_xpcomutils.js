@@ -151,6 +151,18 @@ add_test(function test_defineLazyPreferenceGetter()
 
     equal(obj.pref, "defaultValue", "Should return default value after pref is reset");
 
+    obj = {};
+    XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", PREF, "a,b",
+                                          null, value => value.split(","));
+
+    deepEqual(obj.pref, ["a", "b"], "transform is applied to default value");
+
+    Preferences.set(PREF, "x,y,z");
+    deepEqual(obj.pref, ["x", "y", "z"], "transform is applied to updated value");
+
+    Preferences.reset(PREF);
+    deepEqual(obj.pref, ["a", "b"], "transform is applied to reset default");
+
     run_next_test();
 });
 

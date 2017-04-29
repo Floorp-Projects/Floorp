@@ -299,11 +299,16 @@ this.XPCOMUtils = {
    * @param aOnUpdate
    *        A function to call upon update. Receives as arguments
    *         `(aPreference, previousValue, newValue)`
+   * @param aTransform
+   *        An optional function to transform the value.  If provided,
+   *        this function receives the new preference value as an argument
+   *        and its return value is used by the getter.
    */
   defineLazyPreferenceGetter: function XPCU_defineLazyPreferenceGetter(
                                    aObject, aName, aPreference,
                                    aDefaultValue = null,
-                                   aOnUpdate = null)
+                                   aOnUpdate = null,
+                                   aTransform = val => val)
   {
     // Note: We need to keep a reference to this observer alive as long
     // as aObject is alive. This means that all of our getters need to
@@ -343,7 +348,7 @@ this.XPCOMUtils = {
 
     function lazyGetter() {
       if (observer.value === undefined) {
-        observer.value = Preferences.get(aPreference, aDefaultValue);
+        observer.value = aTransform(Preferences.get(aPreference, aDefaultValue));
       }
       return observer.value;
     }
