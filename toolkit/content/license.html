@@ -2717,8 +2717,11 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     <p>This license applies to parts of the code in:</p>
     <ul>
+#ifndef RELEASE_OR_BETA
+        <li><code>browser/extensions/formautofill/content/heuristicsRegexp.js</code></li>
         <li><code>browser/extensions/formautofill/content/nameReferences.js</code></li>
         <li><code>browser/extensions/formautofill/FormAutofillNameUtils.jsm</code></li>
+#endif
         <li><code>browser/extensions/mortar/host/common/opengles2-utils.jsm</code></li>
         <li><code>editor/libeditor/EditorEventListener.cpp</code></li>
         <li><code>security/sandbox/</code></li>

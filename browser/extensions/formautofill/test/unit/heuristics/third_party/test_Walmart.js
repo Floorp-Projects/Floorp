@@ -9,8 +9,7 @@ runHeuristicsTest([
       [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ],
-      [
-      ],
+      [],
       [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"}, // ac-off
@@ -31,7 +30,7 @@ runHeuristicsTest([
       [
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "family-name"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-number"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
@@ -51,7 +50,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"}, // TODO: fix the regexp
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO: select, state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
