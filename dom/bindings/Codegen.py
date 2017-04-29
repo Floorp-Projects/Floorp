@@ -528,7 +528,9 @@ class CGDOMProxyJSClass(CGThing):
         return ""
 
     def define(self):
-        flags = ["JSCLASS_IS_DOMJSCLASS"]
+        # We need one reserved slot (DOM_OBJECT_SLOT).
+        flags = ["JSCLASS_IS_DOMJSCLASS",
+                 "JSCLASS_HAS_RESERVED_SLOTS(1)"]
         # We don't use an IDL annotation for JSCLASS_EMULATES_UNDEFINED because
         # we don't want people ever adding that to any interface other than
         # HTMLAllCollection.  So just hardcode it here.

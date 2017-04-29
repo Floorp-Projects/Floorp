@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "updatelogging.h"
+#include "updatecommon.h"
 
 UpdateLog::UpdateLog() : logFP(nullptr)
 {
@@ -34,12 +34,13 @@ void UpdateLog::Init(NS_tchar* sourcePath,
       (dstFilePathLen <
          static_cast<int>(sizeof(mDstFilePath)/sizeof(mDstFilePath[0])))) {
 #ifdef XP_WIN
-    GetTempFileNameW(sourcePath, L"log", 0, mTmpFilePath);
-    logFP = NS_tfopen(mTmpFilePath, NS_T("w"));
+    if (GetTempFileNameW(sourcePath, L"log", 0, mTmpFilePath) != 0) {
+      logFP = NS_tfopen(mTmpFilePath, NS_T("w"));
 
-    // Delete this file now so it is possible to tell from the unelevated
-    // updater process if the elevated updater process has written the log.
-    DeleteFileW(mDstFilePath);
+      // Delete this file now so it is possible to tell from the unelevated
+      // updater process if the elevated updater process has written the log.
+      DeleteFileW(mDstFilePath);
+    }
 #elif XP_MACOSX
     logFP = NS_tfopen(mDstFilePath, NS_T("w"));
 #else
@@ -144,4 +145,69 @@ void UpdateLog::WarnPrintf(const char *fmt, ... )
   vfprintf(logFP, fmt, ap);
   fprintf(logFP, "***\n");
   va_end(ap);
+}
+
+/**
+ * Performs checks of a full path for validity for this application.
+ *
+ * @param  origFullPath
+ *         The full path to check.
+ * @return true if the path is valid for this application and false otherwise.
+ */
+bool
+IsValidFullPath(NS_tchar* origFullPath)
+{
+  // Subtract 1 from MAXPATHLEN for null termination.
+  if (NS_tstrlen(origFullPath) > MAXPATHLEN - 1) {
+    // The path is longer than acceptable for this application.
+    return false;
+  }
+
+#ifdef XP_WIN
+  NS_tchar testPath[MAXPATHLEN] = {NS_T('\0')};
+  // GetFullPathNameW will replace / with \ which PathCanonicalizeW requires.
+  if (GetFullPathNameW(origFullPath, MAXPATHLEN, testPath, nullptr) == 0) {
+    // Unable to get the full name for the path (e.g. invalid path).
+    return false;
+  }
+
+  NS_tchar canonicalPath[MAXPATHLEN] = {NS_T('\0')};
+  if (!PathCanonicalizeW(canonicalPath, testPath)) {
+    // Path could not be canonicalized (e.g. invalid path).
+    return false;
+  }
+
+  // Check if the path passed in resolves to a differerent path.
+  if (NS_tstricmp(origFullPath, canonicalPath) != 0) {
+    // Case insensitive string comparison between the supplied path and the
+    // canonical path are not equal. This will prevent directory traversal and
+    // the use of / in paths since they are converted to \.
+    return false;
+  }
+
+  NS_tstrncpy(testPath, origFullPath, MAXPATHLEN);
+  if (!PathStripToRootW(testPath)) {
+    // It should always be possible to strip a valid path to its root.
+    return false;
+  }
+
+  if (origFullPath[0] == NS_T('\\')) {
+    // Only allow UNC server share paths.
+    if (!PathIsUNCServerShareW(testPath)) {
+      return false;
+    }
+  }
+#else
+  // Only allow full paths.
+  if (origFullPath[0] != NS_T('/')) {
+    return false;
+  }
+
+  // The path must not traverse directories
+  if (NS_tstrstr(origFullPath, NS_T("..")) != nullptr ||
+      NS_tstrstr(origFullPath, NS_T("./")) != nullptr) {
+    return false;
+  }
+#endif
+  return true;
 }
