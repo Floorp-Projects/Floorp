@@ -20,6 +20,10 @@ GetProxyGCObjectKind(const Class* clasp, const BaseProxyHandler* handler, const 
     MOZ_ASSERT(clasp->isProxy());
 
     uint32_t nreserved = JSCLASS_RESERVED_SLOTS(clasp);
+
+    // For now assert each Proxy Class has at least 1 reserved slot. This is
+    // not a hard requirement, but helps catch Classes that need an explicit
+    // JSCLASS_HAS_RESERVED_SLOTS since bug 1360523.
     MOZ_ASSERT(nreserved > 0);
 
     MOZ_ASSERT(js::detail::ProxyValueArray::sizeOf(nreserved) % sizeof(Value) == 0,
