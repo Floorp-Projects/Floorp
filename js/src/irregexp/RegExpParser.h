@@ -215,10 +215,10 @@ class RegExpParser
     bool ParseClassAtom(char16_t* char_class, widechar *value);
 
   private:
-    void SyntaxError(unsigned errorNumber, ...);
+    void SyntaxError(unsigned errorNumber, va_list args);
 
   public:
-    RegExpTree* ReportError(unsigned errorNumber, const char* param = nullptr);
+    RegExpTree* ReportError(unsigned errorNumber, ...);
 
     void Advance();
     void Advance(int dist) {
