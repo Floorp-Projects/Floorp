@@ -1159,8 +1159,10 @@ public class BrowserApp extends GeckoApp
 
     @Override
     protected void restoreLastSelectedTab() {
-        if (mResumingAfterOnCreate && !mIsRestoringActivity) {
-            // We're the first activity to run, so our startup code will (have) handle(d) tab selection.
+        if (mIgnoreLastSelectedTab) {
+            // We're either the first activity to run, so our startup code will (have) handle(d) tab
+            // selection, or else we've received a new intent and want to open and select a new tab
+            // as well.
             return;
         }
 
