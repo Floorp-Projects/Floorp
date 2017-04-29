@@ -300,6 +300,14 @@ ProfileStorage.prototype = {
   },
 
   _computeFields(profile) {
+    // Compute name
+    profile.name = FormAutofillNameUtils.joinNameParts({
+      given: profile["given-name"],
+      middle: profile["additional-name"],
+      family: profile["family-name"],
+    });
+
+    // Compute address
     if (profile["street-address"]) {
       let streetAddress = profile["street-address"].split("\n");
       // TODO: we should prevent the dataloss by concatenating the rest of lines
@@ -337,7 +345,26 @@ ProfileStorage.prototype = {
     }
   },
 
+  _normalizeName(profile) {
+    if (!profile.name) {
+      return;
+    }
+
+    let nameParts = FormAutofillNameUtils.splitName(profile.name);
+    if (!profile["given-name"] && nameParts.given) {
+      profile["given-name"] = nameParts.given;
+    }
+    if (!profile["additional-name"] && nameParts.middle) {
+      profile["additional-name"] = nameParts.middle;
+    }
+    if (!profile["family-name"] && nameParts.family) {
+      profile["family-name"] = nameParts.family;
+    }
+    delete profile.name;
+  },
+
   _normalizeProfile(profile) {
+    this._normalizeName(profile);
     this._normalizeAddress(profile);
 
     for (let key in profile) {

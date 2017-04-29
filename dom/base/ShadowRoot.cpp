@@ -710,7 +710,8 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
 }
 
 nsresult
-ShadowRoot::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+ShadowRoot::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                  bool aPreallocateChildren) const
 {
   *aResult = nullptr;
   return NS_ERROR_DOM_DATA_CLONE_ERR;
