@@ -138,6 +138,12 @@ var gEditItemOverlay = {
       throw new Error("_initKeywordField called unexpectedly");
     }
 
+    // Reset the field status synchronously now, eventually we'll reinit it
+    // later if we find an existing keyword. This way we can ensure to be in a
+    // consistent status when reusing the panel across different bookmarks.
+    this._keyword = newKeyword;
+    this._initTextField(this._keywordField, newKeyword);
+
     if (!newKeyword) {
       let entries = [];
       yield PlacesUtils.keywords.fetch({ url: this._paneInfo.uri.spec },
@@ -152,11 +158,12 @@ var gEditItemOverlay = {
           existingKeyword = sameEntry ? sameEntry.keyword : "";
         }
         if (existingKeyword) {
-          this._keyword = newKeyword = existingKeyword;
+          this._keyword = existingKeyword;
+          // Update the text field to the existing keyword.
+          this._initTextField(this._keywordField, this._keyword);
         }
       }
     }
-    this._initTextField(this._keywordField, newKeyword);
   }),
 
   _initLoadInSidebar: Task.async(function* () {
