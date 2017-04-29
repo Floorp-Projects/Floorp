@@ -3,7 +3,7 @@
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 add_task(function* () {
-  let rootDir = do_get_file("chromefiles/");
+  let rootDir = do_get_file("chromefiles/", true);
   let pathId;
   let subDirs = ["Google", "Chrome"];
   if (AppConstants.platform == "macosx") {
