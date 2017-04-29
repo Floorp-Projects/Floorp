@@ -11,7 +11,6 @@
 
 #include "jscntxt.h"
 
-#include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"

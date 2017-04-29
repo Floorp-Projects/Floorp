@@ -14,6 +14,7 @@
 #include "jsiter.h"
 
 #include "builtin/ModuleObject.h"
+#include "frontend/ParseNode.h"
 #include "gc/Policy.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
