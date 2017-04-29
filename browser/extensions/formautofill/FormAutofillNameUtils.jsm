@@ -126,6 +126,10 @@ var FormAutofillNameUtils = {
     // spelled out in the Korean alphabet (Hangul), although they do have a Han
     // equivalent as well.
 
+    if (!name) {
+      return false;
+    }
+
     let previousWasCJK = false;
     let wordCount = 0;
 

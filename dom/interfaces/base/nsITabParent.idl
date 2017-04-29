@@ -69,4 +69,10 @@ interface nsITabParent : nsISupports
    * permissions required to load a document with the given principal.
    */
   void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
+   * True if any of the frames loaded in the TabChild have registered
+   * an onbeforeunload event handler.
+   */
+  readonly attribute boolean hasBeforeUnload;
 };
