@@ -216,14 +216,6 @@ protected:
 };
 
 /**
- * Forces a WAL checkpoint. This will cause all transactions stored in the
- * journal file to be committed to the main database.
- * 
- * @note The checkpoint will force a fsync/flush.
- */
-void ForceWALCheckpoint();
-
-/**
  * Determines if a visit should be marked as hidden given its transition type
  * and whether or not it was a redirect.
  *
