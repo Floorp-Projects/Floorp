@@ -567,7 +567,6 @@
                               align="start">
                           <label id="detail-name" flex="1"/>
                           <label id="detail-version"/>
-                          <label class="legacy-warning" value="&addon.legacy.label;"/>
                           <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                           <label class="update-postfix" value="&addon.update.postfix;"/>
                           <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->

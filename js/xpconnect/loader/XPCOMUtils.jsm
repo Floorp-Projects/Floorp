@@ -299,16 +299,11 @@ this.XPCOMUtils = {
    * @param aOnUpdate
    *        A function to call upon update. Receives as arguments
    *         `(aPreference, previousValue, newValue)`
-   * @param aTransform
-   *        An optional function to transform the value.  If provided,
-   *        this function receives the new preference value as an argument
-   *        and its return value is used by the getter.
    */
   defineLazyPreferenceGetter: function XPCU_defineLazyPreferenceGetter(
                                    aObject, aName, aPreference,
                                    aDefaultValue = null,
-                                   aOnUpdate = null,
-                                   aTransform = val => val)
+                                   aOnUpdate = null)
   {
     // Note: We need to keep a reference to this observer alive as long
     // as aObject is alive. This means that all of our getters need to
@@ -328,7 +323,7 @@ this.XPCOMUtils = {
             // Fetch and cache value.
             this.value = undefined;
             let latest = lazyGetter();
-            aOnUpdate.apply(aObject, data, previous, latest);
+            aOnUpdate(data, previous, latest);
           } else {
 
             // Empty cache, next call to the getter will cause refetch.
@@ -348,7 +343,7 @@ this.XPCOMUtils = {
 
     function lazyGetter() {
       if (observer.value === undefined) {
-        observer.value = aTransform(Preferences.get(aPreference, aDefaultValue));
+        observer.value = Preferences.get(aPreference, aDefaultValue);
       }
       return observer.value;
     }

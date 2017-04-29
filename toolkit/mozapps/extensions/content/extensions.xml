@@ -748,38 +748,6 @@
   <binding id="addon-base"
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <implementation>
-      <property name="isLegacy" readonly="true">
-        <getter><![CDATA[
-          if (this.mAddon.install) {
-            return false;
-          }
-          let legacy = false;
-          if (this.mAddon.type == "extension" && !this.mAddon.isWebExtension) {
-            legacy = true;
-          }
-          if (this.mAddon.type == "theme") {
-            // The logic here is kind of clunky but we want to mark complete
-            // themes as legacy.  There's no explicit flag for complete
-            // themes so explicitly check for new style themes (for which
-            // isWebExtension is true) or lightweight themes (which have
-            // ids that end with @personas.mozilla.org)
-            legacy = !(this.mAddon.isWebExtension ||
-                       this.mAddon.id.endsWith("@personas.mozilla.org"));
-          }
-
-          if (legacy && this.mAddon.signedStatus == AddonManager.SIGNEDSTATE_PRIVILEGED) {
-            legacy = false;
-          }
-
-          // Exceptions that can slip through above: the default theme plus
-          // test pilot addons until we get SIGNEDSTATE_PRIVILEGED deployed.
-          if (legacy && legacyWarningExceptions.includes(this.mAddon.id)) {
-            legacy = false;
-          }
-          return legacy;
-        ]]></getter>
-      </property>
-
       <method name="hasPermission">
         <parameter name="aPerm"/>
         <body><![CDATA[
@@ -865,7 +833,6 @@
               <xul:hbox class="name-container">
                 <xul:label anonid="name" class="name" crop="end" flex="1"
                            tooltip="addonitem-tooltip" xbl:inherits="value=name"/>
-                <xul:label anonid="legacy" class="legacy-warning" value="&addon.legacy.label;"/>
                 <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                 <xul:label class="update-postfix" value="&addon.update.postfix;"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->
@@ -1186,8 +1153,6 @@
             this._description.value = this.mAddon.description;
           else
             this._description.hidden = true;
-
-          this.setAttribute("legacy", this.isLegacy);
 
           if (!("applyBackgroundUpdates" in this.mAddon) ||
               (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
