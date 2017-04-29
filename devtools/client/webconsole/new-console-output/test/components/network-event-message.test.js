@@ -24,7 +24,11 @@ describe("NetworkEventMessage component:", () => {
   describe("GET request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("GET request eventTimings");
-      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
+      const wrapper = render(NetworkEventMessage({
+        message,
+        serviceContainer,
+        timestampsVisible: true,
+      }));
       const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
       const { timestampString } = new L10n();
 
@@ -35,6 +39,17 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
       expect(wrapper.find(".message-body .status").length).toBe(1);
       expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
+    });
+
+    it("does not have a timestamp when timestampsVisible prop is falsy", () => {
+      const message = stubPreparedMessages.get("GET request eventTimings");
+      const wrapper = render(NetworkEventMessage({
+        message,
+        serviceContainer,
+        timestampsVisible: false,
+      }));
+
+      expect(wrapper.find(".timestamp").length).toBe(0);
     });
 
     it("has the expected indent", () => {

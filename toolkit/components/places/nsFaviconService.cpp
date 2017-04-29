@@ -797,33 +797,44 @@ nsFaviconService::OptimizeIconSizes(IconData& aIcon)
     newPayload.mimeType = NS_LITERAL_CSTRING(PNG_MIME_TYPE);
     newPayload.width = frameInfo.width;
     for (uint16_t size : sFaviconSizes) {
-      if (size <= frameInfo.width) {
+      // The icon could be smaller than 16, that is our minimum.
+      // Icons smaller than 16px are kept as-is.
+      if (frameInfo.width >= 16) {
+        if (size > frameInfo.width) {
+          continue;
+        }
         newPayload.width = size;
+      }
+
+      // If the original payload is png and the size is the same, rescale the
+      // image only if it's larger than the maximum allowed.
+      if (newPayload.mimeType.Equals(payload.mimeType) &&
+          newPayload.width == frameInfo.width &&
+          payload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
+        newPayload.data = payload.data;
+      } else {
+        // Otherwise, scale and recompress.
+        // Since EncodeScaledImage uses SYNC_DECODE, it will pick the best frame.
+        nsCOMPtr<nsIInputStream> iconStream;
+        rv = GetImgTools()->EncodeScaledImage(container,
+                                              newPayload.mimeType,
+                                              newPayload.width,
+                                              newPayload.width,
+                                              EmptyString(),
+                                              getter_AddRefs(iconStream));
+        NS_ENSURE_SUCCESS(rv, rv);
+        // Read the stream into the new buffer.
+        rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // If the icon size is good, we are done, otherwise try the next size.
+      if (newPayload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
         break;
       }
     }
 
-    // If the original payload is png and the size is the same, no reason to
-    // rescale the image.
-    if (newPayload.mimeType.Equals(payload.mimeType) &&
-        newPayload.width == frameInfo.width) {
-      newPayload.data = payload.data;
-    } else {
-      // Scale and recompress.
-      // Since EncodeScaledImage use SYNC_DECODE, it will pick the best frame.
-      nsCOMPtr<nsIInputStream> iconStream;
-      rv = GetImgTools()->EncodeScaledImage(container,
-                                            newPayload.mimeType,
-                                            newPayload.width,
-                                            newPayload.width,
-                                            EmptyString(),
-                                            getter_AddRefs(iconStream));
-      NS_ENSURE_SUCCESS(rv, rv);
-      // Read the stream into the new buffer.
-      rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
+    MOZ_ASSERT(newPayload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE);
     if (newPayload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
       aIcon.payloads.AppendElement(newPayload);
     }
