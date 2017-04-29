@@ -343,8 +343,8 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
                 onDone();
                 final Tabs tabs = Tabs.getInstance();
                 final Tab tab = tabs.getSelectedTab();
-                tabs.closeTabNoActivitySwitch(tab);
-                mCheckTabSelectionOnResume = true;
+                mSuppressActivitySwitch = true;
+                tabs.closeTab(tab);
             }
         });
     }
