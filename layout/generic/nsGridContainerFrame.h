@@ -98,7 +98,6 @@ public:
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
-  nsIAtom* GetType() const override;
   bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
@@ -259,7 +258,7 @@ protected:
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
+    : nsContainerFrame(aContext, mozilla::FrameType::GridContainer)
     , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
   {

@@ -111,6 +111,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'CSSAlignUtils.h',
     'CSSOrderAwareFrameIterator.h',
+    'FrameTypeList.h',
     'ReflowInput.h',
     'ReflowOutput.h',
     'ViewportFrame.h',

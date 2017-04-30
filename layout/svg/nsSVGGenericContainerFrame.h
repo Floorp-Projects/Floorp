@@ -18,14 +18,16 @@ class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
 
-class nsSVGGenericContainerFrame : public nsSVGDisplayContainerFrame
+class nsSVGGenericContainerFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
   explicit nsSVGGenericContainerFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext) {}
+    : nsSVGDisplayContainerFrame(aContext,
+                                 mozilla::FrameType::SVGGenericContainer)
+  {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -34,12 +36,6 @@ public:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgGenericContainerFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

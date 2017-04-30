@@ -66,6 +66,7 @@ struct nsOverflowAreas;
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 class EventListenerManager;
+enum class FrameType : uint8_t;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
 class WritingMode;
@@ -318,7 +319,7 @@ public:
    *         such ancestor exists
    */
   static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame,
-                                         nsIAtom* aFrameType,
+                                         mozilla::FrameType aFrameType,
                                          nsIFrame* aStopAt = nullptr);
 
   /**
@@ -326,13 +327,10 @@ public:
    * ancestor that (or the frame itself) is a "Page" frame, if any.
    *
    * @param aFrame the frame to start at
-   * @return a frame of type nsGkAtoms::pageFrame or nullptr if no
+   * @return a frame of type mozilla::FrameType::Page or nullptr if no
    *         such ancestor exists
    */
-  static nsIFrame* GetPageFrame(nsIFrame* aFrame)
-  {
-    return GetClosestFrameOfType(aFrame, nsGkAtoms::pageFrame);
-  }
+  static nsIFrame* GetPageFrame(nsIFrame* aFrame);
 
   /**
    * Given a frame which is the primary frame for an element,

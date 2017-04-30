@@ -230,12 +230,6 @@ SVGGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 }
 
-nsIAtom *
-SVGGeometryFrame::GetType() const
-{
-  return nsGkAtoms::svgGeometryFrame;
-}
-
 bool
 SVGGeometryFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
                                    gfx::Matrix *aFromParentTransform) const
@@ -736,8 +730,8 @@ SVGGeometryFrame::MarkerProperties::GetMarkerStartFrame()
 {
   if (!mMarkerStart)
     return nullptr;
-  return static_cast<nsSVGMarkerFrame *>
-    (mMarkerStart->GetReferencedFrame(nsGkAtoms::svgMarkerFrame, nullptr));
+  return static_cast<nsSVGMarkerFrame*>(
+    mMarkerStart->GetReferencedFrame(FrameType::SVGMarker, nullptr));
 }
 
 nsSVGMarkerFrame *
@@ -745,8 +739,8 @@ SVGGeometryFrame::MarkerProperties::GetMarkerMidFrame()
 {
   if (!mMarkerMid)
     return nullptr;
-  return static_cast<nsSVGMarkerFrame *>
-    (mMarkerMid->GetReferencedFrame(nsGkAtoms::svgMarkerFrame, nullptr));
+  return static_cast<nsSVGMarkerFrame*>(
+    mMarkerMid->GetReferencedFrame(FrameType::SVGMarker, nullptr));
 }
 
 nsSVGMarkerFrame *
@@ -754,8 +748,8 @@ SVGGeometryFrame::MarkerProperties::GetMarkerEndFrame()
 {
   if (!mMarkerEnd)
     return nullptr;
-  return static_cast<nsSVGMarkerFrame *>
-    (mMarkerEnd->GetReferencedFrame(nsGkAtoms::svgMarkerFrame, nullptr));
+  return static_cast<nsSVGMarkerFrame*>(
+    mMarkerEnd->GetReferencedFrame(FrameType::SVGMarker, nullptr));
 }
 
 DrawResult

@@ -14,12 +14,6 @@ using namespace mozilla;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBackdropFrame)
 
-/* virtual */ nsIAtom*
-nsBackdropFrame::GetType() const
-{
-  return nsGkAtoms::backdropFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsBackdropFrame::GetFrameName(nsAString& aResult) const

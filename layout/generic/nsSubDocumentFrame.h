@@ -15,8 +15,9 @@
 /******************************************************************************
  * nsSubDocumentFrame
  *****************************************************************************/
-class nsSubDocumentFrame : public nsAtomicContainerFrame,
-                           public nsIReflowCallback
+class nsSubDocumentFrame final
+  : public nsAtomicContainerFrame
+  , public nsIReflowCallback
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsSubDocumentFrame)
@@ -30,8 +31,6 @@ public:
 #endif
 
   NS_DECL_QUERYFRAME
-
-  nsIAtom* GetType() const override;
 
   bool IsFrameOfType(uint32_t aFlags) const override
   {

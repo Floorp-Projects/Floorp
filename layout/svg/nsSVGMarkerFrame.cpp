@@ -61,12 +61,6 @@ nsSVGMarkerFrame::Init(nsIContent*       aContent,
 }
 #endif /* DEBUG */
 
-nsIAtom *
-nsSVGMarkerFrame::GetType() const
-{
-  return nsGkAtoms::svgMarkerFrame;
-}
-
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
@@ -97,7 +91,7 @@ static nsIFrame*
 GetAnonymousChildFrame(nsIFrame* aFrame)
 {
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
-  MOZ_ASSERT(kid && kid->GetType() == nsGkAtoms::svgMarkerAnonChildFrame,
+  MOZ_ASSERT(kid && kid->IsSVGMarkerAnonChildFrame(),
              "expected to find anonymous child of marker frame");
   return kid;
 }
@@ -279,14 +273,7 @@ nsSVGMarkerAnonChildFrame::Init(nsIContent*       aContent,
                                 nsContainerFrame* aParent,
                                 nsIFrame*         aPrevInFlow)
 {
-  MOZ_ASSERT(aParent->GetType() == nsGkAtoms::svgMarkerFrame,
-             "Unexpected parent");
+  MOZ_ASSERT(aParent->IsSVGMarkerFrame(), "Unexpected parent");
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif
-
-nsIAtom *
-nsSVGMarkerAnonChildFrame::GetType() const
-{
-  return nsGkAtoms::svgMarkerAnonChildFrame;
-}

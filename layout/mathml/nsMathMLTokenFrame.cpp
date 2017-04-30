@@ -68,7 +68,7 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
        childFrame = childFrame->GetNextSibling()) {
     for (nsIFrame* childFrame2 = childFrame->PrincipalChildList().FirstChild();
          childFrame2; childFrame2 = childFrame2->GetNextSibling()) {
-      if (childFrame2->GetType() == nsGkAtoms::textFrame) {
+      if (childFrame2->IsTextFrame()) {
         childFrame2->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
         child = childFrame2;
         childCount++;

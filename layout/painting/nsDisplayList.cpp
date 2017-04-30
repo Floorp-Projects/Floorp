@@ -1023,7 +1023,7 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsDisplayItem* aItem)
     // frames in its document. InvalidateFixedBackgroundFramesFromList in
     // nsGfxScrollFrame will not repaint this item when scrolling occurs.
     nsIFrame* viewportFrame =
-      nsLayoutUtils::GetClosestFrameOfType(aItem->Frame(), nsGkAtoms::viewportFrame, RootReferenceFrame());
+      nsLayoutUtils::GetClosestFrameOfType(aItem->Frame(), FrameType::Viewport, RootReferenceFrame());
     if (viewportFrame) {
       return FindAnimatedGeometryRootFor(viewportFrame);
     }
@@ -1213,7 +1213,7 @@ DisplayListIsNonBlank(nsDisplayList* aList)
       case nsDisplayItem::TYPE_SOLID_COLOR:
       case nsDisplayItem::TYPE_BACKGROUND:
       case nsDisplayItem::TYPE_BACKGROUND_COLOR:
-        if (i->Frame()->GetType() == nsGkAtoms::canvasFrame) {
+        if (i->Frame()->IsCanvasFrame()) {
           continue;
         }
         return true;
@@ -1457,7 +1457,7 @@ IsStickyFrameActive(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* 
   if (!parent) {
     parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   }
-  while (parent->GetType() != nsGkAtoms::scrollFrame) {
+  while (!parent->IsScrollFrame()) {
     cursor = parent;
     if ((parent = nsLayoutUtils::GetCrossDocParentFrame(cursor)) == nullptr) {
       return false;
@@ -1503,10 +1503,11 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParen
   if (!parent)
     return true;
 
-  nsIAtom* parentType = parent->GetType();
+  FrameType parentType = parent->Type();
   // Treat the slider thumb as being as an active scrolled root when it wants
   // its own layer so that it can move without repainting.
-  if (parentType == nsGkAtoms::sliderFrame && nsLayoutUtils::IsScrollbarThumbLayerized(aFrame)) {
+  if (parentType == FrameType::Slider &&
+      nsLayoutUtils::IsScrollbarThumbLayerized(aFrame)) {
     return true;
   }
 
@@ -1516,7 +1517,7 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParen
     return true;
   }
 
-  if (parentType == nsGkAtoms::scrollFrame || parentType == nsGkAtoms::listControlFrame) {
+  if (parentType == FrameType::Scroll || parentType == FrameType::ListControl) {
     nsIScrollableFrame* sf = do_QueryFrame(parent);
     if (sf->IsScrollingActive(this) && sf->GetScrolledFrame() == aFrame) {
       return true;
@@ -3480,7 +3481,7 @@ nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
   nsIFrame *frame = aItem->Frame();
 
   nsRect clipRect = aBackgroundRect;
-  if (frame->GetType() == nsGkAtoms::canvasFrame) {
+  if (frame->IsCanvasFrame()) {
     nsCanvasFrame* canvasFrame = static_cast<nsCanvasFrame*>(frame);
     clipRect = canvasFrame->CanvasArea() + aItem->ToReferenceFrame();
   } else if (aClip == StyleGeometryBox::PaddingBox ||
@@ -3687,7 +3688,7 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
   }
 
   nsRect clipRect = mBackgroundRect;
-  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
+  if (mFrame->IsCanvasFrame()) {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     clipRect = frame->CanvasArea() + ToReferenceFrame();
   }
@@ -4279,7 +4280,7 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     return;
   }
   if (!aFrame->GetParent()) {
-    MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::viewportFrame);
+    MOZ_ASSERT(aFrame->IsViewportFrame());
     // Viewport frames are never event targets, other frames, like canvas frames,
     // are the event targets for any regions viewport frames may cover.
     return;
@@ -4348,7 +4349,7 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     // region on scrollbar frames that won't be placed in their own layer. See
     // bug 1213324 for details.
     mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
-  } else if (aFrame->GetType() == nsGkAtoms::objectFrame) {
+  } else if (aFrame->IsObjectFrame()) {
     // If the frame is a plugin frame and wants to handle wheel events as
     // default action, we should add the frame to dispatch-to-content region.
     nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);

@@ -24,7 +24,8 @@ using namespace mozilla;
 
 namespace mozilla {
 
-class BRFrame : public nsFrame {
+class BRFrame final : public nsFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -49,7 +50,6 @@ public:
                                   InlinePrefISizeData *aData) override;
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
-  virtual nsIAtom* GetType() const override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -63,7 +63,10 @@ public:
 #endif
 
 protected:
-  explicit BRFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
+  explicit BRFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, FrameType::Br)
+  {}
+
   virtual ~BRFrame();
 
   nscoord mAscent;
@@ -204,12 +207,6 @@ BRFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
   return result;
-}
-
-nsIAtom*
-BRFrame::GetType() const
-{
-  return nsGkAtoms::brFrame;
 }
 
 nscoord

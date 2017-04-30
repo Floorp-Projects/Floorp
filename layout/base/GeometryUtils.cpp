@@ -185,8 +185,7 @@ public:
   virtual void AddBox(nsIFrame* aFrame) override
   {
     nsIFrame* f = aFrame;
-    if (mBoxType == CSSBoxType::Margin &&
-        f->GetType() == nsGkAtoms::tableFrame) {
+    if (mBoxType == CSSBoxType::Margin && f->IsTableFrame()) {
       // Margin boxes for table frames should be taken from the table wrapper
       // frame, since that has the margin.
       f = f->GetParent();

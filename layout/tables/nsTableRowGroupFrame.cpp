@@ -53,8 +53,8 @@ struct TableRowGroupReflowInput {
 
 } // namespace mozilla
 
-nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext):
-  nsContainerFrame(aContext)
+nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, FrameType::TableRowGroup)
 {
   SetRepeatable(false);
 }
@@ -85,8 +85,7 @@ nsTableRowGroupFrame::GetRowCount()
     NS_ASSERTION(e.get()->StyleDisplay()->mDisplay ==
                  mozilla::StyleDisplay::TableRow,
                  "Unexpected display");
-    NS_ASSERTION(e.get()->GetType() == nsGkAtoms::tableRowFrame,
-                 "Unexpected frame type");
+    NS_ASSERTION(e.get()->IsTableRowFrame(), "Unexpected frame type");
   }
 #endif
 
@@ -97,7 +96,7 @@ int32_t nsTableRowGroupFrame::GetStartRowIndex()
 {
   int32_t result = -1;
   if (mFrames.NotEmpty()) {
-    NS_ASSERTION(mFrames.FirstChild()->GetType() == nsGkAtoms::tableRowFrame,
+    NS_ASSERTION(mFrames.FirstChild()->IsTableRowFrame(),
                  "Unexpected frame type");
     result = static_cast<nsTableRowFrame*>(mFrames.FirstChild())->GetRowIndex();
   }
@@ -1589,7 +1588,7 @@ nsTableRowGroupFrame::InsertFrames(ChildListID     aListID,
 
   int32_t numRows = rows.Length();
   if (numRows > 0) {
-    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsGkAtoms::tableRowFrame);
+    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, FrameType::TableRow);
     int32_t rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(this, rows, rowIndex, true);
 
@@ -1683,12 +1682,6 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
   }
 
   return false;
-}
-
-nsIAtom*
-nsTableRowGroupFrame::GetType() const
-{
-  return nsGkAtoms::tableRowGroupFrame;
 }
 
 /** find page break before the first row **/
