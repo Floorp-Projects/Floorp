@@ -113,7 +113,7 @@ function documentcreateattributeNS04() {
             attribute = doc.createAttributeNS(namespaceURI,qualifiedName);
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 14);
+      success = ex.code === DOMException.INVALID_CHARACTER_ERR;
 		}
 		assertTrue("documentcreateattributeNS04",success);
 	}
