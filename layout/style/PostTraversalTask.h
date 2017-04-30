@@ -15,6 +15,7 @@ class FontFace;
 class FontFaceSet;
 } // namespace dom
 } // namespace mozilla
+class gfxUserFontEntry;
 
 namespace mozilla {
 
@@ -63,6 +64,13 @@ public:
     return task;
   }
 
+  static PostTraversalTask LoadFontEntry(gfxUserFontEntry* aFontEntry)
+  {
+    auto task = PostTraversalTask(Type::LoadFontEntry);
+    task.mTarget = aFontEntry;
+    return task;
+  }
+
   void Run();
 
 private:
@@ -83,6 +91,9 @@ private:
 
     // mTarget (FontFaceSet*)
     DispatchFontFaceSetCheckLoadingFinishedAfterDelay,
+
+    // mTarget (gfxUserFontEntry*)
+    LoadFontEntry,
   };
 
   PostTraversalTask(Type aType)
