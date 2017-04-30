@@ -123,8 +123,6 @@ class IonIC
         return state_;
     }
 
-    void togglePreBarriers(bool enabled, ReprotectCode reprotect);
-
     CacheKind kind() const { return kind_; }
     uint8_t** codeRawPtr() { return &codeRaw_; }
 

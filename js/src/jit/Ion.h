@@ -147,8 +147,6 @@ void Invalidate(JSContext* cx, const RecompileInfoVector& invalid, bool resetUse
 void Invalidate(JSContext* cx, JSScript* script, bool resetUses = true,
                 bool cancelOffThread = true);
 
-void ToggleBarriers(JS::Zone* zone, bool needs);
-
 class IonBuilder;
 class MIRGenerator;
 class LIRGraph;

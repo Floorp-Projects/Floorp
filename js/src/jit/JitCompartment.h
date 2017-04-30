@@ -422,7 +422,6 @@ class JitZone
 
   public:
     MOZ_MUST_USE bool init(JSContext* cx);
-    void toggleBarriers(bool enabled);
     void sweep(FreeOp* fop);
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -575,8 +574,6 @@ class JitCompartment
         MOZ_ASSERT(bailoutReturnStubInfo_[kind].addr);
         return bailoutReturnStubInfo_[kind].addr;
     }
-
-    void toggleBarriers(bool enabled);
 
     JitCompartment();
     ~JitCompartment();
