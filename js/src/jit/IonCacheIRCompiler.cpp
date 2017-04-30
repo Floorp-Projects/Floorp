@@ -530,10 +530,6 @@ IonCacheIRCompiler::compile()
                                            ImmPtr((void*)-1));
     }
 
-    // All barriers are emitted off-by-default, enable them if needed.
-    if (cx_->zone()->needsIncrementalBarrier())
-        newStubCode->togglePreBarriers(true, DontReprotect);
-
     return newStubCode;
 }
 

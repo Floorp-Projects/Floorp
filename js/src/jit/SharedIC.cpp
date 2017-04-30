@@ -507,10 +507,6 @@ ICStubCompiler::getStubCode()
     if (!newStubCode)
         return nullptr;
 
-    // All barriers are emitted off-by-default, enable them if needed.
-    if (cx->zone()->needsIncrementalBarrier())
-        newStubCode->togglePreBarriers(true, DontReprotect);
-
     // Cache newly compiled stubcode.
     if (!comp->putStubCode(cx, stubKey, newStubCode))
         return nullptr;
