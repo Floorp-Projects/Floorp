@@ -11,9 +11,12 @@
 
 #include "IndexedDatabase.h"
 
-#define IDB_WARNING(x)                                                         \
-  mozilla::dom::indexedDB::ReportInternalError(__FILE__, __LINE__, x);         \
-  NS_WARNING(x)
+#define IDB_WARNING(...)                                                       \
+  do {                                                                         \
+    nsPrintfCString s(__VA_ARGS__);                                            \
+    mozilla::dom::indexedDB::ReportInternalError(__FILE__, __LINE__, s.get()); \
+    NS_WARNING(s.get());                                                       \
+  } while (0)
 
 #define IDB_REPORT_INTERNAL_ERR()                                              \
   mozilla::dom::indexedDB::ReportInternalError(__FILE__, __LINE__,             \

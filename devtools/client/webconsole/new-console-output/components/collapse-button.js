@@ -8,44 +8,30 @@
 
 // React & Redux
 const {
-  createClass,
   DOM: dom,
-  PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const messageToggleDetails = l10n.getStr("messageToggleDetails");
 
-const CollapseButton = createClass({
+function CollapseButton(props) {
+  const {
+    open,
+    onClick,
+    title = messageToggleDetails,
+  } = props;
 
-  displayName: "CollapseButton",
+  let classes = ["theme-twisty"];
 
-  propTypes: {
-    onClick: PropTypes.func.isRequired,
-    open: PropTypes.bool.isRequired,
-    title: PropTypes.string,
-  },
-
-  getDefaultProps: function () {
-    return {
-      title: l10n.getStr("messageToggleDetails")
-    };
-  },
-
-  render: function () {
-    const { open, onClick, title } = this.props;
-
-    let classes = ["theme-twisty"];
-
-    if (open) {
-      classes.push("open");
-    }
-
-    return dom.a({
-      className: classes.join(" "),
-      onClick,
-      title: title,
-    });
+  if (open) {
+    classes.push("open");
   }
-});
+
+  return dom.a({
+    className: classes.join(" "),
+    onClick,
+    title: title,
+  });
+}
 
 module.exports = CollapseButton;

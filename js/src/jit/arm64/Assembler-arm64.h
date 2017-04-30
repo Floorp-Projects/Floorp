@@ -218,8 +218,7 @@ class Assembler : public vixl::Assembler
         return AssemblerShared::oom() ||
             armbuffer_.oom() ||
             jumpRelocations_.oom() ||
-            dataRelocations_.oom() ||
-            preBarriers_.oom();
+            dataRelocations_.oom();
     }
 
     void disableProtection() {}
@@ -236,10 +235,6 @@ class Assembler : public vixl::Assembler
         if (dataRelocations_.length())
             memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
     }
-    void copyPreBarrierTable(uint8_t* dest) const {
-        if (preBarriers_.length())
-            memcpy(dest, preBarriers_.buffer(), preBarriers_.length());
-    }
 
     size_t jumpRelocationTableBytes() const {
         return jumpRelocations_.length();
@@ -247,14 +242,10 @@ class Assembler : public vixl::Assembler
     size_t dataRelocationTableBytes() const {
         return dataRelocations_.length();
     }
-    size_t preBarrierTableBytes() const {
-        return preBarriers_.length();
-    }
     size_t bytesNeeded() const {
         return SizeOfCodeGenerated() +
             jumpRelocationTableBytes() +
-            dataRelocationTableBytes() +
-            preBarrierTableBytes();
+            dataRelocationTableBytes();
     }
 
     void processCodeLabels(uint8_t* rawCode) {
@@ -438,7 +429,6 @@ class Assembler : public vixl::Assembler
     // Final output formatters.
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
-    CompactBufferWriter preBarriers_;
 };
 
 static const uint32_t NumIntArgRegs = 8;

@@ -9,7 +9,7 @@
 // React & Redux
 const {
   createClass,
-  createFactory,
+
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
@@ -37,6 +37,7 @@ const MessageContainer = createClass({
     autoscroll: PropTypes.bool.isRequired,
     indent: PropTypes.number.isRequired,
     tableData: PropTypes.object,
+    timestampsVisible: PropTypes.bool.isRequired,
   },
 
   getDefaultProps: function () {
@@ -52,14 +53,21 @@ const MessageContainer = createClass({
     const tableDataChanged = this.props.tableData !== nextProps.tableData;
     const responseChanged = this.props.message.response !== nextProps.message.response;
     const totalTimeChanged = this.props.message.totalTime !== nextProps.message.totalTime;
-    return repeatChanged || openChanged || tableDataChanged || responseChanged ||
-      totalTimeChanged;
+    const timestampVisibleChanged =
+      this.props.timestampsVisible !== nextProps.timestampsVisible;
+
+    return repeatChanged
+      || openChanged
+      || tableDataChanged
+      || responseChanged
+      || totalTimeChanged
+      || timestampVisibleChanged;
   },
 
   render() {
     const { message } = this.props;
 
-    let MessageComponent = createFactory(getMessageComponent(message));
+    let MessageComponent = getMessageComponent(message);
     return MessageComponent(this.props);
   }
 });

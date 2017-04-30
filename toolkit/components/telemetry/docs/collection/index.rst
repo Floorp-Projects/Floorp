@@ -16,7 +16,7 @@ The current data collection possibilities include:
 * :doc:`histograms` can efficiently record multiple data points
 * ``environment`` data records information about the system and settings a session occurs in
 * :doc:`events` can record richer data on individual occurences of specific actions
-* ``TelemetryLog`` allows collecting ordered event entries (note: this does not have supporting analysis tools)
+* ``TelemetryLog`` allows collecting ordered event entries up to a limit of 1000 entries (note: this does not have supporting analysis tools)
 * :doc:`measuring elapsed time <measuring-time>`
 * :doc:`custom pings <custom-pings>`
 * :doc:`stack capture <stack-capture>` allow recording application call stacks

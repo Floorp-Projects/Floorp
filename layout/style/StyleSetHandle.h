@@ -137,8 +137,7 @@ public:
                               dom::Element* aPseudoElement);
     inline already_AddRefed<nsStyleContext>
     ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                       nsStyleContext* aParentContext,
-                                       uint32_t aFlags = 0);
+                                       nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
     ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
     inline nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);

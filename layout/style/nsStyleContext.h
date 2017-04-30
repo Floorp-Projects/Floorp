@@ -90,8 +90,7 @@ public:
                  nsPresContext* aPresContext,
                  nsIAtom* aPseudoTag,
                  mozilla::CSSPseudoElementType aPseudoType,
-                 already_AddRefed<ServoComputedValues> aComputedValues,
-                 bool aSkipParentDisplayBasedStyleFixup);
+                 already_AddRefed<ServoComputedValues> aComputedValues);
 
   void* operator new(size_t sz, nsPresContext* aPresContext);
   void Destroy();
@@ -551,7 +550,7 @@ private:
                  mozilla::CSSPseudoElementType aPseudoType);
 
   // Helper post-contruct hook.
-  void FinishConstruction(bool aSkipParentDisplayBasedStyleFixup);
+  void FinishConstruction();
 
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
@@ -560,6 +559,8 @@ private:
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
   void SetStyleBits();
+
+  // Only called for Gecko-backed nsStyleContexts.
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
 
   const void* StyleStructFromServoComputedValues(nsStyleStructID aSID) {
@@ -631,49 +632,31 @@ private:
         return newData;                                                 \
       }                                                                 \
       /**                                                               \
-       * Always forward to the parent to grab the inherited style struct\
-       * we're a text node.                                             \
+       * Also (conservatively) set the owning bit in the parent style   \
+       * context if we're a text node.                                  \
        *                                                                \
        * This causes the parent element's style context to cache any    \
        * inherited structs we request for a text node, which means we   \
        * don't have to compute change hints for the text node, as       \
        * handling the change on the parent element is sufficient.       \
        *                                                                \
-       * Note that adding the inherit bit is ok, because the struct     \
-       * pointer returned by the parent and the child is owned by       \
-       * Servo. This is fine if the pointers are the same (as it        \
-       * should, read below), because both style context sources will   \
-       * hold it.                                                       \
+       * Note, however, that we still need to request the style struct  \
+       * of the text node itself, since we may run some fixups on it,   \
+       * like for text-combine.                                         \
        *                                                                \
-       * In the case of a mishandled frame, we could end up with the    \
-       * pointer to and old parent style, but that's fine too, since    \
-       * the parent style context will remain alive until we reframe,   \
-       * in which case we'll discard both style contexts. Also, we      \
-       * hold a strong reference to the parent style context, which     \
-       * makes it a non-issue.                                          \
+       * This model is sound because for the fixed-up values to change, \
+       * other properties on the parent need to change too, and we'll   \
+       * handle those change hints correctly.                           \
        *                                                                \
-       * Also, note that the assertion below should be true, except     \
-       * for those frames we still don't handle correctly, like         \
-       * anonymous table wrappers, in which case the pointers will      \
-       * differ.                                                        \
-       *                                                                \
-       * That means we're not going to restyle correctly text frames    \
-       * of anonymous table wrappers, for example. It's kind of         \
-       * embarrassing, but I think it's not worth it to add more        \
-       * logic here unconditionally, given that's going to be fixed.    \
-       *                                                                \
-       * TODO(emilio): Convert to a strong assertion once we support    \
-       * all kinds of random frames. In fact, this can be a great       \
-       * assertion to debug them.                                       \
+       * TODO(emilio): Perhaps we should remove those fixups and handle \
+       * those in layout instead. Those fixups are kind of expensive    \
+       * for style sharing, and computed style of text nodes is not     \
+       * observable. If we do that, we could assert here that the       \
+       * inherited structs of both are the same.                        \
        */                                                               \
-      if (mPseudoTag == nsCSSAnonBoxes::mozText) {                      \
+      if (mPseudoTag == nsCSSAnonBoxes::mozText && aComputeData) {      \
         MOZ_ASSERT(mParent);                                            \
-        const nsStyle##name_* data =                                    \
-          mParent->DoGetStyle##name_<aComputeData>();                   \
-        NS_WARNING_ASSERTION(!data ||                                   \
-          data == Servo_GetStyle##name_(mSource.AsServoComputedValues()), \
-          "bad data");                                                  \
-        return data;                                                    \
+        mParent->AddStyleBit(NS_STYLE_INHERIT_BIT(name_));              \
       }                                                                 \
                                                                         \
       const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
@@ -829,7 +812,6 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsPresContext* aPresContext,
                    nsIAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,
-                   already_AddRefed<ServoComputedValues> aComputedValues,
-                   bool aSkipParentDisplayBasedStyleFixup);
+                   already_AddRefed<ServoComputedValues> aComputedValues);
 
 #endif

@@ -85,6 +85,11 @@ this.SafeBrowsing = {
       return;
     }
 
+    if (!provider.updateURL) {
+      log("Invalid update url " + listname);
+      return;
+    }
+
     listManager.registerTable(listname, providerName, provider.updateURL, provider.gethashURL);
   },
 
@@ -269,6 +274,14 @@ this.SafeBrowsing = {
         "browser.safebrowsing.provider." + provider + ".gethashURL");
       updateURL = updateURL.replace("SAFEBROWSING_ID", clientID);
       gethashURL = gethashURL.replace("SAFEBROWSING_ID", clientID);
+
+      // Disable updates and gethash if the Google API key is missing.
+      let googleKey = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
+      if ((provider == "google" || provider == "google4") &&
+          (!googleKey || googleKey == "no-google-api-key")) {
+        updateURL= "";
+        gethashURL= "";
+      }
 
       log("Provider: " + provider + " updateURL=" + updateURL);
       log("Provider: " + provider + " gethashURL=" + gethashURL);

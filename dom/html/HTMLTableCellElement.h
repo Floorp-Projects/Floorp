@@ -151,7 +151,8 @@ public:
   // Get mapped attributes of ancestor table, if any
   nsMappedAttributes* GetMappedAttributesInheritedFromTable() const;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
 
 protected:
   virtual ~HTMLTableCellElement();

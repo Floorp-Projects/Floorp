@@ -757,7 +757,8 @@ var PlacesSearchBox = {
     if (this._folders.length == 0) {
       this._folders.push(PlacesUtils.bookmarksMenuFolderId,
                          PlacesUtils.unfiledBookmarksFolderId,
-                         PlacesUtils.toolbarFolderId);
+                         PlacesUtils.toolbarFolderId,
+                         PlacesUtils.mobileFolderId);
     }
     return this._folders;
   },
@@ -943,7 +944,8 @@ var PlacesQueryBuilder = {
         filterCollection = "bookmarks";
         folders.push(PlacesUtils.bookmarksMenuFolderId,
                      PlacesUtils.toolbarFolderId,
-                     PlacesUtils.unfiledBookmarksFolderId);
+                     PlacesUtils.unfiledBookmarksFolderId,
+                     PlacesUtils.mobileFolderId);
         break;
       case "downloads":
         filterCollection = "downloads";

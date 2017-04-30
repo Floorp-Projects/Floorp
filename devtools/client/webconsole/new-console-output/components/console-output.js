@@ -101,19 +101,14 @@ const ConsoleOutput = createClass({
           tableData: messagesTableData.get(message.id),
           autoscroll,
           indent: parentGroups.length,
+          timestampsVisible,
         })
       );
     });
 
-    let classList = ["webconsole-output"];
-
-    if (!timestampsVisible) {
-      classList.push("hideTimestamps");
-    }
-
     return (
       dom.div({
-        className: classList.join(" "),
+        className: "webconsole-output",
         onContextMenu: this.onContextMenu,
         ref: node => {
           this.outputNode = node;

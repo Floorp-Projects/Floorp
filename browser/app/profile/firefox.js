@@ -85,6 +85,9 @@ pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad");
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
+// Extensions that should not be flagged as legacy in about:addons
+pref("extensions.legacy.exceptions", "{972ce4c6-7e08-4474-a285-3208198ce6fd},testpilot@cliqz.com,@testpilot-containers,jid1-NeEaf3sAHdKHPA@jetpack,@activity-streams,pulse@mozilla.com,@testpilot-addon,@min-vid,tabcentertest1@mozilla.com,snoozetabs@mozilla.com,speaktome@mozilla.com,hoverpad@mozilla.com");
+
 // Require signed add-ons by default
 pref("xpinstall.signatures.required", true);
 pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
@@ -698,6 +701,8 @@ pref("browser.preferences.offlineGroup.enabled", false);
 #else
 pref("browser.preferences.offlineGroup.enabled", true);
 #endif
+
+pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
@@ -1455,6 +1460,8 @@ pref("browser.translation.engine", "bing");
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
 pref("toolkit.telemetry.archive.enabled", true);
+// Enables sending the shutdown ping when Firefox shuts down.
+pref("toolkit.telemetry.shutdownPingSender.enabled", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);

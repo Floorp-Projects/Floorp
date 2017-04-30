@@ -812,7 +812,8 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify) override;
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1011,7 +1012,7 @@ public:
     mLoadedAsInteractiveData = aLoadedAsInteractiveData;
   }
 
-  nsresult CloneDocHelper(nsDocument* clone) const;
+  nsresult CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const;
 
   void MaybeInitializeFinalizeFrameLoaders();
 

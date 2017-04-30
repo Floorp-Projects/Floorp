@@ -1616,6 +1616,19 @@ CSS_PROP_CONTENT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_SVG(
+    // Only intended to be used internally by Mozilla, so prefixed.
+    -moz-context-properties,
+    _moz_context_properties,
+    CSS_PROP_DOMPROP_PREFIXED(ContextProperties),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+        CSS_PROPERTY_INTERNAL,
+    "",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_TEXT(
     -moz-control-character-visibility,
     _moz_control_character_visibility,

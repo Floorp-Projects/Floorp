@@ -126,15 +126,15 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   }
 
   mSource.AsGeckoRuleNode()->SetUsedDirectly(); // before ApplyStyleFixups()!
-  FinishConstruction(aSkipParentDisplayBasedStyleFixup);
+  FinishConstruction();
+  ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
 }
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsPresContext* aPresContext,
                                nsIAtom* aPseudoTag,
                                CSSPseudoElementType aPseudoType,
-                               already_AddRefed<ServoComputedValues> aComputedValues,
-                               bool aSkipParentDisplayBasedStyleFixup)
+                               already_AddRefed<ServoComputedValues> aComputedValues)
   : nsStyleContext(aParent, OwningStyleContextSource(Move(aComputedValues)),
                    aPseudoTag, aPseudoType)
 {
@@ -142,11 +142,14 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mPresContext = aPresContext;
 #endif
 
-  FinishConstruction(aSkipParentDisplayBasedStyleFixup);
+  FinishConstruction();
+
+  // No need to call ApplyStyleFixups here, since fixups are handled by Servo when
+  // producing the ServoComputedValues.
 }
 
 void
-nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
+nsStyleContext::FinishConstruction()
 {
   // This check has to be done "backward", because if it were written the
   // more natural way it wouldn't fail even when it needed to.
@@ -169,13 +172,10 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
   }
 
   SetStyleBits();
-  if (!mSource.IsServoComputedValues()) {
-    ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
-  }
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
-  NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
-               "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
+  static_assert(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
+                "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
   #undef eStyleStruct_LastItem
 }
 
@@ -1394,13 +1394,12 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsPresContext* aPresContext,
                    nsIAtom* aPseudoTag,
                    CSSPseudoElementType aPseudoType,
-                   already_AddRefed<ServoComputedValues> aComputedValues,
-                   bool aSkipParentDisplayBasedStyleFixup)
+                   already_AddRefed<ServoComputedValues> aComputedValues)
 {
   RefPtr<nsStyleContext> context =
     new (aPresContext)
     nsStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
-                   Move(aComputedValues), aSkipParentDisplayBasedStyleFixup);
+                   Move(aComputedValues));
   return context.forget();
 }
 
