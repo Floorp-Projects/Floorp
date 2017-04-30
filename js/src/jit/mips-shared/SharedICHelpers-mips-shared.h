@@ -260,9 +260,9 @@ template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
 {
-    // On MIPS, $ra is clobbered by patchableCallPreBarrier. Save it first.
+    // On MIPS, $ra is clobbered by guardedCallPreBarrier. Save it first.
     masm.push(ra);
-    masm.patchableCallPreBarrier(addr, type);
+    masm.guardedCallPreBarrier(addr, type);
     masm.pop(ra);
 }
 

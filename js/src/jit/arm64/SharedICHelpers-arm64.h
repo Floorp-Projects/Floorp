@@ -238,9 +238,9 @@ template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
 {
-    // On AArch64, lr is clobbered by patchableCallPreBarrier. Save it first.
+    // On AArch64, lr is clobbered by guardedCallPreBarrier. Save it first.
     masm.push(lr);
-    masm.patchableCallPreBarrier(addr, type);
+    masm.guardedCallPreBarrier(addr, type);
     masm.pop(lr);
 }
 
