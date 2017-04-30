@@ -1605,6 +1605,10 @@ public:
                          nsStyleContext*     aStyleContext = nullptr,
                          DrawStringFlags     aFlags = DrawStringFlags::eDefault);
 
+  static nsPoint GetBackgroundFirstTilePos(const nsPoint& aDest,
+                                           const nsPoint& aFill,
+                                           const nsSize& aRepeatSize);
+
   /**
    * Supports only LTR or RTL. Bidi (mixed direction) is not supported.
    */
