@@ -52,7 +52,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   } else {
     // else we have an empty transaction and just use the
     // old commands.
-    WebRenderLayerManager* manager = static_cast<WebRenderLayerManager*>(Manager());
+    WebRenderLayerManager* manager = WrManager();
     MOZ_ASSERT(manager);
 
     // Since our recording relies on our parent layer's transform and stacking context

@@ -82,7 +82,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
-  Manager()->AddImageKeyForDiscard(key);
+  WrManager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, key);
 }
@@ -96,7 +96,7 @@ WebRenderCanvasLayer::AttachCompositable()
 CompositableForwarder*
 WebRenderCanvasLayer::GetForwarder()
 {
-  return Manager()->WrBridge();
+  return WrManager()->WrBridge();
 }
 
 } // namespace layers
