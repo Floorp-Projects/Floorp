@@ -587,7 +587,7 @@ option('--enable-stylo', env='STYLO_ENABLED', nargs=0,
 # configure options.  The Windows installer of LLVM/Clang doesn't provide
 # llvm-config, so we need both methods to support all of our tier-1
 # platforms.
-llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-3.9', 'llvm-config',),
+llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-3.9', 'llvm-config39', 'llvm-config',),
                          what='llvm-config', allow_missing=True)
 
 option('--disable-stylo-build-bindgen',
