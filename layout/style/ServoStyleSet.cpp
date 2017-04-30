@@ -1106,4 +1106,21 @@ ServoStyleSet::RemoveSheetOfType(SheetType aType,
   return 0;
 }
 
+void
+ServoStyleSet::RunPostTraversalTasks()
+{
+  MOZ_ASSERT(!IsInServoTraversal());
+
+  if (mPostTraversalTasks.IsEmpty()) {
+    return;
+  }
+
+  nsTArray<PostTraversalTask> tasks;
+  tasks.SwapElements(mPostTraversalTasks);
+
+  for (auto& task : tasks) {
+    task.Run();
+  }
+}
+
 ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;
