@@ -27,11 +27,6 @@ public:
 protected:
   virtual ~WebRenderImageLayer();
 
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
-
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;

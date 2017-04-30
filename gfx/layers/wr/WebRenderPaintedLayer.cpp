@@ -50,7 +50,7 @@ WebRenderPaintedLayer::SetupExternalImages()
 bool
 WebRenderPaintedLayer::UpdateImageClient()
 {
-  MOZ_ASSERT(Manager()->GetPaintedLayerCallback());
+  MOZ_ASSERT(WrManager()->GetPaintedLayerCallback());
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
   LayerIntSize size = bounds.Size();
@@ -70,10 +70,10 @@ WebRenderPaintedLayer::UpdateImageClient()
         gfxContext::CreatePreservingTransformOrNull(target);
     MOZ_ASSERT(ctx); // already checked the target above
 
-    Manager()->GetPaintedLayerCallback()(this,
-                                         ctx,
-                                         visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
-                                         DrawRegionClip::DRAW, nsIntRegion(), Manager()->GetPaintedLayerCallbackData());
+    WrManager()->GetPaintedLayerCallback()(this,
+                                           ctx,
+                                           visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
+                                           DrawRegionClip::DRAW, nsIntRegion(), WrManager()->GetPaintedLayerCallbackData());
 
     if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
       target->SetTransform(Matrix());
@@ -104,7 +104,7 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
 
   WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
-  Manager()->AddImageKeyForDiscard(key);
+  WrManager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, key);
 }
@@ -128,12 +128,12 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   // We have something to paint but can't. This usually happens only in
   // empty transactions
-  if (!regionToPaint.IsEmpty() && !Manager()->GetPaintedLayerCallback()) {
-    Manager()->SetTransactionIncomplete();
+  if (!regionToPaint.IsEmpty() && !WrManager()->GetPaintedLayerCallback()) {
+    WrManager()->SetTransactionIncomplete();
     return;
   }
 
-  if (!regionToPaint.IsEmpty() && Manager()->GetPaintedLayerCallback()) {
+  if (!regionToPaint.IsEmpty() && WrManager()->GetPaintedLayerCallback()) {
     if (!UpdateImageClient()) {
       return;
     }
