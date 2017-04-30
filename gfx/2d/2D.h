@@ -26,6 +26,7 @@
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoUtils.h"
 #include "mozilla/WeakPtr.h"
 
 #include "mozilla/DebugOnly.h"
@@ -61,6 +62,23 @@ struct CGContext;
 typedef struct CGContext *CGContextRef;
 
 namespace mozilla {
+
+namespace gfx {
+class UnscaledFont;
+}
+
+template<>
+struct WeakPtrTraits<gfx::UnscaledFont>
+{
+  static void AssertSafeToAccessFromNonOwningThread()
+  {
+    // We want to allow UnscaledFont objects that were created on the main
+    // thread to be accessed from other threads if the Servo font metrics
+    // mutex is locked, and for objects created on Servo style worker threads
+    // to be accessed later back on the main thread.
+    AssertIsMainThreadOrServoFontMetricsLocked();
+  }
+};
 
 namespace gfx {
 
