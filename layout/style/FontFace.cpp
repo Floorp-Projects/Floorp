@@ -137,6 +137,7 @@ LoadStateToStatus(gfxUserFontEntry::UserFontLoadState aLoadState)
   switch (aLoadState) {
     case gfxUserFontEntry::UserFontLoadState::STATUS_NOT_LOADED:
       return FontFaceLoadStatus::Unloaded;
+    case gfxUserFontEntry::UserFontLoadState::STATUS_LOAD_PENDING:
     case gfxUserFontEntry::UserFontLoadState::STATUS_LOADING:
       return FontFaceLoadStatus::Loading;
     case gfxUserFontEntry::UserFontLoadState::STATUS_LOADED:

@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSet.h"
+#include "gfxUserFontSet.h"
 
 namespace mozilla {
 
@@ -33,6 +34,10 @@ PostTraversalTask::Run()
     case Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay:
       static_cast<FontFaceSet*>(mTarget)->
         DispatchCheckLoadingFinishedAfterDelay();
+      break;
+
+    case Type::LoadFontEntry:
+      static_cast<gfxUserFontEntry*>(mTarget)->ContinueLoad();
       break;
   }
 }
