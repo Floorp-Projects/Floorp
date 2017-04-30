@@ -45,13 +45,6 @@ namespace layers {
 
 static bool CanUsePartialPresents(ID3D11Device* aDevice);
 
-// {1E4D7BEB-D8EC-4A0B-BF0A-63E6DE129425}
-static const GUID sDeviceAttachmentsD3D11 =
-{ 0x1e4d7beb, 0xd8ec, 0x4a0b, { 0xbf, 0xa, 0x63, 0xe6, 0xde, 0x12, 0x94, 0x25 } };
-// {88041664-C835-4AA8-ACB8-7EC832357ED8}
-static const GUID sLayerManagerCount =
-{ 0x88041664, 0xc835, 0x4aa8, { 0xac, 0xb8, 0x7e, 0xc8, 0x32, 0x35, 0x7e, 0xd8 } };
-
 const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 
 namespace TexSlot {
@@ -77,29 +70,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::Compos
 
 CompositorD3D11::~CompositorD3D11()
 {
-  if (mDevice) {
-    int referenceCount = 0;
-    UINT size = sizeof(referenceCount);
-    HRESULT hr = mDevice->GetPrivateData(sLayerManagerCount, &size, &referenceCount);
-    NS_ASSERTION(SUCCEEDED(hr), "Reference count not found on device.");
-    referenceCount--;
-    mDevice->SetPrivateData(sLayerManagerCount,
-                            sizeof(referenceCount),
-                            &referenceCount);
-
-    if (!referenceCount) {
-      DeviceAttachmentsD3D11 *attachments;
-      size = sizeof(attachments);
-      mDevice->GetPrivateData(sDeviceAttachmentsD3D11, &size, &attachments);
-      // No LayerManagers left for this device. Clear out interfaces stored
-      // which hold a reference to the device.
-      mDevice->SetPrivateData(sDeviceAttachmentsD3D11, 0, nullptr);
-
-      delete attachments;
-    }
-  }
 }
-
 
 template<typename VertexType>
 void
@@ -152,10 +123,17 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
 
   HRESULT hr;
 
-  mDevice = DeviceManagerDx::Get()->GetCompositorDevice();
+  DeviceManagerDx::Get()->GetCompositorDevices(&mDevice, &mAttachments);
   if (!mDevice) {
     gfxCriticalNote << "[D3D11] failed to get compositor device.";
     *out_failureReason = "FEATURE_FAILURE_D3D11_NO_DEVICE";
+    return false;
+  }
+  if (!mAttachments || !mAttachments->IsValid()) {
+    gfxCriticalNote << "[D3D11] failed to get compositor device attachments";
+    *out_failureReason = mAttachments
+                         ? mAttachments->GetFailureId()
+                         : NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_ATTACHMENTS");
     return false;
   }
 
@@ -172,29 +150,6 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
   mHwnd = mWidget->AsWindows()->GetHwnd();
 
   memset(&mVSConstants, 0, sizeof(VertexShaderConstants));
-
-  int referenceCount = 0;
-  UINT size = sizeof(referenceCount);
-  // If this isn't there yet it'll fail, count will remain 0, which is correct.
-  mDevice->GetPrivateData(sLayerManagerCount, &size, &referenceCount);
-  referenceCount++;
-  mDevice->SetPrivateData(sLayerManagerCount,
-                          sizeof(referenceCount),
-                          &referenceCount);
-
-  size = sizeof(DeviceAttachmentsD3D11*);
-  if (FAILED(mDevice->GetPrivateData(sDeviceAttachmentsD3D11,
-                                     &size,
-                                     &mAttachments))) {
-    mAttachments = new DeviceAttachmentsD3D11(mDevice);
-    mDevice->SetPrivateData(sDeviceAttachmentsD3D11,
-                            sizeof(mAttachments),
-                            &mAttachments);
-
-    if (!mAttachments->Initialize(out_failureReason)) {
-      return false;
-    }
-  }
 
   RefPtr<IDXGIDevice> dxgiDevice;
   RefPtr<IDXGIAdapter> dxgiAdapter;
