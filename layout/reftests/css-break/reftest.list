@@ -6,7 +6,7 @@ fuzzy(16,460) fuzzy-if(Android,10,3673) fuzzy-if(skiaContent,32,254) == box-deco
 random-if(!gtkWidget) HTTP(..) == box-decoration-break-border-image.html box-decoration-break-border-image-ref.html
 == box-decoration-break-block-border-padding.html box-decoration-break-block-border-padding-ref.html
 == box-decoration-break-block-margin.html box-decoration-break-block-margin-ref.html
-fuzzy-if(!Android,1,62) fuzzy-if(Android,8,6627) fails-if(stylo) == box-decoration-break-first-letter.html box-decoration-break-first-letter-ref.html #Bug 1313773
+fuzzy-if(!Android,1,62) fuzzy-if(Android,8,6627) == box-decoration-break-first-letter.html box-decoration-break-first-letter-ref.html #Bug 1313773
 == box-decoration-break-with-bidi.html box-decoration-break-with-bidi-ref.html
 == box-decoration-break-bug-1235152.html box-decoration-break-bug-1235152-ref.html
 == box-decoration-break-bug-1249913.html box-decoration-break-bug-1249913-ref.html

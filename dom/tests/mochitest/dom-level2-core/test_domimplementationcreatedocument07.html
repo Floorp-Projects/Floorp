@@ -106,7 +106,7 @@ function domimplementationcreatedocument07() {
             newDoc = domImpl.createDocument(namespaceURI,":",docType);
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 14);
+      success = ex.code === DOMException.INVALID_CHARACTER_ERR;
 		}
 		assertTrue("domimplementationcreatedocument07",success);
 	}
