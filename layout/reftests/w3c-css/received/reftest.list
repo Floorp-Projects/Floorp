@@ -756,10 +756,10 @@ fuzzy-if(OSX||winWidget,93,300) == css-writing-modes-3/float-vrl-006.xht css21/r
 fuzzy-if(OSX||winWidget,93,300) == css-writing-modes-3/float-vrl-008.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,93,300) == css-writing-modes-3/float-vrl-010.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,93,300) == css-writing-modes-3/float-vrl-012.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(stylo) != css-writing-modes-3/full-width-001.html css-writing-modes-3/reference/full-width-001-horizontal-notref.html
-fails-if(stylo) != css-writing-modes-3/full-width-001.html css-writing-modes-3/reference/full-width-001-nofullwidth-notref.html
-fails-if(stylo) != css-writing-modes-3/full-width-002.html css-writing-modes-3/reference/full-width-002-notcu-notref.html
-fails-if(stylo) != css-writing-modes-3/full-width-002.html css-writing-modes-3/reference/full-width-002-horizontal-notref.html
+!= css-writing-modes-3/full-width-001.html css-writing-modes-3/reference/full-width-001-horizontal-notref.html
+!= css-writing-modes-3/full-width-001.html css-writing-modes-3/reference/full-width-001-nofullwidth-notref.html
+!= css-writing-modes-3/full-width-002.html css-writing-modes-3/reference/full-width-002-notcu-notref.html
+!= css-writing-modes-3/full-width-002.html css-writing-modes-3/reference/full-width-002-horizontal-notref.html
 skip != css-writing-modes-3/full-width-003.html css-writing-modes-3/reference/full-width-002-notcu-notref.html
 skip != css-writing-modes-3/full-width-003.html css-writing-modes-3/reference/full-width-002-horizontal-notref.html
 fuzzy-if(OSX||winWidget,62,404) == css-writing-modes-3/height-width-inline-non-replaced-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
@@ -937,15 +937,15 @@ fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-002.xh
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-004.xht css-writing-modes-3/text-baseline-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-006.xht css-writing-modes-3/text-baseline-vrl-006-ref.xht
 fuzzy-if(OSX,15,16) == css-writing-modes-3/text-combine-upright-decorations-001.html css-writing-modes-3/reference/text-combine-upright-decorations-001.html
-fails-if(stylo) == css-writing-modes-3/text-combine-upright-inherit-all-001.html css-writing-modes-3/reference/text-combine-upright-inherit-all-001.html
-fails-if(stylo) == css-writing-modes-3/text-combine-upright-inherit-all-002.html css-writing-modes-3/reference/text-combine-upright-inherit-all-002.html
-fails-if(stylo) == css-writing-modes-3/text-combine-upright-layout-rules-001.html css-writing-modes-3/reference/text-combine-upright-layout-rules-001-ref.html
-fails-if(stylo) == css-writing-modes-3/text-combine-upright-line-breaking-rules-001.html css-writing-modes-3/text-combine-upright-line-breaking-rules-001-ref.html
-fuzzy(255,960) fails-if(stylo) == css-writing-modes-3/text-combine-upright-value-all-001.html css-writing-modes-3/reference/text-combine-upright-value-single-character.html
-fuzzy(255,960) fails-if(stylo) == css-writing-modes-3/text-combine-upright-value-all-002.html css-writing-modes-3/reference/vertical-ahem-1x1-ref.html
-fuzzy(255,960) fails-if(stylo) != css-writing-modes-3/text-combine-upright-value-all-002.html css-writing-modes-3/reference/horizontal-ahem-1x1-notref.html
-fuzzy(255,960) fails-if(stylo) == css-writing-modes-3/text-combine-upright-value-all-003.html css-writing-modes-3/reference/vertical-ahem-1x1-ref.html
-fuzzy(255,960) fails-if(stylo) != css-writing-modes-3/text-combine-upright-value-all-003.html css-writing-modes-3/reference/horizontal-ahem-1x1-notref.html
+== css-writing-modes-3/text-combine-upright-inherit-all-001.html css-writing-modes-3/reference/text-combine-upright-inherit-all-001.html
+== css-writing-modes-3/text-combine-upright-inherit-all-002.html css-writing-modes-3/reference/text-combine-upright-inherit-all-002.html
+== css-writing-modes-3/text-combine-upright-layout-rules-001.html css-writing-modes-3/reference/text-combine-upright-layout-rules-001-ref.html
+== css-writing-modes-3/text-combine-upright-line-breaking-rules-001.html css-writing-modes-3/text-combine-upright-line-breaking-rules-001-ref.html
+fuzzy(255,960) == css-writing-modes-3/text-combine-upright-value-all-001.html css-writing-modes-3/reference/text-combine-upright-value-single-character.html
+fuzzy(255,960) == css-writing-modes-3/text-combine-upright-value-all-002.html css-writing-modes-3/reference/vertical-ahem-1x1-ref.html
+fuzzy(255,960) != css-writing-modes-3/text-combine-upright-value-all-002.html css-writing-modes-3/reference/horizontal-ahem-1x1-notref.html
+fuzzy(255,960) == css-writing-modes-3/text-combine-upright-value-all-003.html css-writing-modes-3/reference/vertical-ahem-1x1-ref.html
+fuzzy(255,960) != css-writing-modes-3/text-combine-upright-value-all-003.html css-writing-modes-3/reference/horizontal-ahem-1x1-notref.html
 skip == css-writing-modes-3/text-combine-upright-value-digits2-001.html css-writing-modes-3/reference/text-combine-upright-value-single-character.html
 skip == css-writing-modes-3/text-combine-upright-value-digits2-002.html css-writing-modes-3/reference/vertical-ahem-1x1-ref.html
 skip != css-writing-modes-3/text-combine-upright-value-digits2-002.html css-writing-modes-3/reference/horizontal-ahem-1x1-notref.html

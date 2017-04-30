@@ -414,7 +414,8 @@ public:
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
 
-    virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+    virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                           bool aPreallocateChildren) const override;
     virtual mozilla::EventStates IntrinsicState() const override;
 
     nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);

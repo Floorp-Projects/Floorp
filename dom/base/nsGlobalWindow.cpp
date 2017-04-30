@@ -1116,7 +1116,7 @@ protected:
   static nsGlobalWindow* GetOuterWindow(JSObject *proxy)
   {
     nsGlobalWindow* outerWindow = nsGlobalWindow::FromSupports(
-      static_cast<nsISupports*>(js::GetProxyExtra(proxy, 0).toPrivate()));
+      static_cast<nsISupports*>(js::GetProxyReservedSlot(proxy, 0).toPrivate()));
     MOZ_ASSERT_IF(outerWindow, outerWindow->IsOuterWindow());
     return outerWindow;
   }
@@ -1143,9 +1143,12 @@ static const js::ClassExtension OuterWindowProxyClassExtension = PROXY_MAKE_EXT(
     nsOuterWindowProxy::ObjectMoved
 );
 
+// Give OuterWindowProxyClass 2 reserved slots, like the other wrappers, so
+// JSObject::swap can swap it with CrossCompartmentWrappers without requiring
+// malloc.
 const js::Class OuterWindowProxyClass = PROXY_CLASS_WITH_EXT(
     "Proxy",
-    0, /* additional class flags */
+    JSCLASS_HAS_RESERVED_SLOTS(2), /* additional class flags */
     &OuterWindowProxyClassExtension);
 
 const char *
@@ -1570,7 +1573,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsValidatingTabGroup(false),
 #endif
     mCanSkipCCGeneration(0),
-    mAutoActivateVRDisplayID(0)
+    mAutoActivateVRDisplayID(0),
+    mBeforeUnloadListenerCount(0)
 {
   AssertIsOnMainThread();
 
@@ -1605,6 +1609,13 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     // |this| is an outer window. Outer windows start out frozen and
     // remain frozen until they get an inner window.
     MOZ_ASSERT(IsFrozen());
+  }
+
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+    if (docShell) {
+      mTabChild = docShell->GetTabChild();
+    }
   }
 
   // We could have failed the first time through trying
@@ -1730,7 +1741,7 @@ nsGlobalWindow::~nsGlobalWindow()
   if (IsOuterWindow()) {
     JSObject *proxy = GetWrapperMaybeDead();
     if (proxy) {
-      js::SetProxyExtra(proxy, 0, js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(proxy, 0, js::PrivateValue(nullptr));
     }
 
     // An outer window is destroyed with inner windows still possibly
@@ -2122,6 +2133,12 @@ nsGlobalWindow::FreeInnerObjects()
   DisableVRUpdates();
   mHasVREvents = false;
   mVRDisplays.Clear();
+
+  if (mTabChild) {
+    while (mBeforeUnloadListenerCount-- > 0) {
+      mTabChild->BeforeUnloadRemoved();
+    }
+  }
 }
 
 //*****************************************************************************
@@ -2261,6 +2278,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWakeLock)
@@ -2344,6 +2362,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWakeLock)
@@ -3144,7 +3163,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
 
-      js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
+      js::SetProxyReservedSlot(outer, 0, js::PrivateValue(ToSupports(this)));
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outer);
@@ -3162,8 +3181,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
 
-      js::SetProxyExtra(obj, 0, js::PrivateValue(nullptr));
-      js::SetProxyExtra(outerObject, 0, js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(obj, 0, js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(outerObject, 0, js::PrivateValue(nullptr));
 
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
@@ -3171,7 +3190,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
 
-      js::SetProxyExtra(outerObject, 0, js::PrivateValue(ToSupports(this)));
+      js::SetProxyReservedSlot(outerObject, 0, js::PrivateValue(ToSupports(this)));
 
       SetWrapper(outerObject);
 
@@ -13411,11 +13430,33 @@ nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
     NotifyVREventListenerAdded();
   }
 
+  if (aType == nsGkAtoms::onbeforeunload &&
+      mTabChild &&
+      (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
+    MOZ_ASSERT(IsInnerWindow());
+    mBeforeUnloadListenerCount++;
+    MOZ_ASSERT(mBeforeUnloadListenerCount > 0);
+    mTabChild->BeforeUnloadAdded();
+  }
+
   // We need to initialize localStorage in order to receive notifications.
   if (aType == nsGkAtoms::onstorage) {
     ErrorResult rv;
     GetLocalStorage(rv);
     rv.SuppressException();
+  }
+}
+
+void
+nsGlobalWindow::EventListenerRemoved(nsIAtom* aType)
+{
+  if (aType == nsGkAtoms::onbeforeunload &&
+      mTabChild &&
+      (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
+    MOZ_ASSERT(IsInnerWindow());
+    mBeforeUnloadListenerCount--;
+    MOZ_ASSERT(mBeforeUnloadListenerCount >= 0);
+    mTabChild->BeforeUnloadRemoved();
   }
 }
 

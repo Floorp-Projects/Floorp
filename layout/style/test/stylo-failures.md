@@ -61,7 +61,7 @@ to mochitest command.
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
   * \@support bug 1355394
-    * test_supports_rules.html [1]
+    * test_supports_rules.html [6]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
@@ -69,7 +69,6 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
@@ -80,7 +79,6 @@ to mochitest command.
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [1]
   * test_bug829816.html [8]
-* test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
   * test_counter_style.html [5]
@@ -130,7 +128,7 @@ to mochitest command.
     * test_initial_storage.html `-moz-force-broken-image-icon` [4]
     * test_value_storage.html `-moz-force-broken-image-icon` [4]
   * -moz-transform: need different parsing rules servo/servo#16003
-    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [72]
+    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
@@ -261,7 +259,7 @@ to mochitest command.
   * test_rule_serialization.html [2]
   * test_moz_document_rules.html [13]
   * test_bug511909.html `@-moz-document` [4]
-  * test_condition_text.html: also \@supports [7]
+  * test_condition_text.html: also \@supports [11]
 * getComputedStyle style doesn't contain custom properties bug 1336891
   * test_variable_serialization_computed.html [35]
   * test_variables.html `custom property name` [2]

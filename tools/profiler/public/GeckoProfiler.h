@@ -301,7 +301,6 @@ PROFILER_FUNC_VOID(profiler_log(const char *str))
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"
-#include "PseudoStack.h"
 #include "nsIMemoryReporter.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
@@ -311,19 +310,7 @@ PROFILER_FUNC_VOID(profiler_log(const char *str))
 
 class nsISupports;
 class ProfilerMarkerPayload;
-
-// Each thread gets its own PseudoStack on thread creation. ThreadInfo has the
-// owning reference; tlsPseudoStack is a non-owning reference. On thread
-// destruction, tlsPseudoStack is cleared, and the ThreadInfo (along with its
-// PseudoStack) may or may not be destroyed.
-//
-// Non-owning PseudoStack references are also temporarily used by
-// profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are
-// balanced, and they occur on the thread itself, which means they are
-// necessarily bounded by the lifetime of the thread, which ensures they can't
-// be used after the PseudoStack is destroyed.
-//
-extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
+class PseudoStack;
 
 #ifndef SAMPLE_FUNCTION_NAME
 # if defined(__GNUC__) || defined(_MSC_VER)
@@ -335,37 +322,11 @@ extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack. Operates the same whether the profiler is active or not.
-static inline void*
-profiler_call_enter(const char* aInfo,
-                    js::ProfileEntry::Category aCategory,
-                    void *aFrameAddress, bool aCopy, uint32_t line,
-                    const char* aDynamicString = nullptr)
-{
-  // This function runs both on and off the main thread.
-
-  PseudoStack* stack = tlsPseudoStack.get();
-  if (!stack) {
-    return stack;
-  }
-  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line, aDynamicString);
-
-  // The handle is meant to support future changes but for now it is simply
-  // used to avoid having to call tlsPseudoStack.get() in profiler_call_exit().
-  return stack;
-}
-
-static inline void
-profiler_call_exit(void* aHandle)
-{
-  // This function runs both on and off the main thread.
-
-  if (!aHandle) {
-    return;
-  }
-
-  PseudoStack *stack = (PseudoStack*)aHandle;
-  stack->pop();
-}
+void* profiler_call_enter(const char* aInfo,
+                          js::ProfileEntry::Category aCategory,
+                          void* aFrameAddress, bool aCopy, uint32_t aLine,
+                          const char* aDynamicString = nullptr);
+void profiler_call_exit(void* aHandle);
 
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.
@@ -477,13 +438,7 @@ private:
 
 } // namespace mozilla
 
-inline PseudoStack*
-profiler_get_pseudo_stack(void)
-{
-  // This function runs both on and off the main thread.
-
-  return tlsPseudoStack.get();
-}
+PseudoStack* profiler_get_pseudo_stack();
 
 void profiler_set_js_context(JSContext* aCx);
 void profiler_clear_js_context();

@@ -251,7 +251,8 @@ Attr::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
 }
 
 nsresult
-Attr::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+Attr::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+            bool aPreallocateChildren) const
 {
   nsAutoString value;
   const_cast<Attr*>(this)->GetValue(value);

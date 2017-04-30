@@ -647,6 +647,12 @@ nsListBoxBodyFrame::GetRowCount()
 }
 
 int32_t
+nsListBoxBodyFrame::GetRowHeightPixels() const
+{
+  return nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
+}
+
+int32_t
 nsListBoxBodyFrame::GetFixedRowSize()
 {
   nsresult dummy;

@@ -496,18 +496,4 @@ interface nsITelemetry : nsISupports
    * Resets all the stored events. This is intended to be only used in tests.
    */
   void clearEvents();
-
-  /**
-   * Send a ping using the ping sender.
-   * This method will not wait for the ping to be sent, instead it will return
-   * as soon as the contents of the ping have been handed over to the ping
-   * sender.
-   *
-   * @param {String} aUrl The telemetry server URL
-   * @param {String} aPingFilePath The path to the file holding the ping
-   *        contents, if if sent successfully the pingsender will delete it.
-   *
-   * @throws NS_ERROR_FAILURE if we couldn't find or run the pingsender executable.
-   */
-  void runPingSender(in ACString aUrl, in ACString aPingFilePath);
 };

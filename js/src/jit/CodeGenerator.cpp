@@ -1331,9 +1331,9 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     Address lazySourceAddress(temp1, RegExpStatics::offsetOfLazySource());
     Address lazyIndexAddress(temp1, RegExpStatics::offsetOfLazyIndex());
 
-    masm.patchableCallPreBarrier(pendingInputAddress, MIRType::String);
-    masm.patchableCallPreBarrier(matchesInputAddress, MIRType::String);
-    masm.patchableCallPreBarrier(lazySourceAddress, MIRType::String);
+    masm.guardedCallPreBarrier(pendingInputAddress, MIRType::String);
+    masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);
+    masm.guardedCallPreBarrier(lazySourceAddress, MIRType::String);
 
     masm.storePtr(input, pendingInputAddress);
     masm.storePtr(input, matchesInputAddress);
@@ -1817,9 +1817,6 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     vtune::MarkStub(code, "RegExpMatcherStub");
 #endif
 
-    if (cx->zone()->needsIncrementalBarrier())
-        code->togglePreBarriers(true, DontReprotect);
-
     return code;
 }
 
@@ -1977,9 +1974,6 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     vtune::MarkStub(code, "RegExpSearcherStub");
 #endif
 
-    if (cx->zone()->needsIncrementalBarrier())
-        code->togglePreBarriers(true, DontReprotect);
-
     return code;
 }
 
@@ -2127,9 +2121,6 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
 #ifdef MOZ_VTUNE
     vtune::MarkStub(code, "RegExpTesterStub");
 #endif
-
-    if (cx->zone()->needsIncrementalBarrier())
-        code->togglePreBarriers(true, DontReprotect);
 
     return code;
 }
@@ -3260,9 +3251,9 @@ static void
 EmitUnboxedPreBarrier(MacroAssembler &masm, T address, JSValueType type)
 {
     if (type == JSVAL_TYPE_OBJECT)
-        masm.patchableCallPreBarrier(address, MIRType::Object);
+        masm.guardedCallPreBarrier(address, MIRType::Object);
     else if (type == JSVAL_TYPE_STRING)
-        masm.patchableCallPreBarrier(address, MIRType::String);
+        masm.guardedCallPreBarrier(address, MIRType::String);
     else
         MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(type));
 }
@@ -6561,8 +6552,8 @@ CodeGenerator::emitLoadIteratorValues<ValueMap>(Register result, Register temp, 
     Address valueAddress(front, ValueMap::Entry::offsetOfValue());
     Address keyElemAddress(result, elementsOffset);
     Address valueElemAddress(result, elementsOffset + sizeof(Value));
-    masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
-    masm.patchableCallPreBarrier(valueElemAddress, MIRType::Value);
+    masm.guardedCallPreBarrier(keyElemAddress, MIRType::Value);
+    masm.guardedCallPreBarrier(valueElemAddress, MIRType::Value);
     masm.storeValue(keyAddress, keyElemAddress, temp);
     masm.storeValue(valueAddress, valueElemAddress, temp);
 
@@ -6590,7 +6581,7 @@ CodeGenerator::emitLoadIteratorValues<ValueSet>(Register result, Register temp, 
 
     Address keyAddress(front, ValueSet::offsetOfEntryKey());
     Address keyElemAddress(result, elementsOffset);
-    masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
+    masm.guardedCallPreBarrier(keyElemAddress, MIRType::Value);
     masm.storeValue(keyAddress, keyElemAddress, temp);
 
     Label keyIsNotObject;
@@ -8780,7 +8771,7 @@ StoreUnboxedPointer(MacroAssembler& masm, T address, MIRType type, const LAlloca
                     bool preBarrier)
 {
     if (preBarrier)
-        masm.patchableCallPreBarrier(address, type);
+        masm.guardedCallPreBarrier(address, type);
     if (value->isConstant()) {
         Value v = value->toConstant()->toJSValue();
         if (v.isGCThing()) {
@@ -9236,8 +9227,15 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
 
-    // Write barrier for stores to the iterator. The iterator JSObject is never
-    // nursery allocated. Put this in the whole cell buffer when writing a
+    // Pre-write barrier for store to 'obj'.
+    masm.guardedCallPreBarrier(Address(niTemp, offsetof(NativeIterator, obj)), MIRType::Object);
+
+    // Mark iterator as active.
+    masm.storePtr(obj, Address(niTemp, offsetof(NativeIterator, obj)));
+    masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
+
+    // Post-write barrier for stores to 'obj'. The iterator JSObject is never
+    // nursery allocated. Put this in the whole cell buffer is we wrote a
     // nursery pointer into it.
     {
         Label skipBarrier;
@@ -9251,10 +9249,6 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
         restoreVolatile(temps);
         masm.bind(&skipBarrier);
     }
-
-    // Mark iterator as active.
-    masm.storePtr(obj, Address(niTemp, offsetof(NativeIterator, obj)));
-    masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
     masm.loadPtr(AbsoluteAddress(gen->compartment->addressOfEnumerators()), temp1);
@@ -10033,12 +10027,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     }
     if (patchableBackedges_.length() > 0)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin(), masm);
-
-    // The correct state for prebarriers is unknown until the end of compilation,
-    // since a GC can occur during code generation. All barriers are emitted
-    // off-by-default, and are toggled on here if necessary.
-    if (cx->zone()->needsIncrementalBarrier())
-        ionScript->toggleBarriers(true, DontReprotect);
 
     // Attach any generated script counts to the script.
     if (IonScriptCounts* counts = extractScriptCounts())

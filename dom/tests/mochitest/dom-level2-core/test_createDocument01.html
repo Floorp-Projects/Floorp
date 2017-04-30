@@ -114,9 +114,9 @@ function createDocument01() {
             aNewDoc = domImpl.createDocument(namespaceURI,malformedName,docType);
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 14);
+      success = ex.code === DOMException.INVALID_CHARACTER_ERR;
 		}
-		assertTrue("throw_NAMESPACE_ERR",success);
+		assertTrue("throw INVALID_CHARACTER_ERR",success);
 	}
 
 }

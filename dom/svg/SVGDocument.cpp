@@ -51,13 +51,14 @@ SVGDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify)
 }
 
 nsresult
-SVGDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+SVGDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                   bool aPreallocateChildren) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
   RefPtr<SVGDocument> clone = new SVGDocument();
-  nsresult rv = CloneDocHelper(clone.get());
+  nsresult rv = CloneDocHelper(clone.get(), aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(clone.get(), aResult);

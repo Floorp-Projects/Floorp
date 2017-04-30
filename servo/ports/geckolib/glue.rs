@@ -36,6 +36,7 @@ use style::gecko_bindings::bindings::{RawServoPageRule, RawServoPageRuleBorrowed
 use style::gecko_bindings::bindings::{RawServoStyleSetBorrowed, RawServoStyleSetOwned};
 use style::gecko_bindings::bindings::{RawServoStyleSheetBorrowed, ServoComputedValuesBorrowed};
 use style::gecko_bindings::bindings::{RawServoStyleSheetStrong, ServoComputedValuesStrong};
+use style::gecko_bindings::bindings::{RawServoSupportsRule, RawServoSupportsRuleBorrowed};
 use style::gecko_bindings::bindings::{ServoCssRulesBorrowed, ServoCssRulesStrong};
 use style::gecko_bindings::bindings::{nsACString, nsAString};
 use style::gecko_bindings::bindings::Gecko_AnimationAppendKeyframe;
@@ -82,9 +83,10 @@ use style::selector_parser::PseudoElementCascadeType;
 use style::sequential;
 use style::shared_lock::{SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard, Locked};
 use style::string_cache::Atom;
+use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers};
 use style::stylesheets::{ImportRule, MediaRule, NamespaceRule, Origin};
-use style::stylesheets::{PageRule, Stylesheet, StyleRule};
+use style::stylesheets::{PageRule, Stylesheet, StyleRule, SupportsRule};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::supports::parse_condition_or_declaration;
 use style::thread_state;
@@ -466,7 +468,7 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(raw_data: RawSe
     };
 
     let provider = get_metrics_provider_for_product();
-    element.get_base_style(shared_context, &provider, &styles.primary, pseudo.as_ref(), pseudo_style)
+    element.get_base_style(shared_context, &provider, &styles.primary, pseudo_style)
            .into_strong()
 }
 
@@ -780,13 +782,30 @@ macro_rules! impl_basic_rule_funcs {
     }
 }
 
+macro_rules! impl_group_rule_funcs {
+    { ($name:ident, $rule_type:ty, $raw_type:ty),
+      get_rules: $get_rules:ident,
+      $($basic:tt)+
+    } => {
+        impl_basic_rule_funcs! { ($name, $rule_type, $raw_type), $($basic)+ }
+
+        #[no_mangle]
+        pub extern "C" fn $get_rules(rule: &$raw_type) -> ServoCssRulesStrong {
+            read_locked_arc(rule, |rule: &$rule_type| {
+                rule.rules.clone().into_strong()
+            })
+        }
+    }
+}
+
 impl_basic_rule_funcs! { (Style, StyleRule, RawServoStyleRule),
     getter: Servo_CssRules_GetStyleRuleAt,
     debug: Servo_StyleRule_Debug,
     to_css: Servo_StyleRule_GetCssText,
 }
 
-impl_basic_rule_funcs! { (Media, MediaRule, RawServoMediaRule),
+impl_group_rule_funcs! { (Media, MediaRule, RawServoMediaRule),
+    get_rules: Servo_MediaRule_GetRules,
     getter: Servo_CssRules_GetMediaRuleAt,
     debug: Servo_MediaRule_Debug,
     to_css: Servo_MediaRule_GetCssText,
@@ -802,6 +821,13 @@ impl_basic_rule_funcs! { (Page, PageRule, RawServoPageRule),
     getter: Servo_CssRules_GetPageRuleAt,
     debug: Servo_PageRule_Debug,
     to_css: Servo_PageRule_GetCssText,
+}
+
+impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
+    get_rules: Servo_SupportsRule_GetRules,
+    getter: Servo_CssRules_GetSupportsRuleAt,
+    debug: Servo_SupportsRule_Debug,
+    to_css: Servo_SupportsRule_GetCssText,
 }
 
 #[no_mangle]
@@ -848,13 +874,6 @@ pub extern "C" fn Servo_MediaRule_GetMedia(rule: RawServoMediaRuleBorrowed) -> R
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_MediaRule_GetRules(rule: RawServoMediaRuleBorrowed) -> ServoCssRulesStrong {
-    read_locked_arc(rule, |rule: &MediaRule| {
-        rule.rules.clone().into_strong()
-    })
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: RawServoNamespaceRuleBorrowed) -> *mut nsIAtom {
     read_locked_arc(rule, |rule: &NamespaceRule| {
         rule.prefix.as_ref().unwrap_or(&atom!("")).as_ptr()
@@ -879,6 +898,14 @@ pub extern "C" fn Servo_PageRule_SetStyle(rule: RawServoPageRuleBorrowed,
     let declarations = Locked::<PropertyDeclarationBlock>::as_arc(&declarations);
     write_locked_arc(rule, |rule: &mut PageRule| {
         rule.0 = declarations.clone();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_SupportsRule_GetConditionText(rule: RawServoSupportsRuleBorrowed,
+                                                      result: *mut nsAString) {
+    read_locked_arc(rule, |rule: &SupportsRule| {
+        rule.condition.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
     })
 }
 
@@ -966,15 +993,28 @@ fn get_pseudo_style(guard: &SharedRwLockReadGuard,
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_Inherit(
   raw_data: RawServoStyleSetBorrowed,
-  parent_style: ServoComputedValuesBorrowedOrNull)
+  parent_style: ServoComputedValuesBorrowedOrNull,
+  target: structs::InheritTarget)
      -> ServoComputedValuesStrong {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     let maybe_arc = ComputedValues::arc_from_borrowed(&parent_style);
+
+    let for_text = target == structs::InheritTarget::Text;
     let style = if let Some(reference) = maybe_arc.as_ref() {
-        ComputedValues::inherit_from(reference, &data.default_computed_values())
+        let mut style =
+            ComputedValues::inherit_from(reference,
+                                         &data.default_computed_values());
+        if for_text {
+            StyleAdjuster::new(&mut style, /* is_root = */ false)
+                .adjust_for_text();
+        }
+
+        Arc::new(style)
     } else {
+        debug_assert!(!for_text);
         data.default_computed_values().clone()
     };
+
     style.into_strong()
 }
 
@@ -1011,8 +1051,11 @@ pub extern "C" fn Servo_ParseProperty(property: nsCSSPropertyID, value: *const n
 
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let reporter = RustLogReporter;
-    let context = ParserContext::new(Origin::Author, url_data, &reporter,
-                                     Some(CssRuleType::Style), LengthParsingMode::Default,
+    let context = ParserContext::new(Origin::Author,
+                                     url_data,
+                                     &reporter,
+                                     Some(CssRuleType::Style),
+                                     LengthParsingMode::Default,
                                      QuirksMode::NoQuirks);
 
     match ParsedDeclaration::parse(id, &context, &mut Parser::new(value)) {
@@ -1035,8 +1078,11 @@ pub extern "C" fn Servo_ParseEasing(easing: *const nsAString,
 
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let reporter = RustLogReporter;
-    let context = ParserContext::new(Origin::Author, url_data, &reporter,
-                                     Some(CssRuleType::Style), LengthParsingMode::Default,
+    let context = ParserContext::new(Origin::Author,
+                                     url_data,
+                                     &reporter,
+                                     Some(CssRuleType::Style),
+                                     LengthParsingMode::Default,
                                      QuirksMode::NoQuirks);
     let easing = unsafe { (*easing).to_string() };
     match transition_timing_function::single_value::parse(&context, &mut Parser::new(&easing)) {

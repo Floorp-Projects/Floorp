@@ -98,10 +98,16 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
                      RawServo##type_##RuleBorrowed rule, nsACString* result) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetCssText, void, \
                      RawServo##type_##RuleBorrowed rule, nsAString* result)
+#define GROUP_RULE_FUNCS(type_) \
+  BASIC_RULE_FUNCS(type_) \
+  SERVO_BINDING_FUNC(Servo_##type_##Rule_GetRules, ServoCssRulesStrong, \
+                     RawServo##type_##RuleBorrowed rule)
 BASIC_RULE_FUNCS(Style)
-BASIC_RULE_FUNCS(Media)
+GROUP_RULE_FUNCS(Media)
 BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
+GROUP_RULE_FUNCS(Supports)
+#undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
 SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
                    ServoCssRulesBorrowed rules, uint32_t index)
@@ -114,8 +120,6 @@ SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_MediaRule_GetMedia, RawServoMediaListStrong,
                    RawServoMediaRuleBorrowed rule)
-SERVO_BINDING_FUNC(Servo_MediaRule_GetRules, ServoCssRulesStrong,
-                   RawServoMediaRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_NamespaceRule_GetPrefix, nsIAtom*,
                    RawServoNamespaceRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_NamespaceRule_GetURI, nsIAtom*,
@@ -125,6 +129,8 @@ SERVO_BINDING_FUNC(Servo_PageRule_GetStyle, RawServoDeclarationBlockStrong,
 SERVO_BINDING_FUNC(Servo_PageRule_SetStyle, void,
                    RawServoPageRuleBorrowed rule,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
+                   RawServoSupportsRuleBorrowed rule, nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
@@ -332,7 +338,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
-                   ServoComputedValuesBorrowedOrNull parent_style)
+                   ServoComputedValuesBorrowedOrNull parent_style,
+                   mozilla::InheritTarget target)
 
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,

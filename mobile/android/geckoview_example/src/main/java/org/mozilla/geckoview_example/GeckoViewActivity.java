@@ -13,10 +13,12 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoViewSettings;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String DEFAULT_URL = "https://mozilla.org";
+    private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
 
     /* package */ static final int REQUEST_FILE_PICKER = 1;
 
@@ -52,6 +54,10 @@ public class GeckoViewActivity extends Activity {
     }
 
     private void loadFromIntent(final Intent intent) {
+        mGeckoView.getSettings().setBoolean(
+            GeckoViewSettings.USE_MULTIPROCESS,
+            intent.getBooleanExtra(USE_MULTIPROCESS_EXTRA, true));
+
         final Uri uri = intent.getData();
         mGeckoView.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
     }
