@@ -96,7 +96,10 @@ function timingBoxes(item) {
     tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip.total", totalTime));
   }
 
-  return { boxes, tooltip: tooltip.join(", ") };
+  return {
+    boxes,
+    tooltip: tooltip.join(L10N.getStr("netmonitor.waterfall.tooltip.separator"))
+  };
 }
 
 module.exports = RequestListColumnWaterfall;
