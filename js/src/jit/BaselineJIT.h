@@ -375,10 +375,6 @@ struct BaselineScript
         templateEnv_ = templateEnv;
     }
 
-    void toggleBarriers(bool enabled, ReprotectCode reprotect = Reprotect) {
-        method()->togglePreBarriers(enabled, reprotect);
-    }
-
     bool containsCodeAddress(uint8_t* addr) const {
         return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
     }

@@ -267,7 +267,6 @@ class AssemblerX86Shared : public AssemblerShared
     Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
-    CompactBufferWriter preBarriers_;
 
     void writeDataRelocation(ImmGCPtr ptr) {
         if (ptr.value) {
@@ -275,9 +274,6 @@ class AssemblerX86Shared : public AssemblerShared
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(masm.currentOffset());
         }
-    }
-    void writePrebarrierOffset(CodeOffset label) {
-        preBarriers_.writeUnsigned(label.offset());
     }
 
   protected:
@@ -405,8 +401,7 @@ class AssemblerX86Shared : public AssemblerShared
         return AssemblerShared::oom() ||
                masm.oom() ||
                jumpRelocations_.oom() ||
-               dataRelocations_.oom() ||
-               preBarriers_.oom();
+               dataRelocations_.oom();
     }
 
     void disableProtection() { masm.disableProtection(); }
@@ -439,7 +434,6 @@ class AssemblerX86Shared : public AssemblerShared
     void processCodeLabels(uint8_t* rawCode);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
-    void copyPreBarrierTable(uint8_t* dest);
 
     // Size of the instruction stream, in bytes.
     size_t size() const {
@@ -452,15 +446,11 @@ class AssemblerX86Shared : public AssemblerShared
     size_t dataRelocationTableBytes() const {
         return dataRelocations_.length();
     }
-    size_t preBarrierTableBytes() const {
-        return preBarriers_.length();
-    }
     // Size of the data table, in bytes.
     size_t bytesNeeded() const {
         return size() +
                jumpRelocationTableBytes() +
-               dataRelocationTableBytes() +
-               preBarrierTableBytes();
+               dataRelocationTableBytes();
     }
 
   public:

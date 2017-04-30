@@ -113,13 +113,13 @@ struct Zone
   protected:
     JSRuntime* const runtime_;
     JSTracer* const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
-    bool needsIncrementalBarrier_;
+    uint32_t needsIncrementalBarrier_;
     GCState gcState_;
 
     Zone(JSRuntime* runtime, JSTracer* barrierTracerArg)
       : runtime_(runtime),
         barrierTracer_(barrierTracerArg),
-        needsIncrementalBarrier_(false),
+        needsIncrementalBarrier_(0),
         gcState_(NoGC)
     {}
 

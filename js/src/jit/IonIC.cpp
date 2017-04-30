@@ -106,19 +106,6 @@ IonIC::trace(JSTracer* trc)
     MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
 }
 
-void
-IonIC::togglePreBarriers(bool enabled, ReprotectCode reprotect)
-{
-    uint8_t* nextCodeRaw = codeRaw_;
-    for (IonICStub* stub = firstStub_; stub; stub = stub->next()) {
-        JitCode* code = JitCode::FromExecutable(nextCodeRaw);
-        code->togglePreBarriers(enabled, reprotect);
-        nextCodeRaw = stub->nextCodeRaw();
-    }
-
-    MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
-}
-
 /* static */ bool
 IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonGetPropertyIC* ic,
 			 HandleValue val, HandleValue idVal, MutableHandleValue res)

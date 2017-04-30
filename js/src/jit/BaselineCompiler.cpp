@@ -240,10 +240,6 @@ BaselineCompiler::compile()
     // Adopt fallback stubs from the compiler into the baseline script.
     baselineScript->adoptFallbackStubs(&stubSpace_);
 
-    // All barriers are emitted off-by-default, toggle them on if needed.
-    if (cx->zone()->needsIncrementalBarrier())
-        baselineScript->toggleBarriers(true, DontReprotect);
-
     // If profiler instrumentation is enabled, toggle instrumentation on.
     if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
         baselineScript->toggleProfilerInstrumentation(true);
@@ -2652,7 +2648,7 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
 
     getEnvironmentCoordinateObject(objReg);
     Address address = getEnvironmentCoordinateAddressFromObject(objReg, R1.scratchReg());
-    masm.patchableCallPreBarrier(address, MIRType::Value);
+    masm.guardedCallPreBarrier(address, MIRType::Value);
     masm.storeValue(R0, address);
     frame.push(R0);
 
@@ -3072,7 +3068,7 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
         masm.loadValue(argAddr, R0);
         frame.push(R0);
     } else {
-        masm.patchableCallPreBarrier(argAddr, MIRType::Value);
+        masm.guardedCallPreBarrier(argAddr, MIRType::Value);
         masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
         masm.storeValue(R0, argAddr);
 
@@ -4283,7 +4279,7 @@ BaselineCompiler::emit_JSOP_INITIALYIELD()
     Register envObj = R0.scratchReg();
     Address envChainSlot(genObj, GeneratorObject::offsetOfEnvironmentChainSlot());
     masm.loadPtr(frame.addressOfEnvironmentChain(), envObj);
-    masm.patchableCallPreBarrier(envChainSlot, MIRType::Value);
+    masm.guardedCallPreBarrier(envChainSlot, MIRType::Value);
     masm.storeValue(JSVAL_TYPE_OBJECT, envObj, envChainSlot);
 
     Register temp = R1.scratchReg();
@@ -4329,7 +4325,7 @@ BaselineCompiler::emit_JSOP_YIELD()
         Register envObj = R0.scratchReg();
         Address envChainSlot(genObj, GeneratorObject::offsetOfEnvironmentChainSlot());
         masm.loadPtr(frame.addressOfEnvironmentChain(), envObj);
-        masm.patchableCallPreBarrier(envChainSlot, MIRType::Value);
+        masm.guardedCallPreBarrier(envChainSlot, MIRType::Value);
         masm.storeValue(JSVAL_TYPE_OBJECT, envObj, envChainSlot);
 
         Register temp = R1.scratchReg();
@@ -4572,7 +4568,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         }
         masm.bind(&loopDone);
 
-        masm.patchableCallPreBarrier(exprStackSlot, MIRType::Value);
+        masm.guardedCallPreBarrier(exprStackSlot, MIRType::Value);
         masm.storeValue(NullValue(), exprStackSlot);
         regs.add(initLength);
     }
