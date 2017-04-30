@@ -15,6 +15,7 @@
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "nsIGfxInfo.h"
 #include <d3d11.h>
 #include <ddraw.h>
@@ -602,6 +603,7 @@ DeviceManagerDx::ResetDevices()
   MutexAutoLock lock(mDeviceLock);
 
   mAdapter = nullptr;
+  mCompositorAttachments = nullptr;
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
   mDeviceStatus = Nothing();
@@ -898,6 +900,42 @@ IDirectDraw7*
 DeviceManagerDx::GetDirectDraw()
 {
   return mDirectDraw;
+}
+
+void
+DeviceManagerDx::GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
+                                      RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments)
+{
+  RefPtr<ID3D11Device> device;
+  {
+    MutexAutoLock lock(mDeviceLock);
+    if (!mCompositorDevice) {
+      return;
+    }
+    if (mCompositorAttachments) {
+      *aOutDevice = mCompositorDevice;
+      *aOutAttachments = mCompositorAttachments;
+      return;
+    }
+
+    // Otherwise, we'll try to create attachments outside the lock.
+    device = mCompositorDevice;
+  }
+
+  // We save the attachments object even if it fails to initialize, so the
+  // compositor can grab the failure ID.
+  RefPtr<layers::DeviceAttachmentsD3D11> attachments =
+    layers::DeviceAttachmentsD3D11::Create(device);
+  {
+    MutexAutoLock lock(mDeviceLock);
+    if (device != mCompositorDevice) {
+      return;
+    }
+    mCompositorAttachments = attachments;
+  }
+
+  *aOutDevice = device;
+  *aOutAttachments = attachments;
 }
 
 } // namespace gfx

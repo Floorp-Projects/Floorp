@@ -35,6 +35,9 @@ struct IDirectDraw7;
 
 namespace mozilla {
 class ScopedGfxFeatureReporter;
+namespace layers {
+class DeviceAttachmentsD3D11;
+} // namespace layers
 
 namespace gfx {
 class FeatureState;
@@ -69,6 +72,9 @@ public:
 
   bool CreateCompositorDevices();
   void CreateContentDevices();
+
+  void GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
+                            RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);
 
   void ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus);
   void ExportDeviceInfo(D3D11DeviceStatus* aOut);
@@ -138,6 +144,7 @@ private:
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
+  RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
   bool mCompositorDeviceSupportsVideo;
 
   Maybe<D3D11DeviceStatus> mDeviceStatus;

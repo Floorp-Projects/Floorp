@@ -6,7 +6,6 @@
 #include "DeviceAttachmentsD3D11.h"
 #include "CompositorD3D11Shaders.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/Compositor.h"
 #include "gfxPrefs.h"
 #include "ShaderDefinitionsD3D11.h"
@@ -22,12 +21,27 @@ DeviceAttachmentsD3D11::DeviceAttachmentsD3D11(ID3D11Device* device)
  : mSyncHandle(0),
    mMaximumTriangles(kInitialMaximumTriangles),
    mDevice(device),
-   mInitOkay(true)
+   mContinueInit(true),
+   mInitialized(false)
 {
 }
 
+DeviceAttachmentsD3D11::~DeviceAttachmentsD3D11()
+{
+}
+
+/* static */ RefPtr<DeviceAttachmentsD3D11>
+DeviceAttachmentsD3D11::Create(ID3D11Device* aDevice)
+{
+  // We don't return null even if the attachments object even if it fails to
+  // initialize, so the compositor can grab the failure ID.
+  RefPtr<DeviceAttachmentsD3D11> attachments = new DeviceAttachmentsD3D11(aDevice);
+  attachments->Initialize();
+  return attachments.forget();
+}
+
 bool
-DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
+DeviceAttachmentsD3D11::Initialize()
 {
   D3D11_INPUT_ELEMENT_DESC layout[] =
   {
@@ -42,7 +56,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
                                   getter_AddRefs(mInputLayout));
 
   if (Failed(hr, "CreateInputLayout")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
     return false;
   }
 
@@ -53,7 +67,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
 
   hr = mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mVertexBuffer));
   if (Failed(hr, "create vertex buffer")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
     return false;
   }
 
@@ -71,7 +85,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
                                   getter_AddRefs(mDynamicInputLayout));
 
   if (Failed(hr, "CreateInputLayout")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
     return false;
   }
 
@@ -83,12 +97,12 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
 
   hr = mDevice->CreateBuffer(&bufferDesc, nullptr, getter_AddRefs(mDynamicVertexBuffer));
   if (Failed(hr, "create dynamic vertex buffer")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
     return false;
   }
 
   if (!CreateShaders()) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_CREATE_SHADERS";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_CREATE_SHADERS";
     return false;
   }
 
@@ -99,14 +113,14 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
 
   hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mVSConstantBuffer));
   if (Failed(hr, "create vs buffer")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_VS_BUFFER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_VS_BUFFER";
     return false;
   }
 
   cBufferDesc.ByteWidth = sizeof(PixelShaderConstants);
   hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mPSConstantBuffer));
   if (Failed(hr, "create ps buffer")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_PS_BUFFER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_PS_BUFFER";
     return false;
   }
 
@@ -116,21 +130,21 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
 
   hr = mDevice->CreateRasterizerState(&rastDesc, getter_AddRefs(mRasterizerState));
   if (Failed(hr, "create rasterizer")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_RASTERIZER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_RASTERIZER";
     return false;
   }
 
   CD3D11_SAMPLER_DESC samplerDesc(D3D11_DEFAULT);
   hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mLinearSamplerState));
   if (Failed(hr, "create linear sampler")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_LINEAR_SAMPLER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_LINEAR_SAMPLER";
     return false;
   }
 
   samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
   hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mPointSamplerState));
   if (Failed(hr, "create point sampler")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_POINT_SAMPLER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_POINT_SAMPLER";
     return false;
   }
 
@@ -144,7 +158,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
   blendDesc.RenderTarget[0] = rtBlendPremul;
   hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mPremulBlendState));
   if (Failed(hr, "create pm blender")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_PM_BLENDER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_PM_BLENDER";
     return false;
   }
 
@@ -157,7 +171,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
   blendDesc.RenderTarget[0] = rtBlendNonPremul;
   hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mNonPremulBlendState));
   if (Failed(hr, "create npm blender")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_NPM_BLENDER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_NPM_BLENDER";
     return false;
   }
 
@@ -175,7 +189,7 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
     blendDesc.RenderTarget[0] = rtBlendComponent;
     hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mComponentBlendState));
     if (Failed(hr, "create component blender")) {
-      *aOutFailureReason = "FEATURE_FAILURE_D3D11_COMP_BLENDER";
+      mInitFailureId = "FEATURE_FAILURE_D3D11_COMP_BLENDER";
       return false;
     }
   }
@@ -189,15 +203,16 @@ DeviceAttachmentsD3D11::Initialize(nsCString* const aOutFailureReason)
   blendDesc.RenderTarget[0] = rtBlendDisabled;
   hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mDisabledBlendState));
   if (Failed(hr, "create null blender")) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_NULL_BLENDER";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_NULL_BLENDER";
     return false;
   }
 
   if (!InitSyncObject()) {
-    *aOutFailureReason = "FEATURE_FAILURE_D3D11_OBJ_SYNC";
+    mInitFailureId = "FEATURE_FAILURE_D3D11_OBJ_SYNC";
     return false;
   }
 
+  mInitialized = true;
   return true;
 }
 
@@ -256,7 +271,7 @@ DeviceAttachmentsD3D11::InitBlendShaders()
   if (!mBlendShader[MaskType::MaskNone]) {
     InitPixelShader(sBlendShader, mBlendShader, MaskType::MaskNone);
   }
-  return mInitOkay;
+  return mContinueInit;
 }
 
 bool
@@ -283,28 +298,28 @@ DeviceAttachmentsD3D11::CreateShaders()
     InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader, MaskType::Mask);
   }
 
-  return mInitOkay;
+  return mContinueInit;
 }
 
 void
 DeviceAttachmentsD3D11::InitVertexShader(const ShaderBytes& aShader, ID3D11VertexShader** aOut)
 {
-  if (!mInitOkay) {
+  if (!mContinueInit) {
     return;
   }
   if (Failed(mDevice->CreateVertexShader(aShader.mData, aShader.mLength, nullptr, aOut), "create vs")) {
-    mInitOkay = false;
+    mContinueInit = false;
   }
 }
 
 void
 DeviceAttachmentsD3D11::InitPixelShader(const ShaderBytes& aShader, ID3D11PixelShader** aOut)
 {
-  if (!mInitOkay) {
+  if (!mContinueInit) {
     return;
   }
   if (Failed(mDevice->CreatePixelShader(aShader.mData, aShader.mLength, nullptr, aOut), "create ps")) {
-    mInitOkay = false;
+    mContinueInit = false;
   }
 }
 
