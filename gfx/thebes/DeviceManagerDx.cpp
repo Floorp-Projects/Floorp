@@ -906,6 +906,8 @@ void
 DeviceManagerDx::GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
                                       RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments)
 {
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
+
   RefPtr<ID3D11Device> device;
   {
     MutexAutoLock lock(mDeviceLock);
@@ -936,6 +938,24 @@ DeviceManagerDx::GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
 
   *aOutDevice = device;
   *aOutAttachments = attachments;
+}
+
+/* static */ void
+DeviceManagerDx::PreloadAttachmentsOnCompositorThread()
+{
+  MessageLoop* loop = layers::CompositorThreadHolder::Loop();
+  if (!loop) {
+    return;
+  }
+
+  RefPtr<Runnable> task = NS_NewRunnableFunction([]() -> void {
+    if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
+      RefPtr<ID3D11Device> device;
+      RefPtr<layers::DeviceAttachmentsD3D11> attachments;
+      dm->GetCompositorDevices(&device, &attachments);
+    }
+  });
+  loop->PostTask(task.forget());
 }
 
 } // namespace gfx
