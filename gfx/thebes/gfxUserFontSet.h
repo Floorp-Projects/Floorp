@@ -175,7 +175,7 @@ class gfxUserFontSet {
 
 public:
 
-    NS_INLINE_DECL_REFCOUNTING(gfxUserFontSet)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxUserFontSet)
 
     gfxUserFontSet();
 
