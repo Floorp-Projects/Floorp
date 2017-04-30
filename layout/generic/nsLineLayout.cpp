@@ -79,12 +79,10 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mSuppressLineWrap(nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
 {
   MOZ_ASSERT(aOuterReflowInput, "aOuterReflowInput must not be null");
-  NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->GetType() ==
-                                  nsGkAtoms::letterFrame,
+  NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->IsLetterFrame(),
                "float manager should be present");
   MOZ_ASSERT((!!mBaseLineLayout) ==
-             (aOuterReflowInput->mFrame->GetType() ==
-              nsGkAtoms::rubyTextContainerFrame),
+              aOuterReflowInput->mFrame->IsRubyTextContainerFrame(),
              "Only ruby text container frames have "
              "a different base line layout");
   MOZ_COUNT_CTOR(nsLineLayout);
@@ -228,7 +226,7 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   pfd->mSpan = psd;
   psd->mFrame = pfd;
   nsIFrame* frame = mBlockReflowInput->mFrame;
-  if (frame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+  if (frame->IsRubyTextContainerFrame()) {
     // Ruby text container won't be reflowed via ReflowFrame, hence the
     // relative positioning information should be recorded here.
     MOZ_ASSERT(mBaseLineLayout != this);
@@ -371,7 +369,7 @@ nsLineLayout::UpdateBand(WritingMode aWM,
   mBStartEdge = availSpace.BStart(lineWM);
   mImpactedByFloats = true;
 
-  mLastFloatWasLetterFrame = nsGkAtoms::letterFrame == aFloatFrame->GetType();
+  mLastFloatWasLetterFrame = aFloatFrame->IsLetterFrame();
 }
 
 nsLineLayout::PerSpanData*
@@ -468,12 +466,12 @@ nsLineLayout::AttachFrameToBaseLineLayout(PerFrameData* aFrame)
   MOZ_ASSERT(!aFrame->mIsLinkedToBase,
              "The frame must not have been linked with the base");
 #ifdef DEBUG
-  nsIAtom* baseType = baseFrame->mFrame->GetType();
-  nsIAtom* annotationType = aFrame->mFrame->GetType();
-  MOZ_ASSERT((baseType == nsGkAtoms::rubyBaseContainerFrame &&
-              annotationType == nsGkAtoms::rubyTextContainerFrame) ||
-             (baseType == nsGkAtoms::rubyBaseFrame &&
-              annotationType == nsGkAtoms::rubyTextFrame));
+  FrameType baseType = baseFrame->mFrame->Type();
+  FrameType annotationType = aFrame->mFrame->Type();
+  MOZ_ASSERT((baseType == FrameType::RubyBaseContainer &&
+              annotationType == FrameType::RubyTextContainer) ||
+             (baseType == FrameType::RubyBase &&
+              annotationType == FrameType::RubyText));
 #endif
 
   aFrame->mNextAnnotation = baseFrame->mNextAnnotation;
@@ -713,14 +711,14 @@ IsPercentageAware(const nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "null frame is not allowed");
 
-  nsIAtom *fType = aFrame->GetType();
-  if (fType == nsGkAtoms::textFrame) {
+  FrameType fType = aFrame->Type();
+  if (fType == FrameType::Text) {
     // None of these things can ever be true for text frames.
     return false;
   }
 
   // Some of these things don't apply to non-replaced inline frames
-  // (that is, fType == nsGkAtoms::inlineFrame), but we won't bother making
+  // (that is, fType == FrameType::Inline), but we won't bother making
   // things unnecessarily complicated, since they'll probably be set
   // quite rarely.
 
@@ -753,10 +751,10 @@ IsPercentageAware(const nsIFrame* aFrame)
     const nsStyleDisplay* disp = aFrame->StyleDisplay();
     if (disp->mDisplay == StyleDisplay::InlineBlock ||
         disp->mDisplay == StyleDisplay::InlineTable ||
-        fType == nsGkAtoms::HTMLButtonControlFrame ||
-        fType == nsGkAtoms::gfxButtonControlFrame ||
-        fType == nsGkAtoms::fieldSetFrame ||
-        fType == nsGkAtoms::comboboxDisplayFrame) {
+        fType == FrameType::HTMLButtonControl ||
+        fType == FrameType::GfxButtonControl ||
+        fType == FrameType::FieldSet ||
+        fType == FrameType::ComboboxDisplay) {
       return true;
     }
 
@@ -840,9 +838,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   bool notSafeToBreak = LineIsEmpty() && !mImpactedByFloats;
 
   // Figure out whether we're talking about a textframe here
-  nsIAtom* frameType = aFrame->GetType();
-  bool isText = frameType == nsGkAtoms::textFrame;
-  
+  FrameType frameType = aFrame->Type();
+  bool isText = frameType == FrameType::Text;
+
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
@@ -936,10 +934,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // content.
   bool placedFloat = false;
   bool isEmpty;
-  if (!frameType) {
+  if (frameType == FrameType::None) {
     isEmpty = pfd->mFrame->IsEmpty();
   } else {
-    if (nsGkAtoms::placeholderFrame == frameType) {
+    if (FrameType::Placeholder == frameType) {
       isEmpty = true;
       pfd->mSkipWhenTrimmingWhitespace = true;
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
@@ -962,7 +960,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
         placedFloat = GetOutermostLineLayout()->
           AddFloat(outOfFlowFrame, availableISize);
-        NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
+        NS_ASSERTION(!(outOfFlowFrame->IsLetterFrame() &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");
       }
@@ -981,12 +979,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           pfd->mIsNonWhitespaceTextFrame = !content->TextIsOnlyWhitespace();
         }
       }
-    }
-    else if (nsGkAtoms::brFrame == frameType) {
+    } else if (FrameType::Br == frameType) {
       pfd->mSkipWhenTrimmingWhitespace = true;
       isEmpty = false;
     } else {
-      if (nsGkAtoms::letterFrame==frameType) {
+      if (FrameType::Letter == frameType) {
         pfd->mIsLetterFrame = true;
       }
       if (pfd->mSpan) {
@@ -1093,7 +1090,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // nonempty leaf content has been placed
           mLineAtStart = false;
         }
-        if (nsGkAtoms::rubyFrame == frameType) {
+        if (FrameType::Ruby == frameType) {
           mHasRuby = true;
           SyncAnnotationBounds(pfd);
         }
@@ -1209,7 +1206,7 @@ nsLineLayout::GetCurrentFrameInlineDistanceFromBlock()
 void
 nsLineLayout::SyncAnnotationBounds(PerFrameData* aRubyFrame)
 {
-  MOZ_ASSERT(aRubyFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
+  MOZ_ASSERT(aRubyFrame->mFrame->IsRubyFrame());
   MOZ_ASSERT(aRubyFrame->mSpan);
 
   PerSpanData* span = aRubyFrame->mSpan;
@@ -1334,7 +1331,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
 #ifdef FIX_BUG_50257
   // another special case:  always place a BR
-  if (nsGkAtoms::brFrame == pfd->mFrame->GetType()) {
+  if (pfd->mFrame->IsBrFrame()) {
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> BR frame fits\n");
 #endif
@@ -1432,7 +1429,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics)
                           pfd->mMargin.IEnd(lineWM);
 
   // Count the number of non-placeholder frames on the line...
-  if (pfd->mFrame->GetType() == nsGkAtoms::placeholderFrame) {
+  if (pfd->mFrame->IsPlaceholderFrame()) {
     NS_ASSERTION(pfd->mBounds.ISize(lineWM) == 0 &&
                  pfd->mBounds.BSize(lineWM) == 0,
                  "placeholders should have 0 width/height (checking "
@@ -1671,7 +1668,7 @@ nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
   MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
   nscoord requiredStartLeading = 0;
   nscoord requiredEndLeading = 0;
-  if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
+  if (spanFrame->IsRubyFrame()) {
     // We may need to extend leadings here for ruby annotations as
     // required by section Line Spacing in the CSS Ruby spec.
     // See http://dev.w3.org/csswg/css-ruby/#line-height
@@ -1726,7 +1723,7 @@ GetInflationForBlockDirAlignment(nsIFrame* aFrame,
 {
   if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     const nsIFrame* container =
-      nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::svgTextFrame);
+      nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::SVGText);
     NS_ASSERTION(container, "expected to find an ancestor SVGTextFrame");
     return
       static_cast<const SVGTextFrame*>(container)->GetFontSizeScaleFactor();
@@ -2239,7 +2236,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // Check if it's a BR frame that is not alone on its line (it
           // is given a block size of zero to indicate this), and if so reset
           // blockStart and blockEnd so that BR frames don't influence the line.
-          if (nsGkAtoms::brFrame == frame->GetType()) {
+          if (frame->IsBrFrame()) {
             blockStart = BLOCKDIR_ALIGN_FRAMES_NO_MINIMUM;
             blockEnd = BLOCKDIR_ALIGN_FRAMES_NO_MAXIMUM;
           }
@@ -2755,7 +2752,7 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       continue;
     }
 
-    bool isRubyBase = pfd->mFrame->GetType() == nsGkAtoms::rubyBaseFrame;
+    bool isRubyBase = pfd->mFrame->IsRubyBaseFrame();
     PerFrameData* outerRubyBase = aState.mLastEnteredRubyBase;
     if (isRubyBase) {
       aState.mLastEnteredRubyBase = pfd;
@@ -2813,9 +2810,9 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
                                             nscoord aDeltaISize)
 {
   nsIFrame* frame = aPFD->mFrame;
-  nsIAtom* frameType = frame->GetType();
-  MOZ_ASSERT(frameType == nsGkAtoms::rubyTextFrame ||
-             frameType == nsGkAtoms::rubyTextContainerFrame);
+  FrameType frameType = frame->Type();
+  MOZ_ASSERT(frameType == FrameType::RubyText ||
+             frameType == FrameType::RubyTextContainer);
   MOZ_ASSERT(aPFD->mSpan, "rt and rtc should have span.");
 
   PerSpanData* psd = aPFD->mSpan;
@@ -2830,13 +2827,13 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
   // container does not have children linked to the base:
   // 1. it is a container for span; 2. its children are collapsed.
   // See bug 1055674 for the second case.
-  if (frameType == nsGkAtoms::rubyTextFrame ||
+  if (frameType == FrameType::RubyText ||
       // This ruby text container is a span.
       (psd->mFirstFrame == psd->mLastFrame && psd->mFirstFrame &&
        !psd->mFirstFrame->mIsLinkedToBase)) {
     // For ruby text frames, only increase frames
     // which are not auto-hidden.
-    if (frameType != nsGkAtoms::rubyTextFrame ||
+    if (frameType != FrameType::RubyText ||
         !static_cast<nsRubyTextFrame*>(frame)->IsAutoHidden()) {
       nscoord reservedISize = RubyUtils::GetReservedISize(frame);
       RubyUtils::SetReservedISize(frame, reservedISize + aDeltaISize);
@@ -2943,7 +2940,7 @@ static nsIFrame*
 FindNearestRubyBaseAncestor(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame->StyleContext()->ShouldSuppressLineBreak());
-  while (aFrame && aFrame->GetType() != nsGkAtoms::rubyBaseFrame) {
+  while (aFrame && !aFrame->IsRubyBaseFrame()) {
     aFrame = aFrame->GetParent();
   }
   // XXX It is possible that no ruby base ancestor is found because of
@@ -3017,13 +3014,12 @@ nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
   }
 
   WritingMode lineWM = mRootSpan->mWritingMode;
-  bool isLevelContainer =
-    aFrame->mFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame;
+  bool isLevelContainer = aFrame->mFrame->IsRubyBaseContainerFrame();
   for (PerFrameData* annotation = aFrame->mNextAnnotation;
        annotation; annotation = annotation->mNextAnnotation) {
     if (isLevelContainer) {
       nsIFrame* rtcFrame = annotation->mFrame;
-      MOZ_ASSERT(rtcFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
+      MOZ_ASSERT(rtcFrame->IsRubyTextContainerFrame());
       // It is necessary to set the rect again because the container
       // width was unknown, and zero was used instead when we reflow
       // them. The corresponding base containers were repositioned in
@@ -3053,7 +3049,7 @@ nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
     nsIFrame* parentFrame = annotation->mFrame->GetParent();
     nsSize containerSize = parentFrame->GetSize();
     MOZ_ASSERT(containerSize == aContainerSize ||
-               parentFrame->GetType() == nsGkAtoms::rubyTextContainerFrame,
+               parentFrame->IsRubyTextContainerFrame(),
                "Container width should only be different when the current "
                "annotation is a ruby text frame, whose parent is not same "
                "as its base frame.");
@@ -3254,13 +3250,13 @@ void
 nsLineLayout::RelativePositionAnnotations(PerSpanData* aRubyPSD,
                                           nsOverflowAreas& aOverflowAreas)
 {
-  MOZ_ASSERT(aRubyPSD->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
+  MOZ_ASSERT(aRubyPSD->mFrame->mFrame->IsRubyFrame());
   for (PerFrameData* pfd = aRubyPSD->mFirstFrame; pfd; pfd = pfd->mNext) {
-    MOZ_ASSERT(pfd->mFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+    MOZ_ASSERT(pfd->mFrame->IsRubyBaseContainerFrame());
     for (PerFrameData* rtc = pfd->mNextAnnotation;
          rtc; rtc = rtc->mNextAnnotation) {
       nsIFrame* rtcFrame = rtc->mFrame;
-      MOZ_ASSERT(rtcFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
+      MOZ_ASSERT(rtcFrame->IsRubyTextContainerFrame());
       ApplyRelativePositioning(rtc);
       nsOverflowAreas rtcOverflowAreas;
       RelativePositionFrames(rtc->mSpan, rtcOverflowAreas);
@@ -3369,7 +3365,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
   }
 
   // Also compute relative position in the annotations.
-  if (psd->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame) {
+  if (psd->mFrame->mFrame->IsRubyFrame()) {
     RelativePositionAnnotations(psd, overflowAreas);
   }
 

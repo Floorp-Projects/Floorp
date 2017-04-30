@@ -13,16 +13,17 @@
 
 nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsPopupSetFrame : public nsBoxFrame
+class nsPopupSetFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  explicit nsPopupSetFrame(nsStyleContext* aContext):
-    nsBoxFrame(aContext) {}
+  explicit nsPopupSetFrame(nsStyleContext* aContext)
+    : nsBoxFrame(aContext, mozilla::FrameType::PopupSet)
+  {}
 
   ~nsPopupSetFrame() {}
-  
+
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
@@ -45,8 +46,6 @@ public:
   // Used to destroy our popup frames.
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual nsIAtom* GetType() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
   {
@@ -57,7 +56,7 @@ public:
 protected:
   void AddPopupFrameList(nsFrameList& aPopupFrameList);
   void RemovePopupFrame(nsIFrame* aPopup);
-  
+
   nsFrameList mPopupList;
 };
 

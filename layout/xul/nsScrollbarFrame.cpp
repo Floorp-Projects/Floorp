@@ -72,12 +72,6 @@ nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
   }
 }
 
-nsIAtom*
-nsScrollbarFrame::GetType() const
-{
-  return nsGkAtoms::scrollbarFrame;
-}
-
 nsresult
 nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
                                    nsIAtom* aAttribute,

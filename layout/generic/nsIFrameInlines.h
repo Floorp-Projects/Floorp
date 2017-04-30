@@ -16,17 +16,14 @@
 bool
 nsIFrame::IsFlexItem() const
 {
-  return GetParent() &&
-    GetParent()->GetType() == nsGkAtoms::flexContainerFrame &&
-    !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+  return GetParent() && GetParent()->IsFlexContainerFrame() &&
+         !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
 }
 
 bool
 nsIFrame::IsFlexOrGridContainer() const
 {
-  nsIAtom* t = GetType();
-  return t == nsGkAtoms::flexContainerFrame ||
-         t == nsGkAtoms::gridContainerFrame;
+  return IsFlexContainerFrame() || IsGridContainerFrame();
 }
 
 bool
@@ -165,7 +162,7 @@ nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
 void
 nsIFrame::PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM)
 {
-  MOZ_ASSERT(GetType() == nsGkAtoms::canvasFrame);
+  MOZ_ASSERT(IsCanvasFrame());
   for (auto f = this; f; f = f->GetParent()) {
     f->mWritingMode = aRootElemWM;
   }

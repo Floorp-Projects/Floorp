@@ -48,12 +48,6 @@ NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
 // nsRubyBaseContainerFrame Method Implementations
 // ===============================================
 
-nsIAtom*
-nsRubyBaseContainerFrame::GetType() const
-{
-  return nsGkAtoms::rubyBaseContainerFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const
@@ -74,7 +68,7 @@ LineBreakBefore(nsIFrame* aFrame,
       // It is not an inline element. We can break before it.
       return gfxBreakPriority::eNormalBreak;
     }
-    if (child->GetType() != nsGkAtoms::textFrame) {
+    if (!child->IsTextFrame()) {
       continue;
     }
 
@@ -726,7 +720,7 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
   const uint32_t rtcCount = textContainers.Length();
 
   nsIFrame* nextBase = GetNextInFlowChild(aPullFrameState.mBase);
-  MOZ_ASSERT(!nextBase || nextBase->GetType() == nsGkAtoms::rubyBaseFrame);
+  MOZ_ASSERT(!nextBase || nextBase->IsRubyBaseFrame());
   aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(nextBase);
   bool foundFrame = !!aColumn.mBaseFrame;
   bool pullingIntraLevelWhitespace =
@@ -736,7 +730,7 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsIFrame* nextText =
       textContainers[i]->GetNextInFlowChild(aPullFrameState.mTexts[i]);
-    MOZ_ASSERT(!nextText || nextText->GetType() == nsGkAtoms::rubyTextFrame);
+    MOZ_ASSERT(!nextText || nextText->IsRubyTextFrame());
     nsRubyTextFrame* textFrame = static_cast<nsRubyTextFrame*>(nextText);
     aColumn.mTextFrames.AppendElement(textFrame);
     foundFrame = foundFrame || nextText;

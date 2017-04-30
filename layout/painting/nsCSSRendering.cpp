@@ -1235,11 +1235,11 @@ nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
 bool
 nsCSSRendering::IsCanvasFrame(nsIFrame* aFrame)
 {
-  nsIAtom* frameType = aFrame->GetType();
-  return frameType == nsGkAtoms::canvasFrame ||
-         frameType == nsGkAtoms::rootFrame ||
-         frameType == nsGkAtoms::pageContentFrame ||
-         frameType == nsGkAtoms::viewportFrame;
+  FrameType frameType = aFrame->Type();
+  return frameType == FrameType::Canvas ||
+         frameType == FrameType::Root ||
+         frameType == FrameType::PageContent ||
+         frameType == FrameType::Viewport;
 }
 
 nsIFrame*
@@ -1753,7 +1753,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   }
 
   nsCSSShadowArray* shadows = aForFrame->StyleEffects()->mBoxShadow;
-  NS_ASSERTION(aForFrame->GetType() == nsGkAtoms::fieldSetFrame ||
+  NS_ASSERTION(aForFrame->IsFieldSetFrame() ||
                aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
 
   nsRect paddingRect = GetBoxShadowInnerPaddingRect(aForFrame, aFrameArea);
@@ -2135,7 +2135,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
   StyleGeometryBox layerClip = ComputeBoxValue(aForFrame, aLayer.mClip);
   if (IsSVGStyleGeometryBox(layerClip)) {
     MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
-               (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame));
+               !aForFrame->IsSVGOuterSVGFrame());
 
     // The coordinate space of clipArea is svg user space.
     nsRect clipArea =
@@ -2175,7 +2175,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
   }
 
   MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
-             aForFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+             aForFrame->IsSVGOuterSVGFrame());
 
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea.
@@ -2199,7 +2199,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
   aClipState->mBGClipArea = clipBorderArea;
 
-  if (aForFrame->GetType() == nsGkAtoms::scrollFrame &&
+  if (aForFrame->IsScrollFrame() &&
       NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL == aLayer.mAttachment) {
     // As of this writing, this is still in discussion in the CSS Working Group
     // http://lists.w3.org/Archives/Public/www-style/2013Jul/0250.html
@@ -2788,7 +2788,7 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
 
   if (IsSVGStyleGeometryBox(layerOrigin)) {
     MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
-               (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame));
+               !aForFrame->IsSVGOuterSVGFrame());
     *aAttachedToFrame = aForFrame;
 
     positionArea =
@@ -2807,11 +2807,11 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   }
 
   MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
-             aForFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+             aForFrame->IsSVGOuterSVGFrame());
 
-  nsIAtom* frameType = aForFrame->GetType();
+  FrameType frameType = aForFrame->Type();
   nsIFrame* geometryFrame = aForFrame;
-  if (MOZ_UNLIKELY(frameType == nsGkAtoms::scrollFrame &&
+  if (MOZ_UNLIKELY(frameType == FrameType::Scroll &&
                    NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL == aLayer.mAttachment)) {
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
     positionArea = nsRect(
@@ -2838,7 +2838,7 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     return positionArea;
   }
 
-  if (MOZ_UNLIKELY(frameType == nsGkAtoms::canvasFrame)) {
+  if (MOZ_UNLIKELY(frameType == FrameType::Canvas)) {
     geometryFrame = aForFrame->PrincipalChildList().FirstChild();
     // geometryFrame might be null if this canvas is a page created
     // as an overflow container (e.g. the in-flow content has already
@@ -2882,7 +2882,7 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     nsIFrame* pageContentFrame = nullptr;
     if (aPresContext->IsPaginated()) {
       pageContentFrame =
-        nsLayoutUtils::GetClosestFrameOfType(aForFrame, nsGkAtoms::pageContentFrame);
+        nsLayoutUtils::GetClosestFrameOfType(aForFrame, FrameType::PageContent);
       if (pageContentFrame) {
         attachedToFrame = pageContentFrame;
       }

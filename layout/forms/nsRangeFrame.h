@@ -16,8 +16,8 @@
 
 class nsDisplayRangeFocusRing;
 
-class nsRangeFrame : public nsContainerFrame,
-                     public nsIAnonymousContentCreator
+class nsRangeFrame final : public nsContainerFrame,
+                           public nsIAnonymousContentCreator
 {
   friend nsIFrame*
   NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -84,8 +84,6 @@ public:
 
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
-
-  virtual nsIAtom* GetType() const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

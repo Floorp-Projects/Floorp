@@ -42,12 +42,6 @@ NS_NewRubyFrame(nsIPresShell* aPresShell,
 // nsRubyFrame Method Implementations
 // ==================================
 
-nsIAtom*
-nsRubyFrame::GetType() const
-{
-  return nsGkAtoms::rubyFrame;
-}
-
 /* virtual */ bool
 nsRubyFrame::IsFrameOfType(uint32_t aFlags) const
 {
@@ -96,7 +90,7 @@ FindRubyBaseContainerAncestor(nsIFrame* aFrame)
   for (nsIFrame* ancestor = aFrame->GetParent();
        ancestor && ancestor->IsFrameOfType(nsIFrame::eLineParticipant);
        ancestor = ancestor->GetParent()) {
-    if (ancestor->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
+    if (ancestor->IsRubyBaseContainerFrame()) {
       return static_cast<nsRubyBaseContainerFrame*>(ancestor);
     }
   }
@@ -381,7 +375,7 @@ nsRubyFrame::PullOneSegment(const nsLineLayout* aLineLayout,
   if (!baseFrame) {
     return nullptr;
   }
-  MOZ_ASSERT(baseFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+  MOZ_ASSERT(baseFrame->IsRubyBaseContainerFrame());
 
   // Get the float containing block of the base frame before we pull it.
   nsBlockFrame* oldFloatCB =
@@ -391,7 +385,7 @@ nsRubyFrame::PullOneSegment(const nsLineLayout* aLineLayout,
   // Pull all ruby text containers following the base container
   nsIFrame* nextFrame;
   while ((nextFrame = GetNextInFlowChild(aState)) != nullptr &&
-         nextFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+         nextFrame->IsRubyTextContainerFrame()) {
     PullNextInFlowChild(aState);
   }
 

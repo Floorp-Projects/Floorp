@@ -33,7 +33,7 @@ class nsSVGFilterFrame : public nsSVGContainerFrame
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext)
+    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGFilter)
     , mLoopFlag(false)
     , mNoHRefURI(false)
   {
@@ -57,13 +57,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgFilterFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 private:
   // Parse our xlink:href and set up our nsSVGPaintingProperty if we

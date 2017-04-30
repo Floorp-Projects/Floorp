@@ -16,7 +16,7 @@ class SVGFEUnstyledLeafFrame : public nsFrame
   NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
+    : nsFrame(aContext, FrameType::SVGFEUnstyledLeaf)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -40,13 +40,6 @@ public:
   }
 #endif
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgFEUnstyledLeafFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t  aModType) override;
@@ -65,12 +58,6 @@ NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
-nsIAtom *
-SVGFEUnstyledLeafFrame::GetType() const
-{
-  return nsGkAtoms::svgFEUnstyledLeafFrame;
-}
-
 nsresult
 SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
                                          nsIAtom* aAttribute,
@@ -78,7 +65,7 @@ SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   SVGFEUnstyledElement *element = static_cast<SVGFEUnstyledElement*>(mContent);
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->GetParent()->GetType() == nsGkAtoms::svgFilterFrame,
+    MOZ_ASSERT(GetParent()->GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent()->GetParent());
   }

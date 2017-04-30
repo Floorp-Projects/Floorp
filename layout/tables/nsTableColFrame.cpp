@@ -24,7 +24,7 @@ using namespace mozilla;
 using namespace mozilla;
 
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext)
-  : nsSplittableFrame(aContext)
+  : nsSplittableFrame(aContext, FrameType::TableCol)
   , mMinCoord(0)
   , mPrefCoord(0)
   , mSpanMinCoord(0)
@@ -179,18 +179,12 @@ nsTableColFrame::GetNextCol() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    if (nsGkAtoms::tableColFrame == childFrame->GetType()) {
+    if (childFrame->IsTableColFrame()) {
       return (nsTableColFrame*)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
   }
   return nullptr;
-}
-
-nsIAtom*
-nsTableColFrame::GetType() const
-{
-  return nsGkAtoms::tableColFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

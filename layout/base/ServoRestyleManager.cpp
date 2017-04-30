@@ -151,7 +151,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     changeHint |= nsChangeHint_ReconstructFrame;
     // The only time the primary frame is non-null is when image maps do hacky
     // SetPrimaryFrame calls.
-    MOZ_ASSERT_IF(styleFrame, styleFrame->GetType() == nsGkAtoms::imageFrame);
+    MOZ_ASSERT_IF(styleFrame, styleFrame->IsImageFrame());
     styleFrame = nullptr;
   }
 

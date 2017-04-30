@@ -46,15 +46,16 @@ private:
   nsSVGImageFrame *mFrame;
 };
 
-class nsSVGImageFrame : public SVGGeometryFrame
-                      , public nsIReflowCallback
+class nsSVGImageFrame final
+  : public SVGGeometryFrame
+  , public nsIReflowCallback
 {
   friend nsIFrame*
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
   explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext)
+    : SVGGeometryFrame(aContext, FrameType::SVGImage)
     , mReflowCallbackPosted(false)
   {
     EnableVisibilityTracking();
@@ -88,13 +89,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgImageFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -492,12 +486,6 @@ nsSVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint)
   }
 
   return this;
-}
-
-nsIAtom *
-nsSVGImageFrame::GetType() const
-{
-  return nsGkAtoms::svgImageFrame;
 }
 
 //----------------------------------------------------------------------

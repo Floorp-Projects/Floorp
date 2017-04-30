@@ -1042,8 +1042,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
 bool
 nsView::RequestWindowClose(nsIWidget* aWidget)
 {
-  if (mFrame && IsPopupWidget(aWidget) &&
-      mFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+  if (mFrame && IsPopupWidget(aWidget) && mFrame->IsMenuPopupFrame()) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
       pm->HidePopup(mFrame->GetContent(), false, true, false, false);
