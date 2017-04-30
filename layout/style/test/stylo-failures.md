@@ -128,7 +128,7 @@ to mochitest command.
     * test_initial_storage.html `-moz-force-broken-image-icon` [4]
     * test_value_storage.html `-moz-force-broken-image-icon` [4]
   * -moz-transform: need different parsing rules servo/servo#16003
-    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [72]
+    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
