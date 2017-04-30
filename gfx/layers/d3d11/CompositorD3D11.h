@@ -21,7 +21,7 @@ namespace layers {
 
 #define LOGD3D11(param)
 
-struct DeviceAttachmentsD3D11;
+class DeviceAttachmentsD3D11;
 class DiagnosticsD3D11;
 
 class CompositorD3D11 : public Compositor
@@ -215,7 +215,7 @@ private:
 
   RefPtr<ID3D11Query> mQuery;
 
-  DeviceAttachmentsD3D11* mAttachments;
+  RefPtr<DeviceAttachmentsD3D11> mAttachments;
   UniquePtr<DiagnosticsD3D11> mDiagnostics;
 
   LayoutDeviceIntSize mSize;

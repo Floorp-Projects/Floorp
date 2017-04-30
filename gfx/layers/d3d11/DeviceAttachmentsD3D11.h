@@ -8,6 +8,7 @@
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -17,14 +18,23 @@ struct ShaderBytes;
 namespace mozilla {
 namespace layers {
 
-struct DeviceAttachmentsD3D11
+class DeviceAttachmentsD3D11
 {
-  explicit DeviceAttachmentsD3D11(ID3D11Device* device);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceAttachmentsD3D11);
 
-  bool Initialize(nsCString* const aOutFailureReason);
+public:
+  static RefPtr<DeviceAttachmentsD3D11> Create(ID3D11Device* aDevice);
+
   bool InitBlendShaders();
-
   bool EnsureTriangleBuffer(size_t aNumTriangles);
+
+  bool IsValid() const {
+    return mInitialized;
+  }
+  const nsCString& GetFailureId() const {
+    MOZ_ASSERT(!IsValid());
+    return mInitFailureId;
+  }
 
   typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
           VertexShaderArray;
@@ -64,6 +74,10 @@ struct DeviceAttachmentsD3D11
   HANDLE mSyncHandle;
 
 private:
+  explicit DeviceAttachmentsD3D11(ID3D11Device* device);
+  ~DeviceAttachmentsD3D11();
+
+  bool Initialize();
   bool CreateShaders();
   bool InitSyncObject();
 
@@ -84,7 +98,9 @@ private:
 
   // Only used during initialization.
   RefPtr<ID3D11Device> mDevice;
-  bool mInitOkay;
+  bool mContinueInit;
+  bool mInitialized;
+  nsCString mInitFailureId;
 };
 
 } // namespace layers
