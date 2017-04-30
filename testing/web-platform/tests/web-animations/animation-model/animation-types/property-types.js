@@ -1132,23 +1132,7 @@ const boxShadowListType = {
 
 const positionType = {
   testInterpolation: function(property, setup) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 500,  expected: '30px 30px' }]);
-    }, property + ' supports animating as a position');
-
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 500,  expected: '30px 30px' }]);
-    }, property + ' supports animating as a position of rem');
+    lengthPairType.testInterpolation(property, setup);
 
     test(function(t) {
       var idlName = propertyToIDL(property);
@@ -1162,23 +1146,7 @@ const positionType = {
   },
 
   testAddition: function(property, setup) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      target.style[idlName] = '10px 10px';
-      var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
-                                     { duration: 1000, composite: 'add' });
-      testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
-    }, property + ': position');
-
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      target.style[idlName] = '1rem 1rem';
-      var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
-                                     { duration: 1000, composite: 'add' });
-      testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
-    }, property + ': position of rem');
+    lengthPairType.testAddition(property, setup);
 
     test(function(t) {
       var idlName = propertyToIDL(property);
