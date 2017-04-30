@@ -1548,9 +1548,6 @@ pref("network.http.referer.XOriginTrimmingPolicy", 0);
 // 0=always send, 1=send iff base domains match, 2=send iff hosts match
 pref("network.http.referer.XOriginPolicy", 0);
 
-// Controls whether referrer attributes in <a>, <img>, <area>, <iframe>, and <link> are honoured
-pref("network.http.enablePerElementReferrer", true);
-
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 20);
 

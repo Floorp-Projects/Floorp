@@ -13,8 +13,6 @@ const REFERRER_POLICYSERVER_URL =
 const REFERRER_POLICYSERVER_URL_ATTRIBUTE =
   "test1.example.com" + REFERRER_URL_BASE + "file_referrer_policyserver_attr.sjs";
 
-SpecialPowers.pushPrefEnv({"set": [["network.http.enablePerElementReferrer", true]]});
-
 var gTestWindow = null;
 var rounds = 0;
 

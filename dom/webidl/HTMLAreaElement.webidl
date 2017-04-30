@@ -29,7 +29,7 @@ interface HTMLAreaElement : HTMLElement {
            attribute DOMString ping;
            [SetterThrows]
            attribute DOMString rel;
-           [SetterThrows, Pref="network.http.enablePerElementReferrer"]
+           [SetterThrows]
            attribute DOMString referrerPolicy;
            [PutForwards=value]
   readonly attribute DOMTokenList relList;
