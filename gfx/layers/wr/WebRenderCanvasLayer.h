@@ -35,10 +35,6 @@ public:
 
 protected:
   virtual ~WebRenderCanvasLayer();
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
 
 public:
   Layer* GetLayer() override { return this; }

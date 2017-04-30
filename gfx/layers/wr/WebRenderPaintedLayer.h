@@ -36,10 +36,6 @@ protected:
       WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
     }
   }
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
 
   wr::MaybeExternalImageId mExternalImageId;
 
