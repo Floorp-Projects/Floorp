@@ -78,14 +78,9 @@ public:
     , mListID(aListID)
 #endif
   {
-#ifdef DEBUG
-    {
-      const nsIAtom* type = aContainer->GetType();
-      MOZ_ASSERT(type == nsGkAtoms::flexContainerFrame ||
-                 type == nsGkAtoms::gridContainerFrame,
-                 "Only use this iterator in a container that honors 'order'");
-    }
-#endif
+    MOZ_ASSERT(aContainer->IsFlexOrGridContainer(),
+               "Only use this iterator in a container that honors 'order'");
+
     size_t count = 0;
     bool isOrdered = aState != eKnownUnordered;
     if (aState == eUnknownOrder) {
@@ -162,7 +157,7 @@ public:
   size_t ItemIndex() const
   {
     MOZ_ASSERT(!AtEnd());
-    MOZ_ASSERT((**this)->GetType() != nsGkAtoms::placeholderFrame,
+    MOZ_ASSERT(!(**this)->IsPlaceholderFrame(),
                "MUST not call this when at a placeholder");
     MOZ_ASSERT(IsForward() || mItemIndex < *mItemCount,
                "Returning an out-of-range mItemIndex...");
@@ -189,14 +184,14 @@ public:
     if (mIter.isSome()) {
       for (; *mIter != *mIterEnd; ++*mIter) {
         nsIFrame* child = **mIter;
-        if (child->GetType() != nsGkAtoms::placeholderFrame) {
+        if (!child->IsPlaceholderFrame()) {
           return;
         }
       }
     } else {
       for (; mArrayIndex < mArray->Length(); ++mArrayIndex) {
         nsIFrame* child = (*mArray)[mArrayIndex];
-        if (child->GetType() != nsGkAtoms::placeholderFrame) {
+        if (!child->IsPlaceholderFrame()) {
           return;
         }
       }
@@ -221,8 +216,7 @@ public:
                list.LastChild() == mChildren.LastChild(),
                "the list of child frames must not change while iterating!");
 #endif
-    if (mSkipPlaceholders ||
-        (**this)->GetType() != nsGkAtoms::placeholderFrame) {
+    if (mSkipPlaceholders || !(**this)->IsPlaceholderFrame()) {
       IsForward() ? ++mItemIndex : --mItemIndex;
     }
     if (mIter.isSome()) {

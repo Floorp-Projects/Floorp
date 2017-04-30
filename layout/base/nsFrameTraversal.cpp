@@ -202,7 +202,7 @@ nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
   mLast(aStart),
   mOffEdge(0)
 {
-  MOZ_ASSERT(!aFollowOOFs || aStart->GetType() != nsGkAtoms::placeholderFrame,
+  MOZ_ASSERT(!aFollowOOFs || !aStart->IsPlaceholderFrame(),
              "Caller should have resolved placeholder frame");
 }
 
@@ -234,9 +234,7 @@ nsFrameIterator::First()
 static bool
 IsRootFrame(nsIFrame* aFrame)
 {
-  nsIAtom* atom = aFrame->GetType();
-  return (atom == nsGkAtoms::canvasFrame) ||
-         (atom == nsGkAtoms::rootFrame);
+  return aFrame->IsCanvasFrame() || aFrame->IsRootFrame();
 }
 
 void
@@ -246,7 +244,7 @@ nsFrameIterator::Last()
   nsIFrame* parent = getCurrent();
   // If the current frame is a popup, don't move farther up the tree.
   // Otherwise, get the nearest root frame or popup.
-  if (mSkipPopupChecks || parent->GetType() != nsGkAtoms::menuPopupFrame) {
+  if (mSkipPopupChecks || !parent->IsMenuPopupFrame()) {
     while (!IsRootFrame(parent) && (result = GetParentFrameNotPopup(parent)))
       parent = result;
   }
@@ -254,7 +252,7 @@ nsFrameIterator::Last()
   while ((result = GetLastChild(parent))) {
     parent = result;
   }
-  
+
   setCurrent(parent);
   if (!parent)
     setOffEdge(1);
@@ -298,7 +296,7 @@ nsFrameIterator::Next()
       else {
         result = GetParentFrameNotPopup(parent);
         if (!result || IsRootFrame(result) ||
-            (mLockScroll && result->GetType() == nsGkAtoms::scrollFrame)) {
+            (mLockScroll && result->IsScrollFrame())) {
           result = nullptr;
           break;
         }
@@ -353,7 +351,7 @@ nsFrameIterator::Prev()
       } else {
         result = GetParentFrameNotPopup(parent);
         if (!result || IsRootFrame(result) ||
-            (mLockScroll && result->GetType() == nsGkAtoms::scrollFrame)) {
+            (mLockScroll && result->IsScrollFrame())) {
           result = nullptr;
           break;
         }
@@ -400,7 +398,7 @@ nsIFrame*
 nsFrameIterator::GetFirstChild(nsIFrame* aFrame)
 {
   nsIFrame* result = GetFirstChildInner(aFrame);
-  if (mLockScroll && result && result->GetType() == nsGkAtoms::scrollFrame)
+  if (mLockScroll && result && result->IsScrollFrame())
     return nullptr;
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
@@ -415,7 +413,7 @@ nsIFrame*
 nsFrameIterator::GetLastChild(nsIFrame* aFrame)
 {
   nsIFrame* result = GetLastChildInner(aFrame);
-  if (mLockScroll && result && result->GetType() == nsGkAtoms::scrollFrame)
+  if (mLockScroll && result && result->IsScrollFrame())
     return nullptr;
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);

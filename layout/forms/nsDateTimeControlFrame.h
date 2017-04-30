@@ -50,8 +50,6 @@ public:
   }
 #endif
 
-  nsIAtom* GetType() const override;
-
   bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &

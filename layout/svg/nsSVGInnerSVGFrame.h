@@ -13,14 +13,17 @@
 
 class gfxContext;
 
-class nsSVGInnerSVGFrame : public nsSVGDisplayContainerFrame
-                         , public nsISVGSVGFrame
+class nsSVGInnerSVGFrame final
+  : public nsSVGDisplayContainerFrame
+  , public nsISVGSVGFrame
 {
   friend nsIFrame*
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGInnerSVGFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext) {}
+    : nsSVGDisplayContainerFrame(aContext, mozilla::FrameType::SVGInnerSVG)
+  {
+  }
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsSVGInnerSVGFrame)
@@ -32,13 +35,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgInnerSVGFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

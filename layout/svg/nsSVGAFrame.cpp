@@ -20,7 +20,8 @@ class nsSVGAFrame : public nsSVGDisplayContainerFrame
   NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGAFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext) {}
+    : nsSVGDisplayContainerFrame(aContext, FrameType::SVGA)
+  {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -35,13 +36,6 @@ public:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgAFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -101,12 +95,6 @@ nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
   }
 
  return NS_OK;
-}
-
-nsIAtom *
-nsSVGAFrame::GetType() const
-{
-  return nsGkAtoms::svgAFrame;
 }
 
 //----------------------------------------------------------------------

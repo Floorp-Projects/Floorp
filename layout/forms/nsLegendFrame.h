@@ -16,16 +16,16 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  explicit nsLegendFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
+  explicit nsLegendFrame(nsStyleContext* aContext)
+    : nsBlockFrame(aContext, mozilla::FrameType::Legend)
+  {}
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;

@@ -85,12 +85,6 @@ nsBulletFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsIAtom*
-nsBulletFrame::GetType() const
-{
-  return nsGkAtoms::bulletFrame;
-}
-
 bool
 nsBulletFrame::IsEmpty()
 {

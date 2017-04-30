@@ -26,7 +26,6 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const override;
   virtual bool CanContinueTextRun() const override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -51,7 +50,8 @@ protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
   explicit nsRubyTextFrame(nsStyleContext* aContext)
-    : nsRubyContentFrame(aContext) {}
+    : nsRubyContentFrame(aContext, mozilla::FrameType::RubyText)
+  {}
 };
 
 #endif /* nsRubyTextFrame_h___ */

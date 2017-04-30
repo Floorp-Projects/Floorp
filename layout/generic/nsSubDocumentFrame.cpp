@@ -59,7 +59,7 @@ GetDocumentFromView(nsView* aView)
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsAtomicContainerFrame(aContext)
+  : nsAtomicContainerFrame(aContext, FrameType::SubDocument)
   , mOuterView(nullptr)
   , mInnerView(nullptr)
   , mIsInline(false)
@@ -620,12 +620,6 @@ nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsIAtom*
-nsSubDocumentFrame::GetType() const
-{
-  return nsGkAtoms::subDocumentFrame;
-}
-
 /* virtual */ nscoord
 nsSubDocumentFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
@@ -1088,7 +1082,7 @@ InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent)
 nsresult
 nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
 {
-  if (!aOther || aOther->GetType() != nsGkAtoms::subDocumentFrame) {
+  if (!aOther || !aOther->IsSubDocumentFrame()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

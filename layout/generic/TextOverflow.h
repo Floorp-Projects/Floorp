@@ -174,12 +174,12 @@ class TextOverflow {
    * @param aClippedMarkerEdges the innermost edges of all text and atomic
    *   inline-level frames that are clipped by the current marker width
    */
-  void AnalyzeMarkerEdges(nsIFrame*       aFrame,
-                          const nsIAtom*  aFrameType,
+  void AnalyzeMarkerEdges(nsIFrame* aFrame,
+                          mozilla::FrameType aFrameType,
                           const LogicalRect& aInsideMarkersArea,
                           FrameHashtable* aFramesToHide,
                           AlignmentEdges* aAlignmentEdges,
-                          bool*           aFoundVisibleTextOrAtomic,
+                          bool* aFoundVisibleTextOrAtomic,
                           InnerClipEdges* aClippedMarkerEdges);
 
   /**

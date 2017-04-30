@@ -12,15 +12,16 @@
 
 using namespace mozilla::dom;
 
-class nsSVGUseFrame : public nsSVGGFrame
-                    , public nsIAnonymousContentCreator
+class nsSVGUseFrame final
+  : public nsSVGGFrame
+  , public nsIAnonymousContentCreator
 {
   friend nsIFrame*
   NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
   explicit nsSVGUseFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext)
+    : nsSVGGFrame(aContext, FrameType::SVGUse)
     , mHasValidDimensions(true)
   {}
 
@@ -38,13 +39,6 @@ public:
                                      int32_t         aModType) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgUseFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
   virtual bool IsLeaf() const override;
 
@@ -78,12 +72,6 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)
-
-nsIAtom *
-nsSVGUseFrame::GetType() const
-{
-  return nsGkAtoms::svgUseFrame;
-}
 
 //----------------------------------------------------------------------
 // nsQueryFrame methods

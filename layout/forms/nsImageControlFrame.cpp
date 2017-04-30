@@ -30,16 +30,14 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                          ReflowOutput&     aDesiredSize,
-                          const ReflowInput& aReflowInput,
-                          nsReflowStatus&          aStatus) override;
+  virtual void Reflow(nsPresContext* aPresContext,
+                      ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
-
-  virtual nsIAtom* GetType() const override;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
@@ -59,9 +57,8 @@ public:
                                    const nsAString& aValue) override;
 };
 
-
 nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext)
-  : nsImageFrame(aContext)
+  : nsImageFrame(aContext, FrameType::ImageControl)
 {
 }
 
@@ -117,12 +114,6 @@ nsImageControlFrame::AccessibleType()
   return a11y::eNoType;
 }
 #endif
-
-nsIAtom*
-nsImageControlFrame::GetType() const
-{
-  return nsGkAtoms::imageControlFrame;
-}
 
 void
 nsImageControlFrame::Reflow(nsPresContext*           aPresContext,

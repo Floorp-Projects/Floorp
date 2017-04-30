@@ -108,13 +108,6 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::tableWrapperFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

@@ -43,7 +43,7 @@ NS_QUERYFRAME_HEAD(nsDateTimeControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsDateTimeControlFrame::nsDateTimeControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::DateTimeControl)
 {
 }
 
@@ -423,10 +423,4 @@ nsDateTimeControlFrame::ContentStatesChanged(EventStates aStates)
   if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
     nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
   }
-}
-
-nsIAtom*
-nsDateTimeControlFrame::GetType() const
-{
-  return nsGkAtoms::dateTimeControlFrame;
 }

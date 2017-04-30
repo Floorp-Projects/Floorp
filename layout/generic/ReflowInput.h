@@ -293,13 +293,12 @@ private:
    */
   bool ComputePadding(mozilla::WritingMode aWM,
                       const mozilla::LogicalSize& aPercentBasis,
-                      nsIAtom* aFrameType);
+                      mozilla::FrameType aFrameType);
 
 protected:
-
   void InitOffsets(mozilla::WritingMode aWM,
                    const mozilla::LogicalSize& aPercentBasis,
-                   nsIAtom* aFrameType,
+                   mozilla::FrameType aFrameType,
                    ReflowInputFlags aFlags,
                    const nsMargin* aBorder = nullptr,
                    const nsMargin* aPadding = nullptr);
@@ -966,15 +965,16 @@ public:
 #endif
 
 protected:
-  void InitFrameType(nsIAtom* aFrameType);
+  void InitFrameType(FrameType aFrameType);
   void InitCBReflowInput();
-  void InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType);
+  void InitResizeFlags(nsPresContext* aPresContext,
+                       mozilla::FrameType aFrameType);
 
-  void InitConstraints(nsPresContext*              aPresContext,
+  void InitConstraints(nsPresContext* aPresContext,
                        const mozilla::LogicalSize& aContainingBlockSize,
-                       const nsMargin*             aBorder,
-                       const nsMargin*             aPadding,
-                       nsIAtom*                    aFrameType);
+                       const nsMargin* aBorder,
+                       const nsMargin* aPadding,
+                       mozilla::FrameType aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns
@@ -994,12 +994,12 @@ protected:
                                      nsIFrame* aPlaceholderFrame,
                                      const ReflowInput* cbrs,
                                      nsHypotheticalPosition& aHypotheticalPos,
-                                     nsIAtom* aFrameType) const;
+                                     mozilla::FrameType aFrameType) const;
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const ReflowInput* cbrs,
                                const mozilla::LogicalSize& aContainingBlockSize,
-                               nsIAtom* aFrameType);
+                               mozilla::FrameType aFrameType);
 
   // Calculates the computed values for the 'min-Width', 'max-Width',
   // 'min-Height', and 'max-Height' properties, and stores them in the assorted
@@ -1014,7 +1014,7 @@ protected:
                                     nscoord* aInsideBoxSizing,
                                     nscoord* aOutsideBoxSizing) const;
 
-  void CalculateBlockSideMargins(nsIAtom* aFrameType);
+  void CalculateBlockSideMargins(FrameType aFrameType);
 };
 
 } // namespace mozilla

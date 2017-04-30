@@ -116,9 +116,10 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
 nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
+                       FrameType aType,
                        bool aIsRoot,
-                       nsBoxLayout* aLayoutManager) :
-  nsContainerFrame(aContext)
+                       nsBoxLayout* aLayoutManager)
+  : nsContainerFrame(aContext, aType)
 {
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
@@ -1542,12 +1543,6 @@ nsBoxFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("Box"), aResult);
 }
 #endif
-
-nsIAtom*
-nsBoxFrame::GetType() const
-{
-  return nsGkAtoms::boxFrame;
-}
 
 #ifdef DEBUG_LAYOUT
 nsresult

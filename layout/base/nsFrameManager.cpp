@@ -179,8 +179,7 @@ void
 nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   MOZ_ASSERT(aPlaceholderFrame, "null param unexpected");
-  MOZ_ASSERT(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
-             "unexpected frame type");
+  MOZ_ASSERT(aPlaceholderFrame->IsPlaceholderFrame(), "unexpected frame type");
   auto entry = static_cast<PlaceholderMapEntry*>
     (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame()));
   MOZ_ASSERT(!entry->placeholderFrame,
@@ -192,7 +191,7 @@ void
 nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
+  NS_PRECONDITION(aPlaceholderFrame->IsPlaceholderFrame(),
                   "unexpected frame type");
 
   mPlaceholderMap.Remove(aPlaceholderFrame->GetOutOfFlowFrame());
@@ -514,7 +513,7 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
-               aOldFrame->GetType() == nsGkAtoms::textFrame,
+               aOldFrame->IsTextFrame(),
                "Must remove first continuation.");
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
                  GetPlaceholderFrameFor(aOldFrame)),

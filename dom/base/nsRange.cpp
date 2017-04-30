@@ -2973,7 +2973,7 @@ GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
     }
 
     nsIFrame* frame = aContent->GetPrimaryFrame();
-    if (frame && frame->GetType() == nsGkAtoms::textFrame) {
+    if (frame && frame->IsTextFrame()) {
       return static_cast<nsTextFrame*>(frame);
     }
   }
@@ -3513,9 +3513,8 @@ GetRequiredInnerTextLineBreakCount(nsIFrame* aFrame)
 static bool
 IsLastCellOfRow(nsIFrame* aFrame)
 {
-  nsIAtom* type = aFrame->GetType();
-  if (type != nsGkAtoms::tableCellFrame &&
-      type != nsGkAtoms::bcTableCellFrame) {
+  FrameType type = aFrame->Type();
+  if (type != FrameType::TableCell && type != FrameType::BCTableCell) {
     return true;
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
@@ -3529,7 +3528,7 @@ IsLastCellOfRow(nsIFrame* aFrame)
 static bool
 IsLastRowOfRowGroup(nsIFrame* aFrame)
 {
-  if (aFrame->GetType() != nsGkAtoms::tableRowFrame) {
+  if (!aFrame->IsTableRowFrame()) {
     return true;
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
@@ -3543,7 +3542,7 @@ IsLastRowOfRowGroup(nsIFrame* aFrame)
 static bool
 IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
 {
-  if (aFrame->GetType() != nsGkAtoms::tableRowGroupFrame) {
+  if (!aFrame->IsTableRowGroupFrame()) {
     return true;
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
