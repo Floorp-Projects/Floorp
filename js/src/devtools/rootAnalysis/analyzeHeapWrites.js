@@ -325,7 +325,8 @@ function ignoreCallEdge(entry, callee)
     }
 
     // We manually lock here
-    if ("Gecko_nsFont_InitSystem" == name)
+    if (name == "Gecko_nsFont_InitSystem" ||
+        name == "Gecko_GetFontMetrics")
     {
         return true;
     }
