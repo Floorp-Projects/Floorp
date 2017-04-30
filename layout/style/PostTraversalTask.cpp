@@ -6,11 +6,24 @@
 
 #include "PostTraversalTask.h"
 
+#include "mozilla/dom/FontFace.h"
+
 namespace mozilla {
+
+using namespace dom;
 
 void
 PostTraversalTask::Run()
 {
+  switch (mType) {
+    case Type::ResolveFontFaceLoadedPromise:
+      static_cast<FontFace*>(mTarget)->DoResolve();
+      break;
+
+    case Type::RejectFontFaceLoadedPromise:
+      static_cast<FontFace*>(mTarget)->DoReject(mResult);
+      break;
+  }
 }
 
 } // namespace mozilla
