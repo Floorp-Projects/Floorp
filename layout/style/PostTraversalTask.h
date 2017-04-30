@@ -10,6 +10,12 @@
 /* a task to be performed immediately after a Servo traversal */
 
 namespace mozilla {
+namespace dom {
+class FontFace;
+} // namespace dom
+} // namespace mozilla
+
+namespace mozilla {
 
 /**
  * A PostTraversalTask is a task to be performed immediately after a Servo
@@ -22,22 +28,48 @@ namespace mozilla {
 class PostTraversalTask
 {
 public:
+  static PostTraversalTask ResolveFontFaceLoadedPromise(dom::FontFace* aFontFace)
+  {
+    auto task = PostTraversalTask(Type::ResolveFontFaceLoadedPromise);
+    task.mTarget = aFontFace;
+    return task;
+  }
+
+  static PostTraversalTask RejectFontFaceLoadedPromise(dom::FontFace* aFontFace,
+                                                       nsresult aResult)
+  {
+    auto task = PostTraversalTask(Type::ResolveFontFaceLoadedPromise);
+    task.mTarget = aFontFace;
+    task.mResult = aResult;
+    return task;
+  }
+
   void Run();
 
 private:
+  // For any new raw pointer type that we need to store in a PostTraversalTask,
+  // please add an assertion that class' destructor that we are not in a Servo
+  // traversal, to protect against the possibility of having dangling pointers.
   enum class Type
   {
-    Dummy,
+    // mTarget (FontFace*)
+    ResolveFontFaceLoadedPromise,
+
+    // mTarget (FontFace*)
+    // mResult
+    RejectFontFaceLoadedPromise,
   };
 
   explicit PostTraversalTask(Type aType)
     : mType(aType)
     , mTarget(nullptr)
+    , mResult(NS_OK)
   {
   }
 
   Type mType;
   void* mTarget;
+  nsresult mResult;
 };
 
 } // namespace mozilla
