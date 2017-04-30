@@ -27,6 +27,40 @@
 
 namespace mozilla {
 
+template <>
+class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>
+{
+  nsresult mErrorValue;
+
+  template<typename V, typename E2> friend class Result;
+
+public:
+  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {}
+
+  operator nsresult() { return mErrorValue; }
+};
+
+static inline Result<Ok, nsresult>
+WrapNSResult(PRStatus aRv)
+{
+    if (aRv != PR_SUCCESS) {
+        return Err(NS_ERROR_FAILURE);
+    }
+    return Ok();
+}
+
+static inline Result<Ok, nsresult>
+WrapNSResult(nsresult aRv)
+{
+    if (NS_FAILED(aRv)) {
+        return Err(aRv);
+    }
+    return Ok();
+}
+
+#define NS_TRY(expr) MOZ_TRY(WrapNSResult(expr))
+
+
 using Compression::LZ4;
 
 #ifdef XP_WIN
@@ -119,39 +153,39 @@ ReadFile(const char* path)
 
 /**
  * Reads the contents of a LZ4-compressed file, as stored by the OS.File
- * module, and stores the decompressed contents in result.
+ * module, and returns the decompressed contents on success.
  *
- * Returns true on success, or false on failure. A nonexistent or empty file
- * is treated as success. A corrupt or non-LZ4 file is treated as failure.
+ * A nonexistent or empty file is treated as success. A corrupt or non-LZ4
+ * file is treated as failure.
  */
-static bool
-ReadFileLZ4(const char* path, nsCString& result)
+static Result<nsCString, nsresult>
+ReadFileLZ4(const char* path)
 {
   static const char MAGIC_NUMBER[] = "mozLz40";
   constexpr auto HEADER_SIZE = sizeof(MAGIC_NUMBER) + 4;
 
+  nsCString result;
+
   nsCString lz4 = ReadFile(path);
   if (lz4.IsEmpty()) {
-    result.Truncate();
-    return true;
+    return result;
   }
 
   // Note: We want to include the null terminator here.
   nsDependentCSubstring magic(MAGIC_NUMBER, sizeof(MAGIC_NUMBER));
 
   if (lz4.Length() < HEADER_SIZE || StringHead(lz4, magic.Length()) != magic) {
-    return false;
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   auto size = LittleEndian::readUint32(lz4.get() + magic.Length());
 
   if (!result.SetLength(size, fallible) ||
       !LZ4::decompress(lz4.get() + HEADER_SIZE, result.BeginWriting(), size)) {
-    result.Truncate();
-    return false;
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
-  return true;
+  return result;
 }
 
 
@@ -473,20 +507,15 @@ AddonManagerStartup::AddInstallLocation(Addon& addon)
 nsresult
 AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locations)
 {
-  nsresult rv;
-
   locations.set(JS::UndefinedValue());
 
   nsCOMPtr<nsIFile> file = CloneAndAppend(ProfileDir(), "addonStartup.json.lz4");
 
   nsCString path;
-  rv = file->GetNativePath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_TRY(file->GetNativePath(path));
 
   nsCString data;
-  if (!ReadFileLZ4(path.get(), data)) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_TRY_VAR(data, ReadFileLZ4(path.get()));
 
   if (data.IsEmpty() || !ParseJSON(cx, data, locations)) {
     return NS_OK;
