@@ -570,9 +570,10 @@ HTMLObjectElement::DestroyContent()
 }
 
 nsresult
-HTMLObjectElement::CopyInnerTo(Element* aDest)
+HTMLObjectElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 {
-  nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
+  nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest,
+                                                      aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {

@@ -93,7 +93,8 @@ HTMLScriptElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsresult
-HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const
 {
   *aResult = nullptr;
 
@@ -101,7 +102,7 @@ HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) c
   HTMLScriptElement* it = new HTMLScriptElement(ni, NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
-  nsresult rv = const_cast<HTMLScriptElement*>(this)->CopyInnerTo(it);
+  nsresult rv = const_cast<HTMLScriptElement*>(this)->CopyInnerTo(it, aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The clone should be marked evaluated if we are.

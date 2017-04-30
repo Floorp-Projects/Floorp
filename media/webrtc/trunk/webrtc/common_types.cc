@@ -33,7 +33,35 @@ RTPHeaderExtension::RTPHeaderExtension()
       hasVideoRotation(false),
       videoRotation(0),
       hasRID(false),
-      rid(NULL) {
+      rid(nullptr) {
+}
+
+RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& rhs) {
+  *this = rhs;
+}
+
+RTPHeaderExtension&
+RTPHeaderExtension::operator=(const RTPHeaderExtension& rhs) {
+  hasTransmissionTimeOffset = rhs.hasTransmissionTimeOffset;
+  transmissionTimeOffset = rhs.transmissionTimeOffset;
+  hasAbsoluteSendTime = rhs.hasAbsoluteSendTime;
+  absoluteSendTime = rhs.absoluteSendTime;
+  hasTransportSequenceNumber = rhs.hasTransportSequenceNumber;
+  transportSequenceNumber = rhs.transportSequenceNumber;
+
+  hasAudioLevel = rhs.hasAudioLevel;
+  voiceActivity = rhs.voiceActivity;
+  audioLevel = rhs.audioLevel;
+
+  hasVideoRotation = rhs.hasVideoRotation;
+  videoRotation = rhs.videoRotation;
+
+  hasRID = rhs.hasRID;
+  if (rhs.rid) {
+    rid.reset(new char[strlen(rhs.rid.get())+1]);
+    strcpy(rid.get(), rhs.rid.get());
+  }
+  return *this;
 }
 
 RTPHeader::RTPHeader()

@@ -76,6 +76,10 @@ var whitelist = new Set([
   // Add-on API introduced in bug 1118285
   {file: "resource://app/modules/NewTabURL.jsm"},
 
+  // browser/components/newtab bug 1355166
+  {file: "resource://app/modules/NewTabSearchProvider.jsm"},
+  {file: "resource://app/modules/NewTabWebChannel.jsm"},
+
   // layout/mathml/nsMathMLChar.cpp
   {file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties"},
   {file: "resource://gre/res/fonts/mathfontUnicode.properties"},

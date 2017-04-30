@@ -10,6 +10,9 @@ import os
 import re
 import sys
 
+from shared_telemetry_utils import ParserError
+from collections import OrderedDict
+
 # Constants.
 MAX_LABEL_LENGTH = 20
 MAX_LABEL_COUNT = 100
@@ -29,20 +32,6 @@ except ImportError:
     # Must be in an out-of-tree usage scenario.  Trust that whoever is
     # running this script knows we need the usecounters module and has
     # ensured it's in our sys.path.
-    pass
-
-from collections import OrderedDict
-
-
-def table_dispatch(kind, table, body):
-    """Call body with table[kind] if it exists.  Raise an error otherwise."""
-    if kind in table:
-        return body(table[kind])
-    else:
-        raise BaseException("don't know how to handle a histogram of kind %s" % kind)
-
-
-class DefinitionException(BaseException):
     pass
 
 
@@ -87,10 +76,10 @@ try:
             for name, whitelist in whitelists.iteritems():
                 whitelists[name] = set(whitelist)
         except ValueError, e:
-            raise BaseException('error parsing whitelist (%s)' % whitelist_path)
+            raise ParserError('Error parsing whitelist: %s' % whitelist_path)
 except IOError:
     whitelists = None
-    print 'Unable to parse whitelist (%s). Assuming all histograms are acceptable.' % whitelist_path
+    print 'Unable to parse whitelist: %s.\nAssuming all histograms are acceptable.' % whitelist_path
 
 
 class Histogram:
@@ -119,24 +108,10 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._keyed = definition.get('keyed', False)
         self._expiration = definition.get('expires_in_version')
         self._labels = definition.get('labels', [])
+
         self.compute_bucket_parameters(definition)
-        table = {
-            'boolean': 'BOOLEAN',
-            'flag': 'FLAG',
-            'count': 'COUNT',
-            'enumerated': 'LINEAR',
-            'categorical': 'CATEGORICAL',
-            'linear': 'LINEAR',
-            'exponential': 'EXPONENTIAL',
-        }
-        table_dispatch(self.kind(), table,
-                       lambda k: self._set_nsITelemetry_kind(k))
-        datasets = {'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
-                    'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT'}
-        value = definition.get('releaseChannelCollection', 'opt-in')
-        if value not in datasets:
-            raise DefinitionException("unknown release channel collection policy for " + name)
-        self._dataset = "nsITelemetry::" + datasets[value]
+        self.set_nsITelemetry_kind()
+        self.set_dataset(definition)
 
     def name(self):
         """Return the name of the histogram."""
@@ -160,9 +135,6 @@ or 'exponential'."""
         """Return the nsITelemetry constant corresponding to the kind of
 the histogram."""
         return self._nsITelemetry_kind
-
-    def _set_nsITelemetry_kind(self, kind):
-        self._nsITelemetry_kind = "nsITelemetry::HISTOGRAM_%s" % kind
 
     def low(self):
         """Return the lower bound of the histogram."""
@@ -195,7 +167,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""
-        table = {
+        bucket_fns = {
             'boolean': linear_buckets,
             'flag': linear_buckets,
             'count': linear_buckets,
@@ -204,11 +176,15 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'linear': linear_buckets,
             'exponential': exponential_buckets,
         }
-        return table_dispatch(self.kind(), table,
-                              lambda p: p(self.low(), self.high(), self.n_buckets()))
+
+        if self._kind not in bucket_fns:
+            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+
+        fn = bucket_fns[self._kind]
+        return fn(self.low(), self.high(), self.n_buckets())
 
     def compute_bucket_parameters(self, definition):
-        table = {
+        bucket_fns = {
             'boolean': Histogram.boolean_flag_bucket_parameters,
             'flag': Histogram.boolean_flag_bucket_parameters,
             'count': Histogram.boolean_flag_bucket_parameters,
@@ -217,8 +193,12 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'linear': Histogram.linear_bucket_parameters,
             'exponential': Histogram.exponential_bucket_parameters,
         }
-        table_dispatch(self.kind(), table,
-                       lambda p: self.set_bucket_parameters(*p(definition)))
+
+        if self._kind not in bucket_fns:
+            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+
+        fn = bucket_fns[self._kind]
+        self.set_bucket_parameters(*fn(definition))
 
     def verify_attributes(self, name, definition):
         global always_allowed_keys
@@ -238,10 +218,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if not self._strict_type_checks:
             table['exponential'].append('extended_statistics_ok')
 
-        table_dispatch(definition['kind'], table,
-                       lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
+        kind = definition['kind']
+        if kind not in table:
+            raise ParserError('Unknown kind "%s" for histogram "%s".' % (kind, name))
+        allowed_keys = table[kind]
 
         self.check_name(name)
+        self.check_keys(name, definition, allowed_keys)
         self.check_field_types(name, definition)
         self.check_whitelisted_kind(name, definition)
         self.check_whitelistable_fields(name, definition)
@@ -250,11 +233,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     def check_name(self, name):
         if '#' in name:
-            raise ValueError('"#" not permitted for %s' % (name))
+            raise ParserError('Error for histogram name "%s": "#" is not allowed.' % (name))
 
         # Avoid C++ identifier conflicts between histogram enums and label enum names.
         if name.startswith("LABELS_"):
-            raise ValueError("Histogram name '%s' can not start with LABELS_" % (name))
+            raise ParserError('Error for histogram name "%s":  can not start with "LABELS_".' % (name))
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the histogram names to a strict pattern.
@@ -262,7 +245,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if self._strict_type_checks:
             pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
             if not re.match(pattern, name, re.IGNORECASE):
-                raise ValueError("Histogram name '%s' doesn't confirm to '%s'" % (name, pattern))
+                raise ParserError('Error for histogram name "%s": name does not conform to "%s"' % (name, pattern))
 
     def check_expiration(self, name, definition):
         field = 'expires_in_version'
@@ -274,7 +257,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         # We forbid new probes from using "expires_in_version" : "default" field/value pair.
         # Old ones that use this are added to the whitelist.
         if expiration == "default" and name not in whitelists['expiry_default']:
-            raise ValueError('New histogram "%s" cannot have "default" %s value.' % (name, field))
+            raise ParserError('New histogram "%s" cannot have "default" %s value.' % (name, field))
 
         if re.match(r'^[1-9][0-9]*$', expiration):
             expiration = expiration + ".0a1"
@@ -290,20 +273,20 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         invalid = filter(lambda l: len(l) > MAX_LABEL_LENGTH, labels)
         if len(invalid) > 0:
-            raise ValueError('Label values for %s exceed length limit of %d: %s' %
-                             (name, MAX_LABEL_LENGTH, ', '.join(invalid)))
+            raise ParserError('Label values for "%s" exceed length limit of %d: %s' %
+                              (name, MAX_LABEL_LENGTH, ', '.join(invalid)))
 
         if len(labels) > MAX_LABEL_COUNT:
-            raise ValueError('Label count for %s exceeds limit of %d' %
-                             (name, MAX_LABEL_COUNT))
+            raise ParserError('Label count for "%s" exceeds limit of %d' %
+                              (name, MAX_LABEL_COUNT))
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the label values to a strict pattern.
         pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
         invalid = filter(lambda l: not re.match(pattern, l, re.IGNORECASE), labels)
         if len(invalid) > 0:
-            raise ValueError('Label values for %s are not matching pattern "%s": %s' %
-                             (name, pattern, ', '.join(invalid)))
+            raise ParserError('Label values for %s are not matching pattern "%s": %s' %
+                              (name, pattern, ', '.join(invalid)))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
@@ -323,11 +306,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if not android_cpp_guard and \
            hist_kind in ["flag", "count"] and \
            name not in whitelists["kind"]:
-            raise KeyError(('New "%s" histograms are not supported on Desktop, you should'
-                            ' use scalars instead: %s'
-                            ' Are you trying to add a histogram on Android?'
-                            ' Add "cpp_guard": "ANDROID" to your histogram definition.')
-                           % (hist_kind, DOC_URL))
+            raise ParserError(('Unsupported kind "%s" for histogram "%s":\n'
+                               'New "%s" histograms are not supported on Desktop, you should'
+                               ' use scalars instead:\n'
+                               '%s\n'
+                               'Are you trying to add a histogram on Android?'
+                               ' Add "cpp_guard": "ANDROID" to your histogram definition.')
+                              % (hist_kind, name, hist_kind, DOC_URL))
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
@@ -343,10 +328,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         for field in ['alert_emails', 'bug_numbers']:
             if field not in definition and name not in whitelists[field]:
-                raise KeyError('New histogram "%s" must have a %s field.' % (name, field))
+                raise ParserError('New histogram "%s" must have a "%s" field.' % (name, field))
             if field in definition and name in whitelists[field]:
-                msg = 'Should remove histogram "%s" from the whitelist for "%s" in histogram-whitelists.json'
-                raise KeyError(msg % (name, field))
+                msg = 'Histogram "%s" should be removed from the whitelist for "%s" in histogram-whitelists.json.'
+                raise ParserError(msg % (name, field))
 
     def check_field_types(self, name, definition):
         # Define expected types for the histogram properties.
@@ -395,21 +380,20 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if key not in definition:
                 continue
             if not isinstance(definition[key], key_type):
-                raise ValueError('value for key "{0}" in Histogram "{1}" should be {2}'
-                                 .format(key, name, nice_type_name(key_type)))
+                raise ParserError('Value for key "{0}" in histogram "{1}" should be {2}.'
+                                  .format(key, name, nice_type_name(key_type)))
 
         for key, key_type in type_checked_list_fields.iteritems():
             if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
-                raise ValueError('all values for list "{0}" in Histogram "{1}" should be {2}'
-                                 .format(key, name, nice_type_name(key_type)))
+                raise ParserError('All values for list "{0}" in histogram "{1}" should be of type {2}.'
+                                  .format(key, name, nice_type_name(key_type)))
 
-    @staticmethod
-    def check_keys(name, definition, allowed_keys):
+    def check_keys(self, name, definition, allowed_keys):
         for key in definition.iterkeys():
             if key not in allowed_keys:
-                raise KeyError('%s not permitted for %s' % (key, name))
+                raise ParserError('Key "%s" is not allowed for histogram "%s".' % (key, name))
 
     def set_bucket_parameters(self, low, high, n_buckets):
         self._low = low
@@ -417,9 +401,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self._n_buckets = n_buckets
         if whitelists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
             if self._name not in whitelists['n_buckets']:
-                raise KeyError('New histogram "%s" is not permitted to have more than 100 buckets. '
-                               'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
-                               'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
+                raise ParserError('New histogram "%s" is not permitted to have more than 100 buckets.\n'
+                                  'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
+                                  'Contact a Telemetry peer (e.g. in #telemetry) if you think an exception ought to be made:\n'
+                                  'https://wiki.mozilla.org/Modules/Toolkit#Telemetry'
+                                  % self._name)
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
@@ -452,14 +438,43 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 definition['high'],
                 definition['n_buckets'])
 
+    def set_nsITelemetry_kind(self):
+        # Pick a Telemetry implementation type.
+        types = {
+            'boolean': 'BOOLEAN',
+            'flag': 'FLAG',
+            'count': 'COUNT',
+            'enumerated': 'LINEAR',
+            'categorical': 'CATEGORICAL',
+            'linear': 'LINEAR',
+            'exponential': 'EXPONENTIAL',
+        }
+
+        if self._kind not in types:
+            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+
+        self._nsITelemetry_kind = "nsITelemetry::HISTOGRAM_%s" % types[self._kind]
+
+    def set_dataset(self, definition):
+        datasets = {
+            'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
+            'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT'
+        }
+
+        value = definition.get('releaseChannelCollection', 'opt-in')
+        if value not in datasets:
+            raise ParserError('Unknown value for releaseChannelCollection policy for histogram "%s".' % self._name)
+
+        self._dataset = "nsITelemetry::" + datasets[value]
+
 
 # This hook function loads the histograms into an OrderedDict.
-# It will raise a ValueError if duplicate keys are found.
+# It will raise a ParserError if duplicate keys are found.
 def load_histograms_into_dict(ordered_pairs):
     d = collections.OrderedDict()
     for key, value in ordered_pairs:
         if key in d:
-            raise ValueError("Found duplicate key in Histograms file: %s" % key)
+            raise ParserError("Found duplicate key in Histograms file: %s" % key)
         d[key] = value
     return d
 
@@ -473,7 +488,7 @@ def from_Histograms_json(filename):
         try:
             histograms = json.load(f, object_pairs_hook=load_histograms_into_dict)
         except ValueError, e:
-            raise BaseException("error parsing histograms in %s: %s" % (filename, e.message))
+            raise ParserError("error parsing histograms in %s: %s" % (filename, e.message))
     return histograms
 
 
@@ -534,11 +549,11 @@ the histograms defined in filenames.
         # all_histograms stable, which makes ordering in generated files
         # stable, which makes builds more deterministic.
         if not isinstance(histograms, OrderedDict):
-            raise BaseException("histogram parser didn't provide an OrderedDict")
+            raise ParserError("Histogram parser did not provide an OrderedDict.")
 
         for (name, definition) in histograms.iteritems():
             if name in all_histograms:
-                raise DefinitionException("duplicate histogram name %s" % name)
+                raise ParserError('Duplicate histogram name "%s".' % name)
             all_histograms[name] = definition
 
     # We require that all USE_COUNTER2_* histograms be defined in a contiguous
@@ -550,15 +565,15 @@ the histograms defined in filenames.
         upper_bound = use_counter_indices[-1][0]
         n_counters = upper_bound - lower_bound + 1
         if n_counters != len(use_counter_indices):
-            raise DefinitionException("use counter histograms must be defined in a contiguous block")
+            raise ParserError("Use counter histograms must be defined in a contiguous block.")
 
     # Check that histograms that were removed from Histograms.json etc. are also removed from the whitelists.
     if whitelists is not None:
         all_whitelist_entries = itertools.chain.from_iterable(whitelists.itervalues())
         orphaned = set(all_whitelist_entries) - set(all_histograms.keys())
         if len(orphaned) > 0:
-            msg = 'The following entries are orphaned and should be removed from histogram-whitelists.json: %s'
-            raise BaseException(msg % (', '.join(sorted(orphaned))))
+            msg = 'The following entries are orphaned and should be removed from histogram-whitelists.json:\n%s'
+            raise ParserError(msg % (', '.join(sorted(orphaned))))
 
     for (name, definition) in all_histograms.iteritems():
         yield Histogram(name, definition, strict_type_checks=True)

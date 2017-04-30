@@ -14,11 +14,10 @@ if (typeof define === "undefined") {
 
 // React
 const {
-  createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
-const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
+const VariablesViewLink = require("devtools/client/webconsole/new-console-output/components/variables-view-link");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const Rep = REPS.Rep;
@@ -94,23 +93,23 @@ function GripMessageBody(props) {
   );
 }
 
+// Regular expression that matches the allowed CSS property names.
+const allowedStylesRegex = new RegExp(
+  "^(?:-moz-)?(?:background|border|box|clear|color|cursor|display|float|font|line|" +
+  "margin|padding|text|transition|outline|white-space|word|writing|" +
+  "(?:min-|max-)?width|(?:min-|max-)?height)"
+);
+
+// Regular expression that matches the forbidden CSS property values.
+const forbiddenValuesRegexs = [
+  // url(), -moz-element()
+  /\b(?:url|(?:-moz-)?element)[\s('"]+/gi,
+
+  // various URL protocols
+  /['"(]*(?:chrome|resource|about|app|data|https?|ftp|file):+\/*/gi,
+];
+
 function cleanupStyle(userProvidedStyle, createElement) {
-  // Regular expression that matches the allowed CSS property names.
-  const allowedStylesRegex = new RegExp(
-    "^(?:-moz-)?(?:background|border|box|clear|color|cursor|display|float|font|line|" +
-    "margin|padding|text|transition|outline|white-space|word|writing|" +
-    "(?:min-|max-)?width|(?:min-|max-)?height)"
-  );
-
-  // Regular expression that matches the forbidden CSS property values.
-  const forbiddenValuesRegexs = [
-    // url(), -moz-element()
-    /\b(?:url|(?:-moz-)?element)[\s('"]+/gi,
-
-    // various URL protocols
-    /['"(]*(?:chrome|resource|about|app|data|https?|ftp|file):+\/*/gi,
-  ];
-
   // Use a dummy element to parse the style string.
   let dummy = createElement("div");
   dummy.style = userProvidedStyle;

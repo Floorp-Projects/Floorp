@@ -12,6 +12,9 @@
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
 #include "shared-libraries.h"
 #endif
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#include "PseudoStack.h"
+#endif
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"

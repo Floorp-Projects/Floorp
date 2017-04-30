@@ -39,13 +39,6 @@ AssemblerX86Shared::copyDataRelocationTable(uint8_t* dest)
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
 }
 
-void
-AssemblerX86Shared::copyPreBarrierTable(uint8_t* dest)
-{
-    if (preBarriers_.length())
-        memcpy(dest, preBarriers_.buffer(), preBarriers_.length());
-}
-
 static void
 TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader)
 {

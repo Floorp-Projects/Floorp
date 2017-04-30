@@ -1168,6 +1168,14 @@ class RTCPeerConnection {
     this._impl.selectSsrc(receiver.track, ssrcIndex);
   }
 
+  mozAddRIDExtension(receiver, extensionId) {
+    this._impl.addRIDExtension(receiver.track, extensionId);
+  }
+
+  mozAddRIDFilter(receiver, rid) {
+    this._impl.addRIDFilter(receiver.track, rid);
+  }
+
   get localDescription() {
     this._checkClosed();
     let sdp = this._impl.localDescription;

@@ -37,7 +37,8 @@ public:
 
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
 
   // XPCOM GetName is fine.
   void SetName(const nsAString& aName, ErrorResult& aRv)

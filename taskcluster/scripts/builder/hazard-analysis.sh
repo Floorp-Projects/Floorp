@@ -114,7 +114,16 @@ function grab_artifacts () {
         # Do not error out if no files found
         shopt -s nullglob
         set +e
-        for f in *.txt *.lst run-analysis.sh; do
+        local important
+        important=(refs.txt unnecessary.txt hazards.txt gcFunctions.txt allFunctions.txt heapWriteHazards.txt)
+
+        # Bundle up the less important but still useful intermediate outputs,
+        # just to cut down on the clutter in treeherder's Job Details pane.
+        tar -acvf "${artifacts}/hazardIntermediates.tar.xz" --exclude-from <(for f in "${important[@]}"; do echo $f; done) *.txt *.lst build_xgill.log
+
+        # Upload the important outputs individually, so that they will be
+        # visible in Job Details and accessible to automated jobs.
+        for f in "${important[@]}"; do
             gzip -9 -c "$f" > "${artifacts}/$f.gz"
         done
 

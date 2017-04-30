@@ -121,6 +121,10 @@ interface RTCPeerConnection : EventTarget  {
 
   [ChromeOnly]
   void mozSelectSsrc(RTCRtpReceiver receiver, unsigned short ssrcIndex);
+  [ChromeOnly]
+  void mozAddRIDExtension(RTCRtpReceiver receiver, unsigned short extensionId);
+  [ChromeOnly]
+  void mozAddRIDFilter(RTCRtpReceiver receiver, DOMString rid);
 
   void close ();
   attribute EventHandler onnegotiationneeded;

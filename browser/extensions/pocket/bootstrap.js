@@ -128,30 +128,6 @@ function CreatePocketWidget(reason) {
       CustomizableUI.moveWidgetWithinArea("pocket-button", bmbtn + 1);
     }
   }
-
-  // Uninstall the Pocket social provider if it exists, but only if we haven't
-  // already uninstalled it in this manner.  That way the user can reinstall
-  // it if they prefer it without its being uninstalled every time they start
-  // the browser.
-  let SocialService;
-  try {
-    // For Firefox 51+
-    SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
-  } catch (e) {
-    SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-  }
-
-  let origin = "https://getpocket.com";
-  SocialService.getProvider(origin, provider => {
-    if (provider) {
-      let pref = "social.backup.getpocket-com";
-      if (!Services.prefs.prefHasUserValue(pref)) {
-        Services.prefs.setStringPref(pref, JSON.stringify(provider.manifest));
-        SocialService.uninstallProvider(origin, () => {});
-      }
-    }
-  });
-
 }
 
 // PocketContextMenu

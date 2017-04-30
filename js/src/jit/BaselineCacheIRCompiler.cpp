@@ -207,10 +207,6 @@ BaselineCacheIRCompiler::compile()
         return nullptr;
     }
 
-    // All barriers are emitted off-by-default, enable them if needed.
-    if (cx_->zone()->needsIncrementalBarrier())
-        newStubCode->togglePreBarriers(true, DontReprotect);
-
     return newStubCode;
 }
 
@@ -1826,8 +1822,8 @@ BaselineCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
     if (!addFailurePath(&failure))
         return false;
 
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch);
-    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
+    Address expandoAddr(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
     // Load the ExpandoAndGeneration* in the output scratch register and guard
     // it matches the proxy's ExpandoAndGeneration.

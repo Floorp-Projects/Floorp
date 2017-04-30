@@ -385,7 +385,7 @@ public:
    */
   bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
-  nsresult CopyInnerTo(Element* aDest);
+  nsresult CopyInnerTo(Element* aDest, bool aPreallocateChildren);
 
   /**
    * Sets the Accept header on the HTTP channel to the required
@@ -1746,6 +1746,10 @@ private:
   // True if media element has been marked as 'tainted' and can't
   // participate in video decoder suspending.
   bool mHasSuspendTaint;
+
+  // True if audio tracks and video tracks are constructed and added into the
+  // track list, false if all tracks are removed from the track list.
+  bool mMediaTracksConstructed;
 
   Visibility mVisibilityState;
 

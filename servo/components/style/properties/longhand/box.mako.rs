@@ -407,7 +407,6 @@ ${helpers.single_keyword("overflow-clip-box", "padding-box content-box",
 // FIXME(pcwalton, #2742): Implement scrolling for `scroll` and `auto`.
 ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                          need_clone=True, animation_value_type="none",
-                         extra_gecko_aliases="-moz-scrollbars-none=hidden",
                          extra_gecko_values="-moz-hidden-unscrollable",
                          custom_consts=overflow_custom_consts,
                          gecko_constant_prefix="NS_STYLE_OVERFLOW",
@@ -503,6 +502,7 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
         use parser::{Parse, ParserContext};
         use std::fmt;
         use style_traits::ToCss;
+        use super::FunctionKeyword;
         use values::specified;
 
         pub use super::parse;
@@ -513,6 +513,7 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
             CubicBezier(Point2D<f32>, Point2D<f32>),
             Steps(u32, StartEnd),
             Frames(u32),
+            Keyword(FunctionKeyword),
         }
 
         impl ToCss for T {
@@ -539,6 +540,9 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                         try!(frames.to_css(dest));
                         dest.write_str(")")
                     },
+                    T::Keyword(keyword) => {
+                        super::serialize_keyword(dest, keyword)
+                    }
                 }
             }
         }
@@ -652,6 +656,22 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
         dest.write_str(")")
     }
 
+    fn serialize_keyword<W>(dest: &mut W, keyword: FunctionKeyword) -> fmt::Result
+        where W: fmt::Write,
+    {
+        match keyword {
+            FunctionKeyword::StepStart => {
+                serialize_steps(dest, specified::Integer::new(1), StartEnd::Start)
+            },
+            FunctionKeyword::StepEnd => {
+                serialize_steps(dest, specified::Integer::new(1), StartEnd::End)
+            },
+            _ => {
+                keyword.to_css(dest)
+            },
+        }
+    }
+
     // https://drafts.csswg.org/css-transitions/#serializing-a-timing-function
     impl ToCss for SpecifiedValue {
         fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
@@ -676,17 +696,7 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                     dest.write_str(")")
                 },
                 SpecifiedValue::Keyword(keyword) => {
-                    match keyword {
-                        FunctionKeyword::StepStart => {
-                            serialize_steps(dest, specified::Integer::new(1), StartEnd::Start)
-                        },
-                        FunctionKeyword::StepEnd => {
-                            serialize_steps(dest, specified::Integer::new(1), StartEnd::End)
-                        },
-                        _ => {
-                            keyword.to_css(dest)
-                        },
-                    }
+                    serialize_keyword(dest, keyword)
                 },
             }
         }
@@ -709,7 +719,9 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                 SpecifiedValue::Frames(frames) => {
                     computed_value::T::Frames(frames.to_computed_value(context) as u32)
                 },
-                SpecifiedValue::Keyword(keyword) => keyword.to_computed_value(),
+                SpecifiedValue::Keyword(keyword) => {
+                    computed_value::T::Keyword(keyword)
+                },
             }
         }
         #[inline]
@@ -730,13 +742,16 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                     let frames = frames as i32;
                     SpecifiedValue::Frames(specified::Integer::from_computed_value(&frames))
                 },
+                computed_value::T::Keyword(keyword) => {
+                    SpecifiedValue::Keyword(keyword)
+                },
             }
         }
     }
 
     impl FunctionKeyword {
         #[inline]
-        pub fn to_computed_value(&self) -> computed_value::T {
+        pub fn to_non_keyword_value(&self) -> computed_value::T {
             match *self {
                 FunctionKeyword::Ease => ease(),
                 FunctionKeyword::Linear => linear(),
@@ -754,7 +769,7 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
 
     #[inline]
     pub fn get_initial_value() -> computed_value::T {
-        ease()
+        computed_value::T::Keyword(FunctionKeyword::Ease)
     }
 
     #[inline]
@@ -1993,8 +2008,8 @@ ${helpers.predefined_type("scroll-snap-coordinate",
                                 m32: Number::from_computed_value(&computed.m32),
                                 m33: Number::from_computed_value(&computed.m33),
                                 m34: Number::from_computed_value(&computed.m34),
-                                m41: Either::First(LengthOrPercentage::from_computed_value(&computed.m41)),
-                                m42: Either::First(LengthOrPercentage::from_computed_value(&computed.m42)),
+                                m41: Either::Second(LengthOrPercentage::from_computed_value(&computed.m41)),
+                                m42: Either::Second(LengthOrPercentage::from_computed_value(&computed.m42)),
                                 m43: LengthOrNumber::from_computed_value(&Either::First(computed.m43)),
                                 m44: Number::from_computed_value(&computed.m44),
                             });
@@ -2041,8 +2056,8 @@ ${helpers.predefined_type("scroll-snap-coordinate",
     // LengthOrPercentage. Number maps into Length
     fn lopon_to_lop(value: &ComputedLoPoNumber) -> ComputedLoP {
         match *value {
-            Either::First(length_or_percentage) => length_or_percentage,
-            Either::Second(number) => ComputedLoP::Length(Au::from_f32_px(number)),
+            Either::First(number) => ComputedLoP::Length(Au::from_f32_px(number)),
+            Either::Second(length_or_percentage) => length_or_percentage,
         }
     }
 

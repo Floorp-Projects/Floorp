@@ -59,14 +59,14 @@ static inline AuxCPOWData*
 AuxCPOWDataOf(JSObject* obj)
 {
     MOZ_ASSERT(IsCPOW(obj));
-    return static_cast<AuxCPOWData*>(GetProxyExtra(obj, 1).toPrivate());
+    return static_cast<AuxCPOWData*>(GetProxyReservedSlot(obj, 1).toPrivate());
 }
 
 static inline WrapperOwner*
 OwnerOf(JSObject* obj)
 {
     MOZ_ASSERT(IsCPOW(obj));
-    return reinterpret_cast<WrapperOwner*>(GetProxyExtra(obj, 0).toPrivate());
+    return reinterpret_cast<WrapperOwner*>(GetProxyReservedSlot(obj, 0).toPrivate());
 }
 
 ObjectId
@@ -1218,8 +1218,8 @@ WrapperOwner::fromRemoteObjectVariant(JSContext* cx, const RemoteObject& objVar)
                                            objVar.isDOMObject(),
                                            objVar.objectTag());
 
-        SetProxyExtra(obj, 0, PrivateValue(this));
-        SetProxyExtra(obj, 1, PrivateValue(aux));
+        SetProxyReservedSlot(obj, 0, PrivateValue(this));
+        SetProxyReservedSlot(obj, 1, PrivateValue(aux));
     }
 
     if (!JS_WrapObject(cx, &obj))

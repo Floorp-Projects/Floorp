@@ -3,19 +3,6 @@
 
 // See also browser/base/content/test/newtab/.
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-Cu.import("resource://gre/modules/NewTabUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
-const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
-
-function run_test() {
-  Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
-  run_next_test();
-}
-
 add_task(function* validCacheMidPopulation() {
   let expectedLinks = makeLinks(0, 3, 1);
 
@@ -320,6 +307,292 @@ add_task(function* extractSite() {
   });
 });
 
+add_task(function* faviconBytesToDataURI() {
+  let tests = [
+        [{favicon: "bar".split("").map(s => s.charCodeAt(0)), mimeType: "foo"}],
+        [{favicon: "bar".split("").map(s => s.charCodeAt(0)), mimeType: "foo", xxyy: "quz"}]
+      ];
+  let provider = NewTabUtils.activityStreamProvider;
+
+  for (let test of tests) {
+    let clone = JSON.parse(JSON.stringify(test));
+    delete clone[0].mimeType;
+    clone[0].favicon = `data:foo;base64,${btoa("bar")}`;
+    let result = provider._faviconBytesToDataURI(test);
+    Assert.deepEqual(JSON.stringify(clone), JSON.stringify(result), "favicon converted to data uri");
+  }
+});
+
+add_task(function* addFavicons() {
+  yield setUpActivityStreamTest();
+  let provider = NewTabUtils.activityStreamProvider;
+
+  // start by passing in a bad uri and check that we get a null favicon back
+  let links = [{url: "mozilla.com"}];
+  yield provider._addFavicons(links);
+  Assert.equal(links[0].favicon, null, "Got a null favicon because we passed in a bad url");
+  Assert.equal(links[0].mimeType, null, "Got a null mime type because we passed in a bad url");
+
+  // now fix the url and try again - this time we get good favicon data back
+  links[0].url = "https://mozilla.com";
+  let base64URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
+    "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+
+  let visit = [
+    {uri: links[0].url, visitDate: timeDaysAgo(0), transition: PlacesUtils.history.TRANSITION_TYPED}
+  ];
+  yield PlacesTestUtils.addVisits(visit);
+
+  let faviconData = new Map();
+  faviconData.set("https://mozilla.com", base64URL);
+  yield PlacesTestUtils.addFavicons(faviconData);
+
+  yield provider._addFavicons(links);
+  Assert.equal(links[0].mimeType, "image/png", "Got the right mime type before deleting it");
+  Assert.equal(links[0].faviconLength, links[0].favicon.length, "Got the right length for the byte array");
+  Assert.equal(provider._faviconBytesToDataURI(links)[0].favicon, base64URL, "Got the right favicon");
+});
+
+add_task(function* getTopFrecentSites() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = yield provider.getTopSites();
+  Assert.equal(links.length, 0, "empty history yields empty links");
+
+  // add a visit
+  let testURI = "http://mozilla.com/";
+  yield PlacesTestUtils.addVisits(testURI);
+
+  links = yield provider.getTopSites();
+  Assert.equal(links.length, 1, "adding a visit yields a link");
+  Assert.equal(links[0].url, testURI, "added visit corresponds to added url");
+  Assert.equal(links[0].eTLD, "com", "added visit mozilla.com has 'com' eTLD");
+});
+
+add_task(function* getTopFrecentSites_dedupeWWW() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+
+  let links = yield provider.getTopSites();
+  Assert.equal(links.length, 0, "empty history yields empty links");
+
+  // add a visit without www
+  let testURI = "http://mozilla.com";
+  yield PlacesTestUtils.addVisits(testURI);
+
+  // add a visit with www
+  testURI = "http://www.mozilla.com";
+  yield PlacesTestUtils.addVisits(testURI);
+
+  // Test combined frecency score
+  links = yield provider.getTopSites();
+  Assert.equal(links.length, 1, "adding both www. and no-www. yields one link");
+  Assert.equal(links[0].frecency, 200, "frecency scores are combined");
+
+  // add another page visit with www and without www
+  testURI = "http://mozilla.com/page";
+  yield PlacesTestUtils.addVisits(testURI);
+  testURI = "http://www.mozilla.com/page";
+  yield PlacesTestUtils.addVisits(testURI);
+  links = yield provider.getTopSites();
+  Assert.equal(links.length, 1, "adding both www. and no-www. yields one link");
+  Assert.equal(links[0].frecency, 200, "frecency scores are combined ignoring extra pages");
+});
+
+add_task(function* getTopFrencentSites_maxLimit() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+
+  // add many visits
+  const MANY_LINKS = 20;
+  for (let i = 0; i < MANY_LINKS; i++) {
+    let testURI = `http://mozilla${i}.com`;
+    yield PlacesTestUtils.addVisits(testURI);
+  }
+
+  let links = yield provider.getTopSites();
+  Assert.ok(links.length < MANY_LINKS, "query default limited to less than many");
+  Assert.ok(links.length > 6, "query default to more than visible count");
+});
+
+add_task(function* getTopFrecentSites_order() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let {TRANSITION_TYPED} = PlacesUtils.history;
+
+  let timeEarlier = timeDaysAgo(0);
+  let timeLater = timeDaysAgo(2);
+
+  let visits = [
+    // frecency 200
+    {uri: "https://mozilla1.com/0", visitDate: timeEarlier, transition: TRANSITION_TYPED},
+    // sort by url, frecency 200
+    {uri: "https://mozilla2.com/1", visitDate: timeEarlier, transition: TRANSITION_TYPED},
+    // sort by last visit date, frecency 200
+    {uri: "https://mozilla3.com/2", visitDate: timeLater, transition: TRANSITION_TYPED},
+    // sort by frecency, frecency 10
+    {uri: "https://mozilla4.com/3", visitDate: timeLater}
+  ];
+
+  let links = yield provider.getTopSites();
+  Assert.equal(links.length, 0, "empty history yields empty links");
+
+  let base64URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
+    "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+
+  // map of page url to favicon url
+  let faviconData = new Map();
+  faviconData.set("https://mozilla3.com/2", base64URL);
+
+  yield PlacesTestUtils.addVisits(visits);
+  yield PlacesTestUtils.addFavicons(faviconData);
+
+  links = yield provider.getTopSites();
+  Assert.equal(links.length, visits.length, "number of links added is the same as obtain by getTopFrecentSites");
+
+  // first link doesn't have a favicon
+  Assert.equal(links[0].url, visits[0].uri, "links are obtained in the expected order");
+  Assert.equal(null, links[0].favicon, "favicon data is stored as expected");
+  Assert.ok(isVisitDateOK(links[0].lastVisitDate), "visit date within expected range");
+
+  // second link doesn't have a favicon
+  Assert.equal(links[1].url, visits[1].uri, "links are obtained in the expected order");
+  Assert.equal(null, links[1].favicon, "favicon data is stored as expected");
+  Assert.ok(isVisitDateOK(links[1].lastVisitDate), "visit date within expected range");
+
+  // third link should have the favicon data that we added
+  Assert.equal(links[2].url, visits[2].uri, "links are obtained in the expected order");
+  Assert.equal(faviconData.get(links[2].url), links[2].favicon, "favicon data is stored as expected");
+  Assert.ok(isVisitDateOK(links[2].lastVisitDate), "visit date within expected range");
+
+  // fourth link doesn't have a favicon
+  Assert.equal(links[3].url, visits[3].uri, "links are obtained in the expected order");
+  Assert.equal(null, links[3].favicon, "favicon data is stored as expected");
+  Assert.ok(isVisitDateOK(links[3].lastVisitDate), "visit date within expected range");
+});
+
+add_task(function* activitySteamProvider_deleteHistoryLink() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+
+  let {TRANSITION_TYPED} = PlacesUtils.history;
+
+  let visits = [
+    // frecency 200
+    {uri: "https://mozilla1.com/0", visitDate: timeDaysAgo(1), transition: TRANSITION_TYPED},
+    // sort by url, frecency 200
+    {uri: "https://mozilla2.com/1", visitDate: timeDaysAgo(0)}
+  ];
+
+  let size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  Assert.equal(size, 0, "empty history has size 0");
+
+  yield PlacesTestUtils.addVisits(visits);
+
+  size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  Assert.equal(size, 2, "expected history size");
+
+  // delete a link
+  let deleted = yield provider.deleteHistoryEntry("https://mozilla2.com/1");
+  Assert.equal(deleted, true, "link is deleted");
+
+  // ensure that there's only one link left
+  size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  Assert.equal(size, 1, "expected history size");
+});
+
+add_task(function* activityStream_addBookmark() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let bookmarks = [
+    "https://mozilla1.com/0",
+    "https://mozilla1.com/1"
+  ];
+
+  let bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(bookmarksSize, 0, "empty bookmarks yields 0 size");
+
+  for (let url of bookmarks) {
+    yield provider.addBookmark(url);
+  }
+  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(bookmarksSize, 2, "size 2 for 2 bookmarks added");
+});
+
+add_task(function* activityStream_getBookmark() {
+    yield setUpActivityStreamTest();
+
+    let provider = NewTabUtils.activityStreamLinks;
+    let bookmark = yield provider.addBookmark("https://mozilla1.com/0");
+
+    let result = yield NewTabUtils.activityStreamProvider.getBookmark(bookmark.guid);
+    Assert.equal(result.bookmarkGuid, bookmark.guid, "got the correct bookmark guid");
+    Assert.equal(result.bookmarkTitle, bookmark.title, "got the correct bookmark title");
+    Assert.equal(result.lastModified, bookmark.lastModified.getTime(), "got the correct bookmark time");
+    Assert.equal(result.url, bookmark.url.href, "got the correct bookmark url");
+});
+
+add_task(function* activityStream_deleteBookmark() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let bookmarks = [
+    {url: "https://mozilla1.com/0", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK},
+    {url: "https://mozilla1.com/1", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK}
+  ];
+
+  let bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(bookmarksSize, 0, "empty bookmarks yields 0 size");
+
+  for (let placeInfo of bookmarks) {
+    yield PlacesUtils.bookmarks.insert(placeInfo);
+  }
+
+  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(bookmarksSize, 2, "size 2 for 2 bookmarks added");
+
+  let bookmarkGuid = yield new Promise(resolve => PlacesUtils.bookmarks.fetch(
+    {url: bookmarks[0].url}, bookmark => resolve(bookmark.guid)));
+  let deleted = yield provider.deleteBookmark(bookmarkGuid);
+  Assert.equal(deleted.guid, bookmarkGuid, "the correct bookmark was deleted");
+
+  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(bookmarksSize, 1, "size 1 after deleting");
+});
+
+add_task(function* activityStream_blockedURLs() {
+  yield setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  NewTabUtils.blockedLinks.addObserver(provider);
+
+  let {TRANSITION_TYPED} = PlacesUtils.history;
+
+  let timeToday = timeDaysAgo(0);
+  let timeEarlier = timeDaysAgo(2);
+
+  let visits = [
+    {uri: "https://example1.com/", visitDate: timeToday, transition: TRANSITION_TYPED},
+    {uri: "https://example2.com/", visitDate: timeToday, transition: TRANSITION_TYPED},
+    {uri: "https://example3.com/", visitDate: timeEarlier, transition: TRANSITION_TYPED},
+    {uri: "https://example4.com/", visitDate: timeEarlier, transition: TRANSITION_TYPED}
+  ];
+  yield PlacesTestUtils.addVisits(visits);
+  yield PlacesUtils.bookmarks.insert({url: "https://example5.com/", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK});
+
+  let sizeQueryResult;
+
+  // bookmarks
+  sizeQueryResult = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  Assert.equal(sizeQueryResult, 1, "got the correct bookmark size");
+});
+
 function TestProvider(getLinksFn) {
   this.getLinks = getLinksFn;
   this._observers = new Set();
@@ -346,33 +619,3 @@ TestProvider.prototype = {
   },
 };
 
-function do_check_links(actualLinks, expectedLinks) {
-  do_check_true(Array.isArray(actualLinks));
-  do_check_eq(actualLinks.length, expectedLinks.length);
-  for (let i = 0; i < expectedLinks.length; i++) {
-    let expected = expectedLinks[i];
-    let actual = actualLinks[i];
-    do_check_eq(actual.url, expected.url);
-    do_check_eq(actual.title, expected.title);
-    do_check_eq(actual.frecency, expected.frecency);
-    do_check_eq(actual.lastVisitDate, expected.lastVisitDate);
-  }
-}
-
-function makeLinks(frecRangeStart, frecRangeEnd, step) {
-  let links = [];
-  // Remember, links are ordered by frecency descending.
-  for (let i = frecRangeEnd; i > frecRangeStart; i -= step) {
-    links.push(makeLink(i));
-  }
-  return links;
-}
-
-function makeLink(frecency) {
-  return {
-    url: "http://example" + frecency + ".com/",
-    title: "My frecency is " + frecency,
-    frecency,
-    lastVisitDate: 0,
-  };
-}

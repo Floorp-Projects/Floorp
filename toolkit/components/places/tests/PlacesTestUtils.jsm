@@ -87,6 +87,43 @@ this.PlacesTestUtils = Object.freeze({
     return PlacesUtils.history.insertMany(infos);
   }),
 
+   /*
+    * Add Favicons
+    *
+    * @param {Map} faviconURLs  keys are page URLs, values are their
+    *                           associated favicon URLs.
+    */
+
+  addFavicons: Task.async(function*(faviconURLs) {
+    let faviconPromises = [];
+
+    // If no favicons were provided, we do not want to continue on
+    if (!faviconURLs) {
+      throw new Error("No favicon URLs were provided");
+    }
+    for (let [key, val] of faviconURLs) {
+      if (!val) {
+        throw new Error("URL does not exist");
+      }
+      faviconPromises.push(new Promise((resolve, reject) => {
+        let uri = NetUtil.newURI(key);
+        let faviconURI = NetUtil.newURI(val);
+        try {
+          PlacesUtils.favicons.setAndFetchFaviconForPage(
+            uri,
+            faviconURI,
+            false,
+            PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+            resolve,
+            Services.scriptSecurityManager.getSystemPrincipal());
+        } catch (ex) {
+          reject(ex);
+        }
+      }));
+    }
+    yield Promise.all(faviconPromises);
+  }),
+
   /**
    * Clear all history.
    *

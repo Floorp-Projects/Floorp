@@ -34,5 +34,8 @@ interface nsITabChild : nsISupports
                                   [array, size_is(linksCount)] in nsIDroppedLinkItem links);
 
   readonly attribute uint64_t tabId;
+
+  [noscript, notxpcom] void beforeUnloadAdded();
+  [noscript, notxpcom] void beforeUnloadRemoved();
 };
 
