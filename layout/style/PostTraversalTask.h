@@ -12,6 +12,7 @@
 namespace mozilla {
 namespace dom {
 class FontFace;
+class FontFaceSet;
 } // namespace dom
 } // namespace mozilla
 
@@ -44,6 +45,24 @@ public:
     return task;
   }
 
+  static PostTraversalTask DispatchLoadingEventAndReplaceReadyPromise(
+    dom::FontFaceSet* aFontFaceSet)
+  {
+    auto task =
+      PostTraversalTask(Type::DispatchLoadingEventAndReplaceReadyPromise);
+    task.mTarget = aFontFaceSet;
+    return task;
+  }
+
+  static PostTraversalTask DispatchFontFaceSetCheckLoadingFinishedAfterDelay(
+    dom::FontFaceSet* aFontFaceSet)
+  {
+    auto task =
+      PostTraversalTask(Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay);
+    task.mTarget = aFontFaceSet;
+    return task;
+  }
+
   void Run();
 
 private:
@@ -58,6 +77,12 @@ private:
     // mTarget (FontFace*)
     // mResult
     RejectFontFaceLoadedPromise,
+
+    // mTarget (FontFaceSet*)
+    DispatchLoadingEventAndReplaceReadyPromise,
+
+    // mTarget (FontFaceSet*)
+    DispatchFontFaceSetCheckLoadingFinishedAfterDelay,
   };
 
   explicit PostTraversalTask(Type aType)

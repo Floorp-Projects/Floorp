@@ -17,6 +17,8 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoUtils.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
@@ -128,6 +130,10 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
 
 FontFaceSet::~FontFaceSet()
 {
+  // Assert that we don't drop any FontFaceSet objects during a Servo traversal,
+  // since PostTraversalTask objects can hold raw pointers to FontFaceSets.
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+
   Disconnect();
   for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
     it.Get()->GetKey()->Cancel();
@@ -380,6 +386,8 @@ FontFaceSet::Check(const nsAString& aFont,
 Promise*
 FontFaceSet::GetReady(ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mReady) {
     nsCOMPtr<nsIGlobalObject> global = GetParentObject();
     mReady = Promise::Create(global, aRv);
@@ -1462,6 +1470,8 @@ FontFaceSet::GetPrivateBrowsing()
 void
 FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
 {
+  AssertIsMainThreadOrServoFontMetricsLocked();
+
   MOZ_ASSERT(HasAvailableFontFace(aFontFace));
 
   mHasLoadingFontFacesIsDirty = true;
@@ -1480,12 +1490,31 @@ FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
     // and call CheckLoadingFinished() after the reflow has been queued.
     if (!mDelayedLoadCheck) {
       mDelayedLoadCheck = true;
-      nsCOMPtr<nsIRunnable> checkTask =
-        NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
-      mDocument->Dispatch("FontFaceSet::CheckLoadingFinishedAfterDelay",
-                          TaskCategory::Other, checkTask.forget());
+      DispatchCheckLoadingFinishedAfterDelay();
     }
   }
+}
+
+void
+FontFaceSet::DispatchCheckLoadingFinishedAfterDelay()
+{
+  AssertIsMainThreadOrServoFontMetricsLocked();
+
+  if (ServoStyleSet* set = ServoStyleSet::Current()) {
+    // See comments in Gecko_GetFontMetrics.
+    //
+    // We can't just dispatch the runnable below if we're not on the main
+    // thread, since it needs to take a strong reference to the FontFaceSet,
+    // and being a DOM object, FontFaceSet doesn't support thread-safe
+    // refcounting.
+    set->AppendTask(PostTraversalTask::DispatchFontFaceSetCheckLoadingFinishedAfterDelay(this));
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> checkTask =
+    NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
+  mDocument->Dispatch("FontFaceSet::CheckLoadingFinishedAfterDelay",
+                      TaskCategory::Other, checkTask.forget());
 }
 
 void
@@ -1504,6 +1533,8 @@ FontFaceSet::CheckLoadingFinishedAfterDelay()
 void
 FontFaceSet::CheckLoadingStarted()
 {
+  AssertIsMainThreadOrServoFontMetricsLocked();
+
   if (!HasLoadingFontFaces()) {
     return;
   }
@@ -1515,6 +1546,27 @@ FontFaceSet::CheckLoadingStarted()
   }
 
   mStatus = FontFaceSetLoadStatus::Loading;
+  DispatchLoadingEventAndReplaceReadyPromise();
+}
+
+void
+FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise()
+{
+  AssertIsMainThreadOrServoFontMetricsLocked();
+
+  if (ServoStyleSet* set = ServoStyleSet::Current()) {
+    // See comments in Gecko_GetFontMetrics.
+    //
+    // We can't just dispatch the runnable below if we're not on the main
+    // thread, since it needs to take a strong reference to the FontFaceSet,
+    // and being a DOM object, FontFaceSet doesn't support thread-safe
+    // refcounting.  (Also, the Promise object creation must be done on
+    // the main thread.)
+    set->AppendTask(
+      PostTraversalTask::DispatchLoadingEventAndReplaceReadyPromise(this));
+    return;
+  }
+
   (new AsyncEventDispatcher(this, NS_LITERAL_STRING("loading"),
                             false))->PostDOMEvent();
 
@@ -1594,6 +1646,8 @@ FontFaceSet::MightHavePendingFontLoads()
 void
 FontFaceSet::CheckLoadingFinished()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mDelayedLoadCheck) {
     // Wait until the runnable posted in OnFontFaceStatusChanged calls us.
     return;
