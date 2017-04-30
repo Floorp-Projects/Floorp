@@ -57,17 +57,12 @@ ZoneGroup::~ZoneGroup()
 }
 
 void
-ZoneGroup::enter(JSContext* cx)
+ZoneGroup::enter()
 {
+    JSContext* cx = TlsContext.get();
     if (ownerContext().context() == cx) {
         MOZ_ASSERT(enterCount);
     } else {
-        if (useExclusiveLocking) {
-            MOZ_ASSERT(!usedByHelperThread);
-            while (ownerContext().context() != nullptr) {
-                cx->yieldToEmbedding();
-            }
-        }
         MOZ_RELEASE_ASSERT(ownerContext().context() == nullptr);
         MOZ_ASSERT(enterCount == 0);
         ownerContext_ = CooperatingContext(cx);
