@@ -226,8 +226,6 @@ class MacroAssemblerNone : public Assembler
     CodeOffset toggledCall(JitCode*, bool) { MOZ_CRASH(); }
     static size_t ToggledCallSize(uint8_t*) { MOZ_CRASH(); }
 
-    void writePrebarrierOffset(CodeOffset) { MOZ_CRASH(); }
-
     void finish() { MOZ_CRASH(); }
 
     template <typename T, typename S> void moveValue(T, S) { MOZ_CRASH(); }
