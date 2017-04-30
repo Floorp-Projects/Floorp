@@ -85,6 +85,11 @@ public:
     return sInServoTraversal;
   }
 
+  static ServoStyleSet* Current()
+  {
+    return sInServoTraversal;
+  }
+
   ServoStyleSet();
   ~ServoStyleSet();
 
@@ -309,6 +314,23 @@ public:
                         const ServoComputedValuesWithParent& aComputedValues);
 
 private:
+  class MOZ_STACK_CLASS AutoSetInServoTraversal
+  {
+  public:
+    AutoSetInServoTraversal(ServoStyleSet* aSet)
+    {
+      MOZ_ASSERT(!sInServoTraversal);
+      MOZ_ASSERT(aSet);
+      sInServoTraversal = aSet;
+    }
+
+    ~AutoSetInServoTraversal()
+    {
+      MOZ_ASSERT(sInServoTraversal);
+      sInServoTraversal = nullptr;
+    }
+  };
+
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,
@@ -399,7 +421,7 @@ private:
                   nsCSSAnonBoxes::NonInheriting::_Count,
                   RefPtr<nsStyleContext>> mNonInheritingStyleContexts;
 
-  static bool sInServoTraversal;
+  static ServoStyleSet* sInServoTraversal;
 };
 
 } // namespace mozilla
