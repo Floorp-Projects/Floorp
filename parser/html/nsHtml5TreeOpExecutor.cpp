@@ -984,14 +984,10 @@ nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
   if (uri && ShouldPreloadURI(uri)) {
     // use document wide referrer policy
     mozilla::net::ReferrerPolicy referrerPolicy = mSpeculationReferrerPolicy;
-    // if enabled in preferences, use the referrer attribute from the image, if provided
-    bool referrerAttributeEnabled = Preferences::GetBool("network.http.enablePerElementReferrer", true);
-    if (referrerAttributeEnabled) {
-      mozilla::net::ReferrerPolicy imageReferrerPolicy =
-        mozilla::net::AttributeReferrerPolicyFromString(aImageReferrerPolicy);
-      if (imageReferrerPolicy != mozilla::net::RP_Unset) {
-        referrerPolicy = imageReferrerPolicy;
-      }
+    mozilla::net::ReferrerPolicy imageReferrerPolicy =
+      mozilla::net::AttributeReferrerPolicyFromString(aImageReferrerPolicy);
+    if (imageReferrerPolicy != mozilla::net::RP_Unset) {
+      referrerPolicy = imageReferrerPolicy;
     }
 
     mDocument->MaybePreLoadImage(uri, aCrossOrigin, referrerPolicy);
