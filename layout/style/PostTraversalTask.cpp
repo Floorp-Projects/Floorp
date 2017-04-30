@@ -7,6 +7,7 @@
 #include "PostTraversalTask.h"
 
 #include "mozilla/dom/FontFace.h"
+#include "mozilla/dom/FontFaceSet.h"
 
 namespace mozilla {
 
@@ -22,6 +23,16 @@ PostTraversalTask::Run()
 
     case Type::RejectFontFaceLoadedPromise:
       static_cast<FontFace*>(mTarget)->DoReject(mResult);
+      break;
+
+    case Type::DispatchLoadingEventAndReplaceReadyPromise:
+      static_cast<FontFaceSet*>(mTarget)->
+        DispatchLoadingEventAndReplaceReadyPromise();
+      break;
+
+    case Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay:
+      static_cast<FontFaceSet*>(mTarget)->
+        DispatchCheckLoadingFinishedAfterDelay();
       break;
   }
 }
