@@ -1644,8 +1644,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template <typename T>
-    void callPreBarrier(const T& address, MIRType type) {
+    void guardedCallPreBarrier(const T& address, MIRType type) {
         Label done;
+
+        branchTestNeedsIncrementalBarrier(Assembler::Zero, &done);
 
         if (type == MIRType::Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
@@ -1658,20 +1660,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         call(preBarrier);
         Pop(PreBarrierReg);
-
-        bind(&done);
-    }
-
-    template <typename T>
-    void patchableCallPreBarrier(const T& address, MIRType type) {
-        Label done;
-
-        // All barriers are off by default.
-        // They are enabled if necessary at the end of CodeGenerator::generate().
-        CodeOffset nopJump = toggledJump(&done);
-        writePrebarrierOffset(nopJump);
-
-        callPreBarrier(address, type);
         jump(&done);
 
         haltingAlign(8);

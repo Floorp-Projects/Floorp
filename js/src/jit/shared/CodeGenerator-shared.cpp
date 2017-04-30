@@ -1654,17 +1654,17 @@ CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index, int
 {
     if (index->isConstant()) {
         Address address(base, ToInt32(index) * sizeof(Value) + offsetAdjustment);
-        masm.patchableCallPreBarrier(address, MIRType::Value);
+        masm.guardedCallPreBarrier(address, MIRType::Value);
     } else {
         BaseIndex address(base, ToRegister(index), TimesEight, offsetAdjustment);
-        masm.patchableCallPreBarrier(address, MIRType::Value);
+        masm.guardedCallPreBarrier(address, MIRType::Value);
     }
 }
 
 void
 CodeGeneratorShared::emitPreBarrier(Address address)
 {
-    masm.patchableCallPreBarrier(address, MIRType::Value);
+    masm.guardedCallPreBarrier(address, MIRType::Value);
 }
 
 Label*
