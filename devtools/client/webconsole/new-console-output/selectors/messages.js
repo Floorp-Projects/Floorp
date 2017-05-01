@@ -8,6 +8,7 @@
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
+const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
 const {
   MESSAGE_TYPE,
   MESSAGE_SOURCE
@@ -108,9 +109,8 @@ function matchSearchFilters(message, filters) {
   let text = filters.text || "";
   return (
     text === ""
-    // @TODO currently we return true for any object grip. We should find a way to
-    // search object grips.
-    || (message.parameters !== null && !Array.isArray(message.parameters))
+    // Look for a match in parameters.
+    || isTextInParameters(text, message.parameters)
     // Look for a match in location.
     || isTextInFrame(text, message.frame)
     // Look for a match in stacktrace.
@@ -146,16 +146,54 @@ function matchSearchFilters(message, filters) {
   );
 }
 
+/**
+ * Returns true if given text is included in provided stack frame.
+ */
 function isTextInFrame(text, frame) {
   if (!frame) {
     return false;
   }
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  return Object.keys(frame)
-    .map(key => frame[key])
+  return Object.values(frame)
     .join(":")
     .toLocaleLowerCase()
     .includes(text.toLocaleLowerCase());
+}
+
+/**
+ * Returns true if given text is included in provided parameters.
+ */
+function isTextInParameters(text, parameters) {
+  if (!parameters) {
+    return false;
+  }
+
+  text = text.toLocaleLowerCase();
+  return getAllProps(parameters).find(prop =>
+    (prop + "").toLocaleLowerCase().includes(text)
+  );
+}
+
+/**
+ * Get a flat array of all the grips and their properties.
+ *
+ * @param {Array} Grips
+ * @return {Array} Flat array of the grips and their properties.
+ */
+function getAllProps(grips) {
+  let result = grips.reduce((res, grip) => {
+    let previewItems = getGripPreviewItems(grip);
+    let allProps = previewItems.length > 0 ? getAllProps(previewItems) : [];
+    return [...res, grip, grip.class, ...allProps];
+  }, []);
+
+  // We are interested only in primitive props (to search for)
+  // not in objects and undefined previews.
+  result = result.filter(grip =>
+    typeof grip != "object" &&
+    typeof grip != "undefined"
+  );
+
+  return [...new Set(result)];
 }
 
 function prune(messages, logLimit) {
