@@ -1155,10 +1155,10 @@ int32_t WebrtcMediaCodecVP8VideoDecoder::Decode(
     const webrtc::CodecSpecificInfo* codecSpecificInfo,
     int64_t renderTimeMs) {
 
-  CSFLogDebug(logTag,  "%s, renderTimeMs = %lld ", __FUNCTION__, renderTimeMs);
+  CSFLogDebug(logTag,  "%s, renderTimeMs = %" PRId64, __FUNCTION__, renderTimeMs);
 
   if (inputImage._length== 0 || !inputImage._buffer) {
-    CSFLogDebug(logTag,  "%s, input Image invalid. length = %d", __FUNCTION__, inputImage._length);
+    CSFLogDebug(logTag,  "%s, input Image invalid. length = %" PRIdPTR, __FUNCTION__, inputImage._length);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
