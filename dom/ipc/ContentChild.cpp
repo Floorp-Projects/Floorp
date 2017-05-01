@@ -2570,18 +2570,12 @@ ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
 mozilla::ipc::IPCResult
 ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
 {
-  nsTArray<const char*> featureArray;
-  for (size_t i = 0; i < params.features().Length(); ++i) {
-    featureArray.AppendElement(params.features()[i].get());
-  }
-
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
   }
 
-  profiler_start(params.entries(), params.interval(),
-                 featureArray.Elements(), featureArray.Length(),
+  profiler_start(params.entries(), params.interval(), params.features(),
                  filterArray.Elements(), filterArray.Length());
 
  return IPC_OK();

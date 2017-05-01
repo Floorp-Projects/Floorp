@@ -9,8 +9,8 @@ struct ProfilerInitParams {
   bool enabled;
   uint32_t entries;
   double interval;
+  uint32_t features;
   nsCString[] filters;
-  nsCString[] features;
 };
 
 } // namespace mozilla

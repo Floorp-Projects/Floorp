@@ -22,8 +22,8 @@ interface nsIProfilerStartParams : nsISupports
 {
   readonly attribute uint32_t entries;
   readonly attribute double interval;
+  readonly attribute uint32_t features;
 
-  [noscript, notxpcom, nostdcall] StringArrayRef getFeatures();
   [noscript, notxpcom, nostdcall] StringArrayRef getFilters();
 };
 
