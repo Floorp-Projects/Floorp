@@ -38,7 +38,6 @@ const HEADER_FILTERS = HEADERS
 
 const FILTER_FLAGS = [
   ...HEADER_FILTERS,
-  "scheme",
   "set-cookie-domain",
   "set-cookie-name",
   "set-cookie-value",
@@ -182,8 +181,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       }
       break;
     case "scheme":
-      let scheme = new URL(item.url).protocol.replace(":", "").toLowerCase();
-      match = scheme === value;
+      match = item.urlDetails.scheme === value;
       break;
     case "regexp":
       try {

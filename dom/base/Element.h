@@ -837,9 +837,6 @@ public:
     GetElementsByClassName(const nsAString& aClassNames);
 
   CSSPseudoElementType GetPseudoElementType() const {
-    if (!HasProperties()) {
-      return CSSPseudoElementType::NotPseudo;
-    }
     nsresult rv = NS_OK;
     auto raw = GetProperty(nsGkAtoms::pseudoProperty, &rv);
     if (rv == NS_PROPTABLE_PROP_NOT_THERE) {

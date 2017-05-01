@@ -15,7 +15,6 @@ use gecko_bindings::structs::RawGeckoFontFaceRuleList;
 use gecko_bindings::structs::RawGeckoNode;
 use gecko_bindings::structs::RawGeckoAnimationValueList;
 use gecko_bindings::structs::RawServoAnimationValue;
-use gecko_bindings::structs::RawServoAnimationValueMap;
 use gecko_bindings::structs::RawServoDeclarationBlock;
 use gecko_bindings::structs::RawServoStyleRule;
 use gecko_bindings::structs::RawGeckoPresContext;
@@ -222,9 +221,6 @@ pub struct RawServoImportRule(RawServoImportRuleVoid);
 pub type RawServoAnimationValueStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoAnimationValue>;
 pub type RawServoAnimationValueBorrowed<'a> = &'a RawServoAnimationValue;
 pub type RawServoAnimationValueBorrowedOrNull<'a> = Option<&'a RawServoAnimationValue>;
-pub type RawServoAnimationValueMapStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoAnimationValueMap>;
-pub type RawServoAnimationValueMapBorrowed<'a> = &'a RawServoAnimationValueMap;
-pub type RawServoAnimationValueMapBorrowedOrNull<'a> = Option<&'a RawServoAnimationValueMap>;
 pub type RawServoMediaListStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoMediaList>;
 pub type RawServoMediaListBorrowed<'a> = &'a RawServoMediaList;
 pub type RawServoMediaListBorrowedOrNull<'a> = Option<&'a RawServoMediaList>;
@@ -272,6 +268,14 @@ pub type ServoElementSnapshotBorrowed<'a> = &'a ServoElementSnapshot;
 pub type ServoElementSnapshotBorrowedOrNull<'a> = Option<&'a ServoElementSnapshot>;
 pub type ServoElementSnapshotBorrowedMut<'a> = &'a mut ServoElementSnapshot;
 pub type ServoElementSnapshotBorrowedMutOrNull<'a> = Option<&'a mut ServoElementSnapshot>;
+pub type RawServoAnimationValueMapOwned = ::gecko_bindings::sugar::ownership::Owned<RawServoAnimationValueMap>;
+pub type RawServoAnimationValueMapOwnedOrNull = ::gecko_bindings::sugar::ownership::OwnedOrNull<RawServoAnimationValueMap>;
+pub type RawServoAnimationValueMapBorrowed<'a> = &'a RawServoAnimationValueMap;
+pub type RawServoAnimationValueMapBorrowedOrNull<'a> = Option<&'a RawServoAnimationValueMap>;
+pub type RawServoAnimationValueMapBorrowedMut<'a> = &'a mut RawServoAnimationValueMap;
+pub type RawServoAnimationValueMapBorrowedMutOrNull<'a> = Option<&'a mut RawServoAnimationValueMap>;
+enum RawServoAnimationValueMapVoid { }
+pub struct RawServoAnimationValueMap(RawServoAnimationValueMapVoid);
 pub type RawGeckoNodeBorrowed<'a> = &'a RawGeckoNode;
 pub type RawGeckoNodeBorrowedOrNull<'a> = Option<&'a RawGeckoNode>;
 pub type RawGeckoElementBorrowed<'a> = &'a RawGeckoElement;
@@ -372,14 +376,6 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_AnimationValue_Release(ptr: RawServoAnimationValueBorrowed);
-}
-extern "C" {
-    pub fn Servo_AnimationValueMap_AddRef(ptr:
-                                              RawServoAnimationValueMapBorrowed);
-}
-extern "C" {
-    pub fn Servo_AnimationValueMap_Release(ptr:
-                                               RawServoAnimationValueMapBorrowed);
 }
 extern "C" {
     pub fn Servo_MediaList_AddRef(ptr: RawServoMediaListBorrowed);
@@ -631,7 +627,7 @@ extern "C" {
                                   aCascadeLevel:
                                       EffectCompositor_CascadeLevel,
                                   aAnimationValues:
-                                      RawServoAnimationValueMapBorrowed)
+                                      RawServoAnimationValueMapBorrowedMut)
      -> bool;
 }
 extern "C" {
@@ -1079,9 +1075,6 @@ extern "C" {
      -> nscoord;
 }
 extern "C" {
-    pub fn Gecko_CSSValue_GetAngle(css_value: nsCSSValueBorrowed) -> f32;
-}
-extern "C" {
     pub fn Gecko_CSSValue_GetKeyword(aCSSValue: nsCSSValueBorrowed)
      -> nsCSSKeyword;
 }
@@ -1113,10 +1106,6 @@ extern "C" {
 extern "C" {
     pub fn Gecko_CSSValue_SetPercentage(css_value: nsCSSValueBorrowedMut,
                                         percent: f32);
-}
-extern "C" {
-    pub fn Gecko_CSSValue_SetAngle(css_value: nsCSSValueBorrowedMut,
-                                   radians: f32);
 }
 extern "C" {
     pub fn Gecko_CSSValue_SetCalc(css_value: nsCSSValueBorrowedMut,
@@ -1790,7 +1779,7 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_AnimationValueMap_Push(arg1:
-                                            RawServoAnimationValueMapBorrowed,
+                                            RawServoAnimationValueMapBorrowedMut,
                                         property: nsCSSPropertyID,
                                         value:
                                             RawServoAnimationValueBorrowed);
@@ -1964,7 +1953,7 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_AnimationCompose(animation_values:
-                                      RawServoAnimationValueMapBorrowed,
+                                      RawServoAnimationValueMapBorrowedMut,
                                   base_values: *mut ::std::os::raw::c_void,
                                   property: nsCSSPropertyID,
                                   animation_segment:

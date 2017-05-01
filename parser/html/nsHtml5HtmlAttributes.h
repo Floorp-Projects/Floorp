@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2008-2011 Mozilla Foundation
+ * Copyright (c) 2008-2017 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -21,11 +21,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-/*
- * THIS IS A GENERATED FILE. PLEASE DO NOT EDIT.
- * Please edit HtmlAttributes.java instead and regenerate.
- */
-
 #ifndef nsHtml5HtmlAttributes_h
 #define nsHtml5HtmlAttributes_h
 
@@ -43,6 +38,8 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsTArray.h"
+#include "nsHtml5AttributeEntry.h"
 
 class nsHtml5StreamParser;
 
@@ -61,34 +58,39 @@ class nsHtml5HtmlAttributes
   public:
     static nsHtml5HtmlAttributes* EMPTY_ATTRIBUTES;
   private:
-    int32_t mode;
-    int32_t length;
-    autoJArray<nsHtml5AttributeName*,int32_t> names;
-    autoJArray<nsHtml5String, int32_t> values;
-    autoJArray<int32_t,int32_t> lines;
+    AutoTArray<nsHtml5AttributeEntry, 5> mStorage;
+    int32_t mMode;
+    void AddEntry(nsHtml5AttributeEntry&& aEntry);
+
   public:
-    explicit nsHtml5HtmlAttributes(int32_t mode);
+    explicit nsHtml5HtmlAttributes(int32_t aMode);
     ~nsHtml5HtmlAttributes();
-    int32_t getIndex(nsHtml5AttributeName* name);
-    nsHtml5String getValue(nsHtml5AttributeName* name);
+
+    // Remove getIndex when removing isindex support
+    int32_t getIndex(nsHtml5AttributeName* aName);
+
+    nsHtml5String getValue(nsHtml5AttributeName* aName);
     int32_t getLength();
-    nsIAtom* getLocalNameNoBoundsCheck(int32_t index);
-    int32_t getURINoBoundsCheck(int32_t index);
-    nsIAtom* getPrefixNoBoundsCheck(int32_t index);
-    nsHtml5String getValueNoBoundsCheck(int32_t index);
-    nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t index);
-    int32_t getLineNoBoundsCheck(int32_t index);
-    void addAttribute(nsHtml5AttributeName* name,
-                      nsHtml5String value,
-                      int32_t line);
-    void clear(int32_t m);
-    void releaseValue(int32_t i);
+    nsIAtom* getLocalNameNoBoundsCheck(int32_t aIndex);
+    int32_t getURINoBoundsCheck(int32_t aIndex);
+    nsIAtom* getPrefixNoBoundsCheck(int32_t aIndex);
+    nsHtml5String getValueNoBoundsCheck(int32_t aIndex);
+    nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t aIndex);
+    int32_t getLineNoBoundsCheck(int32_t aIndex);
+    void addAttribute(nsHtml5AttributeName* aName,
+                      nsHtml5String aValue,
+                      int32_t aLine);
+    void AddAttributeWithLocal(nsIAtom* aName,
+                               nsHtml5String aValue,
+                               int32_t aLine);
+    void clear(int32_t aMode);
+    void releaseValue(int32_t aIndex);
     void clearWithoutReleasingContents();
-    bool contains(nsHtml5AttributeName* name);
+    bool contains(nsHtml5AttributeName* aName);
     void adjustForMath();
     void adjustForSvg();
-    nsHtml5HtmlAttributes* cloneAttributes(nsHtml5AtomTable* interner);
-    bool equalsAnother(nsHtml5HtmlAttributes* other);
+    nsHtml5HtmlAttributes* cloneAttributes(nsHtml5AtomTable* aInterner);
+    bool equalsAnother(nsHtml5HtmlAttributes* aOther);
     static void initializeStatics();
     static void releaseStatics();
 };
