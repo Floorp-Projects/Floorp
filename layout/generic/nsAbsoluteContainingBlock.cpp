@@ -425,15 +425,15 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                         ? GetOrthogonalAxis(aAbsPosCBAxis)
                         : aAbsPosCBAxis);
 
-  nsIAtom* parentType = aPlaceholderContainer->GetType();
+  FrameType parentType = aPlaceholderContainer->Type();
   LogicalSize alignAreaSize(pcWM);
-  if (parentType == nsGkAtoms::flexContainerFrame) {
+  if (parentType == FrameType::FlexContainer) {
     // The alignment container is the flex container's content box:
     alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
     LogicalMargin pcBorderPadding =
       aPlaceholderContainer->GetLogicalUsedBorderAndPadding(pcWM);
     alignAreaSize -= pcBorderPadding.Size(pcWM);
-  } else if (parentType == nsGkAtoms::gridContainerFrame) {
+  } else if (parentType == FrameType::GridContainer) {
     // This abspos elem's parent is a grid container. Per CSS Grid 10.1 & 10.2:
     //  - If the grid container *also* generates the abspos containing block (a
     // grid area) for this abspos child, we use that abspos containing block as
@@ -686,7 +686,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   bool constrainBSize = (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)
     && (aFlags & AbsPosReflowFlags::eConstrainHeight)
        // Don't split if told not to (e.g. for fixed frames)
-    && (aDelegatingFrame->GetType() != nsGkAtoms::inlineFrame)
+    && !aDelegatingFrame->IsInlineFrame()
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
     && (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
         aReflowInput.AvailableBSize());

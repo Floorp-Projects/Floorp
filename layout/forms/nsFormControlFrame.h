@@ -27,8 +27,6 @@ public:
     */
   explicit nsFormControlFrame(nsStyleContext*);
 
-  virtual nsIAtom* GetType() const override;
-
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsAtomicContainerFrame::IsFrameOfType(aFlags &

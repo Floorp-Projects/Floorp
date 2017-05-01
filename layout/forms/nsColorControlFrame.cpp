@@ -23,7 +23,7 @@ using mozilla::dom::HTMLInputElement;
 using mozilla::dom::CallerType;
 
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext)
-  : nsHTMLButtonControlFrame(aContext)
+  : nsHTMLButtonControlFrame(aContext, FrameType::ColorControl)
 {
 }
 
@@ -46,12 +46,6 @@ void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mColorContent);
   nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot);
-}
-
-nsIAtom*
-nsColorControlFrame::GetType() const
-{
-  return nsGkAtoms::colorControlFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

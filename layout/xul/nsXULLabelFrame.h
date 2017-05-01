@@ -34,19 +34,14 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::XULLabelFrame
-   */
-  virtual nsIAtom* GetType() const override;
-  
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
 protected:
-  explicit nsXULLabelFrame(nsStyleContext *aContext) : nsBlockFrame(aContext) {}
+  explicit nsXULLabelFrame(nsStyleContext* aContext)
+    : nsBlockFrame(aContext, mozilla::FrameType::XULLabel)
+  {}
 
   nsresult RegUnregAccessKey(bool aDoReg);
 };

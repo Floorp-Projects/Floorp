@@ -15,8 +15,9 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 } // namespace mozilla
 
-class nsProgressFrame : public nsContainerFrame,
-                        public nsIAnonymousContentCreator
+class nsProgressFrame final
+  : public nsContainerFrame
+  , public nsIAnonymousContentCreator
 {
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
@@ -39,8 +40,6 @@ public:
                       ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
-
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {

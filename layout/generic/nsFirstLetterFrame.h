@@ -17,7 +17,9 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  explicit nsFirstLetterFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  explicit nsFirstLetterFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext, mozilla::FrameType::Letter)
+  {}
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -31,7 +33,6 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  virtual nsIAtom* GetType() const override;
 
   bool IsFloating() const { return GetStateBits() & NS_FRAME_OUT_OF_FLOW; }
 

@@ -40,8 +40,8 @@ class nsSVGContainerFrame : public nsContainerFrame
   friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 protected:
-  explicit nsSVGContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
+  nsSVGContainerFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsContainerFrame(aContext, aType)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
   }
@@ -111,8 +111,8 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsSVGDisplayableFrame
 {
 protected:
-  explicit nsSVGDisplayContainerFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext)
+  nsSVGDisplayContainerFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsSVGContainerFrame(aContext, aType)
   {
      AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }

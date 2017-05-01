@@ -65,11 +65,11 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext)
-    , mCallingReflowSVG(false)
-    , mFullZoom(aContext->PresContext()->GetFullZoom())
-    , mViewportInitialized(false)
-    , mIsRootContent(false)
+  : nsSVGDisplayContainerFrame(aContext, FrameType::SVGOuterSVG)
+  , mCallingReflowSVG(false)
+  , mFullZoom(aContext->PresContext()->GetFullZoom())
+  , mViewportInitialized(false)
+  , mIsRootContent(false)
 {
   // Outer-<svg> has CSS layout, so remove this bit:
   RemoveStateBits(NS_FRAME_SVG_LAYOUT);
@@ -798,12 +798,6 @@ nsSVGOuterSVGFrame::GetSplittableType() const
   return NS_FRAME_NOT_SPLITTABLE;
 }
 
-nsIAtom *
-nsSVGOuterSVGFrame::GetType() const
-{
-  return nsGkAtoms::svgOuterSVGFrame;
-}
-
 //----------------------------------------------------------------------
 // nsISVGSVGFrame methods:
 
@@ -875,8 +869,7 @@ nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                              const nsIntRect* aDirtyRect,
                              uint32_t aFlags)
 {
-  NS_ASSERTION(PrincipalChildList().FirstChild()->GetType() ==
-                 nsGkAtoms::svgOuterSVGAnonChildFrame &&
+  NS_ASSERTION(PrincipalChildList().FirstChild()->IsSVGOuterSVGAnonChildFrame() &&
                !PrincipalChildList().FirstChild()->GetNextSibling(),
                "We should have a single, anonymous, child");
   nsSVGOuterSVGAnonChildFrame *anonKid =
@@ -888,8 +881,7 @@ SVGBBox
 nsSVGOuterSVGFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
                                         uint32_t aFlags)
 {
-  NS_ASSERTION(PrincipalChildList().FirstChild()->GetType() ==
-                 nsGkAtoms::svgOuterSVGAnonChildFrame &&
+  NS_ASSERTION(PrincipalChildList().FirstChild()->IsSVGOuterSVGAnonChildFrame() &&
                !PrincipalChildList().FirstChild()->GetNextSibling(),
                "We should have a single, anonymous, child");
   // We must defer to our child so that we don't include our
@@ -986,7 +978,7 @@ nsSVGOuterSVGFrame::DoUpdateStyleOfOwnedAnonBoxes(
   nsChangeHint aHintForThisFrame)
 {
   nsIFrame* anonKid = PrincipalChildList().FirstChild();
-  MOZ_ASSERT(anonKid->GetType() == nsGkAtoms::svgOuterSVGAnonChildFrame);
+  MOZ_ASSERT(anonKid->IsSVGOuterSVGAnonChildFrame());
   UpdateStyleOfChildAnonBox(anonKid, aStyleSet, aChangeList, aHintForThisFrame);
 }
 
@@ -1008,17 +1000,10 @@ nsSVGOuterSVGAnonChildFrame::Init(nsIContent*       aContent,
                                   nsContainerFrame* aParent,
                                   nsIFrame*         aPrevInFlow)
 {
-  MOZ_ASSERT(aParent->GetType() == nsGkAtoms::svgOuterSVGFrame,
-             "Unexpected parent");
+  MOZ_ASSERT(aParent->IsSVGOuterSVGFrame(), "Unexpected parent");
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif
-
-nsIAtom *
-nsSVGOuterSVGAnonChildFrame::GetType() const
-{
-  return nsGkAtoms::svgOuterSVGAnonChildFrame;
-}
 
 bool
 nsSVGOuterSVGAnonChildFrame::IsSVGTransformed(Matrix* aOwnTransform,

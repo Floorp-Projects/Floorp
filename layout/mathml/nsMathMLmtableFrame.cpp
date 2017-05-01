@@ -169,7 +169,7 @@ FindCellProperty(const nsIFrame* aCellFrame,
   while (currentFrame) {
     ConstFrameProperties props = currentFrame->Properties();
     propertyData = props.Get(aFrameProperty);
-    bool frameIsTable = (currentFrame->GetType() == nsGkAtoms::tableFrame);
+    bool frameIsTable = (currentFrame->IsTableFrame());
 
     if (propertyData || frameIsTable)
       currentFrame = nullptr; // A null frame pointer exits the loop
@@ -585,12 +585,12 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
 
   // mtable is simple and only has one (pseudo) row-group
   nsIFrame* rgFrame = aTableFrame->PrincipalChildList().FirstChild();
-  if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+  if (!rgFrame || !rgFrame->IsTableRowGroupFrame())
     return;
 
   for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
     DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TableRow);
-    if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
+    if (rowFrame->IsTableRowFrame()) {
       // Map row rowalign.
       ParseFrameAttribute(rowFrame, nsGkAtoms::rowalign_, false);
       // Map row columnalign.
@@ -598,7 +598,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
 
       for (nsIFrame* cellFrame : rowFrame->PrincipalChildList()) {
         DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TableCell);
-        if (IS_TABLE_CELL(cellFrame->GetType())) {
+        if (IS_TABLE_CELL(cellFrame->Type())) {
           // Map cell rowalign.
           ParseFrameAttribute(cellFrame, nsGkAtoms::rowalign_, false);
           // Map row columnalign.
@@ -728,10 +728,10 @@ nsMathMLmtableWrapperFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   // mtable is simple and only has one (pseudo) row-group inside our inner-table
   nsIFrame* tableFrame = mFrames.FirstChild();
-  NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
+  NS_ASSERTION(tableFrame && tableFrame->IsTableFrame(),
                "should always have an inner table frame");
   nsIFrame* rgFrame = tableFrame->PrincipalChildList().FirstChild();
-  if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+  if (!rgFrame || !rgFrame->IsTableRowGroupFrame())
     return NS_OK;
 
   // align - just need to issue a dirty (resize) reflow command
@@ -801,15 +801,15 @@ nsMathMLmtableWrapperFrame::GetRowFrameAt(int32_t aRowIndex)
   // if our inner table says that the index is valid, find the row now
   if (0 <= aRowIndex && aRowIndex <= rowCount) {
     nsIFrame* tableFrame = mFrames.FirstChild();
-    NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
+    NS_ASSERTION(tableFrame && tableFrame->IsTableFrame(),
                  "should always have an inner table frame");
     nsIFrame* rgFrame = tableFrame->PrincipalChildList().FirstChild();
-    if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+    if (!rgFrame || !rgFrame->IsTableRowGroupFrame())
       return nullptr;
     for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
       if (aRowIndex == 0) {
         DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TableRow);
-        if (rowFrame->GetType() != nsGkAtoms::tableRowFrame)
+        if (!rowFrame->IsTableRowFrame())
           return nullptr;
 
         return rowFrame;

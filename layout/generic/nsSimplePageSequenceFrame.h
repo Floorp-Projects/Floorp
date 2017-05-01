@@ -51,8 +51,10 @@ public:
 };
 
 // Simple page sequence frame class. Used when we're in paginated mode
-class nsSimplePageSequenceFrame : public nsContainerFrame,
-                                  public nsIPageSequenceFrame {
+class nsSimplePageSequenceFrame final
+  : public nsContainerFrame
+  , public nsIPageSequenceFrame
+{
 public:
   friend nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell,
                                                                   nsStyleContext* aContext);
@@ -97,13 +99,6 @@ public:
   bool HonorPrintBackgroundSettings() override { return false; }
 
   bool HasTransformGetter() const override { return true; }
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::sequenceFrame
-   */
-  nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;

@@ -97,7 +97,7 @@ IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
 static bool
 IsLegacyBox(const nsIFrame* aFlexContainer)
 {
-  MOZ_ASSERT(aFlexContainer->GetType() == nsGkAtoms::flexContainerFrame,
+  MOZ_ASSERT(aFlexContainer->IsFlexContainerFrame(),
              "only flex containers may be passed to this function");
   return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
 }
@@ -1763,7 +1763,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     // mAlignSelf, see below
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
-  MOZ_ASSERT(mFrame->GetType() != nsGkAtoms::placeholderFrame,
+  MOZ_ASSERT(!mFrame->IsPlaceholderFrame(),
              "placeholder frames should not be treated as flex items");
   MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
              "out-of-flow frames should not be treated as flex items");
@@ -1861,7 +1861,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
   MOZ_ASSERT(NS_STYLE_VISIBILITY_COLLAPSE ==
              mFrame->StyleVisibility()->mVisible,
              "Should only make struts for children with 'visibility:collapse'");
-  MOZ_ASSERT(mFrame->GetType() != nsGkAtoms::placeholderFrame,
+  MOZ_ASSERT(!mFrame->IsPlaceholderFrame(),
              "placeholder frames should not be treated as flex items");
   MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
              "out-of-flow frames should not be treated as flex items");
@@ -2202,13 +2202,6 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   if (isLegacyBox) {
     AddStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
   }
-}
-
-/* virtual */
-nsIAtom*
-nsFlexContainerFrame::GetType() const
-{
-  return nsGkAtoms::flexContainerFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -3589,7 +3582,7 @@ nsFlexContainerFrame::GenerateFlexLines(
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
     // Don't create flex items / lines for placeholder frames:
-    if (childFrame->GetType() == nsGkAtoms::placeholderFrame) {
+    if (childFrame->IsPlaceholderFrame()) {
       aPlaceholders.AppendElement(childFrame);
       continue;
     }
@@ -3906,8 +3899,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     // an instance of nsFrame (i.e. it should return null from GetType()).
     // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
     // assertion that trivially passes if bug 765861's flag has been flipped.
-    NS_WARNING_ASSERTION(
-      !aItem.Frame()->GetType(),
+    NS_WARNING_ASSERTION(aItem.Frame()->Type() == FrameType::None,
       "Child should at least request space for border/padding");
     aItem.SetCrossSize(0);
   } else {
@@ -4613,7 +4605,7 @@ nsFlexContainerFrame::ReflowPlaceholders(nsPresContext* aPresContext,
   // As noted in this method's documentation, we'll reflow every entry in
   // |aPlaceholders| at the container's content-box origin.
   for (nsIFrame* placeholder : aPlaceholders) {
-    MOZ_ASSERT(placeholder->GetType() == nsGkAtoms::placeholderFrame,
+    MOZ_ASSERT(placeholder->IsPlaceholderFrame(),
                "placeholders array should only contain placeholder frames");
     WritingMode wm = placeholder->GetWritingMode();
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
