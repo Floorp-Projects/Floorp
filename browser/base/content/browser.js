@@ -7987,36 +7987,21 @@ var gPageActionButton = {
       return item;
     });
 
-    if (!gSync.isSignedIn) {
-      // Could be unconfigured or unverified
-      body.setAttribute("state", "notsignedin");
-      return;
-    }
-
+    body.removeAttribute("state");
     // In the first ~10 sec after startup, Sync may not be loaded and the list
     // of devices will be empty.
-    if (!gSync.syncReady) {
+    if (gSync.syncConfiguredAndLoading) {
       body.setAttribute("state", "notready");
       // Force a background Sync
       Services.tm.dispatchToMainThread(() => {
         Weave.Service.sync([]);  // [] = clients engine only
-        if (!window.closed && gSync.syncReady) {
+        // There's no way Sync is still syncing at this point, but we check
+        // anyway to avoid infinite looping.
+        if (!window.closed && !gSync.syncConfiguredAndLoading) {
           this.setupSendToDeviceView();
         }
       });
-      return;
     }
-    if (!gSync.remoteClients.length) {
-      body.setAttribute("state", "nodevice");
-      return;
-    }
-
-    body.setAttribute("state", "signedin");
-  },
-
-  fxaButtonClicked() {
-    this.panel.hidePopup();
-    gSync.openPrefs();
   },
 };
 

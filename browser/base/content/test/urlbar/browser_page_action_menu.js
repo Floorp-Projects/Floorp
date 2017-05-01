@@ -1,5 +1,12 @@
 "use strict";
 
+/* global sinon */
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+
+registerCleanupFunction(function() {
+  delete window.sinon;
+});
+
 const mockRemoteClients = [
   { id: "0", name: "foo", type: "mobile" },
   { id: "1", name: "bar", type: "desktop" },
@@ -103,6 +110,7 @@ add_task(async function emailLink() {
 add_task(async function sendToDevice_nonSendable() {
   // Open a tab that's not sendable.
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await promiseSyncReady();
     // Open the panel.  Send to Device should be disabled.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
@@ -114,32 +122,88 @@ add_task(async function sendToDevice_nonSendable() {
   });
 });
 
-add_task(async function sendToDevice_syncNotReady() {
+add_task(async function sendToDevice_syncNotReady_other_states() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
-    let syncReadyMock = mockReturn(gSync, "syncReady", false);
-    let signedInMock = mockReturn(gSync, "isSignedIn", true);
-
-    let remoteClientsMock;
-    let origSync = Weave.Service.sync;
-    Weave.Service.sync = () => {
-      mockReturn(gSync, "syncReady", true);
-      remoteClientsMock = mockReturn(gSync, "remoteClients", mockRemoteClients);
-    };
-
-    let origSetupSendToDeviceView = gPageActionButton.setupSendToDeviceView;
-    gPageActionButton.setupSendToDeviceView = () => {
-      this.numCall++ || (this.numCall = 1);
-      origSetupSendToDeviceView.call(gPageActionButton);
-      testSendTabToDeviceMenu(this.numCall);
-    }
+    await promiseSyncReady();
+    const sandbox = sinon.sandbox.create();
+    sandbox.stub(gSync, "syncReady").get(() => false);
+    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => 0);
+    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
+    sandbox.stub(gSync, "isSendableURI").returns(true);
 
     let cleanUp = () => {
-      Weave.Service.sync = origSync;
-      gPageActionButton.setupSendToDeviceView = origSetupSendToDeviceView;
-      signedInMock.restore();
-      syncReadyMock.restore();
-      remoteClientsMock.restore();
+      sandbox.restore();
+    };
+    registerCleanupFunction(cleanUp);
+
+    // Open the panel.
+    await promisePageActionPanelOpen();
+    let sendToDeviceButton =
+      document.getElementById("page-action-send-to-device-button");
+    Assert.ok(!sendToDeviceButton.disabled);
+
+    // Click Send to Device.
+    let viewPromise = promisePageActionViewShown();
+    EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
+    let view = await viewPromise;
+    Assert.equal(view.id, "page-action-sendToDeviceView");
+
+    let expectedItems = [
+      {
+        id: "page-action-sync-not-ready-button",
+        display: "none",
+        disabled: true,
+      },
+      {
+        attrs: {
+          label: "Account Not Verified",
+        },
+        disabled: true
+      },
+      null,
+      {
+        attrs: {
+          label: "Verify Your Account...",
+        },
+      }
+    ];
+    checkSendToDeviceItems(expectedItems);
+
+    // Done, hide the panel.
+    let hiddenPromise = promisePageActionPanelHidden();
+    gPageActionPanel.hidePopup();
+    await hiddenPromise;
+
+    cleanUp();
+  });
+});
+
+add_task(async function sendToDevice_syncNotReady_configured() {
+  // Open a tab that's sendable.
+  await BrowserTestUtils.withNewTab("http://example.com/", async () => {
+    await promiseSyncReady();
+    const sandbox = sinon.sandbox.create();
+    const syncReady = sandbox.stub(gSync, "syncReady").get(() => false);
+    const lastSync = sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => 0);
+    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
+    sandbox.stub(gSync, "isSendableURI").returns(true);
+
+    sandbox.stub(Weave.Service, "sync").callsFake(() => {
+      syncReady.get(() => true);
+      lastSync.get(() => Date.now());
+      sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
+    });
+
+    const setupSendToDeviceView = gPageActionButton.setupSendToDeviceView;
+    sandbox.stub(gPageActionButton, "setupSendToDeviceView").callsFake(() => {
+      this.numCall++ || (this.numCall = 1);
+      setupSendToDeviceView.call(gPageActionButton);
+      testSendTabToDeviceMenu(this.numCall);
+    });
+
+    let cleanUp = () => {
+      sandbox.restore();
     };
     registerCleanupFunction(cleanUp);
 
@@ -157,17 +221,8 @@ add_task(async function sendToDevice_syncNotReady() {
 
     function testSendTabToDeviceMenu(numCall) {
       if (numCall == 1) {
-        // The Fxa button should be shown.
+        // "Syncing devices" should be shown.
         checkSendToDeviceItems([
-          {
-            id: "page-action-sendToDevice-fxa-button",
-            display: "none",
-          },
-          {
-            id: "page-action-no-devices-button",
-            display: "none",
-            disabled: true,
-          },
           {
             id: "page-action-sync-not-ready-button",
             disabled: true,
@@ -176,15 +231,6 @@ add_task(async function sendToDevice_syncNotReady() {
       } else if (numCall == 2) {
         // The devices should be shown in the subview.
         let expectedItems = [
-          {
-            id: "page-action-sendToDevice-fxa-button",
-            display: "none",
-          },
-          {
-            id: "page-action-no-devices-button",
-            display: "none",
-            disabled: true,
-          },
           {
             id: "page-action-sync-not-ready-button",
             display: "none",
@@ -203,7 +249,9 @@ add_task(async function sendToDevice_syncNotReady() {
         expectedItems.push(
           null,
           {
-            label: "Send to All Devices",
+            attrs: {
+              label: "Send to All Devices"
+            }
           }
         );
         checkSendToDeviceItems(expectedItems);
@@ -237,41 +285,31 @@ add_task(async function sendToDevice_notSignedIn() {
     let view = await viewPromise;
     Assert.equal(view.id, "page-action-sendToDeviceView");
 
-    // The Fxa button should be shown.
-    checkSendToDeviceItems([
-      {
-        id: "page-action-sendToDevice-fxa-button",
-      },
-      {
-        id: "page-action-no-devices-button",
-        display: "none",
-        disabled: true,
-      },
+    let expectedItems = [
       {
         id: "page-action-sync-not-ready-button",
         display: "none",
         disabled: true,
       },
-    ]);
+      {
+        attrs: {
+          label: "Not Connected to Sync",
+        },
+        disabled: true
+      },
+      null,
+      {
+        attrs: {
+          label: "Learn About Sending Tabs..."
+        },
+      }
+    ];
+    checkSendToDeviceItems(expectedItems);
 
-    // Click the Fxa button.
-    let body = view.firstChild;
-    let fxaButton = body.childNodes[0];
-    Assert.equal(fxaButton.id, "page-action-sendToDevice-fxa-button");
-    let prefsTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+    // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    EventUtils.synthesizeMouseAtCenter(fxaButton, {});
-    let values = await Promise.all([prefsTabPromise, hiddenPromise]);
-    let tab = values[0];
-
-    // The Fxa prefs pane should open.  The full URL is something like:
-    //   about:preferences?entrypoint=syncbutton#sync
-    // Just make sure it's about:preferences#sync.
-    let urlObj = new URL(gBrowser.selectedBrowser.currentURI.spec);
-    let url = urlObj.protocol + urlObj.pathname + urlObj.hash;
-    Assert.equal(url, "about:preferences#sync");
-
-    await BrowserTestUtils.removeTab(tab);
+    gPageActionPanel.hidePopup();
+    await hiddenPromise;
   });
 });
 
@@ -279,7 +317,17 @@ add_task(async function sendToDevice_noDevices() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    UIState._internal._state = { status: UIState.STATUS_SIGNED_IN };
+    const sandbox = sinon.sandbox.create();
+    sandbox.stub(gSync, "syncReady").get(() => true);
+    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
+    sandbox.stub(gSync, "isSendableURI").returns(true);
+    sandbox.stub(gSync, "remoteClients").get(() => []);
+
+    let cleanUp = () => {
+      sandbox.restore();
+    };
+    registerCleanupFunction(cleanUp);
 
     // Open the panel.
     await promisePageActionPanelOpen();
@@ -293,27 +341,33 @@ add_task(async function sendToDevice_noDevices() {
     let view = await viewPromise;
     Assert.equal(view.id, "page-action-sendToDeviceView");
 
-    // The no-devices item should be shown.
-    checkSendToDeviceItems([
-      {
-        id: "page-action-sendToDevice-fxa-button",
-        display: "none",
-      },
-      {
-        id: "page-action-no-devices-button",
-        disabled: true,
-      },
+    let expectedItems = [
       {
         id: "page-action-sync-not-ready-button",
         display: "none",
         disabled: true,
       },
-    ]);
+      {
+        attrs: {
+          label: "No Devices Connected",
+        },
+        disabled: true
+      },
+      null,
+      {
+        attrs: {
+          label: "Learn About Sending Tabs..."
+        }
+      }
+    ];
+    checkSendToDeviceItems(expectedItems);
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
     gPageActionPanel.hidePopup();
     await hiddenPromise;
+
+    cleanUp();
 
     await UIState.reset();
   });
@@ -323,12 +377,15 @@ add_task(async function sendToDevice_devices() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    UIState._internal._state = { status: UIState.STATUS_SIGNED_IN };
+    const sandbox = sinon.sandbox.create();
+    sandbox.stub(gSync, "syncReady").get(() => true);
+    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
+    sandbox.stub(gSync, "isSendableURI").returns(true);
+    sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
 
-    // Set up mock remote clients.
-    let remoteClientsMock = mockReturn(gSync, "remoteClients", mockRemoteClients);
     let cleanUp = () => {
-      remoteClientsMock.restore();
+      sandbox.restore();
     };
     registerCleanupFunction(cleanUp);
 
@@ -347,15 +404,6 @@ add_task(async function sendToDevice_devices() {
     // The devices should be shown in the subview.
     let expectedItems = [
       {
-        id: "page-action-sendToDevice-fxa-button",
-        display: "none",
-      },
-      {
-        id: "page-action-no-devices-button",
-        display: "none",
-        disabled: true,
-      },
-      {
         id: "page-action-sync-not-ready-button",
         display: "none",
         disabled: true,
@@ -373,7 +421,9 @@ add_task(async function sendToDevice_devices() {
     expectedItems.push(
       null,
       {
-        label: "Send to All Devices",
+        attrs: {
+          label: "Send to All Devices"
+        }
       }
     );
     checkSendToDeviceItems(expectedItems);
@@ -384,7 +434,6 @@ add_task(async function sendToDevice_devices() {
     await hiddenPromise;
 
     cleanUp();
-    await UIState.reset();
   });
 });
 
@@ -418,32 +467,12 @@ function checkSendToDeviceItems(expectedItems) {
     if ("attrs" in expected) {
       for (let name in expected.attrs) {
         Assert.ok(actual.hasAttribute(name));
-        Assert.equal(actual.getAttribute(name), expected.attrs[name]);
+        let attrVal = actual.getAttribute(name)
+        if (name == "label") {
+          attrVal = attrVal.normalize("NFKC"); // There's a bug with …
+        }
+        Assert.equal(attrVal, expected.attrs[name]);
       }
-    }
-  }
-}
-
-// Copied from test/sync/head.js (see bug 1369855)
-function mockReturn(obj, symbol, fixture) {
-  let getter = Object.getOwnPropertyDescriptor(obj, symbol).get;
-  if (getter) {
-    Object.defineProperty(obj, symbol, {
-      get() { return fixture; }
-    });
-    return {
-      restore() {
-        Object.defineProperty(obj, symbol, {
-          get: getter
-        });
-      }
-    }
-  }
-  let func = obj[symbol];
-  obj[symbol] = () => fixture;
-  return {
-    restore() {
-      obj[symbol] = func;
     }
   }
 }
