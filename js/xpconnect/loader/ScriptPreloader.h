@@ -76,7 +76,8 @@ public:
     void NoteScript(const nsCString& url, const nsCString& cachePath, JS::HandleScript script);
 
     void NoteScript(const nsCString& url, const nsCString& cachePath,
-                    ProcessType processType, nsTArray<uint8_t>&& xdrData);
+                    ProcessType processType, nsTArray<uint8_t>&& xdrData,
+                    TimeStamp loadTime);
 
     // Initializes the script cache from the startup script cache file.
     Result<Ok, nsresult> InitCache(const nsAString& = NS_LITERAL_STRING("scriptCache"));
@@ -148,6 +149,33 @@ private:
             mCache->mScripts.Remove(mCachePath);
         }
 
+        // For use with nsTArray::Sort.
+        //
+        // Orders scripts by:
+        //
+        // 1) Async-decoded scripts before sync-decoded scripts, since the
+        //    former are needed immediately at startup, and should be stored
+        //    contiguously.
+        // 2) Script load time, so that scripts which are needed earlier are
+        //    stored earlier, and scripts needed at approximately the same
+        //    time are stored approximately contiguously.
+        struct Comparator
+        {
+            bool Equals(const CachedScript* a, const CachedScript* b) const
+            {
+              return (a->AsyncDecodable() == b->AsyncDecodable() &&
+                      a->mLoadTime == b->mLoadTime);
+            }
+
+            bool LessThan(const CachedScript* a, const CachedScript* b) const
+            {
+              if (a->AsyncDecodable() != b->AsyncDecodable()) {
+                return a->AsyncDecodable();
+              }
+              return a->mLoadTime < b->mLoadTime;
+            }
+        };
+
         void Cancel();
 
         void FreeData()
@@ -159,6 +187,15 @@ private:
                 mXDRData.destroy();
             }
         }
+
+        void UpdateLoadTime(const TimeStamp& loadTime)
+        {
+          if (!mLoadTime || loadTime < mLoadTime) {
+            mLoadTime = loadTime;
+          }
+        }
+
+        bool AsyncDecodable() const { return mSize > MIN_OFFTHREAD_SIZE; }
 
         // Encodes this script into XDR data, and stores the result in mXDRData.
         // Returns true on success, false on failure.
@@ -236,6 +273,8 @@ private:
         uint32_t mOffset = 0;
         // The size of this script's encoded XDR data.
         uint32_t mSize = 0;
+
+        TimeStamp mLoadTime{};
 
         JS::Heap<JSScript*> mScript;
 
