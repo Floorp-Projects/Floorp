@@ -675,7 +675,7 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
   }
 }
 
-static const int SAMPLER_MAX_STRING_LENGTH = 128;
+static const int SAMPLER_MAX_STRING_LENGTH = 512;
 
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
