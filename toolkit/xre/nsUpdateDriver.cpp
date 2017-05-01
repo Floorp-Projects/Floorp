@@ -703,15 +703,26 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
   }
 #elif defined(XP_MACOSX)
   UpdateDriverSetupMacCommandLine(argc, argv, restart);
-  // LaunchChildMac uses posix_spawnp and prefers the current
-  // architecture when launching. It doesn't require a
-  // null-terminated string but it doesn't matter if we pass one.
+  // We need to detect whether elevation is required for this update. This can
+  // occur when an admin user installs the application, but another admin
+  // user attempts to update (see bug 394984).
+  if (restart && !IsRecursivelyWritable(installDirPath.get())) {
+    if (!LaunchElevatedUpdate(argc, argv, outpid)) {
+      LOG(("Failed to launch elevated update!"));
+      exit(1);
+    }
+    exit(0);
+  }
+
   if (isStaged) {
     // Launch the updater to replace the installation with the staged updated.
     LaunchChildMac(argc, argv);
   } else {
     // Launch the updater to either stage or apply an update.
     LaunchChildMac(argc, argv, outpid);
+  }
+  if (restart) {
+    exit(0);
   }
 #else
   if (isStaged) {
