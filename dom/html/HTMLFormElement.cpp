@@ -386,7 +386,7 @@ CollectOrphans(nsINode* aRemovalRoot,
     if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
       node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
-        node->ClearForm(true);
+        node->ClearForm(true, false);
 
         // When a form control loses its form owner, its state can change.
         node->UpdateState(true);
