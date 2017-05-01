@@ -282,10 +282,15 @@ public:
         mIsDirty = true;
         mDirection = value;
       }
-      // return true only if mStart, mEnd, or mDirection have been modified
+      // return true only if mStart, mEnd, or mDirection have been modified,
+      // or if SetIsDirty() was explicitly called.
       bool IsDirty() const
       {
         return mIsDirty;
+      }
+      void SetIsDirty()
+      {
+        mIsDirty = true;
       }
     private:
       uint32_t mStart, mEnd;

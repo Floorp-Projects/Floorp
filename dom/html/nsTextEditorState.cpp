@@ -2636,26 +2636,41 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (!mValue) {
       mValue.emplace();
     }
-    if (!mValue->Assign(newValue, fallible)) {
-      return false;
-    }
 
-    // Since we have no editor we presumably have cached selection state.
-    if (IsSelectionCached()) {
-      SelectionProperties& props = GetSelectionProperties();
-      if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
-        props.SetStart(newValue.Length());
-        props.SetEnd(newValue.Length());
-      } else {
-        // Make sure our cached selection position is not outside the new value.
-        props.SetStart(std::min(props.GetStart(), newValue.Length()));
-        props.SetEnd(std::min(props.GetEnd(), newValue.Length()));
+    // We can't just early-return here if mValue->Equals(newValue), because
+    // ValueWasChanged and OnValueChanged below still need to be called.
+    if (!mValue->Equals(newValue) ||
+        !nsContentUtils::SkipCursorMoveForSameValueSet()) {
+      if (!mValue->Assign(newValue, fallible)) {
+        return false;
       }
-    }
 
-    // Update the frame display if needed
-    if (mBoundFrame) {
-      mBoundFrame->UpdateValueDisplay(true);
+      // Since we have no editor we presumably have cached selection state.
+      if (IsSelectionCached()) {
+        SelectionProperties& props = GetSelectionProperties();
+        if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
+          props.SetStart(newValue.Length());
+          props.SetEnd(newValue.Length());
+        } else {
+          // Make sure our cached selection position is not outside the new value.
+          props.SetStart(std::min(props.GetStart(), newValue.Length()));
+          props.SetEnd(std::min(props.GetEnd(), newValue.Length()));
+        }
+      }
+
+      // Update the frame display if needed
+      if (mBoundFrame) {
+        mBoundFrame->UpdateValueDisplay(true);
+      }
+    } else {
+      // Even if our value is not actually changing, apparently we need to mark
+      // our SelectionProperties dirty to make accessibility tests happy.
+      // Probably because they depend on the SetSelectionRange() call we make on
+      // our frame in RestoreSelectionState, but I have no idea why they do.
+      if (IsSelectionCached()) {
+        SelectionProperties& props = GetSelectionProperties();
+        props.SetIsDirty();
+      }
     }
   }
 
