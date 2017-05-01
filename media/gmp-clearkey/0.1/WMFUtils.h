@@ -26,6 +26,7 @@
 #include <mfobjects.h>
 #include <mftransform.h>
 #include <wmcodecdsp.h>
+#include "VideoLimits.h"
 
 #include "gmp-platform.h"
 
