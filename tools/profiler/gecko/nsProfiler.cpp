@@ -96,15 +96,14 @@ nsProfiler::CanProfile(bool *aCanProfile)
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aThreadNameFilters, uint32_t aFilterCount)
+                          const char** aFilters, uint32_t aFilterCount)
 {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   profiler_start(aEntries, aInterval,
-                 aFeatures, aFeatureCount,
-                 aThreadNameFilters, aFilterCount);
+                 aFeatures, aFeatureCount, aFilters, aFilterCount);
 
   // Do this after profiler_start().
   mGatherer = new ProfileGatherer();

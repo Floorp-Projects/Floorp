@@ -19,14 +19,14 @@ public:
   nsProfilerStartParams(uint32_t aEntries,
                         double aInterval,
                         const nsTArray<nsCString>& aFeatures,
-                        const nsTArray<nsCString>& aThreadFilterNames);
+                        const nsTArray<nsCString>& aFilters);
 
 private:
   virtual ~nsProfilerStartParams();
   uint32_t mEntries;
   double mInterval;
   nsTArray<nsCString> mFeatures;
-  nsTArray<nsCString> mThreadFilterNames;
+  nsTArray<nsCString> mFilters;
 };
 
 #endif
