@@ -225,10 +225,7 @@ var PrintUtils = {
 
       // If the user transits too quickly within preview and we have a pending
       // progress dialog, we will close it before opening a new one.
-      if (this._webProgressPP && this._webProgressPP.value) {
-        this._webProgressPP.value.onStateChange(null, null,
-          Components.interfaces.nsIWebProgressListener.STATE_STOP, 0);
-      }
+      this.ensureProgressDialogClosed();
     }
 
     this._webProgressPP = {};
@@ -657,6 +654,8 @@ var PrintUtils = {
 
     this.setSimplifiedMode(false);
 
+    this.ensureProgressDialogClosed();
+
     this._listener.onExit();
   },
 
@@ -697,7 +696,18 @@ var PrintUtils = {
       aEvent.preventDefault();
       aEvent.stopPropagation();
     }
-  }
+  },
+
+  /**
+   * If there's a printing or print preview progress dialog displayed, force
+   * it to close now.
+   */
+  ensureProgressDialogClosed() {
+    if (this._webProgressPP && this._webProgressPP.value) {
+      this._webProgressPP.value.onStateChange(null, null,
+        Components.interfaces.nsIWebProgressListener.STATE_STOP, 0);
+    }
+  },
 }
 
 PrintUtils.init();
