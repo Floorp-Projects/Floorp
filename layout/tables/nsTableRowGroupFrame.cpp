@@ -54,7 +54,7 @@ struct TableRowGroupReflowInput {
 } // namespace mozilla
 
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::TableRowGroup)
+  : nsContainerFrame(aContext, LayoutFrameType::TableRowGroup)
 {
   SetRepeatable(false);
 }
@@ -1588,7 +1588,7 @@ nsTableRowGroupFrame::InsertFrames(ChildListID     aListID,
 
   int32_t numRows = rows.Length();
   if (numRows > 0) {
-    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, FrameType::TableRow);
+    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, LayoutFrameType::TableRow);
     int32_t rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(this, rows, rowIndex, true);
 

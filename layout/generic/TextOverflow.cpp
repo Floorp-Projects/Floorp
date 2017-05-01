@@ -69,12 +69,12 @@ GetSelfOrNearestBlock(nsIFrame* aFrame)
 // It's not supposed to be called for block frames since we never
 // process block descendants for text-overflow.
 static bool
-IsAtomicElement(nsIFrame* aFrame, FrameType aFrameType)
+IsAtomicElement(nsIFrame* aFrame, LayoutFrameType aFrameType)
 {
   NS_PRECONDITION(!nsLayoutUtils::GetAsBlock(aFrame) ||
                   !aFrame->IsBlockOutside(),
                   "unexpected block frame");
-  NS_PRECONDITION(aFrameType != FrameType::Placeholder,
+  NS_PRECONDITION(aFrameType != LayoutFrameType::Placeholder,
                   "unexpected placeholder frame");
   return !aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
@@ -347,8 +347,9 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
                                   bool*           aFoundVisibleTextOrAtomic,
                                   InnerClipEdges* aClippedMarkerEdges)
 {
-  const FrameType frameType = aFrame->Type();
-  if (frameType == FrameType::Br || frameType == FrameType::Placeholder) {
+  const LayoutFrameType frameType = aFrame->Type();
+  if (frameType == LayoutFrameType::Br ||
+      frameType == LayoutFrameType::Placeholder) {
     return;
   }
   const bool isAtomic = IsAtomicElement(aFrame, frameType);
@@ -368,7 +369,7 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     if (isAtomic && ((mIStart.mActive && overflowIStart) ||
                      (mIEnd.mActive && overflowIEnd))) {
       aFramesToHide->PutEntry(aFrame);
-    } else if (isAtomic || frameType == FrameType::Text) {
+    } else if (isAtomic || frameType == LayoutFrameType::Text) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea,
                          aFramesToHide, aAlignmentEdges,
                          aFoundVisibleTextOrAtomic,
@@ -389,7 +390,7 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
 
 void
 TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
-                                 FrameType aFrameType,
+                                 LayoutFrameType aFrameType,
                                  const LogicalRect& aInsideMarkersArea,
                                  FrameHashtable* aFramesToHide,
                                  AlignmentEdges* aAlignmentEdges,
@@ -424,7 +425,7 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
 
   if ((istartOverlap > 0 && insideIStartEdge) ||
       (iendOverlap > 0 && insideIEndEdge)) {
-    if (aFrameType == FrameType::Text) {
+    if (aFrameType == LayoutFrameType::Text) {
       if (aInsideMarkersArea.IStart(mBlockWM) <
           aInsideMarkersArea.IEnd(mBlockWM)) {
         // a clipped text frame and there is some room between the markers

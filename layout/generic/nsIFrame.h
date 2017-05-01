@@ -167,7 +167,7 @@ typedef uint32_t nsSplittableType;
 
 namespace mozilla {
 
-enum class FrameType : uint8_t {
+enum class LayoutFrameType : uint8_t {
 #define FRAME_TYPE(ty_) ty_,
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
@@ -602,7 +602,7 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
-  explicit nsIFrame(mozilla::FrameType aType)
+  explicit nsIFrame(mozilla::LayoutFrameType aType)
     : mRect()
     , mContent(nullptr)
     , mStyleContext(nullptr)
@@ -2636,12 +2636,15 @@ public:
   /**
    * Get the "type" of the frame.
    *
-   * @see mozilla::FrameType
+   * @see mozilla::LayoutFrameType
    */
-  mozilla::FrameType Type() const { return mType; }
+  mozilla::LayoutFrameType Type() const { return mType; }
 
 #define FRAME_TYPE(name_)                                                      \
-  bool Is##name_##Frame() const { return mType == mozilla::FrameType::name_; }
+  bool Is##name_##Frame() const                                                \
+  {                                                                            \
+    return mType == mozilla::LayoutFrameType::name_;                           \
+  }
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
 
@@ -3805,7 +3808,7 @@ protected:
   mozilla::WritingMode mWritingMode;
 
   /** The type of the frame. */
-  mozilla::FrameType mType;
+  mozilla::LayoutFrameType mType;
 
   // Helpers
   /**

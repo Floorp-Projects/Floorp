@@ -59,7 +59,7 @@ GetDocumentFromView(nsView* aView)
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsAtomicContainerFrame(aContext, FrameType::SubDocument)
+  : nsAtomicContainerFrame(aContext, LayoutFrameType::SubDocument)
   , mOuterView(nullptr)
   , mInnerView(nullptr)
   , mIsInline(false)

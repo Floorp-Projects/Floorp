@@ -23,7 +23,7 @@ using mozilla::dom::HTMLInputElement;
 using mozilla::dom::CallerType;
 
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext)
-  : nsHTMLButtonControlFrame(aContext, FrameType::ColorControl)
+  : nsHTMLButtonControlFrame(aContext, LayoutFrameType::ColorControl)
 {
 }
 

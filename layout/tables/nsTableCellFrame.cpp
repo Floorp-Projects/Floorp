@@ -44,7 +44,7 @@ using namespace mozilla::image;
 
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
                                    nsTableFrame* aTableFrame,
-                                   FrameType aType)
+                                   LayoutFrameType aType)
   : nsContainerFrame(aContext, aType)
   , mDesiredSize(aTableFrame->GetWritingMode())
 {
@@ -175,8 +175,8 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowInput)
 
   // We always need to let the percent bsize observer be propagated
   // from a table wrapper frame to an inner table frame.
-  FrameType fType = aReflowInput.mFrame->Type();
-  if (fType == FrameType::Table) {
+  LayoutFrameType fType = aReflowInput.mFrame->Type();
+  if (fType == LayoutFrameType::Table) {
     return true;
   }
 
@@ -188,7 +188,7 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowInput)
   // instead of bsizes for orthogonal children.
   return rs->mFrame == this &&
          (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
-          fType == FrameType::TableWrapper);
+          fType == LayoutFrameType::TableWrapper);
 }
 
 nsresult
@@ -712,12 +712,12 @@ nsTableCellFrame::CellHasVisibleContent(nscoord       height,
   if (tableFrame->IsBorderCollapse())
     return true;
   for (nsIFrame* innerFrame : kidFrame->PrincipalChildList()) {
-    FrameType frameType = innerFrame->Type();
-    if (FrameType::Text == frameType) {
+    LayoutFrameType frameType = innerFrame->Type();
+    if (LayoutFrameType::Text == frameType) {
       nsTextFrame* textFrame = static_cast<nsTextFrame*>(innerFrame);
       if (textFrame->HasNoncollapsedCharacters())
         return true;
-    } else if (FrameType::Placeholder != frameType) {
+    } else if (LayoutFrameType::Placeholder != frameType) {
       return true;
     }
     else {
@@ -1120,7 +1120,7 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
                                        nsTableFrame* aTableFrame)
-  : nsTableCellFrame(aContext, aTableFrame, FrameType::BCTableCell)
+  : nsTableCellFrame(aContext, aTableFrame, LayoutFrameType::BCTableCell)
 {
   mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }

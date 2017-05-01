@@ -43,7 +43,7 @@ nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 }
 
 nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::TableWrapper)
+  : nsContainerFrame(aContext, LayoutFrameType::TableWrapper)
 {
 }
 
