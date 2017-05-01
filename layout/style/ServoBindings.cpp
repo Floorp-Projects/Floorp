@@ -461,7 +461,7 @@ PseudoTagAndCorrectElementForAnimation(const Element*& aElementOrPseudo) {
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        EffectCompositor::CascadeLevel aCascadeLevel,
-                       RawServoAnimationValueMapBorrowed aAnimationValues)
+                       RawServoAnimationValueMapBorrowedMut aAnimationValues)
 {
   MOZ_ASSERT(aElement);
 
