@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 
 struct RawServoStyleSet;
+struct RawServoAnimationValueMap;
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
 #include "mozilla/ServoArcTypeList.h"
@@ -108,6 +109,7 @@ DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(ServoElementSnapshot)
+DECL_OWNED_REF_TYPE_FOR(RawServoAnimationValueMap)
 
 // We don't use BorrowedMut because the nodes may alias
 // Servo itself doesn't directly read or mutate these;
