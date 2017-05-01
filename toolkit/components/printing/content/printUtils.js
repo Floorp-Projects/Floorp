@@ -183,10 +183,20 @@ var PrintUtils = {
    *          Returns the <xul:browser> to display the print preview in. This
    *          <xul:browser> must have its type attribute set to "content".
    *
+   *        getSimplifiedPrintPreviewBrowser:
+   *          Returns the <xul:browser> to display the simplified print preview
+   *          in. This <xul:browser> must have its type attribute set to
+   *          "content".
+   *
    *        getSourceBrowser:
    *          Returns the <xul:browser> that contains the document being
    *          printed. This <xul:browser> must have its type attribute set to
    *          "content".
+   *
+   *        getSimplifiedSourceBrowser:
+   *          Returns the <xul:browser> that contains the simplified version
+   *          of the document being printed. This <xul:browser> must have its
+   *          type attribute set to "content".
    *
    *        getNavToolbox:
    *          Returns the primary toolbox for this window.
@@ -220,7 +230,9 @@ var PrintUtils = {
       // issues in bug 267422.
       // We use the print preview browser as the source browser to avoid
       // re-initializing print preview with a document that might now have changed.
-      this._sourceBrowser = this._listener.getPrintPreviewBrowser();
+      this._sourceBrowser = this._shouldSimplify ?
+        this._listener.getSimplifiedPrintPreviewBrowser() :
+        this._listener.getPrintPreviewBrowser();
       this._sourceBrowser.collapsed = true;
 
       // If the user transits too quickly within preview and we have a pending
@@ -307,7 +319,7 @@ var PrintUtils = {
       return {};
     }
 
-    return this._listener.getPrintPreviewBrowser().docShell.printPreview;
+    return this._currentPPBrowser.docShell.printPreview;
   },
 
   get inPrintPreview() {
@@ -501,13 +513,41 @@ var PrintUtils = {
     this._shouldSimplify = shouldSimplify;
   },
 
+  /**
+  * Currently, we create a new print preview browser to host the simplified
+  * cloned-document when Simplify Page option is used on preview. To accomplish
+  * this, we need to keep track of what browser should be presented, based on
+  * whether the 'Simplify page' checkbox is checked.
+  *
+  * _ppBrowsers
+  *        Set of print preview browsers.
+  * _currentPPBrowser
+  *        References the current print preview browser that is being presented.
+  */
+  _ppBrowsers: new Set(),
+  _currentPPBrowser: null,
+
   enterPrintPreview() {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
     // progress listener from nsIPrintingPromptService.showProgress
     // in printPreview, we add listeners to feed that progress
     // listener.
-    let ppBrowser = this._listener.getPrintPreviewBrowser();
+    let ppBrowser = this._shouldSimplify ?
+      this._listener.getSimplifiedPrintPreviewBrowser() :
+      this._listener.getPrintPreviewBrowser();
+    this._ppBrowsers.add(ppBrowser);
+
+    // If we're switching from 'normal' print preview to 'simplified' print
+    // preview, we will want to run reader mode against the 'normal' print
+    // preview browser's content:
+    let oldPPBrowser = null;
+    let changingPrintPreviewBrowsers = false;
+    if (this._currentPPBrowser && ppBrowser != this._currentPPBrowser) {
+      changingPrintPreviewBrowsers = true;
+      oldPPBrowser = this._currentPPBrowser;
+    }
+    this._currentPPBrowser = ppBrowser;
     let mm = ppBrowser.messageManager;
     let defaultPrinterName = this.getDefaultPrinterName();
 
@@ -515,6 +555,7 @@ var PrintUtils = {
       mm.sendAsyncMessage("Printing:Preview:Enter", {
         windowID: browser.outerWindowID,
         simplifiedMode: simplified,
+        changingBrowsers: changingPrintPreviewBrowsers,
         defaultPrinterName,
       });
     };
@@ -545,7 +586,7 @@ var PrintUtils = {
         // that the document is ready for print previewing.
         spMM.sendAsyncMessage("Printing:Preview:ParseDocument", {
           URL: this._originalURL,
-          windowID: this._sourceBrowser.outerWindowID,
+          windowID: oldPPBrowser.outerWindowID,
         });
 
         // Here we log telemetry data for when the user enters simplify mode.
@@ -577,6 +618,10 @@ var PrintUtils = {
 
       let printPreviewTB = document.getElementById("print-preview-toolbar");
       if (printPreviewTB) {
+        if (message.data.changingBrowsers) {
+          printPreviewTB.destroy();
+          printPreviewTB.initialize(ppBrowser);
+        }
         printPreviewTB.updateToolbar();
         ppBrowser.collapsed = false;
         ppBrowser.focus();
@@ -633,9 +678,12 @@ var PrintUtils = {
   },
 
   exitPrintPreview() {
-    let ppBrowser = this._listener.getPrintPreviewBrowser();
-    let browserMM = ppBrowser.messageManager;
-    browserMM.sendAsyncMessage("Printing:Preview:Exit");
+    for (let browser of this._ppBrowsers) {
+      let browserMM = browser.messageManager;
+      browserMM.sendAsyncMessage("Printing:Preview:Exit");
+    }
+    this._ppBrowsers.clear();
+    this._currentPPBrowser = null;
     window.removeEventListener("keydown", this.onKeyDownPP, true);
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
@@ -645,7 +693,8 @@ var PrintUtils = {
 
     // remove the print preview toolbar
     let printPreviewTB = document.getElementById("print-preview-toolbar");
-    this._listener.getNavToolbox().parentNode.removeChild(printPreviewTB);
+    printPreviewTB.destroy();
+    printPreviewTB.remove();
 
     let fm = Components.classes["@mozilla.org/focus-manager;1"]
                        .getService(Components.interfaces.nsIFocusManager);

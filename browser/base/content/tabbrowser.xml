@@ -3401,7 +3401,7 @@
         </getter>
         <setter>
           <![CDATA[
-          if (gNavToolbox.collapsed) {
+          if (gNavToolbox.collapsed && !this._allowTabChange) {
             return this.mTabBox.selectedTab;
           }
           // Update the tab
