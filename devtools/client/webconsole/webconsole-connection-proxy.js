@@ -308,7 +308,13 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onLogMessage: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.dispatchMessageAdd(packet);
+    } else {
       this.webConsoleFrame.handleLogMessage(packet);
     }
   },
