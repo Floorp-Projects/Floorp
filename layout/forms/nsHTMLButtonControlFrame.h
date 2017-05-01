@@ -19,7 +19,8 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
 {
 public:
   explicit nsHTMLButtonControlFrame(nsStyleContext* aContext)
-    : nsHTMLButtonControlFrame(aContext, mozilla::FrameType::HTMLButtonControl)
+    : nsHTMLButtonControlFrame(aContext,
+                               mozilla::LayoutFrameType::HTMLButtonControl)
   {}
 
   ~nsHTMLButtonControlFrame();
@@ -105,7 +106,8 @@ public:
                                      nsStyleChangeList& aChangeList,
                                      nsChangeHint aHintForThisFrame) override;
 protected:
-  nsHTMLButtonControlFrame(nsStyleContext* aContext, mozilla::FrameType aType);
+  nsHTMLButtonControlFrame(nsStyleContext* aContext,
+                           mozilla::LayoutFrameType aType);
 
   virtual bool IsInput() { return false; }
 

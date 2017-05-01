@@ -4871,9 +4871,10 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowInput& aState) con
     if (wm.IsOrthogonalTo(cbRI->GetWritingMode())) {
       break;
     }
-    FrameType frameType = cbRI->mFrame->Type();
-    if ((frameType == FrameType::Canvas && PresContext()->IsPaginated()) ||
-        frameType == FrameType::ColumnSet) {
+    LayoutFrameType frameType = cbRI->mFrame->Type();
+    if ((frameType == LayoutFrameType::Canvas &&
+         PresContext()->IsPaginated()) ||
+        frameType == LayoutFrameType::ColumnSet) {
       data.emplace();
       data->mIsTopOfPage = gridRI->mFlags.mIsTopOfPage;
       data->mToFragmentainerEnd = aState.mFragBStart +

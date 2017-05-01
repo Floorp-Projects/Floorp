@@ -104,7 +104,7 @@ private:
 #endif
 
 nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::TextInput)
+  : nsContainerFrame(aContext, LayoutFrameType::TextInput)
   , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)

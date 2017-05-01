@@ -861,8 +861,8 @@ GetPrevContinuationWithSameStyle(nsIFrame* aFrame)
 nsresult
 GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  FrameType frameType = aFrame->Type();
-  if (frameType == FrameType::Placeholder) {
+  LayoutFrameType frameType = aFrame->Type();
+  if (frameType == LayoutFrameType::Placeholder) {
     // Also reparent the out-of-flow and all its continuations.
     nsIFrame* outOfFlow =
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
@@ -870,7 +870,7 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     do {
       ReparentStyleContext(outOfFlow);
     } while ((outOfFlow = outOfFlow->GetNextContinuation()));
-  } else if (frameType == FrameType::Backdrop) {
+  } else if (frameType == LayoutFrameType::Backdrop) {
     // Style context of backdrop frame has no parent style context, and
     // thus we do not need to reparent it.
     return NS_OK;
@@ -1660,8 +1660,8 @@ ElementRestyler::MoveStyleContextsForContentChildren(
       if (sc->GetParent() != aOldContext) {
         return false;
       }
-      FrameType type = child->Type();
-      if (type == FrameType::Letter || type == FrameType::Line) {
+      LayoutFrameType type = child->Type();
+      if (type == LayoutFrameType::Letter || type == LayoutFrameType::Line) {
         return false;
       }
       if (sc->HasChildThatUsesGrandancestorStyle()) {
@@ -2068,16 +2068,16 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
   // content).  Continue restyling to the children of the nsLetterFrame so
   // that they get the correct style context parent.  Similarly for
   // nsLineFrames.
-  FrameType type = aSelf->Type();
+  LayoutFrameType type = aSelf->Type();
 
-  if (type == FrameType::Letter) {
+  if (type == LayoutFrameType::Letter) {
     LOG_RESTYLE_CONTINUE("frame is a letter frame");
     aRestyleResult = RestyleResult::eContinue;
     aCanStopWithStyleChange = false;
     return;
   }
 
-  if (type == FrameType::Line) {
+  if (type == LayoutFrameType::Line) {
     LOG_RESTYLE_CONTINUE("frame is a line frame");
     aRestyleResult = RestyleResult::eContinue;
     aCanStopWithStyleChange = false;

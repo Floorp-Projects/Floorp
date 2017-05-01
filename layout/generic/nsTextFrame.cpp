@@ -686,7 +686,7 @@ InvalidateFrameDueToGlyphsChanged(nsIFrame* aFrame)
     if (nsSVGUtils::IsInSVGTextSubtree(f) &&
         f->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
       auto svgTextFrame = static_cast<SVGTextFrame*>(
-        nsLayoutUtils::GetClosestFrameOfType(f, FrameType::SVGText));
+        nsLayoutUtils::GetClosestFrameOfType(f, LayoutFrameType::SVGText));
       svgTextFrame->ScheduleReflowSVGNonDisplayText(nsIPresShell::eResize);
     } else {
       // Theoretically we could just update overflow areas, perhaps using
@@ -1287,15 +1287,16 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame)
 BuildTextRunsScanner::FindBoundaryResult
 BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState)
 {
-  FrameType frameType = aFrame->Type();
-  if (frameType == FrameType::RubyTextContainer) {
+  LayoutFrameType frameType = aFrame->Type();
+  if (frameType == LayoutFrameType::RubyTextContainer) {
     // Don't stop a text run for ruby text container. We want ruby text
     // containers to be skipped, but continue the text run across them.
     return FB_CONTINUE;
   }
 
-  nsTextFrame* textFrame =
-    frameType == FrameType::Text ? static_cast<nsTextFrame*>(aFrame) : nullptr;
+  nsTextFrame* textFrame = frameType == LayoutFrameType::Text
+                             ? static_cast<nsTextFrame*>(aFrame)
+                             : nullptr;
   if (textFrame) {
     if (aState->mLastTextFrame &&
         textFrame != aState->mLastTextFrame->GetNextInFlow() &&
@@ -1839,8 +1840,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 {
-  FrameType frameType = aFrame->Type();
-  if (frameType == FrameType::RubyTextContainer) {
+  LayoutFrameType frameType = aFrame->Type();
+  if (frameType == LayoutFrameType::RubyTextContainer) {
     // Don't include any ruby text container into the text run.
     return;
   }
@@ -1850,7 +1851,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     MappedFlow* mappedFlow = &mMappedFlows[mMappedFlows.Length() - 1];
     if (mappedFlow->mEndFrame == aFrame &&
         (aFrame->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION)) {
-      NS_ASSERTION(frameType == FrameType::Text,
+      NS_ASSERTION(frameType == LayoutFrameType::Text,
                    "Flow-sibling of a text frame is not a text frame?");
 
       // Don't do this optimization if mLastFrame has a terminal newline...
@@ -1865,7 +1866,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   }
 
   // Now see if we can add a new set of frames to the current textrun
-  if (frameType == FrameType::Text) {
+  if (frameType == LayoutFrameType::Text) {
     nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
     if (mLastFrame) {
@@ -1895,7 +1896,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   }
 
   FrameTextTraversal traversal = CanTextCrossFrameBoundary(aFrame);
-  bool isBR = frameType == FrameType::Br;
+  bool isBR = frameType == LayoutFrameType::Br;
   if (!traversal.mLineBreakerCanCrossFrameBoundary) {
     // BR frames are special. We do not need or want to record a break opportunity
     // before a BR frame.
@@ -4603,8 +4604,8 @@ void
 nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
-    nsIFrame* svgTextFrame =
-      nsLayoutUtils::GetClosestFrameOfType(GetParent(), FrameType::SVGText);
+    nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
+      GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
     return;
   }
@@ -4615,8 +4616,8 @@ void
 nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
-    nsIFrame* svgTextFrame =
-      nsLayoutUtils::GetClosestFrameOfType(GetParent(), FrameType::SVGText);
+    nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
+      GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
     return;
   }

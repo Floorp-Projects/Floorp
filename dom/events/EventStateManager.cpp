@@ -2739,10 +2739,10 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
       break;
     }
 
-    FrameType currentFrameType = current->Type();
+    LayoutFrameType currentFrameType = current->Type();
 
     // Scrollbars should always be draggable
-    if (currentFrameType == FrameType::Scrollbar) {
+    if (currentFrameType == LayoutFrameType::Scrollbar) {
       panDirection = WidgetGestureNotifyEvent::ePanNone;
       break;
     }

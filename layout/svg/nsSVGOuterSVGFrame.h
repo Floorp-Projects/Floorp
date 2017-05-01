@@ -232,7 +232,7 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame
 
   explicit nsSVGOuterSVGAnonChildFrame(nsStyleContext* aContext)
     : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::FrameType::SVGOuterSVGAnonChild)
+                                 mozilla::LayoutFrameType::SVGOuterSVGAnonChild)
   {}
 
 public:

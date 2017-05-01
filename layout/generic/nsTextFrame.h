@@ -50,7 +50,7 @@ class nsTextFrame : public nsFrame
 
 public:
   explicit nsTextFrame(nsStyleContext* aContext)
-    : nsTextFrame(aContext, mozilla::FrameType::Text)
+    : nsTextFrame(aContext, mozilla::LayoutFrameType::Text)
   {}
 
   NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
@@ -648,7 +648,7 @@ public:
   uint32_t CountGraphemeClusters() const;
 
 protected:
-  nsTextFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+  nsTextFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
     : nsFrame(aContext, aType)
     , mNextContinuation(nullptr)
     , mContentOffset(0)

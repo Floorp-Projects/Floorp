@@ -33,7 +33,7 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGMarkerFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGMarker)
+    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGMarker)
     , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
@@ -140,7 +140,7 @@ class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame
 
   explicit nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
     : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::FrameType::SVGMarkerAnonChild)
+                                 mozilla::LayoutFrameType::SVGMarkerAnonChild)
   {}
 
 public:
