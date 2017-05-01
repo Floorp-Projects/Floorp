@@ -120,13 +120,6 @@ to mochitest command.
   * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
   * test_value_storage.html `'grid` [*]
 * Unimplemented prefixed properties:
-  * -moz-force-broken-image-icon servo/servo#16001
-    * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
-    * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
-    * test_inherit_storage.html `-moz-force-broken-image-icon` [2]
-    * test_initial_computation.html `-moz-force-broken-image-icon` [4]
-    * test_initial_storage.html `-moz-force-broken-image-icon` [4]
-    * test_value_storage.html `-moz-force-broken-image-icon` [4]
   * -moz-transform: need different parsing rules servo/servo#16003
     * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
   * test_variables.html `var(--var6)`: -x-system-font [1]
