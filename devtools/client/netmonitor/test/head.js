@@ -20,8 +20,9 @@ const {
 const {
   decodeUnicodeUrl,
   getUrlBaseName,
-  getUrlQuery,
   getUrlHost,
+  getUrlQuery,
+  getUrlScheme,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 
 /* eslint-disable no-unused-vars, max-len */
@@ -380,6 +381,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
   let host = getUrlHost(url);
+  let scheme = getUrlScheme(url);
   let { httpVersion = "", remoteAddress, remotePort } = requestItem;
   let formattedIPPort = getFormattedIPAndPort(remoteAddress, remotePort);
   let remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
@@ -426,6 +428,12 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
 
   is(target.querySelector(".requests-list-remoteip").getAttribute("title"),
     remoteIP, "The tooltip remote IP is correct.");
+
+  is(target.querySelector(".requests-list-scheme").textContent,
+    scheme, "The displayed scheme is correct.");
+
+  is(target.querySelector(".requests-list-scheme").getAttribute("title"),
+    scheme, "The tooltip scheme is correct.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-list-status-icon")
