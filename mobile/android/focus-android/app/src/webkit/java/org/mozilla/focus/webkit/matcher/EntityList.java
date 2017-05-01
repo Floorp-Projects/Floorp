@@ -6,6 +6,7 @@ package org.mozilla.focus.webkit.matcher;
 
 
 import android.net.Uri;
+import android.text.TextUtils;
 
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
@@ -27,8 +28,8 @@ import java.net.URL;
     }
 
     public boolean isWhiteListed(final Uri site, final Uri resource) {
-        if (site.getHost().length() == 0 ||
-                resource.getHost().length() == 0 ||
+        if (TextUtils.isEmpty(site.getHost()) ||
+                TextUtils.isEmpty(resource.getHost()) ||
                 site.getScheme().equals("data")) {
             return true;
         }
