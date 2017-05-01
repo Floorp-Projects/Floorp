@@ -60,7 +60,6 @@
 #include "nsHtml5MetaScanner.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
-#include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5StateSnapshot.h"
@@ -1264,11 +1263,16 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               nsHtml5HtmlAttributes* inputAttributes = new nsHtml5HtmlAttributes(0);
               inputAttributes->addAttribute(nsHtml5AttributeName::ATTR_NAME, nsHtml5Portability::newStringFromLiteral("isindex"), tokenizer->getLineNumber());
               for (int32_t i = 0; i < attributes->getLength(); i++) {
-                nsHtml5AttributeName* attributeQName = attributes->getAttributeNameNoBoundsCheck(i);
-                if (nsHtml5AttributeName::ATTR_NAME == attributeQName || nsHtml5AttributeName::ATTR_PROMPT == attributeQName) {
+                nsIAtom* attributeQName =
+                  attributes->getLocalNameNoBoundsCheck(i);
+                if (nsHtml5Atoms::name == attributeQName ||
+                    nsHtml5Atoms::prompt == attributeQName) {
                   attributes->releaseValue(i);
-                } else if (nsHtml5AttributeName::ATTR_ACTION != attributeQName) {
-                  inputAttributes->addAttribute(attributeQName, attributes->getValueNoBoundsCheck(i), attributes->getLineNoBoundsCheck(i));
+                } else if (nsHtml5Atoms::action != attributeQName) {
+                  inputAttributes->AddAttributeWithLocal(
+                    attributeQName,
+                    attributes->getValueNoBoundsCheck(i),
+                    attributes->getLineNoBoundsCheck(i));
                 }
               }
               attributes->clearWithoutReleasingContents();

@@ -193,7 +193,7 @@ Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed element);
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
-                       RawServoAnimationValueMapBorrowed aAnimationValues);
+                       RawServoAnimationValueMapBorrowedMut aAnimationValues);
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
@@ -404,7 +404,6 @@ nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_valu
 // const version of the above function.
 nsCSSValueBorrowed Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed css_value, int32_t index);
 nscoord Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed css_value);
-float Gecko_CSSValue_GetAngle(nsCSSValueBorrowed css_value);
 nsCSSKeyword Gecko_CSSValue_GetKeyword(nsCSSValueBorrowed aCSSValue);
 float Gecko_CSSValue_GetNumber(nsCSSValueBorrowed css_value);
 float Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed css_value);
@@ -415,7 +414,6 @@ void Gecko_CSSValue_SetNormal(nsCSSValueBorrowedMut css_value);
 void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut css_value, float number);
 void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword keyword);
 void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent);
-void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
