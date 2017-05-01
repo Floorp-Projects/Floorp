@@ -485,15 +485,6 @@
                    class="PanelUI-subView"
                    title="&sendToDevice.viewTitle;">
           <vbox id="page-action-sendToDeviceView-body" class="panel-subview-body">
-            <toolbarbutton id="page-action-sendToDevice-fxa-button"
-                           class="subviewbutton subviewbutton-iconic"
-                           label="&syncBrand.fxAccount.label;"
-                           shortcut="&sendToDevice.fxaRequired.label;"
-                           oncommand="gPageActionButton.fxaButtonClicked();"/>
-            <toolbarbutton id="page-action-no-devices-button"
-                           class="subviewbutton"
-                           label="&sendToDevice.noDevices.label;"
-                           disabled="true"/>
             <toolbarbutton id="page-action-sync-not-ready-button"
                            class="subviewbutton"
                            label="&sendToDevice.syncNotReady.label;"
