@@ -69,6 +69,7 @@
 #include "nsStreamUtils.h"
 #include "WidgetUtils.h"
 #include "nsIPresentationService.h"
+#include "nsIScriptError.h"
 
 #include "mozilla/dom/MediaDevices.h"
 #include "MediaManager.h"
@@ -2023,6 +2024,22 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
 
   Telemetry::Accumulate(Telemetry::MEDIA_EME_SECURE_CONTEXT,
                         mWindow->IsSecureContext());
+
+  if (!mWindow->IsSecureContext()) {
+    nsIDocument* doc = mWindow->GetExtantDoc();
+    nsString uri;
+    if (doc) {
+      doc->GetDocumentURI(uri);
+    }
+    const char16_t* params[] = { uri.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "MediaEMEInsecureContextDeprecatedWarning",
+                                    params,
+                                    ArrayLength(params));
+  }
 
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   RefPtr<DetailedPromise> promise =
