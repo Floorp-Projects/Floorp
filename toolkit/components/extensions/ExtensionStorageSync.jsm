@@ -105,6 +105,12 @@ if (AppConstants.platform != "android") {
   _fxaService = fxAccounts;
 }
 
+class ServerKeyringDeleted extends Error {
+  constructor() {
+    super("server keyring appears to have disappeared; we were called to decrypt null");
+  }
+}
+
 /**
  * Check for FXA and throw an exception if we don't have access.
  *
@@ -315,6 +321,28 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   }
 
   async decode(record) {
+    if (record === null) {
+      // XXX: This is a hack that detects a situation that should
+      // never happen by using a technique that shouldn't actually
+      // work. See
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1359879 for
+      // the whole gory story.
+      //
+      // For reasons that aren't clear yet,
+      // sometimes the server-side keyring is deleted. When we try
+      // to sync our copy of the keyring, we get a conflict with the
+      // deleted version. Due to a bug in kinto.js, we are called to
+      // decode the deleted version, which is represented as
+      // null. For now, try to handle this by throwing a specific
+      // kind of exception which we can catch and recover from the
+      // same way we would do with any other kind of undecipherable
+      // keyring -- wiping the bucket and reuploading everything.
+      //
+      // Eventually we will probably fix the bug in kinto.js, and
+      // this will have to move somewhere else, probably in the code
+      // that detects a resolved conflict.
+      throw new ServerKeyringDeleted();
+    }
     try {
       return await super.decode(record);
     } catch (e) {
@@ -881,6 +909,7 @@ class ExtensionStorageSync {
    * @returns {Promise<void>}
    */
   async _deleteBucket() {
+    log.error("Deleting default bucket and everything in it");
     return await this._requestWithToken("Clearing server", async function(token) {
       const headers = {Authorization: "Bearer " + token};
       const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
@@ -943,6 +972,7 @@ class ExtensionStorageSync {
       return collectionKeys;
     }
 
+    log.info(`Need to create keys and/or salts for ${JSON.stringify(extIds)}`);
     const kbHash = await getKBHash(this._fxaService);
     const newKeys = await collectionKeys.ensureKeysFor(extIds);
     const newSalts = await this.ensureSaltsFor(keysRecord, extIds);
@@ -1051,11 +1081,13 @@ class ExtensionStorageSync {
       // No conflicts, or conflict was just someone else adding keys.
       return result;
     } catch (e) {
-      if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e)) {
+      if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e) ||
+          e instanceof ServerKeyringDeleted) {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
         const isSessionValid = await this._fxaService.sessionStatus();
         if (isSessionValid) {
+          log.error("Couldn't decipher old keyring; deleting the default bucket and resetting sync status");
           await this._deleteBucket();
           await this.cryptoCollection.resetSyncStatus();
 
