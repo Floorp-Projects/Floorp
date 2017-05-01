@@ -175,7 +175,7 @@ PROFILER_FUNC_VOID(profiler_shutdown())
 PROFILER_FUNC_VOID(profiler_start(int aEntries, double aInterval,
                                   const char** aFeatures,
                                   uint32_t aFeatureCount,
-                                  const char** aThreadNameFilters,
+                                  const char** aFilters,
                                   uint32_t aFilterCount))
 
 // Stop the profiler and discard the profile without saving it. A no-op if the

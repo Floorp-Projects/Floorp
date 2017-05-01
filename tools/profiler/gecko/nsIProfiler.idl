@@ -24,7 +24,7 @@ interface nsIProfilerStartParams : nsISupports
   readonly attribute double interval;
 
   [noscript, notxpcom, nostdcall] StringArrayRef getFeatures();
-  [noscript, notxpcom, nostdcall] StringArrayRef getThreadFilterNames();
+  [noscript, notxpcom, nostdcall] StringArrayRef getFilters();
 };
 
 [scriptable, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
@@ -34,7 +34,7 @@ interface nsIProfiler : nsISupports
   void StartProfiler(in uint32_t aEntries, in double aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
                       in uint32_t aFeatureCount,
-                      [array, size_is(aFilterCount), optional] in string aThreadNameFilters,
+                      [array, size_is(aFilterCount), optional] in string aFilters,
                       [optional] in uint32_t aFilterCount);
   void StopProfiler();
   boolean IsPaused();

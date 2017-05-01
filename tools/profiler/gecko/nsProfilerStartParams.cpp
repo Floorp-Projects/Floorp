@@ -10,11 +10,11 @@ NS_IMPL_ISUPPORTS(nsProfilerStartParams, nsIProfilerStartParams)
 nsProfilerStartParams::nsProfilerStartParams(uint32_t aEntries,
                                              double aInterval,
                                              const nsTArray<nsCString>& aFeatures,
-                                             const nsTArray<nsCString>& aThreadFilterNames) :
+                                             const nsTArray<nsCString>& aFilters) :
   mEntries(aEntries),
   mInterval(aInterval),
   mFeatures(aFeatures),
-  mThreadFilterNames(aThreadFilterNames)
+  mFilters(aFilters)
 {
 }
 
@@ -45,7 +45,7 @@ nsProfilerStartParams::GetFeatures()
 }
 
 const nsTArray<nsCString>&
-nsProfilerStartParams::GetThreadFilterNames()
+nsProfilerStartParams::GetFilters()
 {
-  return mThreadFilterNames;
+  return mFilters;
 }
