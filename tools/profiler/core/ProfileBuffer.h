@@ -6,8 +6,9 @@
 #ifndef MOZ_PROFILE_BUFFER_H
 #define MOZ_PROFILE_BUFFER_H
 
-#include "ProfileBufferEntry.h"
 #include "platform.h"
+#include "ProfileBufferEntry.h"
+#include "ProfilerMarker.h"
 #include "ProfileJSONWriter.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
