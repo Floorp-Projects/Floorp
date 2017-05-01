@@ -82,7 +82,8 @@ nsSVGRenderingObserver::GetReferencedFrame()
 }
 
 nsIFrame*
-nsSVGRenderingObserver::GetReferencedFrame(FrameType aFrameType, bool* aOK)
+nsSVGRenderingObserver::GetReferencedFrame(LayoutFrameType aFrameType,
+                                           bool* aOK)
 {
   nsIFrame* frame = GetReferencedFrame();
   if (frame) {
@@ -260,7 +261,7 @@ nsSVGFilterFrame *
 nsSVGFilterReference::GetFilterFrame()
 {
   return static_cast<nsSVGFilterFrame*>(
-    GetReferencedFrame(FrameType::SVGFilter, nullptr));
+    GetReferencedFrame(LayoutFrameType::SVGFilter, nullptr));
 }
 
 void
@@ -626,10 +627,10 @@ nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
   if (!result)
     return nullptr;
 
-  FrameType type = result->Type();
-  if (type != FrameType::SVGLinearGradient &&
-      type != FrameType::SVGRadialGradient &&
-      type != FrameType::SVGPattern)
+  LayoutFrameType type = result->Type();
+  if (type != LayoutFrameType::SVGLinearGradient &&
+      type != LayoutFrameType::SVGRadialGradient &&
+      type != LayoutFrameType::SVGPattern)
     return nullptr;
 
   return static_cast<nsSVGPaintServerFrame*>(result);
@@ -642,7 +643,7 @@ nsSVGEffects::EffectProperties::GetClipPathFrame()
     return nullptr;
 
   nsSVGClipPathFrame* frame = static_cast<nsSVGClipPathFrame*>(
-    mClipPath->GetReferencedFrame(FrameType::SVGClipPath, nullptr));
+    mClipPath->GetReferencedFrame(LayoutFrameType::SVGClipPath, nullptr));
 
   return frame;
 }
@@ -658,7 +659,7 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
   const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
   for (size_t i = 0; i < props.Length(); i++) {
     nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
-      props[i]->GetReferencedFrame(FrameType::SVGMask, &ok));
+      props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok));
     MOZ_ASSERT_IF(maskFrame, ok);
     result.AppendElement(maskFrame);
   }
@@ -678,7 +679,7 @@ nsSVGEffects::EffectProperties::HasNoOrValidClipPath()
   if (mClipPath) {
     bool ok = true;
     nsSVGClipPathFrame* frame = static_cast<nsSVGClipPathFrame*>(
-      mClipPath->GetReferencedFrame(FrameType::SVGClipPath, &ok));
+      mClipPath->GetReferencedFrame(LayoutFrameType::SVGClipPath, &ok));
     if (!ok || (frame && !frame->IsValid())) {
       return false;
     }
@@ -694,7 +695,7 @@ nsSVGEffects::EffectProperties::HasNoOrValidMask()
     bool ok = true;
     const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
     for (size_t i = 0; i < props.Length(); i++) {
-      props[i]->GetReferencedFrame(FrameType::SVGMask, &ok);
+      props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok);
       if (!ok) {
         return false;
       }

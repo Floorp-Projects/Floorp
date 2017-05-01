@@ -144,7 +144,10 @@ public:
   explicit nsBoxFrame(nsStyleContext* aContext,
                       bool aIsRoot = false,
                       nsBoxLayout* aLayoutManager = nullptr)
-    : nsBoxFrame(aContext, mozilla::FrameType::Box, aIsRoot, aLayoutManager)
+    : nsBoxFrame(aContext,
+                 mozilla::LayoutFrameType::Box,
+                 aIsRoot,
+                 aLayoutManager)
   {}
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
@@ -182,7 +185,7 @@ public:
 
 protected:
   nsBoxFrame(nsStyleContext* aContext,
-             mozilla::FrameType aType,
+             mozilla::LayoutFrameType aType,
              bool aIsRoot = false,
              nsBoxLayout* aLayoutManager = nullptr);
 

@@ -579,7 +579,7 @@ public:
 
 protected:
   // Protected constructor and destructor
-  explicit nsFrame(nsStyleContext* aContext, mozilla::FrameType aType);
+  explicit nsFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
   virtual ~nsFrame();
 
   /**
@@ -633,17 +633,17 @@ public:
     if (aDisp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
         aDisp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
       // REVIEW: these are the frame types that set up clipping.
-      mozilla::FrameType type = aFrame->Type();
-      if (type == mozilla::FrameType::Table ||
-          type == mozilla::FrameType::TableCell ||
-          type == mozilla::FrameType::BCTableCell ||
-          type == mozilla::FrameType::SVGOuterSVG ||
-          type == mozilla::FrameType::SVGInnerSVG ||
-          type == mozilla::FrameType::SVGForeignObject) {
+      mozilla::LayoutFrameType type = aFrame->Type();
+      if (type == mozilla::LayoutFrameType::Table ||
+          type == mozilla::LayoutFrameType::TableCell ||
+          type == mozilla::LayoutFrameType::BCTableCell ||
+          type == mozilla::LayoutFrameType::SVGOuterSVG ||
+          type == mozilla::LayoutFrameType::SVGInnerSVG ||
+          type == mozilla::LayoutFrameType::SVGForeignObject) {
         return true;
       }
       if (aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
-        if (type == mozilla::FrameType::TextInput) {
+        if (type == mozilla::LayoutFrameType::TextInput) {
           // It always has an anonymous scroll frame that handles any overflow.
           return false;
         }

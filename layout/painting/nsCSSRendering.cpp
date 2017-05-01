@@ -1235,11 +1235,11 @@ nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
 bool
 nsCSSRendering::IsCanvasFrame(nsIFrame* aFrame)
 {
-  FrameType frameType = aFrame->Type();
-  return frameType == FrameType::Canvas ||
-         frameType == FrameType::Root ||
-         frameType == FrameType::PageContent ||
-         frameType == FrameType::Viewport;
+  LayoutFrameType frameType = aFrame->Type();
+  return frameType == LayoutFrameType::Canvas ||
+         frameType == LayoutFrameType::Root ||
+         frameType == LayoutFrameType::PageContent ||
+         frameType == LayoutFrameType::Viewport;
 }
 
 nsIFrame*
@@ -2809,9 +2809,9 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
              aForFrame->IsSVGOuterSVGFrame());
 
-  FrameType frameType = aForFrame->Type();
+  LayoutFrameType frameType = aForFrame->Type();
   nsIFrame* geometryFrame = aForFrame;
-  if (MOZ_UNLIKELY(frameType == FrameType::Scroll &&
+  if (MOZ_UNLIKELY(frameType == LayoutFrameType::Scroll &&
                    NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL == aLayer.mAttachment)) {
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
     positionArea = nsRect(
@@ -2838,7 +2838,7 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     return positionArea;
   }
 
-  if (MOZ_UNLIKELY(frameType == FrameType::Canvas)) {
+  if (MOZ_UNLIKELY(frameType == LayoutFrameType::Canvas)) {
     geometryFrame = aForFrame->PrincipalChildList().FirstChild();
     // geometryFrame might be null if this canvas is a page created
     // as an overflow container (e.g. the in-flow content has already
@@ -2881,8 +2881,8 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     NS_ASSERTION(attachedToFrame, "no root frame");
     nsIFrame* pageContentFrame = nullptr;
     if (aPresContext->IsPaginated()) {
-      pageContentFrame =
-        nsLayoutUtils::GetClosestFrameOfType(aForFrame, FrameType::PageContent);
+      pageContentFrame = nsLayoutUtils::GetClosestFrameOfType(
+        aForFrame, LayoutFrameType::PageContent);
       if (pageContentFrame) {
         attachedToFrame = pageContentFrame;
       }

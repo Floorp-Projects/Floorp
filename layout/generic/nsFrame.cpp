@@ -449,10 +449,10 @@ WeakFrame::Init(nsIFrame* aFrame)
 nsIFrame*
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFrame(aContext, FrameType::None);
+  return new (aPresShell) nsFrame(aContext, LayoutFrameType::None);
 }
 
-nsFrame::nsFrame(nsStyleContext* aContext, FrameType aType)
+nsFrame::nsFrame(nsStyleContext* aContext, LayoutFrameType aType)
   : nsBox(aType)
 {
   MOZ_COUNT_CTOR(nsFrame);
@@ -540,11 +540,11 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
   }
 
   nsIContent *content = aFrame->GetContent();
-  FrameType frameType = aFrame->Type();
+  LayoutFrameType frameType = aFrame->Type();
   bool isInline = (aFrame->GetDisplay() == StyleDisplay::Inline ||
                    RubyUtils::IsRubyBox(frameType) ||
                    (aFrame->IsFloating() &&
-                    frameType == FrameType::Letter) ||
+                    frameType == LayoutFrameType::Letter) ||
                    // Given multiple frames for the same node, only the
                    // outer one should be considered a container.
                    // (Important, e.g., for nsSelectsAreaFrame.)
@@ -876,7 +876,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     SVGTextFrame* svgTextFrame = static_cast<SVGTextFrame*>(
-      nsLayoutUtils::GetClosestFrameOfType(this, FrameType::SVGText));
+      nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::SVGText));
     nsIFrame* anonBlock = svgTextFrame->PrincipalChildList().FirstChild();
     // Just as in SVGTextFrame::DidSetStyleContext, we need to ensure that
     // any non-display SVGTextFrames get reflowed when a child text frame
@@ -3860,7 +3860,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
 
   nsIFrame* scrollbar =
-    nsLayoutUtils::GetClosestFrameOfType(this, FrameType::Scrollbar);
+    nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::Scrollbar);
   if (!scrollbar) {
     // XXX Do we really need to exclude non-selectable content here?
     // GetContentOffsetsFromPoint can handle it just fine, although some
@@ -4092,13 +4092,13 @@ static FrameContentRange GetRangeForFrame(nsIFrame* aFrame) {
     NS_WARNING("Frame has no content");
     return FrameContentRange(nullptr, -1, -1);
   }
-  FrameType type = aFrame->Type();
-  if (type == FrameType::Text) {
+  LayoutFrameType type = aFrame->Type();
+  if (type == LayoutFrameType::Text) {
     int32_t offset, offsetEnd;
     aFrame->GetOffsets(offset, offsetEnd);
     return FrameContentRange(content, offset, offsetEnd);
   }
-  if (type == FrameType::Br) {
+  if (type == LayoutFrameType::Br) {
     parent = content->GetParent();
     int32_t beginOffset = parent->IndexOf(content);
     return FrameContentRange(parent, beginOffset, beginOffset);
@@ -5965,12 +5965,12 @@ nsIFrame::SetView(nsView* aView)
     aView->SetFrame(this);
 
 #ifdef DEBUG
-    FrameType frameType = Type();
-    NS_ASSERTION(frameType == FrameType::SubDocument ||
-                 frameType == FrameType::ListControl ||
-                 frameType == FrameType::Object ||
-                 frameType == FrameType::Viewport ||
-                 frameType == FrameType::MenuPopup,
+    LayoutFrameType frameType = Type();
+    NS_ASSERTION(frameType == LayoutFrameType::SubDocument ||
+                 frameType == LayoutFrameType::ListControl ||
+                 frameType == LayoutFrameType::Object ||
+                 frameType == LayoutFrameType::Viewport ||
+                 frameType == LayoutFrameType::MenuPopup,
                  "Only specific frame types can have an nsView");
 #endif
 
@@ -8725,11 +8725,11 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
     }
   }
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
-  FrameType fType = aFrame->Type();
+  LayoutFrameType fType = aFrame->Type();
   if (nsFrame::ShouldApplyOverflowClipping(aFrame, disp) ||
-      fType == FrameType::Scroll ||
-      fType == FrameType::ListControl ||
-      fType == FrameType::SVGOuterSVG) {
+      fType == LayoutFrameType::Scroll ||
+      fType == LayoutFrameType::ListControl ||
+      fType == LayoutFrameType::SVGOuterSVG) {
     return u;
   }
 
@@ -10698,10 +10698,10 @@ struct DR_State
   DR_State();
   ~DR_State();
   void Init();
-  void AddFrameTypeInfo(FrameType aFrameType,
+  void AddFrameTypeInfo(LayoutFrameType aFrameType,
                         const char* aFrameNameAbbrev,
                         const char* aFrameName);
-  DR_FrameTypeInfo* GetFrameTypeInfo(FrameType aFrameType);
+  DR_FrameTypeInfo* GetFrameTypeInfo(LayoutFrameType aFrameType);
   DR_FrameTypeInfo* GetFrameTypeInfo(char* aFrameName);
   void InitFrameTypeTable();
   DR_FrameTreeNode* CreateTreeNode(nsIFrame*                aFrame,
@@ -10744,14 +10744,14 @@ static DR_State *DR_state; // the one and only DR_State
 
 struct DR_RulePart
 {
-  explicit DR_RulePart(FrameType aFrameType)
+  explicit DR_RulePart(LayoutFrameType aFrameType)
     : mFrameType(aFrameType)
     , mNext(0)
   {}
 
   void Destroy();
 
-  FrameType mFrameType;
+  LayoutFrameType mFrameType;
   DR_RulePart* mNext;
 };
 
@@ -10772,7 +10772,7 @@ struct DR_Rule
     if (mTarget) mTarget->Destroy();
     MOZ_COUNT_DTOR(DR_Rule);
   }
-  void AddPart(FrameType aFrameType);
+  void AddPart(LayoutFrameType aFrameType);
 
   uint32_t      mLength;
   DR_RulePart*  mTarget;
@@ -10780,7 +10780,7 @@ struct DR_Rule
 };
 
 void
-DR_Rule::AddPart(FrameType aFrameType)
+DR_Rule::AddPart(LayoutFrameType aFrameType)
 {
   DR_RulePart* newPart = new DR_RulePart(aFrameType);
   newPart->mNext = mTarget;
@@ -10790,7 +10790,7 @@ DR_Rule::AddPart(FrameType aFrameType)
 
 struct DR_FrameTypeInfo
 {
-  DR_FrameTypeInfo(FrameType aFrameType,
+  DR_FrameTypeInfo(LayoutFrameType aFrameType,
                    const char* aFrameNameAbbrev,
                    const char* aFrameName);
   ~DR_FrameTypeInfo() {
@@ -10801,7 +10801,7 @@ struct DR_FrameTypeInfo
       }
    }
 
-  FrameType   mType;
+  LayoutFrameType   mType;
   char        mNameAbbrev[16];
   char        mName[32];
   nsTArray<DR_Rule*> mRules;
@@ -10809,7 +10809,7 @@ private:
   DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) = delete;
 };
 
-DR_FrameTypeInfo::DR_FrameTypeInfo(FrameType aFrameType,
+DR_FrameTypeInfo::DR_FrameTypeInfo(LayoutFrameType aFrameType,
                                    const char* aFrameNameAbbrev,
                                    const char* aFrameName)
 {
@@ -10968,7 +10968,7 @@ DR_Rule* DR_State::ParseRule(FILE* aFile)
         rule = new DR_Rule;
       }
       if (strcmp(buf, "*") == 0) {
-        rule->AddPart(FrameType::None);
+        rule->AddPart(LayoutFrameType::None);
       }
       else {
         DR_FrameTypeInfo* info = GetFrameTypeInfo(buf);
@@ -11007,7 +11007,7 @@ void DR_State::ParseRulesFile()
     if (inFile) {
       for (DR_Rule* rule = ParseRule(inFile); rule; rule = ParseRule(inFile)) {
         if (rule->mTarget) {
-          FrameType fType = rule->mTarget->mFrameType;
+          LayoutFrameType fType = rule->mTarget->mFrameType;
           DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
           if (info) {
             AddRule(info->mRules, *rule);
@@ -11025,7 +11025,7 @@ void DR_State::ParseRulesFile()
 }
 
 void
-DR_State::AddFrameTypeInfo(FrameType aFrameType,
+DR_State::AddFrameTypeInfo(LayoutFrameType aFrameType,
                            const char* aFrameNameAbbrev,
                            const char* aFrameName)
 {
@@ -11033,7 +11033,7 @@ DR_State::AddFrameTypeInfo(FrameType aFrameType,
 }
 
 DR_FrameTypeInfo*
-DR_State::GetFrameTypeInfo(FrameType aFrameType)
+DR_State::GetFrameTypeInfo(LayoutFrameType aFrameType)
 {
   int32_t numEntries = mFrameTypeTable.Length();
   NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
@@ -11061,43 +11061,43 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
 
 void DR_State::InitFrameTypeTable()
 {
-  AddFrameTypeInfo(FrameType::Block,            "block",     "block");
-  AddFrameTypeInfo(FrameType::Br,               "br",        "br");
-  AddFrameTypeInfo(FrameType::Bullet,           "bullet",    "bullet");
-  AddFrameTypeInfo(FrameType::ColorControl,     "color",     "colorControl");
-  AddFrameTypeInfo(FrameType::GfxButtonControl, "button",    "gfxButtonControl");
-  AddFrameTypeInfo(FrameType::HTMLButtonControl, "HTMLbutton",    "HTMLButtonControl");
-  AddFrameTypeInfo(FrameType::HTMLCanvas,       "HTMLCanvas","HTMLCanvas");
-  AddFrameTypeInfo(FrameType::SubDocument,      "subdoc",    "subDocument");
-  AddFrameTypeInfo(FrameType::Image,            "img",       "image");
-  AddFrameTypeInfo(FrameType::Inline,           "inline",    "inline");
-  AddFrameTypeInfo(FrameType::Letter,           "letter",    "letter");
-  AddFrameTypeInfo(FrameType::Line,             "line",      "line");
-  AddFrameTypeInfo(FrameType::ListControl,      "select",    "select");
-  AddFrameTypeInfo(FrameType::Object,           "obj",       "object");
-  AddFrameTypeInfo(FrameType::Page,             "page",      "page");
-  AddFrameTypeInfo(FrameType::Placeholder,      "place",     "placeholder");
-  AddFrameTypeInfo(FrameType::Canvas,           "canvas",    "canvas");
-  AddFrameTypeInfo(FrameType::Root,             "root",      "root");
-  AddFrameTypeInfo(FrameType::Scroll,           "scroll",    "scroll");
-  AddFrameTypeInfo(FrameType::TableCell,        "cell",      "tableCell");
-  AddFrameTypeInfo(FrameType::BCTableCell,      "bcCell",    "bcTableCell");
-  AddFrameTypeInfo(FrameType::TableCol,         "col",       "tableCol");
-  AddFrameTypeInfo(FrameType::TableColGroup,    "colG",      "tableColGroup");
-  AddFrameTypeInfo(FrameType::Table,            "tbl",       "table");
-  AddFrameTypeInfo(FrameType::TableWrapper,     "tblW",      "tableWrapper");
-  AddFrameTypeInfo(FrameType::TableRowGroup,    "rowG",      "tableRowGroup");
-  AddFrameTypeInfo(FrameType::TableRow,         "row",       "tableRow");
-  AddFrameTypeInfo(FrameType::TextInput,        "textCtl",   "textInput");
-  AddFrameTypeInfo(FrameType::Text,             "text",      "text");
-  AddFrameTypeInfo(FrameType::Viewport,         "VP",        "viewport");
+  AddFrameTypeInfo(LayoutFrameType::Block,            "block",     "block");
+  AddFrameTypeInfo(LayoutFrameType::Br,               "br",        "br");
+  AddFrameTypeInfo(LayoutFrameType::Bullet,           "bullet",    "bullet");
+  AddFrameTypeInfo(LayoutFrameType::ColorControl,     "color",     "colorControl");
+  AddFrameTypeInfo(LayoutFrameType::GfxButtonControl, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(LayoutFrameType::HTMLButtonControl, "HTMLbutton",    "HTMLButtonControl");
+  AddFrameTypeInfo(LayoutFrameType::HTMLCanvas,       "HTMLCanvas","HTMLCanvas");
+  AddFrameTypeInfo(LayoutFrameType::SubDocument,      "subdoc",    "subDocument");
+  AddFrameTypeInfo(LayoutFrameType::Image,            "img",       "image");
+  AddFrameTypeInfo(LayoutFrameType::Inline,           "inline",    "inline");
+  AddFrameTypeInfo(LayoutFrameType::Letter,           "letter",    "letter");
+  AddFrameTypeInfo(LayoutFrameType::Line,             "line",      "line");
+  AddFrameTypeInfo(LayoutFrameType::ListControl,      "select",    "select");
+  AddFrameTypeInfo(LayoutFrameType::Object,           "obj",       "object");
+  AddFrameTypeInfo(LayoutFrameType::Page,             "page",      "page");
+  AddFrameTypeInfo(LayoutFrameType::Placeholder,      "place",     "placeholder");
+  AddFrameTypeInfo(LayoutFrameType::Canvas,           "canvas",    "canvas");
+  AddFrameTypeInfo(LayoutFrameType::Root,             "root",      "root");
+  AddFrameTypeInfo(LayoutFrameType::Scroll,           "scroll",    "scroll");
+  AddFrameTypeInfo(LayoutFrameType::TableCell,        "cell",      "tableCell");
+  AddFrameTypeInfo(LayoutFrameType::BCTableCell,      "bcCell",    "bcTableCell");
+  AddFrameTypeInfo(LayoutFrameType::TableCol,         "col",       "tableCol");
+  AddFrameTypeInfo(LayoutFrameType::TableColGroup,    "colG",      "tableColGroup");
+  AddFrameTypeInfo(LayoutFrameType::Table,            "tbl",       "table");
+  AddFrameTypeInfo(LayoutFrameType::TableWrapper,     "tblW",      "tableWrapper");
+  AddFrameTypeInfo(LayoutFrameType::TableRowGroup,    "rowG",      "tableRowGroup");
+  AddFrameTypeInfo(LayoutFrameType::TableRow,         "row",       "tableRow");
+  AddFrameTypeInfo(LayoutFrameType::TextInput,        "textCtl",   "textInput");
+  AddFrameTypeInfo(LayoutFrameType::Text,             "text",      "text");
+  AddFrameTypeInfo(LayoutFrameType::Viewport,         "VP",        "viewport");
 #ifdef MOZ_XUL
-  AddFrameTypeInfo(FrameType::XULLabel,         "XULLabel",  "XULLabel");
-  AddFrameTypeInfo(FrameType::Box,              "Box",       "Box");
-  AddFrameTypeInfo(FrameType::Slider,           "Slider",    "Slider");
-  AddFrameTypeInfo(FrameType::PopupSet,         "PopupSet",  "PopupSet");
+  AddFrameTypeInfo(LayoutFrameType::XULLabel,         "XULLabel",  "XULLabel");
+  AddFrameTypeInfo(LayoutFrameType::Box,              "Box",       "Box");
+  AddFrameTypeInfo(LayoutFrameType::Slider,           "Slider",    "Slider");
+  AddFrameTypeInfo(LayoutFrameType::PopupSet,         "PopupSet",  "PopupSet");
 #endif
-  AddFrameTypeInfo(FrameType::None,             "unknown",   "unknown");
+  AddFrameTypeInfo(LayoutFrameType::None,             "unknown",   "unknown");
 }
 
 
@@ -11135,7 +11135,7 @@ DR_State::RuleMatches(DR_Rule& aRule, DR_FrameTreeNode& aNode)
   for (rulePart = aRule.mTarget->mNext, parentNode = aNode.mParent;
        rulePart && parentNode;
        rulePart = rulePart->mNext, parentNode = parentNode->mParent) {
-    if (rulePart->mFrameType != FrameType::None) {
+    if (rulePart->mFrameType != LayoutFrameType::None) {
       if (parentNode->mFrame) {
         if (rulePart->mFrameType != parentNode->mFrame->Type()) {
           return false;

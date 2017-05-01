@@ -153,8 +153,8 @@ nsSVGFilterFrame::GetReferencedFilter()
   if (!result)
     return nullptr;
 
-  FrameType frameType = result->Type();
-  if (frameType != FrameType::SVGFilter)
+  LayoutFrameType frameType = result->Type();
+  if (frameType != LayoutFrameType::SVGFilter)
     return nullptr;
 
   return static_cast<nsSVGFilterFrame*>(result);

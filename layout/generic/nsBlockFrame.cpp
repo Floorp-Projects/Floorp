@@ -3081,9 +3081,9 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
       nsContainerFrame* ancestor = GetParent();
       for (; ancestor; ancestor = ancestor->GetParent()) {
         auto frameType = ancestor->Type();
-        if (frameType == FrameType::Block ||
-            frameType == FrameType::FlexContainer ||
-            frameType == FrameType::GridContainer) {
+        if (frameType == LayoutFrameType::Block ||
+            frameType == LayoutFrameType::FlexContainer ||
+            frameType == LayoutFrameType::GridContainer) {
           break;
         }
       }
@@ -5353,12 +5353,12 @@ nsBlockFrame::RemoveFrame(ChildListID aListID,
 static bool
 ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 {
-  FrameType type = aLastFrame->Type();
-  if (type == FrameType::Br) {
+  LayoutFrameType type = aLastFrame->Type();
+  if (type == LayoutFrameType::Br) {
     return true;
   }
   // XXX the TEXT_OFFSETS_NEED_FIXING check is a wallpaper for bug 822910.
-  if (type == FrameType::Text &&
+  if (type == LayoutFrameType::Text &&
       !(aLastFrame->GetStateBits() & TEXT_OFFSETS_NEED_FIXING)) {
     return aLastFrame->HasSignificantTerminalNewline();
   }
@@ -6231,7 +6231,7 @@ nsBlockFrame::AdjustFloatAvailableSpace(BlockReflowInput& aState,
 
   if (availBSize != NS_UNCONSTRAINEDSIZE &&
       !aState.mFlags.mFloatFragmentsInsideColumnEnabled &&
-      nsLayoutUtils::GetClosestFrameOfType(this, FrameType::ColumnSet)) {
+      nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::ColumnSet)) {
     // Tell the float it has unrestricted block-size, so it won't break.
     // If the float doesn't actually fit in the column it will fail to be
     // placed, and either move to the block-start of the next column or just

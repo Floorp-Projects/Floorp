@@ -1060,11 +1060,11 @@ public:
 
 protected:
   nsHTMLScrollFrame(nsStyleContext* aContext, bool aIsRoot)
-    : nsHTMLScrollFrame(aContext, mozilla::FrameType::Scroll, aIsRoot)
+    : nsHTMLScrollFrame(aContext, mozilla::LayoutFrameType::Scroll, aIsRoot)
   {}
 
   nsHTMLScrollFrame(nsStyleContext* aContext,
-                    mozilla::FrameType aType,
+                    mozilla::LayoutFrameType aType,
                     bool aIsRoot);
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mHelper.mSupppressScrollbarUpdate = aSuppress;

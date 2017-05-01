@@ -50,7 +50,9 @@ public:
   // default constructor supplied by the compiler
 
   nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aContext, aTableFrame, mozilla::FrameType::TableCell)
+    : nsTableCellFrame(aContext,
+                       aTableFrame,
+                       mozilla::LayoutFrameType::TableCell)
   {}
 
   ~nsTableCellFrame();
@@ -238,7 +240,7 @@ public:
 protected:
   nsTableCellFrame(nsStyleContext* aContext,
                    nsTableFrame* aTableFrame,
-                   mozilla::FrameType aType);
+                   mozilla::LayoutFrameType aType);
 
   virtual LogicalSides
   GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;

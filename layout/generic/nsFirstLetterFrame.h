@@ -18,7 +18,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsFirstLetterFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::FrameType::Letter)
+    : nsContainerFrame(aContext, mozilla::LayoutFrameType::Letter)
   {}
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

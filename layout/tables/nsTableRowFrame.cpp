@@ -130,7 +130,7 @@ NS_QUERYFRAME_HEAD(nsTableRowFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::TableRow)
+  : nsContainerFrame(aContext, LayoutFrameType::TableRow)
   , mContentBSize(0)
   , mStylePctBSize(0)
   , mStyleFixedBSize(0)
@@ -238,8 +238,8 @@ nsTableRowFrame::InsertFrames(ChildListID  aListID,
 
   // Get the table frame
   nsTableFrame* tableFrame = GetTableFrame();
-  FrameType cellFrameType = tableFrame->IsBorderCollapse()
-      ? FrameType::BCTableCell : FrameType::TableCell;
+  LayoutFrameType cellFrameType = tableFrame->IsBorderCollapse()
+      ? LayoutFrameType::BCTableCell : LayoutFrameType::TableCell;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsTArray<nsTableCellFrame*> cellChildren;
   for (nsFrameList::Enumerator e(newCells); !e.AtEnd(); e.Next()) {

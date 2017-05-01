@@ -47,7 +47,7 @@ NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 nsRangeFrame::nsRangeFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::Range)
+  : nsContainerFrame(aContext, LayoutFrameType::Range)
 {
 }
 

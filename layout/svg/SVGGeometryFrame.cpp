@@ -731,7 +731,7 @@ SVGGeometryFrame::MarkerProperties::GetMarkerStartFrame()
   if (!mMarkerStart)
     return nullptr;
   return static_cast<nsSVGMarkerFrame*>(
-    mMarkerStart->GetReferencedFrame(FrameType::SVGMarker, nullptr));
+    mMarkerStart->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
 }
 
 nsSVGMarkerFrame *
@@ -740,7 +740,7 @@ SVGGeometryFrame::MarkerProperties::GetMarkerMidFrame()
   if (!mMarkerMid)
     return nullptr;
   return static_cast<nsSVGMarkerFrame*>(
-    mMarkerMid->GetReferencedFrame(FrameType::SVGMarker, nullptr));
+    mMarkerMid->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
 }
 
 nsSVGMarkerFrame *
@@ -749,7 +749,7 @@ SVGGeometryFrame::MarkerProperties::GetMarkerEndFrame()
   if (!mMarkerEnd)
     return nullptr;
   return static_cast<nsSVGMarkerFrame*>(
-    mMarkerEnd->GetReferencedFrame(FrameType::SVGMarker, nullptr));
+    mMarkerEnd->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
 }
 
 DrawResult
