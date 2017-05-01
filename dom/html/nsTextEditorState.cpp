@@ -2643,7 +2643,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     // Since we have no editor we presumably have cached selection state.
     if (IsSelectionCached()) {
       SelectionProperties& props = GetSelectionProperties();
-      if (aFlags & eSetValue_MoveCursorToEnd) {
+      if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
         props.SetStart(newValue.Length());
         props.SetEnd(newValue.Length());
       } else {
