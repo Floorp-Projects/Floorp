@@ -1361,7 +1361,7 @@ pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 491323-1.xul 491323-1-ref.xul
 == 492239-1.xul 492239-1-ref.xul
 == 492661-1.html 492661-1-ref.html
-fails-if(stylo) == 493968-1.html 493968-1-ref.html
+== 493968-1.html 493968-1-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
