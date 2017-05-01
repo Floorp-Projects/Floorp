@@ -24,15 +24,20 @@ class MediaStreamVideoRecorderSink : public MediaStreamVideoSink
 {
 public:
   explicit MediaStreamVideoRecorderSink(VideoTrackEncoder* aEncoder)
-    : mVideoEncoder(aEncoder) {}
+    : mVideoEncoder(aEncoder)
+    , mSuspended(false) {}
 
   // MediaStreamVideoSink methods
   virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
   virtual void ClearFrames() override {}
 
+  void Resume() { mSuspended = false; }
+  void Suspend() { mSuspended = true; }
+
 private:
   virtual ~MediaStreamVideoRecorderSink() {}
   VideoTrackEncoder* mVideoEncoder;
+  Atomic<bool> mSuspended;
 };
 
 /**
@@ -111,7 +116,9 @@ public :
   /* Note - called from control code, not on MSG threads. */
   void Suspend()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     mSuspended = RECORD_SUSPENDED;
+    mVideoSink->Suspend();
   }
 
   /**
@@ -120,9 +127,11 @@ public :
    * to the next frame, in order to avoid any possible loss of sync. */
   void Resume()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     if (mSuspended == RECORD_SUSPENDED) {
       mSuspended = RECORD_RESUMED;
     }
+    mVideoSink->Resume();
   }
 
   /**
