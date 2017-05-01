@@ -70,6 +70,15 @@ add_task(function* test_user_defined_commands() {
         shiftKey: true,
       },
     },
+    {
+      name: "toggle-ctrl-shift-1",
+      shortcut: "Ctrl+Shift+1",
+      key: "1",
+      modifiers: {
+        accelKey: true,
+        shiftKey: true,
+      },
+    },
     // Alt+Shift Shortcuts
     {
       name: "toggle-alt-shift-1",
@@ -137,6 +146,31 @@ add_task(function* test_user_defined_commands() {
         shiftKey: true,
       },
     },
+    {
+      name: "toggle-ctrl-space",
+      shortcut: "Ctrl+Space",
+      key: "VK_SPACE",
+      modifiers: {
+        accelKey: true,
+      },
+    },
+    {
+      name: "toggle-ctrl-comma",
+      shortcut: "Ctrl+Comma",
+      key: "VK_COMMA",
+      modifiers: {
+        accelKey: true,
+      },
+    },
+    {
+      name: "toggle-ctrl-period",
+      shortcut: "Ctrl+Period",
+      key: "VK_PERIOD",
+      modifiers: {
+        accelKey: true,
+      },
+    },
+
   ];
 
   // Create a window before the extension is loaded.
