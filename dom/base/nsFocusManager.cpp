@@ -1058,8 +1058,9 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
         nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
         nsCOMPtr<EventTarget> relatedTarget = mDelayedBlurFocusEvents[i].mRelatedTarget;
         mDelayedBlurFocusEvents.RemoveElementAt(i);
-        SendFocusOrBlurEvent(message, presShell, aDocument, target, 0,
-                             false, false, relatedTarget);
+
+        FireFocusOrBlurEvent(message, presShell, target, false, false,
+                             relatedTarget);
         --i;
       }
     }
@@ -2081,7 +2082,7 @@ GetDocumentHelper(EventTarget* aTarget)
   return node->OwnerDoc();
 }
 
-void nsFocusManager::SendFocusInOrOutEvent(EventMessage aEventMessage,
+void nsFocusManager::FireFocusInOrOutEvent(EventMessage aEventMessage,
                                      nsIPresShell* aPresShell,
                                      nsISupports* aTarget,
                                      nsPIDOMWindowOuter* aCurrentFocusedWindow,
@@ -2089,7 +2090,7 @@ void nsFocusManager::SendFocusInOrOutEvent(EventMessage aEventMessage,
                                      EventTarget* aRelatedTarget)
 {
   NS_ASSERTION(aEventMessage == eFocusIn || aEventMessage == eFocusOut,
-      "Wrong event type for SendFocusInOrOutEvent");
+      "Wrong event type for FireFocusInOrOutEvent");
 
   nsContentUtils::AddScriptRunner(
       new FocusInOutEvent(
@@ -2117,11 +2118,6 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   nsCOMPtr<nsIDocument> eventTargetDoc = GetDocumentHelper(eventTarget);
   nsCOMPtr<nsIDocument> relatedTargetDoc = GetDocumentHelper(aRelatedTarget);
-  nsCOMPtr<nsPIDOMWindowOuter> currentWindow = mFocusedWindow;
-  nsCOMPtr<nsPIDOMWindowInner> targetWindow = do_QueryInterface(aTarget);
-  nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(aTarget);
-  nsCOMPtr<nsIContent> currentFocusedContent = currentWindow ?
-      currentWindow->GetFocusedNode() : nullptr;
 
   // set aRelatedTarget to null if it's not in the same document as eventTarget
   if (eventTargetDoc != relatedTargetDoc) {
@@ -2149,6 +2145,36 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
     return;
   }
 
+  // If mDelayedBlurFocusEvents queue is not empty, check if there are events
+  // that belongs to this doc, if yes, fire them first.
+  if (aDocument && !aDocument->EventHandlingSuppressed() &&
+      mDelayedBlurFocusEvents.Length()) {
+    FireDelayedEvents(aDocument);
+  }
+
+  FireFocusOrBlurEvent(aEventMessage, aPresShell, aTarget, aWindowRaised,
+                       aIsRefocus, aRelatedTarget);
+}
+
+void
+nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
+                                     nsIPresShell* aPresShell,
+                                     nsISupports* aTarget,
+                                     bool aWindowRaised,
+                                     bool aIsRefocus,
+                                     EventTarget* aRelatedTarget)
+{
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIDocument> eventTargetDoc = GetDocumentHelper(eventTarget);
+  nsCOMPtr<nsPIDOMWindowOuter> currentWindow = mFocusedWindow;
+  nsCOMPtr<nsPIDOMWindowInner> targetWindow = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIContent> currentFocusedContent = currentWindow ?
+      currentWindow->GetFocusedNode() : nullptr;
+
+  bool dontDispatchEvent =
+    eventTargetDoc && nsContentUtils::IsUserFocusIgnored(eventTargetDoc);
+
 #ifdef ACCESSIBILITY
   nsAccessibilityService* accService = GetAccService();
   if (accService) {
@@ -2174,7 +2200,7 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
     // resolved.
     if (!targetWindow && !targetDocument) {
       EventMessage focusInOrOutMessage = aEventMessage == eFocus ? eFocusIn : eFocusOut;
-      SendFocusInOrOutEvent(focusInOrOutMessage, aPresShell, aTarget,
+      FireFocusInOrOutEvent(focusInOrOutMessage, aPresShell, aTarget,
           currentWindow, currentFocusedContent, aRelatedTarget);
     }
   }
