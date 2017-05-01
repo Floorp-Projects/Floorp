@@ -403,6 +403,9 @@ TabChild::TabChild(nsIContentChild* aManager,
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
 #endif
+#if defined(ACCESSIBILITY)
+  , mTopLevelDocAccessibleChild(nullptr)
+#endif
 {
   nsWeakPtr weakPtrThis(do_GetWeakReference(static_cast<nsITabChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback = [weakPtrThis](uint64_t aInputBlockId,
