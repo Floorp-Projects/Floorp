@@ -137,6 +137,21 @@ config = {
                 'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
                 'force_clobber': True,
             },
+            'linux-devedition': {
+                "update_channel": "aurora",
+            },
+            'linux64-devedition': {
+                "update_channel": "aurora",
+            },
+            'macosx64-devedition': {
+                "update_channel": "aurora",
+            },
+            'win32-devedition': {
+                "update_channel": "aurora",
+            },
+            'win64-devedition': {
+                "update_channel": "aurora",
+            },
             'linux-debug': {
                 'update_channel': 'default',
             },
