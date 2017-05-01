@@ -201,10 +201,14 @@ struct JSContext : public JS::RootingContext,
 #endif
 
   private:
-    // If |c| or |oldCompartment| is the atoms compartment, the
-    // |exclusiveAccessLock| must be held.
-    inline void enterCompartment(JSCompartment* c,
-                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    // We distinguish between entering the atoms compartment and all other
+    // compartments. Entering the atoms compartment requires a lock. Also, we
+    // don't call enterZoneGroup when entering the atoms compartment since that
+    // can induce GC hazards.
+    inline void enterNonAtomsCompartment(JSCompartment* c);
+    inline void enterAtomsCompartment(JSCompartment* c,
+                                      const js::AutoLockForExclusiveAccess& lock);
+
     friend class js::AutoCompartment;
 
   public:
