@@ -10,8 +10,12 @@
 #include "mozilla/Unused.h"
 #include "nsIFile.h"
 
+#include <private/pprio.h>
+
 namespace mozilla {
 namespace loader {
+
+using namespace mozilla::ipc;
 
 AutoMemMap::~AutoMemMap()
 {
@@ -26,26 +30,62 @@ AutoMemMap::~AutoMemMap()
     }
 }
 
+FileDescriptor
+AutoMemMap::cloneFileDescriptor()
+{
+    if (fd.get()) {
+        auto handle = FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd.get()));
+        return FileDescriptor(handle);
+    }
+    return FileDescriptor();
+}
+
 Result<Ok, nsresult>
 AutoMemMap::init(nsIFile* file, int flags, int mode, PRFileMapProtect prot)
 {
     MOZ_ASSERT(!fd);
+
+    NS_TRY(file->OpenNSPRFileDesc(flags, mode, &fd.rwget()));
+
+    return initInternal(prot);
+}
+
+Result<Ok, nsresult>
+AutoMemMap::init(const FileDescriptor& file)
+{
+    MOZ_ASSERT(!fd);
+    if (!file.IsValid()) {
+        return Err(NS_ERROR_INVALID_ARG);
+    }
+
+    auto handle = file.ClonePlatformHandle();
+
+    fd = PR_ImportFile(PROsfd(handle.get()));
+    if (!fd) {
+        return Err(NS_ERROR_FAILURE);
+    }
+    Unused << handle.release();
+
+    return initInternal();
+}
+
+Result<Ok, nsresult>
+AutoMemMap::initInternal(PRFileMapProtect prot)
+{
     MOZ_ASSERT(!fileMap);
     MOZ_ASSERT(!addr);
 
-    int64_t fileSize;
-    NS_TRY(file->GetFileSize(&fileSize));
+    PRFileInfo64 fileInfo;
+    NS_TRY(PR_GetOpenFileInfo64(fd.get(), &fileInfo));
 
-    if (fileSize > UINT32_MAX)
+    if (fileInfo.size > UINT32_MAX)
         return Err(NS_ERROR_INVALID_ARG);
-
-    NS_TRY(file->OpenNSPRFileDesc(flags, mode, &fd.rwget()));
 
     fileMap = PR_CreateFileMap(fd, 0, prot);
     if (!fileMap)
         return Err(NS_ERROR_FAILURE);
 
-    size_ = fileSize;
+    size_ = fileInfo.size;
     addr = PR_MemMap(fileMap, 0, size_);
     if (!addr)
         return Err(NS_ERROR_FAILURE);
