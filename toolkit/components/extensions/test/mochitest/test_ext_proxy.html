@@ -18,8 +18,12 @@
 function* testProxyScript(script, expected) {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
+      let errorReceived = false;
       browser.proxy.onProxyError.addListener(error => {
-        browser.test.sendMessage("proxy-error-received", error);
+        if (!errorReceived) {
+          errorReceived = true;
+          browser.test.sendMessage("proxy-error-received", error);
+        }
       });
 
       browser.proxy.registerProxyScript("proxy_script.js");

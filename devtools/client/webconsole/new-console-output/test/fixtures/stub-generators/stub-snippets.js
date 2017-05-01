@@ -18,10 +18,23 @@ const consoleApiCommands = [
   "console.log('hello \\nfrom \\rthe \\\"string world!')",
   "console.log('\xFA\u1E47\u0129\xE7\xF6d\xEA \u021B\u0115\u0219\u0165')",
   "console.dirxml(window)",
+  "console.log('myarray', ['red', 'green', 'blue'])",
+  "console.log('myregex', /a.b.c/)",
+  "console.table(['red', 'green', 'blue']);",
+  "console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});",
 ];
 
 let consoleApi = new Map(consoleApiCommands.map(
   cmd => [cmd, {keys: [cmd], code: cmd}]));
+
+consoleApi.set("console.map('mymap')", {
+  keys: ["console.map('mymap')"],
+  code: `
+var map = new Map();
+map.set("key1", "value1");
+map.set("key2", "value2");
+console.log('mymap', map);
+`});
 
 consoleApi.set("console.trace()", {
   keys: ["console.trace()"],

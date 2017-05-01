@@ -19,6 +19,8 @@ loader.lazyImporter(this, "BrowserUtils",
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "showDoorhanger",
                          "devtools/client/shared/doorhanger", true);
+loader.lazyRequireGetter(this, "gDevToolsBrowser",
+                         "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "TouchEventSimulator",
                          "devtools/shared/touch/simulator", true);
 loader.lazyRequireGetter(this, "flags",
@@ -226,6 +228,8 @@ ResponsiveUI.prototype = {
     let ready = this.waitForMessage("ResponsiveMode:ChildScriptReady");
     this.mm.loadFrameScript("resource://devtools/client/responsivedesign/responsivedesign-child.js", true);
     yield ready;
+
+    yield gDevToolsBrowser.loadBrowserStyleSheet(this.mainWindow);
 
     let requiresFloatingScrollbars =
       !this.mainWindow.matchMedia("(-moz-overlay-scrollbars)").matches;

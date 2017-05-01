@@ -25,7 +25,7 @@ class nsIStyleRule;
 class nsPresContext;
 class nsStyleContext;
 struct RawServoAnimationValueMap;
-typedef RawServoAnimationValueMap const* RawServoAnimationValueMapBorrowed;
+typedef RawServoAnimationValueMap* RawServoAnimationValueMapBorrowedMut;
 
 namespace mozilla {
 
@@ -163,7 +163,7 @@ public:
     const dom::Element* aElement,
     CSSPseudoElementType aPseudoType,
     CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMapBorrowed aAnimationValues);
+    RawServoAnimationValueMapBorrowedMut aAnimationValues);
 
   bool HasPendingStyleUpdates() const;
   bool HasThrottledStyleUpdates() const;
