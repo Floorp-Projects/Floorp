@@ -1253,7 +1253,7 @@ pref("dom.input.dirpicker", false);
 
 // Enable not moving the cursor to end when a text input or textarea has .value
 // set to the value it already has.  By default, enabled.
-pref("dom.input.skip_cursor_move_for_same_value_set", true);
+pref("dom.input.skip_cursor_move_for_same_value_set", false);
 
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
