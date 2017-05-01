@@ -193,7 +193,7 @@ Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed element);
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
-                       RawServoAnimationValueMapBorrowed aAnimationValues);
+                       RawServoAnimationValueMapBorrowedMut aAnimationValues);
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
