@@ -5055,7 +5055,7 @@ ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch
 }
 
 nsresult
-ContentParent::AboutToLoadDocumentForChild(nsIChannel* aChannel)
+ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 {
   MOZ_ASSERT(aChannel);
 
