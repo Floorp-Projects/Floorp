@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Tamam"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Firefox Screenshots'ı kullandığınızda Screenshosts $TERMSANDPRIVACYNOTICETERMSLINK$ ve $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kabul etmiş sayılırsınız.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox Screenshots'ı kullandığınızda Firefox Bulut Hizmetleri'nin $TERMSANDPRIVACYNOTICETERMSLINK$ ve $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kabul etmiş sayılırsınız.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
