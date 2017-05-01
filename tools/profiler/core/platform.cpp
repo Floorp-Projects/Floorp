@@ -2299,7 +2299,7 @@ profiler_save_profile_to_file(const char* aFilename)
 }
 
 const char**
-profiler_get_features()
+profiler_get_available_features()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
