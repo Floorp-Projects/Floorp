@@ -16,7 +16,7 @@
 #  include <pthread_np.h>
 # endif
 
-# if defined(ANDROID)
+# if defined(ANDROID) && !defined(__aarch64__)
 #  include <sys/types.h>
 #  include <unistd.h>
 # endif
@@ -120,11 +120,11 @@ js::GetNativeStackBaseImpl()
     rc = pthread_stackseg_np(pthread_self(), &ss);
     stackBase = (void*)((size_t) ss.ss_sp - ss.ss_size);
     stackSize = ss.ss_size;
-# elif defined(ANDROID)
+# elif defined(ANDROID) && !defined(__aarch64__)
     if (gettid() == getpid()) {
-        // bionic's pthread_attr_getstack doesn't tell the truth for the main
-        // thread (see bug 846670). So we scan /proc/self/maps to find the
-        // segment which contains the stack.
+        // bionic's pthread_attr_getstack prior to API 21 doesn't tell the truth
+        // for the main thread (see bug 846670). So we scan /proc/self/maps to
+        // find the segment which contains the stack.
         rc = -1;
 
         // Put the string on the stack, otherwise there is the danger that it
