@@ -44,7 +44,11 @@ add_task(async function test_link() {
        "---",                   null,
        "context-savelink",      true,
        "context-copylink",      true,
-       "context-searchselect",  true]);
+       "context-searchselect",  true,
+       "---", null,
+       "context-sendlinktodevice", true, [], null,
+       ]
+    );
 });
 
 add_task(async function test_video() {

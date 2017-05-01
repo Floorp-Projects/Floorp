@@ -198,6 +198,8 @@ add_task(async function test_date_time_color_range_month_week_datetimelocal_inpu
        "context-savepage",     true,
        ...(hasPocket ? ["context-pocket", true] : []),
        "---",                  null,
+       "context-sendpagetodevice", null, [], null,
+       "---",                  null,
        "context-viewbgimage",  false,
        "context-selectall",    null,
        "---",                  null,

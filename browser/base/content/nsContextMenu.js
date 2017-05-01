@@ -630,7 +630,7 @@ nsContextMenu.prototype = {
   },
 
   initSyncItems() {
-    gSync.initPageContextMenu(this);
+    gSync.updateContentContextMenu(this);
   },
 
   openPasswordManager() {
