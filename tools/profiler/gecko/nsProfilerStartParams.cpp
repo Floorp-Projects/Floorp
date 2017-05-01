@@ -31,26 +31,10 @@ nsProfilerStartParams::GetEntries(uint32_t* aEntries)
 }
 
 NS_IMETHODIMP
-nsProfilerStartParams::SetEntries(uint32_t aEntries)
-{
-  NS_ENSURE_ARG(aEntries);
-  mEntries = aEntries;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProfilerStartParams::GetInterval(double* aInterval)
 {
   NS_ENSURE_ARG_POINTER(aInterval);
   *aInterval = mInterval;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProfilerStartParams::SetInterval(double aInterval)
-{
-  NS_ENSURE_ARG(aInterval);
-  mInterval = aInterval;
   return NS_OK;
 }
 
