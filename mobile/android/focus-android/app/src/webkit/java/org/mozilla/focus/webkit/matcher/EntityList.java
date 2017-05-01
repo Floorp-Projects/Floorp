@@ -31,7 +31,7 @@ import java.net.URL;
         if (TextUtils.isEmpty(site.getHost()) ||
                 TextUtils.isEmpty(resource.getHost()) ||
                 site.getScheme().equals("data")) {
-            return true;
+            return false;
         }
 
         if (UrlUtils.isPermittedResourceProtocol(resource.getScheme()) &&

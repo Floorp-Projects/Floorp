@@ -46,6 +46,10 @@ public class UrlMatcherTest {
         assertTrue(!matcher.matches(Uri.parse("http://bcd.specific/something"), Uri.parse("http://mozilla.org")));
         assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific"), Uri.parse("http://mozilla.org")));
         assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific/something"), Uri.parse("http://mozilla.org")));
+
+        // Check that we still do matching for data: URIs
+        assertFalse(matcher.matches(Uri.parse("http://mozilla.org/resource"), Uri.parse("data:text/html;stuff here")));
+        assertTrue(matcher.matches(Uri.parse("http://bcd.random/resource"), Uri.parse("data:text/html;stuff here")));
     }
 
     @Test

@@ -64,6 +64,9 @@ public class EntityListTest {
         assertFalse(entityList.isWhiteListed(Uri.parse("http://" + mozillaOrg + "/another/page.html?u=a"), Uri.parse("http://" + barCom + "/hello")));
         assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg + "/somewhere"), Uri.parse("http://" + fooCom + "/somewhereElse/bla/bla")));
         assertTrue(entityList.isWhiteListed(Uri.parse("http://" + fooMozillaOrg + "/another/page.html?u=a"), Uri.parse("http://" + barCom + "/hello")));
+
+        // Check we don't whitelist resources from data: pages
+        assertFalse(entityList.isWhiteListed(Uri.parse("data:text/html;stuff"), Uri.parse("http://" + fooCom + "/somewhereElse/bla/bla")));
     }
 
 }
