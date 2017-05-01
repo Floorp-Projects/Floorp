@@ -248,7 +248,9 @@ private:
 
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
-                                const uint64_t& aId) override;
+                                const uint64_t& aId,
+                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                bool* aSuccess) override;
 
   virtual bool DeallocPLayerTransactionChild(PLayerTransactionChild *aChild) override;
 

@@ -91,7 +91,9 @@ public:
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
-                                 const uint64_t& aId) override;
+                                 const uint64_t& aId,
+                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                 bool *aSuccess) override;
 
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
 
