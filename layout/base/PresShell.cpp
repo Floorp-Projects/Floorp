@@ -2954,6 +2954,12 @@ PresShell::CreateFramesFor(nsIContent* aContent)
 void
 nsIPresShell::PostRecreateFramesFor(Element* aElement)
 {
+  if (MOZ_UNLIKELY(!mDidInitialize)) {
+    // Nothing to do here. In fact, if we proceed and aElement is the root, we
+    // will crash.
+    return;
+  }
+
   mPresContext->RestyleManager()->PostRestyleEvent(aElement, nsRestyleHint(0),
                                                    nsChangeHint_ReconstructFrame);
 }
