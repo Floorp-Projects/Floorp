@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 
 #include "GeckoProfiler.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #include "jsapi.h"
 #include "js/Initialization.h"
 #include "mozilla/UniquePtrExtensions.h"

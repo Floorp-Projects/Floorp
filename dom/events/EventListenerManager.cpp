@@ -34,7 +34,7 @@
 #include "EventListenerService.h"
 #include "GeckoProfiler.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #endif
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
