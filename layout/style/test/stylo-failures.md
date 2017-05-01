@@ -133,7 +133,7 @@ to mochitest command.
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
     * test_align_shorthand_serialization.html [8]
-    * test_value_storage.html `place-` [7]
+    * test_value_storage.html `place-` [3]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
@@ -156,8 +156,7 @@ to mochitest command.
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
-    * test_value_storage.html `align-` [9]
-    * ... `justify-` [14]
+    * ... `justify-` [5]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
