@@ -9,5 +9,7 @@ ac_add_options --enable-verify-mar
 
 ac_add_options --with-branding=browser/branding/aurora
 
+mk_add_options MOZ_PGO=1
+
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
