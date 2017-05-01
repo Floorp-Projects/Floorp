@@ -24,12 +24,6 @@ config = {
     ],
     'exes': {
         'python2.7': sys.executable,
-        'make': [
-            sys.executable,
-            os.path.join(
-                os.getcwd(), 'build', 'src', 'build', 'pymake', 'make.py'
-            )
-        ],
         'virtualenv': [
             sys.executable,
             os.path.join(
@@ -89,7 +83,6 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s\\breakpad\\win32\\minidump_stackwalk.exe',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s\\minidumps',
     },
-    'enable_pymake': True,
     'src_mozconfig': 'browser\\config\\mozconfigs\\win32\\debug-qr',
     'tooltool_manifest_src': 'browser\\config\\tooltool-manifests\\win32\\releng.manifest',
     #########################################################################

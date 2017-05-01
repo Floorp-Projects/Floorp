@@ -116,8 +116,8 @@ public:
   void  Clear();
 
 protected:
-  LinkedList<UndisplayedNode>* GetListFor(nsIContent** aParentContent);
-  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent** aParentContent);
+  LinkedList<UndisplayedNode>* GetListFor(nsIContent* aParentContent);
+  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent* aParentContent);
   void AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent);
   /**
    * Get the applicable parent for the map lookup. This is almost always the
@@ -716,12 +716,12 @@ nsFrameManagerBase::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent** aParent)
+nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
 {
-  *aParent = GetApplicableParent(*aParent);
+  aParent = GetApplicableParent(aParent);
 
   LinkedList<UndisplayedNode>* list;
-  if (Get(*aParent, &list)) {
+  if (Get(aParent, &list)) {
     return list;
   }
 
@@ -729,17 +729,17 @@ nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent** aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent** aParent)
+nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
 {
-  *aParent = GetApplicableParent(*aParent);
-  return LookupOrAdd(*aParent);
+  aParent = GetApplicableParent(aParent);
+  return LookupOrAdd(aParent);
 }
 
 
 UndisplayedNode*
 nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 {
-  auto* list = GetListFor(&aParentContent);
+  auto* list = GetListFor(aParentContent);
   return list ? list->getFirst() : nullptr;
 }
 
@@ -748,7 +748,7 @@ void
 nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
                                                   nsIContent* aParentContent)
 {
-  LinkedList<UndisplayedNode>* list = GetOrCreateListFor(&aParentContent);
+  LinkedList<UndisplayedNode>* list = GetOrCreateListFor(aParentContent);
 
 #ifdef DEBUG
   for (UndisplayedNode* node = list->getFirst(); node; node = node->getNext()) {
@@ -776,7 +776,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
                                                   UndisplayedNode* aNode)
 {
 #ifdef DEBUG
-  auto list = GetListFor(&aParentContent);
+  auto list = GetListFor(aParentContent);
   MOZ_ASSERT(list, "content not in map");
   aNode->removeFrom(*list);
 #else

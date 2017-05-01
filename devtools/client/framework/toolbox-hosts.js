@@ -13,6 +13,7 @@ const Services = require("Services");
 const {DOMHelpers} = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 
 /* A host should always allow this much space for the page to be displayed.
  * There is also a min-height on the browser, but we still don't want to set
@@ -53,8 +54,8 @@ BottomHost.prototype = {
   /**
    * Create a box at the bottom of the host tab.
    */
-  create: function () {
-    let deferred = defer();
+  create: async function () {
+    await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
@@ -75,22 +76,22 @@ BottomHost.prototype = {
     this._nbox.appendChild(this._splitter);
     this._nbox.appendChild(this.frame);
 
-    let frameLoad = () => {
-      this.emit("ready", this.frame);
-      deferred.resolve(this.frame);
-    };
-
     this.frame.tooltip = "aHTMLTooltip";
 
     // we have to load something so we can switch documents if we have to
     this.frame.setAttribute("src", "about:blank");
 
-    let domHelper = new DOMHelpers(this.frame.contentWindow);
-    domHelper.onceDOMReady(frameLoad);
+    let frame = await new Promise(resolve => {
+      let domHelper = new DOMHelpers(this.frame.contentWindow);
+      let frameLoad = () => {
+        this.emit("ready", this.frame);
+        resolve(this.frame);
+      };
+      domHelper.onceDOMReady(frameLoad);
+      focusTab(this.hostTab);
+    });
 
-    focusTab(this.hostTab);
-
-    return deferred.promise;
+    return frame;
   },
 
   /**
@@ -199,8 +200,8 @@ SidebarHost.prototype = {
   /**
    * Create a box in the sidebar of the host tab.
    */
-  create: function () {
-    let deferred = defer();
+  create: async function () {
+    await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
@@ -220,20 +221,20 @@ SidebarHost.prototype = {
     this._sidebar.appendChild(this._splitter);
     this._sidebar.appendChild(this.frame);
 
-    let frameLoad = () => {
-      this.emit("ready", this.frame);
-      deferred.resolve(this.frame);
-    };
-
     this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
 
-    let domHelper = new DOMHelpers(this.frame.contentWindow);
-    domHelper.onceDOMReady(frameLoad);
+    let frame = await new Promise(resolve => {
+      let domHelper = new DOMHelpers(this.frame.contentWindow);
+      let frameLoad = () => {
+        this.emit("ready", this.frame);
+        resolve(this.frame);
+      };
+      domHelper.onceDOMReady(frameLoad);
+      focusTab(this.hostTab);
+    });
 
-    focusTab(this.hostTab);
-
-    return deferred.promise;
+    return frame;
   },
 
   /**

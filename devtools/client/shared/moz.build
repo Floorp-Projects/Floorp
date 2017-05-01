@@ -49,6 +49,7 @@ DevToolsModules(
     'scroll.js',
     'source-utils.js',
     'SplitView.jsm',
+    'stylesheet-utils.js',
     'suggestion-picker.js',
     'telemetry.js',
     'theme.js',
