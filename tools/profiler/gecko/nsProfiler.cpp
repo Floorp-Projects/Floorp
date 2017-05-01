@@ -345,7 +345,7 @@ nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
 {
   uint32_t len = 0;
 
-  const char **features = profiler_get_features();
+  const char** features = profiler_get_available_features();
   if (!features) {
     *aCount = 0;
     *aFeatures = nullptr;

@@ -260,10 +260,10 @@ extern "C" {
 PROFILER_FUNC_VOID(profiler_save_profile_to_file(const char* aFilename))
 }
 
-// Get the features supported by the profiler that are accepted by
-// profiler_init(). Returns a null terminated char* array. The result is the
+// Get all the features supported by the profiler that are accepted by
+// profiler_start(). Returns a null terminated char* array. The result is the
 // same whether the profiler is active or not.
-PROFILER_FUNC(const char** profiler_get_features(), nullptr)
+PROFILER_FUNC(const char** profiler_get_available_features(), nullptr)
 
 // Get information about the current buffer status. A no-op when the profiler
 // is inactive. Do not call this function; call profiler_get_buffer_info()
