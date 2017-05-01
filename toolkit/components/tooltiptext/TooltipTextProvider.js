@@ -91,6 +91,7 @@ TooltipTextProvider.prototype = {
 
     // Check texts against null so that title="" can be used to undefine a
     // title on a child element.
+    let usedTipElement = null;
     while (tipElement &&
            (titleText == null) && (XLinkTitleText == null) &&
            (SVGTitleText == null) && (XULtooltiptextText == null)) {
@@ -121,8 +122,7 @@ TooltipTextProvider.prototype = {
           }
         }
 
-        direction = defView.getComputedStyle(tipElement)
-                           .getPropertyValue("direction");
+        usedTipElement = tipElement;
       }
 
       tipElement = tipElement.parentNode;
@@ -132,6 +132,12 @@ TooltipTextProvider.prototype = {
       if (t && /\S/.test(t)) {
         // Make CRLF and CR render one line break each.
         textOut.value = t.replace(/\r\n?/g, "\n");
+
+        if (usedTipElement) {
+          direction = defView.getComputedStyle(usedTipElement)
+                             .getPropertyValue("direction");
+        }
+
         directionOut.value = direction;
         return true;
       }
