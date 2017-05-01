@@ -138,6 +138,9 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
   UINT32 width = 0, height = 0;
   hr = MFGetAttributeSize(aMediaType, MF_MT_FRAME_SIZE, &width, &height);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  NS_ENSURE_TRUE(width <= MAX_VIDEO_WIDTH, E_FAIL);
+  NS_ENSURE_TRUE(height <= MAX_VIDEO_HEIGHT, E_FAIL);
+
   aOutPictureRegion = nsIntRect(0, 0, width, height);
   return S_OK;
 }
