@@ -2503,6 +2503,12 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     }
   }
 
+  // \r is an illegal character in the dom, but people use them,
+  // so convert windows and mac platform linebreaks to \n:
+  if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
+    return false;
+  }
+
   if (mEditor && mBoundFrame) {
     // The InsertText call below might flush pending notifications, which
     // could lead into a scheduled PrepareEditor to be called.  That will
@@ -2522,14 +2528,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     mBoundFrame->GetText(currentValue);
 
     AutoWeakFrame weakFrame(mBoundFrame);
-
-    // \r is an illegal character in the dom, but people use them,
-    // so convert windows and mac platform linebreaks to \n:
-    if (newValue.FindChar(char16_t('\r')) != -1) {
-      if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
-        return false;
-      }
-    }
 
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(newValue))
@@ -2638,14 +2636,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (!mValue) {
       mValue.emplace();
     }
-    nsString value;
-    if (!value.Assign(newValue, fallible)) {
-      return false;
-    }
-    if (!nsContentUtils::PlatformToDOMLineBreaks(value, fallible)) {
-      return false;
-    }
-    if (!mValue->Assign(value, fallible)) {
+    if (!mValue->Assign(newValue, fallible)) {
       return false;
     }
 
@@ -2653,12 +2644,12 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (IsSelectionCached()) {
       SelectionProperties& props = GetSelectionProperties();
       if (aFlags & eSetValue_MoveCursorToEnd) {
-        props.SetStart(value.Length());
-        props.SetEnd(value.Length());
+        props.SetStart(newValue.Length());
+        props.SetEnd(newValue.Length());
       } else {
         // Make sure our cached selection position is not outside the new value.
-        props.SetStart(std::min(props.GetStart(), value.Length()));
-        props.SetEnd(std::min(props.GetEnd(), value.Length()));
+        props.SetStart(std::min(props.GetStart(), newValue.Length()));
+        props.SetEnd(std::min(props.GetEnd(), newValue.Length()));
       }
     }
 
