@@ -56,7 +56,7 @@ extern const SkBitmapProcState::MatrixProc RepeatX_RepeatY_Procs_neon[];
 #endif // defined(SK_ARM_HAS_NEON)
 
 // Compile non-neon code path if needed
-#if !defined(SK_ARM_HAS_NEON)
+#if !defined(SK_ARM_HAS_NEON) || defined(SK_ARM_HAS_OPTIONAL_NEON)
 #define MAKENAME(suffix)        ClampX_ClampY ## suffix
 #define TILEX_PROCF(fx, max)    SkClampMax((fx) >> 16, max)
 #define TILEY_PROCF(fy, max)    SkClampMax((fy) >> 16, max)
