@@ -150,6 +150,7 @@ EXPORTS += [
     'TimeUnits.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
+    'VideoLimits.h',
     'VideoSegment.h',
     'VideoUtils.h',
     'VorbisUtils.h',
