@@ -31,6 +31,16 @@ jobs:
           - date
       when: [] # never (hook only)
 
+    - name: nightly-desktop-win64
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-Win64
+          triggered-by: nightly
+          target-tasks-method: nightly_win64
+      run-on-projects:
+          - date
+      when: [] # never (hook only)
+
     - name: nightly-android
       job:
           type: decision-task
