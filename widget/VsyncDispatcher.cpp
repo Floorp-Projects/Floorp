@@ -13,7 +13,7 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #include "GeckoProfiler.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #endif
 
 using namespace mozilla::layers;

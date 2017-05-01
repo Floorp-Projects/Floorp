@@ -51,6 +51,7 @@
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 #include "nsGkAtoms.h"
@@ -964,6 +965,9 @@ gfxPlatform::InitLayersIPC()
             wr::RenderThread::Start();
         }
         layers::CompositorThreadHolder::Start();
+#ifdef XP_WIN
+        gfx::DeviceManagerDx::PreloadAttachmentsOnCompositorThread();
+#endif
     }
 }
 
