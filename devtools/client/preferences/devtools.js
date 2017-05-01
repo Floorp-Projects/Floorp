@@ -150,7 +150,8 @@ pref("devtools.netmonitor.enabled", true);
 pref("devtools.netmonitor.panes-network-details-width", 550);
 pref("devtools.netmonitor.panes-network-details-height", 450);
 pref("devtools.netmonitor.filters", "[\"all\"]");
-pref("devtools.netmonitor.hiddenColumns", "[\"cookies\",\"protocol\",\"remoteip\",\"setCookies\"]");
+pref("devtools.netmonitor.hiddenColumns",
+  "[\"cookies\",\"protocol\",\"remoteip\",\"scheme\",\"setCookies\"]");
 
 // The default Network monitor HAR export setting
 pref("devtools.netmonitor.har.defaultLogDir", "");

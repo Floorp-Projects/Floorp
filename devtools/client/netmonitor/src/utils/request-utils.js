@@ -177,6 +177,17 @@ function getUrlHost(url) {
 }
 
 /**
+ * Helpers for getting the shceme portion of a url.
+ * For example helper returns "http" from http://domain.com/path/basename
+ *
+ * @param {string} url - url string
+ * @return {string} string scheme of a url
+ */
+function getUrlScheme(url) {
+  return (new URL(url)).protocol.replace(":", "").toLowerCase();
+}
+
+/**
  * Extract several details fields from a URL at once.
  */
 function getUrlDetails(url) {
@@ -184,6 +195,7 @@ function getUrlDetails(url) {
   let host = getUrlHost(url);
   let hostname = getUrlHostName(url);
   let unicodeUrl = decodeUnicodeUrl(url);
+  let scheme = getUrlScheme(url);
 
   // Mark local hosts specially, where "local" is  as defined in the W3C
   // spec for secure contexts.
@@ -202,6 +214,7 @@ function getUrlDetails(url) {
   return {
     baseNameWithQuery,
     host,
+    scheme,
     unicodeUrl,
     isLocal
   };
@@ -296,11 +309,12 @@ module.exports = {
   decodeUnicodeUrl,
   getAbbreviatedMimeType,
   getUrlBaseName,
-  getUrlQuery,
   getUrlBaseNameWithQuery,
-  getUrlHostName,
-  getUrlHost,
   getUrlDetails,
+  getUrlHost,
+  getUrlHostName,
+  getUrlQuery,
+  getUrlScheme,
   parseQueryString,
   parseFormData,
   propertiesEqual,
