@@ -235,14 +235,16 @@ public:
 
   explicit ThreadHangStats(const char* aName)
     : mName(aName)
+    , mNativeStackCnt(0)
   {
   }
   ThreadHangStats(ThreadHangStats&& aOther)
     : mName(mozilla::Move(aOther.mName))
     , mActivity(mozilla::Move(aOther.mActivity))
     , mHangs(mozilla::Move(aOther.mHangs))
-    , mNativeStackCnt(0)
+    , mNativeStackCnt(aOther.mNativeStackCnt)
   {
+    aOther.mNativeStackCnt = 0;
   }
   const char* GetName() const {
     return mName.get();
