@@ -2523,18 +2523,18 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
 
     AutoWeakFrame weakFrame(mBoundFrame);
 
+    // \r is an illegal character in the dom, but people use them,
+    // so convert windows and mac platform linebreaks to \n:
+    if (newValue.FindChar(char16_t('\r')) != -1) {
+      if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
+        return false;
+      }
+    }
+
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(newValue))
     {
       ValueSetter valueSetter(mEditor);
-
-      // \r is an illegal character in the dom, but people use them,
-      // so convert windows and mac platform linebreaks to \n:
-      if (newValue.FindChar(char16_t('\r')) != -1) {
-        if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
-          return false;
-        }
-      }
 
       nsCOMPtr<nsIDOMDocument> domDoc;
       mEditor->GetDocument(getter_AddRefs(domDoc));
