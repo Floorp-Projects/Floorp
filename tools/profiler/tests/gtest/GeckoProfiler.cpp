@@ -82,7 +82,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
     const char* features[] = { "js", "threads" };
     const char* filters[] = { "GeckoMain", "Compositor" };
 
-    profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, MOZ_ARRAY_LENGTH(features),
                    filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -91,7 +91,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(!profiler_feature_active("privacy"));
     ASSERT_TRUE(!profiler_feature_active("restyle"));
 
-    ActiveParamsCheck(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       features, MOZ_ARRAY_LENGTH(features),
                       filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -171,7 +171,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(!profiler_feature_active("restyle"));
 
     // Entries and intervals go to defaults if 0 is specified.
-    ActiveParamsCheck(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       features, 0,
                       filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -195,7 +195,7 @@ TEST(GeckoProfiler, GetBacktrace)
     const char* features[] = { "stackwalk" };
     const char* filters[] = { "GeckoMain" };
 
-    profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, MOZ_ARRAY_LENGTH(features),
                    filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -223,7 +223,7 @@ TEST(GeckoProfiler, GetBacktrace)
     const char* features[] = { "privacy" };
     const char* filters[] = { "GeckoMain" };
 
-    profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, MOZ_ARRAY_LENGTH(features),
                    filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -243,7 +243,7 @@ TEST(GeckoProfiler, Pause)
 
   ASSERT_TRUE(!profiler_is_paused());
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -282,7 +282,7 @@ TEST(GeckoProfiler, Markers)
   const char* features[] = { "stackwalk" };
   const char* filters[] = { "GeckoMain" };
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -320,7 +320,7 @@ TEST(GeckoProfiler, Time)
   ASSERT_TRUE(t1 <= t2);
 
   // profiler_start() restarts the timer used by profiler_time().
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -342,7 +342,7 @@ TEST(GeckoProfiler, GetProfile)
 
   ASSERT_TRUE(!profiler_get_profile());
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -362,7 +362,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   SpliceableChunkedJSONWriter w;
   ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -391,7 +391,7 @@ TEST(GeckoProfiler, PseudoStack)
     PROFILER_LABEL_DYNAMIC("A", "C", js::ProfileEntry::Category::JS,
                            dynamic.get());
 
-    profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, MOZ_ARRAY_LENGTH(features),
                    filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -421,16 +421,16 @@ TEST(GeckoProfiler, Bug1355807)
   const char* manyThreadsFilter[] = { "" };
   const char* fewThreadsFilter[] = { "GeckoMain" };
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  manyThreadsFilter, MOZ_ARRAY_LENGTH(manyThreadsFilter));
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
 
   // In bug 1355807 this caused an assertion failure in StopJSSampling().
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, MOZ_ARRAY_LENGTH(features),
                  fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
 
