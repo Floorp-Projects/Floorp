@@ -1,7 +1,7 @@
 # Please keep this list sorted by bug number (but feel free to use a
 # logical order for the tests for each bug).
 == 105-1.html 105-1-ref.html
-fails-if(stylo) == 647-1.html 647-1-ref.html
+== 647-1.html 647-1-ref.html
 == 9458-basic-1.html 9458-basic-1-ref.html
 == 9458-valign-1.html 9458-valign-1-ref.html
 == 9458-valign-2.html 9458-valign-2-ref.html
