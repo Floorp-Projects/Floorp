@@ -26,14 +26,14 @@ class SVGSVGElement;
 
 struct nsSVGMark;
 
-class nsSVGMarkerFrame : public nsSVGContainerFrame
+class nsSVGMarkerFrame final : public nsSVGContainerFrame
 {
   friend class nsSVGMarkerAnonChildFrame;
   friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGMarkerFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext)
+    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGMarker)
     , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
@@ -58,12 +58,6 @@ public:
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgMarkerFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -75,8 +69,7 @@ public:
   virtual nsContainerFrame* GetContentInsertionFrame() override {
     // Any children must be added to our single anonymous inner frame kid.
     MOZ_ASSERT(PrincipalChildList().FirstChild() &&
-               PrincipalChildList().FirstChild()->GetType() ==
-                 nsGkAtoms::svgMarkerAnonChildFrame,
+               PrincipalChildList().FirstChild()->IsSVGMarkerAnonChildFrame(),
                "Where is our anonymous child?");
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
@@ -139,14 +132,15 @@ private:
 ////////////////////////////////////////////////////////////////////////
 // nsMarkerAnonChildFrame class
 
-class nsSVGMarkerAnonChildFrame : public nsSVGDisplayContainerFrame
+class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsContainerFrame*
   NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                                 nsStyleContext* aContext);
 
   explicit nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext)
+    : nsSVGDisplayContainerFrame(aContext,
+                                 mozilla::FrameType::SVGMarkerAnonChild)
   {}
 
 public:
@@ -163,13 +157,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGMarkerAnonChild"), aResult);
   }
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgMarkerAnonChildFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override

@@ -43,8 +43,9 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
-                                   nsTableFrame* aTableFrame)
-  : nsContainerFrame(aContext)
+                                   nsTableFrame* aTableFrame,
+                                   FrameType aType)
+  : nsContainerFrame(aContext, aType)
   , mDesiredSize(aTableFrame->GetWritingMode())
 {
   mColIndex = 0;
@@ -174,8 +175,8 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowInput)
 
   // We always need to let the percent bsize observer be propagated
   // from a table wrapper frame to an inner table frame.
-  nsIAtom *fType = aReflowInput.mFrame->GetType();
-  if (fType == nsGkAtoms::tableFrame) {
+  FrameType fType = aReflowInput.mFrame->Type();
+  if (fType == FrameType::Table) {
     return true;
   }
 
@@ -187,7 +188,7 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowInput)
   // instead of bsizes for orthogonal children.
   return rs->mFrame == this &&
          (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
-          fType == nsGkAtoms::tableWrapperFrame);
+          fType == FrameType::TableWrapper);
 }
 
 nsresult
@@ -711,13 +712,12 @@ nsTableCellFrame::CellHasVisibleContent(nscoord       height,
   if (tableFrame->IsBorderCollapse())
     return true;
   for (nsIFrame* innerFrame : kidFrame->PrincipalChildList()) {
-    nsIAtom* frameType = innerFrame->GetType();
-    if (nsGkAtoms::textFrame == frameType) {
-       nsTextFrame* textFrame = static_cast<nsTextFrame*>(innerFrame);
-       if (textFrame->HasNoncollapsedCharacters())
-         return true;
-    }
-    else if (nsGkAtoms::placeholderFrame != frameType) {
+    FrameType frameType = innerFrame->Type();
+    if (FrameType::Text == frameType) {
+      nsTextFrame* textFrame = static_cast<nsTextFrame*>(innerFrame);
+      if (textFrame->HasNoncollapsedCharacters())
+        return true;
+    } else if (FrameType::Placeholder != frameType) {
       return true;
     }
     else {
@@ -1097,12 +1097,6 @@ nsTableCellFrame::GetBorderWidth(WritingMode aWM) const
   return LogicalMargin(aWM, StyleBorder()->GetComputedBorder());
 }
 
-nsIAtom*
-nsTableCellFrame::GetType() const
-{
-  return nsGkAtoms::tableCellFrame;
-}
-
 void
 nsTableCellFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
                                                 nsStyleChangeList& aChangeList,
@@ -1126,19 +1120,13 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
                                        nsTableFrame* aTableFrame)
-  : nsTableCellFrame(aContext, aTableFrame)
+  : nsTableCellFrame(aContext, aTableFrame, FrameType::BCTableCell)
 {
   mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }
 
 nsBCTableCellFrame::~nsBCTableCellFrame()
 {
-}
-
-nsIAtom*
-nsBCTableCellFrame::GetType() const
-{
-  return nsGkAtoms::bcTableCellFrame;
 }
 
 /* virtual */ nsMargin

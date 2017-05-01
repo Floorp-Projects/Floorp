@@ -92,13 +92,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
 
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(nsStyleContext* aContext)
-  : nsHTMLScrollFrame(aContext, false),
-    mView(nullptr),
-    mMightNeedSecondPass(false),
-    mHasPendingInterruptAtStartOfReflow(false),
-    mDropdownCanGrow(false),
-    mForceSelection(false),
-    mLastDropdownComputedBSize(NS_UNCONSTRAINEDSIZE)
+  : nsHTMLScrollFrame(aContext, FrameType::ListControl, false)
+  , mView(nullptr)
+  , mMightNeedSecondPass(false)
+  , mHasPendingInterruptAtStartOfReflow(false)
+  , mDropdownCanGrow(false)
+  , mForceSelection(false)
+  , mLastDropdownComputedBSize(NS_UNCONSTRAINEDSIZE)
 {
   mComboboxFrame      = nullptr;
   mChangesSinceDragStart = false;
@@ -1534,12 +1534,6 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
   }
 
   mHasPendingInterruptAtStartOfReflow = false;
-}
-
-nsIAtom*
-nsListControlFrame::GetType() const
-{
-  return nsGkAtoms::listControlFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

@@ -42,12 +42,6 @@ nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsIAtom*
-nsFirstLetterFrame::GetType() const
-{
-  return nsGkAtoms::letterFrame;
-}
-
 void
 nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,

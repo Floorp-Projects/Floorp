@@ -75,7 +75,7 @@ SwapScaleWidthHeightForRotation(IntSize& aSize, VideoInfo::Rotation aDegrees)
 }
 
 nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::HTMLVideo)
 {
   EnableVisibilityTracking();
 }
@@ -518,18 +518,12 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       child->BuildDisplayListForStackingContext(aBuilder,
                                                 aDirtyRect - child->GetOffsetTo(this),
                                                 aLists.Content());
-    } else if (child->GetType() == nsGkAtoms::boxFrame) {
+    } else if (child->IsBoxFrame()) {
       child->BuildDisplayListForStackingContext(aBuilder,
                                                 aDirtyRect - child->GetOffsetTo(this),
                                                 aLists.Content());
     }
   }
-}
-
-nsIAtom*
-nsVideoFrame::GetType() const
-{
-  return nsGkAtoms::HTMLVideoFrame;
 }
 
 #ifdef ACCESSIBILITY

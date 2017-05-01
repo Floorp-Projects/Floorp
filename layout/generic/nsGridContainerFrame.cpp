@@ -4871,10 +4871,9 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowInput& aState) con
     if (wm.IsOrthogonalTo(cbRI->GetWritingMode())) {
       break;
     }
-    nsIAtom* frameType = cbRI->mFrame->GetType();
-    if ((frameType == nsGkAtoms::canvasFrame &&
-         PresContext()->IsPaginated()) ||
-        frameType == nsGkAtoms::columnSetFrame) {
+    FrameType frameType = cbRI->mFrame->Type();
+    if ((frameType == FrameType::Canvas && PresContext()->IsPaginated()) ||
+        frameType == FrameType::ColumnSet) {
       data.emplace();
       data->mIsTopOfPage = gridRI->mFlags.mIsTopOfPage;
       data->mToFragmentainerEnd = aState.mFragBStart +
@@ -4918,8 +4917,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   LogicalMargin pad(aState.mReflowInput->ComputedLogicalPadding());
   const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
   const bool isGridItem = !!aGridItemInfo;
-  auto childType = aChild->GetType();
-  MOZ_ASSERT(isGridItem == (childType != nsGkAtoms::placeholderFrame));
+  MOZ_ASSERT(isGridItem == !aChild->IsPlaceholderFrame());
   LogicalRect cb(wm);
   WritingMode childWM = aChild->GetWritingMode();
   bool isConstrainedBSize = false;
@@ -5036,7 +5034,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
 
   // A table-wrapper needs to propagate the CB size we give it to its
   // inner table frame later.  @see nsTableWrapperFrame::InitChildReflowInput.
-  if (childType == nsGkAtoms::tableWrapperFrame) {
+  if (aChild->IsTableWrapperFrame()) {
     const auto& props = aChild->Properties();
     LogicalSize* cb = props.Get(nsTableWrapperFrame::GridItemCBSizeProperty());
     if (!cb) {
@@ -5124,7 +5122,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
   aState.mIter.Reset(CSSOrderAwareFrameIterator::eIncludeAll);
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
-    if (child->GetType() != nsGkAtoms::placeholderFrame) {
+    if (!child->IsPlaceholderFrame()) {
       const GridItemInfo* info = &aState.mGridItems[aState.mIter.ItemIndex()];
       sortedItems.AppendElement(info);
     } else {
@@ -5641,7 +5639,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowInput&     aState,
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
       nsIFrame* child = *aState.mIter;
       const GridItemInfo* info = nullptr;
-      if (child->GetType() != nsGkAtoms::placeholderFrame) {
+      if (!child->IsPlaceholderFrame()) {
         info = &aState.mGridItems[aState.mIter.ItemIndex()];
       }
       ReflowInFlowChild(*aState.mIter, info, containerSize, Nothing(), nullptr,
@@ -6355,12 +6353,6 @@ nsGridContainerFrame::MarkIntrinsicISizesDirty()
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
-nsIAtom*
-nsGridContainerFrame::GetType() const
-{
-  return nsGkAtoms::gridContainerFrame;
-}
-
 void
 nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
@@ -6855,8 +6847,7 @@ nsGridContainerFrame::GetGridFrameWithComputedInfo(nsIFrame* aFrame)
 
     if (aFrame) {
       nsIFrame* contentFrame = aFrame->GetContentInsertionFrame();
-      if (contentFrame &&
-          (contentFrame->GetType() == nsGkAtoms::gridContainerFrame)) {
+      if (contentFrame && (contentFrame->IsGridContainerFrame())) {
         gridFrame = static_cast<nsGridContainerFrame*>(contentFrame);
       }
     }

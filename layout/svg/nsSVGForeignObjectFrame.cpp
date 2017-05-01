@@ -40,7 +40,7 @@ NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::SVGForeignObject)
   , mInReflow(false)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED |
@@ -78,12 +78,6 @@ void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
       nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
   }
   nsContainerFrame::DestroyFrom(aDestructRoot);
-}
-
-nsIAtom *
-nsSVGForeignObjectFrame::GetType() const
-{
-  return nsGkAtoms::svgForeignObjectFrame;
 }
 
 nsresult

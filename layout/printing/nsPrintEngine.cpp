@@ -2065,7 +2065,7 @@ nsPrintEngine::SetRootView(
     // presshell exists because parent is printable
 
     // the top nsPrintObject's widget will always have scrollbars
-    if (frame && frame->GetType() == nsGkAtoms::subDocumentFrame) {
+    if (frame && frame->IsSubDocumentFrame()) {
       nsView* view = frame->GetView();
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
       view = view->GetFirstChild();

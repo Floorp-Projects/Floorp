@@ -135,15 +135,14 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 
-
-nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
-  nsAtomicContainerFrame(aContext),
-  mComputedSize(0, 0),
-  mIntrinsicRatio(0, 0),
-  mDisplayingIcon(false),
-  mFirstFrameComplete(false),
-  mReflowCallbackPosted(false),
-  mForceSyncDecoding(false)
+nsImageFrame::nsImageFrame(nsStyleContext* aContext, FrameType aType)
+  : nsAtomicContainerFrame(aContext, aType)
+  , mComputedSize(0, 0)
+  , mIntrinsicRatio(0, 0)
+  , mDisplayingIcon(false)
+  , mFirstFrameComplete(false)
+  , mReflowCallbackPosted(false)
+  , mForceSyncDecoding(false)
 {
   EnableVisibilityTracking();
 
@@ -2127,12 +2126,6 @@ nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
   }
 
   nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
-}
-
-nsIAtom*
-nsImageFrame::GetType() const
-{
-  return nsGkAtoms::imageFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

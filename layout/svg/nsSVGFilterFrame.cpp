@@ -153,8 +153,8 @@ nsSVGFilterFrame::GetReferencedFilter()
   if (!result)
     return nullptr;
 
-  nsIAtom* frameType = result->GetType();
-  if (frameType != nsGkAtoms::svgFilterFrame)
+  FrameType frameType = result->Type();
+  if (frameType != FrameType::SVGFilter)
     return nullptr;
 
   return static_cast<nsSVGFilterFrame*>(result);
@@ -198,9 +198,3 @@ nsSVGFilterFrame::Init(nsIContent*       aContent,
   nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-nsIAtom *
-nsSVGFilterFrame::GetType() const
-{
-  return nsGkAtoms::svgFilterFrame;
-}

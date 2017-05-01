@@ -86,7 +86,7 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
 {
   nsIFrame* frame = aSelectsAreaFrame->GetParent();
   while (frame) {
-    if (frame->GetType() == nsGkAtoms::listControlFrame)
+    if (frame->IsListControlFrame())
       return static_cast<nsListControlFrame*>(frame);
     frame = frame->GetParent();
   }

@@ -69,12 +69,12 @@ GetSelfOrNearestBlock(nsIFrame* aFrame)
 // It's not supposed to be called for block frames since we never
 // process block descendants for text-overflow.
 static bool
-IsAtomicElement(nsIFrame* aFrame, const nsIAtom* aFrameType)
+IsAtomicElement(nsIFrame* aFrame, FrameType aFrameType)
 {
   NS_PRECONDITION(!nsLayoutUtils::GetAsBlock(aFrame) ||
                   !aFrame->IsBlockOutside(),
                   "unexpected block frame");
-  NS_PRECONDITION(aFrameType != nsGkAtoms::placeholderFrame,
+  NS_PRECONDITION(aFrameType != FrameType::Placeholder,
                   "unexpected placeholder frame");
   return !aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
@@ -99,8 +99,7 @@ IsInlineAxisOverflowVisible(nsIFrame* aFrame)
                   "expected a block frame");
 
   nsIFrame* f = aFrame;
-  while (f && f->StyleContext()->GetPseudo() &&
-         f->GetType() != nsGkAtoms::scrollFrame) {
+  while (f && f->StyleContext()->GetPseudo() && !f->IsScrollFrame()) {
     f = f->GetParent();
   }
   if (!f) {
@@ -348,9 +347,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
                                   bool*           aFoundVisibleTextOrAtomic,
                                   InnerClipEdges* aClippedMarkerEdges)
 {
-  const nsIAtom* frameType = aFrame->GetType();
-  if (frameType == nsGkAtoms::brFrame ||
-      frameType == nsGkAtoms::placeholderFrame) {
+  const FrameType frameType = aFrame->Type();
+  if (frameType == FrameType::Br || frameType == FrameType::Placeholder) {
     return;
   }
   const bool isAtomic = IsAtomicElement(aFrame, frameType);
@@ -370,7 +368,7 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     if (isAtomic && ((mIStart.mActive && overflowIStart) ||
                      (mIEnd.mActive && overflowIEnd))) {
       aFramesToHide->PutEntry(aFrame);
-    } else if (isAtomic || frameType == nsGkAtoms::textFrame) {
+    } else if (isAtomic || frameType == FrameType::Text) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea,
                          aFramesToHide, aAlignmentEdges,
                          aFoundVisibleTextOrAtomic,
@@ -390,12 +388,12 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
 }
 
 void
-TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
-                                 const nsIAtom*  aFrameType,
+TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
+                                 FrameType aFrameType,
                                  const LogicalRect& aInsideMarkersArea,
                                  FrameHashtable* aFramesToHide,
                                  AlignmentEdges* aAlignmentEdges,
-                                 bool*           aFoundVisibleTextOrAtomic,
+                                 bool* aFoundVisibleTextOrAtomic,
                                  InnerClipEdges* aClippedMarkerEdges)
 {
   LogicalRect borderRect(mBlockWM,
@@ -426,7 +424,7 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
 
   if ((istartOverlap > 0 && insideIStartEdge) ||
       (iendOverlap > 0 && insideIEndEdge)) {
-    if (aFrameType == nsGkAtoms::textFrame) {
+    if (aFrameType == FrameType::Text) {
       if (aInsideMarkersArea.IStart(mBlockWM) <
           aInsideMarkersArea.IEnd(mBlockWM)) {
         // a clipped text frame and there is some room between the markers
@@ -761,7 +759,7 @@ TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame)
 
   // Skip ComboboxControlFrame because it would clip the drop-down arrow.
   // Its anon block inherits 'text-overflow' and does what is expected.
-  if (aBlockFrame->GetType() == nsGkAtoms::comboboxControlFrame) {
+  if (aBlockFrame->IsComboboxControlFrame()) {
     return false;
   }
 

@@ -70,8 +70,6 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual nsIAtom* GetType() const override;
-
   /**
    * Similar to nsBlockFrame::DrainOverflowLines. Locate any columns not
    * handled by our prev-in-flow, and any columns sitting on our own

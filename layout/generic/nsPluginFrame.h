@@ -47,9 +47,10 @@ class LayerManager;
 
 class PluginFrameDidCompositeObserver;
 
-class nsPluginFrame : public nsFrame
-                    , public nsIObjectFrame
-                    , public nsIReflowCallback
+class nsPluginFrame final
+  : public nsFrame
+  , public nsIObjectFrame
+  , public nsIReflowCallback
 {
 public:
   typedef mozilla::LayerState LayerState;
@@ -87,8 +88,6 @@ public:
   virtual nsresult  HandleEvent(nsPresContext* aPresContext,
                                 mozilla::WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus) override;
-
-  virtual nsIAtom* GetType() const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

@@ -81,15 +81,15 @@ NS_QUERYFRAME_HEAD(nsSliderFrame)
   NS_QUERYFRAME_ENTRY(nsSliderFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsSliderFrame::nsSliderFrame(nsStyleContext* aContext):
-  nsBoxFrame(aContext),
-  mRatio(0.0f),
-  mCurPos(0),
-  mChange(0),
-  mDragFinished(true),
-  mUserChanged(false),
-  mScrollingWithAPZ(false),
-  mSuppressionActive(false)
+nsSliderFrame::nsSliderFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, FrameType::Slider)
+  , mRatio(0.0f)
+  , mCurPos(0)
+  , mChange(0)
+  , mDragFinished(true)
+  , mUserChanged(false)
+  , mScrollingWithAPZ(false)
+  , mSuppressionActive(false)
 {
 }
 
@@ -908,12 +908,6 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPo
   printf("Current Pos=%d\n",aNewPos);
 #endif
 
-}
-
-nsIAtom*
-nsSliderFrame::GetType() const
-{
-  return nsGkAtoms::sliderFrame;
 }
 
 void

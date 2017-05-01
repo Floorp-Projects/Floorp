@@ -2716,8 +2716,8 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
     // autocomplete widget use the noautofocus attribute to allow the focus to
     // remain outside the popup when it is opened.
     if (frame) {
-      popupFrame = nsLayoutUtils::GetClosestFrameOfType(frame,
-                                                        nsGkAtoms::menuPopupFrame);
+      popupFrame =
+        nsLayoutUtils::GetClosestFrameOfType(frame, FrameType::MenuPopup);
     }
 
     if (popupFrame && !forDocumentNavigation) {
@@ -2943,8 +2943,8 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
       // navigation would move outside the popup when tabbing outside the
       // iframe.
       if (!forDocumentNavigation) {
-        popupFrame = nsLayoutUtils::GetClosestFrameOfType(frame,
-                                                          nsGkAtoms::menuPopupFrame);
+        popupFrame =
+          nsLayoutUtils::GetClosestFrameOfType(frame, FrameType::MenuPopup);
         if (popupFrame) {
           rootContent = popupFrame->GetContent();
           NS_ASSERTION(rootContent, "Popup frame doesn't have a content node");
