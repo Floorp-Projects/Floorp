@@ -256,7 +256,7 @@ RestyleTracker::DoProcessRestyles()
         }
 
         Maybe<GeckoProfilerTracingRAII> profilerRAII;
-        if (profiler_feature_active("restyle")) {
+        if (profiler_feature_active(ProfilerFeature::Restyle)) {
           profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
         }
         ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
@@ -360,7 +360,7 @@ RestyleTracker::DoProcessRestyles()
           LOG_RESTYLE_INDENT();
 
           Maybe<GeckoProfilerTracingRAII> profilerRAII;
-          if (profiler_feature_active("restyle")) {
+          if (profiler_feature_active(ProfilerFeature::Restyle)) {
             profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
           if (isTimelineRecording) {
