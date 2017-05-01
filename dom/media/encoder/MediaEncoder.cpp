@@ -33,7 +33,10 @@ void
 MediaStreamVideoRecorderSink::SetCurrentFrames(const VideoSegment& aSegment)
 {
   MOZ_ASSERT(mVideoEncoder);
-  mVideoEncoder->SetCurrentFrames(aSegment);
+  // If we're suspended (paused) we don't forward frames
+  if (!mSuspended) {
+    mVideoEncoder->SetCurrentFrames(aSegment);
+  }
 }
 
 void
