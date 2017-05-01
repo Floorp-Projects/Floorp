@@ -22,7 +22,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "PseudoStack.h"
 #include "ThreadInfo.h"
@@ -700,9 +699,17 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   if (entry.isCopyLabel() || dynamicString) {
     if (dynamicString) {
-      int bytesWritten =
-        SprintfLiteral(combinedStringBuffer, "%s %s", sampleLabel, dynamicString);
-      if (bytesWritten > 0) {
+      // Create a string that is sampleLabel + ' ' + annotationString.
+      // Avoid sprintf because it can take a lock on Windows, and this
+      // code runs during the profiler's "critical section" as defined
+      // in SamplerThread::SuspendAndSampleAndResumeThread.
+      size_t labelLength = strlen(sampleLabel);
+      size_t dynamicLength = strlen(dynamicString);
+      if (labelLength + 1 + dynamicLength < ArrayLength(combinedStringBuffer)) {
+        PodCopy(combinedStringBuffer, sampleLabel, labelLength);
+        combinedStringBuffer[labelLength] = ' ';
+        PodCopy(&combinedStringBuffer[labelLength + 1], dynamicString, dynamicLength);
+        combinedStringBuffer[labelLength + 1 + dynamicLength] = '\0';
         sampleLabel = combinedStringBuffer;
       }
     }
