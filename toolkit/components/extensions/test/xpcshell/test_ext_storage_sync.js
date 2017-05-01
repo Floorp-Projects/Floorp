@@ -744,6 +744,58 @@ add_task(function* ensureCanSync_handles_conflicts() {
   });
 });
 
+add_task(function* ensureCanSync_handles_deleted_conflicts() {
+  // A keyring can be deleted, and this changes the format of the 412
+  // Conflict response from the Kinto server. Make sure we handle it correctly.
+  const extensionId = uuid();
+  const extensionId2 = uuid();
+  yield* withContextAndServer(function* (context, server) {
+    server.installCollection("storage-sync-crypto");
+    server.installDeleteBucket();
+    yield* withSignedInUser(loggedInUser, function* (extensionStorageSync, fxaService) {
+      server.etag = 700;
+      yield extensionStorageSync.cryptoCollection._clear();
+
+      // Generate keys that we can check for later.
+      let collectionKeys = yield extensionStorageSync.ensureCanSync([extensionId]);
+      const extensionKey = collectionKeys.keyForCollection(extensionId);
+      server.clearPosts();
+
+      // This is the response that the Kinto server return when the
+      // keyring has been deleted.
+      server.addRecord({collectionId: "storage-sync-crypto", conflict: true, data: null, etag: 765});
+
+      // Try to add a new extension to trigger a sync of the keyring.
+      let collectionKeys2 = yield extensionStorageSync.ensureCanSync([extensionId2]);
+
+      assertKeyRingKey(collectionKeys2, extensionId, extensionKey,
+                       `syncing keyring should keep our local key for ${extensionId}`);
+
+      deepEqual(server.getDeletedBuckets(), ["default"],
+                "Kinto server should have been wiped when keyring was thrown away");
+
+      let posts = server.getPosts();
+      equal(posts.length, 2,
+            "syncing keyring should have tried to post a keyring twice");
+      // The first post got a conflict.
+      const failedPost = posts[0];
+      assertPostedUpdatedRecord(failedPost, 700);
+      let body = yield assertPostedEncryptedKeys(fxaService, failedPost);
+
+      deepEqual(body.keys.collections[extensionId], extensionKey.keyPairB64,
+                `decrypted failed post should have the key for ${extensionId}`);
+
+      // The second post was after the wipe, and succeeded.
+      const afterWipePost = posts[1];
+      assertPostedNewRecord(afterWipePost);
+      let afterWipeBody = yield assertPostedEncryptedKeys(fxaService, afterWipePost);
+
+      deepEqual(afterWipeBody.keys.collections[extensionId], extensionKey.keyPairB64,
+                `decrypted new post should have preserved the key for ${extensionId}`);
+    });
+  });
+});
+
 add_task(function* checkSyncKeyRing_reuploads_keys() {
   // Verify that when keys are present, they are reuploaded with the
   // new kB when we call touchKeys().
