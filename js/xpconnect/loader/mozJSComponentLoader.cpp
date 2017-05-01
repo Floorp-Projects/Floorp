@@ -683,28 +683,26 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     rv = PathifyURI(aInfo.URI(), cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (cache) {
-        if (!mReuseLoaderGlobal) {
-            script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
-            if (!script) {
-                rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
-            }
-        } else {
-            rv = ReadCachedFunction(cache, cachePath, cx, mSystemPrincipal,
-                                    function.address());
+    if (!mReuseLoaderGlobal) {
+        script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
+        if (!script && cache) {
+            ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
         }
+    } else if (cache) {
+        ReadCachedFunction(cache, cachePath, cx, mSystemPrincipal,
+                           function.address());
+    }
 
-        if (NS_SUCCEEDED(rv)) {
-            LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
-        } else {
-            // This is ok, it just means the script is not yet in the
-            // cache. Could mean that the cache was corrupted and got removed,
-            // but either way we're going to write this out.
-            writeToCache = true;
-            // ReadCachedScript and ReadCachedFunction may have set a pending
-            // exception.
-            JS_ClearPendingException(cx);
-        }
+    if (script || function) {
+        LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
+    } else if (cache) {
+        // This is ok, it just means the script is not yet in the
+        // cache. Could mean that the cache was corrupted and got removed,
+        // but either way we're going to write this out.
+        writeToCache = true;
+        // ReadCachedScript and ReadCachedFunction may have set a pending
+        // exception.
+        JS_ClearPendingException(cx);
     }
 
     if (!script && !function) {
