@@ -24,12 +24,12 @@ add_task(function* test_toolbar_element_restyles_on_activation() {
   restyles.win2.initial = utils2.elementsRestyled;
 
   // switch back to 1st window, and snapshot elementsStyled
-  win1.focus();
+  Services.focus.activeWindow = win1;
   restyles.win1.activate = utils1.elementsRestyled;
   restyles.win2.deactivate = utils2.elementsRestyled;
 
   // switch back to 2nd window, and snapshot elementsStyled
-  win2.focus();
+  Services.focus.activeWindow = win2;
   restyles.win2.activate = utils2.elementsRestyled;
   restyles.win1.deactivate = utils1.elementsRestyled;
 
