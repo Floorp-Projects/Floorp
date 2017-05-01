@@ -45,19 +45,44 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver)
 
+// This function decides the transaction's order in the pending queue.
+// Given two transactions t1 and t2, returning true means that t2 is
+// more important than t1 and thus should be dispatched first.
+static bool
+TransactionComparator(nsHttpTransaction *t1, nsHttpTransaction *t2)
+{
+    bool t1Blocking =
+        t1->Caps() & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED);
+    bool t2Blocking =
+        t2->Caps() & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED);
+
+    if (t1Blocking > t2Blocking) {
+        return false;
+    }
+
+    if (t2Blocking > t1Blocking) {
+        return true;
+    }
+
+    return t1->Priority() >= t2->Priority();
+}
+
 void
 nsHttpConnectionMgr::InsertTransactionSorted(nsTArray<RefPtr<nsHttpConnectionMgr::PendingTransactionInfo> > &pendingQ,
                                              nsHttpConnectionMgr::PendingTransactionInfo *pendingTransInfo)
 {
-    // insert into queue with smallest valued number first.  search in reverse
-    // order under the assumption that many of the existing transactions will
-    // have the same priority (usually 0).
+    // insert the transaction into the front of the queue based on following rules:
+    // 1. The transaction has NS_HTTP_LOAD_AS_BLOCKING or NS_HTTP_LOAD_UNBLOCKED.
+    // 2. The transaction's priority is higher.
+    //
+    // search in reverse order under the assumption that many of the
+    // existing transactions will have the same priority (usually 0).
 
     nsHttpTransaction *trans = pendingTransInfo->mTransaction;
 
     for (int32_t i = pendingQ.Length() - 1; i >= 0; --i) {
         nsHttpTransaction *t = pendingQ[i]->mTransaction;
-        if (trans->Priority() >= t->Priority()) {
+        if (TransactionComparator(trans, t)) {
             if (ChaosMode::isActive(ChaosFeature::NetworkScheduling)) {
                 int32_t samePriorityCount;
                 for (samePriorityCount = 0; i - samePriorityCount >= 0; ++samePriorityCount) {
@@ -1042,14 +1067,19 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
             maxNonFocusedWindowConnections);
     }
 
-    // If the slots for the non-focused window are not filled up to
-    // the availability, try to use the remaining available connections
-    // for the focused window (with preference for the focused window).
+    // If the slots for either focused or non-focused window are not filled up
+    // to the availability, try to use the remaining available connections
+    // for the other slot (with preference for the focused window).
     if (remainingPendingQ.Length() < maxNonFocusedWindowConnections) {
         ent->AppendPendingQForFocusedWindow(
             mCurrentTopLevelOuterContentWindowId,
             pendingQ,
             maxNonFocusedWindowConnections - remainingPendingQ.Length());
+    } else if (pendingQ.Length() < maxFocusedWindowConnections) {
+        ent->AppendPendingQForNonFocusedWindows(
+            mCurrentTopLevelOuterContentWindowId,
+            remainingPendingQ,
+            maxFocusedWindowConnections - pendingQ.Length());
     }
 
     MOZ_ASSERT(pendingQ.Length() + remainingPendingQ.Length() <=
