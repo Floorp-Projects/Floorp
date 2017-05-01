@@ -102,18 +102,8 @@ DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent)
       return;
     }
 
-    nsTArray<PDocAccessibleChild*> ipcDocAccs;
-    tabChild->ManagedPDocAccessibleChild(ipcDocAccs);
-
-    // Look for the top-level DocAccessibleChild - there will only be one
-    // per TabChild.
-    for (uint32_t i = 0, l = ipcDocAccs.Length(); i < l; ++i) {
-      auto ipcDocAcc = static_cast<DocAccessibleChild*>(ipcDocAccs[i]);
-      if (ipcDocAcc->mDoc && ipcDocAcc->mDoc->IsRoot()) {
-        topLevelIPCDoc = ipcDocAcc;
-        break;
-      }
-    }
+    topLevelIPCDoc =
+      static_cast<DocAccessibleChild*>(tabChild->GetTopLevelDocAccessibleChild());
   }
 
   if (topLevelIPCDoc) {
