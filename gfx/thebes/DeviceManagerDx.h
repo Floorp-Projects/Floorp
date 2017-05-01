@@ -70,6 +70,10 @@ public:
   // need to avoid it.
   bool CanInitializeKeyedMutexTextures();
 
+  // Intel devices on older windows versions seem to occasionally have
+  // stability issues when supplying InitData to CreateTexture2D.
+  bool HasCrashyInitData();
+
   bool CreateCompositorDevices();
   void CreateContentDevices();
 
