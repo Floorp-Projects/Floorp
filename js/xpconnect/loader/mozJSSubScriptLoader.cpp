@@ -697,10 +697,10 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     RootedFunction function(cx);
     RootedScript script(cx);
-    if (cache && !options.ignoreCache) {
+    if (!options.ignoreCache) {
         if (!options.wantReturnValue)
             script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
-        if (!script)
+        if (!script && cache)
             rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
         if (NS_FAILED(rv) || !script) {
             // ReadCachedScript may have set a pending exception.
