@@ -1,0 +1,50 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "ఒక తెరపట్టు తీసుకోండి"
+  },
+  "myShotsLink": {
+    "message": "నా షాట్లు"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "భద్రపరచు"
+  },
+  "saveScreenshotFullPage": {
+    "message": "పూర్తి పేజీని భద్రపరచు"
+  },
+  "cancelScreenshot": {
+    "message": "రద్దుచేయి"
+  },
+  "downloadScreenshot": {
+    "message": "దింపుకోండి"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "లంకె కాపీ అయింది"
+  },
+  "requestErrorDetails": {
+    "message": "క్షమిచండి! మీ తెరను భద్రపరచలేకపోయాం. దయచేసి కాసేపాగి మళ్ళీ ప్రయత్నించండి."
+  },
+  "tourHeaderThree": {
+    "message": "మీకు నచ్చినట్టుగా"
+  },
+  "tourSkip": {
+    "message": "దాటవేయి"
+  },
+  "tourNext": {
+    "message": "తర్వాతి ఫలకం"
+  },
+  "tourPrevious": {
+    "message": "మునుపటి ఫలకం"
+  },
+  "tourDone": {
+    "message": "పూర్తయింది"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "నియమాలు"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "అంతరంగికత గమనిక"
+  }
+}

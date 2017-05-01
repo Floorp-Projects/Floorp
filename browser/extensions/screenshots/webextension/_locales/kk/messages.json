@@ -49,6 +49,12 @@
   "connectionErrorTitle": {
     "message": "Скриншоттарыңызға байланыса алмадық."
   },
+  "connectionErrorDetails": {
+    "message": "Интернетпен байланысыңызды тексеріңіз. Егер сізде интернетпен байланыс бар болса, онда Firefox скриншоттары қызметімен уақытша мәселелер болуы мүмкін."
+  },
+  "loginErrorDetails": {
+    "message": "Скриншотыңызды сақтай алмадық, өйткені Firefox скриншоттары қызметімен мәселе бар болып тұр. Кейінірек қайталап көріңіз."
+  },
   "unshootablePageErrorTitle": {
     "message": "Бұл беттің скриншотын түсіре алмаймыз."
   },
@@ -61,14 +67,29 @@
   "genericErrorTitle": {
     "message": "Қап! Firefox скриншоттары жасамай қалған сияқты."
   },
+  "genericErrorDetails": {
+    "message": "Не болғанын білмейміз. Қайталап көресіз бе, немесе басқа парақтың скриншотын түсіріп көресіз бе?"
+  },
   "tourBodyOne": {
     "message": "Firefox ішінен скриншоттарды түсіру, сақтау және олармен бөлісу."
   },
   "tourHeaderTwo": {
     "message": "Тек керек нәрсені түсіріңіз"
   },
+  "tourBodyTwo": {
+    "message": "Беттің тек бір бөлігін түсіру үшін тышқанды шертіп, тартыңыз. Таңдауыңызды түспен ерекшелеу үшін үстінен өткізсеңіз болады."
+  },
   "tourHeaderThree": {
     "message": "Өзіңізге керек түрде"
+  },
+  "tourBodyThree": {
+    "message": "Қиылған скриншоттарыңыздбен оңай бөлісу үшін оларды интернетте сақтаңыз, немесе өз компьютеріңізге жүктеп алыңыз. Сонымен қатар, сіз жасаған барлық скриншоттарды табу үшін Менің скриншоттарым батырмасына шерте аласыз."
+  },
+  "tourHeaderFour": {
+    "message": "Терезелер немесе толық беттерді түсіріңіз"
+  },
+  "tourBodyFour": {
+    "message": "Жоғарғы оң жақта орналасқан батырмаларды терезенің көрінетін аймағын, немесе толық бетті түсіру үшін қолданыңыз."
   },
   "tourSkip": {
     "message": "Аттап кету"
@@ -81,5 +102,22 @@
   },
   "tourDone": {
     "message": "Дайын"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox скриншоттарын қолдану арқылы, сіз Firefox бұлттық қызметтерінің $TERMSANDPRIVACYNOTICETERMSLINK$ және $TERMSANDPRIVACYNOTICEPRIVACYLINK$ келісесіз.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Қолдану шарттары"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Жекелік ескертуі"
   }
 }
