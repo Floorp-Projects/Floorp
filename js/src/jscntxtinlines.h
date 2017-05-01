@@ -451,17 +451,27 @@ JSContext::runningWithTrustedPrincipals()
 }
 
 inline void
-JSContext::enterCompartment(
-    JSCompartment* c,
-    const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+JSContext::enterNonAtomsCompartment(JSCompartment* c)
 {
     enterCompartmentDepth_++;
 
-    if (!c->zone()->isAtomsZone())
-        enterZoneGroup(c->zone()->group());
+    MOZ_ASSERT(!c->zone()->isAtomsZone());
+    enterZoneGroup(c->zone()->group());
 
     c->enter();
-    setCompartment(c, maybeLock);
+    setCompartment(c, nullptr);
+}
+
+inline void
+JSContext::enterAtomsCompartment(JSCompartment* c,
+                                 const js::AutoLockForExclusiveAccess& lock)
+{
+    enterCompartmentDepth_++;
+
+    MOZ_ASSERT(c->zone()->isAtomsZone());
+
+    c->enter();
+    setCompartment(c, &lock);
 }
 
 template <typename T>
@@ -469,7 +479,7 @@ inline void
 JSContext::enterCompartmentOf(const T& target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
-    enterCompartment(target->compartment(), nullptr);
+    enterNonAtomsCompartment(target->compartment());
 }
 
 inline void
