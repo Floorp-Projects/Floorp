@@ -1008,3 +1008,4 @@ def security_hardening_cflags(value, c_compiler):
         return '-fstack-protector-strong'
 
 add_old_configure_assignment('HARDENING_CFLAGS', security_hardening_cflags)
+imply_option('--enable-pie', depends_if('--enable-hardening')(lambda v: v))
