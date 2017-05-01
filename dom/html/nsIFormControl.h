@@ -127,8 +127,10 @@ public:
    *
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
+   * @param aUnbindOrDelete set true if the element is being deleted or unbound
+   *        from tree.
    */
-  virtual void ClearForm(bool aRemoveFromForm) = 0;
+  virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)
