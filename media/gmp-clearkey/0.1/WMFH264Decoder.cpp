@@ -89,9 +89,16 @@ WMFH264Decoder::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   UINT32 width = 0, height = 0;
   hr = MFGetAttributeSize(aMediaType, MF_MT_FRAME_SIZE, &width, &height);
   ENSURE(SUCCEEDED(hr), hr);
+  ENSURE(width <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+  ENSURE(height <= mozilla::MAX_VIDEO_HEIGHT, E_FAIL);
+
+  UINT32 stride = 0;
+  hr = GetDefaultStride(aMediaType, &stride);
+  ENSURE(SUCCEEDED(hr), hr);
+  ENSURE(stride <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
 
   // Success! Save state.
-  GetDefaultStride(aMediaType, (UINT32*)&mStride);
+  mStride = stride;
   mVideoWidth = width;
   mVideoHeight = height;
   mPictureRegion = pictureRegion;

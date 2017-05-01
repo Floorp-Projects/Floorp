@@ -141,10 +141,13 @@ GetPictureRegion(IMFMediaType* aMediaType, IntRect& aOutPictureRegion)
 
   if (SUCCEEDED(hr)) {
     // The media specified a picture region, return it.
-    aOutPictureRegion = IntRect(MFOffsetToInt32(videoArea.OffsetX),
-                                  MFOffsetToInt32(videoArea.OffsetY),
-                                  videoArea.Area.cx,
-                                  videoArea.Area.cy);
+    IntRect picture = IntRect(MFOffsetToInt32(videoArea.OffsetX),
+                              MFOffsetToInt32(videoArea.OffsetY),
+                              videoArea.Area.cx,
+                              videoArea.Area.cy);
+    ENSURE(picture.width <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+    ENSURE(picture.height <= mozilla::MAX_VIDEO_HEIGHT, E_FAIL);
+    aOutPictureRegion = picture;
     return S_OK;
   }
 
@@ -152,6 +155,8 @@ GetPictureRegion(IMFMediaType* aMediaType, IntRect& aOutPictureRegion)
   UINT32 width = 0, height = 0;
   hr = MFGetAttributeSize(aMediaType, MF_MT_FRAME_SIZE, &width, &height);
   ENSURE(SUCCEEDED(hr), hr);
+  ENSURE(width <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+  ENSURE(height <= mozilla::MAX_VIDEO_HEIGHT, E_FAIL);
   aOutPictureRegion = IntRect(0, 0, width, height);
   return S_OK;
 }
@@ -161,8 +166,11 @@ HRESULT
 GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
 {
   // Try to get the default stride from the media type.
-  HRESULT hr = aType->GetUINT32(MF_MT_DEFAULT_STRIDE, aOutStride);
+  UINT32 stride = 0;
+  HRESULT hr = aType->GetUINT32(MF_MT_DEFAULT_STRIDE, &stride);
   if (SUCCEEDED(hr)) {
+    ENSURE(stride <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+    *aOutStride = stride;
     return S_OK;
   }
 
@@ -176,9 +184,15 @@ GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
 
   hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &width, &height);
   ENSURE(SUCCEEDED(hr), hr);
+  ENSURE(width <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+  ENSURE(height <= mozilla::MAX_VIDEO_HEIGHT, E_FAIL);
 
-  hr = MFGetStrideForBitmapInfoHeader(subtype.Data1, width, (LONG*)(aOutStride));
+  LONG lstride = 0;
+  hr = MFGetStrideForBitmapInfoHeader(subtype.Data1, width, &lstride);
   ENSURE(SUCCEEDED(hr), hr);
+  ENSURE(lstride <= mozilla::MAX_VIDEO_WIDTH, E_FAIL);
+  ENSURE(lstride >= 0, E_FAIL);
+  *aOutStride = lstride;
 
   return hr;
 }
