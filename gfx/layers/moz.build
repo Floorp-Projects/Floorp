@@ -62,9 +62,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         EXPORTS.mozilla.layers += [
             'd3d11/CompositorD3D11.h',
+            'd3d11/DeviceAttachmentsD3D11.h',
             'd3d11/DiagnosticsD3D11.h',
             'd3d11/HelpersD3D11.h',
             'd3d11/ReadbackManagerD3D11.h',
+            'd3d11/ShaderDefinitionsD3D11.h',
             'd3d11/TextureD3D11.h',
         ]
         UNIFIED_SOURCES += [
@@ -73,6 +75,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
         SOURCES += [
             'd3d11/CompositorD3D11.cpp',
+            'd3d11/DeviceAttachmentsD3D11.cpp',
             'd3d11/ReadbackManagerD3D11.cpp',
         ]
 

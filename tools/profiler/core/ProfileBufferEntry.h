@@ -12,7 +12,6 @@
 #include "platform.h"
 #include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
-#include "PseudoStack.h"
 #include "mozilla/RefPtr.h"
 #include <string>
 #include <map>
@@ -25,6 +24,8 @@
 #include "gtest/MozGtestFriend.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
+
+class ProfilerMarker;
 
 #define PROFILE_BUFFER_ENTRY_KIND_LIST(_) \
     _(Category,        int)               \
