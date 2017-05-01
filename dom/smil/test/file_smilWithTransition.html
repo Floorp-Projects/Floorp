@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1315874
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test SMIL does not trigger CSS Transitions (bug 1315874)</title>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1315874">Mozilla Bug
+  1315874</a>
+<svg>
+  <rect width="100%" height="100%"
+        style="fill: red; transition: fill 10s" id="rect">
+    <animate attributeName="fill" to="lime" dur="1s" fill="freeze">
+  </rect>
+</svg>
+<script  type="text/javascript">
+  // Bring SimpleTest's function from opener.
+  if (opener) {
+    var is = opener.is.bind(opener);
+    var ok = opener.ok.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  }
+
+  window.addEventListener('load', runTests, false);
+
+  var rect = document.getElementById('rect');
+  var svg = document.getElementsByTagName('svg')[0];
+  is(getComputedStyle(rect).fill, 'rgb(255, 0, 0)',
+     'The initial color should be red.');
+
+  function runTests() {
+    waitForFrame().then(function() {
+      svg.setCurrentTime(1);
+      ok(getComputedStyle(rect).fill, 'rgb(0, 255, 0)',
+         'The end color should be lime.');
+
+      return waitForAnimationFrames(2);
+    }).then(function() {
+      var anim = document.getAnimations()[0];
+      ok(!anim, 'Transition should not be created by restyling for SMIL');
+      finish();
+    });
+  }
+
+  // Utility methods from testcommon.js
+  // For detail, see dom/animation/test/testcommon.js.
+
+  function waitForFrame() {
+    return new Promise(function(resolve, reject) {
+      requestAnimationFrame(function(time) {
+        resolve();
+      });
+    });
+  }
+
+  function waitForAnimationFrames(frameCount) {
+    return new Promise(function(resolve, reject) {
+      function handleFrame() {
+        if (--frameCount <= 0) {
+          resolve();
+        } else {
+          window.requestAnimationFrame(handleFrame);
+        }
+      }
+      window.requestAnimationFrame(handleFrame);
+    });
+  }
+</script>
+</pre>
+</body>
+</html>
