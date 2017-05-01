@@ -104,7 +104,7 @@ private:
 #endif
 
 nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::TextInput)
   , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
@@ -140,12 +140,6 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
 
   nsContainerFrame::DestroyFrom(aDestructRoot);
-}
-
-nsIAtom*
-nsTextControlFrame::GetType() const 
-{ 
-  return nsGkAtoms::textInputFrame;
 }
 
 LogicalSize

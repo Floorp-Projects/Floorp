@@ -81,8 +81,6 @@ public:
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  nsIAtom* GetType() const override;
-
   bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsSplittableFrame::IsFrameOfType(aFlags &

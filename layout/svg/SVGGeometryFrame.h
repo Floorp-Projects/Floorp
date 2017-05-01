@@ -49,11 +49,15 @@ class SVGGeometryFrame : public nsFrame
   friend class ::nsDisplaySVGGeometry;
 
 protected:
-  explicit SVGGeometryFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
+  SVGGeometryFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsFrame(aContext, aType)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
+
+  explicit SVGGeometryFrame(nsStyleContext* aContext)
+    : SVGGeometryFrame(aContext, mozilla::FrameType::SVGGeometry)
+  {}
 
 public:
   NS_DECL_QUERYFRAME_TARGET(SVGGeometryFrame)
@@ -75,13 +79,6 @@ public:
                                      int32_t         aModType) override;
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgGeometryFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
   virtual bool IsSVGTransformed(Matrix *aOwnTransforms = nullptr,
                                 Matrix *aFromParentTransforms = nullptr) const override;

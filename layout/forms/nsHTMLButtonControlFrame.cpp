@@ -26,8 +26,9 @@ NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
-nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext,
+                                                   FrameType aType)
+  : nsContainerFrame(aContext, aType)
 {
 }
 
@@ -62,12 +63,6 @@ nsHTMLButtonControlFrame::AccessibleType()
   return a11y::eHTMLButtonType;
 }
 #endif
-
-nsIAtom*
-nsHTMLButtonControlFrame::GetType() const
-{
-  return nsGkAtoms::HTMLButtonControlFrame;
-}
 
 void 
 nsHTMLButtonControlFrame::SetFocus(bool aOn, bool aRepaint)

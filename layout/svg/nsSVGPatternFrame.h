@@ -27,7 +27,7 @@ class nsSVGAnimatedTransformList;
  * Patterns can refer to other patterns. We create an nsSVGPaintingProperty
  * with property type nsGkAtoms::href to track the referenced pattern.
  */
-class nsSVGPatternFrame : public nsSVGPaintServerFrame
+class nsSVGPatternFrame final : public nsSVGPaintServerFrame
 {
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
@@ -65,13 +65,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgPatternFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

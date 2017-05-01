@@ -501,7 +501,7 @@ nsBaseDragService::DragMoved(int32_t aX, int32_t aY)
 {
   if (mDragPopup) {
     nsIFrame* frame = mDragPopup->GetPrimaryFrame();
-    if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
+    if (frame && frame->IsMenuPopupFrame()) {
       CSSIntPoint cssPos = RoundedToInt(LayoutDeviceIntPoint(aX, aY) /
           frame->PresContext()->CSSToDevPixelScale()) - mImageOffset;
       (static_cast<nsMenuPopupFrame *>(frame))->MoveTo(cssPos, true);
@@ -644,7 +644,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     // XXXndeakin this should be chrome-only
 
     nsIFrame* frame = content->GetPrimaryFrame();
-    if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
+    if (frame && frame->IsMenuPopupFrame()) {
       mDragPopup = content;
     }
   }

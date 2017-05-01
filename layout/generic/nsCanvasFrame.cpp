@@ -807,15 +807,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-nsIAtom*
-nsCanvasFrame::GetType() const
-{
-  return nsGkAtoms::canvasFrame;
-}
-
-nsresult 
-nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent,
-                                  nsIContent** aContent)
+nsresult
+nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent, nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
   nsresult rv = nsFrame::GetContentForEvent(aEvent,

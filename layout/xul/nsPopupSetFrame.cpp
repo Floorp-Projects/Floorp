@@ -37,12 +37,6 @@ nsPopupSetFrame::Init(nsIContent*       aContent,
   }
 }
 
-nsIAtom*
-nsPopupSetFrame::GetType() const
-{
-  return nsGkAtoms::popupSetFrame;
-}
-
 void
 nsPopupSetFrame::AppendFrames(ChildListID     aListID,
                               nsFrameList&    aFrameList)
@@ -140,7 +134,7 @@ void
 nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
 {
   NS_PRECONDITION((aPopup->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-                  aPopup->GetType() == nsGkAtoms::menuPopupFrame,
+                  aPopup->IsMenuPopupFrame(),
                   "removing wrong type of frame in popupset's ::popupList");
 
   mPopupList.DestroyFrame(aPopup);
@@ -152,7 +146,7 @@ nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList)
 #ifdef DEBUG
   for (nsFrameList::Enumerator e(aPopupFrameList); !e.AtEnd(); e.Next()) {
     NS_ASSERTION((e.get()->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-                 e.get()->GetType() == nsGkAtoms::menuPopupFrame,
+                 e.get()->IsMenuPopupFrame(),
                  "adding wrong type of frame in popupset's ::popupList");
   }
 #endif

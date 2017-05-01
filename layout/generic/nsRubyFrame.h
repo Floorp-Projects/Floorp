@@ -27,7 +27,6 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                  InlineMinISizeData *aData) override;
@@ -50,7 +49,8 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext) {}
+    : nsInlineFrame(aContext, mozilla::FrameType::Ruby)
+  {}
 
   void ReflowSegment(nsPresContext* aPresContext,
                      const ReflowInput& aReflowInput,

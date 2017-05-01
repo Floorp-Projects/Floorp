@@ -200,7 +200,6 @@ public:
   void SetPrevInFlow(nsIFrame*) override;
   nsIFrame* GetNextInFlowVirtual() const override;
   void SetNextInFlow(nsIFrame*) override;
-  nsIAtom* GetType() const override;
 
   nsresult GetSelectionController(nsPresContext *aPresContext,
                                   nsISelectionController **aSelCon) override;
@@ -580,7 +579,7 @@ public:
 
 protected:
   // Protected constructor and destructor
-  explicit nsFrame(nsStyleContext* aContext);
+  explicit nsFrame(nsStyleContext* aContext, mozilla::FrameType aType);
   virtual ~nsFrame();
 
   /**
@@ -626,7 +625,7 @@ public:
     // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
     // which is an nsHTMLScrollFrame.
     if (MOZ_UNLIKELY(aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP &&
-                     aFrame->GetType() != nsGkAtoms::listControlFrame)) {
+                     !aFrame->IsListControlFrame())) {
       return true;
     }
 
@@ -634,17 +633,17 @@ public:
     if (aDisp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
         aDisp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
       // REVIEW: these are the frame types that set up clipping.
-      nsIAtom* type = aFrame->GetType();
-      if (type == nsGkAtoms::tableFrame ||
-          type == nsGkAtoms::tableCellFrame ||
-          type == nsGkAtoms::bcTableCellFrame ||
-          type == nsGkAtoms::svgOuterSVGFrame ||
-          type == nsGkAtoms::svgInnerSVGFrame ||
-          type == nsGkAtoms::svgForeignObjectFrame) {
+      mozilla::FrameType type = aFrame->Type();
+      if (type == mozilla::FrameType::Table ||
+          type == mozilla::FrameType::TableCell ||
+          type == mozilla::FrameType::BCTableCell ||
+          type == mozilla::FrameType::SVGOuterSVG ||
+          type == mozilla::FrameType::SVGInnerSVG ||
+          type == mozilla::FrameType::SVGForeignObject) {
         return true;
       }
       if (aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
-        if (type == nsGkAtoms::textInputFrame) {
+        if (type == mozilla::FrameType::TextInput) {
           // It always has an anonymous scroll frame that handles any overflow.
           return false;
         }
@@ -658,10 +657,8 @@ public:
 
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.
-    return
-      (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0 &&
-      aFrame->PresContext()->IsPaginated() &&
-      aFrame->GetType() == nsGkAtoms::blockFrame;
+    return (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0 &&
+           aFrame->PresContext()->IsPaginated() && aFrame->IsBlockFrame();
   }
 
   nsILineIterator* GetLineIterator() override;
