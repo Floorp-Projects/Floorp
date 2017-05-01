@@ -1053,5 +1053,17 @@ LayerTransactionParent::RecvRecordPaintTimes(const PaintTiming& aTiming)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+LayerTransactionParent::RecvGetTextureFactoryIdentifier(TextureFactoryIdentifier* aIdentifier)
+{
+  if (!mLayerManager) {
+    // Default constructor sets mParentBackend to LAYERS_NONE.
+    return IPC_OK();
+  }
+
+  *aIdentifier = mLayerManager->GetTextureFactoryIdentifier();
+  return IPC_OK();
+}
+
 } // namespace layers
 } // namespace mozilla
