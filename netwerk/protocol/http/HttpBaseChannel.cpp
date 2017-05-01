@@ -1640,36 +1640,6 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     }
   }
 
-  // for cross-origin-based referrer changes (not just host-based), figure out
-  // if the referrer is being sent cross-origin.
-  nsCOMPtr<nsIURI> triggeringURI;
-  bool isCrossOrigin = true;
-  if (mLoadInfo) {
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal = mLoadInfo->TriggeringPrincipal();
-    if (triggeringPrincipal) {
-      triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
-    }
-  }
-  if (triggeringURI) {
-    if (LOG_ENABLED()) {
-      nsAutoCString triggeringURISpec;
-      rv = triggeringURI->GetAsciiSpec(triggeringURISpec);
-      if (!NS_FAILED(rv)) {
-        LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
-      }
-    }
-    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    rv = ssm->CheckSameOriginURI(triggeringURI, mURI, false);
-    isCrossOrigin = NS_FAILED(rv);
-  } else {
-    LOG(("no triggering principal available via loadInfo, assuming load is cross-origin"));
-  }
-
-  // Don't send referrer when the request is cross-origin and policy is "same-origin".
-  if (isCrossOrigin && mReferrerPolicy == REFERRER_POLICY_SAME_ORIGIN) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIURI> clone;
   //
   // we need to clone the referrer, so we can:
@@ -1734,13 +1704,62 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   rv = clone->SetUserPass(EmptyCString());
   if (NS_FAILED(rv)) return rv;
 
+  // Computing whether our URI is cross-origin may be expensive, so we only do
+  // that in cases where we're going to use this information later on.  The if
+  // condition below encodes those cases.  isCrossOrigin.isNothing() will return
+  // true otherwise.
+  Maybe<bool> isCrossOrigin;
+  if ((mReferrerPolicy == REFERRER_POLICY_SAME_ORIGIN ||
+       mReferrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN ||
+       mReferrerPolicy == REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN ||
+       // If our referrer policy is origin-only or strict-origin, we will send
+       // the origin only no matter if we are cross origin, so in those cases we
+       // can also skip checking cross-origin-ness.
+       (gHttpHandler->ReferrerXOriginTrimmingPolicy() != 0 &&
+        mReferrerPolicy != REFERRER_POLICY_ORIGIN &&
+        mReferrerPolicy != REFERRER_POLICY_STRICT_ORIGIN)) &&
+      // 2 (origin-only) is already the strictest policy which we'd adopt if we
+      // were cross-origin, so there is no point to compute whether we are or
+      // not.
+      gHttpHandler->ReferrerTrimmingPolicy() != 2) {
+    // for cross-origin-based referrer changes (not just host-based), figure out
+    // if the referrer is being sent cross-origin.
+    nsCOMPtr<nsIURI> triggeringURI;
+    if (mLoadInfo) {
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal = mLoadInfo->TriggeringPrincipal();
+      if (triggeringPrincipal) {
+        triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
+      }
+    }
+    if (triggeringURI) {
+      if (LOG_ENABLED()) {
+        nsAutoCString triggeringURISpec;
+        rv = triggeringURI->GetAsciiSpec(triggeringURISpec);
+        if (!NS_FAILED(rv)) {
+          LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
+        }
+      }
+      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+      rv = ssm->CheckSameOriginURI(triggeringURI, mURI, false);
+      isCrossOrigin.emplace(NS_FAILED(rv));
+    } else {
+      LOG(("no triggering principal available via loadInfo, assuming load is cross-origin"));
+      isCrossOrigin.emplace(true);
+    }
+  }
+
+  // Don't send referrer when the request is cross-origin and policy is "same-origin".
+  if (mReferrerPolicy == REFERRER_POLICY_SAME_ORIGIN && *isCrossOrigin) {
+    return NS_OK;
+  }
+
   nsAutoCString spec;
 
   // Apply the user cross-origin trimming policy if it's more
   // restrictive than the general one.
-  if (isCrossOrigin) {
-    int userReferrerXOriginTrimmingPolicy =
-      gHttpHandler->ReferrerXOriginTrimmingPolicy();
+  int userReferrerXOriginTrimmingPolicy =
+    gHttpHandler->ReferrerXOriginTrimmingPolicy();
+  if (userReferrerXOriginTrimmingPolicy != 0 && *isCrossOrigin) {
     userReferrerTrimmingPolicy =
       std::max(userReferrerTrimmingPolicy, userReferrerXOriginTrimmingPolicy);
   }
@@ -1755,8 +1774,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   // "strict-origin-when-cross-origin" behaves the same as "origin-when-cross-origin"
   if (mReferrerPolicy == REFERRER_POLICY_ORIGIN ||
       mReferrerPolicy == REFERRER_POLICY_STRICT_ORIGIN ||
-      (isCrossOrigin && (mReferrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN ||
-                         mReferrerPolicy == REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN))) {
+      ((mReferrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN ||
+        mReferrerPolicy == REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN) &&
+        *isCrossOrigin)) {
     // We can override the user trimming preference because "origin"
     // (network.http.referer.trimmingPolicy = 2) is the strictest
     // trimming policy that users can specify.
