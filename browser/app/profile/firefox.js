@@ -683,10 +683,6 @@ pref("plugin.defaultXpi.state", 2);
 pref("plugin.state.flash", 2);
 pref("plugin.state.java", 1);
 
-#ifdef NIGHTLY_BUILD
-pref("plugins.flashBlock.enabled", true);
-#endif
-
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else
