@@ -111,6 +111,7 @@ public abstract class BrowserDB {
     @Nullable public abstract Cursor getBookmarkForUrl(ContentResolver cr, String url);
     @Nullable public abstract Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl);
     @Nullable public abstract Cursor getBookmarkById(ContentResolver cr, long id);
+    @Nullable public abstract Cursor getBookmarkByGuid(ContentResolver cr, String guid);
     @Nullable public abstract Cursor getAllBookmarkFolders(ContentResolver cr);
     public abstract void removeBookmarksWithURL(ContentResolver cr, String uri);
     public abstract void removeBookmarkWithId(ContentResolver cr, long id);
