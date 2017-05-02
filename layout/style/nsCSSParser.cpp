@@ -8768,6 +8768,10 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
     return CSSParseResult::NotFound;
   }
   if (mToken.mIdent.LowerCaseEqualsLiteral("fit-content")) {
+    if (requireFixedSize) {
+      UngetToken();
+      return CSSParseResult::Error;
+    }
     nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_fit_content, 1);
     if (ParseGridTrackBreadth(func->Item(1)) == CSSParseResult::Ok &&
         func->Item(1).IsLengthPercentCalcUnit() &&
