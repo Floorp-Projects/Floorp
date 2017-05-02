@@ -1660,9 +1660,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         call(preBarrier);
         Pop(PreBarrierReg);
-        jump(&done);
 
-        haltingAlign(8);
         bind(&done);
     }
 
