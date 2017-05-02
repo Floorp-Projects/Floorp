@@ -11,7 +11,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
@@ -170,7 +170,7 @@ this.BrowserIDManager.prototype = {
     this._log.trace("initializeWithCurrentIdentity");
 
     // Reset the world before we do anything async.
-    this.whenReadyToAuthenticate = Promise.defer();
+    this.whenReadyToAuthenticate = PromiseUtils.defer();
     this.whenReadyToAuthenticate.promise.catch(err => {
       this._log.error("Could not authenticate", err);
     });
@@ -559,7 +559,7 @@ this.BrowserIDManager.prototype = {
 
     let getToken = assertion => {
       log.debug("Getting a token");
-      let deferred = Promise.defer();
+      let deferred = PromiseUtils.defer();
       let cb = function(err, token) {
         if (err) {
           return deferred.reject(err);

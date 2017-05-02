@@ -7,7 +7,6 @@ this.EXPORTED_SYMBOLS = ["FxAccountsClient"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/hawkclient.js");
@@ -564,45 +563,36 @@ this.FxAccountsClient.prototype = {
    *          "info": "https://docs.dev.lcip.og/errors/1234" // link to more info on the error
    *        }
    */
-  _request: function hawkRequest(path, method, credentials, jsonPayload) {
-    let deferred = Promise.defer();
-
+  async _request(path, method, credentials, jsonPayload) {
     // We were asked to back off.
     if (this.backoffError) {
       log.debug("Received new request during backoff, re-rejecting.");
-      deferred.reject(this.backoffError);
-      return deferred.promise;
+      throw this.backoffError;
     }
-
-    this.hawk.request(path, method, credentials, jsonPayload).then(
-      (response) => {
-        try {
-          let responseObj = JSON.parse(response.body);
-          deferred.resolve(responseObj);
-        } catch (err) {
-          log.error("json parse error on response: " + response.body);
-          deferred.reject({error: err});
-        }
-      },
-
-      (error) => {
-        log.error("error " + method + "ing " + path + ": " + JSON.stringify(error));
-        if (error.retryAfter) {
-          log.debug("Received backoff response; caching error as flag.");
-          this.backoffError = error;
-          // Schedule clearing of cached-error-as-flag.
-          CommonUtils.namedTimer(
-            this._clearBackoff,
-            error.retryAfter * 1000,
-            this,
-            "fxaBackoffTimer"
-           );
-        }
-        deferred.reject(error);
+    let response;
+    try {
+      response = await this.hawk.request(path, method, credentials, jsonPayload);
+    } catch (error) {
+      log.error("error " + method + "ing " + path + ": " + JSON.stringify(error));
+      if (error.retryAfter) {
+        log.debug("Received backoff response; caching error as flag.");
+        this.backoffError = error;
+        // Schedule clearing of cached-error-as-flag.
+        CommonUtils.namedTimer(
+          this._clearBackoff,
+          error.retryAfter * 1000,
+          this,
+          "fxaBackoffTimer"
+         );
       }
-    );
-
-    return deferred.promise;
+      throw error;
+    }
+    try {
+      return JSON.parse(response.body);
+    } catch (error) {
+      log.error("json parse error on response: " + response.body);
+      throw {error};
+    }
   },
 };
 
