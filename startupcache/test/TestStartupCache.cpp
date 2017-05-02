@@ -27,6 +27,7 @@
 #include "prio.h"
 #include "prprf.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
 
 using namespace JS;
@@ -64,7 +65,7 @@ TestStartupCache::TestStartupCache()
   mSCFile->AppendNative(NS_LITERAL_CSTRING("test-startupcache.tmp"));
   nsAutoCString path;
   mSCFile->GetNativePath(path);
-  char* env = PR_smprintf("MOZ_STARTUP_CACHE=%s", path.get());
+  char* env = mozilla::Smprintf("MOZ_STARTUP_CACHE=%s", path.get()).release();
   PR_SetEnv(env);
   // We intentionally leak `env` here because it is required by PR_SetEnv
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(env);

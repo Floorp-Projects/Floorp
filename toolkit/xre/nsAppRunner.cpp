@@ -314,7 +314,7 @@ EnvHasValue(const char *name)
 static void
 SaveWordToEnv(const char *name, const nsACString & word)
 {
-  char *expr = PR_smprintf("%s=%s", name, PromiseFlatCString(word).get());
+  char *expr = Smprintf("%s=%s", name, PromiseFlatCString(word).get()).release();
   if (expr)
     PR_SetEnv(expr);
   // We intentionally leak |expr| here since it is required by PR_SetEnv.
@@ -2810,7 +2810,7 @@ static void SaveStateForAppInitiatedRestart()
   for (auto & savedVar : gSavedVars) {
     const char *s = PR_GetEnv(savedVar.name);
     if (s)
-      savedVar.value = PR_smprintf("%s=%s", savedVar.name, s);
+      savedVar.value = Smprintf("%s=%s", savedVar.name, s).release();
   }
 }
 
@@ -4415,7 +4415,8 @@ XREMain::XRE_mainRun()
   char appFile[MAX_PATH];
   if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
     SmprintfPointer saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
-    PR_SetEnv(saved.get());
+    // We intentionally leak the string here since it is required by PR_SetEnv.
+    PR_SetEnv(saved.release());
   }
 #endif
 

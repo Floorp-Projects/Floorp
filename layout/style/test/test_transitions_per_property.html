@@ -1836,7 +1836,7 @@ function test_integer_transition(prop) {
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "-14", "");
-  is(cs.getPropertyValue(prop), "-1",
+  is(cs.getPropertyValue(prop), "0",
      "integer-valued property " + prop + ": interpolation of integers");
   check_distance(prop, "6", "1", "-14");
 
@@ -1880,7 +1880,7 @@ function test_font_stretch(prop) {
      "font-stretch property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "extra-condensed", "");
-  is(cs.getPropertyValue(prop), "normal",
+  is(cs.getPropertyValue(prop), "semi-expanded",
      "font-stretch property " + prop + ": interpolation of font-stretches");
   check_distance(prop, "expanded", "semi-expanded", "condensed");
 
@@ -1964,7 +1964,7 @@ function test_pos_integer_or_auto_transition(prop) {
      "integer-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "11", "");
-  is(cs.getPropertyValue(prop), "5",
+  is(cs.getPropertyValue(prop), "6",
      "integer-valued property " + prop + ": interpolation of integers");
   check_distance(prop, "4", "6", "12");
   div.style.setProperty(prop, "auto", "");

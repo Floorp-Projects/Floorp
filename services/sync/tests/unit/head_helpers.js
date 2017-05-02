@@ -501,3 +501,46 @@ function enableValidationPrefs() {
   Svc.Prefs.set("engine.bookmarks.validation.maxRecords", -1);
   Svc.Prefs.set("engine.bookmarks.validation.enabled", true);
 }
+
+function serverForEnginesWithKeys(users, engines, callback) {
+  // Generate and store a fake default key bundle to avoid resetting the client
+  // before the first sync.
+  let wbo = Service.collectionKeys.generateNewKeysWBO();
+  let modified = new_timestamp();
+  Service.collectionKeys.setContents(wbo.cleartext, modified);
+
+  let allEngines = [Service.clientsEngine].concat(engines);
+
+  let globalEngines = allEngines.reduce((entries, engine) => {
+    let { name, version, syncID } = engine;
+    entries[name] = { version, syncID };
+    return entries;
+  }, {});
+
+  let contents = allEngines.reduce((collections, engine) => {
+    collections[engine.name] = {};
+    return collections;
+  }, {
+    meta: {
+      global: {
+        syncID: Service.syncID,
+        storageVersion: STORAGE_VERSION,
+        engines: globalEngines,
+      },
+    },
+    crypto: {
+      keys: encryptPayload(wbo.cleartext),
+    },
+  });
+
+  return serverForUsers(users, contents, callback);
+}
+
+function serverForFoo(engine, callback) {
+  // The bookmarks engine *always* tracks changes, meaning we might try
+  // and sync due to the bookmarks we ourselves create! Worse, because we
+  // do an engine sync only, there's no locking - so we end up with multiple
+  // syncs running. Neuter that by making the threshold very large.
+  Service.scheduler.syncThreshold = 10000000;
+  return serverForEnginesWithKeys({"foo": "password"}, engine, callback);
+}
