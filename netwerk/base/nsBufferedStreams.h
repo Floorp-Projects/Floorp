@@ -14,6 +14,7 @@
 #include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
 #include "nsIIPCSerializableInputStream.h"
+#include "nsIAsyncInputStream.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +62,9 @@ protected:
 class nsBufferedInputStream : public nsBufferedStream,
                               public nsIBufferedInputStream,
                               public nsIStreamBufferAccess,
-                              public nsIIPCSerializableInputStream
+                              public nsIIPCSerializableInputStream,
+                              public nsIAsyncInputStream,
+                              public nsIInputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -69,6 +72,8 @@ public:
     NS_DECL_NSIBUFFEREDINPUTSTREAM
     NS_DECL_NSISTREAMBUFFERACCESS
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+    NS_DECL_NSIASYNCINPUTSTREAM
+    NS_DECL_NSIINPUTSTREAMCALLBACK
 
     nsBufferedInputStream() : nsBufferedStream() {}
 
@@ -83,9 +88,12 @@ protected:
     virtual ~nsBufferedInputStream() {}
 
     bool IsIPCSerializable() const;
+    bool IsAsyncInputStream() const;
 
     NS_IMETHOD Fill() override;
     NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams
+
+    nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
