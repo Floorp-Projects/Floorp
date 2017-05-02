@@ -3593,7 +3593,8 @@ TypeOfIRGenerator::tryAttachStub()
     if (tryAttachPrimitive(valId))
         return true;
 
-    return false;
+    MOZ_ALWAYS_TRUE(tryAttachObject(valId));
+    return true;
 }
 
 bool
@@ -3604,6 +3605,19 @@ TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId)
 
     writer.guardType(valId, val_.isNumber() ? JSVAL_TYPE_DOUBLE : val_.extractNonDoubleType());
     writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
+TypeOfIRGenerator::tryAttachObject(ValOperandId valId)
+{
+    if (!val_.isObject())
+        return false;
+
+    ObjOperandId objId = writer.guardIsObject(valId);
+    writer.loadTypeOfObjectResult(objId);
     writer.returnFromIC();
 
     return true;
