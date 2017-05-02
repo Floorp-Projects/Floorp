@@ -1220,7 +1220,8 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_computed_flags(self, computed_flags, backend_file):
         for var, flags in computed_flags.get_flags():
-            backend_file.write('COMPUTED_%s += %s\n' % (var, make_quote(' '.join(flags))))
+            backend_file.write('COMPUTED_%s += %s\n' % (var,
+                                                        ' '.join(make_quote(shell_quote(f)) for f in flags)))
 
     def _process_java_jar_data(self, jar, backend_file):
         target = jar.name
