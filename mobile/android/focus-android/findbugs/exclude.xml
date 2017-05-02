@@ -8,4 +8,7 @@
     <Match>
         <Class name="~.*\.Manifest\$.*"/>
     </Match>
+    <Match>
+        <Class name="~.*\.*Test"/>
+    </Match>
 </FindBugsFilter>
