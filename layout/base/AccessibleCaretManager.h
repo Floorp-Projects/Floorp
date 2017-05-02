@@ -181,11 +181,13 @@ protected:
 
   // If aDirection is eDirNext, get the frame for the range start in the first
   // range from the current selection, and return the offset into that frame as
-  // well as the range start node and the node offset. Otherwise, get the frame
-  // and offset for the range end in the last range instead.
+  // well as the range start content and the content offset. Otherwise, get the
+  // frame and the offset for the range end in the last range instead.
   nsIFrame* GetFrameForFirstRangeStartOrLastRangeEnd(
-    nsDirection aDirection, int32_t* aOutOffset, nsINode** aOutNode = nullptr,
-    int32_t* aOutNodeOffset = nullptr) const;
+    nsDirection aDirection,
+    int32_t* aOutOffset,
+    nsIContent** aOutContent = nullptr,
+    int32_t* aOutContentOffset = nullptr) const;
 
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
