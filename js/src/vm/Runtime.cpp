@@ -177,6 +177,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     liveRuntimesCount++;
 
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
+    JS_INIT_CLIST(&onNewGlobalObjectWatchers());
 
     PodZero(&asmJSCacheOps);
     lcovOutput().init();
