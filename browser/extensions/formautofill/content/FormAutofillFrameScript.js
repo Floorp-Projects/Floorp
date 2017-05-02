@@ -23,7 +23,7 @@ Cu.import("resource://formautofill/FormAutofillContent.jsm");
  */
 var FormAutofillFrameScript = {
   init() {
-    addEventListener("DOMContentLoaded", this);
+    addEventListener("focusin", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutoComplete:PopupClosed", this);
   },
@@ -38,12 +38,12 @@ var FormAutofillFrameScript = {
     }
 
     switch (evt.type) {
-      case "DOMContentLoaded": {
-        let doc = evt.target;
-        if (!(doc instanceof Ci.nsIDOMHTMLDocument)) {
+      case "focusin": {
+        let element = evt.target;
+        if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
           return;
         }
-        FormAutofillContent.identifyAutofillFields(doc);
+        FormAutofillContent.identifyAutofillFields(element.ownerDocument);
         break;
       }
     }
