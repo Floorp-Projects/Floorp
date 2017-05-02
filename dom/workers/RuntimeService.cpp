@@ -2709,6 +2709,13 @@ RuntimeService::MemoryPressureAllWorkers()
 uint32_t
 RuntimeService::ClampedHardwareConcurrency() const
 {
+  // The Firefox Hardware Report says 70% of Firefox users have exactly 2 cores.
+  // When the resistFingerprinting pref is set, we want to blend into the crowd
+  // so spoof navigator.hardwareConcurrency = 2 to reduce user uniqueness.
+  if (MOZ_UNLIKELY(nsContentUtils::ShouldResistFingerprinting())) {
+    return 2;
+  }
+
   // This needs to be atomic, because multiple workers, and even mainthread,
   // could race to initialize it at once.
   static Atomic<uint32_t> clampedHardwareConcurrency;
