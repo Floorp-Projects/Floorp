@@ -106,7 +106,6 @@ android {
             java {
                 srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
-                srcDir "${topsrcdir}/mobile/android/javaaddons/java"
                 srcDir "${topsrcdir}/mobile/android/services/src/main/java"
 
                 if (mozconfig.substs.MOZ_ANDROID_MLS_STUMBLER) {
