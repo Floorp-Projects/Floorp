@@ -248,6 +248,17 @@ PrintError(const char* aPrefix)
   LocalFree(lpMsgBuf);
 }
 
+static void
+InitializeDbgHelpCriticalSection()
+{
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  ::InitializeCriticalSection(&gDbgHelpCS);
+  initialized = true;
+}
+
 static unsigned int WINAPI WalkStackThread(void* aData);
 
 static bool
@@ -300,8 +311,7 @@ EnsureWalkThreadReady()
   stackWalkThread = nullptr;
   readyEvent = nullptr;
 
-
-  ::InitializeCriticalSection(&gDbgHelpCS);
+  InitializeDbgHelpCriticalSection();
 
   return walkThreadReady = true;
 }
@@ -851,9 +861,7 @@ EnsureSymInitialized()
     return gInitialized;
   }
 
-  if (!EnsureWalkThreadReady()) {
-    return false;
-  }
+  InitializeDbgHelpCriticalSection();
 
   SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
   retStat = SymInitialize(GetCurrentProcess(), nullptr, TRUE);

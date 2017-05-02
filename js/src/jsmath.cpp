@@ -66,6 +66,8 @@
 #  define GETRANDOM_NR 318
 # elif defined(__i386__)
 #  define GETRANDOM_NR 355
+# elif defined(__aarch64__)
+#  define GETRANDOM_NR 278
 # elif defined(__arm__)
 #  define GETRANDOM_NR 384
 // Added other architectures:

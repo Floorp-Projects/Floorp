@@ -1065,6 +1065,8 @@
               return;
 
             if (!aForceUpdate) {
+              document.commandDispatcher.lock();
+
               TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
               if (!gMultiProcessBrowser) {
                 // old way of measuring tab paint which is not valid with e10s.
@@ -1274,6 +1276,8 @@
             this.tabContainer._setPositionalAttributes();
 
             if (!gMultiProcessBrowser) {
+              document.commandDispatcher.unlock();
+
               let event = new CustomEvent("TabSwitchDone", {
                 bubbles: true,
                 cancelable: true
@@ -3980,6 +3984,8 @@
               if (fromBrowser) {
                 fromBrowser.removeAttribute("primary");
               }
+
+              document.commandDispatcher.unlock();
 
               let event = new CustomEvent("TabSwitchDone", {
                 bubbles: true,
