@@ -103,7 +103,9 @@ else:
     sandbox_vars = {
         # NSS explicitly exports its public symbols
         # with linker scripts.
-        'NO_VISIBILITY_FLAGS': True,
+        'COMPILE_FLAGS': {
+            'VISIBILITY': [],
+        },
         # XXX: We should fix these warnings.
         'ALLOW_COMPILER_WARNINGS': True,
         # NSS' build system doesn't currently build NSS with PGO.
