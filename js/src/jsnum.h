@@ -283,7 +283,14 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
  *
  * The returned index will always be in the range 0 <= *index <= 2^53-1.
  */
-MOZ_MUST_USE bool ToIndex(JSContext* cx, JS::HandleValue v, uint64_t* index);
+MOZ_MUST_USE bool
+ToIndex(JSContext* cx, JS::HandleValue v, const unsigned errorNumber, uint64_t* index);
+
+static MOZ_MUST_USE inline bool
+ToIndex(JSContext* cx, JS::HandleValue v, uint64_t* index)
+{
+    return ToIndex(cx, v, JSMSG_BAD_INDEX, index);
+}
 
 MOZ_MUST_USE inline bool
 SafeAdd(int32_t one, int32_t two, int32_t* res)
