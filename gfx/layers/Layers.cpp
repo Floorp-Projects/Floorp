@@ -293,7 +293,7 @@ Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
 
           // If the animation is play-pending, resolve the start time.
           if (anim.startTime().IsNull() && !anim.isNotPlaying()) {
-            anim.startTime() = aReadyTime - anim.holdTime() + anim.delay();
+            anim.startTime() = aReadyTime - anim.holdTime();
             updated = true;
           }
         }
