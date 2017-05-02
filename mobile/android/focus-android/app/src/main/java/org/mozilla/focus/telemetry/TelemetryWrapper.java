@@ -65,6 +65,7 @@ public final class TelemetryWrapper {
         private static final String BACK_BUTTON = "back_button";
         private static final String NOTIFICATION = "notification";
         private static final String SHORTCUT = "shortcut";
+        private static final String BLOCKING_SWITCH = "blocking_switch";
     }
 
     private static class Value {
@@ -255,5 +256,9 @@ public final class TelemetryWrapper {
 
     public static void openSelectionEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.SELECTION).queue();
+    }
+
+    public static void blockingSwitchEvent(boolean isBlockingEnabled) {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BLOCKING_SWITCH, String.valueOf(isBlockingEnabled)).queue();
     }
 }
