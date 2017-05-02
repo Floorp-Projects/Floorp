@@ -138,14 +138,23 @@ jobs:
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
             artifacts:
-              - name: public/android/lint/lint-results-automationDebug.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html
+              - name: public/android/lint/lint-results-officialAustralisDebug.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
                 type: file
-              - name: public/android/lint/lint-results-automationDebug.xml
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.xml
+              - name: public/android/lint/lint-results-officialAustralisDebug.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
                 type: file
-              - name: public/android/lint/lint-results-automationDebug_files
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug_files
+              - name: public/android/lint/lint-results-officialAustralisDebug_files
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
+                type: directory
+              - name: public/android/lint/lint-results-officialPhotonDebug.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
+                type: file
+              - name: public/android/lint/lint-results-officialPhotonDebug.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
+                type: file
+              - name: public/android/lint/lint-results-officialPhotonDebug_files
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
                 type: directory
               - name: public/build
                 path: /home/worker/artifacts/
@@ -252,8 +261,11 @@ jobs:
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
             artifacts:
-              - name: public/android/findbugs/findbugs-report.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-automationDebug-output.html
+              - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
+                type: file
+              - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
                 type: file
               - name: public/build
                 path: /home/worker/artifacts/
