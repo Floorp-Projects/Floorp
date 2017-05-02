@@ -485,8 +485,6 @@ Utils.getDefaultDeviceName = function() {
 };
 
 function registerRotaryEngine() {
-  let {RotaryEngine} =
-    Cu.import("resource://testing-common/services/sync/rotaryengine.js", {});
   Service.engineManager.clear();
 
   Service.engineManager.register(RotaryEngine);
