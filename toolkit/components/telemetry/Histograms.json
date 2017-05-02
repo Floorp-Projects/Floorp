@@ -2399,6 +2399,26 @@
     "n_values": 4,
     "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
   },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354407],
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds that we saved when we race cache with network."
+  },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_OCEC_ON_START_DIFF": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354407],
+    "kind": "linear",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds between onStartRequest from the cache and onCacheEntryCheck. Report only when net wins and OCEC is before onStartRequest from net."
+  },
   "HTTP_AUTH_DIALOG_STATS_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",
