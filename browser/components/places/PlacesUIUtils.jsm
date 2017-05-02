@@ -1110,8 +1110,13 @@ this.PlacesUIUtils = {
     return this.leftPaneQueries;
   },
 
-  // Get the folder id for the organizer left-pane folder.
   get leftPaneFolderId() {
+    delete this.leftPaneFolderId;
+    return this.leftPaneFolderId = this.maybeRebuildLeftPane();
+  },
+
+  // Get the folder id for the organizer left-pane folder.
+  maybeRebuildLeftPane() {
     let leftPaneRoot = -1;
     let allBookmarksId;
 
@@ -1163,8 +1168,8 @@ this.PlacesUIUtils = {
     // Returns true if item really exists, false otherwise.
     function itemExists(aItemId) {
       try {
-        bs.getItemIndex(aItemId);
-        return true;
+        let index = bs.getItemIndex(aItemId);
+        return index > -1;
       } catch (e) {
         return false;
       }
@@ -1251,8 +1256,7 @@ this.PlacesUIUtils = {
         safeRemoveItem(leftPaneRoot);
       } else {
         // Everything is fine, return the current left pane folder.
-        delete this.leftPaneFolderId;
-        return this.leftPaneFolderId = leftPaneRoot;
+        return leftPaneRoot;
       }
     }
 
@@ -1345,8 +1349,7 @@ this.PlacesUIUtils = {
     };
     bs.runInBatchMode(callback, null);
 
-    delete this.leftPaneFolderId;
-    return this.leftPaneFolderId = leftPaneRoot;
+    return leftPaneRoot;
   },
 
   /**

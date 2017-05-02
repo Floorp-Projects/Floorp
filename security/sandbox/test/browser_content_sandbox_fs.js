@@ -248,6 +248,9 @@ function* testFileAccess() {
     fileBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
   }
 
+  // Current level
+  let level = prefs.getIntPref("security.sandbox.content.level");
+
   // Directories/files to test accessing from content processes.
   // For directories, we test whether a directory listing is allowed
   // or blocked. For files, we test if we can read from the file.
@@ -291,6 +294,30 @@ function* testFileAccess() {
     });
   }
 
+  if (isMac()) {
+    // If ~/Library/Caches/TemporaryItems exists, when level <= 2 we
+    // make sure it's readable. For level 3, we make sure it isn't.
+    let homeTempDir = GetHomeDir();
+    homeTempDir.appendRelativePath('Library/Caches/TemporaryItems');
+    if (homeTempDir.exists()) {
+      let shouldBeReadable, minLevel;
+      if (level >= minHomeReadSandboxLevel()) {
+        shouldBeReadable = false;
+        minLevel = minHomeReadSandboxLevel();
+      } else {
+        shouldBeReadable = true;
+        minLevel = 0;
+      }
+      tests.push({
+        desc:     "home library cache temp dir",
+        ok:       shouldBeReadable,
+        browser:  webBrowser,
+        file:     homeTempDir,
+        minLevel: minLevel,
+      });
+    }
+  }
+
   let extensionsDir = GetProfileEntry("extensions");
   if (extensionsDir.exists() && extensionsDir.isDirectory()) {
     tests.push({
@@ -331,7 +358,6 @@ function* testFileAccess() {
   }
 
   // remove tests not enabled by the current sandbox level
-  let level = prefs.getIntPref("security.sandbox.content.level");
   tests = tests.filter((test) => { return (test.minLevel <= level); });
 
   for (let test of tests) {
