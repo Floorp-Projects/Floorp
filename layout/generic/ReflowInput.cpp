@@ -2200,7 +2200,8 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
   } else {
     // Get the containing block reflow state
     const ReflowInput* cbrs = mCBReflowInput;
-    NS_ASSERTION(nullptr != cbrs, "no containing block");
+    MOZ_ASSERT(cbrs, "no containing block");
+    MOZ_ASSERT(mFrame->GetParent());
 
     // If we weren't given a containing block width and height, then
     // compute one
@@ -2397,7 +2398,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
       }
 
       nsIFrame* alignCB = mFrame->GetParent();
-      if (alignCB && alignCB->IsTableWrapperFrame() && alignCB->GetParent()) {
+      if (alignCB->IsTableWrapperFrame() && alignCB->GetParent()) {
         // XXX grid-specific for now; maybe remove this check after we address bug 799725
         if (alignCB->GetParent()->IsGridContainerFrame()) {
           alignCB = alignCB->GetParent();
@@ -2432,7 +2433,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
             ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
         }
 
-        if (alignCB && alignCB->IsFlexContainerFrame()) {
+        if (alignCB->IsFlexContainerFrame()) {
           computeSizeFlags =
             ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
 
@@ -2473,8 +2474,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
       // margin calculations.
       if (isBlock && !IsSideCaption(mFrame, mStyleDisplay, cbwm) &&
           mStyleDisplay->mDisplay != StyleDisplay::InlineTable &&
-          (!alignCB || (!alignCB->IsFlexContainerFrame() &&
-                        !alignCB->IsGridContainerFrame()))) {
+          !alignCB->IsFlexOrGridContainer()) {
         CalculateBlockSideMargins(aFrameType);
       }
     }
