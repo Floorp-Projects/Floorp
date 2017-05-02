@@ -6196,7 +6196,6 @@
           if (rtl)
             tabs.reverse();
           let tabWidth = draggedTab.getBoundingClientRect().width;
-          draggedTab._dragData.tabWidth = tabWidth;
 
           // Move the dragged tab based on the mouse position.
 
@@ -6212,7 +6211,6 @@
           translateX = Math.max(translateX, leftBound);
           translateX = Math.min(translateX, rightBound);
           draggedTab.style.transform = "translateX(" + translateX + "px)";
-          draggedTab._dragData.translateX = translateX;
 
           // Determine what tab we're dragging over.
           // * Point of reference is the center of the dragged tab. If that
@@ -6884,41 +6882,14 @@
           if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
         } else if (draggedTab && draggedTab.parentNode == this) {
-          let oldTranslateX = draggedTab._dragData.translateX;
-          let tabWidth = draggedTab._dragData.tabWidth;
-          let translateOffset = oldTranslateX % tabWidth;
-          let newTranslateX = oldTranslateX - translateOffset;
-          if (oldTranslateX > 0 && translateOffset > tabWidth / 2) {
-            newTranslateX += tabWidth;
-          } else if (oldTranslateX < 0 && -translateOffset > tabWidth / 2) {
-            newTranslateX -= tabWidth;
-          }
+          this._finishAnimateTabMove();
 
-          let dropIndex = "animDropIndex" in draggedTab._dragData &&
-                          draggedTab._dragData.animDropIndex;
-          if (dropIndex && dropIndex > draggedTab._tPos)
-            dropIndex--;
-
-          if (oldTranslateX && oldTranslateX != newTranslateX) {
-            draggedTab.setAttribute("tabdrop-samewindow", "true");
-            draggedTab.style.transform = "translateX(" + newTranslateX + "px)";
-            let onTransitionEnd = event => {
-              if (event.propertyName != "transform" || event.originalTarget != draggedTab) {
-                return;
-              }
-              draggedTab.removeEventListener("transitionend", onTransitionEnd);
-
-              draggedTab.removeAttribute("tabdrop-samewindow");
-
-              this._finishAnimateTabMove();
-              if (dropIndex !== false)
-                this.tabbrowser.moveTabTo(draggedTab, dropIndex);
-            }
-            draggedTab.addEventListener("transitionend", onTransitionEnd);
-          } else {
-            this._finishAnimateTabMove();
-            if (dropIndex !== false)
-              this.tabbrowser.moveTabTo(draggedTab, dropIndex);
+          // actually move the dragged tab
+          if ("animDropIndex" in draggedTab._dragData) {
+            let newIndex = draggedTab._dragData.animDropIndex;
+            if (newIndex > draggedTab._tPos)
+              newIndex--;
+            this.tabbrowser.moveTabTo(draggedTab, newIndex);
           }
         } else if (draggedTab) {
           let newIndex = this._getDropIndex(event, false);
@@ -6959,17 +6930,14 @@
       ]]></handler>
 
       <handler event="dragend"><![CDATA[
-        var dt = event.dataTransfer;
-        var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-
-        // Prevent this code from running if a tabdrop animation is
-        // running since calling _finishAnimateTabMove would clear
-        // any CSS transition that is running.
-        if (draggedTab.hasAttribute("tabdrop-samewindow"))
-          return;
+        // Note: while this case is correctly handled here, this event
+        // isn't dispatched when the tab is moved within the tabstrip,
+        // see bug 460801.
 
         this._finishAnimateTabMove();
 
+        var dt = event.dataTransfer;
+        var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
         if (dt.mozUserCancelled || dt.dropEffect != "none" || this._isCustomizing) {
           delete draggedTab._dragData;
           return;
