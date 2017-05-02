@@ -18,7 +18,6 @@
     </em:targetApplication>
 
     <em:unpack>true</em:unpack>
-    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
   </Description>
 </RDF>

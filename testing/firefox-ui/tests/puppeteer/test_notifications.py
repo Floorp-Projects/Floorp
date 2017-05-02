@@ -18,7 +18,6 @@ class TestNotifications(PuppeteerMixin, MarionetteTestCase):
         super(TestNotifications, self).setUp()
 
         self.marionette.set_pref('extensions.install.requireSecureOrigin', False)
-        self.marionette.set_pref('extensions.allow-non-mpc-extensions', True)
 
         self.addons_url = self.marionette.absolute_url('addons/extensions/')
         self.puppeteer.utils.permissions.add(self.marionette.baseurl, 'install')
@@ -26,7 +25,6 @@ class TestNotifications(PuppeteerMixin, MarionetteTestCase):
     def tearDown(self):
         try:
             self.marionette.clear_pref('extensions.install.requireSecureOrigin')
-            self.marionette.clear_pref('extensions.allow-non-mpc-extensions')
             self.marionette.clear_pref('xpinstall.signatures.required')
 
             self.puppeteer.utils.permissions.remove(self.addons_url, 'install')
