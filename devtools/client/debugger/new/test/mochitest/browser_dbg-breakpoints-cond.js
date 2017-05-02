@@ -13,6 +13,8 @@ function setConditionalBreakpoint(dbg, index, condition) {
     selectMenuItem(dbg, 2);
     yield waitForElement(dbg, ".conditional-breakpoint-panel input");
     findElementWithSelector(dbg, ".conditional-breakpoint-panel input").focus();
+    // Position cursor reliably at the end of the text.
+    pressKey(dbg, "End")
     type(dbg, condition);
     pressKey(dbg, "Enter");
   });

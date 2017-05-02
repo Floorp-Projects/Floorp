@@ -146,7 +146,7 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
 
   // Get the frame of the filter element.
   nsIFrame* frame = element->GetPrimaryFrame();
-  if (!frame || frame->GetType() != nsGkAtoms::svgFilterFrame) {
+  if (!frame || !frame->IsSVGFilterFrame()) {
     // The URL points to an element that's not an SVG filter element, or to an
     // element that hasn't had its frame constructed yet.
     return nullptr;

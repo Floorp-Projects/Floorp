@@ -520,7 +520,12 @@ const CustomizableWidgets = [
       // respects different buttons (eg, to open in a new tab).
       item.addEventListener("click", e => {
         doc.defaultView.openUILink(tabInfo.url, e);
-        CustomizableUI.hidePanelForNode(item);
+        if (doc.defaultView.whereToOpenLink(e) != "current") {
+          e.preventDefault();
+          e.stopPropagation();
+        } else {
+          CustomizableUI.hidePanelForNode(item);
+        }
         BrowserUITelemetry.countSyncedTabEvent("open", "toolbarbutton-subview");
       });
       return item;

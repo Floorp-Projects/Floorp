@@ -68,7 +68,6 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual nsIAtom* GetType() const override;
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -127,7 +126,8 @@ private:
   bool mSuppressStyleCheck;
 }; // class nsImageBoxFrame
 
-class nsDisplayXULImage : public nsDisplayImageContainer {
+class nsDisplayXULImage final : public nsDisplayImageContainer
+{
 public:
   nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
                     nsImageBoxFrame* aFrame) :

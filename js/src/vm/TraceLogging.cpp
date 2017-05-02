@@ -61,7 +61,7 @@ rdtsc(void)
     return result;
 
 }
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 #include <sys/time.h>
 

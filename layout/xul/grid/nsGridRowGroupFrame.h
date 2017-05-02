@@ -23,7 +23,7 @@
  * all the columns).  However, multiple levels of groups are allowed, so
  * the parent or child could instead be another group.
  */
-class nsGridRowGroupFrame : public nsBoxFrame
+class nsGridRowGroupFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

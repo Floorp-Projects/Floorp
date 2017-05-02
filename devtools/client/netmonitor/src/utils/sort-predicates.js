@@ -56,6 +56,11 @@ function protocol(first, second) {
   return result || waterfall(first, second);
 }
 
+function scheme(first, second) {
+  const result = compareValues(first.urlDetails.scheme, second.urlDetails.scheme);
+  return result || waterfall(first, second);
+}
+
 function domain(first, second) {
   const firstDomain = first.urlDetails.host.toLowerCase();
   const secondDomain = second.urlDetails.host.toLowerCase();
@@ -119,6 +124,7 @@ exports.Sorters = {
   method,
   file,
   protocol,
+  scheme,
   cookies,
   setCookies,
   domain,

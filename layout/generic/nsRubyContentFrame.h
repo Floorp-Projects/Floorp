@@ -27,8 +27,10 @@ public:
   bool IsIntraLevelWhitespace() const;
 
 protected:
-  explicit nsRubyContentFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext) {}
+  explicit nsRubyContentFrame(nsStyleContext* aContext,
+                              mozilla::FrameType aType)
+    : nsInlineFrame(aContext, aType)
+  {}
 };
 
 #endif /* nsRubyContentFrame_h___ */

@@ -118,6 +118,10 @@ const HEADERS = [
     canFilter: true,
   },
   {
+    name: "scheme",
+    canFilter: true,
+  },
+  {
     name: "domain",
     canFilter: true,
   },

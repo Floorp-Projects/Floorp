@@ -17,8 +17,9 @@
 // <mtable> -- table or matrix
 //
 
-class nsMathMLmtableWrapperFrame : public nsTableWrapperFrame,
-                                   public nsMathMLFrame
+class nsMathMLmtableWrapperFrame final
+  : public nsTableWrapperFrame
+  , public nsMathMLFrame
 {
 public:
   friend nsContainerFrame*
@@ -48,7 +49,9 @@ public:
 
 protected:
   explicit nsMathMLmtableWrapperFrame(nsStyleContext* aContext)
-    : nsTableWrapperFrame(aContext) {}
+    : nsTableWrapperFrame(aContext)
+  {}
+
   virtual ~nsMathMLmtableWrapperFrame();
 
   // helper to find the row frame at a given index, positive or negative, e.g.,
@@ -60,7 +63,7 @@ protected:
 
 // --------------
 
-class nsMathMLmtableFrame : public nsTableFrame
+class nsMathMLmtableFrame final : public nsTableFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsMathMLmtableFrame)
@@ -155,7 +158,9 @@ public:
 
 protected:
   explicit nsMathMLmtableFrame(nsStyleContext* aContext)
-    : nsTableFrame(aContext) {}
+    : nsTableFrame(aContext)
+  {}
+
   virtual ~nsMathMLmtableFrame();
 
 private:
@@ -168,7 +173,7 @@ private:
 
 // --------------
 
-class nsMathMLmtrFrame : public nsTableRowFrame
+class nsMathMLmtrFrame final : public nsTableRowFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -225,7 +230,9 @@ public:
 
 protected:
   explicit nsMathMLmtrFrame(nsStyleContext* aContext)
-    : nsTableRowFrame(aContext) {}
+    : nsTableRowFrame(aContext)
+  {}
+
   virtual ~nsMathMLmtrFrame();
 }; // class nsMathMLmtrFrame
 
@@ -270,14 +277,18 @@ public:
 
 protected:
   nsMathMLmtdFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aContext, aTableFrame) {}
+    : nsTableCellFrame(aContext, aTableFrame)
+  {
+  }
+
   virtual ~nsMathMLmtdFrame();
 }; // class nsMathMLmtdFrame
 
 // --------------
 
-class nsMathMLmtdInnerFrame : public nsBlockFrame,
-                              public nsMathMLFrame
+class nsMathMLmtdInnerFrame final
+  : public nsBlockFrame
+  , public nsMathMLFrame
 {
 public:
   friend nsContainerFrame*

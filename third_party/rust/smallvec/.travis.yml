@@ -7,6 +7,7 @@ script: |
   cargo build --verbose &&
   cargo build --features=heapsizeof --verbose &&
   cargo test --verbose &&
-  cargo test --features=heapsizeof --verbose
+  cargo test --features=heapsizeof --verbose &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo bench --verbose bench)
 notifications:
   webhooks: http://build.servo.org:54856/travis

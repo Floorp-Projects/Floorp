@@ -50,7 +50,7 @@ NS_QUERYFRAME_HEAD(nsNumberControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsNumberControlFrame::nsNumberControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::NumberControl)
   , mHandlingInputEvent(false)
 {
 }
@@ -447,12 +447,6 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   SyncDisabledState();
 
   return rv;
-}
-
-nsIAtom*
-nsNumberControlFrame::GetType() const
-{
-  return nsGkAtoms::numberControlFrame;
 }
 
 void

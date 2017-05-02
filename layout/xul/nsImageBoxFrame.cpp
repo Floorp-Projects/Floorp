@@ -150,13 +150,13 @@ nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
-nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext):
-  nsLeafBoxFrame(aContext),
-  mIntrinsicSize(0,0),
-  mLoadFlags(nsIRequest::LOAD_NORMAL),
-  mRequestRegistered(false),
-  mUseSrcAttr(false),
-  mSuppressStyleCheck(false)
+nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext)
+  : nsLeafBoxFrame(aContext, FrameType::ImageBox)
+  , mIntrinsicSize(0, 0)
+  , mLoadFlags(nsIRequest::LOAD_NORMAL)
+  , mRequestRegistered(false)
+  , mUseSrcAttr(false)
+  , mSuppressStyleCheck(false)
 {
   MarkIntrinsicISizesDirty();
 }
@@ -660,12 +660,6 @@ nscoord
 nsImageBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
   return GetXULPrefSize(aState).height;
-}
-
-nsIAtom*
-nsImageBoxFrame::GetType() const
-{
-  return nsGkAtoms::imageBoxFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

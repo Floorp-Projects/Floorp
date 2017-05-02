@@ -15,10 +15,13 @@ class nsRenderingContext;
 class nsPresContext;
 
 class nsHTMLButtonControlFrame : public nsContainerFrame,
-                                 public nsIFormControlFrame 
+                                 public nsIFormControlFrame
 {
 public:
-  explicit nsHTMLButtonControlFrame(nsStyleContext* aContext);
+  explicit nsHTMLButtonControlFrame(nsStyleContext* aContext)
+    : nsHTMLButtonControlFrame(aContext, mozilla::FrameType::HTMLButtonControl)
+  {}
+
   ~nsHTMLButtonControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
@@ -72,8 +75,6 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual nsIAtom* GetType() const override;
-  
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("HTMLButtonControl"), aResult);
@@ -104,6 +105,8 @@ public:
                                      nsStyleChangeList& aChangeList,
                                      nsChangeHint aHintForThisFrame) override;
 protected:
+  nsHTMLButtonControlFrame(nsStyleContext* aContext, mozilla::FrameType aType);
+
   virtual bool IsInput() { return false; }
 
   // Indicates whether we should clip our children's painting to our

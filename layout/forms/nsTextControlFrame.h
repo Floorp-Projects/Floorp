@@ -167,7 +167,6 @@ public:
 //=== END NSISTATEFULFRAME
 
 //==== OVERLOAD of nsIFrame
-  virtual nsIAtom* GetType() const override;
 
   /** handler for attribute changes to mContent */
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,

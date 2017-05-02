@@ -79,7 +79,7 @@ struct TableReflowInput {
     : reflowInput(aReflowInput)
     , availSize(aAvailSize)
   {
-    MOZ_ASSERT(reflowInput.mFrame->GetType() == nsGkAtoms::tableFrame,
+    MOZ_ASSERT(reflowInput.mFrame->IsTableFrame(),
                "TableReflowInput should only be created for nsTableFrame");
     nsTableFrame* table =
       static_cast<nsTableFrame*>(reflowInput.mFrame->FirstInFlow());
@@ -143,18 +143,10 @@ nsTableFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
   return GetParent()->DoGetParentStyleContext(aProviderFrame);
 }
 
-
-nsIAtom*
-nsTableFrame::GetType() const
-{
-  return nsGkAtoms::tableFrame;
-}
-
-
 nsTableFrame::nsTableFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext),
-    mCellMap(nullptr),
-    mTableLayoutStrategy(nullptr)
+  : nsContainerFrame(aContext, FrameType::Table)
+  , mCellMap(nullptr)
+  , mTableLayoutStrategy(nullptr)
 {
   memset(&mBits, 0, sizeof(mBits));
 }
@@ -166,8 +158,7 @@ nsTableFrame::Init(nsIContent*       aContent,
 {
   NS_PRECONDITION(!mCellMap, "Init called twice");
   NS_PRECONDITION(!mTableLayoutStrategy, "Init called twice");
-  NS_PRECONDITION(!aPrevInFlow ||
-                  aPrevInFlow->GetType() == nsGkAtoms::tableFrame,
+  NS_PRECONDITION(!aPrevInFlow || aPrevInFlow->IsTableFrame(),
                   "prev-in-flow must be of same type");
 
   // Let the base class do its processing
@@ -219,9 +210,8 @@ nsTableFrame::RePositionViews(nsIFrame* aFrame)
 static bool
 IsRepeatedFrame(nsIFrame* kidFrame)
 {
-  return (kidFrame->GetType() == nsGkAtoms::tableRowFrame ||
-          kidFrame->GetType() == nsGkAtoms::tableRowGroupFrame) &&
-          kidFrame->HasAnyStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
+  return (kidFrame->IsTableRowFrame() || kidFrame->IsTableRowGroupFrame()) &&
+         kidFrame->HasAnyStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
 }
 
 bool
@@ -256,7 +246,7 @@ nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
   // the potential to break sites that apply 'position: relative' to those
   // parts, expecting nothing to happen. We warn at the console to make tracking
   // down the issue easy.
-  if (!IS_TABLE_CELL(aFrame->GetType())) {
+  if (!IS_TABLE_CELL(aFrame->Type())) {
     nsIContent* content = aFrame->GetContent();
     nsPresContext* presContext = aFrame->PresContext();
     if (content && !presContext->HasWarnedAboutPositionedTableParts()) {
@@ -338,7 +328,7 @@ nsTableFrame::SetInitialChildList(ChildListID     aListID,
     const nsStyleDisplay* childDisplay = childFrame->StyleDisplay();
 
     if (mozilla::StyleDisplay::TableColumnGroup == childDisplay->mDisplay) {
-      NS_ASSERTION(nsGkAtoms::tableColGroupFrame == childFrame->GetType(),
+      NS_ASSERTION(childFrame->IsTableColGroupFrame(),
                    "This is not a colgroup");
       mColGroups.AppendFrame(nullptr, childFrame);
     }
@@ -566,7 +556,7 @@ nsTableFrame::InsertColGroups(int32_t                   aStartColIndex,
   int32_t colIndex = aStartColIndex;
   nsFrameList::Enumerator colGroups(aColGroups);
   for (; !colGroups.AtEnd(); colGroups.Next()) {
-    MOZ_ASSERT(colGroups.get()->GetType() == nsGkAtoms::tableColGroupFrame);
+    MOZ_ASSERT(colGroups.get()->IsTableColGroupFrame());
     nsTableColGroupFrame* cgFrame =
       static_cast<nsTableColGroupFrame*>(colGroups.get());
     cgFrame->SetStartColumnIndex(colIndex);
@@ -1269,15 +1259,15 @@ public:
 
 #ifdef DEBUG
 static bool
-IsFrameAllowedInTable(nsIAtom* aType)
+IsFrameAllowedInTable(FrameType aType)
 {
   return IS_TABLE_CELL(aType) ||
-         nsGkAtoms::tableRowFrame == aType ||
-         nsGkAtoms::tableRowGroupFrame == aType ||
-         nsGkAtoms::scrollFrame == aType ||
-         nsGkAtoms::tableFrame == aType ||
-         nsGkAtoms::tableColFrame == aType ||
-         nsGkAtoms::tableColGroupFrame == aType;
+         FrameType::TableRow == aType ||
+         FrameType::TableRowGroup == aType ||
+         FrameType::Scroll == aType ||
+         FrameType::Table == aType ||
+         FrameType::TableCol == aType ||
+         FrameType::TableColGroup == aType;
 }
 #endif
 
@@ -1295,12 +1285,12 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 static int32_t
 GetTablePartRank(nsDisplayItem* aItem)
 {
-  nsIAtom* type = aItem->Frame()->GetType();
-  if (type == nsGkAtoms::tableFrame)
+  FrameType type = aItem->Frame()->Type();
+  if (type == FrameType::Table)
     return 0;
-  if (type == nsGkAtoms::tableRowGroupFrame)
+  if (type == FrameType::TableRowGroup)
     return 1;
-  if (type == nsGkAtoms::tableRowFrame)
+  if (type == FrameType::TableRow)
     return 2;
   return 3;
 }
@@ -1420,7 +1410,7 @@ AnyTablePartHasBorderOrBackground(nsTableFrame* aTableFrame,
                                   nsIFrame* aEnd)
 {
   for (nsIFrame* f = aStart; f != aEnd; f = f->GetNextSibling()) {
-    NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
+    NS_ASSERTION(IsFrameAllowedInTable(f->Type()), "unexpected frame type");
 
     if (FrameHasBorderOrBackground(aTableFrame, f))
       return true;
@@ -1588,7 +1578,7 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
                               aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
   nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
   for (nsIFrame* colGroupFrame : mColGroups) {
-    MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
+    MOZ_ASSERT(colGroupFrame->IsTableColGroupFrame());
     // first we need to figure out the size of the colgroup
     int32_t groupFirstCol = colIdx;
     nscoord colGroupISize = 0;
@@ -1819,18 +1809,17 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowInput)
   WritingMode wm = aParentReflowInput.GetWritingMode();
   for (const ReflowInput* rs = &aParentReflowInput;
        rs && rs->mFrame; rs = rs->mParentReflowInput) {
-    nsIAtom* frameType = rs->mFrame->GetType();
-    if (IS_TABLE_CELL(frameType)                     ||
-        (nsGkAtoms::tableRowFrame      == frameType) ||
-        (nsGkAtoms::tableRowGroupFrame == frameType)) {
+    FrameType frameType = rs->mFrame->Type();
+    if (IS_TABLE_CELL(frameType) ||
+        (FrameType::TableRow      == frameType) ||
+        (FrameType::TableRowGroup == frameType)) {
       const nsStyleCoord &bsize = rs->mStylePosition->BSize(wm);
       // calc() with percentages treated like 'auto' on internal table elements
       if (bsize.GetUnit() != eStyleUnit_Auto &&
           (!bsize.IsCalcUnit() || !bsize.HasPercent())) {
         return true;
       }
-    }
-    else if (nsGkAtoms::tableFrame == frameType) {
+    } else if (FrameType::Table == frameType) {
       // we reached the containing table, so always return
       return rs->mStylePosition->BSize(wm).GetUnit() != eStyleUnit_Auto;
     }
@@ -1843,10 +1832,10 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowInput)
 void
 nsTableFrame::CheckRequestSpecialBSizeReflow(const ReflowInput& aReflowInput)
 {
-  NS_ASSERTION(IS_TABLE_CELL(aReflowInput.mFrame->GetType()) ||
-               aReflowInput.mFrame->GetType() == nsGkAtoms::tableRowFrame ||
-               aReflowInput.mFrame->GetType() == nsGkAtoms::tableRowGroupFrame ||
-               aReflowInput.mFrame->GetType() == nsGkAtoms::tableFrame,
+  NS_ASSERTION(IS_TABLE_CELL(aReflowInput.mFrame->Type()) ||
+               aReflowInput.mFrame->IsTableRowFrame() ||
+               aReflowInput.mFrame->IsTableRowGroupFrame() ||
+               aReflowInput.mFrame->IsTableFrame(),
                "unexpected frame type");
   WritingMode wm = aReflowInput.GetWritingMode();
   if (!aReflowInput.mFrame->GetPrevInFlow() &&  // 1st in flow
@@ -1868,15 +1857,15 @@ nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const ReflowInput* rs = &aReflowInput; rs && rs->mFrame; rs = rs->mParentReflowInput) {
-    nsIAtom* frameType = rs->mFrame->GetType();
+    FrameType frameType = rs->mFrame->Type();
     NS_ASSERTION(IS_TABLE_CELL(frameType) ||
-                 nsGkAtoms::tableRowFrame == frameType ||
-                 nsGkAtoms::tableRowGroupFrame == frameType ||
-                 nsGkAtoms::tableFrame == frameType,
+                 FrameType::TableRow == frameType ||
+                 FrameType::TableRowGroup == frameType ||
+                 FrameType::Table == frameType,
                  "unexpected frame type");
 
     rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-    if (nsGkAtoms::tableFrame == frameType) {
+    if (FrameType::Table == frameType) {
       NS_ASSERTION(rs != &aReflowInput,
                    "should not request special bsize reflow for table");
       // always stop when we reach a table
@@ -2624,7 +2613,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
     if (aPrevFrame) {
       nsTableColGroupFrame* prevColGroup =
         (nsTableColGroupFrame*)GetFrameAtOrBefore(this, aPrevFrame,
-                                                  nsGkAtoms::tableColGroupFrame);
+                                                  FrameType::TableColGroup);
       if (prevColGroup) {
         startColIndex = prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
       }
@@ -3992,7 +3981,7 @@ nsTableFrame::GetTableFrame(nsIFrame* aFrame)
 {
   for (nsIFrame* ancestor = aFrame->GetParent(); ancestor;
        ancestor = ancestor->GetParent()) {
-    if (nsGkAtoms::tableFrame == ancestor->GetType()) {
+    if (ancestor->IsTableFrame()) {
       return static_cast<nsTableFrame*>(ancestor);
     }
   }
@@ -4017,7 +4006,7 @@ nsTableFrame::GetTableFramePassingThrough(nsIFrame* aMustPassThrough,
     if (ancestor == aMustPassThrough) {
       *aDidPassThrough = true;
     }
-    if (nsGkAtoms::tableFrame == ancestor->GetType()) {
+    if (ancestor->IsTableFrame()) {
       tableFrame = static_cast<nsTableFrame*>(ancestor);
       break;
     }
@@ -4077,15 +4066,15 @@ nsTableFrame::GetFrameName(nsAString& aResult) const
 // Find the closet sibling before aPriorChildFrame (including aPriorChildFrame) that
 // is of type aChildType
 nsIFrame*
-nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
-                                 nsIFrame*       aPriorChildFrame,
-                                 nsIAtom*        aChildType)
+nsTableFrame::GetFrameAtOrBefore(nsIFrame* aParentFrame,
+                                 nsIFrame* aPriorChildFrame,
+                                 FrameType aChildType)
 {
   nsIFrame* result = nullptr;
   if (!aPriorChildFrame) {
     return result;
   }
-  if (aChildType == aPriorChildFrame->GetType()) {
+  if (aChildType == aPriorChildFrame->Type()) {
     return aPriorChildFrame;
   }
 
@@ -4094,7 +4083,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
   nsIFrame* lastMatchingFrame = nullptr;
   nsIFrame* childFrame = aParentFrame->PrincipalChildList().FirstChild();
   while (childFrame && (childFrame != aPriorChildFrame)) {
-    if (aChildType == childFrame->GetType()) {
+    if (aChildType == childFrame->Type()) {
       lastMatchingFrame = childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -4181,7 +4170,7 @@ nsTableFrame::Dump(bool            aDumpRows,
     }
     printf("\n colgroups->");
     for (nsIFrame* childFrame : mColGroups) {
-      if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
+      if (FrameType::TableColGroup == childFrame->Type()) {
         nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
         colGroupFrame->Dump(1);
       }

@@ -31,11 +31,11 @@ public:
    */
   virtual nsRect VisualBorderRectRelativeToSelf() const override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
-                               
+                      nsReflowStatus& aStatus) override;
+
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override;
@@ -63,7 +63,6 @@ public:
                            nsIFrame*      aOldFrame) override;
 #endif
 
-  virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &

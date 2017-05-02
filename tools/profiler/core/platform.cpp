@@ -22,7 +22,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "PseudoStack.h"
 #include "ThreadInfo.h"
@@ -37,7 +36,7 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #include "shared-libraries.h"
 #include "prtime.h"
 
@@ -675,7 +674,7 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
   }
 }
 
-static const int SAMPLER_MAX_STRING_LENGTH = 128;
+static const int SAMPLER_MAX_STRING_LENGTH = 512;
 
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
@@ -700,9 +699,17 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   if (entry.isCopyLabel() || dynamicString) {
     if (dynamicString) {
-      int bytesWritten =
-        SprintfLiteral(combinedStringBuffer, "%s %s", sampleLabel, dynamicString);
-      if (bytesWritten > 0) {
+      // Create a string that is sampleLabel + ' ' + annotationString.
+      // Avoid sprintf because it can take a lock on Windows, and this
+      // code runs during the profiler's "critical section" as defined
+      // in SamplerThread::SuspendAndSampleAndResumeThread.
+      size_t labelLength = strlen(sampleLabel);
+      size_t dynamicLength = strlen(dynamicString);
+      if (labelLength + 1 + dynamicLength < ArrayLength(combinedStringBuffer)) {
+        PodCopy(combinedStringBuffer, sampleLabel, labelLength);
+        combinedStringBuffer[labelLength] = ' ';
+        PodCopy(&combinedStringBuffer[labelLength + 1], dynamicString, dynamicLength);
+        combinedStringBuffer[labelLength + 1 + dynamicLength] = '\0';
         sampleLabel = combinedStringBuffer;
       }
     }
@@ -1578,8 +1585,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
-    ActivePS::SetIsPaused(aLock, true);
-
     const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
     for (size_t i = 0; i < liveThreads.size(); i++) {
       ThreadInfo* info = liveThreads.at(i);
@@ -1611,8 +1616,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       java::GeckoJavaSampler::Unpause();
     }
 #endif
-
-    ActivePS::SetIsPaused(aLock, false);
   }
   aWriter.EndArray();
 }
@@ -1637,55 +1640,6 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSin
 
 // END saving/streaming code
 ////////////////////////////////////////////////////////////////////////
-
-ProfilerMarker::ProfilerMarker(const char* aMarkerName,
-                               ProfilerMarkerPayload* aPayload,
-                               double aTime)
-  : mMarkerName(strdup(aMarkerName))
-  , mPayload(aPayload)
-  , mTime(aTime)
-{
-}
-
-ProfilerMarker::~ProfilerMarker() {
-  free(mMarkerName);
-  delete mPayload;
-}
-
-void
-ProfilerMarker::SetGeneration(uint32_t aGenID) {
-  mGenID = aGenID;
-}
-
-double
-ProfilerMarker::GetTime() const {
-  return mTime;
-}
-
-void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
-                                const TimeStamp& aProcessStartTime,
-                                UniqueStacks& aUniqueStacks) const
-{
-  // Schema:
-  //   [name, time, data]
-
-  aWriter.StartArrayElement();
-  {
-    aUniqueStacks.mUniqueStrings.WriteElement(aWriter, GetMarkerName());
-    aWriter.DoubleElement(mTime);
-    // TODO: Store the callsite for this marker if available:
-    // if have location data
-    //   b.NameValue(marker, "location", ...);
-    if (mPayload) {
-      aWriter.StartObjectElement();
-      {
-        mPayload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
-      }
-      aWriter.EndObject();
-    }
-  }
-  aWriter.EndArray();
-}
 
 static void
 PrintUsageThenExit(int aExitCode)
@@ -1820,6 +1774,8 @@ NewSamplerThread(PSLockRef aLock, uint32_t aGeneration, double aInterval)
 void
 SamplerThread::Run()
 {
+  PR_SetCurrentThreadName("SamplerThread");
+
   // This will be positive if we are running behind schedule (sampling less
   // frequently than desired) and negative if we are ahead of schedule.
   TimeDuration lastSleepOvershoot = 0;
@@ -2149,7 +2105,7 @@ profiler_init(void* aStackTop)
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
-    int entries = PROFILE_DEFAULT_ENTRIES;
+    int entries = PROFILER_DEFAULT_ENTRIES;
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
     if (startupEntries) {
       errno = 0;
@@ -2161,7 +2117,7 @@ profiler_init(void* aStackTop)
       }
     }
 
-    int interval = PROFILE_DEFAULT_INTERVAL;
+    int interval = PROFILER_DEFAULT_INTERVAL;
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
     if (startupInterval) {
       errno = 0;
@@ -2180,7 +2136,7 @@ profiler_init(void* aStackTop)
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  NotifyProfilerStarted(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                         features, MOZ_ARRAY_LENGTH(features),
                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
 }
@@ -2429,8 +2385,8 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  int entries = aEntries > 0 ? aEntries : PROFILE_DEFAULT_ENTRIES;
-  double interval = aInterval > 0 ? aInterval : PROFILE_DEFAULT_INTERVAL;
+  int entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
+  double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, entries, interval, aFeatures, aFeatureCount,
                    aFilters, aFilterCount);
@@ -2851,7 +2807,7 @@ profiler_get_backtrace()
 
   Thread::tid_t tid = Thread::GetCurrentId();
 
-  ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
+  ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
 
   UniquePlatformData platformData = AllocPlatformData(tid);
 
@@ -3070,15 +3026,11 @@ profiler_clear_js_context()
   // requires a live JSContext.
 
   if (ActivePS::Exists(lock)) {
-    ActivePS::SetIsPaused(lock, true);
-
     // Flush this thread's ThreadInfo, if it is being profiled.
     if (info->IsBeingProfiled()) {
       info->FlushSamplesAndMarkers(ActivePS::Buffer(lock),
                                    CorePS::ProcessStartTime(lock));
     }
-
-    ActivePS::SetIsPaused(lock, false);
   }
 
   // We don't call info->StopJSSampling() here; there's no point doing that for
@@ -3124,6 +3076,17 @@ profiler_call_exit(void* aHandle)
 
   PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
   pseudoStack->pop();
+}
+
+void*
+profiler_get_stack_top()
+{
+  PSAutoLock lock(gPSMutex);
+  ThreadInfo* threadInfo = FindLiveThreadInfo(lock);
+  if (threadInfo) {
+    return threadInfo->StackTop();
+  }
+  return nullptr;
 }
 
 // END externally visible functions

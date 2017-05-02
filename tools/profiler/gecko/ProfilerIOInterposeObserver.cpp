@@ -4,7 +4,7 @@
 
 #include "GeckoProfiler.h"
 #include "ProfilerIOInterposeObserver.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 
 using namespace mozilla;
 

@@ -71,6 +71,7 @@
 #include "DriverCrashGuard.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "D3D11Checks.h"
 
 using namespace mozilla;

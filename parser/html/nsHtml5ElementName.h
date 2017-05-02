@@ -49,7 +49,6 @@ class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
 class nsHtml5AttributeName;
-class nsHtml5HtmlAttributes;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -113,6 +112,7 @@ private:
     ~nsHtml5ElementName();
     void setNameForNonInterned(nsIAtom* name);
     static nsHtml5ElementName* ELT_ANNOTATION_XML;
+    static nsHtml5ElementName* ELT_ISINDEX;
     static nsHtml5ElementName* ELT_BIG;
     static nsHtml5ElementName* ELT_BDO;
     static nsHtml5ElementName* ELT_COL;
@@ -311,7 +311,6 @@ private:
     static nsHtml5ElementName* ELT_VIEW;
     static nsHtml5ElementName* ELT_FECOLORMATRIX;
     static nsHtml5ElementName* ELT_FECONVOLVEMATRIX;
-    static nsHtml5ElementName* ELT_ISINDEX;
     static nsHtml5ElementName* ELT_BODY;
     static nsHtml5ElementName* ELT_FEMORPHOLOGY;
     static nsHtml5ElementName* ELT_RUBY;

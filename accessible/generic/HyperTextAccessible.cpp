@@ -65,7 +65,7 @@ HyperTextAccessible::NativeRole()
     return r;
 
   nsIFrame* frame = GetFrame();
-  if (frame && frame->GetType() == nsGkAtoms::inlineFrame)
+  if (frame && frame->IsInlineFrame())
     return roles::TEXT;
 
   return roles::TEXT_CONTAINER;
@@ -96,7 +96,7 @@ HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
                                       uint32_t aEndRenderedOffset)
 {
   nsPresContext* presContext = mDoc->PresContext();
-  if (aFrame->GetType() != nsGkAtoms::textFrame) {
+  if (!aFrame->IsTextFrame()) {
     return aFrame->GetScreenRectInAppUnits().
       ToNearestPixels(presContext->AppUnitsPerDevPixel());
   }
@@ -539,7 +539,7 @@ HyperTextAccessible::FindOffset(uint32_t aOffset, nsDirection aDirection,
 
   int32_t innerContentOffset = innerOffset;
   if (child->IsTextLeaf()) {
-    NS_ASSERTION(childFrame->GetType() == nsGkAtoms::textFrame, "Wrong frame!");
+    NS_ASSERTION(childFrame->IsTextFrame(), "Wrong frame!");
     RenderedToContentOffset(childFrame, innerOffset, &innerContentOffset);
   }
 
@@ -917,7 +917,7 @@ HyperTextAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
 
   // Compute spelling attributes on text accessible only.
   nsIFrame *offsetFrame = accAtOffset->GetFrame();
-  if (offsetFrame && offsetFrame->GetType() == nsGkAtoms::textFrame) {
+  if (offsetFrame && offsetFrame->IsTextFrame()) {
     int32_t nodeOffset = 0;
     RenderedToContentOffset(offsetFrame, offsetInAcc, &nodeOffset);
 
@@ -1109,7 +1109,7 @@ HyperTextAccessible::NativeAttributes()
   // 'formatting' attribute is deprecated, 'display' attribute should be
   // instead.
   nsIFrame *frame = GetFrame();
-  if (frame && frame->GetType() == nsGkAtoms::blockFrame) {
+  if (frame && frame->IsBlockFrame()) {
     nsAutoString unused;
     attributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"),
                                   NS_LITERAL_STRING("block"), unused);
@@ -1223,7 +1223,7 @@ HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
       nsSize frameSize = frame->GetSize();
       if (pointInFrame.x < frameSize.width && pointInFrame.y < frameSize.height) {
         // Finished
-        if (frame->GetType() == nsGkAtoms::textFrame) {
+        if (frame->IsTextFrame()) {
           nsIFrame::ContentOffsets contentOffsets =
             frame->GetContentOffsetsFromPointExternal(pointInFrame, nsIFrame::IGNORE_SELECTION_STYLE);
           if (contentOffsets.IsNull() || contentOffsets.content != content) {
@@ -1971,8 +1971,7 @@ HyperTextAccessible::ContentToRenderedOffset(nsIFrame* aFrame, int32_t aContentO
     return NS_OK;
   }
 
-  NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
-               "Need text frame for offset conversion");
+  NS_ASSERTION(aFrame->IsTextFrame(), "Need text frame for offset conversion");
   NS_ASSERTION(aFrame->GetPrevContinuation() == nullptr,
                "Call on primary frame only");
 
@@ -1996,8 +1995,7 @@ HyperTextAccessible::RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRendere
   *aContentOffset = 0;
   NS_ENSURE_TRUE(aFrame, NS_ERROR_FAILURE);
 
-  NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
-               "Need text frame for offset conversion");
+  NS_ASSERTION(aFrame->IsTextFrame(), "Need text frame for offset conversion");
   NS_ASSERTION(aFrame->GetPrevContinuation() == nullptr,
                "Call on primary frame only");
 
@@ -2100,7 +2098,7 @@ HyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame* aFrame, int32_t aOffset,
     aPoint->idx = parent->IndexOf(content) + 1;
     aPoint->node = parent;
 
-  } else if (aFrame->GetType() == nsGkAtoms::textFrame) {
+  } else if (aFrame->IsTextFrame()) {
     nsIContent* content = aFrame->GetContent();
     NS_ENSURE_STATE(content);
 

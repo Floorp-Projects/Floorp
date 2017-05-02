@@ -88,13 +88,6 @@ public:
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::scrollFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsHTMLScrollFrame::IsFrameOfType(aFlags &

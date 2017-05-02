@@ -82,7 +82,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #endif
 #include "mozilla/VsyncDispatcher.h"
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)

@@ -41,7 +41,8 @@ nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
  * layout here as well (since that's what the -webkit versions are aliased to)
  * -- but only inside of a "display:-webkit-{inline-}box" container.)
  */
-class nsFlexContainerFrame : public nsContainerFrame {
+class nsFlexContainerFrame final : public nsContainerFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS
   NS_DECL_QUERYFRAME_TARGET(nsFlexContainerFrame)
@@ -77,7 +78,6 @@ public:
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
 
-  nsIAtom* GetType() const override;
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -133,10 +133,11 @@ public:
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
+    : nsContainerFrame(aContext, mozilla::FrameType::FlexContainer)
     , mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
+
   virtual ~nsFlexContainerFrame();
 
   /*

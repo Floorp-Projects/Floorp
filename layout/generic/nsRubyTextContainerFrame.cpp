@@ -40,12 +40,6 @@ NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
 // nsRubyTextContainerFrame Method Implementations
 // ===============================================
 
-nsIAtom*
-nsRubyTextContainerFrame::GetType() const
-{
-  return nsGkAtoms::rubyTextContainerFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsRubyTextContainerFrame::GetFrameName(nsAString& aResult) const
@@ -144,7 +138,7 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   const nsSize dummyContainerSize;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
-    MOZ_ASSERT(child->GetType() == nsGkAtoms::rubyTextFrame);
+    MOZ_ASSERT(child->IsRubyTextFrame());
     LogicalRect rect = child->GetLogicalRect(lineWM, dummyContainerSize);
     LogicalMargin margin = child->GetLogicalUsedMargin(lineWM);
     nscoord blockStart = rect.BStart(lineWM) - margin.BStart(lineWM);

@@ -238,9 +238,9 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         platform = task.attributes.get('build_platform')
         if platform in ('linux64-pgo', 'linux-pgo', 'win32-pgo', 'win64-pgo',
                         'android-api-15-nightly', 'android-x86-nightly',
-                        'win32', 'win64', 'macosx64'):
+                        'win32', 'win64'):
             return False
-        if platform in ('linux64', 'linux'):
+        if platform in ('linux64', 'linux', 'macosx64'):
             if task.attributes['build_type'] == 'opt':
                 return False
         # skip l10n, beetmover, balrog

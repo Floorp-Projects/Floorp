@@ -31,18 +31,12 @@ NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 namespace mozilla {
 
 DetailsFrame::DetailsFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext)
+  : nsBlockFrame(aContext, FrameType::Details)
 {
 }
 
 DetailsFrame::~DetailsFrame()
 {
-}
-
-nsIAtom*
-DetailsFrame::GetType() const
-{
-  return nsGkAtoms::detailsFrame;
 }
 
 void

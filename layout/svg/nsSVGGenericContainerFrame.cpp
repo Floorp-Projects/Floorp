@@ -36,12 +36,6 @@ nsSVGGenericContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
   return NS_OK;
 }
 
-nsIAtom *
-nsSVGGenericContainerFrame::GetType() const
-{
-  return nsGkAtoms::svgGenericContainerFrame;
-}
-
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 

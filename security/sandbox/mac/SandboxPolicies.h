@@ -264,17 +264,20 @@ static const char contentSandboxRules[] = R"(
         ; This process has blanket file read privileges
         (allow file-read*)
         ; This process does not have blanket file read privileges
-        (if (string=? hasProfileDir "TRUE")
-          ; we have a profile dir
-          (begin
-            (allow file-read* (require-all
-                (require-not (home-subpath "/Library"))
-                (require-not (subpath profileDir))))
-            (allow file-read*
-                (profile-subpath "/extensions")
-                (profile-subpath "/chrome")))
-          ; we don't have a profile dir
-          (allow file-read* (require-not (home-subpath "/Library"))))))
+        (begin
+          ; bug 1201935
+          (allow file-read* (home-subpath "/Library/Caches/TemporaryItems"))
+          (if (string=? hasProfileDir "TRUE")
+            ; we have a profile dir
+            (begin
+              (allow file-read* (require-all
+                  (require-not (home-subpath "/Library"))
+                  (require-not (subpath profileDir))))
+              (allow file-read*
+                  (profile-subpath "/extensions")
+                  (profile-subpath "/chrome")))
+            ; we don't have a profile dir
+            (allow file-read* (require-not (home-subpath "/Library")))))))
 
   ; level 3: global read access permitted, no global write access,
   ;          no read access to the home directory,
@@ -316,10 +319,6 @@ static const char contentSandboxRules[] = R"(
     (allow iokit-open
         (iokit-user-client-class "NVDVDContextTesla")
         (iokit-user-client-class "Gen6DVDContext"))
-
-  ; bug 1201935
-    (allow file-read*
-        (home-subpath "/Library/Caches/TemporaryItems"))
 
   ; bug 1237847
     (allow file-read*

@@ -97,11 +97,6 @@ public:
 
   void PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt);
 
-  // XXXbz this is only needed to prevent the quirk percent height stuff from
-  // leaking out of the combobox.  We may be able to get rid of this as more
-  // things move to IsFrameOfType.
-  virtual nsIAtom* GetType() const override;
-
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsBlockFrame::IsFrameOfType(aFlags &

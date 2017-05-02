@@ -18,8 +18,8 @@ fails-if(stylo) != 82711-1-ref.html 82711-2-ref.html
 == 485377.html 485377-ref.html
 == 557840.html 557840-ref.html
 == 560059-video-dimensions.html 560059-video-dimensions-ref.html
-fails-if(stylo) == 573322-quirks.html 573322-quirks-ref.html
-fails-if(stylo) == 573322-no-quirks.html 573322-no-quirks-ref.html
+== 573322-quirks.html 573322-quirks-ref.html
+== 573322-no-quirks.html 573322-no-quirks-ref.html
 fails-if(stylo) == 596455-1a.html 596455-ref-1.html
 fails-if(stylo) == 596455-1b.html 596455-ref-1.html
 fails-if(stylo) == 596455-2a.html 596455-ref-2.html

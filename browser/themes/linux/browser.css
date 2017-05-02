@@ -1493,8 +1493,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
-%include ../../../devtools/client/themes/responsivedesign.inc.css
-%include ../../../devtools/client/themes/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
 notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:hover) {

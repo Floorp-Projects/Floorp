@@ -33,7 +33,8 @@ nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                         nsStyleContext* aContext)
 {
-  nsIFrame *frame = new (aPresShell) nsSVGContainerFrame(aContext);
+  nsIFrame* frame =
+    new (aPresShell) nsSVGContainerFrame(aContext, FrameType::None);
   // If we were called directly, then the frame is for a <defs> or
   // an unknown element type. In both cases we prevent the content
   // from displaying directly.
@@ -116,12 +117,12 @@ nsSVGContainerFrame::ReflowSVGNonDisplayText(nsIFrame* aContainer)
                "it is wasteful to call ReflowSVGNonDisplayText on a container "
                "frame that is not NS_FRAME_IS_NONDISPLAY");
   for (nsIFrame* kid : aContainer->PrincipalChildList()) {
-    nsIAtom* type = kid->GetType();
-    if (type == nsGkAtoms::svgTextFrame) {
+    FrameType type = kid->Type();
+    if (type == FrameType::SVGText) {
       static_cast<SVGTextFrame*>(kid)->ReflowSVGNonDisplayText();
     } else {
       if (kid->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer) ||
-          type == nsGkAtoms::svgForeignObjectFrame ||
+          type == FrameType::SVGForeignObject ||
           !kid->IsFrameOfType(nsIFrame::eSVG)) {
         ReflowSVGNonDisplayText(kid);
       }
@@ -322,8 +323,7 @@ nsSVGDisplayContainerFrame::ReflowSVG()
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
 
-  MOZ_ASSERT(GetType() != nsGkAtoms::svgOuterSVGFrame,
-             "Do not call on outer-<svg>");
+  MOZ_ASSERT(!IsSVGOuterSVGFrame(), "Do not call on outer-<svg>");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
     return;

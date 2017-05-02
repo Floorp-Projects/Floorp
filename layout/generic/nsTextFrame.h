@@ -49,22 +49,16 @@ class nsTextFrame : public nsFrame
   typedef gfxTextRun::Range Range;
 
 public:
+  explicit nsTextFrame(nsStyleContext* aContext)
+    : nsTextFrame(aContext, mozilla::FrameType::Text)
+  {}
+
   NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
   friend class nsContinuingTextFrame;
   friend class nsDisplayTextGeometry;
   friend class nsDisplayText;
-
-  explicit nsTextFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
-    , mNextContinuation(nullptr)
-    , mContentOffset(0)
-    , mContentLengthHint(0)
-    , mAscent(0)
-  {
-    NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
-  }
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -88,8 +82,7 @@ public:
   nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
   void SetNextContinuation(nsIFrame* aNextContinuation) final
   {
-    NS_ASSERTION(!aNextContinuation ||
-                   GetType() == aNextContinuation->GetType(),
+    NS_ASSERTION(!aNextContinuation || Type() == aNextContinuation->Type(),
                  "setting a next continuation with incorrect type!");
     NS_ASSERTION(
       !nsSplittableFrame::IsInNextContinuationChain(aNextContinuation, this),
@@ -112,7 +105,7 @@ public:
   }
   void SetNextInFlow(nsIFrame* aNextInFlow) final
   {
-    NS_ASSERTION(!aNextInFlow || GetType() == aNextInFlow->GetType(),
+    NS_ASSERTION(!aNextInFlow || Type() == aNextInFlow->Type(),
                  "setting a next in flow with incorrect type!");
     NS_ASSERTION(
       !nsSplittableFrame::IsInNextContinuationChain(aNextInFlow, this),
@@ -136,13 +129,6 @@ public:
     return NS_FRAME_SPLITTABLE;
   }
 
-  /**
-    * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::textFrame
-   */
-  nsIAtom* GetType() const final;
-
   bool IsFrameOfType(uint32_t aFlags) const final
   {
     // Set the frame state bit for text frames to mark them as replaced.
@@ -157,7 +143,7 @@ public:
     // suppress line break inside. This check is necessary, because when
     // a whitespace is only contained by pseudo ruby frames, its style
     // context won't have SuppressLineBreak bit set.
-    if (mozilla::RubyUtils::IsRubyContentBox(GetParent()->GetType())) {
+    if (mozilla::RubyUtils::IsRubyContentBox(GetParent()->Type())) {
       return true;
     }
     return StyleContext()->ShouldSuppressLineBreak();
@@ -662,6 +648,16 @@ public:
   uint32_t CountGraphemeClusters() const;
 
 protected:
+  nsTextFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsFrame(aContext, aType)
+    , mNextContinuation(nullptr)
+    , mContentOffset(0)
+    , mContentLengthHint(0)
+    , mAscent(0)
+  {
+    NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
+  }
+
   virtual ~nsTextFrame();
 
   RefPtr<gfxTextRun> mTextRun;

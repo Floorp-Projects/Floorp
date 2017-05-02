@@ -40,7 +40,7 @@ AutoRubyTextContainerArray::AutoRubyTextContainerArray(
   nsRubyBaseContainerFrame* aBaseContainer)
 {
   for (nsIFrame* frame = aBaseContainer->GetNextSibling();
-       frame && frame->GetType() == nsGkAtoms::rubyTextContainerFrame;
+       frame && frame->IsRubyTextContainerFrame();
        frame = frame->GetNextSibling()) {
     AppendElement(static_cast<nsRubyTextContainerFrame*>(frame));
   }
@@ -79,8 +79,7 @@ RubyColumn::Iterator::SkipUntilExistingFrame()
 RubySegmentEnumerator::RubySegmentEnumerator(nsRubyFrame* aRubyFrame)
 {
   nsIFrame* frame = aRubyFrame->PrincipalChildList().FirstChild();
-  MOZ_ASSERT(!frame ||
-             frame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+  MOZ_ASSERT(!frame || frame->IsRubyBaseContainerFrame());
   mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
 }
 
@@ -89,7 +88,7 @@ RubySegmentEnumerator::Next()
 {
   MOZ_ASSERT(mBaseContainer);
   nsIFrame* frame = mBaseContainer->GetNextSibling();
-  while (frame && frame->GetType() != nsGkAtoms::rubyBaseContainerFrame) {
+  while (frame && !frame->IsRubyBaseContainerFrame()) {
     frame = frame->GetNextSibling();
   }
   mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
@@ -104,7 +103,7 @@ RubyColumnEnumerator::RubyColumnEnumerator(
   mFrames.SetCapacity(rtcCount + 1);
 
   nsIFrame* rbFrame = aBaseContainer->PrincipalChildList().FirstChild();
-  MOZ_ASSERT(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+  MOZ_ASSERT(!rbFrame || rbFrame->IsRubyBaseFrame());
   mFrames.AppendElement(static_cast<nsRubyContentFrame*>(rbFrame));
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* container = aTextContainers[i];
@@ -112,7 +111,7 @@ RubyColumnEnumerator::RubyColumnEnumerator(
     // Spans do not take part in pairing.
     nsIFrame* rtFrame = !container->IsSpanContainer() ?
       container->PrincipalChildList().FirstChild() : nullptr;
-    MOZ_ASSERT(!rtFrame || rtFrame->GetType() == nsGkAtoms::rubyTextFrame);
+    MOZ_ASSERT(!rtFrame || rtFrame->IsRubyTextFrame());
     mFrames.AppendElement(static_cast<nsRubyContentFrame*>(rtFrame));
   }
 
@@ -148,7 +147,7 @@ RubyColumnEnumerator::Next()
     if (frame && (!mAtIntraLevelWhitespace ||
                   frame->IsIntraLevelWhitespace())) {
       nsIFrame* nextSibling = frame->GetNextSibling();
-      MOZ_ASSERT(!nextSibling || nextSibling->GetType() == frame->GetType(),
+      MOZ_ASSERT(!nextSibling || nextSibling->Type() == frame->Type(),
                  "Frame type should be identical among a level");
       mFrames[i] = frame = static_cast<nsRubyContentFrame*>(nextSibling);
       if (!advancingToIntraLevelWhitespace &&
@@ -191,12 +190,12 @@ void
 RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
 {
   nsRubyContentFrame* rbFrame = GetFrameAtLevel(0);
-  MOZ_ASSERT(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+  MOZ_ASSERT(!rbFrame || rbFrame->IsRubyBaseFrame());
   aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(rbFrame);
   aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 1, iend = mFrames.Length(); i < iend; i++) {
     nsRubyContentFrame* rtFrame = GetFrameAtLevel(i);
-    MOZ_ASSERT(!rtFrame || rtFrame->GetType() == nsGkAtoms::rubyTextFrame);
+    MOZ_ASSERT(!rtFrame || rtFrame->IsRubyTextFrame());
     aColumn.mTextFrames.AppendElement(static_cast<nsRubyTextFrame*>(rtFrame));
   }
   aColumn.mIsIntraLevelWhitespace = mAtIntraLevelWhitespace;

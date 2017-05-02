@@ -461,7 +461,7 @@ PseudoTagAndCorrectElementForAnimation(const Element*& aElementOrPseudo) {
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        EffectCompositor::CascadeLevel aCascadeLevel,
-                       RawServoAnimationValueMapBorrowed aAnimationValues)
+                       RawServoAnimationValueMapBorrowedMut aAnimationValues)
 {
   MOZ_ASSERT(aElement);
 
@@ -1675,22 +1675,6 @@ float
 Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed aCSSValue)
 {
   return aCSSValue->GetPercentValue();
-}
-
-void
-Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut aCSSValue, float aRadians)
-{
-  aCSSValue->SetFloatValue(aRadians, eCSSUnit_Radian);
-}
-
-float
-Gecko_CSSValue_GetAngle(nsCSSValueBorrowed aCSSValue)
-{
-  // Unfortunately nsCSSValue.GetAngleValueInRadians() returns double,
-  // so we use GetAngleValue() instead.
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Radian,
-             "The unit should be eCSSUnit_Radian");
-  return aCSSValue->GetAngleValue();
 }
 
 void

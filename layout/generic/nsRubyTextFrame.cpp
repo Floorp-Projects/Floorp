@@ -39,12 +39,6 @@ NS_NewRubyTextFrame(nsIPresShell* aPresShell,
 // nsRubyTextFrame Method Implementations
 // ======================================
 
-nsIAtom*
-nsRubyTextFrame::GetType() const
-{
-  return nsGkAtoms::rubyTextFrame;
-}
-
 /* virtual */ bool
 nsRubyTextFrame::CanContinueTextRun() const
 {
