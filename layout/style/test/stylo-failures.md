@@ -195,7 +195,6 @@ to mochitest command.
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]
