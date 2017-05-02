@@ -176,39 +176,9 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     artifacts = [
         {
-            'name': 'public/logs/localconfig.json',
-            'path': 'logs/localconfig.json',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_critical.log',
-            'path': 'logs/log_critical.log',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_error.log',
-            'path': 'logs/log_error.log',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_fatal.log',
-            'path': 'logs/log_fatal.log',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_info.log',
-            'path': 'logs/log_info.log',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_raw.log',
-            'path': 'logs/log_raw.log',
-            'type': 'file'
-        },
-        {
-            'name': 'public/logs/log_warning.log',
-            'path': 'logs/log_warning.log',
-            'type': 'file'
+            'name': 'public/logs',
+            'path': 'logs',
+            'type': 'directory'
         },
     ]
 
@@ -295,6 +265,9 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             mh_command.extend(['--download-symbols', mozharness['download-symbols']])
         else:
             mh_command.extend(['--download-symbols', 'true'])
+    if mozharness.get('include-blob-upload-branch'):
+        mh_command.append('--blob-upload-branch=' + config.params['project'])
+    mh_command.extend(mozharness.get('extra-options', []))
 
     # TODO: remove the need for run['chunked']
     if mozharness.get('chunked') or test['chunks'] > 1:
