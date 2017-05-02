@@ -210,17 +210,25 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'path': 'logs/log_warning.log',
             'type': 'file'
         },
-        {
+    ]
+
+    # jittest doesn't have blob_upload_dir
+    if test['test-name'] != 'jittest':
+        artifacts.append({
             'name': 'public/test_info',
             'path': 'build/blobber_upload_dir',
             'type': 'directory'
-        }
-    ]
+        })
 
     build_platform = taskdesc['attributes']['build_platform']
+    build_type = taskdesc['attributes']['build_type']
 
-    target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), build_platform) \
-        if build_platform.startswith('win') else 'target'
+    if build_platform.startswith('win'):
+        target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), build_platform)
+    elif build_platform == 'macosx64' and build_type == 'opt':
+        target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac')
+    else:
+        target = 'target'
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
 
@@ -330,9 +338,14 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     mozharness = test['mozharness']
     worker = taskdesc['worker']
 
+    build_platform = taskdesc['attributes']['build_platform']
+    build_type = taskdesc['attributes']['build_type']
+    target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac') \
+        if build_platform == 'macosx64' and build_type == 'opt' else 'target'
+
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
     test_packages_url = get_artifact_url('<build>',
-                                         'public/build/target.test_packages.json')
+                                         'public/build/{}.test_packages.json'.format(target))
     mozharness_url = get_artifact_url('<build>',
                                       'public/build/mozharness.zip')
 

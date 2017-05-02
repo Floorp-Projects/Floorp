@@ -1419,6 +1419,7 @@ or run without that action (ie: --no-{action})"
             routes.append(template.format(**fmt))
         self.info("Using routes: %s" % routes)
 
+        taskid = self.buildbot_config['properties'].get('upload_to_task_id')
         tc = Taskcluster(
             branch=self.branch,
             rank=pushinfo.pushdate, # Use pushdate as the rank
@@ -1427,10 +1428,13 @@ or run without that action (ie: --no-{action})"
             log_obj=self.log_obj,
             # `upload_to_task_id` is used by mozci to have access to where the artifacts
             # will be uploaded
-            task_id=self.buildbot_config['properties'].get('upload_to_task_id'),
+            task_id=taskid,
         )
 
-        task = tc.create_task(routes)
+        if taskid:
+            task = tc.get_task(taskid)
+        else:
+            task = tc.create_task(routes)
         tc.claim_task(task)
 
         # Only those files uploaded with valid extensions are processed.
