@@ -5,6 +5,7 @@
 
 #include "VsyncChild.h"
 
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "nsThreadUtils.h"
 
@@ -60,6 +61,8 @@ VsyncChild::RecvNotify(const TimeStamp& aVsyncTimestamp)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
+
+  SchedulerGroup::MarkVsyncRan();
   if (mObservingVsync && mObserver) {
     mObserver->NotifyVsync(aVsyncTimestamp);
   }
