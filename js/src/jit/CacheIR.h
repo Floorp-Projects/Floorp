@@ -247,6 +247,7 @@ extern const char* CacheKindNames[];
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
+    _(LoadTypeOfObjectResult)             \
                                           \
     _(TypeMonitorResult)                  \
     _(ReturnFromIC)                       \
@@ -907,6 +908,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadObjectResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
     }
+    void loadTypeOfObjectResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadTypeOfObjectResult, obj);
+    }
 
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
@@ -1326,6 +1330,7 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator
     HandleValue val_;
 
     bool tryAttachPrimitive(ValOperandId valId);
+    bool tryAttachObject(ValOperandId valId);
 
   public:
     TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue value);
