@@ -8,6 +8,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = ["SyncTelemetry"];
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/status.js");
@@ -15,8 +18,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let constants = {};
 Cu.import("resource://services-sync/constants.js", constants);

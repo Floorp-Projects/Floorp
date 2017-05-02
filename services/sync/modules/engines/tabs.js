@@ -10,6 +10,7 @@ const TABS_TTL = 1814400;          // 21 days.
 const TAB_ENTRIES_LIMIT = 5;      // How many URLs to include in tab history.
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
