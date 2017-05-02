@@ -113,36 +113,14 @@ function matchSearchFilters(message, filters) {
     || isTextInParameters(text, message.parameters)
     // Look for a match in location.
     || isTextInFrame(text, message.frame)
-    // Look for a match in stacktrace.
-    || (
-      Array.isArray(message.stacktrace) &&
-      message.stacktrace.some(frame => isTextInFrame(text,
-        // isTextInFrame expect the properties of the frame object to be in the same
-        // order they are rendered in the Frame component.
-        {
-          functionName: frame.functionName ||
-            l10n.getStr("stacktrace.anonymousFunction"),
-          filename: frame.filename,
-          lineNumber: frame.lineNumber,
-          columnNumber: frame.columnNumber
-        }))
-    )
+    // Look for a match in net events.
+    || isTextInNetEvent(text, message.request)
+    // Look for a match in stack-trace.
+    || isTextInStackTrace(text, message.stacktrace)
     // Look for a match in messageText.
-    || (message.messageText &&
-          message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
-    // Look for a match in parameters. Currently only checks value grips.
-    || (message.parameters &&
-        message.parameters.join("").toLocaleLowerCase()
-          .includes(text.toLocaleLowerCase()))
+    || isTextInMessageText(text, message.messageText)
     // Look for a match in notes.
-    || (Array.isArray(message.notes) && message.notes.some(note =>
-          // Look for a match in location.
-          isTextInFrame(text, note.frame)
-          // Look for a match in messageBody.
-          || (note.messageBody &&
-                note.messageBody.toLocaleLowerCase()
-                  .includes(text.toLocaleLowerCase()))
-        ))
+    || isTextInNotes(text, message.notes)
   );
 }
 
@@ -170,6 +148,68 @@ function isTextInParameters(text, parameters) {
   text = text.toLocaleLowerCase();
   return getAllProps(parameters).find(prop =>
     (prop + "").toLocaleLowerCase().includes(text)
+  );
+}
+
+/**
+ * Returns true if given text is included in provided net event grip.
+ */
+function isTextInNetEvent(text, request) {
+  if (!request) {
+    return false;
+  }
+
+  text = text.toLocaleLowerCase();
+
+  let method = request.method.toLocaleLowerCase();
+  let url = request.url.toLocaleLowerCase();
+  return method.includes(text) || url.includes(text);
+}
+
+/**
+ * Returns true if given text is included in provided stack trace.
+ */
+function isTextInStackTrace(text, stacktrace) {
+  if (!Array.isArray(stacktrace)) {
+    return false;
+  }
+
+  // isTextInFrame expect the properties of the frame object to be in the same
+  // order they are rendered in the Frame component.
+  return stacktrace.some(frame => isTextInFrame(text, {
+    functionName: frame.functionName || l10n.getStr("stacktrace.anonymousFunction"),
+    filename: frame.filename,
+    lineNumber: frame.lineNumber,
+    columnNumber: frame.columnNumber
+  }));
+}
+
+/**
+ * Returns true if given text is included in `messageText` field.
+ */
+function isTextInMessageText(text, messageText) {
+  if (!messageText) {
+    return false;
+  }
+
+  return messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase());
+}
+
+/**
+ * Returns true if given text is included in notes.
+ */
+function isTextInNotes(text, notes) {
+  if (!Array.isArray(notes)) {
+    return false;
+  }
+
+  return notes.some(note =>
+    // Look for a match in location.
+    isTextInFrame(text, note.frame) ||
+    // Look for a match in messageBody.
+    (note.messageBody &&
+        note.messageBody.toLocaleLowerCase()
+          .includes(text.toLocaleLowerCase()))
   );
 }
 
