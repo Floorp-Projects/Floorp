@@ -30,7 +30,7 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_media_queries.html [156]
+  * test_media_queries.html [38]
   * test_media_queries_dynamic.html [6]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
@@ -141,8 +141,7 @@ to mochitest command.
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [157]
-  * ... `matched clone` [204]
+  * test_selectors.html `matched clone` [3]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -267,7 +266,6 @@ to mochitest command.
 
 ## Unknown / Unsure
 
-* test_additional_sheets.html: one sub-test cascade order is wrong [1]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
 
