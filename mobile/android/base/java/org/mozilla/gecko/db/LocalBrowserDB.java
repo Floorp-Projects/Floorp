@@ -1841,6 +1841,23 @@ public class LocalBrowserDB extends BrowserDB {
 
     @Override
     @Nullable
+    public Cursor getBookmarkByGuid(ContentResolver cr, String guid) {
+        final Cursor c = cr.query(mBookmarksUriWithProfile,
+                                  DEFAULT_BOOKMARK_COLUMNS,
+                                  Bookmarks.GUID + " = ?",
+                                  new String[] { guid },
+                                  null);
+
+        if (c != null && c.getCount() == 0) {
+            c.close();
+            return null;
+        }
+
+        return c;
+    }
+
+    @Override
+    @Nullable
     public Cursor getAllBookmarkFolders(ContentResolver cr) {
         final Cursor cursor = cr.query(mBookmarksUriWithProfile,
                                        DEFAULT_BOOKMARK_COLUMNS,

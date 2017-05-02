@@ -6,6 +6,7 @@ package org.mozilla.gecko.db;
 import android.annotation.SuppressLint;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -101,6 +102,96 @@ public class LocalBrowserDBTest {
         // Check parent's lastModified timestamp is updated
         final long lastModifiedAfterRemove = getModifiedDate(parentId);
         assertTrue(lastModifiedAfterRemove > lastModifiedBeforeRemove);
+    }
+
+    @Test
+    public void testRemoveBookmarkFolder() throws Exception {
+        final BrowserDB db = new LocalBrowserDB("default");
+        final ContentResolver cr = context.getContentResolver();
+
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+        // Create a parent folder
+        final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
+        assertNotNull(parentUri);
+        // Get id from Uri
+        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+
+        // Create nested child bookmarks and folders
+        // parent / bookmark-1
+        //        / folder-1
+        //        / folder-2 / bookmark-2
+        insertBookmark("bookmark-1", null, "guid-bookmark-1", parentId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        insertBookmark("folder-1", null, "guid-folder-1", parentId, BrowserContract.Bookmarks.TYPE_FOLDER);
+
+        final Uri folderUri = insertBookmark("folder-2", null, "guid-folder-2", parentId, BrowserContract.Bookmarks.TYPE_FOLDER);
+        assertNotNull(folderUri);
+        final long folderId = Long.valueOf(folderUri.getLastPathSegment());
+        insertBookmark("bookmark-2", null, "guid-bookmark-2", folderId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+
+        final String selection = BrowserContract.Bookmarks.PARENT + " = ? OR " +
+                                 BrowserContract.Bookmarks.PARENT + " = ?";
+        final String[] selectionArgs = { String.valueOf(parentId), String.valueOf(folderId) };
+        final int childCountBeforeRemove = getRowCount(selection, selectionArgs);
+        assertEquals(4, childCountBeforeRemove);
+
+        db.removeBookmarkWithId(cr, parentId);
+        final Cursor cursor = db.getBookmarkById(cr, parentId);
+        assertNull(cursor);
+
+        final int childCountAfterRemove = getRowCount(selection, selectionArgs);
+        assertEquals(0, childCountAfterRemove);
+    }
+
+    @Test
+    public void testChunkDeleteBookmarkFolder() throws Exception {
+        final BrowserDB db = new LocalBrowserDB("default");
+        final ContentResolver cr = context.getContentResolver();
+
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+        // Create a parent folder
+        final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
+        assertNotNull(parentUri);
+        // Get id from Uri
+        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+
+        // Create more than DBUtils.SQLITE_MAX_VARIABLE_NUMBER child bookmarks/folders.
+        for (int i = 0; i < DBUtils.SQLITE_MAX_VARIABLE_NUMBER; ++i) {
+            insertBookmark("bookmark-" + i,
+                           "https://www.mozilla-" + i + ".org",
+                           "guid-bookmark-" + i,
+                           parentId,
+                           BrowserContract.Bookmarks.TYPE_BOOKMARK);
+            insertBookmark("folder-" + i,
+                           null,
+                           "guid-folder-" + i,
+                           parentId,
+                           BrowserContract.Bookmarks.TYPE_FOLDER);
+        }
+
+        final String selection = BrowserContract.Bookmarks.PARENT + " = ?";
+        final String[] selectionArgs = { String.valueOf(parentId) };
+        final int childCountBeforeRemove = getRowCount(selection, selectionArgs);
+        assertEquals(DBUtils.SQLITE_MAX_VARIABLE_NUMBER * 2, childCountBeforeRemove);
+
+        db.removeBookmarkWithId(cr, parentId);
+        final Cursor cursor = db.getBookmarkById(cr, parentId);
+        assertNull(cursor);
+
+        final int childCountAfterRemove = getRowCount(selection, selectionArgs);
+        assertEquals(0, childCountAfterRemove);
+    }
+
+    @Test
+    public void testDeleteBookmarkWithDifferentSize() throws Exception {
+        final BrowserDB db = new LocalBrowserDB("default");
+        final ContentResolver cr = context.getContentResolver();
+
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-1", 100);
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-2", DBUtils.SQLITE_MAX_VARIABLE_NUMBER - 1);
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-3", DBUtils.SQLITE_MAX_VARIABLE_NUMBER + 1);
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-4", DBUtils.SQLITE_MAX_VARIABLE_NUMBER);
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-5", DBUtils.SQLITE_MAX_VARIABLE_NUMBER + 100);
+        testDeleteBookmarkWithSize(db, cr, "guid-prefix-6", DBUtils.SQLITE_MAX_VARIABLE_NUMBER * 2);
     }
 
     @Test
@@ -451,6 +542,71 @@ public class LocalBrowserDBTest {
             cursor.close();
         }
         return null;
+    }
+
+    private int getRowCount(String selection, String[] selectionArgs) throws RemoteException {
+        final Cursor cursor = bookmarkClient.query(BrowserContract.Bookmarks.CONTENT_URI,
+                                                   new String[] { BrowserContract.Bookmarks._ID },
+                                                   selection,
+                                                   selectionArgs,
+                                                   null);
+        assertNotNull(cursor);
+        try {
+            return cursor.getCount();
+        } finally {
+            cursor.close();
+        }
+    }
+
+    private Uri insertBookmark(String title, String url, String guid, long parentId, int type) throws RemoteException {
+        final ContentValues values = new ContentValues();
+        if (title != null) {
+            values.put(BrowserContract.Bookmarks.TITLE, title);
+        }
+        if (url != null) {
+            values.put(BrowserContract.Bookmarks.URL, url);
+        }
+        if (guid != null) {
+            values.put(BrowserContract.Bookmarks.GUID, guid);
+        }
+        values.put(BrowserContract.Bookmarks.PARENT, parentId);
+        values.put(BrowserContract.Bookmarks.TYPE, type);
+
+        final long now = System.currentTimeMillis();
+        values.put(BrowserContract.Bookmarks.DATE_CREATED, now);
+        values.put(BrowserContract.Bookmarks.DATE_MODIFIED, now);
+
+        return bookmarkClient.insert(BrowserContract.Bookmarks.CONTENT_URI, values);
+    }
+
+    private void testDeleteBookmarkWithSize(BrowserDB db, ContentResolver cr, String guidPrefix, int size) throws RemoteException {
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+        // Create a parent folder
+        final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
+        assertNotNull(parentUri);
+        // Get id from Uri
+        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+
+        // Create more than DBUtils.SQLITE_MAX_VARIABLE_NUMBER child bookmarks/folders.
+        for (int i = 0; i < size; ++i) {
+            insertBookmark("bookmark-" + i,
+                           "https://www.mozilla-" + i + ".org",
+                           guidPrefix + i,
+                           parentId,
+                           BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        }
+
+        final String selection = BrowserContract.Bookmarks.PARENT + " = ?";
+        final String[] selectionArgs = { String.valueOf(parentId) };
+        final int childCountBeforeRemove = getRowCount(selection, selectionArgs);
+        assertEquals(size, childCountBeforeRemove);
+
+        db.removeBookmarkWithId(cr, parentId);
+        final Cursor cursor = db.getBookmarkById(cr, parentId);
+        assertNull(cursor);
+
+        final int childCountAfterRemove = getRowCount(selection, selectionArgs);
+        assertEquals(0, childCountAfterRemove);
     }
 
     /**
