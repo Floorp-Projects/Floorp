@@ -528,6 +528,11 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
