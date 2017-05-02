@@ -19,8 +19,8 @@ config = {
     'default_actions': [
         'clone-tools',
         'build',
+        'generate-build-stats',
         'check-test',
-        'generate-build-stats'
     ],
     'exes': {
         'python2.7': sys.executable,

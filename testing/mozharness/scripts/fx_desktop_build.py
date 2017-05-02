@@ -39,6 +39,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 'checkout-sources',
                 'setup-mock',
                 'build',
+                'generate-build-stats',
                 'upload-files',  # upload from BB to TC
                 'sendchange',
                 'check-test',
@@ -46,7 +47,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 'package-source',
                 'generate-source-signing-manifest',
                 'multi-l10n',
-                'generate-build-stats',
                 'update',
             ],
             'require_config_file': True,
