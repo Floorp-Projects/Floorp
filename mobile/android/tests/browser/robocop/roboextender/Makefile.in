@@ -4,6 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
-
-tools::
-	-cp $(DEPTH)/mobile/android/tests/javaaddons/javaaddons-test.apk $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/base
