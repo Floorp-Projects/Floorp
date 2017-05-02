@@ -8,51 +8,16 @@ const LoginInfo = Components.Constructor(
 const PropertyBag = Components.Constructor(
   "@mozilla.org/hash-property-bag;1", Ci.nsIWritablePropertyBag);
 
-function serverForEngine(engine) {
-  let clientsEngine = Service.clientsEngine;
-  return serverForUsers({"foo": "password"}, {
-    meta: {
-      global: {
-        syncID: Service.syncID,
-        storageVersion: STORAGE_VERSION,
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          [engine.name]: {
-            version: engine.version,
-            syncID: engine.syncID,
-          },
-        },
-      },
-    },
-    crypto: {
-      keys: encryptPayload({
-        id: "keys",
-        // Generate a fake default key bundle to avoid resetting the client
-        // before the first sync.
-        default: [
-          Svc.Crypto.generateRandomKey(),
-          Svc.Crypto.generateRandomKey(),
-        ],
-      }),
-    },
-    [engine.name]: {},
-  });
-}
-
 add_task(async function test_password_engine() {
   _("Basic password sync test");
 
   let engine = Service.engineManager.get("passwords");
   let store = engine._store;
 
-  let server = serverForEngine(engine);
+  let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("passwords");
 
-  generateNewKeys(Service.collectionKeys);
   enableValidationPrefs();
 
   _("Add new login to upload during first sync");

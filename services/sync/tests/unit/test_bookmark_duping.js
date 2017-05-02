@@ -25,23 +25,10 @@ store._log.level = Log.Level.Trace;
 engine._log.level = Log.Level.Trace;
 
 async function setup() {
- let server = serverForUsers({"foo": "password"}, {
-    meta: {global: {engines: {bookmarks: {version: engine.version,
-                                          syncID: engine.syncID}}}},
-    bookmarks: {},
-  });
-
-  generateNewKeys(Service.collectionKeys);
-
+ let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
-
-  // The bookmarks engine *always* tracks changes, meaning we might try
-  // and sync due to the bookmarks we ourselves create! Worse, because we
-  // do an engine sync only, there's no locking - so we end up with multiple
-  // syncs running. Neuter that by making the threshold very large.
-  Service.scheduler.syncThreshold = 10000000;
 
   Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
 

@@ -22,6 +22,9 @@ with Files("tests/unit/test_distribution.js"):
 with Files("safebrowsing/**"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
+with Files('controlcenter/**'):
+    BUG_COMPONENT = ('Firefox', 'General')
+
 
 DIRS += [
     'about',
@@ -77,9 +80,3 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit/xpcshell.ini'
 ]
-
-with Files('safebrowsing/*'):
-    BUG_COMPONENT = ('Toolkit', 'Phishing Protection')
-
-with Files('controlcenter/**'):
-    BUG_COMPONENT = ('Firefox', 'General')

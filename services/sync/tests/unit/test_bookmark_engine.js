@@ -282,20 +282,6 @@ add_task(async function bad_record_allIDs() {
   await promiseStopServer(server);
 });
 
-function serverForFoo(engine) {
-  // The bookmarks engine *always* tracks changes, meaning we might try
-  // and sync due to the bookmarks we ourselves create! Worse, because we
-  // do an engine sync only, there's no locking - so we end up with multiple
-  // syncs running. Neuter that by making the threshold very large.
-  Service.scheduler.syncThreshold = 10000000;
-
-  return serverForUsers({"foo": "password"}, {
-    meta: {global: {engines: {bookmarks: {version: engine.version,
-                                          syncID: engine.syncID}}}},
-    bookmarks: {}
-  });
-}
-
 add_task(async function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
 

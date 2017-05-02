@@ -89,26 +89,7 @@ add_task(async function test_bookmark_repair_integration() {
 
   _("Ensure that a validation error triggers a repair request.");
 
-  let contents = {
-    meta: {
-      global: {
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          bookmarks: {
-            version: bookmarksEngine.version,
-            syncID: bookmarksEngine.syncID,
-          },
-        }
-      }
-    },
-    clients: {},
-    bookmarks: {},
-    crypto: {},
-  };
-  let server = serverForUsers({"foo": "password"}, contents);
+  let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
   let user = server.user("foo");
@@ -329,26 +310,7 @@ add_task(async function test_repair_client_missing() {
 
   _("Ensure that a record missing from the client only will get re-downloaded from the server");
 
-  let contents = {
-    meta: {
-      global: {
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          bookmarks: {
-            version: bookmarksEngine.version,
-            syncID: bookmarksEngine.syncID,
-          },
-        }
-      }
-    },
-    clients: {},
-    bookmarks: {},
-    crypto: {},
-  };
-  let server = serverForUsers({"foo": "password"}, contents);
+  let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
   let user = server.user("foo");
@@ -420,26 +382,7 @@ add_task(async function test_repair_server_missing() {
 
   _("Ensure that a record missing from the server only will get re-upload from the client");
 
-  let contents = {
-    meta: {
-      global: {
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          bookmarks: {
-            version: bookmarksEngine.version,
-            syncID: bookmarksEngine.syncID,
-          },
-        }
-      }
-    },
-    clients: {},
-    bookmarks: {},
-    crypto: {},
-  };
-  let server = serverForUsers({"foo": "password"}, contents);
+  let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
   let user = server.user("foo");
@@ -504,26 +447,7 @@ add_task(async function test_repair_server_deleted() {
 
   _("Ensure that a record marked as deleted on the server but present on the client will get deleted on the client");
 
-  let contents = {
-    meta: {
-      global: {
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          bookmarks: {
-            version: bookmarksEngine.version,
-            syncID: bookmarksEngine.syncID,
-          },
-        }
-      }
-    },
-    clients: {},
-    bookmarks: {},
-    crypto: {},
-  };
-  let server = serverForUsers({"foo": "password"}, contents);
+  let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
   let user = server.user("foo");
