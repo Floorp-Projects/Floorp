@@ -37,7 +37,6 @@ WebRenderContainerLayer::UpdateTransformDataForAnimation()
       transformData.inheritedYScale() = GetInheritedYScale();
       transformData.hasPerspectiveParent() =
         GetParent() && GetParent()->GetTransformIsPerspective();
-      }
     }
   }
 }
