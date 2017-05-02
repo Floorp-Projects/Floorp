@@ -1,9 +1,9 @@
-fuzzy-if(Android,12,1) fails-if(stylo) == select-fieldset-1.html select-fieldset-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,17) fails-if(stylo) == select-fieldset-2.html select-fieldset-ref-disabled.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,17) fails-if(stylo) == select-fieldset-3.html select-fieldset-ref-disabled.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,13) fails-if(stylo) == select-fieldset-4.html select-fieldset-ref.html
-fails-if(stylo) == select-fieldset-legend-1.html select-fieldset-legend-ref-1.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,6) fails-if(stylo) == select-fieldset-legend-2.html select-fieldset-legend-ref-2.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,8) fails-if(stylo) == select-fieldset-legend-3.html select-fieldset-legend-ref-3.html
-fuzzy-if(skiaContent,2,12) fails-if(stylo) == select-fieldset-legend-4.html select-fieldset-legend-ref-4.html
-fuzzy-if(skiaContent,2,5) fails-if(stylo) == select-fieldset-legend-5.html select-fieldset-legend-ref-5.html
+fuzzy-if(Android,12,1) == select-fieldset-1.html select-fieldset-ref.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,17) == select-fieldset-2.html select-fieldset-ref-disabled.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,17) == select-fieldset-3.html select-fieldset-ref-disabled.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,13) == select-fieldset-4.html select-fieldset-ref.html
+== select-fieldset-legend-1.html select-fieldset-legend-ref-1.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == select-fieldset-legend-2.html select-fieldset-legend-ref-2.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,8) == select-fieldset-legend-3.html select-fieldset-legend-ref-3.html
+fuzzy-if(skiaContent,2,12) == select-fieldset-legend-4.html select-fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,2,5) == select-fieldset-legend-5.html select-fieldset-legend-ref-5.html

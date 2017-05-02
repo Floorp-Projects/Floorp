@@ -31,7 +31,7 @@ to mochitest command.
 
 * Media query support:
   * test_media_queries.html [156]
-  * test_media_queries_dynamic.html [7]
+  * test_media_queries_dynamic.html [6]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
@@ -126,7 +126,6 @@ to mochitest command.
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
     * test_align_shorthand_serialization.html [8]
-    * test_value_storage.html `place-` [3]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]

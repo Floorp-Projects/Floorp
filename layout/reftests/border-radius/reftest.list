@@ -72,8 +72,8 @@ fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1-ref.html
 fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent&&!Android,1,50) fuzzy-if(gtkWidget&&layersGPUAccelerated,12,12) fails-if(stylo) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
-fails-if(Android) fails-if(stylo) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
+fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent&&!Android,1,50) fuzzy-if(gtkWidget&&layersGPUAccelerated,12,12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
