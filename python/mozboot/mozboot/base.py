@@ -658,9 +658,13 @@ class BaseBootstrapper(object):
                 if e.errno != errno.ENOENT:
                     raise
 
-    def http_download_and_save(self, url, dest, sha256hexhash):
+    def http_download_and_save(self, url, dest, hexhash, digest='sha256'):
+        """Download the given url and save it to dest.  hexhash is a checksum
+        that will be used to validate the downloaded file using the given
+        digest algorithm.  The value of digest can be any value accepted by
+        hashlib.new.  The default digest used is 'sha256'."""
         f = urllib2.urlopen(url)
-        h = hashlib.sha256()
+        h = hashlib.new(digest)
         with open(dest, 'wb') as out:
             while True:
                 data = f.read(4096)
@@ -669,6 +673,6 @@ class BaseBootstrapper(object):
                     h.update(data)
                 else:
                     break
-        if h.hexdigest() != sha256hexhash:
+        if h.hexdigest() != hexhash:
             os.remove(dest)
             raise ValueError('Hash of downloaded file does not match expected hash')
