@@ -126,7 +126,6 @@ to mochitest command.
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
     * test_align_shorthand_serialization.html [8]
-    * test_value_storage.html `place-` [3]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
