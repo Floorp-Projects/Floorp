@@ -992,9 +992,24 @@ nsTableFrame::AddDeletedRowIndex(int32_t aDeletedRowStoredIndex)
   // smallerIter->second < aDeletedRowStoredIndex < greaterIter->first
   auto greaterIter = mDeletedRowIndexRanges.upper_bound(aDeletedRowStoredIndex);
   auto smallerIter = greaterIter;
+
   if (smallerIter != mDeletedRowIndexRanges.begin()) {
     smallerIter--;
+    // While greaterIter might be out-of-bounds (by being equal to end()),
+    // smallerIter now cannot be, since we returned early above for a 0-size map.
   }
+
+  // Note: smallerIter can only be equal to greaterIter when both
+  // of them point to the beginning of the map and in that case smallerIter
+  // does not "exist" but we clip smallerIter to point to beginning of map
+  // so that it doesn't point to something unknown or outside the map boundry.
+  // Note: When greaterIter is not the end (i.e. it "exists") upper_bound()
+  // ensures aDeletedRowStoredIndex < greaterIter->first so no need to
+  // assert that.
+  MOZ_ASSERT(smallerIter == greaterIter ||
+               aDeletedRowStoredIndex > smallerIter->second,
+             "aDeletedRowIndexRanges already contains aDeletedRowStoredIndex! "
+             "Trying to delete an already deleted row?");
 
   if (smallerIter->second == aDeletedRowStoredIndex - 1) {
     if (greaterIter != mDeletedRowIndexRanges.end() &&
