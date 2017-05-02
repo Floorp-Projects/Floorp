@@ -32,6 +32,16 @@
 // It can be scaled back again in the future
 #define BHR_BETA_MOD 1;
 
+// This variable controls the maximum number of native hang stacks which may be
+// attached to a ping. This is due to how large native stacks can be. We want to
+// reduce the chance of a ping being discarded due to it exceeding the maximum
+// ping size.
+//
+// NOTE: 300 native hang stacks would, by a rough estimation based on stacks
+// collected from nightly on March 21, 2017, take up approximately 168kb of
+// space.
+static const uint32_t kMaximumNativeHangStacks = 300;
+
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 static const size_t kMaxThreadHangStackDepth = 30;
@@ -180,6 +190,8 @@ public:
   ThreadStackHelper mStackHelper;
   // Stack of current hang
   Telemetry::HangStack mHangStack;
+  // Native stack of current hang
+  Telemetry::NativeHangStack mNativeHangStack;
   // Statistics for telemetry
   Telemetry::ThreadHangStats mStats;
   // Annotations for the current hang
@@ -332,7 +344,19 @@ BackgroundHangManager::RunMonitorThread()
       if (MOZ_LIKELY(!currentThread->mHanging)) {
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
           // A hang started
-          currentThread->mStackHelper.GetStack(currentThread->mHangStack);
+#ifdef NIGHTLY_BUILD
+          if (currentThread->mStats.mNativeStackCnt < kMaximumNativeHangStacks) {
+            // NOTE: In nightly builds of firefox we want to collect native stacks
+            // for all hangs, not just permahangs.
+            currentThread->mStats.mNativeStackCnt += 1;
+            currentThread->mStackHelper.GetPseudoAndNativeStack(
+              currentThread->mHangStack, currentThread->mNativeHangStack);
+          } else {
+            currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+          }
+#else
+          currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+#endif
           currentThread->mHangStart = interval;
           currentThread->mHanging = true;
           currentThread->mAnnotations =
@@ -451,7 +475,7 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
-  Telemetry::HangHistogram newHistogram(Move(mHangStack));
+  Telemetry::HangHistogram newHistogram(Move(mHangStack), Move(mNativeHangStack));
   for (Telemetry::HangHistogram* oldHistogram = mStats.mHangs.begin();
        oldHistogram != mStats.mHangs.end(); oldHistogram++) {
     if (newHistogram == *oldHistogram) {
@@ -475,9 +499,12 @@ BackgroundHangThread::ReportPermaHang()
   // mManager->mLock IS locked
 
   Telemetry::HangHistogram& hang = ReportHang(mMaxTimeout);
-  Telemetry::HangStack& stack = hang.GetNativeStack();
+  Telemetry::NativeHangStack& stack = hang.GetNativeStack();
   if (stack.empty()) {
-    mStackHelper.GetNativeStack(stack);
+    mStats.mNativeStackCnt += 1;
+    if (mStats.mNativeStackCnt <= kMaximumNativeHangStacks) {
+      mStackHelper.GetNativeStack(stack);
+    }
   }
 }
 
