@@ -108,10 +108,6 @@
         for (var span of panel.querySelectorAll("span.hostname")) {
           span.textContent = document.location.hostname;
         }
-        if (!gIsCertError) {
-          panel.replaceChild(document.getElementById("errorLongDesc"),
-                             document.getElementById("advancedLongDesc"));
-        }
 
         // Register click handler for the weakCryptoAdvancedPanel
         document.getElementById("advancedButton")
@@ -288,7 +284,7 @@
             }
           }
           if (getErrorCode() == "sslv3Used") {
-            setupAdvancedButton();
+            document.getElementById("advancedButton").style.display = "none";
           }
         }, true, true);
 
