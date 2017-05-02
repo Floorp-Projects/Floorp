@@ -315,6 +315,12 @@ PROFILER_FUNC(double profiler_time(), 0)
 
 PROFILER_FUNC_VOID(profiler_log(const char *str))
 
+// Gets the stack top of the current thread.
+//
+// The thread must have been previously registered with the profiler, otherwise
+// this method will return nullptr.
+PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
+
 // End of the functions defined whether the profiler is enabled or not.
 
 #if defined(MOZ_GECKO_PROFILER)

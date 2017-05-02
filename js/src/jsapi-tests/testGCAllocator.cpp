@@ -315,7 +315,7 @@ mapMemoryAt(void* desired, size_t length)
 
 #if defined(__ia64__) || defined(__aarch64__) || \
     (defined(__sparc__) && defined(__arch64__) && (defined(__NetBSD__) || defined(__linux__)))
-    MOZ_RELEASE_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
+    MOZ_RELEASE_ASSERT((0xffff800000000000ULL & (uintptr_t(desired) + length - 1)) == 0);
 #endif
     void* region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     if (region == MAP_FAILED)

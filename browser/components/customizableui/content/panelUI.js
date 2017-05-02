@@ -160,11 +160,6 @@ const PanelUI = {
           return;
         }
 
-        let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
-        if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
-          updateEditUIVisibility();
-        }
-
         let personalBookmarksPlacement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
         if (personalBookmarksPlacement &&
             personalBookmarksPlacement.area == CustomizableUI.AREA_PANEL) {
@@ -292,10 +287,14 @@ const PanelUI = {
     switch (aEvent.type) {
       case "popupshowing":
         this._adjustLabelsForAutoHyphens();
+        updateEditUIVisibility();
         // Fall through
       case "popupshown":
         // Fall through
       case "popuphiding":
+        if (aEvent.type == "popuphiding") {
+          updateEditUIVisibility();
+        }
         // Fall through
       case "popuphidden":
         this._updateNotifications();

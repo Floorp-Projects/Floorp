@@ -173,9 +173,11 @@ public:
     // Whether the value change should be notified to the frame/contet nor not.
     eSetValue_Notify                = 1 << 2,
     // Whether to move the cursor to end of the value (in the case when we have
-    // cached selection offsets).  If this is not set, the cached selection
-    // offsets will simply be clamped to be within the length of the new value.
-    eSetValue_MoveCursorToEnd       = 1 << 3,
+    // cached selection offsets), in the case when the value has changed.  If
+    // this is not set, the cached selection offsets will simply be clamped to
+    // be within the length of the new value.  In either case, if the value has
+    // not changed the cursor won't move.
+    eSetValue_MoveCursorToEndIfValueChanged = 1 << 3,
   };
   MOZ_MUST_USE bool SetValue(const nsAString& aValue, uint32_t aFlags);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
@@ -280,10 +282,15 @@ public:
         mIsDirty = true;
         mDirection = value;
       }
-      // return true only if mStart, mEnd, or mDirection have been modified
+      // return true only if mStart, mEnd, or mDirection have been modified,
+      // or if SetIsDirty() was explicitly called.
       bool IsDirty() const
       {
         return mIsDirty;
+      }
+      void SetIsDirty()
+      {
+        mIsDirty = true;
       }
     private:
       uint32_t mStart, mEnd;
