@@ -146,11 +146,13 @@ public class AudioFocusAgent {
     }
 
     @VisibleForTesting
+    @RobocopTarget
     public State getAudioFocusState() {
         return mAudioFocusState;
     }
 
     @VisibleForTesting
+    @RobocopTarget
     public void changeAudioFocus(int focusChange) {
         mAfChangeListener.onAudioFocusChange(focusChange);
     }
