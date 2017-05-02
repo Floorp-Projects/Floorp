@@ -79,13 +79,16 @@ promise_test(function(t) {
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
 promise_test(function(t) {
+  assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
+               'Test should run without the refresh driver being under'
+               + ' test control');
+
   // This test only applies to compositor animations
   if (!isOMTAEnabled()) {
     return;
   }
 
-  const div = addDiv(t);
-  div.classList.add('target');
+  const div = addDiv(t, { class: 'target' });
 
   // As with the above test, any stray paints can cause this test to produce
   // a false negative (that is, pass when it should fail). To avoid this we
@@ -103,28 +106,75 @@ promise_test(function(t) {
                   delay: -200 * MS_PER_SEC });
     return waitForPaints();
   }).then(() => {
-    var transformStr =
+    const transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
-
-    var matrixComponents =
-      transformStr.startsWith('matrix(')
-      ? transformStr.substring('matrix('.length, transformStr.length-1)
-                    .split(',')
-                    .map(component => Number(component))
-      : [];
-    assert_equals(matrixComponents.length, 6,
-                  'Got a valid transform matrix on the compositor'
-                  + ' (got: "' + transformStr + '")');
+    const translateX = getTranslateXFromTransform(transformStr);
 
     // If the delay has been applied we should be about half-way through
     // the animation. However, if we applied it twice we will be at the
     // end of the animation already so check that we are roughly half way
     // through.
-    const translateX = matrixComponents[4];
     assert_between_inclusive(translateX, 40, 75,
         'Animation is about half-way through on the compositor');
   });
 }, 'Starting an animation with a delay starts from the correct point');
+
+// Test that compositor animations with a playback rate start at the
+// appropriate point.
+//
+// NOTE: As with the previous test, it is important that we DON'T use
+// SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
+// us through a different code path.
+promise_test(function(t) {
+  assert_false(SpecialPowers.DOMWindowUtils.isTestControllingRefreshes,
+               'Test should run without the refresh driver being under'
+               + ' test control');
+
+  // This test only applies to compositor animations
+  if (!isOMTAEnabled()) {
+    return;
+  }
+
+  const div = addDiv(t, { class: 'target' });
+
+  // Wait for idle state (see notes in previous test).
+  return waitForDocLoad().then(() => waitForIdle())
+  .then(() => waitForPaints())
+  .then(() => {
+    const animation =
+      div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
+                  200 * MS_PER_SEC);
+    animation.currentTime = 100 * MS_PER_SEC;
+    animation.playbackRate = 0.1;
+    return waitForPaints();
+  }).then(() => {
+    const transformStr =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    const translateX = getTranslateXFromTransform(transformStr);
+
+    // We pass the playback rate to the compositor independently and we have
+    // tests to ensure that it is correctly applied there. However, if, when
+    // we resolve the start time of the pending animation, we fail to
+    // incorporate the playback rate, we will end up starting from the wrong
+    // point and the current time calculated on the compositor will be wrong.
+    assert_between_inclusive(translateX, 25, 75,
+        'Animation is about half-way through on the compositor');
+  });
+}, 'Starting an animation with a playbackRate starts from the correct point');
+
+function getTranslateXFromTransform(transformStr) {
+  const matrixComponents =
+    transformStr.startsWith('matrix(')
+    ? transformStr.substring('matrix('.length, transformStr.length-1)
+                  .split(',')
+                  .map(component => Number(component))
+    : [];
+  assert_equals(matrixComponents.length, 6,
+                'Got a valid transform matrix on the compositor'
+                + ' (got: "' + transformStr + '")');
+
+  return matrixComponents[4];
+}
 
 done();
 </script>
