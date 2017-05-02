@@ -146,17 +146,18 @@ Module::serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) con
     // The compiled debug code must not be saved, set compiled size to 0,
     // so Module::assumptionsMatch will return false during assumptions
     // deserialization.
-    if (maybeCompiledSize && metadata().debugEnabled)
+    if (maybeCompiledSize && metadata_->debugEnabled)
         *maybeCompiledSize = 0;
 
-    if (maybeCompiledSize && !metadata().debugEnabled) {
+    if (maybeCompiledSize && !metadata_->debugEnabled) {
         *maybeCompiledSize = assumptions_.serializedSize() +
+                             SerializedPodVectorSize(code_) +
                              linkData_.serializedSize() +
                              SerializedVectorSize(imports_) +
                              SerializedVectorSize(exports_) +
                              SerializedPodVectorSize(dataSegments_) +
                              SerializedVectorSize(elemSegments_) +
-                             code_->serializedSize();
+                             metadata_->serializedSize();
     }
 }
 
@@ -179,21 +180,22 @@ Module::serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
         MOZ_RELEASE_ASSERT(bytecodeEnd == maybeBytecodeBegin + maybeBytecodeSize);
     }
 
-    MOZ_ASSERT_IF(maybeCompiledBegin && metadata().debugEnabled, maybeCompiledSize == 0);
+    MOZ_ASSERT_IF(maybeCompiledBegin && metadata_->debugEnabled, maybeCompiledSize == 0);
 
-    if (maybeCompiledBegin && !metadata().debugEnabled) {
+    if (maybeCompiledBegin && !metadata_->debugEnabled) {
         // Assumption must be serialized at the beginning of the compiled bytes so
         // that compiledAssumptionsMatch can detect a build-id mismatch before any
         // other decoding occurs.
 
         uint8_t* cursor = maybeCompiledBegin;
         cursor = assumptions_.serialize(cursor);
+        cursor = SerializePodVector(cursor, code_);
         cursor = linkData_.serialize(cursor);
         cursor = SerializeVector(cursor, imports_);
         cursor = SerializeVector(cursor, exports_);
         cursor = SerializePodVector(cursor, dataSegments_);
         cursor = SerializeVector(cursor, elemSegments_);
-        cursor = code_->serialize(cursor, linkData_);
+        cursor = metadata_->serialize(cursor);
         MOZ_RELEASE_ASSERT(cursor == maybeCompiledBegin + maybeCompiledSize);
     }
 }
@@ -224,6 +226,11 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
+    Bytes code;
+    cursor = DeserializePodVector(cursor, &code);
+    if (!cursor)
+        return nullptr;
+
     LinkData linkData;
     cursor = linkData.deserialize(cursor);
     if (!cursor)
@@ -249,22 +256,29 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
-    MutableCode code = js_new<Code>();
-    cursor = code->deserialize(cursor, bytecode, linkData, maybeMetadata);
+    MutableMetadata metadata;
+    if (maybeMetadata) {
+        metadata = maybeMetadata;
+    } else {
+        metadata = js_new<Metadata>();
+        if (!metadata)
+            return nullptr;
+    }
+    cursor = metadata->deserialize(cursor);
     if (!cursor)
         return nullptr;
 
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
-    MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
+    MOZ_RELEASE_ASSERT(!!maybeMetadata == metadata->isAsmJS());
 
     return js_new<Module>(Move(assumptions),
-                          *code,
-                          nullptr, // Serialized code is never debuggable
+                          Move(code),
                           Move(linkData),
                           Move(imports),
                           Move(exports),
                           Move(dataSegments),
                           Move(elemSegments),
+                          *metadata,
                           *bytecode);
 }
 
@@ -363,21 +377,19 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
 Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                       Metadata::SeenSet* seenMetadata,
                       ShareableBytes::SeenSet* seenBytes,
-                      Code::SeenSet* seenCode,
                       size_t* code,
                       size_t* data) const
 {
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
     *data += mallocSizeOf(this) +
              assumptions_.sizeOfExcludingThis(mallocSizeOf) +
+             code_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
+             metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
-    if (unlinkedCodeForDebugging_)
-        *data += unlinkedCodeForDebugging_->sizeOfExcludingThis(mallocSizeOf);
 }
 
 
@@ -386,17 +398,17 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 // contain offsets in the "code" array and basic information about a code
 // segment/function body.
 bool
-Module::extractCode(JSContext* cx, MutableHandleValue vp) const
+Module::extractCode(JSContext* cx, MutableHandleValue vp)
 {
     RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!result)
         return false;
 
-    RootedObject code(cx, JS_NewUint8Array(cx, code_->segment().length()));
+    RootedObject code(cx, JS_NewUint8Array(cx, code_.length()));
     if (!code)
         return false;
 
-    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), code_->segment().base(), code_->segment().length());
+    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), code_.begin(), code_.length());
 
     RootedValue value(cx, ObjectValue(*code));
     if (!JS_DefineProperty(cx, result, "code", value, JSPROP_ENUMERATE))
@@ -406,7 +418,7 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp) const
     if (!segments)
         return false;
 
-    for (const CodeRange& p : metadata().codeRanges) {
+    for (const CodeRange& p : metadata_->codeRanges) {
         RootedObject segment(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
         if (!segment)
             return false;
@@ -563,12 +575,12 @@ FindImportForFuncImport(const ImportVector& imports, uint32_t funcImportIndex)
 bool
 Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const
 {
-    MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
+    MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
 
     if (metadata().isAsmJS())
         return true;
 
-    for (size_t i = 0; i < metadata().funcImports.length(); i++) {
+    for (size_t i = 0; i < metadata_->funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
         if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
             continue;
@@ -577,7 +589,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         Instance& instance = ExportedFunctionToInstance(f);
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
 
-        if (funcExport.sig() != metadata().funcImports[i].sig()) {
+        if (funcExport.sig() != metadata_->funcImports[i].sig()) {
             const Import& import = FindImportForFuncImport(imports_, i);
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
                                       import.module.get(), import.field.get());
@@ -618,27 +630,27 @@ CheckLimits(JSContext* cx, uint32_t declaredMin, const Maybe<uint32_t>& declared
 bool
 Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const
 {
-    if (!metadata().usesMemory()) {
+    if (!metadata_->usesMemory()) {
         MOZ_ASSERT(!memory);
         MOZ_ASSERT(dataSegments_.empty());
         return true;
     }
 
-    uint32_t declaredMin = metadata().minMemoryLength;
-    Maybe<uint32_t> declaredMax = metadata().maxMemoryLength;
+    uint32_t declaredMin = metadata_->minMemoryLength;
+    Maybe<uint32_t> declaredMax = metadata_->maxMemoryLength;
 
     if (memory) {
         ArrayBufferObjectMaybeShared& buffer = memory->buffer();
-        MOZ_ASSERT_IF(metadata().isAsmJS(), buffer.isPreparedForAsmJS());
-        MOZ_ASSERT_IF(!metadata().isAsmJS(), buffer.as<ArrayBufferObject>().isWasm());
+        MOZ_ASSERT_IF(metadata_->isAsmJS(), buffer.isPreparedForAsmJS());
+        MOZ_ASSERT_IF(!metadata_->isAsmJS(), buffer.as<ArrayBufferObject>().isWasm());
 
         if (!CheckLimits(cx, declaredMin, declaredMax, buffer.byteLength(), buffer.wasmMaxSize(),
-                         metadata().isAsmJS(), "Memory")) {
+                         metadata_->isAsmJS(), "Memory")) {
             return false;
         }
     } else {
-        MOZ_ASSERT(!metadata().isAsmJS());
-        MOZ_ASSERT(metadata().memoryUsage == MemoryUsage::Unshared);
+        MOZ_ASSERT(!metadata_->isAsmJS());
+        MOZ_ASSERT(metadata_->memoryUsage == MemoryUsage::Unshared);
 
         RootedArrayBufferObjectMaybeShared buffer(cx,
             ArrayBufferObject::createForWasm(cx, declaredMin, declaredMax));
@@ -660,15 +672,15 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
                          SharedTableVector* tables) const
 {
     if (tableObj) {
-        MOZ_ASSERT(!metadata().isAsmJS());
+        MOZ_ASSERT(!metadata_->isAsmJS());
 
-        MOZ_ASSERT(metadata().tables.length() == 1);
-        const TableDesc& td = metadata().tables[0];
+        MOZ_ASSERT(metadata_->tables.length() == 1);
+        const TableDesc& td = metadata_->tables[0];
         MOZ_ASSERT(td.external);
 
         Table& table = tableObj->table();
         if (!CheckLimits(cx, td.limits.initial, td.limits.maximum, table.length(), table.maximum(),
-                         metadata().isAsmJS(), "Table")) {
+                         metadata_->isAsmJS(), "Table")) {
             return false;
         }
 
@@ -677,7 +689,7 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
             return false;
         }
     } else {
-        for (const TableDesc& td : metadata().tables) {
+        for (const TableDesc& td : metadata_->tables) {
             SharedTable table;
             if (td.external) {
                 MOZ_ASSERT(!tableObj);
@@ -869,28 +881,15 @@ Module::instantiate(JSContext* cx,
     if (!instantiateTable(cx, &table, &tables))
         return false;
 
+    // The CodeSegment does not hold on to the bytecode, see comment below.
+
+    auto codeSegment = CodeSegment::create(cx, code_, bytecode_, linkData_, *metadata_);
+    if (!codeSegment)
+        return false;
+
     auto globalSegment = GlobalSegment::create(linkData_.globalDataLength);
     if (!globalSegment)
         return false;
-
-    SharedCode code(code_);
-
-    if (metadata().debugEnabled) {
-        // The first time through, use the pre-linked code in the module but
-        // mark it as busy. Subsequently, instantiate the copy of the code
-        // bytes that we keep around for debugging instead, because the debugger
-        // may patch the pre-linked code at any time.
-        if (!codeIsBusy_.compareExchange(false, true)) {
-            UniqueConstCodeSegment codeSegment = CodeSegment::create(*unlinkedCodeForDebugging_,
-                                                                     *bytecode_, linkData_,
-                                                                     metadata());
-            if (!codeSegment)
-                return false;
-            code = js_new<Code>(Move(codeSegment), metadata(), bytecode_);
-            if (!code)
-                return false;
-        }
-    }
 
     // To support viewing the source of an instance (Instance::createText), the
     // instance must hold onto a ref of the bytecode (keeping it alive). This
@@ -901,17 +900,21 @@ Module::instantiate(JSContext* cx,
     // for non-developer builds).
 
     const ShareableBytes* maybeBytecode = nullptr;
-    if (cx->compartment()->isDebuggee() || metadata().debugEnabled ||
-        !metadata().funcNames.empty())
+    if (cx->compartment()->isDebuggee() || metadata_->debugEnabled ||
+        !metadata_->funcNames.empty())
     {
         maybeBytecode = bytecode_.get();
     }
+
+    SharedCode code(js_new<Code>(Move(codeSegment), *metadata_, maybeBytecode));
+    if (!code)
+        return false;
 
     // The debug object must be present even when debugging is not enabled: It
     // provides the lazily created source text for the program, even if that
     // text is a placeholder message when debugging is not enabled.
 
-    auto debug = cx->make_unique<DebugState>(code, maybeBytecode);
+    auto debug = cx->make_unique<DebugState>(code, *metadata_, maybeBytecode);
     if (!debug)
         return false;
 
@@ -959,9 +962,9 @@ Module::instantiate(JSContext* cx,
     // Note that failure may cause instantiation to throw, but the instance may
     // still be live via edges created by initSegments or the start function.
 
-    if (metadata().startFuncIndex) {
+    if (metadata_->startFuncIndex) {
         FixedInvokeArgs<0> args(cx);
-        if (!instance->instance().callExport(cx, *metadata().startFuncIndex, args))
+        if (!instance->instance().callExport(cx, *metadata_->startFuncIndex, args))
             return false;
     }
 

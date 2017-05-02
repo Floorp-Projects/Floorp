@@ -83,31 +83,23 @@ typedef UniquePtr<const LinkData> UniqueConstLinkData;
 // any number of times such that the serialized bytes can be deserialized later
 // to produce a new, equivalent Module.
 //
-// Fully linked-and-instantiated code (represented by Code and its owned
-// CodeSegment) can be shared between instances, provided none of those
-// instances are being debugged. If patchable code is needed then each instance
-// must have its own Code. Module eagerly creates a new Code and gives it to the
-// first instance; it then instantiates new Code objects from a copy of the
-// unlinked code that it keeps around for that purpose.
+// Since fully linked-and-instantiated code (represented by CodeSegment) cannot
+// be shared between instances, Module stores an unlinked, uninstantiated copy
+// of the code (represented by the Bytes) and creates a new CodeSegment each
+// time it is instantiated. In the future, Module will store a shareable,
+// immutable CodeSegment that can be shared by all its instances.
 
 class Module : public JS::WasmModule
 {
     const Assumptions       assumptions_;
-    const SharedCode        code_;
-    const UniqueConstBytes  unlinkedCodeForDebugging_;
+    const Bytes             code_;
     const LinkData          linkData_;
     const ImportVector      imports_;
     const ExportVector      exports_;
     const DataSegmentVector dataSegments_;
     const ElemSegmentVector elemSegments_;
+    const SharedMetadata    metadata_;
     const SharedBytes       bytecode_;
-
-    // `codeIsBusy_` is set to false initially and then to true when `code_` is
-    // already being used for an instance and can't be shared because it may be
-    // patched by the debugger. Subsequent instances must then create copies
-    // by linking the `unlinkedCodeForDebugging_`.
-
-    mutable mozilla::Atomic<bool> codeIsBusy_;
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
@@ -122,34 +114,30 @@ class Module : public JS::WasmModule
 
   public:
     Module(Assumptions&& assumptions,
-           const Code& code,
-           UniqueConstBytes unlinkedCodeForDebugging,
+           Bytes&& code,
            LinkData&& linkData,
            ImportVector&& imports,
            ExportVector&& exports,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
+           const Metadata& metadata,
            const ShareableBytes& bytecode)
       : assumptions_(Move(assumptions)),
-        code_(&code),
-        unlinkedCodeForDebugging_(Move(unlinkedCodeForDebugging)),
+        code_(Move(code)),
         linkData_(Move(linkData)),
         imports_(Move(imports)),
         exports_(Move(exports)),
         dataSegments_(Move(dataSegments)),
         elemSegments_(Move(elemSegments)),
-        bytecode_(&bytecode),
-        codeIsBusy_(false)
-    {
-        MOZ_ASSERT_IF(metadata().debugEnabled, unlinkedCodeForDebugging_);
-    }
+        metadata_(&metadata),
+        bytecode_(&bytecode)
+    {}
     ~Module() override { /* Note: can be called on any thread */ }
 
-    const Metadata& metadata() const { return code_->metadata(); }
+    const Metadata& metadata() const { return *metadata_; }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
     const Bytes& bytecode() const { return bytecode_->bytes; }
-    uint32_t codeLength() const { return code_->segment().length(); }
 
     // Instantiate this module with the given imports:
 
@@ -178,12 +166,11 @@ class Module : public JS::WasmModule
     void addSizeOfMisc(MallocSizeOf mallocSizeOf,
                        Metadata::SeenSet* seenMetadata,
                        ShareableBytes::SeenSet* seenBytes,
-                       Code::SeenSet* seenCode,
                        size_t* code, size_t* data) const;
 
     // Generated code analysis support:
 
-    bool extractCode(JSContext* cx, MutableHandleValue vp) const;
+    bool extractCode(JSContext* cx, MutableHandleValue vp);
 };
 
 typedef RefPtr<Module> SharedModule;
