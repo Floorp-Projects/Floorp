@@ -343,6 +343,10 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
         name = "lazyscript";
         break;
 
+      case JS::TraceKind::Null:
+        name = "null_pointer";
+        break;
+
       case JS::TraceKind::Object:
       {
         name = static_cast<JSObject*>(thing)->getClass()->name;
@@ -351,6 +355,14 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
 
       case JS::TraceKind::ObjectGroup:
         name = "object_group";
+        break;
+
+      case JS::TraceKind::RegExpShared:
+        name = "reg_exp_shared";
+        break;
+
+      case JS::TraceKind::Scope:
+        name = "scope";
         break;
 
       case JS::TraceKind::Script:
