@@ -470,22 +470,22 @@ var noframe_container = document.getElementById("content");
   var nonLocalURL = "url(\"foo.svg#foo\")";
   var resolvedNonLocalURL = "url(\"" + docPath + "foo.svg#foo\")";
 
-  var testStyles = {
-    "mask" : "",
-    "markerStart" : "",
-    "markerMid" : "",
-    "markerEnd" : "",
-    "clipPath" : "",
-    "filter" : "",
-    "fill" : " rgba(0, 0, 0, 0)",
-    "stroke" : " rgba(0, 0, 0, 0)",
-  };
+  var testStyles = [
+    "mask",
+    "markerStart",
+    "markerMid",
+    "markerEnd",
+    "clipPath",
+    "filter",
+    "fill",
+    "stroke",
+  ];
 
-  for (var prop in testStyles) {
+  for (var prop of testStyles) {
     p.style[prop] = localURL;
-    is(cs[prop], localURL + testStyles[prop], "computed value of " + prop);
+    is(cs[prop], localURL, "computed value of " + prop);
     p.style[prop] = nonLocalURL;
-    is(cs[prop], resolvedNonLocalURL + testStyles[prop], "computed value of " + prop);
+    is(cs[prop], resolvedNonLocalURL, "computed value of " + prop);
   }
 
   p.remove();
