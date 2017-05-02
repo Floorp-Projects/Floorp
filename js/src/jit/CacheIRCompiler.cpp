@@ -1353,6 +1353,9 @@ CacheIRCompiler::emitGuardType()
       case JSVAL_TYPE_UNDEFINED:
         masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
         break;
+      case JSVAL_TYPE_NULL:
+        masm.branchTestNull(Assembler::NotEqual, input, failure->label());
+        break;
       default:
         MOZ_CRASH("Unexpected type");
     }

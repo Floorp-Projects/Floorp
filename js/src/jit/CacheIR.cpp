@@ -3574,3 +3574,38 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     typeCheckInfo_.set(oldGroup, id);
     return true;
 }
+
+TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                     ICState::Mode mode, HandleValue value)
+  : IRGenerator(cx, script, pc, CacheKind::TypeOf, mode),
+    val_(value)
+{ }
+
+bool
+TypeOfIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::TypeOf);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ValOperandId valId(writer.setInputOperandId(0));
+
+    if (tryAttachPrimitive(valId))
+        return true;
+
+    return false;
+}
+
+bool
+TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId)
+{
+    if (!val_.isPrimitive())
+        return false;
+
+    writer.guardType(valId, val_.isNumber() ? JSVAL_TYPE_DOUBLE : val_.extractNonDoubleType());
+    writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
+    writer.returnFromIC();
+
+    return true;
+}
+
