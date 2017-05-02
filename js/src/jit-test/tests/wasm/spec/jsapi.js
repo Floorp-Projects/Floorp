@@ -684,8 +684,7 @@ assertCompileError([1], TypeError);
 assertCompileError([{}], TypeError);
 assertCompileError([new Uint8Array()], CompileError);
 assertCompileError([new ArrayBuffer()], CompileError);
-// TODO typed array ctors must coerce their argument
-//assertCompileError([new Uint8Array("hi!")], CompileError);
+assertCompileError([new Uint8Array("hi!")], CompileError);
 assertCompileError([new ArrayBuffer("hi!")], CompileError);
 
 num_tests = 1;
@@ -715,6 +714,7 @@ test(() => {
     assert_equals(instantiate, instantiateDesc.value);
     assert_equals(instantiate.length, 1);
     assert_equals(instantiate.name, "instantiate");
+    var instantiateErrorTests = 1;
     function assertInstantiateError(args, err) {
         promise_test(() => {
             return instantiate(...args)
@@ -725,7 +725,7 @@ test(() => {
                     assert_equals(error instanceof err, true);
                     assert_equals(Boolean(error.stack.match("jsapi.js")), true);
                 })
-        }, 'unexpected success in assertInstantiateError');
+        }, `unexpected success in assertInstantiateError ${instantiateErrorTests++}`);
     }
     var scratch_memory = new WebAssembly.Memory({initial:1});
     var scratch_table = new WebAssembly.Table({element:"anyfunc", initial:1, maximum:1});
@@ -735,8 +735,7 @@ test(() => {
     assertInstantiateError([{}], TypeError);
     assertInstantiateError([new Uint8Array()], CompileError);
     assertInstantiateError([new ArrayBuffer()], CompileError);
-    // TODO typed array ctors must coerce their argument
-    //assertInstantiateError([new Uint8Array("hi!")], CompileError);
+    assertInstantiateError([new Uint8Array("hi!")], CompileError);
     assertInstantiateError([new ArrayBuffer("hi!")], CompileError);
     assertInstantiateError([importingModule], TypeError);
     assertInstantiateError([importingModule, null], TypeError);
@@ -752,6 +751,7 @@ test(() => {
     assertInstantiateError([complexImportingModuleBinary, {}], TypeError);
     assertInstantiateError([complexImportingModuleBinary, {"c": {"d": scratch_memory}}], TypeError);
 
+    var instantiateSuccessTests = 1;
     function assertInstantiateSuccess(module, imports) {
         promise_test(()=> {
             return instantiate(module, imports)
@@ -770,7 +770,7 @@ test(() => {
                         assert_equals(desc.enumerable, true);
                         assert_equals(desc.configurable, true);
                     }
-                })}, 'unexpected failure in assertInstantiateSuccess');
+                })}, `unexpected failure in assertInstantiateSuccess ${instantiateSuccessTests++}`);
     }
     assertInstantiateSuccess(emptyModule);
     assertInstantiateSuccess(emptyModuleBinary);
