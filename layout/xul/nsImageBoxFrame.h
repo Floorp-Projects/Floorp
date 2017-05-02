@@ -126,7 +126,8 @@ private:
   bool mSuppressStyleCheck;
 }; // class nsImageBoxFrame
 
-class nsDisplayXULImage : public nsDisplayImageContainer {
+class nsDisplayXULImage final : public nsDisplayImageContainer
+{
 public:
   nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
                     nsImageBoxFrame* aFrame) :

@@ -2963,6 +2963,20 @@ EnableAccessValidation(JSContext* cx, bool enabled);
 extern JS_FRIEND_API(void)
 SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
 
+// If the JS engine wants to block so that other cooperative threads can run, it
+// will call the yield callback. It may do this if it needs to access a ZoneGroup
+// that is held by another thread (such as the system zone group).
+typedef void
+(* YieldCallback)(JSContext* cx);
+
+extern JS_FRIEND_API(void)
+SetCooperativeYieldCallback(JSContext* cx, YieldCallback callback);
+
+// Returns true if the system zone is available (i.e., if no cooperative contexts
+// are using it now).
+extern JS_FRIEND_API(bool)
+SystemZoneAvailable(JSContext* cx);
+
 } /* namespace js */
 
 class NativeProfiler

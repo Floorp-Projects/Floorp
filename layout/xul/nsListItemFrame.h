@@ -9,7 +9,7 @@
 nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
                               nsStyleContext *aContext);
 
-class nsListItemFrame : public nsGridRowLeafFrame
+class nsListItemFrame final : public nsGridRowLeafFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
