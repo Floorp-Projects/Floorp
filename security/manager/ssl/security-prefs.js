@@ -50,7 +50,11 @@ pref("security.enterprise_roots.enabled", false);
 pref("security.OCSP.enabled", 1);
 pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
+#ifdef RELEASE_OR_BETA
 pref("security.OCSP.timeoutMilliseconds.soft", 2000);
+#else
+pref("security.OCSP.timeoutMilliseconds.soft", 1000);
+#endif
 pref("security.OCSP.timeoutMilliseconds.hard", 10000);
 
 pref("security.pki.cert_short_lifetime_in_days", 10);
