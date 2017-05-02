@@ -194,6 +194,11 @@ public:
   // such as changes made through the Web Animations API.
   void IncrementAnimationGeneration();
 
+  static void AddLayerChangesForAnimation(nsIFrame* aFrame,
+                                          nsIContent* aContent,
+                                          nsStyleChangeList&
+                                            aChangeListToProcess);
+
 protected:
   RestyleManager(StyleBackendType aType, nsPresContext* aPresContext);
 

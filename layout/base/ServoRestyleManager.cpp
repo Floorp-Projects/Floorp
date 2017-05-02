@@ -389,6 +389,17 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
       styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
       UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, aChangeList);
     }
+
+    // Some changes to animations don't affect the computed style and yet still
+    // require the layer to be updated. For example, pausing an animation via
+    // the Web Animations API won't affect an element's style but still
+    // requires to update the animation on the layer.
+    //
+    // We can sometimes reach this when the animated style is being removed.
+    // Since AddLayerChangesForAnimation checks if |styleFrame| has a transform
+    // style or not, we need to call it *after* setting |newContext| to
+    // |styleFrame| to ensure the animated transform has been removed first.
+    AddLayerChangesForAnimation(styleFrame, aElement, aChangeList);
   }
 
   const bool descendantsNeedFrames =
