@@ -858,8 +858,9 @@ var SessionStoreInternal = {
           return;
         }
 
-        // Update the tab's cached state.
-        // Mark the window as dirty and trigger a delayed write.
+        // Record telemetry measurements done in the child and update the tab's
+        // cached state. Mark the window as dirty and trigger a delayed write.
+        this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
 
@@ -972,10 +973,23 @@ var SessionStoreInternal = {
         this._crashedBrowsers.delete(browser.permanentKey);
         break;
       case "SessionStore:error":
+        this.reportInternalError(data);
         TabStateFlusher.resolveAll(browser, false, "Received error from the content process");
         break;
       default:
         throw new Error(`received unknown message '${aMessage.name}'`);
+    }
+  },
+
+  /**
+   * Record telemetry measurements stored in an object.
+   * @param telemetry
+   *        {histogramID: value, ...} An object mapping histogramIDs to the
+   *        value to be recorded for that ID,
+   */
+  recordTelemetry(telemetry) {
+    for (let histogramId in telemetry) {
+      Telemetry.getHistogramById(histogramId).add(telemetry[histogramId]);
     }
   },
 
@@ -4718,6 +4732,19 @@ var SessionStoreInternal = {
    */
   resetEpoch(browser) {
     this._browserEpochs.delete(browser.permanentKey);
+  },
+
+  /**
+   * Handle an error report from a content process.
+   */
+  reportInternalError(data) {
+    // For the moment, we only report errors through Telemetry.
+    if (data.telemetry) {
+      for (let key of Object.keys(data.telemetry)) {
+        let histogram = Telemetry.getHistogramById(key);
+        histogram.add(data.telemetry[key]);
+      }
+    }
   },
 
   /**
