@@ -167,10 +167,14 @@ private:
 template <typename Target, typename Function, typename... As>
 class ListenerImpl : public Listener<As...>
 {
+  // Strip CV and reference from Function.
+  using FunctionStorage = typename Decay<Function>::Type;
+
 public:
-  ListenerImpl(Target* aTarget, const Function& aFunction)
+  template <typename F>
+  ListenerImpl(Target* aTarget, F&& aFunction)
     : mTarget(aTarget)
-    , mFunction(aFunction)
+    , mFunction(Forward<F>(aFunction))
   {
   }
 
@@ -182,7 +186,7 @@ private:
 
   bool CanTakeArgs() const override
   {
-    return TakeArgs<Function>::value;
+    return TakeArgs<FunctionStorage>::value;
   }
 
   // |F| takes one or more arguments.
@@ -236,7 +240,7 @@ private:
   }
 
   const RefPtr<Target> mTarget;
-  Function mFunction;
+  FunctionStorage mFunction;
 };
 
 /**
@@ -331,12 +335,13 @@ class MediaEventSourceImpl {
 
   template<typename Target, typename Function>
   MediaEventListener
-  ConnectInternal(Target* aTarget, const Function& aFunction) {
+  ConnectInternal(Target* aTarget, Function&& aFunction) {
     MutexAutoLock lock(mMutex);
     PruneListeners();
     MOZ_ASSERT(Lp == ListenerPolicy::NonExclusive || mListeners.IsEmpty());
     auto l = mListeners.AppendElement();
-    *l = new ListenerImpl<Target, Function>(aTarget, aFunction);
+    *l = new ListenerImpl<Target, Function>(
+      aTarget, Forward<Function>(aFunction));
     return MediaEventListener(*l);
   }
 
@@ -345,10 +350,10 @@ class MediaEventSourceImpl {
   typename EnableIf<TakeArgs<Method>::value, MediaEventListener>::Type
   ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
-    auto f = [=] (ArgType<Es>&&... aEvents) {
-      (thiz.get()->*aMethod)(Move(aEvents)...);
-    };
-    return ConnectInternal(aTarget, f);
+    return ConnectInternal(aTarget,
+      [=](ArgType<Es>&&... aEvents) {
+        (thiz.get()->*aMethod)(Move(aEvents)...);
+      });
   }
 
   // |Method| takes no arguments. Don't bother passing the event data.
@@ -356,10 +361,10 @@ class MediaEventSourceImpl {
   typename EnableIf<!TakeArgs<Method>::value, MediaEventListener>::Type
   ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
-    auto f = [=] () {
-      (thiz.get()->*aMethod)();
-    };
-    return ConnectInternal(aTarget, f);
+    return ConnectInternal(aTarget,
+      [=]() {
+        (thiz.get()->*aMethod)();
+      });
   }
 
 public:
@@ -373,14 +378,14 @@ public:
    */
   template<typename Function>
   MediaEventListener
-  Connect(AbstractThread* aTarget, const Function& aFunction) {
-    return ConnectInternal(aTarget, aFunction);
+  Connect(AbstractThread* aTarget, Function&& aFunction) {
+    return ConnectInternal(aTarget, Forward<Function>(aFunction));
   }
 
   template<typename Function>
   MediaEventListener
-  Connect(nsIEventTarget* aTarget, const Function& aFunction) {
-    return ConnectInternal(aTarget, aFunction);
+  Connect(nsIEventTarget* aTarget, Function&& aFunction) {
+    return ConnectInternal(aTarget, Forward<Function>(aFunction));
   }
 
   /**
