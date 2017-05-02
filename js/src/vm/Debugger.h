@@ -7,7 +7,6 @@
 #ifndef vm_Debugger_h
 #define vm_Debugger_h
 
-#include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Range.h"
@@ -386,27 +385,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     // Whether to enable code coverage on the Debuggee.
     bool collectCoverageInfo;
 
-    template<typename T>
-    struct DebuggerSiblingAccess {
-      static T* GetNext(T* elm) {
-        return elm->debuggerLink.mNext;
-      }
-      static void SetNext(T* elm, T* next) {
-        elm->debuggerLink.mNext = next;
-      }
-      static T* GetPrev(T* elm) {
-        return elm->debuggerLink.mPrev;
-      }
-      static void SetPrev(T* elm, T* prev) {
-        elm->debuggerLink.mPrev = prev;
-      }
-    };
-
-    // List of all js::Breakpoints in this debugger.
-    using BreakpointList =
-        mozilla::DoublyLinkedList<js::Breakpoint,
-                                  DebuggerSiblingAccess<js::Breakpoint>>;
-    BreakpointList breakpoints;
+    JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */
 
     // The set of GC numbers for which one or more of this Debugger's observed
     // debuggees participated in.
@@ -1583,27 +1562,7 @@ class BreakpointSite {
   private:
     Type type_;
 
-    template<typename T>
-    struct SiteSiblingAccess {
-      static T* GetNext(T* elm) {
-        return elm->siteLink.mNext;
-      }
-      static void SetNext(T* elm, T* next) {
-        elm->siteLink.mNext = next;
-      }
-      static T* GetPrev(T* elm) {
-        return elm->siteLink.mPrev;
-      }
-      static void SetPrev(T* elm, T* prev) {
-        elm->siteLink.mPrev = prev;
-      }
-    };
-
-    // List of all js::Breakpoints at this instruction.
-    using BreakpointList =
-        mozilla::DoublyLinkedList<js::Breakpoint,
-                                  SiteSiblingAccess<js::Breakpoint>>;
-    BreakpointList breakpoints;
+    JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
 
   protected:
@@ -1647,7 +1606,6 @@ class BreakpointSite {
 class Breakpoint {
     friend struct ::JSCompartment;
     friend class Debugger;
-    friend class BreakpointSite;
 
   public:
     Debugger * const debugger;
@@ -1655,14 +1613,12 @@ class Breakpoint {
   private:
     /* |handler| is marked unconditionally during minor GC. */
     js::PreBarrieredObject handler;
-
-    /**
-     * Link elements for each list this breakpoint can be in.
-     */
-    mozilla::DoublyLinkedListElement<Breakpoint> debuggerLink;
-    mozilla::DoublyLinkedListElement<Breakpoint> siteLink;
+    JSCList debuggerLinks;
+    JSCList siteLinks;
 
   public:
+    static Breakpoint* fromDebuggerLinks(JSCList* links);
+    static Breakpoint* fromSiteLinks(JSCList* links);
     Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
     void destroy(FreeOp* fop);
     Breakpoint* nextInDebugger();
@@ -1740,9 +1696,9 @@ Breakpoint::asWasm()
 Breakpoint*
 Debugger::firstBreakpoint() const
 {
-    if (breakpoints.isEmpty())
+    if (JS_CLIST_IS_EMPTY(&breakpoints))
         return nullptr;
-    return &(*breakpoints.begin());
+    return Breakpoint::fromDebuggerLinks(JS_NEXT_LINK(&breakpoints));
 }
 
 /* static */ Debugger*
