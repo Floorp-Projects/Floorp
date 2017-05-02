@@ -259,7 +259,7 @@ struct AllPhaseIterator {
     {
     }
 
-    void get(Phase* phase, size_t* dagSlot, size_t* level = nullptr) {
+    void get(Phase* phase, size_t* dagSlot, int* level = nullptr) {
         MOZ_ASSERT(!done());
         *dagSlot = activeSlot;
         *phase = descendants.empty() ? Phase(current) : descendants.front();
@@ -473,7 +473,7 @@ Statistics::formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const
     for (AllPhaseIterator iter; !iter.done(); iter.advance()) {
         Phase phase;
         size_t dagSlot;
-        size_t level;
+        int level;
         iter.get(&phase, &dagSlot, &level);
         MOZ_ASSERT(level < 4);
 
@@ -593,7 +593,6 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice) c
 UniqueChars
 Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const
 {
-    static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const TimeDuration MaxUnaccountedChildTime = TimeDuration::FromMicroseconds(50);
 
     FragmentVector fragments;
@@ -601,22 +600,20 @@ Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const
     for (AllPhaseIterator iter; !iter.done(); iter.advance()) {
         Phase phase;
         size_t dagSlot;
-        size_t level;
+        int level;
         iter.get(&phase, &dagSlot, &level);
-        MOZ_ASSERT(level < 4);
 
         TimeDuration ownTime = phaseTimes[dagSlot][phase];
         TimeDuration childTime = SumChildTimes(dagSlot, phase, phaseTimes);
         if (!ownTime.IsZero()) {
-            SprintfLiteral(buffer, "      %s%s: %.3fms\n",
-                           LevelToIndent[level], phases[phase].name, t(ownTime));
+            SprintfLiteral(buffer, "      %*s: %.3fms\n",
+                           level * 2, phases[phase].name, t(ownTime));
             if (!fragments.append(DuplicateString(buffer)))
                 return UniqueChars(nullptr);
 
             if (childTime && (ownTime - childTime) > MaxUnaccountedChildTime) {
-                MOZ_ASSERT(level < 3);
-                SprintfLiteral(buffer, "      %s%s: %.3fms\n",
-                               LevelToIndent[level + 1], "Other", t(ownTime - childTime));
+                SprintfLiteral(buffer, "      %*s: %.3fms\n",
+                               (level + 1) * 2, "Other", t(ownTime - childTime));
                 if (!fragments.append(DuplicateString(buffer)))
                     return UniqueChars(nullptr);
             }
