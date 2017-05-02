@@ -23,7 +23,6 @@ const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
-const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
 
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
@@ -1089,9 +1088,6 @@ Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
 // Ensure signature checks are enabled by default
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
-
-// Allow non-multiprocessCompatible extensions for now
-Services.prefs.setBoolPref(PREF_ALLOW_NON_MPC, true);
 
 
 // Copies blocklistFile (an nsIFile) to gProfD/blocklist.xml.
