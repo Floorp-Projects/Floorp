@@ -957,24 +957,28 @@ LongestPhaseSelfTime(const Statistics::PhaseTimeTable& times)
     for (auto i : AllPhases())
         selfTimes[i] = SumPhase(i, times);
 
-    // Subtract out the children's times.
+    // We have the total time spent in each phase, including descendant times.
+    // Loop over the children and subtract their times from their parent's self
+    // time.
     for (auto i : AllPhases()) {
         Phase parent = phases[i].parent;
         if (parent == PHASE_MULTI_PARENTS) {
-            // Subtract out only the time for the children specific to this
-            // parent.
+            // Current phase i has multiple parents. Each "instance" of this
+            // phase is in a parallel array of times indexed by 'dagSlot', so
+            // subtract only the dagSlot-specific child's time from the parent.
             for (auto edge : dagChildEdges) {
-                if (edge.parent == parent) {
+                if (edge.parent == i) {
                     size_t dagSlot = phaseExtra[edge.parent].dagSlot;
                     MOZ_ASSERT(dagSlot <= Statistics::MaxMultiparentPhases - 1);
-                    CheckSelfTime(parent, edge.child, times, selfTimes, times[dagSlot][edge.child]);
-                    MOZ_ASSERT(selfTimes[parent] >= times[dagSlot][edge.child]);
-                    selfTimes[parent] -= times[dagSlot][edge.child];
+                    CheckSelfTime(edge.parent, edge.child, times,
+                                  selfTimes, times[dagSlot][edge.child]);
+                    MOZ_ASSERT(selfTimes[edge.parent] >= times[dagSlot][edge.child]);
+                    selfTimes[edge.parent] -= times[dagSlot][edge.child];
                 }
             }
         } else if (parent != PHASE_NO_PARENT) {
-            MOZ_ASSERT(selfTimes[parent] >= selfTimes[i]);
             CheckSelfTime(parent, i, times, selfTimes, selfTimes[i]);
+            MOZ_ASSERT(selfTimes[parent] >= selfTimes[i]);
             selfTimes[parent] -= selfTimes[i];
         }
     }
