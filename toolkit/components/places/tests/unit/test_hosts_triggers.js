@@ -219,50 +219,136 @@ add_task(function* test_moz_hosts_update_2() {
   checkHostInMozHosts(TEST_URI_1, true, "https://www.");
 });
 
-function getTestSection(baseURL1, baseURL2, extra) {
+function getTestSection(baseURL1, baseURL2, baseURL2Prefix, extra) {
   let extraStr = "";
   let expectedSimplePrefix = null;
-  let expectedSecurePrefix = "https://";
+  let expectedUpgradePrefix = baseURL2Prefix;
   if (extra) {
     extraStr = ` (${extra})`;
     expectedSimplePrefix = `${extra}.`;
-    expectedSecurePrefix = `https://${extra}.`;
+    expectedUpgradePrefix = `${baseURL2Prefix}${extra}.`;
   }
   return [{
-    title: `Test simple insecure${extraStr}`,
+    title: `Test simple url${extraStr}`,
     visits: [{ uri: baseURL1, transition: TRANSITION_TYPED }],
-    expect: [baseURL1, true, expectedSimplePrefix ]
+    expect: [baseURL1, true, expectedSimplePrefix]
   }, {
-    title: `Test upgrade secure${extraStr}`,
+    title: `Test upgrade url${extraStr}`,
     visits: [{ uri: baseURL2, transition: TRANSITION_TYPED }],
-    expect: [baseURL2, true, null]
+    expect: [baseURL2, true, expectedUpgradePrefix]
   }, {
-    title: `Test remove insecure completely${extraStr}`,
+    title: `Test remove simple completely${extraStr}`,
     remove: baseURL1,
-    expect: [baseURL2, true, expectedSecurePrefix]
+    expect: [baseURL2, true, expectedUpgradePrefix]
   }, {
     title: `Test add more visits${extraStr}`,
     visits: [
       { uri: baseURL2, transition: TRANSITION_TYPED },
       { uri: baseURL1, transition: TRANSITION_TYPED },
     ],
-    expect: [baseURL2, true, null]
+    expect: [baseURL2, true, expectedUpgradePrefix]
   }, {
-    title: `Test switch to insecure${extraStr}`,
-    visits: [{ uri: baseURL1, transition: TRANSITION_TYPED }],
-    expect: [baseURL2, true, null]
+    title: `Test remove upgrade url${extraStr}`,
+    remove: baseURL2,
+    expect: [baseURL2, true, expectedSimplePrefix]
   }];
 }
 
-const updateTestURL1 = "http://example.com/";
-const updateTestURL2 = "https://example.com/";
-
 const hostsUpdateTests = [{
   title: "Upgrade Secure/Downgrade Insecure",
-  tests: getTestSection("http://example.com", "https://example.com")
+  tests: getTestSection("http://example.com", "https://example.com", "https://")
 }, {
   title: "Upgrade Secure/Downgrade Insecure (www)",
-  tests: getTestSection("http://www.example1.com", "https://www.example1.com", "www")
+  tests: getTestSection("http://www.example1.com", "https://www.example1.com", "https://", "www")
+}, {
+  title: "Upgrade Secure/Downgrade non-www to www",
+  tests: getTestSection("http://example3.com", "http://www.example3.com", "www.")
+}, {
+  title: "Switch to/from ftp",
+  tests: [{
+    title: `Test normal url`,
+    visits: [{ uri: "http://example4.com", transition: TRANSITION_TYPED }],
+    expect: ["http://example4.com", true, null]
+  }, {
+    title: `Test switch to ftp`,
+    visits: [{ uri: "ftp://example4.com", transition: TRANSITION_TYPED }],
+    // ftp is only switched to if all pages are ftp://
+    remove: ["http://example4.com"],
+    expect: ["ftp://example4.com", true, "ftp://"]
+  }, {
+    title: `Test visit http`,
+    visits: [{ uri: "http://example4.com", transition: TRANSITION_TYPED }],
+    expect: ["ftp://example4.com", true, null]
+  }]
+}, {
+  title: "Multiple URLs for source",
+  tests: [{
+    title: `Test simple insecure`,
+    visits: [{ uri: "http://example2.com", transition: TRANSITION_TYPED }],
+    expect: ["http://example2.com", true, null]
+  }, {
+    title: `Test upgrade secure`,
+    visits: [{ uri: "https://example2.com", transition: TRANSITION_TYPED }],
+    expect: ["https://example2.com", true, "https://"]
+  }, {
+    title: `Test extra insecure visit`,
+    visits: [{ uri: "http://example2.com/fake", transition: TRANSITION_TYPED }],
+    expect: ["https://example2.com", true, null]
+  }, {
+    title: `Test extra secure visits`,
+    visits: [
+      { uri: "https://example2.com/foo", transition: TRANSITION_TYPED },
+      { uri: "https://example2.com/bar", transition: TRANSITION_TYPED },
+    ],
+    expect: ["https://example2.com", true, "https://"]
+  }, {
+    title: `Test remove secure`,
+    remove: ["https://example2.com", "https://example2.com/foo", "https://example2.com/bar"],
+    expect: ["https://example2.com", true, null]
+  }]
+}, {
+  title: "Test upgrade tree",
+  tests: [{
+    title: `Add ftp`,
+    visits: [{ uri: "ftp://example5.com", transition: TRANSITION_TYPED }],
+    expect: ["http://example5.com", true, "ftp://"]
+  }, {
+    title: `Add basic http`,
+    visits: [{ uri: "http://example5.com", transition: TRANSITION_TYPED }],
+    expect: ["http://example5.com", true, null]
+  }, {
+    title: `Add basic www`,
+    visits: [
+      // Add multiples to exceed the average.
+      { uri: "http://www.example5.com", transition: TRANSITION_TYPED },
+      { uri: "http://www.example5.com/past", transition: TRANSITION_TYPED }
+    ],
+    expect: ["http://example5.com", true, "www."]
+  }, {
+    title: `Add https`,
+    visits: [
+      // Add multiples to exceed the average.
+      { uri: "https://example5.com", transition: TRANSITION_TYPED },
+      { uri: "https://example5.com/past", transition: TRANSITION_TYPED },
+      { uri: "https://example5.com/mak", transition: TRANSITION_TYPED },
+      { uri: "https://example5.com/standard8", transition: TRANSITION_TYPED }
+    ],
+    expect: ["https://example5.com", true, "https://"]
+  }, {
+    title: `Add https www`,
+    visits: [
+      // Add multiples to exceed the average.
+      { uri: "https://www.example5.com", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/quantum", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/photon", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/dash", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/flow", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/persona", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/ff_fx", transition: TRANSITION_TYPED },
+      { uri: "https://www.example5.com/search", transition: TRANSITION_TYPED }
+    ],
+    expect: ["https://example5.com", true, "https://www."]
+  }]
 }];
 
 add_task(function* test_moz_hosts_update() {

@@ -131,7 +131,7 @@ add_task(function* test_priority_1() {
   yield cleanup();
 });
 
-add_task(function* test_periority_2() {
+add_task(function* test_priority_2() {
   do_print( "Ensuring correct priority 2");
   yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("https://mozilla.org/test/"), transition: TRANSITION_TYPED },
@@ -147,7 +147,7 @@ add_task(function* test_periority_2() {
   yield cleanup();
 });
 
-add_task(function* test_periority_3() {
+add_task(function* test_priority_3() {
   do_print("Ensuring correct priority 3");
   yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("ftp://mozilla.org/test/"), transition: TRANSITION_TYPED },
@@ -162,7 +162,7 @@ add_task(function* test_periority_3() {
   yield cleanup();
 });
 
-add_task(function* test_periority_4() {
+add_task(function* test_priority_4() {
   do_print("Ensuring correct priority 4");
   yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://www.mozilla.org/test/"), transition: TRANSITION_TYPED },
@@ -171,7 +171,7 @@ add_task(function* test_periority_4() {
   yield check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "mozilla.org/"
+    completed: "www.mozilla.org/"
   });
   yield cleanup();
 });
