@@ -113,7 +113,7 @@ public final class TelemetryWrapper {
     public static void init(Context context) {
         // When initializing the telemetry library it will make sure that all directories exist and
         // are readable/writable.
-        final StrictMode.ThreadPolicy threadPolicy = StrictMode.allowThreadDiskReads();
+        final StrictMode.ThreadPolicy threadPolicy = StrictMode.allowThreadDiskWrites();
         try {
             final Resources resources = context.getResources();
 
