@@ -289,8 +289,11 @@ const mockedSessionTransport = {
     sendAsyncMessage('message-sent', data);
   },
   close: function(reason) {
-    sendAsyncMessage('data-transport-closed', reason);
-    this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+    // Don't send a message after tearDown, to avoid a leak.
+    if (this._callback) {
+      sendAsyncMessage('data-transport-closed', reason);
+      this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+    }
   },
   simulateTransportReady: function() {
     this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
@@ -405,14 +408,14 @@ addMessageListener('trigger-incoming-session-request', function(url) {
   var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
                       .getService(Ci.nsIPresentationDeviceManager);
   deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-	       .onSessionRequest(mockedDevice, url, sessionId, mockedControlChannel);
+               .onSessionRequest(mockedDevice, url, sessionId, mockedControlChannel);
 });
 
 addMessageListener('trigger-incoming-terminate-request', function() {
   var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
                       .getService(Ci.nsIPresentationDeviceManager);
   deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-	       .onTerminateRequest(mockedDevice, sessionId, mockedControlChannel, true);
+               .onTerminateRequest(mockedDevice, sessionId, mockedControlChannel, true);
 });
 
 addMessageListener('trigger-reconnected-acked', function(url) {

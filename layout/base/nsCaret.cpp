@@ -56,7 +56,7 @@ static nsIFrame*
 CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
 {
   if (aFrame == aStopAtFrame ||
-      ((aFrame->GetType() == nsGkAtoms::textFrame &&
+      ((aFrame->IsTextFrame() &&
        (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
     return aFrame;
   if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
@@ -104,7 +104,7 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset)
     if (r)
     {
       *aFrame = r;
-      NS_ASSERTION(r->GetType() == nsGkAtoms::textFrame, "Expected text frame");
+      NS_ASSERTION(r->IsTextFrame(), "Expected text frame");
       *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
       return;
     }
@@ -374,8 +374,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
 
   // Clamp the inline-position to be within our scroll frame. If we don't, then
   // it clips us, and we don't appear at all. See bug 335560.
-  nsIFrame *scrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
+  nsIFrame* scrollFrame =
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::Scroll);
   if (scrollFrame) {
     // First, use the scrollFrame to get at the scrollable view that we're in.
     nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
@@ -550,10 +550,9 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
 
   // If the offset falls outside of the frame, then don't paint the caret.
   int32_t startOffset, endOffset;
-  if (frame->GetType() == nsGkAtoms::textFrame &&
+  if (frame->IsTextFrame() &&
       (NS_FAILED(frame->GetOffsets(startOffset, endOffset)) ||
-      startOffset > frameOffset ||
-      endOffset < frameOffset)) {
+       startOffset > frameOffset || endOffset < frameOffset)) {
     return nullptr;
   }
 

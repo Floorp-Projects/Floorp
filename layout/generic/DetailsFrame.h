@@ -31,8 +31,6 @@ public:
 
   virtual ~DetailsFrame();
 
-  nsIAtom* GetType() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override
   {

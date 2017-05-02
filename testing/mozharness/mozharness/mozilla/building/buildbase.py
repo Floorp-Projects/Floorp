@@ -1841,18 +1841,20 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_check_test_env())
 
-        if c.get('enable_pymake'):  # e.g. windows
-            pymake_path = os.path.join(dirs['abs_src_dir'], 'build',
-                                       'pymake', 'make.py')
-            cmd = ['python', pymake_path]
-        else:
-            cmd = ['make']
-        cmd.extend(['-k', 'check'])
+        python = self.query_exe('python2.7')
+        cmd = [
+            python, 'mach',
+            '--log-no-times',
+            'build',
+            '-v',
+            '--keep-going',
+            'check',
+        ]
 
         parser = CheckTestCompleteParser(config=c,
                                          log_obj=self.log_obj)
         return_code = self.run_command_m(command=cmd,
-                                         cwd=dirs['abs_obj_dir'],
+                                         cwd=dirs['abs_src_dir'],
                                          env=env,
                                          output_parser=parser)
         tbpl_status = parser.evaluate_parser(return_code)
@@ -1863,8 +1865,8 @@ or run without that action (ie: --no-{action})"
                 return_code,  self.return_code,
                 AUTOMATION_EXIT_CODES[::-1]
             )
-            self.error("'make -k check' did not run successfully. Please check "
-                       "log for errors.")
+            self.error("'mach build check' did not run successfully. Please "
+                       "check log for errors.")
 
     def _load_build_resources(self):
         p = self.config.get('build_resources_path') % self.query_abs_dirs()

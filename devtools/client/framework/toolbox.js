@@ -4,6 +4,8 @@
 
 "use strict";
 
+const SOURCE_MAP_WORKER = "resource://devtools/client/shared/source-map/worker.js";
+
 const MAX_ORDINAL = 99;
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
@@ -546,6 +548,7 @@ Toolbox.prototype = {
     // Uses browser loader to access the `Worker` global.
     this._sourceMapService =
       this.browserRequire("devtools/client/shared/source-map/index");
+    this._sourceMapService.startSourceMapWorker(SOURCE_MAP_WORKER);
     return this._sourceMapService;
   },
 
@@ -2297,7 +2300,7 @@ Toolbox.prototype = {
     }
 
     if (this._sourceMapService) {
-      this._sourceMapService.destroyWorker();
+      this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
     }
 

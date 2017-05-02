@@ -50,13 +50,6 @@ FAILURE = 1
 SUCCESS_STR = "Success"
 FAILURE_STR = "Failed"
 
-# when running get_output_form_command, pymake has some extra output
-# that needs to be filtered out
-PyMakeIgnoreList = [
-    re.compile(r'''.*make\.py(?:\[\d+\])?: Entering directory'''),
-    re.compile(r'''.*make\.py(?:\[\d+\])?: Leaving directory'''),
-]
-
 
 # mandatory configuration options, without them, this script will not work
 # it's a list of values that are already known before starting a build
@@ -510,33 +503,20 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 self.enUS_revision = match.groups()[1]
         return self.enUS_revision
 
-    def _query_make_variable(self, variable, make_args=None,
-                             exclude_lines=PyMakeIgnoreList):
+    def _query_make_variable(self, variable, make_args=None):
         """returns the value of make echo-variable-<variable>
            it accepts extra make arguements (make_args)
-           it also has an exclude_lines from the output filer
-           exclude_lines defaults to PyMakeIgnoreList because
-           on windows, pymake writes extra output lines that need
-           to be filtered out.
         """
         dirs = self.query_abs_dirs()
         make_args = make_args or []
-        exclude_lines = exclude_lines or []
         target = ["echo-variable-%s" % variable] + make_args
         cwd = dirs['abs_locales_dir']
         raw_output = self._get_output_from_make(target, cwd=cwd,
                                                 env=self.query_bootstrap_env())
-        # we want to log all the messages from make/pymake and
-        # exlcude some messages from the output ("Entering directory...")
+        # we want to log all the messages from make
         output = []
         for line in raw_output.split("\n"):
-            discard = False
-            for element in exclude_lines:
-                if element.match(line):
-                    discard = True
-                    continue
-            if not discard:
-                output.append(line.strip())
+            output.append(line.strip())
         output = " ".join(output).strip()
         self.info('echo-variable-%s: %s' % (variable, output))
         return output

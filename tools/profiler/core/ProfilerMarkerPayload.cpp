@@ -5,7 +5,7 @@
 
 #include "GeckoProfiler.h"
 #include "ProfilerBacktrace.h"
-#include "ProfilerMarkers.h"
+#include "ProfilerMarkerPayload.h"
 #include "gfxASurface.h"
 #include "Layers.h"
 #include "mozilla/Sprintf.h"

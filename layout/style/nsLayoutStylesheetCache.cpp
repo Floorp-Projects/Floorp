@@ -79,7 +79,7 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   if (!mScrollbarsSheet) {
     // Scrollbars don't need access to unsafe rules
     LoadSheetURL("chrome://global/skin/scrollbars.css",
-                 &mScrollbarsSheet, eAuthorSheetFeatures, eCrash);
+                 &mScrollbarsSheet, eSafeAgentSheetFeatures, eCrash);
   }
 
   return mScrollbarsSheet;

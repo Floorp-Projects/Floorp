@@ -6,6 +6,8 @@
 
 #include "ProfileBuffer.h"
 
+#include "ProfilerMarker.h"
+
 ProfileBuffer::ProfileBuffer(int aEntrySize)
   : mEntries(mozilla::MakeUnique<ProfileBufferEntry[]>(aEntrySize))
   , mWritePos(0)

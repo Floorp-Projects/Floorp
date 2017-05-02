@@ -293,14 +293,13 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
         // If column has isize, column-group doesn't override isize.
         if (colInfo.minCoord == 0 && colInfo.prefCoord == 0 &&
             colInfo.prefPercent == 0.0f) {
-            NS_ASSERTION(colFrame->GetParent()->GetType() ==
-                             nsGkAtoms::tableColGroupFrame,
-                         "expected a column-group");
-            colInfo = GetColISizeInfo(aRenderingContext,
-                                      colFrame->GetParent(), wm);
-            colFrame->AddCoords(colInfo.minCoord, colInfo.prefCoord,
-                                colInfo.hasSpecifiedISize);
-            colFrame->AddPrefPercent(colInfo.prefPercent);
+          NS_ASSERTION(colFrame->GetParent()->IsTableColGroupFrame(),
+                       "expected a column-group");
+          colInfo =
+            GetColISizeInfo(aRenderingContext, colFrame->GetParent(), wm);
+          colFrame->AddCoords(
+            colInfo.minCoord, colInfo.prefCoord, colInfo.hasSpecifiedISize);
+          colFrame->AddPrefPercent(colInfo.prefPercent);
         }
 
         // Consider the contents of and the isizes on the cells without

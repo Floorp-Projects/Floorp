@@ -145,7 +145,7 @@ protected:
 };
 
 nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
-  : nsFrame(aContext)
+  : nsFrame(aContext, FrameType::Object)
   , mInstanceOwner(nullptr)
   , mOuterView(nullptr)
   , mInnerView(nullptr)
@@ -238,12 +238,6 @@ nsPluginFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 
   nsFrame::DidSetStyleContext(aOldStyleContext);
-}
-
-nsIAtom*
-nsPluginFrame::GetType() const
-{
-  return nsGkAtoms::objectFrame; 
 }
 
 #ifdef DEBUG_FRAME_DUMP

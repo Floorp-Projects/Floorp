@@ -44,13 +44,13 @@ NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 
-nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
-  nsContainerFrame(aContext),
-  mTotalPages(-1),
-  mSelectionHeight(-1),
-  mYSelOffset(0),
-  mCalledBeginPage(false),
-  mCurrentCanvasListSetup(false)
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, FrameType::Sequence)
+  , mTotalPages(-1)
+  , mSelectionHeight(-1)
+  , mYSelOffset(0)
+  , mCalledBeginPage(false)
+  , mCurrentCanvasListSetup(false)
 {
   nscoord halfInch = PresContext()->CSSTwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
@@ -303,7 +303,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
   // Set Page Number Info
   int32_t pageNum = 1;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    MOZ_ASSERT(e.get()->GetType() == nsGkAtoms::pageFrame,
+    MOZ_ASSERT(e.get()->IsPageFrame(),
                "only expecting nsPageFrame children. Other children will make "
                "this static_cast bogus & probably violate other assumptions");
     nsPageFrame* pf = static_cast<nsPageFrame*>(e.get());
@@ -736,7 +736,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
     if (mSelectionHeight >= 0) {
       selectionContentFrame = currentPageFrame->PrincipalChildList().FirstChild();
-      MOZ_ASSERT(selectionContentFrame->GetType() == nsGkAtoms::pageContentFrame &&
+      MOZ_ASSERT(selectionContentFrame->IsPageContentFrame() &&
                  !selectionContentFrame->GetNextSibling(),
                  "Unexpected frame tree");
       // To print a selection we reposition the page content frame for each
@@ -862,12 +862,6 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                          ::ComputePageSequenceTransform));
 
   aLists.Content()->AppendToTop(&content);
-}
-
-nsIAtom*
-nsSimplePageSequenceFrame::GetType() const
-{
-  return nsGkAtoms::sequenceFrame; 
 }
 
 //------------------------------------------------------------------------------

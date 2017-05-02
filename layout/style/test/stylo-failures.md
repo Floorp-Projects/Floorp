@@ -31,7 +31,7 @@ to mochitest command.
 
 * Media query support:
   * test_media_queries.html [156]
-  * test_media_queries_dynamic.html [7]
+  * test_media_queries_dynamic.html [6]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
@@ -120,20 +120,12 @@ to mochitest command.
   * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
   * test_value_storage.html `'grid` [*]
 * Unimplemented prefixed properties:
-  * -moz-force-broken-image-icon servo/servo#16001
-    * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
-    * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
-    * test_inherit_storage.html `-moz-force-broken-image-icon` [2]
-    * test_initial_computation.html `-moz-force-broken-image-icon` [4]
-    * test_initial_storage.html `-moz-force-broken-image-icon` [4]
-    * test_value_storage.html `-moz-force-broken-image-icon` [4]
   * -moz-transform: need different parsing rules servo/servo#16003
     * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
     * test_align_shorthand_serialization.html [8]
-    * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
@@ -156,8 +148,7 @@ to mochitest command.
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
-    * test_value_storage.html `align-` [9]
-    * ... `justify-` [14]
+    * ... `justify-` [5]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]

@@ -16,10 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "require",
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
-  return require("devtools/shared/css/color").colorUtils;
-});
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   getWinUtils,
@@ -30,6 +26,41 @@ const {
 
 // Minimum time between two resizes.
 const RESIZE_TIMEOUT = 100;
+
+/**
+ * Check if the provided color is fully opaque.
+ *
+ * @param   {string} color
+ *          Any valid CSS color.
+ * @returns {boolean} true if the color is opaque.
+ */
+const isOpaque = function(color) {
+  try {
+    if (/(rgba|hsla)/i.test(color)) {
+      // Match .123456, 123.456, 123456 with an optional % sign.
+      let numberRe = /(\.\d+|\d+\.?\d*)%?/g;
+      // hsla/rgba, opacity is the last number in the color string (can be a percentage).
+      let opacity = color.match(numberRe)[3];
+
+      // Convert to [0, 1] space if the opacity was expressed as a percentage.
+      if (opacity.includes("%")) {
+        opacity = opacity.slice(0, -1);
+        opacity = opacity / 100;
+      }
+
+      return opacity * 1 >= 1;
+    } else if (/^#[a-f0-9]{4}$/i.test(color)) {
+      // Hex color with 4 characters, opacity is one if last character is F
+      return color.toUpperCase().endsWith("F");
+    } else if (/^#[a-f0-9]{8}$/i.test(color)) {
+      // Hex color with 8 characters, opacity is one if last 2 characters are FF
+      return color.toUpperCase().endsWith("FF");
+    }
+  } catch (e) {
+    // Invalid color.
+  }
+  return true;
+};
 
 const BrowserListener = {
   init({allowScriptsToClose, blockParser, fixedWidth, maxHeight, maxWidth, stylesheets, isInline}) {
@@ -213,8 +244,7 @@ const BrowserListener = {
       result = {height, detail};
     } else {
       let background = doc.defaultView.getComputedStyle(body).backgroundColor;
-      let bgColor = colorUtils.colorToRGBA(background);
-      if (bgColor.a !== 1) {
+      if (!isOpaque(background)) {
         // Ignore non-opaque backgrounds.
         background = null;
       }

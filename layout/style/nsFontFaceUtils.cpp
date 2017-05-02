@@ -131,7 +131,7 @@ nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       if (FrameUsesFont(f, aFont)) {
         ScheduleReflow(ps, f);
       } else {
-        if (f->GetType() == nsGkAtoms::placeholderFrame) {
+        if (f->IsPlaceholderFrame()) {
           nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
           if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
             // We have another distinct subtree we need to mark.

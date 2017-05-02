@@ -921,3 +921,7 @@ pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https:
 pref("media.openUnsupportedTypeWithExternalApp", true);
 
 pref("dom.keyboardevent.dispatch_during_composition", true);
+
+#if CPU_ARCH == aarch64
+pref("javascript.options.native_regexp", false);
+#endif

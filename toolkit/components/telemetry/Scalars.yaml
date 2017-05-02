@@ -212,7 +212,7 @@ browser.usage:
     kind: uint
     notification_emails:
       - tom@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - 'all'
 

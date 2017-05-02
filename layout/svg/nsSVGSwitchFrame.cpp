@@ -13,13 +13,14 @@
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsSVGSwitchFrame : public nsSVGGFrame
+class nsSVGSwitchFrame final : public nsSVGGFrame
 {
   friend nsIFrame*
   NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGSwitchFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext) {}
+    : nsSVGGFrame(aContext, FrameType::SVGSwitch)
+  {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -29,13 +30,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgSwitchFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -85,12 +79,6 @@ nsSVGSwitchFrame::Init(nsIContent*       aContent,
   nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-nsIAtom *
-nsSVGSwitchFrame::GetType() const
-{
-  return nsGkAtoms::svgSwitchFrame;
-}
 
 void
 nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,

@@ -53,7 +53,6 @@ class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
 class nsHtml5AttributeName;
 class nsHtml5ElementName;
-class nsHtml5HtmlAttributes;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -127,6 +126,7 @@ class nsHtml5Tokenizer
   protected:
     nsHtml5AttributeName* attributeName;
   private:
+    nsHtml5AttributeName* nonInternedAttributeName;
     nsIAtom* doctypeName;
     nsHtml5String publicIdentifier;
     nsHtml5String systemIdentifier;

@@ -428,7 +428,8 @@ def get_vc_paths(topsrcdir):
 
         yield (Version(install['installationVersion']), {
             'x64': [os.path.join(path, r'VC\bin\amd64')],
-            'x86': [os.path.join(path, r'VC\bin\amd64_x86')],
+            # The x64->x86 cross toolchain requires DLLs from the native x64 toolchain.
+            'x86': [os.path.join(path, r'VC\bin\amd64_x86'), os.path.join(path, r'VC\bin\amd64')],
         })
     # Then VS2017 and newer.
     for install in vswhere(['-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):

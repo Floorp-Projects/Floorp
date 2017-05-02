@@ -26,7 +26,6 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,
@@ -56,9 +55,11 @@ protected:
   friend nsContainerFrame*
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
+
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
-    , mISize(0) {}
+    : nsContainerFrame(aContext, mozilla::FrameType::RubyTextContainer)
+    , mISize(0)
+  {}
 
   void UpdateSpanFlag();
 

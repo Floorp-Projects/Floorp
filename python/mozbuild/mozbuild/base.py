@@ -451,7 +451,7 @@ class MozbuildObject(ProcessExecutionMixin):
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
             ensure_exit_code=0, silent=True, print_directory=True,
-            pass_thru=False, num_jobs=0):
+            pass_thru=False, num_jobs=0, keep_going=False):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -512,6 +512,9 @@ class MozbuildObject(ProcessExecutionMixin):
         # these to measure progress.
         if print_directory:
             args.append('-w')
+
+        if keep_going:
+            args.append('-k')
 
         if isinstance(target, list):
             args.extend(target)

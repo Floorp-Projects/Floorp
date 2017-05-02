@@ -281,7 +281,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   // fall through and return false.
   if (aWidgetType == NS_THEME_RESIZER) {
     nsIFrame* parentFrame = aFrame->GetParent();
-    if (parentFrame && parentFrame->GetType() == nsGkAtoms::scrollFrame) {
+    if (parentFrame && parentFrame->IsScrollFrame()) {
       // if the parent is a scrollframe, the resizer should be native themed
       // only if the scrollable area doesn't override the widget style.
       parentFrame = parentFrame->GetParent();
@@ -712,11 +712,11 @@ bool
 nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame)
 {
   nsIFrame* rangeFrame = aFrame;
-  if (rangeFrame->GetType() != nsGkAtoms::rangeFrame) {
+  if (!rangeFrame->IsRangeFrame()) {
     // If the thumb's frame is passed in, get its range parent:
     rangeFrame = aFrame->GetParent();
   }
-  if (rangeFrame->GetType() == nsGkAtoms::rangeFrame) {
+  if (rangeFrame->IsRangeFrame()) {
     return static_cast<nsRangeFrame*>(rangeFrame)->IsHorizontal();
   }
   // Not actually a range frame - just use the ratio of the frame's size to

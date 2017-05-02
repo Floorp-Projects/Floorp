@@ -40,8 +40,9 @@ public:
   }
 
 protected:
-  explicit nsAtomicContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext) {}
+  nsAtomicContainerFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsContainerFrame(aContext, aType)
+  {}
 };
 
 #endif // nsAtomicContainerFrame_h___

@@ -476,7 +476,7 @@ EffectCompositor::GetServoAnimationRule(
   const dom::Element* aElement,
   CSSPseudoElementType aPseudoType,
   CascadeLevel aCascadeLevel,
-  RawServoAnimationValueMapBorrowed aAnimationValues)
+  RawServoAnimationValueMapBorrowedMut aAnimationValues)
 {
   MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),

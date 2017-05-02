@@ -49,12 +49,6 @@ nsSVGInnerSVGFrame::Init(nsIContent*       aContent,
 }
 #endif /* DEBUG */
 
-nsIAtom *
-nsSVGInnerSVGFrame::GetType() const
-{
-  return nsGkAtoms::svgInnerSVGFrame;
-}
-
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 

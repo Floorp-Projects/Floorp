@@ -130,7 +130,7 @@ NS_QUERYFRAME_HEAD(nsTableRowFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::TableRow)
   , mContentBSize(0)
   , mStylePctBSize(0)
   , mStyleFixedBSize(0)
@@ -213,7 +213,7 @@ nsTableRowFrame::AppendFrames(ChildListID  aListID,
   nsTableFrame* tableFrame = GetTableFrame();
   for (nsFrameList::Enumerator e(newCells) ; !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
-    NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),
+    NS_ASSERTION(IS_TABLE_CELL(childFrame->Type()),
                  "Not a table cell frame/pseudo frame construction failure");
     tableFrame->AppendCell(static_cast<nsTableCellFrame&>(*childFrame), GetRowIndex());
   }
@@ -238,12 +238,13 @@ nsTableRowFrame::InsertFrames(ChildListID  aListID,
 
   // Get the table frame
   nsTableFrame* tableFrame = GetTableFrame();
-  nsIAtom* cellFrameType = tableFrame->IsBorderCollapse() ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
+  FrameType cellFrameType = tableFrame->IsBorderCollapse()
+      ? FrameType::BCTableCell : FrameType::TableCell;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsTArray<nsTableCellFrame*> cellChildren;
   for (nsFrameList::Enumerator e(newCells); !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
-    NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),
+    NS_ASSERTION(IS_TABLE_CELL(childFrame->Type()),
                  "Not a table cell frame/pseudo frame construction failure");
     cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
   }
@@ -309,7 +310,7 @@ GetBSizeOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
   // add in bsize of rows spanned beyond the 1st one
   nsIFrame* nextRow = aTableCellFrame.GetParent()->GetNextSibling();
   for (int32_t rowX = 1; ((rowX < rowSpan) && nextRow);) {
-    if (nsGkAtoms::tableRowFrame == nextRow->GetType()) {
+    if (nextRow->IsTableRowFrame()) {
       bsize += nextRow->BSize(aWM);
       rowX++;
     }
@@ -453,7 +454,7 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM)
   nscoord ascent = 0;
   nsSize containerSize = GetSize();
   for (nsIFrame* childFrame : mFrames) {
-    if (IS_TABLE_CELL(childFrame->GetType())) {
+    if (IS_TABLE_CELL(childFrame->Type())) {
       nsIFrame* firstKid = childFrame->PrincipalChildList().FirstChild();
       ascent = std::max(ascent,
                         LogicalRect(aWM, firstKid->GetNormalRect(),
@@ -1403,12 +1404,6 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
     }
   }
   mFrames.InsertFrame(this, priorCell, aFrame);
-}
-
-nsIAtom*
-nsTableRowFrame::GetType() const
-{
-  return nsGkAtoms::tableRowFrame;
 }
 
 nsTableRowFrame*

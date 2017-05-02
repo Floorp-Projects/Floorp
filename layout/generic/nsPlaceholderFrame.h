@@ -68,7 +68,7 @@ public:
                                           nsStyleContext* aContext,
                                           nsFrameState aTypeBit);
   nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBit)
-    : nsFrame(aContext)
+    : nsFrame(aContext, mozilla::FrameType::Placeholder)
   {
     NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||
                     aTypeBit == PLACEHOLDER_FOR_ABSPOS ||
@@ -116,13 +116,6 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif // DEBUG
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::placeholderFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
   virtual bool IsEmpty() override { return true; }
   virtual bool IsSelfEmpty() override { return true; }
 
@@ -154,7 +147,7 @@ public:
    */
   static nsIFrame* GetRealFrameFor(nsIFrame* aFrame) {
     NS_PRECONDITION(aFrame, "Must have a frame to work with");
-    if (aFrame->GetType() == nsGkAtoms::placeholderFrame) {
+    if (aFrame->IsPlaceholderFrame()) {
       return GetRealFrameForPlaceholder(aFrame);
     }
     return aFrame;
@@ -164,7 +157,7 @@ public:
    * @return the out-of-flow for aFrame, which is known to be a placeholder
    */
   static nsIFrame* GetRealFrameForPlaceholder(nsIFrame* aFrame) {
-    NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::placeholderFrame,
+    NS_PRECONDITION(aFrame->IsPlaceholderFrame(),
                     "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
       static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();

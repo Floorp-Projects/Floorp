@@ -39,7 +39,7 @@ NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsMeterFrame)
 
 nsMeterFrame::nsMeterFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::Meter)
   , mBarDiv(nullptr)
 {
 }
@@ -57,12 +57,6 @@ nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mBarDiv);
   nsContainerFrame::DestroyFrom(aDestructRoot);
-}
-
-nsIAtom*
-nsMeterFrame::GetType() const
-{
-  return nsGkAtoms::meterFrame;
 }
 
 nsresult

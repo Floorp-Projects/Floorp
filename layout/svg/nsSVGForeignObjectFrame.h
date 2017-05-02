@@ -50,13 +50,6 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgForeignObjectFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &

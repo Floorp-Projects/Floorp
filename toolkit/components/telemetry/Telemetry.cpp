@@ -2044,9 +2044,8 @@ CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
   }
 
   if (!hang.GetNativeStack().empty()) {
-    const Telemetry::HangStack& stack = hang.GetNativeStack();
-    const std::vector<uintptr_t>& frames = stack.GetNativeFrames();
-    Telemetry::ProcessedStack processed = Telemetry::GetStackAndModules(frames);
+    const Telemetry::NativeHangStack& stack = hang.GetNativeStack();
+    Telemetry::ProcessedStack processed = Telemetry::GetStackAndModules(stack);
 
     CombinedStacks singleStack;
     singleStack.AddStack(processed);

@@ -1150,7 +1150,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_MENULIST_BUTTON: {
       bool isHTML = IsHTMLContent(aFrame);
       nsIFrame* parentFrame = aFrame->GetParent();
-      bool isMenulist = !isHTML && parentFrame->GetType() == nsGkAtoms::menuFrame;
+      bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
       bool isOpen = false;
 
       // HTML select and XUL menulist dropdown buttons get state from the parent.
@@ -2591,7 +2591,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
       // match the usually white background of the scrollable container, so
       // only support the native resizer if not in a scrollframe.
       nsIFrame* parentFrame = aFrame->GetParent();
-      return (!parentFrame || parentFrame->GetType() != nsGkAtoms::scrollFrame);
+      return !parentFrame || !parentFrame->IsScrollFrame();
     }
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
@@ -3114,7 +3114,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
 
       nsIFrame* parentFrame = aFrame->GetParent();
       bool isHTML = IsHTMLContent(aFrame);
-      bool isMenulist = !isHTML && parentFrame->GetType() == nsGkAtoms::menuFrame;
+      bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
       bool isOpen = false;
 
       // HTML select and XUL menulist dropdown buttons get state from the parent.

@@ -619,7 +619,7 @@ VerifyStyleTree(nsIFrame* aFrame)
     for (nsIFrame* child : lists.CurrentList()) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
-        if (nsGkAtoms::placeholderFrame == child->GetType()) {
+        if (child->IsPlaceholderFrame()) {
           // placeholder: first recurse and verify the out of flow frame,
           // then verify the placeholder's context
           nsIFrame* outOfFlowFrame =
@@ -702,7 +702,7 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 static nsIFrame*
 GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame)
 {
-  if (aFrame->GetType() == nsGkAtoms::viewportFrame) {
+  if (aFrame->IsViewportFrame()) {
     // This happens if the root-<svg> is fixed positioned, in which case we
     // can't use aFrame->GetContent() to find the primary frame, since
     // GetContent() returns nullptr for ViewportFrame.
@@ -711,9 +711,9 @@ GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame)
   // For an nsHTMLScrollFrame, this will get the SVG frame that has the
   // children-only transforms:
   aFrame = aFrame->GetContent()->GetPrimaryFrame();
-  if (aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame) {
+  if (aFrame->IsSVGOuterSVGFrame()) {
     aFrame = aFrame->PrincipalChildList().FirstChild();
-    MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgOuterSVGAnonChildFrame,
+    MOZ_ASSERT(aFrame->IsSVGOuterSVGAnonChildFrame(),
                "Where is the nsSVGOuterSVGFrame's anon child??");
   }
   MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer),
@@ -731,7 +731,7 @@ RecomputePosition(nsIFrame* aFrame)
   // the dynamic position change on the table wrapper frame, and the
   // reflow-based fallback code path also ignores positions on inner table
   // frames.
-  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
+  if (aFrame->IsTableFrame()) {
     return true;
   }
 
@@ -841,7 +841,7 @@ RecomputePosition(nsIFrame* aFrame)
   Maybe<ReflowInput> cbReflowInput;
   nsIFrame* cbFrame = parentFrame->GetContainingBlock();
   if (cbFrame && (aFrame->GetContainingBlock() != parentFrame ||
-                  parentFrame->GetType() == nsGkAtoms::tableFrame)) {
+                  parentFrame->IsTableFrame())) {
     LogicalSize cbSize = cbFrame->GetLogicalSize();
     cbReflowInput.emplace(cbFrame->PresContext(), cbFrame, &rc, cbSize);
     cbReflowInput->ComputedPhysicalMargin() = cbFrame->GetUsedMargin();
@@ -946,7 +946,7 @@ FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame,
 
   for (nsIFrame::ChildListIterator lists(aFrame); !lists.IsDone(); lists.Next()) {
     for (nsIFrame* f : lists.CurrentList()) {
-      if (f->GetType() == nsGkAtoms::placeholderFrame) {
+      if (f->IsPlaceholderFrame()) {
         nsIFrame* outOfFlow =
           nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
         // If SVG text frames could appear here, they could confuse us since
@@ -1079,7 +1079,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         NS_ASSERTION(aFrame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
                      "expected frame for a <textPath> element");
         nsIFrame* text =
-          nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::svgTextFrame);
+          nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::SVGText);
         NS_ASSERTION(text, "expected to find an ancestor SVGTextFrame");
         static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
       } else {
@@ -1156,7 +1156,7 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
     for (nsIFrame* child : lists.CurrentList()) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that don't have placeholders
-        if (nsGkAtoms::placeholderFrame == child->GetType()) {
+        if (child->IsPlaceholderFrame()) {
           // do the out-of-flow frame and its continuations
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
@@ -1429,7 +1429,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     if ((hint & nsChangeHint_UpdateContainingBlock) && frame &&
         !(hint & nsChangeHint_ReconstructFrame)) {
       if (NeedToReframeForAddingOrRemovingTransform(frame) ||
-          frame->GetType() == nsGkAtoms::fieldSetFrame ||
+          frame->IsFieldSetFrame() ||
           frame->GetContentInsertionFrame() != frame) {
         // The frame has positioned children that need to be reparented, or
         // it can't easily be converted to/from being an abs-pos container correctly.
@@ -1685,8 +1685,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       if (frame) {
         DebugVerifyStyleTree(frame);
       }
-    } else if (!data.mFrame ||
-               data.mFrame->GetType() != nsGkAtoms::viewportFrame) {
+    } else if (!data.mFrame || !data.mFrame->IsViewportFrame()) {
       NS_WARNING("Unable to test style tree integrity -- no content node "
                  "(and not a viewport frame)");
     }

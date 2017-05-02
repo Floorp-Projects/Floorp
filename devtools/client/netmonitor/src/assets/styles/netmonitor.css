@@ -447,6 +447,12 @@ body,
   width: 8%;
 }
 
+/* Scheme column */
+
+.requests-list-scheme {
+  width: 8%;
+}
+
 /* Domain column */
 
 .requests-list-domain {

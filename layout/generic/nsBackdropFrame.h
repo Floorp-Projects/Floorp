@@ -17,10 +17,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsBackdropFrame(nsStyleContext* aContext)
-    : nsFrame(aContext) { }
+    : nsFrame(aContext, mozilla::FrameType::Backdrop)
+  {}
 
-  // nsIFrame overrides
-  virtual nsIAtom* GetType() const override;
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

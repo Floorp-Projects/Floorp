@@ -156,7 +156,7 @@ fails-if(stylo) == flexbox-min-height-auto-004.html flexbox-min-height-auto-004-
 == flexbox-min-width-auto-002a.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-002c.html flexbox-min-width-auto-002-ref.html
-== flexbox-min-width-auto-003.html flexbox-min-width-auto-003-ref.html
+fails-if(stylo) == flexbox-min-width-auto-003.html flexbox-min-width-auto-003-ref.html
 fails-if(stylo) == flexbox-min-width-auto-004.html flexbox-min-width-auto-004-ref.html
 
 # Tests for flex containers with the "overflow" property set

@@ -587,13 +587,13 @@ ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun,
     aFrame->RemoveStateBits(aWhichTextRunState);
   } else {
     do {
-      NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame, "Bad frame");
+      NS_ASSERTION(aFrame->IsTextFrame(), "Bad frame");
       aFrame = aFrame->GetNextContinuation();
     } while (aFrame && aFrame != aStartContinuation);
   }
   bool found = aStartContinuation == aFrame;
   while (aFrame) {
-    NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame, "Bad frame");
+    NS_ASSERTION(aFrame->IsTextFrame(), "Bad frame");
     if (!aFrame->RemoveTextRun(aTextRun)) {
       break;
     }
@@ -686,8 +686,7 @@ InvalidateFrameDueToGlyphsChanged(nsIFrame* aFrame)
     if (nsSVGUtils::IsInSVGTextSubtree(f) &&
         f->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
       auto svgTextFrame = static_cast<SVGTextFrame*>(
-                            nsLayoutUtils::GetClosestFrameOfType(f,
-                            nsGkAtoms::svgTextFrame));
+        nsLayoutUtils::GetClosestFrameOfType(f, FrameType::SVGText));
       svgTextFrame->ScheduleReflowSVGNonDisplayText(nsIPresShell::eResize);
     } else {
       // Theoretically we could just update overflow areas, perhaps using
@@ -1238,14 +1237,12 @@ struct FrameTextTraversal {
 };
 
 static FrameTextTraversal
-CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
+CanTextCrossFrameBoundary(nsIFrame* aFrame)
 {
-  NS_ASSERTION(aType == aFrame->GetType(), "Wrong type");
-
   FrameTextTraversal result;
 
   bool continuesTextRun = aFrame->CanContinueTextRun();
-  if (aType == nsGkAtoms::placeholderFrame) {
+  if (aFrame->IsPlaceholderFrame()) {
     // placeholders are "invisible", so a text run should be able to span
     // across one. But don't descend into the out-of-flow.
     result.mLineBreakerCanCrossFrameBoundary = true;
@@ -1276,7 +1273,7 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
       result.mTextRunCanCrossFrameBoundary = true;
       result.mLineBreakerCanCrossFrameBoundary = true;
     } else {
-      MOZ_ASSERT(aType != nsGkAtoms::rubyTextContainerFrame,
+      MOZ_ASSERT(!aFrame->IsRubyTextContainerFrame(),
                  "Shouldn't call this method for ruby text container");
       result.mFrameToScan = nullptr;
       result.mOverflowFrameToScan = nullptr;
@@ -1290,15 +1287,15 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
 BuildTextRunsScanner::FindBoundaryResult
 BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState)
 {
-  nsIAtom* frameType = aFrame->GetType();
-  if (frameType == nsGkAtoms::rubyTextContainerFrame) {
+  FrameType frameType = aFrame->Type();
+  if (frameType == FrameType::RubyTextContainer) {
     // Don't stop a text run for ruby text container. We want ruby text
     // containers to be skipped, but continue the text run across them.
     return FB_CONTINUE;
   }
 
-  nsTextFrame* textFrame = frameType == nsGkAtoms::textFrame
-    ? static_cast<nsTextFrame*>(aFrame) : nullptr;
+  nsTextFrame* textFrame =
+    frameType == FrameType::Text ? static_cast<nsTextFrame*>(aFrame) : nullptr;
   if (textFrame) {
     if (aState->mLastTextFrame &&
         textFrame != aState->mLastTextFrame->GetNextInFlow() &&
@@ -1333,8 +1330,7 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
     return FB_CONTINUE;
   }
 
-  FrameTextTraversal traversal =
-    CanTextCrossFrameBoundary(aFrame, frameType);
+  FrameTextTraversal traversal = CanTextCrossFrameBoundary(aFrame);
   if (!traversal.mTextRunCanCrossFrameBoundary) {
     aState->mSeenTextRunBoundaryOnThisLine = true;
     if (aState->mSeenSpaceForLineBreakingOnThisLine)
@@ -1394,7 +1390,7 @@ BuildTextRuns(DrawTarget* aDrawTarget, nsTextFrame* aForFrame,
     aLineContainer = FindLineContainer(lineContainerChild);
   } else {
     NS_ASSERTION((aLineContainer == FindLineContainer(aForFrame) ||
-                  (aLineContainer->GetType() == nsGkAtoms::letterFrame &&
+                  (aLineContainer->IsLetterFrame() &&
                    aLineContainer->IsFloating())),
                  "Wrong line container hint");
   }
@@ -1417,10 +1413,9 @@ BuildTextRuns(DrawTarget* aDrawTarget, nsTextFrame* aForFrame,
 
   if (!block) {
     nsIFrame* textRunContainer = aLineContainer;
-    if (aLineContainer->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+    if (aLineContainer->IsRubyTextContainerFrame()) {
       textRunContainer = aForFrame;
-      while (textRunContainer &&
-             textRunContainer->GetType() != nsGkAtoms::rubyTextFrame) {
+      while (textRunContainer && !textRunContainer->IsRubyTextFrame()) {
         textRunContainer = textRunContainer->GetParent();
       }
       MOZ_ASSERT(textRunContainer &&
@@ -1844,8 +1839,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 {
-  nsIAtom* frameType = aFrame->GetType();
-  if (frameType == nsGkAtoms::rubyTextContainerFrame) {
+  FrameType frameType = aFrame->Type();
+  if (frameType == FrameType::RubyTextContainer) {
     // Don't include any ruby text container into the text run.
     return;
   }
@@ -1855,7 +1850,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     MappedFlow* mappedFlow = &mMappedFlows[mMappedFlows.Length() - 1];
     if (mappedFlow->mEndFrame == aFrame &&
         (aFrame->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION)) {
-      NS_ASSERTION(frameType == nsGkAtoms::textFrame,
+      NS_ASSERTION(frameType == FrameType::Text,
                    "Flow-sibling of a text frame is not a text frame?");
 
       // Don't do this optimization if mLastFrame has a terminal newline...
@@ -1870,7 +1865,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   }
 
   // Now see if we can add a new set of frames to the current textrun
-  if (frameType == nsGkAtoms::textFrame) {
+  if (frameType == FrameType::Text) {
     nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
     if (mLastFrame) {
@@ -1899,9 +1894,8 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     return;
   }
 
-  FrameTextTraversal traversal =
-    CanTextCrossFrameBoundary(aFrame, frameType);
-  bool isBR = frameType == nsGkAtoms::brFrame;
+  FrameTextTraversal traversal = CanTextCrossFrameBoundary(aFrame);
+  bool isBR = frameType == FrameType::Br;
   if (!traversal.mLineBreakerCanCrossFrameBoundary) {
     // BR frames are special. We do not need or want to record a break opportunity
     // before a BR frame.
@@ -4328,8 +4322,8 @@ public:
   }
   void SetPrevContinuation(nsIFrame* aPrevContinuation) override
   {
-    NS_ASSERTION (!aPrevContinuation || GetType() == aPrevContinuation->GetType(),
-                  "setting a prev continuation with incorrect type!");
+    NS_ASSERTION(!aPrevContinuation || Type() == aPrevContinuation->Type(),
+                 "setting a prev continuation with incorrect type!");
     NS_ASSERTION (!nsSplittableFrame::IsInPrevContinuationChain(aPrevContinuation, this),
                   "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevContinuation);
@@ -4342,8 +4336,8 @@ public:
   }
   void SetPrevInFlow(nsIFrame* aPrevInFlow) override
   {
-    NS_ASSERTION (!aPrevInFlow || GetType() == aPrevInFlow->GetType(),
-                  "setting a prev in flow with incorrect type!");
+    NS_ASSERTION(!aPrevInFlow || Type() == aPrevInFlow->Type(),
+                 "setting a prev in flow with incorrect type!");
     NS_ASSERTION (!nsSplittableFrame::IsInPrevContinuationChain(aPrevInFlow, this),
                   "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevInFlow);
@@ -4358,7 +4352,10 @@ public:
                           InlinePrefISizeData* aData) override;
 
 protected:
-  explicit nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
+  explicit nsContinuingTextFrame(nsStyleContext* aContext)
+    : nsTextFrame(aContext)
+  {}
+
   nsTextFrame* mPrevContinuation;
 };
 
@@ -4607,8 +4604,7 @@ nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame =
-      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
-                                           nsGkAtoms::svgTextFrame);
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(), FrameType::SVGText);
     svgTextFrame->InvalidateFrame();
     return;
   }
@@ -4620,8 +4616,7 @@ nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemK
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame =
-      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
-                                           nsGkAtoms::svgTextFrame);
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(), FrameType::SVGText);
     svgTextFrame->InvalidateFrame();
     return;
   }
@@ -5451,7 +5446,7 @@ nsTextFrame::GetTextDecorations(
 
     // If we're an outer <svg> element, which is classified as an atomic
     // inline-level element, we're done.
-    if (f->GetType() == nsGkAtoms::svgOuterSVGFrame) {
+    if (f->IsSVGOuterSVGFrame()) {
       break;
     }
   }
@@ -5462,7 +5457,7 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     const nsIFrame* container = aFrame;
-    while (container->GetType() != nsGkAtoms::svgTextFrame) {
+    while (!container->IsSVGTextFrame()) {
       container = container->GetParent();
     }
     NS_ASSERTION(container, "expected to find an ancestor SVGTextFrame");
@@ -5507,7 +5502,7 @@ FindFurthestInlineRubyAncestor(nsTextFrame* aFrame)
   for (nsIFrame* frame = aFrame->GetParent();
        frame && frame->IsFrameOfType(nsIFrame::eLineParticipant);
        frame = frame->GetParent()) {
-    if (frame->GetType() == nsGkAtoms::rubyFrame) {
+    if (frame->IsRubyFrame()) {
       rubyFrame = static_cast<nsRubyFrame*>(frame);
     }
   }
@@ -8875,9 +8870,8 @@ nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
 
   if (end < f->mContentOffset) {
     // Our frame is shrinking. Give the text to our next in flow.
-    if (aLineLayout &&
-        HasSignificantTerminalNewline() &&
-        GetParent()->GetType() != nsGkAtoms::letterFrame &&
+    if (aLineLayout && HasSignificantTerminalNewline() &&
+        !GetParent()->IsLetterFrame() &&
         (aSetLengthFlags & ALLOW_FRAME_CREATION_AND_DESTRUCTION)) {
       // Whatever text we hand to our next-in-flow will end up in a frame all of
       // its own, since it ends in a forced linebreak.  Might as well just put
@@ -8974,8 +8968,7 @@ bool
 nsTextFrame::IsFloatingFirstLetterChild() const
 {
   nsIFrame* frame = GetParent();
-  return frame && frame->IsFloating() &&
-         frame->GetType() == nsGkAtoms::letterFrame;
+  return frame && frame->IsFloating() && frame->IsLetterFrame();
 }
 
 bool
@@ -8983,7 +8976,7 @@ nsTextFrame::IsInitialLetterChild() const
 {
   nsIFrame* frame = GetParent();
   return frame && frame->StyleTextReset()->mInitialLetterSize != 0.0f &&
-         frame->GetType() == nsGkAtoms::letterFrame;
+         frame->IsLetterFrame();
 }
 
 struct NewlineProperty {
@@ -9975,12 +9968,6 @@ nsTextFrame::GetRenderedText(uint32_t aStartOffset,
     result.mOffsetWithinNodeRenderedText = offsetInRenderedString;
   }
   return result;
-}
-
-nsIAtom*
-nsTextFrame::GetType() const
-{
-  return nsGkAtoms::textFrame;
 }
 
 /* virtual */ bool

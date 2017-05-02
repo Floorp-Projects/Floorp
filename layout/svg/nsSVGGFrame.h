@@ -16,8 +16,13 @@ class nsSVGGFrame : public nsSVGDisplayContainerFrame
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
+  nsSVGGFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+    : nsSVGDisplayContainerFrame(aContext, aType)
+  {}
+
   explicit nsSVGGFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext) {}
+    : nsSVGGFrame(aContext, mozilla::FrameType::SVGG)
+  {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -27,13 +32,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgGFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

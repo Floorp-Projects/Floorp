@@ -18,8 +18,8 @@
 
 using namespace mozilla;
 
-nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext):
-  nsHTMLButtonControlFrame(aContext)
+nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext)
+  : nsHTMLButtonControlFrame(aContext, FrameType::GfxButtonControl)
 {
 }
 
@@ -35,12 +35,6 @@ void nsGfxButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
   nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot);
-}
-
-nsIAtom*
-nsGfxButtonControlFrame::GetType() const
-{
-  return nsGkAtoms::gfxButtonControlFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP
