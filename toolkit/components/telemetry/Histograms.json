@@ -5648,15 +5648,13 @@
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window and tab data (ms)"
   },
-  "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com", "mdeboer@mozilla.com"],
-    "expires_in_version": "60",
+  "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "default",
     "kind": "exponential",
-    "keyed": true,
     "high": 30000,
-    "n_buckets": 20,
-    "bug_numbers": [1360916],
-    "description": "Session restore: Duration of data collection in the content process (ms). Possible keys currently are: historychange, scroll, formdata, pageStyle, disallow, storage, storagechange."
+    "n_buckets": 10,
+    "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
   },
   "FX_SESSION_RESTORE_PRIVACY_LEVEL": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
