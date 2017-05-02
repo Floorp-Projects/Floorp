@@ -104,7 +104,7 @@ using namespace mozilla;
 #endif
 #define kDesktopFolder "browser"
 
-static void Output(const char *fmt, ... )
+static MOZ_FORMAT_PRINTF(1, 2) void Output(const char *fmt, ... )
 {
   va_list ap;
   va_start(ap, fmt);
