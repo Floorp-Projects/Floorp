@@ -18,7 +18,7 @@ class nsSplitterFrameInner;
 
 nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsSplitterFrame : public nsBoxFrame
+class nsSplitterFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

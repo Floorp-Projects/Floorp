@@ -17,7 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "nsBoxFrame.h"
 
-class nsDeckFrame : public nsBoxFrame
+class nsDeckFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsDeckFrame)

@@ -18,7 +18,7 @@
 #include "nsITimer.h"
 #include "nsRepeatService.h"
 
-class nsScrollbarButtonFrame : public nsButtonBoxFrame
+class nsScrollbarButtonFrame final : public nsButtonBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

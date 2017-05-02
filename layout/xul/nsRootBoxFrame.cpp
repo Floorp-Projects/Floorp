@@ -41,7 +41,8 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
   return rootBox;
 }
 
-class nsRootBoxFrame : public nsBoxFrame, public nsIRootBox {
+class nsRootBoxFrame final : public nsBoxFrame, public nsIRootBox
+{
 public:
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
