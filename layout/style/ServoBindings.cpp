@@ -1171,9 +1171,40 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 
+static already_AddRefed<nsStyleImageRequest>
+CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
+                        mozilla::css::ImageValue* aImageValue)
+{
+  RefPtr<nsStyleImageRequest> req =
+    new nsStyleImageRequest(aModeFlags, aImageValue);
+  return req.forget();
+}
+
+mozilla::css::ImageValue*
+Gecko_ImageValue_Create(ServoBundledURI aURI)
+{
+  NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(aURI.mURLString),
+                            aURI.mURLStringLength);
+
+  RefPtr<ImageValue> value(new ImageValue(url, do_AddRef(aURI.mExtraData)));
+  return value.forget().take();
+}
+
+void
+Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
+                              mozilla::css::ImageValue* aImageValue)
+{
+  MOZ_ASSERT(aImage && aImageValue);
+
+  RefPtr<nsStyleImageRequest> req =
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
+  aImage->SetImageRequest(req.forget());
+}
+
 void
 Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 {
+  MOZ_ASSERT(aImage);
   RefPtr<nsStyleImageRequest> req =
     CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
   aImage->SetImageRequest(req.forget());
@@ -1209,6 +1240,16 @@ Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
 }
 
 void
+Gecko_SetCursorImageValue(nsCursorImage* aCursor,
+                          mozilla::css::ImageValue* aImageValue)
+{
+  MOZ_ASSERT(aCursor && aImageValue);
+
+  aCursor->mImage =
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aImageValue);
+}
+
+void
 Gecko_SetCursorImage(nsCursorImage* aCursor, ServoBundledURI aURI)
 {
   aCursor->mImage =
@@ -1220,6 +1261,17 @@ Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
                           const nsStyleUserInterface* aSrc)
 {
   aDest->mCursorImages = aSrc->mCursorImages;
+}
+
+void
+Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
+                               mozilla::css::ImageValue* aImageValue)
+{
+  MOZ_ASSERT(aContent && aImageValue);
+
+  RefPtr<nsStyleImageRequest> req =
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
+  aContent->SetImageRequest(req.forget());
 }
 
 void
@@ -1273,6 +1325,16 @@ void
 Gecko_SetListStyleImageNone(nsStyleList* aList)
 {
   aList->mListStyleImage = nullptr;
+}
+
+void
+Gecko_SetListStyleImageImageValue(nsStyleList* aList,
+                             mozilla::css::ImageValue* aImageValue)
+{
+  MOZ_ASSERT(aList && aImageValue);
+
+  aList->mListStyleImage =
+    CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aImageValue);
 }
 
 void
