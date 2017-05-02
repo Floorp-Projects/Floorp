@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import errno
 import hashlib
 import os
 import re
@@ -132,6 +133,17 @@ but you may be able to get a recent enough version from a software install
 tool or package manager on your system, or directly from https://rust-lang.org/
 '''
 
+STYLO_MOZCONFIG = '''
+To enable Stylo in your builds, paste the lines between the chevrons
+(>>> and <<<) into your mozconfig file:
+
+<<<
+ac_add_options --enable-stylo
+
+export LLVM_CONFIG=%s/clang/bin/llvm-config
+>>>
+'''
+
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
 Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
 
@@ -158,6 +170,8 @@ class BaseBootstrapper(object):
     def __init__(self, no_interactive=False):
         self.package_manager_updated = False
         self.no_interactive = no_interactive
+        self.stylo = False
+        self.state_dir = None
 
     def install_system_packages(self):
         '''
@@ -185,7 +199,8 @@ class BaseBootstrapper(object):
         Firefox for Desktop can in simple cases determine its build environment
         entirely from configure.
         '''
-        pass
+        if self.stylo:
+            print(STYLO_MOZCONFIG % self.state_dir)
 
     def install_browser_artifact_mode_packages(self):
         '''
@@ -248,6 +263,61 @@ class BaseBootstrapper(object):
         raise NotImplementedError(
             '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
             % __name__)
+
+    def ensure_stylo_packages(self, state_dir):
+        '''
+        Install any necessary packages needed for Stylo development.
+        '''
+        raise NotImplementedError(
+            '%s does not yet implement ensure_stylo_packages()'
+            % __name__)
+
+    def install_tooltool_clang_package(self, state_dir,
+                                       package_filename, package_sha512sum):
+        TOOLTOOL_API = 'https://api.pub.build.mozilla.org/tooltool/sha512/'
+
+        # XXX this is similar to the Android NDK download.  We should unify them.
+        download_path = os.path.join(state_dir, 'mozboot')
+        try:
+            os.makedirs(download_path)
+        except OSError as e:
+            if e.errno == errno.EEXIST and os.path.isdir(download_path):
+                pass
+            else:
+                raise
+
+        try:
+            package_url = TOOLTOOL_API + package_sha512sum
+            downloaded_filename = os.path.join(download_path, package_sha512sum)
+            print('Downloading clang package from %s', package_url)
+            self.http_download_and_save(package_url, downloaded_filename,
+                                        package_sha512sum, 'sha512')
+
+            # We don't have to handle a great variety of archive types here.
+            if package_filename.endswith('tar.gz'):
+                cmd = ['tar', 'zxf', downloaded_filename]
+            elif package_filename.endswith('.tar.bz2'):
+                cmd = ['tar', 'jxf', downloaded_filename]
+            elif package_filename.endswith('.tar.xz'):
+                cmd = ['tar', 'Jxf', downloaded_filename]
+            else:
+                raise NotImplementedError("Don't know how to unpack file: %s"
+                                          % package_filename)
+
+            print('Download complete!')
+            print('Unpacking %s...' % downloaded_filename)
+
+            with open(os.devnull, 'w') as stdout:
+                subprocess.check_call(cmd, stdout=stdout, cwd=state_dir)
+
+            print('Unpacking %s...DONE' % downloaded_filename)
+
+        finally:
+            try:
+                os.remove(downloaded_filename)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
     def which(self, name):
         """Python implementation of which.

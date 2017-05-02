@@ -10,6 +10,18 @@ import tempfile
 
 from mozboot.base import BaseBootstrapper
 
+STYLO_MOZCONFIG = '''
+To enable Stylo in your builds, paste the lines between the chevrons
+(>>> and <<<) into your mozconfig file:
+
+<<<
+ac_add_options --enable-stylo
+
+ac_add_options --with-libclang-path={state_dir}/clang/lib
+ac_add_options --with-clang-path={state_dir}/clang/bin/clang.exe
+>>>
+'''
+
 class MozillaBuildBootstrapper(BaseBootstrapper):
     '''Bootstrapper for MozillaBuild to install rustup.'''
     def __init__(self, no_interactive=False):
@@ -69,6 +81,14 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
 
     def install_mobile_android_artifact_mode_packages(self):
         pass
+
+    def suggest_browser_mozconfig(self):
+        if self.stylo:
+            print(STYLO_MOZCONFIG.format(state_dir=self.state_dir))
+
+    def ensure_stylo_packages(self, state_dir):
+        import stylo
+        self.install_tooltool_clang_package(state_dir, **stylo.WINDOWS)
 
     def _update_package_manager(self):
         pass
