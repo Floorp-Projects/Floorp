@@ -352,7 +352,6 @@ nsSystemInfo::Init()
     const char* name;
   } items[] = {
     { PR_SI_SYSNAME, "name" },
-    { PR_SI_HOSTNAME, "host" },
     { PR_SI_ARCHITECTURE, "arch" },
     { PR_SI_RELEASE, "version" }
   };
