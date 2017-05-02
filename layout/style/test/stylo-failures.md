@@ -130,13 +130,6 @@ to mochitest command.
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
     * test_specified_value_serialization.html `bug-721136` [1]
-  * touch-action property servo/servo#16372
-    * test_compute_data_with_start_struct.html `touch-action` [2]
-    * test_inherit_computation.html `touch-action` [2]
-    * test_inherit_storage.html `touch-action` [2]
-    * test_initial_computation.html `touch-action` [4]
-    * test_initial_storage.html `touch-action` [4]
-    * test_value_storage.html `touch-action` [14]
 * Properties implemented but not in geckolib:
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
