@@ -1920,7 +1920,7 @@ class Repackage(MachCommandBase):
             return 1
 
         if output.endswith('.dmg'):
-            from mozbuild.repackage import repackage_dmg
+            from mozbuild.repackaging.dmg import repackage_dmg
             repackage_dmg(input, output)
         else:
             print("Repackaging into output '%s' is not yet supported." % output)
