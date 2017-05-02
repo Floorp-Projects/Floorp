@@ -147,8 +147,6 @@ to mochitest command.
     * test_value_storage.html `font-feature-settings` [112]
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
-  * flexbox / grid position properties servo/servo#15001
-    * ... `justify-` [5]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
