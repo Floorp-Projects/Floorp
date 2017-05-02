@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "Utils", "Async", "Svc", "Str"];
+this.EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "Utils", "Async", "Svc"];
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -213,11 +213,6 @@ this.Utils = {
         this[defer][prop] = val;
       });
     }
-  },
-
-  lazyStrings: function Weave_lazyStrings(name) {
-    return () => Services.strings.createBundle(
-      `chrome://weave/locale/${name}.properties`);
   },
 
   deepEquals: function eq(a, b) {
@@ -457,19 +452,6 @@ this.Utils = {
     return OS.File.remove(path, { ignoreAbsent: true });
   },
 
-  getErrorString: function Utils_getErrorString(error, args) {
-    try {
-      if (args) {
-        return Str.errors.formatStringFromName(error, args, args.length);
-      }
-      return Str.errors.GetStringFromName(error);
-
-    } catch (e) {}
-
-    // basically returns "Unknown Error"
-    return Str.errors.GetStringFromName("error.reason.unknown");
-  },
-
   /**
    * Generate 26 characters.
    */
@@ -689,13 +671,6 @@ this.Utils = {
       "chrome://branding/locale/brand.properties");
     let brandName = brand.GetStringFromName("brandShortName");
 
-    let appName;
-    try {
-      let syncStrings = Services.strings.createBundle("chrome://browser/locale/sync.properties");
-      appName = syncStrings.formatStringFromName("sync.defaultAccountApplication", [brandName], 1);
-    } catch (ex) {}
-    appName = appName || brandName;
-
     let system =
       // 'device' is defined on unix systems
       Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2).get("device") ||
@@ -704,7 +679,8 @@ this.Utils = {
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return Str.sync.formatStringFromName("client.name2", [user, appName, system], 3);
+    let syncStrings = Services.strings.createBundle("chrome://weave/locale/sync.properties");
+    return syncStrings.formatStringFromName("client.name2", [user, brandName, system], 3);
   },
 
   getDeviceName() {
@@ -746,21 +722,7 @@ XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
  */
 this.Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
-Svc.DefaultPrefs = new Preferences({branch: PREFS_BRANCH, defaultBranch: true});
 Svc.Obs = Observers;
-
-var _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
-  "@mozilla.org/suite/sessionstore;1" :
-  "@mozilla.org/browser/sessionstore;1";
-
-[
- ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
- ["Session", _sessionCID, "nsISessionStore"]
-].forEach(function([name, contract, iface]) {
-  XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
-});
-
-XPCOMUtils.defineLazyModuleGetter(Svc, "FormHistory", "resource://gre/modules/FormHistory.jsm");
 
 Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;
@@ -769,11 +731,6 @@ Svc.__defineGetter__("Crypto", function() {
   cryptoSvc = new ns.WeaveCrypto();
   delete Svc.Crypto;
   return Svc.Crypto = cryptoSvc;
-});
-
-this.Str = {};
-["errors", "sync"].forEach(function(lazy) {
-  XPCOMUtils.defineLazyGetter(Str, lazy, Utils.lazyStrings(lazy));
 });
 
 Svc.Obs.add("xpcom-shutdown", function() {
