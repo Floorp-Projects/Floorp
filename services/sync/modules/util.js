@@ -14,8 +14,8 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
@@ -344,7 +344,7 @@ this.Utils = {
    *        Function to process json object as its first argument. If the file
    *        could not be loaded, the first argument will be undefined.
    */
-  jsonLoad: Task.async(function*(filePath, that, callback) {
+  async jsonLoad(filePath, that, callback) {
     let path = Utils.jsonFilePath(filePath);
 
     if (that._log) {
@@ -354,7 +354,7 @@ this.Utils = {
     let json;
 
     try {
-      json = yield CommonUtils.readJSON(path);
+      json = await CommonUtils.readJSON(path);
     } catch (e) {
       if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
         // Ignore non-existent files, but explicitly return null.
@@ -368,7 +368,7 @@ this.Utils = {
       callback.call(that, json);
     }
     return json;
-  }),
+  },
 
   /**
    * Save a json-able object to disk in the profile directory.
@@ -386,14 +386,14 @@ this.Utils = {
    *        constant on error or null if no error was encountered (and
    *        the file saved successfully).
    */
-  jsonSave: Task.async(function*(filePath, that, obj, callback) {
+  async jsonSave(filePath, that, obj, callback) {
     let path = OS.Path.join(OS.Constants.Path.profileDir, "weave",
                             ...(filePath + ".json").split("/"));
     let dir = OS.Path.dirname(path);
     let error = null;
 
     try {
-      yield OS.File.makeDir(dir, { from: OS.Constants.Path.profileDir });
+      await OS.File.makeDir(dir, { from: OS.Constants.Path.profileDir });
 
       if (that._log) {
         that._log.trace("Saving json to disk: " + path);
@@ -401,7 +401,7 @@ this.Utils = {
 
       let json = typeof obj == "function" ? obj.call(that) : obj;
 
-      yield CommonUtils.writeJSON(json, path);
+      await CommonUtils.writeJSON(json, path);
     } catch (e) {
       error = e
     }
@@ -409,7 +409,7 @@ this.Utils = {
     if (typeof callback == "function") {
       callback.call(that, error);
     }
-  }),
+  },
 
   /**
    * Move a json file in the profile directory. Will fail if a file exists at the

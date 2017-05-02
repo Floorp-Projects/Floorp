@@ -17,13 +17,14 @@ Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm", this);
 
 let constants = {};
 Cu.import("resource://services-sync/constants.js", constants);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
                               "resource://gre/modules/TelemetryController.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
