@@ -4,10 +4,6 @@
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <style>
 @keyframes empty { }
-@keyframes animTransform {
-  from { transform: translate(0px); }
-  to { transform: translate(100px); }
-}
 .target {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
@@ -88,13 +84,25 @@ promise_test(function(t) {
     return;
   }
 
-  // Setup animation
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.classList.add('target');
-  div.style.animation = 'animTransform 100s -50s forwards';
-  var animation = div.getAnimations()[0];
 
-  return waitForPaints(function() {
+  // As with the above test, any stray paints can cause this test to produce
+  // a false negative (that is, pass when it should fail). To avoid this we
+  // first wait for the document to load, then wait until it is idle, then wait
+  // for paints and only then do we commence the test. Even doing that, this
+  // test can sometimes pass when it should not due to a stray paint. Most of
+  // the time, however, it will correctly fail so hopefully even if we do
+  // occasionally produce a false negative on one platform, another platform
+  // will fail as expected.
+  return waitForDocLoad().then(() => waitForIdle())
+  .then(() => waitForPaints())
+  .then(() => {
+    div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
+                { duration: 400 * MS_PER_SEC,
+                  delay: -200 * MS_PER_SEC });
+    return waitForPaints();
+  }).then(() => {
     var transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
 
@@ -108,11 +116,13 @@ promise_test(function(t) {
                   'Got a valid transform matrix on the compositor'
                   + ' (got: "' + transformStr + '")');
 
-    // If the delay has been applied correctly we should be at least
-    // half-way through the animation
-    assert_true(matrixComponents[4] >= 50,
-                'Animation is at least half-way through on the compositor'
-                + ' (got translation of ' + matrixComponents[4] + ')');
+    // If the delay has been applied we should be about half-way through
+    // the animation. However, if we applied it twice we will be at the
+    // end of the animation already so check that we are roughly half way
+    // through.
+    const translateX = matrixComponents[4];
+    assert_between_inclusive(translateX, 40, 75,
+        'Animation is about half-way through on the compositor');
   });
 }, 'Starting an animation with a delay starts from the correct point');
 
