@@ -540,7 +540,12 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-e10s'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'].append('--e10s')
+            if test['suite'] == 'talos':
+                for i, option in enumerate(test['mozharness']['extra-options']):
+                    if option.startswith('--suite='):
+                        test['mozharness']['extra-options'][i] += '-e10s'
+            else:
+                test['mozharness']['extra-options'].append('--e10s')
         yield test
 
 
