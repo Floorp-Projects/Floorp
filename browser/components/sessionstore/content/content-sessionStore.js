@@ -15,9 +15,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-  "resource://gre/modules/TelemetryStopwatch.jsm");
-
 function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
 }
@@ -660,8 +657,8 @@ var SessionStorageListener = {
         }
 
         let size = this.estimateStorageSize(collected);
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS").add(size);
 
+        MessageQueue.push("telemetry", () => ({ FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS: size }));
         if (size > Preferences.get("browser.sessionstore.dom_storage_limit", DOM_STORAGE_MAX_CHARS)) {
           // Rather than keeping the old storage, which wouldn't match the rest
           // of the state of the page, empty the storage. DOM storage will be
@@ -829,39 +826,42 @@ var MessageQueue = {
     }
 
     let flushID = (options && options.flushID) || 0;
-    let histID = "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_MS";
+
+    let durationMs = Date.now();
 
     let data = {};
+    let telemetry = {};
     for (let [key, func] of this._data) {
-      if (key != "isPrivate") {
-        TelemetryStopwatch.startKeyed(histID, key);
-      }
-
       let value = func();
-
-      if (key != "isPrivate") {
-        TelemetryStopwatch.finishKeyed(histID, key);
-      }
-
-      if (value || (key != "storagechange" && key != "historychange")) {
+      if (key == "telemetry") {
+        for (let histogramId of Object.keys(value)) {
+          telemetry[histogramId] = value[histogramId];
+        }
+      } else if (value || (key != "storagechange" && key != "historychange")) {
         data[key] = value;
       }
     }
 
     this._data.clear();
 
+    durationMs = Date.now() - durationMs;
+    telemetry.FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS = durationMs;
+
     try {
       // Send all data to the parent process.
       sendAsyncMessage("SessionStore:update", {
-        data, flushID,
+        data, telemetry, flushID,
         isFinal: options.isFinal || false,
         epoch: gCurrentEpoch
       });
     } catch (ex) {
-      if (ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM").add(1);
-        sendAsyncMessage("SessionStore:error");
-      }
+        if (ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
+          sendAsyncMessage("SessionStore:error", {
+            telemetry: {
+              FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
+            }
+          });
+        }
     }
   },
 };
