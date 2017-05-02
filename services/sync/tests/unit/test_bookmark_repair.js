@@ -313,6 +313,9 @@ add_task(async function test_repair_client_missing() {
   let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
+  let user = server.user("foo");
+
+  let initialID = Service.clientsEngine.localID;
   let remoteID = Utils.makeGUID();
   try {
 
@@ -384,6 +387,7 @@ add_task(async function test_repair_server_missing() {
 
   let user = server.user("foo");
 
+  let initialID = Service.clientsEngine.localID;
   let remoteID = Utils.makeGUID();
   try {
 
@@ -446,6 +450,9 @@ add_task(async function test_repair_server_deleted() {
   let server = serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
 
+  let user = server.user("foo");
+
+  let initialID = Service.clientsEngine.localID;
   let remoteID = Utils.makeGUID();
   try {
 
