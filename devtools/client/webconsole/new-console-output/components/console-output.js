@@ -30,6 +30,7 @@ const ConsoleOutput = createClass({
     serviceContainer: PropTypes.shape({
       attachRefToHud: PropTypes.func.isRequired,
       openContextMenu: PropTypes.func.isRequired,
+      sourceMapService: PropTypes.object,
     }),
     autoscroll: PropTypes.bool.isRequired,
     dispatch: PropTypes.func.isRequired,
