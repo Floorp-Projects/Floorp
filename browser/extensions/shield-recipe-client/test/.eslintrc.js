@@ -5,7 +5,8 @@ module.exports = {
     Assert: false,
     add_task: false,
     getRootDirectory: false,
-    gTestPath: false
+    gTestPath: false,
+    Cu: false,
   },
   rules: {
     "spaced-comment": 2,

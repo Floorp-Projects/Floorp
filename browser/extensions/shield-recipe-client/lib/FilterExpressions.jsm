@@ -7,6 +7,7 @@
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
+Cu.import("resource://shield-recipe-client/lib/PreferenceFilters.jsm");
 
 this.EXPORTED_SYMBOLS = ["FilterExpressions"];
 
@@ -27,6 +28,9 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
     date: dateString => new Date(dateString),
     stableSample: Sampling.stableSample,
     bucketSample: Sampling.bucketSample,
+    preferenceValue: PreferenceFilters.preferenceValue,
+    preferenceIsUserSet: PreferenceFilters.preferenceIsUserSet,
+    preferenceExists: PreferenceFilters.preferenceExists,
   });
   return jexl;
 });
