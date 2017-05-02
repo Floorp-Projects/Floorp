@@ -346,7 +346,13 @@ def set_target(config, tests):
     for test in tests:
         build_platform = test['build-platform']
         if build_platform.startswith('macosx'):
-            target = 'target.dmg'
+            if build_platform.split('/')[1] == 'opt':
+                target = 'firefox-{}.en-US.{}.dmg'.format(
+                    get_firefox_version(),
+                    'mac',
+                )
+            else:
+                target = 'target.dmg'
         elif build_platform.startswith('android'):
             if 'geckoview' in test['test-name']:
                 target = 'geckoview_example.apk'

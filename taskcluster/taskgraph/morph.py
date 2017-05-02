@@ -157,7 +157,92 @@ def add_index_tasks(taskgraph, label_to_taskid):
     return taskgraph, label_to_taskid
 
 
+def make_s3_uploader_task(parent_task):
+    if parent_task.task['payload']['sourcestamp']['branch'] == 'try':
+        worker_type = 'buildbot-try'
+    else:
+        worker_type = 'buildbot'
+
+    task_def = {
+        # The null-provisioner and buildbot worker type don't actually exist.
+        # So this task doesn't actually run - we just need to create the task so
+        # we have something to attach artifacts to.
+        "provisionerId": "null-provisioner",
+        "workerType": worker_type,
+        "created": {'relative-datestamp': '0 seconds'},
+        "deadline": parent_task.task['deadline'],
+        "routes": [],
+        "payload": {},
+        "metadata": {
+            "name": "Buildbot/mozharness S3 uploader",
+            "description": "Upload outputs of buildbot/mozharness builds to S3",
+            "owner": "mshal@mozilla.com",
+            "source": "http://hg.mozilla.org/build/mozharness/",
+        }
+    }
+    label = 's3-uploader-{}'.format(parent_task.label)
+    dependencies = {}
+    task = Task(kind='misc', label=label, attributes={}, task=task_def,
+                dependencies=dependencies)
+    task.task_id = parent_task.task['payload']['properties']['upload_to_task_id']
+    return task
+
+
+def update_test_tasks(taskid, build_taskid, taskgraph):
+    """Tests task must download artifacts from uploader task.
+
+    Notice they don't need to depend on uploader task because it finishes
+    before the build task.
+    """
+    # Notice we handle buildbot-bridge, native, and generic-worker payloads
+    # We can do better here in terms of graph searching
+    # We could do post order search and stop as soon as we
+    # reach the build task. Not worring about it because this is
+    # (supposed to be) a temporary solution.
+    for task in taskgraph.tasks.itervalues():
+        if build_taskid in task.task.get('dependencies', []):
+            payload = task.task['payload']
+            if 'command' in payload:
+                try:
+                    payload['command'] = [
+                        cmd.replace(build_taskid, taskid) for cmd in payload['command']
+                    ]
+                except AttributeError:
+                    # generic-worker command attribute is an list of lists
+                    payload['command'] = [
+                        [cmd.replace(build_taskid, taskid) for cmd in x]
+                        for x in payload['command']
+                    ]
+            if 'mounts' in payload:
+                for mount in payload['mounts']:
+                    if mount.get('content', {}).get('taskId', '') == build_taskid:
+                        mount['content']['taskId'] = taskid
+            if 'env' in payload:
+                payload['env'] = {
+                    k: v.replace(build_taskid, taskid) for k, v in payload['env'].iteritems()
+                }
+            if 'properties' in payload:
+                payload['properties']['parent_task_id'] = taskid
+
+
+def add_s3_uploader_task(taskgraph, label_to_taskid):
+    """The S3 uploader task is used by mozharness to upload buildbot artifacts."""
+    for task in taskgraph.tasks.itervalues():
+        if 'upload_to_task_id' in task.task.get('payload', {}).get('properties', {}):
+            added = make_s3_uploader_task(task)
+            taskgraph, label_to_taskid = amend_taskgraph(
+                taskgraph, label_to_taskid, [added])
+            update_test_tasks(added.task_id, task.task_id, taskgraph)
+            logger.info('Added s3-uploader task')
+    return taskgraph, label_to_taskid
+
+
 def morph(taskgraph, label_to_taskid):
     """Apply all morphs"""
-    taskgraph, label_to_taskid = add_index_tasks(taskgraph, label_to_taskid)
+    morphs = [
+        add_index_tasks,
+        add_s3_uploader_task,
+    ]
+    for m in morphs:
+        taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)
     return taskgraph, label_to_taskid
