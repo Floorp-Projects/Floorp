@@ -40,7 +40,6 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <sys/prctl.h> // set name
 #include <stdlib.h>
 #include <sched.h>
 #include <ucontext.h>
@@ -273,7 +272,6 @@ static void*
 ThreadEntry(void* aArg)
 {
   auto thread = static_cast<SamplerThread*>(aArg);
-  prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
   thread->mSamplerTid = gettid();
   thread->Run();
   return nullptr;
