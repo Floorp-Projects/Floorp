@@ -80,7 +80,7 @@ with Files("tools/**"):
     BUG_COMPONENT = ("Testing", "General")
 
 with Files("tools/fileid/**"):
-    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
 with Files("tools/iceserver/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Networking")
@@ -89,10 +89,10 @@ with Files("tools/websocketprocessbridge/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Networking")
 
 with Files("tools/fileid/**"):
-    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
 with Files("tools/minidumpwriter/**"):
-    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
 with Files("remote*"):
     BUG_COMPONENT = ("Firefox for Android", "Testing")
