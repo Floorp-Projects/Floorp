@@ -1277,11 +1277,11 @@ CacheIRCompiler::emitGuardIsInt32Index()
         return true;
     }
 
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
-
-    ValueOperand input = allocator.useValueRegister(masm, inputId);
 
     Label notInt32, done;
     masm.branchTestInt32(Assembler::NotEqual, input, &notInt32);

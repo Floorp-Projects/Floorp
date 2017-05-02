@@ -503,7 +503,7 @@ bool OmxDecoder::Init()
     int64_t durationUs;
     if (videoTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
       if (durationUs < 0)
-        LOG("video duration %lld should be nonnegative", durationUs);
+        LOG("video duration %" PRId64 " should be nonnegative", durationUs);
       if (durationUs > totalDurationUs)
         totalDurationUs = durationUs;
     }
@@ -536,7 +536,7 @@ bool OmxDecoder::Init()
     int64_t durationUs;
     if (audioTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
       if (durationUs < 0)
-        LOG("audio duration %lld should be nonnegative", durationUs);
+        LOG("audio duration %" PRId64 " should be nonnegative", durationUs);
       if (durationUs > totalDurationUs)
         totalDurationUs = durationUs;
     }
@@ -913,7 +913,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs,
     }
 
     if (timeUs < 0) {
-      LOG("frame time %lld must be nonnegative", timeUs);
+      LOG("frame time %" PRId64 " must be nonnegative", timeUs);
       return false;
     }
 
@@ -977,7 +977,7 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     }
 
     if (timeUs < 0) {
-      LOG("frame time %lld must be nonnegative", timeUs);
+      LOG("frame time %" PRId64 " must be nonnegative", timeUs);
       return false;
     }
 

@@ -1374,6 +1374,7 @@ ProcessHasSignalHandlers()
     sTriedInstallSignalHandlers = true;
 
 #if defined(ANDROID)
+# if !defined(__aarch64__)
     // Before Android 4.4 (SDK version 19), there is a bug
     //   https://android-review.googlesource.com/#/c/52333
     // in Bionic's pthread_join which causes pthread_join to return early when
@@ -1385,6 +1386,7 @@ ProcessHasSignalHandlers()
         if (atol(version_string) < 19)
             return false;
     }
+# endif
 # if defined(MOZ_LINKER)
     // Signal handling is broken on some android systems.
     if (IsSignalHandlingBroken())
