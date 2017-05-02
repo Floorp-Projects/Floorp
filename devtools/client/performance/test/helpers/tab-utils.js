@@ -4,10 +4,9 @@
 
 /* globals dump */
 
+const { Cu } = require("chrome");
+const { BrowserTestUtils } = Cu.import("resource://testing-common/BrowserTestUtils.jsm", {});
 const Services = require("Services");
-const tabs = require("sdk/tabs");
-const tabUtils = require("sdk/tabs/utils");
-const { viewFor } = require("sdk/view/core");
 const { waitForDelayedStartupFinished } = require("devtools/client/performance/test/helpers/wait-utils");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
@@ -29,44 +28,19 @@ exports.addTab = function ({ url, win }, options = {}) {
 
   dump(`Adding tab with url: ${url}.\n`);
 
-  return new Promise(resolve => {
-    let tab;
-
-    tabs.on("ready", function onOpen(model) {
-      if (tab != viewFor(model)) {
-        return;
-      }
-      dump(`Tab added and finished loading: ${model.url}.\n`);
-      tabs.off("ready", onOpen);
-      resolve(tab);
-    });
-
-    win.focus();
-    tab = tabUtils.openTab(win, url);
-
-    if (options.dontWaitForTabReady) {
-      resolve(tab);
-    }
-  });
+  let { gBrowser } = win || window;
+  return BrowserTestUtils.openNewForegroundTab(gBrowser, url,
+                                               !options.dontWaitForTabReady);
 };
 
 /**
  * Removes a browser tab from the specified window and waits for it to close.
  */
 exports.removeTab = function (tab, options = {}) {
-  dump(`Removing tab: ${tabUtils.getURI(tab)}.\n`);
+  dump(`Removing tab: ${tab.linkedBrowser.currentURI.spec}.\n`);
 
   return new Promise(resolve => {
-    tabs.on("close", function onClose(model) {
-      if (tab != viewFor(model)) {
-        return;
-      }
-      dump(`Tab removed and finished closing: ${model.url}.\n`);
-      tabs.off("close", onClose);
-      resolve(tab);
-    });
-
-    tabUtils.closeTab(tab);
+    BrowserTestUtils.removeTab(tab).then(() => resolve(tab));
 
     if (options.dontWaitForTabClose) {
       resolve(tab);
