@@ -1111,6 +1111,9 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     bool tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
   public:
     GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
                        HandleObject env, HandlePropertyName name);
@@ -1126,6 +1129,9 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator
 
     bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
