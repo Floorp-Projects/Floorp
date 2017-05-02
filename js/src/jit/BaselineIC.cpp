@@ -669,18 +669,18 @@ ICToBool_Object::Compiler::generateStubCode(MacroAssembler& masm)
 {
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
-    Label failure, ifFalse, slowPath;
+    Label failure, emulatesUndefined, slowPath;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     Register objReg = masm.extractObject(R0, ExtractTemp0);
     Register scratch = R1.scratchReg();
-    masm.branchTestObjectTruthy(false, objReg, scratch, &slowPath, &ifFalse);
+    masm.branchIfObjectEmulatesUndefined(objReg, scratch, &slowPath, &emulatesUndefined);
 
     // If object doesn't emulate undefined, it evaulates to true.
     masm.moveValue(BooleanValue(true), R0);
     EmitReturnFromIC(masm);
 
-    masm.bind(&ifFalse);
+    masm.bind(&emulatesUndefined);
     masm.moveValue(BooleanValue(false), R0);
     EmitReturnFromIC(masm);
 

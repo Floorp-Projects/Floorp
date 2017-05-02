@@ -1437,6 +1437,33 @@ MacroAssembler::loadStringIndexValue(Register str, Register dest, Label* fail)
 }
 
 void
+MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
+                             Label* isObject, Label* isCallable, Label* isUndefined)
+{
+    loadObjClass(obj, scratch);
+
+    // Proxies can emulate undefined and have complex isCallable behavior.
+    branchTestClassIsProxy(true, scratch, slow);
+
+    // JSFunctions are always callable.
+    branchPtr(Assembler::Equal, scratch, ImmPtr(&JSFunction::class_), isCallable);
+
+    // Objects that emulate undefined.
+    Address flags(scratch, Class::offsetOfFlags());
+    branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), isUndefined);
+
+    // Handle classes with a call hook.
+    branchPtr(Assembler::Equal, Address(scratch, offsetof(js::Class, cOps)), ImmPtr(nullptr),
+              isObject);
+
+    loadPtr(Address(scratch, offsetof(js::Class, cOps)), scratch);
+    branchPtr(Assembler::Equal, Address(scratch, offsetof(js::ClassOps, call)), ImmPtr(nullptr),
+              isObject);
+
+    jump(isCallable);
+}
+
+void
 MacroAssembler::loadJSContext(Register dest)
 {
     CompileCompartment* compartment = GetJitContext()->compartment;
