@@ -1320,11 +1320,14 @@ nsStyleSVGPaint::Assign(const nsStyleSVGPaint& aOther)
       break;
     case eStyleSVGPaintType_Server:
       SetPaintServer(aOther.mPaint.mPaintServer,
+                     aOther.mFallbackType,
                      aOther.mFallbackColor);
       break;
     case eStyleSVGPaintType_ContextFill:
     case eStyleSVGPaintType_ContextStroke:
-      SetContextValue(aOther.mType, aOther.mFallbackColor);
+      SetContextValue(aOther.mType,
+                      aOther.mFallbackType,
+                      aOther.mFallbackColor);
       break;
   }
 }
@@ -1338,12 +1341,14 @@ nsStyleSVGPaint::SetNone()
 
 void
 nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
+                                 nsStyleSVGFallbackType aFallbackType,
                                  nscolor aFallbackColor)
 {
   MOZ_ASSERT(aType == eStyleSVGPaintType_ContextFill ||
              aType == eStyleSVGPaintType_ContextStroke);
   Reset();
   mType = aType;
+  mFallbackType = aFallbackType;
   mFallbackColor = aFallbackColor;
 }
 
@@ -1357,6 +1362,7 @@ nsStyleSVGPaint::SetColor(nscolor aColor)
 
 void
 nsStyleSVGPaint::SetPaintServer(css::URLValue* aPaintServer,
+                                nsStyleSVGFallbackType aFallbackType,
                                 nscolor aFallbackColor)
 {
   MOZ_ASSERT(aPaintServer);
@@ -1364,6 +1370,7 @@ nsStyleSVGPaint::SetPaintServer(css::URLValue* aPaintServer,
   mType = eStyleSVGPaintType_Server;
   mPaint.mPaintServer = aPaintServer;
   mPaint.mPaintServer->AddRef();
+  mFallbackType = aFallbackType;
   mFallbackColor = aFallbackColor;
 }
 
@@ -1378,10 +1385,12 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
     case eStyleSVGPaintType_Server:
       return DefinitelyEqualURIs(mPaint.mPaintServer,
                                  aOther.mPaint.mPaintServer) &&
+             mFallbackType == aOther.mFallbackType &&
              mFallbackColor == aOther.mFallbackColor;
     case eStyleSVGPaintType_ContextFill:
     case eStyleSVGPaintType_ContextStroke:
-      return mFallbackColor == aOther.mFallbackColor;
+      return mFallbackType == aOther.mFallbackType &&
+             mFallbackColor == aOther.mFallbackColor;
     default:
       MOZ_ASSERT(mType == eStyleSVGPaintType_None,
                  "Unexpected SVG paint type");
