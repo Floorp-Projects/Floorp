@@ -46,14 +46,12 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
 #include "nsHtml5ElementName.h"
-#include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5StateSnapshot.h"
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5AttributeName.h"
-#include "nsHtml5ReleasableAttributeName.h"
 
 int32_t* nsHtml5AttributeName::ALL_NO_NS = 0;
 int32_t* nsHtml5AttributeName::XMLNS_NS = 0;
@@ -109,35 +107,58 @@ nsHtml5AttributeName::nameByBuffer(char16_t* buf, int32_t offset, int32_t length
   uint32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
   int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
   if (index < 0) {
-    return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length, interner));
-  } else {
-    nsHtml5AttributeName* attributeName = nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
-    nsIAtom* name = attributeName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
-    if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-      return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length, interner));
-    }
-    return attributeName;
+    return nullptr;
   }
+  nsHtml5AttributeName* attributeName =
+    nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
+  nsIAtom* name = attributeName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
+  if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+    return nullptr;
+  }
+  return attributeName;
 }
 
-
-nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix)
-  : uri(uri),
-    local(local),
-    prefix(prefix)
+nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri,
+                                           nsIAtom** local,
+                                           nsIAtom** prefix)
+  : uri(uri)
+  , local(local)
+  , prefix(prefix)
+  , custom(false)
 {
   MOZ_COUNT_CTOR(nsHtml5AttributeName);
 }
 
-nsHtml5AttributeName* 
-nsHtml5AttributeName::createAttributeName(nsIAtom* name)
+nsHtml5AttributeName::nsHtml5AttributeName()
+  : uri(nsHtml5AttributeName::ALL_NO_NS)
+  , local(nsHtml5AttributeName::SAME_LOCAL(nullptr))
+  , prefix(ALL_NO_PREFIX)
+  , custom(true)
 {
-  return new nsHtml5ReleasableAttributeName(nsHtml5AttributeName::ALL_NO_NS, nsHtml5AttributeName::SAME_LOCAL(name), ALL_NO_PREFIX);
+  MOZ_COUNT_CTOR(nsHtml5AttributeName);
 }
 
-void 
-nsHtml5AttributeName::release()
+bool
+nsHtml5AttributeName::isInterned()
 {
+  return !custom;
+}
+
+void
+nsHtml5AttributeName::setNameForNonInterned(nsIAtom* name)
+{
+  MOZ_ASSERT(custom);
+  local[0] = name;
+  local[1] = name;
+  local[2] = name;
+}
+
+nsHtml5AttributeName*
+nsHtml5AttributeName::createAttributeName(nsIAtom* name)
+{
+  return new nsHtml5AttributeName(nsHtml5AttributeName::ALL_NO_NS,
+                                  nsHtml5AttributeName::SAME_LOCAL(name),
+                                  ALL_NO_PREFIX);
 }
 
 
@@ -145,12 +166,6 @@ nsHtml5AttributeName::~nsHtml5AttributeName()
 {
   MOZ_COUNT_DTOR(nsHtml5AttributeName);
   delete[] local;
-}
-
-nsHtml5AttributeName* 
-nsHtml5AttributeName::cloneAttributeName(nsHtml5AtomTable* interner)
-{
-  return this;
 }
 
 int32_t 

@@ -84,8 +84,8 @@ function run_test() {
       notEqual(endHangs.hangs[0].stack.length, 0);
       equal(typeof endHangs.hangs[0].stack[0], "string");
 
-      // Native stack gathering is only enabled on Windows.
-      if (mozinfo.os == "win") {
+      // Native stack gathering is only enabled on Windows x86.
+      if (mozinfo.os == "win" && mozinfo.bits == 32) {
         // Make sure one of the hangs is a permanent
         // hang containing a native stack.
         ok(endHangs.hangs.some((hang) => (

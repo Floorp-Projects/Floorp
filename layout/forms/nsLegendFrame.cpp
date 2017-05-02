@@ -28,12 +28,6 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLegendFrame)
 
-nsIAtom*
-nsLegendFrame::GetType() const
-{
-  return nsGkAtoms::legendFrame; 
-}
-
 void
 nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {

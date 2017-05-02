@@ -25,7 +25,7 @@ class nsAString;
 
 nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsHTMLCanvasFrame : public nsContainerFrame
+class nsHTMLCanvasFrame final : public nsContainerFrame
 {
 public:
   typedef mozilla::layers::Layer Layer;
@@ -37,8 +37,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsHTMLCanvasFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
-    , mBorderPadding(GetWritingMode()) {}
+    : nsContainerFrame(aContext, mozilla::FrameType::HTMLCanvas)
+    , mBorderPadding(GetWritingMode())
+  {}
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -81,8 +82,6 @@ public:
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
-
-  virtual nsIAtom* GetType() const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

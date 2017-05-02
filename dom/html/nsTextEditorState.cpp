@@ -2503,6 +2503,12 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     }
   }
 
+  // \r is an illegal character in the dom, but people use them,
+  // so convert windows and mac platform linebreaks to \n:
+  if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
+    return false;
+  }
+
   if (mEditor && mBoundFrame) {
     // The InsertText call below might flush pending notifications, which
     // could lead into a scheduled PrepareEditor to be called.  That will
@@ -2527,14 +2533,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (!currentValue.Equals(newValue))
     {
       ValueSetter valueSetter(mEditor);
-
-      // \r is an illegal character in the dom, but people use them,
-      // so convert windows and mac platform linebreaks to \n:
-      if (newValue.FindChar(char16_t('\r')) != -1) {
-        if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
-          return false;
-        }
-      }
 
       nsCOMPtr<nsIDOMDocument> domDoc;
       mEditor->GetDocument(getter_AddRefs(domDoc));
@@ -2638,33 +2636,42 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (!mValue) {
       mValue.emplace();
     }
-    nsString value;
-    if (!value.Assign(newValue, fallible)) {
-      return false;
-    }
-    if (!nsContentUtils::PlatformToDOMLineBreaks(value, fallible)) {
-      return false;
-    }
-    if (!mValue->Assign(value, fallible)) {
-      return false;
-    }
 
-    // Since we have no editor we presumably have cached selection state.
-    if (IsSelectionCached()) {
-      SelectionProperties& props = GetSelectionProperties();
-      if (aFlags & eSetValue_MoveCursorToEnd) {
-        props.SetStart(value.Length());
-        props.SetEnd(value.Length());
-      } else {
-        // Make sure our cached selection position is not outside the new value.
-        props.SetStart(std::min(props.GetStart(), value.Length()));
-        props.SetEnd(std::min(props.GetEnd(), value.Length()));
+    // We can't just early-return here if mValue->Equals(newValue), because
+    // ValueWasChanged and OnValueChanged below still need to be called.
+    if (!mValue->Equals(newValue) ||
+        !nsContentUtils::SkipCursorMoveForSameValueSet()) {
+      if (!mValue->Assign(newValue, fallible)) {
+        return false;
       }
-    }
 
-    // Update the frame display if needed
-    if (mBoundFrame) {
-      mBoundFrame->UpdateValueDisplay(true);
+      // Since we have no editor we presumably have cached selection state.
+      if (IsSelectionCached()) {
+        SelectionProperties& props = GetSelectionProperties();
+        if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
+          props.SetStart(newValue.Length());
+          props.SetEnd(newValue.Length());
+          props.SetDirection(nsITextControlFrame::eForward);
+        } else {
+          // Make sure our cached selection position is not outside the new value.
+          props.SetStart(std::min(props.GetStart(), newValue.Length()));
+          props.SetEnd(std::min(props.GetEnd(), newValue.Length()));
+        }
+      }
+
+      // Update the frame display if needed
+      if (mBoundFrame) {
+        mBoundFrame->UpdateValueDisplay(true);
+      }
+    } else {
+      // Even if our value is not actually changing, apparently we need to mark
+      // our SelectionProperties dirty to make accessibility tests happy.
+      // Probably because they depend on the SetSelectionRange() call we make on
+      // our frame in RestoreSelectionState, but I have no idea why they do.
+      if (IsSelectionCached()) {
+        SelectionProperties& props = GetSelectionProperties();
+        props.SetIsDirty();
+      }
     }
   }
 

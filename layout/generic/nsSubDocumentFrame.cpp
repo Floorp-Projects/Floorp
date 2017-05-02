@@ -59,7 +59,7 @@ GetDocumentFromView(nsView* aView)
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsAtomicContainerFrame(aContext)
+  : nsAtomicContainerFrame(aContext, FrameType::SubDocument)
   , mOuterView(nullptr)
   , mInnerView(nullptr)
   , mIsInline(false)
@@ -494,7 +494,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         // Add the canvas background color to the bottom of the list. This
         // happens after we've built the list so that AddCanvasBackgroundColorItem
         // can monkey with the contents if necessary.
-        uint32_t flags = nsIPresShell::FORCE_DRAW;
+        uint32_t flags = nsIPresShell::FORCE_DRAW | nsIPresShell::ADD_FOR_SUBDOC;
         presShell->AddCanvasBackgroundColorItem(
           *aBuilder, childItems, frame, bounds, NS_RGBA(0,0,0,0), flags);
       }
@@ -547,6 +547,29 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       &childItems, flags);
     childItems.AppendToTop(layerItem);
   }
+
+  // If we're using containers for root frames, then the earlier call
+  // to AddCanvasBackgroundColorItem won't have been able to add an
+  // unscrolled color item for overscroll. Try again now that we're
+  // outside the scrolled ContainerLayer.
+  if (!aBuilder->IsForEventDelivery() &&
+      gfxPrefs::LayoutUseContainersForRootFrames() &&
+      !nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
+     nsRect bounds = GetContentRectRelativeToSelf() +
+       aBuilder->ToReferenceFrame(this);
+
+    // Invoke AutoBuildingDisplayList to ensure that the correct dirty rect
+    // is used to compute the visible rect if AddCanvasBackgroundColorItem
+    // creates a display item.
+    nsDisplayListBuilder::AutoBuildingDisplayList
+      building(aBuilder, this, dirty, true);
+    // Add the canvas background color to the bottom of the list. This
+    // happens after we've built the list so that AddCanvasBackgroundColorItem
+    // can monkey with the contents if necessary.
+    uint32_t flags = nsIPresShell::FORCE_DRAW | nsIPresShell::APPEND_UNSCROLLED_ONLY;
+    presShell->AddCanvasBackgroundColorItem(
+      *aBuilder, childItems, this, bounds, NS_RGBA(0,0,0,0), flags);
+   }
 
   if (aBuilder->IsForFrameVisibility()) {
     // We don't add the childItems to the return list as we're dealing with them here.
@@ -619,12 +642,6 @@ nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("FrameOuter"), aResult);
 }
 #endif
-
-nsIAtom*
-nsSubDocumentFrame::GetType() const
-{
-  return nsGkAtoms::subDocumentFrame;
-}
 
 /* virtual */ nscoord
 nsSubDocumentFrame::GetMinISize(nsRenderingContext *aRenderingContext)
@@ -1088,7 +1105,7 @@ InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent)
 nsresult
 nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
 {
-  if (!aOther || aOther->GetType() != nsGkAtoms::subDocumentFrame) {
+  if (!aOther || !aOther->IsSubDocumentFrame()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

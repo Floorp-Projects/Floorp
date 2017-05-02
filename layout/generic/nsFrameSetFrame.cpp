@@ -83,7 +83,7 @@ void nsFramesetDrag::UnSet()
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
-class nsHTMLFramesetBorderFrame : public nsLeafFrame
+class nsHTMLFramesetBorderFrame final : public nsLeafFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -134,7 +134,7 @@ protected:
 /*******************************************************************************
  * nsHTMLFramesetBlankFrame
  ******************************************************************************/
-class nsHTMLFramesetBlankFrame : public nsLeafFrame
+class nsHTMLFramesetBlankFrame final : public nsLeafFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetBlankFrame)
@@ -158,7 +158,10 @@ public:
                           nsReflowStatus&          aStatus) override;
 
 protected:
-  explicit nsHTMLFramesetBlankFrame(nsStyleContext* aContext) : nsLeafFrame(aContext) {}
+  explicit nsHTMLFramesetBlankFrame(nsStyleContext* aContext)
+    : nsLeafFrame(aContext, FrameType::None)
+  {}
+
   virtual ~nsHTMLFramesetBlankFrame();
   virtual nscoord GetIntrinsicISize() override;
   virtual nscoord GetIntrinsicBSize() override;
@@ -174,7 +177,7 @@ bool    nsHTMLFramesetFrame::gDragInProgress = false;
 #define DEFAULT_BORDER_WIDTH_PX 6
 
 nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::FrameSet)
 {
   mNumRows             = 0;
   mNumCols             = 0;
@@ -1091,12 +1094,6 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-nsIAtom*
-nsHTMLFramesetFrame::GetType() const
-{
-  return nsGkAtoms::frameSetFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const
@@ -1338,9 +1335,12 @@ NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
  ******************************************************************************/
 nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      int32_t aWidth,
-                                                     bool    aVertical,
-                                                     bool    aVisibility)
-  : nsLeafFrame(aContext), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
+                                                     bool aVertical,
+                                                     bool aVisibility)
+  : nsLeafFrame(aContext, FrameType::None)
+  , mWidth(aWidth)
+  , mVertical(aVertical)
+  , mVisibility(aVisibility)
 {
    mCanResize    = true;
    mColor        = NO_COLOR;

@@ -360,7 +360,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   nsAutoLineIterator iter = parent->GetLineIterator();
   if (!iter) {
     // Parent is not a block Frame
-    if (parent->GetType() == nsGkAtoms::lineFrame) {
+    if (parent->IsLineFrame()) {
       // Line frames are not bidi-splittable, so need to consider bidi reordering
       if (paraDir == NSBIDI_LTR) {
         return nsBidiPresUtils::GetFrameToLeftOf(aFrame, mFirstChild, -1);
@@ -432,7 +432,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   nsAutoLineIterator iter = parent->GetLineIterator();
   if (!iter) { 
     // Parent is not a block Frame
-    if (parent->GetType() == nsGkAtoms::lineFrame) {
+    if (parent->IsLineFrame()) {
       // Line frames are not bidi-splittable, so need to consider bidi reordering
       if (paraDir == NSBIDI_LTR) {
         return nsBidiPresUtils::GetFrameToRightOf(aFrame, mFirstChild, -1);

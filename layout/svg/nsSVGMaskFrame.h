@@ -43,7 +43,7 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext)
+    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGMask)
     , mInUse(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
@@ -91,13 +91,6 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override {}
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgMaskFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

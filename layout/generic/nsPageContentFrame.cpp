@@ -108,12 +108,6 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-nsIAtom*
-nsPageContentFrame::GetType() const
-{
-  return nsGkAtoms::pageContentFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsPageContentFrame::GetFrameName(nsAString& aResult) const

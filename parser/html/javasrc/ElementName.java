@@ -192,6 +192,11 @@ public final class ElementName
 
     public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
 
+    // CPPONLY: public static final ElementName ISINDEX = new ElementName("isindex", "isindex", TreeBuilder.ISINDEX | SPECIAL);
+    // [NOCPP[
+    public static final ElementName ISINDEX = new ElementName("isindex", "isindex", TreeBuilder.OTHER);
+    // ]NOCPP]
+
     // START CODE ONLY USED FOR GENERATING CODE uncomment and run to regenerate
 
 //    /**
@@ -424,6 +429,9 @@ public final class ElementName
 //        }
 //        for (int i = 0; i < ELEMENT_NAMES.length; i++) {
 //            ElementName el = ELEMENT_NAMES[i];
+//            if ("isindex".equals(el.name)) {
+//                continue;
+//            }
 //            System.out.println("public static final ElementName "
 //                    + el.constName() + " = new ElementName" + el.toString()
 //                    + ";");
@@ -641,7 +649,6 @@ public final class ElementName
     public static final ElementName VIEW = new ElementName("view", "view", TreeBuilder.OTHER);
     public static final ElementName FECOLORMATRIX = new ElementName("fecolormatrix", "feColorMatrix", TreeBuilder.OTHER);
     public static final ElementName FECONVOLVEMATRIX = new ElementName("feconvolvematrix", "feConvolveMatrix", TreeBuilder.OTHER);
-    public static final ElementName ISINDEX = new ElementName("isindex", "isindex", TreeBuilder.ISINDEX | SPECIAL);
     public static final ElementName BODY = new ElementName("body", "body", TreeBuilder.BODY | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName FEMORPHOLOGY = new ElementName("femorphology", "feMorphology", TreeBuilder.OTHER);
     public static final ElementName RUBY = new ElementName("ruby", "ruby", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);

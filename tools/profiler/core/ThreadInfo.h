@@ -10,8 +10,9 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtrExtensions.h"
 
-#include "ProfileBuffer.h"
 #include "platform.h"
+#include "ProfileBuffer.h"
+#include "PseudoStack.h"
 
 // Stub eventMarker function for js-engine event generation.
 void ProfilerJSEventMarker(const char* aEvent);

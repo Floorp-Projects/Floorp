@@ -116,8 +116,8 @@ public:
   void  Clear();
 
 protected:
-  LinkedList<UndisplayedNode>* GetListFor(nsIContent** aParentContent);
-  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent** aParentContent);
+  LinkedList<UndisplayedNode>* GetListFor(nsIContent* aParentContent);
+  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent* aParentContent);
   void AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent);
   /**
    * Get the applicable parent for the map lookup. This is almost always the
@@ -179,8 +179,7 @@ void
 nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   MOZ_ASSERT(aPlaceholderFrame, "null param unexpected");
-  MOZ_ASSERT(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
-             "unexpected frame type");
+  MOZ_ASSERT(aPlaceholderFrame->IsPlaceholderFrame(), "unexpected frame type");
   auto entry = static_cast<PlaceholderMapEntry*>
     (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame()));
   MOZ_ASSERT(!entry->placeholderFrame,
@@ -192,7 +191,7 @@ void
 nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
+  NS_PRECONDITION(aPlaceholderFrame->IsPlaceholderFrame(),
                   "unexpected frame type");
 
   mPlaceholderMap.Remove(aPlaceholderFrame->GetOutOfFlowFrame());
@@ -514,7 +513,7 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
-               aOldFrame->GetType() == nsGkAtoms::textFrame,
+               aOldFrame->IsTextFrame(),
                "Must remove first continuation.");
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
                  GetPlaceholderFrameFor(aOldFrame)),
@@ -717,12 +716,12 @@ nsFrameManagerBase::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent** aParent)
+nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
 {
-  *aParent = GetApplicableParent(*aParent);
+  aParent = GetApplicableParent(aParent);
 
   LinkedList<UndisplayedNode>* list;
-  if (Get(*aParent, &list)) {
+  if (Get(aParent, &list)) {
     return list;
   }
 
@@ -730,17 +729,17 @@ nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent** aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent** aParent)
+nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
 {
-  *aParent = GetApplicableParent(*aParent);
-  return LookupOrAdd(*aParent);
+  aParent = GetApplicableParent(aParent);
+  return LookupOrAdd(aParent);
 }
 
 
 UndisplayedNode*
 nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 {
-  auto* list = GetListFor(&aParentContent);
+  auto* list = GetListFor(aParentContent);
   return list ? list->getFirst() : nullptr;
 }
 
@@ -749,7 +748,7 @@ void
 nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
                                                   nsIContent* aParentContent)
 {
-  LinkedList<UndisplayedNode>* list = GetOrCreateListFor(&aParentContent);
+  LinkedList<UndisplayedNode>* list = GetOrCreateListFor(aParentContent);
 
 #ifdef DEBUG
   for (UndisplayedNode* node = list->getFirst(); node; node = node->getNext()) {
@@ -777,7 +776,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
                                                   UndisplayedNode* aNode)
 {
 #ifdef DEBUG
-  auto list = GetListFor(&aParentContent);
+  auto list = GetListFor(aParentContent);
   MOZ_ASSERT(list, "content not in map");
   aNode->removeFrom(*list);
 #else

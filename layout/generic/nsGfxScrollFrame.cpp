@@ -109,9 +109,11 @@ NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool a
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
 
-nsHTMLScrollFrame::nsHTMLScrollFrame(nsStyleContext* aContext, bool aIsRoot)
-  : nsContainerFrame(aContext),
-    mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
+nsHTMLScrollFrame::nsHTMLScrollFrame(nsStyleContext* aContext,
+                                     FrameType aType,
+                                     bool aIsRoot)
+  : nsContainerFrame(aContext, aType)
+  , mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
 }
 
@@ -195,12 +197,6 @@ nsSplittableType
 nsHTMLScrollFrame::GetSplittableType() const
 {
   return NS_FRAME_NOT_SPLITTABLE;
-}
-
-nsIAtom*
-nsHTMLScrollFrame::GetType() const
-{
-  return nsGkAtoms::scrollFrame;
 }
 
 /**
@@ -626,7 +622,7 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowInput& aState)
 
   if (mHelper.mIsRoot) {
     nsIFrame *f = mHelper.mScrolledFrame->PrincipalChildList().FirstChild();
-    if (f && f->GetType() == nsGkAtoms::svgOuterSVGFrame &&
+    if (f && f->IsSVGOuterSVGFrame() &&
         static_cast<nsSVGOuterSVGFrame*>(f)->VerticalScrollbarNotNeeded()) {
       // Common SVG case - avoid a bad guess.
       return false;
@@ -1163,9 +1159,10 @@ NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
 NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
 nsXULScrollFrame::nsXULScrollFrame(nsStyleContext* aContext,
-                                   bool aIsRoot, bool aClipAllDescendants)
-  : nsBoxFrame(aContext, aIsRoot),
-    mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
+                                   bool aIsRoot,
+                                   bool aClipAllDescendants)
+  : nsBoxFrame(aContext, FrameType::Scroll, aIsRoot)
+  , mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
   SetXULLayoutManager(nullptr);
   mHelper.mClipAllDescendants = aClipAllDescendants;
@@ -1531,12 +1528,6 @@ nsXULScrollFrame::GetXULPadding(nsMargin& aMargin)
 {
   aMargin.SizeTo(0,0,0,0);
   return NS_OK;
-}
-
-nsIAtom*
-nsXULScrollFrame::GetType() const
-{
-  return nsGkAtoms::scrollFrame;
 }
 
 nscoord

@@ -46,9 +46,9 @@ def write_extra_table(events, output, string_table):
             indexes = string_table.stringIndexes(extra_keys)
 
             print("  // %s, [%s], [%s]" % (
-                    e.category,
-                    ", ".join(e.methods),
-                    ", ".join(e.objects)),
+                  e.category,
+                  ", ".join(e.methods),
+                  ", ".join(e.objects)),
                   file=output)
             print("  // extra_keys: %s" % ", ".join(extra_keys), file=output)
             print("  %s," % ", ".join(map(str, indexes)),

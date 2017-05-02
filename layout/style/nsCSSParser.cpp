@@ -363,10 +363,6 @@ public:
   bool ChromeRulesEnabled() const {
     return mIsChrome;
   }
-  bool UserRulesEnabled() const {
-    return mParsingMode == css::eAgentSheetFeatures ||
-           mParsingMode == css::eUserSheetFeatures;
-  }
 
   CSSEnabledState EnabledState() const {
     static_assert(int(CSSEnabledState::eForAllContent) == 0,
@@ -376,7 +372,7 @@ public:
     if (AgentRulesEnabled()) {
       enabledState |= CSSEnabledState::eInUASheets;
     }
-    if (mIsChrome) {
+    if (ChromeRulesEnabled()) {
       enabledState |= CSSEnabledState::eInChrome;
     }
     return enabledState;
@@ -8768,6 +8764,10 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
     return CSSParseResult::NotFound;
   }
   if (mToken.mIdent.LowerCaseEqualsLiteral("fit-content")) {
+    if (requireFixedSize) {
+      UngetToken();
+      return CSSParseResult::Error;
+    }
     nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_fit_content, 1);
     if (ParseGridTrackBreadth(func->Item(1)) == CSSParseResult::Ok &&
         func->Item(1).IsLengthPercentCalcUnit() &&

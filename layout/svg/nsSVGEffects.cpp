@@ -82,11 +82,11 @@ nsSVGRenderingObserver::GetReferencedFrame()
 }
 
 nsIFrame*
-nsSVGRenderingObserver::GetReferencedFrame(nsIAtom* aFrameType, bool* aOK)
+nsSVGRenderingObserver::GetReferencedFrame(FrameType aFrameType, bool* aOK)
 {
   nsIFrame* frame = GetReferencedFrame();
   if (frame) {
-    if (frame->GetType() == aFrameType)
+    if (frame->Type() == aFrameType)
       return frame;
     if (aOK) {
       *aOK = false;
@@ -259,8 +259,8 @@ NS_INTERFACE_MAP_END
 nsSVGFilterFrame *
 nsSVGFilterReference::GetFilterFrame()
 {
-  return static_cast<nsSVGFilterFrame *>
-    (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nullptr));
+  return static_cast<nsSVGFilterFrame*>(
+    GetReferencedFrame(FrameType::SVGFilter, nullptr));
 }
 
 void
@@ -527,7 +527,7 @@ nsSVGMarkerProperty*
 nsSVGEffects::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty)
 {
-  MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgGeometryFrame &&
+  MOZ_ASSERT(aFrame->IsSVGGeometryFrame() &&
              static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable(),
              "Bad frame");
   return GetEffectProperty(aURI, aFrame, aProperty);
@@ -612,7 +612,7 @@ nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
   if (frame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     frame = frame->GetParent();
     nsIFrame* grandparent = frame->GetParent();
-    if (grandparent && grandparent->GetType() == nsGkAtoms::svgTextFrame) {
+    if (grandparent && grandparent->IsSVGTextFrame()) {
       frame = grandparent;
     }
   }
@@ -622,14 +622,14 @@ nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
     nsSVGEffects::GetPaintingProperty(paintServerURL, frame, aType);
   if (!property)
     return nullptr;
-  nsIFrame *result = property->GetReferencedFrame();
+  nsIFrame* result = property->GetReferencedFrame();
   if (!result)
     return nullptr;
 
-  nsIAtom *type = result->GetType();
-  if (type != nsGkAtoms::svgLinearGradientFrame &&
-      type != nsGkAtoms::svgRadialGradientFrame &&
-      type != nsGkAtoms::svgPatternFrame)
+  FrameType type = result->Type();
+  if (type != FrameType::SVGLinearGradient &&
+      type != FrameType::SVGRadialGradient &&
+      type != FrameType::SVGPattern)
     return nullptr;
 
   return static_cast<nsSVGPaintServerFrame*>(result);
@@ -641,8 +641,8 @@ nsSVGEffects::EffectProperties::GetClipPathFrame()
   if (!mClipPath)
     return nullptr;
 
-  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
-    (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, nullptr));
+  nsSVGClipPathFrame* frame = static_cast<nsSVGClipPathFrame*>(
+    mClipPath->GetReferencedFrame(FrameType::SVGClipPath, nullptr));
 
   return frame;
 }
@@ -657,9 +657,8 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
   bool ok = true;
   const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
   for (size_t i = 0; i < props.Length(); i++) {
-    nsSVGMaskFrame* maskFrame =
-      static_cast<nsSVGMaskFrame *>(props[i]->GetReferencedFrame(
-                                                nsGkAtoms::svgMaskFrame, &ok));
+    nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
+      props[i]->GetReferencedFrame(FrameType::SVGMask, &ok));
     MOZ_ASSERT_IF(maskFrame, ok);
     result.AppendElement(maskFrame);
   }
@@ -678,8 +677,8 @@ nsSVGEffects::EffectProperties::HasNoOrValidClipPath()
 {
   if (mClipPath) {
     bool ok = true;
-    nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
-      (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, &ok));
+    nsSVGClipPathFrame* frame = static_cast<nsSVGClipPathFrame*>(
+      mClipPath->GetReferencedFrame(FrameType::SVGClipPath, &ok));
     if (!ok || (frame && !frame->IsValid())) {
       return false;
     }
@@ -695,7 +694,7 @@ nsSVGEffects::EffectProperties::HasNoOrValidMask()
     bool ok = true;
     const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
     for (size_t i = 0; i < props.Length(); i++) {
-      props[i]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, &ok);
+      props[i]->GetReferencedFrame(FrameType::SVGMask, &ok);
       if (!ok) {
         return false;
       }
@@ -726,7 +725,7 @@ nsSVGEffects::UpdateEffects(nsIFrame* aFrame)
   // We can't do that in DoUpdate as the referenced frame may not be valid
   GetOrCreateFilterProperty(aFrame);
 
-  if (aFrame->GetType() == nsGkAtoms::svgGeometryFrame &&
+  if (aFrame->IsSVGGeometryFrame() &&
       static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
     nsCOMPtr<nsIURI> markerURL =

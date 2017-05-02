@@ -553,13 +553,27 @@ function invokeInTab(fnc) {
 }
 
 const isLinux = Services.appinfo.OS === "Linux";
+const isMac = Services.appinfo.OS === "Darwin";
 const cmdOrCtrl = isLinux ? { ctrlKey: true } : { metaKey: true };
+// On Mac, going to beginning/end only works with meta+left/right.  On
+// Windows, it only works with home/end.  On Linux, apparently, either
+// ctrl+left/right or home/end work.
+const endKey = isMac ?
+      { code: "VK_RIGHT", modifiers: cmdOrCtrl } :
+      { code: "VK_END" };
+const startKey = isMac ? 
+      { code: "VK_LEFT", modifiers: cmdOrCtrl } :
+      { code: "VK_HOME" };
 const keyMappings = {
   sourceSearch: { code: "p", modifiers: cmdOrCtrl },
   fileSearch: { code: "f", modifiers: cmdOrCtrl },
   Enter: { code: "VK_RETURN" },
   Up: { code: "VK_UP" },
   Down: { code: "VK_DOWN" },
+  Right: { code: "VK_RIGHT" },
+  Left: { code: "VK_LEFT" },
+  End: endKey,
+  Start: startKey,
   Tab: { code: "VK_TAB" },
   Escape: { code: "VK_ESCAPE" },
   pauseKey: { code: "VK_F8" },

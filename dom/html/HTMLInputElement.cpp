@@ -1974,9 +1974,10 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
       GetValue(currentValue, aCallerType);
 
       nsresult rv =
-        SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify |
-                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
+        SetValueInternal(aValue,
+          nsTextEditorState::eSetValue_ByContent |
+          nsTextEditorState::eSetValue_Notify |
+          nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -1987,9 +1988,10 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
       }
     } else {
       nsresult rv =
-        SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify |
-                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
+        SetValueInternal(aValue,
+          nsTextEditorState::eSetValue_ByContent |
+          nsTextEditorState::eSetValue_Notify |
+          nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2843,9 +2845,9 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
   } else {
     nsresult rv =
       SetValueInternal(aValue,
-                       nsTextEditorState::eSetValue_BySetUserInput |
-                       nsTextEditorState::eSetValue_Notify|
-                       nsTextEditorState::eSetValue_MoveCursorToEnd);
+        nsTextEditorState::eSetValue_BySetUserInput |
+        nsTextEditorState::eSetValue_Notify|
+        nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -603,7 +603,7 @@ ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
     output.DecryptedBuffer()
       ? static_cast<CDMShmemBuffer*>(output.DecryptedBuffer())
       : nullptr;
-  MOZ_ASSERT(buffer->AsShmemBuffer());
+  MOZ_ASSERT_IF(buffer, buffer->AsShmemBuffer());
   if (status != cdm::kSuccess || !buffer) {
     Unused << SendDecryptFailed(aId, status);
     return IPC_OK();

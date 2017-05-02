@@ -41,7 +41,7 @@ NS_QUERYFRAME_HEAD(nsPageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsPageFrame::nsPageFrame(nsStyleContext* aContext)
-: nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::Page)
 {
 }
 
@@ -61,7 +61,7 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
   aStatus.Reset();  // initialize out parameter
 
   NS_ASSERTION(mFrames.FirstChild() &&
-               nsGkAtoms::pageContentFrame == mFrames.FirstChild()->GetType(),
+               mFrames.FirstChild()->IsPageContentFrame(),
                "pageFrame must have a pageContentFrame child");
 
   // Resize our frame allowing it only to be as big as we are
@@ -167,12 +167,6 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
   PR_PL(("[%d,%d]\n", aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
-}
-
-nsIAtom*
-nsPageFrame::GetType() const
-{
-  return nsGkAtoms::pageFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -459,16 +453,16 @@ GetNextPage(nsIFrame* aPageContentFrame)
 {
   // XXX ugh
   nsIFrame* pageFrame = aPageContentFrame->GetParent();
-  NS_ASSERTION(pageFrame->GetType() == nsGkAtoms::pageFrame,
+  NS_ASSERTION(pageFrame->IsPageFrame(),
                "pageContentFrame has unexpected parent");
   nsIFrame* nextPageFrame = pageFrame->GetNextSibling();
   if (!nextPageFrame)
     return nullptr;
-  NS_ASSERTION(nextPageFrame->GetType() == nsGkAtoms::pageFrame,
+  NS_ASSERTION(nextPageFrame->IsPageFrame(),
                "pageFrame's sibling is not a page frame...");
   nsIFrame* f = nextPageFrame->PrincipalChildList().FirstChild();
   NS_ASSERTION(f, "pageFrame has no page content frame!");
-  NS_ASSERTION(f->GetType() == nsGkAtoms::pageContentFrame,
+  NS_ASSERTION(f->IsPageContentFrame(),
                "pageFrame's child is not page content!");
   return f;
 }
@@ -687,8 +681,9 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
-nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext) :
-  nsLeafFrame(aContext), mHaveReflowed(false)
+nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext)
+  : nsLeafFrame(aContext, FrameType::PageBreak)
+  , mHaveReflowed(false)
 {
 }
 
@@ -732,12 +727,6 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // DidReflow will always get called before the next Reflow() call.
   mHaveReflowed = true;
   aStatus.Reset(); 
-}
-
-nsIAtom*
-nsPageBreakFrame::GetType() const
-{
-  return nsGkAtoms::pageBreakFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

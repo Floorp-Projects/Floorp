@@ -17,11 +17,13 @@ class nsIScrollbarMediator;
 
 nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsScrollbarFrame : public nsBoxFrame
+class nsScrollbarFrame final : public nsBoxFrame
 {
 public:
-    explicit nsScrollbarFrame(nsStyleContext* aContext):
-      nsBoxFrame(aContext), mScrollbarMediator(nullptr) {}
+  explicit nsScrollbarFrame(nsStyleContext* aContext)
+    : nsBoxFrame(aContext, mozilla::FrameType::Scrollbar)
+    , mScrollbarMediator(nullptr)
+  {}
 
   NS_DECL_QUERYFRAME_TARGET(nsScrollbarFrame)
 
@@ -64,8 +66,6 @@ public:
                       ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
-
-  virtual nsIAtom* GetType() const override;  
 
   void SetScrollbarMediatorContent(nsIContent* aMediator);
   nsIScrollbarMediator* GetScrollbarMediator();

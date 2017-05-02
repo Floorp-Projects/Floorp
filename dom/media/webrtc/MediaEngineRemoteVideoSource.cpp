@@ -356,6 +356,13 @@ MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h)
     LOG(("MediaEngineRemoteVideoSource Video FrameSizeChange: %ux%u was %ux%u", w, h, mWidth, mHeight));
     mWidth = w;
     mHeight = h;
+
+    RefPtr<MediaEngineRemoteVideoSource> that = this;
+    NS_DispatchToMainThread(media::NewRunnableFrom([that, w, h]() mutable {
+      that->mSettings.mWidth.Value() = w;
+      that->mSettings.mHeight.Value() = h;
+      return NS_OK;
+    }));
   }
 }
 

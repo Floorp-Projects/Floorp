@@ -14,13 +14,13 @@
  * This frame is used by filter primitive elements that don't
  * have special child elements that provide parameters.
  */
-class SVGFELeafFrame : public nsFrame
+class SVGFELeafFrame final : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFELeafFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
+    : nsFrame(aContext, FrameType::SVGFELeaf)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -45,13 +45,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGFELeaf"), aResult);
   }
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgFELeafFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
@@ -85,12 +78,6 @@ SVGFELeafFrame::Init(nsIContent*       aContent,
 }
 #endif /* DEBUG */
 
-nsIAtom *
-SVGFELeafFrame::GetType() const
-{
-  return nsGkAtoms::svgFELeafFrame;
-}
-
 nsresult
 SVGFELeafFrame::AttributeChanged(int32_t  aNameSpaceID,
                                  nsIAtom* aAttribute,
@@ -98,7 +85,7 @@ SVGFELeafFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   nsSVGFE *element = static_cast<nsSVGFE*>(mContent);
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->GetType() == nsGkAtoms::svgFilterFrame,
+    MOZ_ASSERT(GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }

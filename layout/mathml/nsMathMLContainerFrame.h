@@ -31,8 +31,8 @@ class nsMathMLContainerFrame : public nsContainerFrame,
                                public nsMathMLFrame {
   friend class nsMathMLmfencedFrame;
 public:
-  explicit nsMathMLContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
+  nsMathMLContainerFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext, mozilla::FrameType::None)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mBlockStartAscent(0)
   {}
@@ -558,7 +558,10 @@ public:
   }
 
 protected:
-  explicit nsMathMLmathInlineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}
+  explicit nsMathMLmathInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext)
+  {}
+
   virtual ~nsMathMLmathInlineFrame() {}
 };
 

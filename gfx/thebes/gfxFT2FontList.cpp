@@ -1217,8 +1217,8 @@ gfxFT2FontList::FindFonts()
             FinalizeFamilyMemberList(key, family, /* aSortFaces */ false );
         }
 
-        LOG(("got font list from chrome process: %d faces in %d families "
-             "and %d in hidden families",
+        LOG(("got font list from chrome process: %" PRIdPTR " faces in %"
+             PRIu32 " families and %" PRIu32 " in hidden families",
             fonts.Length(), mFontFamilies.Count(),
             mHiddenFontFamilies.Count()));
         return;

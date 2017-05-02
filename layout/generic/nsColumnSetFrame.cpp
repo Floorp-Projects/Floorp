@@ -129,15 +129,9 @@ NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrame
 NS_IMPL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
 nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext)
+  : nsContainerFrame(aContext, FrameType::ColumnSet)
   , mLastBalanceBSize(NS_INTRINSICSIZE)
 {
-}
-
-nsIAtom*
-nsColumnSetFrame::GetType() const
-{
-  return nsGkAtoms::columnSetFrame;
 }
 
 void

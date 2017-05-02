@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* globals Services, XPCOMUtils, NewTabPrefsProvider, Preferences, aboutNewTabService, do_register_cleanup */
+/* globals Services, XPCOMUtils, Preferences, aboutNewTabService, do_register_cleanup */
 
 "use strict";
 
@@ -10,9 +10,6 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
-                                  "resource:///modules/NewTabPrefsProvider.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
@@ -25,7 +22,6 @@ const DOWNLOADS_URL = "chrome://browser/content/downloads/contentAreaDownloadsVi
 function cleanup() {
   Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", false);
   aboutNewTabService.resetNewTabURL();
-  NewTabPrefsProvider.prefs.uninit();
 }
 
 do_register_cleanup(cleanup);
@@ -34,7 +30,6 @@ do_register_cleanup(cleanup);
  * Test the overriding of the default URL
  */
 add_task(function* test_override_activity_stream_disabled() {
-  NewTabPrefsProvider.prefs.init();
   let notificationPromise;
   Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", false);
 
@@ -69,7 +64,6 @@ add_task(function* test_override_activity_stream_disabled() {
 });
 
 add_task(function* test_override_activity_stream_enabled() {
-  NewTabPrefsProvider.prefs.init();
   let notificationPromise;
   // change newtab page to activity stream
   notificationPromise = nextChangeNotificationPromise("about:newtab");
@@ -105,7 +99,6 @@ add_task(function* test_updates() {
   Preferences.set("browser.newtabpage.activity-stream.enabled", true);
   aboutNewTabService.resetNewTabURL(); // need to set manually because pref notifs are off
   let notificationPromise;
-  NewTabPrefsProvider.prefs.init();
 
   // test update fires on override and reset
   let testURL = "https://example.com/";

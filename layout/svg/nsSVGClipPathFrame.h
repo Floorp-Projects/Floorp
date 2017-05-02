@@ -14,7 +14,7 @@
 class gfxContext;
 class nsSVGDisplayableFrame;
 
-class nsSVGClipPathFrame : public nsSVGContainerFrame
+class nsSVGClipPathFrame final : public nsSVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -25,7 +25,7 @@ class nsSVGClipPathFrame : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext)
+    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGClipPath)
     , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
@@ -124,13 +124,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgClipPathFrame
-   */
-  virtual nsIAtom* GetType() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
   {
@@ -138,8 +131,8 @@ public:
   }
 #endif
 
-  SVGBBox 
-  GetBBoxForClipPathFrame(const SVGBBox &aBBox, const gfxMatrix &aMatrix);
+  SVGBBox GetBBoxForClipPathFrame(const SVGBBox& aBBox,
+                                  const gfxMatrix& aMatrix);
 
   /**
    * If the clipPath element transforms its children due to

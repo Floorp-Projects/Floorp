@@ -25,8 +25,9 @@ using namespace mozilla::gfx;
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext)
-  : nsSVGPaintServerFrame(aContext)
+nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
+                                       FrameType aType)
+  : nsSVGPaintServerFrame(aContext, aType)
   , mLoopFlag(false)
   , mNoHRefURI(false)
 {
@@ -372,9 +373,9 @@ nsSVGGradientFrame::GetReferencedGradient()
   if (!result)
     return nullptr;
 
-  nsIAtom* frameType = result->GetType();
-  if (frameType != nsGkAtoms::svgLinearGradientFrame &&
-      frameType != nsGkAtoms::svgRadialGradientFrame)
+  FrameType frameType = result->Type();
+  if (frameType != FrameType::SVGLinearGradient &&
+      frameType != FrameType::SVGRadialGradient)
     return nullptr;
 
   return static_cast<nsSVGGradientFrame*>(result);
@@ -386,7 +387,7 @@ nsSVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames)
   nsIFrame *stopFrame = nullptr;
   for (stopFrame = mFrames.FirstChild(); stopFrame;
        stopFrame = stopFrame->GetNextSibling()) {
-    if (stopFrame->GetType() == nsGkAtoms::svgStopFrame) {
+    if (stopFrame->IsSVGStopFrame()) {
       aStopFrames->AppendElement(stopFrame);
     }
   }
@@ -428,12 +429,6 @@ nsSVGLinearGradientFrame::Init(nsIContent*       aContent,
   nsSVGGradientFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-nsIAtom*
-nsSVGLinearGradientFrame::GetType() const
-{
-  return nsGkAtoms::svgLinearGradientFrame;
-}
 
 nsresult
 nsSVGLinearGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
@@ -536,12 +531,6 @@ nsSVGRadialGradientFrame::Init(nsIContent*       aContent,
   nsSVGGradientFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-nsIAtom*
-nsSVGRadialGradientFrame::GetType() const
-{
-  return nsGkAtoms::svgRadialGradientFrame;
-}
 
 nsresult
 nsSVGRadialGradientFrame::AttributeChanged(int32_t         aNameSpaceID,

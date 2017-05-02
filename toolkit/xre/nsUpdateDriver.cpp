@@ -24,6 +24,7 @@
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Printf.h"
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -406,18 +407,15 @@ AppendToLibPath(const char *pathToAppend)
 {
   char *pathValue = getenv(LD_LIBRARY_PATH_ENVVAR_NAME);
   if (nullptr == pathValue || '\0' == *pathValue) {
-    char *s = PR_smprintf("%s=%s", LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend);
+    // Leak the string because that is required by PR_SetEnv.
+    char *s = Smprintf("%s=%s", LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend).release();
     PR_SetEnv(s);
   } else if (!strstr(pathValue, pathToAppend)) {
-    char *s = PR_smprintf("%s=%s" PATH_SEPARATOR "%s",
-                    LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend, pathValue);
+    // Leak the string because that is required by PR_SetEnv.
+    char *s = Smprintf("%s=%s" PATH_SEPARATOR "%s",
+                       LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend, pathValue).release();
     PR_SetEnv(s);
   }
-
-  // The memory used by PR_SetEnv is not copied to the environment on all
-  // platform, it can be used by reference directly. So we purposely do not
-  // call PR_smprintf_free on s.  Subsequent calls to PR_SetEnv will free
-  // the old memory first.
 }
 #endif
 
@@ -703,15 +701,26 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
   }
 #elif defined(XP_MACOSX)
   UpdateDriverSetupMacCommandLine(argc, argv, restart);
-  // LaunchChildMac uses posix_spawnp and prefers the current
-  // architecture when launching. It doesn't require a
-  // null-terminated string but it doesn't matter if we pass one.
+  // We need to detect whether elevation is required for this update. This can
+  // occur when an admin user installs the application, but another admin
+  // user attempts to update (see bug 394984).
+  if (restart && !IsRecursivelyWritable(installDirPath.get())) {
+    if (!LaunchElevatedUpdate(argc, argv, outpid)) {
+      LOG(("Failed to launch elevated update!"));
+      exit(1);
+    }
+    exit(0);
+  }
+
   if (isStaged) {
     // Launch the updater to replace the installation with the staged updated.
     LaunchChildMac(argc, argv);
   } else {
     // Launch the updater to either stage or apply an update.
     LaunchChildMac(argc, argv, outpid);
+  }
+  if (restart) {
+    exit(0);
   }
 #else
   if (isStaged) {

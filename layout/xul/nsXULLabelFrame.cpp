@@ -96,12 +96,6 @@ nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
-nsIAtom*
-nsXULLabelFrame::GetType() const
-{
-  return nsGkAtoms::XULLabelFrame;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostics
 

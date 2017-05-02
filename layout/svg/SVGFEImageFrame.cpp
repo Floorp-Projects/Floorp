@@ -16,13 +16,13 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class SVGFEImageFrame : public nsFrame
+class SVGFEImageFrame final : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEImageFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
+    : nsFrame(aContext, FrameType::SVGFEImage)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
@@ -52,13 +52,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGFEImage"), aResult);
   }
 #endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgFEImageFrame
-   */
-  virtual nsIAtom* GetType() const override;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
@@ -122,12 +115,6 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
   }
 }
 
-nsIAtom *
-SVGFEImageFrame::GetType() const
-{
-  return nsGkAtoms::svgFEImageFrame;
-}
-
 nsresult
 SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
                                   nsIAtom* aAttribute,
@@ -135,7 +122,7 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   SVGFEImageElement *element = static_cast<SVGFEImageElement*>(mContent);
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->GetType() == nsGkAtoms::svgFilterFrame,
+    MOZ_ASSERT(GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }

@@ -1,2 +1,2 @@
 fails-if(stylo) == cell-align-stopped-at-table-1-standards.html cell-align-stopped-at-table-1-standards-ref.html
-fails-if(stylo) == cell-align-stopped-at-table-1-quirks.html cell-align-stopped-at-table-1-quirks-ref.html
+== cell-align-stopped-at-table-1-quirks.html cell-align-stopped-at-table-1-quirks-ref.html

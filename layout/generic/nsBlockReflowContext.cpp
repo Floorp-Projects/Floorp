@@ -38,8 +38,8 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
 
 static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 {
-  nsIAtom* type = aFrame->GetType();
-  if (type == nsGkAtoms::columnSetFrame) {
+  FrameType type = aFrame->Type();
+  if (type == FrameType::ColumnSet) {
     static_cast<nsColumnSetFrame*>(aFrame)->DrainOverflowColumns();
     nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
     if (child) {

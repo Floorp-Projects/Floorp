@@ -21,7 +21,8 @@ function test() {
     ["browser.cache.disk.enable", false],
     ["browser.cache.memory.enable", false],
     ["browser.storageManager.enabled", true],
-    ["browser.preferences.offlineGroup.enabled", true]
+    ["browser.preferences.offlineGroup.enabled", true],
+    ["privacy.userContext.ui.enabled", true]
   ]}).then(() => open_preferences(runTest));
 }
 
@@ -39,9 +40,9 @@ function runTest(win) {
     }
     let attributeValue = element.getAttribute("data-category");
     if (attributeValue == "panePrivacy") {
-      is_element_visible(element, "Privacy elements should be visible");
+      is_element_visible(element, `Privacy element of id=${element.id} should be visible`);
     } else {
-      is_element_hidden(element, "Non-Privacy elements should be hidden");
+      is_element_hidden(element, `Non-Privacy element of id=${element.id} should be hidden`);
     }
   }
 

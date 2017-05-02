@@ -169,14 +169,14 @@ NS_QUERYFRAME_HEAD(nsMenuFrame)
   NS_QUERYFRAME_ENTRY(nsMenuFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsMenuFrame::nsMenuFrame(nsStyleContext* aContext):
-  nsBoxFrame(aContext),
-    mIsMenu(false),
-    mChecked(false),
-    mIgnoreAccelTextChange(false),
-    mReflowCallbackPosted(false),
-    mType(eMenuType_Normal),
-    mBlinkState(0)
+nsMenuFrame::nsMenuFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, FrameType::Menu)
+  , mIsMenu(false)
+  , mChecked(false)
+  , mIgnoreAccelTextChange(false)
+  , mReflowCallbackPosted(false)
+  , mType(eMenuType_Normal)
+  , mBlinkState(0)
 {
 }
 
@@ -265,7 +265,7 @@ nsMenuFrame::GetPopupList() const
   }
   nsFrameList* prop = Properties().Get(PopupListProperty());
   NS_ASSERTION(prop && prop->GetLength() == 1 &&
-               prop->FirstChild()->GetType() == nsGkAtoms::menuPopupFrame,
+               prop->FirstChild()->IsMenuPopupFrame(),
                "popup list should have exactly one nsMenuPopupFrame");
   return prop;
 }
