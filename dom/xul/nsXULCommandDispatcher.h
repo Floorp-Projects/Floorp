@@ -68,6 +68,9 @@ protected:
 
     bool Matches(const nsString& aList, 
                    const nsAString& aElement);
+
+    bool mLocked;
+    nsTArray<nsString> mPendingUpdates;
 };
 
 #endif // nsXULCommandDispatcher_h__
