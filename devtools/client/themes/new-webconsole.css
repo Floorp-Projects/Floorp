@@ -473,6 +473,10 @@ body {
   color: var(--theme-comment);
 }
 
+.jsterm-input-node-html {
+  width: 100%;
+}
+
 .jsterm-input-node {
   /* Always allow scrolling on input - it auto expands in js by setting height,
      but don't want it to get bigger than the window. 24px = toolbar height. */
