@@ -270,6 +270,7 @@ fuzzy(28,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
 fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
 == mask-basic-04.svg pass.svg
+== mask-basic-05.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-contains-inner-svg-01.svg pass.svg
 == mask-contains-inner-svg-02.svg pass.svg
