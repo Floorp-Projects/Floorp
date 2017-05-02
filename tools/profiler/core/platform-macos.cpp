@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <dlfcn.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <mach/mach_init.h>
-#include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
 
 #include <AvailabilityMacros.h>
@@ -78,25 +76,10 @@ private:
 ////////////////////////////////////////////////////////////////////////
 // BEGIN SamplerThread target specifics
 
-static void
-SetThreadName()
-{
-  // pthread_setname_np is only available in 10.6 or later, so test
-  // for it at runtime.
-  int (*dynamic_pthread_setname_np)(const char*);
-  *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
-    dlsym(RTLD_DEFAULT, "pthread_setname_np");
-  if (!dynamic_pthread_setname_np)
-    return;
-
-  dynamic_pthread_setname_np("SamplerThread");
-}
-
 static void*
 ThreadEntry(void* aArg)
 {
   auto thread = static_cast<SamplerThread*>(aArg);
-  SetThreadName();
   thread->Run();
   return nullptr;
 }

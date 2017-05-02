@@ -13,7 +13,7 @@ class nsIFrame;
 typedef class nsIFrame nsIFrame;
 class nsBoxLayoutState;
 
-class nsListBoxLayout : public nsGridRowGroupLayout
+class nsListBoxLayout final : public nsGridRowGroupLayout
 {
 public:
   nsListBoxLayout();

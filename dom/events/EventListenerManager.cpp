@@ -127,8 +127,10 @@ EventListenerManagerBase::EventListenerManagerBase()
   , mMayHaveCapturingListeners(false)
   , mMayHaveSystemGroupListeners(false)
   , mMayHaveTouchEventListener(false)
+  , mMayHaveMouseMoveEventListener(false)
   , mMayHaveMouseEnterLeaveEventListener(false)
   , mMayHavePointerEnterLeaveEventListener(false)
+  , mMayHaveAPZAwareKeyEventListener(false)
   , mMayHaveKeyEventListener(false)
   , mMayHaveInputOrCompositionEventListener(false)
   , mClearingListeners(false)
@@ -411,12 +413,20 @@ EventListenerManager::AddEventListenerInternal(
     if (!aFlags.mInSystemGroup) {
       mMayHaveKeyEventListener = true;
     }
+    if (!aFlags.mPassive && aTypeAtom != nsGkAtoms::onkeyup) {
+      mMayHaveAPZAwareKeyEventListener = true;
+    }
   } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
              aTypeAtom == nsGkAtoms::oncompositionstart ||
              aTypeAtom == nsGkAtoms::oncompositionupdate ||
              aTypeAtom == nsGkAtoms::oninput) {
     if (!aFlags.mInSystemGroup) {
       mMayHaveInputOrCompositionEventListener = true;
+    }
+  } else if (aTypeAtom == nsGkAtoms::onmousemove) {
+    mMayHaveMouseMoveEventListener = true;
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      window->SetHasMouseMoveEventListeners();
     }
   }
 

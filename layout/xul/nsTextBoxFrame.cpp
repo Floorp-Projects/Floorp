@@ -277,7 +277,8 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
 
 }
 
-class nsDisplayXULTextBox : public nsDisplayItem {
+class nsDisplayXULTextBox final : public nsDisplayItem
+{
 public:
   nsDisplayXULTextBox(nsDisplayListBuilder* aBuilder,
                       nsTextBoxFrame* aFrame) :
