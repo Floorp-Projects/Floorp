@@ -1,145 +1,108 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyGetter(this, "docShell", () => {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsIDocShell);
-});
+"use strict";
 
+/**
+ * WHOA THERE: We should never be adding new things to EXPECTED_REFLOWS. This
+ * is a whitelist that should slowly go away as we improve the performance of
+ * the front-end. Instead of adding more reflows to the whitelist, you should
+ * be modifying your code to avoid the reflow.
+ *
+ * See https://developer.mozilla.org/en-US/Firefox/Performance_best_practices_for_Firefox_fe_engineers
+ * for tips on how to do that.
+ */
 const EXPECTED_REFLOWS = [
-  // tabbrowser.adjustTabstrip() call after tabopen animation has finished
-  "adjustTabstrip@chrome://browser/content/tabbrowser.xml|" +
-    "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
-    "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
-
-  // switching focus in updateCurrentBrowser() causes reflows
-  "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml|" +
-    "updateCurrentBrowser@chrome://browser/content/tabbrowser.xml|" +
-    "onselect@chrome://browser/content/browser.xul|",
-
-  // switching focus in openLinkIn() causes reflows
-  "openLinkIn@chrome://browser/content/utilityOverlay.js|" +
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js|" +
-    "BrowserOpenTab@chrome://browser/content/browser.js|",
+  // selection change notification may cause querying the focused editor content
+  // by IME and that will cause reflow.
+  [
+    "select@chrome://global/content/bindings/textbox.xml",
+    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+    "openLinkIn@chrome://browser/content/utilityOverlay.js",
+    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
+    "BrowserOpenTab@chrome://browser/content/browser.js",
+  ],
 
   // selection change notification may cause querying the focused editor content
   // by IME and that will cause reflow.
-  "select@chrome://global/content/bindings/textbox.xml|" +
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js|" +
-    "openLinkIn@chrome://browser/content/utilityOverlay.js|" +
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js|" +
-    "BrowserOpenTab@chrome://browser/content/browser.js|",
+  [
+    "select@chrome://global/content/bindings/textbox.xml",
+    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+    "openLinkIn@chrome://browser/content/utilityOverlay.js",
+    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
+    "BrowserOpenTab@chrome://browser/content/browser.js",
+  ],
 
+  [
+    "select@chrome://global/content/bindings/textbox.xml",
+    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+    "openLinkIn@chrome://browser/content/utilityOverlay.js",
+    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
+    "BrowserOpenTab@chrome://browser/content/browser.js",
+  ],
+
+  [
+    "openLinkIn@chrome://browser/content/utilityOverlay.js",
+    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
+    "BrowserOpenTab@chrome://browser/content/browser.js",
+  ],
 ];
 
-const PREF_PRELOAD = "browser.newtab.preload";
-const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
+if (!gMultiProcessBrowser) {
+  EXPECTED_REFLOWS.push(
+    [
+      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
+      "updateCurrentBrowser@chrome://browser/content/tabbrowser.xml",
+      "onselect@chrome://browser/content/browser.xul",
+    ],
+  );
+}
 
 /*
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
 add_task(async function() {
-  let DirectoryLinksProvider = Cu.import("resource:///modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
-  let NewTabUtils = Cu.import("resource://gre/modules/NewTabUtils.jsm", {}).NewTabUtils;
-  let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-
-  // resolves promise when directory links are downloaded and written to disk
-  function watchLinksChangeOnce() {
-    return new Promise(resolve => {
-      let observer = {
-        onManyLinksChanged: () => {
-          DirectoryLinksProvider.removeObserver(observer);
-          NewTabUtils.links.populateCache(() => {
-            NewTabUtils.allPages.update();
-            resolve();
-          }, true);
-        }
-      };
-      observer.onDownloadFail = observer.onManyLinksChanged;
-      DirectoryLinksProvider.addObserver(observer);
-    });
+  // If we've got a preloaded browser, get rid of it so that it
+  // doesn't interfere with the test if it's loading. We have to
+  // do this before we disable preloading or changing the new tab
+  // URL, otherwise _getPreloadedBrowser will return null, despite
+  // the preloaded browser existing.
+  let preloaded = gBrowser._getPreloadedBrowser();
+  if (preloaded) {
+    preloaded.remove();
   }
 
-  let gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(PREF_PRELOAD);
-    Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gOrigDirectorySource);
-    return watchLinksChangeOnce();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtab.preload", false]],
   });
 
-  Services.prefs.setBoolPref(PREF_PRELOAD, false);
-  // set directory source to dummy/empty links
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, 'data:application/json,{"test":1}');
+  let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
+                             .getService(Ci.nsIAboutNewTabService);
+  aboutNewTabService.newTabURL = "about:blank";
 
-  // run tests when directory source change completes
-  await watchLinksChangeOnce();
+  registerCleanupFunction(() => {
+    aboutNewTabService.resetNewTabURL();
+  });
 
-  // Perform a click in the top left of content to ensure the mouse isn't
-  // hovering over any of the tiles
-  let target = gBrowser.selectedBrowser;
-  let rect = target.getBoundingClientRect();
-  let left = rect.left + 1;
-  let top = rect.top + 1;
-
-  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-  utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
-  utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+  // Because the tab strip is a scrollable frame, we can't use the
+  // default dirtying function from withReflowObserver and reliably
+  // get reflows for the strip. Instead, we provide a node that's
+  // already in the scrollable frame to dirty - in this case, the
+  // original tab.
+  let origTab = gBrowser.selectedTab;
 
   // Add a reflow observer and open a new tab.
-  docShell.addWeakReflowObserver(observer);
-  BrowserOpenTab();
+  await withReflowObserver(async function() {
+    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+    BrowserOpenTab();
+    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
+        false, e => e.propertyName === "max-width");
+    await switchDone;
+  }, EXPECTED_REFLOWS, window, origTab);
 
-  // Wait until the tabopen animation has finished.
-  await waitForTransitionEnd();
-
-  // Remove reflow observer and clean up.
-  docShell.removeWeakReflowObserver(observer);
-  gBrowser.removeCurrentTab();
+  let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await switchDone;
 });
 
-var observer = {
-  reflow(start, end) {
-    // Gather information about the current code path.
-    let path = (new Error().stack).split("\n").slice(1).map(line => {
-      return line.replace(/:\d+:\d+$/, "");
-    }).join("|");
-    let pathWithLineNumbers = (new Error().stack).split("\n").slice(1).join("|");
-
-    // Stack trace is empty. Reflow was triggered by native code.
-    if (path === "") {
-      return;
-    }
-
-    // Check if this is an expected reflow.
-    for (let stack of EXPECTED_REFLOWS) {
-      if (path.startsWith(stack)) {
-        ok(true, "expected uninterruptible reflow '" + stack + "'");
-        return;
-      }
-    }
-
-    ok(false, "unexpected uninterruptible reflow '" + pathWithLineNumbers + "'");
-  },
-
-  reflowInterruptible(start, end) {
-    // We're not interested in interruptible reflows.
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                         Ci.nsISupportsWeakReference])
-};
-
-function waitForTransitionEnd() {
-  return new Promise(resolve => {
-    let tab = gBrowser.selectedTab;
-    tab.addEventListener("transitionend", function onEnd(event) {
-      if (event.propertyName === "max-width") {
-        tab.removeEventListener("transitionend", onEnd);
-        resolve();
-      }
-    });
-  });
-}
