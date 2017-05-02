@@ -35,7 +35,7 @@ if not CONFIG['JS_STANDALONE']:
         # TODO: SHARED_LIBRARY_LIBS go here
     else:
         # Temporary, until bug 662814 lands
-        NO_VISIBILITY_FLAGS = True
+        NoVisibilityFlags()
         SOURCES += [
             'dummy.cpp',
         ]
