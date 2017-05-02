@@ -331,26 +331,6 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
         return;
 
     switch (kind) {
-      case JS::TraceKind::Object:
-      {
-        name = static_cast<JSObject*>(thing)->getClass()->name;
-        break;
-      }
-
-      case JS::TraceKind::Script:
-        name = "script";
-        break;
-
-      case JS::TraceKind::String:
-        name = ((JSString*)thing)->isDependent()
-               ? "substring"
-               : "string";
-        break;
-
-      case JS::TraceKind::Symbol:
-        name = "symbol";
-        break;
-
       case JS::TraceKind::BaseShape:
         name = "base_shape";
         break;
@@ -363,12 +343,32 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
         name = "lazyscript";
         break;
 
+      case JS::TraceKind::Object:
+      {
+        name = static_cast<JSObject*>(thing)->getClass()->name;
+        break;
+      }
+
+      case JS::TraceKind::ObjectGroup:
+        name = "object_group";
+        break;
+
+      case JS::TraceKind::Script:
+        name = "script";
+        break;
+
       case JS::TraceKind::Shape:
         name = "shape";
         break;
 
-      case JS::TraceKind::ObjectGroup:
-        name = "object_group";
+      case JS::TraceKind::String:
+        name = ((JSString*)thing)->isDependent()
+               ? "substring"
+               : "string";
+        break;
+
+      case JS::TraceKind::Symbol:
+        name = "symbol";
         break;
 
       default:
