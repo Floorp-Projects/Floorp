@@ -803,8 +803,8 @@ nsScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(nsModuleLoadReque
   // will have ModuleLoaded or LoadFailed on them when the promise is
   // resolved/rejected. This is set up in StartLoad.
 
-  LOG(("ScriptLoadRequest (%p): Module fetch finished (result == %d)",
-       aRequest, aResult));
+  LOG(("ScriptLoadRequest (%p): Module fetch finished (result == %u)",
+       aRequest, unsigned(aResult)));
 
   MOZ_ASSERT(!aRequest->IsReadyToRun());
 
