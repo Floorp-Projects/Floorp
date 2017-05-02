@@ -162,6 +162,11 @@ function gotoPref(aCategory) {
     category = category.substring(0, breakIndex);
   }
   category = friendlyPrefCategoryNameToInternalName(category);
+  if (category != "paneSearchResults") {
+    gSearchResultsPane.searchInput.value = "";
+    gSearchResultsPane.searchResultsCategory.hidden = true;
+    gSearchResultsPane.findSelection.removeAllRanges();
+  }
 
   // Updating the hash (below) or changing the selected category
   // will re-enter gotoPref.
