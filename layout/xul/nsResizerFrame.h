@@ -11,7 +11,7 @@
 
 class nsIBaseWindow;
 
-class nsResizerFrame : public nsTitleBarFrame 
+class nsResizerFrame final : public nsTitleBarFrame
 {
 protected:
   struct Direction {
