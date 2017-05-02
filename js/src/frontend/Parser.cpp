@@ -5882,31 +5882,7 @@ Parser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldHandling
     //
     // Careful!  FunctionDeclaration doesn't include generators or async
     // functions.
-    if (next == TOK_ASYNC) {
-        tokenStream.consumeKnownToken(next, TokenStream::Operand);
-
-        // Peek only on the same line: ExpressionStatement's lookahead
-        // restriction is phrased as
-        //
-        //   [lookahead ∉ { {, function, async [no LineTerminator here] function, class, let [ }]
-        //
-        // meaning that code like this is valid:
-        //
-        //   if (true)
-        //     async       // ASI opportunity
-        //   function clownshoes() {}
-        TokenKind maybeFunction;
-        if (!tokenStream.peekTokenSameLine(&maybeFunction))
-            return null();
-
-        if (maybeFunction == TOK_FUNCTION) {
-            error(JSMSG_FORBIDDEN_AS_STATEMENT, "async function declarations");
-            return null();
-        }
-
-        // Otherwise this |async| begins an ExpressionStatement.
-        tokenStream.ungetToken();
-    } else if (next == TOK_FUNCTION) {
+    if (next == TOK_FUNCTION) {
         tokenStream.consumeKnownToken(next, TokenStream::Operand);
 
         // Parser::statement would handle this, but as this function handles
@@ -7542,11 +7518,7 @@ Parser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
         if (tt == TOK_LET) {
             bool forbiddenLetDeclaration = false;
 
-            if (pc->sc()->strict() || versionNumber() >= JSVERSION_1_7) {
-                // |let| can't be an Identifier in strict mode code.  Ditto for
-                // non-standard JavaScript 1.7+.
-                forbiddenLetDeclaration = true;
-            } else if (next == TOK_LB) {
+            if (next == TOK_LB) {
                 // Enforce ExpressionStatement's 'let [' lookahead restriction.
                 forbiddenLetDeclaration = true;
             } else if (next == TOK_LC || TokenKindIsPossibleIdentifier(next)) {
@@ -7571,6 +7543,28 @@ Parser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
                 error(JSMSG_FORBIDDEN_AS_STATEMENT, "lexical declarations");
                 return null();
             }
+        } else if (tt == TOK_ASYNC) {
+            // Peek only on the same line: ExpressionStatement's lookahead
+            // restriction is phrased as
+            //
+            //   [lookahead ∉ { {, function, async [no LineTerminator here] function, class, let [ }]
+            //
+            // meaning that code like this is valid:
+            //
+            //   if (true)
+            //     async       // ASI opportunity
+            //   function clownshoes() {}
+            TokenKind maybeFunction;
+            if (!tokenStream.peekTokenSameLine(&maybeFunction))
+                return null();
+
+            if (maybeFunction == TOK_FUNCTION) {
+                error(JSMSG_FORBIDDEN_AS_STATEMENT, "async function declarations");
+                return null();
+            }
+
+            // Otherwise this |async| begins an ExpressionStatement or is a
+            // label name.
         }
 
         // NOTE: It's unfortunately allowed to have a label named 'let' in
