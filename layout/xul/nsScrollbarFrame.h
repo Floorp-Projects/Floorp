@@ -17,7 +17,7 @@ class nsIScrollbarMediator;
 
 nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsScrollbarFrame : public nsBoxFrame
+class nsScrollbarFrame final : public nsBoxFrame
 {
 public:
   explicit nsScrollbarFrame(nsStyleContext* aContext)

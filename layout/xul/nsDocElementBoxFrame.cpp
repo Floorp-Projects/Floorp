@@ -26,8 +26,8 @@
 
 using namespace mozilla::dom;
 
-class nsDocElementBoxFrame : public nsBoxFrame,
-                             public nsIAnonymousContentCreator
+class nsDocElementBoxFrame final : public nsBoxFrame
+                                 , public nsIAnonymousContentCreator
 {
 public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

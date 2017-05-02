@@ -589,12 +589,6 @@ public:
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool GetShadowOpacitySetByAnimation() { return mShadowOpacitySetByAnimation; }
 
-  /**
-   * Return true if a checkerboarding background color needs to be drawn
-   * for this layer.
-   */
-  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr) { return false; }
-
 protected:
   HostLayerManager* mCompositorManager;
 
@@ -693,8 +687,6 @@ public:
    * a subset of the shadow visible region.
    */
   virtual nsIntRegion GetFullyRenderedRegion();
-
-  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr);
 
 protected:
   LayerManagerComposite* mCompositeManager;

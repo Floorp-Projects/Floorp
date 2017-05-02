@@ -11,7 +11,7 @@ class nsITreeBoxObject;
 nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                              nsStyleContext* aContext);
 
-class nsTreeColFrame : public nsBoxFrame
+class nsTreeColFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

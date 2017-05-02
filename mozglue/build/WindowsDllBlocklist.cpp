@@ -233,6 +233,8 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Crashes with Internet Download Manager, bug 1333486
   { "idmcchandler7.dll", ALL_VERSIONS },
   { "idmcchandler7_64.dll", ALL_VERSIONS },
+  { "idmcchandler5.dll", ALL_VERSIONS },
+  { "idmcchandler5_64.dll", ALL_VERSIONS },
 
   // Nahimic 2 breaks applicaton update (bug 1356637)
   { "nahimic2devprops.dll", ALL_VERSIONS },
