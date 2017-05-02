@@ -592,7 +592,6 @@ BackgroundHangMonitor::Startup()
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) { // cached ClientID hasn't been read yet
-      ThreadStackHelper::Startup();
       BackgroundHangThread::Startup();
       BackgroundHangManager::sInstance = new BackgroundHangManager();
 
@@ -606,7 +605,6 @@ BackgroundHangMonitor::Startup()
     }
   }
 
-  ThreadStackHelper::Startup();
   BackgroundHangThread::Startup();
   BackgroundHangManager::sInstance = new BackgroundHangManager();
 #endif
@@ -627,7 +625,6 @@ BackgroundHangMonitor::Shutdown()
      we don't want to hold the lock when it's being destroyed. */
   BackgroundHangManager::sInstance->Shutdown();
   BackgroundHangManager::sInstance = nullptr;
-  ThreadStackHelper::Shutdown();
   BackgroundHangManager::sDisabled = true;
 #endif
 }
