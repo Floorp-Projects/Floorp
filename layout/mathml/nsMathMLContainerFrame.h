@@ -28,7 +28,8 @@
 #define STRETCH_CONSIDER_EMBELLISHMENTS 0x00000002 // size calculations include embellishments
 
 class nsMathMLContainerFrame : public nsContainerFrame,
-                               public nsMathMLFrame {
+                               public nsMathMLFrame
+{
   friend class nsMathMLmfencedFrame;
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext)
@@ -60,18 +61,6 @@ public:
       aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
-  
-  // helper to set the "increment script level" flag on the element belonging
-  // to a child frame given by aChildIndex.
-  // When this flag is set, the style system will increment the scriptlevel
-  // for the child element. This is needed for situations where the style system
-  // cannot itself determine the scriptlevel (mfrac, munder, mover, munderover).
-  // This should be called during reflow. We set the flag and if it changed,
-  // we request appropriate restyling and also queue a post-reflow callback
-  // to ensure that restyle and reflow happens immediately after the current
-  // reflow.
-  void
-  SetIncrementScriptLevel(int32_t aChildIndex, bool aIncrement);
 
   // --------------------------------------------------------------------------
   // Overloaded nsContainerFrame methods -- see documentation in nsIFrame.h
