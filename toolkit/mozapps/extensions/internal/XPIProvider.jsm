@@ -184,7 +184,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", 20);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 19);
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC", PREF_ALLOW_NON_MPC);
 

@@ -1517,11 +1517,6 @@ pref("browser.tabs.crashReporting.email", "");
 pref("extensions.interposition.enabled", true);
 pref("extensions.interposition.prefetching", true);
 
-// But don't allow non-MPC extensions by default on Nightly
-#if defined(NIGHTLY_BUILD)
-pref("extensions.allow-non-mpc-extensions", false);
-#endif
-
 // Enable blocking of e10s and e10s-multi for add-on users on beta/release.
 #ifdef RELEASE_OR_BETA
 pref("extensions.e10sBlocksEnabling", true);
