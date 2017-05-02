@@ -108,11 +108,17 @@ nsPrintData::DoOnProgressChange(int32_t      aProgress,
                                 bool         aDoStartStop,
                                 int32_t      aFlag)
 {
-  for (int32_t i=0;i<mPrintProgressListeners.Count();i++) {
-    nsIWebProgressListener* wpl = mPrintProgressListeners.ObjectAt(i);
-    wpl->OnProgressChange(nullptr, nullptr, aProgress, aMaxProgress, aProgress, aMaxProgress);
+  size_t numberOfListeners = mPrintProgressListeners.Length();
+  for (size_t i = 0; i < numberOfListeners; ++i) {
+    nsCOMPtr<nsIWebProgressListener> listener =
+      mPrintProgressListeners.SafeElementAt(i);
+    if (NS_WARN_IF(!listener)) {
+      continue;
+    }
+    listener->OnProgressChange(nullptr, nullptr, aProgress, aMaxProgress,
+                               aProgress, aMaxProgress);
     if (aDoStartStop) {
-      wpl->OnStateChange(nullptr, nullptr, aFlag, NS_OK);
+      listener->OnStateChange(nullptr, nullptr, aFlag, NS_OK);
     }
   }
 }
@@ -120,12 +126,14 @@ nsPrintData::DoOnProgressChange(int32_t      aProgress,
 void
 nsPrintData::DoOnStatusChange(nsresult aStatus)
 {
-  uint32_t numberOfListeners = mPrintProgressListeners.Length();
-  for (uint32_t i = 0; i < numberOfListeners; ++i) {
-    nsIWebProgressListener* listener = mPrintProgressListeners.SafeElementAt(i);
-    if (listener) {
-      listener->OnStatusChange(nullptr, nullptr, aStatus, nullptr);
+  size_t numberOfListeners = mPrintProgressListeners.Length();
+  for (size_t i = 0; i < numberOfListeners; ++i) {
+    nsCOMPtr<nsIWebProgressListener> listener =
+      mPrintProgressListeners.SafeElementAt(i);
+    if (NS_WARN_IF(!listener)) {
+      continue;
     }
+    listener->OnStatusChange(nullptr, nullptr, aStatus, nullptr);
   }
 }
 
