@@ -16,7 +16,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/JSONFile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
@@ -25,6 +24,8 @@ Cu.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 /*
  * Trackers are associated with a single engine and deal with
