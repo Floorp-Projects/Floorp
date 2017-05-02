@@ -607,8 +607,8 @@ def build_generic_worker_payload(config, task, task_def):
     for artifact in worker['artifacts']:
         a = {
             'path': artifact['path'],
-            'type': artifact['type'],
-            'expires': task_def['expires'],  # always expire with the task
+            'type': artifact['type']
+            # Use the default artifact expiration (the task's expiration time)
         }
         if 'name' in artifact:
             a['name'] = artifact['name']
