@@ -86,90 +86,101 @@ nsHtml5StackNode::isHtmlIntegrationPoint()
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(int32_t flags, int32_t ns, nsIAtom* name, nsIContentHandle* node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
-  : flags(flags),
-    name(name),
-    popName(popName),
-    ns(ns),
-    node(node),
-    attributes(attributes),
-    refcount(1)
+nsHtml5StackNode::nsHtml5StackNode(int32_t idxInTreeBuilder)
+  : idxInTreeBuilder(idxInTreeBuilder),
+    refcount(0)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
 }
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName,
-                                   nsIContentHandle* node)
-  : flags(elementName->getFlags())
-  , name(elementName->getName())
-  , popName(elementName->getName())
-  , ns(kNameSpaceID_XHTML)
-  , node(node)
-  , attributes(nullptr)
-  , refcount(1)
+void 
+nsHtml5StackNode::setValues(int32_t flags, int32_t ns, nsIAtom* name, nsIContentHandle* node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
 {
-  MOZ_COUNT_CTOR(nsHtml5StackNode);
-  MOZ_ASSERT(elementName->isInterned(),
-             "Don't use this constructor for custom elements.");
+  MOZ_ASSERT(isUnused());
+  this->flags = flags;
+  this->name = name;
+  this->popName = popName;
+  this->ns = ns;
+  this->node = node;
+  this->attributes = attributes;
+  this->refcount = 1;
 }
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName,
-                                   nsIContentHandle* node,
-                                   nsHtml5HtmlAttributes* attributes)
-  : flags(elementName->getFlags())
-  , name(elementName->getName())
-  , popName(elementName->getName())
-  , ns(kNameSpaceID_XHTML)
-  , node(node)
-  , attributes(attributes)
-  , refcount(1)
+void 
+nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                            nsIContentHandle* node)
 {
-  MOZ_COUNT_CTOR(nsHtml5StackNode);
-  MOZ_ASSERT(elementName->isInterned(),
-             "Don't use this constructor for custom elements.");
+  MOZ_ASSERT(isUnused());
+  this->flags = elementName->getFlags();
+  this->name = elementName->getName();
+  this->popName = elementName->getName();
+  this->ns = kNameSpaceID_XHTML;
+  this->node = node;
+  this->attributes = nullptr;
+  this->refcount = 1;
+  MOZ_ASSERT(elementName->isInterned(), "Don't use this constructor for custom elements.");
 }
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName,
-                                   nsIContentHandle* node,
-                                   nsIAtom* popName)
-  : flags(elementName->getFlags())
-  , name(elementName->getName())
-  , popName(popName)
-  , ns(kNameSpaceID_XHTML)
-  , node(node)
-  , attributes(nullptr)
-  , refcount(1)
+void 
+nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                            nsIContentHandle* node,
+                            nsHtml5HtmlAttributes* attributes)
 {
-  MOZ_COUNT_CTOR(nsHtml5StackNode);
+  MOZ_ASSERT(isUnused());
+  this->flags = elementName->getFlags();
+  this->name = elementName->getName();
+  this->popName = elementName->getName();
+  this->ns = kNameSpaceID_XHTML;
+  this->node = node;
+  this->attributes = attributes;
+  this->refcount = 1;
+  MOZ_ASSERT(elementName->isInterned(), "Don't use this constructor for custom elements.");
 }
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName,
-                                   nsIAtom* popName,
-                                   nsIContentHandle* node)
-  : flags(prepareSvgFlags(elementName->getFlags()))
-  , name(elementName->getName())
-  , popName(popName)
-  , ns(kNameSpaceID_SVG)
-  , node(node)
-  , attributes(nullptr)
-  , refcount(1)
+void 
+nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                            nsIContentHandle* node,
+                            nsIAtom* popName)
 {
-  MOZ_COUNT_CTOR(nsHtml5StackNode);
+  MOZ_ASSERT(isUnused());
+  this->flags = elementName->getFlags();
+  this->name = elementName->getName();
+  this->popName = popName;
+  this->ns = kNameSpaceID_XHTML;
+  this->node = node;
+  this->attributes = nullptr;
+  this->refcount = 1;
 }
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName,
-                                   nsIContentHandle* node,
-                                   nsIAtom* popName,
-                                   bool markAsIntegrationPoint)
-  : flags(prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint))
-  , name(elementName->getName())
-  , popName(popName)
-  , ns(kNameSpaceID_MathML)
-  , node(node)
-  , attributes(nullptr)
-  , refcount(1)
+void 
+nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                            nsIAtom* popName,
+                            nsIContentHandle* node)
 {
-  MOZ_COUNT_CTOR(nsHtml5StackNode);
+  MOZ_ASSERT(isUnused());
+  this->flags = prepareSvgFlags(elementName->getFlags());
+  this->name = elementName->getName();
+  this->popName = popName;
+  this->ns = kNameSpaceID_SVG;
+  this->node = node;
+  this->attributes = nullptr;
+  this->refcount = 1;
+}
+
+void 
+nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                            nsIContentHandle* node,
+                            nsIAtom* popName,
+                            bool markAsIntegrationPoint)
+{
+  MOZ_ASSERT(isUnused());
+  this->flags = prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint);
+  this->name = elementName->getName();
+  this->popName = popName;
+  this->ns = kNameSpaceID_MathML;
+  this->node = node;
+  this->attributes = nullptr;
+  this->refcount = 1;
 }
 
 int32_t 
@@ -204,7 +215,6 @@ nsHtml5StackNode::prepareMathFlags(int32_t flags, bool markAsIntegrationPoint)
 nsHtml5StackNode::~nsHtml5StackNode()
 {
   MOZ_COUNT_DTOR(nsHtml5StackNode);
-  delete attributes;
 }
 
 void 
@@ -220,12 +230,20 @@ nsHtml5StackNode::retain()
 }
 
 void 
-nsHtml5StackNode::release()
+nsHtml5StackNode::release(nsHtml5TreeBuilder* owningTreeBuilder)
 {
   refcount--;
+  MOZ_ASSERT(refcount >= 0);
   if (!refcount) {
-    delete this;
+    delete attributes;
+    owningTreeBuilder->notifyUnusedStackNode(idxInTreeBuilder);
   }
+}
+
+bool 
+nsHtml5StackNode::isUnused()
+{
+  return !refcount;
 }
 
 void
