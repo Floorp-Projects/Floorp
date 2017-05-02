@@ -14,7 +14,6 @@ from mozbuild.frontend.data import (
     Sources,
     GeneratedSources,
     DirectoryTraversal,
-    Defines,
     Linkable,
     LocalInclude,
     PerSourceFlag,
@@ -46,7 +45,6 @@ class CompileDBBackend(CommonBackend):
 
         self._envs = {}
         self._includes = defaultdict(list)
-        self._defines = defaultdict(list)
         self._local_flags = defaultdict(dict)
         self._per_source_flags = defaultdict(list)
         self._extra_includes = defaultdict(list)
@@ -87,11 +85,6 @@ class CompileDBBackend(CommonBackend):
                 obj.path.full_path))
 
         elif isinstance(obj, Linkable):
-            if isinstance(obj.defines, Defines): # As opposed to HostDefines
-                for d in obj.defines.get_defines():
-                    if d not in self._defines[obj.objdir]:
-                        self._defines[obj.objdir].append(d)
-            self._defines[obj.objdir].extend(obj.lib_defines.get_defines())
             if isinstance(obj, SimpleProgram) and obj.is_unit_test:
                 if (self._dist_include_testing not in
                         self._extra_includes[obj.objdir]):
@@ -146,7 +139,6 @@ class CompileDBBackend(CommonBackend):
                         local_extra.extend(f)
             variables = {
                 'LOCAL_INCLUDES': self._includes[directory],
-                'DEFINES': self._defines[directory],
                 'EXTRA_INCLUDES': local_extra,
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
@@ -239,7 +231,6 @@ class CompileDBBackend(CommonBackend):
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
         db.extend((
-            '$(DEFINES)',
             '-I%s' % mozpath.join(cenv.topsrcdir, reldir),
             '-I%s' % objdir,
             '$(LOCAL_INCLUDES)',
