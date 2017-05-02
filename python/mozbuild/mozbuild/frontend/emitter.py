@@ -130,6 +130,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self._libs = OrderedDefaultDict(list)
         self._binaries = OrderedDict()
         self._compile_dirs = set()
+        self._compile_flags = dict()
         self._linkage = []
         self._static_linking_shared = set()
         self._crate_verified_local = set()
@@ -263,6 +264,16 @@ class TreeMetadataEmitter(LoggingMixin):
             if isinstance(lib, Library):
                 propagate_defines(lib, lib.lib_defines)
             yield lib
+
+
+        for lib in (l for libs in self._libs.values() for l in libs):
+            lib_defines = list(lib.lib_defines.get_defines())
+            if lib_defines:
+                objdir_flags = self._compile_flags[lib.objdir]
+                objdir_flags.resolve_flags('LIBRARY_DEFINES', lib_defines)
+
+        for flags_obj in self._compile_flags.values():
+            yield flags_obj
 
         for obj in self._binaries.values():
             yield obj
@@ -976,13 +987,25 @@ class TreeMetadataEmitter(LoggingMixin):
             generated_files.add(str(sub.relpath))
             yield sub
 
-        defines = context.get('DEFINES')
-        if defines:
-            yield Defines(context, defines)
+        computed_flags = ComputedFlags(context, context['COMPILE_FLAGS'])
 
-        host_defines = context.get('HOST_DEFINES')
-        if host_defines:
-            yield HostDefines(context, host_defines)
+        for defines_var, cls in (('DEFINES', Defines),
+                                 ('HOST_DEFINES', HostDefines)):
+            defines = context.get(defines_var)
+            if defines:
+                defines_obj = cls(context, defines)
+                yield defines_obj
+            else:
+                # If we don't have explicitly set defines we need to make sure
+                # initialized values if present end up in computed flags.
+                defines_obj = cls(context, context[defines_var])
+
+            if isinstance(defines_obj, Defines):
+                defines_from_obj = list(defines_obj.get_defines())
+                if defines_from_obj:
+                    computed_flags.resolve_flags('DEFINES',
+                                                 defines_from_obj)
+
 
         simple_lists = [
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
@@ -1138,7 +1161,8 @@ class TreeMetadataEmitter(LoggingMixin):
             yield passthru
 
         if context.objdir in self._compile_dirs:
-            yield ComputedFlags(context, context['COMPILE_FLAGS'])
+            self._compile_flags[context.objdir] = computed_flags
+
 
     def _create_substitution(self, cls, context, path):
         sub = cls(context)
