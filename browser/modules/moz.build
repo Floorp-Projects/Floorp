@@ -26,7 +26,7 @@ with Files("test/browser/*SitePermissions*"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
 with Files("test/browser/browser_UnsubmittedCrashHandler.js"):
-    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
 with Files("test/browser/browser_bug1319078.js"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -62,7 +62,7 @@ with Files("*Telemetry.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
 with Files("ContentCrashHandlers.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
 with Files("ContentSearch.jsm"):
     BUG_COMPONENT = ("Firefox", "Search")
