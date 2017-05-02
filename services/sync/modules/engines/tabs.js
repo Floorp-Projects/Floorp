@@ -17,6 +17,8 @@ Cu.import("resource://services-sync/constants.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm");
 
 this.TabSetRecord = function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -127,7 +129,7 @@ TabStore.prototype = {
   },
 
   getTabState(tab) {
-    return JSON.parse(Svc.Session.getTabState(tab));
+    return JSON.parse(SessionStore.getTabState(tab));
   },
 
   getAllTabs(filter) {

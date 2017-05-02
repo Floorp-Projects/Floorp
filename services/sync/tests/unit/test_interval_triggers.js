@@ -7,7 +7,7 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
+Svc.Prefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
 var scheduler = Service.scheduler;
