@@ -46,9 +46,6 @@ with Files('java/org/mozilla/gecko/home/**'):
 with Files('java/org/mozilla/gecko/icons/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Favicon Handling')
 
-with Files('java/org/mozilla/gecko/javaaddons/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
 with Files('java/org/mozilla/gecko/mdns/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
@@ -725,8 +722,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'icons/storage/FailureCache.java',
     'icons/storage/MemoryStorage.java',
     'IntentHelper.java',
-    'javaaddons/JavaAddonManager.java',
-    'javaaddons/JavaAddonManagerV1.java',
     'LauncherActivity.java',
     'lwt/LightweightTheme.java',
     'lwt/LightweightThemeDrawable.java',
@@ -1011,7 +1006,6 @@ if max_sdk_version >= 11:
     ]]
 
 gbjar.extra_jars += [
-    OBJDIR + '/../javaaddons/javaaddons-1.0.jar',
     'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-thirdparty.jar',

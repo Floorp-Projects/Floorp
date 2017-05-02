@@ -60,7 +60,6 @@ if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
     DIRS += ['stumbler']
 
 DIRS += [
-    'javaaddons', # Must be built before base.
     'base',
     'chrome',
     'components',

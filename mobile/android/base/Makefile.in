@@ -146,7 +146,6 @@ FENNEC_JARS = \
   gecko-browser.jar \
   gecko-thirdparty.jar \
   services.jar \
-  ../javaaddons/javaaddons-1.0.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC
