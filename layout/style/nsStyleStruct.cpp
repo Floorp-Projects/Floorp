@@ -39,6 +39,7 @@
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include <algorithm>
+#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2014,6 +2015,15 @@ nsStyleImageRequest::nsStyleImageRequest(
     const nsAString& aURL,
     already_AddRefed<URLExtraData> aExtraData)
   : mImageValue(new css::ImageValue(aURL, Move(aExtraData)))
+  , mModeFlags(aModeFlags)
+  , mResolved(false)
+{
+}
+
+nsStyleImageRequest::nsStyleImageRequest(
+    Mode aModeFlags,
+    mozilla::css::ImageValue* aImageValue)
+  : mImageValue(aImageValue)
   , mModeFlags(aModeFlags)
   , mResolved(false)
 {
