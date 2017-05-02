@@ -213,6 +213,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
 == mask-basic-04.svg pass.svg
 == mask-extref-dataURI-01.svg pass.svg
+== mask-basic-05.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == mask-transformed-02.svg pass.svg
