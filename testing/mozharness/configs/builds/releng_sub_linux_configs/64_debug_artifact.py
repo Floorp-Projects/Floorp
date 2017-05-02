@@ -10,8 +10,8 @@ config = {
         'checkout-sources',
         'setup-mock',
         'build',
-        'sendchange',
         # 'generate-build-stats',
+        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
