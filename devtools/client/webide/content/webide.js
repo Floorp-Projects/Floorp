@@ -106,12 +106,6 @@ var UI = {
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
     Services.prefs.setBoolPref("devtools.webide.autoinstallFxdtAdapters", false);
 
-    if (Services.prefs.getBoolPref("devtools.webide.widget.autoinstall") &&
-        !Services.prefs.getBoolPref("devtools.webide.widget.enabled")) {
-      Services.prefs.setBoolPref("devtools.webide.widget.enabled", true);
-      gDevToolsBrowser.moveWebIDEWidgetInNavbar();
-    }
-
     this.setupDeck();
 
     this.contentViewer = window.QueryInterface(Ci.nsIInterfaceRequestor)
