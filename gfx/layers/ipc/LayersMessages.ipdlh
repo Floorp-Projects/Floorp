@@ -162,6 +162,11 @@ union TransformFunction {
   TransformMatrix;
 };
 
+union MaybeTimeDuration {
+  null_t;
+  TimeDuration;
+};
+
 union Animatable {
   null_t;
   float;
@@ -195,15 +200,20 @@ union AnimationData {
 };
 
 struct Animation {
-  TimeStamp startTime;
+  // The zero time of this Animation's timeline. May be null if isNotPlaying is
+  // true.
+  TimeStamp originTime;
+  // The start time is relative to the originTime. This allows us to represent
+  // start times in the distant past that cannot be expressed using a TimeStamp.
+  MaybeTimeDuration startTime;
   TimeDuration delay;
   TimeDuration endDelay;
   // The value of the animation's current time at the moment it was sent to the
   // compositor.  This value will be used for below cases:
   // 1) Animations that are play-pending. Initially these animations will have a
-  //    null |startTime|. Once the animation is read to start (i.e. painting has
-  //    finished), we calculate an appropriate value of |startTime| such that
-  //    playback begins from |holdTime|.
+  //    null |startTime|. Once the animation is ready to start (i.e. painting
+  //    has finished), we calculate an appropriate value of |startTime| such
+  //    that playback begins from |holdTime|.
   // 2) Not playing animations (e.g. paused and finished animations). In this
   //   case the |holdTime| represents the current time the animation will
   //   maintain.
