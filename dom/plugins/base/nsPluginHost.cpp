@@ -121,6 +121,7 @@ using mozilla::plugins::FakePluginTag;
 using mozilla::plugins::PluginTag;
 using mozilla::plugins::PluginAsyncSurrogate;
 using mozilla::dom::FakePluginTagInit;
+using mozilla::dom::FakePluginMimeEntry;
 
 // Null out a strong ref to a linked list iteratively to avoid
 // exhausting the stack (bug 486349).
@@ -1471,6 +1472,31 @@ nsPluginHost::EnumerateSiteData(const nsACString& domain,
   return NS_OK;
 }
 
+static bool
+MimeTypeIsAllowedForFakePlugin(const nsString& aMimeType)
+{
+  static const char* const allowedFakePlugins[] = {
+    // Flash
+    "application/x-shockwave-flash",
+    // PDF
+    "application/pdf",
+    "application/vnd.adobe.pdf",
+    "application/vnd.adobe.pdfxml",
+    "application/vnd.adobe.x-mars",
+    "application/vnd.adobe.xdp+xml",
+    "application/vnd.adobe.xfdf",
+    "application/vnd.adobe.xfd+xml",
+    "application/vnd.fdf",
+  };
+
+  for (const auto allowed : allowedFakePlugins) {
+    if (aMimeType.EqualsASCII(allowed)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
                                  JSContext* aCx,
@@ -1479,6 +1505,12 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
   FakePluginTagInit initDictionary;
   if (!initDictionary.Init(aCx, aInitDictionary)) {
     return NS_ERROR_FAILURE;
+  }
+
+  for (const FakePluginMimeEntry& mimeEntry : initDictionary.mMimeEntries) {
+    if (!MimeTypeIsAllowedForFakePlugin(mimeEntry.mType)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   RefPtr<nsFakePluginTag> newTag;
@@ -1492,8 +1524,16 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
   }
 
   mFakePlugins.AppendElement(newTag);
-  // FIXME-jsplugins do we need to register with the category manager here?  For
-  // shumway, for now, probably not.
+
+  nsAdoptingCString disableFullPage =
+    Preferences::GetCString(kPrefDisableFullPage);
+  for (uint32_t i = 0; i < newTag->MimeTypes().Length(); i++) {
+    if (!IsTypeInList(newTag->MimeTypes()[i], disableFullPage)) {
+      RegisterWithCategoryManager(newTag->MimeTypes()[i],
+                                  ePluginRegister);
+    }
+  }
+
   newTag.forget(aResult);
   return NS_OK;
 }
@@ -2335,15 +2375,24 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
         }
       }
 
-      mFakePlugins.AppendElement(new nsFakePluginTag(tag.id(),
-                                                     mozilla::ipc::DeserializeURI(tag.handlerURI()),
-                                                     tag.name().get(),
-                                                     tag.description().get(),
-                                                     tag.mimeTypes(),
-                                                     tag.mimeDescriptions(),
-                                                     tag.extensions(),
-                                                     tag.niceName(),
-                                                     tag.sandboxScript()));
+      RefPtr<nsFakePluginTag> pluginTag =
+      *mFakePlugins.AppendElement(new nsFakePluginTag(tag.id(),
+                                                      mozilla::ipc::DeserializeURI(tag.handlerURI()),
+                                                      tag.name().get(),
+                                                      tag.description().get(),
+                                                      tag.mimeTypes(),
+                                                      tag.mimeDescriptions(),
+                                                      tag.extensions(),
+                                                      tag.niceName(),
+                                                      tag.sandboxScript()));
+      nsAdoptingCString disableFullPage =
+        Preferences::GetCString(kPrefDisableFullPage);
+      for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); i++) {
+        if (!IsTypeInList(pluginTag->MimeTypes()[i], disableFullPage)) {
+          RegisterWithCategoryManager(pluginTag->MimeTypes()[i],
+                                      ePluginRegister);
+        }
+      }
     }
   }
 
@@ -3871,6 +3920,7 @@ nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
   //
   // XXX: Remove test/java cases when bug 1351885 lands.
   if (nsPluginHost::GetSpecialType(aMIMEType) == nsPluginHost::eSpecialType_Flash ||
+      MimeTypeIsAllowedForFakePlugin(NS_ConvertUTF8toUTF16(aMIMEType)) ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-third-test") ||
