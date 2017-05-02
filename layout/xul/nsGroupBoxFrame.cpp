@@ -18,7 +18,8 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsGroupBoxFrame : public nsBoxFrame {
+class nsGroupBoxFrame final : public nsBoxFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -83,7 +84,8 @@ NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
-class nsDisplayXULGroupBorder : public nsDisplayItem {
+class nsDisplayXULGroupBorder final : public nsDisplayItem
+{
 public:
   nsDisplayXULGroupBorder(nsDisplayListBuilder* aBuilder,
                               nsGroupBoxFrame* aFrame) :

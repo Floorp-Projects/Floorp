@@ -12,7 +12,7 @@ class nsAccessKeyInfo;
 class nsAsyncAccesskeyUpdate;
 class nsFontMetrics;
 
-class nsTextBoxFrame : public nsLeafBoxFrame
+class nsTextBoxFrame final : public nsLeafBoxFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTextBoxFrame)
