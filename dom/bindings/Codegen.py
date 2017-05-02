@@ -3990,11 +3990,15 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                 body += fill(
                     """
 
+                    static_assert(${slot} < js::shadow::Object::MAX_FIXED_SLOTS,
+                                  "Not enough fixed slots to fit '${interface}.${member}.  Ion's visitGetDOMMemberV/visitGetDOMMemberT assume StoreInSlot things are all in fixed slots.");
                     if (!get_${member}(aCx, aWrapper, aObject, args)) {
                       return false;
                     }
                     // Getter handled setting our reserved slots
                     """,
+                    slot=memberReservedSlot(m, self.descriptor),
+                    interface=self.descriptor.interface.identifier.name,
                     member=m.identifier.name)
 
         body += "\nreturn true;\n"
