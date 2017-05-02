@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form profile autofill
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let expectingPopup = null;
+let MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.",
+  tel: "1-345-345-3456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+  tel: "1-650-903-0800",
+}];
+
+function expectPopup() {
+  info("expecting a popup");
+  return new Promise(resolve => {
+    expectingPopup = resolve;
+  });
+}
+
+function popupShownListener() {
+  info("popup shown for test ");
+  if (expectingPopup) {
+    expectingPopup();
+    expectingPopup = null;
+  }
+}
+
+function checkInputFilled(element, expectedvalue) {
+  return new Promise(resolve => {
+    element.addEventListener("change", function onChange() {
+      is(element.value, expectedvalue, "Checking " + element.name + " field");
+      resolve();
+    }, {once: true});
+  });
+}
+
+function checkAutoCompleteInputFilled(element, expectedvalue) {
+  return new Promise(resolve => {
+    element.addEventListener("DOMAutoComplete", function onChange() {
+      is(element.value, expectedvalue, "Checking " + element.name + " field");
+      resolve();
+    }, {once: true});
+  });
+}
+
+function checkFormFilled(profile) {
+  let promises = [];
+  for (let prop in profile) {
+    let element = document.getElementById(prop);
+    if (document.activeElement == element) {
+      promises.push(checkAutoCompleteInputFilled(element, profile[prop]));
+    } else {
+      promises.push(checkInputFilled(element, profile[prop]));
+    }
+  }
+  doKey("return");
+  return Promise.all(promises);
+}
+
+function* setupProfileStorage() {
+  yield addProfile(MOCK_STORAGE[0]);
+  yield addProfile(MOCK_STORAGE[1]);
+}
+
+function* setupFormHistory() {
+  yield updateFormHistory([
+    {op: "add", fieldname: "tel", value: "1-234-567-890"},
+    {op: "add", fieldname: "country", value: "US"},
+  ]);
+}
+
+// Form with history only.
+add_task(function* history_only_menu_checking() {
+  yield setupFormHistory();
+
+  setInput("#tel", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["1-234-567-890"]);
+});
+
+// Form with both history and profile storage.
+add_task(function* check_menu_when_both_existed() {
+  yield setupProfileStorage();
+
+  setInput("#organization", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(profile =>
+    JSON.stringify({primary: profile.organization, secondary: profile["street-address"]})
+  ));
+
+  setInput("#street-address", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(profile =>
+    JSON.stringify({primary: profile["street-address"], secondary: profile.organization})
+  ));
+
+  setInput("#tel", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(profile =>
+    JSON.stringify({primary: profile.tel, secondary: profile["street-address"]})
+  ));
+});
+
+// Display history search result if no matched data in profiles.
+add_task(function* check_fallback_for_mismatched_field() {
+  setInput("#country", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["US"]);
+});
+
+// Autofill the profile from dropdown menu.
+add_task(function* check_fields_after_form_autofill() {
+  setInput("#organization", "Moz");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(profile =>
+    JSON.stringify({primary: profile.organization, secondary: profile["street-address"]})
+  ).slice(1));
+  doKey("down");
+  yield checkFormFilled(MOCK_STORAGE[1]);
+});
+
+// Fallback to history search after autofill profile.
+add_task(function* check_fallback_after_form_autofill() {
+  setInput("#tel", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["1-234-567-890"]);
+});
+
+registerPopupShownListener(popupShownListener);
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>streetAddress: <input id="street-address" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>tel: <input id="tel" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>country: <input id="country" name="country" autocomplete="country" type="text"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
