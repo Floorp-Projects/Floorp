@@ -18,7 +18,7 @@ MOCHITEST_CHROME_MANIFESTS += [
     'test/chrome.ini'
 ]
 
-JS_PREFERENCE_PP_FILES += [
+JS_PREFERENCE_FILES += [
     'webide-prefs.js',
 ]
 
