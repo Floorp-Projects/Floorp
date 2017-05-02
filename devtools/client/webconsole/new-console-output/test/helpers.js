@@ -59,9 +59,17 @@ function shallowRenderComponent(component, props) {
   return renderer.getRenderOutput();
 }
 
+/**
+ * Create deep copy of given packet object.
+ */
+function clonePacket(packet) {
+  return JSON.parse(JSON.stringify(packet));
+}
+
 module.exports = {
   setupActions,
   setupStore,
   renderComponent,
-  shallowRenderComponent
+  shallowRenderComponent,
+  clonePacket
 };
