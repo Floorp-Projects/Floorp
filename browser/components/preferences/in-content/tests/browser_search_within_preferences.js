@@ -40,9 +40,9 @@ add_task(function*() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.doCommand()
+  searchInput.focus();
   searchInput.value = "password";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   let categoriesList = gBrowser.contentDocument.getElementById("categories");
 
@@ -56,7 +56,7 @@ add_task(function*() {
   }
   // Takes search off
   searchInput.value = "";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   // Checks if back to generalPane
   for (let i = 0; i < categoriesList.childElementCount; i++) {
@@ -79,9 +79,9 @@ add_task(function*() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.doCommand()
+  searchInput.focus();
   searchInput.value = "password";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
 
@@ -96,7 +96,7 @@ add_task(function*() {
 
   // Takes search off
   searchInput.value = "";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   // Checks if back to generalPane
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
@@ -132,15 +132,15 @@ add_task(function*() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.doCommand()
+  searchInput.focus();
   searchInput.value = "coach";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   is_element_visible(noResultsEl, "Should be in search results");
 
   // Takes search off
   searchInput.value = "";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   is_element_hidden(noResultsEl, "Should not be in search results");
 
@@ -158,13 +158,13 @@ add_task(function*() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.doCommand()
+  searchInput.focus();
   searchInput.value = "password";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   // Takes search off
   searchInput.value = "";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
@@ -185,9 +185,9 @@ add_task(function*() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.doCommand()
+  searchInput.focus();
   searchInput.value = "site data";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
 
@@ -196,10 +196,40 @@ add_task(function*() {
 
   // Takes search off
   searchInput.value = "";
-  searchInput.doCommand()
+  searchInput.doCommand();
 
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for if we go to another tab after searching
+ */
+add_task(function*() {
+  yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let searchInput = gBrowser.contentDocument.getElementById("searchInput");
+  let searchResultsCategory = gBrowser.contentDocument.getElementById("category-search-results");
+  searchInput.focus();
+  searchInput.value = "password";
+  searchInput.doCommand();
+  is(searchResultsCategory.hidden, false, "search results category should be shown");
+  is(searchResultsCategory.selected, true, "search results category should be selected");
+
+  let privacyCategory = gBrowser.contentDocument.getElementById("category-privacy");
+  privacyCategory.click();
+  is(searchResultsCategory.hidden, true, "search results category should not be shown");
+  is(searchInput.value, "", "search input should be empty");
+  let categoriesList = gBrowser.contentDocument.getElementById("categories");
+  for (let i = 0; i < categoriesList.childElementCount; i++) {
+    let child = categoriesList.children[i]
+    if (child.id == "category-privacy") {
+      is(child.selected, true, "Privacy panel should be selected");
+    } else if (child.id) {
+      is(child.selected, false, "No other panel should be selected");
+    }
+  }
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
