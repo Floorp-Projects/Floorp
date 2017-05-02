@@ -11,7 +11,6 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -56,14 +55,14 @@ let log = Log.repository.getLogger("Sync.RemoteTabs");
 // A private singleton that does the work.
 let SyncedTabsInternal = {
   /* Make a "tab" record. Returns a promise */
-  _makeTab: Task.async(function* (client, tab, url, showRemoteIcons) {
+  async _makeTab(client, tab, url, showRemoteIcons) {
     let icon;
     if (showRemoteIcons) {
       icon = tab.icon;
     }
     if (!icon) {
       try {
-        icon = (yield PlacesUtils.promiseFaviconLinkUrl(url)).spec;
+        icon = (await PlacesUtils.promiseFaviconLinkUrl(url)).spec;
       } catch (ex) { /* no favicon avaiable */ }
     }
     if (!icon) {
@@ -77,10 +76,10 @@ let SyncedTabsInternal = {
       client: client.id,
       lastUsed: tab.lastUsed,
     };
-  }),
+  },
 
   /* Make a "client" record. Returns a promise for consistency with _makeTab */
-  _makeClient: Task.async(function* (client) {
+  async _makeClient(client) {
     return {
       id: client.id,
       type: "client",
@@ -89,14 +88,14 @@ let SyncedTabsInternal = {
       lastModified: client.lastModified * 1000, // sec to ms
       tabs: []
     };
-  }),
+  },
 
   _tabMatchesFilter(tab, filter) {
     let reFilter = new RegExp(escapeRegExp(filter), "i");
     return tab.url.match(reFilter) || tab.title.match(reFilter);
   },
 
-  getTabClients: Task.async(function* (filter) {
+  async getTabClients(filter) {
     log.info("Generating tab list with filter", filter);
     let result = [];
 
@@ -118,7 +117,7 @@ let SyncedTabsInternal = {
       if (!Weave.Service.clientsEngine.remoteClientExists(client.id)) {
         continue;
       }
-      let clientRepr = yield this._makeClient(client);
+      let clientRepr = await this._makeClient(client);
       log.debug("Processing client", clientRepr);
 
       for (let tab of client.tabs) {
@@ -137,7 +136,7 @@ let SyncedTabsInternal = {
         if (!url || seenURLs.has(url)) {
           continue;
         }
-        let tabRepr = yield this._makeTab(client, tab, url, showRemoteIcons);
+        let tabRepr = await this._makeTab(client, tab, url, showRemoteIcons);
         if (filter && !this._tabMatchesFilter(tabRepr, filter)) {
           continue;
         }
@@ -151,7 +150,7 @@ let SyncedTabsInternal = {
     }
     log.info(`Final tab list has ${result.length} clients with ${ntabs} tabs.`);
     return result;
-  }),
+  },
 
   syncTabs(force) {
     if (!force) {

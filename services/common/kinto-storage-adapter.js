@@ -13,7 +13,6 @@
  */
 const { utils: Cu } = Components;
 const { Sqlite } = Cu.import("resource://gre/modules/Sqlite.jsm", {});
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
 
 const SQLITE_PATH = "kinto.sqlite";
@@ -212,24 +211,22 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
    *
    * This will be called automatically by open().
    */
-  static _init(connection) {
-    return Task.spawn(function* () {
-      yield connection.executeTransaction(function* doSetup() {
-        const schema = yield connection.getSchemaVersion();
+  static async _init(connection) {
+    await connection.executeTransaction(function* doSetup() {
+      const schema = yield connection.getSchemaVersion();
 
-        if (schema == 0) {
+      if (schema == 0) {
 
-          for (let statementName of createStatements) {
-            yield connection.execute(statements[statementName]);
-          }
-
-          yield connection.setSchemaVersion(currentSchemaVersion);
-        } else if (schema != 1) {
-          throw new Error("Unknown database schema: " + schema);
+        for (let statementName of createStatements) {
+          yield connection.execute(statements[statementName]);
         }
-      });
-      return connection;
+
+        yield connection.setSchemaVersion(currentSchemaVersion);
+      } else if (schema != 1) {
+        throw new Error("Unknown database schema: " + schema);
+      }
     });
+    return connection;
   }
 
   _executeStatement(statement, params) {
@@ -327,39 +324,37 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
    * @param  {Array} records.
    * @return {Array} imported records.
    */
-  loadDump(records) {
+  async loadDump(records) {
     const connection = this._connection;
     const collection_name = this.collection;
-    return Task.spawn(function* () {
-      yield connection.executeTransaction(function* doImport() {
-        for (let record of records) {
-          const params = {
-            collection_name,
-            record_id: record.id,
-            record: JSON.stringify(record),
-          };
-          yield connection.execute(statements.importData, params);
-        }
-        const lastModified = Math.max(...records.map(record => record.last_modified));
+    await connection.executeTransaction(function* doImport() {
+      for (let record of records) {
         const params = {
           collection_name,
+          record_id: record.id,
+          record: JSON.stringify(record),
         };
-        const previousLastModified = yield connection.execute(
-          statements.getLastModified, params).then(result => {
-            return result.length > 0
-              ? result[0].getResultByName("last_modified")
-              : -1;
-          });
-        if (lastModified > previousLastModified) {
-          const params = {
-            collection_name,
-            last_modified: lastModified,
-          };
-          yield connection.execute(statements.saveLastModified, params);
-        }
-      });
-      return records;
+        yield connection.execute(statements.importData, params);
+      }
+      const lastModified = Math.max(...records.map(record => record.last_modified));
+      const params = {
+        collection_name,
+      };
+      const previousLastModified = yield connection.execute(
+        statements.getLastModified, params).then(result => {
+          return result.length > 0
+            ? result[0].getResultByName("last_modified")
+            : -1;
+        });
+      if (lastModified > previousLastModified) {
+        const params = {
+          collection_name,
+          last_modified: lastModified,
+        };
+        yield connection.execute(statements.saveLastModified, params);
+      }
     });
+    return records;
   }
 
   saveLastModified(lastModified) {
