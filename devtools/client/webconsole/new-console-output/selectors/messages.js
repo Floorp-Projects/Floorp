@@ -128,20 +128,20 @@ function matchSearchFilters(message, filters) {
         }))
     )
     // Look for a match in messageText.
-    || (message.messageText !== null
-          && message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
+    || (message.messageText &&
+          message.messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase()))
     // Look for a match in parameters. Currently only checks value grips.
-    || (message.parameters !== null
-        && message.parameters.join("").toLocaleLowerCase()
-            .includes(text.toLocaleLowerCase()))
+    || (message.parameters &&
+        message.parameters.join("").toLocaleLowerCase()
+          .includes(text.toLocaleLowerCase()))
     // Look for a match in notes.
     || (Array.isArray(message.notes) && message.notes.some(note =>
           // Look for a match in location.
           isTextInFrame(text, note.frame)
           // Look for a match in messageBody.
-          || (note.messageBody !== null
-                && note.messageBody.toLocaleLowerCase()
-                     .includes(text.toLocaleLowerCase()))
+          || (note.messageBody &&
+                note.messageBody.toLocaleLowerCase()
+                  .includes(text.toLocaleLowerCase()))
         ))
   );
 }
