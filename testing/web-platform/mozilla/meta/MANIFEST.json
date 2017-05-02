@@ -18,21 +18,6 @@
      {}
     ]
    ],
-   "html/semantics/scripting-1/the-script-element/support/circular_error1.js": [
-    [
-     {}
-    ]
-   ],
-   "html/semantics/scripting-1/the-script-element/support/circular_error2.js": [
-    [
-     {}
-    ]
-   ],
-   "html/semantics/scripting-1/the-script-element/support/circular_error3.js": [
-    [
-     {}
-    ]
-   ],
    "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
     [
      {}
@@ -464,12 +449,6 @@
    "html/semantics/forms/textfieldselection/selection-value-interactions.html": [
     [
      "/_mozilla/html/semantics/forms/textfieldselection/selection-value-interactions.html",
-     {}
-    ]
-   ],
-   "html/semantics/scripting-1/the-script-element/circular-module-import-with-syntax-error.html": [
-    [
-     "/_mozilla/html/semantics/scripting-1/the-script-element/circular-module-import-with-syntax-error.html",
      {}
     ]
    ],
@@ -934,10 +913,6 @@
    "eea373cbbfd4f6289234667fe9a002ff6a9755cf",
    "testharness"
   ],
-  "html/semantics/scripting-1/the-script-element/circular-module-import-with-syntax-error.html": [
-   "464742f9fe4bc9e02103c9c03ec5dc9d7d3cd9c7",
-   "testharness"
-  ],
   "html/semantics/scripting-1/the-script-element/create-module-script.html": [
    "3214bced5d81e8001a321aea4c80675b6603b11d",
    "testharness"
@@ -945,18 +920,6 @@
   "html/semantics/scripting-1/the-script-element/reload-failed-module-script.html": [
    "5b8cf6809bd8d0797f4172bf9a01f9085c0abbaf",
    "testharness"
-  ],
-  "html/semantics/scripting-1/the-script-element/support/circular_error1.js": [
-   "5f53c0df8ea4741dd79ae8441fc75b71e57553ea",
-   "support"
-  ],
-  "html/semantics/scripting-1/the-script-element/support/circular_error2.js": [
-   "512c88977c5b4518530cfe3f6c6c47e01e511a1e",
-   "support"
-  ],
-  "html/semantics/scripting-1/the-script-element/support/circular_error3.js": [
-   "a3687131ce1c869910fb71d98d1e0cdb8e707251",
-   "support"
   ],
   "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
    "52d9e4b6332f11467c1a7d3d18893fdf8ce6ff72",
