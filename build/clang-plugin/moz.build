@@ -49,7 +49,7 @@ third_party_paths.inputs = [
 ]
 
 DisableStlWrapping()
-NO_VISIBILITY_FLAGS = True
+NoVisibilityFlags()
 
 # libc++ is required to build plugins against clang on OS X.
 if CONFIG['HOST_OS_ARCH'] == 'Darwin':
