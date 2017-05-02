@@ -54,7 +54,6 @@
   display: none;
 }
 
-.variables-view-scope,
 .variable-or-property {
   -moz-user-focus: normal;
 }
