@@ -587,6 +587,12 @@ impl ClipId {
     }
 
     pub fn new(id: u64, pipeline_id: PipelineId) -> ClipId {
+        // We do this because it is very easy to create accidentally create something that
+        // seems like a root scroll node, but isn't one.
+        if id == 0 {
+            return ClipId::root_scroll_node(pipeline_id);
+        }
+
         ClipId::ClipExternalId(id, pipeline_id)
     }
 

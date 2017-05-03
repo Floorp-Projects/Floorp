@@ -22,7 +22,6 @@ flat varying float vSDFSelect;
 flat varying float vAlphaSelect;
 
 #ifdef WR_FEATURE_TRANSFORM
-flat varying RectWithSize vLocalRect;
 varying vec3 vLocalPos;
 #else
 varying vec2 vLocalPos;

@@ -43,6 +43,11 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "binary-space-partition"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "bincode"
 version = "1.0.0-alpha6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -255,7 +260,7 @@ dependencies = [
 
 [[package]]
 name = "euclid"
-version = "0.11.0"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "heapsize 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -563,6 +568,17 @@ version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "plane-split"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "binary-space-partition 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "precomputed-hash"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -755,7 +771,7 @@ dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -785,7 +801,7 @@ version = "0.0.1"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1001,7 +1017,7 @@ dependencies = [
  "core-graphics 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-text 4.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gamma-lut 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1009,6 +1025,7 @@ dependencies = [
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plane-split 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadpool 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1020,7 +1037,7 @@ name = "webrender_bindings"
 version = "0.1.0"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender 0.36.0",
  "webrender_traits 0.36.0",
@@ -1035,7 +1052,7 @@ dependencies = [
  "core-foundation 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "heapsize 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1067,6 +1084,7 @@ dependencies = [
 "checksum app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5a0c3b5be4ed53affe3e1a162b2e7ef9979bcaac80daa9026e9d7988c41e0e83"
 "checksum aster 0.38.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2c9b49e42a449c0b79d8acb91db37621de0978064dca7d3288ddcf030123e5b3"
 "checksum atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fb2dcb6e6d35f20276943cc04bb98e538b348d525a04ac79c10021561d202f21"
+"checksum binary-space-partition 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "df65281d9b2b5c332f5bfbd9bb5e5f2e62f627c259cf9dc9cd10fecb758be33d"
 "checksum bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)" = "fb0cdeac1c5d567fdb487ae5853c024e4acf1ea85ba6a6552fe084e0805fea5d"
 "checksum bindgen 0.22.0 (registry+https://github.com/rust-lang/crates.io-index)" = "facc480c409c373db3c870e377ce223e5e07d979efc2604691dc6f583e8ded0f"
 "checksum bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9bf6104718e80d7b26a68fdbacff3481cfc05df670821affc7e9cbc1884400c"
@@ -1088,7 +1106,7 @@ dependencies = [
 "checksum dtoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "80c8b71fd71146990a9742fc06dcbbde19161a267e0ad4e572c35162f4578c90"
 "checksum dwrote 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "74114b6b49d6731835da7a28a3642651451e315f7f9b9d04e907e65a45681796"
 "checksum env_logger 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ed39959122ea027670b704fb70539f4286ddf4a49eefede23bf0b4b2a069ec03"
-"checksum euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "34559b159306de36203986eff799f83ef2bfb301a29fad333883f1a74a4cc6b0"
+"checksum euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "f5517462c626a893f3b027615e88d7102cc6dd3f7f1bcb90c7220fb1da4970b5"
 "checksum fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6cc484842f1e2884faf56f529f960cc12ad8c71ce96cc7abba0a067c98fee344"
 "checksum freetype 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fde23272c687e4570aefec06cb71174ec0f5284b725deac4e77ba2665d635faf"
 "checksum gamma-lut 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "cd8728df930776135895cbb25cbdd17791cde7d4285d53cf58fe6ee2e6412455"
@@ -1121,6 +1139,7 @@ dependencies = [
 "checksum phf_generator 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "6b07ffcc532ccc85e3afc45865469bf5d9e4ef5bfcf9622e3cfe80c2d275ec03"
 "checksum phf_shared 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "07e24b0ca9643bdecd0632f2b3da6b1b89bbb0030e0b992afc1113b23a7bc2f2"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
+"checksum plane-split 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a05e1e40e37630095627acfd2c7c6cf259e8b4f4ef4f01b2adf2a35331e45975"
 "checksum precomputed-hash 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cdf1fc3616b3ef726a847f2cd2388c646ef6a1f1ba4835c2629004da48184150"
 "checksum procedural-masquerade 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "9f566249236c6ca4340f7ca78968271f0ed2b0f234007a61b66f9ecd0af09260"
 "checksum quasi 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dcbf815446dc6a0afbc72d88f9a8aa71b608d10b168e09437c80c0fd6fd410c9"

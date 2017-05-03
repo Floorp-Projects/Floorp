@@ -48,6 +48,8 @@
 uniform sampler2DArray sCacheA8;
 uniform sampler2DArray sCacheRGBA8;
 
+uniform sampler2D sGradients;
+
 struct RectWithSize {
     vec2 p0;
     vec2 size;
@@ -101,16 +103,24 @@ RectWithEndpoint intersect_rect(RectWithEndpoint a, RectWithEndpoint b) {
     return RectWithEndpoint(p.xy, max(p.xy, p.zw));
 }
 
+float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
+    vec2 dir_to_p0 = p0 - p;
+    return dot(normalize(perp_dir), dir_to_p0);
+}
 
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
 varying vec3 vClipMaskUv;
+#ifdef WR_FEATURE_TRANSFORM
+    flat varying vec4 vLocalBounds;
+#endif
 
 #ifdef WR_VERTEX_SHADER
 
 #define VECS_PER_LAYER             13
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_GEOM          2
+#define VECS_PER_SPLIT_GEOM         3
 
 uniform sampler2D sLayers;
 uniform sampler2D sRenderTasks;
@@ -698,6 +708,8 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
+    vLocalBounds = vec4(local_rect.p0, local_rect.p1);
+
     vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
 
     return TransformVertexInfo(layer_pos.xyw, device_pos);
@@ -777,12 +789,14 @@ void write_clip(vec2 global_pos, ClipArea area) {
 #endif //WR_VERTEX_SHADER
 
 #ifdef WR_FRAGMENT_SHADER
+
+#ifdef WR_FEATURE_TRANSFORM
 float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
     vec2 d = max(p0 - pos, pos - p1);
     return length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y));
 }
 
-vec2 init_transform_fs(vec3 local_pos, RectWithSize local_rect, out float fragment_alpha) {
+vec2 init_transform_fs(vec3 local_pos, out float fragment_alpha) {
     fragment_alpha = 1.0;
     vec2 pos = local_pos.xy / local_pos.z;
 
@@ -797,9 +811,7 @@ vec2 init_transform_fs(vec3 local_pos, RectWithSize local_rect, out float fragme
     // Now get the actual signed distance. Inset the local rect by the offset amount
     // above to get correct distance values. This ensures that we only apply
     // anti-aliasing when the fragment has partial coverage.
-    float d = signed_distance_rect(pos,
-                                   local_rect.p0 + dxdy,
-                                   local_rect.p0 + local_rect.size - dxdy);
+    float d = signed_distance_rect(pos, vLocalBounds.xy + dxdy, vLocalBounds.zw - dxdy);
 
     // Find the appropriate distance to apply the AA smoothstep over.
     float afwidth = 0.5 / length(fw);
@@ -809,6 +821,7 @@ vec2 init_transform_fs(vec3 local_pos, RectWithSize local_rect, out float fragme
 
     return pos;
 }
+#endif //WR_FEATURE_TRANSFORM
 
 float do_clip() {
     // anything outside of the mask is considered transparent
@@ -834,6 +847,28 @@ vec4 dither(vec4 color) {
 vec4 dither(vec4 color) {
     return color;
 }
-#endif
+#endif //WR_FEATURE_DITHERING
+
+vec4 sample_gradient(float offset, float gradient_repeat, float gradient_index, vec2 gradient_size) {
+    // Either saturate or modulo the offset depending on repeat mode
+    float x = mix(clamp(offset, 0.0, 1.0), fract(offset), gradient_repeat);
+
+    // Scale to the number of gradient color entries (texture width / 2).
+    x = x * 0.5 * gradient_size.x;
+
+    // Calculate the texel to index into the gradient color entries:
+    //     floor(x) is the gradient color entry index
+    //     fract(x) is the linear filtering factor between start and end
+    //     so, 2 * floor(x) + 0.5 is the center of the start color
+    //     finally, add floor(x) to interpolate to end
+    x = 2.0 * floor(x) + 0.5 + fract(x);
+
+    // Gradient color entries are encoded with high bits in one row and low bits in the next
+    // So use linear filtering to mix (gradient_index + 1) with (gradient_index)
+    float y = gradient_index * 2.0 + 0.5 + 1.0 / 256.0;
+
+    // Finally sample and apply dithering
+    return dither(texture(sGradients, vec2(x, y) / gradient_size));
+}
 
 #endif //WR_FRAGMENT_SHADER
