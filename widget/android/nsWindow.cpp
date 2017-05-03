@@ -428,22 +428,6 @@ public:
     }
 
 public:
-    void AdjustScrollForSurfaceShift(float aX, float aY)
-    {
-        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
-        RefPtr<IAPZCTreeManager> controller;
-
-        if (LockedWindowPtr window{mWindow}) {
-            controller = window->mAPZC;
-        }
-
-        if (controller) {
-            controller->AdjustScrollForSurfaceShift(
-                ScreenPoint(aX, aY));
-        }
-    }
-
     void SetIsLongpressEnabled(bool aIsLongpressEnabled)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
