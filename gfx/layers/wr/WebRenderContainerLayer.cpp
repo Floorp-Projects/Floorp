@@ -109,20 +109,11 @@ void
 WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                const StackingContextHelper& aSc)
 {
-  gfx::Matrix4x4 transform;// = GetTransform();
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  LayerRect rect = Bounds();
+  DumpLayerInfo("RefLayer", rect);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(relBounds));
-
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("RefLayer %p (%" PRIu64 ") using bounds/overflow=%s, transform=%s\n",
-                  this->GetLayer(),
-                  mId,
-                  Stringify(relBounds).c_str(),
-                  Stringify(transform).c_str());
-  }
-
-  aBuilder.PushIFrame(wr::ToWrRect(relBounds), clipRegion, wr::AsPipelineId(mId));
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(rect));
+  aBuilder.PushIFrame(aSc.ToRelativeWrRect(rect), clipRegion, wr::AsPipelineId(mId));
 }
 
 } // namespace layers
