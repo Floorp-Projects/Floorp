@@ -141,7 +141,8 @@ class TypedOperandId : public OperandId
     _(SetElem)              \
     _(BindName)             \
     _(In)                   \
-    _(HasOwn)
+    _(HasOwn)               \
+    _(TypeOf)
 
 enum class CacheKind : uint8_t
 {
@@ -245,6 +246,8 @@ extern const char* CacheKindNames[];
     _(CallProxyHasOwnResult)              \
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
+    _(LoadStringResult)                   \
+    _(LoadTypeOfObjectResult)             \
                                           \
     _(TypeMonitorResult)                  \
     _(ReturnFromIC)                       \
@@ -797,6 +800,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadUndefinedResult() {
         writeOp(CacheOp::LoadUndefinedResult);
     }
+    void loadStringResult(JSString* str) {
+        writeOp(CacheOp::LoadStringResult);
+        addStubField(uintptr_t(str), StubField::Type::String);
+    }
     void loadFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadFixedSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
@@ -900,6 +907,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void loadObjectResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
+    }
+    void loadTypeOfObjectResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadTypeOfObjectResult, obj);
     }
 
     void typeMonitorResult() {
@@ -1111,6 +1121,9 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     bool tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
   public:
     GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
                        HandleObject env, HandlePropertyName name);
@@ -1126,6 +1139,9 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator
 
     bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
@@ -1305,6 +1321,19 @@ class MOZ_RAII HasOwnIRGenerator : public IRGenerator
   public:
     HasOwnIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue key,
                       HandleValue value);
+
+    bool tryAttachStub();
+};
+
+class MOZ_RAII TypeOfIRGenerator : public IRGenerator
+{
+    HandleValue val_;
+
+    bool tryAttachPrimitive(ValOperandId valId);
+    bool tryAttachObject(ValOperandId valId);
+
+  public:
+    TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue value);
 
     bool tryAttachStub();
 };

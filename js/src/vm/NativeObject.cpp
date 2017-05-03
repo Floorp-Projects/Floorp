@@ -1106,6 +1106,49 @@ UpdateShapeTypeAndValue(JSContext* cx, NativeObject* obj, Shape* shape, jsid id,
         MarkTypePropertyNonWritable(cx, obj, id);
 }
 
+void
+js::AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj, ObjectGroup* oldGroup)
+{
+    MOZ_ASSERT(obj->group() != oldGroup);
+    MOZ_ASSERT(!obj->group()->unknownProperties());
+
+    // First copy the dynamic flags.
+    MarkObjectGroupFlags(cx, obj, oldGroup->flags() & OBJECT_FLAG_DYNAMIC_MASK);
+
+    // Now update all property types. If the object has many properties, this
+    // function may be slow so we mark all properties as unknown.
+    static const size_t MaxPropertyCount = 40;
+
+    size_t nprops = obj->getDenseInitializedLength();
+    if (nprops > MaxPropertyCount) {
+        MarkObjectGroupUnknownProperties(cx, obj->group());
+        return;
+    }
+
+    // Add dense element types.
+    for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
+        Value val = obj->getDenseElement(i);
+        if (!val.isMagic(JS_ELEMENTS_HOLE))
+            AddTypePropertyId(cx, obj, JSID_VOID, val);
+    }
+
+    // Add property types.
+    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
+        Shape* shape = &r.front();
+        jsid id = shape->propid();
+        if (JSID_IS_EMPTY(id))
+            continue;
+
+        if (nprops++ > MaxPropertyCount) {
+            MarkObjectGroupUnknownProperties(cx, obj->group());
+            return;
+        }
+
+        Value val = shape->hasSlot() ? obj->getSlot(shape->slot()) : UndefinedValue();
+        UpdateShapeTypeAndValue(cx, obj, shape, id, val);
+    }
+}
+
 static bool
 PurgeProtoChain(JSContext* cx, JSObject* objArg, HandleId id)
 {

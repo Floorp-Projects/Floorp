@@ -239,8 +239,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/Profiler.jsm"},
   // Bug 1351658
   {file: "resource://gre/modules/PropertyListUtils.jsm", platforms: ["linux", "win"]},
-  // Bug 1351093
-  {file: "resource://gre/modules/Sntp.jsm"},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
   // Bug 1351637

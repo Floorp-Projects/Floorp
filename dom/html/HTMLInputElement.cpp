@@ -441,7 +441,7 @@ struct HTMLInputElement::FileData
 
   void ClearGetFilesHelpers()
   {
-    if (mGetFilesNonRecursiveHelper) {
+    if (mGetFilesRecursiveHelper) {
       mGetFilesRecursiveHelper->Unlink();
       mGetFilesRecursiveHelper = nullptr;
     }

@@ -15,7 +15,6 @@
 %define scopeBarSeparatorBorder 1px solid #888
 %define scopeBarTitleColor #6D6D6D
 
-%define toolbarbuttonCornerRadius 3px
 %define toolbarbuttonBackground linear-gradient(#FFF, #ADADAD) repeat-x
 %define toolbarbuttonPressedInnerShadow inset rgba(0, 0, 0, 0.3) 0 -6px 10px, inset #000 0 1px 3px, inset rgba(0, 0, 0, 0.2) 0 1px 3px
 %define toolbarbuttonInactiveBorderColor rgba(146, 146, 146, 0.84)

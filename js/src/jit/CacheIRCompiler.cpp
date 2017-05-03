@@ -1353,6 +1353,9 @@ CacheIRCompiler::emitGuardType()
       case JSVAL_TYPE_UNDEFINED:
         masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
         break;
+      case JSVAL_TYPE_NULL:
+        masm.branchTestNull(Assembler::NotEqual, input, failure->label());
+        break;
       default:
         MOZ_CRASH("Unexpected type");
     }
@@ -2139,6 +2142,51 @@ CacheIRCompiler::emitLoadObjectResult()
     else
         masm.mov(obj, output.typedReg().gpr());
 
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadTypeOfObjectResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    Label slowCheck, isObject, isCallable, isUndefined, done;
+    masm.typeOfObject(obj, scratch, &slowCheck, &isObject, &isCallable, &isUndefined);
+
+    masm.bind(&isCallable);
+    masm.moveValue(StringValue(cx_->names().function), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&isUndefined);
+    masm.moveValue(StringValue(cx_->names().undefined), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&isObject);
+    masm.moveValue(StringValue(cx_->names().object), output.valueReg());
+    masm.jump(&done);
+
+    {
+        masm.bind(&slowCheck);
+        LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+        masm.PushRegsInMask(save);
+
+        masm.setupUnalignedABICall(scratch);
+        masm.passABIArg(obj);
+        masm.movePtr(ImmPtr(cx_->runtime()), scratch);
+        masm.passABIArg(scratch);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, TypeOfObject));
+        masm.mov(ReturnReg, scratch);
+
+        LiveRegisterSet ignore;
+        ignore.add(scratch);
+        masm.PopRegsInMaskIgnore(save, ignore);
+
+        masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+    }
+
+    masm.bind(&done);
     return true;
 }
 
