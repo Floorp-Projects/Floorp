@@ -49,15 +49,16 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-        UNIFIED_SOURCES += [
-            'lul/AutoObjectMapper.cpp',
-            'lul/LulCommon.cpp',
-            'lul/LulDwarf.cpp',
-            'lul/LulDwarfSummariser.cpp',
-            'lul/LulElf.cpp',
-            'lul/LulMain.cpp',
-            'lul/platform-linux-lul.cpp',
-        ]
+        if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64'):
+            UNIFIED_SOURCES += [
+                'lul/AutoObjectMapper.cpp',
+                'lul/LulCommon.cpp',
+                'lul/LulDwarf.cpp',
+                'lul/LulDwarfSummariser.cpp',
+                'lul/LulElf.cpp',
+                'lul/LulMain.cpp',
+                'lul/platform-linux-lul.cpp',
+            ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
             'core/shared-libraries-linux.cc',
