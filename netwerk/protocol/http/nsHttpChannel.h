@@ -684,8 +684,7 @@ private:
     // Is true if the onCacheEntryAvailable callback has been called.
     Atomic<bool> mOnCacheAvailableCalled;
     // Will be true if the onCacheEntryAvailable callback is not called by the
-    // time we send the network request. This could also be true when we are
-    // bypassing the cache.
+    // time we send the network request
     Atomic<bool> mRaceCacheWithNetwork;
 
 protected:

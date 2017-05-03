@@ -1078,8 +1078,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         // Invalidate and reflow the entire SVGTextFrame:
         NS_ASSERTION(aFrame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
                      "expected frame for a <textPath> element");
-        nsIFrame* text =
-          nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::SVGText);
+        nsIFrame* text = nsLayoutUtils::GetClosestFrameOfType(
+          aFrame, LayoutFrameType::SVGText);
         NS_ASSERTION(text, "expected to find an ancestor SVGTextFrame");
         static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
       } else {

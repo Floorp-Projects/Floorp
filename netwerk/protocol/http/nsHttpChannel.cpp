@@ -7003,6 +7003,23 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
+    enum RaceCacheAndNetStatus
+    {
+        kDidNotRaceUsedNetwork = 0,
+        kDidNotRaceUsedCache = 1,
+        kRaceUsedNetwork = 2,
+        kRaceUsedCache = 3
+    };
+
+    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
+    if (request == mTransactionPump) {
+        rcwnStatus = mRaceCacheWithNetwork ?  kRaceUsedNetwork : kDidNotRaceUsedNetwork;
+    } else if (request == mCachePump) {
+        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
+    }
+    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
+                          rcwnStatus);
+
     nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);
     if (conv) {
         conv->GetDecodedDataLength(&mDecodedBodySize);
@@ -8891,12 +8908,6 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
 
     if (!aTimeout) {
         mNetworkTriggered = true;
-        if (!mOnCacheAvailableCalled) {
-            // If the network was triggered before onCacheEntryAvailable was
-            // called, we are either racing network and cache, or the load is
-            // bypassing the cache.
-            mRaceCacheWithNetwork = true;
-        }
         if (mNetworkTriggerTimer) {
             mNetworkTriggerTimer->Cancel();
             mNetworkTriggerTimer = nullptr;
@@ -8942,6 +8953,13 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
     LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p]\n", this));
+
+    if (!mOnCacheAvailableCalled) {
+        // If the network was triggered before onCacheEntryAvailable was
+        // called, it means we are racing the network with the cache.
+        mRaceCacheWithNetwork = true;
+    }
+
     return TriggerNetwork(0);
 }
 
@@ -8949,6 +8967,11 @@ NS_IMETHODIMP
 nsHttpChannel::Test_triggerNetwork(int32_t aTimeout)
 {
     MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+    if (!mOnCacheAvailableCalled) {
+        // If the network was triggered before onCacheEntryAvailable was
+        // called, it means we are racing the network with the cache.
+        mRaceCacheWithNetwork = true;
+    }
     return TriggerNetwork(aTimeout);
 }
 

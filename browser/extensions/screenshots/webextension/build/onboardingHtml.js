@@ -46,9 +46,9 @@ window.onboardingHtml = `
 
         <!-- Clickable elements should be buttons for accessibility -->
         <button id="skip" data-l10n-id="tourSkip" tabindex=1>Skip</button>
-        <button id="prev" tabindex=2 data-l10n-label-id="tourPrevious" style="background-image: url('MOZ_EXTENSION/icons/back.svg');"></button>
-        <button id="next" tabindex=3 data-l10n-label-id="tourNext" style="background-image: url('MOZ_EXTENSION/icons/back.svg');"/></button>
-        <button id="done" tabindex=4 data-l10n-label-id="tourDone" style="background-image: url('MOZ_EXTENSION/icons/done.svg')"></button>
+        <button id="prev" tabindex=2 data-l10n-label-id="tourPrevious"></button>
+        <button id="next" tabindex=3 data-l10n-label-id="tourNext"></button>
+        <button id="done" tabindex=4 data-l10n-label-id="tourDone"></button>
         <div id="slide-status-container">
           <button class="goto-slide goto-slide-1" data-number="1" tabindex=4></button>
           <button class="goto-slide goto-slide-2" data-number="2" tabindex=5></button>
