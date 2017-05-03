@@ -4637,9 +4637,6 @@ pref("layers.bench.enabled", false);
 pref("layers.gpu-process.enabled", true);
 pref("layers.gpu-process.max_restarts", 3);
 pref("media.gpu-process-decoder", true);
-#ifdef NIGHTLY_BUILD
-pref("layers.gpu-process.allow-software", true);
-#endif
 #endif
 
 // Whether to force acceleration on, ignoring blacklists.
