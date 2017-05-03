@@ -31,7 +31,7 @@ function* testSteps()
 
   is(objectStore.name, objectStoreName, "Bad name");
   is(objectStore.keyPath, "foo", "Bad keyPath");
-  if(objectStore.indexNames.length, 0, "Bad indexNames");
+  if (objectStore.indexNames.length, 0, "Bad indexNames");
 
   finishTest();
 }

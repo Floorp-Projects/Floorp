@@ -721,17 +721,17 @@ function RequestCounter(expectedType) {
   this._counter = 0;
 }
 RequestCounter.prototype = {
-  incr: function() {
+  incr() {
     this._counter++;
   },
 
-  decr: function() {
+  decr() {
     if (!--this._counter) {
       continueToNextStepSync();
     }
   },
 
-  handler: function(type, preventDefault) {
+  handler(type, preventDefault) {
     this.incr();
     return event => {
       is(event.type, type || "success", "Correct type");
@@ -739,7 +739,7 @@ RequestCounter.prototype = {
     };
   },
 
-  errorHandler: function(eventType, errorName) {
+  errorHandler(eventType, errorName) {
     this.incr();
     return event => {
       is(event.type, eventType || "error", "Correct type");

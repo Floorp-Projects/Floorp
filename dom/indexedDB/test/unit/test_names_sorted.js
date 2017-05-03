@@ -67,7 +67,7 @@ function* testSteps()
   let trans = db.transaction(objectStoreNames);
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
-  
+
     is(trans.objectStoreNames[info.location], info.name,
        "Got objectStore name in the right location");
   }
@@ -102,7 +102,7 @@ function* testSteps()
   trans = db.transaction(objectStoreNames);
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
-  
+
     is(trans.objectStoreNames[info.location], info.name,
        "Got objectStore name in the right location");
   }
