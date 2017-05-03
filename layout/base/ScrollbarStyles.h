@@ -52,7 +52,6 @@ struct ScrollbarStyles
 
   explicit ScrollbarStyles(const nsStyleDisplay* aDisplay);
   ScrollbarStyles(uint8_t aH, uint8_t aV, const nsStyleDisplay* aDisplay);
-  ScrollbarStyles() {}
   bool operator==(const ScrollbarStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical &&
            aStyles.mScrollBehavior == mScrollBehavior &&
