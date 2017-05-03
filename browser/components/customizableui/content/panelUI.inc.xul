@@ -500,6 +500,14 @@
   <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
     <panelview id="appMenu-mainView" class="cui-widget-panelview PanelUI-subView">
       <vbox class="panel-subview-body">
+        <vbox id="appMenu-addon-banners"/>
+        <toolbarbutton class="panel-banner-item"
+                       label-update-available="&updateAvailable.panelUI.label;"
+                       label-update-manual="&updateManual.panelUI.label;"
+                       label-update-restart="&updateRestart.panelUI.label;"
+                       oncommand="PanelUI._onBannerItemSelected(event)"
+                       wrap="true"
+                       hidden="true"/>
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
