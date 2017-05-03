@@ -159,7 +159,7 @@ public:
 
 protected:
   explicit nsHTMLFramesetBlankFrame(nsStyleContext* aContext)
-    : nsLeafFrame(aContext, FrameType::None)
+    : nsLeafFrame(aContext, LayoutFrameType::None)
   {}
 
   virtual ~nsHTMLFramesetBlankFrame();
@@ -177,7 +177,7 @@ bool    nsHTMLFramesetFrame::gDragInProgress = false;
 #define DEFAULT_BORDER_WIDTH_PX 6
 
 nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::FrameSet)
+  : nsContainerFrame(aContext, LayoutFrameType::FrameSet)
 {
   mNumRows             = 0;
   mNumCols             = 0;
@@ -1337,7 +1337,7 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      int32_t aWidth,
                                                      bool aVertical,
                                                      bool aVisibility)
-  : nsLeafFrame(aContext, FrameType::None)
+  : nsLeafFrame(aContext, LayoutFrameType::None)
   , mWidth(aWidth)
   , mVertical(aVertical)
   , mVisibility(aVisibility)

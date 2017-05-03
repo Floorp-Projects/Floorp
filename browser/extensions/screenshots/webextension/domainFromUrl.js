@@ -4,13 +4,13 @@
 
 "use strict";
 
-this.domainFromUrl = (function () {
+this.domainFromUrl = (function() {
 
   return function urlDomainForId(location) { // eslint-disable-line no-unused-vars
     let domain = location.hostname;
     if (!domain) {
       domain = location.origin.split(":")[0];
-      if (! domain) {
+      if (!domain) {
         domain = "unknown";
       }
     }
@@ -18,7 +18,7 @@ this.domainFromUrl = (function () {
       // Probably a unicode domain; we could use punycode but it wouldn't decode
       // well in the URL anyway.  Instead we'll punt.
       domain = domain.replace(/[^a-z0-9.\-]/ig, "");
-      if (! domain) {
+      if (!domain) {
         domain = "site";
       }
     }

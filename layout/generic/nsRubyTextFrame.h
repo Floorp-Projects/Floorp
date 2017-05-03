@@ -50,7 +50,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
   explicit nsRubyTextFrame(nsStyleContext* aContext)
-    : nsRubyContentFrame(aContext, mozilla::FrameType::RubyText)
+    : nsRubyContentFrame(aContext, mozilla::LayoutFrameType::RubyText)
   {}
 };
 

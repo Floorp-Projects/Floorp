@@ -300,8 +300,10 @@ WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 void
 WebRenderLayerManager::DiscardImages()
 {
-  for (auto key : mImageKeys) {
+  if (!WrBridge()->IsDestroyed()) {
+    for (auto key : mImageKeys) {
       WrBridge()->SendDeleteImage(key);
+    }
   }
   mImageKeys.clear();
 }

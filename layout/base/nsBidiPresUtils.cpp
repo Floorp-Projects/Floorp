@@ -505,10 +505,10 @@ static bool
 IsBidiSplittable(nsIFrame* aFrame)
 {
   // Bidi inline containers should be split, unless they're line frames.
-  FrameType frameType = aFrame->Type();
+  LayoutFrameType frameType = aFrame->Type();
   return (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
-          frameType != FrameType::Line) ||
-         frameType == FrameType::Text;
+          frameType != LayoutFrameType::Line) ||
+         frameType == LayoutFrameType::Text;
 }
 
 // Should this frame be treated as a leaf (e.g. when building mLogicalFrames)?
@@ -1125,8 +1125,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
       aBpd->AppendFrame(frame, aLineIter, content);
 
       // Append the content of the frame to the paragraph buffer
-      FrameType frameType = frame->Type();
-      if (FrameType::Text == frameType) {
+      LayoutFrameType frameType = frame->Type();
+      if (LayoutFrameType::Text == frameType) {
         if (content != aBpd->mPrevContent) {
           aBpd->mPrevContent = content;
           if (!frame->StyleText()->NewlineIsSignificant(
@@ -1241,7 +1241,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
             } while (next);
           }
         }
-      } else if (FrameType::Br == frameType) {
+      } else if (LayoutFrameType::Br == frameType) {
         // break frame -- append line separator
         aBpd->AppendUnichar(kLineSeparator);
         ResolveParagraphWithinBlock(aBpd);
@@ -1564,14 +1564,14 @@ nsBidiPresUtils::RepositionRubyFrame(
   const WritingMode aContainerWM,
   const LogicalMargin& aBorderPadding)
 {
-  FrameType frameType = aFrame->Type();
+  LayoutFrameType frameType = aFrame->Type();
   MOZ_ASSERT(RubyUtils::IsRubyBox(frameType));
 
   nscoord icoord = 0;
   WritingMode frameWM = aFrame->GetWritingMode();
   bool isLTR = frameWM.IsBidiLTR();
   nsSize frameSize = aFrame->GetSize();
-  if (frameType == FrameType::Ruby) {
+  if (frameType == LayoutFrameType::Ruby) {
     icoord += aBorderPadding.IStart(frameWM);
     // Reposition ruby segments in a ruby container
     for (RubySegmentEnumerator e(static_cast<nsRubyFrame*>(aFrame));
@@ -1590,7 +1590,7 @@ nsBidiPresUtils::RepositionRubyFrame(
       icoord += segmentISize;
     }
     icoord += aBorderPadding.IEnd(frameWM);
-  } else if (frameType == FrameType::RubyBaseContainer) {
+  } else if (frameType == LayoutFrameType::RubyBaseContainer) {
     // Reposition ruby columns in a ruby segment
     auto rbc = static_cast<nsRubyBaseContainerFrame*>(aFrame);
     AutoRubyTextContainerArray textContainers(rbc);
@@ -1610,7 +1610,8 @@ nsBidiPresUtils::RepositionRubyFrame(
       icoord += columnISize;
     }
   } else {
-    if (frameType == FrameType::RubyBase || frameType == FrameType::RubyText) {
+    if (frameType == LayoutFrameType::RubyBase ||
+        frameType == LayoutFrameType::RubyText) {
       RepositionRubyContentFrame(aFrame, frameWM, aBorderPadding);
     }
     // Note that, ruby text container is not present in all conditions

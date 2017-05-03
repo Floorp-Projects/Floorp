@@ -185,7 +185,7 @@ public abstract class GeckoApp
 
     private static boolean sAlreadyLoaded;
 
-    protected boolean mResumingAfterOnCreate;
+    protected boolean mIgnoreLastSelectedTab;
     protected static WeakReference<GeckoApp> mLastActiveGeckoApp;
 
     protected RelativeLayout mRootLayout;
@@ -1299,8 +1299,6 @@ public abstract class GeckoApp
             return;
         }
 
-        mResumingAfterOnCreate = true;
-
         if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
@@ -1310,6 +1308,9 @@ public abstract class GeckoApp
             Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
 
         } else {
+            // We're going to restore the last session and/or open a startup/external tab.
+            mIgnoreLastSelectedTab = true;
+
             final String action = intent.getAction();
             final String args = intent.getStringExtra("args");
 
@@ -2288,6 +2289,7 @@ public abstract class GeckoApp
 
         final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
         mWasFirstTabShownAfterActivityUnhidden = true; // Reset since we'll be loading a tab.
+        mIgnoreLastSelectedTab = true;
 
         // if we were previously OOM killed, we can end up here when launching
         // from external shortcuts, so set this as the intent for initialization
@@ -2414,6 +2416,7 @@ public abstract class GeckoApp
             mCheckTabSelectionOnResume = false;
             restoreLastSelectedTab();
         }
+        mIgnoreLastSelectedTab = false;
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2463,8 +2466,6 @@ public abstract class GeckoApp
         });
 
         Restrictions.update(this);
-
-        mResumingAfterOnCreate = false;
     }
 
     /**

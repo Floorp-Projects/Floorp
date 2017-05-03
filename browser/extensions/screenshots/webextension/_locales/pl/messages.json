@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Zamknij"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Używając Firefox Screenshots, zgadzasz się na $TERMSANDPRIVACYNOTICETERMSLINK$ i $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Używając Firefox Screenshots, zgadzasz się na $TERMSANDPRIVACYNOTICETERMSLINK$ i $TERMSANDPRIVACYNOTICEPRIVACYLINK$ usług Firefox Cloud.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -115,7 +115,7 @@
     }
   },
   "termsAndPrivacyNoticeTermsLink": {
-    "message": "warunki korzystania z usługi"
+    "message": "warunki korzystania"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "zasady ochrony prywatności"
