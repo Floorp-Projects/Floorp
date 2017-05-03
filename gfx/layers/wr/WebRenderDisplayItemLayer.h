@@ -29,6 +29,7 @@ public:
   Maybe<wr::ImageKey> SendImageContainer(ImageContainer* aContainer,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands);
   bool PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                       const StackingContextHelper& aSc,
                        nsTArray<layers::WebRenderParentCommand>& aParentCommands);
 
 protected:

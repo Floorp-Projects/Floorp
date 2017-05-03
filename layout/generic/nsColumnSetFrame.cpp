@@ -108,7 +108,7 @@ nsDisplayColumnRule::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
 {
   MOZ_ASSERT(!mBorderRenderers.IsEmpty());
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-      iter->CreateWebRenderCommands(aBuilder, aLayer);
+      iter->CreateWebRenderCommands(aBuilder, aSc, aLayer);
   }
 }
 

@@ -3444,7 +3444,7 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
   params.bgClipRect = &mBounds;
 
   image::DrawResult result =
-    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aParentCommands, aLayer);
+    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aSc, aParentCommands, aLayer);
 
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 }
@@ -4241,7 +4241,7 @@ nsDisplayOutline::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
     clip = LayoutDeviceRect::FromAppUnits(
         GetClip().GetClipRect(), appUnitsPerDevPixel).ToUnknownRect();
   }
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer, clip);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc, aLayer, clip);
 }
 
 bool
@@ -4760,6 +4760,7 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    const StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer* aLayer)
 {
@@ -4877,7 +4878,7 @@ nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   MOZ_ASSERT(mBorderImageRenderer || mBorderRenderer);
 
   if (mBorderImageRenderer) {
-    CreateBorderImageWebRenderCommands(aBuilder, aParentCommands, aLayer);
+    CreateBorderImageWebRenderCommands(aBuilder, aSc, aParentCommands, aLayer);
   } else if (mBorderRenderer) {
     gfx::Rect clip(0, 0, 0, 0);
     if (GetClip().HasClip()) {
@@ -4886,7 +4887,7 @@ nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
           GetClip().GetClipRect(), appUnitsPerDevPixel).ToUnknownRect();
     }
 
-    mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer, clip);
+    mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc, aLayer, clip);
   }
 }
 
@@ -5341,6 +5342,7 @@ nsDisplayBoxShadowInner::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 /* static */ void
 nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                               const StackingContextHelper& aSc,
                                                                WebRenderDisplayItemLayer* aLayer,
                                                                nsIFrame* aFrame,
                                                                const nsRect aBorderRect)
@@ -5411,7 +5413,7 @@ nsDisplayBoxShadowInner::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
 
-  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder, aLayer, mFrame, borderRect);
+  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder, aSc, aLayer, mFrame, borderRect);
 }
 
 bool

@@ -1027,6 +1027,7 @@ nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
 
 void
 nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                                  const layers::StackingContextHelper& aSc,
                                                   layers::WebRenderDisplayItemLayer* aLayer,
                                                   const nsRect& aDest,
                                                   const nsRect& aFillArea,
