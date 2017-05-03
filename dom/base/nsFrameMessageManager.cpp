@@ -256,17 +256,13 @@ nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
                                           nsIMessageListener* aListener,
                                           bool aListenWhenClosed)
 {
-  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
-    mListeners.Get(aMessage);
-  if (!listeners) {
-    listeners = new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
-    mListeners.Put(aMessage, listeners);
-  } else {
-    uint32_t len = listeners->Length();
-    for (uint32_t i = 0; i < len; ++i) {
-      if (listeners->ElementAt(i).mStrongListener == aListener) {
-        return NS_OK;
-      }
+  auto listeners = mListeners.LookupForAdd(aMessage).OrInsert([]() {
+      return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+    });
+  uint32_t len = listeners->Length();
+  for (uint32_t i = 0; i < len; ++i) {
+    if (listeners->ElementAt(i).mStrongListener == aListener) {
+      return NS_OK;
     }
   }
 
@@ -323,17 +319,13 @@ nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
   }
 #endif
 
-  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
-    mListeners.Get(aMessage);
-  if (!listeners) {
-    listeners = new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
-    mListeners.Put(aMessage, listeners);
-  } else {
-    uint32_t len = listeners->Length();
-    for (uint32_t i = 0; i < len; ++i) {
-      if (listeners->ElementAt(i).mWeakListener == weak) {
-        return NS_OK;
-      }
+  auto listeners = mListeners.LookupForAdd(aMessage).OrInsert([]() {
+      return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+    });
+  uint32_t len = listeners->Length();
+  for (uint32_t i = 0; i < len; ++i) {
+    if (listeners->ElementAt(i).mWeakListener == weak) {
+      return NS_OK;
     }
   }
 
