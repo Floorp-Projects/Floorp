@@ -739,8 +739,6 @@ mochitest-devtools-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
-            windows.*: false
             macosx64/debug: true
             default: both
     mozharness:
