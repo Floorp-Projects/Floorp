@@ -77,6 +77,4 @@ interface nsIPK11Token : nsISupports
    */
   boolean isHardwareToken();
   boolean needsLogin();
-  boolean isFriendly();
 };
-
