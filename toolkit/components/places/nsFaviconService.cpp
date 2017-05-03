@@ -253,6 +253,13 @@ nsFaviconService::GetDefaultFavicon(nsIURI** _retval)
   return mDefaultIcon->Clone(_retval);
 }
 
+NS_IMETHODIMP
+nsFaviconService::GetDefaultFaviconMimeType(nsACString& _retval)
+{
+  _retval = NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE);
+  return NS_OK;
+}
+
 void
 nsFaviconService::SendFaviconNotifications(nsIURI* aPageURI,
                                            nsIURI* aFaviconURI,
@@ -723,25 +730,6 @@ nsFaviconService::GetFaviconLinkForIconString(const nsCString& aSpec,
   annoUri.AssignLiteral("moz-anno:" FAVICON_ANNOTATION_NAME ":");
   annoUri += aSpec;
   return NS_NewURI(aOutput, annoUri);
-}
-
-
-// nsFaviconService::GetFaviconSpecForIconString
-//
-//    This computes a favicon spec for when you don't want a URI object (as in
-//    the tree view implementation), sparing all parsing and normalization.
-void
-nsFaviconService::GetFaviconSpecForIconString(const nsCString& aSpec,
-                                              nsACString& aOutput)
-{
-  if (aSpec.IsEmpty()) {
-    aOutput.AssignLiteral(FAVICON_DEFAULT_URL);
-  } else if (StringBeginsWith(aSpec, NS_LITERAL_CSTRING("chrome:"))) {
-    aOutput = aSpec;
-  } else {
-    aOutput.AssignLiteral("moz-anno:" FAVICON_ANNOTATION_NAME ":");
-    aOutput += aSpec;
-  }
 }
 
 /**

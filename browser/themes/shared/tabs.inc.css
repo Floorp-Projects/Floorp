@@ -86,7 +86,7 @@
 }
 
 .tab-icon-image {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .tab-icon-image[sharing]:not([selected]),
@@ -564,10 +564,6 @@
 
   .tab-throbber[busy] {
     list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
-  }
-
-  .tab-icon-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
 
   .tab-throbber[progress] {

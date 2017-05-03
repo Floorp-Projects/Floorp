@@ -1318,14 +1318,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
 #PanelUI-historyItems > toolbarbutton {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
-  #PanelUI-historyItems > toolbarbutton {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,

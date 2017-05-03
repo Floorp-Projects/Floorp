@@ -1376,17 +1376,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .bookmark-item {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .bookmark-item {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
-  image.bookmark-item {
-    width: 16px;
-  }
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .openintabs-menuitem {
@@ -1792,7 +1782,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* All Tabs Menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
@@ -1800,10 +1790,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 @media (min-resolution: 2dppx) {
-  .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
   .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png") !important;
   }
