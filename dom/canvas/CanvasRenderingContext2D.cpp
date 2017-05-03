@@ -1081,7 +1081,7 @@ NS_INTERFACE_MAP_END
 
 
 // Initialize our static variables.
-uint32_t CanvasRenderingContext2D::sNumLivingContexts = 0;
+uintptr_t CanvasRenderingContext2D::sNumLivingContexts = 0;
 DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 static bool sMaxContextsInitialized = false;
 static int32_t sMaxContexts = 0;
