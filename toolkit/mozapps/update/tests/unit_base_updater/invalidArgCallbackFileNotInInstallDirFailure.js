@@ -3,11 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* Install directory path traversal failure test */
+/* Callback file not in install directory or a sub-directory of the install
+   directory failure */
 
-const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR
-                  : STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
+const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_DIR_ERROR;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -23,14 +22,8 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  let path = "123456789";
-  if (IS_WIN) {
-    path = "C:\\" + path + "\\..\\" + path;
-  } else {
-    path = "/" + path + "/../" + path;
-  }
-
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
+  let path = getTestDirFile(FILE_HELPER_BIN).path;
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, null, path);
 }
 
 /**
