@@ -417,9 +417,9 @@ public class CodeGenerator {
         final String uniqueName = info.wrapperName;
         final Class<?> type = field.getType();
 
-        // Handles a peculiar case when dealing with enum types. We don't care about this field.
-        // It just gets in the way and stops our code from compiling.
-        if (field.isSynthetic() || field.getName().equals("$VALUES")) {
+        // Handle various cases where we don't care about the field.
+        if (field.isSynthetic() || field.getName().equals("$VALUES") ||
+                field.getName().equals("CREATOR")) {
             return;
         }
 
@@ -535,35 +535,6 @@ public class CodeGenerator {
                                 getTraitsName(uniqueName, /* includeScope */ false) + ">::Call",
                         wrapperName, argTypes, returnType, info, /* isStatic */ true) + "\n" +
                 "\n");
-    }
-
-    public void generateMembers(Member[] members) {
-        for (Member m : members) {
-            if (!Modifier.isPublic(m.getModifiers())) {
-                continue;
-            }
-
-            String name = Utils.getMemberName(m);
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-            // Default for SDK bindings.
-            final AnnotationInfo info = new AnnotationInfo(name,
-                    AnnotationInfo.ExceptionMode.NSRESULT,
-                    AnnotationInfo.CallingThread.ANY,
-                    AnnotationInfo.DispatchTarget.CURRENT);
-            final AnnotatableEntity entity = new AnnotatableEntity(m, info);
-
-            if (m instanceof Constructor) {
-                generateConstructor(entity);
-            } else if (m instanceof Method) {
-                generateMethod(entity);
-            } else if (m instanceof Field) {
-                generateField(entity);
-            } else {
-                throw new IllegalArgumentException(
-                        "expected member to be Constructor, Method, or Field");
-            }
-        }
     }
 
     public void generateClasses(final ClassWithOptions[] classes) {
