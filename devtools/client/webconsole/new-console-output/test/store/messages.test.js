@@ -10,7 +10,8 @@ const {
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const {
   setupActions,
-  setupStore
+  setupStore,
+  clonePacket
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const {
@@ -45,8 +46,12 @@ describe("Message reducer:", () => {
         "console.log('foobar', 'test')"
       ]);
 
-      const packet = stubPackets.get("console.log('foobar', 'test')");
+      const packet = clonePacket(stubPackets.get("console.log('foobar', 'test')"));
+
+      // Repeat ID must be the same even if the timestamp is different.
+      packet.message.timeStamp = 1;
       dispatch(actions.messageAdd(packet));
+      packet.message.timeStamp = 2;
       dispatch(actions.messageAdd(packet));
 
       const messages = getAllMessages(getState());
@@ -101,7 +106,7 @@ describe("Message reducer:", () => {
       const { dispatch, getState } = setupStore([]);
 
       const logLimit = 1000;
-      const packet = stubPackets.get("console.log(undefined)");
+      const packet = clonePacket(stubPackets.get("console.log(undefined)"));
       for (let i = 1; i <= logLimit + 1; i++) {
         packet.message.arguments = [`message num ${i}`];
         dispatch(actions.messageAdd(packet));
@@ -190,7 +195,7 @@ describe("Message reducer:", () => {
       dispatch(actions.messageAdd(
         stubPackets.get("console.group('bar')")));
 
-      const packet = stubPackets.get("console.log(undefined)");
+      const packet = clonePacket(stubPackets.get("console.log(undefined)"));
       for (let i = 1; i <= logLimit + 1; i++) {
         packet.message.arguments = [`message num ${i}`];
         dispatch(actions.messageAdd(packet));

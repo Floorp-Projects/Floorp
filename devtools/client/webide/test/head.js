@@ -73,8 +73,6 @@ function closeWebIDE(win) {
 
   let deferred = promise.defer();
 
-  Services.prefs.clearUserPref("devtools.webide.widget.enabled");
-
   win.addEventListener("unload", function () {
     info("WebIDE closed");
     SimpleTest.executeSoon(() => {
