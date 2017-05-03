@@ -193,9 +193,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     build_platform = taskdesc['attributes']['build_platform']
     build_type = taskdesc['attributes']['build_type']
 
-    if build_platform.startswith('win'):
-        target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), build_platform)
-    elif build_platform == 'macosx64' and build_type == 'opt':
+    if build_platform == 'macosx64' and build_type == 'opt':
         target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac')
     else:
         target = 'target'
