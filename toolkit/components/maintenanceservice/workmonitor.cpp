@@ -71,8 +71,6 @@ IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying)
     return FALSE;
   }
 
-  LOG(("updater.exe returned status: %s", buf));
-
   const char kApplying[] = "applying";
   isApplying = strncmp(buf, kApplying,
                        sizeof(kApplying) - 1) == 0;
