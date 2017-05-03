@@ -258,7 +258,7 @@ nsLayoutStylesheetCache::Shutdown()
   gCSSLoader_Servo = nullptr;
   gStyleCache_Gecko = nullptr;
   gStyleCache_Servo = nullptr;
-  MOZ_ASSERT(!gUserContentSheetURL, "Got the URL but never used?");
+  gUserContentSheetURL = nullptr;
 }
 
 void

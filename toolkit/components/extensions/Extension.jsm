@@ -1113,3 +1113,7 @@ this.Extension = class extends ExtensionData {
     return this._optionalOrigins;
   }
 };
+
+Services.ppmm.loadProcessScript("data:,new " + function() {
+  Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
+}, true);
