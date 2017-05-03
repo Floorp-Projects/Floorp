@@ -13,18 +13,24 @@ const OUTER_VALUE = "outer-value-" + RAND;
 // Test that we record the size of messages.
 add_task(function* test_telemetry() {
   Services.telemetry.canRecordExtended = true;
-  let histogram = Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS");
+  let suffix = gMultiProcessBrowser ? "#content" : "";
+  let histogram = Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS" + suffix);
   let snap1 = histogram.snapshot();
 
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 
-  // Flush to make sure chrome received all data.
+  // Flush to make sure we submitted telemetry data.
   yield TabStateFlusher.flush(browser);
-  let snap2 = histogram.snapshot();
 
-  Assert.ok(snap2.counts[5] > snap1.counts[5]);
+  // There is no good way to make sure that the parent received the histogram entries from the child processes.
+  // Let's stick to the ugly, spinning the event loop until we have a good approach (Bug 1357509).
+  yield BrowserTestUtils.waitForCondition(() => {
+    return histogram.snapshot().counts[5] > snap1.counts[5];
+  });
+
+  Assert.ok(true);
   yield promiseRemoveTab(tab);
   Services.telemetry.canRecordExtended = false;
 });

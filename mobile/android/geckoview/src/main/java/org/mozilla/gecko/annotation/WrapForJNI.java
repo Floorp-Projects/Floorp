@@ -57,4 +57,9 @@ public @interface WrapForJNI {
      *   widget/jni/Natives.h.
      */
     String dispatchTo() default "current";
+
+    /**
+     * Generate a getter instead of a literal. Only supported for static final fields.
+     */
+    boolean noLiteral() default false;
 }

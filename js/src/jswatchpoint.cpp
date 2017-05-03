@@ -193,6 +193,9 @@ WatchpointMap::trace(JSTracer* trc)
 /* static */ void
 WatchpointMap::sweepAll(JSRuntime* rt)
 {
+    // This is called during compacting GC. Watchpoint closure pointers can be
+    // cross-compartment so we have to sweep all watchpoint maps, not just those
+    // owned by compartments we are compacting.
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (WatchpointMap* wpmap = c->watchpointMap)
             wpmap->sweep();

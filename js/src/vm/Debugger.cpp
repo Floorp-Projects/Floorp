@@ -3223,16 +3223,20 @@ Debugger::sweepAll(FreeOp* fop)
         Debugger* dbg = group->debuggerList().getFirst();
         while (dbg) {
             Debugger* next = dbg->getNext();
-            if (IsAboutToBeFinalized(&dbg->object)) {
-                /*
-                 * dbg is being GC'd. Detach it from its debuggees. The debuggee
-                 * might be GC'd too. Since detaching requires access to both
-                 * objects, this must be done before finalize time.
-                 */
-                for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+
+            // Detach dying debuggers and debuggees from each other. Since this
+            // requires access to both objects it must be done before either
+            // object is finalized.
+            bool debuggerDying = IsAboutToBeFinalized(&dbg->object);
+            for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+                GlobalObject* global = e.front().unbarrieredGet();
+                if (debuggerDying || IsAboutToBeFinalizedUnbarriered(&global))
                     dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e);
-                fop->delete_(dbg);
             }
+
+            if (debuggerDying)
+                fop->delete_(dbg);
+
             dbg = next;
         }
     }

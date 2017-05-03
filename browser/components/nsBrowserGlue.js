@@ -41,8 +41,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
  * XXX Bug 1325373 is for making eslint detect these automatically.
  */
 
+let initializedModules = {};
+
 [
-  ["AboutHome", "resource:///modules/AboutHome.jsm"],
+  ["AboutHome", "resource:///modules/AboutHome.jsm", "init"],
   ["AboutNewTab", "resource:///modules/AboutNewTab.jsm"],
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
@@ -52,8 +54,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["ContentClick", "resource:///modules/ContentClick.jsm"],
-  ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm"],
-  ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
+  ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm", "alwaysInit"],
+  ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["DateTimePickerHelper", "resource://gre/modules/DateTimePickerHelper.jsm"],
   ["DirectoryLinksProvider", "resource:///modules/DirectoryLinksProvider.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
@@ -78,7 +80,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
   ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
   ["RemotePrompt", "resource:///modules/RemotePrompt.jsm"],
-  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm"],
+  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm", "init"],
   ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
   ["ShellService", "resource:///modules/ShellService.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
@@ -87,9 +89,19 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["UITour", "resource:///modules/UITour.jsm"],
   ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
   ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
-  ["webrtcUI", "resource:///modules/webrtcUI.jsm"],
+  ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
   ["UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm"],
-].forEach(([name, resource]) => XPCOMUtils.defineLazyModuleGetter(this, name, resource));
+].forEach(([name, resource, init]) => {
+  if (init) {
+    XPCOMUtils.defineLazyGetter(this, name, () => {
+      Cu.import(resource, initializedModules);
+      initializedModules[name][init]();
+      return initializedModules[name];
+    });
+  } else {
+    XPCOMUtils.defineLazyModuleGetter(this, name, resource);
+  }
+});
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
@@ -107,6 +119,93 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
+
+const global = this;
+
+const listeners = {
+  observers: {
+    "sessionstore-windows-restored": ["SelfSupportBackend"],
+  },
+
+  ppmm: {
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
+    "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
+    "ContentPrefs:AddObserverForName": ["ContentPrefServiceParent"],
+    "ContentPrefs:RemoveObserverForName": ["ContentPrefServiceParent"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
+    "FeedConverter:addLiveBookmark": ["Feeds"],
+    "WCCR:setAutoHandler": ["Feeds"],
+    "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
+    "webrtc:UpdatingIndicators": ["webrtcUI"],
+  },
+
+  mm: {
+    "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
+    "AboutHome:RequestUpdate": ["AboutHome"],
+    "Content:Click": ["ContentClick"],
+    "ContentSearch": ["ContentSearch"],
+    "FormValidation:ShowPopup": ["FormValidationHandler"],
+    "FormValidation:HidePopup": ["FormValidationHandler"],
+    "Prompt:Open": ["RemotePrompt"],
+    "Reader:ArticleGet": ["ReaderParent"],
+    "Reader:FaviconRequest": ["ReaderParent"],
+    "Reader:UpdateReaderButton": ["ReaderParent"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
+    "RemoteLogins:findLogins": ["LoginManagerParent"],
+    "RemoteLogins:findRecipes": ["LoginManagerParent"],
+    "RemoteLogins:onFormSubmit": ["LoginManagerParent"],
+    "RemoteLogins:autoCompleteLogins": ["LoginManagerParent"],
+    "RemoteLogins:removeLogin": ["LoginManagerParent"],
+    "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
+    "WCCR:registerProtocolHandler": ["Feeds"],
+    "WCCR:registerContentHandler": ["Feeds"],
+    "rtcpeer:CancelRequest": ["webrtcUI"],
+    "rtcpeer:Request": ["webrtcUI"],
+    "webrtc:CancelRequest": ["webrtcUI"],
+    "webrtc:Request": ["webrtcUI"],
+    "webrtc:StopRecording": ["webrtcUI"],
+    "webrtc:UpdateBrowserIndicators": ["webrtcUI"],
+  },
+
+  observe(subject, topic, data) {
+    for (let module of this.observers[topic]) {
+      try {
+        this[module].observe(subject, topic, data);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  },
+
+  receiveMessage(modules, data) {
+    let val;
+    for (let module of modules[data.name]) {
+      try {
+        val = global[module].receiveMessage(data) || val;
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+    return val;
+  },
+
+  init() {
+    for (let observer of Object.keys(this.observers)) {
+      Services.obs.addObserver(this, observer);
+    }
+
+    let receiveMessageMM = this.receiveMessage.bind(this, this.mm);
+    for (let message of Object.keys(this.mm)) {
+      Services.mm.addMessageListener(message, receiveMessageMM);
+    }
+
+    let receiveMessagePPMM = this.receiveMessage.bind(this, this.ppmm);
+    for (let message of Object.keys(this.ppmm)) {
+      Services.ppmm.addMessageListener(message, receiveMessagePPMM);
+    }
+  }
+};
 
 // Seconds of idle before trying to create a bookmarks backup.
 const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
@@ -499,9 +598,9 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
+    listeners.init();
+
     PageThumbs.init();
-    webrtcUI.init();
-    AboutHome.init();
 
     DirectoryLinksProvider.init();
     NewTabUtils.init();
@@ -511,18 +610,6 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
-    ContentSearch.init();
-    FormValidationHandler.init();
-
-    ContentClick.init();
-    RemotePrompt.init();
-    Feeds.init();
-    ContentPrefServiceParent.init();
-
-    LoginManagerParent.init();
-    ReaderParent.init();
-
-    SelfSupportBackend.init();
 
     if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
@@ -893,13 +980,17 @@ BrowserGlue.prototype = {
       delete this._bookmarksBackupIdleTime;
     }
 
+    for (let mod of Object.values(initializedModules)) {
+      if (mod.uninit) {
+        mod.uninit();
+      }
+    }
+
     BrowserUsageTelemetry.uninit();
-    SelfSupportBackend.uninit();
+
     PageThumbs.uninit();
     AboutNewTab.uninit();
     NewTabUtils.uninit();
-    webrtcUI.uninit();
-    FormValidationHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerHelper.uninit();
   },
