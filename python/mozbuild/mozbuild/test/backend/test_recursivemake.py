@@ -918,39 +918,6 @@ class TestRecursiveMakeBackend(BackendTester):
         m = InstallManifest(p)
         self.assertIn('testing/mochitest/tests/support-file.txt', m)
 
-    def test_android_eclipse(self):
-        env = self._consume('android_eclipse', RecursiveMakeBackend)
-
-        with open(mozpath.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
-            lines = fh.readlines()
-
-        lines = [line.rstrip() for line in lines]
-
-        # Dependencies first.
-        self.assertIn('ANDROID_ECLIPSE_PROJECT_main1: target1 target2', lines)
-        self.assertIn('ANDROID_ECLIPSE_PROJECT_main4: target3 target4', lines)
-
-        command_template = '\t$(call py_action,process_install_manifest,' + \
-                           '--no-remove --no-remove-all-directory-symlinks ' + \
-                           '--no-remove-empty-directories %s %s.manifest)'
-        # Commands second.
-        for project_name in ['main1', 'main2', 'library1', 'library2']:
-            stem = '%s/android_eclipse/%s' % (env.topobjdir, project_name)
-            self.assertIn(command_template % (stem, stem), lines)
-
-        # Projects declared in subdirectories.
-        with open(mozpath.join(env.topobjdir, 'subdir', 'backend.mk'), 'rb') as fh:
-            lines = fh.readlines()
-
-        lines = [line.rstrip() for line in lines]
-
-        self.assertIn('ANDROID_ECLIPSE_PROJECT_submain: subtarget1 subtarget2', lines)
-
-        for project_name in ['submain', 'sublibrary']:
-            # Destination and install manifest are relative to topobjdir.
-            stem = '%s/android_eclipse/%s' % (env.topobjdir, project_name)
-            self.assertIn(command_template % (stem, stem), lines)
-
     def test_install_manifests_package_tests(self):
         """Ensure test suites honor package_tests=False."""
         env = self._consume('test-manifests-package-tests', RecursiveMakeBackend)
