@@ -1656,9 +1656,11 @@ NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
 }
 
 bool
-NS_ShouldCheckAppCache(nsIURI *aURI, bool usePrivateBrowsing)
+NS_ShouldCheckAppCache(nsIPrincipal *aPrincipal)
 {
-    if (usePrivateBrowsing) {
+    uint32_t privateBrowsingId = 0;
+    nsresult rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    if (NS_SUCCEEDED(rv) && (privateBrowsingId > 0)) {
         return false;
     }
 
@@ -1669,29 +1671,7 @@ NS_ShouldCheckAppCache(nsIURI *aURI, bool usePrivateBrowsing)
     }
 
     bool allowed;
-    nsresult rv = offlineService->OfflineAppAllowedForURI(aURI,
-                                                          nullptr,
-                                                          &allowed);
-    return NS_SUCCEEDED(rv) && allowed;
-}
-
-bool
-NS_ShouldCheckAppCache(nsIPrincipal *aPrincipal, bool usePrivateBrowsing)
-{
-    if (usePrivateBrowsing) {
-        return false;
-    }
-
-    nsCOMPtr<nsIOfflineCacheUpdateService> offlineService =
-        do_GetService("@mozilla.org/offlinecacheupdate-service;1");
-    if (!offlineService) {
-        return false;
-    }
-
-    bool allowed;
-    nsresult rv = offlineService->OfflineAppAllowed(aPrincipal,
-                                                    nullptr,
-                                                    &allowed);
+    rv = offlineService->OfflineAppAllowed(aPrincipal, nullptr, &allowed);
     return NS_SUCCEEDED(rv) && allowed;
 }
 
