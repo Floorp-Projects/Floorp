@@ -29,7 +29,7 @@ function setupUpdaterTestFinished() {
  * Called after the call to waitForHelperSleep finishes.
  */
 function waitForHelperSleepFinished() {
-  stageUpdate();
+  stageUpdate(true);
 }
 
 /**
@@ -38,9 +38,9 @@ function waitForHelperSleepFinished() {
 function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
-  checkUpdateLogContents(LOG_COMPLETE_SUCCESS_STAGE, true);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Switch the application to the staged application that was updated.
-  runUpdate(STATE_PENDING, true, 1, false);
+  runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true);
 }
 
 /**

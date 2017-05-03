@@ -22,8 +22,8 @@ function run_test() {
 function setupUpdaterTestFinished() {
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE, false,
-            (USE_EXECV ? 0 : 1), true);
+  runUpdate(STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE, false, (USE_EXECV ? 0 : 1),
+            true);
 }
 
 /**
