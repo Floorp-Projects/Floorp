@@ -129,6 +129,8 @@ var gSyncPane = {
     });
 
     this.updateWeavePrefs();
+
+    this._initProfileImageUI();
   },
 
   _toggleComputerNameControls(editMode) {
@@ -223,6 +225,14 @@ var gSyncPane = {
     });
   },
 
+  _initProfileImageUI() {
+    try {
+      if (Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled")) {
+        document.getElementById("fxaProfileImage").hidden = false;
+      }
+    } catch (e) { }
+  },
+
   updateWeavePrefs() {
     let service = Components.classes["@mozilla.org/weave/service;1"]
                   .getService(Components.interfaces.nsISupports)
@@ -232,6 +242,8 @@ var gSyncPane = {
     let fxaEmailAddress1Label = document.getElementById("fxaEmailAddress1");
     fxaEmailAddress1Label.hidden = false;
     displayNameLabel.hidden = true;
+
+    let profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled", false);
 
     // determine the fxa status...
     this._showLoadPage(service);
@@ -288,7 +300,7 @@ var gSyncPane = {
       return null;
     }).then(data => {
       let fxaLoginStatus = document.getElementById("fxaLoginStatus");
-      if (data) {
+      if (data && profileInfoEnabled) {
         if (data.displayName) {
           fxaLoginStatus.setAttribute("hasName", true);
           displayNameLabel.hidden = false;

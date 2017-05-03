@@ -571,7 +571,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa:not([fxastatus="signedin"]) > toolbarseparator,
-#PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-icon {
+#PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-icon,
+#PanelUI-footer-fxa:not([fxaprofileimage]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   display: none;
 }
 
@@ -724,7 +725,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-inline-start-style: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
+#PanelUI-footer-fxa[fxaprofileimage="set"] > #PanelUI-fxa-status > #PanelUI-fxa-label,
+#PanelUI-footer-fxa[fxaprofileimage="enabled"]:not([fxastatus="error"]) > #PanelUI-fxa-status > #PanelUI-fxa-label {
   padding-inline-start: 0px;
 }
 
@@ -885,7 +887,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label > .toolbarbutton-icon,
-#PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
+#PanelUI-footer-fxa[fxastatus="error"][fxaprofileimage="set"] > #PanelUI-fxa-status > #PanelUI-fxa-label > .toolbarbutton-icon {
+  display: none;
+}
+
+#PanelUI-footer-fxa[fxastatus="error"]:not([fxaprofileimage="set"]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   display: none;
 }
 
@@ -908,7 +914,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin-inline-end: 0;
 }
 
-#PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
+#PanelUI-footer-fxa[fxaprofileimage="enabled"] > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
 }
 
