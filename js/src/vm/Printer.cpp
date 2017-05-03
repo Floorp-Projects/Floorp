@@ -549,18 +549,4 @@ LSprinter::put(const char* s, size_t len)
     return true;
 }
 
-void
-LSprinter::reportOutOfMemory()
-{
-    if (hadOOM_)
-        return;
-    hadOOM_ = true;
-}
-
-bool
-LSprinter::hadOutOfMemory() const
-{
-    return hadOOM_;
-}
-
 } // namespace js
