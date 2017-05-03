@@ -49,6 +49,7 @@ public:
       mLib,
       aParams.mTaskQueue,
       aParams.VideoConfig(),
+      aParams.mKnowsCompositor,
       aParams.mImageContainer,
       aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency));
     return decoder.forget();
