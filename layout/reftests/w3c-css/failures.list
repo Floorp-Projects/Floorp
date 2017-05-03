@@ -214,7 +214,7 @@ fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) fails-if(stylo) css-multicol-1/mu
 fuzzy(225,2529) fails-if(stylo) css-multicol-1/multicol-nested-margin-004.xht
 fuzzy(225,2529) fails-if(stylo) css-multicol-1/multicol-nested-margin-005.xht
 fuzzy(116,142) css-multicol-1/multicol-overflow-000.xht
-fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) fails-if(stylo) css-multicol-1/multicol-overflowing-001.xht
+fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) css-multicol-1/multicol-overflowing-001.xht
 fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) css-multicol-1/multicol-reduce-000.xht
 fuzzy-if(OSX,8,20) css-multicol-1/multicol-rule-000.xht
 fuzzy(116,1584) css-multicol-1/multicol-rule-001.xht

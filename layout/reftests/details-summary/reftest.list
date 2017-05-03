@@ -36,8 +36,8 @@ fails-if(stylo) == open-nested-details.html open-nested-details-ref.html
 
 # With 'overflow' property
 == overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
-fails-if(stylo) == overflow-auto-open-details.html overflow-auto-open-details-ref.html
-fails-if(stylo) == overflow-scroll-details.html overflow-scroll-details-ref.html
+== overflow-auto-open-details.html overflow-auto-open-details-ref.html
+== overflow-scroll-details.html overflow-scroll-details-ref.html
 
 # With pagination property
 == details-page-break-after-1.html details-two-pages.html
@@ -78,7 +78,7 @@ fails-if(stylo) == mouse-click-open-second-summary.html open-multiple-summary.ht
 fails-if(stylo) == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
 == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
 fuzzy-if(gtkWidget,1,20) fails-if(stylo) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
-fails-if(stylo) == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
+== mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
 fails-if(stylo) == mouse-click-display-none-details.html open-single-summary.html
 fails-if(stylo) == mouse-click-change-details-to-display-none.html open-single-summary.html
 == mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none-ref.html

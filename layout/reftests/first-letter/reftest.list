@@ -3,7 +3,7 @@
 == basic-2.html basic-ref.html
 
 # parent style context correct
-fails-if(stylo) == parent-style-1.html parent-style-1-ref.html
+== parent-style-1.html parent-style-1-ref.html
 
 # others
 == nested-1a.html nested-1-ref.html
@@ -70,5 +70,5 @@ HTTP(..) == indic-clusters-1.html indic-clusters-1-ref.html
 == overflow-float-nooverflow.html overflow-float-nooverflow-ref.html
 == overflow-float-overflow.html overflow-float-overflow-notref.html
 == overflow-inline-nooverflow.html overflow-inline-nooverflow-ref.html
-fails-if(stylo) != overflow-inline-overflow.html overflow-inline-overflow-notref.html
-fails-if(stylo) == overflow-inline-overflow.html overflow-inline-overflow-ref.html
+!= overflow-inline-overflow.html overflow-inline-overflow-notref.html
+== overflow-inline-overflow.html overflow-inline-overflow-ref.html
