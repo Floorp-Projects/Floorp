@@ -624,7 +624,6 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
           aDest, appUnitsPerDevPixel);
-      LayerRect dest = aLayer->RelativeToParent(destRect);
 
       nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(aDest.TopLeft(),
                                                                       aFill.TopLeft(),
@@ -637,10 +636,10 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       LayerRect clip = aLayer->RelativeToParent(
                                  LayoutDeviceRect::FromAppUnits(aFill,appUnitsPerDevPixel));
 
-      Size gapSize((aRepeatSize.width - aDest.width) / appUnitsPerDevPixel,
-                   (aRepeatSize.height - aDest.height) / appUnitsPerDevPixel);
+      LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
+          aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
       aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
-                         wr::ToWrSize(dest.Size()), wr::ToWrSize(gapSize),
+                         wr::ToWrSize(destRect.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key.value());
       break;
     }
