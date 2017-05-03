@@ -140,7 +140,7 @@ public class BrowsingNotificationService extends Service {
 
         return new NotificationCompat.Builder(this)
                 .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(R.drawable.ic_delete)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_erase_text))
                 .setContentIntent(pendingIntent)
