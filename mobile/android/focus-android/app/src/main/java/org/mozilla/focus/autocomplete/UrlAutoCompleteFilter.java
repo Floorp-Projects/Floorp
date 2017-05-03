@@ -2,26 +2,33 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.autocomplete;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 
-import org.mozilla.focus.R;
+import org.mozilla.focus.utils.Locales;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilterListener {
-    private List<String> domains;
+    private static final String LOG_TAG = "UrlAutoCompleteFilter";
+
+    private Set<String> domains;
 
     /**
      * Our autocomplete list is all lower case, however the search text might be mixed case.
@@ -56,36 +63,63 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
         }
     }
 
-    @VisibleForTesting void onDomainsLoaded(List<String> domains) {
+    @VisibleForTesting void onDomainsLoaded(Set<String> domains) {
         this.domains = domains;
     }
 
-    public void loadDomainsInBackground(Context context) {
-        new AsyncTask<Resources, Void, List<String>>() {
+    public void loadDomainsInBackground(final Context context) {
+        new AsyncTask<Resources, Void, Set<String>>() {
             @Override
-            protected List<String> doInBackground(Resources... resources) {
+            protected Set<String> doInBackground(Resources... resources) {
+                final Set<String> domains = new LinkedHashSet<String>();
+                final Set<String> availableLists = getAvailableDomainLists(context);
 
-                try (final BufferedReader reader =
-                             new BufferedReader(new InputStreamReader(resources[0].openRawResource(R.raw.topdomains), StandardCharsets.UTF_8))) {
-
-                    final List<String> domains = new ArrayList<>(460);
-
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        domains.add(line);
+                // First load the country specific lists following the default locale order
+                for (final String country : Locales.getCountriesInDefaultLocaleList()) {
+                    if (availableLists.contains(country)) {
+                        loadDomainsForLanguage(context, domains, country);
                     }
-
-                    return domains;
-                } catch (IOException e) {
-                    // No autocomplete for you!
-                    return null;
                 }
+
+                // And then add domains from the global list
+                loadDomainsForLanguage(context, domains, "global");
+
+                return domains;
             }
 
             @Override
-            protected void onPostExecute(List<String> domains) {
+            protected void onPostExecute(Set<String> domains) {
                 onDomainsLoaded(domains);
             }
         }.execute(context.getResources());
+    }
+
+    private Set<String> getAvailableDomainLists(Context context) {
+        final Set<String> availableDomains = new HashSet<>();
+
+        final AssetManager assetManager = context.getAssets();
+
+        try {
+            Collections.addAll(availableDomains, assetManager.list("domains"));
+        } catch (IOException e) {
+            Log.w(LOG_TAG, "Could not list domain list directory");
+        }
+
+        return availableDomains;
+    }
+
+    private void loadDomainsForLanguage(Context context, Set<String> domains, String country) {
+        final AssetManager assetManager = context.getAssets();
+
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(
+                assetManager.open("domains/" + country), StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                domains.add(line);
+            }
+        } catch (IOException e) {
+            Log.w(LOG_TAG, "Could not load domain list: " + country);
+        }
     }
 }

@@ -120,7 +120,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         searchView.setOnClickListener(this);
 
         urlAutoCompleteFilter = new UrlAutoCompleteFilter();
-        urlAutoCompleteFilter.loadDomainsInBackground(getContext());
+        urlAutoCompleteFilter.loadDomainsInBackground(getContext().getApplicationContext());
 
         urlView = (InlineAutocompleteEditText) view.findViewById(R.id.url_edit);
         urlView.setOnFilterListener(this);
