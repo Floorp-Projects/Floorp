@@ -122,6 +122,11 @@ js::Nursery::Nursery(JSRuntime* rt)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
+#ifdef MOZ_GECKO_PROFILER
+  , trackTimings_(true)
+#else
+  , trackTimings_(false)
+#endif
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
@@ -165,6 +170,7 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
             exit(0);
         }
         enableProfiling_ = true;
+        trackTimings_ = true;
         profileThreshold_ = TimeDuration::FromMicroseconds(atoi(env));
     }
 
@@ -539,7 +545,7 @@ js::Nursery::printTotalProfileTimes()
 void
 js::Nursery::maybeClearProfileDurations()
 {
-    if (enableProfiling_) {
+    if (trackTimings_) {
         for (auto& duration : profileDurations_)
             duration = mozilla::TimeDuration();
     }
@@ -561,14 +567,14 @@ js::Nursery::endProfile(ProfileKey key)
 inline void
 js::Nursery::maybeStartProfile(ProfileKey key)
 {
-    if (enableProfiling_)
+    if (trackTimings_)
         startProfile(key);
 }
 
 inline void
 js::Nursery::maybeEndProfile(ProfileKey key)
 {
-    if (enableProfiling_)
+    if (trackTimings_)
         endProfile(key);
 }
 
