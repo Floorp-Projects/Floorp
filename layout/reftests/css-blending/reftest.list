@@ -56,7 +56,7 @@ fuzzy(1,6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-svg-as-data-uri.html background-blending-image-color-ref.html
 # Test 10
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-gif.html background-blending-image-color-gif-ref.html
-pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == background-blending-image-color-transform3d.html background-blending-image-color-ref.html
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-transform3d.html background-blending-image-color-ref.html
 
 # Test plan 5.3.2 Background layers do not blend with content outside the background (or behind the element) - tests 2 and 3
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation-parent-child-color.html background-blending-isolation-parent-child-ref.html
