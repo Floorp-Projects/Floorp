@@ -1551,47 +1551,6 @@ class ICTypeOf_Fallback : public ICFallbackStub
     };
 };
 
-class ICTypeOf_Typed : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    ICTypeOf_Typed(JitCode* stubCode, JSType type)
-      : ICFallbackStub(ICStub::TypeOf_Typed, stubCode)
-    {
-        extra_ = uint16_t(type);
-        MOZ_ASSERT(JSType(extra_) == type);
-    }
-
-  public:
-    JSType type() const {
-        return JSType(extra_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        JSType type_;
-        RootedString typeString_;
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(type_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, JSType type, HandleString string)
-          : ICStubCompiler(cx, ICStub::TypeOf_Typed, Engine::Baseline),
-            type_(type),
-            typeString_(cx, string)
-        { }
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICTypeOf_Typed>(space, getStubCode(), type_);
-        }
-    };
-};
-
 class ICRest_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;

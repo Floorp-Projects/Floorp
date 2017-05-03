@@ -233,6 +233,8 @@ private:
 
         // This table provides a mapping from top level outer content window id
         // to a queue of pending transaction information.
+        // The transaction's order in pending queue is decided by whether it's a
+        // blocking transaction and its priority.
         // Note that the window id could be 0 if the http request
         // is initialized without a window.
         nsClassHashtable<nsUint64HashKey,
