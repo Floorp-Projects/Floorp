@@ -60,6 +60,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsSystemInfo.h"
 #include "nsAutoPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
@@ -326,14 +327,9 @@ nsresult InitOSFileConstants()
   // Get the umask from the system-info service.
   // The property will always be present, but it will be zero on
   // non-Unix systems.
-  nsCOMPtr<nsIPropertyBag2> infoService =
-    do_GetService("@mozilla.org/system-info;1");
-  MOZ_ASSERT(infoService, "Could not access the system information service");
-  rv = infoService->GetPropertyAsUint32(NS_LITERAL_STRING("umask"),
-                                        &gUserUmask);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  // nsSystemInfo::gUserUmask is initialized by NS_InitXPCOM2 so we don't need
+  // to initialize the service.
+  gUserUmask = nsSystemInfo::gUserUmask;
 
   return NS_OK;
 }

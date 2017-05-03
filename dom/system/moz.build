@@ -81,6 +81,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bindings',
     '/js/xpconnect/loader',
+    '/xpcom/base',
 ]
 
 DEFINES['DLL_PREFIX'] = '"%s"' % CONFIG['DLL_PREFIX']
