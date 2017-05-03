@@ -5019,10 +5019,14 @@ SweepRegExpsTask::run()
 SweepMiscTask::run()
 {
     for (GCCompartmentGroupIter c(runtime()); !c.done(); c.next()) {
+        c->sweepGlobalObject();
+        c->sweepDebugEnvironments();
+        c->sweepTemplateObjects();
         c->sweepSavedStacks();
         c->sweepTemplateLiteralMap();
         c->sweepSelfHostingScriptSource();
         c->sweepNativeIterators();
+        c->sweepWatchpoints();
     }
 }
 
@@ -5202,23 +5206,16 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
             // Cancel any active or pending off thread compilations.
             js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
 
-            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-                c->sweepGlobalObject();
-                c->sweepDebugEnvironments();
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
                 c->sweepJitCompartment(&fop);
-                c->sweepTemplateObjects();
-            }
 
             for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
                 if (jit::JitZone* jitZone = zone->jitZone())
                     jitZone->sweep(&fop);
             }
 
-            // Bug 1071218: the following two methods have not yet been
-            // refactored to work on a single zone-group at once.
-
-            // Collect watch points associated with unreachable objects.
-            WatchpointMap::sweepAll(rt);
+            // Bug 1071218: the following method has not yet been refactored to
+            // work on a single zone-group at once.
 
             // Sweep entries containing about-to-be-finalized JitCode and
             // update relocated TypeSet::Types inside the JitcodeGlobalTable.
