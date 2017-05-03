@@ -13,6 +13,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/Result.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -20,6 +21,13 @@
 
 namespace mozilla {
 namespace loader {
+
+using mozilla::dom::AutoJSAPI;
+
+struct MOZ_RAII AutoSafeJSAPI : public AutoJSAPI
+{
+    AutoSafeJSAPI() { Init(); }
+};
 
 static inline Result<Ok, nsresult>
 WrapNSResult(PRStatus aRv)
