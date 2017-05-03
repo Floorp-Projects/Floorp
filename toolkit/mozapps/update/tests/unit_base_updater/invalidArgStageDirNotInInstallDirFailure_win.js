@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* Test trying to use an apply-to directory different from the install
- * directory, which should fail.
- */
+/* Different install and working directories for a regular update failure */
+
+const STATE_AFTER_RUNUPDATE =
+  IS_SERVICE_TEST ? STATE_FAILED_SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR
+                  : STATE_FAILED_INVALID_APPLYTO_DIR_STAGED_ERROR;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -21,11 +23,8 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  overrideApplyToDir(getApplyDirPath() + "/../NoSuchDir");
-  // If execv is used the updater process will turn into the callback process
-  // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_INVALID_APPLYTO_DIR_ERROR, false, (USE_EXECV ? 0 : 1),
-            false);
+  let path = getApplyDirFile("..", false).path;
+  runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true, null, null, path);
 }
 
 /**

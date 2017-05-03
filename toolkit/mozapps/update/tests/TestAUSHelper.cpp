@@ -337,6 +337,26 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
   }
 
+  if (!NS_tstrcmp(argv[1], NS_T("launch-service"))) {
+#ifdef XP_WIN
+    DWORD ret = LaunchServiceSoftwareUpdateCommand(argc - 2, (LPCWSTR *)argv + 2);
+    if (ret != ERROR_SUCCESS) {
+      // 192 is used to avoid reusing a possible return value from the call to
+      // WaitForServiceStop
+      return 0x000000C0;
+    }
+    // Wait a maximum of 120 seconds.
+    DWORD lastState = WaitForServiceStop(SVC_NAME, 120);
+    if (SERVICE_STOPPED == lastState) {
+      return 0;
+    }
+    return lastState;
+#else
+    // Not implemented on non-Windows platforms
+    return 1;
+#endif
+  }
+
   if (NS_tchdir(argv[1]) != 0) {
     return 1;
   }
