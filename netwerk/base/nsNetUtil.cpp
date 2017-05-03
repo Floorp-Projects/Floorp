@@ -1565,16 +1565,10 @@ NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
 bool
 NS_UsePrivateBrowsing(nsIChannel *channel)
 {
-    bool isPrivate = false;
-    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
-    if (pbChannel && NS_SUCCEEDED(pbChannel->GetIsChannelPrivate(&isPrivate))) {
-        return isPrivate;
-    }
-
-    // Some channels may not implement nsIPrivateBrowsingChannel
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(channel, loadContext);
-    return loadContext && loadContext->UsePrivateBrowsing();
+    OriginAttributes attrs;
+    bool result = NS_GetOriginAttributes(channel, attrs);
+    NS_ENSURE_TRUE(result, result);
+    return attrs.mPrivateBrowsingId > 0;
 }
 
 bool
@@ -1587,7 +1581,19 @@ NS_GetOriginAttributes(nsIChannel *aChannel,
     }
 
     loadInfo->GetOriginAttributes(&aAttributes);
-    aAttributes.SyncAttributesWithPrivateBrowsing(NS_UsePrivateBrowsing(aChannel));
+
+    bool isPrivate = false;
+    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(aChannel);
+    if (pbChannel) {
+        nsresult rv = pbChannel->GetIsChannelPrivate(&isPrivate);
+        NS_ENSURE_SUCCESS(rv, false);
+    } else {
+        // Some channels may not implement nsIPrivateBrowsingChannel
+        nsCOMPtr<nsILoadContext> loadContext;
+        NS_QueryNotificationCallbacks(aChannel, loadContext);
+        isPrivate = loadContext && loadContext->UsePrivateBrowsing();
+    }
+    aAttributes.SyncAttributesWithPrivateBrowsing(isPrivate);
     return true;
 }
 
