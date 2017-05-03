@@ -35,6 +35,7 @@ namespace layers {
 class ImageContainer;
 class WebRenderDisplayItemLayer;
 class WebRenderParentCommand;
+class LayerManager;
 } // namespace layers
 
 namespace wr {
@@ -104,6 +105,7 @@ struct nsCSSRendering {
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+  typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::image::DrawResult DrawResult;
   typedef nsIFrame::Sides Sides;
 
@@ -491,7 +493,8 @@ struct nsCSSRendering {
                                                nsStyleContext *mBackgroundSC,
                                                const nsStyleBorder& aBorder);
 
-  static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& aPresCtx,
+  static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aManager,
+                                                              nsPresContext& aPresCtx,
                                                               nsIFrame *aFrame,
                                                               const nsStyleBackground* aBackgroundStyle,
                                                               int32_t aLayer);
