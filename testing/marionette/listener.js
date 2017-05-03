@@ -37,8 +37,6 @@ Cu.importGlobalProperties(["URL"]);
 
 var contentLog = new logging.ContentLogger();
 
-var isB2G = false;
-
 var marionetteTestName;
 var winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
@@ -648,9 +646,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getCookies", getCookiesFn);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
-  if (isB2G) {
-    content.removeEventListener("mozbrowsershowmodalprompt", modalHandler);
-  }
+
   seenEls.clear();
   // reset container frame to the top-most frame
   curContainer = { frame: content, shadowRoot: null };
