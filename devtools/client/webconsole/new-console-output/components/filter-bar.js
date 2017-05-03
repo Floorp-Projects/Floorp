@@ -4,7 +4,6 @@
 "use strict";
 
 const {
-  createFactory,
   createClass,
   DOM: dom,
   PropTypes
@@ -22,7 +21,7 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 const {
   MESSAGE_LEVEL
 } = require("../constants");
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
+const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
 
 const FilterBar = createClass({
 
