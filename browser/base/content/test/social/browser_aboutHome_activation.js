@@ -82,7 +82,7 @@ function test() {
       info(testCase.desc);
 
       // Create a tab to run the test.
-      let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
       // Add an event handler to modify the snippets map once it's ready.
       let snippetsPromise = promiseSetupSnippetsMap(tab, testCase.snippet);
@@ -221,6 +221,6 @@ function activateProvider(tab, expectPanel, aCallback) {
 function waitForProviderLoad(cb) {
   return Promise.all([
     promiseObserverNotified("social:provider-enabled"),
-    ensureFrameLoaded(gBrowser, "https://example.com/browser/browser/base/content/test/social/social_postActivation.html"),
+    BrowserTestUtils.waitForNewTab(gBrowser, "https://example.com/browser/browser/base/content/test/social/social_postActivation.html"),
   ]);
 }
