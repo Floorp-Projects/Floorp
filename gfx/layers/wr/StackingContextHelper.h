@@ -52,9 +52,15 @@ public:
   // that is relative to the stacking context. This is useful because most
   // things that are pushed inside the stacking context need to be relative
   // to the stacking context.
+  // We allow passing in a LayoutDeviceRect for convenience because in a lot of
+  // cases with WebRender display item generate the layout device space is the
+  // same as the layer space. (TODO: try to make this more explicit somehow).
   WrRect ToRelativeWrRect(const LayerRect& aRect) const;
+  WrRect ToRelativeWrRect(const LayoutDeviceRect& aRect) const;
   // Same but for points
   WrPoint ToRelativeWrPoint(const LayerPoint& aPoint) const;
+  // Same but rounds the rectangle to ints after transforming.
+  WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
 
 private:
   wr::DisplayListBuilder* mBuilder;

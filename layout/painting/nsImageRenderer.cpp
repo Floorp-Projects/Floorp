@@ -12,6 +12,7 @@
 
 #include "gfxDrawable.h"
 #include "ImageOps.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "nsContentUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
@@ -632,13 +633,13 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
           nsRect(firstTilePos.x, firstTilePos.y,
                  aFill.XMost() - firstTilePos.x, aFill.YMost() - firstTilePos.y),
           appUnitsPerDevPixel);
-      LayerRect fill = aLayer->RelativeToParent(fillRect);
-      LayerRect clip = aLayer->RelativeToParent(
-                                 LayoutDeviceRect::FromAppUnits(aFill,appUnitsPerDevPixel));
+      WrRect fill = aSc.ToRelativeWrRect(fillRect);
+      WrRect clip = aSc.ToRelativeWrRect(
+          LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
           aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
-      aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+      aBuilder.PushImage(fill, aBuilder.BuildClipRegion(clip),
                          wr::ToWrSize(destRect.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key.value());
       break;
