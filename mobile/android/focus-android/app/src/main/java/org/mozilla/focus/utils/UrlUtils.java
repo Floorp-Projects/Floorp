@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
 
@@ -18,7 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class UrlUtils {
-    public static String normalize(String input) {
+    public static String normalize(@NonNull String input) {
         Uri uri = Uri.parse(input);
 
         if (TextUtils.isEmpty(uri.getScheme())) {
