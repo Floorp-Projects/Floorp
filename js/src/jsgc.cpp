@@ -4957,22 +4957,21 @@ class SweepWeakCacheTask : public GCSweepTask
     }
 };
 
-#define MAKE_GC_SWEEP_TASK(name)                                              \
+#define MAKE_GC_SWEEP_TASK(name, phase)                                       \
     class name : public GCSweepTask {                                         \
         void run() override;                                                  \
       public:                                                                 \
         explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
+        static const gcstats::Phase StatsPhase = phase;                       \
     }
-MAKE_GC_SWEEP_TASK(SweepAtomsTask);
-MAKE_GC_SWEEP_TASK(SweepCCWrappersTask);
-MAKE_GC_SWEEP_TASK(SweepBaseShapesTask);
-MAKE_GC_SWEEP_TASK(SweepInitialShapesTask);
-MAKE_GC_SWEEP_TASK(SweepObjectGroupsTask);
-MAKE_GC_SWEEP_TASK(SweepRegExpsTask);
-MAKE_GC_SWEEP_TASK(SweepMiscTask);
-MAKE_GC_SWEEP_TASK(SweepCompressionTasksTask);
-MAKE_GC_SWEEP_TASK(SweepWeakMapsTask);
-MAKE_GC_SWEEP_TASK(SweepUniqueIdsTask);
+MAKE_GC_SWEEP_TASK(SweepAtomsTask,            gcstats::PHASE_SWEEP_ATOMS);
+MAKE_GC_SWEEP_TASK(SweepCCWrappersTask,       gcstats::PHASE_SWEEP_CC_WRAPPER);
+MAKE_GC_SWEEP_TASK(SweepObjectGroupsTask,     gcstats::PHASE_SWEEP_TYPE_OBJECT);
+MAKE_GC_SWEEP_TASK(SweepRegExpsTask,          gcstats::PHASE_SWEEP_REGEXP);
+MAKE_GC_SWEEP_TASK(SweepMiscTask,             gcstats::PHASE_SWEEP_MISC);
+MAKE_GC_SWEEP_TASK(SweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC);
+MAKE_GC_SWEEP_TASK(SweepWeakMapsTask,         gcstats::PHASE_SWEEP_MISC);
+MAKE_GC_SWEEP_TASK(SweepUniqueIdsTask,        gcstats::PHASE_SWEEP_BREAKPOINT);
 #undef MAKE_GC_SWEEP_TASK
 
 /* virtual */ void
@@ -5129,9 +5128,6 @@ GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
 void
 GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
 {
-    gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
-    gcstats::AutoSCC scc(stats(), sweepGroupIndex);
-
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_MISC);
 
@@ -5208,6 +5204,25 @@ PrepareWeakCacheTasks(JSRuntime* rt)
     return WeakCacheTaskVector();
 }
 
+template <typename Task>
+class js::gc::AutoRunGCSweepTask
+{
+    Task task_;
+    GCRuntime* gc_;
+    AutoLockHelperThreadState& lock_;
+
+  public:
+    AutoRunGCSweepTask(GCRuntime* gc, AutoLockHelperThreadState& lock)
+      : task_(gc->rt), gc_(gc), lock_(lock)
+    {
+        gc_->startTask(task_, Task::StatsPhase, lock_);
+    }
+
+    ~AutoRunGCSweepTask() {
+        gc_->joinTask(task_, Task::StatsPhase, lock_);
+    }
+};
+
 void
 GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
 {
@@ -5236,14 +5251,6 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
     validateIncrementalMarking();
 
     FreeOp fop(rt);
-    SweepAtomsTask sweepAtomsTask(rt);
-    SweepCCWrappersTask sweepCCWrappersTask(rt);
-    SweepObjectGroupsTask sweepObjectGroupsTask(rt);
-    SweepRegExpsTask sweepRegExpsTask(rt);
-    SweepMiscTask sweepMiscTask(rt);
-    SweepCompressionTasksTask sweepCompressionTasksTask(rt);
-    SweepWeakMapsTask sweepWeakMapsTask(rt);
-    SweepUniqueIdsTask sweepUniqueIdsTask(rt);
     WeakCacheTaskVector sweepCacheTasks = PrepareWeakCacheTasks(rt);
 
     {
@@ -5265,51 +5272,31 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
 
     sweepDebuggerOnMainThread(&fop);
 
-    if (sweepingAtoms) {
-        AutoLockHelperThreadState helperLock;
-        startTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
-    }
-
     {
+        AutoLockHelperThreadState helperLock;
+
+        Maybe<AutoRunGCSweepTask<SweepAtomsTask>> sweepAtoms;
+        if (sweepingAtoms)
+            sweepAtoms.emplace(this, helperLock);
+
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
         gcstats::AutoSCC scc(stats(), sweepGroupIndex);
+
+        AutoRunGCSweepTask<SweepCCWrappersTask> sweepCCWrappers(this, helperLock);
+        AutoRunGCSweepTask<SweepObjectGroupsTask> sweepObjectGroups(this, helperLock);
+        AutoRunGCSweepTask<SweepRegExpsTask> sweepRegExps(this, helperLock);
+        AutoRunGCSweepTask<SweepMiscTask> sweepMisc(this, helperLock);
+        AutoRunGCSweepTask<SweepCompressionTasksTask> sweepCompressionTasks(this, helperLock);
+        AutoRunGCSweepTask<SweepWeakMapsTask> sweepWeakMaps(this, helperLock);
+        AutoRunGCSweepTask<SweepUniqueIdsTask> sweepUniqueIds(this, helperLock);
+        for (auto& task : sweepCacheTasks)
+            startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
 
         {
-            AutoLockHelperThreadState helperLock;
-            startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
-            startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
-            startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
-            startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-            startTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-            startTask(sweepWeakMapsTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-            startTask(sweepUniqueIdsTask, gcstats::PHASE_SWEEP_BREAKPOINT, helperLock);
-            for (auto& task : sweepCacheTasks)
-                startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
+            AutoUnlockHelperThreadState unlock(helperLock);
+            sweepJitDataOnMainThread(&fop);
         }
 
-    }
-
-    // Sweep JIT-related data structures on the main thread.
-    sweepJitDataOnMainThread(&fop);
-
-    // Rejoin our off-thread tasks.
-    if (sweepingAtoms) {
-        AutoLockHelperThreadState helperLock;
-        joinTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
-    }
-
-    {
-        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
-
-        AutoLockHelperThreadState helperLock;
-        joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
-        joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
-        joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
-        joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-        joinTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-        joinTask(sweepWeakMapsTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-        joinTask(sweepUniqueIdsTask, gcstats::PHASE_SWEEP_BREAKPOINT, helperLock);
         for (auto& task : sweepCacheTasks)
             joinTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
     }
