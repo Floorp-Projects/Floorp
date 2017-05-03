@@ -98,9 +98,6 @@ public:
     , mOuterIDNumber(0)
     , mInnerIDNumber(0)
     , mStatus(eUnused)
-#ifdef DEBUG
-    , mOwningThread(PR_GetCurrentThread())
-#endif
   {}
 
   bool
@@ -197,8 +194,7 @@ public:
   void
   AssertIsOnOwningThread() const
   {
-    MOZ_ASSERT(mOwningThread);
-    MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+    NS_ASSERT_OWNINGTHREAD(ConsoleCallData);
   }
 
   JS::Heap<JSObject*> mGlobal;
@@ -292,10 +288,6 @@ public:
     // calling ReleaseCallData().
     eToBeDeleted
   } mStatus;
-
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
 
 private:
   ~ConsoleCallData()
@@ -823,9 +815,6 @@ Console::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 
 Console::Console(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
-#ifdef DEBUG
-  , mOwningThread(PR_GetCurrentThread())
-#endif
   , mOuterID(0)
   , mInnerID(0)
   , mStatus(eUnknown)
@@ -2387,8 +2376,7 @@ Console::SetConsoleEventHandler(AnyCallback* aHandler)
 void
 Console::AssertIsOnOwningThread() const
 {
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(Console);
 }
 
 bool
