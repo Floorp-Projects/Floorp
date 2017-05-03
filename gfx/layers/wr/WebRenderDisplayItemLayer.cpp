@@ -40,10 +40,24 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   Maybe<WrImageMask> mask = BuildWrMaskLayer(false);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
-    gfx::Rect rect = GetTransform().TransformBounds(Bounds().ToUnknownRect());
-    // XXX: this is probably not correct, see bug 1361357
-    gfx::Rect clip(0.0, 0.0, rect.width, rect.height);
-    aBuilder.PushClip(wr::ToWrRect(clip), imageMask);
+    ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());
+    // As with WebRenderTextLayer, I'm not 100% sure this is correct, but I
+    // think it is. Because we don't push a stacking context for this layer,
+    // WR doesn't know about the transform on this layer. The display items
+    // that we push as part of this layer already take the transform into
+    // account. When we set the clip rect we also need to explicitly apply
+    // the transform to make sure it gets taken into account.
+    // In a sense this is the opposite of what WebRenderLayer::ClipRect() does,
+    // because there we remove the transform from the clip rect to bring it
+    // into the coordinate space of the local stacking context, but here we
+    // need to apply the transform to the bounds to take it into the coordinate
+    // space of the enclosing stacking context.
+    // The conversion from ParentLayerPixel to LayerPixel below is a result of
+    // changing the reference layer from "this layer" to the "the layer that
+    // created aSc".
+    LayerRect clipInParentLayerSpace = ViewAs<LayerPixel>(clip,
+        PixelCastJustification::MovingDownToChildren);
+    aBuilder.PushClip(aSc.ToRelativeWrRect(clipInParentLayerSpace), imageMask);
   }
 
   if (mItem) {
