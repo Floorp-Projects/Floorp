@@ -359,11 +359,9 @@ ConvertRectArrayToJavaRectFArray(const nsTArray<LayoutDeviceIntRect>& aRects,
     for (size_t i = 0; i < length; i++) {
         LayoutDeviceIntRect tmp = aRects[i] + aOffset;
 
-        sdk::RectF::LocalRef rect(rects.Env());
-        sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
-                        (tmp.x + tmp.width) / aScale.scale,
-                        (tmp.y + tmp.height) / aScale.scale,
-                        &rect);
+        auto rect = sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
+                                    (tmp.x + tmp.width) / aScale.scale,
+                                    (tmp.y + tmp.height) / aScale.scale);
         rects->SetElement(i, rect);
     }
     return rects;

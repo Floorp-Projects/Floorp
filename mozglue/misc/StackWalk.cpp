@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/StackWalk.h"
 
 #include <string.h>
@@ -189,6 +188,7 @@ StackWalkInitCriticalAddress()
 #include <stdio.h>
 #include <malloc.h>
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/StackWalk_windows.h"
 
 #include <imagehlp.h>
@@ -223,9 +223,60 @@ DWORD gStackWalkThread;
 CRITICAL_SECTION gDbgHelpCS;
 
 #ifdef _M_AMD64
+// Because various Win64 APIs acquire function-table locks, we need a way of
+// preventing stack walking while those APIs are being called. Otherwise, the
+// stack walker may suspend a thread holding such a lock, and deadlock when the
+// stack unwind code attempts to wait for that lock.
+//
+// We're using an atomic counter rather than a critical section because we
+// don't require mutual exclusion with the stack walker. If the stack walker
+// determines that it's safe to start unwinding the suspended thread (i.e.
+// there are no suppressions when the unwind begins), then it's safe to
+// continue unwinding that thread even if other threads request suppressions
+// in the meantime, because we can't deadlock with those other threads.
+//
+// XXX: This global variable is a larger-than-necessary hammer. A more scoped
+// solution would be to maintain a counter per thread, but then it would be
+// more difficult for WalkStackMain64 to read the suspended thread's counter.
+static Atomic<size_t> sStackWalkSuppressions;
+
+MFBT_API
+AutoSuppressStackWalking::AutoSuppressStackWalking()
+{
+  ++sStackWalkSuppressions;
+}
+
+MFBT_API
+AutoSuppressStackWalking::~AutoSuppressStackWalking()
+{
+  --sStackWalkSuppressions;
+}
+
 static uint8_t* sJitCodeRegionStart;
 static size_t sJitCodeRegionSize;
-#endif
+
+MFBT_API void
+RegisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(!sJitCodeRegionStart);
+
+  sJitCodeRegionStart = aStart;
+  sJitCodeRegionSize = aSize;
+}
+
+MFBT_API void
+UnregisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(sJitCodeRegionStart &&
+                     sJitCodeRegionStart == aStart &&
+                     sJitCodeRegionSize == aSize);
+
+  sJitCodeRegionStart = nullptr;
+  sJitCodeRegionSize = 0;
+}
+#endif // _M_AMD64
 
 // Routine to print an error message to standard error.
 static void
@@ -354,17 +405,19 @@ WalkStackMain64(struct WalkStackData* aData)
 #endif
 
 #ifdef _M_AMD64
-  // Workaround possible deadlock where the thread we're profiling happens to
-  // be in RtlLookupFunctionEntry (see below) or in RtlAddFunctionTable or
-  // RtlDeleteFunctionTable when starting or shutting down the JS engine.
-  // On Win64 each of these Rtl* functions will take a lock, so we need to make
-  // sure we don't deadlock when a suspended thread is holding it.
-  if (!TryAcquireStackWalkWorkaroundLock()) {
+  // If there are any active suppressions, then at least one thread (we don't
+  // know which) is holding a lock that can deadlock RtlVirtualUnwind. Since
+  // that thread may be the one that we're trying to unwind, we can't proceed.
+  //
+  // But if there are no suppressions, then our target thread can't be holding
+  // a lock, and it's safe to proceed. By virtue of being suspended, the target
+  // thread can't acquire any new locks during the unwind process, so we only
+  // need to do this check once. After that, sStackWalkSuppressions can be
+  // changed by other threads while we're unwinding, and that's fine because
+  // we can't deadlock with those threads.
+  if (sStackWalkSuppressions) {
     return;
   }
-  auto releaseLock = mozilla::MakeScopeExit([] {
-    ReleaseStackWalkWorkaroundLock();
-  });
 
   bool firstFrame = true;
 
@@ -499,76 +552,6 @@ WalkStackMain64(struct WalkStackData* aData)
 #endif
   }
 }
-
-// The JIT needs to allocate executable memory. Because of the inanity of
-// the win64 APIs, this requires locks that stalk walkers also need. Provide
-// another lock to allow synchronization around these resources.
-#ifdef _M_AMD64
-
-struct CriticalSectionAutoInitializer {
-    CRITICAL_SECTION lock;
-
-    CriticalSectionAutoInitializer() {
-      InitializeCriticalSection(&lock);
-    }
-};
-
-static CriticalSectionAutoInitializer gWorkaroundLock;
-
-#endif // _M_AMD64
-
-MFBT_API void
-AcquireStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  EnterCriticalSection(&gWorkaroundLock.lock);
-#endif
-}
-
-MFBT_API bool
-TryAcquireStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  return TryEnterCriticalSection(&gWorkaroundLock.lock);
-#else
-  return true;
-#endif
-}
-
-MFBT_API void
-ReleaseStackWalkWorkaroundLock()
-{
-#ifdef _M_AMD64
-  LeaveCriticalSection(&gWorkaroundLock.lock);
-#endif
-}
-
-MFBT_API void
-RegisterJitCodeRegion(uint8_t* aStart, size_t aSize)
-{
-#ifdef _M_AMD64
-  // Currently we can only handle one JIT code region at a time
-  MOZ_RELEASE_ASSERT(!sJitCodeRegionStart);
-
-  sJitCodeRegionStart = aStart;
-  sJitCodeRegionSize = aSize;
-#endif
-}
-
-MFBT_API void
-UnregisterJitCodeRegion(uint8_t* aStart, size_t aSize)
-{
-#ifdef _M_AMD64
-  // Currently we can only handle one JIT code region at a time
-  MOZ_RELEASE_ASSERT(sJitCodeRegionStart &&
-                     sJitCodeRegionStart == aStart &&
-                     sJitCodeRegionSize == aSize);
-
-  sJitCodeRegionStart = nullptr;
-  sJitCodeRegionSize = 0;
-#endif
-}
-
 
 static unsigned int WINAPI
 WalkStackThread(void* aData)
