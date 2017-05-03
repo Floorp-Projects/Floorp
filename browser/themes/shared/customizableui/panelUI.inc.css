@@ -314,7 +314,7 @@ panelview[id^=PanelUI-webext-] {
 }
 
 panelview:not([mainview]) .toolbarbutton-text,
-.cui-widget-panel toolbarbutton > .toolbarbutton-text {
+.cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text {
   text-align: start;
   display: -moz-box;
 }
@@ -674,6 +674,15 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-bottom: 1px solid transparent;
   margin-bottom: -1px;
 }
+
+/* in Photon, we have a bottom border as well. Reconcile with the above rule
+ * after photon launch. */
+#appMenu-mainView > .panel-subview-body > .panel-banner-item {
+  border-bottom: 1px solid var(--panel-separator-color);
+  margin-bottom: 3px;
+  padding-inline-start: 10px;
+}
+
 
 .panel-banner-item > .toolbarbutton-text {
   width: 0; /* Fancy cropping solution for flexbox. */

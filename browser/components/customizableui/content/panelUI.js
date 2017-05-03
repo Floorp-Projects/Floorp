@@ -37,7 +37,7 @@ const PanelUI = {
       panel: gPhotonStructure ? "appMenu-popup" : "PanelUI-popup",
       notificationPanel: "appMenu-notification-popup",
       scroller: "PanelUI-contents-scroller",
-      addonNotificationContainer: "PanelUI-footer-addons",
+      addonNotificationContainer: gPhotonStructure ? "appMenu-addon-banners" : "PanelUI-footer-addons",
 
       overflowFixedList: gPhotonStructure ? "widget-overflow-fixed-list" : "",
     };
