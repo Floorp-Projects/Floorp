@@ -29,7 +29,8 @@ WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
 }
 
 void
-WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc)
 {
   if (mVisibleRegion.IsEmpty()) {
     return;

@@ -14,6 +14,7 @@ namespace mozilla {
 namespace layers {
 
 class ImageClientSingle;
+class StackingContextHelper;
 class WebRenderBridgeChild;
 class WebRenderLayerManager;
 
@@ -23,7 +24,8 @@ class WebRenderLayer
 {
 public:
   virtual Layer* GetLayer() = 0;
-  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
+  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                           const StackingContextHelper& aSc) = 0;
   virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);

@@ -110,7 +110,8 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
 }
 
 void
-WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                   const StackingContextHelper& aSc)
 {
   if (!SetupExternalImages()) {
     return;

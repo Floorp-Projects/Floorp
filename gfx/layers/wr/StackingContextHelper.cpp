@@ -10,6 +10,12 @@
 namespace mozilla {
 namespace layers {
 
+StackingContextHelper::StackingContextHelper()
+  : mBuilder(nullptr)
+{
+  // mOrigin remains at 0,0
+}
+
 StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              const Maybe<gfx::Matrix4x4>& aTransform)
@@ -43,11 +49,13 @@ StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
 
 StackingContextHelper::~StackingContextHelper()
 {
-  mBuilder->PopStackingContext();
+  if (mBuilder) {
+    mBuilder->PopStackingContext();
+  }
 }
 
 WrRect
-StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect)
+StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect) const
 {
   return wr::ToWrRect(aRect - mOrigin);
 }

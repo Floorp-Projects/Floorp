@@ -42,7 +42,8 @@ WebRenderContainerLayer::UpdateTransformDataForAnimation()
 }
 
 void
-WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                     const StackingContextHelper& aSc)
 {
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
@@ -99,13 +100,14 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
-    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
+    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder, sc);
   }
   aBuilder.PopClip();
 }
 
 void
-WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                               const StackingContextHelper& aSc)
 {
   gfx::Matrix4x4 transform;// = GetTransform();
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
