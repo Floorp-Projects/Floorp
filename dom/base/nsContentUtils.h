@@ -372,6 +372,12 @@ public:
    */
   static nsINode* GetCommonAncestor(nsINode* aNode1, nsINode* aNode2);
 
+  /**
+   * Returns the common flattened tree ancestor, if any, for two given content
+   * nodes.
+   */
+  static nsIContent* GetCommonFlattenedTreeAncestor(nsIContent* aContent1,
+                                                    nsIContent* aContent2);
 
   /**
    * Returns true if aNode1 is before aNode2 in the same connected
