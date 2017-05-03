@@ -7,24 +7,24 @@ void main(void) {
     Primitive prim = load_primitive();
     Border border = fetch_border(prim.prim_index);
     int sub_part = prim.sub_index;
-    vBorderRect = prim.local_rect;
+    vBorderRect = vec4(prim.local_rect.p0, prim.local_rect.size);
 
-    vec2 tl_outer = vBorderRect.p0;
+    vec2 tl_outer = vBorderRect.xy;
     vec2 tl_inner = tl_outer + vec2(max(border.radii[0].x, border.widths.x),
                                     max(border.radii[0].y, border.widths.y));
 
-    vec2 tr_outer = vec2(vBorderRect.p0.x + vBorderRect.size.x,
-                         vBorderRect.p0.y);
+    vec2 tr_outer = vec2(vBorderRect.x + vBorderRect.z,
+                         vBorderRect.y);
     vec2 tr_inner = tr_outer + vec2(-max(border.radii[0].z, border.widths.z),
                                     max(border.radii[0].w, border.widths.y));
 
-    vec2 br_outer = vec2(vBorderRect.p0.x + vBorderRect.size.x,
-                         vBorderRect.p0.y + vBorderRect.size.y);
+    vec2 br_outer = vec2(vBorderRect.x + vBorderRect.z,
+                         vBorderRect.y + vBorderRect.w);
     vec2 br_inner = br_outer - vec2(max(border.radii[1].x, border.widths.z),
                                     max(border.radii[1].y, border.widths.w));
 
-    vec2 bl_outer = vec2(vBorderRect.p0.x,
-                         vBorderRect.p0.y + vBorderRect.size.y);
+    vec2 bl_outer = vec2(vBorderRect.x,
+                         vBorderRect.y + vBorderRect.w);
     vec2 bl_inner = bl_outer + vec2(max(border.radii[1].z, border.widths.x),
                                     -max(border.radii[1].w, border.widths.w));
 
@@ -107,8 +107,6 @@ void main(void) {
                                                     prim.layer,
                                                     prim.task,
                                                     prim.local_rect.p0);
-    vLocalPos = vi.local_pos;
-    vLocalRect = segment_rect;
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
@@ -116,9 +114,9 @@ void main(void) {
                                  prim.layer,
                                  prim.task,
                                  prim.local_rect.p0);
-    vLocalPos = vi.local_pos.xy;
 #endif
 
+    vLocalPos = vi.local_pos;
     write_clip(vi.screen_pos, prim.clip_area);
 
     float x0, y0, x1, y1;
@@ -185,8 +183,8 @@ void main(void) {
 #else
     vDistanceFromMixLine = (vi.local_pos.x - x0) * height -
                            (vi.local_pos.y - y0) * width;
-    vDistanceFromMiddle = (vi.local_pos.x - vBorderRect.p0.x) +
-                          (vi.local_pos.y - vBorderRect.p0.y) -
-                          0.5 * (vBorderRect.size.x + vBorderRect.size.y);
+    vDistanceFromMiddle = (vi.local_pos.x - vBorderRect.x) +
+                          (vi.local_pos.y - vBorderRect.y) -
+                          0.5 * (vBorderRect.z + vBorderRect.w);
 #endif
 }

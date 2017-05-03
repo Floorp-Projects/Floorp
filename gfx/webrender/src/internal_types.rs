@@ -76,6 +76,7 @@ pub enum TextureSampler {
     Geometry,
     ResourceRects,
     Gradients,
+    SplitGeometry,
     Dither,
 }
 

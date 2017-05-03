@@ -2,18 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
-use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, PrimitiveContainer};
+use mask_cache::{ClipSource};
+use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, GpuBlock32, PrimitiveContainer};
 use tiling::PrimitiveFlags;
 use util::pack_as_float;
 use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ClipRegion};
 use webrender_traits::{ColorF, LayerPoint, LayerRect, LayerSize, NormalBorder};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+enum BorderCorner {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum BorderCornerKind {
     None,
     Solid,
     Clip,
+    Mask(BorderCornerClipData, LayerSize, LayerSize),
     Unhandled,
 }
 
@@ -25,13 +35,15 @@ pub enum BorderEdgeKind {
     Unhandled,
 }
 
-pub trait NormalBorderHelpers {
+trait NormalBorderHelpers {
     fn get_corner(&self,
                   edge0: &BorderSide,
                   width0: f32,
                   edge1: &BorderSide,
                   width1: f32,
-                  radius: &LayerSize) -> BorderCornerKind;
+                  radius: &LayerSize,
+                  corner: BorderCorner,
+                  border_rect: &LayerRect) -> BorderCornerKind;
 
     fn get_edge(&self,
                 edge: &BorderSide,
@@ -44,7 +56,9 @@ impl NormalBorderHelpers for NormalBorder {
                   width0: f32,
                   edge1: &BorderSide,
                   width1: f32,
-                  radius: &LayerSize) -> BorderCornerKind {
+                  radius: &LayerSize,
+                  corner: BorderCorner,
+                  border_rect: &LayerRect) -> BorderCornerKind {
         // If either width is zero, a corner isn't formed.
         if width0 == 0.0 || width1 == 0.0 {
             return BorderCornerKind::None;
@@ -78,6 +92,45 @@ impl NormalBorderHelpers for NormalBorder {
             (BorderStyle::Groove, BorderStyle::Groove) |
             (BorderStyle::Ridge, BorderStyle::Ridge) => BorderCornerKind::Clip,
 
+            // Dashed border corners get drawn into a clip mask.
+            (BorderStyle::Dashed, BorderStyle::Dashed) => {
+                let size = LayerSize::new(width0.max(radius.width), width1.max(radius.height));
+                let (origin, clip_center, sign_modifier) = match corner {
+                    BorderCorner::TopLeft => {
+                        let origin = border_rect.origin;
+                        let clip_center = origin + size;
+                        (origin, clip_center, LayerPoint::new(-1.0, -1.0))
+                    }
+                    BorderCorner::TopRight => {
+                        let origin = LayerPoint::new(border_rect.origin.x +
+                                                     border_rect.size.width -
+                                                     size.width,
+                                                     border_rect.origin.y);
+                        let clip_center = origin + LayerSize::new(0.0, size.height);
+                        (origin, clip_center, LayerPoint::new(1.0, -1.0))
+                    }
+                    BorderCorner::BottomRight => {
+                        let origin = border_rect.origin + (border_rect.size - size);
+                        let clip_center = origin;
+                        (origin, clip_center, LayerPoint::new(1.0, 1.0))
+                    }
+                    BorderCorner::BottomLeft => {
+                        let origin = LayerPoint::new(border_rect.origin.x,
+                                                     border_rect.origin.y +
+                                                     border_rect.size.height -
+                                                     size.height);
+                        let clip_center = origin + LayerSize::new(size.width, 0.0);
+                        (origin, clip_center, LayerPoint::new(-1.0, 1.0))
+                    }
+                };
+                let clip_data = BorderCornerClipData {
+                    corner_rect: LayerRect::new(origin, size),
+                    clip_center: clip_center,
+                    sign_modifier: sign_modifier,
+                };
+                BorderCornerKind::Mask(clip_data, *radius, LayerSize::new(width0, width1))
+            }
+
             // Assume complex for these cases.
             // TODO(gw): There are some cases in here that can be handled with a fast path.
             // For example, with inset/outset borders, two of the four corners are solid.
@@ -108,10 +161,10 @@ impl NormalBorderHelpers for NormalBorder {
 
             BorderStyle::Double |
             BorderStyle::Groove |
-            BorderStyle::Ridge => (BorderEdgeKind::Clip, width),
+            BorderStyle::Ridge |
+            BorderStyle::Dashed => (BorderEdgeKind::Clip, width),
 
-            BorderStyle::Dotted |
-            BorderStyle::Dashed => (BorderEdgeKind::Unhandled, width),
+            BorderStyle::Dotted => (BorderEdgeKind::Unhandled, width),
         }
     }
 }
@@ -123,7 +176,8 @@ impl FrameBuilder {
                                    widths: &BorderWidths,
                                    clip_and_scroll: ClipAndScrollInfo,
                                    clip_region: &ClipRegion,
-                                   use_new_border_path: bool) {
+                                   use_new_border_path: bool,
+                                   extra_clips: &[ClipSource]) {
         let radius = &border.radius;
         let left = &border.left;
         let right = &border.right;
@@ -163,7 +217,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
-                           &[],
+                           extra_clips,
                            PrimitiveContainer::Border(prim_cpu, prim_gpu));
     }
 
@@ -193,10 +247,34 @@ impl FrameBuilder {
         let bottom = &border.bottom;
 
         let corners = [
-            border.get_corner(left, widths.left, top, widths.top, &radius.top_left),
-            border.get_corner(top, widths.top, right, widths.right, &radius.top_right),
-            border.get_corner(right, widths.right, bottom, widths.bottom, &radius.bottom_right),
-            border.get_corner(bottom, widths.bottom, left, widths.left, &radius.bottom_left),
+            border.get_corner(left,
+                              widths.left,
+                              top,
+                              widths.top,
+                              &radius.top_left,
+                              BorderCorner::TopLeft,
+                              rect),
+            border.get_corner(right,
+                              widths.right,
+                              top,
+                              widths.top,
+                              &radius.top_right,
+                              BorderCorner::TopRight,
+                              rect),
+            border.get_corner(right,
+                              widths.right,
+                              bottom,
+                              widths.bottom,
+                              &radius.bottom_right,
+                              BorderCorner::BottomRight,
+                              rect),
+            border.get_corner(left,
+                              widths.left,
+                              bottom,
+                              widths.bottom,
+                              &radius.bottom_left,
+                              BorderCorner::BottomLeft,
+                              rect),
         ];
 
         // If any of the corners are unhandled, fall back to slow path for now.
@@ -206,7 +284,8 @@ impl FrameBuilder {
                                              widths,
                                              clip_and_scroll,
                                              clip_region,
-                                             false);
+                                             false,
+                                             &[]);
             return;
         }
 
@@ -229,7 +308,8 @@ impl FrameBuilder {
                                              widths,
                                              clip_and_scroll,
                                              clip_region,
-                                             false);
+                                             false,
+                                             &[]);
             return;
         }
 
@@ -284,12 +364,25 @@ impl FrameBuilder {
                                          PrimitiveFlags::None);
             }
         } else {
+            // Create clip masks for border corners, if required.
+            let mut extra_clips = Vec::new();
+
+            for corner in corners.iter() {
+                if let &BorderCornerKind::Mask(corner_data, corner_radius, widths) = corner {
+                    let clip_source = BorderCornerClipSource::new(corner_data,
+                                                                  corner_radius,
+                                                                  widths);
+                    extra_clips.push(ClipSource::BorderCorner(clip_source));
+                }
+            }
+
             self.add_normal_border_primitive(rect,
                                              border,
                                              widths,
                                              clip_and_scroll,
                                              clip_region,
-                                             true);
+                                             true,
+                                             &extra_clips);
         }
     }
 }
@@ -324,6 +417,130 @@ impl BorderSideHelpers for BorderSide {
                 }
             }
             _ => self.color,
+        }
+    }
+}
+
+/// The source data for a border corner clip mask.
+#[derive(Debug, Clone)]
+pub struct BorderCornerClipSource {
+    pub corner_data: BorderCornerClipData,
+    pub dash_count: usize,
+    dash_arc_length: f32,
+    ellipse: Ellipse,
+}
+
+impl BorderCornerClipSource {
+    pub fn new(corner_data: BorderCornerClipData,
+               corner_radius: LayerSize,
+               widths: LayerSize) -> BorderCornerClipSource {
+        let ellipse = Ellipse::new(corner_radius);
+
+        // Work out a dash length (and therefore dash count)
+        // based on the width of the border edges. The "correct"
+        // dash length is not mentioned in the CSS borders
+        // spec. The calculation below is similar, but not exactly
+        // the same as what Gecko uses.
+        // TODO(gw): Iterate on this to get it closer to what Gecko
+        //           uses for dash length.
+
+        // Approximate the total arc length of the quarter ellipse.
+        let total_arc_length = ellipse.get_quarter_arc_length();
+
+        // The desired dash length is ~3x the border width.
+        let average_border_width = 0.5 * (widths.width + widths.height);
+        let desired_dash_arc_length = average_border_width * 3.0;
+
+        // Get the ideal number of dashes for that arc length.
+        // This is scaled by 0.5 since there is an on/off length
+        // for each dash.
+        let desired_count = 0.5 * total_arc_length / desired_dash_arc_length;
+
+        // Round that up to the nearest integer, so that the dash length
+        // doesn't exceed the ratio above.
+        let actual_count = desired_count.ceil();
+
+        // Get the correct dash arc length.
+        let dash_arc_length = 0.5 * total_arc_length / actual_count;
+
+        // Get the number of dashes we'll need to fit.
+        let dash_count = actual_count as usize;
+
+        BorderCornerClipSource {
+            corner_data: corner_data,
+            dash_count: dash_count,
+            ellipse: ellipse,
+            dash_arc_length: dash_arc_length,
+        }
+    }
+
+    pub fn populate_gpu_data(&self, slice: &mut [GpuBlock32]) {
+        let (header, dashes) = slice.split_first_mut().unwrap();
+        *header = self.corner_data.into();
+
+        let mut current_arc_length = self.dash_arc_length * 0.5;
+        for dash_index in 0..self.dash_count {
+            let arc_length0 = current_arc_length;
+            current_arc_length += self.dash_arc_length;
+
+            let arc_length1 = current_arc_length;
+            current_arc_length += self.dash_arc_length;
+
+            let dash_data = BorderCornerDashClipData::new(arc_length0,
+                                                          arc_length1,
+                                                          &self.ellipse);
+            dashes[dash_index] = dash_data.into();
+        }
+    }
+}
+
+/// Represents the common GPU data for writing a
+/// clip mask for a border corner.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[repr(C)]
+pub struct BorderCornerClipData {
+    /// Local space rect of the border corner.
+    corner_rect: LayerRect,
+    /// Local space point that is the center of the
+    /// circle or ellipse that we are clipping against.
+    clip_center: LayerPoint,
+    /// A constant that flips the local space points
+    /// and tangents of the ellipse for this specific
+    /// corner. This is used since the ellipse points
+    /// and tangents are always generated for a single
+    /// quadrant only.
+    sign_modifier: LayerPoint,
+}
+
+/// Represents the GPU data for drawing a single dash
+/// to a clip mask. A dash clip is defined by two lines.
+/// We store a point on the ellipse curve, and a tangent
+/// to that point, which allows for efficient line-distance
+/// calculations in the fragment shader.
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct BorderCornerDashClipData {
+    pub point0: LayerPoint,
+    pub tangent0: LayerPoint,
+    pub point1: LayerPoint,
+    pub tangent1: LayerPoint,
+}
+
+impl BorderCornerDashClipData {
+    pub fn new(arc_length0: f32,
+               arc_length1: f32,
+               ellipse: &Ellipse) -> BorderCornerDashClipData {
+        let alpha = ellipse.find_angle_for_arc_length(arc_length0);
+        let beta = ellipse.find_angle_for_arc_length(arc_length1);
+
+        let (p0, t0) = ellipse.get_point_and_tangent(alpha);
+        let (p1, t1) = ellipse.get_point_and_tangent(beta);
+
+        BorderCornerDashClipData {
+            point0: p0,
+            tangent0: t0,
+            point1: p1,
+            tangent1: t1,
         }
     }
 }

@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
+use border::{BorderCornerClipData, BorderCornerDashClipData};
 use euclid::{Size2D};
 use gpu_store::GpuStoreAddress;
 use internal_types::{SourceTexture, PackedTexel};
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo};
-use renderer::{VertexDataStore, GradientDataStore};
+use renderer::{VertexDataStore, GradientDataStore, SplitGeometryStore};
 use render_task::{RenderTask, RenderTaskLocation};
 use resource_cache::{CacheItem, ImageProperties, ResourceCache};
 use std::mem;
@@ -99,6 +100,15 @@ pub struct PrimitiveGeometry {
     pub local_clip_rect: LayerRect,
 }
 
+impl Default for PrimitiveGeometry {
+    fn default() -> PrimitiveGeometry {
+        PrimitiveGeometry {
+            local_rect: unsafe { mem::uninitialized() },
+            local_clip_rect: unsafe { mem::uninitialized() },
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum PrimitiveCacheKey {
     BoxShadow(BoxShadowPrimitiveCacheKey),
@@ -133,6 +143,20 @@ impl PrimitiveMetadata {
         self.clip_task.is_some()
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct SplitGeometry {
+    pub data: [f32; 12],
+}
+
+impl Default for SplitGeometry {
+    fn default() -> SplitGeometry {
+        SplitGeometry {
+            data: unsafe { mem::uninitialized() },
+        }
+    }
+}
+
 
 #[derive(Debug, Clone)]
 #[repr(C)]
@@ -318,11 +342,7 @@ impl Clone for GradientData {
 
 impl GradientData {
     // Generate a color ramp between the start and end indexes from a start color to an end color.
-    fn fill_colors(&mut self, start_idx: usize, end_idx: usize, start_color: &ColorF, end_color: &ColorF) -> usize {
-        if start_idx >= end_idx {
-            return start_idx;
-        }
-
+    fn fill_colors(&mut self, start_idx: usize, end_idx: usize, start_color: &ColorF, end_color: &ColorF) {
         // Calculate the color difference for individual steps in the ramp.
         let inv_steps = 1.0 / (end_idx - start_idx) as f32;
         let step_r = (end_color.r - start_color.r) * inv_steps;
@@ -350,8 +370,6 @@ impl GradientData {
             high_byte_entry.end_color = cur_color_high;
             low_byte_entry.end_color = cur_color_low;
         }
-
-        end_idx
     }
 
     // Compute an entry index based on a gradient stop offset.
@@ -362,31 +380,46 @@ impl GradientData {
 
     // Build the gradient data from the supplied stops, reversing them if necessary.
     fn build(&mut self, src_stops: &[GradientStop], reverse_stops: bool) {
-        let mut cur_idx = 0usize;
-        let mut cur_color = if let Some(src) = src_stops.first() {
-            src.color
-        } else {
-            ColorF::new(0.0, 0.0, 0.0, 0.0)
-        };
+
+        const MAX_IDX: usize = GRADIENT_DATA_RESOLUTION;
+        const MIN_IDX: usize = 0;
+
+        // Preconditions (should be ensured by DisplayListBuilder):
+        // * we have at least two stops
+        // * first stop has offset 0.0
+        // * last stop has offset 1.0
+
+        let mut src_stops = src_stops.into_iter();
+        let first = src_stops.next().unwrap();
+        let mut cur_color = first.color;
+        debug_assert_eq!(first.offset, 0.0);
 
         if reverse_stops {
-            // If the gradient is reversed, then ensure the stops are processed in reverse order
-            // and that the offsets are inverted.
-            for src in src_stops.iter().rev() {
-                cur_idx = self.fill_colors(cur_idx, Self::get_index(1.0 - src.offset),
-                                           &cur_color, &src.color);
-                cur_color = src.color;
+            // If the gradient is reversed, then we invert offsets and draw right-to-left
+            let mut cur_idx = MAX_IDX;
+            for next in src_stops {
+                let next_idx = Self::get_index(1.0 - next.offset);
+                if next_idx < cur_idx {
+                    self.fill_colors(next_idx, cur_idx,
+                                     &next.color, &cur_color);
+                    cur_idx = next_idx;
+                }
+                cur_color = next.color;
             }
+            debug_assert_eq!(cur_idx, MIN_IDX);
         } else {
-            for src in src_stops {
-                cur_idx = self.fill_colors(cur_idx, Self::get_index(src.offset),
-                                           &cur_color, &src.color);
-                cur_color = src.color;
+            let mut cur_idx = MIN_IDX;
+            for next in src_stops {
+                let next_idx = Self::get_index(next.offset);
+                if next_idx > cur_idx {
+                    self.fill_colors(cur_idx, next_idx,
+                                     &cur_color, &next.color);
+                    cur_idx = next_idx;
+                }
+                cur_color = next.color;
             }
+            debug_assert_eq!(cur_idx, MAX_IDX);
         }
-
-        // Fill out any remaining entries in the gradient.
-        self.fill_colors(cur_idx, GRADIENT_DATA_RESOLUTION, &cur_color, &cur_color);
     }
 }
 
@@ -565,7 +598,7 @@ pub enum PrimitiveContainer {
 }
 
 pub struct PrimitiveStore {
-    // CPU side information only
+    /// CPU side information only.
     pub cpu_bounding_rects: Vec<Option<DeviceIntRect>>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
@@ -575,7 +608,7 @@ pub struct PrimitiveStore {
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
 
-    // Gets uploaded directly to GPU via vertex texture
+    /// Gets uploaded directly to GPU via vertex texture.
     pub gpu_geometry: VertexDataStore<PrimitiveGeometry>,
     pub gpu_data16: VertexDataStore<GpuBlock16>,
     pub gpu_data32: VertexDataStore<GpuBlock32>,
@@ -583,10 +616,13 @@ pub struct PrimitiveStore {
     pub gpu_data128: VertexDataStore<GpuBlock128>,
     pub gpu_gradient_data: GradientDataStore,
 
-    // Resolved resource rects.
+    /// Geometry generated by plane splitting.
+    pub gpu_split_geometry: SplitGeometryStore,
+
+    /// Resolved resource rects.
     pub gpu_resource_rects: VertexDataStore<TexelRect>,
 
-    // General
+    /// General
     prims_to_resolve: Vec<PrimitiveIndex>,
 }
 
@@ -608,6 +644,7 @@ impl PrimitiveStore {
             gpu_data64: VertexDataStore::new(),
             gpu_data128: VertexDataStore::new(),
             gpu_gradient_data: GradientDataStore::new(),
+            gpu_split_geometry: SplitGeometryStore::new(),
             gpu_resource_rects: VertexDataStore::new(),
         }
     }
@@ -629,6 +666,7 @@ impl PrimitiveStore {
             gpu_data64: self.gpu_data64.recycle(),
             gpu_data128: self.gpu_data128.recycle(),
             gpu_gradient_data: self.gpu_gradient_data.recycle(),
+            gpu_split_geometry: self.gpu_split_geometry.recycle(),
             gpu_resource_rects: self.gpu_resource_rects.recycle(),
         }
     }
@@ -1042,6 +1080,7 @@ impl PrimitiveStore {
                 let (rect, is_complex) = match source {
                     ClipSource::Complex(rect, radius, _) => (rect, radius > 0.0),
                     ClipSource::Region(ref region, _) => (region.main, region.is_complex()),
+                    ClipSource::BorderCorner{..} => panic!("Not supported!"),
                 };
                 self.gpu_geometry.get_mut(GpuStoreAddress(index.0 as i32))
                     .local_clip_rect = rect;
@@ -1340,7 +1379,8 @@ define_gpu_block!(GpuBlock16: [f32; 4] =
     TextRunPrimitiveGpu, ImagePrimitiveGpu, YuvImagePrimitiveGpu
 );
 define_gpu_block!(GpuBlock32: [f32; 8] =
-    GradientStopGpu, ClipCorner, ClipRect, ImageMaskData
+    GradientStopGpu, ClipCorner, ClipRect, ImageMaskData,
+    BorderCornerClipData, BorderCornerDashClipData
 );
 define_gpu_block!(GpuBlock64: [f32; 16] =
     GradientPrimitiveGpu, RadialGradientPrimitiveGpu, BoxShadowPrimitiveGpu

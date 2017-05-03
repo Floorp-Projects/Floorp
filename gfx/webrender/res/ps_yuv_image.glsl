@@ -16,7 +16,6 @@ flat varying vec2 vHalfTexelUv;    // Normalized length of the half of u and v t
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;
-flat varying RectWithSize vLocalRect;
 #else
 varying vec2 vLocalPos;
 #endif
