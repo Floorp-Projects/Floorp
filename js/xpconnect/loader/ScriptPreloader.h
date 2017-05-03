@@ -17,7 +17,7 @@
 #include "mozilla/Vector.h"
 #include "mozilla/Result.h"
 #include "mozilla/loader/AutoMemMap.h"
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
@@ -42,6 +42,12 @@ namespace loader {
         Parent,
         Web,
         Extension,
+    };
+
+    template <typename T>
+    struct Matcher
+    {
+        virtual bool Matches(T) = 0;
     };
 }
 
@@ -101,6 +107,11 @@ protected:
     virtual ~ScriptPreloader() = default;
 
 private:
+    enum class ScriptStatus {
+      Restored,
+      Saved,
+    };
+
     // Represents a cached JS script, either initially read from the script
     // cache file, to be added to the next session's script cache file, or
     // both.
@@ -125,7 +136,7 @@ private:
     // the next session's cache file. If it was compiled in this session, its
     // mXDRRange will initially be empty, and its mXDRData buffer will be
     // populated just before it is written to the cache file.
-    class CachedScript : public LinkedListElement<CachedScript>
+    class CachedScript
     {
     public:
         CachedScript(CachedScript&&) = default;
@@ -134,20 +145,14 @@ private:
             : mCache(cache)
             , mURL(url)
             , mCachePath(cachePath)
+            , mStatus(ScriptStatus::Saved)
             , mScript(script)
             , mReadyToExecute(true)
         {}
 
         inline CachedScript(ScriptPreloader& cache, InputBuffer& buf);
 
-        ~CachedScript()
-        {
-#ifdef DEBUG
-            auto hashValue = mCache->mScripts.Get(mCachePath);
-            MOZ_ASSERT_IF(hashValue, hashValue == this);
-#endif
-            mCache->mScripts.Remove(mCachePath);
-        }
+        ~CachedScript() = default;
 
         // For use with nsTArray::Sort.
         //
@@ -174,6 +179,18 @@ private:
               }
               return a->mLoadTime < b->mLoadTime;
             }
+        };
+
+        struct StatusMatcher final : public Matcher<CachedScript*>
+        {
+            StatusMatcher(ScriptStatus status) : mStatus(status) {}
+
+            virtual bool Matches(CachedScript* script)
+            {
+                return script->mStatus == mStatus;
+            }
+
+            const ScriptStatus mStatus;
         };
 
         void Cancel();
@@ -274,6 +291,8 @@ private:
         // The size of this script's encoded XDR data.
         uint32_t mSize = 0;
 
+        ScriptStatus mStatus;
+
         TimeStamp mLoadTime{};
 
         JS::Heap<JSScript*> mScript;
@@ -301,6 +320,13 @@ private:
         MaybeOneOf<JS::TranscodeBuffer, nsTArray<uint8_t>> mXDRData;
     };
 
+    template <ScriptStatus status>
+    static Matcher<CachedScript*>* Match()
+    {
+        static CachedScript::StatusMatcher matcher{status};
+        return &matcher;
+    }
+
     // There's a trade-off between the time it takes to setup an off-thread
     // decode and the time we save by doing the decode off-thread. At this
     // point, the setup is quite expensive, and 20K is about where we start to
@@ -324,7 +350,6 @@ private:
     void Cleanup();
 
     void FlushCache();
-    void FlushScripts(LinkedList<CachedScript>& scripts);
 
     // Opens the cache file for reading.
     Result<Ok, nsresult> OpenCache();
@@ -340,8 +365,6 @@ private:
     // current profile.
     Result<nsCOMPtr<nsIFile>, nsresult>
     GetCacheFile(const nsAString& suffix);
-
-    static CachedScript* FindScript(LinkedList<CachedScript>& scripts, const nsCString& cachePath);
 
     // Waits for the given cached script to finish compiling off-thread, or
     // decodes it synchronously on the main thread, as appropriate.
@@ -359,26 +382,19 @@ private:
                 mallocSizeOf(mSaveThread.get()) + mallocSizeOf(mProfD.get()));
     }
 
-    template<typename T>
-    static size_t SizeOfLinkedList(LinkedList<T>& list, mozilla::MallocSizeOf mallocSizeOf)
+    using ScriptHash = nsClassHashtable<nsCStringHashKey, CachedScript>;
+
+    template<ScriptStatus status>
+    static size_t SizeOfHashEntries(ScriptHash& scripts, mozilla::MallocSizeOf mallocSizeOf)
     {
         size_t size = 0;
-        for (auto elem : list) {
+        for (auto elem : IterHash(scripts, Match<status>())) {
             size += elem->HeapSizeOfIncludingThis(mallocSizeOf);
         }
         return size;
     }
 
-    // The list of scripts executed during this session, and being saved for
-    // potential reuse, and to be written to the next session's cache file.
-    AutoCleanLinkedList<CachedScript> mSavedScripts;
-
-    // The list of scripts restored from the cache file at the start of this
-    // session. Scripts are removed from this list and moved to mSavedScripts
-    // the first time they're used during this session.
-    AutoCleanLinkedList<CachedScript> mRestoredScripts;
-
-    nsDataHashtable<nsCStringHashKey, CachedScript*> mScripts;
+    ScriptHash mScripts;
 
     // True after we've shown the first window, and are no longer adding new
     // scripts to the cache.

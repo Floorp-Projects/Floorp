@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
@@ -55,13 +56,13 @@ ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
 {
     MOZ_COLLECT_REPORT(
         "explicit/script-preloader/heap/saved-scripts", KIND_HEAP, UNITS_BYTES,
-        SizeOfLinkedList(mSavedScripts, MallocSizeOf),
+        SizeOfHashEntries<ScriptStatus::Saved>(mScripts, MallocSizeOf),
         "Memory used to hold the scripts which have been executed in this "
         "session, and will be written to the startup script cache file.");
 
     MOZ_COLLECT_REPORT(
         "explicit/script-preloader/heap/restored-scripts", KIND_HEAP, UNITS_BYTES,
-        SizeOfLinkedList(mRestoredScripts, MallocSizeOf),
+        SizeOfHashEntries<ScriptStatus::Restored>(mScripts, MallocSizeOf),
         "Memory used to hold the scripts which have been restored from the "
         "startup script cache file, but have not been executed in this session.");
 
@@ -194,11 +195,7 @@ TraceOp(JSTracer* trc, void* data)
 void
 ScriptPreloader::Trace(JSTracer* trc)
 {
-    for (auto script : mSavedScripts) {
-        JS::TraceEdge(trc, &script->mScript, "ScriptPreloader::CachedScript.mScript");
-    }
-
-    for (auto script : mRestoredScripts) {
+    for (auto& script : IterHash(mScripts)) {
         JS::TraceEdge(trc, &script->mScript, "ScriptPreloader::CachedScript.mScript");
     }
 }
@@ -259,8 +256,7 @@ ScriptPreloader::Cleanup()
         }
     }
 
-    mSavedScripts.clear();
-    mRestoredScripts.clear();
+    mScripts.Clear();
 
     AutoSafeJSAPI jsapi;
     JS_RemoveExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
@@ -269,30 +265,19 @@ ScriptPreloader::Cleanup()
 }
 
 void
-ScriptPreloader::FlushScripts(LinkedList<CachedScript>& scripts)
+ScriptPreloader::FlushCache()
 {
-    for (auto next = scripts.getFirst(); next; ) {
-        auto script = next;
-        next = script->getNext();
+    MonitorAutoLock mal(mMonitor);
 
+    for (auto& script : IterHash(mScripts)) {
         // We can only purge finished scripts here. Async scripts that are
         // still being parsed off-thread have a non-refcounted reference to
         // this script, which needs to stay alive until they finish parsing.
         if (script->mReadyToExecute) {
             script->Cancel();
-            script->remove();
-            delete script;
+            script.Remove();
         }
     }
-}
-
-void
-ScriptPreloader::FlushCache()
-{
-    MonitorAutoLock mal(mMonitor);
-
-    FlushScripts(mSavedScripts);
-    FlushScripts(mRestoredScripts);
 
     // If we've already finished saving the cache at this point, start a new
     // delayed save operation. This will write out an empty cache file in place
@@ -330,7 +315,7 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
         mStartupFinished = true;
 
         if (mChildActor) {
-            mChildActor->Finalize(mSavedScripts);
+            mChildActor->SendScriptsAndFinalize(mScripts);
         }
     } else if (!strcmp(topic, SHUTDOWN_TOPIC)) {
         ForceWriteCacheFile();
@@ -449,7 +434,9 @@ ScriptPreloader::InitCacheInternal()
     }
 
     {
-        AutoCleanLinkedList<CachedScript> scripts;
+        auto cleanup = MakeScopeExit([&] () {
+            mScripts.Clear();
+        });
 
         Range<uint8_t> header(data, data + headerSize);
         data += headerSize;
@@ -474,17 +461,14 @@ ScriptPreloader::InitCacheInternal()
 
             script->mXDRRange.emplace(scriptData, scriptData + script->mSize);
 
-            scripts.insertBack(script.release());
+            mScripts.Put(script->mCachePath, script.release());
         }
 
         if (buf.error()) {
             return Err(NS_ERROR_UNEXPECTED);
         }
 
-        for (auto script : scripts) {
-            mScripts.Put(script->mCachePath, script);
-        }
-        mRestoredScripts = Move(scripts);
+        cleanup.release();
     }
 
     AutoJSAPI jsapi;
@@ -495,7 +479,8 @@ ScriptPreloader::InitCacheInternal()
     LOG(Info, "Off-thread decoding scripts...\n");
 
     JS::CompileOptions options(cx, JSVERSION_LATEST);
-    for (auto script : mRestoredScripts) {
+
+    for (auto& script : IterHash(mScripts, Match<ScriptStatus::Restored>())) {
         // Only async decode scripts which have been used in this process type.
         if (script->mProcessTypes.contains(CurrentProcessType()) &&
             script->AsyncDecodable() &&
@@ -536,35 +521,25 @@ ScriptPreloader::PrepareCacheWrite()
         return;
     }
 
-    if (mRestoredScripts.isEmpty()) {
-        // Check for any new scripts that we need to save. If there aren't
-        // any, and there aren't any saved scripts that we need to remove,
-        // don't bother writing out a new cache file.
-        bool found = false;
-        for (auto script : mSavedScripts) {
-            if (!script->HasRange() || script->HasArray()) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            mSaveComplete = true;
-            return;
-        }
+    bool found = Find(IterHash(mScripts), [] (CachedScript* script) {
+        return (script->mStatus == ScriptStatus::Restored ||
+                !script->HasRange() || script->HasArray());
+    });
+
+    if (!found) {
+        mSaveComplete = true;
+        return;
     }
 
     AutoSafeJSAPI jsapi;
 
-    for (CachedScript* next = mSavedScripts.getFirst(); next; ) {
-        CachedScript* script = next;
-        next = script->getNext();
-
+    for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
         // Don't write any scripts that are also in the child cache. They'll be
         // loaded from the child cache in that case, so there's no need to write
         // them twice.
         CachedScript* childScript = mChildCache ? mChildCache->mScripts.Get(script->mCachePath) : nullptr;
         if (childScript) {
-            if (FindScript(mChildCache->mSavedScripts, script->mCachePath)) {
+            if (childScript->mStatus == ScriptStatus::Saved) {
                 childScript->UpdateLoadTime(script->mLoadTime);
                 childScript->mProcessTypes += script->mProcessTypes;
             } else {
@@ -573,8 +548,7 @@ ScriptPreloader::PrepareCacheWrite()
         }
 
         if (childScript || (!script->mSize && !script->XDREncode(jsapi.cx()))) {
-            script->remove();
-            delete script;
+            script.Remove();
         } else {
             script->mSize = script->Range().length();
         }
@@ -629,7 +603,7 @@ ScriptPreloader::WriteCache()
     NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
 
     nsTArray<CachedScript*> scripts;
-    for (auto script : mSavedScripts) {
+    for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
         scripts.AppendElement(script);
     }
 
@@ -690,17 +664,6 @@ ScriptPreloader::Run()
     return NS_OK;
 }
 
-/* static */ ScriptPreloader::CachedScript*
-ScriptPreloader::FindScript(LinkedList<CachedScript>& scripts, const nsCString& cachePath)
-{
-    for (auto script : scripts) {
-        if (script->mCachePath == cachePath) {
-            return script;
-        }
-    }
-    return nullptr;
-}
-
 void
 ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
                             JS::HandleScript jsscript)
@@ -717,22 +680,14 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         return;
     }
 
-    CachedScript* script = mScripts.Get(cachePath);
-    bool restored = script && FindScript(mRestoredScripts, cachePath);
+    auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, jsscript);
 
-    if (restored) {
-        script->remove();
-        mSavedScripts.insertBack(script);
+    if (script->mStatus == ScriptStatus::Restored) {
+        script->mStatus = ScriptStatus::Saved;
 
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
-    } else if (!script) {
-        script = new CachedScript(*this, url, cachePath, jsscript);
-        mSavedScripts.insertBack(script);
-        mScripts.Put(cachePath, script);
-    } else {
-        return;
     }
 
     script->UpdateLoadTime(TimeStamp::Now());
@@ -744,21 +699,13 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
                             ProcessType processType, nsTArray<uint8_t>&& xdrData,
                             TimeStamp loadTime)
 {
-    CachedScript* script = mScripts.Get(cachePath);
-    bool restored = script && FindScript(mRestoredScripts, cachePath);
+    auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, nullptr);
 
-    if (restored) {
-        script->remove();
-        mSavedScripts.insertBack(script);
+    if (script->mStatus == ScriptStatus::Restored) {
+        script->mStatus = ScriptStatus::Saved;
 
         script->mReadyToExecute = true;
     } else {
-        if (!script) {
-            script = new CachedScript(this, url, cachePath, nullptr);
-            mSavedScripts.insertBack(script);
-            mScripts.Put(cachePath, script);
-        }
-
         if (!script->HasRange()) {
             MOZ_ASSERT(!script->HasArray());
 
@@ -869,6 +816,7 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
 
 ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer& buf)
     : mCache(cache)
+    , mStatus(ScriptStatus::Restored)
 {
     Code(buf);
 }

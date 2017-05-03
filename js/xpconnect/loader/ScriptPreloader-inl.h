@@ -208,6 +208,105 @@ public:
     size_t cursor_ = 0;
 };
 
+
+template <typename T> struct Matcher;
+
+// Wraps the iterator for a nsTHashTable so that it may be used as a range
+// iterator. Each iterator result acts as a smart pointer to the hash element,
+// and has a Remove() method which will remove the element from the hash.
+//
+// It also accepts an optional Matcher instance against which to filter the
+// elements which should be iterated over.
+//
+// Example:
+//
+//    for (auto& elem : HashElemIter<HashType>(hash)) {
+//        if (elem->IsDead()) {
+//            elem.Remove();
+//        }
+//    }
+template <typename T>
+class HashElemIter
+{
+    using Iterator = typename T::Iterator;
+    using ElemType = typename T::UserDataType;
+
+    T& hash_;
+    Matcher<ElemType>* matcher_;
+    Maybe<Iterator> iter_;
+
+public:
+    explicit HashElemIter(T& hash, Matcher<ElemType>* matcher = nullptr)
+        : hash_(hash), matcher_(matcher)
+    {
+        iter_.emplace(Move(hash.Iter()));
+    }
+
+    class Elem
+    {
+        friend class HashElemIter<T>;
+
+        HashElemIter<T>& iter_;
+        bool done_;
+
+        Elem(HashElemIter& iter, bool done)
+            : iter_(iter), done_(done)
+        {}
+
+        Iterator& iter() { return iter_.iter_.ref(); }
+
+    public:
+        Elem& operator*() { return *this; }
+
+        ElemType get() { return done_ ? nullptr : iter().Data(); }
+
+        ElemType operator->() { return get(); }
+
+        operator ElemType() { return get(); }
+
+        void Remove() { iter().Remove(); }
+
+        Elem& operator++()
+        {
+            MOZ_ASSERT(!done_);
+
+            do {
+                iter().Next();
+                done_ = iter().Done();
+            } while (!done_ && iter_.matcher_ && !iter_.matcher_->Matches(get()));
+
+            return *this;
+        }
+
+        bool operator!=(Elem& other)
+        {
+            return done_ != other.done_ || this->get() != other.get();
+        }
+    };
+
+    Elem begin() { return Elem(*this, iter_->Done()); }
+
+    Elem end() { return Elem(*this, true); }
+};
+
+template <typename T>
+HashElemIter<T> IterHash(T& hash, Matcher<typename T::UserDataType>* matcher = nullptr)
+{
+    return HashElemIter<T>(hash, matcher);
+}
+
+template <typename T, typename F>
+bool
+Find(T&& iter, F&& match)
+{
+    for (auto& elem : iter) {
+        if (match(elem)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }; // namespace loader
 }; // namespace mozilla
 
