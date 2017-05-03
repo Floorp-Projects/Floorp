@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "완료"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Firefox Screenshots를 사용하므로써, $TERMSANDPRIVACYNOTICETERMSLINK$와 $TERMSANDPRIVACYNOTICEPRIVACYLINK$에 동의하게 됩니다.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox Screenshots을 사용함으로써, Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$과 $TERMSANDPRIVACYNOTICEPRIVACYLINK$에 동의하게 됩니다.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

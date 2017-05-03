@@ -103,17 +103,6 @@
   "tourDone": {
     "message": "সম্পন্ন"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Firefox Screenshots ব্যবহারের জন্য, আপনি স্ক্রিনশটের $TERMSANDPRIVACYNOTICETERMSLINK$ এবং $TERMSANDPRIVACYNOTICEPRIVACYLINK$ নীতিতে আগ্রহী।",
-    "placeholders": {
-      "termsandprivacynoticetermslink": {
-        "content": "$1"
-      },
-      "termsandprivacynoticeprivacylink": {
-        "content": "$2"
-      }
-    }
-  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "শর্তাবলী"
   },

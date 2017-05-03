@@ -72,7 +72,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsImageFrame(nsStyleContext* aContext)
-    : nsImageFrame(aContext, mozilla::FrameType::Image)
+    : nsImageFrame(aContext, mozilla::LayoutFrameType::Image)
   {}
 
   NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
@@ -183,7 +183,7 @@ public:
   virtual void ReflowCallbackCanceled() override;
 
 protected:
-  nsImageFrame(nsStyleContext* aContext, mozilla::FrameType aType);
+  nsImageFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
 
   virtual ~nsImageFrame();
 

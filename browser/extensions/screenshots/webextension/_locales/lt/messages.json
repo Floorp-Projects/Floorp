@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Baigta"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Naudodamiesi „Firefox Screenshots“, sutinkate su jų $TERMSANDPRIVACYNOTICETERMSLINK$ ir $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Naudodami „Firefox Screenshots“ sutinkate su „Firefox“ tinklo paslaugų $TERMSANDPRIVACYNOTICETERMSLINK$ bei $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

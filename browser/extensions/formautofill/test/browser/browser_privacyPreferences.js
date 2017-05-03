@@ -22,28 +22,28 @@ add_task(function* test_aboutPreferences() {
 });
 
 // Visibility of form autofill group should be visible when opening
-// directly to privacy page. Checkbox is not checked by default.
+// directly to privacy page. Checkbox is checked by default.
 add_task(function* test_aboutPreferencesPrivacy() {
   yield BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, function* (browser) {
     yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       is(content.document.querySelector(args.group).hidden, false,
         "Form Autofill group should be visible");
-      is(content.document.querySelector(args.checkbox).checked, false,
-        "Checkbox should be unchecked");
+      is(content.document.querySelector(args.checkbox).checked, true,
+        "Checkbox should be checked");
     });
   });
 });
 
-// Checkbox should be checked when form autofill is enabled.
-add_task(function* test_autofillEnabledCheckbox() {
-  SpecialPowers.pushPrefEnv({set: [[PREF_AUTOFILL_ENABLED, true]]});
+// Checkbox should be unchecked when form autofill is disabled.
+add_task(function* test_autofillDisabledCheckbox() {
+  SpecialPowers.pushPrefEnv({set: [[PREF_AUTOFILL_ENABLED, false]]});
 
   yield BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, function* (browser) {
     yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       is(content.document.querySelector(args.group).hidden, false,
         "Form Autofill group should be visible");
-      is(content.document.querySelector(args.checkbox).checked, true,
-        "Checkbox should be checked when Form Autofill is enabled");
+      is(content.document.querySelector(args.checkbox).checked, false,
+        "Checkbox should be unchecked when Form Autofill is disabled");
     });
   });
 });

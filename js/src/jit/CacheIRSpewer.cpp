@@ -123,7 +123,7 @@ QuoteString(GenericPrinter& out, JSLinearString* str)
 }
 
 void
-CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, HandleValue v)
+CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, const Value& v)
 {
     MOZ_ASSERT(enabled());
     JSONPrinter& j = json.ref();

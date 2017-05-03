@@ -2769,7 +2769,7 @@ private:
 
   bool IsClipPathChild() const {
     return nsLayoutUtils::GetClosestFrameOfType
-             (mFrame->GetParent(), FrameType::SVGText)->GetStateBits() &
+             (mFrame->GetParent(), LayoutFrameType::SVGText)->GetStateBits() &
              NS_STATE_SVG_CLIPPATH_CHILD;
   }
 
@@ -5446,7 +5446,7 @@ SVGTextFrame::TransformFramePointToTextChild(const Point& aPoint,
 {
   NS_ASSERTION(aChildFrame &&
                nsLayoutUtils::GetClosestFrameOfType
-                 (aChildFrame->GetParent(), FrameType::SVGText) == this,
+                 (aChildFrame->GetParent(), LayoutFrameType::SVGText) == this,
                "aChildFrame must be a descendant of this frame");
 
   UpdateGlyphPositioning();
@@ -5525,7 +5525,7 @@ SVGTextFrame::TransformFrameRectToTextChild(const gfxRect& aRect,
 {
   NS_ASSERTION(aChildFrame &&
                nsLayoutUtils::GetClosestFrameOfType
-                 (aChildFrame->GetParent(), FrameType::SVGText) == this,
+                 (aChildFrame->GetParent(), LayoutFrameType::SVGText) == this,
                "aChildFrame must be a descendant of this frame");
 
   UpdateGlyphPositioning();
@@ -5606,7 +5606,7 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
 {
   NS_ASSERTION(aChildFrame &&
                nsLayoutUtils::GetClosestFrameOfType
-                 (aChildFrame->GetParent(), FrameType::SVGText) == this,
+                 (aChildFrame->GetParent(), LayoutFrameType::SVGText) == this,
                "aChildFrame must be a descendant of this frame");
 
   UpdateGlyphPositioning();

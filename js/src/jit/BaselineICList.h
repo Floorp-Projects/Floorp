@@ -74,7 +74,6 @@ namespace jit {
     _(InstanceOf_Function)                       \
                                                  \
     _(TypeOf_Fallback)                           \
-    _(TypeOf_Typed)                              \
                                                  \
     _(Rest_Fallback)                             \
                                                  \

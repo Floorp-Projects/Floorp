@@ -397,22 +397,23 @@ nsSVGClipPathFrame::IsValid()
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
 
-    FrameType kidType = kid->Type();
+    LayoutFrameType kidType = kid->Type();
 
-    if (kidType == FrameType::SVGUse) {
+    if (kidType == LayoutFrameType::SVGUse) {
       for (nsIFrame* grandKid : kid->PrincipalChildList()) {
 
-        FrameType grandKidType = grandKid->Type();
+        LayoutFrameType grandKidType = grandKid->Type();
 
-        if (grandKidType != FrameType::SVGGeometry &&
-            grandKidType != FrameType::SVGText) {
+        if (grandKidType != LayoutFrameType::SVGGeometry &&
+            grandKidType != LayoutFrameType::SVGText) {
           return false;
         }
       }
       continue;
     }
 
-    if (kidType != FrameType::SVGGeometry && kidType != FrameType::SVGText) {
+    if (kidType != LayoutFrameType::SVGGeometry &&
+        kidType != LayoutFrameType::SVGText) {
       return false;
     }
   }

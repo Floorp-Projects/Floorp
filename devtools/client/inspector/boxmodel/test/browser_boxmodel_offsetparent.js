@@ -16,7 +16,7 @@ const TEST_URI = `
   <div id="fixed" style="position: fixed"></div>
 `;
 
-const OFFSET_PARENT_SELECTOR = ".boxmodel-offset-parent .objectBox-node";
+const OFFSET_PARENT_SELECTOR = ".property-value-container .objectBox-node";
 
 const res1 = [
   {
@@ -29,7 +29,7 @@ const res1 = [
   },
   {
     selector: "#relative_parent",
-    offsetParentValue: null
+    offsetParentValue: "body"
   },
   {
     selector: "#static",
@@ -57,15 +57,15 @@ const res2 = [
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let { inspector, view, testActor } = yield openBoxModelView();
+  let { inspector, boxmodel, testActor } = yield openLayoutView();
 
-  yield testInitialValues(inspector, view);
-  yield testChangingValues(inspector, view, testActor);
+  yield testInitialValues(inspector, boxmodel);
+  yield testChangingValues(inspector, boxmodel, testActor);
 });
 
-function* testInitialValues(inspector, view) {
+function* testInitialValues(inspector, boxmodel) {
   info("Test that the initial values of the box model offset parent are correct");
-  let viewdoc = view.document;
+  let viewdoc = boxmodel.document;
 
   for (let { selector, offsetParentValue } of res1) {
     yield selectNode(selector, inspector);
@@ -75,9 +75,9 @@ function* testInitialValues(inspector, view) {
   }
 }
 
-function* testChangingValues(inspector, view, testActor) {
+function* testChangingValues(inspector, boxmodel, testActor) {
   info("Test that changing the document updates the box model");
-  let viewdoc = view.document;
+  let viewdoc = boxmodel.document;
 
   for (let { selector, update } of updates) {
     let onUpdated = waitForUpdate(inspector);

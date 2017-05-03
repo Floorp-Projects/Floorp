@@ -1,0 +1,67 @@
+/* ----- BOOKMARK STAR ANIMATION ----- */
+
+@keyframes animation-bookmarkAdded {
+  from { transform: rotate(0deg) translateX(-16px) rotate(0deg) scale(1); opacity: 0; }
+  60%  { transform: rotate(180deg) translateX(-16px) rotate(-180deg) scale(2.2); opacity: 1; }
+  80%  { opacity: 1; }
+  to   { transform: rotate(180deg) translateX(-16px) rotate(-180deg) scale(1); opacity: 0; }
+}
+
+@keyframes animation-bookmarkPulse {
+  from { transform: scale(1); }
+  50%  { transform: scale(1.3); }
+  to   { transform: scale(1); }
+}
+
+#bookmarked-notification-container {
+  min-height: 1px;
+  min-width: 1px;
+  height: 1px;
+  margin-bottom: -1px;
+  z-index: 5;
+  position: relative;
+}
+
+#bookmarked-notification {
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+}
+
+#bookmarked-notification-dropmarker-anchor {
+  z-index: -1;
+  position: relative;
+}
+
+#bookmarked-notification-dropmarker-icon {
+  width: 18px;
+  height: 18px;
+  visibility: hidden;
+}
+
+#bookmarked-notification-anchor[notification="finish"] > #bookmarked-notification {
+  background-image: url("chrome://browser/skin/places/bookmarks-notification-finish.png");
+  animation: animation-bookmarkAdded 800ms;
+  animation-timing-function: ease, ease, ease;
+}
+
+@media (min-resolution: 2dppx) {
+  #bookmarked-notification-anchor[notification="finish"] > #bookmarked-notification {
+    background-image: url("chrome://browser/skin/places/bookmarks-notification-finish@2x.png");
+  }
+}
+
+#bookmarks-menu-button[notification="finish"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  list-style-image: none !important;
+}
+
+#bookmarked-notification-dropmarker-anchor[notification="finish"] > #bookmarked-notification-dropmarker-icon {
+  visibility: visible;
+  animation: animation-bookmarkPulse 300ms;
+  animation-delay: 600ms;
+  animation-timing-function: ease-out;
+}
+

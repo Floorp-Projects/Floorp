@@ -55,27 +55,27 @@ namespace mozilla {
 class RubyUtils
 {
 public:
-  static inline bool IsRubyContentBox(FrameType aFrameType)
+  static inline bool IsRubyContentBox(LayoutFrameType aFrameType)
   {
-    return aFrameType == mozilla::FrameType::RubyBase ||
-           aFrameType == mozilla::FrameType::RubyText;
+    return aFrameType == mozilla::LayoutFrameType::RubyBase ||
+           aFrameType == mozilla::LayoutFrameType::RubyText;
   }
 
-  static inline bool IsRubyContainerBox(FrameType aFrameType)
+  static inline bool IsRubyContainerBox(LayoutFrameType aFrameType)
   {
-    return aFrameType == mozilla::FrameType::RubyBaseContainer ||
-           aFrameType == mozilla::FrameType::RubyTextContainer;
+    return aFrameType == mozilla::LayoutFrameType::RubyBaseContainer ||
+           aFrameType == mozilla::LayoutFrameType::RubyTextContainer;
   }
 
-  static inline bool IsRubyBox(FrameType aFrameType)
+  static inline bool IsRubyBox(LayoutFrameType aFrameType)
   {
-    return aFrameType == mozilla::FrameType::Ruby ||
+    return aFrameType == mozilla::LayoutFrameType::Ruby ||
            IsRubyContentBox(aFrameType) || IsRubyContainerBox(aFrameType);
   }
 
   static inline bool IsExpandableRubyBox(nsIFrame* aFrame)
   {
-    mozilla::FrameType type = aFrame->Type();
+    mozilla::LayoutFrameType type = aFrame->Type();
     return IsRubyContentBox(type) || IsRubyContainerBox(type);
   }
 

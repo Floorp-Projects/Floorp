@@ -525,6 +525,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/UrlAnnotations.java',
     'db/URLImageDataTable.java',
     'db/URLMetadata.java',
+    'deeplink/DeepLinkContract.java',
     'delegates/BookmarkStateChangeDelegate.java',
     'delegates/BrowserAppDelegate.java',
     'delegates/BrowserAppDelegateWithReference.java',

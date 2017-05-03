@@ -347,7 +347,11 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
     if (!mMuteFrame) {
       mMuteFrame = VideoFrame::CreateBlackImage(gfx::IntSize(mFrameWidth, mFrameHeight));
-      MOZ_ASSERT(mMuteFrame);
+    }
+    if (!mMuteFrame) {
+      VP8LOG(LogLevel::Warning, "Failed to allocate black image of size %dx%d",
+             mFrameWidth, mFrameHeight);
+      return NS_OK;
     }
     img = mMuteFrame;
   } else {

@@ -41,7 +41,7 @@ class CacheIRSpewer
     Mutex& lock() { MOZ_ASSERT(enabled()); return outputLock; }
 
     void beginCache(LockGuard<Mutex>&, const IRGenerator& generator);
-    void valueProperty(LockGuard<Mutex>&, const char* name, HandleValue v);
+    void valueProperty(LockGuard<Mutex>&, const char* name, const Value& v);
     void attached(LockGuard<Mutex>&, const char* name);
     void endCache(LockGuard<Mutex>&);
 };

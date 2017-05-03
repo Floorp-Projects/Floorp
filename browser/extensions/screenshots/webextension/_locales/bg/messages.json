@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Готово"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Използвайки Firefox Screenshots вие се съгласявате с тези $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Използвайки Firefox Screenshots вие се съгласявате с $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$ на облачните услуги на Firefox.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -115,9 +115,9 @@
     }
   },
   "termsAndPrivacyNoticeTermsLink": {
-    "message": "Условия"
+    "message": "Условията"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "Политика на поверителност"
+    "message": "Политиката на поверителност"
   }
 }

@@ -16,7 +16,7 @@ window.inlineSelectionCss = `
   position: relative;
   text-align: center;
   text-decoration: none;
-  transition: background 150ms;
+  transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
   user-select: none;
   white-space: nowrap; }
   .button.small, .small.highlight-button-cancel, .small.highlight-button-save, .small.highlight-button-download {
@@ -24,70 +24,80 @@ window.inlineSelectionCss = `
     line-height: 32px;
     padding: 0 8px; }
   .button.tiny, .tiny.highlight-button-cancel, .tiny.highlight-button-save, .tiny.highlight-button-download {
-    font-size: 12px;
-    height: 22px;
-    line-height: 12px;
-    padding: 2px 6px; }
+    font-size: 14px;
+    height: 26px;
+    border: 1px solid #c7c7c7; }
+    .button.tiny:hover, .tiny.highlight-button-cancel:hover, .tiny.highlight-button-save:hover, .tiny.highlight-button-download:hover, .button.tiny:focus, .tiny.highlight-button-cancel:focus, .tiny.highlight-button-save:focus, .tiny.highlight-button-download:focus {
+      background: #ebebeb;
+      border-color: #989898; }
+    .button.tiny:active, .tiny.highlight-button-cancel:active, .tiny.highlight-button-save:active, .tiny.highlight-button-download:active {
+      background: #dedede;
+      border-color: #989898; }
   .button.set-width--medium, .set-width--medium.highlight-button-cancel, .set-width--medium.highlight-button-save, .set-width--medium.highlight-button-download {
     max-width: 200px; }
-  .button.inline, .inline.highlight-button-cancel, .inline.highlight-button-save, .inline.highlight-button-download {
-    display: inline-block; }
   .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
     border: none;
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid #c7c7c7;
     box-shadow: none;
     border-radius: 0;
-    height: 100%;
-    line-height: 100%;
-    padding: 0 20px;
-    margin-right: 20px;
-    flex: 0 0 155px; }
-  .button .arrow-icon, .highlight-button-cancel .arrow-icon, .highlight-button-save .arrow-icon, .highlight-button-download .arrow-icon {
-    display: inline-block;
-    position: relative;
-    top: 1px;
-    flex: 0 0 18px;
-    height: 16px;
-    opacity: .6;
-    background-image: url(../img/arrow-page-right-16.svg);
-    background-position: right center;
-    background-repeat: no-repeat; }
+    flex-shrink: 0;
+    font-size: 20px;
+    height: 100px;
+    line-height: 100%; }
+    @media (max-width: 719px) {
+      .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
+        justify-content: flex-start;
+        padding: 10px;
+        font-size: 16px;
+        height: 72px;
+        flex: 1 0;
+        margin-right: 10px; } }
+    .button.block-button:hover, .block-button.highlight-button-cancel:hover, .block-button.highlight-button-save:hover, .block-button.highlight-button-download:hover {
+      background: #ebebeb; }
+    .button.block-button:active, .block-button.highlight-button-cancel:active, .block-button.highlight-button-save:active, .block-button.highlight-button-download:active {
+      background: #dedede; }
 
 .inverse-color-scheme {
-  background: #383E49;
-  color: #FFF; }
+  background: #3e3d40;
+  color: #f5f5f7; }
   .inverse-color-scheme a {
-    color: #0996F8; }
-  .inverse-color-scheme .large-icon {
-    filter: invert(100%); }
+    color: #e1e1e6; }
 
 .default-color-scheme {
-  background: #f2f2f2;
-  color: #000; }
+  background: #f5f5f7;
+  color: #3e3d40; }
   .default-color-scheme a {
-    color: #0996F8; }
+    color: #009ec0; }
+
+.highlight-color-scheme {
+  background: #009ec0;
+  color: #fff; }
+  .highlight-color-scheme a {
+    color: #fff;
+    text-decoration: underline; }
 
 .button.primary, .primary.highlight-button-cancel, .highlight-button-save, .primary.highlight-button-download {
-  background-color: #0996F8;
-  color: #FFF; }
+  background-color: #009ec0;
+  color: #fff; }
   .button.primary:hover, .primary.highlight-button-cancel:hover, .highlight-button-save:hover, .primary.highlight-button-download:hover, .button.primary:focus, .primary.highlight-button-cancel:focus, .highlight-button-save:focus, .primary.highlight-button-download:focus {
-    background-color: #0681d7; }
+    background-color: #00819c; }
   .button.primary:active, .primary.highlight-button-cancel:active, .highlight-button-save:active, .primary.highlight-button-download:active {
-    background-color: #0573be; }
+    background-color: #006c83; }
 
 .button.secondary, .highlight-button-cancel, .secondary.highlight-button-save, .highlight-button-download {
-  background: #EDEDED;
-  color: #000; }
-  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover, .button.secondary:focus, .highlight-button-cancel:focus, .secondary.highlight-button-save:focus, .highlight-button-download:focus {
-    background-color: #dbdbdb; }
-  .button.secondary:active, .highlight-button-cancel:active, .secondary.highlight-button-save:active, .highlight-button-download:active {
-    background-color: #cecece; }
+  background-color: #f5f5f7;
+  color: #3e3d40; }
+  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover {
+    background-color: #ebebeb; }
+  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover {
+    background-color: #dedede; }
 
 .button.warning, .warning.highlight-button-cancel, .warning.highlight-button-save, .warning.highlight-button-download {
-  color: #FFF;
+  color: #fff;
   background: #d92215; }
   .button.warning:hover, .warning.highlight-button-cancel:hover, .warning.highlight-button-save:hover, .warning.highlight-button-download:hover, .button.warning:focus, .warning.highlight-button-cancel:focus, .warning.highlight-button-save:focus, .warning.highlight-button-download:focus {
     background: #b81d12; }
@@ -95,7 +105,7 @@ window.inlineSelectionCss = `
     background: #a11910; }
 
 .subtitle-link {
-  color: #0996F8; }
+  color: #009ec0; }
 
 @keyframes fade-in {
   0% {
@@ -219,7 +229,7 @@ window.inlineSelectionCss = `
   transform: scale(1.05); }
 
 .mover {
-  background-color: #FFF;
+  background-color: #fff;
   border-radius: 50%;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
   height: 16px;
@@ -288,9 +298,11 @@ window.inlineSelectionCss = `
   z-index: 6; }
   .bottom-selection .highlight-buttons {
     bottom: 5px; }
+  .left-selection .highlight-buttons {
+    right: auto;
+    left: 5px; }
 
 .highlight-button-cancel {
-  background-color: #ededed;
   background-image: url("MOZ_EXTENSION/icons/cancel.svg");
   background-position: center center;
   background-repeat: no-repeat;
@@ -304,7 +316,6 @@ window.inlineSelectionCss = `
   min-width: 80px; }
 
 .highlight-button-download {
-  background-color: #ededed;
   background-image: url("MOZ_EXTENSION/icons/download.svg");
   background-position: center center;
   background-repeat: no-repeat;
@@ -312,15 +323,6 @@ window.inlineSelectionCss = `
   display: block;
   margin: 5px;
   width: 40px; }
-
-.highlight-button-cancel,
-.highlight-button-download {
-  transition: background-color cubic-bezier(0.07, 0.95, 0, 1) 250ms; }
-  .highlight-button-cancel:hover, .highlight-button-cancel:focus, .highlight-button-cancel:active,
-  .highlight-button-download:hover,
-  .highlight-button-download:focus,
-  .highlight-button-download:active {
-    background-color: #dbdbdb; }
 
 .pixel-dimensions {
   position: absolute;
@@ -344,6 +346,49 @@ window.inlineSelectionCss = `
   top: 0;
   width: 100%; }
 
+.face-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  width: 64px;
+  height: 64px;
+  transform: translateY(-45px); }
+
+.eye {
+  background-color: #fff;
+  width: 10.8px;
+  height: 14.6px;
+  position: absolute;
+  border-radius: 100%;
+  overflow: hidden;
+  left: 16.4px;
+  top: 19.8px; }
+
+.eyeball {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #000;
+  border-radius: 50%;
+  left: 2.4px;
+  top: 4.3px;
+  z-index: 10; }
+
+.left {
+  margin-left: 0; }
+
+.right {
+  margin-left: 20px; }
+
+.face {
+  width: 62.4px;
+  height: 62.4px;
+  display: block;
+  background-image: url("MOZ_EXTENSION/icons/icon-welcome-face-without-eyes.svg"); }
+
 .preview-instructions {
   display: flex;
   align-items: center;
@@ -354,7 +399,8 @@ window.inlineSelectionCss = `
   font-size: 24px;
   line-height: 32px;
   text-align: center;
-  width: 400px; }
+  width: 400px;
+  margin-top: 45px; }
 
 .myshots-all-buttons-container {
   display: flex;
@@ -412,7 +458,7 @@ window.inlineSelectionCss = `
 /* styleMyShotsButton test: */
 .styleMyShotsButton-bright .myshots-button {
   color: #fff;
-  background: #0996F8; }
+  background: #009ec0; }
 
 .styleMyShotsButton-bright .myshots-text-pre,
 .styleMyShotsButton-bright .myshots-text-post {

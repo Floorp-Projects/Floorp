@@ -235,6 +235,15 @@ function waitForAnimationFrames(frameCount, onFrame) {
 }
 
 /**
+ * Promise wrapper for requestIdleCallback.
+ */
+function waitForIdle() {
+  return new Promise(resolve => {
+    requestIdleCallback(resolve);
+  });
+}
+
+/**
  * Wrapper that takes a sequence of N animations and returns:
  *
  *   Promise.all([animations[0].ready, animations[1].ready, ... animations[N-1].ready]);

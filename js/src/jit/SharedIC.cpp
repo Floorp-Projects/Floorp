@@ -1777,19 +1777,25 @@ ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
         EmitReturnFromIC(masm);
     } else {
         // obj != undefined only where !obj->getClass()->emulatesUndefined()
-        Label emulatesUndefined;
         Register obj = masm.extractObject(objectOperand, ExtractTemp0);
-        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), obj);
-        masm.loadPtr(Address(obj, ObjectGroup::offsetOfClasp()), obj);
-        masm.branchTest32(Assembler::NonZero,
-                          Address(obj, Class::offsetOfFlags()),
-                          Imm32(JSCLASS_EMULATES_UNDEFINED),
-                          &emulatesUndefined);
+
+        // We need a scratch register.
+        masm.push(obj);
+        Label slow, emulatesUndefined;
+        masm.branchIfObjectEmulatesUndefined(obj, obj, &slow, &emulatesUndefined);
+
+        masm.pop(obj);
         masm.moveValue(BooleanValue(op == JSOP_NE), R0);
         EmitReturnFromIC(masm);
+
         masm.bind(&emulatesUndefined);
+        masm.pop(obj);
         masm.moveValue(BooleanValue(op == JSOP_EQ), R0);
         EmitReturnFromIC(masm);
+
+        masm.bind(&slow);
+        masm.pop(obj);
+        masm.jump(&failure);
     }
 
     masm.bind(&notObject);

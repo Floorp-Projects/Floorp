@@ -3538,8 +3538,8 @@ PresShell::DoScrollContentIntoView()
 
   // Make sure we skip 'frame' ... if it's scrollable, we should use its
   // scrollable ancestor as the container.
-  nsIFrame* container =
-    nsLayoutUtils::GetClosestFrameOfType(frame->GetParent(), FrameType::Scroll);
+  nsIFrame* container = nsLayoutUtils::GetClosestFrameOfType(
+    frame->GetParent(), LayoutFrameType::Scroll);
   if (!container) {
     // nothing can be scrolled
     return;

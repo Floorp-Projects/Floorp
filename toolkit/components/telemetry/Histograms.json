@@ -377,9 +377,9 @@
   "CREATE_EVENT_BEFOREUNLOADEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"beforeunloadevent\") ever called",
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "count",
-    "bug_numbers": [1295588, 1251198]
+    "bug_numbers": [1295588, 1251198, 1358893]
   },
   "CREATE_EVENT_COMPOSITIONEVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
@@ -2056,6 +2056,14 @@
       "high": 60000,
       "n_buckets": 100,
       "description": "Time in milliseconds that http channel spent suspended between AsyncOpen and OnStartRequest."
+  },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_USAGE": {
+    "expires_in_version": "58",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1354409],
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
   },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
@@ -4219,6 +4227,15 @@
     "bug_numbers": [1336903],
     "description": "Server response time to update request (ms). Keyed by provider"
   },
+  "URLCLASSIFIER_UPDATE_TIMEOUT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "61",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 4,
+    "bug_numbers": [1336904],
+    "description": " Whether or not an update timed out (0 = no timeout, 1 = server respond timeout, 2 = overall timeout). Keyed by provider"
+  },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS2": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -4254,7 +4271,6 @@
     "bug_numbers": [1336903],
     "description": "Server response time to getHash request (ms). Keyed by provider"
   },
-
   "URLCLASSIFIER_UPDATE_ERROR": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "59",
@@ -5655,6 +5671,14 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
+  },
+  "FX_SESSION_RESTORE_PRIVACY_LEVEL": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 3,
+    "bug_numbers": [1360810],
+    "description": "Session restore: The privacy level chosen by the user (0: Collect data from all sites, 1: Collect data only from non-HTTPS sites, 2: Collect no data)"
   },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],

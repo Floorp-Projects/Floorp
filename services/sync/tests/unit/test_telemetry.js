@@ -391,7 +391,6 @@ add_task(async function test_initial_sync_engines() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let engines = {};
   // These are the only ones who actually have things to sync at startup.
   let engineNames = ["clients", "bookmarks", "prefs", "tabs"];
   let server = serverForEnginesWithKeys({"foo": "password"}, ["bookmarks", "prefs", "tabs"].map(name =>

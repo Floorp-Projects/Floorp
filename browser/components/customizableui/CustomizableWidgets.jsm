@@ -1006,7 +1006,6 @@ const CustomizableWidgets = [
       }
     },
     onCreated(aNode) {
-      const kPanelId = "PanelUI-popup";
       let document = aNode.ownerDocument;
 
       let updateButton = () => {
@@ -1016,27 +1015,32 @@ const CustomizableWidgets = [
           aNode.removeAttribute("disabled");
       };
 
-      if (this.currentArea == CustomizableUI.AREA_PANEL) {
-        let panel = document.getElementById(kPanelId);
-        panel.addEventListener("popupshowing", updateButton);
+      let getPanel = () => {
+        let {PanelUI} = document.ownerGlobal;
+        if (PanelUI.overflowContents) {
+          return document.getElementById("widget-overflow");
+        }
+        return PanelUI.panel;
+      }
+
+      if (CustomizableUI.getAreaType(this.currentArea) == CustomizableUI.TYPE_MENU_PANEL) {
+        getPanel().addEventListener("popupshowing", updateButton);
       }
 
       let listener = {
         onWidgetAdded: (aWidgetId, aArea) => {
           if (aWidgetId != this.id)
             return;
-          if (aArea == CustomizableUI.AREA_PANEL) {
-            let panel = document.getElementById(kPanelId);
-            panel.addEventListener("popupshowing", updateButton);
+          if (CustomizableUI.getAreaType(aArea) == CustomizableUI.TYPE_MENU_PANEL) {
+            getPanel().addEventListener("popupshowing", updateButton);
           }
         },
         onWidgetRemoved: (aWidgetId, aPrevArea) => {
           if (aWidgetId != this.id)
             return;
           aNode.removeAttribute("disabled");
-          if (aPrevArea == CustomizableUI.AREA_PANEL) {
-            let panel = document.getElementById(kPanelId);
-            panel.removeEventListener("popupshowing", updateButton);
+          if (CustomizableUI.getAreaType(aPrevArea) == CustomizableUI.TYPE_MENU_PANEL) {
+            getPanel().removeEventListener("popupshowing", updateButton);
           }
         },
         onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
@@ -1044,8 +1048,7 @@ const CustomizableWidgets = [
             return;
 
           CustomizableUI.removeListener(listener);
-          let panel = aDoc.getElementById(kPanelId);
-          panel.removeEventListener("popupshowing", updateButton);
+          getPanel().removeEventListener("popupshowing", updateButton);
         }
       };
       CustomizableUI.addListener(listener);

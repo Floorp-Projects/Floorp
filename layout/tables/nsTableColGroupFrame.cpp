@@ -228,8 +228,8 @@ nsTableColGroupFrame::InsertFrames(ChildListID     aListID,
 
   const nsFrameList::Slice& newFrames =
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-  nsIFrame* prevFrame =
-    nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, FrameType::TableCol);
+  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(
+    this, aPrevFrame, LayoutFrameType::TableCol);
 
   int32_t colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : GetStartColumnIndex();
   InsertColsReflow(colIndex, newFrames);

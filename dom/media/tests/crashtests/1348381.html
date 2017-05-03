@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1348381: Crash when recording extremely large canvas' captureStream</title>
+</head>
+</body>
+<canvas id="c" height="0.6"></canvas>
+<img id="img" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA="></img>
+<script type="application/javascript">
+const c = document.getElementById("c");
+const ctx = c.getContext('2d');
+const s = c.captureStream(0);
+const mr = new MediaRecorder(s);
+const t = s.getVideoTracks()[0];
+mr.start();
+const img = document.getElementById('img');
+t.enabled = false;
+ctx.drawImage(img, 16, 18014398509481984);
+setTimeout(() => document.documentElement.removeAttribute("class"), 100);
+</script>
+</body>
+</html>
