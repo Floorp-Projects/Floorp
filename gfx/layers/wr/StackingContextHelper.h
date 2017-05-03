@@ -38,7 +38,13 @@ public:
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr);
-  // Pops the stacking context
+  // This version of the constructor should only be used at the root level
+  // of the tree, so that we have a StackingContextHelper to pass down into
+  // the RenderLayer traversal, but don't actually want it to push a stacking
+  // context on the display list builder.
+  StackingContextHelper();
+
+  // Pops the stacking context, if one was pushed during the constructor.
   ~StackingContextHelper();
 
   // When this StackingContextHelper is in scope, this function can be used
@@ -46,7 +52,7 @@ public:
   // that is relative to the stacking context. This is useful because most
   // things that are pushed inside the stacking context need to be relative
   // to the stacking context.
-  WrRect ToRelativeWrRect(const LayerRect& aRect);
+  WrRect ToRelativeWrRect(const LayerRect& aRect) const;
 
 private:
   wr::DisplayListBuilder* mBuilder;

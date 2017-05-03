@@ -47,7 +47,8 @@ WebRenderCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                  const StackingContextHelper& aSc)
 {
   UpdateCompositableClient();
 

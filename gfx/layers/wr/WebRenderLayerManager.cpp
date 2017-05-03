@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "WebRenderCanvasLayer.h"
@@ -190,8 +191,9 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   DiscardCompositorAnimations();
   mRoot->StartPendingAnimations(mAnimationReadyTime);
 
+  StackingContextHelper sc;
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
-  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
+  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
   WrBridge()->ClearReadLocks();
 
   // We can't finish this transaction so return. This usually

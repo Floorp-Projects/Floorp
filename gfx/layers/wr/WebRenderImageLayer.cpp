@@ -84,7 +84,8 @@ WebRenderImageLayer::ClearCachedResources()
 }
 
 void
-WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc)
 {
   if (!mContainer) {
      return;
