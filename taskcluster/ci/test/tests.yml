@@ -320,8 +320,6 @@ jsreftest:
             default: 3
     e10s:
         by-test-platform:
-            # Bug 1321782
-            windows.*: false
             android.*: false
             macosx.*: true
             default: both
