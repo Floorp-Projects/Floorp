@@ -45,22 +45,6 @@ add_task(async function v4_upgrade() {
 
   try {
 
-    _("Set up some tabs.");
-    let myTabs =
-      {windows: [{tabs: [{index: 1,
-                          entries: [{
-                            url: "http://foo.com/",
-                            title: "Title"
-                          }],
-                          attributes: {
-                            image: "image"
-                          }
-                          }]}]};
-    delete Svc.Session;
-    Svc.Session = {
-      getBrowserState: () => JSON.stringify(myTabs)
-    };
-
     Service.status.resetSync();
 
     _("Logging in.");
@@ -211,23 +195,6 @@ add_task(async function v5_upgrade() {
   });
 
   try {
-
-    _("Set up some tabs.");
-    let myTabs =
-      {windows: [{tabs: [{index: 1,
-                          entries: [{
-                            url: "http://foo.com/",
-                            title: "Title"
-                          }],
-                          attributes: {
-                            image: "image"
-                          }
-                          }]}]};
-    delete Svc.Session;
-    Svc.Session = {
-      getBrowserState: () => JSON.stringify(myTabs)
-    };
-
     Service.status.resetSync();
 
     Service.clusterURL = server.baseURI + "/";

@@ -145,7 +145,7 @@ var loadListener = {
     this.seenUnload = false;
 
     this.timerPageLoad = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this.timerPageUnload = null;
 
     // In case of a remoteness change, only wait the remaining time
     timeout = startTime + timeout - new Date().getTime();
@@ -159,8 +159,9 @@ var loadListener = {
       addEventListener("hashchange", this, false);
       addEventListener("pagehide", this, false);
 
-      // The event can only be received if the listener gets added to the
-      // currently selected frame.
+      // The events can only be received when the event listeners are
+      // added to the currently selected frame.
+      curContainer.frame.addEventListener("beforeunload", this, false);
       curContainer.frame.addEventListener("unload", this, false);
 
       Services.obs.addObserver(this, "outer-window-destroyed");
@@ -192,6 +193,7 @@ var loadListener = {
     // If the original content window, where the navigation was triggered,
     // doesn't exist anymore, exceptions can be silently ignored.
     try {
+      curContainer.frame.removeEventListener("beforeunload", this);
       curContainer.frame.removeEventListener("unload", this);
     } catch (e if e.name == "TypeError") {}
 
@@ -210,6 +212,20 @@ var loadListener = {
     logger.debug(`Received DOM event "${event.type}" for "${location}"`);
 
     switch (event.type) {
+      case "beforeunload":
+        if (this.timerPageUnload) {
+          // In the case when a document has a beforeunload handler registered,
+          // the currently active command will return immediately due to the
+          // modal dialog observer in proxy.js.
+          // Otherwise the timeout waiting for the document to start navigating
+          // is increased by 5000 ms to ensure a possible load event is not missed.
+          // In the common case such an event should occur pretty soon after
+          // beforeunload, and we optimise for this.
+          this.timerPageUnload.cancel();
+          this.timerPageUnload.initWithCallback(this, 5000, Ci.nsITimer.TYPE_ONE_SHOT)
+        }
+        break;
+
       case "unload":
         this.seenUnload = true;
         break;
@@ -352,6 +368,7 @@ var loadListener = {
 
       // If requested setup a timer to detect a possible page load
       if (useUnloadTimer) {
+        this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         this.timerPageUnload.initWithCallback(this, 200, Ci.nsITimer.TYPE_ONE_SHOT);
       }
 

@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
 var {utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");

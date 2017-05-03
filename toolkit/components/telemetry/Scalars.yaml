@@ -593,3 +593,34 @@ devtools.copy.full.css.selector:
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
+
+navigator.storage:
+  estimate_count:
+    bug_numbers:
+      - 1359708
+    description: >
+      Number of times navigator.storage.estimate has been used.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - shuang@mozilla.com
+      - ttung@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  persist_count:
+    bug_numbers:
+      - 1359708
+    description: >
+      Number of times navigator.storage.persist has been used.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - shuang@mozilla.com
+      - ttung@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'

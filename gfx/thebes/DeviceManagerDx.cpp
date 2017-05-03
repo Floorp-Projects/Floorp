@@ -824,6 +824,17 @@ DeviceManagerDx::CanInitializeKeyedMutexTextures()
 }
 
 bool
+DeviceManagerDx::HasCrashyInitData()
+{
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+
+  return (mDeviceStatus->adapter().VendorId == 0x8086 && !IsWin10OrLater());
+}
+
+bool
 DeviceManagerDx::CheckRemotePresentSupport()
 {
   MOZ_ASSERT(XRE_IsParentProcess());

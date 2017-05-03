@@ -251,6 +251,7 @@ struct SomeEvent {
   SomeEvent(const SomeEvent& aOther) : mCount(aOther.mCount) {
     ++mCount;
   }
+  SomeEvent(SomeEvent&& aOther) : mCount(aOther.mCount) { }
   int& mCount;
 };
 
@@ -371,6 +372,33 @@ TEST(MediaEventSource, NoMove)
 
   queue->BeginShutdown();
   queue->AwaitShutdownAndIdle();
+  listener1.Disconnect();
+  listener2.Disconnect();
+}
+
+/*
+ * Rvalue lambda should be moved instead of copied.
+ */
+TEST(MediaEventSource, MoveLambda)
+{
+  RefPtr<TaskQueue> queue;
+  MediaEventProducer<void> source;
+
+  int counter = 0;
+  SomeEvent someEvent(counter);
+
+  auto func = [someEvent] () { };
+  // someEvent is copied when captured by the lambda.
+  EXPECT_EQ(someEvent.mCount, 1);
+
+  // someEvent should be copied for we pass |func| as an lvalue.
+  MediaEventListener listener1 = source.Connect(queue, func);
+  EXPECT_EQ(someEvent.mCount, 2);
+
+  // someEvent should be moved for we pass |func| as an rvalue.
+  MediaEventListener listener2 = source.Connect(queue, Move(func));
+  EXPECT_EQ(someEvent.mCount, 2);
+
   listener1.Disconnect();
   listener2.Disconnect();
 }
