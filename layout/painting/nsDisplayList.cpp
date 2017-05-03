@@ -526,15 +526,22 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
       UpdateStartValueFromReplacedTransition();
   }
 
-  const ComputedTiming computedTiming =
-    aAnimation->GetEffect()->GetComputedTiming();
+  animation->originTime() = !aAnimation->GetTimeline()
+                            ? TimeStamp()
+                            : aAnimation->GetTimeline()->
+                                ToTimeStamp(TimeDuration());
+
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
-  animation->startTime() = startTime.IsNull() || !aAnimation->GetTimeline()
-                           ? TimeStamp()
-                           : aAnimation->GetTimeline()->
-                              ToTimeStamp(startTime.Value());
+  if (startTime.IsNull()) {
+    animation->startTime() = null_t();
+  } else {
+    animation->startTime() = startTime.Value();
+  }
+
   animation->holdTime() = aAnimation->GetCurrentTime().Value();
 
+  const ComputedTiming computedTiming =
+    aAnimation->GetEffect()->GetComputedTiming();
   animation->delay() = timing.mDelay;
   animation->endDelay() = timing.mEndDelay;
   animation->duration() = computedTiming.mDuration;

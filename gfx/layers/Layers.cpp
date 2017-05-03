@@ -292,8 +292,16 @@ Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
           Animation& anim = layer->mAnimations[animIdx];
 
           // If the animation is play-pending, resolve the start time.
-          if (anim.startTime().IsNull() && !anim.isNotPlaying()) {
-            anim.startTime() = aReadyTime - anim.holdTime() + anim.delay();
+          // This mirrors the calculation in Animation::StartTimeFromReadyTime.
+          if (anim.startTime().type() == MaybeTimeDuration::Tnull_t &&
+              !anim.originTime().IsNull() &&
+              !anim.isNotPlaying()) {
+            TimeDuration readyTime = aReadyTime - anim.originTime();
+            anim.startTime() =
+              anim.playbackRate() == 0
+              ? readyTime
+              : readyTime - anim.holdTime().MultDouble(1.0 /
+                                                       anim.playbackRate());
             updated = true;
           }
         }

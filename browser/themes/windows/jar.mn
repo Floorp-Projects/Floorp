@@ -48,7 +48,6 @@ browser.jar:
   skin/classic/browser/Toolbar-win8.png
   skin/classic/browser/Toolbar-win8@2x.png
   skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
-  skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker@2x.png
@@ -80,7 +79,6 @@ browser.jar:
   skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png             (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png   (places/bookmarksToolbar-menuPanel.png)
-  skin/classic/browser/places/bookmarks-notification-finish.png (places/bookmarks-notification-finish.png)
   skin/classic/browser/places/calendar.png                     (places/calendar.png)
   skin/classic/browser/places/toolbarDropMarker.png            (places/toolbarDropMarker.png)
   skin/classic/browser/places/editBookmarkOverlay.css          (places/editBookmarkOverlay.css)

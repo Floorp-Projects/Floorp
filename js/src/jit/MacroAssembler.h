@@ -1139,15 +1139,15 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
 
+    inline void branchIfObjectEmulatesUndefined(Register objReg, Register scratch, Label* slowCheck,
+                                                Label* label);
+
     inline void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
                                    Label* label);
     inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
     inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
     inline void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label);
     inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
-
-    inline void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
-                                       Label* slowCheck, Label* checked);
 
     inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
@@ -1660,9 +1660,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         call(preBarrier);
         Pop(PreBarrierReg);
-        jump(&done);
 
-        haltingAlign(8);
         bind(&done);
     }
 
@@ -1804,6 +1802,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This checks for identical pointers, atoms and length and fails for everything else.
     void compareStrings(JSOp op, Register left, Register right, Register result,
                         Label* fail);
+
+    // Result of the typeof operation. Falls back to slow-path for proxies.
+    void typeOfObject(Register objReg, Register scratch, Label* slow,
+                      Label* isObject, Label* isCallable, Label* isUndefined);
 
   public:
     // Generates code used to complete a bailout.
