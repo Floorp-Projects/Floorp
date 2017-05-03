@@ -77,11 +77,6 @@ class IDMap {
     }
   }
 
-  void ReplaceWithID(const T& data, int32_t id) {
-    DCHECK(data_.find(id) != data_.end()) << "item doesn't exist";
-    data_[id] = data;
-  }
-
   bool IsEmpty() const {
     return data_.empty();
   }
