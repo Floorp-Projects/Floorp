@@ -58,6 +58,7 @@ private:
   MediaResult DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample);
 
   const RefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::KnowsCompositor> mImageAllocator;
   const RefPtr<TaskQueue> mTaskQueue;
 
   // VPx decoder state
