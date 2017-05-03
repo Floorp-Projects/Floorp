@@ -95,6 +95,11 @@ FillInSample(TickSample& aSample, ucontext_t* aContext)
   aSample.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
   aSample.mFP = reinterpret_cast<Address>(mcontext.arm_fp);
   aSample.mLR = reinterpret_cast<Address>(mcontext.arm_lr);
+#elif defined(GP_ARCH_aarch64)
+  aSample.mPC = reinterpret_cast<Address>(mcontext.pc);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.sp);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.regs[29]);
+  aSample.mLR = reinterpret_cast<Address>(mcontext.regs[30]);
 #else
 # error "bad platform"
 #endif
