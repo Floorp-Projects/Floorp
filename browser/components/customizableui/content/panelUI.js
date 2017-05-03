@@ -37,13 +37,18 @@ const PanelUI = {
       panel: gPhotonStructure ? "appMenu-popup" : "PanelUI-popup",
       notificationPanel: "PanelUI-notification-popup",
       scroller: "PanelUI-contents-scroller",
-      footer: "PanelUI-footer"
+      footer: "PanelUI-footer",
+
+      overflowFixedList: gPhotonStructure ? "widget-overflow-fixed-list" : "",
     };
   },
 
   _initialized: false,
   init() {
     for (let [k, v] of Object.entries(this.kElements)) {
+      if (!v) {
+        continue;
+      }
       // Need to do fresh let-bindings per iteration
       let getKey = k;
       let id = v;
@@ -68,6 +73,12 @@ const PanelUI = {
 
     for (let event of this.kEvents) {
       this.notificationPanel.addEventListener(event, this);
+    }
+
+    if (gPhotonStructure) {
+      this.overflowFixedList.hidden = false;
+      this.overflowFixedList.nextSibling.hidden = false;
+      CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
     }
 
     this._initialized = true;
@@ -385,11 +396,11 @@ const PanelUI = {
       }
 
       if (aCustomizing) {
-        CustomizableUI.registerMenuPanel(this.contents);
+        CustomizableUI.registerMenuPanel(this.contents, CustomizableUI.AREA_PANEL);
       } else {
         this.beginBatchUpdate();
         try {
-          CustomizableUI.registerMenuPanel(this.contents);
+          CustomizableUI.registerMenuPanel(this.contents, CustomizableUI.AREA_PANEL);
         } finally {
           this.endBatchUpdate();
         }

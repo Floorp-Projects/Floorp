@@ -460,6 +460,13 @@
         ]
       }
     },
+    "lo": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "ddg", "wikipedia-lo", "twitter"
+        ]
+      }
+    },
     "lt": {
       "default": {
         "visibleDefaultEngines": [

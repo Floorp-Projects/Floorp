@@ -50,6 +50,7 @@ static const char kPrefDisableIPv6[]         = "network.dns.disableIPv6";
 static const char kPrefDisablePrefetch[]     = "network.dns.disablePrefetch";
 static const char kPrefBlockDotOnion[]       = "network.dns.blockDotOnion";
 static const char kPrefDnsLocalDomains[]     = "network.dns.localDomains";
+static const char kPrefDnsForceResolve[]     = "network.dns.forceResolve";
 static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
 
@@ -482,6 +483,7 @@ nsDNSService::nsDNSService()
     , mFirstTime(true)
     , mNotifyResolution(false)
     , mOfflineLocalhost(false)
+    , mForceResolveOn(false)
 {
 }
 
@@ -546,6 +548,7 @@ nsDNSService::Init()
 
     nsAdoptingCString ipv4OnlyDomains;
     nsAdoptingCString localDomains;
+    nsAdoptingCString forceResolve;
 
     // read prefs
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -562,6 +565,7 @@ nsDNSService::Init()
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
         prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
         prefs->GetCharPref(kPrefDnsLocalDomains, getter_Copies(localDomains));
+        prefs->GetCharPref(kPrefDnsForceResolve, getter_Copies(forceResolve));
         prefs->GetBoolPref(kPrefDnsOfflineLocalhost, &offlineLocalhost);
         prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
         prefs->GetBoolPref(kPrefBlockDotOnion, &blockDotOnion);
@@ -579,6 +583,7 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefDnsCacheGrace, this, false);
             prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
             prefs->AddObserver(kPrefDnsLocalDomains, this, false);
+            prefs->AddObserver(kPrefDnsForceResolve, this, false);
             prefs->AddObserver(kPrefDisableIPv6, this, false);
             prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
             prefs->AddObserver(kPrefDisablePrefetch, this, false);
@@ -616,6 +621,8 @@ nsDNSService::Init()
         mOfflineLocalhost = offlineLocalhost;
         mDisableIPv6 = disableIPv6;
         mBlockDotOnion = blockDotOnion;
+        mForceResolve = forceResolve;
+        mForceResolveOn = !mForceResolve.IsEmpty();
 
         // Disable prefetching either by explicit preference or if a manual proxy is configured 
         mDisablePrefetch = disablePrefetch || (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
@@ -704,6 +711,15 @@ nsDNSService::PreprocessHostname(bool              aLocalDomain,
     if (aLocalDomain) {
         aACE.AssignLiteral("localhost");
         return NS_OK;
+    }
+
+    if (mForceResolveOn) {
+        MutexAutoLock lock(mLock);
+        if (!aInput.LowerCaseEqualsASCII("localhost") &&
+            !aInput.LowerCaseEqualsASCII("127.0.0.1")) {
+            aACE.Assign(mForceResolve);
+            return NS_OK;
+        }
     }
 
     if (!aIDN || IsASCII(aInput)) {
