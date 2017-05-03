@@ -116,8 +116,6 @@ public:
 
   static uint32_t GetMaxFileDescriptorsPerMessage();
 
-  virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
-
 protected:
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
