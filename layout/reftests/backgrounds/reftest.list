@@ -137,7 +137,7 @@ fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
 
-fails-if(stylo) == really-big-background.html really-big-background-ref.html
+== really-big-background.html really-big-background-ref.html
 == body-background.html body-background-ref.html
 == table-background.html table-background-ref.html
 == table-background-print.html table-background-print-ref.html

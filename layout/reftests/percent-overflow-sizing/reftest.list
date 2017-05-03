@@ -1,8 +1,8 @@
 == simpleHeight100.html greenbox.html
 == simpleAbsHeight.html greenbox.html
 random-if(transparentScrollbars) == hScrollSimpleHeight.html greenboxhbar.html # bug 650591
-random-if(transparentScrollbars) fails-if(stylo) == hScrollSimpleHeightQuirks-1.html greenboxhbar.html # bug 650591
-random-if(transparentScrollbars) fails-if(stylo) == hScrollSimpleHeightQuirks-2.html greenboxhbar.html # bug 650591
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-1.html greenboxhbar.html # bug 650591
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-2.html greenboxhbar.html # bug 650591
 random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-3.html greenboxhbar.html # bug 650591
 random-if(transparentScrollbars) == hScrollAbsHeight.html greenboxhbar.html # bug 650591
 random-if(transparentScrollbars) == hScrollAbsHeightQuirks.html greenboxhbar.html # bug 650591

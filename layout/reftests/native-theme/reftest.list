@@ -39,7 +39,7 @@ pref(layout.css.moz-appearance.enabled,true) == 482955-1.xul 482955-1-ref.xul
 == 492155-1.html about:blank
 == 492155-2.html about:blank
 == 492155-3.html about:blank
-fails-if(Android&&!asyncPan) fails-if(stylo) != 492155-4.html about:blank
+fails-if(Android&&!asyncPan) != 492155-4.html about:blank
 
 fails-if(stylo) != box-shadow-input.html box-shadow-input-ref.html
 fails-if(stylo) != box-shadow-button.html box-shadow-button-ref.html
