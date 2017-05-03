@@ -1532,8 +1532,8 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
     }
 
   } else {
-    FrameType childType = aChildFrame->Type();
-    if (FrameType::MenuPopup == childType) {
+    LayoutFrameType childType = aChildFrame->Type();
+    if (LayoutFrameType::MenuPopup == childType) {
       nsIFrame* parent = aChildFrame->GetParent();
       MOZ_ASSERT(parent, "nsMenuPopupFrame can't be the root frame");
       if (parent) {
@@ -1550,7 +1550,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
       } else {
         id = nsIFrame::kPrincipalList;
       }
-    } else if (FrameType::TableColGroup == childType) {
+    } else if (LayoutFrameType::TableColGroup == childType) {
       id = nsIFrame::kColGroupList;
     } else if (aChildFrame->IsTableCaption()) {
       id = nsIFrame::kCaptionList;
@@ -1622,7 +1622,7 @@ nsLayoutUtils::GetAfterFrame(const nsIContent* aContent)
 // static
 nsIFrame*
 nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
-                                     FrameType aFrameType,
+                                     LayoutFrameType aFrameType,
                                      nsIFrame* aStopAt)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
@@ -1639,7 +1639,7 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
 /* static */ nsIFrame*
 nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 {
-  return GetClosestFrameOfType(aFrame, FrameType::Page);
+  return GetClosestFrameOfType(aFrame, LayoutFrameType::Page);
 }
 
 // static
@@ -2897,7 +2897,7 @@ nsRect
 nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
 {
   nsIFrame* closestScrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::Scroll);
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::Scroll);
 
   nsRect resultRect = aRect;
 
@@ -2915,9 +2915,8 @@ nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
     }
 
     // Get next ancestor scroll frame.
-    closestScrollFrame =
-      nsLayoutUtils::GetClosestFrameOfType(closestScrollFrame->GetParent(),
-                                           FrameType::Scroll);
+    closestScrollFrame = nsLayoutUtils::GetClosestFrameOfType(
+      closestScrollFrame->GetParent(), LayoutFrameType::Scroll);
   }
 
   return resultRect;
@@ -3013,9 +3012,8 @@ GetContainingSVGTextFrame(nsIFrame* aFrame)
     return nullptr;
   }
 
-  return static_cast<SVGTextFrame*>
-    (nsLayoutUtils::GetClosestFrameOfType(aFrame->GetParent(),
-                                          FrameType::SVGText));
+  return static_cast<SVGTextFrame*>(nsLayoutUtils::GetClosestFrameOfType(
+    aFrame->GetParent(), LayoutFrameType::SVGText));
 }
 
 nsPoint
@@ -3596,18 +3594,18 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
     }
 
-    FrameType frameType = aFrame->Type();
+    LayoutFrameType frameType = aFrame->Type();
 
     // For the viewport frame in print preview/page layout we want to paint
     // the grey background behind the page, not the canvas color.
-    if (frameType == FrameType::Viewport &&
+    if (frameType == LayoutFrameType::Viewport &&
         nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
       nsRect bounds = nsRect(builder.ToReferenceFrame(aFrame),
                              aFrame->GetSize());
       nsDisplayListBuilder::AutoBuildingDisplayList
         buildingDisplayList(&builder, aFrame, bounds, false);
       presShell->AddPrintPreviewBackgroundItem(builder, list, aFrame, bounds);
-    } else if (frameType != FrameType::Page) {
+    } else if (frameType != LayoutFrameType::Page) {
       // For printing, this function is first called on an nsPageFrame, which
       // creates a display list with a PageContent item. The PageContent item's
       // paint function calls this function on the nsPageFrame's child which is
@@ -4657,9 +4655,10 @@ GetPercentBSize(const nsStyleCoord& aStyle,
     NS_ASSERTION(bSizeCoord.GetUnit() == eStyleUnit_Auto ||
                  bSizeCoord.HasPercent(),
                  "unknown block-size unit");
-    FrameType fType = f->Type();
-    if (fType != FrameType::Viewport && fType != FrameType::Canvas &&
-        fType != FrameType::PageContent) {
+    LayoutFrameType fType = f->Type();
+    if (fType != LayoutFrameType::Viewport &&
+        fType != LayoutFrameType::Canvas &&
+        fType != LayoutFrameType::PageContent) {
       // There's no basis for the percentage height, so it acts like auto.
       // Should we consider a max-height < min-height pair a basis for
       // percentage heights?  The spec is somewhat unclear, and not doing
@@ -4835,8 +4834,8 @@ FormControlShrinksForPercentISize(nsIFrame* aFrame)
     return false;
   }
 
-  FrameType fType = aFrame->Type();
-  if (fType == FrameType::Meter || fType == FrameType::Progress) {
+  LayoutFrameType fType = aFrame->Type();
+  if (fType == LayoutFrameType::Meter || fType == LayoutFrameType::Progress) {
     // progress and meter do have this shrinking behavior
     // FIXME: Maybe these should be nsIFormControlFrame?
     return true;
@@ -4848,8 +4847,8 @@ FormControlShrinksForPercentISize(nsIFrame* aFrame)
     return false;
   }
 
-  if (fType == FrameType::GfxButtonControl ||
-      fType == FrameType::HTMLButtonControl) {
+  if (fType == LayoutFrameType::GfxButtonControl ||
+      fType == LayoutFrameType::HTMLButtonControl) {
     // Buttons don't have this shrinking behavior.  (Note that color
     // inputs do, even though they inherit from button, so we can't use
     // do_QueryFrame here.)
@@ -5967,15 +5966,15 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
   if (!block) {
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
-    FrameType fType = aFrame->Type();
-    if (fType == FrameType::TableWrapper  ||
-        fType == FrameType::FlexContainer ||
-        fType == FrameType::GridContainer) {
-      if ((fType == FrameType::GridContainer &&
+    LayoutFrameType fType = aFrame->Type();
+    if (fType == LayoutFrameType::TableWrapper ||
+        fType == LayoutFrameType::FlexContainer ||
+        fType == LayoutFrameType::GridContainer) {
+      if ((fType == LayoutFrameType::GridContainer &&
            aFrame->HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) ||
-          (fType == FrameType::FlexContainer &&
+          (fType == LayoutFrameType::FlexContainer &&
            aFrame->HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) ||
-          (fType == FrameType::TableWrapper &&
+          (fType == LayoutFrameType::TableWrapper &&
            static_cast<const nsTableWrapperFrame*>(aFrame)->GetRowCount() == 0)) {
         // empty grid/flex/table container
         aResult->mBStart = 0;
@@ -5993,7 +5992,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     }
 
     // For first-line baselines, we have to consider scroll frames.
-    if (fType == FrameType::Scroll) {
+    if (fType == LayoutFrameType::Scroll) {
       nsIScrollableFrame *sFrame = do_QueryFrame(const_cast<nsIFrame*>(aFrame));
       if (!sFrame) {
         NS_NOTREACHED("not scroll frame");
@@ -6011,7 +6010,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
       return false;
     }
 
-    if (fType == FrameType::FieldSet) {
+    if (fType == LayoutFrameType::FieldSet) {
       LinePosition kidPosition;
       nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
       // kid might be a legend frame here, but that's ok.
@@ -6942,14 +6941,14 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
 static bool IsPopupFrame(nsIFrame* aFrame)
 {
   // aFrame is a popup it's the list control frame dropdown for a combobox.
-  FrameType frameType = aFrame->Type();
-  if (frameType == FrameType::ListControl) {
+  LayoutFrameType frameType = aFrame->Type();
+  if (frameType == LayoutFrameType::ListControl) {
     nsListControlFrame* lcf = static_cast<nsListControlFrame*>(aFrame);
     return lcf->IsInDropDownMode();
   }
 
   // ... or if it's a XUL menupopup frame.
-  return frameType == FrameType::MenuPopup;
+  return frameType == LayoutFrameType::MenuPopup;
 }
 
 /* static */ bool
@@ -7126,9 +7125,9 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
                     NS_STYLE_POSITION_FIXED,
                   "IsReallyFixedPos called on non-'position:fixed' frame");
 
-  FrameType parentType = aFrame->GetParent()->Type();
-  return parentType == FrameType::Viewport ||
-         parentType == FrameType::PageContent;
+  LayoutFrameType parentType = aFrame->GetParent()->Type();
+  return parentType == LayoutFrameType::Viewport ||
+         parentType == LayoutFrameType::PageContent;
 }
 
 nsLayoutUtils::SurfaceFromElementResult
@@ -7937,19 +7936,19 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
        f && !f->IsContainerForFontSizeInflation();
        f = f->GetParent()) {
     nsIContent* content = f->GetContent();
-    FrameType fType = f->Type();
+    LayoutFrameType fType = f->Type();
     nsIFrame* parent = f->GetParent();
     // Also, if there is more than one frame corresponding to a single
     // content node, we want the outermost one.
     if (!(parent && parent->GetContent() == content) &&
         // ignore width/height on inlines since they don't apply
-        fType != FrameType::Inline &&
+        fType != LayoutFrameType::Inline &&
         // ignore width on radios and checkboxes since we enlarge them and
         // they have width/height in ua.css
-        fType != FrameType::FormControl) {
+        fType != LayoutFrameType::FormControl) {
       // ruby annotations should have the same inflation as its
       // grandparent, which is the ruby frame contains the annotation.
-      if (fType == FrameType::RubyText) {
+      if (fType == LayoutFrameType::RubyText) {
         MOZ_ASSERT(parent && parent->IsRubyTextContainerFrame());
         nsIFrame* grandparent = parent->GetParent();
         MOZ_ASSERT(grandparent && grandparent->IsRubyFrame());

@@ -165,6 +165,13 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
     }
 
     @Override
+    public void onDone() {
+        // We're most probably running within a foreign app's task, so we have no choice what to
+        // call here if we want to allow the user to return to that task's previous activity.
+        finish();
+    }
+
+    @Override
     public void finish() {
         super.finish();
 

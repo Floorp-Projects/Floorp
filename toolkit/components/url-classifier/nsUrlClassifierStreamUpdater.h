@@ -91,6 +91,12 @@ private:
   // retry on our own.
   nsCOMPtr<nsITimer> mFetchNextRequestTimer;
 
+  // Timer to abort the download if the server takes too long to respond.
+  nsCOMPtr<nsITimer> mResponseTimeoutTimer;
+
+  // Timer to abort the download if it takes too long.
+  nsCOMPtr<nsITimer> mTimeoutTimer;
+
   struct PendingRequest {
     nsCString mTables;
     nsCString mRequestPayload;

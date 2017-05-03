@@ -19,7 +19,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsPopupSetFrame(nsStyleContext* aContext)
-    : nsBoxFrame(aContext, mozilla::FrameType::PopupSet)
+    : nsBoxFrame(aContext, mozilla::LayoutFrameType::PopupSet)
   {}
 
   ~nsPopupSetFrame() {}

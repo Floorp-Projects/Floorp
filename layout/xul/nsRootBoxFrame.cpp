@@ -108,7 +108,7 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
 nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, FrameType::Root, true)
+  : nsBoxFrame(aContext, LayoutFrameType::Root, true)
   , mPopupSetFrame(nullptr)
   , mDefaultTooltip(nullptr)
 {

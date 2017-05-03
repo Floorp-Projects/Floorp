@@ -5205,6 +5205,10 @@ pref("urlclassifier.gethashnoise", 4);
 
 // Gethash timeout for Safebrowsing.
 pref("urlclassifier.gethash.timeout_ms", 5000);
+// Update server response timeout for Safebrowsing.
+pref("urlclassifier.update.response_timeout_ms", 5000);
+// Download update timeout for Safebrowsing.
+pref("urlclassifier.update.timeout_ms", 60000);
 
 // If an urlclassifier table has not been updated in this number of seconds,
 // a gethash request will be forced to check that the result is still in

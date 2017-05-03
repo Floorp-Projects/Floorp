@@ -17,7 +17,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsBackdropFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, mozilla::FrameType::Backdrop)
+    : nsFrame(aContext, mozilla::LayoutFrameType::Backdrop)
   {}
 
 #ifdef DEBUG_FRAME_DUMP

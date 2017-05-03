@@ -412,11 +412,11 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
-  FrameType type = aFrame->Type();
-  if (type == FrameType::SVGForeignObject) {
+  LayoutFrameType type = aFrame->Type();
+  if (type == LayoutFrameType::SVGForeignObject) {
     return static_cast<nsSVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
   }
-  if (type == FrameType::SVGOuterSVG) {
+  if (type == LayoutFrameType::SVGOuterSVG) {
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
@@ -1304,15 +1304,16 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   if (!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     return false;
   }
-  FrameType type = aFrame->Type();
-  if (type != FrameType::SVGImage && type != FrameType::SVGGeometry) {
+  LayoutFrameType type = aFrame->Type();
+  if (type != LayoutFrameType::SVGImage &&
+      type != LayoutFrameType::SVGGeometry) {
     return false;
   }
   if (aFrame->StyleEffects()->HasFilters()) {
     return false;
   }
   // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
-  if (type == FrameType::SVGImage) {
+  if (type == LayoutFrameType::SVGImage) {
     return true;
   }
   const nsStyleSVG *style = aFrame->StyleSVG();

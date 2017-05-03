@@ -62,14 +62,12 @@ module.exports = createClass({
       BoxModelMain({
         boxModel,
         boxModelContainer: this.boxModelContainer,
-        setSelectedNode,
         ref: boxModelMain => {
           this.boxModelMain = boxModelMain;
         },
         onHideBoxModelHighlighter,
         onShowBoxModelEditor,
         onShowBoxModelHighlighter,
-        onShowBoxModelHighlighterForNode,
       }),
       BoxModelInfo({
         boxModel,
@@ -78,6 +76,9 @@ module.exports = createClass({
       showBoxModelProperties ?
         BoxModelProperties({
           boxModel,
+          setSelectedNode,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
         })
         :
         null

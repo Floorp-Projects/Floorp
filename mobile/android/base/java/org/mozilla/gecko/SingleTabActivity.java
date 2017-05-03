@@ -136,16 +136,6 @@ public abstract class SingleTabActivity extends GeckoApp {
         return false;
     }
 
-    @Override
-    protected void onDone() {
-        // Our startup logic should be robust enough to cope with it's tab having been closed even
-        // though the activity might survive, so we don't have to call finish() just to make sure
-        // that a new tab is opened in that case. This also has the advantage that we'll remain in
-        // memory as long as the low-memory killer permits, so we can potentially avoid a costly
-        // re-startup of Gecko if the user returns to us soon.
-        moveTaskToBack(true);
-    }
-
     /**
      * For us here, mLastSelectedTabId/Hash will hold the tab that will be selected when the
      * activity is resumed/recreated, unless

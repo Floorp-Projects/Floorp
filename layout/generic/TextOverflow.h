@@ -175,7 +175,7 @@ class TextOverflow {
    *   inline-level frames that are clipped by the current marker width
    */
   void AnalyzeMarkerEdges(nsIFrame* aFrame,
-                          mozilla::FrameType aFrameType,
+                          mozilla::LayoutFrameType aFrameType,
                           const LogicalRect& aInsideMarkersArea,
                           FrameHashtable* aFramesToHide,
                           AlignmentEdges* aAlignmentEdges,

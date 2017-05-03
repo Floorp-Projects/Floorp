@@ -637,7 +637,7 @@ Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const
       nsIFrame* canvasFrame = frame->GetParent();
       if (canvasFrame) {
         canvasFrame = nsLayoutUtils::GetClosestFrameOfType(
-          canvasFrame, FrameType::HTMLCanvas);
+          canvasFrame, LayoutFrameType::HTMLCanvas);
       }
 
       // make the canvas the bounding frame
