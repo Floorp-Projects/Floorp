@@ -59,6 +59,7 @@ public:
   typedef nsBaseHashtableET<KeyClass, DataType> EntryType;
 
   using nsTHashtable<EntryType>::Contains;
+  using nsTHashtable<EntryType>::GetGeneration;
 
   nsBaseHashtable() {}
   explicit nsBaseHashtable(uint32_t aInitLength)

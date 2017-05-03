@@ -33,8 +33,9 @@ typedef Vector<ZoneGroup*, 4, SystemAllocPolicy> ZoneGroupVector;
 using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 
 class AutoMaybeStartBackgroundAllocation;
-class MarkingValidator;
+template <typename Task> class AutoRunGCSweepTask;
 class AutoTraceSession;
+class MarkingValidator;
 struct MovingTracer;
 
 enum IncrementalProgress
@@ -988,6 +989,8 @@ class GCRuntime
     void endMarkingSweepGroup();
     void beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock);
     bool shouldReleaseObservedTypes();
+    void sweepDebuggerOnMainThread(FreeOp* fop);
+    void sweepJitDataOnMainThread(FreeOp* fop);
     void endSweepingSweepGroup();
     IncrementalProgress performSweepActions(SliceBudget& sliceBudget,
                                             AutoLockForExclusiveAccess& lock);
@@ -1227,6 +1230,7 @@ class GCRuntime
      */
     void startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
     void joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
+    template <typename Task> friend class AutoRunGCSweepTask;
 
     /*
      * List head of arenas allocated during the sweep phase.

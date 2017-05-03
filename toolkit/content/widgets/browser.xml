@@ -848,26 +848,6 @@
         </setter>
       </property>
 
-      <!-- increases or decreases the browser's network priority -->
-      <method name="adjustPriority">
-        <parameter name="adjustment"/>
-        <body><![CDATA[
-          let loadGroup = this.webNavigation.QueryInterface(Components.interfaces.nsIDocumentLoader)
-                              .loadGroup.QueryInterface(Components.interfaces.nsISupportsPriority);
-          loadGroup.adjustPriority(adjustment);
-        ]]></body>
-      </method>
-
-      <!-- sets the browser's network priority to a discrete value -->
-      <method name="setPriority">
-        <parameter name="priority"/>
-        <body><![CDATA[
-          let loadGroup = this.webNavigation.QueryInterface(Components.interfaces.nsIDocumentLoader)
-                              .loadGroup.QueryInterface(Components.interfaces.nsISupportsPriority);
-          loadGroup.priority = priority;
-        ]]></body>
-      </method>
-
       <field name="urlbarChangeTracker">
         ({
           _startedLoadSinceLastUserTyping: false,

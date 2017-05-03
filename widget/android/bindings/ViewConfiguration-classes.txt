@@ -1,1 +1,1 @@
-android.view.ViewConfiguration
+[android.view.ViewConfiguration = exceptionMode:nsresult]

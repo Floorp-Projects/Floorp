@@ -143,7 +143,6 @@
   "msgbroker.js": ["addListener", "addObject", "removeListener", "sendMessage", "log", "pass", "fail"],
   "MulticastDNSAndroid.jsm": ["MulticastDNS"],
   "NativeMessaging.jsm": ["HostManifestManager", "NativeApp"],
-  "NetworkPrioritizer.jsm": ["trackBrowserWindow"],
   "NotificationDB.jsm": [],
   "nsFormAutoCompleteResult.jsm": ["FormAutoCompleteResult"],
   "objects.js": ["getLength"],

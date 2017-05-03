@@ -13,9 +13,6 @@ with Files("test/browser/*Telemetry*"):
 with Files("test/browser/*ContentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("test/browser/*NetworkPrioritizer*"):
-    BUG_COMPONENT = ("Core", "Networking")
-
 with Files("test/browser/*PermissionUI*"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -84,9 +81,6 @@ with Files("FullZoomUI.jsm"):
 
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
-
-with Files("NetworkPrioritizer.jsm"):
-    BUG_COMPONENT = ("Core", "Networking")
 
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
@@ -158,7 +152,6 @@ EXTRA_JS_MODULES += [
     'FormValidationHandler.jsm',
     'FullZoomUI.jsm',
     'LaterRun.jsm',
-    'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
     'PermissionUI.jsm',
     'PluginContent.jsm',

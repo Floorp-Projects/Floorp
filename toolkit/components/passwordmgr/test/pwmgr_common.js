@@ -373,6 +373,7 @@ if (this.addMessageListener) {
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
   ok = is = () => {}; // eslint-disable-line no-native-reassign
 
+  Cu.import("resource://gre/modules/AppConstants.jsm");
   Cu.import("resource://gre/modules/LoginHelper.jsm");
   Cu.import("resource://gre/modules/LoginManagerParent.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
@@ -398,7 +399,9 @@ if (this.addMessageListener) {
   addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
     // Force LoginManagerParent to init for the tests since it's normally delayed
     // by apps such as on Android.
-    LoginManagerParent.init();
+    if (AppConstants.platform == "android") {
+      LoginManagerParent.init();
+    }
 
     commonInit(selfFilling);
     sendAsyncMessage("doneSetup");
