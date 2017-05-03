@@ -271,9 +271,14 @@ protected:
   bool ShowList(bool aShowList);
   void CheckFireOnChange();
   void FireValueChangeEvent();
-  nsresult RedisplayText(int32_t aIndex);
+  nsresult RedisplayText();
   void HandleRedisplayTextEvent();
   void ActuallyDisplayText(bool aNotify);
+  void GetPreviewText(nsAString& aValue)
+  {
+    aValue = mPreviewText;
+  }
+  void SetPreviewText(const nsAString& aValue);
 
 private:
   // If our total transform to the root frame of the root document is only a 2d
@@ -297,7 +302,8 @@ protected:
 
   int32_t               mRecentSelectedIndex;
   int32_t               mDisplayedIndex;
-  nsString              mDisplayedOptionText;
+  nsString              mDisplayedOptionTextOrPreview;
+  nsString              mPreviewText;
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
