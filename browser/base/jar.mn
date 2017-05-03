@@ -73,6 +73,7 @@ browser.jar:
         content/browser/browser-feeds.js              (content/browser-feeds.js)
         content/browser/browser-fullScreenAndPointerLock.js  (content/browser-fullScreenAndPointerLock.js)
         content/browser/browser-fullZoom.js           (content/browser-fullZoom.js)
+        content/browser/browser-fxaccounts.js         (content/browser-fxaccounts.js)
         content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
         content/browser/browser-media.js              (content/browser-media.js)
         content/browser/browser-places.js             (content/browser-places.js)
@@ -81,7 +82,7 @@ browser.jar:
         content/browser/browser-safebrowsing.js       (content/browser-safebrowsing.js)
         content/browser/browser-sidebar.js            (content/browser-sidebar.js)
         content/browser/browser-social.js             (content/browser-social.js)
-        content/browser/browser-sync.js               (content/browser-sync.js)
+        content/browser/browser-syncui.js             (content/browser-syncui.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 #ifdef CAN_DRAW_IN_TITLEBAR
         content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)

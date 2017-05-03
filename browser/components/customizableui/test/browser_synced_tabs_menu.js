@@ -229,11 +229,11 @@ add_task(function* () {
   let syncNowButton = document.getElementById("PanelUI-remotetabs-syncnow");
 
   let didSync = false;
-  let oldDoSync = gSync.doSync;
-  gSync.doSync = function() {
+  let oldDoSync = gSyncUI.doSync;
+  gSyncUI.doSync = function() {
     didSync = true;
     mockedInternal.hasSyncedThisSession = true;
-    gSync.doSync = oldDoSync;
+    gSyncUI.doSync = oldDoSync;
   }
   syncNowButton.click();
   ok(didSync, "clicking the button called the correct function");

@@ -122,7 +122,7 @@ SyncedTabsDeckComponent.prototype = {
 
   getPanelStatus() {
     return this._accountStatus().then(exists => {
-      if (!exists || this._SyncedTabs.loginFailed) {
+      if (!exists || this._getChromeWindow(this._window).gSyncUI.loginFailed()) {
         return this.PANELS.NOT_AUTHED_INFO;
       }
       if (!this._SyncedTabs.isConfiguredToSyncTabs) {
@@ -166,7 +166,7 @@ SyncedTabsDeckComponent.prototype = {
   },
 
   openSyncPrefs() {
-    this._getChromeWindow(this._window).gSync.openPrefs("tabs-sidebar");
+    this._getChromeWindow(this._window).gSyncUI.openPrefs("tabs-sidebar");
   }
 };
 

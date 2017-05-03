@@ -601,7 +601,7 @@ nsContextMenu.prototype = {
   },
 
   initSyncItems() {
-    gSync.initPageContextMenu(this);
+    gFxAccounts.initPageContextMenu(this);
   },
 
   openPasswordManager() {
