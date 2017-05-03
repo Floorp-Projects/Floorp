@@ -25,8 +25,8 @@ function run_test() {
 function setupUpdaterTestFinished() {
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdateUsingUpdater(STATE_FAILED_VERSION_DOWNGRADE_ERROR, false,
-                        (USE_EXECV ? 0 : 1));
+  runUpdate(STATE_FAILED_VERSION_DOWNGRADE_ERROR, false, (USE_EXECV ? 0 : 1),
+            false);
 }
 
 /**
