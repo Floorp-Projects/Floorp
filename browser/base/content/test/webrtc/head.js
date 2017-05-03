@@ -30,9 +30,9 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-function promiseWaitForCondition(aConditionFn) {
+function promiseWaitForCondition(aConditionFn, retryTimes) {
   let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.");
+  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.", retryTimes);
   return deferred.promise;
 }
 
