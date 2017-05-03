@@ -437,8 +437,11 @@ private:
   void Render(const nsIntRegion& aInvalidRegion, const nsIntRegion& aOpaqueRegion);
 #if defined(MOZ_WIDGET_ANDROID)
   void RenderToPresentationSurface();
-  // Returns the height of the toolbar in screen pixels.
-  int32_t RenderToolbar();
+  // Shifts the content down so the toolbar does not cover it.
+  // Returns the Y shift of the content in screen pixels
+  ScreenCoord GetContentShiftForToolbar();
+  // Renders the static snapshot after the content has been rendered.
+  void RenderToolbar();
   // Used by robocop tests to get a snapshot of the frame buffer.
   void HandlePixelsTarget();
 #endif
