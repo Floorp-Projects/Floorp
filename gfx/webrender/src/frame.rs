@@ -61,7 +61,6 @@ impl<'a> FlattenContext<'a> {
 pub struct Frame {
     pub clip_scroll_tree: ClipScrollTree,
     pub pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
-    pub pipeline_auxiliary_lists: AuxiliaryListsMap,
     id: FrameId,
     frame_builder_config: FrameBuilderConfig,
     frame_builder: Option<FrameBuilder>,
@@ -226,7 +225,6 @@ impl Frame {
     pub fn new(config: FrameBuilderConfig) -> Frame {
         Frame {
             pipeline_epoch_map: HashMap::default(),
-            pipeline_auxiliary_lists: HashMap::default(),
             clip_scroll_tree: ClipScrollTree::new(),
             id: FrameId(0),
             frame_builder: None,
@@ -296,7 +294,6 @@ impl Frame {
         }
 
         let old_scrolling_states = self.reset();
-        self.pipeline_auxiliary_lists = scene.pipeline_auxiliary_lists.clone();
 
         self.pipeline_epoch_map.insert(root_pipeline_id, root_pipeline.epoch);
 
@@ -381,9 +378,9 @@ impl Frame {
         }
 
         let composition_operations = {
-            let auxiliary_lists = self.pipeline_auxiliary_lists
-                                      .get(&pipeline_id)
-                                      .expect("No auxiliary lists?!");
+            let auxiliary_lists = context.scene.pipeline_auxiliary_lists
+                                               .get(&pipeline_id)
+                                               .expect("No auxiliary lists?!");
             CompositeOps::new(
                 stacking_context.filter_ops_for_compositing(auxiliary_lists, &context.scene.properties),
                 stacking_context.mix_blend_mode_for_compositing())
@@ -437,6 +434,7 @@ impl Frame {
                                               pipeline_id,
                                               level == 0,
                                               composition_operations,
+                                              *bounds,
                                               stacking_context.transform_style);
 
         // For the root pipeline, there's no need to add a full screen rectangle
@@ -609,9 +607,9 @@ impl Frame {
                                              text_info.glyph_options);
                 }
                 SpecificDisplayItem::Rectangle(ref info) => {
-                    let auxiliary_lists = self.pipeline_auxiliary_lists
-                                              .get(&pipeline_id)
-                                              .expect("No auxiliary lists?!");
+                    let auxiliary_lists = context.scene.pipeline_auxiliary_lists
+                                                       .get(&pipeline_id)
+                                                       .expect("No auxiliary lists?!");
                     // Try to extract the opaque inner rectangle out of the clipped primitive.
                     if let Some(opaque_rect) = clip_intersection(&item.rect, &item.clip, auxiliary_lists) {
                         let mut results = Vec::new();

@@ -23,13 +23,13 @@ define_matrix! {
     ///
     /// Matrices can be parametrized over the source and destination units, to describe a
     /// transformation from a space to another.
-    /// For example, TypedMatrix2D<f32, WordSpace, ScreenSpace>::transform_point4d
-    /// takes a TypedPoint2D<f32, WordSpace> and returns a TypedPoint2D<f32, ScreenSpace>.
+    /// For example, `TypedMatrix2D<f32, WordSpace, ScreenSpace>::transform_point4d`
+    /// takes a `TypedPoint2D<f32, WordSpace>` and returns a `TypedPoint2D<f32, ScreenSpace>`.
     ///
     /// Matrices expose a set of convenience methods for pre- and post-transformations.
     /// A pre-transformation corresponds to adding an operation that is applied before
     /// the rest of the transformation, while a post-transformation adds an operation
-    /// that is appled after.
+    /// that is applied after.
     pub struct TypedMatrix2D<T, Src, Dst> {
         pub m11: T, pub m12: T,
         pub m21: T, pub m22: T,

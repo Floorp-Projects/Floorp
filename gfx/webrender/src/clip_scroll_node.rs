@@ -271,6 +271,11 @@ impl ClipScrollNode {
             NodeType::ReferenceFrame(_) => parent_combined_viewport_in_local_space,
         };
 
+        // HACK: prevent the code above for non-AA transforms, it's incorrect.
+        if (local_transform.m13, local_transform.m23) != (0.0, 0.0) {
+            self.combined_local_viewport_rect = self.local_clip_rect;
+        }
+
         // The transformation for this viewport in world coordinates is the transformation for
         // our parent reference frame, plus any accumulated scrolling offsets from nodes
         // between our reference frame and this node. For reference frames, we also include

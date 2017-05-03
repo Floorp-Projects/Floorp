@@ -394,40 +394,40 @@ impl<T: Floor + Ceil + Round + Add<T, Output=T> + Sub<T, Output=T>, U> TypedRect
 
 // Convenience functions for common casts
 impl<T: NumCast + Copy, Unit> TypedRect<T, Unit> {
-    /// Cast into an f32 vector.
+    /// Cast into an `f32` rectangle.
     pub fn to_f32(&self) -> TypedRect<f32, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an usize vector, truncating decimals if any.
+    /// Cast into an `usize` rectangle, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), round_in() or round_out() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point rectangles, it is worth considering whether
+    /// to `round()`, `round_in()` or `round_out()` before the cast in order to
+    /// obtain the desired conversion behavior.
     pub fn to_uint(&self) -> TypedRect<usize, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i32 vector, truncating decimals if any.
+    /// Cast into an `i32` rectangle, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), round_in() or round_out() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point rectangles, it is worth considering whether
+    /// to `round()`, `round_in()` or `round_out()` before the cast in order to
+    /// obtain the desired conversion behavior.
     pub fn to_i32(&self) -> TypedRect<i32, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i64 vector, truncating decimals if any.
+    /// Cast into an `i64` rectangle, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), round_in() or round_out() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point rectangles, it is worth considering whether
+    /// to `round()`, `round_in()` or `round_out()` before the cast in order to
+    /// obtain the desired conversion behavior.
     pub fn to_i64(&self) -> TypedRect<i64, Unit> {
         self.cast().unwrap()
     }
 }
 
-/// Shorthand for TypedRect::new(TypedPoint2D::new(x, y), TypedSize2D::new(w, h)).
+/// Shorthand for `TypedRect::new(TypedPoint2D::new(x, y), TypedSize2D::new(w, h))`.
 pub fn rect<T: Copy, U>(x: T, y: T, w: T, h: T) -> TypedRect<T, U> {
     TypedRect::new(TypedPoint2D::new(x, y), TypedSize2D::new(w, h))
 }

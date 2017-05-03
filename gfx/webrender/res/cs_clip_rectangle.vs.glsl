@@ -54,7 +54,6 @@ void main(void) {
                                                layer,
                                                area,
                                                cci.segment_index);
-    vLocalRect = vi.clipped_local_rect;
     vPos = vi.local_pos;
 
     vClipMode = clip.rect.mode.x;

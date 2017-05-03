@@ -20,6 +20,7 @@ void main(void) {
     vec2 st0 = src_task.render_target_origin / texture_size;
     vec2 st1 = (src_task.render_target_origin + src_task.size) / texture_size;
     vUv = vec3(mix(st0, st1, aPosition.xy), src_task.render_target_layer_index);
+    vUvBounds = vec4(st0 + 0.5 / texture_size, st1 - 0.5 / texture_size);
 
     vOp = pi.sub_index;
     vAmount = float(pi.user_data.y) / 65535.0;

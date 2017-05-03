@@ -22,7 +22,7 @@ use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler};
-use prim_store::GradientData;
+use prim_store::{GradientData, SplitGeometry};
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
 use record::ApiRecordingReceiver;
@@ -70,6 +70,7 @@ const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag { label: "Image", color:
 const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag { label: "YuvImage", color: debug_colors::DARKGREEN };
 const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag { label: "Blend", color: debug_colors::LIGHTBLUE };
 const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "HwComposite", color: debug_colors::DODGERBLUE };
+const GPU_TAG_PRIM_SPLIT_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "SplitComposite", color: debug_colors::DARKBLUE };
 const GPU_TAG_PRIM_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "Composite", color: debug_colors::MAGENTA };
 const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag { label: "TextRun", color: debug_colors::BLUE };
 const GPU_TAG_PRIM_GRADIENT: GpuProfileTag = GpuProfileTag { label: "Gradient", color: debug_colors::YELLOW };
@@ -246,7 +247,7 @@ impl GpuStoreLayout for VertexDataTextureLayout {
 type VertexDataTexture = GpuDataTexture<VertexDataTextureLayout>;
 pub type VertexDataStore<T> = GpuStore<T, VertexDataTextureLayout>;
 
-pub struct GradientDataTextureLayout {}
+pub struct GradientDataTextureLayout;
 
 impl GpuStoreLayout for GradientDataTextureLayout {
     fn image_format() -> ImageFormat {
@@ -264,6 +265,26 @@ impl GpuStoreLayout for GradientDataTextureLayout {
 
 type GradientDataTexture = GpuDataTexture<GradientDataTextureLayout>;
 pub type GradientDataStore = GpuStore<GradientData, GradientDataTextureLayout>;
+
+pub struct SplitGeometryTextureLayout;
+
+impl GpuStoreLayout for SplitGeometryTextureLayout {
+    fn image_format() -> ImageFormat {
+        //TODO: use normalized integers
+        ImageFormat::RGBAF32
+    }
+
+    fn texture_width<T>() -> usize {
+        MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % Self::texels_per_item::<T>())
+    }
+
+    fn texture_filter() -> TextureFilter {
+        TextureFilter::Nearest
+    }
+}
+
+type SplitGeometryTexture = GpuDataTexture<SplitGeometryTextureLayout>;
+pub type SplitGeometryStore = GpuStore<SplitGeometry, SplitGeometryTextureLayout>;
 
 const TRANSFORM_FEATURE: &'static str = "TRANSFORM";
 const SUBPIXEL_AA_FEATURE: &'static str = "SUBPIXEL_AA";
@@ -437,6 +458,7 @@ struct GpuDataTextures {
     data128_texture: VertexDataTexture,
     resource_rects_texture: VertexDataTexture,
     gradient_data_texture: GradientDataTexture,
+    split_geometry_texture: SplitGeometryTexture,
 }
 
 impl GpuDataTextures {
@@ -451,6 +473,7 @@ impl GpuDataTextures {
             data128_texture: VertexDataTexture::new(device),
             resource_rects_texture: VertexDataTexture::new(device),
             gradient_data_texture: GradientDataTexture::new(device),
+            split_geometry_texture: SplitGeometryTexture::new(device),
         }
     }
 
@@ -464,6 +487,7 @@ impl GpuDataTextures {
         self.layer_texture.init(device, &mut frame.layer_texture_data);
         self.render_task_texture.init(device, &mut frame.render_task_data);
         self.gradient_data_texture.init(device, &mut frame.gpu_gradient_data);
+        self.split_geometry_texture.init(device, &mut frame.gpu_split_geometry);
 
         device.bind_texture(TextureSampler::Layers, self.layer_texture.id);
         device.bind_texture(TextureSampler::RenderTasks, self.render_task_texture.id);
@@ -474,6 +498,7 @@ impl GpuDataTextures {
         device.bind_texture(TextureSampler::Data128, self.data128_texture.id);
         device.bind_texture(TextureSampler::ResourceRects, self.resource_rects_texture.id);
         device.bind_texture(TextureSampler::Gradients, self.gradient_data_texture.id);
+        device.bind_texture(TextureSampler::SplitGeometry, self.split_geometry_texture.id);
     }
 }
 
@@ -497,6 +522,7 @@ pub struct Renderer {
     /// of these shaders are also used by the primitive shaders.
     cs_clip_rectangle: LazilyCompiledShader,
     cs_clip_image: LazilyCompiledShader,
+    cs_clip_border: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
     // final results on screen. They are aware of tile boundaries.
@@ -522,6 +548,7 @@ pub struct Renderer {
 
     ps_blend: LazilyCompiledShader,
     ps_hw_composite: LazilyCompiledShader,
+    ps_split_composite: LazilyCompiledShader,
     ps_composite: LazilyCompiledShader,
 
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
@@ -532,6 +559,7 @@ pub struct Renderer {
     clear_color: ColorF,
     debug: DebugRenderer,
     render_target_debug: bool,
+    enable_batcher: bool,
     backend_profile_counters: BackendProfileCounters,
     profile_counters: RendererProfileCounters,
     profiler: Profiler,
@@ -678,6 +706,14 @@ impl Renderer {
         let cs_clip_image = try!{
             LazilyCompiledShader::new(ShaderKind::ClipCache,
                                       "cs_clip_image",
+                                      &[],
+                                      &mut device,
+                                      options.precache_shaders)
+        };
+
+        let cs_clip_border = try!{
+            LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                      "cs_clip_border",
                                       &[],
                                       &mut device,
                                       options.precache_shaders)
@@ -872,6 +908,14 @@ impl Renderer {
                                      options.precache_shaders)
         };
 
+        let ps_split_composite = try!{
+            LazilyCompiledShader::new(ShaderKind::Primitive,
+                                     "ps_split_composite",
+                                     &[],
+                                     &mut device,
+                                     options.precache_shaders)
+        };
+
         let device_max_size = device.max_texture_size();
         let max_texture_size = cmp::min(device_max_size, options.max_texture_size.unwrap_or(device_max_size));
 
@@ -1040,6 +1084,7 @@ impl Renderer {
             cs_text_run: cs_text_run,
             cs_blur: cs_blur,
             cs_clip_rectangle: cs_clip_rectangle,
+            cs_clip_border: cs_clip_border,
             cs_clip_image: cs_clip_image,
             ps_rectangle: ps_rectangle,
             ps_rectangle_clip: ps_rectangle_clip,
@@ -1057,10 +1102,12 @@ impl Renderer {
             ps_cache_image: ps_cache_image,
             ps_blend: ps_blend,
             ps_hw_composite: ps_hw_composite,
+            ps_split_composite: ps_split_composite,
             ps_composite: ps_composite,
             notifier: notifier,
             debug: debug_renderer,
             render_target_debug: render_target_debug,
+            enable_batcher: options.enable_batcher,
             backend_profile_counters: BackendProfileCounters::new(),
             profile_counters: RendererProfileCounters::new(),
             profiler: Profiler::new(),
@@ -1437,10 +1484,19 @@ impl Renderer {
             self.device.bind_texture(TextureSampler::Dither, id);
         }
 
-        self.device.update_vao_instances(vao, data, VertexUsageHint::Stream);
-        self.device.draw_indexed_triangles_instanced_u16(6, data.len() as i32);
+        if self.enable_batcher {
+            self.device.update_vao_instances(vao, data, VertexUsageHint::Stream);
+            self.device.draw_indexed_triangles_instanced_u16(6, data.len() as i32);
+            self.profile_counters.draw_calls.inc();
+        } else {
+            for i in 0 .. data.len() {
+                self.device.update_vao_instances(vao, &data[i..i+1], VertexUsageHint::Stream);
+                self.device.draw_triangles_u16(0, 6);
+                self.profile_counters.draw_calls.inc();
+            }
+        }
+
         self.profile_counters.vertices.add(6 * data.len());
-        self.profile_counters.draw_calls.inc();
     }
 
     fn submit_batch(&mut self,
@@ -1464,6 +1520,10 @@ impl Renderer {
             AlphaBatchKind::HardwareComposite => {
                 let shader = self.ps_hw_composite.get(&mut self.device);
                 (GPU_TAG_PRIM_HW_COMPOSITE, shader)
+            }
+            AlphaBatchKind::SplitComposite => {
+                let shader = self.ps_split_composite.get(&mut self.device);
+                (GPU_TAG_PRIM_SPLIT_COMPOSITE, shader)
             }
             AlphaBatchKind::Blend => {
                 let shader = self.ps_blend.get(&mut self.device);
@@ -1801,6 +1861,16 @@ impl Renderer {
                                           &textures,
                                           &projection);
             }
+            // draw special border clips
+            if !target.clip_batcher.borders.is_empty() {
+                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip borders");
+                let shader = self.cs_clip_border.get(&mut self.device).unwrap();
+                self.draw_instanced_batch(&target.clip_batcher.borders,
+                                          vao,
+                                          shader,
+                                          &BatchTextures::no_texture(),
+                                          &projection);
+            }
         }
     }
 
@@ -2120,6 +2190,7 @@ pub struct RendererOptions {
     pub enable_subpixel_aa: bool,
     pub clear_framebuffer: bool,
     pub clear_color: ColorF,
+    pub enable_batcher: bool,
     pub render_target_debug: bool,
     pub max_texture_size: Option<u32>,
     pub workers: Option<Arc<Mutex<ThreadPool>>>,
@@ -2143,6 +2214,7 @@ impl Default for RendererOptions {
             enable_subpixel_aa: false,
             clear_framebuffer: true,
             clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
+            enable_batcher: true,
             render_target_debug: false,
             max_texture_size: None,
             workers: None,

@@ -37,11 +37,11 @@ const mat3 YuvColorMatrix = mat3(
 void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     float alpha = 0.0;
-    vec2 pos = init_transform_fs(vLocalPos, vLocalRect, alpha);
+    vec2 pos = init_transform_fs(vLocalPos, alpha);
 
     // We clamp the texture coordinate calculation here to the local rectangle boundaries,
     // which makes the edge of the texture stretch instead of repeat.
-    vec2 relative_pos_in_rect = clamp_rect(pos, vLocalRect) - vLocalRect.p0;
+    vec2 relative_pos_in_rect = clamp(pos, vLocalBounds.xy, vLocalBounds.zw) - vLocalBounds.xy;
 #else
     float alpha = 1.0;;
     vec2 relative_pos_in_rect = vLocalPos;

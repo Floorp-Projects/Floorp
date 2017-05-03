@@ -110,6 +110,16 @@ where T: Copy + Mul<T, Output=T> + Add<T, Output=T> + Sub<T, Output=T> {
     pub fn cross(self, other: TypedPoint2D<T, U>) -> T {
         self.x * other.y - self.y * other.x
     }
+
+    #[inline]
+    pub fn normalize(self) -> Self where T: Float + ApproxEq<T> {
+        let dot = self.dot(self);
+        if dot.approx_eq(&T::zero()) {
+            self
+        } else {
+            self / dot.sqrt()
+        }
+    }
 }
 
 impl<T: Copy + Add<T, Output=T>, U> Add for TypedPoint2D<T, U> {
@@ -193,27 +203,27 @@ impl<T: Round, U> TypedPoint2D<T, U> {
     /// Rounds each component to the nearest integer value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
-    /// For example { -0.1, -0.8 }.round() == { 0.0, -1.0 }
+    /// For example `{ -0.1, -0.8 }.round() == { 0.0, -1.0 }`.
     pub fn round(&self) -> Self {
         TypedPoint2D::new(self.x.round(), self.y.round())
     }
 }
 
 impl<T: Ceil, U> TypedPoint2D<T, U> {
-    /// Rounds each component to the smallest integer equal or greater than the orginal value.
+    /// Rounds each component to the smallest integer equal or greater than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
-    /// For example { -0.1, -0.8 }.ceil() == { 0.0, 0.0 }.
+    /// For example `{ -0.1, -0.8 }.ceil() == { 0.0, 0.0 }`.
     pub fn ceil(&self) -> Self {
         TypedPoint2D::new(self.x.ceil(), self.y.ceil())
     }
 }
 
 impl<T: Floor, U> TypedPoint2D<T, U> {
-    /// Rounds each component to the biggest integer equal or lower than the orginal value.
+    /// Rounds each component to the biggest integer equal or lower than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
-    /// For example { -0.1, -0.8 }.floor() == { -1.0, -1.0 }.
+    /// For example `{ -0.1, -0.8 }.floor() == { -1.0, -1.0 }`.
     pub fn floor(&self) -> Self {
         TypedPoint2D::new(self.x.floor(), self.y.floor())
     }
@@ -224,7 +234,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     ///
     /// When casting from floating point to integer coordinates, the decimals are truncated
     /// as one would expect from a simple cast, but this behavior does not always make sense
-    /// geometrically. Consider using round(), ceil or floor() before casting.
+    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint2D<NewT, U>> {
         match (NumCast::from(self.x), NumCast::from(self.y)) {
             (Some(x), Some(y)) => Some(TypedPoint2D::new(x, y)),
@@ -234,34 +244,34 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
 
     // Convenience functions for common casts
 
-    /// Cast into an f32 vector.
+    /// Cast into an `f32` point.
     pub fn to_f32(&self) -> TypedPoint2D<f32, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an usize point, truncating decimals if any.
+    /// Cast into an `usize` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_uint(&self) -> TypedPoint2D<usize, U> {
         self.cast().unwrap()
     }
 
     /// Cast into an i32 point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i32(&self) -> TypedPoint2D<i32, U> {
         self.cast().unwrap()
     }
 
     /// Cast into an i64 point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i64(&self) -> TypedPoint2D<i64, U> {
         self.cast().unwrap()
     }
@@ -386,6 +396,16 @@ impl<T: Mul<T, Output=T> +
                           self.z * other.x - self.x * other.z,
                           self.x * other.y - self.y * other.x)
     }
+
+    #[inline]
+    pub fn normalize(self) -> Self where T: Float + ApproxEq<T> {
+        let dot = self.dot(self);
+        if dot.approx_eq(&T::zero()) {
+            self
+        } else {
+            self / dot.sqrt()
+        }
+    }
 }
 
 impl<T: Copy + Add<T, Output=T>, U> Add for TypedPoint3D<T, U> {
@@ -414,6 +434,22 @@ impl <T: Copy + Neg<Output=T>, U> Neg for TypedPoint3D<T, U> {
     }
 }
 
+impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedPoint3D<T, U> {
+    type Output = Self;
+    #[inline]
+    fn mul(self, scale: T) -> Self {
+        Self::new(self.x * scale, self.y * scale, self.z * scale)
+    }
+}
+
+impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedPoint3D<T, U> {
+    type Output = Self;
+    #[inline]
+    fn div(self, scale: T) -> Self {
+        Self::new(self.x / scale, self.y / scale, self.z / scale)
+    }
+}
+
 impl<T: Float, U> TypedPoint3D<T, U> {
     pub fn min(self, other: TypedPoint3D<T, U>) -> TypedPoint3D<T, U> {
          TypedPoint3D::new(self.x.min(other.x),
@@ -437,7 +473,7 @@ impl<T: Round, U> TypedPoint3D<T, U> {
 }
 
 impl<T: Ceil, U> TypedPoint3D<T, U> {
-    /// Rounds each component to the smallest integer equal or greater than the orginal value.
+    /// Rounds each component to the smallest integer equal or greater than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn ceil(&self) -> Self {
@@ -446,7 +482,7 @@ impl<T: Ceil, U> TypedPoint3D<T, U> {
 }
 
 impl<T: Floor, U> TypedPoint3D<T, U> {
-    /// Rounds each component to the biggest integer equal or lower than the orginal value.
+    /// Rounds each component to the biggest integer equal or lower than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn floor(&self) -> Self {
@@ -471,34 +507,34 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
 
     // Convenience functions for common casts
 
-    /// Cast into an f32 vector.
+    /// Cast into an `f32` point.
     pub fn to_f32(&self) -> TypedPoint3D<f32, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an usize point, truncating decimals if any.
+    /// Cast into an `usize` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_uint(&self) -> TypedPoint3D<usize, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i32 point, truncating decimals if any.
+    /// Cast into an `i32` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i32(&self) -> TypedPoint3D<i32, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i64 point, truncating decimals if any.
+    /// Cast into an `i64` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i64(&self) -> TypedPoint3D<i64, U> {
         self.cast().unwrap()
     }
@@ -675,7 +711,7 @@ impl<T: Round, U> TypedPoint4D<T, U> {
 }
 
 impl<T: Ceil, U> TypedPoint4D<T, U> {
-    /// Rounds each component to the smallest integer equal or greater than the orginal value.
+    /// Rounds each component to the smallest integer equal or greater than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn ceil(&self) -> Self {
@@ -684,7 +720,7 @@ impl<T: Ceil, U> TypedPoint4D<T, U> {
 }
 
 impl<T: Floor, U> TypedPoint4D<T, U> {
-    /// Rounds each component to the biggest integer equal or lower than the orginal value.
+    /// Rounds each component to the biggest integer equal or lower than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn floor(&self) -> Self {
@@ -697,7 +733,7 @@ impl<T: NumCast + Copy, U> TypedPoint4D<T, U> {
     ///
     /// When casting from floating point to integer coordinates, the decimals are truncated
     /// as one would expect from a simple cast, but this behavior does not always make sense
-    /// geometrically. Consider using round(), ceil or floor() before casting.
+    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint4D<NewT, U>> {
         match (NumCast::from(self.x),
                NumCast::from(self.y),
@@ -710,34 +746,34 @@ impl<T: NumCast + Copy, U> TypedPoint4D<T, U> {
 
     // Convenience functions for common casts
 
-    /// Cast into an f32 vector.
+    /// Cast into an `f32` point.
     pub fn to_f32(&self) -> TypedPoint4D<f32, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an usize point, truncating decimals if any.
+    /// Cast into an `usize` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_uint(&self) -> TypedPoint4D<usize, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i32 point, truncating decimals if any.
+    /// Cast into an `i32` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i32(&self) -> TypedPoint4D<i32, U> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i64 point, truncating decimals if any.
+    /// Cast into an `i64` point, truncating decimals if any.
     ///
-    /// When casting from floating point vectors, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i64(&self) -> TypedPoint4D<i64, U> {
         self.cast().unwrap()
     }
@@ -798,6 +834,16 @@ mod point2d {
         let p2: Point2D<f32> = Point2D::new(13.0, 8.0);
         let r = p1.cross(p2);
         assert_eq!(r, -59.0);
+    }
+
+    #[test]
+    pub fn test_normalize() {
+        let p0: Point2D<f32> = Point2D::zero();
+        let p1: Point2D<f32> = Point2D::new(4.0, 0.0);
+        let p2: Point2D<f32> = Point2D::new(3.0, -4.0);
+        assert_eq!(p0.normalize(), p0);
+        assert_eq!(p1.normalize(), Point2D::new(1.0, 0.0));
+        assert_eq!(p2.normalize(), Point2D::new(0.6, -0.8));
     }
 
     #[test]
@@ -870,6 +916,16 @@ mod point3d {
         let p2 = Point3D::new(13.0, 8.0, 3.0);
         let p3 = p1.cross(p2);
         assert_eq!(p3, Point3D::new(-51.0, 105.0, -59.0));
+    }
+
+    #[test]
+    pub fn test_normalize() {
+        let p0: Point3D<f32> = Point3D::zero();
+        let p1: Point3D<f32> = Point3D::new(0.0, -6.0, 0.0);
+        let p2: Point3D<f32> = Point3D::new(1.0, 2.0, -2.0);
+        assert_eq!(p0.normalize(), p0);
+        assert_eq!(p1.normalize(), Point3D::new(0.0, -1.0, 0.0));
+        assert_eq!(p2.normalize(), Point3D::new(1.0/3.0, 2.0/3.0, -2.0/3.0));
     }
 
     #[test]

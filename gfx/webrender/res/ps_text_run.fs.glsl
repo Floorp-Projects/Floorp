@@ -11,7 +11,7 @@ void main(void) {
     float alpha = texture(sColor0, tc).a;
 #ifdef WR_FEATURE_TRANSFORM
     float a = 0.0;
-    init_transform_fs(vLocalPos, vLocalRect, a);
+    init_transform_fs(vLocalPos, a);
     alpha *= a;
 #endif
     vec4 color = vColor;

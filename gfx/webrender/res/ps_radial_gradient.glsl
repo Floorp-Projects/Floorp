@@ -3,11 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 flat varying float vGradientIndex;
+flat varying vec2 vGradientTextureSize;
 flat varying float vGradientRepeat;
+
 flat varying vec2 vStartCenter;
 flat varying vec2 vEndCenter;
 flat varying float vStartRadius;
 flat varying float vEndRadius;
+
 flat varying vec2 vTileSize;
 flat varying vec2 vTileRepeat;
+
 varying vec2 vPos;

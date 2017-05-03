@@ -10,8 +10,8 @@ use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLev
 use internal_types::SourceTexture;
 use mask_cache::MaskCacheInfo;
 use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock128, GpuBlock16, GpuBlock32};
-use prim_store::{GpuBlock64, GradientData, PrimitiveCacheKey, PrimitiveGeometry, PrimitiveIndex};
-use prim_store::{PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
+use prim_store::{GpuBlock64, GradientData, SplitGeometry, PrimitiveCacheKey, PrimitiveGeometry};
+use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, MaskGeometryKind, MaskSegment, RenderTask, RenderTaskData};
 use render_task::{RenderTaskId, RenderTaskIndex, RenderTaskKey, RenderTaskKind};
@@ -198,15 +198,6 @@ impl RenderTaskCollection {
     }
 }
 
-impl Default for PrimitiveGeometry {
-    fn default() -> PrimitiveGeometry {
-        PrimitiveGeometry {
-            local_rect: unsafe { mem::uninitialized() },
-            local_clip_rect: unsafe { mem::uninitialized() },
-        }
-    }
-}
-
 struct AlphaBatchTask {
     task_id: RenderTaskId,
     items: Vec<AlphaRenderItem>,
@@ -320,7 +311,7 @@ impl AlphaRenderItem {
                 };
 
                 let amount = (amount * 65535.0).round() as i32;
-                let batch = batch_list.get_suitable_batch(&key, &stacking_context.bounding_rect);
+                let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
 
                 batch.add_instance(PrimitiveInstance {
                     global_prim_id: -1,
@@ -340,7 +331,7 @@ impl AlphaRenderItem {
                                              AlphaBatchKeyFlags::empty(),
                                              composite_op.to_blend_mode(),
                                              BatchTextures::no_texture());
-                let batch = batch_list.get_suitable_batch(&key, &stacking_context.bounding_rect);
+                let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
                 batch.add_instance(PrimitiveInstance {
                     global_prim_id: -1,
                     prim_address: GpuStoreAddress(0),
@@ -362,7 +353,7 @@ impl AlphaRenderItem {
                                              AlphaBatchKeyFlags::empty(),
                                              BlendMode::Alpha,
                                              BatchTextures::no_texture());
-                let batch = batch_list.get_suitable_batch(&key, &stacking_context.bounding_rect);
+                let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
                 let backdrop_task = render_tasks.get_task_index(&backdrop_id, child_pass_index);
                 let src_task_index = render_tasks.get_static_task_index(&src_id);
                 batch.add_instance(PrimitiveInstance {
@@ -377,10 +368,16 @@ impl AlphaRenderItem {
                     z_sort_index: z,
                 });
             }
-            AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, z) => {
-                let group = &ctx.clip_scroll_group_store[clip_scroll_group_index.0];
+            AlphaRenderItem::Primitive(clip_scroll_group_index_opt, prim_index, z) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-                let transform_kind = group.screen_bounding_rect.as_ref().unwrap().0;
+                let (transform_kind, packed_layer_index) = match clip_scroll_group_index_opt {
+                    Some(group_index) => {
+                        let group = &ctx.clip_scroll_group_store[group_index.0];
+                        let bounding_rect = group.screen_bounding_rect.as_ref().unwrap();
+                        (bounding_rect.0, group.packed_layer_index.0 as i32)
+                    },
+                    None => (TransformedRectKind::AxisAligned, 0),
+                };
                 let needs_clipping = prim_metadata.needs_clipping();
                 let mut flags = AlphaBatchKeyFlags::empty();
                 if needs_clipping {
@@ -401,8 +398,6 @@ impl AlphaRenderItem {
                         OPAQUE_TASK_INDEX
                     }
                 }.0 as i32;
-                let packed_layer_index = ctx.clip_scroll_group_store[clip_scroll_group_index.0]
-                                            .packed_layer_index.0 as i32;
                 let global_prim_id = prim_index.0 as i32;
                 let prim_address = prim_metadata.gpu_prim_index;
                 let task_index = task_index.0 as i32;
@@ -586,8 +581,26 @@ impl AlphaRenderItem {
                                                                    0));
                         }
                     }
-
                 }
+            }
+            AlphaRenderItem::SplitComposite(sc_index, task_id, gpu_address, z) => {
+                let key = AlphaBatchKey::new(AlphaBatchKind::SplitComposite,
+                                             AlphaBatchKeyFlags::empty(),
+                                             BlendMode::PremultipliedAlpha,
+                                             BatchTextures::no_texture());
+                let stacking_context = &ctx.stacking_context_store[sc_index.0];
+                let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
+                let source_task = render_tasks.get_task_index(&task_id, child_pass_index);
+                batch.add_instance(PrimitiveInstance {
+                    global_prim_id: -1,
+                    prim_address: gpu_address,
+                    task_index: task_index.0 as i32,
+                    clip_task_index: -1,
+                    layer_index: -1, // not be used
+                    sub_index: 0,
+                    user_data: [ source_task.0 as i32, 0 ],
+                    z_sort_index: z,
+                });
             }
         }
     }
@@ -630,6 +643,7 @@ pub struct ClipBatcher {
     pub rectangles: Vec<CacheClipInstance>,
     /// Image draws apply the image masking.
     pub images: HashMap<SourceTexture, Vec<CacheClipInstance>>,
+    pub borders: Vec<CacheClipInstance>,
 }
 
 impl ClipBatcher {
@@ -637,6 +651,7 @@ impl ClipBatcher {
         ClipBatcher {
             rectangles: Vec::new(),
             images: HashMap::new(),
+            borders: Vec::new(),
         }
     }
 
@@ -654,8 +669,8 @@ impl ClipBatcher {
                 segment: 0,
             };
 
-            for clip_index in 0..info.effective_clip_count as usize {
-                let offset = info.clip_range.start.0 + ((CLIP_DATA_GPU_SIZE * clip_index) as i32);
+            for clip_index in 0..info.effective_complex_clip_count as usize {
+                let offset = info.complex_clip_range.start.0 + ((CLIP_DATA_GPU_SIZE * clip_index) as i32);
                 match geometry_kind {
                     MaskGeometryKind::Default => {
                         self.rectangles.push(CacheClipInstance {
@@ -699,6 +714,16 @@ impl ClipBatcher {
                     address: address,
                     ..instance
                 })
+            }
+
+            for &(ref source, gpu_address) in &info.border_corners {
+                for dash_index in 0..source.dash_count {
+                    self.borders.push(CacheClipInstance {
+                        address: gpu_address,
+                        segment: dash_index as i32,
+                        ..instance
+                    })
+                }
             }
         }
     }
@@ -1149,6 +1174,7 @@ impl RenderPass {
 pub enum AlphaBatchKind {
     Composite,
     HardwareComposite,
+    SplitComposite,
     Blend,
     Rectangle,
     TextRun,
@@ -1300,32 +1326,47 @@ pub struct PackedLayerIndex(pub usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct StackingContextIndex(pub usize);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum ContextIsolation {
+    /// No isolation - the content is mixed up with everything else.
+    None,
+    /// Items are isolated and drawn into a separate render target.
+    /// Child contexts are exposed.
+    Items,
+    /// All the content inside is isolated and drawn into a separate target.
+    Full,
+}
+
 #[derive(Debug)]
 pub struct StackingContext {
     pub pipeline_id: PipelineId,
 
-    // Offset in the parent reference frame to the origin of this stacking
-    // context's coordinate system.
+    /// Offset in the parent reference frame to the origin of this stacking
+    /// context's coordinate system.
     pub reference_frame_offset: LayerPoint,
 
-    // Bounding rectangle for this stacking context calculated based on the size
-    // and position of all its children.
-    pub bounding_rect: DeviceIntRect,
+    /// The `ClipId` of the owning reference frame.
+    pub reference_frame_id: ClipId,
+
+    /// Local bounding rectangle for this stacking context.
+    pub local_bounds: LayerRect,
+
+    /// Screen space bounding rectangle for this stacking context,
+    /// calculated based on the size and position of all its children.
+    pub screen_bounds: DeviceIntRect,
 
     pub composite_ops: CompositeOps,
     pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
 
-    // Signifies that this stacking context should be drawn in a separate render pass
-    // with a transparent background and then composited back to its parent. Used to
-    // support mix-blend-mode in certain cases.
-    pub should_isolate: bool,
+    /// Type of the isolation of the content.
+    pub isolation: ContextIsolation,
 
-    // Set for the root stacking context of a display list or an iframe. Used for determining
-    // when to isolate a mix-blend-mode composite.
+    /// Set for the root stacking context of a display list or an iframe. Used for determining
+    /// when to isolate a mix-blend-mode composite.
     pub is_page_root: bool,
 
-    // Wehther or not this stacking context has any visible components, calculated
-    // based on the size and position of all children and how they are clipped.
+    /// Whether or not this stacking context has any visible components, calculated
+    /// based on the size and position of all children and how they are clipped.
     pub is_visible: bool,
 }
 
@@ -1333,16 +1374,24 @@ impl StackingContext {
     pub fn new(pipeline_id: PipelineId,
                reference_frame_offset: LayerPoint,
                is_page_root: bool,
+               reference_frame_id: ClipId,
+               local_bounds: LayerRect,
                transform_style: TransformStyle,
                composite_ops: CompositeOps)
                -> StackingContext {
+        let isolation = match transform_style {
+            TransformStyle::Flat => ContextIsolation::None,
+            TransformStyle::Preserve3D => ContextIsolation::Items,
+        };
         StackingContext {
             pipeline_id: pipeline_id,
             reference_frame_offset: reference_frame_offset,
-            bounding_rect: DeviceIntRect::zero(),
+            reference_frame_id: reference_frame_id,
+            local_bounds: local_bounds,
+            screen_bounds: DeviceIntRect::zero(),
             composite_ops: composite_ops,
             clip_scroll_groups: Vec::new(),
-            should_isolate: transform_style == TransformStyle::Preserve3D, //TODO
+            isolation: isolation,
             is_page_root: is_page_root,
             is_visible: false,
         }
@@ -1481,6 +1530,7 @@ pub struct Frame {
     pub gpu_data128: Vec<GpuBlock128>,
     pub gpu_geometry: Vec<PrimitiveGeometry>,
     pub gpu_gradient_data: Vec<GradientData>,
+    pub gpu_split_geometry: Vec<SplitGeometry>,
     pub gpu_resource_rects: Vec<TexelRect>,
 
     // List of textures that we don't know about yet
