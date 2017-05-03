@@ -102,26 +102,34 @@ class PromiseObject : public NativeObject
 };
 
 /**
- * Enqueues resolve/reject reactions in the given Promise's reactions lists
- * in a content-invisible way.
+ * Unforgeable version of the JS builtin Promise.all.
  *
- * Used internally to implement DOM functionality.
+ * Takes an AutoObjectVector of Promise objects and returns a promise that's
+ * resolved with an array of resolution values when all those promises have
+ * been resolved, or rejected with the rejection value of the first rejected
+ * promise.
  *
- * Note: the reactions pushed using this function contain a `promise` field
- * that can contain null. That field is only ever used by devtools, which have
- * to treat these reactions specially.
+ * Asserts that all objects in the `promises` vector are, maybe wrapped,
+ * instances of `Promise` or a subclass of `Promise`.
  */
-MOZ_MUST_USE bool
-EnqueuePromiseReactions(JSContext* cx, Handle<PromiseObject*> promise,
-                        HandleObject dependentPromise,
-                        HandleValue onFulfilled, HandleValue onRejected);
-
 MOZ_MUST_USE JSObject*
 GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
 
-MOZ_MUST_USE JSObject*
-OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
-                    HandleValue onRejected);
+/**
+ * Enqueues resolve/reject reactions in the given Promise's reactions lists
+ * as though calling the original value of Promise.prototype.then.
+ *
+ * If the `createDependent` flag is not set, no dependent Promise will be
+ * created. This is used internally to implement DOM functionality.
+ * Note: In this case, the reactions pushed using this function contain a
+ * `promise` field that can contain null. That field is only ever used by
+ * devtools, which have to treat these reactions specially.
+ */
+MOZ_MUST_USE bool
+OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
+                    HandleValue onFulfilled, HandleValue onRejected,
+                    MutableHandleObject dependent, bool createDependent);
+
 
 MOZ_MUST_USE PromiseObject*
 CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal);
