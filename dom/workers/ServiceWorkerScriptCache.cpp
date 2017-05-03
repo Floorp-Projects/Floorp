@@ -105,6 +105,7 @@ public:
     , mState(WaitingForInitialization)
     , mNetworkResult(NS_OK)
     , mCacheResult(NS_OK)
+    , mLoadFlags(nsIChannel::LOAD_BYPASS_SERVICE_WORKER)
   {
     MOZ_ASSERT(aManager);
     AssertIsOnMainThread();
@@ -194,6 +195,9 @@ private:
 
   nsresult mNetworkResult;
   nsresult mCacheResult;
+
+  nsCString mMaxScope;
+  nsLoadFlags mLoadFlags;
 };
 
 NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver,
@@ -294,6 +298,7 @@ public:
     : mRegistration(aRegistration)
     , mCallback(aCallback)
     , mState(WaitingForInitialization)
+    , mLoadFlags(nsIChannel::LOAD_BYPASS_SERVICE_WORKER)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aRegistration);
@@ -308,29 +313,11 @@ public:
     return mURL;
   }
 
-  void
-  SetMaxScope(const nsACString& aMaxScope)
-  {
-    mMaxScope = aMaxScope;
-  }
-
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration()
   {
     RefPtr<ServiceWorkerRegistrationInfo> copy = mRegistration.get();
     return copy.forget();
-  }
-
-  void
-  SaveLoadFlags(nsLoadFlags aLoadFlags)
-  {
-    if (mState == WaitingForScriptOrComparisonResult) {
-      MOZ_ASSERT(mCallback);
-      mCallback->SaveLoadFlags(aLoadFlags);
-      return;
-    }
-
-    MOZ_ASSERT(mState == Redundant);
   }
 
   void
@@ -348,7 +335,22 @@ public:
   }
 
   void
-  ComparisonFinished(nsresult aStatus, bool aIsEqual = false)
+  ComparisonFinished(nsresult aStatus)
+  {
+    MOZ_ASSERT(NS_FAILED(aStatus));
+    ComparisonFinished(aStatus,
+                       false /* aIsEqual */,
+                       false /* aIsMainScript */,
+                       EmptyCString(),
+                       nsIRequest::LOAD_NORMAL);
+  }
+
+  void
+  ComparisonFinished(nsresult aStatus,
+                     bool aIsEqual,
+                     bool aIsMainScript,
+                     const nsACString& aMaxScope,
+                     nsLoadFlags aLoadFlags)
   {
     AssertIsOnMainThread();
 
@@ -357,8 +359,17 @@ public:
       return;
     }
 
+    if (aIsMainScript) {
+      mMaxScope = aMaxScope;
+      mLoadFlags = aLoadFlags;
+    }
+
     if (aIsEqual) {
-      NotifyComparisonResult(aStatus, aIsEqual, EmptyString(), mMaxScope);
+      NotifyComparisonResult(aStatus,
+                             aIsEqual,
+                             EmptyString(),
+                             mMaxScope,
+                             mLoadFlags);
       return;
     }
 
@@ -389,7 +400,8 @@ private:
   NotifyComparisonResult(nsresult aStatus,
                          bool aSameScripts,
                          const nsAString& aNewCacheName,
-                         const nsACString& aMaxScope);
+                         const nsACString& aMaxScope,
+                         nsLoadFlags aLoadFlags);
 
   void
   FetchScript(const nsAString& aURL,
@@ -608,8 +620,6 @@ private:
   // Only used if the network script has changed and needs to be cached.
   nsString mNewCacheName;
 
-  nsCString mMaxScope;
-
   enum {
     WaitingForInitialization,
     WaitingForExistingOpen,
@@ -619,6 +629,9 @@ private:
     WaitingForPut,
     Redundant
   } mState;
+
+  nsCString mMaxScope;
+  nsLoadFlags mLoadFlags;
 };
 
 NS_IMPL_ISUPPORTS0(CompareManager)
@@ -656,17 +669,12 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
     return;
   }
 
-  nsLoadFlags flags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+  // Update mLoadFlags, which is passed to script loaders later.
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     mManager->GetRegistration();
-  flags |= registration->GetLoadFlags();
+  mLoadFlags |= registration->GetLoadFlags();
   if (registration->IsLastUpdateCheckTimeOverOneDay()) {
-    flags |= nsIRequest::LOAD_BYPASS_CACHE;
-  }
-
-  // Save the load flags for propagating to ServiceWorkerInfo.
-  if (mIsMainScript) {
-    mManager->SaveLoadFlags(flags);
+    mLoadFlags |= nsIRequest::LOAD_BYPASS_CACHE;
   }
 
   // Note that because there is no "serviceworker" RequestContext type, we can
@@ -678,7 +686,7 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
                      nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
                      loadGroup,
                      nullptr, // aCallbacks
-                     flags);
+                     mLoadFlags);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -741,7 +749,7 @@ CompareNetwork::Finished()
            mCC->Buffer().Equals(mBuffer);
   }
 
-  mManager->ComparisonFinished(rv, same);
+  mManager->ComparisonFinished(rv, same, mIsMainScript, mMaxScope, mLoadFlags);
 
   mCC = nullptr;
 }
@@ -917,13 +925,11 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   }
 
   if (mIsMainScript) {
-    nsAutoCString maxScope;
     // Note: we explicitly don't check for the return value here, because the
     // absence of the header is not an error condition.
-    Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
-        maxScope);
-
-    mManager->SetMaxScope(maxScope);
+    Unused << httpChannel->GetResponseHeader(
+        NS_LITERAL_CSTRING("Service-Worker-Allowed"),
+        mMaxScope);
   }
 
   bool isFromCache = false;
@@ -1252,7 +1258,8 @@ CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   NotifyComparisonResult(NS_OK,
                          false /* aIsEqual */,
                          mNewCacheName,
-                         mMaxScope);
+                         mMaxScope,
+                         mLoadFlags);
 }
 
 void
@@ -1278,14 +1285,16 @@ CompareManager::NotifyComparisonResult(nsresult aState)
   NotifyComparisonResult(aState,
                          false /* aSameScripts*/,
                          EmptyString(),
-                         EmptyCString());
+                         EmptyCString(),
+                         nsIRequest::LOAD_NORMAL);
 }
 
 void
 CompareManager::NotifyComparisonResult(nsresult aStatus,
                                        bool aSameScripts,
                                        const nsAString& aNewCacheName,
-                                       const nsACString& aMaxScope)
+                                       const nsACString& aMaxScope,
+                                       nsLoadFlags aLoadFlags)
 {
   AssertIsOnMainThread();
 
@@ -1300,7 +1309,11 @@ CompareManager::NotifyComparisonResult(nsresult aStatus,
 
   // Send the result to mCallBack.
   MOZ_ASSERT(mCallback);
-  mCallback->ComparisonResult(aStatus, aSameScripts, aNewCacheName, aMaxScope);
+  mCallback->ComparisonResult(aStatus,
+                              aSameScripts,
+                              aNewCacheName,
+                              aMaxScope,
+                              aLoadFlags);
   mCallback = nullptr;
 
   // Abort and release the CompareNetwork.
