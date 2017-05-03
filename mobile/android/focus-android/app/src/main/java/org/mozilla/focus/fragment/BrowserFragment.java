@@ -202,7 +202,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             public void onPageFinished(boolean isSecure) {
                 updateIsLoading(false);
 
-                backgroundTransition.startTransition(ANIMATION_DURATION);
+                if (isBlockingEnabled()) {
+                    // We only show the colorful background gradient when content blocking is enabled.
+                    backgroundTransition.startTransition(ANIMATION_DURATION);
+                }
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading_finished));
 
