@@ -748,7 +748,16 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mToolbarAnimator);
-  nsEventStatus isConsumed = mToolbarAnimator->ReceiveInputEvent(aEvent);
+  ScreenPoint scrollOffset;
+  {
+    MutexAutoLock lock(mTreeLock);
+    RefPtr<AsyncPanZoomController> apzc = FindRootContentOrRootApzc();
+    if (apzc) {
+      scrollOffset = ViewAs<ScreenPixel>(apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::NORMAL),
+                                         PixelCastJustification::ScreenIsParentLayerForRoot);
+    }
+  }
+  nsEventStatus isConsumed = mToolbarAnimator->ReceiveInputEvent(aEvent, scrollOffset);
   // Check if the mToolbarAnimator consumed the event.
   if (isConsumed == nsEventStatus_eConsumeNoDefault) {
     APZCTM_LOG("Dynamic toolbar consumed event");
