@@ -121,32 +121,6 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         return ret;
     }
 
-    private static <T extends Enum<T>> T getEnumValue(Class<T> type, String name)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        try {
-            return Enum.valueOf(type, name.toUpperCase());
-
-        } catch (IllegalArgumentException e) {
-            Object[] values = (Object[]) type.getDeclaredMethod("values").invoke(null);
-            StringBuilder names = new StringBuilder();
-
-            for (int i = 0; i < values.length; i++) {
-                if (i != 0) {
-                    names.append(", ");
-                }
-                names.append(values[i].toString().toLowerCase());
-            }
-
-            System.err.println("***");
-            System.err.println("*** Invalid value \"" + name + "\" for " + type.getSimpleName());
-            System.err.println("*** Specify one of " + names.toString());
-            System.err.println("***");
-            e.printStackTrace(System.err);
-            System.exit(6);
-            return null;
-        }
-    }
-
     private AnnotationInfo buildAnnotationInfo(AnnotatedElement element, Annotation annotation) {
         Class<? extends Annotation> annotationType = annotation.annotationType();
         final String annotationTypeName = annotationType.getName();
@@ -175,19 +149,19 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
 
             final Method exceptionModeMethod = annotationType.getDeclaredMethod("exceptionMode");
             exceptionModeMethod.setAccessible(true);
-            exceptionMode = getEnumValue(
+            exceptionMode = Utils.getEnumValue(
                     AnnotationInfo.ExceptionMode.class,
                     (String) exceptionModeMethod.invoke(annotation));
 
             final Method calledFromMethod = annotationType.getDeclaredMethod("calledFrom");
             calledFromMethod.setAccessible(true);
-            callingThread = getEnumValue(
+            callingThread = Utils.getEnumValue(
                     AnnotationInfo.CallingThread.class,
                     (String) calledFromMethod.invoke(annotation));
 
             final Method dispatchToMethod = annotationType.getDeclaredMethod("dispatchTo");
             dispatchToMethod.setAccessible(true);
-            dispatchTarget = getEnumValue(
+            dispatchTarget = Utils.getEnumValue(
                     AnnotationInfo.DispatchTarget.class,
                     (String) dispatchToMethod.invoke(annotation));
 
