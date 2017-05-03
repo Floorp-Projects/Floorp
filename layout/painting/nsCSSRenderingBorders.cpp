@@ -3551,6 +3551,7 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                             const layers::StackingContextHelper& aSc,
                                              layers::WebRenderDisplayItemLayer* aLayer,
                                              gfx::Rect aClipRect)
 {

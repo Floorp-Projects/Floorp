@@ -2866,6 +2866,7 @@ public:
 
 protected:
   void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                          const StackingContextHelper& aSc,
                                           nsTArray<WebRenderParentCommand>& aParentCommands,
                                           WebRenderDisplayItemLayer* aLayer);
   nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder);
@@ -3457,6 +3458,7 @@ public:
                                          nsIFrame* aFrame,
                                          nsPoint aReferencePoint);
   static void CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    const StackingContextHelper& aSc,
                                                     WebRenderDisplayItemLayer* aLayer,
                                                     nsIFrame* aFrame,
                                                     const nsRect aBorderRect);

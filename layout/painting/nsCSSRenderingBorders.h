@@ -30,6 +30,7 @@ namespace gfx {
 class GradientStops;
 } // namespace gfx
 namespace layers {
+class StackingContextHelper;
 class WebRenderDisplayItemLayer;
 } // namespace layers
 } // namespace mozilla
@@ -107,6 +108,7 @@ public:
 
   bool CanCreateWebRenderCommands();
   void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               const mozilla::layers::StackingContextHelper& aSc,
                                mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                Rect aClipRect = Rect(0, 0, 0, 0));
 

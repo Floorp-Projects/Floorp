@@ -33,6 +33,7 @@ class DrawTarget;
 
 namespace layers {
 class ImageContainer;
+class StackingContextHelper;
 class WebRenderDisplayItemLayer;
 class WebRenderParentCommand;
 class LayerManager;
@@ -500,11 +501,13 @@ struct nsCSSRendering {
                                                               int32_t aLayer);
   static DrawResult BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                 const mozilla::layers::StackingContextHelper& aSc,
                                                                  nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                  mozilla::layers::WebRenderDisplayItemLayer* aLayer);
 
   static DrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                        mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                       const mozilla::layers::StackingContextHelper& aSc,
                                                                        nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                        nsStyleContext *mBackgroundSC,
