@@ -332,18 +332,26 @@ button.month-year.active::after {
   scroll-snap-coordinate: 0 0;
 }
 
+.spinner-container > .spinner > div::before,
+.calendar-container .days-view > div::before {
+  position: absolute;
+  top: 5%;
+  bottom: 5%;
+  left: 5%;
+  right: 5%;
+  z-index: -10;
+  border-radius: var(--border-radius);
+}
+
 .spinner-container > .spinner > div:hover::before,
 .calendar-container .days-view > div:hover::before {
   background: var(--fill-color);
   border: var(--border);
-  border-radius: var(--border-radius);
   content: "";
-  position: absolute;
-  z-index: -10;
 }
 
 .spinner-container > .spinner:not(.scrolling) > div.selection,
-.calendar-container .days-view > div.selection {
+.calendar-container .days-view > div.selection:not(.out-of-range) {
   color: var(--selected-font-color);
 }
 
@@ -351,14 +359,7 @@ button.month-year.active::after {
 .calendar-container .days-view > div.selection::before {
   background: var(--selected-fill-color);
   border: none;
-  border-radius: var(--border-radius);
   content: "";
-  position: absolute;
-  top: 0%;
-  bottom: 0%;
-  left: 0%;
-  right: 0%;
-  z-index: -10;
 }
 
 .spinner-container > .spinner > div.disabled::before,

@@ -34,6 +34,10 @@ function DateKeeper(props) {
       return this.state.dateObj.getUTCDate();
     },
 
+    get selection() {
+      return this.state.selection;
+    },
+
     /**
      * Initialize DateKeeper
      * @param  {Number} year
@@ -58,6 +62,7 @@ function DateKeeper(props) {
         years: [],
         months: [],
         days: [],
+        selection: { year, month, day },
       };
 
       this.state.dateObj = isDateSet ?
@@ -81,12 +86,14 @@ function DateKeeper(props) {
 
     /**
      * Set selection date
-     * @param {Date} selection
+     * @param {Number} year
+     * @param {Number} month
+     * @param {Number} day
      */
-    setSelection(selection) {
-      this.set({ year: selection.getUTCFullYear(),
-                 month: selection.getUTCMonth(),
-                 day: selection.getUTCDate() });
+    setSelection({ year, month, day }) {
+      this.state.selection.year = year;
+      this.state.selection.month = month;
+      this.state.selection.day = day;
     },
 
     /**
@@ -199,6 +206,11 @@ function DateKeeper(props) {
         }
         if (month != dateObj.getUTCMonth()) {
           classNames.push("outside");
+        }
+        if (this.state.selection.year == dateObj.getUTCFullYear() &&
+            this.state.selection.month == dateObj.getUTCMonth() &&
+            this.state.selection.day == dateObj.getUTCDate()) {
+          classNames.push("selection");
         }
         if (dateObj.getTime() < this.state.min.getTime() || dateObj.getTime() > this.state.max.getTime()) {
           classNames.push("out-of-range");
