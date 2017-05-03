@@ -242,7 +242,7 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
             default: built-projects
     mozharness:
