@@ -26,7 +26,7 @@ const RequestListColumnDomain = createClass({
 
   propTypes: {
     item: PropTypes.object.isRequired,
-    onSecurityIconClick: PropTypes.func.isRequired,
+    onSecurityIconMouseDown: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps) {
@@ -34,7 +34,7 @@ const RequestListColumnDomain = createClass({
   },
 
   render() {
-    let { item, onSecurityIconClick } = this.props;
+    let { item, onSecurityIconMouseDown } = this.props;
     let { remoteAddress, remotePort, securityState,
       urlDetails: { host, isLocal } } = item;
     let iconClassList = ["requests-security-state-icon"];
@@ -54,7 +54,7 @@ const RequestListColumnDomain = createClass({
       div({ className: "requests-list-column requests-list-domain", title },
         div({
           className: iconClassList.join(" "),
-          onMouseDown: onSecurityIconClick,
+          onMouseDown: onSecurityIconMouseDown,
           title: iconTitle,
         }),
         host,
