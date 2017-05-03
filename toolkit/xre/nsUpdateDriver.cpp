@@ -1086,6 +1086,16 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   if (NS_FAILED(rv))
     return rv;
 
+  // Return early since there isn't a valid update when the update application
+  // version file doesn't exist or if the update's application version is less
+  // than the current application version. The cleanup of the update will happen
+  // during post update processing in nsUpdateService.js.
+  nsCOMPtr<nsIFile> versionFile;
+  if (!GetVersionFile(updatesDir, versionFile) ||
+      IsOlderVersion(versionFile, appVersion)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIFile> statusFile;
   UpdateStatus status = GetUpdateStatus(updatesDir, statusFile);
   switch (status) {
@@ -1104,17 +1114,8 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   }
   case ePendingUpdate:
   case ePendingService: {
-    nsCOMPtr<nsIFile> versionFile;
-    // Remove the update if the update application version file doesn't exist
-    // or if the update's application version is less than the current
-    // application version.
-    if (!GetVersionFile(updatesDir, versionFile) ||
-        IsOlderVersion(versionFile, appVersion)) {
-      updatesDir->Remove(true);
-    } else {
-      ApplyUpdate(greDir, updatesDir, statusFile,
-                  appDir, argc, argv, restart, isOSUpdate, osApplyToDir, pid);
-    }
+    ApplyUpdate(greDir, updatesDir, statusFile, appDir, argc, argv, restart,
+                isOSUpdate, osApplyToDir, pid);
     break;
   }
   case eAppliedUpdate:
