@@ -577,6 +577,105 @@
       }
     }
 
+    function test9_prepare()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, () => {
+          let doc = getNode('t9_container').contentDocument;
+          return doc && doc.getElementById('container');
+        })
+      ];
+
+      this.invoke = () => {
+        getNode('t9_container').src =
+          `data:text/html,
+            <html><body></body>
+            <script>
+              let el = document.createElement('div');
+              el.id = 'container';
+              el.innerHTML = "<input id='input'>";
+              document.documentElement.appendChild(el);
+            </` + `script></html>`;
+      }
+
+      this.finalCheck = () => {
+        var tree =
+          { INTERNAL_FRAME: [
+            { DOCUMENT: [
+              { SECTION: [
+                { ENTRY: [] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree('t9_container', tree);
+      }
+
+      this.getID = () => {
+        return `Set ARIA owns on a document (part1)`;
+      }
+    }
+
+    function test9_setARIAOwns()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, () => {
+          let doc = getNode('t9_container').contentDocument;
+          return doc && doc.getElementById('input');
+        })
+      ];
+
+      this.invoke = () => {
+        let doc = getNode('t9_container').contentDocument;
+        doc.body.setAttribute('aria-owns', 'input');
+      }
+
+      this.finalCheck = () => {
+        var tree =
+          { INTERNAL_FRAME: [
+            { DOCUMENT: [
+              { SECTION: [] },
+              { ENTRY: [] }
+            ] }
+          ] };
+        testAccessibleTree("t9_container", tree);
+      }
+
+      this.getID = () => {
+        return `Set ARIA owns on a document (part2)`;
+      }
+    }
+
+    function test9_finish()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, () => {
+          return getNode('t9_container').contentDocument;
+        })
+      ];
+
+      this.invoke = () => {
+        // trigger a tree update.
+        let doc = getNode('t9_container').contentDocument;
+        doc.body.appendChild(document.createElement('p'));
+      }
+
+      this.finalCheck = () => {
+        var tree =
+          { INTERNAL_FRAME: [
+            { DOCUMENT: [
+              { PARAGRAPH: [] },
+              { SECTION: [] },
+              { ENTRY: [] }
+            ] }
+          ] };
+        testAccessibleTree("t9_container", tree);
+      }
+
+      this.getID = () => {
+        return `Set ARIA owns on a document (part3)`;
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Test
     ////////////////////////////////////////////////////////////////////////////
@@ -625,6 +724,9 @@
       gQueue.push(new setARIAOwnsOnElToRemove("t7_parent", "t7_child"));
 
       gQueue.push(new test8());
+      gQueue.push(new test9_prepare());
+      gQueue.push(new test9_setARIAOwns());
+      gQueue.push(new test9_finish());
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -688,6 +790,8 @@
   <div id="t8_container">
     <input id="t8_button" type="button"><span id="t8_span"><input><input><input></span>
   </div>
+
+  <iframe id="t9_container"></iframe>
 </body>
 
 </html>
