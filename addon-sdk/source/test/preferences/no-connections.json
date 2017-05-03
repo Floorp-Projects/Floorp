@@ -26,7 +26,6 @@
   "browser.safebrowsing.provider.mozilla.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.mozilla.updateURL": "http://localhost/safebrowsing-dummy/update",
   "browser.newtabpage.directory.source": "data:application/json,{'jetpack':1}",
-  "browser.newtabpage.directory.ping": "",
   "extensions.update.url": "http://localhost/extensions-dummy/updateURL",
   "extensions.update.background.url": "http://localhost/extensions-dummy/updateBackgroundURL",
   "extensions.blocklist.url": "http://localhost/extensions-dummy/blocklistURL",
