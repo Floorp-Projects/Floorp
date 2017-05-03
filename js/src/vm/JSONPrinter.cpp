@@ -8,11 +8,20 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 
 #include <stdarg.h>
 
+#include "jsdtoa.h"
+
 using namespace js;
+
+JSONPrinter::~JSONPrinter()
+{
+    if (dtoaState_)
+        DestroyDtoaState(dtoaState_);
+}
 
 void
 JSONPrinter::indent()
@@ -76,7 +85,15 @@ JSONPrinter::endStringProperty()
 }
 
 void
-JSONPrinter::property(const char* name, const char* format, ...)
+JSONPrinter::property(const char* name, const char* value)
+{
+    beginStringProperty(name);
+    out_.put(value);
+    endStringProperty();
+}
+
+void
+JSONPrinter::formatProperty(const char* name, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -124,7 +141,7 @@ void
 JSONPrinter::property(const char* name, uint32_t value)
 {
     propertyName(name);
-    out_.printf("%u", value);
+    out_.printf("%" PRIu32, value);
 }
 
 void
@@ -158,6 +175,33 @@ JSONPrinter::property(const char* name, double value)
         out_.printf("%f", value);
     else
         out_.printf("null");
+}
+
+void
+JSONPrinter::floatProperty(const char* name, double value, size_t precision)
+{
+    if (!mozilla::IsFinite(value)) {
+        propertyName(name);
+        out_.printf("null");
+        return;
+    }
+
+    if (!dtoaState_) {
+        dtoaState_ = NewDtoaState();
+        if (!dtoaState_) {
+            out_.reportOutOfMemory();
+            return;
+        }
+    }
+
+    char buffer[DTOSTR_STANDARD_BUFFER_SIZE];
+    char* str = js_dtostr(dtoaState_, buffer, sizeof(buffer), DTOSTR_STANDARD, precision, value);
+    if (!str) {
+        out_.reportOutOfMemory();
+        return;
+    }
+
+    property(name, str);
 }
 
 void

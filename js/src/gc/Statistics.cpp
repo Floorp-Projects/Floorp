@@ -642,174 +642,123 @@ Statistics::formatDetailedTotals() const
     return DuplicateString(buffer);
 }
 
-UniqueChars
-Statistics::formatJsonSlice(size_t sliceNum) const
+void
+Statistics::formatJsonSlice(size_t sliceNum, JSONPrinter& json) const
 {
-    FragmentVector fragments;
+    json.beginObject();
+    formatJsonSliceDescription(sliceNum, slices_[sliceNum], json);
 
-    if (!fragments.append(DuplicateString("{")) ||
-        !fragments.append(formatJsonSliceDescription(sliceNum, slices_[sliceNum])) ||
-        !fragments.append(DuplicateString("\"times\":{")) ||
-        !fragments.append(formatJsonPhaseTimes(slices_[sliceNum].phaseTimes)) ||
-        !fragments.append(DuplicateString("}}")))
-    {
-        return UniqueChars(nullptr);
-    }
+    json.beginObjectProperty("times");
+    formatJsonPhaseTimes(slices_[sliceNum].phaseTimes, json);
+    json.endObject();
 
-    return Join(fragments);
+    json.endObject();
 }
 
 UniqueChars
-Statistics::formatJsonMessage(uint64_t timestamp, bool includeSlices) const
+Statistics::renderJsonSlice(size_t sliceNum) const
+{
+    Sprinter printer(nullptr, false);
+    if (!printer.init())
+        return UniqueChars(nullptr);
+    JSONPrinter json(printer);
+
+    formatJsonSlice(sliceNum, json);
+    return UniqueChars(printer.release());
+}
+
+UniqueChars
+Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 {
     if (aborted)
         return DuplicateString("{status:\"aborted\"}"); // May return nullptr
 
-    FragmentVector fragments;
-
-    if (!fragments.append(DuplicateString("{")) ||
-        !fragments.append(formatJsonDescription(timestamp)))
-    {
+    Sprinter printer(nullptr, false);
+    if (!printer.init())
         return UniqueChars(nullptr);
-    }
+    JSONPrinter json(printer);
+
+    json.beginObject();
+    formatJsonDescription(timestamp, json);
 
     if (includeSlices) {
-        if (!fragments.append(DuplicateString("\"slices\":[")))
-            return UniqueChars(nullptr);
-
-        for (unsigned i = 0; i < slices_.length(); i++) {
-            if (!fragments.append(formatJsonSlice(i)))
-                return UniqueChars(nullptr);
-            if ((i < (slices_.length() - 1) && !fragments.append(DuplicateString(","))))
-                return UniqueChars(nullptr);
-        }
-
-        if (!fragments.append(DuplicateString("],")))
-            return UniqueChars(nullptr);
+        json.beginListProperty("slices");
+        for (unsigned i = 0; i < slices_.length(); i++)
+            formatJsonSlice(i, json);
+        json.endList();
     }
 
-    if (!fragments.append(DuplicateString("\"totals\":{")) ||
-        !fragments.append(formatJsonPhaseTimes(phaseTimes)) ||
-        !fragments.append(DuplicateString("}}")))
-    {
-        return UniqueChars(nullptr);
-    }
+    json.beginObjectProperty("totals");
+    formatJsonPhaseTimes(phaseTimes, json);
+    json.endObject();
 
-    return Join(fragments);
+    json.endObject();
+
+    return UniqueChars(printer.release());
 }
 
-// JSON requires decimals to be separated by periods, but the LC_NUMERIC
-// setting may cause printf to use commas in some locales. Split a duration
-// into whole and fractional parts of milliseconds, for use in passing to
-// %llu.%03llu.
-static lldiv_t
-SplitDurationMS(TimeDuration d)
+void
+Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
 {
-    return lldiv(static_cast<int64_t>(d.ToMicroseconds()), 1000);
-}
+    json.property("timestamp", timestamp);
 
-UniqueChars
-Statistics::formatJsonDescription(uint64_t timestamp) const
-{
     TimeDuration total, longest;
     gcDuration(&total, &longest);
-    lldiv_t totalParts = SplitDurationMS(total);
-    lldiv_t longestParts = SplitDurationMS(longest);
+    json.property("max_pause", longest, JSONPrinter::MILLISECONDS);
+    json.property("total_time", total, JSONPrinter::MILLISECONDS);
 
-    TimeDuration sccTotal, sccLongest;
-    sccDurations(&sccTotal, &sccLongest);
-    lldiv_t sccTotalParts = SplitDurationMS(sccTotal);
-    lldiv_t sccLongestParts = SplitDurationMS(sccLongest);
+    json.property("reason", ExplainReason(slices_[0].reason));
+    json.property("zones_collected", zoneStats.collectedZoneCount);
+    json.property("total_zones", zoneStats.zoneCount);
+    json.property("total_compartments", zoneStats.compartmentCount);
+    json.property("minor_gcs", counts[STAT_MINOR_GC]);
+    json.property("store_buffer_overflows", counts[STAT_STOREBUFFER_OVERFLOW]);
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
+    json.property("mmu_20ms", int(mmu20 * 100));
+    json.property("mmu_50ms", int(mmu50 * 100));
 
-    const char *format =
-        "\"timestamp\":%llu,"
-        "\"max_pause\":%llu.%03llu,"
-        "\"total_time\":%llu.%03llu,"
-        "\"reason\":\"%s\","
-        "\"zones_collected\":%d,"
-        "\"total_zones\":%d,"
-        "\"total_compartments\":%d,"
-        "\"minor_gcs\":%d,"
-        "\"store_buffer_overflows\":%d,"
-        "\"mmu_20ms\":%d,"
-        "\"mmu_50ms\":%d,"
-        "\"scc_sweep_total\":%llu.%03llu,"
-        "\"scc_sweep_max_pause\":%llu.%03llu,"
-        "\"nonincremental_reason\":\"%s\","
-        "\"allocated\":%u,"
-        "\"added_chunks\":%d,"
-        "\"removed_chunks\":%d,"
-        "\"major_gc_number\":%llu,"
-        "\"minor_gc_number\":%llu,";
-    char buffer[1024];
-    SprintfLiteral(buffer, format,
-                   (unsigned long long)timestamp,
-                   longestParts.quot, longestParts.rem,
-                   totalParts.quot, totalParts.rem,
-                   ExplainReason(slices_[0].reason),
-                   zoneStats.collectedZoneCount,
-                   zoneStats.zoneCount,
-                   zoneStats.compartmentCount,
-                   getCount(STAT_MINOR_GC),
-                   getCount(STAT_STOREBUFFER_OVERFLOW),
-                   int(mmu20 * 100),
-                   int(mmu50 * 100),
-                   sccTotalParts.quot, sccTotalParts.rem,
-                   sccLongestParts.quot, sccLongestParts.rem,
-                   ExplainAbortReason(nonincrementalReason_),
-                   unsigned(preBytes / 1024 / 1024),
-                   getCount(STAT_NEW_CHUNK),
-                   getCount(STAT_DESTROY_CHUNK),
-                   startingMajorGCNumber,
-                   startingMinorGCNumber);
-    return DuplicateString(buffer);
+    TimeDuration sccTotal, sccLongest;
+    sccDurations(&sccTotal, &sccLongest);
+    json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS);
+    json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS);
+
+    json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_));
+    json.property("allocated", uint64_t(preBytes) / 1024 / 1024);
+    json.property("added_chunks", getCount(STAT_NEW_CHUNK));
+    json.property("removed_chunks", getCount(STAT_DESTROY_CHUNK));
+    json.property("major_gc_number", startingMajorGCNumber);
+    json.property("minor_gc_number", startingMinorGCNumber);
 }
 
-UniqueChars
-Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice) const
+void
+Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter& json) const
 {
-    TimeDuration duration = slice.duration();
-    lldiv_t durationParts = SplitDurationMS(duration);
     TimeDuration when = slice.start - slices_[0].start;
-    lldiv_t whenParts = SplitDurationMS(when);
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
-    int64_t pageFaults = slice.endFaults - slice.startFaults;
     TimeStamp originTime = TimeStamp::ProcessCreation();
 
-    const char* format =
-        "\"slice\":%d,"
-        "\"pause\":%llu.%03llu,"
-        "\"when\":%llu.%03llu,"
-        "\"reason\":\"%s\","
-        "\"initial_state\":\"%s\","
-        "\"final_state\":\"%s\","
-        "\"budget\":\"%s\","
-        "\"page_faults\":%llu,"
-        "\"start_timestamp\":%llu,"
-        "\"end_timestamp\":%llu,";
-    char buffer[1024];
-    SprintfLiteral(buffer, format,
-                   i,
-                   durationParts.quot, durationParts.rem,
-                   whenParts.quot, whenParts.rem,
-                   ExplainReason(slice.reason),
-                   gc::StateName(slice.initialState),
-                   gc::StateName(slice.finalState),
-                   budgetDescription,
-                   pageFaults,
-                   (slice.start - originTime).ToSeconds(),
-                   (slice.end - originTime).ToSeconds());
-    return DuplicateString(buffer);
+    json.property("slice", i);
+    json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS);
+    json.property("when", when, JSONPrinter::MILLISECONDS);
+    json.property("reason", ExplainReason(slice.reason));
+    json.property("initial_state", gc::StateName(slice.initialState));
+    json.property("final_state", gc::StateName(slice.finalState));
+    json.property("budget", budgetDescription);
+    json.property("page_faults", int64_t(slice.endFaults - slice.startFaults));
+    json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS);
+    json.property("end_timestamp", slice.end - originTime, JSONPrinter::SECONDS);
 }
 
-UniqueChars
-FilterJsonKey(const char*const buffer)
+static UniqueChars
+SanitizeJsonKey(const char* const buffer)
 {
     char* mut = strdup(buffer);
+    if (!mut)
+        return UniqueChars(nullptr);
+
     char* c = mut;
     while (*c) {
         if (!isalpha(*c))
@@ -818,31 +767,25 @@ FilterJsonKey(const char*const buffer)
             *c = tolower(*c);
         ++c;
     }
+
     return UniqueChars(mut);
 }
 
-UniqueChars
-Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes) const
+void
+Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter& json) const
 {
-    FragmentVector fragments;
-    char buffer[128];
     for (AllPhaseIterator iter; !iter.done(); iter.advance()) {
         Phase phase;
         size_t dagSlot;
         iter.get(&phase, &dagSlot);
 
-        UniqueChars name = FilterJsonKey(phases[phase].name);
+        UniqueChars name = SanitizeJsonKey(phases[phase].name);
+        if (!name)
+            json.outOfMemory();
         TimeDuration ownTime = phaseTimes[dagSlot][phase];
-        if (!ownTime.IsZero()) {
-            lldiv_t ownParts = SplitDurationMS(ownTime);
-            SprintfLiteral(buffer, "\"%s\":%llu.%03llu",
-                           name.get(), ownParts.quot, ownParts.rem);
-
-            if (!fragments.append(DuplicateString(buffer)))
-                return UniqueChars(nullptr);
-        }
+        if (!ownTime.IsZero())
+            json.property(name.get(), ownTime, JSONPrinter::MILLISECONDS);
     }
-    return Join(fragments, ",");
 }
 
 Statistics::Statistics(JSRuntime* rt)
@@ -1414,18 +1357,18 @@ Statistics::computeMMU(TimeDuration window) const
 
     int startIndex = 0;
     for (size_t endIndex = 1; endIndex < slices_.length(); endIndex++) {
-        auto& startSlice = slices_[startIndex];
+        auto* startSlice = &slices_[startIndex];
         auto& endSlice = slices_[endIndex];
         gc += endSlice.end - endSlice.start;
 
-        while (endSlice.end - startSlice.end >= window) {
-            gc -= startSlice.end - startSlice.start;
-            startIndex++;
+        while (endSlice.end - startSlice->end >= window) {
+            gc -= startSlice->end - startSlice->start;
+            startSlice = &slices_[++startIndex];
         }
 
         TimeDuration cur = gc;
-        if (endSlice.end - startSlice.start > window)
-            cur -= (endSlice.end - startSlice.start - window);
+        if (endSlice.end - startSlice->start > window)
+            cur -= (endSlice.end - startSlice->start - window);
         if (cur > gcMax)
             gcMax = cur;
     }

@@ -7,12 +7,14 @@
 #ifndef vm_JSONPrinter_h
 #define vm_JSONPrinter_h
 
-#include <stdio.h>
-
 #include "mozilla/TimeStamp.h"
+
+#include <stdio.h>
 
 #include "js/TypeDecls.h"
 #include "vm/Printer.h"
+
+struct DtoaState;
 
 namespace js {
 
@@ -22,6 +24,7 @@ class JSONPrinter
     int indentLevel_;
     bool first_;
     GenericPrinter& out_;
+    DtoaState* dtoaState_;
 
     void indent();
 
@@ -29,8 +32,12 @@ class JSONPrinter
     explicit JSONPrinter(GenericPrinter& out)
       : indentLevel_(0),
         first_(true),
-        out_(out)
-    { }
+        out_(out),
+        dtoaState_(nullptr)
+    {
+    }
+
+    ~JSONPrinter();
 
     void beginObject();
     void beginObjectProperty(const char* name);
@@ -39,7 +46,7 @@ class JSONPrinter
     void value(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
     void value(int value);
 
-    void property(const char* name, const char* format, ...) MOZ_FORMAT_PRINTF(3, 4);
+    void property(const char* name, const char* value);
     void property(const char* name, int32_t value);
     void property(const char* name, uint32_t value);
     void property(const char* name, int64_t value);
@@ -52,17 +59,24 @@ class JSONPrinter
 #endif
     void property(const char* name, double value);
 
+    void formatProperty(const char* name, const char* format, ...) MOZ_FORMAT_PRINTF(3, 4);
+
     // JSON requires decimals to be separated by periods, but the LC_NUMERIC
-    // setting may cause printf to use commas in some locales. Enforce using a
-    // period.
+    // setting may cause printf to use commas in some locales.
     enum TimePrecision { SECONDS, MILLISECONDS };
     void property(const char* name, const mozilla::TimeDuration& dur, TimePrecision precision);
+
+    void floatProperty(const char* name, double value, size_t precision);
 
     void beginStringProperty(const char* name);
     void endStringProperty();
 
     void endObject();
     void endList();
+
+    // Notify the output that the caller has detected OOM and should transition
+    // to its saw-OOM state.
+    void outOfMemory() { out_.reportOutOfMemory(); }
 
   protected:
     void propertyName(const char* name);
