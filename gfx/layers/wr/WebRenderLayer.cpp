@@ -64,12 +64,6 @@ WebRenderLayer::RelativeToParent(const LayoutDeviceRect& aRect)
       aRect, PixelCastJustification::WebRenderHasUnitResolution));
 }
 
-LayerPoint
-WebRenderLayer::GetOffsetToParent()
-{
-  return ParentBounds().TopLeft();
-}
-
 gfx::Rect
 WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 {

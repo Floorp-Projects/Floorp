@@ -60,5 +60,11 @@ StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect) const
   return wr::ToWrRect(aRect - mOrigin);
 }
 
+WrPoint
+StackingContextHelper::ToRelativeWrPoint(const LayerPoint& aPoint) const
+{
+  return wr::ToWrPoint(aPoint - mOrigin);
+}
+
 } // namespace layers
 } // namespace mozilla

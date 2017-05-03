@@ -25,24 +25,21 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
         return;
     }
 
-    gfx::Rect rect = GetTransform().TransformBounds(IntRectToRect(mBounds))
-        - ParentBounds().ToUnknownRect().TopLeft();
-    gfx::Rect clip;
-    if (GetClipRect().isSome()) {
-      clip = IntRectToRect(GetClipRect().ref().ToUnknownRect())
-          - ParentBounds().ToUnknownRect().TopLeft();
-    } else {
-      clip = rect;
-    }
+    LayerRect rect = LayerRect::FromUnknownRect(
+        // I am not 100% sure this is correct, but it probably is. Because:
+        // the bounds are in layer space, and when gecko composites layers it
+        // applies the transform to the layer before compositing. However with
+        // WebRender compositing, we don't pass the transform on this layer to
+        // WR, so WR has no way of knowing about the transformed bounds unless
+        // we apply it here. The glyphs that we push to WR should already be
+        // taking the transform into account.
+        GetTransform().TransformBounds(IntRectToRect(mBounds))
+    );
+    DumpLayerInfo("TextLayer", rect);
 
-    if (gfxPrefs::LayersDump()) {
-        printf_stderr("TextLayer %p using rect=%s, clip=%s\n",
-                      this->GetLayer(),
-                      Stringify(rect).c_str(),
-                      Stringify(clip).c_str());
-    }
+    LayerRect clipRect = ClipRect().valueOr(rect);
 
-    WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, GetOffsetToParent(), rect, clip);
+    WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, rect, clipRect);
 }
 
 } // namespace layers
