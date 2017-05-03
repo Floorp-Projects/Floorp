@@ -452,12 +452,13 @@ public:
            uint32_t aLength, gfxFontGroup *aFontGroup,
            uint32_t aFlags);
 
-    // The text is divided into GlyphRuns as necessary
+    // The text is divided into GlyphRuns as necessary. (In the vast majority
+    // of cases, a gfxTextRun contains just a single GlyphRun.)
     struct GlyphRun {
-        RefPtr<gfxFont> mFont;   // never null
-        uint32_t          mCharacterOffset; // into original UTF16 string
-        uint8_t           mMatchType;
-        uint16_t          mOrientation; // gfxTextRunFactory::TEXT_ORIENT_* value
+        RefPtr<gfxFont> mFont; // never null in a valid GlyphRun
+        uint32_t        mCharacterOffset; // into original UTF16 string
+        uint16_t        mOrientation; // gfxTextRunFactory::TEXT_ORIENT_* value
+        uint8_t         mMatchType;
     };
 
     class GlyphRunIterator {
@@ -518,7 +519,15 @@ public:
     nsresult AddGlyphRun(gfxFont *aFont, uint8_t aMatchType,
                          uint32_t aStartCharIndex, bool aForceNewRun,
                          uint16_t aOrientation);
-    void ResetGlyphRuns() { mGlyphRuns.Clear(); }
+    void ResetGlyphRuns()
+    {
+        if (mHasGlyphRunArray) {
+            mGlyphRunArray.~nsTArray<GlyphRun>();
+            mHasGlyphRunArray = false;
+        } else {
+            mSingleGlyphRun.mFont = nullptr;
+        }
+    }
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
 
@@ -578,9 +587,16 @@ public:
     void FetchGlyphExtents(DrawTarget* aRefDrawTarget);
 
     uint32_t CountMissingGlyphs() const;
-    const GlyphRun* GetGlyphRuns(uint32_t* aNumGlyphRuns) const {
-        *aNumGlyphRuns = mGlyphRuns.Length();
-        return mGlyphRuns.Elements();
+
+    const GlyphRun* GetGlyphRuns(uint32_t* aNumGlyphRuns) const
+    {
+        if (mHasGlyphRunArray) {
+            *aNumGlyphRuns = mGlyphRunArray.Length();
+            return mGlyphRunArray.Elements();
+        } else {
+            *aNumGlyphRuns = mSingleGlyphRun.mFont ? 1 : 0;
+            return &mSingleGlyphRun;
+        }
     }
     // Returns the index of the GlyphRun containing the given offset.
     // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
@@ -757,9 +773,29 @@ private:
                     PropertyProvider *aProvider, Range aSpacingRange,
                     TextRunDrawParams& aParams, uint16_t aOrientation) const;
 
-    // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
-    // for smaller size especially in the super-common one-glyphrun case
-    AutoTArray<GlyphRun,1>        mGlyphRuns;
+    // The textrun holds either a single GlyphRun -or- an array;
+    // the flag mHasGlyphRunArray tells us which is present.
+    union {
+        GlyphRun           mSingleGlyphRun;
+        nsTArray<GlyphRun> mGlyphRunArray;
+    };
+
+    void ConvertToGlyphRunArray() {
+        MOZ_ASSERT(!mHasGlyphRunArray && mSingleGlyphRun.mFont);
+        GlyphRun tmp = mozilla::Move(mSingleGlyphRun);
+        mSingleGlyphRun.~GlyphRun();
+        new (&mGlyphRunArray) nsTArray<GlyphRun>(2);
+        mGlyphRunArray.AppendElement(mozilla::Move(tmp));
+        mHasGlyphRunArray = true;
+    }
+
+    void ConvertFromGlyphRunArray() {
+        MOZ_ASSERT(mHasGlyphRunArray && mGlyphRunArray.Length() == 1);
+        GlyphRun tmp = mozilla::Move(mGlyphRunArray[0]);
+        mGlyphRunArray.~nsTArray<GlyphRun>();
+        new (&mSingleGlyphRun) GlyphRun(mozilla::Move(tmp));
+        mHasGlyphRunArray = false;
+    }
 
     void             *mUserData;
     gfxFontGroup     *mFontGroup; // addrefed on creation, but our reference
@@ -771,6 +807,8 @@ private:
                                     // until the download completes (or timeout fires)
     bool              mReleasedFontGroup; // we already called NS_RELEASE on
                                           // mFontGroup, so don't do it again
+    bool              mHasGlyphRunArray; // whether we're using an array or
+                                         // just storing a single glyphrun
 
     // shaping state for handling variant fallback features
     // such as subscript/superscript variant glyphs

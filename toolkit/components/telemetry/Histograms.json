@@ -5672,6 +5672,14 @@
     "n_buckets": 10,
     "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
   },
+  "FX_SESSION_RESTORE_PRIVACY_LEVEL": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 3,
+    "bug_numbers": [1360810],
+    "description": "Session restore: The privacy level chosen by the user (0: Collect data from all sites, 1: Collect data only from non-HTTPS sites, 2: Collect no data)"
+  },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",

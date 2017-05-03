@@ -5,7 +5,6 @@
 %include ../shared/compacttheme.inc.css
 
 :root {
-  --forwardbutton-width: 29px;
    /* Matches the #browser-border-start, #browser-border-end color */
   --chrome-nav-bar-separator-color: rgba(10, 31, 51, 0.35);
 }
@@ -33,59 +32,6 @@
 
 #TabsToolbar::after {
   display: none;
-}
-
-#back-button > .toolbarbutton-icon,
-#forward-button > .toolbarbutton-icon {
-  background: var(--chrome-nav-buttons-background) !important;
-  border-radius: 0 !important;
-  height: auto !important;
-  padding: var(--toolbarbutton-vertical-inner-padding) 5px !important;
-  margin: 0 !important;
-  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
-  box-shadow: none !important;
-}
-
-#back-button > .toolbarbutton-icon {
-  /* 18px icon + 2 * 5px padding + 2 * 1px border */
-  width: 30px !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  /* 18px icon + 2 * 5px padding + 1 * 1px border */
-  width: 29px !important;
-}
-
-/* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
-#back-button[open="true"] > .toolbarbutton-icon {
-  box-shadow: none !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  border-inline-start: none !important;
-}
-
-/* Override a box shadow for disabled back button */
-#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
-  box-shadow: none !important;
-}
-
-/* Override !important properties for hovered back button */
-#main-window #back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
-#main-window #forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
-  background: var(--chrome-nav-buttons-hover-background) !important;
-  box-shadow: none !important;
-}
-
-#back-button > .toolbarbutton-icon {
-  border-radius: 2px 0 0 2px !important;
-}
-
-#nav-bar .toolbarbutton-1:not([type=menu-button]),
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding-top: 2px;
-  padding-bottom: 2px;
 }
 
 .tabbrowser-tab {
