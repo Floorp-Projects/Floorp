@@ -48,7 +48,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
-    mItem->CreateWebRenderCommands(builder, mParentCommands, this);
+    mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, this);
     mBuiltDisplayList = builder.Finalize();
   } else {
     // else we have an empty transaction and just use the

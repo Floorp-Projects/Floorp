@@ -304,6 +304,7 @@ nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                        const StackingContextHelper& aSc,
                                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                                         WebRenderDisplayItemLayer* aLayer)
 {
