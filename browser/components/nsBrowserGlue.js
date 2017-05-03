@@ -80,7 +80,7 @@ let initializedModules = {};
   ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
   ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
   ["RemotePrompt", "resource:///modules/RemotePrompt.jsm"],
-  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm"],
+  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm", "init"],
   ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
   ["ShellService", "resource:///modules/ShellService.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
@@ -124,6 +124,7 @@ const global = this;
 
 const listeners = {
   observers: {
+    "sessionstore-windows-restored": ["SelfSupportBackend"],
   },
 
   ppmm: {
@@ -610,8 +611,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
 
-    SelfSupportBackend.init();
-
     if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
 
@@ -985,7 +984,7 @@ BrowserGlue.prototype = {
     }
 
     BrowserUsageTelemetry.uninit();
-    SelfSupportBackend.uninit();
+
     PageThumbs.uninit();
     AboutNewTab.uninit();
     NewTabUtils.uninit();
