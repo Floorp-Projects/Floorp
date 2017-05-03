@@ -83,6 +83,11 @@ enum class ImageFormat {
   TEXTURE_WRAPPER,
 
   /**
+   * A D3D11 backed YUV image.
+   */
+  D3D11_YCBCR_IMAGE,
+
+  /**
    * An opaque handle that refers to an Image stored in the GPU
    * process.
    */
