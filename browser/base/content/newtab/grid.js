@@ -9,7 +9,6 @@
  */
 const GRID_BOTTOM_EXTRA = 7; // title's line-height extends 7px past the margin
 const GRID_WIDTH_EXTRA = 1; // provide 1px buffer to allow for rounding error
-const SPONSORED_TAG_BUFFER = 2; // 2px buffer to clip off top of sponsored tag
 
 /**
  * This singleton represents the grid that contains all sites.
@@ -182,7 +181,6 @@ var gGrid = {
 
     // Create the site's inner HTML code.
     site.innerHTML =
-      '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>' +
       '<a class="newtab-link">' +
       '  <span class="newtab-thumbnail placeholder"/>' +
       '  <span class="newtab-thumbnail thumbnail"/>' +
@@ -192,8 +190,7 @@ var gGrid = {
       '<input type="button" title="' + newTabString("pin") + '"' +
       '       class="newtab-control newtab-control-pin"/>' +
       '<input type="button" title="' + newTabString("block") + '"' +
-      '       class="newtab-control newtab-control-block"/>' +
-      '<span class="newtab-suggested"/>';
+      '       class="newtab-control newtab-control-block"/>';
 
     this._siteFragment = document.createDocumentFragment();
     this._siteFragment.appendChild(site);
@@ -274,6 +271,6 @@ var gGrid = {
     this._node.style.maxWidth = gGridPrefs.gridColumns * this._cellWidth +
                                 GRID_WIDTH_EXTRA + "px";
     this._node.style.height = this._computeHeight() + "px";
-    this._node.style.maxHeight = this._computeHeight(gridRows) - SPONSORED_TAG_BUFFER + "px";
+    this._node.style.maxHeight = this._computeHeight(gridRows) + "px";
   }
 };
