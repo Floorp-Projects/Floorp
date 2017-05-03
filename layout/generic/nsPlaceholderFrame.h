@@ -166,7 +166,7 @@ public:
   }
 
 protected:
-  nsIFrame* mOutOfFlowFrame;
+  nsIFrame* mOutOfFlowFrame { nullptr };
 };
 
 #endif /* nsPlaceholderFrame_h___ */
