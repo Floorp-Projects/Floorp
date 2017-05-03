@@ -258,7 +258,8 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
-  if (IsThemed()) {
+  const nsStyleDisplay* disp = StyleDisplay();
+  if (IsThemed(disp)) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
     // Only create items for the thumb. Specifically, we do not want
     // the track to paint, since *our* background is used to paint
@@ -298,7 +299,6 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  const nsStyleDisplay *disp = StyleDisplay();
   if (IsThemed(disp) &&
       PresContext()->GetTheme()->ThemeDrawsFocusForWidget(disp->UsedAppearance())) {
     return; // the native theme displays its own visual indication of focus

@@ -19,8 +19,8 @@ nsIDocument::GetBodyElement()
 template<typename T>
 size_t
 nsIDocument::FindDocStyleSheetInsertionPoint(
-    const nsTArray<RefPtr<T>>& aDocSheets,
-    T* aSheet)
+    const nsTArray<T>& aDocSheets,
+    mozilla::StyleSheet* aSheet)
 {
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
@@ -30,12 +30,11 @@ nsIDocument::FindDocStyleSheetInsertionPoint(
   int32_t count = aDocSheets.Length();
   int32_t index;
   for (index = 0; index < count; index++) {
-    T* sheet = aDocSheets[index];
+    mozilla::StyleSheet* sheet = static_cast<mozilla::StyleSheet*>(
+      aDocSheets[index]);
     int32_t sheetDocIndex = GetIndexOfStyleSheet(sheet);
     if (sheetDocIndex > newDocIndex)
       break;
-
-    mozilla::StyleSheet* sheetHandle = sheet;
 
     // If the sheet is not owned by the document it can be an author
     // sheet registered at nsStyleSheetService or an additional author
@@ -45,11 +44,11 @@ nsIDocument::FindDocStyleSheetInsertionPoint(
       if (sheetService) {
         auto& authorSheets =
           *sheetService->AuthorStyleSheets(GetStyleBackendType());
-        if (authorSheets.IndexOf(sheetHandle) != authorSheets.NoIndex) {
+        if (authorSheets.IndexOf(sheet) != authorSheets.NoIndex) {
           break;
         }
       }
-      if (sheetHandle == GetFirstAdditionalAuthorSheet()) {
+      if (sheet == GetFirstAdditionalAuthorSheet()) {
         break;
       }
     }

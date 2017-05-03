@@ -28,4 +28,4 @@ XPIDL_SOURCES += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Breakpad Integration')
+    BUG_COMPONENT = ('Toolkit', 'Crash Reporting')

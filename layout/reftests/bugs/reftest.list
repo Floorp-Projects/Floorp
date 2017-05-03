@@ -1361,7 +1361,7 @@ pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 491323-1.xul 491323-1-ref.xul
 == 492239-1.xul 492239-1-ref.xul
 == 492661-1.html 492661-1-ref.html
-fails-if(stylo) == 493968-1.html 493968-1-ref.html
+== 493968-1.html 493968-1-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
@@ -1990,6 +1990,9 @@ fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 fails-if(stylo) == 1322512-1.html 1322512-1-ref.html
 == 1330051.svg 1330051-ref.svg
+== 1348481-1.html 1348481-ref.html
+== 1348481-2.html 1348481-ref.html
+fails-if(stylo) == 1348481-3.html 1348481-ref.html
 == 1352464-1.html 1352464-1-ref.html
 == 1358375-1.html 1358375-ref.html
 == 1358375-2.html 1358375-ref.html

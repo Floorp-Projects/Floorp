@@ -38,11 +38,11 @@ let MockStorage = function() {
   this.data = null;
 };
 MockStorage.prototype = Object.freeze({
-  set: function (contents) {
+  set(contents) {
     this.data = contents;
     return Promise.resolve(null);
   },
-  get: function () {
+  get() {
     return Promise.resolve(this.data);
   },
   getOAuthTokens() {
@@ -57,7 +57,7 @@ function MockFxAccounts() {
   return new FxAccounts({
     _now_is: new Date(),
 
-    now: function() {
+    now() {
       return this._now_is;
     },
 
@@ -113,18 +113,17 @@ function runTest() {
       ok(false, JSON.stringify(signInError));
     }
   );
-};
+}
 
 SpecialPowers.pushPrefEnv({"set": [
     ["identity.fxaccounts.enabled", true],         // fx accounts
     ["identity.fxaccounts.auth.uri", TEST_SERVER], // our sjs server
     ["browser.dom.window.dump.enabled", true],
   ]},
-  function () { runTest(); }
+  function() { runTest(); }
 );
 
 </script>
 </pre>
 </body>
 </html>
-

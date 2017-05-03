@@ -811,7 +811,7 @@ public class AndroidFxAccount {
       return defaultValue;
     }
     try {
-      return Long.parseLong(key);
+      return Long.parseLong(numStr);
     } catch (NumberFormatException e) {
       Logger.warn(LOG_TAG, "Couldn't parse " + key + "; defaulting to " + defaultValue, e);
       return defaultValue;
