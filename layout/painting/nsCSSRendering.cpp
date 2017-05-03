@@ -2692,18 +2692,22 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
       }
     }
 
-    // Skip the following layer painting code if we found the dirty region is
-    // empty or the current layer is not selected for drawing.
-    if (clipState.mDirtyRectInDevPx.IsEmpty() ||
-        (aParams.layer >= 0 && i != (uint32_t)aParams.layer)) {
+    // Skip the following layer preparing and painting code if the current
+    // layer is not selected for drawing.
+    if (aParams.layer >= 0 && i != (uint32_t)aParams.layer) {
       continue;
     }
-
     nsBackgroundLayerState state =
       PrepareImageLayer(&aParams.presCtx, aParams.frame,
                         aParams.paintFlags, paintBorderArea,
                         clipState.mBGClipArea, layer, nullptr);
     result &= state.mImageRenderer.PrepareResult();
+
+    // Skip the layer painting code if we found the dirty region is empty.
+    if (clipState.mDirtyRectInDevPx.IsEmpty()) {
+      continue;
+    }
+
     if (!state.mFillArea.IsEmpty()) {
       CompositionOp co = DetermineCompositionOp(aParams, layers, i);
       if (co != CompositionOp::OP_OVER) {
