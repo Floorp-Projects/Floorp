@@ -98,6 +98,13 @@
     <string name="preference_privacy_block_content">Block other content trackers</string>
     <string name="preference_privacy_block_content_summary">May break some videos and Web pages</string>
 
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Secure Mode</string>
+    <!-- Preference Summary: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+     and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode_summary">Do not show app content in "recent apps" and screenshots</string>
+
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->

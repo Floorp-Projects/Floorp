@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         if (Settings.getInstance(this).shouldUseSecureMode()) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
 
         getWindow().getDecorView().setSystemUiVisibility(
@@ -93,6 +93,12 @@ public class MainActivity extends AppCompatActivity {
         BrowsingNotificationService.foreground(this);
 
         TelemetryWrapper.startSession();
+
+        if (Settings.getInstance(this).shouldUseSecureMode()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }
     }
 
     @Override
