@@ -194,10 +194,7 @@ body.compact .newtab-thumbnail.placeholder {
   opacity: 0;
 }
 
-.newtab-site[type=affiliate] .newtab-thumbnail,
-.newtab-site[type=enhanced] .newtab-thumbnail,
-.newtab-site[type=organic] .newtab-thumbnail,
-.newtab-site[type=sponsored] .newtab-thumbnail {
+.newtab-site[type=affiliate] .newtab-thumbnail {
   background-position: center center;
 }
 
@@ -205,10 +202,7 @@ body.compact .newtab-site[type=affiliate] .newtab-thumbnail {
   background-position: center 30%;
 }
 
-.newtab-site[type=affiliate] .newtab-thumbnail,
-body:not(.compact) .newtab-site[type=enhanced] .newtab-thumbnail,
-body:not(.compact) .newtab-site[type=organic] .newtab-thumbnail,
-body:not(.compact) .newtab-site[type=sponsored] .newtab-thumbnail {
+.newtab-site[type=affiliate] .newtab-thumbnail {
   background-size: auto;
 }
 
@@ -231,20 +225,12 @@ body.compact .newtab-title {
   background-clip: padding-box;
 }
 
-.newtab-title,
-.newtab-suggested {
+.newtab-title {
   color: #5c5c5c;
 }
 
-body.compact .newtab-title,
-body.compact .newtab-suggested {
+body.compact .newtab-title {
   color: black;
-}
-
-.newtab-suggested[active] {
-  background-color: rgba(51, 51, 51, 0.95);
-  border: 0;
-  color: white;
 }
 
 body:not(.compact) .newtab-site:hover .newtab-title {
