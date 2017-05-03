@@ -19,7 +19,7 @@ function* testSteps()
   for (let autoIncrement of [false, true]) {
     let objectStore =
       db.createObjectStore(autoIncrement, { keyPath: "id",
-                                            autoIncrement: autoIncrement });
+                                            autoIncrement });
     objectStore.createIndex("", "index", { unique: true });
 
     for (let i = 0; i < 10; i++) {

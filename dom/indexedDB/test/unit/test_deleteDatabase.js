@@ -59,7 +59,7 @@ function* testSteps()
     db2.close();
     db.onversionchange = unexpectedSuccessHandler;
     db2.onversionchange = unexpectedSuccessHandler;
-  };
+  }
 
   // The IDB spec doesn't guarantee the order that onversionchange will fire
   // on the dbs.

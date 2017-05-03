@@ -36,11 +36,11 @@ function* testSteps()
                                              { autoIncrement: autoincrement,
                                                keyPath: (keypath ? "id" : null) });
 
-            let test = " for test " + JSON.stringify({ autoincrement: autoincrement,
-                                                       keypath: keypath,
-                                                       method: method,
+            let test = " for test " + JSON.stringify({ autoincrement,
+                                                       keypath,
+                                                       method,
                                                        explicit: explicit === undefined ? "undefined" : explicit,
-                                                       existing: existing });
+                                                       existing });
 
             // Insert "existing" data if needed
             if (existing) {

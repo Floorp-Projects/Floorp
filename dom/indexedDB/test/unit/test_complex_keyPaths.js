@@ -35,7 +35,7 @@ function* testSteps()
     { keyPath: "foo.",    exception: true },
     { keyPath: "fo o",    exception: true },
     { keyPath: "foo ",    exception: true },
-    { keyPath: "foo[bar]",exception: true },
+    { keyPath: "foo[bar]", exception: true },
     { keyPath: "foo[1]",  exception: true },
     { keyPath: "$('id').stuff", exception: true },
     { keyPath: "foo.2.bar", exception: true },
@@ -143,7 +143,7 @@ function* testSteps()
       eval("newValue." + destProp + " = 'newKeyValue'");
     }
     else {
-      newValue = 'newKeyValue';
+      newValue = "newKeyValue";
     }
     let didThrow;
     try {
@@ -238,7 +238,7 @@ function* testSteps()
         store.add(info.v);
         ok(false, "should throw" + test);
       }
-      catch(e) {
+      catch (e) {
         ok(true, "did throw" + test);
         ok(e instanceof DOMException, "Got a DOMException" + test);
         is(e.name, "DataError", "expect a DataError" + test);
