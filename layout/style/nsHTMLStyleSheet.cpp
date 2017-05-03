@@ -489,11 +489,10 @@ nsHTMLStyleSheet::ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aCol
     return NS_OK;
   }
 
-  aRule = new HTMLColorRule();
+  aRule = new HTMLColorRule(aColor);
   if (!aRule)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  aRule->mColor = aColor;
   // Now make sure we restyle any links that might need it.  This
   // shouldn't happen often, so just rebuilding everything is ok.
   if (mDocument && mDocument->GetShell()) {
