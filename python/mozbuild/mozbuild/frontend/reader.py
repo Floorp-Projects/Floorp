@@ -54,7 +54,6 @@ from mozpack.files import FileFinder
 import mozpack.path as mozpath
 
 from .data import (
-    AndroidEclipseProjectData,
     JavaJarData,
 )
 
@@ -267,34 +266,6 @@ class MozbuildSandbox(Sandbox):
         jar = JavaJarData(name)
         self['JAVA_JAR_TARGETS'][name] = jar
         return jar
-
-    # Not exposed to the sandbox.
-    def add_android_eclipse_project_helper(self, name):
-        """Add an Android Eclipse project target."""
-        if not name:
-            raise Exception('Android Eclipse project cannot be registered without a name')
-
-        if name in self['ANDROID_ECLIPSE_PROJECT_TARGETS']:
-            raise Exception('Android Eclipse project has already been registered: %s' % name)
-
-        data = AndroidEclipseProjectData(name)
-        self['ANDROID_ECLIPSE_PROJECT_TARGETS'][name] = data
-        return data
-
-    def _add_android_eclipse_project(self, name, manifest):
-        if not manifest:
-            raise Exception('Android Eclipse project must specify a manifest')
-
-        data = self.add_android_eclipse_project_helper(name)
-        data.manifest = manifest
-        data.is_library = False
-        return data
-
-    def _add_android_eclipse_library_project(self, name):
-        data = self.add_android_eclipse_project_helper(name)
-        data.manifest = None
-        data.is_library = True
-        return data
 
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""

@@ -1,5 +1,0 @@
-#filter substitution
-<?xml version="1.0" encoding="UTF-8"?>
-<lint>
-    <issue id="NewApi" severity="ignore" />
-</lint>
