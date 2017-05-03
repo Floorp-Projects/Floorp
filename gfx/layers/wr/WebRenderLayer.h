@@ -52,10 +52,7 @@ public:
   LayerRect BoundsForStackingContext();
 protected:
   BoundsTransformMatrix BoundsTransform();
-  LayerRect ParentBounds();
   Maybe<LayerRect> ClipRect();
-
-  gfx::Rect TransformedVisibleBoundsRelativeToParent();
 
   void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);

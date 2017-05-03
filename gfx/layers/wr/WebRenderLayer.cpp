@@ -40,25 +40,6 @@ WebRenderLayer::GetImageKey()
   return key;
 }
 
-LayerRect
-WebRenderLayer::ParentBounds()
-{
-  // Walk up to find the parent stacking context. This will be created by the
-  // parent layer which must be a ContainerLayer if it exists.
-  if (Layer* parent = GetLayer()->GetParent()) {
-    return ToWebRenderLayer(parent)->Bounds();
-  }
-  return LayerRect();
-}
-
-gfx::Rect
-WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
-{
-  IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();
-  Rect transformed = GetLayer()->GetTransform().TransformBounds(IntRectToRect(bounds));
-  return transformed - ParentBounds().ToUnknownRect().TopLeft();
-}
-
 Maybe<WrImageMask>
 WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
 {

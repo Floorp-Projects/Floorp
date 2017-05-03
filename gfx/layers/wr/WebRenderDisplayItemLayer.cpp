@@ -40,7 +40,8 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   Maybe<WrImageMask> mask = BuildWrMaskLayer(false);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
-    gfx::Rect rect = TransformedVisibleBoundsRelativeToParent();
+    gfx::Rect rect = GetTransform().TransformBounds(Bounds().ToUnknownRect());
+    // XXX: this is probably not correct, see bug 1361357
     gfx::Rect clip(0.0, 0.0, rect.width, rect.height);
     aBuilder.PushClip(wr::ToWrRect(clip), imageMask);
   }
