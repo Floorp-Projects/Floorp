@@ -24,7 +24,7 @@ function run_test() {
  */
 function setupUpdaterTestFinished() {
   let path = "\\\\.\\" + getApplyDirFile(null, false).path;
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, path);
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, path, null);
 }
 
 /**

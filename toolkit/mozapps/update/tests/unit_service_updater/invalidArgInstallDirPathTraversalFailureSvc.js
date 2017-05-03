@@ -30,7 +30,7 @@ function setupUpdaterTestFinished() {
     path = "/" + path + "/../" + path;
   }
 
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null);
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
 }
 
 /**
