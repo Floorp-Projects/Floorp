@@ -135,6 +135,8 @@ const listeners = {
     "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
     "AboutHome:RequestUpdate": ["AboutHome"],
     "ContentSearch": ["ContentSearch"],
+    "FormValidation:ShowPopup": ["FormValidationHandler"],
+    "FormValidation:HidePopup": ["FormValidationHandler"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],
@@ -583,7 +585,6 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
-    FormValidationHandler.init();
 
     ContentClick.init();
     RemotePrompt.init();
@@ -972,7 +973,6 @@ BrowserGlue.prototype = {
     PageThumbs.uninit();
     AboutNewTab.uninit();
     NewTabUtils.uninit();
-    FormValidationHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerHelper.uninit();
   },
