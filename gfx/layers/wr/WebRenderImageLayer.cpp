@@ -165,7 +165,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {

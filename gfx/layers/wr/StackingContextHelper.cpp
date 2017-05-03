@@ -17,30 +17,32 @@ StackingContextHelper::StackingContextHelper()
   // mOrigin remains at 0,0
 }
 
-StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              const Maybe<gfx::Matrix4x4>& aTransform)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->RelativeToParent(aLayer->BoundsForStackingContext());
+  LayerRect scBounds = aLayer->BoundsForStackingContext();
   Layer* layer = aLayer->GetLayer();
   gfx::Matrix4x4 transform = aTransform.valueOr(layer->GetTransform());
-  mBuilder->PushStackingContext(wr::ToWrRect(scBounds),
+  mBuilder->PushStackingContext(aParentSC.ToRelativeWrRect(scBounds),
                                 1.0f,
                                 transform,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()));
   mOrigin = aLayer->Bounds().TopLeft();
 }
 
-StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->RelativeToParent(aLayer->BoundsForStackingContext());
-  mBuilder->PushStackingContext(wr::ToWrRect(scBounds),
+  LayerRect scBounds = aLayer->BoundsForStackingContext();
+  mBuilder->PushStackingContext(aParentSC.ToRelativeWrRect(scBounds),
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,

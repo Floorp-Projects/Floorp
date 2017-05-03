@@ -21,7 +21,7 @@ void
 WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                  const StackingContextHelper& aSc)
 {
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("ColorLayer", rect);

@@ -89,9 +89,10 @@ WebRenderPaintedLayer::UpdateImageClient()
 }
 
 void
-WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder)
+WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder,
+                                                  const StackingContextHelper& aSc)
 {
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
@@ -145,7 +146,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     MOZ_ASSERT(GetInvalidRegion().IsEmpty());
   }
 
-  CreateWebRenderDisplayList(aBuilder);
+  CreateWebRenderDisplayList(aBuilder, aSc);
 }
 
 } // namespace layers

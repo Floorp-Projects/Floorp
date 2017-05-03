@@ -28,12 +28,14 @@ public:
   // the transform if provided, otherwise takes the transform from the layer.
   // It also takes the mix-blend-mode and bounds from the layer, and uses 1.0
   // for the opacity.
-  StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+  StackingContextHelper(const StackingContextHelper& aParentSC,
+                        wr::DisplayListBuilder& aBuilder,
                         WebRenderLayer* aLayer,
                         const Maybe<gfx::Matrix4x4>& aTransform = Nothing());
   // Alternate constructor which invokes the version of PushStackingContext
   // for animations.
-  StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+  StackingContextHelper(const StackingContextHelper& aParentSC,
+                        wr::DisplayListBuilder& aBuilder,
                         WebRenderLayer* aLayer,
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
