@@ -802,15 +802,13 @@ void
 Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                         Metadata::SeenSet* seenMetadata,
                         ShareableBytes::SeenSet* seenBytes,
-                        Code::SeenSet* seenCode,
                         Table::SeenSet* seenTables,
                         size_t* code,
                         size_t* data) const
 {
     *data += mallocSizeOf(this) + globals_->sizeOfMisc(mallocSizeOf);
-    debug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
 
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    code_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, code, data);
 
     for (const SharedTable& table : tables_)
          *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
