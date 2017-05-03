@@ -475,7 +475,7 @@ public:
   static bool IsShowModalDialogEnabled(JSContext* /* unused */ = nullptr,
                                        JSObject* /* unused */ = nullptr);
 
-  static bool IsRequestIdleCallbackEnabled(JSContext* /* unused */, JSObject* aObj);
+  static bool IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject* /* unused */);
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                  JS::Handle<jsid> aId,
