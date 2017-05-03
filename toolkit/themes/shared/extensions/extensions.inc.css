@@ -463,6 +463,13 @@ button.warning {
   padding: 4px 5px 3px;
   font-size: 0.9rem;
   font-weight: 600;
+  -moz-user-focus: ignore;
+}
+
+.legacy-warning:hover {
+  background-color: #D7B600;
+  color: #3E2800;
+  text-decoration: none;
 }
 
 #detail-view .legacy-warning {
