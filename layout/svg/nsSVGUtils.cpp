@@ -1457,10 +1457,13 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
   nscolor color;
   switch (paint.Type()) {
     case eStyleSVGPaintType_Server:
-    case eStyleSVGPaintType_ContextFill:
     case eStyleSVGPaintType_ContextStroke:
       color = paint.GetFallbackType() == eStyleSVGFallbackType_Color ?
                 paint.GetFallbackColor() : NS_RGBA(0, 0, 0, 0);
+      break;
+    case eStyleSVGPaintType_ContextFill:
+      color = paint.GetFallbackType() == eStyleSVGFallbackType_Color ?
+                paint.GetFallbackColor() : NS_RGB(0, 0, 0);
       break;
     default:
       color = paint.GetColor();
