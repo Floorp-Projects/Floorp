@@ -30,6 +30,7 @@
 #include "nsCounterManager.h"
 #include "nsBidiUtils.h"
 #include "CounterStyleManager.h"
+#include "UnitTransforms.h"
 
 #include "imgIContainer.h"
 #include "ImageLayers.h"
@@ -504,12 +505,12 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
-  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
-      aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
-  gfx::Rect destRectTransformed = aLayer->RelativeToParent(destRect).ToUnknownRect();
+  LayerRect destRect = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(
+          aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
 
-  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
-                                destRectTransformed, destRectTransformed);
+  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, destRect, destRect);
 }
 
 class nsDisplayBullet final : public nsDisplayItem {

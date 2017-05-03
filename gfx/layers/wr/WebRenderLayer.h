@@ -50,7 +50,6 @@ public:
 
   LayerRect RelativeToParent(const LayerRect& aRect);
   LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
-  LayerPoint GetOffsetToParent();
 
   LayerRect Bounds();
   LayerRect BoundsForStackingContext();

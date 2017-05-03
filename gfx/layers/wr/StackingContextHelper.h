@@ -53,6 +53,8 @@ public:
   // things that are pushed inside the stacking context need to be relative
   // to the stacking context.
   WrRect ToRelativeWrRect(const LayerRect& aRect) const;
+  // Same but for points
+  WrPoint ToRelativeWrPoint(const LayerPoint& aPoint) const;
 
 private:
   wr::DisplayListBuilder* mBuilder;
