@@ -31,14 +31,12 @@ function* testSteps()
                       db.createObjectStore(info.name);
 
     // Test index creation, and that it ends up in indexNames.
-    let objectStoreName = info.name;
     for (let j = 0; j < indexInfo.length; j++) {
       let info = indexInfo[j];
-      let count = objectStore.indexNames.length;
-      let index = info.hasOwnProperty("options") ?
-                  objectStore.createIndex(info.name, info.keyPath,
-                                          info.options) :
-                  objectStore.createIndex(info.name, info.keyPath);
+      info.hasOwnProperty("options") ?
+        objectStore.createIndex(info.name, info.keyPath,
+                                info.options) :
+        objectStore.createIndex(info.name, info.keyPath);
     }
   }
 
