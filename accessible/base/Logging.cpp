@@ -396,7 +396,7 @@ void
 logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
                  nsIRequest* aRequest, uint32_t aStateFlags)
 {
-  MsgBegin(sDocLoadTitle, aMsg);
+  MsgBegin(sDocLoadTitle, "%s", aMsg);
 
   nsCOMPtr<mozIDOMWindowProxy> DOMWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
@@ -433,7 +433,7 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
 void
 logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
 {
-  MsgBegin(sDocLoadTitle, aMsg);
+  MsgBegin(sDocLoadTitle, "%s", aMsg);
 
   DocAccessible* document = GetExistingDocAccessible(aDocumentNode);
   LogDocInfo(aDocumentNode, document);
@@ -497,7 +497,7 @@ logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
   DocAccessible* document = aDocument ?
     aDocument : GetExistingDocAccessible(aDocumentNode);
 
-  MsgBegin(sDocCreateTitle, aMsg);
+  MsgBegin(sDocCreateTitle, "%s", aMsg);
   LogDocInfo(aDocumentNode, document);
   MsgEnd();
 }
@@ -509,7 +509,7 @@ logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
   DocAccessible* document = aDocument ?
     aDocument : GetExistingDocAccessible(aDocumentNode);
 
-  MsgBegin(sDocDestroyTitle, aMsg);
+  MsgBegin(sDocDestroyTitle, "%s", aMsg);
   LogDocInfo(aDocumentNode, document);
   MsgEnd();
 }
@@ -526,7 +526,7 @@ void
 logging::FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
                                  Accessible* aTarget)
 {
-  MsgBegin(sFocusTitle, aMsg);
+  MsgBegin(sFocusTitle, "%s", aMsg);
   AccessibleNNode(aTargetDescr, aTarget);
   MsgEnd();
 }
@@ -535,7 +535,7 @@ void
 logging::FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
                                  nsINode* aTargetNode)
 {
-  MsgBegin(sFocusTitle, aMsg);
+  MsgBegin(sFocusTitle, "%s", aMsg);
   Node(aTargetDescr, aTargetNode);
   MsgEnd();
 }
@@ -544,7 +544,7 @@ void
 logging::FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
                                  nsISupports* aTargetThing)
 {
-  MsgBegin(sFocusTitle, aMsg);
+  MsgBegin(sFocusTitle, "%s", aMsg);
 
   if (aTargetThing) {
     nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTargetThing));
@@ -628,7 +628,7 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...)
       }
     }
     else {
-      MsgBegin("TREE", aMsg);
+      MsgBegin("TREE", "%s", aMsg);
     }
     va_end(vl);
     MsgEnd();
@@ -677,7 +677,7 @@ logging::Tree(const char* aTitle, const char* aMsgText,
               Accessible* aRoot, GetTreePrefix aPrefixFunc,
               void* aGetTreePrefixData)
 {
-  logging::MsgBegin(aTitle, aMsgText);
+  logging::MsgBegin(aTitle, "%s", aMsgText);
 
   nsAutoString level;
   Accessible* root = aRoot;
@@ -717,7 +717,7 @@ void
 logging::DOMTree(const char* aTitle, const char* aMsgText,
                  DocAccessible* aDocument)
 {
-  logging::MsgBegin(aTitle, aMsgText);
+  logging::MsgBegin(aTitle, "%s", aMsgText);
   nsAutoString level;
   nsINode* root = aDocument->DocumentNode();
   do {
