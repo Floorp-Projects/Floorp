@@ -593,12 +593,13 @@ pub extern "C" fn Servo_StyleSheet_ClearAndUpdate(stylesheet: RawServoStyleSheet
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_AppendStyleSheet(raw_data: RawServoStyleSetBorrowed,
                                                   raw_sheet: RawServoStyleSheetBorrowed,
+                                                  unique_id: u32,
                                                   flush: bool) {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.append_stylesheet(sheet);
+    data.stylesheets.append_stylesheet(sheet, unique_id);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -607,12 +608,13 @@ pub extern "C" fn Servo_StyleSet_AppendStyleSheet(raw_data: RawServoStyleSetBorr
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_PrependStyleSheet(raw_data: RawServoStyleSetBorrowed,
                                                    raw_sheet: RawServoStyleSheetBorrowed,
+                                                   unique_id: u32,
                                                    flush: bool) {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.prepend_stylesheet(sheet);
+    data.stylesheets.prepend_stylesheet(sheet, unique_id);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -621,14 +623,14 @@ pub extern "C" fn Servo_StyleSet_PrependStyleSheet(raw_data: RawServoStyleSetBor
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_InsertStyleSheetBefore(raw_data: RawServoStyleSetBorrowed,
                                                         raw_sheet: RawServoStyleSheetBorrowed,
-                                                        raw_reference: RawServoStyleSheetBorrowed,
+                                                        unique_id: u32,
+                                                        before_unique_id: u32,
                                                         flush: bool) {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    let reference = HasArcFFI::as_arc(&raw_reference);
-    data.stylesheets.insert_stylesheet_before(sheet, reference);
+    data.stylesheets.insert_stylesheet_before(sheet, unique_id, before_unique_id);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -636,13 +638,12 @@ pub extern "C" fn Servo_StyleSet_InsertStyleSheetBefore(raw_data: RawServoStyleS
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_RemoveStyleSheet(raw_data: RawServoStyleSetBorrowed,
-                                                  raw_sheet: RawServoStyleSheetBorrowed,
+                                                  unique_id: u32,
                                                   flush: bool) {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.remove_stylesheet(sheet);
+    data.stylesheets.remove_stylesheet(unique_id);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -1169,7 +1170,7 @@ pub extern "C" fn Servo_DeclarationBlock_GetNthProperty(declarations: RawServoDe
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         if let Some(&(ref decl, _)) = decls.declarations().get(index as usize) {
             let result = unsafe { result.as_mut().unwrap() };
-            decl.id().to_css(result).unwrap();
+            result.assign_utf8(&decl.id().name());
             true
         } else {
             false
@@ -1541,7 +1542,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(declarations:
                                                         unit: structs::nsCSSUnit) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
-    use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
+    use style::values::specified::length::{AbsoluteLength, FontRelativeLength, PhysicalLength};
     use style::values::specified::length::{LengthOrPercentage, NoCalcLength};
 
     let long = get_longhand_from_id!(property);
@@ -1552,6 +1553,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(declarations:
         structs::nsCSSUnit::eCSSUnit_Inch => NoCalcLength::Absolute(AbsoluteLength::In(value)),
         structs::nsCSSUnit::eCSSUnit_Centimeter => NoCalcLength::Absolute(AbsoluteLength::Cm(value)),
         structs::nsCSSUnit::eCSSUnit_Millimeter => NoCalcLength::Absolute(AbsoluteLength::Mm(value)),
+        structs::nsCSSUnit::eCSSUnit_PhysicalMillimeter => NoCalcLength::Physical(PhysicalLength(value)),
         structs::nsCSSUnit::eCSSUnit_Point => NoCalcLength::Absolute(AbsoluteLength::Pt(value)),
         structs::nsCSSUnit::eCSSUnit_Pica => NoCalcLength::Absolute(AbsoluteLength::Pc(value)),
         structs::nsCSSUnit::eCSSUnit_Quarter => NoCalcLength::Absolute(AbsoluteLength::Q(value)),
@@ -2018,6 +2020,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
         // mServoDeclarationBlock is null in the case where we have an invalid css property.
         let iter = keyframe.mPropertyValues.iter()
                                            .filter(|&property| !property.mServoDeclarationBlock.mRawPtr.is_null());
+        let mut property_index = 0;
         for property in iter {
             let declarations = unsafe { &*property.mServoDeclarationBlock.mRawPtr.clone() };
             let declarations = Locked::<PropertyDeclarationBlock>::as_arc(&declarations);
@@ -2044,17 +2047,18 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
                                 }
                             });
 
-            for (i, anim) in anim_iter.enumerate() {
+            for anim in anim_iter {
                 if !seen.has_transition_property_bit(&anim.0) {
                     // This is safe since we immediately write to the uninitialized values.
-                    unsafe { animation_values.set_len((i + 1) as u32) };
+                    unsafe { animation_values.set_len((property_index + 1) as u32) };
                     seen.set_transition_property_bit(&anim.0);
-                    animation_values[i].mProperty = (&anim.0).into();
+                    animation_values[property_index].mProperty = (&anim.0).into();
                     // We only make sure we have enough space for this variable,
                     // but didn't construct a default value for StyleAnimationValue,
                     // so we should zero it to avoid getting undefined behaviors.
-                    animation_values[i].mValue.mGecko = unsafe { mem::zeroed() };
-                    animation_values[i].mValue.mServo.set_arc_leaky(Arc::new(anim.1));
+                    animation_values[property_index].mValue.mGecko = unsafe { mem::zeroed() };
+                    animation_values[property_index].mValue.mServo.set_arc_leaky(Arc::new(anim.1));
+                    property_index += 1;
                 }
             }
         }
@@ -2222,4 +2226,3 @@ pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(raw_data: RawServoStyleS
                                               parent_style,
                                               declarations.clone()).into_strong()
 }
-

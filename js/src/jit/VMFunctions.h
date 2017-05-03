@@ -866,6 +866,9 @@ SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* v
 bool
 ObjectHasGetterSetter(JSContext* cx, JSObject* obj, Shape* propShape);
 
+JSString*
+TypeOfObject(JSObject* obj, JSRuntime* rt);
+
 } // namespace jit
 } // namespace js
 

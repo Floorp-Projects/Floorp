@@ -55,7 +55,7 @@ class nsSVGImageFrame final
 
 protected:
   explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, FrameType::SVGImage)
+    : SVGGeometryFrame(aContext, LayoutFrameType::SVGImage)
     , mReflowCallbackPosted(false)
   {
     EnableVisibilityTracking();

@@ -150,6 +150,8 @@
 #include "nsDOMStringMap.h"
 #include "DOMIntersectionObserver.h"
 
+#include "nsISpeculativeConnect.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -648,8 +650,9 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
 
   // menu frames implement GetScrollTargetFrame but we don't want
   // to use it here.  Similar for comboboxes.
-  FrameType type = frame->Type();
-  if (type != FrameType::Menu && type != FrameType::ComboboxControl) {
+  LayoutFrameType type = frame->Type();
+  if (type != LayoutFrameType::Menu &&
+      type != LayoutFrameType::ComboboxControl) {
     nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
     if (scrollFrame)
       return scrollFrame;
@@ -3065,6 +3068,13 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
 
           EventStateManager::SetActiveManager(
             aVisitor.mPresContext->EventStateManager(), this);
+
+          // OK, we're pretty sure we're going to load, so warm up a speculative
+          // connection to be sure we have one ready when we open the channel.
+          nsCOMPtr<nsISpeculativeConnect> sc =
+            do_QueryInterface(nsContentUtils::GetIOService());
+          nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(handler);
+          sc->SpeculativeConnect2(absURI, NodePrincipal(), ir);
         }
       }
     }

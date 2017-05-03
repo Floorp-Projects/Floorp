@@ -1,12 +1,12 @@
-/* globals console, catcher, util, ui, slides */
+/* globals log, catcher, util, ui, slides */
 /* globals window, document, location, shooter, callBackground, selectorLoader, assertIsTrusted */
 
 "use strict";
 
-this.uicontrol = (function () {
+this.uicontrol = (function() {
   let exports = {};
 
-  /**********************************************************
+  /** ********************************************************
    * selection
    */
 
@@ -57,8 +57,12 @@ this.uicontrol = (function () {
   // This is how close (in pixels) you can get to the edge of the window and then
   // it will scroll:
   const SCROLL_BY_EDGE = 20;
+  // This is how wide the inboard scrollbars are, generally 0 except on Mac
+  const SCROLLBAR_WIDTH = (window.navigator.platform.match(/Mac/i)) ? 17 : 0;
+
 
   const { sendEvent } = shooter;
+  const log = global.log;
 
   function round10(n) {
     return Math.floor(n / 10) * 10;
@@ -89,7 +93,7 @@ this.uicontrol = (function () {
     };
   }
 
-  /***********************************************
+  /** *********************************************
    * State and stateHandlers infrastructure
    */
 
@@ -175,7 +179,7 @@ this.uicontrol = (function () {
   getState.state = "cancel";
 
   function setState(s) {
-    if (! stateHandlers[s]) {
+    if (!stateHandlers[s]) {
       throw new Error("Unknown state: " + s);
     }
     let cur = getState.state;
@@ -305,13 +309,13 @@ this.uicontrol = (function () {
     }
   }
 
-  Selection.getBoundingClientRect = function (el) {
-    if (! el.getBoundingClientRect) {
+  Selection.getBoundingClientRect = function(el) {
+    if (!el.getBoundingClientRect) {
       // Typically the <html> element or somesuch
       return null;
     }
     let rect = el.getBoundingClientRect();
-    if (! rect) {
+    if (!rect) {
       return null;
     }
     return new Selection(rect.left, rect.top, rect.right, rect.bottom);
@@ -336,12 +340,12 @@ this.uicontrol = (function () {
     }
   }
 
-  /***********************************************
+  /** *********************************************
    * all stateHandlers
    */
 
   stateHandlers.onboarding = {
-    start: function () {
+    start() {
       if (typeof slides == "undefined") {
         throw new Error("Attempted to set state to onboarding without loading slides");
       }
@@ -350,12 +354,12 @@ this.uicontrol = (function () {
       }));
     },
 
-    slidesOnEnd: function () {
+    slidesOnEnd() {
       callBackground("hasSeenOnboarding");
       setState("crosshairs");
     },
 
-    end: function () {
+    end() {
       slides.remove();
     }
   };
@@ -364,34 +368,41 @@ this.uicontrol = (function () {
 
     cachedEl: null,
 
-    start: function () {
+    start() {
       selectedPos = mousedownPos = null;
       this.cachedEl = null;
       watchPromise(ui.iframe.display(installHandlersOnDocument, standardOverlayCallbacks).then(() => {
         ui.iframe.usePreSelection();
         ui.Box.remove();
         const handler = watchFunction(assertIsTrusted(keyupHandler));
-        document.addEventListener("keyup", handler, false);
+        document.addEventListener("keyup", handler);
         registeredDocumentHandlers.push({name: "keyup", doc: document, handler});
       }));
     },
 
-    mousemove: function (event) {
+    mousemove(event) {
       ui.PixelDimensions.display(event.pageX, event.pageY, event.pageX, event.pageY);
       if (event.target.classList &&
-          (! event.target.classList.contains("preview-overlay"))) {
+          (!event.target.classList.contains("preview-overlay"))) {
         // User is hovering over a toolbar button or control
         autoDetectRect = null;
         ui.HoverBox.hide();
         return;
       }
       let el;
-      if (event.target.classList.contains("preview-overlay")) {
+      if (event.target.classList && event.target.classList.contains("preview-overlay")) {
         // The hover is on the overlay, so we need to figure out the real element
         el = ui.iframe.getElementFromPoint(
           event.pageX + window.scrollX - window.pageXOffset,
           event.pageY + window.scrollY - window.pageYOffset
         );
+        let xpos = Math.floor(10 * (event.pageX - window.innerWidth / 2) / window.innerWidth);
+        let ypos = Math.floor(10 * (event.pageY - window.innerHeight / 2) / window.innerHeight)
+
+        for (var i = 0; i < 2; i++) {
+          let move = `translate(${xpos}px, ${ypos}px)`;
+          event.target.getElementsByClassName('eyeball')[i].style.transform = move;
+        }
       } else {
         // The hover is on the element we care about, so we use that
         el = event.target;
@@ -404,7 +415,7 @@ this.uicontrol = (function () {
       this.setAutodetectBasedOnElement(el);
     },
 
-    setAutodetectBasedOnElement: function (el) {
+    setAutodetectBasedOnElement(el) {
       let lastRect;
       let lastNode;
       let rect;
@@ -412,7 +423,7 @@ this.uicontrol = (function () {
       let node = el;
       while (node) {
         rect = Selection.getBoundingClientRect(node);
-        if (! rect) {
+        if (!rect) {
           rect = lastRect;
           break;
         }
@@ -423,7 +434,7 @@ this.uicontrol = (function () {
           break;
         }
         if (rect.width >= MIN_DETECT_WIDTH && rect.height >= MIN_DETECT_HEIGHT) {
-          if (! doNotAutoselectTags[node.tagName]) {
+          if (!doNotAutoselectTags[node.tagName]) {
             break;
           }
         }
@@ -446,11 +457,11 @@ this.uicontrol = (function () {
             break;
           }
           extendNode = extendNode.nextSibling;
-          if (! extendNode) {
+          if (!extendNode) {
             let parent = lastNode.parentNode;
-            for (let i=0; i<parent.childNodes.length; i++) {
+            for (let i = 0; i < parent.childNodes.length; i++) {
               if (parent.childNodes[i] === lastNode) {
-                extendNode = parent.childNodes[i+1];
+                extendNode = parent.childNodes[i + 1];
               }
             }
           }
@@ -467,7 +478,7 @@ this.uicontrol = (function () {
       if (rect && (rect.width < MIN_DETECT_ABSOLUTE_WIDTH || rect.height < MIN_DETECT_ABSOLUTE_HEIGHT)) {
         rect = null;
       }
-      if (! rect) {
+      if (!rect) {
         ui.HoverBox.hide();
       } else {
         ui.HoverBox.display(rect);
@@ -476,34 +487,43 @@ this.uicontrol = (function () {
     },
 
     /** When we find an element, maybe there's one that's just a little bit better... */
-    evenBetterElement: function (node, origRect) {
+    evenBetterElement(node, origRect) {
       let el = node.parentNode;
       let ELEMENT_NODE = document.ELEMENT_NODE;
       while (el && el.nodeType == ELEMENT_NODE) {
-        if (! el.getAttribute) {
+        if (!el.getAttribute) {
           return null;
         }
         let role = el.getAttribute("role");
         if (role === "article" || (el.className && typeof el.className == "string" && el.className.search("tweet ") !== -1)) {
           let rect = Selection.getBoundingClientRect(el);
-          if (! rect) {
+          if (!rect) {
             return null;
           }
           if (rect.width <= MAX_DETECT_WIDTH && rect.height <= MAX_DETECT_HEIGHT) {
             return el;
-          } else {
-            return null;
           }
+          return null;
         }
         el = el.parentNode;
       }
       return null;
     },
 
-    mousedown: function (event) {
+    mousedown(event) {
       if (ui.isHeader(event.target)) {
-        return;
+        return undefined;
       }
+      // If the pageX is greater than this, then probably it's an attempt to get
+      // to the scrollbar, or an actual scroll, and not an attempt to start the
+      // selection:
+      let maxX = window.innerWidth - SCROLLBAR_WIDTH;
+      if (event.pageX >= maxX) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+
       mousedownPos = new Pos(event.pageX + window.scrollX, event.pageY + window.scrollY);
       setState("draggingReady");
       event.stopPropagation();
@@ -511,7 +531,7 @@ this.uicontrol = (function () {
       return false;
     },
 
-    end: function () {
+    end() {
       ui.HoverBox.remove();
       ui.PixelDimensions.remove();
     }
@@ -524,12 +544,12 @@ this.uicontrol = (function () {
     maxAutoElementWidth: 800,
     maxAutoElementHeight: 600,
 
-    start: function () {
+    start() {
       ui.iframe.usePreSelection();
       ui.Box.remove();
     },
 
-    mousemove: function (event) {
+    mousemove(event) {
       if (mousedownPos.distanceTo(event.pageX, event.pageY) > this.minMove) {
         selectedPos = new Selection(
           mousedownPos.x,
@@ -541,7 +561,7 @@ this.uicontrol = (function () {
       }
     },
 
-    mouseup: function (event) {
+    mouseup(event) {
       // If we don't get into "dragging" then we attempt an autoselect
       if (mouseupNoAutoselect) {
         sendEvent("cancel-selection", "selection-background-mousedown");
@@ -565,15 +585,16 @@ this.uicontrol = (function () {
         sendEvent("no-selection", "no-element-found");
         setState("crosshairs");
       }
+      return undefined;
     },
 
-    click: function (event) {
+    click(event) {
       this.mouseup(event);
     },
 
-    findGoodEl: function () {
+    findGoodEl() {
       let el = mousedownPos.elementFromPoint();
-      if (! el) {
+      if (!el) {
         return null;
       }
       let isGoodEl = (el) => {
@@ -588,8 +609,8 @@ this.uicontrol = (function () {
         if (['block', 'inline-block', 'table'].indexOf(display) != -1) {
           return true;
           // FIXME: not sure if this is useful:
-          //let rect = el.getBoundingClientRect();
-          //return rect.width <= this.maxAutoElementWidth && rect.height <= this.maxAutoElementHeight;
+          // let rect = el.getBoundingClientRect();
+          // return rect.width <= this.maxAutoElementWidth && rect.height <= this.maxAutoElementHeight;
         }
         return false;
       };
@@ -602,7 +623,7 @@ this.uicontrol = (function () {
       return null;
     },
 
-    end: function () {
+    end() {
       mouseupNoAutoselect = false;
     }
 
@@ -610,12 +631,12 @@ this.uicontrol = (function () {
 
   stateHandlers.dragging = {
 
-    start: function () {
+    start() {
       ui.iframe.useSelection();
       ui.Box.display(selectedPos);
     },
 
-    mousemove: function (event) {
+    mousemove(event) {
       selectedPos.x2 = util.truncateX(event.pageX);
       selectedPos.y2 = util.truncateY(event.pageY);
       scrollIfByEdge(event.pageX, event.pageY);
@@ -623,7 +644,7 @@ this.uicontrol = (function () {
       ui.PixelDimensions.display(event.pageX, event.pageY, selectedPos.width, selectedPos.height);
     },
 
-    mouseup: function (event) {
+    mouseup(event) {
       selectedPos.x2 = util.truncateX(event.pageX);
       selectedPos.y2 = util.truncateY(event.pageY);
       ui.Box.display(selectedPos, standardDisplayCallbacks);
@@ -638,21 +659,21 @@ this.uicontrol = (function () {
       setState("selected");
     },
 
-    end: function () {
+    end() {
       ui.PixelDimensions.remove();
     }
   };
 
   stateHandlers.selected = {
-    start: function () {
+    start() {
       ui.iframe.useSelection();
     },
 
-    mousedown: function (event) {
+    mousedown(event) {
       let target = event.target;
       if (target.tagName == "HTML") {
         // This happens when you click on the scrollbar
-        return;
+        return undefined;
       }
       let direction = ui.Box.draggerDirection(target);
       if (direction) {
@@ -661,7 +682,7 @@ this.uicontrol = (function () {
       } else if (ui.Box.isSelection(target)) {
         sendEvent("start-move-selection", "selection");
         stateHandlers.resizing.startResize(event, "move");
-      } else if (! ui.Box.isControl(target)) {
+      } else if (!ui.Box.isControl(target)) {
         mousedownPos = new Pos(event.pageX, event.pageY);
         setState("crosshairs");
       }
@@ -671,12 +692,12 @@ this.uicontrol = (function () {
   };
 
   stateHandlers.resizing = {
-    start: function () {
+    start() {
       ui.iframe.useSelection();
       selectedPos.sortCoords();
     },
 
-    startResize: function (event, direction) {
+    startResize(event, direction) {
       selectedPos.sortCoords();
       resizeDirection = direction;
       resizeStartPos = new Pos(event.pageX, event.pageY);
@@ -685,12 +706,12 @@ this.uicontrol = (function () {
       setState("resizing");
     },
 
-    mousemove: function (event) {
+    mousemove(event) {
       this._resize(event);
       return false;
     },
 
-    mouseup: function (event) {
+    mouseup(event) {
       this._resize(event);
       sendEvent("selection-resized");
       ui.Box.display(selectedPos, standardDisplayCallbacks);
@@ -706,17 +727,15 @@ this.uicontrol = (function () {
             "resize-selection", "mouseup",
             eventOptionsForResize(resizeStartSelected, selectedPos));
         }
+      } else if (resizeDirection == "move") {
+        sendEvent("keep-resize-selection", "mouseup");
       } else {
-        if (resizeDirection == "move") {
-          sendEvent("keep-resize-selection", "mouseup");
-        } else {
-          sendEvent("keep-move-selection", "mouseup");
-        }
+        sendEvent("keep-move-selection", "mouseup");
       }
       setState("selected");
     },
 
-    _resize: function (event) {
+    _resize(event) {
       let diffX = event.pageX - resizeStartPos.x;
       let diffY = event.pageY - resizeStartPos.y;
       let movement = movements[resizeDirection];
@@ -741,14 +760,14 @@ this.uicontrol = (function () {
       ui.Box.display(selectedPos);
     },
 
-    end: function () {
+    end() {
       resizeDirection = resizeStartPos = resizeStartSelected = null;
       selectedPos.sortCoords();
     }
   };
 
   stateHandlers.cancel = {
-    start: function () {
+    start() {
       ui.iframe.hide();
       ui.Box.remove();
     }
@@ -782,14 +801,14 @@ this.uicontrol = (function () {
     }
   }
 
-  /***********************************************
+  /** *********************************************
    * Selection communication
    */
 
    // If the slides module is loaded then we're supposed to onboard
   let shouldOnboard = typeof slides !== "undefined";
 
-  exports.activate = function () {
+  exports.activate = function() {
     if (isFrameset()) {
       callBackground("abortFrameset");
       selectorLoader.unloadModules();
@@ -811,7 +830,7 @@ this.uicontrol = (function () {
     return document.body.tagName == "FRAMESET";
   }
 
-  exports.deactivate = function () {
+  exports.deactivate = function() {
     try {
       setState("cancel");
       callBackground('closeSelector');
@@ -823,12 +842,12 @@ this.uicontrol = (function () {
     }
   };
 
-  exports.unload = function () {
+  exports.unload = function() {
     // Note that ui.unload() will be called on its own
     removeHandlers();
   };
 
-  /***********************************************
+  /** *********************************************
    * Event handlers
    */
 
@@ -837,20 +856,21 @@ this.uicontrol = (function () {
 
   function addHandlers() {
     ["mouseup", "mousedown", "mousemove", "click"].forEach((eventName) => {
-      let fn = watchFunction((function (eventName, event) {
+      let fn = watchFunction((function(eventName, event) {
         if (typeof event.button == "number" && event.button !== 0) {
           // Not a left click
-          return;
+          return undefined;
         }
         if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
           // Modified click of key
-          return;
+          return undefined;
         }
         let state = getState();
         let handler = stateHandlers[state];
         if (handler[eventName]) {
           return handler[eventName](event);
         }
+        return undefined;
       }).bind(null, eventName));
       primedDocumentHandlers.set(eventName, fn);
     });

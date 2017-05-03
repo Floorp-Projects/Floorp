@@ -144,7 +144,7 @@ nsTableFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 }
 
 nsTableFrame::nsTableFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, FrameType::Table)
+  : nsContainerFrame(aContext, LayoutFrameType::Table)
   , mCellMap(nullptr)
   , mTableLayoutStrategy(nullptr)
 {
@@ -1259,15 +1259,15 @@ public:
 
 #ifdef DEBUG
 static bool
-IsFrameAllowedInTable(FrameType aType)
+IsFrameAllowedInTable(LayoutFrameType aType)
 {
   return IS_TABLE_CELL(aType) ||
-         FrameType::TableRow == aType ||
-         FrameType::TableRowGroup == aType ||
-         FrameType::Scroll == aType ||
-         FrameType::Table == aType ||
-         FrameType::TableCol == aType ||
-         FrameType::TableColGroup == aType;
+         LayoutFrameType::TableRow == aType ||
+         LayoutFrameType::TableRowGroup == aType ||
+         LayoutFrameType::Scroll == aType ||
+         LayoutFrameType::Table == aType ||
+         LayoutFrameType::TableCol == aType ||
+         LayoutFrameType::TableColGroup == aType;
 }
 #endif
 
@@ -1285,12 +1285,12 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 static int32_t
 GetTablePartRank(nsDisplayItem* aItem)
 {
-  FrameType type = aItem->Frame()->Type();
-  if (type == FrameType::Table)
+  LayoutFrameType type = aItem->Frame()->Type();
+  if (type == LayoutFrameType::Table)
     return 0;
-  if (type == FrameType::TableRowGroup)
+  if (type == LayoutFrameType::TableRowGroup)
     return 1;
-  if (type == FrameType::TableRow)
+  if (type == LayoutFrameType::TableRow)
     return 2;
   return 3;
 }
@@ -1809,17 +1809,17 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowInput)
   WritingMode wm = aParentReflowInput.GetWritingMode();
   for (const ReflowInput* rs = &aParentReflowInput;
        rs && rs->mFrame; rs = rs->mParentReflowInput) {
-    FrameType frameType = rs->mFrame->Type();
+    LayoutFrameType frameType = rs->mFrame->Type();
     if (IS_TABLE_CELL(frameType) ||
-        (FrameType::TableRow      == frameType) ||
-        (FrameType::TableRowGroup == frameType)) {
+        (LayoutFrameType::TableRow      == frameType) ||
+        (LayoutFrameType::TableRowGroup == frameType)) {
       const nsStyleCoord &bsize = rs->mStylePosition->BSize(wm);
       // calc() with percentages treated like 'auto' on internal table elements
       if (bsize.GetUnit() != eStyleUnit_Auto &&
           (!bsize.IsCalcUnit() || !bsize.HasPercent())) {
         return true;
       }
-    } else if (FrameType::Table == frameType) {
+    } else if (LayoutFrameType::Table == frameType) {
       // we reached the containing table, so always return
       return rs->mStylePosition->BSize(wm).GetUnit() != eStyleUnit_Auto;
     }
@@ -1857,15 +1857,15 @@ nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const ReflowInput* rs = &aReflowInput; rs && rs->mFrame; rs = rs->mParentReflowInput) {
-    FrameType frameType = rs->mFrame->Type();
+    LayoutFrameType frameType = rs->mFrame->Type();
     NS_ASSERTION(IS_TABLE_CELL(frameType) ||
-                 FrameType::TableRow == frameType ||
-                 FrameType::TableRowGroup == frameType ||
-                 FrameType::Table == frameType,
+                 LayoutFrameType::TableRow == frameType ||
+                 LayoutFrameType::TableRowGroup == frameType ||
+                 LayoutFrameType::Table == frameType,
                  "unexpected frame type");
 
     rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-    if (FrameType::Table == frameType) {
+    if (LayoutFrameType::Table == frameType) {
       NS_ASSERTION(rs != &aReflowInput,
                    "should not request special bsize reflow for table");
       // always stop when we reach a table
@@ -2613,7 +2613,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
     if (aPrevFrame) {
       nsTableColGroupFrame* prevColGroup =
         (nsTableColGroupFrame*)GetFrameAtOrBefore(this, aPrevFrame,
-                                                  FrameType::TableColGroup);
+                                                  LayoutFrameType::TableColGroup);
       if (prevColGroup) {
         startColIndex = prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
       }
@@ -4068,7 +4068,7 @@ nsTableFrame::GetFrameName(nsAString& aResult) const
 nsIFrame*
 nsTableFrame::GetFrameAtOrBefore(nsIFrame* aParentFrame,
                                  nsIFrame* aPriorChildFrame,
-                                 FrameType aChildType)
+                                 LayoutFrameType aChildType)
 {
   nsIFrame* result = nullptr;
   if (!aPriorChildFrame) {
@@ -4170,7 +4170,7 @@ nsTableFrame::Dump(bool            aDumpRows,
     }
     printf("\n colgroups->");
     for (nsIFrame* childFrame : mColGroups) {
-      if (FrameType::TableColGroup == childFrame->Type()) {
+      if (LayoutFrameType::TableColGroup == childFrame->Type()) {
         nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
         colGroupFrame->Dump(1);
       }

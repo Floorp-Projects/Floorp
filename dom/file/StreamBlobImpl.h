@@ -46,6 +46,27 @@ public:
     return true;
   }
 
+  void SetFullPath(const nsAString& aFullPath)
+  {
+    mFullPath = aFullPath;
+  }
+
+  void GetMozFullPathInternal(nsAString& aFullPath,
+                              ErrorResult& aRv) const override
+  {
+    aFullPath = mFullPath;
+  }
+
+  void SetIsDirectory(bool aIsDirectory)
+  {
+    mIsDirectory = aIsDirectory;
+  }
+
+  bool IsDirectory() const override
+  {
+    return mIsDirectory;
+  }
+
 private:
   StreamBlobImpl(nsIInputStream* aInputStream,
                  const nsAString& aContentType,
@@ -67,6 +88,9 @@ private:
   void MaybeRegisterMemoryReporter();
 
   nsCOMPtr<nsIInputStream> mInputStream;
+
+  nsString mFullPath;
+  bool mIsDirectory;
 };
 
 } // namespace dom

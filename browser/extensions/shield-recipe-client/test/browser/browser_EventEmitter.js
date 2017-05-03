@@ -26,7 +26,7 @@ function listenerC(x = 1) {
   evidence.log += "c";
 }
 
-add_task(withSandboxManager(Assert, function* (sandboxManager) {
+add_task(withSandboxManager(Assert, async function(sandboxManager) {
   const eventEmitter = new EventEmitter(sandboxManager);
 
   // Fire an unrelated event, to make sure nothing goes wrong
@@ -51,7 +51,7 @@ add_task(withSandboxManager(Assert, function* (sandboxManager) {
   }, "events are fired async");
 
   // Spin the event loop to run events, so we can safely "off"
-  yield Promise.resolve();
+  await Promise.resolve();
 
   // Check intermediate event results
   Assert.deepEqual(evidence, {
@@ -69,7 +69,7 @@ add_task(withSandboxManager(Assert, function* (sandboxManager) {
   eventEmitter.on("nothing");
 
   // Spin the event loop to run events
-  yield Promise.resolve();
+  await Promise.resolve();
 
   Assert.deepEqual(evidence, {
     a: 111,
@@ -91,13 +91,13 @@ add_task(withSandboxManager(Assert, function* (sandboxManager) {
 
   const data = {count: 0};
   eventEmitter.emit("mutationTest", data);
-  yield Promise.resolve();
+  await Promise.resolve();
 
   is(handlerRunCount, 2, "Mutation handler was executed twice.");
   is(data.count, 0, "Event data cannot be mutated by handlers.");
 }));
 
-add_task(withSandboxManager(Assert, function* sandboxedEmitter(sandboxManager) {
+add_task(withSandboxManager(Assert, async function sandboxedEmitter(sandboxManager) {
   const eventEmitter = new EventEmitter(sandboxManager);
 
   // Event handlers inside the sandbox should be run in response to
@@ -117,7 +117,7 @@ add_task(withSandboxManager(Assert, function* sandboxedEmitter(sandboxManager) {
   eventEmitter.emit("event", 10);
   eventEmitter.emit("eventOnce", 5);
   eventEmitter.emit("eventOnce", 10);
-  yield Promise.resolve();
+  await Promise.resolve();
 
   const eventCounts = sandboxManager.evalInSandbox("this.eventCounts");
   Assert.deepEqual(eventCounts, {

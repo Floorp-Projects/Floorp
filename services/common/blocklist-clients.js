@@ -102,8 +102,14 @@ class BlocklistClient {
     });
   }
 
+  get identifier() {
+    return `${this.bucketName}/${this.collectionName}`;
+  }
+
   get filename() {
-    return `${this.bucketName}/${this.collectionName}.json`;
+    // Replace slash by OS specific path separator (eg. Windows)
+    const identifier = OS.Path.join(...this.identifier.split("/"));
+    return `${identifier}.json`;
   }
 
   /**
@@ -114,7 +120,9 @@ class BlocklistClient {
    * dump each time the collection changes.
    */
   loadDumpFile() {
-    const fileURI = `resource://app/defaults/${this.filename}`;
+    // Replace OS specific path separator by / for URI.
+    const { components: folderFile } = OS.Path.split(this.filename);
+    const fileURI = `resource://app/defaults/${folderFile.join("/")}`;
     return Task.spawn(function* loadFile() {
       const response = yield fetch(fileURI);
       if (!response.ok) {

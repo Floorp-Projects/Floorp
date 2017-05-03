@@ -258,10 +258,6 @@ class BuildOutputManager(LoggingMixin):
     def on_line(self, line):
         warning, state_changed, relevant = self.monitor.on_line(line)
 
-        if warning:
-            self.log(logging.INFO, 'compiler_warning', warning,
-                'Warning: {flag} in {filename}: {message}')
-
         if relevant:
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
         elif state_changed:
@@ -469,6 +465,25 @@ class Build(MachCommandBase):
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
+
+            # Print the collected compiler warnings. This is redundant with
+            # inline output from the compiler itself. However, unlike inline
+            # output, this list is sorted and grouped by file, making it
+            # easier to triage output.
+            for warning in sorted(monitor.instance_warnings):
+                path = mozpath.normsep(warning['filename'])
+                if path.startswith(self.topsrcdir):
+                    path = path[len(self.topsrcdir) + 1:]
+
+                warning['normpath'] = path
+
+                if warning['column'] is not None:
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line}:{column} [{flag}] '
+                             '{message}')
+                else:
+                    self.log(logging.WARNING, 'compiler_warning', warning,
+                             'warning: {normpath}:{line} [{flag}] {message}')
 
             monitor.finish(record_usage=status==0)
 

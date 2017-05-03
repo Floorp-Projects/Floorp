@@ -239,7 +239,6 @@ EXTRA_JS_MODULES += [
     'sessionstore/ScrollPosition.jsm',
     'sessionstore/XPathGenerator.jsm',
     'ShortcutUtils.jsm',
-    'Sntp.jsm',
     'Sqlite.jsm',
     'Task.jsm',
     'Timer.jsm',

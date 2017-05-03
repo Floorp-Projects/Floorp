@@ -102,5 +102,22 @@
   },
   "tourDone": {
     "message": "Selesai"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Dengan menggunakan Firefox Screenshots, anda bersetuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Cloud Services.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Terma"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Notis Privasi"
   }
 }

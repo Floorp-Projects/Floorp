@@ -1794,6 +1794,13 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
                                         nsIInterfaceRequestor *aCallbacks,
                                         bool aAnonymous)
 {
+    bool isHTTP, isHTTPS;
+    if (!(NS_SUCCEEDED(aURI->SchemeIs("http", &isHTTP)) && isHTTP) &&
+        !(NS_SUCCEEDED(aURI->SchemeIs("https", &isHTTPS)) && isHTTPS)) {
+        // We don't speculatively connect to non-HTTP[S] URIs.
+        return NS_OK;
+    }
+
     if (IsNeckoChild()) {
         ipc::URIParams params;
         SerializeURI(aURI, params);

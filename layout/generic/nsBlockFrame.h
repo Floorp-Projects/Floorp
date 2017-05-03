@@ -397,7 +397,7 @@ public:
   };
 
 protected:
-  nsBlockFrame(nsStyleContext* aContext, mozilla::FrameType aType)
+  nsBlockFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
     : nsContainerFrame(aContext, aType)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
@@ -408,7 +408,7 @@ protected:
   }
 
   explicit nsBlockFrame(nsStyleContext* aContext)
-    : nsBlockFrame(aContext, mozilla::FrameType::Block)
+    : nsBlockFrame(aContext, mozilla::LayoutFrameType::Block)
   {}
 
   virtual ~nsBlockFrame();

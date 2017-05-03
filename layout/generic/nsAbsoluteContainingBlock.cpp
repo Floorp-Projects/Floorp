@@ -425,15 +425,15 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                         ? GetOrthogonalAxis(aAbsPosCBAxis)
                         : aAbsPosCBAxis);
 
-  FrameType parentType = aPlaceholderContainer->Type();
+  LayoutFrameType parentType = aPlaceholderContainer->Type();
   LogicalSize alignAreaSize(pcWM);
-  if (parentType == FrameType::FlexContainer) {
+  if (parentType == LayoutFrameType::FlexContainer) {
     // The alignment container is the flex container's content box:
     alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
     LogicalMargin pcBorderPadding =
       aPlaceholderContainer->GetLogicalUsedBorderAndPadding(pcWM);
     alignAreaSize -= pcBorderPadding.Size(pcWM);
-  } else if (parentType == FrameType::GridContainer) {
+  } else if (parentType == LayoutFrameType::GridContainer) {
     // This abspos elem's parent is a grid container. Per CSS Grid 10.1 & 10.2:
     //  - If the grid container *also* generates the abspos containing block (a
     // grid area) for this abspos child, we use that abspos containing block as

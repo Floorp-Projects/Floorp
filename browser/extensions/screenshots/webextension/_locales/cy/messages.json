@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Cymrwch clipiau a lluniau sgrin o'r We a'u cadw dros dro neu'n barhaol."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Cymryd Llun Sgrin Screenshot"
+  },
+  "myShotsLink": {
+    "message": "Fy Lluniau Sgrin"
+  },
+  "screenshotInstructions": {
+    "message": "Llusgwch neu glicio ar y dudalen i ddewis adran. Pwyso ESC i ddiddymu."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Cadw"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Cadw'r gweladwy"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Cadw tudalen lawn"
+  },
+  "cancelScreenshot": {
+    "message": "Diddymu"
+  },
+  "downloadScreenshot": {
+    "message": "Llwytho i Lawr"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Dolen wedi ei Chadw"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Mae'r ddolen i'ch llun wedi ei gopïo i'r clipfwrdd. Pwyswch $META_KEY$-V i'w ludo.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ddim yn gweithio."
+  },
+  "requestErrorDetails": {
+    "message": "Ymddiheuriadau! Nid oedd modd cadw eich llun. Ceisiwch eto'n hwyrach."
+  },
+  "connectionErrorTitle": {
+    "message": "Nid oes modd i ni gysylltu a'ch lluniau sgrin."
+  },
+  "connectionErrorDetails": {
+    "message": "Gwiriwch eich cysylltiad Rhyngrwyd. Os ydych yn gallu cysylltu â'r Rhyngrwyd, efallai bod anhawster dros dro gyda gwasanaeth lluniau sgrin, Firefox Screnshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nid oedd modd i ni gadw eich llun gan fod yna anhawster gyda gwasanaeth Firefox Screenshots. Ceisiwch eto'n hwyrach."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nid oes modd tynnu llun sgrin o'r dudalen."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Nid yw hwn yn dudalen Gwe safonol, felly does dim modd tynnu llun sgrin ohono."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nid oes modd cymryd llun o dudalen lluniau sgrin Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Www! Mae Firefox Screenshots wedi mynd yn hurt."
+  },
+  "genericErrorDetails": {
+    "message": "Nid ydym yn gwybod beth sydd wedi ddigwydd. Ceisiwch eto neu dynnu llun o dudalen wahanol?"
+  },
+  "tourBodyOne": {
+    "message": "Cymryd, cadw a rhannu lluniau sgrin heb adael Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Cipio Dim ond Beth Rydych ei Angen"
+  },
+  "tourBodyTwo": {
+    "message": "Cliciwch a llusgo i gipio rhan o dudalen. Gallwch hofran i amlygu eich dewis."
+  },
+  "tourHeaderThree": {
+    "message": "Yn Ôl eich Dewis"
+  },
+  "tourBodyThree": {
+    "message": "Cadwch eich lluniau wedi eu golygu i'r We ar gyfer rhannu haws, neu eu llwytho i lawr i'ch cyfrifiadur. Gallwch hefyd glicio ar Fy Lluniau i weld pob llun sydd gennych."
+  },
+  "tourHeaderFour": {
+    "message": "Cipio Ffenestri neu Dudalennau Cyfan"
+  },
+  "tourBodyFour": {
+    "message": "Dewiswch y botymau ar y dde uchod i gipio ardal gweladwy mewn ffenestr neu i gipio tudalen gyfan."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Sleid Nesaf"
+  },
+  "tourPrevious": {
+    "message": "Sleid Flaenorol"
+  },
+  "tourDone": {
+    "message": "Gorffen"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Drwy ddefnyddio Firefox Screenshots, rydych yn cytuno i Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Telerau"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Hysbysiad Preifatrwydd"
+  }
+}

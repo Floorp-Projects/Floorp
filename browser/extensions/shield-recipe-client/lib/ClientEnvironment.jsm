@@ -7,13 +7,18 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ShellService", "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NormandyApi", "resource://shield-recipe-client/lib/NormandyApi.jsm");
+XPCOMUtils.defineLazyModuleGetter(
+    this,
+    "PreferenceExperiments",
+    "resource://shield-recipe-client/lib/PreferenceExperiments.jsm",
+);
+XPCOMUtils.defineLazyModuleGetter(this, "Utils", "resource://shield-recipe-client/lib/Utils.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -31,12 +36,12 @@ this.ClientEnvironment = {
    * The server request is made lazily and is cached for the entire browser
    * session.
    */
-  getClientClassification: Task.async(function *() {
+  async getClientClassification() {
     if (!_classifyRequest) {
       _classifyRequest = NormandyApi.classifyClient();
     }
-    return yield _classifyRequest;
-  }),
+    return await _classifyRequest;
+  },
 
   clearClassifyCache() {
     _classifyRequest = null;
@@ -45,13 +50,13 @@ this.ClientEnvironment = {
   /**
    * Test wrapper that mocks the server request for classifying the client.
    * @param  {Object}   data          Fake server data to use
-   * @param  {Function} testGenerator Test generator to execute while mock data is in effect.
+   * @param  {Function} testFunction  Test function to execute while mock data is in effect.
    */
-  withMockClassify(data, testGenerator) {
-    return function* inner() {
+  withMockClassify(data, testFunction) {
+    return async function inner() {
       const oldRequest = _classifyRequest;
       _classifyRequest = Promise.resolve(data);
-      yield testGenerator();
+      await testFunction();
       _classifyRequest = oldRequest;
     };
   },
@@ -94,8 +99,8 @@ this.ClientEnvironment = {
       return Preferences.get("distribution.id", "default");
     });
 
-    XPCOMUtils.defineLazyGetter(environment, "telemetry", Task.async(function *() {
-      const pings = yield TelemetryArchive.promiseArchivedPingList();
+    XPCOMUtils.defineLazyGetter(environment, "telemetry", async function() {
+      const pings = await TelemetryArchive.promiseArchivedPingList();
 
       // get most recent ping per type
       const mostRecentPings = {};
@@ -112,10 +117,10 @@ this.ClientEnvironment = {
       const telemetry = {};
       for (const key in mostRecentPings) {
         const ping = mostRecentPings[key];
-        telemetry[ping.type] = yield TelemetryArchive.promiseArchivedPingById(ping.id);
+        telemetry[ping.type] = await TelemetryArchive.promiseArchivedPingById(ping.id);
       }
       return telemetry;
-    }));
+    });
 
     XPCOMUtils.defineLazyGetter(environment, "version", () => {
       return Services.appinfo.version;
@@ -129,13 +134,13 @@ this.ClientEnvironment = {
       return ShellService.isDefaultBrowser();
     });
 
-    XPCOMUtils.defineLazyGetter(environment, "searchEngine", Task.async(function* () {
-      const searchInitialized = yield new Promise(resolve => Services.search.init(resolve));
+    XPCOMUtils.defineLazyGetter(environment, "searchEngine", async function() {
+      const searchInitialized = await new Promise(resolve => Services.search.init(resolve));
       if (Components.isSuccessCode(searchInitialized)) {
         return Services.search.defaultEngine.identifier;
       }
       return null;
-    }));
+    });
 
     XPCOMUtils.defineLazyGetter(environment, "syncSetup", () => {
       return Preferences.isSet("services.sync.username");
@@ -150,29 +155,46 @@ this.ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "syncTotalDevices", () => {
-      return Preferences.get("services.sync.numClients", 0);
+      return environment.syncDesktopDevices + environment.syncMobileDevices;
     });
 
-    XPCOMUtils.defineLazyGetter(environment, "plugins", Task.async(function* () {
-      const plugins = yield AddonManager.getAddonsByTypes(["plugin"]);
-      return plugins.reduce((pluginMap, plugin) => {
-        pluginMap[plugin.name] = {
-          name: plugin.name,
-          description: plugin.description,
-          version: plugin.version,
-        };
-        return pluginMap;
-      }, {});
-    }));
+    XPCOMUtils.defineLazyGetter(environment, "plugins", async function() {
+      let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
+      plugins = plugins.map(plugin => ({
+        name: plugin.name,
+        description: plugin.description,
+        version: plugin.version,
+      }));
+      return Utils.keyBy(plugins, "name");
+    });
 
     XPCOMUtils.defineLazyGetter(environment, "locale", () => {
+      if (Services.locale.getAppLocaleAsLangTag) {
+        return Services.locale.getAppLocaleAsLangTag();
+      }
+
       return Cc["@mozilla.org/chrome/chrome-registry;1"]
         .getService(Ci.nsIXULChromeRegistry)
-        .getSelectedLocale("browser");
+        .getSelectedLocale("global");
     });
 
     XPCOMUtils.defineLazyGetter(environment, "doNotTrack", () => {
       return Preferences.get("privacy.donottrackheader.enabled", false);
+    });
+
+    XPCOMUtils.defineLazyGetter(environment, "experiments", async () => {
+      const names = {all: [], active: [], expired: []};
+
+      for (const experiment of await PreferenceExperiments.getAll()) {
+        names.all.push(experiment.name);
+        if (experiment.expired) {
+          names.expired.push(experiment.name);
+        } else {
+          names.active.push(experiment.name);
+        }
+      }
+
+      return names;
     });
 
     return environment;

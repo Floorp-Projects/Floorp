@@ -669,18 +669,18 @@ ICToBool_Object::Compiler::generateStubCode(MacroAssembler& masm)
 {
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
-    Label failure, ifFalse, slowPath;
+    Label failure, emulatesUndefined, slowPath;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     Register objReg = masm.extractObject(R0, ExtractTemp0);
     Register scratch = R1.scratchReg();
-    masm.branchTestObjectTruthy(false, objReg, scratch, &slowPath, &ifFalse);
+    masm.branchIfObjectEmulatesUndefined(objReg, scratch, &slowPath, &emulatesUndefined);
 
     // If object doesn't emulate undefined, it evaulates to true.
     masm.moveValue(BooleanValue(true), R0);
     EmitReturnFromIC(masm);
 
-    masm.bind(&ifFalse);
+    masm.bind(&emulatesUndefined);
     masm.moveValue(BooleanValue(false), R0);
     EmitReturnFromIC(masm);
 
@@ -4428,25 +4428,30 @@ DoTypeOfFallback(JSContext* cx, BaselineFrame* frame, ICTypeOf_Fallback* stub, H
                  MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "TypeOf");
-    JSType type = js::TypeOfValue(val);
-    RootedString string(cx, TypeName(type, cx->names()));
 
-    res.setString(string);
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
 
-    if (stub->numOptimizedStubs() >= ICTypeOf_Fallback::MAX_OPTIMIZED_STUBS)
-        return true;
+    if (stub->state().canAttachStub()) {
+        RootedScript script(cx, frame->script());
+        jsbytecode* pc = stub->icEntry()->pc(script);
 
-    MOZ_ASSERT(type != JSTYPE_NULL);
-    if (type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION) {
-        // Create a new TypeOf stub.
-        JitSpew(JitSpew_BaselineIC, "  Generating TypeOf stub for JSType (%d)", (int) type);
-        ICTypeOf_Typed::Compiler compiler(cx, type, string);
-        ICStub* typeOfStub = compiler.getStub(compiler.getStubSpace(frame->script()));
-        if (!typeOfStub)
-            return false;
-        stub->addNewStub(typeOfStub);
+        ICStubEngine engine = ICStubEngine::Baseline;
+        TypeOfIRGenerator gen(cx, script, pc, stub->state().mode(), val);
+        bool attached = false;
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        engine, script, stub, &attached);
+            if (newStub)
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+        }
+        if (!attached)
+            stub->state().trackNotAttached();
     }
 
+    JSType type = js::TypeOfValue(val);
+    RootedString string(cx, TypeName(type, cx->names()));
+    res.setString(string);
     return true;
 }
 
@@ -4467,49 +4472,6 @@ ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoTypeOfFallbackInfo, masm);
-}
-
-bool
-ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-    MOZ_ASSERT(type_ != JSTYPE_NULL);
-    MOZ_ASSERT(type_ != JSTYPE_FUNCTION);
-    MOZ_ASSERT(type_ != JSTYPE_OBJECT);
-
-    Label failure;
-    switch(type_) {
-      case JSTYPE_UNDEFINED:
-        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
-        break;
-
-      case JSTYPE_STRING:
-        masm.branchTestString(Assembler::NotEqual, R0, &failure);
-        break;
-
-      case JSTYPE_NUMBER:
-        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
-        break;
-
-      case JSTYPE_BOOLEAN:
-        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-        break;
-
-      case JSTYPE_SYMBOL:
-        masm.branchTestSymbol(Assembler::NotEqual, R0, &failure);
-        break;
-
-      default:
-        MOZ_CRASH("Unexpected type");
-    }
-
-    masm.movePtr(ImmGCPtr(typeString_), R0.scratchReg());
-    masm.tagValue(JSVAL_TYPE_STRING, R0.scratchReg(), R0);
-    EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 static bool

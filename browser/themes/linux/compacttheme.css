@@ -4,10 +4,6 @@
 
 %include ../shared/compacttheme.inc.css
 
-:root {
-  --forwardbutton-width: 29px;
-}
-
 :root:-moz-lwtheme-darktext {
   --urlbar-dropmarker-url: url("chrome://browser/skin/compacttheme/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
@@ -35,40 +31,6 @@
 }
 #main-menubar > menu:not([open]) {
   color: inherit;
-}
-
-/* Allow buttons with -moz-appearance set to look normal on hover and open states */
-#navigator-toolbox .toolbarbutton-1:-moz-any(:hover, [open="true"]),
-#PlacesToolbar toolbarbutton.bookmark-item:-moz-any(:hover, [open="true"]) {
-  color: initial;
-}
-
-/* Square back and forward buttons */
-#back-button > .toolbarbutton-icon,
-#forward-button > .toolbarbutton-icon {
-  margin: 0;
-  border: 1px solid var(--chrome-nav-bar-controls-border-color);
-  padding: 2px 5px;
-  background: var(--chrome-nav-buttons-background);
-  box-shadow: none !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  border-inline-start: none;
-}
-
-/* Override a box shadow for disabled back button */
-#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
-  box-shadow: none !important;
-}
-
-#back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
-#forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
-  background: var(--chrome-nav-buttons-hover-background) !important;
-}
-
-#back-button > .toolbarbutton-icon {
-  border-radius: 2px 0 0 2px !important;
 }
 
 .urlbar-history-dropmarker {

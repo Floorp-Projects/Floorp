@@ -1,0 +1,20 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Saxla"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Görünən ərazini saxla"
+  },
+  "cancelScreenshot": {
+    "message": "Ləğv et"
+  },
+  "downloadScreenshot": {
+    "message": "Endir"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Keçid köçürüldü"
+  }
+}

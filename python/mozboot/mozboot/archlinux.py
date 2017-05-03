@@ -9,9 +9,10 @@ import subprocess
 import glob
 
 from mozboot.base import BaseBootstrapper
+from mozboot.linux_common import StyloInstall
 
 
-class ArchlinuxBootstrapper(BaseBootstrapper):
+class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
     '''Archlinux experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [

@@ -19,7 +19,7 @@
 using namespace mozilla;
 
 nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext)
-  : nsHTMLButtonControlFrame(aContext, FrameType::GfxButtonControl)
+  : nsHTMLButtonControlFrame(aContext, LayoutFrameType::GfxButtonControl)
 {
 }
 

@@ -43,9 +43,8 @@ NS_QUERYFRAME_HEAD(nsDeckFrame)
   NS_QUERYFRAME_ENTRY(nsDeckFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-
 nsDeckFrame::nsDeckFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, FrameType::Deck)
+  : nsBoxFrame(aContext, LayoutFrameType::Deck)
   , mIndex(0)
 {
   nsCOMPtr<nsBoxLayout> layout;

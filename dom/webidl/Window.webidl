@@ -487,10 +487,10 @@ Window implements ChromeWindow;
 Window implements WindowOrWorkerGlobalScope;
 
 partial interface Window {
-  [Throws, Pref="dom.requestIdleCallback.enabled"]
+  [Throws, Func="nsGlobalWindow::IsRequestIdleCallbackEnabled"]
   unsigned long requestIdleCallback(IdleRequestCallback callback,
                                     optional IdleRequestOptions options);
-  [Pref="dom.requestIdleCallback.enabled"]
+  [Func="nsGlobalWindow::IsRequestIdleCallbackEnabled"]
   void          cancelIdleCallback(unsigned long handle);
 };
 

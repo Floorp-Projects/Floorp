@@ -1075,6 +1075,10 @@ extern "C" {
      -> nscoord;
 }
 extern "C" {
+    pub fn Gecko_GetAppUnitsPerPhysicalInch(pres_context: RawGeckoPresContextBorrowed)
+     -> i32;
+}
+extern "C" {
     pub fn Gecko_CSSValue_GetKeyword(aCSSValue: nsCSSValueBorrowed)
      -> nsCSSKeyword;
 }
@@ -1570,16 +1574,18 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleSet_AppendStyleSheet(set: RawServoStyleSetBorrowed,
                                            sheet: RawServoStyleSheetBorrowed,
+                                           unique_id: u32,
                                            flush: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_PrependStyleSheet(set: RawServoStyleSetBorrowed,
                                             sheet: RawServoStyleSheetBorrowed,
+                                            unique_id: u32,
                                             flush: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_RemoveStyleSheet(set: RawServoStyleSetBorrowed,
-                                           sheet: RawServoStyleSheetBorrowed,
+                                           unique_id: u32,
                                            flush: bool);
 }
 extern "C" {
@@ -1587,8 +1593,8 @@ extern "C" {
                                                      RawServoStyleSetBorrowed,
                                                  sheet:
                                                      RawServoStyleSheetBorrowed,
-                                                 reference:
-                                                     RawServoStyleSheetBorrowed,
+                                                 unique_id: u32,
+                                                 before_unique_id: u32,
                                                  flush: bool);
 }
 extern "C" {
