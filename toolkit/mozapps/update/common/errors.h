@@ -93,6 +93,8 @@
 #define INVALID_APPLYTO_DIR_ERROR 74
 #define INVALID_INSTALL_DIR_PATH_ERROR 75
 #define INVALID_WORKING_DIR_PATH_ERROR 76
+#define INVALID_CALLBACK_PATH_ERROR 77
+#define INVALID_CALLBACK_DIR_ERROR 78
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js
 
