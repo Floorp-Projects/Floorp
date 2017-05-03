@@ -5126,6 +5126,48 @@ GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
     }
 }
 
+void
+GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
+{
+    gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
+    gcstats::AutoSCC scc(stats(), sweepGroupIndex);
+
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_MISC);
+
+        // Cancel any active or pending off thread compilations.
+        js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+            c->sweepJitCompartment(fop);
+
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+            if (jit::JitZone* jitZone = zone->jitZone())
+                jitZone->sweep(fop);
+        }
+
+        // Bug 1071218: the following method has not yet been refactored to
+        // work on a single zone-group at once.
+
+        // Sweep entries containing about-to-be-finalized JitCode and
+        // update relocated TypeSet::Types inside the JitcodeGlobalTable.
+        jit::JitRuntime::SweepJitcodeGlobalTable(rt);
+    }
+
+    {
+        gcstats::AutoPhase apdc(stats(), gcstats::PHASE_SWEEP_DISCARD_CODE);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->discardJitCode(fop);
+    }
+
+    {
+        gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_TYPES);
+        gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES_BEGIN);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->beginSweepTypes(fop, releaseObservedTypes && !zone->isPreservingCode());
+    }
+}
+
 using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
 
 template <typename Functor>
@@ -5245,43 +5287,10 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
                 startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
         }
 
-        // The remainder of the tasks run in parallel on the active thread
-        // until we join, below.
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_MISC);
-
-            // Cancel any active or pending off thread compilations.
-            js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
-
-            for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
-                c->sweepJitCompartment(&fop);
-
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-                if (jit::JitZone* jitZone = zone->jitZone())
-                    jitZone->sweep(&fop);
-            }
-
-            // Bug 1071218: the following method has not yet been refactored to
-            // work on a single zone-group at once.
-
-            // Sweep entries containing about-to-be-finalized JitCode and
-            // update relocated TypeSet::Types inside the JitcodeGlobalTable.
-            jit::JitRuntime::SweepJitcodeGlobalTable(rt);
-        }
-
-        {
-            gcstats::AutoPhase apdc(stats(), gcstats::PHASE_SWEEP_DISCARD_CODE);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->discardJitCode(&fop);
-        }
-
-        {
-            gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_TYPES);
-            gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES_BEGIN);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
-        }
     }
+
+    // Sweep JIT-related data structures on the main thread.
+    sweepJitDataOnMainThread(&fop);
 
     // Rejoin our off-thread tasks.
     if (sweepingAtoms) {
