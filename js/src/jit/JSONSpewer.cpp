@@ -26,7 +26,7 @@ JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
     if (script)
-        property("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
+        formatProperty("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
     else
         property("name", "wasm compilation");
     beginListProperty("passes");
@@ -36,7 +36,7 @@ void
 JSONSpewer::beginPass(const char* pass)
 {
     beginObject();
-    property("name", "%s", pass);
+    property("name", pass);
 }
 
 void
@@ -52,13 +52,13 @@ JSONSpewer::spewMResumePoint(MResumePoint* rp)
 
     switch (rp->mode()) {
       case MResumePoint::ResumeAt:
-        property("mode", "%s", "At");
+        property("mode", "At");
         break;
       case MResumePoint::ResumeAfter:
-        property("mode", "%s", "After");
+        property("mode", "After");
         break;
       case MResumePoint::Outer:
-        property("mode", "%s", "Outer");
+        property("mode", "Outer");
         break;
     }
 
@@ -119,7 +119,7 @@ JSONSpewer::spewMDef(MDefinition* def)
         out_.printf(" : %s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
         endStringProperty();
     } else {
-        property("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
+        formatProperty("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
     }
 
     if (def->isInstruction()) {
@@ -255,7 +255,7 @@ JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
                     LiveRange* range = LiveRange::get(*iter);
 
                     beginObject();
-                    property("allocation", "%s", range->bundle()->allocation().toString().get());
+                    property("allocation", range->bundle()->allocation().toString().get());
                     property("start", range->from().bits());
                     property("end", range->to().bits());
                     endObject();
