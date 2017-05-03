@@ -5497,11 +5497,16 @@ nsDocShell::Reload(uint32_t aReloadFlags)
 
     MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
 
-    rv = InternalLoad(mCurrentURI,
+    // Stack variables to ensure changes to the member variables don't affect to
+    // the call.
+    nsCOMPtr<nsIURI> currentURI = mCurrentURI;
+    nsCOMPtr<nsIURI> referrerURI = mReferrerURI;
+    uint32_t referrerPolicy = mReferrerPolicy;
+    rv = InternalLoad(currentURI,
                       originalURI,
                       loadReplace,
-                      mReferrerURI,
-                      mReferrerPolicy,
+                      referrerURI,
+                      referrerPolicy,
                       triggeringPrincipal,
                       triggeringPrincipal,
                       flags,

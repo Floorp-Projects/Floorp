@@ -176,6 +176,11 @@ static const PhaseInfo phases[] = {
             { PHASE_SWEEP_TYPE_OBJECT, "Sweep Type Objects", PHASE_SWEEP_COMPARTMENTS, 26 },
             { PHASE_SWEEP_BREAKPOINT, "Sweep Breakpoints", PHASE_SWEEP_COMPARTMENTS, 27 },
             { PHASE_SWEEP_REGEXP, "Sweep Regexps", PHASE_SWEEP_COMPARTMENTS, 28 },
+            { PHASE_SWEEP_COMPRESSION, "Sweep Compression Tasks", PHASE_SWEEP_COMPARTMENTS, 62 },
+            { PHASE_SWEEP_WEAKMAPS, "Sweep WeakMaps", PHASE_SWEEP_COMPARTMENTS, 63 },
+            { PHASE_SWEEP_UNIQUEIDS, "Sweep Unique IDs", PHASE_SWEEP_COMPARTMENTS, 64 },
+            { PHASE_SWEEP_JIT_DATA, "Sweep JIT Data", PHASE_SWEEP_COMPARTMENTS, 65 },
+            { PHASE_SWEEP_WEAK_CACHES, "Sweep Weak Caches", PHASE_SWEEP_COMPARTMENTS, 66 },
             { PHASE_SWEEP_MISC, "Sweep Miscellaneous", PHASE_SWEEP_COMPARTMENTS, 29 },
             { PHASE_SWEEP_TYPES, "Sweep type information", PHASE_SWEEP_COMPARTMENTS, 30 },
                 { PHASE_SWEEP_TYPES_BEGIN, "Sweep type tables and compilations", PHASE_SWEEP_TYPES, 31 },
@@ -212,11 +217,11 @@ static const PhaseInfo phases[] = {
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },
     { PHASE_PURGE_SHAPE_TABLES, "Purge ShapeTables", PHASE_NO_PARENT, 60 },
 
-    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 61 }
+    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 66 }
 
-    // Current number of telemetryBuckets is 61. If you insert new phases
-    // somewhere, start at that number and count up. Do not change any existing
-    // numbers.
+    // The current number of telemetryBuckets is equal to the value for
+    // PHASE_LIMIT. If you insert new phases somewhere, start at that number and
+    // count up. Do not change any existing numbers.
 };
 
 static mozilla::EnumeratedArray<Phase, PHASE_LIMIT, ExtraPhaseInfo> phaseExtra;
@@ -549,14 +554,14 @@ Statistics::formatDetailedDescription()
                    zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
                    zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                    zoneStats.sweptCompartmentCount,
-                   counts[STAT_MINOR_GC],
-                   counts[STAT_STOREBUFFER_OVERFLOW],
+                   getCount(STAT_MINOR_GC),
+                   getCount(STAT_STOREBUFFER_OVERFLOW),
                    mmu20 * 100., mmu50 * 100.,
                    t(sccTotal), t(sccLongest),
                    double(preBytes) / bytesPerMiB,
-                   counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK],
-                   counts[STAT_NEW_CHUNK] + counts[STAT_DESTROY_CHUNK],
-                   double(ArenaSize * counts[STAT_ARENA_RELOCATED]) / bytesPerMiB);
+                   getCount(STAT_NEW_CHUNK) - getCount(STAT_DESTROY_CHUNK),
+                   getCount(STAT_NEW_CHUNK) + getCount(STAT_DESTROY_CHUNK),
+                   double(ArenaSize * getCount(STAT_ARENA_RELOCATED)) / bytesPerMiB);
     return DuplicateString(buffer);
 }
 
@@ -724,16 +729,16 @@ Statistics::formatJsonDescription(uint64_t timestamp)
                    zoneStats.collectedZoneCount,
                    zoneStats.zoneCount,
                    zoneStats.compartmentCount,
-                   counts[STAT_MINOR_GC],
-                   counts[STAT_STOREBUFFER_OVERFLOW],
+                   getCount(STAT_MINOR_GC),
+                   getCount(STAT_STOREBUFFER_OVERFLOW),
                    int(mmu20 * 100),
                    int(mmu50 * 100),
                    sccTotalParts.quot, sccTotalParts.rem,
                    sccLongestParts.quot, sccLongestParts.rem,
                    ExplainAbortReason(nonincrementalReason_),
                    unsigned(preBytes / 1024 / 1024),
-                   counts[STAT_NEW_CHUNK],
-                   counts[STAT_DESTROY_CHUNK]);
+                   getCount(STAT_NEW_CHUNK),
+                   getCount(STAT_DESTROY_CHUNK));
     return DuplicateString(buffer);
 }
 

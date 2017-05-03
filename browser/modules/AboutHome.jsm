@@ -100,18 +100,15 @@ var AboutHome = {
     "AboutHome:Addons",
     "AboutHome:Sync",
     "AboutHome:Settings",
-    "AboutHome:RequestUpdate",
-    "AboutHome:MaybeShowAutoMigrationUndoNotification",
   ],
 
   init() {
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-
     for (let msg of this.MESSAGES) {
-      mm.addMessageListener(msg, this);
+      Services.mm.addMessageListener(msg, this);
     }
   },
 
+  // Additional listeners are registered in nsBrowserGlue.js
   receiveMessage(aMessage) {
     let window = aMessage.target.ownerGlobal;
 
