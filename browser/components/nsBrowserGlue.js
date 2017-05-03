@@ -146,6 +146,14 @@ const listeners = {
     "FormValidation:ShowPopup": ["FormValidationHandler"],
     "FormValidation:HidePopup": ["FormValidationHandler"],
     "Prompt:Open": ["RemotePrompt"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
+    "RemoteLogins:findLogins": ["LoginManagerParent"],
+    "RemoteLogins:findRecipes": ["LoginManagerParent"],
+    "RemoteLogins:onFormSubmit": ["LoginManagerParent"],
+    "RemoteLogins:autoCompleteLogins": ["LoginManagerParent"],
+    "RemoteLogins:removeLogin": ["LoginManagerParent"],
+    "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
     "WCCR:registerProtocolHandler": ["Feeds"],
     "WCCR:registerContentHandler": ["Feeds"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
@@ -167,13 +175,15 @@ const listeners = {
   },
 
   receiveMessage(modules, data) {
+    let val;
     for (let module of modules[data.name]) {
       try {
-        global[module].receiveMessage(data);
+        val = global[module].receiveMessage(data) || val;
       } catch (e) {
         Cu.reportError(e);
       }
     }
+    return val;
   },
 
   init() {
@@ -597,7 +607,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
 
-    LoginManagerParent.init();
     ReaderParent.init();
 
     SelfSupportBackend.init();
