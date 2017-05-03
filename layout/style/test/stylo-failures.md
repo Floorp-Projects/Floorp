@@ -74,8 +74,6 @@ to mochitest command.
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
-* ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
-* ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [1]
   * test_bug829816.html [8]

@@ -17302,6 +17302,7 @@ CSSParserImpl::ParsePaint(nsCSSPropertyID aPropID)
     return false;
   }
 
+  bool hasFallback = false;
   bool canHaveFallback = x.GetUnit() == eCSSUnit_URL ||
                          x.GetUnit() == eCSSUnit_Enumerated;
   if (canHaveFallback) {
@@ -17309,17 +17310,16 @@ CSSParserImpl::ParsePaint(nsCSSPropertyID aPropID)
       ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nullptr);
     if (result == CSSParseResult::Error) {
       return false;
-    } else if (result == CSSParseResult::NotFound) {
-      y.SetNoneValue();
     }
+    hasFallback = (result != CSSParseResult::NotFound);
   }
 
-  if (!canHaveFallback) {
-    AppendValue(aPropID, x);
-  } else {
+  if (hasFallback) {
     nsCSSValue val;
     val.SetPairValue(x, y);
     AppendValue(aPropID, val);
+  } else {
+    AppendValue(aPropID, x);
   }
   return true;
 }

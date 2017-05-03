@@ -21,6 +21,8 @@ add_task(function* test_profileSavedFieldNames_observe() {
   let formAutofillParent = new FormAutofillParent();
   sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
+  formAutofillParent.init();
+
   // profile added => Need to trigger updateValidFields
   formAutofillParent.observe(null, "formautofill-storage-changed", "add");
   do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
