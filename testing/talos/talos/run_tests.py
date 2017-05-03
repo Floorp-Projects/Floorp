@@ -120,6 +120,8 @@ def run_tests(config, browser_config):
     if browser_config['develop'] or browser_config['branch_name'] == 'Try':
         browser_config['preferences']['xpinstall.signatures.required'] = False
 
+    browser_config['preferences']['extensions.allow-non-mpc-extensions'] = True
+
     # set defaults
     testdate = config.get('testdate', '')
 
