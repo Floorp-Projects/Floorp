@@ -14,12 +14,11 @@ SimpleBuffer::SimpleBuffer()
   : mStatus(NS_OK)
   , mAvailable(0)
 {
-  mOwningThread = PR_GetCurrentThread();
 }
 
 nsresult SimpleBuffer::Write(char *src, size_t len)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   if (NS_FAILED(mStatus)) {
     return mStatus;
   }
@@ -51,7 +50,7 @@ nsresult SimpleBuffer::Write(char *src, size_t len)
 
 size_t SimpleBuffer::Read(char *dest, size_t maxLen)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   if (NS_FAILED(mStatus)) {
     return 0;
   }
@@ -77,13 +76,13 @@ size_t SimpleBuffer::Read(char *dest, size_t maxLen)
 
 size_t SimpleBuffer::Available()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   return NS_SUCCEEDED(mStatus) ? mAvailable : 0;
 }
 
 void SimpleBuffer::Clear()
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   SimpleBufferPage *p;
   while ((p = mBufferList.popFirst())) {
     delete p;
