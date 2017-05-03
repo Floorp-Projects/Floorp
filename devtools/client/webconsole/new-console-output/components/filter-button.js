@@ -4,44 +4,37 @@
 "use strict";
 
 const {
-  createClass,
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
-const FilterButton = createClass({
+FilterButton.displayName = "FilterButton";
 
-  displayName: "FilterButton",
+FilterButton.propTypes = {
+  label: PropTypes.string.isRequired,
+  filterKey: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
+  dispatch: PropTypes.func.isRequired,
+};
 
-  propTypes: {
-    label: PropTypes.string.isRequired,
-    filterKey: PropTypes.string.isRequired,
-    active: PropTypes.bool.isRequired,
-    dispatch: PropTypes.func.isRequired,
-  },
-
-  onClick: function () {
-    this.props.dispatch(actions.filterToggle(this.props.filterKey));
-  },
-
-  render() {
-    const {active, label, filterKey} = this.props;
-
-    let classList = [
-      "devtools-button",
-      filterKey,
-    ];
-    if (active) {
-      classList.push("checked");
-    }
-
-    return dom.button({
-      "aria-pressed": active === true,
-      className: classList.join(" "),
-      onClick: this.onClick
-    }, label);
+function FilterButton(props) {
+  const {active, label, filterKey, dispatch} = props;
+  let classList = [
+    "devtools-button",
+    filterKey,
+  ];
+  if (active) {
+    classList.push("checked");
   }
-});
+
+  return dom.button({
+    "aria-pressed": active === true,
+    className: classList.join(" "),
+    onClick: () => {
+      dispatch(actions.filterToggle(filterKey));
+    },
+  }, label);
+}
 
 module.exports = FilterButton;
