@@ -1,0 +1,33 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace loader {
+
+struct ScriptData {
+    nsCString url;
+    nsCString cachePath;
+    TimeStamp loadTime;
+    // This will be an empty array if script data is present in the previous
+    // session's cache.
+    uint8_t[] xdrData;
+};
+
+protocol PScriptCache
+{
+    manager PContent;
+
+parent:
+    async __delete__(ScriptData[] scripts);
+};
+
+} // namespace loader
+} // namespace mozilla

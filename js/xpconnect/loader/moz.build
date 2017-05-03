@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     'ChromeScriptLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
+    'ScriptCacheActors.cpp',
     'ScriptPreloader.cpp',
 ]
 
@@ -16,6 +17,10 @@ UNIFIED_SOURCES += [
 # windows.h
 SOURCES += [
     'mozJSComponentLoader.cpp'
+]
+
+IPDL_SOURCES += [
+    'PScriptCache.ipdl',
 ]
 
 EXPORTS.mozilla += [
@@ -28,6 +33,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.loader += [
     'AutoMemMap.h',
+    'ScriptCacheActors.h',
 ]
 
 EXTRA_JS_MODULES += [
