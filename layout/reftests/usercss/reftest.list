@@ -1,1 +1,3 @@
-skip-if(stylo) == usercss.html usercss-ref.html
+== usercss.html usercss-ref.html
+== usercss-xbl.html usercss-ref.html
+fails-if(stylo) == usercss-moz-document.html usercss-moz-document-ref.html # bug 1355408
