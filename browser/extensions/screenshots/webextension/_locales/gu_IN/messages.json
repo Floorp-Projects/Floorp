@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "થઈ ગયું"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Firefox સ્ક્રીનશોટ્સ વાપરીને, તમે સ્ક્રીનશૉટ્સ થી સંમત છો $TERMSANDPRIVACYNOTICETERMSLINK$ અને $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox સ્ક્રીનશોટ્સ વાપરીને, તમે Firefox Cloud સેવાઓ સાથે સંમત થાઓ છો $TERMSANDPRIVACYNOTICETERMSLINK$ અને $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

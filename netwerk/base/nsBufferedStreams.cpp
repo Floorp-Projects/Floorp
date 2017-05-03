@@ -279,10 +279,12 @@ NS_IMPL_CLASSINFO(nsBufferedInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_BUFFEREDINPUTSTREAM_CID)
 
 NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, IsIPCSerializable())
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, IsAsyncInputStream())
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback, IsAsyncInputStream())
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
@@ -334,6 +336,8 @@ nsBufferedInputStream::Close()
         NS_WARNING("(debug) Error: nsBufferedStream::Close() returned error (rv2) within nsBufferedInputStream::Close().");
     };
 #endif
+
+    mAsyncWaitCallback = nullptr;
 
     if (NS_FAILED(rv1)) {
         return rv1;
@@ -389,7 +393,8 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
         uint32_t amt = std::min(count, mFillPoint - mCursor);
         if (amt > 0) {
             uint32_t read = 0;
-            rv = writer(this, closure, mBuffer + mCursor, *result, amt, &read);
+            rv = writer(static_cast<nsIBufferedInputStream*>(this), closure,
+                        mBuffer + mCursor, *result, amt, &read);
             if (NS_FAILED(rv)) {
                 // errors returned from the writer end here!
                 rv = NS_OK;
@@ -621,6 +626,57 @@ nsBufferedInputStream::IsIPCSerializable() const
 
     nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
     return !!stream;
+}
+
+bool
+nsBufferedInputStream::IsAsyncInputStream() const
+{
+    nsCOMPtr<nsIAsyncInputStream> stream = do_QueryInterface(mStream);
+    return !!stream;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::CloseWithStatus(nsresult aStatus)
+{
+    return Close();
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
+                                uint32_t aFlags,
+                                uint32_t aRequestedCount,
+                                nsIEventTarget* aEventTarget)
+{
+    nsCOMPtr<nsIAsyncInputStream> stream = do_QueryInterface(mStream);
+    if (!stream) {
+        return NS_ERROR_FAILURE;
+    }
+
+    if (mAsyncWaitCallback && aCallback) {
+        return NS_ERROR_FAILURE;
+    }
+
+    mAsyncWaitCallback = aCallback;
+
+    if (!mAsyncWaitCallback) {
+        return NS_OK;
+    }
+
+    return stream->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+    // We have been canceled in the meanwhile.
+    if (!mAsyncWaitCallback) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIInputStreamCallback> callback;
+    callback.swap(mAsyncWaitCallback);
+
+    return callback->OnInputStreamReady(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

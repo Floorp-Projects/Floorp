@@ -1,6 +1,21 @@
 {
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Bëni një Foto"
+  },
+  "myShotsLink": {
+    "message": "Shkrepjet e Mia"
+  },
   "saveScreenshotSelectedArea": {
     "message": "Ruaje"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Ruaj pjesën e dukshme"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Ruaj krejt faqen"
   },
   "cancelScreenshot": {
     "message": "Anuloje"
@@ -10,5 +25,32 @@
   },
   "notificationLinkCopiedTitle": {
     "message": "Lidhja u Kopjua"
+  },
+  "requestErrorDetails": {
+    "message": "Na ndjeni! S’e ruajtëm dot foton tuaj. Ju lutemi, riprovoni më vonë."
+  },
+  "connectionErrorTitle": {
+    "message": "S’lidhemi dot te fotot tuaja."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "S’bëjmë dot foto të kësaj faqeje."
+  },
+  "tourHeaderTwo": {
+    "message": "Fiksoni Në Foto Aq Sa Doni"
+  },
+  "tourHeaderThree": {
+    "message": "Si T’ju Pëlqejë"
+  },
+  "tourHeaderFour": {
+    "message": "Fiksoni Dritare ose Krejt Faqet"
+  },
+  "tourDone": {
+    "message": "U bë"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Kushte"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Shënim Privatësie"
   }
 }

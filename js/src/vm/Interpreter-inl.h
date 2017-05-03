@@ -637,13 +637,6 @@ TypeOfOperation(const Value& v, JSRuntime* rt)
     return TypeName(type, *rt->commonNames);
 }
 
-static inline JSString*
-TypeOfObjectOperation(JSObject* obj, JSRuntime* rt)
-{
-    JSType type = js::TypeOfObject(obj);
-    return TypeName(type, *rt->commonNames);
-}
-
 static MOZ_ALWAYS_INLINE bool
 InitElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue idval, HandleValue val)
 {

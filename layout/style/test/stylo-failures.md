@@ -30,13 +30,13 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_media_queries.html [156]
+  * test_media_queries.html [38]
   * test_media_queries_dynamic.html [6]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [19]
+  * test_animations.html [5]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -74,8 +74,6 @@ to mochitest command.
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
-* ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
-* ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [1]
   * test_bug829816.html [8]
@@ -130,13 +128,6 @@ to mochitest command.
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
     * test_specified_value_serialization.html `bug-721136` [1]
-  * touch-action property servo/servo#16372
-    * test_compute_data_with_start_struct.html `touch-action` [2]
-    * test_inherit_computation.html `touch-action` [2]
-    * test_inherit_storage.html `touch-action` [2]
-    * test_initial_computation.html `touch-action` [4]
-    * test_initial_storage.html `touch-action` [4]
-    * test_value_storage.html `touch-action` [14]
 * Properties implemented but not in geckolib:
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
@@ -147,11 +138,8 @@ to mochitest command.
     * test_value_storage.html `font-feature-settings` [112]
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
-  * flexbox / grid position properties servo/servo#15001
-    * ... `justify-` [5]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [157]
-  * ... `matched clone` [204]
+  * test_selectors.html `matched clone` [3]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -173,7 +161,6 @@ to mochitest command.
     * test_value_storage.html `cursor` [4]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
-  * test_pixel_lengths.html `mozmm`: mozmm unit bug 1356104 [3]
 * Unsupported values
   * SVG-only values of pointer-events not recognized
     * test_value_storage.html `pointer-events` [1]
@@ -196,7 +183,6 @@ to mochitest command.
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]
@@ -278,7 +264,6 @@ to mochitest command.
 
 ## Unknown / Unsure
 
-* test_additional_sheets.html: one sub-test cascade order is wrong [1]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
 

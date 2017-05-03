@@ -1642,6 +1642,7 @@ GetNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
+    trackNotAttached();
     return false;
 }
 
@@ -1733,6 +1734,8 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
     }
 
     writer.typeMonitorResult();
+
+    trackAttached("GlobalNameValue");
     return true;
 }
 
@@ -1773,6 +1776,8 @@ GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id)
     }
 
     EmitCallGetterResultNoGuards(writer, &globalLexical->global(), holder, shape, globalId);
+
+    trackAttached("GlobalNameGetter");
     return true;
 }
 
@@ -1852,9 +1857,41 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
         size_t dynamicSlotOffset = holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
         writer.loadEnvironmentDynamicSlotResult(lastObjId, dynamicSlotOffset);
     }
-
     writer.typeMonitorResult();
+
+    trackAttached("EnvironmentName");
     return true;
+}
+
+void
+GetNameIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+GetNameIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.endCache(guard);
+    }
+#endif
 }
 
 BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -1880,6 +1917,7 @@ BindNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
+    trackNotAttached();
     return false;
 }
 
@@ -1919,6 +1957,7 @@ BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id)
     }
     writer.returnFromIC();
 
+    trackAttached("GlobalName");
     return true;
 }
 
@@ -1978,7 +2017,39 @@ BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     writer.loadObjectResult(lastObjId);
     writer.returnFromIC();
 
+    trackAttached("EnvironmentName");
     return true;
+}
+
+void
+BindNameIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+BindNameIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.endCache(guard);
+    }
+#endif
 }
 
 InIRGenerator::InIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -2119,8 +2190,7 @@ InIRGenerator::trackAttached(const char* name)
     if (sp.enabled()) {
         LockGuard<Mutex> guard(sp.lock());
         sp.beginCache(guard, *this);
-        RootedValue objV(cx_, ObjectValue(*obj_));
-        sp.valueProperty(guard, "base", objV);
+        sp.valueProperty(guard, "base", ObjectValue(*obj_));
         sp.valueProperty(guard, "property", key_);
         sp.attached(guard, name);
         sp.endCache(guard);
@@ -2136,8 +2206,7 @@ InIRGenerator::trackNotAttached()
     if (sp.enabled()) {
         LockGuard<Mutex> guard(sp.lock());
         sp.beginCache(guard, *this);
-        RootedValue objV(cx_, ObjectValue(*obj_));
-        sp.valueProperty(guard, "base", objV);
+        sp.valueProperty(guard, "base", ObjectValue(*obj_));
         sp.valueProperty(guard, "property", key_);
         sp.endCache(guard);
     }
@@ -3505,3 +3574,52 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     typeCheckInfo_.set(oldGroup, id);
     return true;
 }
+
+TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                     ICState::Mode mode, HandleValue value)
+  : IRGenerator(cx, script, pc, CacheKind::TypeOf, mode),
+    val_(value)
+{ }
+
+bool
+TypeOfIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::TypeOf);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ValOperandId valId(writer.setInputOperandId(0));
+
+    if (tryAttachPrimitive(valId))
+        return true;
+
+    MOZ_ALWAYS_TRUE(tryAttachObject(valId));
+    return true;
+}
+
+bool
+TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId)
+{
+    if (!val_.isPrimitive())
+        return false;
+
+    writer.guardType(valId, val_.isNumber() ? JSVAL_TYPE_DOUBLE : val_.extractNonDoubleType());
+    writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
+TypeOfIRGenerator::tryAttachObject(ValOperandId valId)
+{
+    if (!val_.isObject())
+        return false;
+
+    ObjOperandId objId = writer.guardIsObject(valId);
+    writer.loadTypeOfObjectResult(objId);
+    writer.returnFromIC();
+
+    return true;
+}
+

@@ -1099,8 +1099,13 @@ void nsXULWindow::OnChromeLoaded()
 
     int32_t specWidth = -1, specHeight = -1;
     bool gotSize = false;
+    bool isContent = false;
 
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    GetHasPrimaryContent(&isContent);
+
+    // If this window has a primary content and fingerprinting resistance is
+    // enabled, we enforce this window to rounded dimensions.
+    if (isContent && nsContentUtils::ShouldResistFingerprinting()) {
       ForceRoundedDimensions();
     } else if (!mIgnoreXULSize) {
       gotSize = LoadSizeFromXUL(specWidth, specHeight);

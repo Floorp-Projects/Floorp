@@ -244,6 +244,7 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         return;
       }
       case CacheKind::In:
+      case CacheKind::TypeOf:
         MOZ_CRASH("Baseline-specific for now");
       case CacheKind::HasOwn: {
         IonHasOwnIC* hasOwnIC = ic->asHasOwnIC();
@@ -591,7 +592,7 @@ CodeGenerator::testObjectEmulatesUndefinedKernel(Register objreg,
     // Perform a fast-path check of the object's class flags if the object's
     // not a proxy.  Let out-of-line code handle the slow cases that require
     // saving registers, making a function call, and restoring registers.
-    masm.branchTestObjectTruthy(false, objreg, scratch, ool->entry(), ifEmulatesUndefined);
+    masm.branchIfObjectEmulatesUndefined(objreg, scratch, ool->entry(), ifEmulatesUndefined);
 }
 
 void
@@ -10656,6 +10657,7 @@ void
 CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool)
 {
     LTypeOfV* ins = ool->ins();
+    const JSAtomState& names = GetJitContext()->runtime->names();
 
     ValueOperand input = ToValue(ins, LTypeOfV::Input);
     Register temp = ToTempUnboxRegister(ins->tempToUnbox());
@@ -10663,12 +10665,29 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool)
 
     Register obj = masm.extractObject(input, temp);
 
+    Label slowCheck, isObject, isCallable, isUndefined, done;
+    masm.typeOfObject(obj, output, &slowCheck, &isObject, &isCallable, &isUndefined);
+
+    masm.bind(&isCallable);
+    masm.movePtr(ImmGCPtr(names.function), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&isUndefined);
+    masm.movePtr(ImmGCPtr(names.undefined), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&isObject);
+    masm.movePtr(ImmGCPtr(names.object), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&slowCheck);
+
     saveVolatile(output);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(obj);
     masm.movePtr(ImmPtr(GetJitContext()->runtime), output);
     masm.passABIArg(output);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::TypeOfObjectOperation));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, TypeOfObject));
     masm.storeCallWordResult(output);
     restoreVolatile(output);
 

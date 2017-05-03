@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="data:text/css,div { color: green }">
+<link rel="stylesheet" href="data:text/css,div { color: green }">
+<div>This should be green</div>
+<script>
+  onload = function() {
+    var links = document.getElementsByTagName("link");
+    links[0].remove();
+  }
+</script>

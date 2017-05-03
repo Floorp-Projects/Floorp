@@ -353,7 +353,7 @@ WalkStackMain64(struct WalkStackData* aData)
   frame64.AddrReturn.Mode  = AddrModeFlat;
 #endif
 
-#ifdef _WIN64
+#ifdef _M_AMD64
   // Workaround possible deadlock where the thread we're profiling happens to
   // be in RtlLookupFunctionEntry (see below) or in RtlAddFunctionTable or
   // RtlDeleteFunctionTable when starting or shutting down the JS engine.
@@ -365,10 +365,11 @@ WalkStackMain64(struct WalkStackData* aData)
   auto releaseLock = mozilla::MakeScopeExit([] {
     ReleaseStackWalkWorkaroundLock();
   });
-#endif
 
-#ifdef _M_AMD64
   bool firstFrame = true;
+
+  // In the loop below we'll need to special-case stack frames in this DLL.
+  HMODULE msmpeg2vdec = GetModuleHandleW(L"msmpeg2vdec.dll");
 #endif
 
   // Skip our own stack walking frames.
@@ -421,6 +422,18 @@ WalkStackMain64(struct WalkStackData* aData)
     if (sJitCodeRegionStart &&
         (uint8_t*)context.Rip >= sJitCodeRegionStart &&
         (uint8_t*)context.Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
+      break;
+    }
+
+    HMODULE ripModule = nullptr;
+    DWORD moduleFlags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+    // msmpeg2vdec.dll's unwind handler deliberately crashes, presumably
+    // as a terminate-on-exception safety mechanism. If we have a stack
+    // frame inside that library, abort stack walking.
+    if (msmpeg2vdec &&
+        GetModuleHandleExW(moduleFlags, (LPWSTR)context.Rip, &ripModule) &&
+        ripModule == msmpeg2vdec) {
       break;
     }
 

@@ -17,7 +17,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsLegendFrame(nsStyleContext* aContext)
-    : nsBlockFrame(aContext, mozilla::FrameType::Legend)
+    : nsBlockFrame(aContext, mozilla::LayoutFrameType::Legend)
   {}
 
   virtual void Reflow(nsPresContext* aPresContext,

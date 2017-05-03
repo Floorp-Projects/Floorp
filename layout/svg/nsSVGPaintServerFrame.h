@@ -59,7 +59,7 @@ protected:
   typedef mozilla::image::DrawResult DrawResult;
 
   explicit nsSVGPaintServerFrame(nsStyleContext* aContext,
-                                 mozilla::FrameType aType)
+                                 mozilla::LayoutFrameType aType)
     : nsSVGContainerFrame(aContext, aType)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

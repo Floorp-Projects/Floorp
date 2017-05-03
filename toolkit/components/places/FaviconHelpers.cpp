@@ -1218,13 +1218,9 @@ FetchAndConvertUnsupportedPayloads::Run()
     return NS_DispatchToCurrentThread(this);
   }
 
-  // We're done. Remove any leftovers and force a checkpoint for safety.
+  // We're done. Remove any leftovers.
   rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_icons WHERE typeof(width) = 'text'"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA wal_checkpoint"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
   // Run a one-time VACUUM of places.sqlite, since we removed a lot from it.

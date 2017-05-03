@@ -125,7 +125,7 @@ class TestCompilerWarning(unittest.TestCase):
 class TestWarningsParsing(unittest.TestCase):
     def test_clang_parsing(self):
         for source, filename, line, column, message, flag in CLANG_TESTS:
-            collector = WarningsCollector(resolve_files=False)
+            collector = WarningsCollector(lambda w: None)
             warning = collector.process_line(source)
 
             self.assertIsNotNone(warning)
@@ -138,7 +138,7 @@ class TestWarningsParsing(unittest.TestCase):
 
     def test_msvc_parsing(self):
         for source, filename, line, flag, message in MSVC_TESTS:
-            collector = WarningsCollector(resolve_files=False)
+            collector = WarningsCollector(lambda w: None)
             warning = collector.process_line(source)
 
             self.assertIsNotNone(warning)

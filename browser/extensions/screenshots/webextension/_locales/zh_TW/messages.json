@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "完成"
   },
-  "termsAndPrivacyNotice": {
-    "message": "使用 Firefox Screenshots，代表您同意 Screenshots 的 $TERMSANDPRIVACYNOTICETERMSLINK$ 及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "繼續使用 Firefox Screenshots，代表您同意 Firefox 雲端服務的 $TERMSANDPRIVACYNOTICETERMSLINK$ 以及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

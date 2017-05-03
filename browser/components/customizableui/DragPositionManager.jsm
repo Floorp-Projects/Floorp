@@ -379,7 +379,7 @@ AreaPositionManager.prototype = {
 
 var DragPositionManager = {
   start(aWindow) {
-    let areas = CustomizableUI.areas.filter((area) => CustomizableUI.getAreaType(area) != "toolbar");
+    let areas = [CustomizableUI.AREA_PANEL];
     areas = areas.map((area) => CustomizableUI.getCustomizeTargetForArea(area, aWindow));
     areas.push(aWindow.document.getElementById(kPaletteId));
     for (let areaNode of areas) {
@@ -393,7 +393,7 @@ var DragPositionManager = {
   },
 
   add(aWindow, aArea, aContainer) {
-    if (CustomizableUI.getAreaType(aArea) != "toolbar") {
+    if (aArea != CustomizableUI.AREA_PANEL) {
       return;
     }
 
@@ -401,7 +401,7 @@ var DragPositionManager = {
   },
 
   remove(aWindow, aArea, aContainer) {
-    if (CustomizableUI.getAreaType(aArea) != "toolbar") {
+    if (aArea != CustomizableUI.AREA_PANEL) {
       return;
     }
 

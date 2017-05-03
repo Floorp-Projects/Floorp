@@ -52,26 +52,29 @@ module.exports = createClass({
   componentWillMount() {
     const sourceMapService = this.props.sourceMapService;
     if (sourceMapService) {
-      const source = this.getSource();
-      sourceMapService.subscribe(source, this.onSourceUpdated);
-    }
-  },
-
-  componentWillUnmount() {
-    const sourceMapService = this.props.sourceMapService;
-    if (sourceMapService) {
-      const source = this.getSource();
-      sourceMapService.unsubscribe(source, this.onSourceUpdated);
+      const { source, line, column } = this.props.frame;
+      sourceMapService.originalPositionFor(source, line, column)
+        .then(resolvedLocation => {
+          if (resolvedLocation) {
+            this.onSourceUpdated(resolvedLocation);
+          }
+        });
     }
   },
 
   /**
    * Component method to update the FrameView when a resolved location is available
-   * @param event
-   * @param location
+   * @param {Location} resolvedLocation
+   *        the resolved location as found via a source map
    */
-  onSourceUpdated(event, location, resolvedLocation) {
-    const frame = this.getFrame(resolvedLocation);
+  onSourceUpdated(resolvedLocation) {
+    const { sourceUrl, line, column } = resolvedLocation;
+    const frame = {
+      source: sourceUrl,
+      line,
+      column,
+      functionDisplayName: this.props.frame.functionDisplayName,
+    };
     this.setState({
       frame,
       isSourceMapped: true,
@@ -79,31 +82,15 @@ module.exports = createClass({
   },
 
   /**
-   * Utility method to convert the Frame object to the
-   * Source Object model required by SourceMapService
-   * @param frame
-   * @returns {{url: *, line: *, column: *}}
+   * Utility method to convert the Frame object model to the
+   * object model required by the onClick callback.
+   * @param Frame frame
+   * @returns {{url: *, line: *, column: *, functionDisplayName: *}}
    */
-  getSource(frame) {
-    frame = frame || this.props.frame;
+  getSourceForClick(frame) {
     const { source, line, column } = frame;
     return {
       url: source,
-      line,
-      column,
-    };
-  },
-
-  /**
-   * Utility method to convert the Source object model to the
-   * Frame object model required by FrameView class.
-   * @param source
-   * @returns {{source: *, line: *, column: *, functionDisplayName: *}}
-   */
-  getFrame(source) {
-    const { url, line, column } = source;
-    return {
-      source: url,
       line,
       column,
       functionDisplayName: this.props.frame.functionDisplayName,
@@ -224,7 +211,7 @@ module.exports = createClass({
       sourceEl = dom.a({
         onClick: e => {
           e.preventDefault();
-          onClick(this.getSource(frame));
+          onClick(this.getSourceForClick(frame));
         },
         href: source,
         className: "frame-link-source",

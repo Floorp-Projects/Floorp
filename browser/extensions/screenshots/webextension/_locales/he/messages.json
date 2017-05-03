@@ -90,5 +90,34 @@
   },
   "tourBodyFour": {
     "message": "נא לבחור בכפתורים שבחלק העליון כדי לצלם את האזור הגלוי בחלון או לצלם את הדף כולו."
+  },
+  "tourSkip": {
+    "message": "דילוג"
+  },
+  "tourNext": {
+    "message": "השקופית הבאה"
+  },
+  "tourPrevious": {
+    "message": "השקופית הקודמת"
+  },
+  "tourDone": {
+    "message": "סיום"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "מעצם השימוש ב־Firefox Screenshots הכללים של שירותי הענן של Firefox‏ $TERMSANDPRIVACYNOTICETERMSLINK$ ו$TERMSANDPRIVACYNOTICEPRIVACYLINK$ מוסכמים עליך.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "תנאים"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "הצהרת פרטיות"
   }
 }

@@ -24,6 +24,10 @@ struct IPCFile
   nsString name;
   int64_t lastModified;
   nsString DOMPath;
+  nsString fullPath;
+
+  // Useful for Entries API.
+  bool isDirectory;
 };
 
 // Union for blob vs file.

@@ -22,11 +22,13 @@ function run_test() {
     p.StartProfiler(10000, ms, ["js"], 1);
 
     let stack = null;
-    function ffi_function(){
+    function ffi_function() {
         var delayMS = 5;
         while (1) {
             let then = Date.now();
-            do {} while (Date.now() - then < delayMS);
+            do {
+              // do nothing
+            } while (Date.now() - then < delayMS);
 
             var thread0 = p.getProfileData().threads[0];
 
@@ -56,7 +58,7 @@ function run_test() {
 
     do_check_true(jsFuns.isAsmJSModule(asmjs_module));
 
-    var asmjs_function = asmjs_module(null, {ffi:ffi_function});
+    var asmjs_function = asmjs_module(null, {ffi: ffi_function});
     do_check_true(jsFuns.isAsmJSFunction(asmjs_function));
 
     asmjs_function();

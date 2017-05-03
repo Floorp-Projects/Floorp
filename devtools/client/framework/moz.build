@@ -26,6 +26,7 @@ DevToolsModules(
     'selection.js',
     'sidebar.js',
     'source-map-service.js',
+    'source-map-url-service.js',
     'target-from-url.js',
     'target.js',
     'toolbox-highlighter-utils.js',

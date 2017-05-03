@@ -441,6 +441,7 @@ IonCacheIRCompiler::init()
         break;
       }
       case CacheKind::In:
+      case CacheKind::TypeOf:
         MOZ_CRASH("Invalid cache");
       case CacheKind::HasOwn: {
         IonHasOwnIC* ic = ic_->asHasOwnIC();
@@ -1140,6 +1141,13 @@ IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
     // Load the value.
     masm.loadTypedOrValue(slot, output);
     return true;
+}
+
+
+bool
+IonCacheIRCompiler::emitLoadStringResult()
+{
+    MOZ_CRASH("not used in ion");
 }
 
 static bool

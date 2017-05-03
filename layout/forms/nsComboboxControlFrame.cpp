@@ -223,7 +223,7 @@ static int32_t gReflowInx = -1;
 //------------------------------------------------------
 
 nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext, FrameType::ComboboxControl)
+  : nsBlockFrame(aContext, LayoutFrameType::ComboboxControl)
   , mDisplayFrame(nullptr)
   , mButtonFrame(nullptr)
   , mDropdownFrame(nullptr)
@@ -779,9 +779,10 @@ nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
   }
 
   // add room for the dropmarker button if there is one
-  if ((!IsThemed() ||
+  const nsStyleDisplay* disp = StyleDisplay();
+  if ((!IsThemed(disp) ||
        presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) &&
-      StyleDisplay()->UsedAppearance() != NS_THEME_NONE) {
+      disp->UsedAppearance() != NS_THEME_NONE) {
     displayISize += scrollbarWidth;
   }
 
@@ -1278,7 +1279,7 @@ public:
 
   nsComboboxDisplayFrame(nsStyleContext* aContext,
                          nsComboboxControlFrame* aComboBox)
-    : nsBlockFrame(aContext, FrameType::ComboboxDisplay)
+    : nsBlockFrame(aContext, LayoutFrameType::ComboboxDisplay)
     , mComboBox(aComboBox)
   {}
 

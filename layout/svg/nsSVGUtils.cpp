@@ -412,11 +412,11 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
-  FrameType type = aFrame->Type();
-  if (type == FrameType::SVGForeignObject) {
+  LayoutFrameType type = aFrame->Type();
+  if (type == LayoutFrameType::SVGForeignObject) {
     return static_cast<nsSVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
   }
-  if (type == FrameType::SVGOuterSVG) {
+  if (type == LayoutFrameType::SVGOuterSVG) {
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
@@ -1304,15 +1304,16 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   if (!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     return false;
   }
-  FrameType type = aFrame->Type();
-  if (type != FrameType::SVGImage && type != FrameType::SVGGeometry) {
+  LayoutFrameType type = aFrame->Type();
+  if (type != LayoutFrameType::SVGImage &&
+      type != LayoutFrameType::SVGGeometry) {
     return false;
   }
   if (aFrame->StyleEffects()->HasFilters()) {
     return false;
   }
   // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
-  if (type == FrameType::SVGImage) {
+  if (type == LayoutFrameType::SVGImage) {
     return true;
   }
   const nsStyleSVG *style = aFrame->StyleSVG();
@@ -1453,10 +1454,18 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
 {
   const nsStyleSVGPaint &paint = aStyleContext->StyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  bool isServer = paint.Type() == eStyleSVGPaintType_Server ||
-                  paint.Type() == eStyleSVGPaintType_ContextFill ||
-                  paint.Type() == eStyleSVGPaintType_ContextStroke;
-  nscolor color = isServer ? paint.GetFallbackColor() : paint.GetColor();
+  nscolor color;
+  switch (paint.Type()) {
+    case eStyleSVGPaintType_Server:
+    case eStyleSVGPaintType_ContextFill:
+    case eStyleSVGPaintType_ContextStroke:
+      color = paint.GetFallbackType() == eStyleSVGFallbackType_Color ?
+                paint.GetFallbackColor() : NS_RGBA(0, 0, 0, 0);
+      break;
+    default:
+      color = paint.GetColor();
+      break;
+  }
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =
       styleIfVisited->StyleSVG()->*aFillOrStroke;
@@ -1542,6 +1551,10 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     }
   }
 
+  if (style->mFill.GetFallbackType() == eStyleSVGFallbackType_None) {
+    return DrawResult::SUCCESS;
+  }
+
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
@@ -1616,6 +1629,10 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
       aOutPattern->Init(*pattern->GetPattern(dt));
       return result;
     }
+  }
+
+  if (style->mStroke.GetFallbackType() == eStyleSVGFallbackType_None) {
+    return DrawResult::SUCCESS;
   }
 
   // On failure, use the fallback colour in case we have an

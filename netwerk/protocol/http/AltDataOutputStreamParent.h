@@ -44,6 +44,7 @@ private:
   // In case any error occurs mStatus will be != NS_OK, and this status code will
   // be sent to the content process asynchronously.
   nsresult mStatus;
+  bool     mIPCOpen;
 };
 
 } // namespace net

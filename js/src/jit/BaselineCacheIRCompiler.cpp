@@ -838,6 +838,17 @@ BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadStringResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    masm.loadPtr(stubAddress(reader.stubOffset()), scratch);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::callTypeUpdateIC(Register obj, ValueOperand val, Register scratch,
                                           LiveGeneralRegisterSet saveRegs)
 {
@@ -1859,6 +1870,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
 
     switch (kind) {
       case CacheKind::GetProp:
+      case CacheKind::TypeOf:
         MOZ_ASSERT(numInputs == 1);
         allocator.initInputLocation(0, R0);
         break;
@@ -1924,6 +1936,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
       case CacheKind::In:
       case CacheKind::HasOwn:
       case CacheKind::BindName:
+      case CacheKind::TypeOf:
         stubDataOffset = sizeof(ICCacheIR_Regular);
         stubKind = CacheIRStubKind::Regular;
         break;

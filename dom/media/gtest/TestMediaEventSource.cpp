@@ -335,3 +335,42 @@ TEST(MediaEventSource, MoveOnly)
   queue->AwaitShutdownAndIdle();
   listener.Disconnect();
 }
+
+struct RefCounter
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCounter)
+  explicit RefCounter(int aVal) : mVal(aVal) { }
+  int mVal;
+private:
+  ~RefCounter() { }
+};
+
+/*
+ * Test we should copy instead of move in NonExclusive mode
+ * for each listener must get a copy.
+ */
+TEST(MediaEventSource, NoMove)
+{
+  RefPtr<TaskQueue> queue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLAYBACK));
+
+  MediaEventProducer<RefPtr<RefCounter>> source;
+
+  auto func1 = [] (RefPtr<RefCounter>&& aEvent) {
+    EXPECT_EQ(aEvent->mVal, 20);
+  };
+  auto func2 = [] (RefPtr<RefCounter>&& aEvent) {
+    EXPECT_EQ(aEvent->mVal, 20);
+  };
+  MediaEventListener listener1 = source.Connect(queue, func1);
+  MediaEventListener listener2 = source.Connect(queue, func2);
+
+  // We should copy this rvalue instead of move it in NonExclusive mode.
+  RefPtr<RefCounter> val = new RefCounter(20);
+  source.Notify(Move(val));
+
+  queue->BeginShutdown();
+  queue->AwaitShutdownAndIdle();
+  listener1.Disconnect();
+  listener2.Disconnect();
+}

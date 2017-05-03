@@ -1684,7 +1684,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     if (referrerURI) {
       rv = httpChannel->SetReferrerWithPolicy(referrerURI,
                                               aLoadData->mSheet->GetReferrerPolicy());
-      NS_ENSURE_SUCCESS(rv, rv);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
     }
 
     nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);

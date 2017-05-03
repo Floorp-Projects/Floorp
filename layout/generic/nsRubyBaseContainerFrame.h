@@ -67,7 +67,7 @@ protected:
                                  nsStyleContext* aContext);
 
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::FrameType::RubyBaseContainer)
+    : nsContainerFrame(aContext, mozilla::LayoutFrameType::RubyBaseContainer)
   {}
 
   struct RubyReflowInput;

@@ -64,7 +64,7 @@ with Files('tests/browser/*982298*'):
     BUG_COMPONENT = ('Core', 'Layout')
 
 with Files('tests/browser/browser_content_url_annotation.js'):
-    BUG_COMPONENT = ('Toolkit', 'Breakpad Integration')
+    BUG_COMPONENT = ('Toolkit', 'Crash Reporting')
 
 with Files('tests/browser/browser_default_image_filename.js'):
     BUG_COMPONENT = ('Firefox', 'File Handling')

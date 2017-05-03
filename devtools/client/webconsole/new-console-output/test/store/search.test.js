@@ -58,6 +58,14 @@ describe("Searching in grips", () => {
       expect(getAllMessages(store.getState()).size).toEqual(1);
     });
   });
+
+  describe("Search in logs with net messages", () => {
+    it("matches on network messages", () => {
+      store.dispatch(actions.filterToggle("net"));
+      store.dispatch(actions.filterTextSet("get"));
+      expect(getAllMessages(store.getState()).size).toEqual(1);
+    });
+  });
 });
 
 function prepareBaseStore() {
@@ -70,6 +78,7 @@ function prepareBaseStore() {
     "console.log('myregex', /a.b.c/)",
     "console.map('mymap')",
     "console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});",
+    "GET request",
   ]);
 
   return store;

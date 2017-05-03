@@ -333,8 +333,8 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
         continue;
       }
 
-      FrameType fType = kid->Type();
-      if (fType == FrameType::Text) {
+      LayoutFrameType fType = kid->Type();
+      if (fType == LayoutFrameType::Text) {
         nsIContent *content = kid->GetContent();
         if (content && kid == content->GetPrimaryFrame()) {
           uint32_t len = nsTextFrameUtils::
@@ -347,13 +347,13 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
             }
           }
         }
-      } else if (fType == FrameType::TextInput) {
+      } else if (fType == LayoutFrameType::TextInput) {
         // We don't want changes to the amount of text in a text input
         // to change what we count towards inflation.
         nscoord fontSize = kid->StyleFont()->mFont.size;
         int32_t charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
         mTextAmount += charCount * fontSize;
-      } else if (fType == FrameType::ComboboxControl) {
+      } else if (fType == LayoutFrameType::ComboboxControl) {
         // See textInputFrame above (with s/amount of text/selected option/).
         // Don't just recurse down to the list control inside, since we
         // need to exclude the display frame.
@@ -361,7 +361,7 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
         int32_t charCount = CharCountOfLargestOption(
           static_cast<nsComboboxControlFrame*>(kid)->GetDropDown());
         mTextAmount += charCount * fontSize;
-      } else if (fType == FrameType::ListControl) {
+      } else if (fType == LayoutFrameType::ListControl) {
         // See textInputFrame above (with s/amount of text/selected option/).
         nscoord fontSize = kid->StyleFont()->mFont.size;
         int32_t charCount = CharCountOfLargestOption(kid);

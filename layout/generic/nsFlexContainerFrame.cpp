@@ -3899,7 +3899,8 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     // an instance of nsFrame (i.e. it should return null from GetType()).
     // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
     // assertion that trivially passes if bug 765861's flag has been flipped.
-    NS_WARNING_ASSERTION(aItem.Frame()->Type() == FrameType::None,
+    NS_WARNING_ASSERTION(
+      aItem.Frame()->Type() == LayoutFrameType::None,
       "Child should at least request space for border/padding");
     aItem.SetCrossSize(0);
   } else {

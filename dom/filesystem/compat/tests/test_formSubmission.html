@@ -19,6 +19,7 @@
 var form;
 var iframe;
 var input;
+var script;
 var xhr;
 
 function setup_tests() {
@@ -37,6 +38,9 @@ function setup_tests() {
 }
 
 function populate_entries(webkitDirectory) {
+  var url = SimpleTest.getTestFileURL("script_entries.js");
+  script = SpecialPowers.loadChromeScript(url);
+
   if (input) {
     form.removeChild(input);
   }
@@ -52,20 +56,24 @@ function populate_entries(webkitDirectory) {
 
   form.appendChild(input);
 
-  var url = SimpleTest.getTestFileURL("script_entries.js");
-  var script = SpecialPowers.loadChromeScript(url);
-
   function onOpened(message) {
     input.addEventListener("change", function() {
       next();
     }, {once: true});
 
     SpecialPowers.wrap(input).mozSetDndFilesAndDirectories([message.data[0]]);
-    script.destroy();
   }
 
   script.addMessageListener("entries.opened", onOpened);
   script.sendAsyncMessage("entries.open");
+}
+
+function delete_entries() {
+  script.sendAsyncMessage("entries.delete");
+  script.addMessageListener("entries.deleted", function() {
+    script.destroy();
+    next();
+  });
 }
 
 function setup_plain() {
@@ -214,6 +222,7 @@ function test_webkit_multipart() {
 
 var tests = [
   setup_tests,
+
   function() { populate_entries(false); },
 
   setup_plain,
@@ -231,6 +240,8 @@ var tests = [
   setup_formData,
   test_multipart,
 
+  delete_entries,
+
   function() { populate_entries(true); },
 
   setup_plain,
@@ -247,6 +258,8 @@ var tests = [
 
   setup_formData,
   test_webkit_multipart,
+
+  delete_entries,
 ];
 
 function next() {
