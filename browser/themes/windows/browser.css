@@ -1711,8 +1711,9 @@ html|*.addon-webext-perm-list {
 .addon-toolbar-icon {
   width: 14px;
   height: 14px;
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 486px, 18px, 468px);
+  list-style-image: url("chrome://browser/skin/menu.svg");
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill);
 }
 
 /* Notification icon box */

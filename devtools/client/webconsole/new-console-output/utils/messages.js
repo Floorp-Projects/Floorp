@@ -146,6 +146,17 @@ function transformPacket(packet) {
       });
     }
 
+    case "logMessage": {
+      let { message } = packet;
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.CONSOLE_API,
+        type: MESSAGE_TYPE.LOG,
+        level: MESSAGE_LEVEL.LOG,
+        messageText: message.message,
+        timeStamp: message.timeStamp
+      });
+    }
+
     case "pageError": {
       let { pageError } = packet;
       let level = MESSAGE_LEVEL.ERROR;
@@ -220,7 +231,8 @@ function transformPacket(packet) {
 // Helpers
 function getRepeatId(message) {
   message = message.toJS();
-  delete message.repeat;
+  message.repeat = null;
+  message.timeStamp = null;
   return JSON.stringify(message);
 }
 
@@ -240,8 +252,11 @@ function convertCachedPacket(packet) {
   } else if (packet._type === "NetworkEvent") {
     convertPacket.networkEvent = packet;
     convertPacket.type = "networkEvent";
+  } else if (packet._type === "LogMessage") {
+    convertPacket.message = packet;
+    convertPacket.type = "logMessage";
   } else {
-    throw new Error("Unexpected packet type");
+    throw new Error("Unexpected packet type: " + packet._type);
   }
   return convertPacket;
 }

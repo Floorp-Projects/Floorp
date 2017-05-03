@@ -730,6 +730,21 @@ KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty)
   return false;
 }
 
+/* static */ already_AddRefed<RawServoDeclarationBlock>
+KeyframeUtils::ParseProperty(nsCSSPropertyID aProperty,
+                             const nsAString& aValue,
+                             nsIDocument* aDocument)
+{
+  MOZ_ASSERT(aDocument);
+
+  NS_ConvertUTF16toUTF8 value(aValue);
+  // FIXME this is using the wrong base uri (bug 1343919)
+  RefPtr<URLExtraData> data = new URLExtraData(aDocument->GetDocumentURI(),
+                                               aDocument->GetDocumentURI(),
+                                               aDocument->NodePrincipal());
+  return Servo_ParseProperty(aProperty, &value, data).Consume();
+}
+
 // ------------------------------------------------------------------
 //
 // Internal helpers
@@ -1015,15 +1030,8 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
   result.mProperty = aProperty;
 
   if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
-    NS_ConvertUTF16toUTF8 value(aStringValue);
-
-    // FIXME this is using the wrong base uri (bug 1343919)
-    RefPtr<URLExtraData> data = new URLExtraData(aDocument->GetDocumentURI(),
-                                                 aDocument->GetDocumentURI(),
-                                                 aDocument->NodePrincipal());
-
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      Servo_ParseProperty(aProperty, &value, data).Consume();
+      KeyframeUtils::ParseProperty(aProperty, aStringValue, aDocument);
 
     if (servoDeclarationBlock) {
       result.mServoDeclarationBlock = servoDeclarationBlock.forget();

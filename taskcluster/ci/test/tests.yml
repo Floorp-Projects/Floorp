@@ -320,8 +320,6 @@ jsreftest:
             default: 3
     e10s:
         by-test-platform:
-            # Bug 1321782
-            windows.*: false
             android.*: false
             macosx.*: true
             default: both
@@ -739,8 +737,6 @@ mochitest-devtools-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
-            windows.*: false
             macosx64/debug: true
             default: both
     mozharness:
@@ -1409,8 +1405,6 @@ web-platform-tests-reftests:
     instance-size: xlarge
     e10s:
         by-test-platform:
-            # Bug 1304438
-            windows.*: false
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
