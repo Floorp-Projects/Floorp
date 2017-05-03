@@ -74,7 +74,7 @@ button {
 .nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
-  filter: url("chrome://global/skin/filters.svg#fill");
+  -moz-context-properties: fill;
   fill: var(--button-font-color);
 }
 
@@ -88,12 +88,12 @@ button {
 
 .nav > button.prev,
 .nav > button.next:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrows.svg#left") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/calendar-arrow-left.svg") no-repeat 50% 50%;
 }
 
 .nav > button.next,
 .nav > button.prev:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrows.svg#right") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/calendar-arrow-right.svg") no-repeat 50% 50%;
 }
 
 .month-year-container {
