@@ -1061,6 +1061,10 @@ var RemoteAddonsParent = {
 
     Services.ppmm.initialProcessData.remoteAddonsParentInitted = true;
 
+    Services.ppmm.loadProcessScript("data:,new " + function() {
+      Components.utils.import("resource://gre/modules/RemoteAddonsChild.jsm");
+    }, true);
+
     this.globalToBrowser = new WeakMap();
     this.browserToGlobal = new WeakMap();
   },
