@@ -1277,7 +1277,7 @@ public:
       source->SetPullEnabled(true);
       source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
-      LOG(("started all sources"));
+      MM_LOG(("started all sources"));
 
       // Forward onTracksAvailableCallback to GetUserMediaNotificationEvent,
       // because onTracksAvailableCallback needs to be added to domStream
@@ -3449,7 +3449,7 @@ SourceListener::Remove()
     return;
   }
 
-  LOG(("SourceListener removed on purpose, mFinished = %d", (int) mFinished));
+  MM_LOG(("SourceListener removed on purpose, mFinished = %d", (int) mFinished));
   mRemoved = true; // RemoveListener is async, avoid races
   mWindowListener = nullptr;
 
@@ -3662,7 +3662,7 @@ void
 SourceListener::NotifyRemoved()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(("SourceListener removed, mFinished = %d", (int) mFinished));
+  MM_LOG(("SourceListener removed, mFinished = %d", (int) mFinished));
   mRemoved = true;
 
   if (!mFinished) {
