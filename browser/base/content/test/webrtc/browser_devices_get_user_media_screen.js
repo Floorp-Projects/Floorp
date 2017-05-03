@@ -55,7 +55,7 @@ var gTests = [
     menulist.getItemAtIndex(2).doCommand();
     ok(!document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should now be visible");
-    yield promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+    yield promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden, 100);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(!document.getElementById("webRTC-previewWarning").hidden,
