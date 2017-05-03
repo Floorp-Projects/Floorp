@@ -579,6 +579,7 @@ AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbar
   mControllerStartTouch = 0;
   mControllerPreviousTouch = 0;
   mControllerTotalDistance = 0;
+  bool dragThresholdReached = mControllerDragThresholdReached;
   mControllerDragThresholdReached = false;
   mControllerLastEventTimeStamp = 0;
   bool cancelTouchTracking = mControllerCancelTouchTracking;
@@ -592,6 +593,12 @@ AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbar
   // Received a UI thread request to show or hide the snapshot during a touch.
   // This overrides the touch event so just return.
   if (cancelTouchTracking) {
+    return;
+  }
+
+  // The drag threshold has not been reach and the toolbar is either completely visible or completely hidden.
+  if (!dragThresholdReached && ((mControllerToolbarHeight == mControllerMaxToolbarHeight) || (mControllerToolbarHeight == 0))) {
+    ShowToolbarIfNotVisible(aCurrentToolbarState);
     return;
   }
 
