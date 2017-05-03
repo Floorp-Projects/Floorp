@@ -22,7 +22,7 @@ using namespace mozilla::gfx;
 
 void
 WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
-                                       const StackingContextHelper& aHelper)
+                                       const StackingContextHelper& aSc)
 {
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
@@ -78,7 +78,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
   MOZ_ASSERT(ok);
 
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 

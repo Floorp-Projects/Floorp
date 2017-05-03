@@ -88,7 +88,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     WrBridge()->AddWebRenderParentCommand(anim);
   }
 
-  StackingContextHelper sc(aBuilder, this, animationsId, opacityForSC, transformForSC);
+  StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);

@@ -48,9 +48,6 @@ public:
   WebRenderBridgeChild* WrBridge();
   WrImageKey GetImageKey();
 
-  LayerRect RelativeToParent(const LayerRect& aRect);
-  LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
-
   LayerRect Bounds();
   LayerRect BoundsForStackingContext();
 protected:
