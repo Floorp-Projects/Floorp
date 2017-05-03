@@ -1634,7 +1634,7 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 
 // Preferences for the form autofill system extension
 pref("browser.formautofill.experimental", false);
-pref("browser.formautofill.enabled", false);
+pref("browser.formautofill.enabled", true);
 pref("browser.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.

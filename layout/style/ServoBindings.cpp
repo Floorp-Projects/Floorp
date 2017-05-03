@@ -1542,7 +1542,7 @@ void
 Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint, ServoBundledURI aURI)
 {
   RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aPaint->SetPaintServer(url.get(), NS_RGB(0, 0, 0));
+  aPaint->SetPaintServer(url.get());
 }
 
 void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint)

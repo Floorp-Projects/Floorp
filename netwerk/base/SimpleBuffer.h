@@ -45,7 +45,8 @@ public:
   void Clear();
 
 private:
-  PRThread *mOwningThread;
+  NS_DECL_OWNINGTHREAD
+
   nsresult mStatus;
   AutoCleanLinkedList<SimpleBufferPage> mBufferList;
   size_t mAvailable;
