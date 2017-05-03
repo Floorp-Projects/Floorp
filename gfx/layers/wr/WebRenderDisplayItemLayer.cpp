@@ -8,6 +8,7 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
 #include "mozilla/gfx/Matrix.h"
@@ -170,13 +171,13 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
     return false;
   }
 
-  LayerRect dest = RelativeToParent(imageRect) + offset;
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
   WrImageKey key = GetImageKey();
   aParentCommands.AppendElement(layers::OpAddExternalImage(
                                 mExternalImageId.value(),
                                 key));
-  aBuilder.PushImage(wr::ToWrRect(dest),
+  aBuilder.PushImage(dest,
                      clipRegion,
                      WrImageRendering::Auto,
                      key);
