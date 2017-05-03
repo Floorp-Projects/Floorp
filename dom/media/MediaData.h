@@ -27,6 +27,7 @@ namespace mozilla {
 namespace layers {
 class Image;
 class ImageContainer;
+class KnowsCompositor;
 } // namespace layers
 
 class MediaByteBuffer;
@@ -497,7 +498,8 @@ public:
     const YCbCrBuffer& aBuffer,
     bool aKeyframe,
     const media::TimeUnit& aTimecode,
-    const IntRect& aPicture);
+    const IntRect& aPicture,
+    layers::KnowsCompositor* aAllocator = nullptr);
 
   static already_AddRefed<VideoData> CreateAndCopyData(
     const VideoInfo& aInfo,
