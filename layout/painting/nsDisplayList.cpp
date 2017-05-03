@@ -3351,7 +3351,7 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage) &&
-      CanBuildWebRenderDisplayItems()) {
+      CanBuildWebRenderDisplayItems(aManager)) {
     return LAYER_ACTIVE;
   }
 
@@ -3420,10 +3420,11 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems()
+nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager)
 {
   return mBackgroundStyle->mImage.mLayers[mLayer].mClip != StyleGeometryBox::Text &&
-         nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(*mFrame->PresContext(),
+         nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(aManager,
+                                                                         *mFrame->PresContext(),
                                                                          mFrame,
                                                                          mBackgroundStyle,
                                                                          mLayer);
