@@ -3432,6 +3432,7 @@ nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager)
 
 void
 nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                  const StackingContextHelper& aSc,
                                                   nsTArray<WebRenderParentCommand>& aParentCommands,
                                                   WebRenderDisplayItemLayer* aLayer)
 {
@@ -4228,6 +4229,7 @@ nsDisplayOutline::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayOutline::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                          const StackingContextHelper& aSc,
                                           nsTArray<WebRenderParentCommand>& aParentCommands,
                                           WebRenderDisplayItemLayer* aLayer)
 {
@@ -4500,6 +4502,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCaret::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) {
   using namespace mozilla::layers;
@@ -4867,6 +4870,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
 void
 nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
                                          nsTArray<WebRenderParentCommand>& aParentCommands,
                                          WebRenderDisplayItemLayer* aLayer)
 {
@@ -5127,6 +5131,7 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
 
 void
 nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                 const StackingContextHelper& aSc,
                                                  nsTArray<WebRenderParentCommand>& aParentCommands,
                                                  WebRenderDisplayItemLayer* aLayer)
 {
@@ -5399,6 +5404,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
 
 void
 nsDisplayBoxShadowInner::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                 const StackingContextHelper& aSc,
                                                  nsTArray<WebRenderParentCommand>& aCommands,
                                                  WebRenderDisplayItemLayer* aLayer)
 {

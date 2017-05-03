@@ -223,6 +223,7 @@ public:
   void
   CreateWebRenderCommands(nsDisplayItem* aItem,
                           wr::DisplayListBuilder& aBuilder,
+                          const layers::StackingContextHelper& aSc,
                           nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                           layers::WebRenderDisplayItemLayer* aLayer);
 
@@ -269,19 +270,22 @@ public:
 private:
   void
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
-                                 wr::DisplayListBuilder& aBuilder,
+                                  wr::DisplayListBuilder& aBuilder,
+                                  const layers::StackingContextHelper& aSc,
                                   nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
 private:
@@ -312,16 +316,17 @@ private:
 void
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                         wr::DisplayListBuilder& aBuilder,
+                                        const layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (IsImageType()) {
-    CreateWebRenderCommandsForImage(aItem, aBuilder, aParentCommands, aLayer);
+    CreateWebRenderCommandsForImage(aItem, aBuilder, aSc, aParentCommands, aLayer);
   } else if (IsPathType()) {
-    CreateWebRenderCommandsForPath(aItem, aBuilder, aParentCommands, aLayer);
+    CreateWebRenderCommandsForPath(aItem, aBuilder, aSc, aParentCommands, aLayer);
   } else {
     MOZ_ASSERT(IsTextType());
-    CreateWebRenderCommandsForText(aItem, aBuilder, aLayer);
+    CreateWebRenderCommandsForText(aItem, aBuilder, aSc, aLayer);
   }
 }
 
@@ -430,6 +435,7 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
 void
 BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                                 wr::DisplayListBuilder& aBuilder,
+                                                const layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -472,6 +478,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 void
 BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
+                                               const layers::StackingContextHelper& aSc,
                                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -486,6 +493,7 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
 void
 BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
+                                               const layers::StackingContextHelper& aSc,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsTextType());
@@ -534,6 +542,7 @@ public:
                                              const ContainerLayerParameters& aParameters) override;
 
   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                        layers::WebRenderDisplayItemLayer* aLayer) override;
 
@@ -643,13 +652,14 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                          layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (!mBulletRenderer)
     return;
 
-  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aParentCommands, aLayer);
+  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aSc, aParentCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
