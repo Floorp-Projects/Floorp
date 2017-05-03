@@ -79,6 +79,13 @@ LaunchMacPostProcess(const char* aAppBundle)
     return;
   }
 
+  // The path must not traverse directories and it must be a relative path.
+  if ([exeRelPath rangeOfString:@".."].location != NSNotFound ||
+      [exeRelPath rangeOfString:@"./"].location != NSNotFound ||
+      [exeRelPath rangeOfString:@"/"].location == 0) {
+    return;
+  }
+
   NSString* exeFullPath = [NSString stringWithUTF8String:aAppBundle];
   exeFullPath = [exeFullPath stringByAppendingPathComponent:exeRelPath];
 

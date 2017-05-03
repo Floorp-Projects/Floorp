@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef UPDATELOGGING_H
-#define UPDATELOGGING_H
+#ifndef UPDATECOMMON_H
+#define UPDATECOMMON_H
 
 #include "updatedefines.h"
 #include <stdio.h>
@@ -34,6 +34,8 @@ protected:
   NS_tchar mTmpFilePath[MAXPATHLEN];
   NS_tchar mDstFilePath[MAXPATHLEN];
 };
+
+bool IsValidFullPath(NS_tchar* fullPath);
 
 #define LOG_WARN(args) UpdateLog::GetPrimaryLog().WarnPrintf args
 #define LOG(args) UpdateLog::GetPrimaryLog().Printf args
