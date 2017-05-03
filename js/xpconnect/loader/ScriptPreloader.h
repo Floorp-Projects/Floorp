@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Range.h"
 #include "mozilla/Vector.h"
@@ -27,8 +28,15 @@
 #include <prio.h>
 
 namespace mozilla {
+namespace dom {
+    class ContentParent;
+}
+namespace ipc {
+    class FileDescriptor;
+}
 namespace loader {
     class InputBuffer;
+    class ScriptCacheChild;
 
     enum class ProcessType : uint8_t {
         Parent,
@@ -44,6 +52,8 @@ class ScriptPreloader : public nsIObserver
                       , public nsIRunnable
 {
     MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
+    friend class mozilla::loader::ScriptCacheChild;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -65,15 +75,26 @@ public:
     // stored to the startup script cache.
     void NoteScript(const nsCString& url, const nsCString& cachePath, JS::HandleScript script);
 
+    void NoteScript(const nsCString& url, const nsCString& cachePath,
+                    ProcessType processType, nsTArray<uint8_t>&& xdrData);
+
     // Initializes the script cache from the startup script cache file.
     Result<Ok, nsresult> InitCache(const nsAString& = NS_LITERAL_STRING("scriptCache"));
 
+    Result<Ok, nsresult> InitCache(const Maybe<ipc::FileDescriptor>& cacheFile, ScriptCacheChild* cacheChild);
+
+private:
+    Result<Ok, nsresult> InitCacheInternal();
+
+public:
     void Trace(JSTracer* trc);
 
     static ProcessType CurrentProcessType()
     {
         return sProcessType;
     }
+
+    static void InitContentChild(dom::ContentParent& parent);
 
 protected:
     virtual ~ScriptPreloader() = default;
@@ -129,6 +150,16 @@ private:
 
         void Cancel();
 
+        void FreeData()
+        {
+            // If the script data isn't mmapped, we need to release both it
+            // and the Range that points to it at the same time.
+            if (!mXDRData.empty()) {
+                mXDRRange.reset();
+                mXDRData.destroy();
+            }
+        }
+
         // Encodes this script into XDR data, and stores the result in mXDRData.
         // Returns true on success, false on failure.
         bool XDREncode(JSContext* cx);
@@ -147,29 +178,48 @@ private:
 
         // Returns the XDR data generated for this script during this session. See
         // mXDRData.
-        JS::TranscodeBuffer& Data()
+        JS::TranscodeBuffer& Buffer()
         {
-            MOZ_ASSERT(mXDRData.isSome());
-            return mXDRData.ref();
+            MOZ_ASSERT(HasBuffer());
+            return mXDRData.ref<JS::TranscodeBuffer>();
         }
+
+        bool HasBuffer() { return mXDRData.constructed<JS::TranscodeBuffer>(); }
 
         // Returns the read-only XDR data for this script. See mXDRRange.
         const JS::TranscodeRange& Range()
         {
-            MOZ_ASSERT(mXDRRange.isSome());
+            MOZ_ASSERT(HasRange());
             return mXDRRange.ref();
         }
+
+        bool HasRange() { return mXDRRange.isSome(); }
+
+        nsTArray<uint8_t>& Array()
+        {
+            MOZ_ASSERT(HasArray());
+            return mXDRData.ref<nsTArray<uint8_t>>();
+        }
+
+        bool HasArray() { return mXDRData.constructed<nsTArray<uint8_t>>(); }
+
 
         JSScript* GetJSScript(JSContext* cx);
 
         size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
         {
             auto size = mallocSizeOf(this);
-            if (mXDRData.isSome()) {
-                size += (mXDRData->sizeOfExcludingThis(mallocSizeOf) +
-                         mURL.SizeOfExcludingThisEvenIfShared(mallocSizeOf) +
-                         mCachePath.SizeOfExcludingThisEvenIfShared(mallocSizeOf));
+
+            if (HasArray()) {
+                size += Array().ShallowSizeOfExcludingThis(mallocSizeOf);
+            } else if (HasBuffer()) {
+                size += Buffer().sizeOfExcludingThis(mallocSizeOf);
+            } else {
+                return size;
             }
+
+            size += (mURL.SizeOfExcludingThisEvenIfShared(mallocSizeOf) +
+                     mCachePath.SizeOfExcludingThisEvenIfShared(mallocSizeOf));
             return size;
         }
 
@@ -209,7 +259,7 @@ private:
 
         // XDR data which was generated from a script compiled during this
         // session, and will be written to the cache file.
-        Maybe<JS::TranscodeBuffer> mXDRData;
+        MaybeOneOf<JS::TranscodeBuffer, nsTArray<uint8_t>> mXDRData;
     };
 
     // There's a trade-off between the time it takes to setup an off-thread
@@ -302,7 +352,12 @@ private:
     // The process type of the current process.
     static ProcessType sProcessType;
 
+    // The process types for which remote processes have been initialized, and
+    // are expected to send back script data.
+    EnumSet<ProcessType> mInitializedProcesses{};
+
     RefPtr<ScriptPreloader> mChildCache;
+    ScriptCacheChild* mChildActor = nullptr;
 
     nsString mBaseName;
 
