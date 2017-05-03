@@ -55,7 +55,8 @@ public:
 private:
   bool SetupExternalImages();
   bool UpdateImageClient();
-  void CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder);
+  void CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder,
+                                  const StackingContextHelper& aSc);
 };
 
 } // namespace layers

@@ -62,7 +62,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     transform = Some(GetTransform().PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1));
   }
 
-  StackingContextHelper sc(aBuilder, this, transform);
+  StackingContextHelper sc(aSc, aBuilder, this, transform);
 
   LayerRect rect(0, 0, mBounds.width, mBounds.height);
   DumpLayerInfo("CanvasLayer", rect);

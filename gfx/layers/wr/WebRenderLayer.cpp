@@ -51,19 +51,6 @@ WebRenderLayer::ParentBounds()
   return LayerRect();
 }
 
-LayerRect
-WebRenderLayer::RelativeToParent(const LayerRect& aRect)
-{
-  return aRect - ParentBounds().TopLeft();
-}
-
-LayerRect
-WebRenderLayer::RelativeToParent(const LayoutDeviceRect& aRect)
-{
-  return RelativeToParent(ViewAs<LayerPixel>(
-      aRect, PixelCastJustification::WebRenderHasUnitResolution));
-}
-
 gfx::Rect
 WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 {

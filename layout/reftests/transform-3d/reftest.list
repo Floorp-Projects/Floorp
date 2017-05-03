@@ -46,7 +46,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html pe
 == perspective-origin-4a.html perspective-origin-4-ref.html
 fails-if(webrender) == perspective-zindex.html green-rect.html
 fails-if(webrender) == perspective-zindex-2.html green-rect.html
-fails-if(webrender) fails-if(stylo) != sorting-1a.html sorting-1-ref.html
+fails-if(stylo) != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
 fails-if(webrender) == sorting-2a.html sorting-2-ref.html
 # Parallel planes, same z depth (shouldn't be sorted!)

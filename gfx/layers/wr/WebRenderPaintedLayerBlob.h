@@ -48,7 +48,7 @@ public:
 
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
-                   const StackingContextHelper& aHelper) override;
+                   const StackingContextHelper& aSc) override;
 private:
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<ImageClient> mImageClient;
