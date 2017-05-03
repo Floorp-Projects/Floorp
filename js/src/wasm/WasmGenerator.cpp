@@ -1124,25 +1124,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishCodegen())
         return nullptr;
 
-    // Round up the code size to page size since this is eventually required by
-    // the executable-code allocator and for setting memory protection.
-    uint32_t bytesNeeded = masm_.bytesNeeded();
-    uint32_t padding = ComputeByteAlignment(bytesNeeded, gc::SystemPageSize());
-
-    // Use initLengthUninitialized so there is no round-up allocation nor time
-    // wasted zeroing memory.
-    Bytes code;
-    if (!code.initLengthUninitialized(bytesNeeded + padding))
-        return nullptr;
-
-    // We're not copying into executable memory, so don't flush the icache.
-    // Note: we may be executing on an arbitrary thread without TlsContext set
-    // so we can't use AutoFlushICache to inhibit.
-    masm_.executableCopy(code.begin(), /* flushICache = */ false);
-
-    // Zero the padding, since we used resizeUninitialized above.
-    memset(code.begin() + bytesNeeded, 0, padding);
-
     // Convert the CallSiteAndTargetVector (needed during generation) to a
     // CallSiteVector (what is stored in the Module).
     if (!metadata_->callSites.appendAll(masm_.callSites()))
@@ -1202,14 +1183,29 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     generateBytecodeHash(bytecode);
 
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(masm_, bytecode, linkData_, *metadata_);
+    if (!codeSegment)
+        return nullptr;
+
+    UniqueConstBytes maybeDebuggingBytes;
+    if (metadata_->debugEnabled) {
+        maybeDebuggingBytes = codeSegment->unlinkedBytesForDebugging(linkData_);
+        if (!maybeDebuggingBytes)
+            return nullptr;
+    }
+
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, &bytecode);
+    if (!code)
+        return nullptr;
+
     return SharedModule(js_new<Module>(Move(assumptions_),
-                                       Move(code),
+                                       *code,
+                                       Move(maybeDebuggingBytes),
                                        Move(linkData_),
                                        Move(env_->imports),
                                        Move(env_->exports),
                                        Move(env_->dataSegments),
                                        Move(env_->elemSegments),
-                                       *metadata_,
                                        bytecode));
 }
 

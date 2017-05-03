@@ -622,7 +622,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   if (httpChannel) {
     rv = httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
                                             mDocument->GetReferrerPolicy());
-    NS_ENSURE_SUCCESS(rv, rv);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
 
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
     if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED)) {

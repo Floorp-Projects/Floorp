@@ -47,7 +47,7 @@ Deserialize(const IPCBlob& aIPCBlob)
 
   MOZ_ASSERT(inputStream);
 
-  RefPtr<BlobImpl> blobImpl;
+  RefPtr<StreamBlobImpl> blobImpl;
 
   if (aIPCBlob.file().type() == IPCFileUnion::Tvoid_t) {
     blobImpl = StreamBlobImpl::Create(inputStream,
@@ -61,6 +61,8 @@ Deserialize(const IPCBlob& aIPCBlob)
                                       file.lastModified(),
                                       aIPCBlob.size());
     blobImpl->SetDOMPath(file.DOMPath());
+    blobImpl->SetFullPath(file.fullPath());
+    blobImpl->SetIsDirectory(file.isDirectory());
   }
 
   return blobImpl.forget();
@@ -164,6 +166,14 @@ SerializeInternal(BlobImpl* aBlobImpl, M* aManager, IPCBlob& aIPCBlob)
 
     aBlobImpl->GetDOMPath(value);
     file.DOMPath() = value;
+
+    aBlobImpl->GetMozFullPathInternal(value, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+    file.fullPath() = value;
+
+    file.isDirectory() = aBlobImpl->IsDirectory();
 
     aIPCBlob.file() = file;
   }

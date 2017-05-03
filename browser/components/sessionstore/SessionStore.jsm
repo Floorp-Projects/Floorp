@@ -615,6 +615,9 @@ var SessionStoreInternal = {
 
     this._initPrefs();
     this._initialized = true;
+
+    Telemetry.getHistogramById("FX_SESSION_RESTORE_PRIVACY_LEVEL").add(
+      Services.prefs.getIntPref("browser.sessionstore.privacy_level"));
   },
 
   /**

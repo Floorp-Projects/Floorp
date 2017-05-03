@@ -372,12 +372,15 @@ var gCSSProperties = {
   },
   'column-count': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-count
-    types: [
+    types: [ 'positiveInteger',
+            { type: 'discrete', options: [ [ 'auto', '10' ] ] }
     ]
   },
   'column-gap': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-gap
-    types: [ 'length' ]
+    types: [ 'length',
+	     {  type: 'discrete', options: [ [ 'normal', '200px' ] ] }
+    ]
   },
   'column-rule-color': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-color
@@ -1526,7 +1529,6 @@ function propertyToIDL(property) {
                           function (str) {
                             return str.substr(1).toUpperCase(); });
 }
-
 function calcFromPercentage(idlName, percentageValue) {
   var examElem = document.createElement('div');
   document.body.appendChild(examElem);
