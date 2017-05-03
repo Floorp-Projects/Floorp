@@ -179,7 +179,7 @@ menuitem.bookmark-item {
 
 /* Bookmark items */
 .bookmark-item {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .bookmark-item[container] {
@@ -1055,7 +1055,7 @@ html|span.ac-emphasize-text-url {
 
 /* All tabs menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .alltabs-item[selected="true"] {

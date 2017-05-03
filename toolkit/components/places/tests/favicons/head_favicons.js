@@ -25,7 +25,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
 // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
 const FAVICON_ERRORPAGE_URI =
-  NetUtil.newURI("chrome://global/skin/icons/warning-16.png");
+  Services.io.newURI("chrome://global/skin/icons/warning-16.png");
 
 /**
  * Waits for the first OnPageChanged notification for ATTRIBUTE_FAVICON, and
