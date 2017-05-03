@@ -13,7 +13,8 @@ const OUTER_VALUE = "outer-value-" + RAND;
 // Test that we record the size of messages.
 add_task(function* test_telemetry() {
   Services.telemetry.canRecordExtended = true;
-  let histogram = Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS#content");
+  let suffix = gMultiProcessBrowser ? "#content" : "";
+  let histogram = Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS" + suffix);
   let snap1 = histogram.snapshot();
 
   let tab = gBrowser.addTab(URL);
