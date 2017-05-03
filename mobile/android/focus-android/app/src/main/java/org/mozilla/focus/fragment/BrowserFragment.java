@@ -29,6 +29,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.InstallFirefoxActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.notification.BrowsingNotificationService;
@@ -469,9 +470,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     intent.setPackage(browsers.getFirefoxBrandedBrowser().packageName);
                     startActivity(intent);
                 } else {
-                    final Intent intent = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName));
-                    startActivity(intent);
+                    InstallFirefoxActivity.open(getContext());
                 }
 
                 TelemetryWrapper.openFirefoxEvent();

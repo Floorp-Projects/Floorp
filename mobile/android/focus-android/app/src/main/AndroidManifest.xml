@@ -65,6 +65,9 @@
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/InfoTheme"/>
 
+        <activity android:name=".activity.InstallFirefoxActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true"
