@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ViewPopup",
                                   "resource:///modules/ExtensionPopups.jsm");
 
@@ -36,6 +38,8 @@ var {
 } = ExtensionParent;
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
+const POPUP_OPEN_MS_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_OPEN_MS";
+const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT";
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -79,6 +83,7 @@ this.browserAction = class extends ExtensionAPI {
 
     this.pendingPopup = null;
     this.pendingPopupTimeout = null;
+    this.eventQueue = [];
 
     this.tabManager = extension.tabManager;
 
@@ -159,7 +164,8 @@ this.browserAction = class extends ExtensionAPI {
         this.updateButton(node, this.defaults);
       },
 
-      onViewShowing: event => {
+      onViewShowing: async event => {
+        TelemetryStopwatch.start(POPUP_OPEN_MS_HISTOGRAM, this);
         let document = event.target.ownerDocument;
         let tabbrowser = document.defaultView.gBrowser;
 
@@ -177,12 +183,22 @@ this.browserAction = class extends ExtensionAPI {
             // called. PanelMultiView.jsm dictates different behavior.
             event.target.setAttribute("current", true);
             let popup = this.getPopup(document.defaultView, popupURL);
-            event.detail.addBlocker(popup.attach(event.target));
+            let attachPromise = popup.attach(event.target);
+            event.detail.addBlocker(attachPromise);
+            await attachPromise;
+            TelemetryStopwatch.finish(POPUP_OPEN_MS_HISTOGRAM, this);
+            if (this.eventQueue.length) {
+              let histogram = Services.telemetry.getHistogramById(POPUP_RESULT_HISTOGRAM);
+              histogram.add("popupShown");
+              this.eventQueue = [];
+            }
           } catch (e) {
+            TelemetryStopwatch.cancel(POPUP_OPEN_MS_HISTOGRAM, this);
             Cu.reportError(e);
             event.preventDefault();
           }
         } else {
+          TelemetryStopwatch.cancel(POPUP_OPEN_MS_HISTOGRAM, this);
           // This isn't not a hack, but it seems to provide the correct behavior
           // with the fewest complications.
           event.preventDefault();
@@ -253,6 +269,7 @@ this.browserAction = class extends ExtensionAPI {
           let enabled = this.getProperty(tab, "enabled");
 
           if (popupURL && enabled && (this.pendingPopup || !ViewPopup.for(this.extension, window))) {
+            this.eventQueue.push("Mousedown");
             // Add permission for the active tab so it will exist for the popup.
             // Store the tab to revoke the permission during clearPopup.
             if (!this.tabManager.hasActiveTabPermission(tab)) {
@@ -293,6 +310,7 @@ this.browserAction = class extends ExtensionAPI {
         let enabled = this.getProperty(tab, "enabled");
 
         if (popupURL && enabled && (this.pendingPopup || !ViewPopup.for(this.extension, window))) {
+          this.eventQueue.push("Hover");
           this.pendingPopup = this.getPopup(window, popupURL, true);
         }
         break;
@@ -300,6 +318,11 @@ this.browserAction = class extends ExtensionAPI {
 
       case "mouseout":
         if (this.pendingPopup) {
+          if (this.eventQueue.length) {
+            let histogram = Services.telemetry.getHistogramById(POPUP_RESULT_HISTOGRAM);
+            histogram.add(`clearAfter${this.eventQueue.pop()}`);
+            this.eventQueue = [];
+          }
           this.clearPopup();
         }
         break;
