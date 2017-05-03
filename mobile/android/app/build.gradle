@@ -73,21 +73,9 @@ android {
         }
     }
 
-    // The "audience" flavour dimension distinguishes between _local_ builds (intended for
-    // development) and _official_ builds (intended for testing in automation and to ship in one of
-    // the Fennec distribution channels).
-    //
-    // The "skin" flavor dimension distinguishes between different user interfaces.  We sometimes
-    // want to develop significant new user interface pieces in-tree that don't ship (even in the
-    // Nightly channel) while under development.  A new "skin" flavour allows us to develop such
-    // pieces in Gradle without changing the mainline configuration.
-    flavorDimensions "audience", "skin"
-
     productFlavors {
         // For API 21+ - with multi dex, this will be faster for local development.
         local {
-            dimension "audience"
-
             // For multi dex, setting `minSdkVersion 21` allows the Android gradle plugin to
             // pre-DEX each module and produce an APK that can be tested on
             // Android Lollipop without time consuming DEX merging processes.
@@ -101,25 +89,9 @@ android {
         // is slow in that case. Most builds will not require multi dex so this
         // should not be an issue.
         localOld {
-            dimension "audience"
         }
-
-        // Automation builds.  We use "official" rather than "automation" to drive these builds down
-        // the list of configurations that Android Studio offers, thereby making it _not_ the
-        // default.  This avoids a common issue with "omni.ja" not being packed into the default APK
-        // built and deployed by Android Studio.
-        official {
-             dimension "audience"
-        }
-
-        // The default user interface.
-        australis {
-            dimension "skin"
-        }
-
-        // A new user interface, currently under development.
-        photon {
-            dimension "skin"
+        // Automation builds.
+        automation {
         }
     }
 
@@ -268,8 +240,7 @@ dependencies {
     // define a version of leakcanary for every flavor:
     localCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
     localOldCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
-    officialCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
-    officialCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
+    automationCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
     compile project(':geckoview')
@@ -344,18 +315,19 @@ android.applicationVariants.all { variant ->
     variant.preBuild.dependsOn syncPreprocessedCode
     variant.preBuild.dependsOn syncPreprocessedResources
 
-    // Official automation builds don't include Gecko binaries, since those binaries are not
-    // produced until after build time (at package time).  official Therefore, automation builds
-    // include the Gecko binaries into the APK at package time.  The "withGeckoBinaries" variant of
-    // the :geckoview project also does this.  (It does what it says on the tin!)  For notes on this
+    // Automation builds don't include Gecko binaries, since those binaries are
+    // not produced until after build time (at package time).  Therefore,
+    // automation builds include the Gecko binaries into the APK at package
+    // time.  The "withGeckoBinaries" variant of the :geckoview project also
+    // does this.  (It does what it says on the tin!)  For notes on this
     // approach, see mobile/android/gradle/with_gecko_binaries.gradle.
 
     // Like 'local' or 'localOld'.
-    def audienceDimension = variant.productFlavors[0].name
+    def productFlavor = variant.productFlavors[0].name
 
     // :app uses :geckoview:release and handles it's own Gecko binary inclusion,
     // even though this would be most naturally done in the :geckoview project.
-    if (!audienceDimension.equals('official')) {
+    if (!productFlavor.equals('automation')) {
         configureVariantWithGeckoBinaries(variant)
     }
 }
@@ -384,20 +356,20 @@ spoon {
     }
 }
 
-// // See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
-// afterEvaluate {
-//     tasks["spoonLocal${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
+// See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
+afterEvaluate {
+    tasks["spoonLocal${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
 
-//     // This is an awkward way to define different sets of instrumentation tests.
-//     // The task name itself is fished at runtime and the package name configured
-//     // in the spoon configuration.
-//     task runBrowserTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-//     task runBackgroundTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-// }
+    // This is an awkward way to define different sets of instrumentation tests.
+    // The task name itself is fished at runtime and the package name configured
+    // in the spoon configuration.
+    task runBrowserTests {
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
+    }
+    task runBackgroundTests {
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
+    }
+}
 
 // Bug 1299015: Complain to treeherder if checkstyle, lint, or unittest fails.  It's not obvious
 // how to listen to individual errors in most cases, so we just link to the reports for now.
@@ -422,33 +394,18 @@ def makeTaskExecutionListener(artifactRootUrl) {
                 println "TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: $url"
                 break
 
-            case ':app:lintOfficialAustralisDebug':
-                def url = "${artifactRootUrl}/public/android/lint/lint-results-officialAustralisDebug.html"
+            case ':app:lintAutomationDebug':
+                def url = "${artifactRootUrl}/public/android/lint/lint-results-automationDebug.html"
                 println "TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: $url"
                 break
 
-            case ':app:testOfficialAustralisDebugUnitTest':
-                def url = "${artifactRootUrl}/public/android/unittest/officialAustralisDebug/index.html"
-                println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: $url"
+            case ':app:testAutomationDebugUnitTest':
+                def url = "${artifactRootUrl}/public/android/unittest/automationDebug/index.html"
+                println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the report at: $url"
                 break
 
-            case ':app:findbugsOfficialAustralisDebug':
-                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialAustralisDebug-output.html"
-                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
-                break
-
-            case ':app:lintOfficialPhotonDebug':
-                def url = "${artifactRootUrl}/public/android/lint/lint-results-officialPhotonDebug.html"
-                println "TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: $url"
-                break
-
-            case ':app:testOfficialPhotonDebugUnitTest':
-                def url = "${artifactRootUrl}/public/android/unittest/officialPhotonDebug/index.html"
-                println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: $url"
-                break
-
-            case ':app:findbugsOfficialPhotonDebug':
-                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialPhotonDebug-output.html"
+            case ':app:findbugsAutomationDebug':
+                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-report.html"
                 println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
                 break
             }
