@@ -85,7 +85,8 @@ def main(output, *filenames):
 
     print("  HistogramCount,", file=output)
     if seen_use_counters:
-        print("  HistogramUseCounterCount = HistogramLastUseCounter - HistogramFirstUseCounter + 1", file=output)
+        print("  HistogramUseCounterCount = HistogramLastUseCounter -"
+              " HistogramFirstUseCounter + 1", file=output)
     else:
         print("  HistogramFirstUseCounter = 0,", file=output)
         print("  HistogramLastUseCounter = 0,", file=output)
@@ -106,7 +107,8 @@ def main(output, *filenames):
 
     print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
     for name, _, id in enums:
-        print("template<> struct CategoricalLabelId<%s> : IntegralConstant<uint32_t, %s> {};" % (name, id), file=output)
+        print("template<> struct CategoricalLabelId<%s> : "
+              "IntegralConstant<uint32_t, %s> {};" % (name, id), file=output)
 
     # Footer.
     print(footer, file=output)

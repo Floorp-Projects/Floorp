@@ -189,7 +189,8 @@ class EventData:
         record_in_processes = definition.get('record_in_processes')
         for proc in record_in_processes:
             if not utils.is_valid_process_name(proc):
-                raise ParserError(self.identifier + ': Unknown value in record_in_processes: ' + proc)
+                raise ParserError(self.identifier + ': Unknown value in record_in_processes: ' +
+                                  proc)
 
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
@@ -203,18 +204,19 @@ class EventData:
 
         # Check expiry.
         if 'expiry_version' not in definition and 'expiry_date' not in definition:
-            raise ParserError("%s: event is missing an expiration - either expiry_version or expiry_date is required" %
-                              (self.identifier))
+            raise ParserError("%s: event is missing an expiration - either expiry_version or"
+                              " expiry_date is required" % (self.identifier))
         expiry_date = definition.get('expiry_date')
         if expiry_date and isinstance(expiry_date, basestring) and expiry_date != 'never':
             if not re.match(DATE_PATTERN, expiry_date):
-                raise ParserError("%s: Event has invalid expiry_date, it should be either 'never' or match this format: %s" %
-                                  (self.identifier, DATE_PATTERN))
+                raise ParserError("%s: Event has invalid expiry_date, it should be either 'never'"
+                                  " or match this format: %s" % (self.identifier, DATE_PATTERN))
             # Parse into date.
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
         # Finish setup.
-        definition['expiry_version'] = utils.add_expiration_postfix(definition.get('expiry_version', 'never'))
+        definition['expiry_version'] = \
+            utils.add_expiration_postfix(definition.get('expiry_version', 'never'))
 
     @property
     def category(self):
