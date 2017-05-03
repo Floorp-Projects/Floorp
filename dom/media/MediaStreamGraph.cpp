@@ -3023,7 +3023,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       LogLevel::Warning,
       ("Source track for direct track listener %p is unknown", listener.get()));
     // It is not a video or audio track.
-    MOZ_ASSERT(true);
+    MOZ_ASSERT(false);
     return;
   }
   LOG(

@@ -20,7 +20,7 @@ class nsSVGAFrame : public nsSVGDisplayContainerFrame
   NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGAFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, FrameType::SVGA)
+    : nsSVGDisplayContainerFrame(aContext, LayoutFrameType::SVGA)
   {}
 
 public:

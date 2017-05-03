@@ -26,7 +26,7 @@ using namespace mozilla::gfx;
 // Implementation
 
 nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
-                                       FrameType aType)
+                                       LayoutFrameType aType)
   : nsSVGPaintServerFrame(aContext, aType)
   , mLoopFlag(false)
   , mNoHRefURI(false)
@@ -373,9 +373,9 @@ nsSVGGradientFrame::GetReferencedGradient()
   if (!result)
     return nullptr;
 
-  FrameType frameType = result->Type();
-  if (frameType != FrameType::SVGLinearGradient &&
-      frameType != FrameType::SVGRadialGradient)
+  LayoutFrameType frameType = result->Type();
+  if (frameType != LayoutFrameType::SVGLinearGradient &&
+      frameType != LayoutFrameType::SVGRadialGradient)
     return nullptr;
 
   return static_cast<nsSVGGradientFrame*>(result);
