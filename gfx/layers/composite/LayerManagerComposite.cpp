@@ -788,17 +788,26 @@ class ScopedCompositorRenderOffset {
 public:
   ScopedCompositorRenderOffset(CompositorOGL* aCompositor, const ScreenPoint& aOffset) :
     mCompositor(aCompositor),
-    mOriginalOffset(mCompositor->GetScreenRenderOffset())
+    mOriginalOffset(mCompositor->GetScreenRenderOffset()),
+    mOriginalProjection(mCompositor->GetProjMatrix())
   {
-    mCompositor->SetScreenRenderOffset(aOffset);
+    ScreenPoint offset(mOriginalOffset.x + aOffset.x, mOriginalOffset.y + aOffset.y);
+    mCompositor->SetScreenRenderOffset(offset);
+    // Calling CompositorOGL::SetScreenRenderOffset does not affect the projection matrix
+    // so adjust that as well.
+    gfx::Matrix4x4 mat = mOriginalProjection;
+    mat.PreTranslate(aOffset.x, aOffset.y, 0.0f);
+    mCompositor->SetProjMatrix(mat);
   }
   ~ScopedCompositorRenderOffset()
   {
     mCompositor->SetScreenRenderOffset(mOriginalOffset);
+    mCompositor->SetProjMatrix(mOriginalProjection);
   }
 private:
   CompositorOGL* const mCompositor;
   const ScreenPoint mOriginalOffset;
+  const gfx::Matrix4x4 mOriginalProjection;
 };
 #endif // defined(MOZ_WIDGET_ANDROID)
 
@@ -888,9 +897,8 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
     clipRect = ParentLayerIntRect(rect.x, rect.y, rect.width, rect.height);
   }
 #if defined(MOZ_WIDGET_ANDROID)
-  int32_t toolbarHeight = RenderToolbar();
-  // This doesn't affect the projection matrix after BeginFrame has been called.
-  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(), ScreenPoint(0, toolbarHeight));
+  ScreenCoord offset = GetContentShiftForToolbar();
+  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(), ScreenPoint(0.0f, offset));
 #endif
 
   if (actualBounds.IsEmpty()) {
@@ -947,6 +955,9 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   mCompositor->NormalDrawingDone();
 
 #if defined(MOZ_WIDGET_ANDROID)
+  // Depending on the content shift the toolbar may be rendered on top of
+  // some of the content so it must be rendered after the content.
+  RenderToolbar();
   HandlePixelsTarget();
 #endif // defined(MOZ_WIDGET_ANDROID)
 
@@ -1122,22 +1133,38 @@ LayerManagerComposite::RenderToPresentationSurface()
   mCompositor->EndFrame();
 }
 
-int32_t
-LayerManagerComposite::RenderToolbar()
+ScreenCoord
+LayerManagerComposite::GetContentShiftForToolbar()
 {
-  int32_t toolbarHeight = 0;
-
-  // If GetTargetContext returns null we are drawing to the screen so draw the toolbar offset if present.
+  ScreenCoord result(0.0f);
+  // If GetTargetContext return is not null we are not drawing to the screen so there will not be any content offset.
   if (mCompositor->GetTargetContext() != nullptr) {
-    return toolbarHeight;
+    return result;
   }
 
   if (CompositorBridgeParent* bridge = mCompositor->GetCompositorBridgeParent()) {
     AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
-    MOZ_ASSERT(animator);
-    toolbarHeight = animator->GetCurrentToolbarHeight();
+    MOZ_RELEASE_ASSERT(animator);
+    result.value = (float)animator->GetCurrentContentOffset().value;
+  }
+  return result;
+}
+
+void
+LayerManagerComposite::RenderToolbar()
+{
+  // If GetTargetContext return is not null we are not drawing to the screen so don't draw the toolbar.
+  if (mCompositor->GetTargetContext() != nullptr) {
+    return;
+  }
+
+  if (CompositorBridgeParent* bridge = mCompositor->GetCompositorBridgeParent()) {
+    AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
+    MOZ_RELEASE_ASSERT(animator);
+
+    int32_t toolbarHeight = animator->GetCurrentToolbarHeight();
     if (toolbarHeight == 0) {
-      return toolbarHeight;
+      return;
     }
 
     EffectChain effects;
@@ -1146,17 +1173,12 @@ LayerManagerComposite::RenderToolbar()
     // If the real toolbar chrome is not covering this portion of the surface, the clear color
     // of the surface will be visible. On Android the clear color is the background color of the page.
     if (effects.mPrimaryEffect) {
+      ScopedCompositorRenderOffset toolbarOffset(mCompositor->AsCompositorOGL(),
+                                                 ScreenPoint(0.0f, -animator->GetCurrentContentOffset()));
       mCompositor->DrawQuad(gfx::Rect(0, 0, mRenderBounds.width, toolbarHeight),
                             IntRect(0, 0, mRenderBounds.width, toolbarHeight), effects, 1.0, gfx::Matrix4x4());
     }
-
-    // Move the content down the surface by the toolbar's height so they don't overlap
-    gfx::Matrix4x4 mat = mCompositor->AsCompositorOGL()->GetProjMatrix();
-    mat.PreTranslate(0.0f, float(toolbarHeight), 0.0f);
-    mCompositor->AsCompositorOGL()->SetProjMatrix(mat);
   }
-
-  return toolbarHeight;
 }
 
 // Used by robocop tests to get a snapshot of the frame buffer.
