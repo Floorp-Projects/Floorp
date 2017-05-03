@@ -12,7 +12,6 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
-  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
 }
 
 :root:-moz-lwtheme {
