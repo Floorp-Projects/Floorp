@@ -809,8 +809,8 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 
     mInnerFrame = mOuterFrame;
     if (mOuterFrame) {
-      FrameType type = mOuterFrame->Type();
-      if (type == FrameType::TableWrapper) {
+      LayoutFrameType type = mOuterFrame->Type();
+      if (type == LayoutFrameType::TableWrapper) {
         // If the frame is a table wrapper frame then we should get the style
         // from the inner table frame.
         mInnerFrame = mOuterFrame->PrincipalChildList().FirstChild();

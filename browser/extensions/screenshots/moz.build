@@ -29,6 +29,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/ach/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["az"] += [
+  'webextension/_locales/az/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["be"] += [
   'webextension/_locales/be/messages.json'
 ]
@@ -43,6 +47,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cs"] += [
   'webextension/_locales/cs/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cy"] += [
+  'webextension/_locales/cy/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["de"] += [
@@ -89,6 +97,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/fa/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["fi"] += [
+  'webextension/_locales/fi/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["fr"] += [
   'webextension/_locales/fr/messages.json'
 ]
@@ -103,6 +115,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["he"] += [
   'webextension/_locales/he/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["hi_IN"] += [
+  'webextension/_locales/hi_IN/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["hsb"] += [
@@ -137,6 +153,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/kk/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["km"] += [
+  'webextension/_locales/km/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ko"] += [
   'webextension/_locales/ko/messages.json'
 ]
@@ -155,6 +175,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ms"] += [
   'webextension/_locales/ms/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["my"] += [
+  'webextension/_locales/my/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["nb_NO"] += [
@@ -189,6 +213,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/rm/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ro"] += [
+  'webextension/_locales/ro/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ru"] += [
   'webextension/_locales/ru/messages.json'
 ]
@@ -213,6 +241,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/sv_SE/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["te"] += [
+  'webextension/_locales/te/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["th"] += [
   'webextension/_locales/th/messages.json'
 ]
@@ -231,6 +263,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ur"] += [
   'webextension/_locales/ur/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["uz"] += [
+  'webextension/_locales/uz/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["zh_CN"] += [
@@ -262,6 +298,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["build"] 
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] += [
+  'webextension/icons/back-highlight.svg',
   'webextension/icons/back.svg',
   'webextension/icons/cancel.svg',
   'webextension/icons/copy.png',
@@ -269,16 +306,17 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] 
   'webextension/icons/download.svg',
   'webextension/icons/icon-128.png',
   'webextension/icons/icon-16.png',
+  'webextension/icons/icon-16.svg',
   'webextension/icons/icon-19.png',
   'webextension/icons/icon-256.png',
   'webextension/icons/icon-32.png',
+  'webextension/icons/icon-32.svg',
   'webextension/icons/icon-38.png',
   'webextension/icons/icon-48.png',
   'webextension/icons/icon-64.png',
-  'webextension/icons/icon-highlight-19.png',
-  'webextension/icons/icon-highlight-38.png',
-  'webextension/icons/icon-starred-19.png',
-  'webextension/icons/icon-starred-38.png',
+  'webextension/icons/icon-highlight-32.svg',
+  'webextension/icons/icon-starred-32.svg',
+  'webextension/icons/icon-welcome-face-without-eyes.svg',
   'webextension/icons/menu-fullpage.svg',
   'webextension/icons/menu-myshot.svg',
   'webextension/icons/menu-visible.svg',

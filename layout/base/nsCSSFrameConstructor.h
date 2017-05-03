@@ -614,8 +614,8 @@ private:
     return GetParentType(aParentFrame->Type());
   }
 
-  /* Get the parent type for the given FrameType */
-  static ParentType GetParentType(mozilla::FrameType aFrameType);
+  /* Get the parent type for the given LayoutFrameType */
+  static ParentType GetParentType(mozilla::LayoutFrameType aFrameType);
 
   static bool IsRubyParentType(ParentType aParentType) {
     return (aParentType == eTypeRuby ||

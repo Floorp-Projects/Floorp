@@ -19,7 +19,7 @@ class nsSVGSwitchFrame final : public nsSVGGFrame
   NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGSwitchFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, FrameType::SVGSwitch)
+    : nsSVGGFrame(aContext, LayoutFrameType::SVGSwitch)
   {}
 
 public:

@@ -135,7 +135,7 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 
-nsImageFrame::nsImageFrame(nsStyleContext* aContext, FrameType aType)
+nsImageFrame::nsImageFrame(nsStyleContext* aContext, LayoutFrameType aType)
   : nsAtomicContainerFrame(aContext, aType)
   , mComputedSize(0, 0)
   , mIntrinsicRatio(0, 0)

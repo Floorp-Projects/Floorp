@@ -38,7 +38,7 @@ SVGTextContentElement::GetSVGTextFrame()
 {
   nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
   nsIFrame* textFrame =
-    nsLayoutUtils::GetClosestFrameOfType(frame, FrameType::SVGText);
+    nsLayoutUtils::GetClosestFrameOfType(frame, LayoutFrameType::SVGText);
   return static_cast<SVGTextFrame*>(textFrame);
 }
 
@@ -47,7 +47,7 @@ SVGTextContentElement::GetSVGTextFrameForNonLayoutDependentQuery()
 {
   nsIFrame* frame = GetPrimaryFrame(FlushType::Frames);
   nsIFrame* textFrame =
-    nsLayoutUtils::GetClosestFrameOfType(frame, FrameType::SVGText);
+    nsLayoutUtils::GetClosestFrameOfType(frame, LayoutFrameType::SVGText);
   return static_cast<SVGTextFrame*>(textFrame);
 }
 

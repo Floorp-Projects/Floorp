@@ -375,7 +375,7 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   // Clamp the inline-position to be within our scroll frame. If we don't, then
   // it clips us, and we don't appear at all. See bug 335560.
   nsIFrame* scrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(aFrame, FrameType::Scroll);
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::Scroll);
   if (scrollFrame) {
     // First, use the scrollFrame to get at the scrollable view that we're in.
     nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);

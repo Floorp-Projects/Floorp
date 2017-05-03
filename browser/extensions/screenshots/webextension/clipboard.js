@@ -2,10 +2,10 @@
 
 "use strict";
 
-this.clipboard = (function () {
+this.clipboard = (function() {
   let exports = {};
 
-  exports.copy = function (text) {
+  exports.copy = function(text) {
     let el = document.createElement("textarea");
     document.body.appendChild(el);
     el.value = text;

@@ -1,17 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 21.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 46 46" style="enable-background:new 0 0 46 46;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#3E3D40;}
-</style>
-<path class="st0" d="M11,29v6c0,0.5,0.4,1,1,1h6v-7H11z"/>
-<rect x="20" y="11" class="st0" width="7" height="7"/>
-<rect x="11" y="20" class="st0" width="7" height="7"/>
-<path class="st0" d="M18,11h-6c-0.5,0-1,0.4-1,1v6h7V11z"/>
-<rect x="20" y="29" class="st0" width="7" height="7"/>
-<path class="st0" d="M35,11h-6v7h7v-6C36,11.5,35.6,11,35,11z"/>
-<path class="st0" d="M29,36h6c0.5,0,1-0.4,1-1v-6h-7V36z"/>
-<rect x="20" y="20" class="st0" width="7" height="7"/>
-<rect x="29" y="20" class="st0" width="7" height="7"/>
-</svg>
+<svg width="46" height="46" viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg"><title>Screenshots</title><path d="M11 11.995c0-.55.455-.995.995-.995h23.01c.55 0 .995.455.995.995v23.01c0 .55-.455.995-.995.995h-23.01c-.55 0-.995-.455-.995-.995v-23.01zM11 25v-2h7v2h-7zm9-5h7v-2h-7v2zm9 5h7v-2h-7v2zm-9 4h7v-2h-7v2zm-2-18h2v25h-2V11zm9 0h2v25h-2V11z" fill="#3E3D40" fill-rule="evenodd"/></svg>

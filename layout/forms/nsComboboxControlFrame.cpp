@@ -223,7 +223,7 @@ static int32_t gReflowInx = -1;
 //------------------------------------------------------
 
 nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext, FrameType::ComboboxControl)
+  : nsBlockFrame(aContext, LayoutFrameType::ComboboxControl)
   , mDisplayFrame(nullptr)
   , mButtonFrame(nullptr)
   , mDropdownFrame(nullptr)
@@ -1278,7 +1278,7 @@ public:
 
   nsComboboxDisplayFrame(nsStyleContext* aContext,
                          nsComboboxControlFrame* aComboBox)
-    : nsBlockFrame(aContext, FrameType::ComboboxDisplay)
+    : nsBlockFrame(aContext, LayoutFrameType::ComboboxDisplay)
     , mComboBox(aComboBox)
   {}
 
