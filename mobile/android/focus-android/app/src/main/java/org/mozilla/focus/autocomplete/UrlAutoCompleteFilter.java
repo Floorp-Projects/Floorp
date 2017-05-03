@@ -7,6 +7,7 @@ package org.mozilla.focus.autocomplete;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
@@ -21,10 +22,6 @@ import java.util.Locale;
 
 public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilterListener {
     private List<String> domains;
-
-    public UrlAutoCompleteFilter(Context context) {
-        loadUrls(context);
-    }
 
     /**
      * Our autocomplete list is all lower case, however the search text might be mixed case.
@@ -59,7 +56,11 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
         }
     }
 
-    private void loadUrls(Context context) {
+    @VisibleForTesting void onDomainsLoaded(List<String> domains) {
+        this.domains = domains;
+    }
+
+    public void loadDomainsInBackground(Context context) {
         new AsyncTask<Resources, Void, List<String>>() {
             @Override
             protected List<String> doInBackground(Resources... resources) {
@@ -83,7 +84,7 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
 
             @Override
             protected void onPostExecute(List<String> domains) {
-                UrlAutoCompleteFilter.this.domains = domains;
+                onDomainsLoaded(domains);
             }
         }.execute(context.getResources());
     }
