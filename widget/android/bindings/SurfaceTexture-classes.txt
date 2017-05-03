@@ -1,2 +1,2 @@
-android.graphics.SurfaceTexture
-android.view.Surface
+[android.graphics.SurfaceTexture = exceptionMode:nsresult]
+[android.view.Surface = exceptionMode:nsresult]

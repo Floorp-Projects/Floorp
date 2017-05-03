@@ -1,2 +1,2 @@
-android.graphics.Rect
-android.graphics.RectF
+[android.graphics.Rect]
+[android.graphics.RectF]

@@ -1,1 +1,3 @@
-android.view.MotionEvent
+# We only use constants from MotionEvent
+[android.view.MotionEvent = skip:true]
+<field> = skip:false
