@@ -43,7 +43,7 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::FrameType::SVGMask)
+    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGMask)
     , mInUse(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

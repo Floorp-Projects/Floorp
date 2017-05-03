@@ -2057,6 +2057,14 @@
       "n_buckets": 100,
       "description": "Time in milliseconds that http channel spent suspended between AsyncOpen and OnStartRequest."
   },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_USAGE": {
+    "expires_in_version": "58",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1354409],
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
+  },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -4219,6 +4227,15 @@
     "bug_numbers": [1336903],
     "description": "Server response time to update request (ms). Keyed by provider"
   },
+  "URLCLASSIFIER_UPDATE_TIMEOUT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "61",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 4,
+    "bug_numbers": [1336904],
+    "description": " Whether or not an update timed out (0 = no timeout, 1 = server respond timeout, 2 = overall timeout). Keyed by provider"
+  },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS2": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -4254,7 +4271,6 @@
     "bug_numbers": [1336903],
     "description": "Server response time to getHash request (ms). Keyed by provider"
   },
-
   "URLCLASSIFIER_UPDATE_ERROR": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "59",

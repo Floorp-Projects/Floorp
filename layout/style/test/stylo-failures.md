@@ -36,7 +36,7 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [19]
+  * test_animations.html [5]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -171,7 +171,6 @@ to mochitest command.
     * test_value_storage.html `cursor` [4]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
-  * test_pixel_lengths.html `mozmm`: mozmm unit bug 1356104 [3]
 * Unsupported values
   * SVG-only values of pointer-events not recognized
     * test_value_storage.html `pointer-events` [1]
@@ -194,7 +193,6 @@ to mochitest command.
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]

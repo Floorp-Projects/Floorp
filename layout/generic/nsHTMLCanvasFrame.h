@@ -37,7 +37,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   explicit nsHTMLCanvasFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::FrameType::HTMLCanvas)
+    : nsContainerFrame(aContext, mozilla::LayoutFrameType::HTMLCanvas)
     , mBorderPadding(GetWritingMode())
   {}
 

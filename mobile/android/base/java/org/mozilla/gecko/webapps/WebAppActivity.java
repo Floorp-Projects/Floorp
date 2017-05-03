@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
@@ -42,6 +43,7 @@ import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
 
 import static org.mozilla.gecko.Tabs.TabEvents;
@@ -111,6 +113,8 @@ public class WebAppActivity extends SingleTabActivity {
     @Override
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
+        super.handleMessage(event, message, callback);
+
         if (message == null ||
                 !message.containsKey("tabId") || message.getInt("tabId") != mLastSelectedTabId) {
             return;
@@ -196,6 +200,25 @@ public class WebAppActivity extends SingleTabActivity {
             manifestPath = tab.getManifestPath();
         }
         loadManifest(manifestPath);
+    }
+
+    @Override
+    protected ActionModePresenter getTextSelectPresenter() {
+        return new ActionModePresenter() {
+            private ActionMode mMode;
+
+            @Override
+            public void startActionMode(ActionMode.Callback callback) {
+                mMode = startSupportActionMode(callback);
+            }
+
+            @Override
+            public void endActionMode() {
+                if (mMode != null) {
+                    mMode.finish();
+                }
+            }
+        };
     }
 
     private void loadManifest(String manifestPath) {

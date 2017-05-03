@@ -40,7 +40,7 @@ NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-nsLeafBoxFrame::nsLeafBoxFrame(nsStyleContext* aContext, FrameType aType)
+nsLeafBoxFrame::nsLeafBoxFrame(nsStyleContext* aContext, LayoutFrameType aType)
   : nsLeafFrame(aContext, aType)
 {
 }
