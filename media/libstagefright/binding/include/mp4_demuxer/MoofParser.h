@@ -299,8 +299,7 @@ public:
 
   nsTArray<Moof>& Moofs() { return mMoofs; }
 private:
-  void ScanForMetadata(mozilla::MediaByteRange& aFtyp,
-                       mozilla::MediaByteRange& aMoov);
+  void ScanForMetadata(mozilla::MediaByteRange& aMoov);
   nsTArray<Moof> mMoofs;
   nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
