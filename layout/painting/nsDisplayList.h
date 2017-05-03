@@ -4110,7 +4110,7 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override
   {
-    return mozilla::LAYER_ACTIVE;
+    return mozilla::LAYER_ACTIVE_FORCE;
   }
   virtual bool TryMerge(nsDisplayItem* aItem) override;
 
