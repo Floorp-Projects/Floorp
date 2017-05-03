@@ -81,14 +81,7 @@
 
 <!ENTITY updateTab.label                 "Update">
 
-<!-- LOCALIZATION NOTE (updateApplication.label):
-  Strings from aboutDialog.dtd are displayed in this section of the preferences.
-  Please check for possible accesskey conflicts.
--->
 <!ENTITY updateApplication.label         "&brandShortName; Updates">
-<!-- LOCALIZATION NOTE (updateApplication.version.pre): include a trailing space as needed -->
-<!ENTITY updateApplication.version.pre   "Version ">
-<!ENTITY updateApplication.version.post  "">
 <!ENTITY updateApplication.description   "Allow &brandShortName; to">
 <!ENTITY updateAuto2.label               "Automatically install updates (recommended for improved security)">
 <!ENTITY updateAuto2.accesskey           "A">

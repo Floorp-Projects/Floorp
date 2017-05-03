@@ -20,56 +20,7 @@ var gAdvancedPane = {
 
     this._inited = true;
 
-    let version = AppConstants.MOZ_APP_VERSION_DISPLAY;
-
-    // Include the build ID if this is an "a#" (nightly) build
-    if (/a\d+$/.test(version)) {
-      let buildID = Services.appinfo.appBuildID;
-      let year = buildID.slice(0, 4);
-      let month = buildID.slice(4, 6);
-      let day = buildID.slice(6, 8);
-      version += ` (${year}-${month}-${day})`;
-    }
-
-    // Append "(32-bit)" or "(64-bit)" build architecture to the version number:
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let archResource = Services.appinfo.is64Bit
-                       ? "aboutDialog.architecture.sixtyFourBit"
-                       : "aboutDialog.architecture.thirtyTwoBit";
-    let arch = bundle.GetStringFromName(archResource);
-    version += ` (${arch})`;
-
-    document.getElementById("version").textContent = version;
-
-    // Show a release notes link if we have a URL.
-    let relNotesLink = document.getElementById("releasenotes");
-    let relNotesPrefType = Services.prefs.getPrefType("app.releaseNotesURL");
-    if (relNotesPrefType != Services.prefs.PREF_INVALID) {
-      let relNotesURL = Services.urlFormatter.formatURLPref("app.releaseNotesURL");
-      if (relNotesURL != "about:blank") {
-        relNotesLink.href = relNotesURL;
-        relNotesLink.hidden = false;
-      }
-    }
-
-    let distroId = Services.prefs.getCharPref("distribution.id", "");
-    if (distroId) {
-      let distroVersion = Services.prefs.getCharPref("distribution.version");
-
-      let distroIdField = document.getElementById("distributionId");
-      distroIdField.value = distroId + " - " + distroVersion;
-      distroIdField.hidden = false;
-
-      let distroAbout = Services.prefs.getStringPref("distribution.about", "");
-      if (distroAbout) {
-        let distroField = document.getElementById("distribution");
-        distroField.value = distroAbout;
-        distroField.hidden = false;
-      }
-    }
-
     if (AppConstants.MOZ_UPDATER) {
-      gAppUpdater = new appUpdater();
       let onUnload = () => {
         window.removeEventListener("unload", onUnload);
         Services.prefs.removeObserver("app.update.", this);
