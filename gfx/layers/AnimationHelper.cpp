@@ -159,15 +159,18 @@ AnimationHelper::SampleAnimationForEachNode(TimeStamp aTime,
 
     activeAnimations = true;
 
-    MOZ_ASSERT(!animation.startTime().IsNull() ||
+    MOZ_ASSERT((!animation.originTime().IsNull() &&
+                animation.startTime().type() != MaybeTimeDuration::Tnull_t) ||
                animation.isNotPlaying(),
-               "Failed to resolve start time of play-pending animations");
+               "If we are playing, we should have an origin time and a start"
+               " time");
     // If the animation is not currently playing , e.g. paused or
     // finished, then use the hold time to stay at the same position.
     TimeDuration elapsedDuration = animation.isNotPlaying()
       ? animation.holdTime()
-      : (aTime - animation.startTime())
-          .MultDouble(animation.playbackRate());
+      : (aTime - animation.originTime() -
+         animation.startTime().get_TimeDuration())
+        .MultDouble(animation.playbackRate());
     TimingParams timing;
     timing.mDuration.emplace(animation.duration());
     timing.mDelay = animation.delay();

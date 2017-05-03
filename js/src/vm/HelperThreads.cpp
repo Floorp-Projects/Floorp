@@ -1949,7 +1949,13 @@ HelperThread::threadLoop()
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
         }
 
-        if (ionCompile) {
+        if (HelperThreadState().canStartGCParallelTask(lock)) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCPARALLEL);
+            handleGCParallelWorkload(lock);
+        } else if (HelperThreadState().canStartGCHelperTask(lock)) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCHELPER);
+            handleGCHelperWorkload(lock);
+        } else if (ionCompile) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_ION);
             handleIonWorkload(lock);
         } else if (HelperThreadState().canStartWasmCompile(lock)) {
@@ -1964,12 +1970,6 @@ HelperThread::threadLoop()
         } else if (HelperThreadState().canStartCompressionTask(lock)) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_COMPRESS);
             handleCompressionWorkload(lock);
-        } else if (HelperThreadState().canStartGCHelperTask(lock)) {
-            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCHELPER);
-            handleGCHelperWorkload(lock);
-        } else if (HelperThreadState().canStartGCParallelTask(lock)) {
-            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCPARALLEL);
-            handleGCParallelWorkload(lock);
         } else {
             MOZ_CRASH("No task to perform");
         }
