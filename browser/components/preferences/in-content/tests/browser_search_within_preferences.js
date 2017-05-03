@@ -171,3 +171,35 @@ add_task(function*() {
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+/**
+ * Test for "Site Data" case, verifying elements with data-hidden-from-search = true
+ * are hidden in search result.
+ */
+add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({"set": [["browser.storageManager.enabled", false]]});
+  yield openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let generalPane = gBrowser.contentDocument.getElementById("header-general");
+
+  is_element_hidden(generalPane, "Should not be in general");
+
+  // Performs search
+  let searchInput = gBrowser.contentDocument.getElementById("searchInput");
+  searchInput.doCommand()
+  searchInput.value = "site data";
+  searchInput.doCommand()
+
+  let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
+
+  let child = mainPrefTag.querySelector("#siteDataGroup");
+  is_element_hidden(child, "Should be hidden in search results");
+
+  // Takes search off
+  searchInput.value = "";
+  searchInput.doCommand()
+
+  // Checks if back to normal
+  is_element_visible(generalPane, "Should be in generalPane");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
