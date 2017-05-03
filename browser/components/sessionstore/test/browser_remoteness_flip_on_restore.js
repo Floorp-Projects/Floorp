@@ -86,6 +86,14 @@ const PINNED_STATE = {
  *   restored window. Leave this at 0 if you don't want to change
  *   the selection from the initial window state.
  *
+ * expectedFlips:
+ *   an Array that represents the window that we end up with after
+ *   restoring state. Each bool in the Array represents the window tabs,
+ *   in order. A "true" indicates that the tab should have flipped
+ *   its remoteness once. "false" indicates that the tab should never
+ *   have flipped remoteness. Note that any tab that flips its remoteness
+ *   more than once will cause a test failure.
+ *
  * expectedRemoteness:
  *   an Array that represents the window that we end up with after
  *   restoring state. Each bool in the Array represents the window
@@ -98,6 +106,10 @@ const PINNED_STATE = {
 function* runScenarios(scenarios) {
   for (let [scenarioIndex, scenario] of scenarios.entries()) {
     info("Running scenario " + scenarioIndex);
+    // Let's make sure our scenario is sane first.
+    Assert.equal(scenario.expectedFlips.length,
+                 scenario.expectedRemoteness.length,
+                 "All expected flips and remoteness needs to be supplied");
     Assert.ok(scenario.initialSelectedTab > 0,
               "You must define an initially selected tab");
 
@@ -130,15 +142,62 @@ function* runScenarios(scenarios) {
       yield BrowserTestUtils.switchTab(tabbrowser, tabToSelect);
     }
 
+    // Hook up an event listener to make sure that the right
+    // tabs flip remoteness, and only once.
+    let flipListener = {
+      seenBeforeTabs: new Set(),
+      seenAfterTabs: new Set(),
+      handleEvent(e) {
+        let index = Array.from(tabbrowser.tabs).indexOf(e.target);
+        switch (e.type) {
+          case "BeforeTabRemotenessChange":
+            info(`Saw tab at index ${index} before remoteness flip`);
+            if (this.seenBeforeTabs.has(e.target)) {
+              Assert.ok(false, "Saw tab before remoteness flip more than once");
+            }
+            this.seenBeforeTabs.add(e.target);
+            break;
+          case "TabRemotenessChange":
+            info(`Saw tab at index ${index} after remoteness flip`);
+            if (this.seenAfterTabs.has(e.target)) {
+              Assert.ok(false, "Saw tab after remoteness flip more than once");
+            }
+            this.seenAfterTabs.add(e.target);
+            break;
+        }
+      },
+    };
+
+    win.addEventListener("BeforeTabRemotenessChange", flipListener);
+    win.addEventListener("TabRemotenessChange", flipListener);
+
     // Okay, time to test!
     let state = prepareState(scenario.stateToRestore,
                              scenario.selectedTab);
 
     SessionStore.setWindowState(win, state, true);
 
-    for (let i = 0; i < scenario.expectedRemoteness.length; ++i) {
+    win.removeEventListener("BeforeTabRemotenessChange", flipListener);
+    win.removeEventListener("TabRemotenessChange", flipListener);
+
+    // Because we know that scenario.expectedFlips and
+    // scenario.expectedRemoteness have the same length, we
+    // can check that we satisfied both with the same loop.
+    for (let i = 0; i < scenario.expectedFlips.length; ++i) {
+      let expectedToFlip = scenario.expectedFlips[i];
       let expectedRemoteness = scenario.expectedRemoteness[i];
       let tab = tabbrowser.tabs[i];
+      if (expectedToFlip) {
+        Assert.ok(flipListener.seenBeforeTabs.has(tab),
+                  `We should have seen tab at index ${i} before remoteness flip`);
+        Assert.ok(flipListener.seenAfterTabs.has(tab),
+                  `We should have seen tab at index ${i} after remoteness flip`);
+      } else {
+        Assert.ok(!flipListener.seenBeforeTabs.has(tab),
+                  `We should not have seen tab at index ${i} before remoteness flip`);
+        Assert.ok(!flipListener.seenAfterTabs.has(tab),
+                  `We should not have seen tab at index ${i} after remoteness flip`);
+      }
 
       Assert.equal(tab.linkedBrowser.isRemoteBrowser, expectedRemoteness,
                    "Should have gotten the expected remoteness " +
@@ -151,7 +210,8 @@ function* runScenarios(scenarios) {
 
 /**
  * Tests that if we restore state to browser windows with
- * a variety of initial remoteness states. For this particular
+ * a variety of initial remoteness states, that we only flip
+ * the remoteness on the necessary tabs. For this particular
  * set of tests, we assume that tabs are restoring on demand.
  */
 add_task(function*() {
@@ -173,6 +233,11 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 3,
+      // The initial tab is remote and should go into
+      // the background state. The second and third tabs
+      // are new and should initialize remotely as well.
+      // There should therefore be no remoteness flips.
+      expectedFlips: [false, false, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -184,6 +249,10 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 1,
+      // The initial tab is remote and selected, so it should
+      // not flip remoteness. The other two new tabs should
+      // initialize as remote unrestored background tabs.
+      expectedFlips: [false, false, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -196,6 +265,10 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 0,
+      // The initial tab is remote and selected, so it should
+      // not flip remoteness. The other two new tabs should
+      // initialize as remote unrestored background tabs.
+      expectedFlips: [false, false, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -208,6 +281,12 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: PINNED_STATE,
       selectedTab: 3,
+      // The initial tab is pinned and will load right away,
+      // so it should stay remote. The second tab is new
+      // and pinned, so it should start remote and not flip.
+      // The third tab is not pinned, but it is selected,
+      // so it will start remote.
+      expectedFlips: [false, false, false],
       // Both pinned tabs and the selected tabs should all
       // end up being remote.
       expectedRemoteness: [true, true, true],
@@ -219,6 +298,14 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 2,
+      // The initial tab is non-remote and will flip. The two tabs that
+      // are added after should be initialized as remote. Since the selected
+      // tab is changing, SessionStore should swap the initial tab with the
+      // tab thats in the selectedTab slot. That'll result in a remoteness
+      // state like this:
+      //
+      // [true, false, true]
+      expectedFlips: [false, true, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -229,6 +316,16 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 3,
+      // The initial tab is remote and should stay that way, even
+      // when put into the background. The initial tab is going to be
+      // swapped into the selectedTab slot, and both of those tabs are
+      // remote already. That will result in the tabs remoteness being
+      // in this order still:
+      //
+      // [true, false, true]
+      //
+      // This means that we'll only need to flip the second tab.
+      expectedFlips: [false, true, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -241,6 +338,18 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: PINNED_STATE,
       selectedTab: 3,
+      // The initial tab is going to swap into the selected slot,
+      // and so after the other two tabs from the PINNED_STATE are
+      // inserted, we'll have a remoteness state like this:
+      //
+      // [true, true, false]
+      //
+      // The two pinned tabs at the start of the PINNED_STATE should
+      // load right away, but should not flip remoteness.
+      //
+      // The third tab is selected, and should load right away, so
+      // it should flip remoteness.
+      expectedFlips: [false, false, true],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
