@@ -472,7 +472,7 @@ const CustomizableWidgets = [
       clientItem.setAttribute("itemtype", "client");
       let window = doc.defaultView;
       clientItem.setAttribute("tooltiptext",
-        window.gSync.formatLastSyncDate(new Date(client.lastModified)));
+        window.gSyncUI.formatLastSyncDate(new Date(client.lastModified)));
       clientItem.textContent = client.name;
 
       attachFragment.appendChild(clientItem);

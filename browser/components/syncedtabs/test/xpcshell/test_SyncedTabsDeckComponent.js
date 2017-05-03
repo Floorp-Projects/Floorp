@@ -140,6 +140,16 @@ add_task(function* testPanelStatus() {
   let SyncedTabsMock = {
     getTabClients() {}
   };
+  let loginFailed = false;
+  let chromeWindowMock = {
+    gSyncUI: {
+      loginFailed() {
+        return loginFailed;
+      }
+    }
+  };
+  let getChromeWindowMock = sinon.stub();
+  getChromeWindowMock.returns(chromeWindowMock);
 
   sinon.stub(listStore, "getData");
 
@@ -148,7 +158,8 @@ add_task(function* testPanelStatus() {
     fxAccounts,
     deckStore,
     listComponent,
-    SyncedTabs: SyncedTabsMock
+    SyncedTabs: SyncedTabsMock,
+    getChromeWindowMock
   });
 
   let isAuthed = false;
@@ -158,10 +169,10 @@ add_task(function* testPanelStatus() {
 
   isAuthed = true;
 
-  SyncedTabsMock.loginFailed = true;
+  loginFailed = true;
   result = yield component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
-  SyncedTabsMock.loginFailed = false;
+  loginFailed = false;
 
   SyncedTabsMock.isConfiguredToSyncTabs = false;
   result = yield component.getPanelStatus();
@@ -200,12 +211,12 @@ add_task(function* testActions() {
     openUILink() {},
   };
   let chromeWindowMock = {
-    gSync: {
+    gSyncUI: {
       openPrefs() {}
     }
   };
   sinon.spy(windowMock, "openUILink");
-  sinon.spy(chromeWindowMock.gSync, "openPrefs");
+  sinon.spy(chromeWindowMock.gSyncUI, "openPrefs");
 
   let getChromeWindowMock = sinon.stub();
   getChromeWindowMock.returns(chromeWindowMock);
@@ -225,5 +236,5 @@ add_task(function* testActions() {
 
   component.openSyncPrefs();
   Assert.ok(getChromeWindowMock.calledWith(windowMock));
-  Assert.ok(chromeWindowMock.gSync.openPrefs.called);
+  Assert.ok(chromeWindowMock.gSyncUI.openPrefs.called);
 });

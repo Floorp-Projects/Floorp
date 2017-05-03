@@ -121,6 +121,9 @@ with Files("browser-feeds.js"):
 with Files("browser-fullZoom.js"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browsing")
 
+with Files("browser-fxaccounts.js"):
+    BUG_COMPONENT = ("Core", "FxAccounts")
+
 with Files("browser-gestureSupport.js"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
@@ -142,7 +145,7 @@ with Files("browser-safebrowsing.js"):
 with Files("*social*"):
     BUG_COMPONENT = ("Firefox", "SocialAPI")
 
-with Files("browser-sync.js"):
+with Files("browser-syncui.js"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
 with Files("browser-tabPreviews.xml"):

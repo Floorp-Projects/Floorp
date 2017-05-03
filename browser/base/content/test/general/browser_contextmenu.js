@@ -903,7 +903,7 @@ add_task(function* test_input_spell_false() {
 const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
 add_task(function* test_plaintext_sendpagetodevice() {
-  if (!gSync.sendTabToDeviceEnabled) {
+  if (!gFxAccounts.sendTabToDeviceEnabled) {
     return;
   }
   yield ensureSyncReady();
@@ -942,7 +942,7 @@ add_task(function* test_plaintext_sendpagetodevice() {
 });
 
 add_task(function* test_link_sendlinktodevice() {
-  if (!gSync.sendTabToDeviceEnabled) {
+  if (!gFxAccounts.sendTabToDeviceEnabled) {
     return;
   }
   yield ensureSyncReady();

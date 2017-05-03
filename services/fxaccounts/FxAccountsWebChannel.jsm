@@ -85,9 +85,7 @@ this.FxAccountsWebChannel = function(options) {
   this._webChannelId = options.channel_id;
 
   // options.helpers is only specified by tests.
-  XPCOMUtils.defineLazyGetter(this, "_helpers", () => {
-    return options.helpers || new FxAccountsWebChannelHelpers(options);
-  });
+  this._helpers = options.helpers || new FxAccountsWebChannelHelpers(options);
 
   this._setupChannel();
 };
