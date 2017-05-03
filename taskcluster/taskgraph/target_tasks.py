@@ -217,9 +217,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if not filter_for_project(task, parameters):
             return False
         platform = task.attributes.get('build_platform')
-        if platform in ('linux64-pgo', 'linux-pgo', 'win32-pgo', 'win64-pgo',
-                        'android-api-15-nightly', 'android-x86-nightly',
-                        'win32', 'win64'):
+        if platform in ('linux64-pgo', 'linux-pgo', 'android-api-15-nightly',
+                        'android-x86-nightly'):
             return False
         if platform in ('linux64', 'linux', 'macosx64'):
             if task.attributes['build_type'] == 'opt':
