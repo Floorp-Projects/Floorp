@@ -15,18 +15,6 @@
 % override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-aero.png            os=WINNT osversion=6.1
 % override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-aero@2x.png         os=WINNT osversion=6
 % override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-aero@2x.png         os=WINNT osversion=6.1
-% override chrome://pocket/skin/Toolbar@2x.png            chrome://pocket/skin/Toolbar-aero@2x.png           os=WINNT osversion=6
-% override chrome://pocket/skin/Toolbar@2x.png            chrome://pocket/skin/Toolbar-aero@2x.png           os=WINNT osversion=6.1
-% override chrome://pocket/skin/Toolbar@2x.png            chrome://pocket/skin/Toolbar-win8@2x.png           os=WINNT osversion=6.2
-% override chrome://pocket/skin/Toolbar@2x.png            chrome://pocket/skin/Toolbar-win8@2x.png           os=WINNT osversion=6.3
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-XP.png                os=WINNT osversion<6
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-aero.png              os=WINNT osversion=6
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-aero.png              os=WINNT osversion=6.1
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-win8.png              os=WINNT osversion=6.2
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-win8.png              os=WINNT osversion=6.3
-# osx overrides
-% override chrome://pocket/skin/Toolbar.png               chrome://pocket/skin/Toolbar-yosemite.png          os=Darwin osversion>=10.10
-% override chrome://pocket/skin/Toolbar@2x.png            chrome://pocket/skin/Toolbar-yosemite@2x.png       os=Darwin osversion>=10.10
 % override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-yosemite.png        os=Darwin osversion>=10.10
 % override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-yosemite@2x.png     os=Darwin osversion>=10.10
 

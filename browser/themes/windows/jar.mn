@@ -39,14 +39,6 @@ browser.jar:
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
-  skin/classic/browser/Toolbar.png
-  skin/classic/browser/Toolbar@2x.png
-  skin/classic/browser/Toolbar-win7.png
-  skin/classic/browser/Toolbar-win7@2x.png
-  skin/classic/browser/Toolbar-inverted.png
-  skin/classic/browser/Toolbar-inverted@2x.png
-  skin/classic/browser/Toolbar-win8.png
-  skin/classic/browser/Toolbar-win8@2x.png
   skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-history-dropmarker.png
@@ -174,13 +166,6 @@ browser.jar:
 % override chrome://browser/skin/tabbrowser/newtab.svg                chrome://browser/skin/tabbrowser/newtab-win7.svg              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab-inverted.svg       chrome://browser/skin/tabbrowser/newtab-inverted-win7.svg     os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.svg        chrome://browser/skin/tabbrowser/tab-arrow-left-win7.svg      os=WINNT osversion<=6.1
-
-% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win7@2x.png                         os=WINNT osversion=6.1
-% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win8@2x.png                         os=WINNT osversion=6.2
-% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win8@2x.png                         os=WINNT osversion=6.3
-% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win7.png                            os=WINNT osversion=6.1
-% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.2
-% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.3
 
 % override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3
 % override chrome://browser/skin/tabbrowser/tab-background-start@2x.png  chrome://browser/skin/tabbrowser/tab-background-start-preWin10@2x.png  os=WINNT osversion<=6.3

@@ -19,6 +19,7 @@ const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");

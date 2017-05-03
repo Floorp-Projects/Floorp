@@ -21,7 +21,9 @@ $ npm install -g yarn
 
 ## Quick Setup
 
-Navigate to the `netmonitor` folder with your terminal, then run the following commands:
+Navigate to the `mozilla-central/devtools/client/netmonitor` folder with your terminal.
+Note that this folder is available after `mozilla-central` was cloned in order to get
+a local copy of the repository. Then run the following commands:
 
 ```bash
 # Install packages

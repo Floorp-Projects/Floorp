@@ -14,13 +14,10 @@ DESCRIPTION
 
 USAGE
 
-  It is included in Firefox, but not enabled by default unless the
-  --marionette flag is passed or the marionette.enabled preference is
-  set to true.
+  Marionette can be activated by passing the -marionette flag.  To start
+  Firefox with the remote protocol turned on:
 
-  To start Firefox with the remote protocol turned on:
-
-  	% firefox --marionette
+  	% firefox -marionette
   	…
   	1491228343089	Marionette	INFO	Listening on port 2828
 

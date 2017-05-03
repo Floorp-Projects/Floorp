@@ -3141,7 +3141,7 @@ MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::InvokeSeek(const SeekTarget& aTarget)
 {
-  return InvokeAsync<SeekTarget&&>(
+  return InvokeAsync(
            OwnerThread(), this, __func__,
            &MediaDecoderStateMachine::Seek, aTarget);
 }

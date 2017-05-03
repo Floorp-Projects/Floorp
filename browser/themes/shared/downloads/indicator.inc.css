@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #downloads-indicator-progress-icon {
-  background: var(--downloads-indicator-image-attention) bottom no-repeat;
+  background: var(--downloads-indicator-image) bottom no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill-attention);
   background-size: 18px;
   margin-top: 18px;
   /* From javascript side we use animation delay from 0s to -100s to show
@@ -18,7 +20,6 @@
 }
 
 toolbar[brighttext] #downloads-indicator-progress-icon {
-  background-image: var(--downloads-indicator-image-attention-inverted);
   animation-name: indicatorArrowProgressDark;
 }
 

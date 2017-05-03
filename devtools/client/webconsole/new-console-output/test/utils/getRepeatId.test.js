@@ -9,8 +9,12 @@ const expect = require("expect");
 
 describe("getRepeatId:", () => {
   it("returns same repeatId for duplicate values", () => {
-    const message1 = stubPreparedMessages.get("console.log('foobar', 'test')");
-    const message2 = message1.set("repeat", 3);
+    const baseMessage = stubPreparedMessages.get("console.log('foobar', 'test')");
+
+    // Repeat ID must be the same even if the timestamp is different.
+    const message1 = baseMessage.set("timeStamp", 1);
+    const message2 = baseMessage.set("timeStamp", 2);
+
     expect(getRepeatId(message1)).toEqual(getRepeatId(message2));
   });
 
