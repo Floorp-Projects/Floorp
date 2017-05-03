@@ -4192,6 +4192,16 @@ StyleClipBasicShapeToCSSArray(const StyleShapeSource& aClipPath,
   return true;
 }
 
+static void
+SetFallbackValue(nsCSSValuePair* aPair, const nsStyleSVGPaint& aPaint)
+{
+  if (aPaint.GetFallbackType() == eStyleSVGFallbackType_Color) {
+    aPair->mYValue.SetColorValue(aPaint.GetFallbackColor());
+  } else {
+    aPair->mYValue.SetNoneValue();
+  }
+}
+
 bool
 StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
                                           nsStyleContext* aStyleContext,
@@ -4709,22 +4719,33 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             NS_WARNING("Null paint server");
             return false;
           }
-          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          pair->mXValue.SetURLValue(url);
-          pair->mYValue.SetColorValue(paint.GetFallbackColor());
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
-                                                      eUnit_CSSValuePair);
+          if (paint.GetFallbackType() != eStyleSVGFallbackType_NotSet) {
+            nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+            pair->mXValue.SetURLValue(url);
+            SetFallbackValue(pair, paint);
+            aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                        eUnit_CSSValuePair);
+          } else {
+            auto result = MakeUnique<nsCSSValue>();
+            result->SetURLValue(url);
+            aComputedValue.SetAndAdoptCSSValueValue(
+              result.release(), eUnit_URL);
+          }
           return true;
         }
         case eStyleSVGPaintType_ContextFill:
         case eStyleSVGPaintType_ContextStroke: {
-          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          pair->mXValue.SetIntValue(paint.Type() == eStyleSVGPaintType_ContextFill ?
-                                    NS_COLOR_CONTEXT_FILL : NS_COLOR_CONTEXT_STROKE,
-                                    eCSSUnit_Enumerated);
-          pair->mYValue.SetColorValue(paint.GetFallbackColor());
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
-                                                      eUnit_CSSValuePair);
+          int32_t value = paint.Type() == eStyleSVGPaintType_ContextFill ?
+                            NS_COLOR_CONTEXT_FILL : NS_COLOR_CONTEXT_STROKE;
+          if (paint.GetFallbackType() != eStyleSVGFallbackType_NotSet) {
+            nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+            pair->mXValue.SetIntValue(value, eCSSUnit_Enumerated);
+            SetFallbackValue(pair, paint);
+            aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                        eUnit_CSSValuePair);
+          } else {
+            aComputedValue.SetIntValue(value, eUnit_Enumerated);
+          }
           return true;
         }
         default:
