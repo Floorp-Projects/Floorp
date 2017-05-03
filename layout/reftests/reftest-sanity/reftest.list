@@ -91,8 +91,8 @@ needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android) random-if(transparentScrollbars) fails-if(stylo) == 647192-1.html 647192-1-ref.html
-skip-if(!browserIsRemote) fails-if(stylo) == 656041-1.html 656041-1-ref.html
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html
+skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
 
 # IPC Position-fixed frames/layers test
@@ -170,8 +170,8 @@ skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1
 fuzzy(112,800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
 
 # reftest-opaque-layer
-fails-if(stylo) == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
-fails-if(stylo) != reftest-opaque-layer-pass.html about:blank
+== reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-pass.html about:blank
 != about:blank reftest-opaque-layer-pass.html
 fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
@@ -184,13 +184,13 @@ fails != reftest-opaque-layer-fail.html about:blank
 fails-if(!stylo) != about:blank reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
-fails-if(stylo) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
-fails-if(stylo) != reftest-opaque-layer-wait-pass.html about:blank
+== reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-wait-pass.html about:blank
 fails fails-if(stylo) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
 fails-if(!stylo) fails-if(stylo) != reftest-opaque-layer-wait-fail.html about:blank
 
 # reftest-assigned-layer
-fails-if(stylo) != reftest-assigned-layer-pass.html about:blank
+!= reftest-assigned-layer-pass.html about:blank
 fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-1.html about:blank
 fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-2.html about:blank
 fails-if(!stylo) fails-if(stylo) != reftest-assigned-layer-fail-3.html about:blank

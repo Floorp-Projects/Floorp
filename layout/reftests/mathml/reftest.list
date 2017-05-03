@@ -85,11 +85,11 @@ fails-if(!stylo) == stretchy-mover-2a.html stretchy-mover-2-ref.html
 != stretchy-mover-2b.html stretchy-mover-2-ref.html
 == stretchy-mover-3.html stretchy-mover-3-ref.html
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
-fails-if(stylo) == stretchy-largeop-2.html stretchy-largeop-2-ref.html
+== stretchy-largeop-2.html stretchy-largeop-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
 fails-if(stylo) == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
-fails-if(stylo) == table-width-3.html table-width-3-ref.html
+== table-width-3.html table-width-3-ref.html
 == table-width-4.html table-width-4-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
@@ -188,7 +188,7 @@ fails-if(stylo) == mtable-columnalign-multi-mtable-dynamic.html mtable-columnali
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
-fails-if(stylo) == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
+== mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
 == mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html
 == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html

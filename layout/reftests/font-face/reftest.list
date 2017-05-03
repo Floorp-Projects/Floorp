@@ -98,7 +98,7 @@ skip-if(stylo) HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 == local-styled-1.html local-styled-1-ref.html
 
 HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
-fails-if(stylo) HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
+HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
 
 # Leak test
 skip-if(stylo) HTTP(..) load 486974-1.html

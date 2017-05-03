@@ -1,5 +1,5 @@
-fails-if(stylo) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
-fails-if(stylo) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
+== complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
+== complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
@@ -94,7 +94,7 @@ fails-if(stylo) == underline-block-propagation-2-standards.html underline-block-
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
-fails-if(stylo) == 641444-1.html 641444-1-ref.html
+== 641444-1.html 641444-1-ref.html
 == decoration-css21.html decoration-css21-ref.html
 fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
 == decoration-color-override-standards.html decoration-color-override-standards-ref.html
