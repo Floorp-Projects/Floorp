@@ -1409,8 +1409,6 @@ web-platform-tests-reftests:
     instance-size: xlarge
     e10s:
         by-test-platform:
-            # Bug 1304438
-            windows.*: false
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
