@@ -29,7 +29,6 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/siteIdentity/browser.ini',
     'content/test/social/browser.ini',
     'content/test/static/browser.ini',
-    'content/test/sync/browser.ini',
     'content/test/tabcrashed/browser.ini',
     'content/test/tabPrompts/browser.ini',
     'content/test/tabs/browser.ini',

@@ -1507,7 +1507,8 @@ var gBrowserInit = {
     PointerLock.init();
 
     // initialize the sync UI
-    gSync.init();
+    gSyncUI.init();
+    gFxAccounts.init();
 
     if (AppConstants.MOZ_DATA_REPORTING)
       gDataNotificationInfoBar.init();
@@ -1654,7 +1655,7 @@ var gBrowserInit = {
 
     FullScreen.uninit();
 
-    gSync.uninit();
+    gFxAccounts.uninit();
 
     gExtensionsNotifications.uninit();
 
@@ -1817,7 +1818,7 @@ if (AppConstants.platform == "macosx") {
     gPrivateBrowsingUI.init();
 
     // initialize the sync UI
-    gSync.init();
+    gSyncUI.init();
 
     if (AppConstants.E10S_TESTING_ONLY) {
       gRemoteTabsUI.init();
@@ -6803,7 +6804,7 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
 }
 
 function BrowserOpenSyncTabs() {
-  gSync.openSyncedTabsPanel();
+  gSyncUI.openSyncedTabsPanel();
 }
 
 function ReportFalseDeceptiveSite() {
@@ -8177,7 +8178,7 @@ var TabContextMenu = {
     this.contextTab.addEventListener("TabAttrModified", this);
     aPopupMenu.addEventListener("popuphiding", this);
 
-    gSync.updateTabContextMenu(aPopupMenu, this.contextTab);
+    gFxAccounts.updateTabContextMenu(aPopupMenu, this.contextTab);
   },
   handleEvent(aEvent) {
     switch (aEvent.type) {

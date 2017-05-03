@@ -31,21 +31,19 @@
                        hidden="true"/>
         <hbox id="PanelUI-footer-fxa">
           <hbox id="PanelUI-fxa-status"
-                label="&fxaSignedIn.tooltip;"
                 defaultlabel="&fxaSignIn.label;"
                 signedinTooltiptext="&fxaSignedIn.tooltip;"
                 tooltiptext="&fxaSignedIn.tooltip;"
                 errorlabel="&fxaSignInError.label;"
                 unverifiedlabel="&fxaUnverified.label;"
-                onclick="if (event.which == 1) gSync.onMenuPanelCommand();">
+                onclick="if (event.which == 1) gFxAccounts.onMenuPanelCommand();">
             <image id="PanelUI-fxa-avatar"/>
             <toolbarbutton id="PanelUI-fxa-label"
-                           label="&fxaSignIn.label;"
                            fxabrandname="&syncBrand.fxAccount.label;"/>
           </hbox>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-fxa-icon"
-                         oncommand="gSync.doSync();"
+                         oncommand="gSyncUI.doSync();"
                          closemenu="none">
             <observes element="sync-status" attribute="syncstatus"/>
             <observes element="sync-status" attribute="tooltiptext"/>
@@ -127,11 +125,11 @@
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
                            class="subviewbutton"
                            label="&appMenuRemoteTabs.managedevices.label;"
-                           oncommand="gSync.openDevicesManagementPage('syncedtabs-menupanel');"/>
+                           oncommand="gFxAccounts.openDevicesManagementPage('syncedtabs-menupanel');"/>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
                            observes="sync-status"
                            class="subviewbutton"
-                           oncommand="gSync.doSync();"
+                           oncommand="gSyncUI.doSync();"
                            closemenu="none"/>
             <menuseparator id="PanelUI-remotetabs-separator"/>
           </vbox>
@@ -156,7 +154,7 @@
                 <hbox pack="center">
                   <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                                  label="&appMenuRemoteTabs.openprefs.label;"
-                                 oncommand="gSync.openPrefs('synced-tabs');"/>
+                                 oncommand="gSyncUI.openPrefs('synced-tabs');"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -190,7 +188,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                            label="&appMenuRemoteTabs.signin.label;"
-                           oncommand="gSync.openPrefs('synced-tabs');"/>
+                           oncommand="gSyncUI.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync needs re-authentication. This uses the exact same messaging
                as "Sync is not configured" but remains a separate box so we get
@@ -204,7 +202,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                            label="&appMenuRemoteTabs.signin.label;"
-                           oncommand="gSync.openPrefs('synced-tabs');"/>
+                           oncommand="gSyncUI.openPrefs('synced-tabs');"/>
           </vbox>
         </hbox>
       </vbox>
