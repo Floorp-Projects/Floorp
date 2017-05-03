@@ -236,17 +236,33 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 //-----------------------------------------------------------------------------
 
 void
+HttpChannelParent::AsyncOpenFailed(nsresult aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_FAILED(aRv));
+
+  // Break the reference cycle among HttpChannelParent,
+  // HttpChannelParentListener, and nsHttpChannel to avoid memory leakage.
+  mChannel = nullptr;
+  mParentListener = nullptr;
+
+  if (!mIPCClosed) {
+    Unused << SendFailedAsyncOpen(aRv);
+  }
+}
+
+void
 HttpChannelParent::InvokeAsyncOpen(nsresult rv)
 {
   if (NS_FAILED(rv)) {
-    Unused << SendFailedAsyncOpen(rv);
+    AsyncOpenFailed(rv);
     return;
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
   rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
-    Unused << SendFailedAsyncOpen(rv);
+    AsyncOpenFailed(rv);
     return;
   }
   if (loadInfo && loadInfo->GetEnforceSecurity()) {
@@ -256,7 +272,7 @@ HttpChannelParent::InvokeAsyncOpen(nsresult rv)
     rv = mChannel->AsyncOpen(mParentListener, nullptr);
   }
   if (NS_FAILED(rv)) {
-    Unused << SendFailedAsyncOpen(rv);
+    AsyncOpenFailed(rv);
   }
 }
 
@@ -387,61 +403,60 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  mChannel = do_QueryObject(channel, &rv);
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel, &rv);
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }
 
   // Set the channelId allocated in child to the parent instance
-  mChannel->SetChannelId(aChannelId);
-  mChannel->SetTopLevelContentWindowId(aContentWindowId);
-  mChannel->SetTopLevelOuterContentWindowId(aTopLevelOuterContentWindowId);
+  httpChannel->SetChannelId(aChannelId);
+  httpChannel->SetTopLevelContentWindowId(aContentWindowId);
+  httpChannel->SetTopLevelOuterContentWindowId(aTopLevelOuterContentWindowId);
 
-  mChannel->SetWarningReporter(this);
-  mChannel->SetTimingEnabled(true);
+  httpChannel->SetWarningReporter(this);
+  httpChannel->SetTimingEnabled(true);
   if (mPBOverride != kPBOverride_Unset) {
-    mChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
+    httpChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
   }
 
   if (doResumeAt)
-    mChannel->ResumeAt(startPos, entityID);
+    httpChannel->ResumeAt(startPos, entityID);
 
   if (originalUri)
-    mChannel->SetOriginalURI(originalUri);
+    httpChannel->SetOriginalURI(originalUri);
   if (docUri)
-    mChannel->SetDocumentURI(docUri);
+    httpChannel->SetDocumentURI(docUri);
   if (referrerUri) {
-    rv = mChannel->SetReferrerWithPolicyInternal(referrerUri, aReferrerPolicy);
+    rv = httpChannel->SetReferrerWithPolicyInternal(referrerUri, aReferrerPolicy);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
   if (apiRedirectToUri)
-    mChannel->RedirectTo(apiRedirectToUri);
+    httpChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri) {
-    rv = mChannel->SetTopWindowURI(topWindowUri);
+    rv = httpChannel->SetTopWindowURI(topWindowUri);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
   if (aLoadFlags != nsIRequest::LOAD_NORMAL)
-    mChannel->SetLoadFlags(aLoadFlags);
+    httpChannel->SetLoadFlags(aLoadFlags);
 
   for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
     if (requestHeaders[i].mEmpty) {
-      mChannel->SetEmptyRequestHeader(requestHeaders[i].mHeader);
+      httpChannel->SetEmptyRequestHeader(requestHeaders[i].mHeader);
     } else {
-      mChannel->SetRequestHeader(requestHeaders[i].mHeader,
+      httpChannel->SetRequestHeader(requestHeaders[i].mHeader,
                                  requestHeaders[i].mValue,
                                  requestHeaders[i].mMerge);
     }
   }
 
-  mParentListener = new HttpChannelParentListener(this);
+  RefPtr<HttpChannelParentListener> parentListener
+    = new HttpChannelParentListener(this);
 
-  mChannel->SetNotificationCallbacks(mParentListener);
-
-  mChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
+  httpChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
 
   if (aCorsPreflightArgs.type() == OptionalCorsPreflightArgs::TCorsPreflightArgs) {
     const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
-    mChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+    httpChannel->SetCorsPreflightParameters(args.unsafeHeaders());
   }
 
   bool delayAsyncOpen = false;
@@ -497,29 +512,29 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
         return SendFailedAsyncOpen(rv);
       }
 
-      mChannel->InternalSetUploadStream(newUploadStream);
+      httpChannel->InternalSetUploadStream(newUploadStream);
     } else {
-      mChannel->InternalSetUploadStream(stream);
+      httpChannel->InternalSetUploadStream(stream);
     }
-    mChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
+    httpChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
   if (aSynthesizedResponseHead.type() == OptionalHttpResponseHead::TnsHttpResponseHead) {
-    mParentListener->SetupInterception(aSynthesizedResponseHead.get_nsHttpResponseHead());
+    parentListener->SetupInterception(aSynthesizedResponseHead.get_nsHttpResponseHead());
     mWillSynthesizeResponse = true;
-    mChannel->SetCouldBeSynthesized();
+    httpChannel->SetCouldBeSynthesized();
 
     if (!aSecurityInfoSerialization.IsEmpty()) {
       nsCOMPtr<nsISupports> secInfo;
       NS_DeserializeObject(aSecurityInfoSerialization, getter_AddRefs(secInfo));
-      rv = mChannel->OverrideSecurityInfo(secInfo);
+      rv = httpChannel->OverrideSecurityInfo(secInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   } else {
     nsLoadFlags newLoadFlags;
-    mChannel->GetLoadFlags(&newLoadFlags);
+    httpChannel->GetLoadFlags(&newLoadFlags);
     newLoadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-    mChannel->SetLoadFlags(newLoadFlags);
+    httpChannel->SetLoadFlags(newLoadFlags);
   }
 
   nsCOMPtr<nsISupportsPRUint32> cacheKey =
@@ -533,37 +548,37 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  mChannel->SetCacheKey(cacheKey);
-  mChannel->PreferAlternativeDataType(aPreferredAlternativeType);
+  httpChannel->SetCacheKey(cacheKey);
+  httpChannel->PreferAlternativeDataType(aPreferredAlternativeType);
 
-  mChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
+  httpChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
 
-  mChannel->SetContentType(aContentTypeHint);
+  httpChannel->SetContentType(aContentTypeHint);
 
   if (priority != nsISupportsPriority::PRIORITY_NORMAL) {
-    mChannel->SetPriority(priority);
+    httpChannel->SetPriority(priority);
   }
   if (classOfService) {
-    mChannel->SetClassFlags(classOfService);
+    httpChannel->SetClassFlags(classOfService);
   }
-  mChannel->SetRedirectionLimit(redirectionLimit);
-  mChannel->SetAllowSTS(allowSTS);
-  mChannel->SetThirdPartyFlags(thirdPartyFlags);
-  mChannel->SetAllowSpdy(allowSpdy);
-  mChannel->SetAllowAltSvc(allowAltSvc);
-  mChannel->SetBeConservative(beConservative);
-  mChannel->SetInitialRwin(aInitialRwin);
-  mChannel->SetBlockAuthPrompt(aBlockAuthPrompt);
+  httpChannel->SetRedirectionLimit(redirectionLimit);
+  httpChannel->SetAllowSTS(allowSTS);
+  httpChannel->SetThirdPartyFlags(thirdPartyFlags);
+  httpChannel->SetAllowSpdy(allowSpdy);
+  httpChannel->SetAllowAltSvc(allowAltSvc);
+  httpChannel->SetBeConservative(beConservative);
+  httpChannel->SetInitialRwin(aInitialRwin);
+  httpChannel->SetBlockAuthPrompt(aBlockAuthPrompt);
 
-  mChannel->SetLaunchServiceWorkerStart(aLaunchServiceWorkerStart);
-  mChannel->SetLaunchServiceWorkerEnd(aLaunchServiceWorkerEnd);
-  mChannel->SetDispatchFetchEventStart(aDispatchFetchEventStart);
-  mChannel->SetDispatchFetchEventEnd(aDispatchFetchEventEnd);
-  mChannel->SetHandleFetchEventStart(aHandleFetchEventStart);
-  mChannel->SetHandleFetchEventEnd(aHandleFetchEventEnd);
+  httpChannel->SetLaunchServiceWorkerStart(aLaunchServiceWorkerStart);
+  httpChannel->SetLaunchServiceWorkerEnd(aLaunchServiceWorkerEnd);
+  httpChannel->SetDispatchFetchEventStart(aDispatchFetchEventStart);
+  httpChannel->SetDispatchFetchEventEnd(aDispatchFetchEventEnd);
+  httpChannel->SetHandleFetchEventStart(aHandleFetchEventStart);
+  httpChannel->SetHandleFetchEventEnd(aHandleFetchEventEnd);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
-    do_QueryObject(mChannel);
+    do_QueryObject(httpChannel);
   nsCOMPtr<nsIApplicationCacheService> appCacheService =
     do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
 
@@ -585,7 +600,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
     if (setChooseApplicationCache) {
       OriginAttributes attrs;
-      NS_GetOriginAttributes(mChannel, attrs);
+      NS_GetOriginAttributes(httpChannel, attrs);
 
       nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
@@ -599,7 +614,15 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     }
   }
 
-  mChannel->SetRequestContextID(aRequestContextID);
+  httpChannel->SetRequestContextID(aRequestContextID);
+
+  // Store the strong reference of channel and parent listener object until
+  // all the initialization procedure is complete without failure, to remove
+  // cycle reference in fail case and to avoid memory leakage.
+  mChannel = httpChannel.forget();
+  mParentListener = parentListener.forget();
+  mChannel->SetNotificationCallbacks(mParentListener);
+
 
   mSuspendAfterSynthesizeResponse = aSuspendAfterSynthesizeResponse;
 
