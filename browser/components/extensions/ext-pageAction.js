@@ -8,6 +8,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
                                   "resource:///modules/ExtensionPopups.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 
 var {
@@ -19,6 +21,8 @@ Cu.import("resource://gre/modules/ExtensionParent.jsm");
 var {
   IconDetails,
 } = ExtensionParent;
+
+const popupOpenTimingHistogram = "WEBEXT_PAGEACTION_POPUP_OPEN_MS";
 
 // WeakMap[Extension -> PageAction]
 let pageActionMap = new WeakMap();
@@ -229,6 +233,7 @@ this.pageAction = class extends ExtensionAPI {
   // that URL. Otherwise, a "click" event is emitted, and dispatched to
   // the any click listeners in the add-on.
   handleClick(window) {
+    TelemetryStopwatch.start(popupOpenTimingHistogram, this);
     let tab = window.gBrowser.selectedTab;
     let popupURL = this.tabContext.get(tab).popup;
 
@@ -241,7 +246,9 @@ this.pageAction = class extends ExtensionAPI {
     if (popupURL) {
       new PanelPopup(this.extension, this.getButton(window), popupURL,
                      this.browserStyle);
+      TelemetryStopwatch.finish(popupOpenTimingHistogram, this);
     } else {
+      TelemetryStopwatch.cancel(popupOpenTimingHistogram, this);
       this.emit("click", tab);
     }
   }
