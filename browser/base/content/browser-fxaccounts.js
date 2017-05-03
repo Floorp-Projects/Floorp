@@ -5,6 +5,7 @@
 var gFxAccounts = {
 
   _initialized: false,
+  _inCustomizationMode: false,
   _cachedProfile: null,
 
   get weave() {
@@ -114,6 +115,9 @@ var gFxAccounts = {
       Services.obs.addObserver(this, topic);
     }
 
+    gNavToolbox.addEventListener("customizationstarting", this);
+    gNavToolbox.addEventListener("customizationending", this);
+
     EnsureFxAccountsWebChannel();
     this._initialized = true;
 
@@ -143,9 +147,27 @@ var gFxAccounts = {
     }
   },
 
+  handleEvent(event) {
+    this._inCustomizationMode = event.type == "customizationstarting";
+    this.updateUI();
+  },
+
   // Note that updateUI() returns a Promise that's only used by tests.
   updateUI() {
     this.panelUIFooter.hidden = false;
+
+    // Make sure the button is disabled in customization mode.
+    if (this._inCustomizationMode) {
+      this.panelUIStatus.setAttribute("disabled", "true");
+      this.panelUILabel.setAttribute("disabled", "true");
+      this.panelUIAvatar.setAttribute("disabled", "true");
+      this.panelUIIcon.setAttribute("disabled", "true");
+    } else {
+      this.panelUIStatus.removeAttribute("disabled");
+      this.panelUILabel.removeAttribute("disabled");
+      this.panelUIAvatar.removeAttribute("disabled");
+      this.panelUIIcon.removeAttribute("disabled");
+    }
 
     let defaultLabel = this.panelUIStatus.getAttribute("defaultlabel");
     let errorLabel = this.panelUIStatus.getAttribute("errorlabel");
