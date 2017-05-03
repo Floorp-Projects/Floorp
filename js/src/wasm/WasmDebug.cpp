@@ -75,22 +75,15 @@ GeneratedSourceMap::searchLineByOffset(JSContext* cx, uint32_t offset, size_t* e
     return true;
 }
 
-size_t
-GeneratedSourceMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    size_t size = exprlocs_.sizeOfExcludingThis(mallocSizeOf);
-    if (sortedByOffsetExprLocIndices_)
-        size += sortedByOffsetExprLocIndices_->sizeOfIncludingThis(mallocSizeOf);
-    return size;
-}
-
 DebugState::DebugState(SharedCode code,
+                       const Metadata& metadata,
                        const ShareableBytes* maybeBytecode)
   : code_(Move(code)),
+    metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
     enterAndLeaveFrameTrapsCounter_(0)
 {
-    MOZ_ASSERT_IF(debugEnabled(), maybeBytecode);
+    MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
 }
 
 const char enabledMessage[] =
@@ -164,7 +157,7 @@ struct LineComparator
 bool
 DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 {
-    if (!debugEnabled())
+    if (!metadata_->debugEnabled)
         return true;
 
     if (!ensureSourceMap(cx))
@@ -197,7 +190,7 @@ bool
 DebugState::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column)
 {
     *found = false;
-    if (!debugEnabled())
+    if (!metadata_->debugEnabled)
         return true;
 
     if (!ensureSourceMap(cx))
@@ -221,7 +214,7 @@ bool
 DebugState::totalSourceLines(JSContext* cx, uint32_t* count)
 {
     *count = 0;
-    if (!debugEnabled())
+    if (!metadata_->debugEnabled)
         return true;
 
     if (!ensureSourceMap(cx))
@@ -241,8 +234,8 @@ DebugState::stepModeEnabled(uint32_t funcIndex) const
 bool
 DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CodeRange& codeRange = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
     MOZ_ASSERT(codeRange.isFunction());
 
     if (!stepModeCounters_.initialized() && !stepModeCounters_.init()) {
@@ -265,7 +258,7 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::incrementStepModeCount");
 
-    for (const CallSite& callSite : callSites()) {
+    for (const CallSite& callSite : metadata_->callSites) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
@@ -278,8 +271,8 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 bool
 DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CodeRange& codeRange = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
     MOZ_ASSERT(codeRange.isFunction());
 
     MOZ_ASSERT(stepModeCounters_.initialized() && !stepModeCounters_.empty());
@@ -294,7 +287,7 @@ DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::decrementStepModeCount");
 
-    for (const CallSite& callSite : callSites()) {
+    for (const CallSite& callSite : metadata_->callSites) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
@@ -319,16 +312,16 @@ SlowCallSiteSearchByOffset(const Metadata& metadata, uint32_t offset)
 bool
 DebugState::hasBreakpointTrapAtOffset(uint32_t offset)
 {
-    if (!debugEnabled())
+    if (!metadata_->debugEnabled)
         return false;
-    return SlowCallSiteSearchByOffset(metadata(), offset);
+    return SlowCallSiteSearchByOffset(*metadata_, offset);
 }
 
 void
 DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
 {
-    MOZ_ASSERT(debugEnabled());
-    const CallSite* callSite = SlowCallSiteSearchByOffset(metadata(), offset);
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CallSite* callSite = SlowCallSiteSearchByOffset(*metadata_, offset);
     if (!callSite)
         return;
     size_t debugTrapOffset = callSite->returnAddressOffset();
@@ -420,7 +413,7 @@ DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
 {
     MOZ_ASSERT(offset);
     uint8_t* trap = code_->segment().base() + offset;
-    const Uint32Vector& farJumpOffsets = metadata().debugTrapFarJumpOffsets;
+    const Uint32Vector& farJumpOffsets = metadata_->debugTrapFarJumpOffsets;
     if (enabled) {
         MOZ_ASSERT(farJumpOffsets.length() > 0);
         size_t i = 0;
@@ -439,7 +432,7 @@ DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
 void
 DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
 {
-    MOZ_ASSERT(debugEnabled());
+    MOZ_ASSERT(metadata_->debugEnabled);
     MOZ_ASSERT_IF(!enabled, enterAndLeaveFrameTrapsCounter_ > 0);
 
     bool wasEnabled = enterAndLeaveFrameTrapsCounter_ > 0;
@@ -454,7 +447,7 @@ DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
     AutoWritableJitCode awjc(cx->runtime(), code_->segment().base(), code_->segment().length());
     AutoFlushICache afc("Code::adjustEnterAndLeaveFrameTrapsState");
     AutoFlushICache::setRange(uintptr_t(code_->segment().base()), code_->segment().length());
-    for (const CallSite& callSite : callSites()) {
+    for (const CallSite& callSite : metadata_->callSites) {
         if (callSite.kind() != CallSite::EnterFrame && callSite.kind() != CallSite::LeaveFrame)
             continue;
         toggleDebugTrap(callSite.returnAddressOffset(), stillEnabled);
@@ -464,28 +457,28 @@ DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
 bool
 DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength)
 {
-    MOZ_ASSERT(debugEnabled());
+    MOZ_ASSERT(metadata_->debugEnabled);
 
-    const ValTypeVector& args = metadata().debugFuncArgTypes[funcIndex];
+    const ValTypeVector& args = metadata_->debugFuncArgTypes[funcIndex];
     *argsLength = args.length();
     if (!locals->appendAll(args))
         return false;
 
     // Decode local var types from wasm binary function body.
-    const CodeRange& range = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    const CodeRange& range = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
     // In wasm, the Code points to the function start via funcLineOrBytecode.
-    MOZ_ASSERT(!metadata().isAsmJS() && maybeBytecode_);
+    MOZ_ASSERT(!metadata_->isAsmJS() && maybeBytecode_);
     size_t offsetInModule = range.funcLineOrBytecode();
     Decoder d(maybeBytecode_->begin() + offsetInModule,  maybeBytecode_->end(),
               offsetInModule, /* error = */ nullptr);
-    return DecodeLocalEntries(d, metadata().kind, locals);
+    return DecodeLocalEntries(d, metadata_->kind, locals);
 }
 
 ExprType
 DebugState::debugGetResultType(uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
-    return metadata().debugFuncReturnTypes[funcIndex];
+    MOZ_ASSERT(metadata_->debugEnabled);
+    return metadata_->debugFuncReturnTypes[funcIndex];
 }
 
 JSString*
@@ -498,7 +491,7 @@ DebugState::debugDisplayURL(JSContext* cx) const
     js::StringBuffer result(cx);
     if (!result.append("wasm:"))
         return nullptr;
-    if (const char* filename = metadata().filename.get()) {
+    if (const char* filename = metadata_->filename.get()) {
         js::StringBuffer filenamePrefix(cx);
         // EncodeURI returns false due to invalid chars or OOM -- fail only
         // during OOM.
@@ -511,7 +504,7 @@ DebugState::debugDisplayURL(JSContext* cx) const
         }
     }
 
-    const ModuleHash& hash = metadata().hash;
+    const ModuleHash& hash = metadata_->hash;
     for (size_t i = 0; i < sizeof(ModuleHash); i++) {
         char digit1 = hash[i] / 16, digit2 = hash[i] % 16;
         if (!result.append((char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10)))
@@ -520,19 +513,5 @@ DebugState::debugDisplayURL(JSContext* cx) const
             return nullptr;
     }
     return result.finishString();
-}
 
-void
-DebugState::addSizeOfMisc(MallocSizeOf mallocSizeOf,
-                          Metadata::SeenSet* seenMetadata,
-                          ShareableBytes::SeenSet* seenBytes,
-                          Code::SeenSet* seenCode,
-                          size_t* code,
-                          size_t* data) const
-{
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
-    if (maybeSourceMap_)
-        *data += maybeSourceMap_->sizeOfExcludingThis(mallocSizeOf);
-    if (maybeBytecode_)
-        *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }

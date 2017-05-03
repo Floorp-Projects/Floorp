@@ -34,6 +34,7 @@
   _(GeckoProfilerStrings,        500) \
   _(ProtectedRegionTree,         500) \
   _(WasmSigIdSet,                500) \
+  _(WasmCodeProfilingLabels,     500) \
   _(ShellOffThreadState,         500) \
   _(SimulatorCacheLock,          500) \
   _(Arm64SimulatorLock,          500) \
@@ -44,9 +45,6 @@
   _(DateTimeInfoMutex,           500) \
   _(IcuTimeZoneStateMutex,       500) \
   _(ProcessExecutableRegion,     500) \
-                                      \
-  /* WasmCodeProfilingLabels > PromiseTaskPtrVector */ \
-  _(WasmCodeProfilingLabels,     550) \
                                       \
   _(TraceLoggerGraphState,       600) \
   _(VTuneLock,                   600)

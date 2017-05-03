@@ -53,7 +53,6 @@ typedef RefPtr<const ShareableBytes> SharedBytes;
 // A wasm CodeSegment owns the allocated executable code for a wasm module.
 
 class CodeSegment;
-typedef UniquePtr<CodeSegment> UniqueCodeSegment;
 typedef UniquePtr<const CodeSegment> UniqueConstCodeSegment;
 
 class CodeSegment
@@ -71,40 +70,32 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
-    // This assumes ownership of the codeBytes, and deletes them in the event of error.
-    bool initialize(uint8_t* codeBase, uint32_t codeLength, const ShareableBytes& bytecode,
-                    const LinkData& linkData, const Metadata& metadata);
+    CodeSegment(uint8_t* bytes, uint32_t functionLength, uint32_t length, uint8_t* interruptCode,
+                uint8_t* outOfBoundsCode, uint8_t* unalignedAccessCode)
+      : bytes_(bytes),
+        functionLength_(functionLength),
+        length_(length),
+        interruptCode_(interruptCode),
+        outOfBoundsCode_(outOfBoundsCode),
+        unalignedAccessCode_(unalignedAccessCode)
+    {
+    }
 
-    // codeBytes must be executable memory.
-    // This assumes ownership of the codeBytes, and deletes them in the event of error.
-    static UniqueConstCodeSegment create(uint8_t* codeBytes,
-                                         uint32_t codeLength,
-                                         const ShareableBytes& bytecode,
-                                         const LinkData& linkData,
-                                         const Metadata& metadata);
-  public:
+  protected:
+    CodeSegment() { PodZero(this); }
+    template <class> friend struct js::MallocProvider;
+
     CodeSegment(const CodeSegment&) = delete;
+    CodeSegment(CodeSegment&&) = delete;
     void operator=(const CodeSegment&) = delete;
+    void operator=(CodeSegment&&) = delete;
 
-    CodeSegment()
-      : bytes_(nullptr),
-        functionLength_(0),
-        length_(0),
-        interruptCode_(nullptr),
-        outOfBoundsCode_(nullptr),
-        unalignedAccessCode_(nullptr)
-    {}
-
-    static UniqueConstCodeSegment create(jit::MacroAssembler& masm,
-                                         const ShareableBytes& bytecode,
+  public:
+    static UniqueConstCodeSegment create(JSContext* cx,
+                                         const Bytes& codeBytes,
+                                         const SharedBytes& bytecode,
                                          const LinkData& linkData,
                                          const Metadata& metadata);
-
-    static UniqueConstCodeSegment create(const Bytes& codeBytes,
-                                         const ShareableBytes& bytecode,
-                                         const LinkData& linkData,
-                                         const Metadata& metadata);
-
     ~CodeSegment();
 
     uint8_t* base() const { return bytes_; }
@@ -126,15 +117,6 @@ class CodeSegment
     bool containsCodePC(const void* pc) const {
         return pc >= base() && pc < (base() + length_);
     }
-
-    UniqueConstBytes unlinkedBytesForDebugging(const LinkData& linkData) const;
-
-    size_t serializedSize() const;
-    uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
-    const uint8_t* deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
-                               const LinkData& linkData, const Metadata& metadata);
-
-    void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data) const;
 };
 
 // A FuncExport represents a single function definition inside a wasm Module
@@ -390,14 +372,12 @@ typedef RefPtr<const Metadata> SharedMetadata;
 
 class Code : public ShareableBase<Code>
 {
-    UniqueConstCodeSegment              segment_;
-    SharedMetadata                      metadata_;
-    SharedBytes                         maybeBytecode_;
-    ExclusiveData<CacheableCharsVector> profilingLabels_;
+    const UniqueConstCodeSegment              segment_;
+    const SharedMetadata                      metadata_;
+    const SharedBytes                         maybeBytecode_;
+    const ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
-    Code();
-
     Code(UniqueConstCodeSegment segment,
          const Metadata& metadata,
          const ShareableBytes* maybeBytecode);
@@ -425,25 +405,16 @@ class Code : public ShareableBase<Code>
 
     // about:memory reporting:
 
-    void addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
-                                Metadata::SeenSet* seenMetadata,
-                                ShareableBytes::SeenSet* seenBytes,
-                                Code::SeenSet* seenCode,
-                                size_t* code,
-                                size_t* data) const;
+    void addSizeOfMisc(MallocSizeOf mallocSizeOf,
+                       Metadata::SeenSet* seenMetadata,
+                       ShareableBytes::SeenSet* seenBytes,
+                       size_t* code,
+                       size_t* data) const;
 
-    // A Code object is serialized as the length and bytes of the machine code
-    // after statically unlinking it; the Code is then later recreated from the
-    // machine code and other parts.
-
-    size_t serializedSize() const;
-    uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
-    const uint8_t* deserialize(const uint8_t* cursor, const SharedBytes& bytecode,
-                               const LinkData& linkData, Metadata* maybeMetadata);
+    WASM_DECLARE_SERIALIZABLE(Code);
 };
 
 typedef RefPtr<const Code> SharedCode;
-typedef RefPtr<Code> MutableCode;
 
 } // namespace wasm
 } // namespace js
