@@ -49,7 +49,10 @@ public:
 
   already_AddRefed<gfx::DrawTarget> GetDrawTarget()
   {
-    RefPtr<gfx::DrawTarget> target = mTexture->BorrowDrawTarget();
+    RefPtr<gfx::DrawTarget> target;
+    if (mTexture) {
+      target = mTexture->BorrowDrawTarget();
+    }
     return target.forget();
   }
 
