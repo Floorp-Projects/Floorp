@@ -4972,6 +4972,7 @@ MAKE_GC_SWEEP_TASK(SweepRegExpsTask);
 MAKE_GC_SWEEP_TASK(SweepMiscTask);
 MAKE_GC_SWEEP_TASK(SweepCompressionTasksTask);
 MAKE_GC_SWEEP_TASK(SweepWeakMapsTask);
+MAKE_GC_SWEEP_TASK(SweepUniqueIdsTask);
 #undef MAKE_GC_SWEEP_TASK
 
 /* virtual */ void
@@ -5020,7 +5021,6 @@ SweepMiscTask::run()
 {
     for (GCCompartmentGroupIter c(runtime()); !c.done(); c.next()) {
         c->sweepGlobalObject();
-        c->sweepDebugEnvironments();
         c->sweepTemplateObjects();
         c->sweepSavedStacks();
         c->sweepTemplateLiteralMap();
@@ -5074,6 +5074,14 @@ SweepWeakMapsTask::run()
     }
 }
 
+/* virtual */ void
+SweepUniqueIdsTask::run()
+{
+    FreeOp fop(nullptr);
+    for (GCSweepGroupIter zone(runtime()); !zone.done(); zone.next())
+        zone->sweepUniqueIds(&fop);
+}
+
 void
 GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
@@ -5089,6 +5097,33 @@ GCRuntime::joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperTh
 {
     gcstats::AutoPhase ap(stats(), task, phase);
     task.joinWithLockHeld(locked);
+}
+
+void
+GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
+{
+    // Detach unreachable debuggers and global objects from each other.
+    // This can modify weakmaps and so must happen before weakmap sweeping.
+    Debugger::sweepAll(fop);
+
+    gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
+
+    // Sweep debug environment information. This performs lookups in the Zone's
+    // unique IDs table and so must not happen in parallel with sweeping that
+    // table.
+    {
+        gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_MISC);
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+            c->sweepDebugEnvironments();
+    }
+
+    // Sweep breakpoints. This is done here to be with the other debug sweeping,
+    // although note that it can cause JIT code to be patched.
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->sweepBreakpoints(fop);
+    }
 }
 
 using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
@@ -5166,6 +5201,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
     SweepMiscTask sweepMiscTask(rt);
     SweepCompressionTasksTask sweepCompressionTasksTask(rt);
     SweepWeakMapsTask sweepWeakMapsTask(rt);
+    SweepUniqueIdsTask sweepUniqueIdsTask(rt);
     WeakCacheTaskVector sweepCacheTasks = PrepareWeakCacheTasks(rt);
 
     {
@@ -5185,9 +5221,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
         callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
     }
 
-    // Detach unreachable debuggers and global objects from each other.
-    // This can modify weakmaps and so must happen before weakmap sweeping.
-    Debugger::sweepAll(&fop);
+    sweepDebuggerOnMainThread(&fop);
 
     if (sweepingAtoms) {
         AutoLockHelperThreadState helperLock;
@@ -5206,6 +5240,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
             startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
             startTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
             startTask(sweepWeakMapsTask, gcstats::PHASE_SWEEP_MISC, helperLock);
+            startTask(sweepUniqueIdsTask, gcstats::PHASE_SWEEP_BREAKPOINT, helperLock);
             for (auto& task : sweepCacheTasks)
                 startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
         }
@@ -5246,18 +5281,6 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
             for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
         }
-
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->sweepBreakpoints(&fop);
-        }
-
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->sweepUniqueIds(&fop);
-        }
     }
 
     // Rejoin our off-thread tasks.
@@ -5277,6 +5300,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
         joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
         joinTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
         joinTask(sweepWeakMapsTask, gcstats::PHASE_SWEEP_MISC, helperLock);
+        joinTask(sweepUniqueIdsTask, gcstats::PHASE_SWEEP_BREAKPOINT, helperLock);
         for (auto& task : sweepCacheTasks)
             joinTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
     }
