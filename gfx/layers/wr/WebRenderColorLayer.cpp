@@ -18,7 +18,8 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc)
 {
   StackingContextHelper sc(aBuilder, this);
 

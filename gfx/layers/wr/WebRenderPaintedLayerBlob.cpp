@@ -21,7 +21,8 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aHelper)
 {
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();

@@ -18,7 +18,8 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                const StackingContextHelper& aSc)
 {
     if (mBounds.IsEmpty()) {
         return;
