@@ -61,6 +61,7 @@
 #include "nsRubyTextContainerFrame.h"
 #include <algorithm>
 #include "SVGImageContext.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1943,7 +1944,8 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
 }
 
 bool
-nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& aPresCtx,
+nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aManager,
+                                                                nsPresContext& aPresCtx,
                                                                 nsIFrame *aFrame,
                                                                 const nsStyleBackground* aBackgroundStyle,
                                                                 int32_t aLayer)
@@ -1967,9 +1969,23 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& a
     }
   }
 
+  const nsStyleImage* styleImage = &aBackgroundStyle->mImage.mLayers[aLayer].mImage;
+
+  // We only support image with image container.
+  if (!styleImage->IsEmpty() && styleImage->GetType() == eStyleImageType_Image) {
+    imgRequestProxy* requestProxy = styleImage->GetImageData();
+    if (requestProxy) {
+      nsCOMPtr<imgIContainer> srcImage;
+      requestProxy->GetImage(getter_AddRefs(srcImage));
+      if (srcImage && !srcImage->IsImageContainerAvailable(aManager, imgIContainer::FLAG_NONE)) {
+        return false;
+      }
+    }
+  }
+
   // We only support painting gradients and image for a single style image layer
-  return aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Gradient ||
-         aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Image;
+  return styleImage->GetType() == eStyleImageType_Gradient ||
+         styleImage->GetType() == eStyleImageType_Image;
 }
 
 DrawResult
@@ -2721,7 +2737,8 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
                                                                    nsStyleContext *aBackgroundSC,
                                                                    const nsStyleBorder& aBorder)
 {
-  MOZ_ASSERT(CanBuildWebRenderDisplayItemsForStyleImageLayer(aParams.presCtx,
+  MOZ_ASSERT(CanBuildWebRenderDisplayItemsForStyleImageLayer(aLayer->WrManager(),
+                                                             aParams.presCtx,
                                                              aParams.frame,
                                                              aBackgroundSC->StyleBackground(),
                                                              aParams.layer));
