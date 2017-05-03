@@ -103,6 +103,13 @@ public class CodeGenerator {
 
     private void generateMember(AnnotationInfo info, Member member,
                                 String uniqueName, Class<?> type, Class<?>[] argTypes) {
+        // Sanity check.
+        if (info.noLiteral && !(member instanceof Field &&
+                                Utils.isStatic(member) && Utils.isFinal(member))) {
+            throw new IllegalStateException(clsName + "::" + uniqueName +
+                                            " is not a static final field");
+        }
+
         final StringBuilder args = new StringBuilder();
         for (Class<?> argType : argTypes) {
             args.append("\n                " + getNativeParameterType(argType, info) + ",");
@@ -426,7 +433,8 @@ public class CodeGenerator {
         final boolean isStatic = Utils.isStatic(field);
         final boolean isFinal = Utils.isFinal(field);
 
-        if (isStatic && isFinal && (type.isPrimitive() || type.equals(String.class))) {
+        if (!info.noLiteral && isStatic && isFinal &&
+                (type.isPrimitive() || type.equals(String.class))) {
             Object val = null;
             try {
                 field.setAccessible(true);
