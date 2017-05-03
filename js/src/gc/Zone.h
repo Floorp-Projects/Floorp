@@ -293,7 +293,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Side map for storing a unique ids for cells, independent of address.
-    js::ZoneGroupData<js::gc::UniqueIdMap> uniqueIds_;
+    js::ZoneGroupOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
     js::gc::UniqueIdMap& uniqueIds() { return uniqueIds_.ref(); }
 
