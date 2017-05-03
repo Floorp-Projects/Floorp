@@ -33,7 +33,7 @@ function setupUpdaterTestFinished() {
     path = path.repeat(1000); // 10000 characters
   }
 
-  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null);
+  runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
 }
 
 /**

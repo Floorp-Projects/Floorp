@@ -1665,10 +1665,15 @@ function readServiceLogFile() {
  * @param   aApplyToDirPath (optional)
  *          When specified the apply to / working directory path to use for
  *          invalid argument tests otherwise the normal path will be used.
+ * @param   aCallbackPath (optional)
+ *          When specified the callback path to use for invalid argument tests
+ *          otherwise the normal path will be used.
  */
 function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog,
-                   aPatchDirPath, aInstallDirPath, aApplyToDirPath) {
-  let isInvalidArgTest = !!aPatchDirPath || !!aInstallDirPath || !!aApplyToDirPath;
+                   aPatchDirPath, aInstallDirPath, aApplyToDirPath,
+                   aCallbackPath) {
+  let isInvalidArgTest = !!aPatchDirPath || !!aInstallDirPath ||
+                         !!aApplyToDirPath || aCallbackPath;
 
   let svcOriginalLog;
   if (IS_SERVICE_TEST) {
@@ -1710,6 +1715,8 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     args = args.concat(gCallbackArgs);
   } else if (IS_SERVICE_TEST) {
     args = ["launch-service", updateBin.path].concat(args);
+  } else if (aCallbackPath) {
+    args = args.concat([callbackApp.parent.path, aCallbackPath]);
   }
 
   debugDump("launching the program: " + launchBin.path + " " + args.join(" "));
