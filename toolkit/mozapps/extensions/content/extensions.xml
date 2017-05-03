@@ -1307,7 +1307,7 @@
                 "notification.unsignedAndDisabled", [this.mAddon.name, gStrings.brandShortName], 2
               );
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              this._errorLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._errorLink.href = SUPPORT_URL + "unsigned-addons";
               this._errorLink.hidden = false;
             } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
             || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
@@ -1334,7 +1334,7 @@
                 "notification.unsigned", [this.mAddon.name, gStrings.brandShortName], 2
               );
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              this._warningLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._warningLink.href = SUPPORT_URL + "unsigned-addons";
               this._warningLink.hidden = false;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
               this.setAttribute("notification", "warning");
