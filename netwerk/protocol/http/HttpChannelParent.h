@@ -217,6 +217,8 @@ private:
   void MaybeFlushPendingDiversion();
   void ResponseSynthesized();
 
+  void AsyncOpenFailed(nsresult aRv);
+
   friend class DivertDataAvailableEvent;
   friend class DivertStopRequestEvent;
   friend class DivertCompleteEvent;
