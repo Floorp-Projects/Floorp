@@ -6,10 +6,7 @@ config = {
     'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android-frontend/releng.manifest',
     'multi_locale_config_platform': 'android',
     'postflight_build_mach_commands': [
-        ['gradle',
-         'app:testOfficialAustralisDebugUnitTest',
-         'app:testOfficialPhotonDebugUnitTest',
-        ],
+        ['gradle', 'app:testAutomationDebugUnitTest'],
     ],
     'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.
 }
