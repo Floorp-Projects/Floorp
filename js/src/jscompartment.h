@@ -708,7 +708,7 @@ struct JSCompartment
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
     void sweepTemplateLiteralMap();
-    void sweepGlobalObject(js::FreeOp* fop);
+    void sweepGlobalObject();
     void sweepSelfHostingScriptSource();
     void sweepJitCompartment(js::FreeOp* fop);
     void sweepRegExps();
