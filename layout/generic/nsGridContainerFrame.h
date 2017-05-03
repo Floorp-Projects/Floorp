@@ -456,7 +456,7 @@ private:
   // If true, NS_STATE_GRID_DID_PUSH_ITEMS may be set even though all pushed
   // frames may have been removed.  This is used to suppress an assertion
   // in case RemoveFrame removed all associated child frames.
-  bool mDidPushItemsBitMayLie;
+  bool mDidPushItemsBitMayLie { false };
 #endif
 };
 
