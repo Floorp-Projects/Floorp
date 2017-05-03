@@ -1203,6 +1203,14 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding-left: 6px;
 }
 
+/* Yeah, the ids are ugly, but this should be reasonably performant, and
+ * using a tagname as the last item would be less so.
+ */
+#widget-overflow-fixed-list:empty + #widget-overflow-fixed-separator {
+  display: none;
+}
+
+#widget-overflow-scroller > toolbarseparator,
 .PanelUI-subView menuseparator,
 .PanelUI-subView toolbarseparator,
 .cui-widget-panelview menuseparator {
@@ -1428,7 +1436,7 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   margin-bottom: 10px;
 }
 
-#widget-overflow-list {
+.widget-overflow-list {
   width: @menuPanelWidth@;
   padding-left: 10px;
   padding-right: 10px;
@@ -1455,7 +1463,7 @@ toolbaritem[overflowedItem=true],
   padding-inline-start: .5em;
 }
 
-#widget-overflow-list > .toolbaritem-combined-buttons {
+.widget-overflow-list > .toolbaritem-combined-buttons {
   min-height: 28px;
 }
 

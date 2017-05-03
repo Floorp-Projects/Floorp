@@ -21,8 +21,7 @@ QuitterObserver.prototype = {
   _xpcom_categories: [{category: "profile-after-change", service: true }],
   isFrameScriptLoaded: false,
 
-  observe: function(aSubject, aTopic, aData)
-  {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "profile-after-change") {
       this.init();
     } else if (!this.isFrameScriptLoaded &&
@@ -40,15 +39,13 @@ QuitterObserver.prototype = {
     }
   },
 
-  init: function()
-  {
+  init() {
     var obs = Services.obs;
     obs.addObserver(this, "xpcom-shutdown");
     obs.addObserver(this, "chrome-document-global-created");
   },
 
-  uninit: function()
-  {
+  uninit() {
     var obs = Services.obs;
     obs.removeObserver(this, "chrome-document-global-created");
   },
@@ -57,8 +54,8 @@ QuitterObserver.prototype = {
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
    **/
-  receiveMessage: function(aMessage) {
-    switch(aMessage.name) {
+  receiveMessage(aMessage) {
+    switch (aMessage.name) {
       case "Quitter.Quit":
         let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
         appStartup.quit(Ci.nsIAppStartup.eForceQuit);

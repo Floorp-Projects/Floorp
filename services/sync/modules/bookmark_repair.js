@@ -381,7 +381,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       case STATE.FINISHED:
         break;
 
-      case NOT_REPAIRING:
+      case STATE.NOT_REPAIRING:
         // No repair is in progress. This is a common case, so only log trace.
         log.trace("continue repairs called but no repair in progress.");
         break;
@@ -667,18 +667,16 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
           log.debug(`repair request to upload item '${id}' but it isn't under a syncable root; writing a tombstone`);
           toDelete.add(id);
         }
+      // The item wasn't explicitly requested - only upload if it is syncable
+      // and doesn't exist on the server.
+      } else if (syncable && !existRemotely.has(id)) {
+        log.debug(`repair request found related item '${id}' which isn't on the server; uploading`);
+        toUpload.add(id);
+      } else if (!syncable && existRemotely.has(id)) {
+        log.debug(`repair request found non-syncable related item '${id}' on the server; writing a tombstone`);
+        toDelete.add(id);
       } else {
-        // The item wasn't explicitly requested - only upload if it is syncable
-        // and doesn't exist on the server.
-        if (syncable && !existRemotely.has(id)) {
-          log.debug(`repair request found related item '${id}' which isn't on the server; uploading`);
-          toUpload.add(id);
-        } else if (!syncable && existRemotely.has(id)) {
-          log.debug(`repair request found non-syncable related item '${id}' on the server; writing a tombstone`);
-          toDelete.add(id);
-        } else {
-          log.debug(`repair request found related item '${id}' which we will not upload; ignoring`);
-        }
+        log.debug(`repair request found related item '${id}' which we will not upload; ignoring`);
       }
     }
     return { toUpload, toDelete };

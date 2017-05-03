@@ -1918,6 +1918,11 @@ pref("network.dns.blockDotOnion", true);
 // These domains are treated as localhost equivalent
 pref("network.dns.localDomains", "");
 
+// When non empty all non-localhost DNS queries (including IP addresses)
+// resolve to this value. The value can be a name or an IP address.
+// domains mapped to localhost with localDomains stay localhost.
+pref("network.dns.forceResolve", "");
+
 // Contols whether or not "localhost" should resolve when offline
 pref("network.dns.offline-localhost", true);
 

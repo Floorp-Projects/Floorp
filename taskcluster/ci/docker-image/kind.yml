@@ -20,8 +20,6 @@ jobs:
     symbol: I(dt16t)
   desktop-build:
     symbol: I(db)
-  tester:
-    symbol: I(tst)
   lint:
     symbol: I(lnt)
   android-gradle-build:

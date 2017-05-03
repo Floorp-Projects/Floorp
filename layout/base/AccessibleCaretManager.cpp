@@ -1029,8 +1029,10 @@ AccessibleCaretManager::FlushLayout() const
 
 nsIFrame*
 AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
-  nsDirection aDirection, int32_t* aOutOffset, nsINode** aOutNode,
-  int32_t* aOutNodeOffset) const
+  nsDirection aDirection,
+  int32_t* aOutOffset,
+  nsIContent** aOutContent,
+  int32_t* aOutContentOffset) const
 {
   if (!mPresShell) {
     return nullptr;
@@ -1096,11 +1098,11 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   }
 
   if (startFrame) {
-    if (aOutNode) {
-      *aOutNode = startNode.get();
+    if (aOutContent) {
+      startContent.forget(aOutContent);
     }
-    if (aOutNodeOffset) {
-      *aOutNodeOffset = nodeOffset;
+    if (aOutContentOffset) {
+      *aOutContentOffset = nodeOffset;
     }
   }
 
@@ -1119,16 +1121,17 @@ AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   nsDirection dir = mActiveCaret == mFirstCaret.get() ? eDirPrevious : eDirNext;
   int32_t offset = 0;
-  nsINode* node = nullptr;
+  nsCOMPtr<nsIContent> content;
   int32_t contentOffset = 0;
   nsIFrame* frame =
-    GetFrameForFirstRangeStartOrLastRangeEnd(dir, &offset, &node, &contentOffset);
+    GetFrameForFirstRangeStartOrLastRangeEnd(dir, &offset,
+                                             getter_AddRefs(content),
+                                             &contentOffset);
 
   if (!frame) {
     return false;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
 
   // Compare the active caret's new position (aOffsets) to the inactive caret's
   // position.

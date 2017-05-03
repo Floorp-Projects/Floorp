@@ -21,8 +21,7 @@ function runfile(file) {
   var result = "Results of processing log " + file.fileName + " :\n";
 
   var fileReader = new FileReader();
-  fileReader.onload = function(e)
-  {
+  fileReader.onload = function(e) {
     runContents(result, e.target.result);
   }
   fileReader.readAsText(file, "iso-8859-1");
@@ -36,14 +35,14 @@ function runContents(result, contents) {
         "DOMWINDOW": {
             count: 0,
             windows: {},
-            handle_line: function(line) {
+            handle_line(line) {
                 var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
                 if (match) {
                     var addr = match[1];
                     var verb = match[2];
                     var rest = match[3];
                     if (verb == "created") {
-                        var m = rest.match(/ outer=([0-9a-f]*)$/);
+                        let m = rest.match(/ outer=([0-9a-f]*)$/);
                         if (!m)
                             throw "outer expected";
                         this.windows[addr] = { outer: m[1] };
@@ -51,14 +50,14 @@ function runContents(result, contents) {
                     } else if (verb == "destroyed") {
                         delete this.windows[addr];
                     } else if (verb == "SetNewDocument") {
-                        var m = rest.match(/^ (.*)$/);
+                        let m = rest.match(/^ (.*)$/);
                         if (!m)
                             throw "URI expected";
                         this.windows[addr][m[1]] = true;
                     }
                 }
             },
-            dump: function() {
+            dump() {
                 for (var addr in this.windows) {
                     var winobj = this.windows[addr];
                     var outer = winobj.outer;
@@ -72,18 +71,15 @@ function runContents(result, contents) {
                     }
                 }
             },
-            summary: function() {
-                var len = 0;
-                for (var w in this.windows)
-                    ++len;
-                result += 'Leaked ' + len + ' out of ' +
+            summary() {
+                result += "Leaked " + Object.keys(this.windows).length + " out of " +
                           this.count + " DOM Windows\n";
             }
         },
         "DOCUMENT": {
             count: 0,
             docs: {},
-            handle_line: function(line) {
+            handle_line(line) {
                 var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
                 if (match) {
                     var addr = match[1];
@@ -108,7 +104,7 @@ function runContents(result, contents) {
                     }
                 }
             },
-            dump: function() {
+            dump() {
                 for (var addr in this.docs) {
                     var doc = this.docs[addr];
                     result += "Leaked document at address " + addr + ".\n";
@@ -119,18 +115,15 @@ function runContents(result, contents) {
                     }
                 }
             },
-            summary: function() {
-                var len = 0;
-                for (var w in this.docs)
-                    ++len;
-                result += 'Leaked ' + len + ' out of ' +
+            summary() {
+                result += "Leaked " + Object.keys(this.docs).length + " out of " +
                           this.count + " documents\n";
             }
         },
         "DOCSHELL": {
             count: 0,
             shells: {},
-            handle_line: function(line) {
+            handle_line(line) {
                 var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
                 if (match) {
                     var addr = match[1];
@@ -150,7 +143,7 @@ function runContents(result, contents) {
                     }
                 }
             },
-            dump: function() {
+            dump() {
                 for (var addr in this.shells) {
                     var doc = this.shells[addr];
                     result += "Leaked docshell at address " + addr + ".\n";
@@ -159,18 +152,15 @@ function runContents(result, contents) {
                     }
                 }
             },
-            summary: function() {
-                var len = 0;
-                for (var w in this.shells)
-                    ++len;
-                result += 'Leaked ' + len + ' out of ' +
+            summary() {
+                result += "Leaked " + Object.keys(this.shells).length + " out of " +
                           this.count + " docshells\n";
             }
         },
         "NODEINFOMANAGER": {
             count: 0,
             nims: {},
-            handle_line: function(line) {
+            handle_line(line) {
                 var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
                 if (match) {
                     var addr = match[1];
@@ -197,7 +187,7 @@ function runContents(result, contents) {
                     }
                 }
             },
-            dump: function() {
+            dump() {
                 for (var addr in this.nims) {
                     var nim = this.nims[addr];
                     result += "Leaked content nodes associated with node info manager at address " + addr + ".\n";
@@ -206,11 +196,8 @@ function runContents(result, contents) {
                     }
                 }
             },
-            summary: function() {
-                var len = 0;
-                for (var w in this.nims)
-                    ++len;
-                result += 'Leaked content nodes in ' + len + ' out of ' +
+            summary() {
+                result += "Leaked content nodes in " + Object.keys(this.nims).length + " out of " +
                           this.count + " documents\n";
             }
         }
@@ -223,7 +210,7 @@ function runContents(result, contents) {
         // first word and rest
         var matches = line.match(/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/);
         if (matches) {
-            var handler = matches[1];
+            let handler = matches[1];
             var data = matches[2];
             if (typeof(handlers[handler]) != "undefined") {
                 handlers[handler].handle_line(data);
@@ -231,12 +218,12 @@ function runContents(result, contents) {
         }
     }
 
-    for (var handler in handlers)
+    for (let handler in handlers)
         handlers[handler].dump();
     if (result.length)
         result += "\n";
     result += "Summary:\n";
-    for (var handler in handlers)
+    for (let handler in handlers)
         handlers[handler].summary();
     result += "\n";
 

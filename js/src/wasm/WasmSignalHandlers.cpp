@@ -108,7 +108,19 @@ class AutoSetHandlingSegFault
 # define R12_sig(p) ((p)->sc_r12)
 # define R13_sig(p) ((p)->sc_r13)
 # define R14_sig(p) ((p)->sc_r14)
-# define R15_sig(p) ((p)->sc_r15)
+# if defined(__arm__)
+#  define R15_sig(p) ((p)->sc_pc)
+# else
+#  define R15_sig(p) ((p)->sc_r15)
+# endif
+# if defined(__aarch64__)
+#  define EPC_sig(p) ((p)->sc_elr)
+#  define RFP_sig(p) ((p)->sc_x[29])
+# endif
+# if defined(__mips__)
+#  define EPC_sig(p) ((p)->sc_pc)
+#  define RFP_sig(p) ((p)->sc_regs[30])
+# endif
 #elif defined(__linux__) || defined(__sun)
 # if defined(__linux__)
 #  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs->_xmm[i])
@@ -171,6 +183,14 @@ class AutoSetHandlingSegFault
 # define R13_sig(p) ((p)->uc_mcontext.__gregs[_REG_R13])
 # define R14_sig(p) ((p)->uc_mcontext.__gregs[_REG_R14])
 # define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
+# if defined(__aarch64__)
+#  define EPC_sig(p) ((p)->uc_mcontext.__gregs[_REG_PC])
+#  define RFP_sig(p) ((p)->uc_mcontext.__gregs[_REG_X29])
+# endif
+# if defined(__mips__)
+#  define EPC_sig(p) ((p)->uc_mcontext.__gregs[_REG_EPC])
+#  define RFP_sig(p) ((p)->uc_mcontext.__gregs[_REG_S8])
+# endif
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 # if defined(__DragonFly__)
 #  define XMM_sig(p,i) (((union savefpu*)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
@@ -199,6 +219,14 @@ class AutoSetHandlingSegFault
 #  define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
 # else
 #  define R15_sig(p) ((p)->uc_mcontext.mc_r15)
+# endif
+# if defined(__FreeBSD__) && defined(__aarch64__)
+#  define EPC_sig(p) ((p)->uc_mcontext.mc_gpregs.gp_elr)
+#  define RFP_sig(p) ((p)->uc_mcontext.mc_gpregs.gp_x[29])
+# endif
+# if defined(__FreeBSD__) && defined(__mips__)
+#  define EPC_sig(p) ((p)->uc_mcontext.mc_pc)
+#  define RFP_sig(p) ((p)->uc_mcontext.mc_regs[30])
 # endif
 #elif defined(XP_DARWIN)
 # define EIP_sig(p) ((p)->uc_mcontext->__ss.__eip)

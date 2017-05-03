@@ -92,8 +92,7 @@ NewConsoleOutputWrapper.prototype = {
             return panel.panelWin.NetMonitorController.inspectRequest(requestId);
           });
         },
-        sourceMapService:
-          this.toolbox ? this.toolbox._deprecatedServerSourceMapService : null,
+        sourceMapService: this.toolbox ? this.toolbox.sourceMapURLService : null,
         highlightDomElement: (grip, options = {}) => {
           return this.toolbox.highlighterUtils
             ? this.toolbox.highlighterUtils.highlightDomValueGrip(grip, options)

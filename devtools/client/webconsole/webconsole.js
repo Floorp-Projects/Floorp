@@ -2626,7 +2626,7 @@ WebConsoleFrame.prototype = {
       frame: { source, line, column },
       showEmptyPathAsHost: true,
       onClick,
-      sourceMapService: toolbox ? toolbox._deprecatedServerSourceMapService : null,
+      sourceMapService: toolbox ? toolbox.sourceMapURLService : null,
     }), locationNode);
 
     return locationNode;

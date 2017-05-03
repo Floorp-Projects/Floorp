@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<link id="target" rel="stylesheet" href="data:text/css,">
+<link rel="stylesheet" href="data:text/css,div { color: green }">
+<link rel="stylesheet" href="data:text/css,">
+<div>This should be green</div>
+<script>
+  onload = function() {
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "data:text/css,div { color: red; }";
+    link.title = "turnitred";
+    var target = document.getElementById("target");
+    target.parentNode.insertBefore(link, target);
+  }
+</script>

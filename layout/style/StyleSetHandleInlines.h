@@ -185,7 +185,7 @@ StyleSetHandle::Ptr::InsertStyleSheetBefore(SheetType aType,
   FORWARD_CONCRETE(
     InsertStyleSheetBefore,
     (aType, aNewSheet->AsGecko(), aReferenceSheet->AsGecko()),
-    (aType, aReferenceSheet->AsServo(), aReferenceSheet->AsServo()));
+    (aType, aNewSheet->AsServo(), aReferenceSheet->AsServo()));
 }
 
 int32_t
