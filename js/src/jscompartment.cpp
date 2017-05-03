@@ -838,13 +838,10 @@ JSCompartment::sweepTemplateLiteralMap()
 }
 
 void
-JSCompartment::sweepGlobalObject(FreeOp* fop)
+JSCompartment::sweepGlobalObject()
 {
-    if (global_ && IsAboutToBeFinalized(&global_)) {
-        if (isDebuggee())
-            Debugger::detachAllDebuggersFromGlobal(fop, global_.unbarrieredGet());
+    if (global_ && IsAboutToBeFinalized(&global_))
         global_.set(nullptr);
-    }
 }
 
 void
@@ -912,6 +909,13 @@ void
 JSCompartment::sweepVarNames()
 {
     varNames_.sweep();
+}
+
+void
+JSCompartment::sweepWatchpoints()
+{
+    if (watchpointMap)
+        watchpointMap->sweep();
 }
 
 namespace {

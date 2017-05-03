@@ -49,15 +49,16 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-        UNIFIED_SOURCES += [
-            'lul/AutoObjectMapper.cpp',
-            'lul/LulCommon.cpp',
-            'lul/LulDwarf.cpp',
-            'lul/LulDwarfSummariser.cpp',
-            'lul/LulElf.cpp',
-            'lul/LulMain.cpp',
-            'lul/platform-linux-lul.cpp',
-        ]
+        if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64'):
+            UNIFIED_SOURCES += [
+                'lul/AutoObjectMapper.cpp',
+                'lul/LulCommon.cpp',
+                'lul/LulDwarf.cpp',
+                'lul/LulDwarfSummariser.cpp',
+                'lul/LulElf.cpp',
+                'lul/LulMain.cpp',
+                'lul/platform-linux-lul.cpp',
+            ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
             'core/shared-libraries-linux.cc',
@@ -93,6 +94,8 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     ]
 
     if CONFIG['OS_TARGET'] == 'Android':
+        DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
+        DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
         LOCAL_INCLUDES += [
             # We need access to Breakpad's getcontext(3) which is suitable for Android
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',

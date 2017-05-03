@@ -10,7 +10,9 @@
 
 #include "jsopcode.h"
 
-void js::jit::GenericAssembler::spew(const char* fmt, va_list va)
+#ifdef JS_JITSPEW
+void
+js::jit::GenericAssembler::spew(const char* fmt, va_list va)
 {
     // Buffer to hold the formatted string. Note that this may contain
     // '%' characters, so do not pass it directly to printf functions.
@@ -23,3 +25,4 @@ void js::jit::GenericAssembler::spew(const char* fmt, va_list va)
         js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
     }
 }
+#endif

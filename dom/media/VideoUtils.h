@@ -26,6 +26,7 @@
 #include "TimeUnits.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
+#include "VideoLimits.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
@@ -140,13 +141,6 @@ CheckedInt64 TimeUnitToFrames(const media::TimeUnit& aTime, uint32_t aRate);
 // Converts from seconds to microseconds. Returns failure if the resulting
 // integer is too big to fit in an int64_t.
 nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs);
-
-// The maximum height and width of the video. Used for
-// sanitizing the memory allocation of the RGB buffer.
-// The maximum resolution we anticipate encountering in the
-// wild is 2160p (UHD "4K") or 4320p - 7680x4320 pixels for VR.
-static const int32_t MAX_VIDEO_WIDTH = 8192;
-static const int32_t MAX_VIDEO_HEIGHT = 4608;
 
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
 // Note that aDisplay must be validated by IsValidVideoRegion()

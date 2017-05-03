@@ -2044,7 +2044,7 @@
         "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
         "characterSet", "fullZoom", "textZoom", "webProgress",
         "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
-        "audioPlaybackStopped", "adjustPriority", "pauseMedia", "stopMedia",
+        "audioPlaybackStopped", "pauseMedia", "stopMedia",
         "blockMedia", "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll",
         "userTypedValue", "userTypedClear"
