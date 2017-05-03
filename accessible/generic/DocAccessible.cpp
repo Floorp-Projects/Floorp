@@ -2035,8 +2035,9 @@ DocAccessible::ValidateARIAOwned()
     nsTArray<RefPtr<Accessible> >* children = it.UserData();
 
     // Owner is about to die, put children back if applicable.
-    if (!mAccessibleCache.GetWeak(reinterpret_cast<void*>(owner)) ||
-        !owner->IsInDocument()) {
+    if (owner != this &&
+        (!mAccessibleCache.GetWeak(reinterpret_cast<void*>(owner)) ||
+         !owner->IsInDocument())) {
       PutChildrenBack(children, 0);
       it.Remove();
       continue;
