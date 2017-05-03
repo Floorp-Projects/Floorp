@@ -1942,11 +1942,16 @@ class Repackage(MachCommandBase):
     '''
     @Command('repackage', category='misc',
              description='Repackage artifacts into different formats.')
+    def repackage(self):
+        print("Usage: ./mach repackage [dmg|installer|mar] [args...]")
+
+    @SubCommand('repackage', 'dmg',
+                description='Repackage a tar file into a .dmg for OSX')
     @CommandArgument('--input', '-i', type=str, required=True,
         help='Input filename')
     @CommandArgument('--output', '-o', type=str, required=True,
         help='Output filename')
-    def repackage(self, input, output):
+    def repackage_dmg(self, input, output):
         if not os.path.exists(input):
             print('Input file does not exist: %s' % input)
             return 1
@@ -1956,10 +1961,5 @@ class Repackage(MachCommandBase):
                   'prior to |mach repackage|.')
             return 1
 
-        if output.endswith('.dmg'):
-            from mozbuild.repackaging.dmg import repackage_dmg
-            repackage_dmg(input, output)
-        else:
-            print("Repackaging into output '%s' is not yet supported." % output)
-            return 1
-        return 0
+        from mozbuild.repackaging.dmg import repackage_dmg
+        repackage_dmg(input, output)
