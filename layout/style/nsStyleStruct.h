@@ -3410,9 +3410,18 @@ public:
   void SetNone();
   void SetColor(nscolor aColor);
   void SetPaintServer(mozilla::css::URLValue* aPaintServer,
+                      nsStyleSVGFallbackType aFallbackType,
                       nscolor aFallbackColor);
+  void SetPaintServer(mozilla::css::URLValue* aPaintServer) {
+    SetPaintServer(aPaintServer, eStyleSVGFallbackType_NotSet,
+                   NS_RGB(0, 0, 0));
+  }
   void SetContextValue(nsStyleSVGPaintType aType,
+                       nsStyleSVGFallbackType aFallbackType,
                        nscolor aFallbackColor);
+  void SetContextValue(nsStyleSVGPaintType aType) {
+    SetContextValue(aType, eStyleSVGFallbackType_NotSet, NS_RGB(0, 0, 0));
+  }
 
   nscolor GetColor() const {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Color);
