@@ -547,27 +547,10 @@ IProtocol::SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarge
 }
 
 void
-IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
-                                      nsIEventTarget* aEventTarget)
-{
-  // Ensure the actor has been registered.
-  MOZ_ASSERT(aActor->Manager());
-
-  Manager()->ReplaceEventTargetForActorInternal(aActor, aEventTarget);
-}
-
-void
 IProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
                                           nsIEventTarget* aEventTarget)
 {
   Manager()->SetEventTargetForActorInternal(aActor, aEventTarget);
-}
-
-void
-IProtocol::ReplaceEventTargetForActorInternal(IProtocol* aActor,
-                                              nsIEventTarget* aEventTarget)
-{
-  Manager()->ReplaceEventTargetForActorInternal(aActor, aEventTarget);
 }
 
 nsIEventTarget*
@@ -891,22 +874,6 @@ IToplevelProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
 
   MutexAutoLock lock(mEventTargetMutex);
   mEventTargetMap.AddWithID(aEventTarget, id);
-}
-
-void
-IToplevelProtocol::ReplaceEventTargetForActorInternal(
-  IProtocol* aActor,
-  nsIEventTarget* aEventTarget)
-{
-  // The EventTarget of a ToplevelProtocol shall never be set.
-  MOZ_RELEASE_ASSERT(aActor != this);
-
-  int32_t id = aActor->Id();
-  // The ID of the actor should have existed.
-  MOZ_RELEASE_ASSERT(id!= kNullActorId && id!= kFreedActorId);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  mEventTargetMap.ReplaceWithID(aEventTarget, id);
 }
 
 } // namespace ipc

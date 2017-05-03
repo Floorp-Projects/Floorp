@@ -191,12 +191,6 @@ public:
     // aActor.
     void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget);
 
-    // Replace the event target for the messages of aActor. There must not be
-    // any messages of aActor in the task queue, or we might run into some
-    // unexpected behavior.
-    void ReplaceEventTargetForActor(IProtocol* aActor,
-                                    nsIEventTarget* aEventTarget);
-
     // Returns the event target set by SetEventTargetForActor() if available.
     virtual nsIEventTarget* GetActorEventTarget();
 
@@ -208,9 +202,6 @@ protected:
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
     virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget);
 
     virtual already_AddRefed<nsIEventTarget>
     GetActorEventTargetInternal(IProtocol* aActor);
@@ -397,9 +388,6 @@ protected:
     GetSpecificMessageEventTarget(const Message& aMsg) { return nullptr; }
 
     virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget);
 
     virtual already_AddRefed<nsIEventTarget>
     GetActorEventTargetInternal(IProtocol* aActor);

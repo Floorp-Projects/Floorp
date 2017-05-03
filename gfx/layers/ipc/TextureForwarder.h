@@ -72,8 +72,7 @@ public:
     LayersBackend aLayersBackend,
     TextureFlags aFlags,
     uint64_t aSerial,
-    wr::MaybeExternalImageId& aExternalImageId,
-    nsIEventTarget* aTarget = nullptr) = 0;
+    wr::MaybeExternalImageId& aExternalImageId) = 0;
 };
 
 } // namespace layers
