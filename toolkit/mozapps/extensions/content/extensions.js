@@ -3091,6 +3091,7 @@ var gDetailView = {
       }
     }
     this.node.setAttribute("legacy", legacy);
+    document.getElementById("detail-legacy-warning").href = SUPPORT_URL + "webextensions";
 
     // If the search category isn't selected then make sure to select the
     // correct category

@@ -1,5 +1,7 @@
 
 add_task(async function() {
+  const INFO_URL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "webextensions";
+
   const NAMES = {
     fullTheme: "Full Theme",
     newTheme: "New LWT",
@@ -58,10 +60,11 @@ add_task(async function() {
     item.parentNode.ensureElementIsVisible(item);
 
     // Check the badge
-    let badge = document.getAnonymousElementByAttribute(item, "class", "legacy-warning");
+    let badge = document.getAnonymousElementByAttribute(item, "anonid", "legacy");
 
     if (isLegacy) {
       is_element_visible(badge, `Legacy badge is visible for ${name}`);
+      is(badge.href, INFO_URL, "Legacy badge link is correct");
     } else {
       is_element_hidden(badge, `Legacy badge is hidden for ${name}`);
     }
@@ -78,6 +81,7 @@ add_task(async function() {
 
     if (isLegacy) {
       is_element_visible(badge, `Legacy badge is visible for ${name}`);
+      is(badge.href, INFO_URL, "Legacy badge link is correct");
     } else {
       is_element_hidden(badge, `Legacy badge is hidden for ${name}`);
     }
