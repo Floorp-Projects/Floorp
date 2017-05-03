@@ -549,14 +549,14 @@ Statistics::formatDetailedDescription()
                    zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
                    zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                    zoneStats.sweptCompartmentCount,
-                   counts[STAT_MINOR_GC],
-                   counts[STAT_STOREBUFFER_OVERFLOW],
+                   getCount(STAT_MINOR_GC),
+                   getCount(STAT_STOREBUFFER_OVERFLOW),
                    mmu20 * 100., mmu50 * 100.,
                    t(sccTotal), t(sccLongest),
                    double(preBytes) / bytesPerMiB,
-                   counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK],
-                   counts[STAT_NEW_CHUNK] + counts[STAT_DESTROY_CHUNK],
-                   double(ArenaSize * counts[STAT_ARENA_RELOCATED]) / bytesPerMiB);
+                   getCount(STAT_NEW_CHUNK) - getCount(STAT_DESTROY_CHUNK),
+                   getCount(STAT_NEW_CHUNK) + getCount(STAT_DESTROY_CHUNK),
+                   double(ArenaSize * getCount(STAT_ARENA_RELOCATED)) / bytesPerMiB);
     return DuplicateString(buffer);
 }
 
@@ -724,16 +724,16 @@ Statistics::formatJsonDescription(uint64_t timestamp)
                    zoneStats.collectedZoneCount,
                    zoneStats.zoneCount,
                    zoneStats.compartmentCount,
-                   counts[STAT_MINOR_GC],
-                   counts[STAT_STOREBUFFER_OVERFLOW],
+                   getCount(STAT_MINOR_GC),
+                   getCount(STAT_STOREBUFFER_OVERFLOW),
                    int(mmu20 * 100),
                    int(mmu50 * 100),
                    sccTotalParts.quot, sccTotalParts.rem,
                    sccLongestParts.quot, sccLongestParts.rem,
                    ExplainAbortReason(nonincrementalReason_),
                    unsigned(preBytes / 1024 / 1024),
-                   counts[STAT_NEW_CHUNK],
-                   counts[STAT_DESTROY_CHUNK]);
+                   getCount(STAT_NEW_CHUNK),
+                   getCount(STAT_DESTROY_CHUNK));
     return DuplicateString(buffer);
 }
 
