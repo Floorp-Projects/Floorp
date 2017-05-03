@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
-#include "updatelogging.h"
+#include "updatecommon.h"
 
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 BOOL VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent);

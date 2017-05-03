@@ -9,7 +9,7 @@
 #include <wintrust.h>
 
 #include "certificatecheck.h"
-#include "updatelogging.h"
+#include "updatecommon.h"
 
 static const int ENCODING = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
 
