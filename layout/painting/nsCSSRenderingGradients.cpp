@@ -29,6 +29,7 @@
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
 
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -1066,10 +1067,10 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // Make the rects relative to the parent stacking context
-  LayerRect layerClipBounds = aLayer->RelativeToParent(clipBounds);
+  WrRect wrClipBounds = aSc.ToRelativeWrRect(clipBounds);
   LayerSize layerFirstTileSize = ViewAs<LayerPixel>(firstTileBounds.Size(),
       PixelCastJustification::WebRenderHasUnitResolution);
-  LayerRect layerGradientBounds = aLayer->RelativeToParent(gradientBounds);
+  WrRect wrGradientBounds = aSc.ToRelativeWrRect(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
@@ -1085,8 +1086,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
 
     aBuilder.PushLinearGradient(
-      mozilla::wr::ToWrRect(layerGradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
+      wrGradientBounds,
+      aBuilder.BuildClipRegion(wrClipBounds),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrPoint(lineEnd),
       stops,
@@ -1098,8 +1099,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     gradientRadius.height *= srcTransform.height;
 
     aBuilder.PushRadialGradient(
-      mozilla::wr::ToWrRect(layerGradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
+      wrGradientBounds,
+      aBuilder.BuildClipRegion(wrClipBounds),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrSize(gradientRadius),
       stops,

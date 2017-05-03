@@ -13,6 +13,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
@@ -465,12 +466,11 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
-  LayerRect destRectTransformed = aLayer->RelativeToParent(destRect);
-  LayerIntRect dest = RoundedToInt(destRectTransformed);
+  WrRect dest = aSc.ToRelativeWrRectRounded(destRect);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
 
-  aBuilder.PushImage(wr::ToWrRect(dest),
+  aBuilder.PushImage(dest,
                      clipRegion,
                      WrImageRendering::Auto,
                      key.value());

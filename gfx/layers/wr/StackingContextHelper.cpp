@@ -6,6 +6,7 @@
 #include "mozilla/layers/StackingContextHelper.h"
 
 #include "mozilla/layers/WebRenderLayer.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
@@ -60,10 +61,22 @@ StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect) const
   return wr::ToWrRect(aRect - mOrigin);
 }
 
+WrRect
+StackingContextHelper::ToRelativeWrRect(const LayoutDeviceRect& aRect) const
+{
+  return wr::ToWrRect(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin);
+}
+
 WrPoint
 StackingContextHelper::ToRelativeWrPoint(const LayerPoint& aPoint) const
 {
   return wr::ToWrPoint(aPoint - mOrigin);
+}
+
+WrRect
+StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const
+{
+  return wr::ToWrRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
 } // namespace layers
