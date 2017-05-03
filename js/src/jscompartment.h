@@ -184,15 +184,11 @@ class CrossCompartmentKey
         return wrapped.match(matcher);
     }
 
-    // Valid for JSObject* and Debugger keys. Crashes immediately if used on a
-    // JSString* key.
     JSCompartment* compartment() {
         struct GetCompartmentFunctor {
             JSCompartment* operator()(JSObject** tp) const { return (*tp)->compartment(); }
             JSCompartment* operator()(JSScript** tp) const { return (*tp)->compartment(); }
-            JSCompartment* operator()(JSString** tp) const {
-                MOZ_CRASH("invalid ccw key"); return nullptr;
-            }
+            JSCompartment* operator()(JSString** tp) const { return nullptr; }
         };
         return applyToWrapped(GetCompartmentFunctor());
     }
@@ -239,9 +235,169 @@ class CrossCompartmentKey
     WrappedType wrapped;
 };
 
+// The data structure for storing CCWs, which has a map per target compartment
+// so we can access them easily. Note string CCWs are stored separately from the
+// others because they have target compartment nullptr.
+class WrapperMap
+{
+    static const size_t InitialInnerMapSize = 4;
 
-using WrapperMap = NurseryAwareHashMap<CrossCompartmentKey, JS::Value,
-                                       CrossCompartmentKey::Hasher, SystemAllocPolicy>;
+    using InnerMap = NurseryAwareHashMap<CrossCompartmentKey,
+                                         JS::Value,
+                                         CrossCompartmentKey::Hasher,
+                                         SystemAllocPolicy>;
+    using OuterMap = GCHashMap<JSCompartment*,
+                               InnerMap,
+                               DefaultHasher<JSCompartment*>,
+                               SystemAllocPolicy>;
+
+    OuterMap map;
+
+  public:
+    class Enum
+    {
+        Enum(const Enum&) = delete;
+        void operator=(const Enum&) = delete;
+
+        void goToNext() {
+            if (outer.isNothing())
+                return;
+            while (!outer->empty()) {
+                InnerMap& m = outer->front().value();
+                if (!m.empty()) {
+                    if (inner.isSome())
+                        inner.reset();
+                    inner.emplace(m);
+                    outer->popFront();
+                    return;
+                }
+                outer->popFront();
+            }
+        }
+
+        mozilla::Maybe<OuterMap::Enum> outer;
+        mozilla::Maybe<InnerMap::Enum> inner;
+
+      public:
+        explicit Enum(WrapperMap& m) {
+            outer.emplace(m.map);
+            goToNext();
+        }
+
+        Enum(WrapperMap& m, JSCompartment* target) {
+            // Leave the outer map as nothing and only iterate the inner map we
+            // find here.
+            auto p = m.map.lookup(target);
+            if (p)
+                inner.emplace(p->value());
+        }
+
+        bool empty() const {
+            return (outer.isNothing() || outer->empty()) &&
+                   (inner.isNothing() || inner->empty());
+        }
+
+        InnerMap::Entry& front() const {
+            MOZ_ASSERT(inner.isSome() && !inner->empty());
+            return inner->front();
+        }
+
+        void popFront() {
+            MOZ_ASSERT(!empty());
+            if (!inner->empty()) {
+                inner->popFront();
+                if (!inner->empty())
+                    return;
+            }
+            goToNext();
+        }
+
+        void removeFront() {
+            MOZ_ASSERT(inner.isSome());
+            inner->removeFront();
+        }
+    };
+
+    class Ptr : public InnerMap::Ptr
+    {
+        friend class WrapperMap;
+
+        InnerMap* map;
+
+        Ptr() : InnerMap::Ptr(), map(nullptr) {}
+        Ptr(const InnerMap::Ptr& p, InnerMap& m) : InnerMap::Ptr(p), map(&m) {}
+    };
+
+    MOZ_MUST_USE bool init(uint32_t len) { return map.init(len); }
+
+    bool empty() {
+        if (map.empty())
+            return true;
+        for (OuterMap::Enum e(map); !e.empty(); e.popFront()) {
+            if (!e.front().value().empty())
+                return false;
+        }
+        return true;
+    }
+
+    Ptr lookup(const CrossCompartmentKey& k) const {
+        auto op = map.lookup(const_cast<CrossCompartmentKey&>(k).compartment());
+        if (op) {
+            auto ip = op->value().lookup(k);
+            if (ip)
+                return Ptr(ip, op->value());
+        }
+        return Ptr();
+    }
+
+    void remove(Ptr p) {
+        if (p)
+            p.map->remove(p);
+    }
+
+    MOZ_MUST_USE bool put(const CrossCompartmentKey& k, const JS::Value& v) {
+        JSCompartment* c = const_cast<CrossCompartmentKey&>(k).compartment();
+        MOZ_ASSERT(k.is<JSString*>() == !c);
+        auto p = map.lookupForAdd(c);
+        if (!p) {
+            InnerMap m;
+            if (!m.init(InitialInnerMapSize) || !map.add(p, c, mozilla::Move(m)))
+                return false;
+        }
+        return p->value().put(k, v);
+    }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+        size_t size = map.sizeOfExcludingThis(mallocSizeOf);
+        for (OuterMap::Enum e(map); !e.empty(); e.popFront())
+            size += e.front().value().sizeOfExcludingThis(mallocSizeOf);
+        return size;
+    }
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+        size_t size = map.sizeOfIncludingThis(mallocSizeOf);
+        for (OuterMap::Enum e(map); !e.empty(); e.popFront())
+            size += e.front().value().sizeOfIncludingThis(mallocSizeOf);
+        return size;
+    }
+
+    void sweepAfterMinorGC(JSTracer* trc) {
+        for (OuterMap::Enum e(map); !e.empty(); e.popFront()) {
+            InnerMap& m = e.front().value();
+            m.sweepAfterMinorGC(trc);
+            if (m.empty())
+                e.removeFront();
+        }
+    }
+
+    void sweep() {
+        for (OuterMap::Enum e(map); !e.empty(); e.popFront()) {
+            InnerMap& m = e.front().value();
+            m.sweep();
+            if (m.empty())
+                e.removeFront();
+        }
+    }
+};
 
 // We must ensure that all newly allocated JSObjects get their metadata
 // set. However, metadata builders may require the new object be in a sane
@@ -676,6 +832,7 @@ struct JSCompartment
 
     struct WrapperEnum : public js::WrapperMap::Enum {
         explicit WrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
+        explicit WrapperEnum(JSCompartment* c, JSCompartment* target) : js::WrapperMap::Enum(c->crossCompartmentWrappers, target) {}
     };
 
     js::LexicalEnvironmentObject*
