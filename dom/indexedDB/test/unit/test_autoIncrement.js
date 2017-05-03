@@ -208,7 +208,7 @@ function* testSteps()
              { trans: trans2 });
   trans.objectStore("store1").put({ over: 1 }).onsuccess =
     genCheck(c1, { over: 1 }, "second" + test,
-             { trans: trans });
+             { trans });
   c1 += 2;
   yield undefined; yield undefined;
 
@@ -219,7 +219,7 @@ function* testSteps()
              { trans: trans2 });
   trans.objectStore("store2").put({ over: 1 }).onsuccess =
     genCheck(c2, { over: 1, id: c2 }, "fourth" + test,
-             { trans: trans });
+             { trans });
   c2 += 2;
   yield undefined; yield undefined;
 

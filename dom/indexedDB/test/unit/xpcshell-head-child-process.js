@@ -4,7 +4,7 @@
  */
 
 function run_test() {
-  const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
+  const { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
   const INDEXEDDB_HEAD_FILE = "xpcshell-head-parent-process.js";
   const INDEXEDDB_PREF_EXPERIMENTAL = "dom.indexedDB.experimental";

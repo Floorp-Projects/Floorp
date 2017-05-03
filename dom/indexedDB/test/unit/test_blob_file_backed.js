@@ -19,7 +19,7 @@ function* testSteps()
 
   info("Creating temp file");
 
-  SpecialPowers.createFiles([{data:fileData, options:{type:fileType}}], function (files) {
+  SpecialPowers.createFiles([{data: fileData, options: {type: fileType}}], function(files) {
       testGenerator.next(files[0]);
   });
 

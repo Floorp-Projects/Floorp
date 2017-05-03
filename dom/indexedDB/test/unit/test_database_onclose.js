@@ -100,7 +100,7 @@ function* testSteps()
   objectStore = txn.objectStore("store");
 
   let objectId = 0;
-  while(true) {
+  while (true) {
     let addRequest = objectStore.add({foo: "foo"}, objectId);
     addRequest.onerror = function(event) {
       info("addRequest.onerror, objectId: " + objectId);
@@ -166,7 +166,7 @@ function* testSteps()
   // during testing.
   let numberOfObjects = 3000;
   objectId = 0;
-  while(true) {
+  while (true) {
     let addRequest = objectStore.add({foo: "foo"});
     addRequest.onsuccess = function() {
       objectId++;
