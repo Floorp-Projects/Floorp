@@ -208,7 +208,6 @@ this.UITour = {
       query: "#urlbar",
       widgetName: "urlbar-container",
     }],
-    ["webide",      {query: "#webide-button"}],
   ]),
 
   init() {

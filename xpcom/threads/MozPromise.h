@@ -1328,12 +1328,11 @@ InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName
             RefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...),
             ActualArgTypes&&... aArgs)
 {
-  static_assert((!detail::Any(IsReference<ArgTypes>::value...)) &&
-                (!detail::Any(IsPointer<ArgTypes>::value...)),
-                "Cannot pass reference/pointer types through InvokeAsync, Storages must be provided");
+  static_assert(!detail::Any(IsPointer<ArgTypes>::value...),
+                "Cannot pass pointer types through InvokeAsync, Storages must be provided");
   static_assert(sizeof...(ArgTypes) == sizeof...(ActualArgTypes),
                 "Method's ArgTypes and ActualArgTypes should have equal sizes");
-  return detail::InvokeAsyncImpl<StoreCopyPassByRRef<ArgTypes>...>(
+  return detail::InvokeAsyncImpl<StoreCopyPassByRRef<typename Decay<ArgTypes>::Type>...>(
            aTarget, aThisVal, aCallerName, aMethod,
            Forward<ActualArgTypes>(aArgs)...);
 }

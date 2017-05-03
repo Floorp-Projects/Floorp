@@ -139,6 +139,7 @@ function renderAllToolsButton(props) {
           },
           id: "all-tools-menupopup-" + id,
           label,
+          type: "checkbox",
         }));
       });
 

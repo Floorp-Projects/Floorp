@@ -28,7 +28,6 @@ EXTRA_JS_MODULES += [
     'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',
-    'JavaAddonManager.jsm',
     'JNI.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',

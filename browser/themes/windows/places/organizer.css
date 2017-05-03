@@ -15,17 +15,19 @@
   opacity: .4;
 }
 
-#back-button,
-#forward-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
+  -moz-context-properties: fill;
+  fill: currentcolor;
+  opacity: 0.65;
 }
 
 #back-button {
-  -moz-image-region: rect(0, 54px, 18px, 36px);
+  list-style-image: url("chrome://browser/skin/back.svg");
 }
 
 #forward-button {
-  -moz-image-region: rect(0, 72px, 18px, 54px);
+  list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
@@ -79,8 +81,8 @@
 }
 
 /* organize, view and maintenance buttons icons */
-#organizeButton, 
-#viewMenu, 
+#organizeButton,
+#viewMenu,
 #maintenanceButton {
   list-style-image: url("chrome://browser/skin/places/libraryToolbar.png");
 }
