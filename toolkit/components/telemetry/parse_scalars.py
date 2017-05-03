@@ -114,7 +114,8 @@ class ScalarType:
         # Checks that all the required fields are available.
         missing_fields = [f for f in REQUIRED_FIELDS.keys() if f not in definition]
         if len(missing_fields) > 0:
-            raise ParserError(self._name + ' - missing required fields: ' + ', '.join(missing_fields) +
+            raise ParserError(self._name + ' - missing required fields: ' +
+                              ', '.join(missing_fields) +
                               '.\nSee: {}#required-fields'.format(BASE_DOC_URL))
 
         # Do we have any unknown field?
@@ -125,7 +126,8 @@ class ScalarType:
 
         # Checks the type for all the fields.
         wrong_type_names = ['{} must be {}'.format(f, ALL_FIELDS[f].__name__)
-                            for f in definition.keys() if not isinstance(definition[f], ALL_FIELDS[f])]
+                            for f in definition.keys()
+                            if not isinstance(definition[f], ALL_FIELDS[f])]
         if len(wrong_type_names) > 0:
             raise ParserError(self._name + ' - ' + ', '.join(wrong_type_names) +
                               '.\nSee: {}#required-fields'.format(BASE_DOC_URL))
