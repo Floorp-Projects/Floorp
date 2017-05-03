@@ -87,7 +87,7 @@
               <vbox align="center" pack="center">
                 <image id="fxaProfileImage" class="actionable"
                     role="button"
-                    onclick="gSyncPane.openChangeProfileImage(event);"
+                    onclick="gSyncPane.openChangeProfileImage(event);" hidden="true"
                     onkeypress="gSyncPane.openChangeProfileImage(event);"
                     tooltiptext="&profilePicture.tooltip;"/>
               </vbox>
