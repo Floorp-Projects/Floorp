@@ -678,13 +678,9 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!cursor)
         return nullptr;
 
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (metadata_->debugEnabled || !metadata_->funcNames.empty())
-        maybeBytecode = bytecode.get();
-
     segment_ = UniqueConstCodeSegment(codeSegment.release());
     metadata_ = metadata;
-    maybeBytecode_ = maybeBytecode;
+    maybeBytecode_ = bytecode;
 
     return cursor;
 }

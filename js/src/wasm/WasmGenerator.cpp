@@ -1194,11 +1194,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (metadata_->debugEnabled || !metadata_->funcNames.empty())
-        maybeBytecode = &bytecode;
-
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, maybeBytecode);
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, &bytecode);
     if (!code)
         return nullptr;
 
