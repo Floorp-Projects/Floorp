@@ -291,7 +291,6 @@ function* testSteps()
   keyIndex = 0;
 
   let gotRemoveEvent = false;
-  let retval = false;
 
   request = objectStore.openCursor(null, "next");
   request.onerror = errorHandler;

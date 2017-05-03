@@ -14,7 +14,6 @@ function* testSteps()
   openRequest.onsuccess = unexpectedSuccessHandler;
   let event = yield undefined;
   let db = event.target.result;
-  let trans = event.target.transaction;
 
   for (let autoincrement of [true, false]) {
     for (let keypath of [false, true, "missing", "invalid"]) {
