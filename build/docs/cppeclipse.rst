@@ -18,14 +18,14 @@ built tree::
 
    mach build
 
-Then, simply generate the Android Eclipse build backend::
+Then, simply generate the C++ Eclipse build backend::
 
    mach build-backend -b CppEclipse
 
 If all goes well, the path to the generated workspace should be
-printed (currently, ``$OBJDIR/android_eclipse``).
+printed.
 
-To use the generated Android Eclipse project files, you'll need to
+To use the generated C++ Eclipse project files, you'll need to
 have a Eclipse CDT 8.3 (We plan to follow the latest Eclipse release)
 `Eclipse CDT plugin
 <https://www.eclipse.org/cdt/>`_
@@ -43,7 +43,7 @@ rare circumstances Eclipse's index may not have the proper build
 configuration.
 
 To account for this, you'll want to periodically regenerate the
-Android Eclipse project files. You can do this by running ``mach build
+C++ Eclipse project files. You can do this by running ``mach build
 && mach build-backend -b CppEclipse`` from the
 command line.
 
