@@ -337,17 +337,6 @@ CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>
 {
   LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
-
-  TabChild* tabChild = TabChild::GetFrom(c->GetId());
-
-  // Do the DOM Labeling.
-  if (tabChild) {
-    nsCOMPtr<nsIEventTarget> target =
-      tabChild->TabGroup()->EventTargetFor(TaskCategory::Other);
-    SetEventTargetForActor(c, target);
-    MOZ_ASSERT(c->GetActorEventTarget());
-  }
-
   return c;
 }
 
