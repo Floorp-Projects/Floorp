@@ -109,6 +109,8 @@ def main(argv):
                   help='Run a single test under the specified debugger')
     op.add_option('--valgrind', dest='valgrind', action='store_true',
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
+    op.add_option('--unusable-error-status', action='store_true',
+                  help='Ignore incorrect exit status on tests that should return nonzero.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
