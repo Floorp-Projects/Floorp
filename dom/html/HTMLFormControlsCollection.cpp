@@ -100,12 +100,12 @@ HTMLFormControlsCollection::Clear()
 {
   // Null out childrens' pointer to me.  No refcounting here
   for (int32_t i = mElements.Length() - 1; i >= 0; i--) {
-    mElements[i]->ClearForm(false);
+    mElements[i]->ClearForm(false, false);
   }
   mElements.Clear();
 
   for (int32_t i = mNotInElements.Length() - 1; i >= 0; i--) {
-    mNotInElements[i]->ClearForm(false);
+    mNotInElements[i]->ClearForm(false, false);
   }
   mNotInElements.Clear();
 

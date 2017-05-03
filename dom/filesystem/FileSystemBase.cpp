@@ -14,9 +14,6 @@ namespace dom {
 
 FileSystemBase::FileSystemBase()
   : mShutdown(false)
-#ifdef DEBUG
-  , mOwningThread(PR_GetCurrentThread())
-#endif
 {
 }
 
@@ -161,8 +158,7 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
 void
 FileSystemBase::AssertIsOnOwningThread() const
 {
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+  NS_ASSERT_OWNINGTHREAD(FileSystemBase);
 }
 
 } // namespace dom
