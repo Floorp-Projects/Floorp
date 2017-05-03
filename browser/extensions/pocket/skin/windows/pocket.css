@@ -8,9 +8,3 @@
     max-width: 18px;
     padding: 0;
 }
-
-@media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
-  #pocket-button {
-    list-style-image: url(Toolbar-lunaSilver.png);
-  }
-}

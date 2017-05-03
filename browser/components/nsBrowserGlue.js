@@ -757,11 +757,14 @@ BrowserGlue.prototype = {
     if (!win)
       return;
 
-    let message = win.gNavigatorBundle.getString("nonMpcDisabled.message");
+    // This is only going to be on Nightly and only for the 55 and 56
+    // cycles, and it points to a wiki page that is not localized, so
+    // no need to localize the message here...
+    let message = "Due to performance testing, we have disabled some of your add-ons. They can be re-enabled in your browser settings.";
     let buttons = [
       {
-        label: win.gNavigatorBundle.getString("nonMpcDisabled.manage.label"),
-        accessKey: win.gNavigatorBundle.getString("nonMpcDisabled.manage.accessKey"),
+        label: "Manage Add-Ons",
+        accessKey: "M",
         callback() {
           win.BrowserOpenAddonsMgr("addons://list/extension");
         }

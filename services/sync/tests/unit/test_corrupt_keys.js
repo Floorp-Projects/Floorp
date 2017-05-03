@@ -37,21 +37,6 @@ add_task(async function test_locally_changed_keys() {
 
   try {
     Svc.Prefs.set("registerEngines", "Tab");
-    _("Set up some tabs.");
-    let myTabs =
-      {windows: [{tabs: [{index: 1,
-                          entries: [{
-                            url: "http://foo.com/",
-                            title: "Title"
-                          }],
-                          attributes: {
-                            image: "image"
-                          }
-                          }]}]};
-    delete Svc.Session;
-    Svc.Session = {
-      getBrowserState: () => JSON.stringify(myTabs)
-    };
 
     await configureIdentity({ username: "johndoe" }, server);
     // We aren't doing a .login yet, so fudge the cluster URL.

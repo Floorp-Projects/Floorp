@@ -4,7 +4,6 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-var hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
 var hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 
 requestLongerTimeout(2);
@@ -30,7 +29,6 @@ add_UITour_task(function* test_availableTargets() {
     "searchIcon",
     "trackingProtection",
     "urlbar",
-      ...(hasWebIDE ? ["webide"] : [])
   ]);
 
   ok(UITour.availableTargetsCache.has(window),
@@ -59,7 +57,6 @@ add_UITour_task(function* test_availableTargets_changeWidgets() {
     "searchIcon",
     "trackingProtection",
     "urlbar",
-      ...(hasWebIDE ? ["webide"] : [])
   ]);
 
   ok(UITour.availableTargetsCache.has(window),
@@ -91,7 +88,6 @@ add_UITour_task(function* test_availableTargets_exceptionFromGetTarget() {
     "readerMode-urlBar",
     "trackingProtection",
     "urlbar",
-      ...(hasWebIDE ? ["webide"] : [])
   ]);
 
   CustomizableUI.reset();

@@ -14,6 +14,7 @@
 #include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsTArray.h"
@@ -662,6 +663,8 @@ public:
            + mBuffer.ComputedSizeOfExcludingThis()
            + mAlphaBuffer.ComputedSizeOfExcludingThis();
   }
+  // Access the buffer as a Span.
+  operator Span<const uint8_t>() { return MakeSpan(Data(), Size()); }
 
   const CryptoSample& mCrypto;
   RefPtr<MediaByteBuffer> mExtraData;

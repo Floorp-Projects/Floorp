@@ -22,7 +22,7 @@ namespace mozilla {
 using namespace gfx;
 using namespace layers;
 
-static int MimeTypeToCodec(const nsACString& aMimeType)
+static VPXDecoder::Codec MimeTypeToCodec(const nsACString& aMimeType)
 {
   if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
     return VPXDecoder::Codec::VP8;
@@ -31,13 +31,13 @@ static int MimeTypeToCodec(const nsACString& aMimeType)
   } else if (aMimeType.EqualsLiteral("video/vp9")) {
     return VPXDecoder::Codec::VP9;
   }
-  return -1;
+  return VPXDecoder::Codec::Unknown;
 }
 
 static nsresult
 InitContext(vpx_codec_ctx_t* aCtx,
             const VideoInfo& aInfo,
-            const int aCodec)
+            const VPXDecoder::Codec aCodec)
 {
   int decode_threads = 2;
 
@@ -124,16 +124,8 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
 #if defined(DEBUG)
-  vpx_codec_stream_info_t si;
-  PodZero(&si);
-  si.sz = sizeof(si);
-  if (mCodec == Codec::VP8) {
-    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), aSample->Data(), aSample->Size(), &si);
-  } else if (mCodec == Codec::VP9) {
-    vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aSample->Data(), aSample->Size(), &si);
-  }
-  NS_ASSERTION(bool(si.is_kf) == aSample->mKeyframe,
-               "VPX Decode Keyframe error sample->mKeyframe and si.si_kf out of sync");
+  NS_ASSERTION(IsKeyframe(*aSample, mCodec) == aSample->mKeyframe,
+               "VPX Decode Keyframe error sample->mKeyframe and sample data out of sync");
 #endif
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(), aSample->Size(), nullptr, 0)) {
@@ -314,5 +306,40 @@ VPXDecoder::IsVP9(const nsACString& aMimeType)
   return IsVPX(aMimeType, VPXDecoder::VP9);
 }
 
+/* static */
+bool
+VPXDecoder::IsKeyframe(Span<const uint8_t> aBuffer, Codec aCodec)
+{
+  vpx_codec_stream_info_t si;
+  PodZero(&si);
+  si.sz = sizeof(si);
+
+  if (aCodec == Codec::VP8) {
+    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), aBuffer.Elements(), aBuffer.Length(), &si);
+    return bool(si.is_kf);
+  } else if (aCodec == Codec::VP9) {
+    vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aBuffer.Elements(), aBuffer.Length(), &si);
+    return bool(si.is_kf);
+  }
+
+  return false;
+}
+
+/* static */
+nsIntSize
+VPXDecoder::GetFrameSize(Span<const uint8_t> aBuffer, Codec aCodec)
+{
+  vpx_codec_stream_info_t si;
+  PodZero(&si);
+  si.sz = sizeof(si);
+
+  if (aCodec == Codec::VP8) {
+    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), aBuffer.Elements(), aBuffer.Length(), &si);
+  } else if (aCodec == Codec::VP9) {
+    vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aBuffer.Elements(), aBuffer.Length(), &si);
+  }
+
+  return nsIntSize(si.w, si.h);
+}
 } // namespace mozilla
 #undef LOG

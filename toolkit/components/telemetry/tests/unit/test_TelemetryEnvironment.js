@@ -853,6 +853,9 @@ add_task(function* setup() {
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
 
+  // Allow non-multiprocessCompatible extensions
+  Preferences.set("extensions.allow-non-mpc-extensions", true);
+
   // Create the attribution data file, so that settings.attribution will exist.
   // The attribution functionality only exists in Firefox.
   if (AppConstants.MOZ_BUILD_APP == "browser") {

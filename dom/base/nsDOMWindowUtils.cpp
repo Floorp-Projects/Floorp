@@ -2415,28 +2415,6 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
   return NS_OK;
 }
 
-static bool
-ComputeAnimationValue(nsCSSPropertyID aProperty,
-                      Element* aElement,
-                      const nsAString& aInput,
-                      StyleAnimationValue& aOutput)
-{
-  nsIDocument* doc = aElement->GetUncomposedDoc();
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
-    return false;
-  }
-
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aElement, nullptr, shell);
-
-  if (!StyleAnimationValue::ComputeValue(aProperty, aElement, styleContext,
-                                         aInput, false, aOutput)) {
-    return false;
-  }
-  return true;
-}
-
 NS_IMETHODIMP
 nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
 {
@@ -2700,31 +2678,23 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
 
   nsCSSPropertyID property =
     nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eIgnoreEnabledState);
-  if (property != eCSSProperty_UNKNOWN && nsCSSProps::IsShorthand(property)) {
-    property = eCSSProperty_UNKNOWN;
-  }
-
-  MOZ_ASSERT(property == eCSSProperty_UNKNOWN ||
-             !nsCSSProps::IsShorthand(property),
-             "should not have shorthand");
-
-  StyleAnimationValue v1, v2;
-  Element* element = content->AsElement();
   if (property == eCSSProperty_UNKNOWN ||
-      !ComputeAnimationValue(property, element, aValue1, v1) ||
-      !ComputeAnimationValue(property, element, aValue2, v2)) {
+      nsCSSProps::IsShorthand(property)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsIPresShell* shell = element->GetUncomposedDoc()->GetShell();
+  Element* element = content->AsElement();
+  AnimationValue v1 = AnimationValue::FromString(property, aValue1, element);
+  AnimationValue v2 = AnimationValue::FromString(property, aValue2, element);
+  if (v1.IsNull() || v2.IsNull()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsIPresShell* shell = element->GetComposedDoc()->GetShell();
   RefPtr<nsStyleContext> styleContext = shell
     ? nsComputedDOMStyle::GetStyleContext(element, nullptr, shell)
     : nullptr;
-  if (!StyleAnimationValue::ComputeDistance(property, v1, v2, styleContext,
-                                            *aResult)) {
-    return NS_ERROR_FAILURE;
-  }
-
+  *aResult = v1.ComputeDistance(property, v2, styleContext);
   return NS_OK;
 }
 
