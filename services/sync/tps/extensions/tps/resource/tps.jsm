@@ -624,7 +624,7 @@ var TPS = {
         item.decrypt(collectionKey);
         items.push(item.cleartext);
       };
-      collection.get();
+      Async.promiseSpinningly(collection.get());
       return items;
     };
     let serverRecordDumpStr;
