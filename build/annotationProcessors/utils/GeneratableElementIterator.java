@@ -158,6 +158,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         AnnotationInfo.ExceptionMode exceptionMode = null;
         AnnotationInfo.CallingThread callingThread = null;
         AnnotationInfo.DispatchTarget dispatchTarget = null;
+        boolean noLiteral = false;
 
         try {
             final Method skipMethod = annotationType.getDeclaredMethod("skip");
@@ -190,6 +191,10 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     AnnotationInfo.DispatchTarget.class,
                     (String) dispatchToMethod.invoke(annotation));
 
+            final Method noLiteralMethod = annotationType.getDeclaredMethod("noLiteral");
+            noLiteralMethod.setAccessible(true);
+            noLiteral = (Boolean) noLiteralMethod.invoke(annotation);
+
         } catch (NoSuchMethodException e) {
             System.err.println("Unable to find expected field on WrapForJNI annotation. Did the signature change?");
             e.printStackTrace(System.err);
@@ -209,7 +214,8 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             stubName = Utils.getNativeName(element);
         }
 
-        return new AnnotationInfo(stubName, exceptionMode, callingThread, dispatchTarget);
+        return new AnnotationInfo(stubName, exceptionMode, callingThread, dispatchTarget,
+                                  noLiteral);
     }
 
     /**
@@ -240,7 +246,8 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     Utils.getNativeName(candidateElement),
                     mClassInfo.exceptionMode,
                     mClassInfo.callingThread,
-                    mClassInfo.dispatchTarget);
+                    mClassInfo.dispatchTarget,
+                    mClassInfo.noLiteral);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }
