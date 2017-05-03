@@ -19,7 +19,7 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  runUpdateUsingService(STATE_SUCCEEDED, false, true);
+  runUpdate(STATE_SUCCEEDED, false, 0, true);
 }
 
 /**
