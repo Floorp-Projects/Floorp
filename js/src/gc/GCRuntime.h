@@ -989,6 +989,7 @@ class GCRuntime
     void beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock);
     bool shouldReleaseObservedTypes();
     void sweepDebuggerOnMainThread(FreeOp* fop);
+    void sweepJitDataOnMainThread(FreeOp* fop);
     void endSweepingSweepGroup();
     IncrementalProgress performSweepActions(SliceBudget& sliceBudget,
                                             AutoLockForExclusiveAccess& lock);
