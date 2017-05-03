@@ -115,6 +115,7 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
 
 bool
 WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                                           const StackingContextHelper& aSc,
                                            nsTArray<layers::WebRenderParentCommand>& aParentCommands)
 {
   if (!mImageContainer) {

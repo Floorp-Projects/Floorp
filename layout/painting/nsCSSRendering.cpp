@@ -1991,6 +1991,7 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
 DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                              mozilla::wr::DisplayListBuilder& aBuilder,
+                                                             const mozilla::layers::StackingContextHelper& aSc,
                                                              nsTArray<WebRenderParentCommand>& aParentCommands,
                                                              mozilla::layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -2016,7 +2017,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     sc = aParams.frame->StyleContext();
   }
 
-  return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aParentCommands, aLayer,
+  return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aSc, aParentCommands, aLayer,
                                                             sc, *aParams.frame->StyleBorder());
 }
 
@@ -2732,6 +2733,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
 DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                    mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                   const mozilla::layers::StackingContextHelper& aSc,
                                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
                                                                    mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                    nsStyleContext *aBackgroundSC,
@@ -2778,7 +2780,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
 
   if (!state.mFillArea.IsEmpty()) {
     return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
-                                     aBuilder, aParentCommands, aLayer,
+                                     aBuilder, aSc, aParentCommands, aLayer,
                                      state.mDestArea, state.mFillArea,
                                      state.mAnchor + paintBorderArea.TopLeft(),
                                      clipState.mDirtyRectInAppUnits,

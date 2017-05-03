@@ -579,6 +579,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 DrawResult
 nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                             mozilla::wr::DisplayListBuilder&            aBuilder,
+                                            const mozilla::layers::StackingContextHelper& aSc,
                                             nsTArray<WebRenderParentCommand>&           aParentCommands,
                                             mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                             const nsRect&        aDirtyRect,
@@ -604,7 +605,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       nsCSSGradientRenderer renderer =
         nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      renderer.BuildWebRenderDisplayItems(aBuilder, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
+      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
       break;
     }
     case eStyleImageType_Image:
@@ -713,6 +714,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
 DrawResult
 nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    const mozilla::layers::StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer*       aLayer,
                                                     const nsRect&        aDest,
@@ -731,7 +733,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
     return DrawResult::SUCCESS;
   }
 
-  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aParentCommands, aLayer,
+  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aSc, aParentCommands, aLayer,
                                     aDirty, aDest, aFill, aAnchor, aRepeatSize,
                                     CSSIntRect(0, 0,
                                                nsPresContext::AppUnitsToIntCSSPixels(mSize.width),

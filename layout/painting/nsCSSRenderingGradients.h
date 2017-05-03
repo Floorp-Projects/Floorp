@@ -15,6 +15,7 @@
 namespace mozilla {
 
 namespace layers {
+class StackingContextHelper;
 class WebRenderDisplayItemLayer;
 } // namespace layers
 
@@ -80,6 +81,7 @@ public:
    * aSrc - the area of the gradient that will fill aDest
    */
   void BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                  const layers::StackingContextHelper& aSc,
                                   layers::WebRenderDisplayItemLayer* aLayer,
                                   const nsRect& aDest,
                                   const nsRect& aFill,
