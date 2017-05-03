@@ -71,7 +71,7 @@ function* testSteps()
   testInvalidStateError(db, txn);
 
   info("#2: Verifying IDBDatabase.onclose && IDBTransaction.onerror " +
-  		 "in *write* operation after cleared by the agent.");
+       "in *write* operation after cleared by the agent.");
   openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;

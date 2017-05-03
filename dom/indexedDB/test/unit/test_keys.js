@@ -8,9 +8,6 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
-  const RW = "readwrite"
-  let c1 = 1;
-  let c2 = 1;
 
   let openRequest = indexedDB.open(dbname, 1);
   openRequest.onerror = errorHandler;
@@ -18,7 +15,6 @@ function* testSteps()
   openRequest.onsuccess = unexpectedSuccessHandler;
   let event = yield undefined;
   let db = event.target.result;
-  let trans = event.target.transaction;
 
   // Create test stores
   let store = db.createObjectStore("store");

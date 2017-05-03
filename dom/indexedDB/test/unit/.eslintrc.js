@@ -10,8 +10,6 @@ module.exports = {
   ],
   "rules": {
     "brace-style": "off",
-    "no-mixed-spaces-and-tabs": "off",
     "no-shadow": "off",
-    "no-unused-vars": "off",
   }
 };

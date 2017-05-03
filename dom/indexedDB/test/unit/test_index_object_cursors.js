@@ -40,9 +40,9 @@ function* testSteps()
                                            objectStoreInfo.options);
     for (let indexIndex in indexData) {
       const indexInfo = indexData[indexIndex];
-      let index = objectStore.createIndex(indexInfo.name,
-                                          indexInfo.keyPath,
-                                          indexInfo.options);
+      objectStore.createIndex(indexInfo.name,
+                              indexInfo.keyPath,
+                              indexInfo.options);
     }
   }
   yield undefined;
