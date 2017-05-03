@@ -298,6 +298,8 @@ public:
     : mRegistration(aRegistration)
     , mCallback(aCallback)
     , mState(WaitingForInitialization)
+    , mPendingCount(0)
+    , mAreScriptsEqual(true)
     , mLoadFlags(nsIChannel::LOAD_BYPASS_SERVICE_WORKER)
   {
     AssertIsOnMainThread();
@@ -359,14 +361,22 @@ public:
       return;
     }
 
+    mAreScriptsEqual = mAreScriptsEqual && aIsEqual;
+
     if (aIsMainScript) {
       mMaxScope = aMaxScope;
       mLoadFlags = aLoadFlags;
     }
 
-    if (aIsEqual) {
+    // Check whether all CompareNetworks finished their jobs.
+    MOZ_DIAGNOSTIC_ASSERT(mPendingCount > 0);
+    if (--mPendingCount) {
+      return;
+    }
+
+    if (mAreScriptsEqual) {
       NotifyComparisonResult(aStatus,
-                             aIsEqual,
+                             true /* aSameScripts */,
                              EmptyString(),
                              mMaxScope,
                              mLoadFlags);
@@ -382,7 +392,7 @@ private:
   ~CompareManager()
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(!mCN);
+    MOZ_ASSERT(mCNs.Length() == 0);
   }
 
   void
@@ -408,12 +418,14 @@ private:
               bool aIsMainScript,
               Cache* const aCache)
   {
-    mCN = new CompareNetwork(this,
-                             mPrincipal,
-                             aURL,
-                             aIsMainScript,
-                             mLoadGroup,
-                             aCache);
+    RefPtr<CompareNetwork> cn = new CompareNetwork(this,
+                                                   mPrincipal,
+                                                   aURL,
+                                                   aIsMainScript,
+                                                   mLoadGroup,
+                                                   aCache);
+    mCNs.AppendElement(cn.forget());
+    mPendingCount += 1;
   }
 
   void
@@ -470,7 +482,10 @@ private:
       return;
     }
 
-    // Populate the script URLs.
+    // Fetch the new scripts.
+    MOZ_ASSERT(mPendingCount == 0);
+
+    mState = WaitingForScriptOrComparisonResult;
     for (uint32_t i = 0; i < len; ++i) {
       JS::Rooted<JS::Value> val(aCx);
       if (NS_WARN_IF(!JS_GetElement(aCx, obj, i, &val)) ||
@@ -490,10 +505,9 @@ private:
 
       nsString URL;
       request->GetUrl(URL);
+      FetchScript(URL, mURL == URL /* aIsMainScript */, mOldCache);
     }
 
-    mState = WaitingForScriptOrComparisonResult;
-    FetchScript(mURL, true /* aIsMainScript */, mOldCache);
     return;
   }
 
@@ -523,7 +537,11 @@ private:
     // Just to be safe.
     RefPtr<Cache> kungfuDeathGrip = cache;
     mState = WaitingForPut;
-    WriteToCache(cache);
+
+    MOZ_ASSERT(mPendingCount == 0);
+    for (uint32_t i = 0; i < mCNs.Length(); ++i) {
+      WriteToCache(cache, mCNs[i]);
+    }
     return;
   }
 
@@ -531,7 +549,7 @@ private:
   WriteNetworkBufferToNewCache()
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mCN);
+    MOZ_ASSERT(mCNs.Length() != 0);
     MOZ_ASSERT(mCacheStorage);
     MOZ_ASSERT(mNewCacheName.IsEmpty());
 
@@ -554,16 +572,17 @@ private:
   }
 
   void
-  WriteToCache(Cache* aCache)
+  WriteToCache(Cache* aCache, CompareNetwork* aCN)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aCache);
+    MOZ_ASSERT(aCN);
     MOZ_ASSERT(mState == WaitingForPut);
 
     ErrorResult result;
     nsCOMPtr<nsIInputStream> body;
     result = NS_NewCStringInputStream(getter_AddRefs(body),
-                                      NS_ConvertUTF16toUTF8(mCN->Buffer()));
+                                      NS_ConvertUTF16toUTF8(aCN->Buffer()));
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       NotifyComparisonResult(result.StealNSResult());
@@ -572,22 +591,22 @@ private:
 
     RefPtr<InternalResponse> ir =
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-    ir->SetBody(body, mCN->Buffer().Length());
+    ir->SetBody(body, aCN->Buffer().Length());
 
-    ir->InitChannelInfo(mCN->GetChannelInfo());
-    UniquePtr<PrincipalInfo> principalInfo = mCN->TakePrincipalInfo();
+    ir->InitChannelInfo(aCN->GetChannelInfo());
+    UniquePtr<PrincipalInfo> principalInfo = aCN->TakePrincipalInfo();
     if (principalInfo) {
       ir->SetPrincipalInfo(Move(principalInfo));
     }
 
     IgnoredErrorResult ignored;
-    RefPtr<InternalHeaders> internalHeaders = mCN->GetInternalHeaders();
+    RefPtr<InternalHeaders> internalHeaders = aCN->GetInternalHeaders();
     ir->Headers()->Fill(*(internalHeaders.get()), ignored);
 
     RefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
     RequestOrUSVString request;
-    request.SetAsUSVString().Rebind(URL().Data(), URL().Length());
+    request.SetAsUSVString().Rebind(aCN->URL().Data(), URL().Length());
 
     // For now we have to wait until the Put Promise is fulfilled before we can
     // continue since Cache does not yet support starting a read that is being
@@ -599,6 +618,7 @@ private:
       return;
     }
 
+    mPendingCount += 1;
     cachePromise->AppendNativeHandler(this);
   }
 
@@ -607,7 +627,7 @@ private:
   JS::PersistentRooted<JSObject*> mSandbox;
   RefPtr<CacheStorage> mCacheStorage;
 
-  RefPtr<CompareNetwork> mCN;
+  nsTArray<RefPtr<CompareNetwork>> mCNs;
 
   nsString mURL;
   RefPtr<nsIPrincipal> mPrincipal;
@@ -629,6 +649,9 @@ private:
     WaitingForPut,
     Redundant
   } mState;
+
+  uint32_t mPendingCount;
+  bool mAreScriptsEqual;
 
   nsCString mMaxScope;
   nsLoadFlags mLoadFlags;
@@ -1179,6 +1202,7 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(mState == WaitingForInitialization);
+  MOZ_ASSERT(mPendingCount == 0);
 
   // RAII error notifier
   nsresult rv = NS_ERROR_FAILURE;
@@ -1255,8 +1279,13 @@ CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 
   MOZ_ASSERT(mState == WaitingForPut);
+  MOZ_DIAGNOSTIC_ASSERT(mPendingCount > 0);
+  if (--mPendingCount) {
+    return;
+  }
+
   NotifyComparisonResult(NS_OK,
-                         false /* aIsEqual */,
+                         false /* aSameScripts */,
                          mNewCacheName,
                          mMaxScope,
                          mLoadFlags);
@@ -1316,10 +1345,12 @@ CompareManager::NotifyComparisonResult(nsresult aStatus,
                               aLoadFlags);
   mCallback = nullptr;
 
-  // Abort and release the CompareNetwork.
-  MOZ_ASSERT(mCN);
-  mCN->Abort();
-  mCN = nullptr;
+  // Abort and release CompareNetworks.
+  MOZ_ASSERT(mCNs.Length());
+  for (uint32_t i = 0; i < mCNs.Length(); ++i) {
+    mCNs[i]->Abort();
+  }
+  mCNs.Clear();
 }
 
 } // namespace
