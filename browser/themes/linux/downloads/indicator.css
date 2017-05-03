@@ -21,21 +21,33 @@
 
 /*** Main indicator icon ***/
 
-#downloads-button {
-  --downloads-indicator-image: url("chrome://browser/skin/download.svg");
+@media not all and (min-resolution: 1.1dppx) {
+  #downloads-button {
+    --downloads-indicator-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 0, 198, 18, 180);
+    --downloads-indicator-image-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+    --downloads-indicator-image-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
+    --downloads-indicator-image-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #downloads-button {
+    --downloads-indicator-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-image-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 36, 396, 72, 360);
+    --downloads-indicator-image-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-image-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 36, 396, 72, 360);
+  }
 }
 
 #downloads-button[cui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background: var(--downloads-indicator-image) center no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
   width: 18px;
   height: 18px;
   background-size: 18px;
 }
 
 toolbar[brighttext] #downloads-button[cui-areatype="toolbar"]:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon {
-  fill: var(--toolbarbutton-icon-fill-inverted);
+  background-image: var(--downloads-indicator-image-inverted);
 }
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
@@ -69,7 +81,11 @@ toolbar[brighttext] #downloads-button[cui-areatype="toolbar"]:not([attention="su
 }
 
 #downloads-button[cui-areatype="toolbar"][attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  fill: var(--toolbarbutton-icon-fill-attention);
+  background-image: var(--downloads-indicator-image-attention);
+}
+
+toolbar[brighttext] #downloads-button[cui-areatype="toolbar"][attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: var(--downloads-indicator-image-attention-inverted);
 }
 
 #downloads-button[cui-areatype="menu-panel"][attention="success"] {
@@ -82,17 +98,19 @@ toolbar[brighttext] #downloads-button[cui-areatype="toolbar"]:not([attention="su
 
 #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background: var(--downloads-indicator-image) center no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
   background-size: 12px;
 }
 
 toolbar[brighttext] #downloads-button:not([counter]):not([attention="success"]) > #downloads-indicator-anchor > #downloads-button-progress-area > #downloads-indicator-counter {
-  fill: var(--toolbarbutton-icon-fill-inverted);
+  background-image: var(--downloads-indicator-image-inverted);
 }
 
 #downloads-button:not([counter])[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  fill: var(--toolbarbutton-icon-fill-attention);
+  background-image: var(--downloads-indicator-image-attention);
+}
+
+toolbar[brighttext] #downloads-button:not([counter])[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+  background-image: var(--downloads-indicator-image-attention-inverted);
 }
 
 /*** Download notifications ***/

@@ -37,7 +37,6 @@
 }
 
 #bookmarked-notification-dropmarker-icon {
-  -moz-context-properties: fill;
   width: 18px;
   height: 18px;
   visibility: hidden;

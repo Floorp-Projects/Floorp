@@ -557,108 +557,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 /* Inactive elements are faded out on OSX */
 
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
-toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
-toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-menubutton-button[open] + .toolbarbutton-menubutton-dropmarker,
-toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button,
-toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker,
-toolbar .toolbaritem-combined-buttons:hover > .toolbarbutton-combined {
-  border-color: var(--toolbarbutton-hover-bordercolor);
-  box-shadow: var(--toolbarbutton-hover-boxshadow);
-}
-
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
-toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover] > .toolbarbutton-menubutton-button,
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover > .toolbarbutton-menubutton-dropmarker {
-  background: var(--toolbarbutton-hover-background);
-}
-
-.findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active),
-toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open],[checked]),
-toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-menubutton-button[open],
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
-toolbar .toolbarbutton-1[type="menu-button"][open]:not([disabled]) > .toolbarbutton-menubutton-dropmarker {
-  background: var(--toolbarbutton-active-background);
-  border-color: var(--toolbarbutton-active-bordercolor);
-  box-shadow: var(--toolbarbutton-active-boxshadow);
-  transition-duration: 10ms;
-}
-
-.findbar-button[checked="true"]:not(:active):hover,
-toolbar .toolbarbutton-1[checked]:not(:active):hover {
-  background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
-  transition: background-color 250ms;
-}
-
-.toolbarbutton-1[type="menu-button"]:not([overflowedItem=true]) {
-  padding: 0;
-}
-
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  margin: 0;
-}
-
-.toolbarbutton-1 {
-  margin: 4px 2px;
-}
-
-/**
- * Draw seperators before toolbar button dropmarkers, as well as between
- * consecutive toolbarbutton-1's within a toolbaritem.
- */
-toolbar .toolbaritem-combined-buttons:not(:hover) > separator,
-toolbar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
-  content: "";
-  display: -moz-box;
-  width: 1px;
-  height: 18px;
-  margin-inline-start: -1px;
-  background-image: linear-gradient(currentColor 0, currentColor 100%);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 1px 18px;
-  opacity: .2;
-}
-
-toolbar[brighttext] .toolbaritem-combined-buttons > separator,
-toolbar[brighttext] .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
-  opacity: .3;
-}
-
-toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-box-orient: horizontal;
-}
-
-toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  margin: 0 4px;
-}
-
-#PanelUI-button {
-  margin-top: -4px;
-  margin-bottom: -4px;
-  margin-inline-start: 5px;
-  margin-inline-end: 1px;
-  padding-inline-start: 5px;
-  -moz-box-align: center;
-}
-
-%include ../shared/toolbarbutton-icons.inc.css
-%include ../shared/menupanel.inc.css
-
-toolbar .toolbarbutton-1:not([type="menu-button"]),
-toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  min-width: 28px;
-}
-
-#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
-#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1:not(:hover):-moz-window-inactive > #downloads-indicator-anchor,
 .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
 .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
@@ -2319,9 +2217,8 @@ html|*.addon-webext-perm-list {
 .addon-toolbar-icon {
   width: 14px;
   height: 14px;
-  list-style-image: url("chrome://browser/skin/menu.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0, 486px, 18px, 468px);
 }
 
 /* Status panel */

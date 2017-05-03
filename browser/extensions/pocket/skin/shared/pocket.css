@@ -14,17 +14,12 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button {
-  list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
+  list-style-image: url("chrome://pocket/skin/Toolbar.png");
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
 
 toolbar[brighttext] #pocket-button {
-  fill: var(--toolbarbutton-icon-fill-inverted);
-}
-
-#pocket-button[cui-areatype="toolbar"][open] {
-  fill: rgb(213,32,20);
+  list-style-image: url(chrome://pocket/skin/Toolbar-inverted.png);
 }
 
 @media not all and (min-resolution: 1.1dppx) {
@@ -51,20 +46,34 @@ toolbar[brighttext] #pocket-button {
   }
 }
 
+#pocket-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 18px, 18px, 0);
+}
+
+#pocket-button[cui-areatype="toolbar"][open] {
+  -moz-image-region: rect(18px, 18px, 36px, 0);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #pocket-button {
+    list-style-image: url("chrome://pocket/skin/Toolbar@2x.png");
+  }
+
+  toolbar[brighttext] #pocket-button {
+    list-style-image: url("chrome://pocket/skin/Toolbar-inverted@2x.png");
+  }
+
+  #pocket-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 36px, 36px, 0px);
+  }
+
+  #pocket-button[cui-areatype="toolbar"][open] {
+    -moz-image-region: rect(36px, 36px, 72px, 0px);
+  }
+}
+
 #panelMenu_pocket,
 #menu_pocket,
 #BMB_pocket {
   list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #panelMenu_pocket,
-  #menu_pocket,
-  #BMB_pocket {
-    list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16@2x.png");
-  }
-
-  #panelMenu_pocket > .toolbarbutton-icon {
-    width: 16px;
-  }
 }
