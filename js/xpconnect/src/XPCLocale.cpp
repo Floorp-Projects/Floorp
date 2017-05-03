@@ -72,9 +72,6 @@ XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic, const char
 struct XPCLocaleCallbacks : public JSLocaleCallbacks
 {
   XPCLocaleCallbacks()
-#ifdef DEBUG
-    : mThread(PR_GetCurrentThread())
-#endif
   {
     MOZ_COUNT_CTOR(XPCLocaleCallbacks);
 
@@ -223,14 +220,12 @@ private:
 
   void AssertThreadSafety() const
   {
-    MOZ_ASSERT(mThread == PR_GetCurrentThread(),
-               "XPCLocaleCallbacks used unsafely!");
+    NS_ASSERT_OWNINGTHREAD(XPCLocaleCallbacks);
   }
 
   nsCOMPtr<nsICollation> mCollation;
-#ifdef DEBUG
-  PRThread* mThread;
-#endif
+
+  NS_DECL_OWNINGTHREAD
 };
 
 bool
