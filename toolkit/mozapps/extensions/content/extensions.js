@@ -48,6 +48,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
 XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC",
                                       "extensions.allow-non-mpc-extensions", true);
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL",
+                                      "", null, val => Services.urlFormatter.formatURL(val));
+
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
 const PREF_XPI_ENABLED = "xpinstall.enabled";
@@ -2826,8 +2829,7 @@ var gListView = {
       }
     });
 
-    document.getElementById("signing-learn-more").setAttribute("href",
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons");
+    document.getElementById("signing-learn-more").setAttribute("href", SUPPORT_URL + "unsigned-addons");
 
     let findSignedAddonsLink = document.getElementById("find-alternative-addons");
     try {
@@ -2846,7 +2848,7 @@ var gListView = {
 
     if (Preferences.get("plugin.load_flash_only", true)) {
       document.getElementById("plugindeprecation-learnmore-link")
-        .setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "npapi");
+        .setAttribute("href", SUPPORT_URL + "npapi");
     } else {
       document.getElementById("plugindeprecation-notice").hidden = true;
     }
@@ -3401,7 +3403,7 @@ var gDetailView = {
         );
         let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.unsigned.link");
-        errorLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+        errorLink.href = SUPPORT_URL + "unsigned-addons";
         errorLink.hidden = false;
       } else if (!this._addon.isCompatible && (AddonManager.checkCompatibility ||
         (this._addon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
@@ -3426,7 +3428,7 @@ var gDetailView = {
         );
         var warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.unsigned.link");
-        warningLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+        warningLink.href = SUPPORT_URL + "unsigned-addons";
         warningLink.hidden = false;
       } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
         this.node.setAttribute("notification", "warning");
