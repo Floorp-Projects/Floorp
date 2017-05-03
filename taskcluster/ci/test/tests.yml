@@ -81,7 +81,6 @@ crashtest:
             default: 1
     e10s:
         by-test-platform:
-            windows.*: false # Bug 1304435
             macosx64/debug: true
             default: both
     mozharness:
