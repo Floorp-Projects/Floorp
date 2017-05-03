@@ -111,7 +111,6 @@ public:
    */
   static mozilla::EventStates GetContentStateForVisitedHandling(
              mozilla::dom::Element* aElement,
-             const TreeMatchContext& aTreeMatchContext,
              nsRuleWalker::VisitedHandlingType aVisitedHandling,
              bool aIsRelevantLink);
 
