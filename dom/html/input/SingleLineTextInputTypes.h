@@ -105,6 +105,7 @@ public:
   }
 
   bool HasTypeMismatch() const override;
+  bool HasBadInput() const override;
 
 private:
   explicit EmailInputType(mozilla::dom::HTMLInputElement* aInputElement)

@@ -133,6 +133,12 @@ InputType::GetStepBase() const
   return mInputElement->GetStepBase();
 }
 
+nsIFrame*
+InputType::GetPrimaryFrame() const
+{
+  return mInputElement->GetPrimaryFrame();
+}
+
 void
 InputType::DropReference()
 {
@@ -184,6 +190,12 @@ InputType::IsRangeUnderflow() const
 
 bool
 InputType::HasStepMismatch(bool aUseZeroIfValueNaN) const
+{
+  return false;
+}
+
+bool
+InputType::HasBadInput() const
 {
   return false;
 }
