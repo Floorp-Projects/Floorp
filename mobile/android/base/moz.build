@@ -503,6 +503,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'ANRReporter.java',
     'bookmarks/BookmarkEditFragment.java',
     'bookmarks/BookmarkUtils.java',
+    'bookmarks/CreateFolderCallback.java',
+    'bookmarks/CreateFolderFragment.java',
     'bookmarks/EditBookmarkTask.java',
     'bookmarks/SelectFolderCallback.java',
     'bookmarks/SelectFolderFragment.java',
