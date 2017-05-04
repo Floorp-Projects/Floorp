@@ -114,10 +114,6 @@
   padding-bottom: 2px;
 }
 
-#nav-bar-overflow-button {
-  -moz-image-region: rect(-5px, 12px, 11px, -4px);
-}
-
 /* This only has an effect when this element is placed on the bookmarks toolbar.
  * It's 30px to make sure buttons with 18px icons fit along with the default 16px
  * icons, without changing the size of the toolbar.
