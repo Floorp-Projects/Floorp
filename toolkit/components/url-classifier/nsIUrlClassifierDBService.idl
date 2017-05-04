@@ -111,13 +111,6 @@ interface nsIUrlClassifierDBService : nsISupports
                         in nsIUrlClassifierHashCompleter completer);
 
   /**
-   * Set the last update time for the given table. We use this to
-   * remember freshness past restarts. Time is in milliseconds since epoch.
-   */
-  void setLastUpdateTime(in ACString tableName,
-                         in unsigned long long lastUpdateTime);
-
-  /**
    * Forget the results that were used in the last DB update.
    */
   void clearLastResults();
