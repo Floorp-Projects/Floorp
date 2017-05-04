@@ -38,7 +38,7 @@ public:
             reinterpret_cast<const uint8_t*>(aString), aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
+            ComputeFlags(aMetrics), 0,
             nullptr);
     }
 
@@ -49,7 +49,7 @@ public:
             aString, aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
+            ComputeFlags(aMetrics), 0,
             nullptr);
     }
 
@@ -57,8 +57,8 @@ public:
     gfxTextRun *operator->() { return mTextRun.get(); }
 
 private:
-    static uint32_t ComputeFlags(nsFontMetrics* aMetrics) {
-        uint32_t flags = 0;
+    static uint16_t ComputeFlags(nsFontMetrics* aMetrics) {
+        uint16_t flags = 0;
         if (aMetrics->GetTextRunRTL()) {
             flags |= gfxTextRunFactory::TEXT_IS_RTL;
         }

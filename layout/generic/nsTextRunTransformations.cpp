@@ -38,7 +38,8 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
                              const char16_t* aString, uint32_t aLength,
-                             const uint32_t aFlags,
+                             const uint16_t aFlags,
+                             const uint16_t aFlags2,
                              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                              bool aOwnsFactory)
 {
@@ -52,7 +53,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
 
   RefPtr<nsTransformedTextRun> result =
     new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
-                                       aString, aLength, aFlags,
+                                       aString, aLength, aFlags, aFlags2,
                                        Move(aStyles), aOwnsFactory);
   return result.forget();
 }
@@ -102,19 +103,21 @@ nsTransformedTextRun::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
+                                          gfxFontGroup* aFontGroup,
+                                          uint16_t aFlags, uint16_t aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
   return nsTransformedTextRun::Create(aParams, this, aFontGroup,
-                                      aString, aLength, aFlags, Move(aStyles),
+                                      aString, aLength, aFlags, aFlags2, Move(aStyles),
                                       aOwnsFactory);
 }
 
 already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
+                                          gfxFontGroup* aFontGroup,
+                                          uint16_t aFlags, uint16_t aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
@@ -123,6 +126,7 @@ nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLeng
   NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
                      aFlags & ~(gfxFontGroup::TEXT_IS_PERSISTENT | gfxFontGroup::TEXT_IS_8BIT),
+                     aFlags2,
                      Move(aStyles), aOwnsFactory);
 }
 
@@ -213,7 +217,8 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 }
 
 gfxTextRunFactory::Parameters
-GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
+GetParametersForInner(nsTransformedTextRun* aTextRun,
+                      uint16_t* aFlags,
                       DrawTarget* aRefDrawTarget)
 {
   gfxTextRunFactory::Parameters params =
@@ -660,7 +665,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                                      &canBreakBeforeArray,
                                      &styleArray);
 
-  uint32_t flags;
+  uint16_t flags;
   gfxTextRunFactory::Parameters innerParams =
     GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
@@ -672,12 +677,12 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, fontGroup, flags, Move(styleArray), false);
+        &innerParams, fontGroup, flags, 0, Move(styleArray), false);
     child = transformedChild.get();
   } else {
     cachedChild = fontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags, aMFR);
+        &innerParams, flags, 0, aMFR);
     child = cachedChild.get();
   }
   if (!child)
