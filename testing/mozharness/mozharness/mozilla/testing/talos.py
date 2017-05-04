@@ -494,3 +494,20 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
 
         self.buildbot_status(parser.worst_tbpl_status,
                              level=parser.worst_log_level)
+
+    def fetch_python3(self):
+        manifest_file = os.path.join(
+            self.query_abs_dirs()['base_work_dir'],
+            '..',
+            'talos',
+            self.config['python3_manifest'][self.platform_name()])
+        output_dir = self.query_abs_dirs()['abs_work_dir']
+        # Slowdown: The unzipped Python3 installation gets deleted every time
+        self.tooltool_fetch(
+            manifest_file,
+            output_dir=output_dir,
+            cache=self.config['tooltool_cache']
+        )
+        python3_path = os.path.join(output_dir, 'python3.6', 'python')
+        self.run_command([python3_path, '--version'])
+        return python3_path
