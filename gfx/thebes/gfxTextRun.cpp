@@ -145,7 +145,8 @@ gfxTextRun::AllocateStorageForTextRun(size_t aSize, uint32_t aLength)
 
 already_AddRefed<gfxTextRun>
 gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
-                   uint32_t aLength, gfxFontGroup *aFontGroup, uint32_t aFlags)
+                   uint32_t aLength, gfxFontGroup *aFontGroup,
+                   uint16_t aFlags, uint16_t aFlags2)
 {
     void *storage = AllocateStorageForTextRun(sizeof(gfxTextRun), aLength);
     if (!storage) {
@@ -153,16 +154,19 @@ gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
     }
 
     RefPtr<gfxTextRun> result = new (storage) gfxTextRun(aParams, aLength,
-                                                         aFontGroup, aFlags);
+                                                         aFontGroup,
+                                                         aFlags, aFlags2);
     return result.forget();
 }
 
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
-                       uint32_t aLength, gfxFontGroup *aFontGroup, uint32_t aFlags)
+                       uint32_t aLength, gfxFontGroup *aFontGroup,
+                       uint16_t aFlags, uint16_t aFlags2)
     : gfxShapedText(aLength, aFlags, aParams->mAppUnitsPerDevUnit)
     , mSingleGlyphRun()
     , mUserData(aParams->mUserData)
     , mFontGroup(aFontGroup)
+    , mFlags2(aFlags2)
     , mReleasedFontGroup(false)
     , mHasGlyphRunArray(false)
     , mShapingState(eShapingState_Normal)
@@ -197,7 +201,8 @@ gfxTextRun::~gfxTextRun()
 #endif
 #ifdef DEBUG
     // Make it easy to detect a dead text run
-    mFlags = 0xFFFFFFFF;
+    mFlags = 0xFFFF;
+    mFlags2 = 0xFFFF;
 #endif
 
     if (mHasGlyphRunArray) {
@@ -1601,8 +1606,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
 
     aFont->InitWordCache();
     static const uint8_t space = ' ';
-    uint32_t flags = gfxTextRunFactory::TEXT_IS_8BIT |
-                     gfxTextRunFactory::TEXT_IS_ASCII |
+    uint16_t flags = gfxTextRunFactory::TEXT_IS_8BIT |
                      gfxTextRunFactory::TEXT_IS_PERSISTENT |
                      aOrientation;
     bool vertical =
@@ -2168,19 +2172,21 @@ gfxFontGroup::IsInvalidChar(char16_t ch)
 }
 
 already_AddRefed<gfxTextRun>
-gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags)
+gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams,
+                               uint16_t aFlags, uint16_t aFlags2)
 {
-    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return gfxTextRun::Create(aParams, 0, this, aFlags);
+    aFlags |= TEXT_IS_8BIT | TEXT_IS_PERSISTENT;
+    return gfxTextRun::Create(aParams, 0, this, aFlags, aFlags2);
 }
 
 already_AddRefed<gfxTextRun>
-gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
+gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams,
+                               uint16_t aFlags, uint16_t aFlags2)
 {
-    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
+    aFlags |= TEXT_IS_8BIT | TEXT_IS_PERSISTENT;
 
     RefPtr<gfxTextRun> textRun =
-        gfxTextRun::Create(aParams, 1, this, aFlags);
+        gfxTextRun::Create(aParams, 1, this, aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2226,10 +2232,11 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
-                               const Parameters *aParams, uint32_t aFlags)
+                               const Parameters *aParams,
+                               uint16_t aFlags, uint16_t aFlags2)
 {
     RefPtr<gfxTextRun> textRun =
-        gfxTextRun::Create(aParams, aLength, this, aFlags);
+        gfxTextRun::Create(aParams, aLength, this, aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2254,12 +2261,12 @@ gfxFontGroup::MakeHyphenTextRun(DrawTarget* aDrawTarget,
     gfxFont *font = GetFirstValidFont(uint32_t(hyphen));
     if (font->HasCharacter(hyphen)) {
         return MakeTextRun(&hyphen, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                           gfxFontGroup::TEXT_IS_PERSISTENT, nullptr);
+                           gfxFontGroup::TEXT_IS_PERSISTENT, 0, nullptr);
     }
 
     static const uint8_t dash = '-';
     return MakeTextRun(&dash, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                       gfxFontGroup::TEXT_IS_PERSISTENT, nullptr);
+                       gfxFontGroup::TEXT_IS_PERSISTENT, 0, nullptr);
 }
 
 gfxFloat
@@ -2279,14 +2286,15 @@ gfxFontGroup::GetHyphenWidth(const gfxTextRun::PropertyProvider* aProvider)
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
-                          const Parameters *aParams, uint32_t aFlags,
+                          const Parameters *aParams,
+                          uint16_t aFlags, uint16_t aFlags2,
                           gfxMissingFontRecorder *aMFR)
 {
     if (aLength == 0) {
-        return MakeEmptyTextRun(aParams, aFlags);
+        return MakeEmptyTextRun(aParams, aFlags, aFlags2);
     }
     if (aLength == 1 && aString[0] == ' ') {
-        return MakeSpaceTextRun(aParams, aFlags);
+        return MakeSpaceTextRun(aParams, aFlags, aFlags2);
     }
 
     aFlags |= TEXT_IS_8BIT;
@@ -2296,11 +2304,11 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
         // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
         // them, and always create at least size 1 fonts, i.e. they still
         // render something for size 0 fonts.
-        return MakeBlankTextRun(aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
     }
 
     RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
-                                                    aFlags);
+                                                    aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2314,22 +2322,23 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
-                          const Parameters *aParams, uint32_t aFlags,
+                          const Parameters *aParams,
+                          uint16_t aFlags, uint16_t aFlags2,
                           gfxMissingFontRecorder *aMFR)
 {
     if (aLength == 0) {
-        return MakeEmptyTextRun(aParams, aFlags);
+        return MakeEmptyTextRun(aParams, aFlags, aFlags2);
     }
     if (aLength == 1 && aString[0] == ' ') {
-        return MakeSpaceTextRun(aParams, aFlags);
+        return MakeSpaceTextRun(aParams, aFlags, aFlags2);
     }
     if (MOZ_UNLIKELY(GetStyle()->size == 0) ||
         MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0f)) {
-        return MakeBlankTextRun(aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
     }
 
     RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
-                                                    aFlags);
+                                                    aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2747,7 +2756,8 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
 }
 
 gfxTextRun *
-gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
+gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
+                                 uint16_t aFlags,
                                  LazyReferenceDrawTargetGetter& aRefDrawTargetGetter)
 {
     MOZ_ASSERT(!(aFlags & ~TEXT_ORIENT_MASK),
@@ -2773,7 +2783,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
     };
     mCachedEllipsisTextRun =
         MakeTextRun(ellipsis.get(), ellipsis.Length(), &params,
-                    aFlags | TEXT_IS_PERSISTENT, nullptr);
+                    aFlags | TEXT_IS_PERSISTENT, 0, nullptr);
     if (!mCachedEllipsisTextRun) {
         return nullptr;
     }

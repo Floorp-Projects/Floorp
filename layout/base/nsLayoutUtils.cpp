@@ -6997,13 +6997,13 @@ nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
   }
 }
 
-/* static */ uint32_t
+/* static */ uint16_t
 nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
                                        const nsStyleFont* aStyleFont,
                                        const nsStyleText* aStyleText,
                                        nscoord aLetterSpacing)
 {
-  uint32_t result = 0;
+  uint16_t result = 0;
   if (aLetterSpacing != 0 ||
       aStyleText->mTextJustify == StyleTextJustify::InterCharacter) {
     result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
@@ -7027,7 +7027,7 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   return result | GetTextRunOrientFlagsForStyle(aStyleContext);
 }
 
-/* static */ uint32_t
+/* static */ uint16_t
 nsLayoutUtils::GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext)
 {
   uint8_t writingMode = aStyleContext->StyleVisibility()->mWritingMode;

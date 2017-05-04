@@ -2571,7 +2571,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
                        Script      aRunScript,
                        bool        aVertical,
                        int32_t     aAppUnitsPerDevUnit,
-                       uint32_t    aFlags,
+                       uint16_t    aFlags,
                        RoundingFlags aRounding,
                        gfxTextPerfMetrics *aTextPerf GFX_MAYBE_UNUSED)
 {
@@ -2966,7 +2966,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
     InitWordCache();
 
     // the only flags we care about for ShapedWord construction/caching
-    uint32_t flags = aTextRun->GetFlags();
+    uint16_t flags = aTextRun->GetFlags();
     flags &= (gfxTextRunFactory::TEXT_IS_RTL |
               gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES |
               gfxTextRunFactory::TEXT_USE_MATH_SCRIPT |
@@ -3018,7 +3018,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                 return false;
             }
         } else if (length > 0) {
-            uint32_t wordFlags = flags;
+            uint16_t wordFlags = flags;
             // in the 8-bit version of this method, TEXT_IS_8BIT was
             // already set as part of |flags|, so no need for a per-word
             // adjustment here
@@ -3257,7 +3257,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                     };
                     RefPtr<gfxTextRun> tempRun(
                         gfxTextRun::Create(&params, convertedString.Length(),
-                                           aTextRun->GetFontGroup(), 0));
+                                           aTextRun->GetFontGroup(), 0, 0));
                     tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation);
                     if (!f->SplitAndInitTextRun(aDrawTarget, tempRun.get(),
                                                 convertedString.BeginReading(),
@@ -3267,7 +3267,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                     } else {
                         RefPtr<gfxTextRun> mergedRun(
                             gfxTextRun::Create(&params, runLength,
-                                               aTextRun->GetFontGroup(), 0));
+                                               aTextRun->GetFontGroup(), 0, 0));
                         MergeCharactersInTextRun(mergedRun.get(), tempRun.get(),
                                                  charsToMergeArray.Elements(),
                                                  deletedCharsArray.Elements());
