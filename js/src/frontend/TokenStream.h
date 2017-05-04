@@ -27,8 +27,9 @@
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/ErrorReporting.h"
-#include "vm/RegExpObject.h"
+#include "vm/RegExpShared.h"
 #include "vm/String.h"
+#include "vm/Unicode.h"
 
 struct KeywordInfo;
 
@@ -95,7 +96,7 @@ enum class InvalidEscapeType {
     Octal
 };
 
-class TokenStreamBase;
+class TokenStreamAnyChars;
 
 struct Token
 {
@@ -163,7 +164,7 @@ struct Token
         // gotten with None, but we expect Operand.
         OperandIsNone,
     };
-    friend class TokenStreamBase;
+    friend class TokenStreamAnyChars;
 
   public:
     TokenKind           type;           // char value or above enumerator
@@ -199,7 +200,7 @@ struct Token
         u.atom = atom;
     }
 
-    void setRegExpFlags(js::RegExpFlag flags) {
+    void setRegExpFlags(RegExpFlag flags) {
         MOZ_ASSERT(type == TOK_REGEXP);
         MOZ_ASSERT((flags & AllFlags) == flags);
         u.reflags = flags;
@@ -225,7 +226,7 @@ struct Token
         return u.atom;
     }
 
-    js::RegExpFlag regExpFlags() const {
+    RegExpFlag regExpFlags() const {
         MOZ_ASSERT(type == TOK_REGEXP);
         MOZ_ASSERT((u.reflags & AllFlags) == u.reflags);
         return u.reflags;
@@ -263,16 +264,10 @@ class StrictModeGetter {
     virtual bool strictMode() = 0;
 };
 
-class TokenStreamBase
+class TokenStreamAnyChars
 {
   protected:
-    TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& options, StrictModeGetter* smg);
-
-    // Unicode separators that are treated as line terminators, in addition to \n, \r.
-    enum {
-        LINE_SEPARATOR = 0x2028,
-        PARA_SEPARATOR = 0x2029
-    };
+    TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options, StrictModeGetter* smg);
 
     static const size_t ntokens = 4;                // 1 current + 2 lookahead, rounded
                                                     // to power of 2 to avoid divmod by 3
@@ -548,6 +543,13 @@ class TokenStreamBase
         return options_;
     }
 
+    /**
+     * Fill in |err|, excepting line-of-context-related fields.  If the token
+     * stream has location information, use that and return true.  If it does
+     * not, use the caller's location information and return false.
+     */
+    bool fillExcludingContext(ErrorMetadata* err, uint32_t offset);
+
     void updateFlagsForEOL();
 
     const Token& nextToken() const {
@@ -626,7 +628,7 @@ class TokenStreamBase
 // The methods seek() and tell() allow to rescan from a previous visited
 // location of the buffer.
 //
-class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
+class MOZ_STACK_CLASS TokenStream final : public TokenStreamAnyChars
 {
   public:
     using CharT = char16_t;
@@ -1004,7 +1006,10 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
 #endif
 
         static bool isRawEOLChar(int32_t c) {
-            return c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR;
+            return c == '\n' ||
+                   c == '\r' ||
+                   c == unicode::LINE_SEPARATOR ||
+                   c == unicode::PARA_SEPARATOR;
         }
 
         // Returns the offset of the next EOL, but stops once 'max' characters

@@ -3147,15 +3147,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     if (currentInner && currentInner->GetWrapperPreserveColor()) {
       if (oldDoc == aDocument) {
-        // Move the navigator from the old inner window to the new one since
-        // this is a document.write. This is safe from a same-origin point of
-        // view because document.write can only be used by the same origin.
-        newInnerWindow->mNavigator = currentInner->mNavigator;
-        currentInner->mNavigator = nullptr;
-        if (newInnerWindow->mNavigator) {
-          newInnerWindow->mNavigator->SetWindow(newInnerWindow->AsInner());
-        }
-
         // Make a copy of the old window's performance object on document.open.
         // Note that we have to force eager creation of it here, because we need
         // to grab the current document channel and whatnot before that changes.
