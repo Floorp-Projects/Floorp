@@ -1539,12 +1539,11 @@ nsSocketTransport::InitiateSocket()
           // versions older than version 1607, because we do not have subverion
           // to check, we need to call PR_SendTo to check if it is supported.
           mFastOpenCallback->FastOpenNotSupported();
-          mFastOpenCallback = nullptr;
+          // FastOpenNotSupported will set Fast Open as not supported globally.
+          // For this connection we will pretend that we still use fast open,
+          // because of the fallback mechanism in case we need to restart the
+          // attached transaction.
           connectCalled = true;
-          {
-              MutexAutoLock lock(mLock);
-              mFDFastOpenInProgress = false;
-          }
         }
     } else {
         mFastOpenCallback = nullptr;
