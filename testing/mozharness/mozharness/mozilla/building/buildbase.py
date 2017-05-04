@@ -1617,16 +1617,8 @@ or run without that action (ie: --no-{action})"
                 buildprops,
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
-        if 'MOZILLABUILD' in os.environ:
-            mach = [
-                os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
-                os.path.join(dirs['abs_src_dir'], 'mach')
-            ]
-        else:
-            mach = [sys.executable, 'mach']
-
         return_code = self.run_command_m(
-            command=mach + ['--log-no-times', 'build', '-v'],
+            command=[sys.executable, 'mach', '--log-no-times', 'build', '-v'],
             cwd=dirs['abs_src_dir'],
             env=env,
             output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
