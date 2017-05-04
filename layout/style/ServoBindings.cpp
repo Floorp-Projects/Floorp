@@ -1821,19 +1821,6 @@ ShutdownServo()
   Servo_Shutdown();
 }
 
-namespace mozilla {
-
-void
-AssertIsMainThreadOrServoFontMetricsLocked()
-{
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(sServoFontMetricsLock);
-    sServoFontMetricsLock->AssertCurrentThreadOwns();
-  }
-}
-
-} // namespace mozilla
-
 GeckoFontMetrics
 Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                      bool aIsVertical,
@@ -1841,20 +1828,13 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                      nscoord aFontSize,
                      bool aUseUserFontSet)
 {
+  // This function is still unsafe due to frobbing DOM and network
+  // off main thread. We currently disable it in Servo, see bug 1356105
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(*sServoFontMetricsLock);
   GeckoFontMetrics ret;
-
-  // Getting font metrics can require some main thread only work to be
-  // done, such as work that needs to touch non-threadsafe refcounted
-  // objects (like the DOM FontFace/FontFaceSet objects), network loads, etc.
-  //
-  // To handle this work, font code checks whether we are in a Servo traversal
-  // and if so, appends PostTraversalTasks to the current ServoStyleSet
-  // to be performed immediately after the traversal is finished.  This
-  // works well for starting downloadable font loads, since we don't have
-  // those fonts available to get metrics for anyway.  Platform fonts and
-  // ArrayBuffer-backed FontFace objects are handled synchronously.
-
+  // Safe because we are locked, and this function is only
+  // ever called from Servo parallel traversal or the main thread
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
   presContext->SetUsesExChUnits(true);
   RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,

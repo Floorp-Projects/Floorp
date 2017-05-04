@@ -21,8 +21,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatformFontList.h"
-#include "mozilla/ServoStyleSet.h"
-#include "mozilla/PostTraversalTask.h"
 
 #include "opentype-sanitiser.h"
 #include "ots-memory-stream.h"
@@ -143,10 +141,6 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
 
 gfxUserFontEntry::~gfxUserFontEntry()
 {
-    // Assert that we don't drop any gfxUserFontEntry objects during a Servo
-    // traversal, since PostTraversalTask objects can hold raw pointers to
-    // gfxUserFontEntry objects.
-    MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 }
 
 bool
@@ -435,10 +429,11 @@ CopyWOFFMetadata(const uint8_t* aFontData,
 void
 gfxUserFontEntry::LoadNextSrc()
 {
-    NS_ASSERTION(mSrcIndex < mSrcList.Length(),
+    uint32_t numSrc = mSrcList.Length();
+
+    NS_ASSERTION(mSrcIndex < numSrc,
                  "already at the end of the src list for user font");
     NS_ASSERTION((mUserFontLoadState == STATUS_NOT_LOADED ||
-                  mUserFontLoadState == STATUS_LOAD_PENDING ||
                   mUserFontLoadState == STATUS_LOADING) &&
                  mFontDataLoadingState < LOADING_FAILED,
                  "attempting to load a font that has either completed or failed");
@@ -453,23 +448,6 @@ gfxUserFontEntry::LoadNextSrc()
         // that counts against the new download
         mSrcIndex++;
     }
-
-    DoLoadNextSrc(false);
-}
-
-void
-gfxUserFontEntry::ContinueLoad()
-{
-    MOZ_ASSERT(mUserFontLoadState == STATUS_LOAD_PENDING);
-    MOZ_ASSERT(mSrcList[mSrcIndex].mSourceType == gfxFontFaceSrc::eSourceType_URL);
-
-    DoLoadNextSrc(true);
-}
-
-void
-gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
-{
-    uint32_t numSrc = mSrcList.Length();
 
     // load each src entry in turn, until a local face is found
     // or a download begins successfully
@@ -526,12 +504,6 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
                     currSrc.mFormatFlags)) {
 
-                if (ServoStyleSet* set = ServoStyleSet::Current()) {
-                    set->AppendTask(PostTraversalTask::LoadFontEntry(this));
-                    SetLoadState(STATUS_LOAD_PENDING);
-                    return;
-                }
-
                 nsIPrincipal* principal = nullptr;
                 bool bypassCache;
                 nsresult rv = mFontSet->CheckFontLoad(&currSrc, &principal,
@@ -565,11 +537,9 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
                     mPrincipal = principal;
 
                     bool loadDoesntSpin = false;
-                    if (!aForceAsync) {
-                        rv = NS_URIChainHasFlags(currSrc.mURI,
-                               nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
-                               &loadDoesntSpin);
-                    }
+                    rv = NS_URIChainHasFlags(currSrc.mURI,
+                           nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
+                           &loadDoesntSpin);
 
                     if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
                         uint8_t* buffer = nullptr;
@@ -674,7 +644,6 @@ bool
 gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
 {
     NS_ASSERTION((mUserFontLoadState == STATUS_NOT_LOADED ||
-                  mUserFontLoadState == STATUS_LOAD_PENDING ||
                   mUserFontLoadState == STATUS_LOADING) &&
                  mFontDataLoadingState < LOADING_FAILED,
                  "attempting to load a font that has either completed or failed");

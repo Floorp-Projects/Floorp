@@ -18,7 +18,6 @@ class nsCSSFontFaceRule;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
-class PostTraversalTask;
 namespace dom {
 class FontFaceBufferSource;
 struct FontFaceDescriptors;
@@ -34,7 +33,6 @@ namespace dom {
 class FontFace final : public nsISupports,
                        public nsWrapperCache
 {
-  friend class mozilla::PostTraversalTask;
   friend class mozilla::dom::FontFaceBufferSource;
   friend class Entry;
 
@@ -208,9 +206,6 @@ private:
   // Creates mLoaded if it doesn't already exist. It may immediately resolve or
   // reject mLoaded based on mStatus and mLoadedRejection.
   void EnsurePromise();
-
-  void DoResolve();
-  void DoReject(nsresult aResult);
 
   nsCOMPtr<nsISupports> mParent;
 

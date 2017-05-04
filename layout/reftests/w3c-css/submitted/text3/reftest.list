@@ -12,7 +12,7 @@ pref(layout.css.text-justify.enabled,true) == text-justify-distribute-001.html t
 
 == text-word-spacing-001.html text-word-spacing-ref.html
 
-== hyphenation-control-1.html hyphenation-control-1-ref.html
+fails-if(stylo) == hyphenation-control-1.html hyphenation-control-1-ref.html
 
 == segment-break-transformation-removable-1.html segment-break-transformation-removable-ref.html
 == segment-break-transformation-removable-2.html segment-break-transformation-removable-ref.html
