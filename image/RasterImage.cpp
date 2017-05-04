@@ -1262,17 +1262,20 @@ RasterImage::Decode(const IntSize& aSize,
                                                   mSourceBuffer, mSize,
                                                   decoderFlags, surfaceFlags);
     // We may not be able to send an invalidation right here because of async
-    // notifications but that's not a problem because the first frame
-    // invalidation (when it comes) will invalidate for us. So we can ignore
-    // the return value of UpdateState. This also handles the invalidation
-    // from setting the composited frame as valid below.
-    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
-    // If the animation is finished we can draw right away because we just draw
-    // the final frame all the time from now on. See comment in
-    // AnimationState::UpdateState.
-    if (mAnimationFinished) {
-      mAnimationState->SetCompositedFrameInvalid(false);
-    }
+    // notifications but that shouldn't be a problem because we shouldn't be
+    // getting a non-empty rect back from UpdateState. This is because UpdateState
+    // will only return a non-empty rect if we are currently decoded, or the
+    // animation is finished. We can't be decoded because we are creating a decoder
+    // here. If the animation is finished then the composited frame would have
+    // been valid when the animation finished, and it's not possible to mark
+    // the composited frame as invalid when the animation is finished. So
+    // the composited frame can't change from invalid to valid in this UpdateState
+    // call, and hence no rect can be returned.
+#ifdef DEBUG
+    gfx::IntRect rect =
+#endif
+      mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    MOZ_ASSERT(rect.IsEmpty());
   } else {
     task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
                                          mSourceBuffer, mSize, aSize,
