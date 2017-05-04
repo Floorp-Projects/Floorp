@@ -13,74 +13,21 @@ function workerScript() {
   onmessage = function(event) {
     let readerMemoryBlob = new FileReaderSync();
     let status = readerMemoryBlob.readAsText(new Blob(['hello world'])) == 'hello world';
-    postMessage({ status, message: "FileReaderSync with memory blob still works" });
 
-    let readerIPCBlob1 = new FileReaderSync();
-    postMessage({ blob: event.data, method: 'readAsText',
-                  data: readerIPCBlob1.readAsText(event.data)});
-
-    let readerIPCBlob2 = new FileReaderSync();
-    postMessage({ blob: event.data, method: 'readAsArrayBuffer',
-                  data: readerIPCBlob2.readAsArrayBuffer(event.data)});
-
-    let readerIPCBlob3 = new FileReaderSync();
-    postMessage({ blob: event.data, method: 'readAsDataURL',
-                  data: readerIPCBlob3.readAsDataURL(event.data)});
-
-    let multipartBlob = new Blob(['wow', event.data]);
-
-    let readerIPCBlobMultipart1 = new FileReaderSync();
-    postMessage({ blob: multipartBlob, method: 'readAsText',
-                  data: readerIPCBlobMultipart1.readAsText(multipartBlob)});
-
-    let readerIPCBlobMultipart2 = new FileReaderSync();
-    postMessage({ blob: multipartBlob, method: 'readAsArrayBuffer',
-                  data: readerIPCBlobMultipart2.readAsArrayBuffer(multipartBlob)});
-
-    let readerIPCBlobMultipart3 = new FileReaderSync();
-    postMessage({ blob: multipartBlob, method: 'readAsDataURL',
-                  data: readerIPCBlobMultipart3.readAsDataURL(multipartBlob)});
-
-    postMessage({ finish: true });
-  }
-}
-
-let completed = false;
-let pendingTasks = 0;
-function maybeFinish() {
-  if (completed && !pendingTasks) {
-    SimpleTest.finish();
+    let readerIPCBlob = new FileReaderSync();
+    postMessage({ blob: event.data, data: readerIPCBlob.readAsText(event.data), status });
   }
 }
 
 let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
 let worker = new Worker(workerUrl);
 worker.onmessage = event => {
-  if ("status" in event.data) {
-    ok(event.data.status, event.data.message);
-    return;
-  }
-
-  if ("blob" in event.data) {
-    let fr = new FileReader();
-    fr[event.data.method](event.data.blob);
-    ++pendingTasks;
-    fr.onload = () => {
-      if (event.data.method != 'readAsArrayBuffer') {
-        is(event.data.data, fr.result, "The file has been read");
-      } else {
-        is(event.data.data.byteLength, fr.result.byteLength, "The file has been read");
-      }
-      --pendingTasks;
-      maybeFinish();
-    }
-
-    return;
-  }
-
-  if ("finish" in event.data) {
-    completed = true;
-    maybeFinish();
+  let fr = new FileReader();
+  fr.readAsText(event.data.blob);
+  fr.onload = () => {
+    is(event.data.data, fr.result, "The file has been read");
+    ok(event.data.status, "FileReaderSync with memory blob still works");
+    SimpleTest.finish();
   }
 };
 
