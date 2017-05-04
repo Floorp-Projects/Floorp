@@ -143,6 +143,7 @@ protected:
 
   nsInlineFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
     : nsContainerFrame(aContext, aType)
+    , mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
 
   explicit nsInlineFrame(nsStyleContext* aContext)

@@ -19,6 +19,7 @@
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/LanguageExtensions.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
@@ -269,7 +270,7 @@ class ParseContext : public Nestable<ParseContext>
     SharedContext* sc_;
 
     // TokenStream used for error reporting.
-    TokenStreamBase& tokenStream_;
+    TokenStreamAnyChars& tokenStream_;
 
     // The innermost statement, i.e., top of the statement stack.
     Statement* innermostStatement_;
@@ -899,7 +900,7 @@ class ParserBase : public StrictModeGetter
 
     bool isValidStrictBinding(PropertyName* name);
 
-    void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
+    void addTelemetry(DeprecatedLanguageExtension e);
 
     bool warnOnceAboutExprClosure();
     bool warnOnceAboutForEach();
