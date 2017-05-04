@@ -96,7 +96,9 @@ void
 VRDisplayPresentation::DestroyLayers()
 {
   for (VRLayerChild* layer : mLayers) {
-    Unused << layer->SendDestroy();
+    if (layer->IsIPCOpen()) {
+      Unused << layer->SendDestroy();
+    }
   }
   mLayers.Clear();
 }

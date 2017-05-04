@@ -220,6 +220,9 @@ this.configureIdentity = async function(identityOverrides, server) {
 
   configureFxAccountIdentity(ns.Service.identity, config);
   await ns.Service.identity.initializeWithCurrentIdentity();
+  // The token is fetched in the background, whenReadyToAuthenticate is resolved
+  // when we are ready.
+  await ns.Service.identity.whenReadyToAuthenticate.promise;
   // and cheat to avoid requiring each test do an explicit login - give it
   // a cluster URL.
   if (config.fxaccount.token.endpoint) {

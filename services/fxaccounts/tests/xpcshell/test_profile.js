@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsProfileClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsProfile.jsm");

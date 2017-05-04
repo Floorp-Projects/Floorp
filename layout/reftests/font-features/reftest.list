@@ -85,7 +85,7 @@ fails-if(stylo) HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-chec
 HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html
 fails-if(stylo) HTTP(..) == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
-fails-if(stylo) HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
+HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
 random-if(!winWidget&&!cocoaWidget) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces

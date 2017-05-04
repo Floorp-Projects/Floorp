@@ -64,9 +64,7 @@ function MockFxAccountsClient() {
   this._verified = false;
 
   this.accountStatus = function(uid) {
-    let deferred = Promise.defer();
-    deferred.resolve(!!uid && (!this._deletedOnServer));
-    return deferred.promise;
+    return Promise.resolve(!!uid && (!this._deletedOnServer));
   };
 
   this.signOut = function() { return Promise.resolve(); };

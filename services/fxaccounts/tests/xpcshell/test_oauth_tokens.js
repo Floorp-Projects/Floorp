@@ -61,9 +61,7 @@ function MockFxAccountsClient() {
   this._verified = false;
 
   this.accountStatus = function(uid) {
-    let deferred = Promise.defer();
-    deferred.resolve(!!uid && (!this._deletedOnServer));
-    return deferred.promise;
+    return Promise.resolve(!!uid && (!this._deletedOnServer));
   };
 
   this.signOut = function() { return Promise.resolve(); };
@@ -166,11 +164,12 @@ add_task(function* testRevoke() {
   ok(token1, "got a token");
   equal(token1, "token0");
 
+  // FxA fires an observer when the "background" revoke is complete.
+  let revokeComplete = promiseNotification("testhelper-fxa-revoke-complete");
   // drop the new token from our cache.
   yield fxa.removeCachedOAuthToken({token: token1});
+  yield revokeComplete;
 
-  // FxA fires an observer when the "background" revoke is complete.
-  yield promiseNotification("testhelper-fxa-revoke-complete");
   // the revoke should have been successful.
   equal(client.activeTokens.size, 0);
   // fetching it again hits the server.
@@ -198,10 +197,11 @@ add_task(function* testSignOutDestroysTokens() {
   ok(token2, "got a token");
   notEqual(token1, token2, "got a different token");
 
+  // FxA fires an observer when the "background" signout is complete.
+  let signoutComplete = promiseNotification("testhelper-fxa-signout-complete");
   // now sign out - they should be removed.
   yield fxa.signOut();
-  // FxA fires an observer when the "background" signout is complete.
-  yield promiseNotification("testhelper-fxa-signout-complete");
+  yield signoutComplete;
   // No active tokens left.
   equal(client.activeTokens.size, 0);
 });

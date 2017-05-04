@@ -20,6 +20,7 @@ VRLayerChild::VRLayerChild(uint32_t aVRDisplayID, VRManagerChild* aVRManagerChil
   , mCanvasElement(nullptr)
   , mShSurfClient(nullptr)
   , mFront(nullptr)
+  , mIPCOpen(true)
 {
 }
 
@@ -74,11 +75,23 @@ VRLayerChild::SubmitFrame()
   SendSubmitFrame(mFront->GetIPDLActor());
 }
 
+bool
+VRLayerChild::IsIPCOpen()
+{
+  return mIPCOpen;
+}
+
 void
 VRLayerChild::ClearSurfaces()
 {
   mFront = nullptr;
   mShSurfClient = nullptr;
+}
+
+void
+VRLayerChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = false;
 }
 
 } // namespace gfx

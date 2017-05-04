@@ -18,7 +18,7 @@ function test() {
 
 registerCleanupFunction(function*() {
   yield signOut();
-  gFxAccounts.updateUI();
+  gSync.updateAllUI(UIState.get());
 });
 
 var tests = [
@@ -35,7 +35,7 @@ var tests = [
     yield setSignedInUser();
     let userData = yield fxAccounts.getSignedInUser();
     isnot(userData, null, "Logged in now");
-    gFxAccounts.updateUI(); // Causes a leak (see bug 1332985)
+    gSync.updateAllUI(UIState.get());
     yield showMenuPromise("appMenu");
     yield showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
