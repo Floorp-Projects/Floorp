@@ -10,7 +10,6 @@
 #include "nsContainerFrame.h"
 #include "nsIAtom.h"
 #include "nsILineIterator.h"
-#include "nsTablePainter.h"
 #include "nsTArray.h"
 #include "nsTableFrame.h"
 #include "mozilla/WritingModes.h"

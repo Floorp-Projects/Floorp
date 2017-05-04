@@ -12,7 +12,6 @@
 #include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsTablePainter.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -384,19 +383,6 @@ nsTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
                                                 aDirtyRect, rect,
                                                 this, aFlags);
   return nsCSSRendering::PaintStyleImageLayer(params, aRenderingContext);
-}
-
-// Called by nsTablePainter
-DrawResult
-nsTableCellFrame::PaintCellBackground(nsRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect, nsPoint aPt,
-                                      uint32_t aFlags)
-{
-  if (!StyleVisibility()->IsVisible()) {
-    return DrawResult::SUCCESS;
-  }
-
-  return PaintBackground(aRenderingContext, aDirtyRect, aPt, aFlags);
 }
 
 nsresult
