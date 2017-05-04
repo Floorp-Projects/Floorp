@@ -698,8 +698,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         return self._mach(target=target, env=env)
 
     def _get_mach_executable(self):
-        python = self.query_exe('python2.7')
-        return [python, 'mach']
+        return [sys.executable, 'mach']
 
     def _get_make_executable(self):
         config = self.config
@@ -1040,9 +1039,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               config['tooltool_manifest_src'])
-        python = self.query_exe('python2.7')
         cmd = [
-            python, '-u',
+            sys.executable, '-u',
             os.path.join(dirs['abs_mozilla_dir'], 'mach'),
             'artifact',
             'toolchain',
