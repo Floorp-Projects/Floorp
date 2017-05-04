@@ -394,13 +394,9 @@ function registerSelf() {
 
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
-    capabilities = session.Capabilities.fromJSON(register[0][2]);
+    capabilities = session.Capabilities.fromJSON(register[0][1]);
     listenerId = id;
     if (typeof id != "undefined") {
-      // check if we're the main process
-      if (register[0][1]) {
-        addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
-      }
       startListeners();
       let rv = {};
       if (remotenessChange) {
@@ -409,35 +405,6 @@ function registerSelf() {
       sendAsyncMessage("Marionette:listenersAttached", rv);
     }
   }
-}
-
-function emitTouchEventForIFrame(message) {
-  message = message.json;
-  let identifier = legacyactions.nextTouchId;
-
-  let domWindowUtils = curContainer.frame.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var ratio = domWindowUtils.screenPixelsPerCSSPixel;
-
-  var typeForUtils;
-  switch (message.type) {
-    case 'touchstart':
-      typeForUtils = domWindowUtils.TOUCH_CONTACT;
-      break;
-    case 'touchend':
-      typeForUtils = domWindowUtils.TOUCH_REMOVE;
-      break;
-    case 'touchcancel':
-      typeForUtils = domWindowUtils.TOUCH_CANCEL;
-      break;
-    case 'touchmove':
-      typeForUtils = domWindowUtils.TOUCH_CONTACT;
-      break;
-  }
-  domWindowUtils.sendNativeTouchPoint(identifier, typeForUtils,
-    Math.round(message.screenX * ratio), Math.round(message.screenY * ratio),
-    message.force, 90);
 }
 
 // Eventually we will not have a closure for every single command, but
