@@ -470,7 +470,9 @@ TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd)
 
   TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(tfoFd->secret);
 
-  MOZ_ASSERT(secret->mState == TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET);
+  if (secret->mState != TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET) {
+    return 0;
+  }
 
   int32_t sizeLeft =
     (secret->mAddr.raw.family == PR_AF_INET) ? TFO_MAX_PACKET_SIZE_IPV4

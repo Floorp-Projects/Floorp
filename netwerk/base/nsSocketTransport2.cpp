@@ -614,6 +614,21 @@ nsSocketOutputStream::Write(const char *buf, uint32_t count, uint32_t *countWrit
         fastOpenInProgress = mTransport->FastOpenInProgress();
     }
 
+    if (fastOpenInProgress) {
+        // If we are in the fast open phase, we should not write more data
+        // than TCPFastOpenLayer can accept. If we write more data, this data
+        // will be buffered in tls and we want to avoid that.
+        uint32_t availableSpace = TCPFastOpenGetBufferSizeLeft(fd);
+        count = (count > availableSpace) ? availableSpace : count;
+        if (!count) {
+            {
+                MutexAutoLock lock(mTransport->mLock);
+                mTransport->ReleaseFD_Locked(fd);
+            }
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
+    }
+
     SOCKET_LOG(("  calling PR_Write [count=%u]\n", count));
 
     // cannot hold lock while calling NSPR.  (worried about the fact that PSM
@@ -1528,7 +1543,7 @@ nsSocketTransport::InitiateSocket()
             mFDFastOpenInProgress = true;
         }
         SOCKET_LOG(("Using TCP Fast Open."));
-        rv = mFastOpenCallback->StartFastOpen(fd);
+        rv = mFastOpenCallback->StartFastOpen();
         status = PR_FAILURE;
         connectCalled = false;
         bool fastOpenNotSupported = false;
@@ -2255,6 +2270,17 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     else {
         mState = STATE_CLOSED;
 
+        // The error can happened before we start fast open. In that case do not
+        // call mFastOpenCallback->SetFastOpenConnected; If error happends during
+        // fast open, inform the halfOpenSocket.
+        // If we cancel the connection because backup socket was successfully
+        // connected, mFDFastOpenInProgress will be true but mFastOpenCallback
+        // will be nullptr.
+        if (mFDFastOpenInProgress && mFastOpenCallback) {
+            mFastOpenCallback->SetFastOpenConnected(mCondition);
+        }
+        mFastOpenCallback = nullptr;
+
         // make sure there isn't any pending DNS request
         if (mDNSRequest) {
             mDNSRequest->Cancel(NS_ERROR_ABORT);
@@ -2274,17 +2300,6 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
     if (secCtrl)
         secCtrl->SetNotificationCallbacks(nullptr);
-
-    // The error can happened before we start fast open. In that case do not
-    // call mFastOpenCallback->SetFastOpenConnected; If error happends during
-    // fast open, inform the halfOpenSocket.
-    // If we cancel the connection because backup socket was successfully
-    // connected, mFDFastOpenInProgress will be true but mFastOpenCallback
-    // will be nullptr.
-    if (mFDFastOpenInProgress && mFastOpenCallback) {
-        mFastOpenCallback->SetFastOpenConnected(mCondition);
-    }
-    mFastOpenCallback = nullptr;
 
     // finally, release our reference to the socket (must do this within
     // the transport lock) possibly closing the socket. Also release our
