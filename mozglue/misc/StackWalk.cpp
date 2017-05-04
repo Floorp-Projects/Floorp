@@ -453,7 +453,7 @@ WalkStackMain64(struct WalkStackData* aData)
   frame64.AddrReturn.Mode  = AddrModeFlat;
 #endif
 
-#ifdef _M_AMD64
+#ifdef _WIN64
   // If there are any active suppressions, then at least one thread (we don't
   // know which) is holding a lock that can deadlock RtlVirtualUnwind. Since
   // that thread may be the one that we're trying to unwind, we can't proceed.
@@ -467,11 +467,10 @@ WalkStackMain64(struct WalkStackData* aData)
   if (sStackWalkSuppressions) {
     return;
   }
+#endif
 
+#ifdef _M_AMD64
   bool firstFrame = true;
-
-  // In the loop below we'll need to special-case stack frames in this DLL.
-  HMODULE msmpeg2vdec = GetModuleHandleW(L"msmpeg2vdec.dll");
 #endif
 
   // Skip our own stack walking frames.
@@ -524,18 +523,6 @@ WalkStackMain64(struct WalkStackData* aData)
     if (sJitCodeRegionStart &&
         (uint8_t*)context.Rip >= sJitCodeRegionStart &&
         (uint8_t*)context.Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
-      break;
-    }
-
-    HMODULE ripModule = nullptr;
-    DWORD moduleFlags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
-    // msmpeg2vdec.dll's unwind handler deliberately crashes, presumably
-    // as a terminate-on-exception safety mechanism. If we have a stack
-    // frame inside that library, abort stack walking.
-    if (msmpeg2vdec &&
-        GetModuleHandleExW(moduleFlags, (LPWSTR)context.Rip, &ripModule) &&
-        ripModule == msmpeg2vdec) {
       break;
     }
 
