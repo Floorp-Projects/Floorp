@@ -93,7 +93,7 @@ this.Context.fromString = function (s) {
  * object.
  *
  * @param {string} appName
- *     Description of the product, for example "B2G" or "Firefox".
+ *     Description of the product, for example "Firefox".
  * @param {MarionetteServer} server
  *     The instance of Marionette server.
  */
@@ -110,7 +110,6 @@ this.GeckoDriver = function (appName, server) {
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
-  this.mainContentFrameId = null;
   this.mozBrowserClose = null;
   this.currentFrameElement = null;
   // frame ID of the current remote frame, used for mozbrowserclose events
@@ -509,8 +508,7 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
   }
 
   let reg = {};
-  // this will be sent to tell the content process if it is the main content
-  let mainContent = this.curBrowser.mainContentId === null;
+
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -521,12 +519,6 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
     // curBrowser holds all the registered frames in knownFrames
     reg.id = id;
     reg.remotenessChange = this.curBrowser.register(id, be);
-  }
-
-  // set to true if we updated mainContentId
-  mainContent = mainContent && this.curBrowser.mainContentId !== null;
-  if (mainContent) {
-    this.mainContentFrameId = this.curBrowser.curFrameId;
   }
 
   this.wins.set(reg.id, listenerWindow);
@@ -540,7 +532,7 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
     }
   }
 
-  return [reg, mainContent, this.capabilities.toJSON()];
+  return [reg, this.capabilities.toJSON()];
 };
 
 GeckoDriver.prototype.registerPromise = function () {
