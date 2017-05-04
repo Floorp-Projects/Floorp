@@ -104,6 +104,7 @@
   <string name="bookmark_folder_items">&bookmark_folder_items;</string>
   <string name="bookmark_folder_one_item">&bookmark_folder_one_item;</string>
   <string name="bookmark_parent_folder">&bookmark_parent_folder;</string>
+  <string name="bookmark_add_folder">&bookmark_add_folder;</string>
 
   <string name="reader_saved_offline">&reader_saved_offline;</string>
   <string name="reader_switch_to_bookmarks">&reader_switch_to_bookmarks;</string>

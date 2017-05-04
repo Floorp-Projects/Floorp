@@ -22,6 +22,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -40,15 +41,17 @@ import java.util.Map;
 /**
  * A dialog fragment that allows selecting a bookmark folder.
  */
-public class SelectFolderFragment extends DialogFragment {
+public class SelectFolderFragment extends DialogFragment implements CreateFolderCallback {
 
     private static final String ARG_PARENT_ID = "parentId";
     private static final String ARG_BOOKMARK_ID = "bookmarkId";
+    private static final String ARG_CREATE_FOLDER = "createFolder";
 
     private static final int LOADER_ID_FOLDERS = 0;
 
     private long parentId;
     private long bookmarkId;
+    private boolean createFolder;
 
     private Toolbar toolbar;
     private RecyclerView folderView;
@@ -60,7 +63,20 @@ public class SelectFolderFragment extends DialogFragment {
         final Bundle args = new Bundle();
         args.putLong(ARG_PARENT_ID, parentId);
         args.putLong(ARG_BOOKMARK_ID, bookmarkId);
+        args.putBoolean(ARG_CREATE_FOLDER, true);
 
+        return newInstance(args);
+    }
+
+    public static SelectFolderFragment newInstance(long parentId) {
+        final Bundle args = new Bundle();
+        args.putLong(ARG_PARENT_ID, parentId);
+        args.putBoolean(ARG_CREATE_FOLDER, false);
+
+        return newInstance(args);
+    }
+
+    private static SelectFolderFragment newInstance(Bundle args) {
         final SelectFolderFragment fragment = new SelectFolderFragment();
         fragment.setArguments(args);
 
@@ -86,6 +102,7 @@ public class SelectFolderFragment extends DialogFragment {
         if (args != null) {
             parentId = args.getLong(ARG_PARENT_ID);
             bookmarkId = args.getLong(ARG_BOOKMARK_ID);
+            createFolder = args.getBoolean(ARG_CREATE_FOLDER);
         }
     }
 
@@ -97,6 +114,22 @@ public class SelectFolderFragment extends DialogFragment {
         toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         folderView = (RecyclerView) view.findViewById(R.id.folder_recycler_view);
 
+        if (createFolder) {
+            toolbar.inflateMenu(R.menu.bookmark_folder_menu);
+            toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.create_folder:
+                            CreateFolderFragment dialog = CreateFolderFragment.newInstance();
+                            dialog.setTargetFragment(SelectFolderFragment.this, 0);
+                            dialog.show(getActivity().getSupportFragmentManager(), "add-bookmark-folder");
+                    }
+                    return true;
+                }
+            });
+
+        }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -127,6 +160,14 @@ public class SelectFolderFragment extends DialogFragment {
         super.onPause();
 
         getLoaderManager().destroyLoader(LOADER_ID_FOLDERS);
+    }
+
+    @Override
+    public void onFolderCreated(long folderId, String title) {
+        if (callback != null) {
+            callback.onFolderChanged(folderId, title);
+        }
+        dismiss();
     }
 
     public void onFolderSelected(final Folder folder) {
