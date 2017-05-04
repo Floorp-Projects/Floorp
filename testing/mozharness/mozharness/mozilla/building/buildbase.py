@@ -796,27 +796,16 @@ or run without that action (ie: --no-{action})"
 
         buildid = None
         if c.get("is_automation"):
-            if self.buildbot_config.get('properties'):
-                # We're on buildbot
-                if self.buildbot_config.get('properties').get('buildid'):
-                    # Try may not provide a buildid. This means, it's gonna be generated
-                    # below.
-                    self.info("Determining buildid from buildbot properties")
-                    buildid = self.buildbot_config['properties']['buildid'].encode(
-                        'ascii', 'replace'
-                    )
+            if self.buildbot_config['properties'].get('buildid'):
+                self.info("Determining buildid from buildbot properties")
+                buildid = self.buildbot_config['properties']['buildid'].encode(
+                    'ascii', 'replace'
+                )
             else:
-                # We're on taskcluster.
-                # In this case, there are no buildbot properties, and we must pass
+                # for taskcluster, there are no buildbot properties, and we pass
                 # MOZ_BUILD_DATE into mozharness as an environment variable, only
                 # to have it pass the same value out with the same name.
-                try:
-                    buildid = os.environ['MOZ_BUILD_DATE']
-                except KeyError:
-                    self.fatal(
-                        "MOZ_BUILD_DATE must be provided as an environment var on Taskcluster"
-                    )
-
+                buildid = os.environ.get('MOZ_BUILD_DATE')
 
         if not buildid:
             self.info("Creating buildid through current time")
