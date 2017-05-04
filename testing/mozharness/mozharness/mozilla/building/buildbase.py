@@ -2042,6 +2042,24 @@ or run without that action (ie: --no-{action})"
                     "subtests": size_measurements
                 })
 
+        # Extract compiler warnings count.
+        warnings = self.get_output_from_command(
+            command=[sys.executable, 'mach', 'warnings-list'],
+            cwd=self.query_abs_dirs()['abs_src_dir'],
+            env=self.query_build_env(),
+            # No need to pollute the log.
+            silent=True,
+            # Fail fast.
+            halt_on_failure=True)
+
+        if warnings is not None:
+            perfherder_data['suites'].append({
+                'name': 'compiler warnings',
+                'value': len(warnings.strip().splitlines()),
+                'alertThreshold': 1.0,
+                'subtests': [],
+            })
+
         build_metrics = self._load_build_resources()
         if build_metrics:
             perfherder_data['suites'].append(build_metrics)
