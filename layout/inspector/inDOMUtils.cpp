@@ -513,8 +513,8 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
     sel->RemoveRightmostSelector();
   }
 
-  element->OwnerDoc()->FlushPendingLinkUpdates();
-  // XXXbz what exactly should we do with visited state here?
+  // XXXbz what exactly should we do with visited state here?  If we ever start
+  // caring about it, remember to do FlushPendingLinkUpdates().
   TreeMatchContext matchingContext(false,
                                    nsRuleWalker::eRelevantLinkUnvisited,
                                    element->OwnerDoc(),

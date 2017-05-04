@@ -758,8 +758,6 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     return;
   }
 
-  document->FlushPendingLinkUpdates();
-
   // Flush _before_ getting the presshell, since that could create a new
   // presshell.  Also note that we want to flush the style on the document
   // we're computing style in, not on the document mContent is in -- the two

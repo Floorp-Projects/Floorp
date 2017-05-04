@@ -7,13 +7,13 @@
 #ifndef vm_Debugger_h
 #define vm_Debugger_h
 
+#include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Range.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
-#include "jsclist.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsweakmap.h"
@@ -259,6 +259,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
+    friend struct JSRuntime::GlobalObjectWatchersSiblingAccess<Debugger>;
     friend class SavedStacks;
     friend class ScriptedOnStepHandler;
     friend class ScriptedOnPopHandler;
@@ -386,7 +387,27 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     // Whether to enable code coverage on the Debuggee.
     bool collectCoverageInfo;
 
-    JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */
+    template<typename T>
+    struct DebuggerSiblingAccess {
+      static T* GetNext(T* elm) {
+        return elm->debuggerLink.mNext;
+      }
+      static void SetNext(T* elm, T* next) {
+        elm->debuggerLink.mNext = next;
+      }
+      static T* GetPrev(T* elm) {
+        return elm->debuggerLink.mPrev;
+      }
+      static void SetPrev(T* elm, T* prev) {
+        elm->debuggerLink.mPrev = prev;
+      }
+    };
+
+    // List of all js::Breakpoints in this debugger.
+    using BreakpointList =
+        mozilla::DoublyLinkedList<js::Breakpoint,
+                                  DebuggerSiblingAccess<js::Breakpoint>>;
+    BreakpointList breakpoints;
 
     // The set of GC numbers for which one or more of this Debugger's observed
     // debuggees participated in.
@@ -446,11 +467,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     /*
      * If this Debugger is enabled, and has a onNewGlobalObject handler, then
-     * this link is inserted into the circular list headed by
-     * JSRuntime::onNewGlobalObjectWatchers. Otherwise, this is set to a
-     * singleton cycle.
+     * this link is inserted into the list headed by
+     * JSRuntime::onNewGlobalObjectWatchers.
      */
-    JSCList onNewGlobalObjectWatchersLink;
+    mozilla::DoublyLinkedListElement<Debugger> onNewGlobalObjectWatchersLink;
 
     /*
      * Map from stack frames that are currently on the stack to Debugger.Frame
@@ -789,8 +809,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                              MutableHandleDebuggerFrame result);
 
     inline Breakpoint* firstBreakpoint() const;
-
-    static inline Debugger* fromOnNewGlobalObjectWatchersLink(JSCList* link);
 
     static MOZ_MUST_USE bool replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
                                               AbstractFramePtr to,
@@ -1563,7 +1581,27 @@ class BreakpointSite {
   private:
     Type type_;
 
-    JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
+    template<typename T>
+    struct SiteSiblingAccess {
+      static T* GetNext(T* elm) {
+        return elm->siteLink.mNext;
+      }
+      static void SetNext(T* elm, T* next) {
+        elm->siteLink.mNext = next;
+      }
+      static T* GetPrev(T* elm) {
+        return elm->siteLink.mPrev;
+      }
+      static void SetPrev(T* elm, T* prev) {
+        elm->siteLink.mPrev = prev;
+      }
+    };
+
+    // List of all js::Breakpoints at this instruction.
+    using BreakpointList =
+        mozilla::DoublyLinkedList<js::Breakpoint,
+                                  SiteSiblingAccess<js::Breakpoint>>;
+    BreakpointList breakpoints;
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
 
   protected:
@@ -1607,6 +1645,7 @@ class BreakpointSite {
 class Breakpoint {
     friend struct ::JSCompartment;
     friend class Debugger;
+    friend class BreakpointSite;
 
   public:
     Debugger * const debugger;
@@ -1614,12 +1653,14 @@ class Breakpoint {
   private:
     /* |handler| is marked unconditionally during minor GC. */
     js::PreBarrieredObject handler;
-    JSCList debuggerLinks;
-    JSCList siteLinks;
+
+    /**
+     * Link elements for each list this breakpoint can be in.
+     */
+    mozilla::DoublyLinkedListElement<Breakpoint> debuggerLink;
+    mozilla::DoublyLinkedListElement<Breakpoint> siteLink;
 
   public:
-    static Breakpoint* fromDebuggerLinks(JSCList* links);
-    static Breakpoint* fromSiteLinks(JSCList* links);
     Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
     void destroy(FreeOp* fop);
     Breakpoint* nextInDebugger();
@@ -1697,15 +1738,9 @@ Breakpoint::asWasm()
 Breakpoint*
 Debugger::firstBreakpoint() const
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints))
+    if (breakpoints.isEmpty())
         return nullptr;
-    return Breakpoint::fromDebuggerLinks(JS_NEXT_LINK(&breakpoints));
-}
-
-/* static */ Debugger*
-Debugger::fromOnNewGlobalObjectWatchersLink(JSCList* link) {
-    char* p = reinterpret_cast<char*>(link);
-    return reinterpret_cast<Debugger*>(p - offsetof(Debugger, onNewGlobalObjectWatchersLink));
+    return &(*breakpoints.begin());
 }
 
 const js::GCPtrNativeObject&
@@ -1766,7 +1801,7 @@ Debugger::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 #ifdef DEBUG
     global->compartment()->firedOnNewGlobalObject = true;
 #endif
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers()))
+    if (!cx->runtime()->onNewGlobalObjectWatchers().isEmpty())
         Debugger::slowPathOnNewGlobalObject(cx, global);
 }
 
