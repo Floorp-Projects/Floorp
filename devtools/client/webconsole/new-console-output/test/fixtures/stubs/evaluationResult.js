@@ -78,7 +78,7 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -86,6 +86,7 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
     "column": 4
   },
   "groupId": null,
+  "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null
 }));
@@ -199,6 +200,7 @@ stubPackets.set("1 + @", {
     }
   },
   "exceptionMessage": "SyntaxError: illegal character",
+  "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "frame": {
     "source": "debugger eval code",
     "line": 1,
