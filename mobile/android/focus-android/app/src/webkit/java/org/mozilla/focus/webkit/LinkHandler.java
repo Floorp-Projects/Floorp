@@ -41,6 +41,11 @@ import org.mozilla.focus.web.IWebView;
                 callback.onLongPress(new IWebView.HitTarget(true, linkURL, false, null));
                 return true;
 
+            case WebView.HitTestResult.IMAGE_TYPE:
+                final String imageURL = hitTestResult.getExtra();
+                callback.onLongPress(new IWebView.HitTarget(false, null, false, imageURL));
+                return true;
+
             case WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
                 // hitTestResult.getExtra() contains only the image URL, and not the link
                 // URL. Internally, WebView's HitTestData contains both, but they only
@@ -63,8 +68,9 @@ import org.mozilla.focus.web.IWebView;
 
                 webView.requestFocusNodeHref(message);
                 return true;
-        }
 
-        return false;
+            default:
+                return false;
+        }
     }
 }

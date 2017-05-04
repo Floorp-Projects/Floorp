@@ -47,10 +47,13 @@ public final class TelemetryWrapper {
         private static final String TYPE_QUERY = "type_query";
         private static final String TYPE_SELECT_QUERY = "select_query";
         private static final String CLICK = "click";
+        private static final String CANCEL = "cancel";
+        private static final String LONG_PRESS = "long_press";
         private static final String CHANGE = "change";
         private static final String FOREGROUND = "foreground";
         private static final String BACKGROUND = "background";
         private static final String SHARE = "share";
+        private static final String COPY = "copy";
         private static final String OPEN = "open";
         private static final String INTENT_URL = "intent_url";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
@@ -66,6 +69,8 @@ public final class TelemetryWrapper {
         private static final String NOTIFICATION = "notification";
         private static final String SHORTCUT = "shortcut";
         private static final String BLOCKING_SWITCH = "blocking_switch";
+        private static final String BROWSER = "browser";
+        private static final String BROWSER_CONTEXTMENU = "browser_contextmenu";
     }
 
     private static class Value {
@@ -73,6 +78,8 @@ public final class TelemetryWrapper {
         private static final String FIREFOX = "firefox";
         private static final String SELECTION = "selection";
         private static final String ERASE = "erase";
+        private static final String IMAGE = "image";
+        private static final String LINK = "link";
     }
 
     private static class Extra {
@@ -244,6 +251,30 @@ public final class TelemetryWrapper {
 
     public static void shareEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.MENU).queue();
+    }
+
+    public static void shareLinkEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.BROWSER_CONTEXTMENU, Value.LINK).queue();
+    }
+
+    public static void shareImageEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.BROWSER_CONTEXTMENU, Value.IMAGE).queue();
+    }
+
+    public static void copyLinkEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.COPY, Object.BROWSER_CONTEXTMENU, Value.LINK).queue();
+    }
+
+    public static void copyImageEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.COPY, Object.BROWSER_CONTEXTMENU, Value.IMAGE).queue();
+    }
+
+    public static void openWebContextMenuEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.LONG_PRESS, Object.BROWSER).queue();
+    }
+
+    public static void cancelWebContextMenuEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CANCEL, Object.BROWSER_CONTEXTMENU).queue();
     }
 
     public static void openDefaultAppEvent() {
