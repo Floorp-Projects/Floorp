@@ -109,6 +109,9 @@ public:
   // Copies all data from the other storage.
   void CloneFrom(const StorageCache* aThat);
 
+  // Get size of per-origin data.
+  int64_t GetOriginQuotaUsage(const Storage* aStorage) const;
+
   // Starts async preload of this cache if it persistent and not loaded.
   void Preload();
 
