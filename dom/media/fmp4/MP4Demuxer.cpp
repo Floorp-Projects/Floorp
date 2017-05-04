@@ -417,10 +417,22 @@ MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
   mIterator->Seek(seekTime.ToMicroseconds());
 
   // Check what time we actually seeked to.
-  mQueuedSample = mIterator->GetNext();
-  if (mQueuedSample) {
-    seekTime = mQueuedSample->mTime;
-  }
+  RefPtr<MediaRawData> sample;
+  do {
+    sample = GetNextSample();
+    if (!sample) {
+      return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
+                                          __func__);
+    }
+    if (!sample->Size()) {
+      // This sample can't be decoded, continue searching.
+      continue;
+    }
+    if (sample->mKeyframe) {
+      mQueuedSample = sample;
+      seekTime = mQueuedSample->mTime;
+    }
+  } while (!mQueuedSample);
 
   SetNextKeyFrameTime();
 
