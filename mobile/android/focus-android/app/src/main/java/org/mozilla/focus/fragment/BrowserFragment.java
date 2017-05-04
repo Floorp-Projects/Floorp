@@ -20,9 +20,11 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -30,8 +32,11 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -48,6 +53,8 @@ import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
+import org.mozilla.focus.web.BrowsingSession;
+import org.mozilla.focus.web.CustomTabConfig;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 
@@ -120,7 +127,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         urlView = (TextView) view.findViewById(R.id.display_url);
         updateURL(getInitialUrl());
-        urlView.setOnClickListener(this);
 
         backgroundTransition = (TransitionDrawable) view.findViewById(R.id.background).getBackground();
 
@@ -144,12 +150,56 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         progressView = (ProgressBar) view.findViewById(R.id.progress);
 
-        view.findViewById(R.id.erase).setOnClickListener(this);
-
         menuView = view.findViewById(R.id.menu);
         menuView.setOnClickListener(this);
 
+        if (BrowsingSession.getInstance().isCustomTab()) {
+            initialiseCustomTabUi(view);
+        } else {
+            initialiseNormalBrowserUi(view);
+        }
+
         return view;
+    }
+
+    private void initialiseNormalBrowserUi(final @NonNull View view) {
+        final View erase = view.findViewById(R.id.erase);
+        erase.setOnClickListener(this);
+
+        urlView.setOnClickListener(this);
+    }
+
+    private void initialiseCustomTabUi(final @NonNull View view) {
+        final CustomTabConfig customTabConfig = BrowsingSession.getInstance().getCustomTabConfig();
+        if (customTabConfig == null) {
+            throw new IllegalStateException("Can't initialise custom tab UI for non custom-tab session");
+        }
+
+        // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
+        // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
+        //             Moreover, the layout behaviour just doesn't work unless you set it programatically.
+        // - View.GONE: doesn't work because the layout-behaviour makes the FAB visible again when scrolling.
+        // - Adding at runtime: works, but then we need to use a separate layout file (and you need
+        //   to set some attributes programatically, same as ViewStub).
+        final View erase = view.findViewById(R.id.erase);
+        final ViewGroup eraseContainer = (ViewGroup) erase.getParent();
+        eraseContainer.removeView(erase);
+
+        if (customTabConfig.toolbarColor != null) {
+            view.findViewById(R.id.appbar).setBackgroundColor(customTabConfig.toolbarColor);
+        }
+
+        final ImageView closeButton = (ImageView) view.findViewById(R.id.customtab_close);
+
+        closeButton.setVisibility(View.VISIBLE);
+        closeButton.setOnClickListener(this);
+
+        if (customTabConfig.closeButtonIcon != null) {
+            closeButton.setImageBitmap(customTabConfig.closeButtonIcon);
+        } else {
+            // Always set the icon in case it's been overridden by a previous CT invocation
+            closeButton.setImageResource(R.drawable.ic_close);
+        }
     }
 
     @Override
@@ -349,13 +399,17 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         return true;
     }
 
-    public void eraseAndShowHomeScreen() {
+    public void erase() {
         final IWebView webView = getWebView();
         if (webView != null) {
             webView.cleanup();
         }
 
         BrowsingNotificationService.stop(getContext());
+    }
+
+    public void eraseAndShowHomeScreen() {
+        erase();
 
         getActivity().getSupportFragmentManager()
                 .beginTransaction()
@@ -497,6 +551,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 TelemetryWrapper.openSelectionEvent();
                 break;
             }
+
+            case R.id.customtab_close: {
+                erase();
+                getActivity().finish();
+                break;
+            }
+
+            default:
+                throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");
         }
     }
 

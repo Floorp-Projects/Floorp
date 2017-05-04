@@ -12,6 +12,12 @@
     android:paddingEnd="0dp">
 
     <ImageView
+        android:id="@+id/customtab_close"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <ImageView
         android:id="@+id/lock"
         android:layout_width="24dp"
         android:layout_height="24dp"
