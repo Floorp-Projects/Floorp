@@ -122,7 +122,13 @@ html|*#gcli-output-frame {
 #gcli-tooltip {
   border-width: 0;
   background-color: transparent;
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* We always wanted this to be a percentage of the viewport size but width: x% does not
+   * work. vw is the obvious solution.
+   */
+  width: 80vw;
 }
 
 .gclitoolbar-input-node,
