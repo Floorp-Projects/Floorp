@@ -230,6 +230,30 @@ struct ParamTraits<base::ChildPrivileges>
                                     base::PRIVILEGES_LAST>
 { };
 
+/**
+ * A helper class for serializing plain-old data (POD) structures.
+ * The memory representation of the structure is written to and read from
+ * the serialized stream directly, without individual processing of the
+ * structure's members.
+ *
+ * Derive ParamTraits<T> from PlainOldDataSerializer<T> if T is POD.
+ */
+template <typename T>
+struct PlainOldDataSerializer
+{
+  // TODO: Once the mozilla::IsPod trait is in good enough shape (bug 900042),
+  //       static_assert that mozilla::IsPod<T>::value is true.
+  typedef T paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType));
+  }
+};
+
 template<>
 struct ParamTraits<int8_t>
 {
