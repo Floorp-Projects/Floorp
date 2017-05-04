@@ -90,15 +90,15 @@ function checkElement(id, list, eps, doc) {
 <!-- Root element; see d9 -->
 <!-- Element in iframe -->
 <iframe id="f1" style="position:absolute; left:300px; top:0; width:100px; height:200px; border:none"
-        src="data:text/html,<div id='d10' style='position:absolute; left:0; top:25px; width:100px; height:100px; background:cyan'>">
+        srcdoc="<div id='d10' style='position:absolute; left:0; top:25px; width:100px; height:100px; background:cyan'>">
 </iframe>
 <!-- Root element in iframe -->
 <iframe id="f2" style="position:absolute; left:300px; top:250px; width:100px; height:200px; border:none"
-        src="data:text/html,<html id='d11' style='width:100px; height:100px; background:magenta'>">
+        srcdoc="<html id='d11' style='width:100px; height:100px; background:magenta'>">
 </iframe>
 <!-- Fixed-pos element in iframe -->
 <iframe id="f3" style="position:absolute; left:300px; top:400px; border:none"
-        src="data:text/html,<div id='d12' style='position:fixed; left:0; top:0; width:100px; height:100px;'>"></iframe>
+        srcdoc="<div id='d12' style='position:fixed; left:0; top:0; width:100px; height:100px;'>"></iframe>
 
 <script>
 function doTest() {
