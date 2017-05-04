@@ -110,13 +110,18 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  mockUpdateManager.register();
-
   yield openPreferencesViaOpenPreferencesAPI("advanced", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
 
   let showBtn = doc.getElementById("showUpdateHistory");
   let dialogOverlay = doc.getElementById("dialogOverlay");
+
+  // XXX: For unknown reasons, this mock cannot be loaded by
+  // XPCOMUtils.defineLazyServiceGetter() called in aboutDialog-appUpdater.js.
+  // It is registered here so that we could assert update history subdialog
+  // without stopping the preferences advanced pane from loading.
+  // See bug 1361929.
+  mockUpdateManager.register();
 
   // Test the dialog window opens
   is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
