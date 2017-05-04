@@ -405,6 +405,41 @@ const positiveNumberType = {
 
 };
 
+// Test using float values in the range [0, 1]
+const opacityType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: [0.3, 0.8] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 500,  expected: '0.55' }]);
+    }, property + ' supports animating as a [0, 1] number');
+  },
+
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 0.3;
+      var animation = target.animate({ [idlName]: [0.3, 0.8] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName, [{ time: 0, expected: '0.6' }]);
+    }, property + ': [0, 1] number');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 0.8;
+      var animation = target.animate({ [idlName]: [0.3, 0.8] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName, [{ time: 0, expected: '1' }]);
+    }, property + ': [0, 1] number (clamped)');
+  },
+
+};
+
 const visibilityType = {
   testInterpolation: function(property, setup) {
     test(function(t) {
@@ -1218,6 +1253,57 @@ const rectType = {
   },
 }
 
+// stroke-dasharray: none | [ <length> | <percentage> | <number> ]*
+const dasharrayType = {
+  testInterpolation: function(property, setup) {
+    percentageType.testInterpolation(property, setup);
+    positiveNumberType.testInterpolation(property, setup);
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                         ['8, 16, 4',
+                                          '4, 8, 12, 16'] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(
+          animation, idlName,
+          [{ time: 500,  expected: '6, 12, 8, 12, 10, 6, 10, 16, 4, 8, 14, 10' }]);
+    }, property + ' supports animating as a dasharray (mismatched length)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                         ['2, 50%, 6, 10',
+                                          '6, 30%, 2, 2'] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(
+          animation, idlName,
+          [{ time: 500,  expected: '4, 40%, 4, 6' }]);
+    }, property + ' supports animating as a dasharray (mixed number and percentage)');
+
+  },
+
+  // Note that stroke-dasharray is non-additive property, so we should write this
+  // additive test case that animating value replaces underlying values.
+  // See https://www.w3.org/TR/SVG2/painting.html#StrokeDashing.
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = '6, 30%, 2px';
+      var animation = target.animate({ [idlName]:
+                                         ['1, 2, 3, 4, 5',
+                                          '6, 7, 8, 9, 10'] },
+                                     { duration: 1000, fill: 'add' });
+      testAnimationSamples(
+          animation, idlName,
+          [{ time: 0, expected: '1, 2, 3, 4, 5' }]);
+    }, property + ': dasharray');
+  },
+}
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -1229,11 +1315,13 @@ const types = {
   lengthPercentageOrCalc: lengthPercentageOrCalcType,
   lengthPair: lengthPairType,
   positiveNumber: positiveNumberType,
+  opacity: opacityType,
   transformList: transformListType,
   visibility: visibilityType,
   boxShadowList: boxShadowListType,
   textShadowList: textShadowListType,
   rect: rectType,
   position: positionType,
+  dasharray: dasharrayType,
 };
 
