@@ -1395,5 +1395,32 @@ GetMaxTextureSizeFromDevice(ID3D11Device* aDevice)
   return GetMaxTextureSizeForFeatureLevel(aDevice->GetFeatureLevel());
 }
 
+AutoLockD3D11Texture::AutoLockD3D11Texture(ID3D11Texture2D* aTexture)
+{
+  aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
+  if (!mMutex) {
+    return;
+  }
+  HRESULT hr = mMutex->AcquireSync(0, 10000);
+  if (hr == WAIT_TIMEOUT) {
+    MOZ_CRASH("GFX: IMFYCbCrImage timeout");
+  }
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to lock the texture");
+  }
+}
+
+AutoLockD3D11Texture::~AutoLockD3D11Texture()
+{
+  if (!mMutex) {
+    return;
+  }
+  HRESULT hr = mMutex->ReleaseSync(0);
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to unlock the texture");
+  }
+}
+
 } // namespace layers
 } // namespace mozilla
