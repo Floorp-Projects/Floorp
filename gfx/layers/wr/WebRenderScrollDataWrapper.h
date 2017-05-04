@@ -291,12 +291,6 @@ public:
     return mLayer->GetScrollbarTargetContainerId();
   }
 
-  int32_t GetScrollThumbLength() const
-  {
-    MOZ_ASSERT(IsValid());
-    return mLayer->GetScrollThumbLength();
-  }
-
   bool IsScrollbarContainer() const
   {
     MOZ_ASSERT(IsValid());

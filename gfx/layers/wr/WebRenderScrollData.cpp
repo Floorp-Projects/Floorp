@@ -45,9 +45,6 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
       : EventRegionsOverride::NoOverride;
   mScrollbarDirection = aLayer->GetScrollThumbData().mDirection;
   mScrollbarTargetContainerId = aLayer->GetScrollbarTargetContainerId();
-  mScrollThumbLength = mScrollbarDirection == ScrollDirection::VERTICAL
-      ? aLayer->GetVisibleRegion().GetBounds().height
-      : aLayer->GetVisibleRegion().GetBounds().width;
   mIsScrollbarContainer = aLayer->IsScrollbarContainer();
   mFixedPosScrollContainerId = aLayer->GetFixedPositionScrollContainerId();
 }
