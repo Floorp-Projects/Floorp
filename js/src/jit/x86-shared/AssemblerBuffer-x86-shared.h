@@ -223,7 +223,7 @@ namespace jit {
         }
 
 #ifdef JS_JITSPEW
-        MOZ_COLD void spew(const char* fmt, va_list va);
+        MOZ_COLD void spew(const char* fmt, va_list va) MOZ_FORMAT_PRINTF(2, 0);
 #endif
     };
 
