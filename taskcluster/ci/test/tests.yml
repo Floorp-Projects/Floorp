@@ -81,7 +81,6 @@ crashtest:
             default: 1
     e10s:
         by-test-platform:
-            windows.*: false # Bug 1304435
             macosx64/debug: true
             default: both
     mozharness:
@@ -242,7 +241,7 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
             default: built-projects
     mozharness:

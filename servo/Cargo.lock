@@ -2799,6 +2799,7 @@ name = "style_tests"
 version = "0.0.1"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "html5ever 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3193,7 +3194,7 @@ dependencies = [
 [[package]]
 name = "webrender"
 version = "0.36.0"
-source = "git+https://github.com/servo/webrender#964df2fa00f330daf4f233669e37133f93113792"
+source = "git+https://github.com/servo/webrender#e44a079266a181ddaae2fd27298cec1094b54b7e"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3222,7 +3223,7 @@ dependencies = [
 [[package]]
 name = "webrender_traits"
 version = "0.36.0"
-source = "git+https://github.com/servo/webrender#964df2fa00f330daf4f233669e37133f93113792"
+source = "git+https://github.com/servo/webrender#e44a079266a181ddaae2fd27298cec1094b54b7e"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",

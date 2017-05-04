@@ -921,13 +921,13 @@ fn static_assert() {
                                need_clone=True) %>
     % endfor
 
-    pub fn set_border_image_source(&mut self, v: longhands::border_image_source::computed_value::T) {
+    pub fn set_border_image_source(&mut self, image: longhands::border_image_source::computed_value::T) {
         unsafe {
             // Prevent leaking of the last elements we did set
             Gecko_SetNullImageValue(&mut self.gecko.mBorderImageSource);
         }
 
-        if let Some(image) = v.0 {
+        if let Some(image) = image.0 {
             self.gecko.mBorderImageSource.set(image, &mut false)
         }
     }
@@ -1296,11 +1296,46 @@ fn static_assert() {
     skip_font_longhands = """font-family font-size font-size-adjust font-weight
                              font-synthesis -x-lang font-variant-alternates
                              font-variant-east-asian font-variant-ligatures
-                             font-variant-numeric font-language-override"""
+                             font-variant-numeric font-language-override
+                             font-feature-settings"""
 %>
 <%self:impl_trait style_struct_name="Font"
     skip_longhands="${skip_font_longhands}"
     skip_additionals="*">
+
+    pub fn set_font_feature_settings(&mut self, v: longhands::font_feature_settings::computed_value::T) {
+        use properties::longhands::font_feature_settings::computed_value::T;
+
+        let current_settings = &mut self.gecko.mFont.fontFeatureSettings;
+        current_settings.clear_pod();
+
+        match v {
+            T::Normal => unsafe { current_settings.set_len_pod(0) },
+
+            T::Tag(feature_settings) => {
+                unsafe { current_settings.set_len_pod(feature_settings.len() as u32) };
+
+                for (current, feature) in current_settings.iter_mut().zip(feature_settings) {
+                    current.mTag = feature.tag;
+                    current.mValue = feature.value;
+                }
+            }
+        };
+    }
+
+    pub fn copy_font_feature_settings_from(&mut self, other: &Self ) {
+        let current_settings = &mut self.gecko.mFont.fontFeatureSettings;
+        let feature_settings = &other.gecko.mFont.fontFeatureSettings;
+        let settings_length = feature_settings.len() as u32;
+
+        current_settings.clear_pod();
+        unsafe { current_settings.set_len_pod(settings_length) };
+
+        for (current, feature) in current_settings.iter_mut().zip(feature_settings.iter()) {
+            current.mTag = feature.mTag;
+            current.mValue = feature.mValue;
+        }
+    }
 
     pub fn set_font_family(&mut self, v: longhands::font_family::computed_value::T) {
         use properties::longhands::font_family::computed_value::FontFamily;
@@ -2756,18 +2791,9 @@ fn static_assert() {
 
         for (image, geckoimage) in images.0.into_iter().zip(self.gecko.${image_layers_field}
                                                                 .mLayers.iter_mut()) {
-            % if shorthand == "background":
-                if let Some(image) = image.0 {
-                    geckoimage.mImage.set(image, cacheable)
-                }
-            % else:
-                use properties::longhands::mask_image::single_value::computed_value::T;
-                match image {
-                    T::Image(image) => geckoimage.mImage.set(image, cacheable),
-                    _ => ()
-                }
-            % endif
-
+            if let Some(image) = image.0 {
+                geckoimage.mImage.set(image, cacheable)
+            }
         }
     }
 
