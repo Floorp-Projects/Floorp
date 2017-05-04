@@ -38,12 +38,12 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
                              const char16_t* aString, uint32_t aLength,
-                             const uint16_t aFlags,
-                             const uint16_t aFlags2,
+                             const gfx::ShapedTextFlags aFlags,
+                             const nsTextFrameUtils::Flags aFlags2,
                              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                              bool aOwnsFactory)
 {
-  NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
+  NS_ASSERTION(!(aFlags & gfx::ShapedTextFlags::TEXT_IS_8BIT),
                "didn't expect text to be marked as 8-bit here");
 
   void *storage = AllocateStorageForTextRun(sizeof(nsTransformedTextRun), aLength);
@@ -104,7 +104,8 @@ already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup,
-                                          uint16_t aFlags, uint16_t aFlags2,
+                                          gfx::ShapedTextFlags aFlags,
+                                          nsTextFrameUtils::Flags aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
@@ -117,7 +118,8 @@ already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup,
-                                          uint16_t aFlags, uint16_t aFlags2,
+                                          gfx::ShapedTextFlags aFlags,
+                                          nsTextFrameUtils::Flags aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
@@ -125,7 +127,8 @@ nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLeng
   // for these rarely used features
   NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
-                     aFlags & ~(gfxFontGroup::TEXT_IS_PERSISTENT | gfxFontGroup::TEXT_IS_8BIT),
+                     aFlags & ~(gfx::ShapedTextFlags::TEXT_IS_PERSISTENT |
+                                 gfx::ShapedTextFlags::TEXT_IS_8BIT),
                      aFlags2,
                      Move(aStyles), aOwnsFactory);
 }
@@ -218,14 +221,14 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
 gfxTextRunFactory::Parameters
 GetParametersForInner(nsTransformedTextRun* aTextRun,
-                      uint16_t* aFlags,
+                      gfx::ShapedTextFlags* aFlags,
                       DrawTarget* aRefDrawTarget)
 {
   gfxTextRunFactory::Parameters params =
     { aRefDrawTarget, nullptr, nullptr,
       nullptr, 0, aTextRun->GetAppUnitsPerDevUnit()
     };
-  *aFlags = aTextRun->GetFlags() & ~gfxFontGroup::TEXT_IS_PERSISTENT;
+  *aFlags = aTextRun->GetFlags() & ~gfx::ShapedTextFlags::TEXT_IS_PERSISTENT;
   return params;
 }
 
@@ -665,7 +668,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                                      &canBreakBeforeArray,
                                      &styleArray);
 
-  uint16_t flags;
+  gfx::ShapedTextFlags flags;
   gfxTextRunFactory::Parameters innerParams =
     GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
@@ -677,12 +680,13 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, fontGroup, flags, 0, Move(styleArray), false);
+        &innerParams, fontGroup, flags, nsTextFrameUtils::Flags(),
+        Move(styleArray), false);
     child = transformedChild.get();
   } else {
     cachedChild = fontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags, 0, aMFR);
+        &innerParams, flags, nsTextFrameUtils::Flags(), aMFR);
     child = cachedChild.get();
   }
   if (!child)
