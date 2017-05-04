@@ -257,6 +257,9 @@ public:
     nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning);
 
+  // Record telemetry about the size of the content being animated.
+  void RecordFrameSizeTelemetry(uint32_t aPixelArea);
+
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
   void CalculateCumulativeChangeHint(nsStyleContext* aStyleContext);
@@ -416,6 +419,10 @@ protected:
   // per effect:target pair so we use this member to record if we have already
   // reported a "ContentTooLarge" warning for the current target.
   bool mRecordedContentTooLarge = false;
+  // Similarly, as a point of comparison we record telemetry whether or not
+  // we get a "ContentTooLarge" warning, but again only once per effect:target
+  // pair.
+  bool mRecordedFrameSize = false;
 
 private:
   nsChangeHint mCumulativeChangeHint;
