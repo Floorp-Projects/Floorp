@@ -3043,7 +3043,6 @@ void
 css::ImageValue::Initialize(nsIDocument* aDocument)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mInitialized);
 
   // NB: If aDocument is not the original document, we may not be able to load
   // images from aDocument.  Instead we do the image load from the original doc
@@ -3053,17 +3052,15 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
     loadingDoc = aDocument;
   }
 
-  loadingDoc->StyleImageLoader()->LoadImage(GetURI(),
-                                            mExtraData->GetPrincipal(),
-                                            mExtraData->GetReferrer(), this);
+  if (!mLoadedImage) {
+    loadingDoc->StyleImageLoader()->LoadImage(GetURI(),
+                                              mExtraData->GetPrincipal(),
+                                              mExtraData->GetReferrer(), this);
 
-  if (loadingDoc != aDocument) {
-    aDocument->StyleImageLoader()->MaybeRegisterCSSImage(this);
+     mLoadedImage = true;
   }
 
-#ifdef DEBUG
-  mInitialized = true;
-#endif
+  aDocument->StyleImageLoader()->MaybeRegisterCSSImage(this);
 }
 
 css::ImageValue::~ImageValue()
