@@ -106,11 +106,110 @@ MoveResolver::findCycledMove(PendingMoveIterator* iter, PendingMoveIterator end,
     return nullptr;
 }
 
+#ifdef JS_CODEGEN_ARM
+static inline bool
+MoveIsDouble(const MoveOperand& move)
+{
+    if (!move.isFloatReg())
+        return false;
+    return move.floatReg().isDouble();
+}
+#endif
+
+#ifdef JS_CODEGEN_ARM
+static inline bool
+MoveIsSingle(const MoveOperand& move)
+{
+    if (!move.isFloatReg())
+        return false;
+    return move.floatReg().isSingle();
+}
+#endif
+
+#ifdef JS_CODEGEN_ARM
+bool
+MoveResolver::isDoubleAliasedAsSingle(const MoveOperand& move)
+{
+    if (!MoveIsDouble(move))
+        return false;
+
+    for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
+        PendingMove* other = *iter;
+        if (other->from().aliases(move) && MoveIsSingle(other->from()))
+            return true;
+        if (other->to().aliases(move) && MoveIsSingle(other->to()))
+            return true;
+    }
+    return false;
+}
+#endif
+
+#ifdef JS_CODEGEN_ARM
+static MoveOperand
+SplitIntoLowerHalf(const MoveOperand& move)
+{
+    if (MoveIsDouble(move)) {
+        FloatRegister lowerSingle = move.floatReg().asSingle();
+        return MoveOperand(lowerSingle);
+    }
+
+    MOZ_ASSERT(move.isMemoryOrEffectiveAddress());
+    return move;
+}
+#endif
+
+#ifdef JS_CODEGEN_ARM
+static MoveOperand
+SplitIntoUpperHalf(const MoveOperand& move)
+{
+    if (MoveIsDouble(move)) {
+        FloatRegister lowerSingle = move.floatReg().asSingle();
+        FloatRegister upperSingle = VFPRegister(lowerSingle.code() + 1, VFPRegister::Single);
+        return MoveOperand(upperSingle);
+    }
+
+    MOZ_ASSERT(move.isMemoryOrEffectiveAddress());
+    return MoveOperand(move.base(), move.disp() + sizeof(float));
+}
+#endif
+
 bool
 MoveResolver::resolve()
 {
     resetState();
     orderedMoves_.clear();
+
+#ifdef JS_CODEGEN_ARM
+    // Some of ARM's double registers alias two of its single registers,
+    // but the algorithm below assumes that every register can participate
+    // in at most one cycle. To satisfy the algorithm, any double registers
+    // that may conflict are split into their single-register halves.
+    //
+    // This logic is only applicable because ARM only uses registers d0-d15,
+    // all of which alias s0-s31. Double registers d16-d31 are unused.
+    // Therefore there is never a double move that cannot be split.
+    // If this changes in the future, the algorithm will have to be fixed.
+    for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
+        PendingMove* pm = *iter;
+
+        if (isDoubleAliasedAsSingle(pm->from()) || isDoubleAliasedAsSingle(pm->to())) {
+            PendingMove* lower = movePool_.allocate();
+            if (!lower)
+                return false;
+
+            // Insert the new node before the current position to not affect iteration.
+            MoveOperand fromLower = SplitIntoLowerHalf(pm->from());
+            MoveOperand toLower = SplitIntoLowerHalf(pm->to());
+            new (lower) PendingMove(fromLower, toLower, MoveOp::FLOAT32);
+            pending_.insertBefore(pm, lower);
+
+            // Overwrite pm in place for the upper move. Iteration proceeds as normal.
+            MoveOperand fromUpper = SplitIntoUpperHalf(pm->from());
+            MoveOperand toUpper = SplitIntoUpperHalf(pm->to());
+            pm->overwrite(fromUpper, toUpper, MoveOp::FLOAT32);
+        }
+    }
+#endif
 
     InlineList<PendingMove> stack;
 
