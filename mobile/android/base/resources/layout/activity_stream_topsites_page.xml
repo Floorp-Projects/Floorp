@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.mozilla.gecko.home.activitystream.topsites.TopSitesPage xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="wrap_content"
-              android:layout_height="match_parent"
-              android:paddingLeft="10dp"/>
+<org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPage xmlns:android="http://schemas.android.com/apk/res/android"
+                                                                  android:orientation="vertical"
+                                                                  android:layout_width="wrap_content"
+                                                                  android:layout_height="match_parent"
+                                                                  android:paddingLeft="10dp"/>

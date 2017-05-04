@@ -4,7 +4,7 @@
 == calc-background-size-1.html calc-background-size-1-ref.html
 == calc-border-radius-1.html calc-border-radius-1-ref.html
 == calc-height-block-1.html calc-height-block-1-ref.html
-fails-if(stylo) == calc-height-table-1.html calc-height-table-1-ref.html
+== calc-height-table-1.html calc-height-table-1-ref.html
 == calc-margin-block-1.html calc-margin-block-1-ref.html
 == calc-max-height-block-1.html calc-max-height-block-1-ref.html
 == calc-max-width-block-1.html calc-width-block-1-ref.html

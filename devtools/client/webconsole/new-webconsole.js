@@ -114,13 +114,17 @@ NewWebConsoleFrame.prototype = {
 
   },
 
+  handleNetworkEventUpdate() {
+
+  },
+
   /**
    * Setter for saving of network request and response bodies.
    *
    * @param boolean value
    *        The new value you want to set.
    */
-  setSaveRequestAndResponseBodies: function (value) {
+  setSaveRequestAndResponseBodies(value) {
     if (!this.webConsoleClient) {
       // Don't continue if the webconsole disconnected.
       return promise.resolve(null);
@@ -252,7 +256,7 @@ NewWebConsoleFrame.prototype = {
         packet._type = true;
         this.newConsoleOutput.dispatchMessageAdd(packet);
       } else {
-        this.jsterm.clearOutput();
+        this.clearOutput(false);
       }
     }
 
@@ -262,6 +266,14 @@ NewWebConsoleFrame.prototype = {
 
     if (event == "navigate" && !packet.nativeConsoleAPI) {
       this.logWarningAboutReplacedAPI();
+    }
+  },
+
+  clearOutput(clearStorage) {
+    this.newConsoleOutput.dispatchMessagesClear();
+    this.webConsoleClient.clearNetworkRequests();
+    if (clearStorage) {
+      this.webConsoleClient.clearMessagesCache();
     }
   },
 };

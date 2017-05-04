@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mozilla.gecko.home.activitystream.topsites;
+package org.mozilla.gecko.activitystream.homepanel.topsites;
 
 import android.content.Context;
 import android.content.res.Resources;

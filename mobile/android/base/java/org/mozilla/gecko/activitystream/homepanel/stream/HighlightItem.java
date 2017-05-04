@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.home.activitystream.stream;
+package org.mozilla.gecko.activitystream.homepanel.stream;
 
 import android.graphics.Color;
 import android.text.TextUtils;
@@ -19,8 +19,8 @@ import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
-import org.mozilla.gecko.home.activitystream.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;

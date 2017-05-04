@@ -8,7 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.home.activitystream.ActivityStreamHomeFragment;
+import org.mozilla.gecko.activitystream.homepanel.ActivityStreamHomeFragment;
 
 import android.content.Context;
 import android.os.Bundle;

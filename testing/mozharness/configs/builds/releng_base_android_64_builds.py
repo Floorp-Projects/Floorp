@@ -11,10 +11,10 @@ config = {
         'checkout-sources',
         'setup-mock',
         'build',
+        'generate-build-stats',
         'upload-files',
         'sendchange',
         'multi-l10n',
-        'generate-build-stats',
         'update',  # decided by query_is_nightly()
     ],
     "buildbot_json_path": "buildprops.json",
