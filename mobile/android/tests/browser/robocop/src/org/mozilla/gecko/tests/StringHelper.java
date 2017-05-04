@@ -85,6 +85,7 @@ public class StringHelper {
     public final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
     public final String ROBOCOP_READER_MODE_BASIC_ARTICLE = "/robocop/reader_mode_pages/basic_article.html";
     public final String ROBOCOP_LINK_TO_SLOW_LOADING = "/robocop/robocop_link_to_slow_loading.html";
+    public final String ROBOCOP_MEDIA_PLAYBACK_LOOP_URL = "/robocop/robocop_media_playback_loop.html";
 
     private final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
 
