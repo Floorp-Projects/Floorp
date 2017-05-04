@@ -177,11 +177,6 @@
     <!-- This is a context menu item shown when long pressing on the URL bar. Selecting it will copy the text from the clipboard into the URL bar and open the URL or perform a search. -->
     <string name="context_menu_paste_go">Paste &amp; Go</string>
 
-    <string name="firstrun_title">Browse like no one’s watching.</string>
-    <string name="firstrun_description">Automatically block online trackers while you browse. Then tap to erase visited pages, searches, cookies and passwords from your device.</string>
-    <string name="firstrun_button">OK, got it!</string>
-    <string name="firstrun_footer">To be clear, sites and services you use can still know where you\'ve been.</string>
-
     <string name="your_rights">Your Rights</string>
 
     <string name="external_app_prompt_title">Open link in another  app</string>
@@ -275,4 +270,24 @@ be temporary, and you can try again later.</li>
 
     <!-- This is a warning shown in the browser's context menu (when long pressing an image). -->
     <string name="contextmenu_image_warning"><![CDATA[Saved and shared images <b>will not be deleted</b> when you erase Firefox Focus history.]]></string>
+
+    <!-- First run tour (page 1): Title -->
+    <string name="firstrun_tracking_title">Browse like no one’s watching</string>
+    <!-- First run tour (page 1): Text -->
+    <string name="firstrun_tracking_text">Automatically block online tracking while you browse. Then remove visited pages and cookies with a touch to the trash icon in the app or in your notifications.</string>
+
+    <!-- First run tour (page 2): Title -->
+    <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
+    <!-- First run tour (page 2): Text -->
+    <string name="firstrun_defaultbrowser_text">Set Focus as your default browser and get the benefits of private browsing when you link to the Web from other Android apps.</string>
+
+    <!-- First run tour (page 3): Title -->
+    <string name="firstrun_breaking_title">A quick fix when\nblocking = breaking</string>
+    <!-- First run tour (page 3): Text -->
+    <string name="firstrun_breaking_text">When the downside of blocking online trackers is a site that seems broken, turn off blocking with a tap to the tool menu.</string>
+
+    <string name="firstrun_close_button">OK, got it!</string>
+    <string name="firstrun_skip_button">Skip</string>
+    <string name="firstrun_next_button">Next</string>
+
 </resources>

@@ -1,71 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="@drawable/background_inactive">
+    android:background="@drawable/animated_background">
 
-    <!-- Ignore "UselessParent": on tablets we set a limited width, but we still need a full-width
-         background, hence the FrameLayout isn't useless. -->
-    <LinearLayout
-        tools:ignore="UselessParent"
-        android:layout_width="@dimen/firstrun_container_width"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_gravity="center"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/firstrun_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/firstrun_title"
-            android:textAppearance="@android:style/TextAppearance.Material.Large"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"/>
-
-        <TextView
-            android:id="@+id/firstrun_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:lineSpacingExtra="5sp"
-            android:paddingBottom="60dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:text="@string/firstrun_description"
-            android:textAlignment="center"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"/>
-
-        <Button
-            android:id="@+id/firstrun_exitbutton"
-            android:layout_width="match_parent"
-            android:background="@drawable/firstrun_button_background"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:fontFamily="sans-serif"
-            android:gravity="center"
-            android:text="@string/firstrun_button"
-            android:textSize="14sp"/>
-
-        <TextView
-            android:id="@+id/firstrun_footer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:lineSpacingExtra="5sp"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:text="@string/firstrun_footer"
-            android:textAlignment="center"
-            android:textColor="#80FFFFFF"
-            android:textSize="14sp"/>
-
-    </LinearLayout>
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </FrameLayout>
