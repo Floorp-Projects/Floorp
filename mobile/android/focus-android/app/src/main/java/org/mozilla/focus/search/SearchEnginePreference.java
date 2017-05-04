@@ -54,7 +54,7 @@ public class SearchEnginePreference extends DialogPreference {
     private void persistSearchEngine(SearchEngine searchEngine) {
         setTitle(searchEngine.getName());
 
-        final Settings settings = new Settings(getContext());
-        settings.setDefaultSearchEngine(searchEngine);
+        Settings.getInstance(getContext())
+                .setDefaultSearchEngine(searchEngine);
     }
 }

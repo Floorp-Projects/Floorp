@@ -20,10 +20,19 @@ import org.mozilla.focus.search.SearchEngine;
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
 public class Settings {
+    private static Settings instance;
+
+    public synchronized static Settings getInstance(Context context) {
+        if (instance == null) {
+            instance = new Settings(context.getApplicationContext());
+        }
+        return instance;
+    }
+
     private final SharedPreferences preferences;
     private final Resources resources;
 
-    public Settings(Context context) {
+    private Settings(Context context) {
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         resources = context.getResources();
     }
@@ -47,22 +56,21 @@ public class Settings {
             return false;
         }
 
-        return preferences.getBoolean(
-                resources.getString(R.string.pref_key_secure),
-                true);
+        return preferences.getBoolean(getPreferenceKey(R.string.pref_key_secure), true);
     }
 
     @Nullable
     public String getDefaultSearchEngineName() {
-        return preferences.getString(
-                resources.getString(R.string.pref_key_search_engine),
-                null);
+        return preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), null);
     }
 
     public void setDefaultSearchEngine(SearchEngine searchEngine) {
         preferences.edit()
-                .putString(resources.getString(R.string.pref_key_search_engine),
-                        searchEngine.getName())
+                .putString(getPreferenceKey(R.string.pref_key_search_engine), searchEngine.getName())
                 .apply();
+    }
+
+    /* package */ String getPreferenceKey(int resourceId) {
+        return resources.getString(resourceId);
     }
 }

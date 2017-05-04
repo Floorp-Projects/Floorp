@@ -38,9 +38,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Settings appSettings = new Settings(this);
-
-        if (appSettings.shouldUseSecureMode()) {
+        if (Settings.getInstance(this).shouldUseSecureMode()) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         }
 
@@ -66,14 +64,14 @@ public class MainActivity extends AppCompatActivity {
             if (Intent.ACTION_VIEW.equals(intent.getAction())) {
                 final String url = intent.getDataString();
 
-                if (appSettings.shouldShowFirstrun()) {
+                if (Settings.getInstance(this).shouldShowFirstrun()) {
                     pendingUrl = url;
                     showFirstrun();
                 } else {
                     showBrowserScreen(url);
                 }
             } else {
-                if (appSettings.shouldShowFirstrun()) {
+                if (Settings.getInstance(this).shouldShowFirstrun()) {
                     showFirstrun();
                 } else {
                     showHomeScreen();
@@ -138,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             setIntent(new Intent(Intent.ACTION_MAIN));
         }
 
-        if (pendingUrl != null && !new Settings(this).shouldShowFirstrun()) {
+        if (pendingUrl != null && !Settings.getInstance(this).shouldShowFirstrun()) {
             // We have received an URL in onNewIntent(). Let's load it now.
             // Unless we're trying to show the firstrun screen, in which case we leave it pending until
             // firstrun is dismissed.

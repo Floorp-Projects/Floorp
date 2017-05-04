@@ -150,9 +150,7 @@ public class SearchEngineManager extends BroadcastReceiver {
     public synchronized SearchEngine getDefaultSearchEngine(Context context) {
         awaitLoadingSearchEnginesLocked();
 
-        final Settings settings = new Settings(context);
-
-        final String defaultSearch = settings.getDefaultSearchEngineName();
+        final String defaultSearch = Settings.getInstance(context).getDefaultSearchEngineName();
         if (defaultSearch != null) {
             for (SearchEngine searchEngine : searchEngines) {
                 if (defaultSearch.equals(searchEngine.getName())) {
