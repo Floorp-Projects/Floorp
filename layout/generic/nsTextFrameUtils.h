@@ -22,7 +22,7 @@ struct nsStyleText;
 class nsTextFrameUtils {
 public:
   // These constants are used as textrun flags for textframe textruns.
-  enum {
+  enum class Flags : uint16_t {
     // The following flags are set by TransformText
 
     // the text has at least one untransformed tab character
@@ -127,7 +127,7 @@ public:
                               CompressionMode aCompression,
                               uint8_t* aIncomingFlags,
                               gfxSkipChars* aSkipChars,
-                              uint16_t* aAnalysisFlags);
+                              nsTextFrameUtils::Flags* aAnalysisFlags);
 
   /**
    * Returns whether aChar is a character that nsTextFrameUtils::TransformText
@@ -152,6 +152,8 @@ public:
                                                     const nsStyleText*
                                                       aStyleText);
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrameUtils::Flags)
 
 class nsSkipCharsRunIterator {
 public:

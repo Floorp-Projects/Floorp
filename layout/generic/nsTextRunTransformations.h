@@ -49,14 +49,18 @@ public:
   already_AddRefed<nsTransformedTextRun>
   MakeTextRun(const uint8_t* aString, uint32_t aLength,
               const gfxFontGroup::Parameters* aParams,
-              gfxFontGroup* aFontGroup, uint16_t aFlags, uint16_t aFlags2,
+              gfxFontGroup* aFontGroup,
+              mozilla::gfx::ShapedTextFlags aFlags,
+              nsTextFrameUtils::Flags aFlags2,
               nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
               bool aOwnsFactory);
 
   already_AddRefed<nsTransformedTextRun>
   MakeTextRun(const char16_t* aString, uint32_t aLength,
               const gfxFontGroup::Parameters* aParams,
-              gfxFontGroup* aFontGroup, uint16_t aFlags, uint16_t aFlags2,
+              gfxFontGroup* aFontGroup,
+              mozilla::gfx::ShapedTextFlags aFlags,
+              nsTextFrameUtils::Flags aFlags2,
               nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
               bool aOwnsFactory);
 
@@ -125,7 +129,8 @@ public:
          nsTransformingTextRunFactory* aFactory,
          gfxFontGroup* aFontGroup,
          const char16_t* aString, uint32_t aLength,
-         const uint16_t aFlags, const uint16_t aFlags2,
+         const mozilla::gfx::ShapedTextFlags aFlags,
+         const nsTextFrameUtils::Flags aFlags2,
          nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
          bool aOwnsFactory);
 
@@ -169,7 +174,8 @@ private:
                        nsTransformingTextRunFactory* aFactory,
                        gfxFontGroup* aFontGroup,
                        const char16_t* aString, uint32_t aLength,
-                       const uint16_t aFlags, const uint16_t aFlags2,
+                       const mozilla::gfx::ShapedTextFlags aFlags,
+                       const nsTextFrameUtils::Flags aFlags2,
                        nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                        bool aOwnsFactory)
     : gfxTextRun(aParams, aLength, aFontGroup, aFlags, aFlags2),
@@ -216,7 +222,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
 gfxTextRunFactory::Parameters
 GetParametersForInner(nsTransformedTextRun* aTextRun,
-                      uint16_t* aFlags,
+                      mozilla::gfx::ShapedTextFlags* aFlags,
                       mozilla::gfx::DrawTarget* aRefDrawTarget);
 
 
