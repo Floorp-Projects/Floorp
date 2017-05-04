@@ -7,9 +7,13 @@
 #ifndef mozilla_mscom_Utils_h
 #define mozilla_mscom_Utils_h
 
-#ifdef ACCESSIBILITY
+#if defined(MOZILLA_INTERNAL_API)
+#include "nsString.h"
+#endif // defined(MOZILLA_INTERNAL_API)
+
+#if defined(ACCESSIBILITY)
 #include <guiddef.h>
-#endif
+#endif // defined(ACCESSIBILITY)
 
 struct IUnknown;
 
@@ -20,12 +24,16 @@ bool IsCurrentThreadMTA();
 bool IsProxy(IUnknown* aUnknown);
 bool IsValidGUID(REFGUID aCheckGuid);
 
-#ifdef ACCESSIBILITY
+#if defined(MOZILLA_INTERNAL_API)
+void GUIDToString(REFGUID aGuid, nsAString& aOutString);
+#endif // defined(MOZILLA_INTERNAL_API)
+
+#if defined(ACCESSIBILITY)
 bool IsVtableIndexFromParentInterface(REFIID aInterface,
                                       unsigned long aVtableIndex);
 bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
                                        unsigned long aVtableIndexHint);
-#endif
+#endif // defined(ACCESSIBILITY)
 
 } // namespace mscom
 } // namespace mozilla

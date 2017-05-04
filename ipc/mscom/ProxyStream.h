@@ -55,6 +55,7 @@ private:
   HGLOBAL         mHGlobal;
   int             mBufSize;
   ProxyUniquePtr<IUnknown> mUnmarshaledProxy;
+  HRESULT         mUnmarshalResult;
 };
 
 } // namespace mscom
