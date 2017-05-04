@@ -21,8 +21,6 @@ import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
-import org.mozilla.focus.webkit.ErrorPage;
-import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
 
 import java.util.Map;
 
@@ -162,8 +160,11 @@ import java.util.Map;
         if (callback != null) {
             callback.onPageFinished(view.getCertificate() != null);
             // The URL which is supplied in onPageFinished() could be fake (see #301), but webview's
-            // URL is always correct:
-            callback.onURLChanged(view.getUrl());
+            // URL is always correct _except_ for error pages
+            final String viewURL = view.getUrl();
+            if (!UrlUtils.isInternalErrorURL(viewURL)) {
+                callback.onURLChanged(view.getUrl());
+            }
         }
         super.onPageFinished(view, url);
 

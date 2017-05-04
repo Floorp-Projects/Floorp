@@ -85,6 +85,10 @@ public class UrlUtils {
                 url.startsWith("error");
     }
 
+    public static boolean isInternalErrorURL(final String url) {
+        return "data:text/html;charset=utf-8;base64,".equals(url);
+    }
+
     public static boolean urlsMatchExceptForTrailingSlash(final @NonNull String url1, final @NonNull String url2) {
         int lengthDifference = url1.length() - url2.length();
 

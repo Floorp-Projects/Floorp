@@ -97,4 +97,15 @@ public class UrlUtilsTest {
 
         assertEquals("öäü102ß", UrlUtils.stripUserInfo("öäü102ß"));
     }
+
+    @Test
+    public void isInternalErrorURL() {
+        assertTrue(UrlUtils.isInternalErrorURL("data:text/html;charset=utf-8;base64,"));
+
+        assertFalse(UrlUtils.isInternalErrorURL("http://www.mozilla.org"));
+        assertFalse(UrlUtils.isInternalErrorURL("https://www.mozilla.org/en-us/about"));
+        assertFalse(UrlUtils.isInternalErrorURL("www.mozilla.org"));
+        assertFalse(UrlUtils.isInternalErrorURL("error:-8"));
+        assertFalse(UrlUtils.isInternalErrorURL("hello world"));
+    }
 }
