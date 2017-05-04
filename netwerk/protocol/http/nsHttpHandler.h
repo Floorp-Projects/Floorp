@@ -353,12 +353,6 @@ public:
     // returns true in between Init and Shutdown states
     bool Active() { return mHandlerActive; }
 
-    // When the disk cache is responding slowly its use is suppressed
-    // for 1 minute for most requests. Callable from main thread only.
-    TimeStamp GetCacheSkippedUntil() { return mCacheSkippedUntil; }
-    void SetCacheSkippedUntil(TimeStamp arg) { mCacheSkippedUntil = arg; }
-    void ClearCacheSkippedUntil() { mCacheSkippedUntil = TimeStamp(); }
-
     nsIRequestContextService *GetRequestContextService()
     {
         return mRequestContextService.get();
@@ -559,10 +553,6 @@ private:
     // Whether or not to block requests for non head js/css items (e.g. media)
     // while those elements load.
     bool           mCriticalRequestPrioritization;
-
-    // When the disk cache is responding slowly its use is suppressed
-    // for 1 minute for most requests.
-    TimeStamp      mCacheSkippedUntil;
 
     // TCP Keepalive configuration values.
 
