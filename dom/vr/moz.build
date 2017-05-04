@@ -28,4 +28,4 @@ LOCAL_INCLUDES += [
     '/dom/base'
 ]
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
