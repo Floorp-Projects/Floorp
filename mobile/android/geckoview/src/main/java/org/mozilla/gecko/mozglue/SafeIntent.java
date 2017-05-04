@@ -10,7 +10,6 @@ package org.mozilla.gecko.mozglue;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -68,19 +67,6 @@ public class SafeIntent {
     public String getStringExtra(final String name) {
         try {
             return intent.getStringExtra(name);
-        } catch (OutOfMemoryError e) {
-            Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
-            return null;
-        } catch (RuntimeException e) {
-            Log.w(LOGTAG, "Couldn't get intent extras.", e);
-            return null;
-        }
-    }
-
-    @Nullable
-    public Bundle getExtras() {
-        try {
-            return intent.getExtras();
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return null;
