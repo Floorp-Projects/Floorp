@@ -216,8 +216,6 @@ DEFAULT_TEST_PREFS = {
     'layout.css.report_errors': True,
     'layout.css.grid.enabled': True,
     'layout.spammy_warnings.enabled': False,
-    # Make sure the disk cache doesn't get auto disabled
-    'network.http.bypass-cachelock-threshold': 200000,
     # Always use network provider for geolocation tests
     # so we bypass the OSX dialog raised by the corelocation provider
     'geo.provider.testing': True,
