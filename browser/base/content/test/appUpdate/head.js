@@ -208,7 +208,7 @@ function processStep({notificationId, button, beforeClick, cleanup}) {
       return;
     }
 
-    let notification = document.getElementById(`PanelUI-${notificationId}-notification`);
+    let notification = document.getElementById(`appMenu-${notificationId}-notification`);
     is(notification.hidden, false, `${notificationId} notification is showing`);
     if (beforeClick) {
       yield Task.spawn(beforeClick);
