@@ -1518,12 +1518,12 @@ nsSocketTransport::InitiateSocket()
             mFDFastOpenInProgress = true;
         }
         SOCKET_LOG(("Using TCP Fast Open."));
-        rv = mFastOpenCallback->StartFastOpen();
+        rv = mFastOpenCallback->StartFastOpen(fd);
         status = PR_FAILURE;
         connectCalled = false;
         bool fastOpenNotSupported = false;
 
-        TCPFastOpenConnectResult(fd, &code, &fastOpenNotSupported);
+        TCPFastOpenFinish(fd, &code, &fastOpenNotSupported);
         SOCKET_LOG(("called StartFastOpen - code=%d; fastOpen is %s "
                     "supported.\n", code,
                     fastOpenNotSupported ? "not" : ""));
