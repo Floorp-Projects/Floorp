@@ -40,6 +40,7 @@ public:
   virtual bool IsTooShort() const;
   virtual bool IsValueMissing() const;
   virtual bool HasTypeMismatch() const;
+  virtual bool HasPatternMismatch() const;
 
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)

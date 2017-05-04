@@ -17,6 +17,7 @@ public:
   bool IsTooLong() const override;
   bool IsTooShort() const override;
   bool IsValueMissing() const override;
+  bool HasPatternMismatch() const override;
 
 protected:
   explicit SingleLineTextInputTypeBase(
