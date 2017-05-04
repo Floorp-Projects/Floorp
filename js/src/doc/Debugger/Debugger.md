@@ -37,6 +37,10 @@ its prototype:
     Debugger API (e.g, [`Debugger.Source`][source]) for purposes other than
     step debugging a target JavaScript program.
 
+`allowWasmBinarySource`
+:   A boolean value indicating whether WebAssembly sources will be available
+    in binary form. The WebAssembly text generation will be disabled.
+
 `collectCoverageInfo`
 :   A boolean value indicating whether code coverage should be enabled inside
     each debuggee of this `Debugger` instance. Changing this flag value will
