@@ -7,6 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
+DIRS += ['input']
+
 MOCHITEST_MANIFESTS += [
     'test/forms/mochitest.ini',
     'test/imports/mochitest.ini',
@@ -232,6 +234,7 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/dom/canvas',
+    '/dom/html/input',
     '/dom/media/',
     '/dom/xbl',
     '/dom/xul',
