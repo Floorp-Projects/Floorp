@@ -13,6 +13,17 @@ public class testAudioFocus extends MediaPlaybackTest {
         info("- wait for gecko ready -");
         blockForGeckoReady();
 
+        info("- run test : testBasicAbility -");
+        testBasicAbility();
+
+        info("- run test : testAudioFocusChanged -");
+        testAudioFocusChanged();
+
+        info("- run test : testSwitchTab -");
+        testSwitchTab();
+    }
+
+    private void testBasicAbility() {
         info("- check audio focus in the beginning -");
         mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
                      State.LOST_FOCUS,
@@ -65,9 +76,6 @@ public class testAudioFocus extends MediaPlaybackTest {
         mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
                      State.LOST_FOCUS,
                      "Should lose audio focus.");
-
-        info("- run next test : testAudioFocusChanged -");
-        testAudioFocusChanged();
     }
 
     private void testAudioFocusChanged() {
