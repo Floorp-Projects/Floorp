@@ -16,23 +16,6 @@ public class testMediaControl extends MediaPlaybackTest {
         info("- wait for gecko ready -");
         blockForGeckoReady();
 
-        info("- run test : testBasicBehaviors -");
-        testBasicBehaviors();
-
-        info("- run test : testNavigateOutThePage -");
-        testNavigateOutThePage();
-
-        info("- run test : testAudioFocusChanged -");
-        testAudioFocusChanged();
-
-        info("- run test : testSwitchTab -");
-        testSwitchTab();
-
-        info("- run test : testCloseTab -");
-        testCloseTab();
-    }
-
-    private void testBasicBehaviors() {
         info("- load URL -");
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
@@ -54,6 +37,9 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- close tab -");
         closeAllTabs();
+
+        info("- run next test : testNavigateOutThePage -");
+        testNavigateOutThePage();
     }
 
     private void testNavigateOutThePage() {
@@ -98,6 +84,9 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- close tab -");
         closeAllTabs();
+
+        info("- run next test : testSwitchTab -");
+        testSwitchTab();
     }
 
     private void testSwitchTab() {
@@ -117,6 +106,9 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- close tab -");
         closeAllTabs();
+
+        info("- run next test : testCloseTab -");
+        testCloseTab();
     }
 
     private void testCloseTab() {
