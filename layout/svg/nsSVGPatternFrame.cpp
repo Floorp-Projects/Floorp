@@ -35,6 +35,7 @@ using namespace mozilla::image;
 
 nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext)
   : nsSVGPaintServerFrame(aContext, LayoutFrameType::SVGPattern)
+  , mSource(nullptr)
   , mLoopFlag(false)
   , mNoHRefURI(false)
 {

@@ -40,31 +40,33 @@ namespace mozilla {
  */
 struct nsFrameContinuationState : public nsVoidPtrHashKey
 {
-  explicit nsFrameContinuationState(const void *aFrame) : nsVoidPtrHashKey(aFrame) {}
+  explicit nsFrameContinuationState(const void *aFrame)
+    : nsVoidPtrHashKey(aFrame)
+  {}
 
   /**
    * The first visual frame in the continuation chain containing this frame, or
    * nullptr if this frame is the first visual frame in the chain.
    */
-  nsIFrame* mFirstVisualFrame;
+  nsIFrame* mFirstVisualFrame { nullptr };
 
   /**
    * The number of frames in the continuation chain containing this frame, if
    * this frame is the first visual frame of the chain, or 0 otherwise.
    */
-  uint32_t mFrameCount;
+  uint32_t mFrameCount { 0 };
 
   /**
    * TRUE if this frame is the first visual frame of its continuation chain on
    * this line and the chain has some frames on the previous lines.
    */
-  bool mHasContOnPrevLines;
+  bool mHasContOnPrevLines { false };
 
   /**
    * TRUE if this frame is the first visual frame of its continuation chain on
    * this line and the chain has some frames left for next lines.
    */
-  bool mHasContOnNextLines;
+  bool mHasContOnNextLines { false };
 };
 
 /*
