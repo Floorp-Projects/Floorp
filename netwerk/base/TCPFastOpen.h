@@ -36,8 +36,9 @@ public:
   // Inform nsHalfopenSocket whether a connection using TFO succeeded or not.
   // This will cancel the backup connection and in case of a failure rewind
   // the transaction.
-  virtual void FastOpenConnected(nsresult error) = 0;
+  virtual void SetFastOpenConnected(nsresult error) = 0;
   virtual void FastOpenNotSupported() = 0;
+  virtual void SetFastOpenStatus(uint8_t tfoStatus) = 0;
 };
 
 }
