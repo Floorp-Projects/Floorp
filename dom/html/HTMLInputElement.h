@@ -925,28 +925,6 @@ protected:
   };
 
   /**
-   * This helper method returns true if aValue is a valid email address.
-   * This is following the HTML5 specification:
-   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address
-   *
-   * @param aValue  the email address to check.
-   * @result        whether the given string is a valid email address.
-   */
-  static bool IsValidEmailAddress(const nsAString& aValue);
-
-  /**
-   * This helper method returns true if aValue is a valid email address list.
-   * Email address list is a list of email address separated by comas (,) which
-   * can be surrounded by space charecters.
-   * This is following the HTML5 specification:
-   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address-list
-   *
-   * @param aValue  the email address list to check.
-   * @result        whether the given string is a valid email address list.
-   */
-  static bool IsValidEmailAddressList(const nsAString& aValue);
-
-  /**
    * This helper method convert a sub-string that contains only digits to a
    * number (unsigned int given that it can't contain a minus sign).
    * This method will return whether the sub-string is correctly formatted

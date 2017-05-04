@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/UniquePtr.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
@@ -38,6 +39,7 @@ public:
   virtual bool IsTooLong() const;
   virtual bool IsTooShort() const;
   virtual bool IsValueMissing() const;
+  virtual bool HasTypeMismatch() const;
 
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -61,6 +63,10 @@ protected:
    * @return whether the input element's current value is the empty string.
    */
   bool IsValueEmpty() const;
+
+  // A getter for callers that know we're not dealing with a file input, so they
+  // don't have to think about the caller type.
+  void GetNonFileValueInternal(nsAString& aValue) const;
 
   mozilla::dom::HTMLInputElement* mInputElement;
 };
