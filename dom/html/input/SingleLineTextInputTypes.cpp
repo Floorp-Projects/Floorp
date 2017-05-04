@@ -136,6 +136,26 @@ EmailInputType::HasTypeMismatch() const
     !IsValidEmailAddressList(value) : !IsValidEmailAddress(value);
 }
 
+bool
+EmailInputType::HasBadInput() const
+{
+  // With regards to suffering from bad input the spec says that only the
+  // punycode conversion works, so we don't care whether the email address is
+  // valid or not here. (If the email address is invalid then we will be
+  // suffering from a type mismatch.)
+  nsAutoString value;
+  nsAutoCString unused;
+  uint32_t unused2;
+  GetNonFileValueInternal(value);
+  HTMLSplitOnSpacesTokenizer tokenizer(value, ',');
+  while (tokenizer.hasMoreTokens()) {
+    if (!PunycodeEncodeEmailAddress(tokenizer.nextToken(), unused, &unused2)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */ bool
 EmailInputType::IsValidEmailAddressList(const nsAString& aValue)
 {

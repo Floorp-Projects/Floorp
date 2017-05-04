@@ -28,6 +28,7 @@ class HTMLInputElement;
 } // namespace mozilla
 
 struct DoNotDelete;
+class nsIFrame;
 
 /**
  * A common superclass for different types of a HTMLInputElement.
@@ -57,6 +58,7 @@ public:
   virtual bool IsRangeOverflow() const;
   virtual bool IsRangeUnderflow() const;
   virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
+  virtual bool HasBadInput() const;
 
   virtual nsresult MinMaxStepAttrChanged();
 
@@ -102,6 +104,11 @@ protected:
    * @return The step base.
    */
   mozilla::Decimal GetStepBase() const;
+
+  /**
+   * Get the primary frame for the input element.
+   */
+  nsIFrame* GetPrimaryFrame() const;
 
   mozilla::dom::HTMLInputElement* mInputElement;
 };
