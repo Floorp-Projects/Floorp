@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-stroke when only "-moz-context-properties: fill" is specified</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: fill;
+  fill: red;
+  stroke: red;
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' fill='none' stroke='context-stroke blue' stroke-width='10'/></svg>">
+  </body>
+</html>

@@ -65,6 +65,7 @@ public:
 protected:
   explicit BRFrame(nsStyleContext* aContext)
     : nsFrame(aContext, LayoutFrameType::Br)
+    , mAscent(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
 
   virtual ~BRFrame();

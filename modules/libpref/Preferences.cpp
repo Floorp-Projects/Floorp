@@ -52,6 +52,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
+#include "GeckoProfiler.h"
 
 #ifdef DEBUG
 #define ENSURE_MAIN_PROCESS(message, pref) do {                                \
@@ -998,6 +999,9 @@ Preferences::WritePrefFile(nsIFile* aFile)
 
   if (!gHashTable)
     return NS_ERROR_NOT_INITIALIZED;
+
+  PROFILER_LABEL("Preferences", "WritePrefFile",
+                 js::ProfileEntry::Category::OTHER);
 
   // execute a "safe" save by saving through a tempfile
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
