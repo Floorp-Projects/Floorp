@@ -1376,17 +1376,8 @@ struct ParamTraits<mozilla::layers::CompositorOptions>
 
 template <>
 struct ParamTraits<mozilla::layers::SimpleLayerAttributes>
-{
-  typedef mozilla::layers::SimpleLayerAttributes paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType));
-  }
-};
+  : public PlainOldDataSerializer<mozilla::layers::SimpleLayerAttributes>
+{ };
 
 } /* namespace IPC */
 
