@@ -11,6 +11,7 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
@@ -109,7 +110,15 @@ void
 WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                const StackingContextHelper& aSc)
 {
-  LayerRect rect = Bounds();
+  ParentLayerRect bounds = GetLocalTransformTyped().TransformBounds(Bounds());
+  // As with WebRenderTextLayer, because we don't push a stacking context for
+  // this layer, WR doesn't know about the transform on this layer. Therefore
+  // we need to apply that transform to the bounds before we pass it on to WR.
+  // The conversion from ParentLayerPixel to LayerPixel below is a result of
+  // changing the reference layer from "this layer" to the "the layer that
+  // created aSc".
+  LayerRect rect = ViewAs<LayerPixel>(bounds,
+      PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(rect));
