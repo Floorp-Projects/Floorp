@@ -124,16 +124,12 @@
   min-height: 16px;
 }
 
-#PanelUI-update-restart-menu-item::after,
-#PanelUI-update-available-menu-item::after,
-#PanelUI-update-manual-menu-item::after {
+.panel-banner-item[notificationid^=update]::after {
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
 }
 
-#PanelUI-update-restart-menu-item,
-#PanelUI-update-available-menu-item,
-#PanelUI-update-manual-menu-item {
+.panel-banner-item[notificationid^=update] {
   list-style-image: url(chrome://branding/content/icon16.png);
 }
 
@@ -465,7 +461,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
 
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .panel-wide-item,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .toolbarbutton-1:not([panel-multiview-anchor="true"]),
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > .PanelUI-notification-menu-item,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > .panel-banner-item,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-avatar,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-label,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-icon,
@@ -588,7 +584,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-addons > toolbarbutton::after,
-.PanelUI-notification-menu-item::after {
+.panel-banner-item::after {
   content: "";
   width: 16px;
   height: 16px;
@@ -654,7 +650,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin: 0;
 }
 
-.PanelUI-notification-menu-item,
+.panel-banner-item,
 #PanelUI-help,
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
@@ -673,13 +669,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-orient: horizontal;
 }
 
-.PanelUI-notification-menu-item {
+.panel-banner-item {
   border-top: 1px solid var(--panel-separator-color);
   border-bottom: 1px solid transparent;
   margin-bottom: -1px;
 }
 
-.PanelUI-notification-menu-item > .toolbarbutton-text {
+.panel-banner-item > .toolbarbutton-text {
   width: 0; /* Fancy cropping solution for flexbox. */
 }
 
@@ -688,7 +684,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   min-width: 46px;
 }
 
-.PanelUI-notification-menu-item > .toolbarbutton-text,
+.panel-banner-item > .toolbarbutton-text,
 #PanelUI-fxa-label > .toolbarbutton-text,
 #PanelUI-footer-addons > toolbarbutton > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
@@ -703,7 +699,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-.PanelUI-notification-menu-item > .toolbarbutton-icon,
+.panel-banner-item > .toolbarbutton-icon,
 #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-fxa-icon > .toolbarbutton-icon,
 #PanelUI-customize > .toolbarbutton-icon,
@@ -731,7 +727,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 /* descend from #PanelUI-footer to add specificity, or else the
    padding-inline-start will be overridden */
-#PanelUI-footer > .PanelUI-notification-menu-item {
+#PanelUI-footer > .panel-banner-item {
   width: calc(@menuPanelWidth@ + 30px);
   padding-inline-start: 15px;
   border-inline-start-style: none;
@@ -972,16 +968,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-.PanelUI-notification-menu-item {
+.panel-banner-item {
   color: black;
   background-color: hsla(96,65%,75%,.5);
 }
 
-.PanelUI-notification-menu-item:not([disabled]):hover {
+.panel-banner-item:not([disabled]):hover {
   background-color: hsla(96,65%,75%,.8);
 }
 
-.PanelUI-notification-menu-item:not([disabled]):hover:active {
+.panel-banner-item:not([disabled]):hover:active {
   background-color: hsl(96,65%,75%);
 }
 
@@ -1697,9 +1693,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
                       linear-gradient(rgba(255,255,255,0.3), transparent);
   }
 
-  #PanelUI-update-restart-menu-item,
-  #PanelUI-update-available-menu-item,
-  #PanelUI-update-manual-menu-item {
+  .panel-banner-item[notificationid^=update] {
     list-style-image: url(chrome://branding/content/icon32.png);
   }
 
@@ -1736,7 +1730,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
     -moz-image-region: rect(0, 32px, 32px, 0);
   }
 
-  .PanelUI-notification-menu-item > .toolbarbutton-icon,
+  .panel-banner-item > .toolbarbutton-icon,
   #PanelUI-fxa-label > .toolbarbutton-icon,
   #PanelUI-fxa-icon > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,
