@@ -3608,11 +3608,6 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::FastOpenNotSupported()
 {
   MOZ_ASSERT(mUsingFastOpen);
-  RefPtr<nsHalfOpenSocket> deleteProtector(this);
-  CancelBackupTimer();
-  mUsingFastOpen = false;
-  mConnectionNegotiatingFastOpen = nullptr;
-  mSocketTransport = nullptr;
   gHttpHandler->SetFastOpenNotSupported();
 }
 
