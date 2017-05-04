@@ -5167,7 +5167,7 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
 using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
 
 template <typename Functor>
-static bool
+static inline bool
 IterateWeakCaches(JSRuntime* rt, Functor f)
 {
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
@@ -5189,19 +5189,22 @@ static WeakCacheTaskVector
 PrepareWeakCacheTasks(JSRuntime* rt)
 {
     // Build a vector of sweep tasks to run on a helper thread.
-    WeakCacheTaskVector out;
-    if (IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
-        return out.emplaceBack(rt, *cache);
-    })) {
-        return out;
+    WeakCacheTaskVector tasks;
+    bool ok = IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
+        return tasks.emplaceBack(rt, *cache);
+    });
+
+    // If we ran out of memory, do all the work now and ensure we return an
+    // empty list.
+    if (!ok) {
+        IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
+            SweepWeakCacheTask(rt, *cache).runFromActiveCooperatingThread(rt);
+            return true;
+        });
+        tasks.clear();
     }
 
-    // If we ran out of memory, do all the work now and return an empty list.
-    IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
-        SweepWeakCacheTask(rt, *cache).runFromActiveCooperatingThread(rt);
-        return true;
-    });
-    return WeakCacheTaskVector();
+    return tasks;
 }
 
 template <typename Task>
