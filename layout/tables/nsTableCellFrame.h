@@ -112,6 +112,11 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
+  DrawResult PaintCellBackground(nsRenderingContext& aRenderingContext,
+                                 const nsRect& aDirtyRect, nsPoint aPt,
+                                 uint32_t aFlags);
+
+ 
   virtual nsresult ProcessBorders(nsTableFrame* aFrame,
                                   nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aLists);
