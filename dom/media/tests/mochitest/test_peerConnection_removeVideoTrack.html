@@ -11,20 +11,40 @@
     title: "Renegotiation: remove video track"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
+    let receivedTrack, element;
     addRenegotiation(test.chain,
       [
+        function PC_REMOTE_SETUP_HELPER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver before renegotiation");
+
+          receivedTrack = test.pcRemote._pc.getReceivers()[0].track;
+          is(receivedTrack.readyState, "live",
+             "The received track should be live");
+
+          element = createMediaElement("video", "pcRemoteReceivedVideo");
+          element.srcObject = new MediaStream([receivedTrack]);
+          return haveEvent(element, "loadeddata");
+        },
         function PC_LOCAL_REMOVE_VIDEO_TRACK(test) {
           test.setOfferOptions({ offerToReceiveVideo: true });
           test.setMediaConstraints([], [{video: true}]);
           return test.pcLocal.removeSender(0);
         },
+      ],
+      [
+        function PC_REMOTE_CHECK_FLOW_STOPPED(test) {
+          is(test.pcRemote._pc.getReceivers().length, 0,
+             "pcRemote should have no more receivers");
+          is(receivedTrack.readyState, "ended",
+             "The received track should have ended");
+          is(element.ended, true,
+             "Element playing the removed track should have ended");
+        },
       ]
     );
-
-    // TODO(bug 1093835): figure out how to verify that media stopped flowing from pcLocal
 
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.run();
