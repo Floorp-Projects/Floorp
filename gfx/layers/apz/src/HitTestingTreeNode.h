@@ -95,7 +95,6 @@ public:
                         ScrollDirection aDir,
                         bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
-  LayerIntCoord GetScrollThumbLength() const;
   bool IsScrollbarNode() const;
   FrameMetrics::ViewID GetScrollTargetId() const;
 
