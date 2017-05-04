@@ -100,3 +100,4 @@ skip-if(Android&&AndroidVersion=='22') load video-replay-after-audio-end.html # 
 # This needs to run at the end to avoid leaking busted state into other tests.
 load 691096-1.html
 load 1236639.html
+load 1361944.html
