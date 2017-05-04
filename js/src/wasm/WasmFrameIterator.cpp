@@ -318,7 +318,6 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 #if defined(JS_CODEGEN_ARM)
         AutoForbidPools afp(&masm, /* number of instructions in scope = */ 8);
 #endif
-
         *entry = masm.currentOffset();
 
         PushRetAddr(masm, *entry);
@@ -333,12 +332,22 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
     if (!reason.isNone()) {
         Register scratch = ABINonArgReg0;
+
+        // Native callers expect the native ABI, which assume that non-saved
+        // registers are preserved. Explicitly preserve the scratch register
+        // in that case.
+        if (reason.isNative() && !scratch.volatile_())
+            masm.Push(scratch);
+
         masm.loadWasmActivationFromTls(scratch);
         masm.wasmAssertNonExitInvariants(scratch);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
         masm.store32(Imm32(reason.raw()), exitReason);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(FramePointer, exitFP);
+
+        if (reason.isNative() && !scratch.volatile_())
+            masm.Pop(scratch);
     }
 
     if (framePushed)
@@ -354,6 +363,11 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
     if (!reason.isNone()) {
         Register scratch = ABINonArgReturnReg0;
+
+        // See comment in GenerateCallablePrologue.
+        if (reason.isNative() && !scratch.volatile_())
+            masm.Push(scratch);
+
         masm.loadWasmActivationFromTls(scratch);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(ImmWord(0), exitFP);
@@ -369,6 +383,9 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.pop(scratch);
 #endif
         masm.store32(Imm32(ExitReason::None().raw()), exitReason);
+
+        if (reason.isNative() && !scratch.volatile_())
+            masm.Pop(scratch);
     }
 
     // Forbid pools for the same reason as described in GenerateCallablePrologue.
