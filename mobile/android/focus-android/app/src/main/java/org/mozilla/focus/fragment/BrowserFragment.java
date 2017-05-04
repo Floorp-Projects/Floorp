@@ -492,7 +492,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 final OpenWithFragment fragment = OpenWithFragment.newInstance(
                         browsers.getInstalledBrowsers(), webView.getUrl());
-                fragment.show(getFragmentManager(),OpenWithFragment.FRAGMENT_TAG);
+                fragment.show(getFragmentManager(), OpenWithFragment.FRAGMENT_TAG);
 
                 TelemetryWrapper.openSelectionEvent();
                 break;
