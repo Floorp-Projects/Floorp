@@ -122,7 +122,9 @@ class PlatformMixin(object):
             # osx is a special snowflake and to ensure the arch, it is better to use the following
             return sys.maxsize > 2**32  # context: https://docs.python.org/2/library/platform.html
         else:
-            return '64' in platform.architecture()[0]  # architecture() returns (bits, linkage)
+            # Using machine() gives you the architecture of the host rather
+            # than the build type of the Python binary
+            return '64' in platform.machine()
 
 
 # ScriptMixin {{{1
