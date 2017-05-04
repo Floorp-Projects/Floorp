@@ -901,7 +901,7 @@ limitations under the License.
         callDelayed(function () {
           expect(spy.callCount).to.be(1);
           done();
-        }, ASYNC_TIMEOUT);
+        }, ASYNC_TIMEOUT * 3);
       });
 
     });
@@ -947,14 +947,14 @@ limitations under the License.
         targetEl4.src = "intersectionobserver_iframe.html";
       });
 
-      it('rootBounds should is set to null for cross-origin observations', function(done) {
+      it('rootBounds is set to null for cross-origin observations', function(done) {
 
         window.onmessage = function (e) {
-          expect(e.data).to.be.ok();
+          expect(e.data).to.be(true);
           done();
         };
 
-        targetEl4.src = "http://example.org/tests/dom/base/test/intersectionobserver_iframe.html";
+        targetEl4.src = "http://example.org/tests/dom/base/test/intersectionobserver_cross_domain_iframe.html";
 
       });
     
