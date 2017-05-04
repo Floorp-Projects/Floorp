@@ -45,4 +45,5 @@ nsresult PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
 nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength);
 
 // Create a LookupCacheV4 object with sepecified prefix array.
-UniquePtr<LookupCacheV4> SetupLookupCacheV4(const _PrefixArray& prefixArray);
+template<typename T>
+UniquePtr<T> SetupLookupCache(const _PrefixArray& prefixArray);

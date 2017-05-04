@@ -150,6 +150,14 @@ TableUpdateV2::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint3
   return NS_OK;
 }
 
+nsresult
+TableUpdateV2::NewMissPrefix(const Prefix& aPrefix)
+{
+  Prefix *prefix = mMissPrefixes.AppendElement(aPrefix, fallible);
+  if (!prefix) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
 void
 TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
 {

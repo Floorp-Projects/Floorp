@@ -146,24 +146,6 @@ function testGethash() {
     .then(reset);
 }
 
-// This testcase is to make sure an update request will clear completion cache:
-// 1. Add prefixes to DB.
-// 2. Load test frame, this should trigger a gethash request
-// 3. Trigger an update, completion cache should be cleared now.
-// 4. Load test frame again, since cache is cleared now, gethash request should be triggered.
-function testUpdateClearCache() {
-  return Promise.resolve()
-    .then(addPrefixToDB)
-    .then(loadTestFrame)
-    .then(() => {
-      ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
-    .then(updateUnusedUrl)
-    .then(loadTestFrame)
-    .then(() => {
-      ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
-    .then(reset);
-}
-
 // This testcae is to make sure completions in update works:
 // 1. Add completions to DB.
 // 2. Load test frame, since completions is stored in DB, gethash request should
@@ -239,7 +221,6 @@ function runTest() {
     .then(classifierHelper.waitForInit)
     .then(setup)
     .then(testGethash)
-    .then(testUpdateClearCache)
     .then(testUpdate)
     .then(testUpdateNotClearCompletions)
     .then(testUpdateCompletionsAfterReload)
