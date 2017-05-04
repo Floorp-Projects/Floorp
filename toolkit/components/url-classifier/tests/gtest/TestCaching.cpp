@@ -8,6 +8,32 @@
 #define NOTEXPIRED_TIME_SEC  (PR_Now() / PR_USEC_PER_SEC + 3600)
 
 static void
+SetupCacheEntry(LookupCacheV2* aLookupCache,
+                const nsCString& aCompletion,
+                bool aNegExpired = false,
+                bool aPosExpired = false)
+{
+  AddCompleteArray completes;
+  AddCompleteArray emptyCompletes;
+  MissPrefixArray misses;
+  MissPrefixArray emptyMisses;
+
+  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+
+  AddComplete* add = completes.AppendElement(fallible);
+  add->complete.FromPlaintext(aCompletion, cryptoHash);
+
+  Prefix* prefix = misses.AppendElement(fallible);
+  prefix->FromPlaintext(aCompletion, cryptoHash);
+
+  int64_t negExpirySec = aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
+  aLookupCache->AddGethashResultToCache(emptyCompletes, misses, negExpirySec);
+
+  int64_t posExpirySec = aPosExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
+  aLookupCache->AddGethashResultToCache(completes, emptyMisses, posExpirySec);
+}
+
+static void
 SetupCacheEntry(LookupCacheV4* aLookupCache,
                 const nsCString& aCompletion,
                 bool aNegExpired = false,
@@ -28,19 +54,20 @@ SetupCacheEntry(LookupCacheV4* aLookupCache,
   aLookupCache->AddFullHashResponseToCache(map);
 }
 
+template<typename T>
 void
 TestCache(const Completion aCompletion,
           bool aExpectedHas,
           bool aExpectedConfirmed,
-          bool aExpectedFromCache,
-          LookupCacheV4* aCache = nullptr)
+          bool aExpectedInCache,
+          T* aCache = nullptr)
 {
-  bool has, fromCache, confirmed;
+  bool has, inCache, confirmed;
   uint32_t matchLength;
-  TableFreshnessMap dummy;
 
   if (aCache) {
-    aCache->Has(aCompletion, dummy, 0, &has, &matchLength, &confirmed, &fromCache);
+    aCache->Has(aCompletion, &has, &matchLength, &confirmed);
+    inCache = aCache->IsInCache(aCompletion.ToUint32());
   } else {
     _PrefixArray array = { GeneratePrefix(_Fragment("cache.notexpired.com/"), 10),
                            GeneratePrefix(_Fragment("cache.expired.com/"), 8),
@@ -48,65 +75,71 @@ TestCache(const Completion aCompletion,
                            GeneratePrefix(_Fragment("small.com/"), 4)
                          };
 
-    UniquePtr<LookupCacheV4> cache = SetupLookupCacheV4(array);
+    UniquePtr<T> cache = SetupLookupCache<T>(array);
 
     // Create an expired entry and a non-expired entry
     SetupCacheEntry(cache.get(), _Fragment("cache.notexpired.com/"));
     SetupCacheEntry(cache.get(), _Fragment("cache.expired.com/"), true, true);
 
-    cache->Has(aCompletion, dummy, 0, &has, &matchLength, &confirmed, &fromCache);
+    cache->Has(aCompletion, &has, &matchLength, &confirmed);
+    inCache = cache->IsInCache(aCompletion.ToUint32());
   }
 
   EXPECT_EQ(has, aExpectedHas);
   EXPECT_EQ(confirmed, aExpectedConfirmed);
-  EXPECT_EQ(fromCache, aExpectedFromCache);
+  EXPECT_EQ(inCache, aExpectedInCache);
 }
 
+template<typename T>
 void
 TestCache(const _Fragment& aFragment,
           bool aExpectedHas,
           bool aExpectedConfirmed,
-          bool aExpectedFromCache,
-          LookupCacheV4* aCache = nullptr)
+          bool aExpectedInCache,
+          T* aCache = nullptr)
 {
   Completion lookupHash;
   nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
   lookupHash.FromPlaintext(aFragment, cryptoHash);
 
-  TestCache(lookupHash, aExpectedHas, aExpectedConfirmed, aExpectedFromCache, aCache);
+  TestCache<T>(lookupHash, aExpectedHas, aExpectedConfirmed, aExpectedInCache, aCache);
 }
 
 // This testcase check the returned result of |Has| API if fullhash cannot match
 // any prefix in the local database.
-TEST(CachingV4, NotFound)
+TEST(UrlClassifierCaching, NotFound)
 {
-  TestCache(_Fragment("nomatch.com/"), false, false, false);
+  TestCache<LookupCacheV2>(_Fragment("nomatch.com/"), false, false, false);
+  TestCache<LookupCacheV4>(_Fragment("nomatch.com/"), false, false, false);
 }
 
 // This testcase check the returned result of |Has| API if fullhash find a match
 // in the local database but not in the cache.
-TEST(CachingV4, NotInCache)
+TEST(UrlClassifierCaching, NotInCache)
 {
-  TestCache(_Fragment("gound.com/"), true, false, false);
+  TestCache<LookupCacheV2>(_Fragment("gound.com/"), true, false, false);
+  TestCache<LookupCacheV4>(_Fragment("gound.com/"), true, false, false);
 }
 
 // This testcase check the returned result of |Has| API if fullhash matches
 // a cache entry in positive cache.
-TEST(CachingV4, InPositiveCacheNotExpired)
+TEST(UrlClassifierCaching, InPositiveCacheNotExpired)
 {
-  TestCache(_Fragment("cache.notexpired.com/"), true, true, true);
+  TestCache<LookupCacheV2>(_Fragment("cache.notexpired.com/"), true, true, true);
+  TestCache<LookupCacheV4>(_Fragment("cache.notexpired.com/"), true, true, true);
 }
 
 // This testcase check the returned result of |Has| API if fullhash matches
 // a cache entry in positive cache but that it is expired.
-TEST(CachingV4, InPositiveCacheExpired)
+TEST(UrlClassifierCaching, InPositiveCacheExpired)
 {
-  TestCache(_Fragment("cache.expired.com/"), true, false, true);
+  TestCache<LookupCacheV2>(_Fragment("cache.expired.com/"), true, false, true);
+  TestCache<LookupCacheV4>(_Fragment("cache.expired.com/"), true, false, true);
 }
 
 // This testcase check the returned result of |Has| API if fullhash matches
 // a cache entry in negative cache.
-TEST(CachingV4, InNegativeCacheNotExpired)
+TEST(UrlClassifierCaching, InNegativeCacheNotExpired)
 {
   // Create a fullhash whose prefix matches the prefix in negative cache
   // but completion doesn't match any fullhash in positive cache.
@@ -124,12 +157,13 @@ TEST(CachingV4, InNegativeCacheNotExpired)
   // it can match the prefix in database.
   memcpy(fullhash.buf, prefix.buf, 10);
 
-  TestCache(fullhash, false, false, true);
+  TestCache<LookupCacheV2>(fullhash, false, false, true);
+  TestCache<LookupCacheV4>(fullhash, false, false, true);
 }
 
 // This testcase check the returned result of |Has| API if fullhash matches
 // a cache entry in negative cache but that entry is expired.
-TEST(CachingV4, InNegativeCacheExpired)
+TEST(UrlClassifierCaching, InNegativeCacheExpired)
 {
   // Create a fullhash whose prefix is in the cache.
   nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
@@ -142,7 +176,8 @@ TEST(CachingV4, InNegativeCacheExpired)
 
   memcpy(fullhash.buf, prefix.buf, 10);
 
-  TestCache(fullhash, true, false, true);
+  TestCache<LookupCacheV2>(fullhash, true, false, true);
+  TestCache<LookupCacheV4>(fullhash, true, false, true);
 }
 
 #define CACHED_URL              _Fragment("cache.com/")
@@ -158,15 +193,15 @@ TEST(CachingV4, InNegativeCacheExpired)
 // 4. an entry whose negative cache time and positive cache time are expired
 // After calling |InvalidateExpiredCacheEntry| API, entries with expired
 // negative time should be removed from cache(2 & 4)
-TEST(CachingV4, InvalidateExpiredCacheEntry)
+template<typename T>
+void TestInvalidateExpiredCacheEntry()
 {
   _PrefixArray array = { GeneratePrefix(CACHED_URL, 10),
                          GeneratePrefix(NEG_CACHE_EXPIRED_URL, 8),
                          GeneratePrefix(POS_CACHE_EXPIRED_URL, 5),
                          GeneratePrefix(BOTH_CACHE_EXPIRED_URL, 4)
                        };
-
-  UniquePtr<LookupCacheV4> cache = SetupLookupCacheV4(array);
+  UniquePtr<T> cache = SetupLookupCache<T>(array);
 
   SetupCacheEntry(cache.get(), CACHED_URL, false, false);
   SetupCacheEntry(cache.get(), NEG_CACHE_EXPIRED_URL, true, false);
@@ -174,32 +209,63 @@ TEST(CachingV4, InvalidateExpiredCacheEntry)
   SetupCacheEntry(cache.get(), BOTH_CACHE_EXPIRED_URL, true, true);
 
   // Before invalidate
-  TestCache(CACHED_URL, true, true, true, cache.get());
-  TestCache(NEG_CACHE_EXPIRED_URL, true, true, true, cache.get());
-  TestCache(POS_CACHE_EXPIRED_URL, true, false, true, cache.get());
-  TestCache(BOTH_CACHE_EXPIRED_URL, true, false, true, cache.get());
+  TestCache<T>(CACHED_URL, true, true, true, cache.get());
+  TestCache<T>(NEG_CACHE_EXPIRED_URL, true, true, true, cache.get());
+  TestCache<T>(POS_CACHE_EXPIRED_URL, true, false, true, cache.get());
+  TestCache<T>(BOTH_CACHE_EXPIRED_URL, true, false, true, cache.get());
 
   // Call InvalidateExpiredCacheEntry to remove cache entries whose negative cache
   // time is expired
-  cache->InvalidateExpiredCacheEntry();
+  cache->InvalidateExpiredCacheEntries();
 
   // After invalidate, NEG_CACHE_EXPIRED_URL & BOTH_CACHE_EXPIRED_URL should
   // not be found in cache.
-  TestCache(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
-  TestCache(BOTH_CACHE_EXPIRED_URL, true, false, false, cache.get());
+  TestCache<T>(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
+  TestCache<T>(BOTH_CACHE_EXPIRED_URL, true, false, false, cache.get());
 
   // Other entries should remain the same result.
-  TestCache(CACHED_URL, true, true, true, cache.get());
-  TestCache(POS_CACHE_EXPIRED_URL, true, false, true, cache.get());
+  TestCache<T>(CACHED_URL, true, true, true, cache.get());
+  TestCache<T>(POS_CACHE_EXPIRED_URL, true, false, true, cache.get());
+}
+
+TEST(UrlClassifierCaching, InvalidateExpiredCacheEntryV2)
+{
+  TestInvalidateExpiredCacheEntry<LookupCacheV2>();
+}
+
+TEST(UrlClassifierCaching, InvalidateExpiredCacheEntryV4)
+{
+  TestInvalidateExpiredCacheEntry<LookupCacheV4>();
 }
 
 // This testcase check if an cache entry whose negative cache time is expired
 // and it doesn't have any postive cache entries in it, it should be removed
 // from cache after calling |Has|.
-TEST(CachingV4, NegativeCacheExpire)
+TEST(UrlClassifierCaching, NegativeCacheExpireV2)
 {
   _PrefixArray array = { GeneratePrefix(NEG_CACHE_EXPIRED_URL, 8) };
-  UniquePtr<LookupCacheV4> cache = SetupLookupCacheV4(array);
+  UniquePtr<LookupCacheV2> cache = SetupLookupCache<LookupCacheV2>(array);
+
+  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+
+  MissPrefixArray misses;
+  Prefix* prefix = misses.AppendElement(fallible);
+  prefix->FromPlaintext(NEG_CACHE_EXPIRED_URL, cryptoHash);
+
+  AddCompleteArray dummy;
+  cache->AddGethashResultToCache(dummy, misses, EXPIRED_TIME_SEC);
+
+  // Ensure it is in cache in the first place.
+  EXPECT_EQ(cache->IsInCache(prefix->ToUint32()), true);
+
+  // It should be removed after calling Has API.
+  TestCache<LookupCacheV2>(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
+}
+
+TEST(UrlClassifierCaching, NegativeCacheExpireV4)
+{
+  _PrefixArray array = { GeneratePrefix(NEG_CACHE_EXPIRED_URL, 8) };
+  UniquePtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
 
   FullHashResponseMap map;
   Prefix prefix;
@@ -211,10 +277,9 @@ TEST(CachingV4, NegativeCacheExpire)
 
   cache->AddFullHashResponseToCache(map);
 
-  // The first time we should found it in the cache but the result is not
-  // confirmed(because it is expired).
-  TestCache(NEG_CACHE_EXPIRED_URL, true, false, true, cache.get());
+  // Ensure it is in cache in the first place.
+  EXPECT_EQ(cache->IsInCache(prefix.ToUint32()), true);
 
-  // The second time it should not be found in the cache again
-  TestCache(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
+  // It should be removed after calling Has API.
+  TestCache<LookupCacheV4>(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
 }

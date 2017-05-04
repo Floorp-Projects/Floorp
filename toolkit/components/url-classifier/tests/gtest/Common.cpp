@@ -137,7 +137,6 @@ PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
     Prefix hash;
     static_assert(sizeof(hash.buf) == PREFIX_SIZE, "Prefix must be 4 bytes length");
     memcpy(hash.buf, prefixArray[i].BeginReading(), PREFIX_SIZE);
-    MOZ_ASSERT(prefixArray[i].Length() == PREFIX_SIZE);
 
     AddPrefix *add = out.AppendElement(fallible);
     if (!add) {
@@ -163,21 +162,42 @@ GeneratePrefix(const nsCString& aFragment, uint8_t aLength)
   return hash;
 }
 
-UniquePtr<LookupCacheV4>
-SetupLookupCacheV4(const _PrefixArray& prefixArray)
+static nsresult
+BuildCache(LookupCacheV2* cache, const _PrefixArray& prefixArray)
+{
+  AddPrefixArray prefixes;
+  AddCompleteArray completions;
+  nsresult rv = PrefixArrayToAddPrefixArrayV2(prefixArray, prefixes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  EntrySort(prefixes);
+  return cache->Build(prefixes, completions);
+}
+
+static nsresult
+BuildCache(LookupCacheV4* cache, const _PrefixArray& prefixArray)
+{
+  PrefixStringMap map;
+  PrefixArrayToPrefixStringMap(prefixArray, map);
+  return cache->Build(map);
+}
+
+template<typename T>
+UniquePtr<T>
+SetupLookupCache(const _PrefixArray& prefixArray)
 {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
-  UniquePtr<LookupCacheV4> cache = MakeUnique<LookupCacheV4>(GTEST_TABLE, EmptyCString(), file);
+  UniquePtr<T> cache = MakeUnique<T>(GTEST_TABLE, EmptyCString(), file);
   nsresult rv = cache->Init();
   EXPECT_EQ(rv, NS_OK);
 
-  PrefixStringMap map;
-  PrefixArrayToPrefixStringMap(prefixArray, map);
-  rv = cache->Build(map);
+  rv = BuildCache(cache.get(), prefixArray);
   EXPECT_EQ(rv, NS_OK);
 
   return Move(cache);

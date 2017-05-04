@@ -25,16 +25,9 @@ public:
 
   virtual nsresult Init() override;
   virtual nsresult Has(const Completion& aCompletion,
-                       const TableFreshnessMap& aTableFreshness,
-                       uint32_t aFreshnessGuarantee,
-                       bool* aHas, uint32_t* aMatchLength,
-                       bool* aConfirmed, bool* aFromCache) override;
-
-  virtual void ClearCache() override;
-
-#if DEBUG
-  virtual void DumpCache() override;
-#endif
+                       bool* aHas,
+                       uint32_t* aMatchLength,
+                       bool* aConfirmed) override;
 
   virtual bool IsEmpty() override;
 
@@ -53,8 +46,6 @@ public:
   nsresult WriteMetadata(TableUpdateV4* aTableUpdate);
   nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
 
-  void InvalidateExpiredCacheEntry();
-
   static const int VER;
 
 protected:
@@ -70,8 +61,6 @@ private:
   nsresult VerifyChecksum(const nsACString& aChecksum);
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
-
-  FullHashResponseMap mCache;
 };
 
 } // namespace safebrowsing

@@ -444,7 +444,6 @@ Classifier::TableRequest(nsACString& aResult)
 nsresult
 Classifier::Check(const nsACString& aSpec,
                   const nsACString& aTables,
-                  uint32_t aFreshnessGuarantee,
                   LookupResultArray& aResults)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_CHECK_TIME> timer;
@@ -496,11 +495,10 @@ Classifier::Check(const nsACString& aSpec,
 
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
-      bool has, fromCache, confirmed;
+      bool has, confirmed;
       uint32_t matchLength;
 
-      rv = cache->Has(lookupHash, mTableFreshness, aFreshnessGuarantee,
-                      &has, &matchLength, &confirmed, &fromCache);
+      rv = cache->Has(lookupHash, &has, &matchLength, &confirmed);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (has) {
@@ -1240,7 +1238,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   }
 
   // Clear cache when update
-  lookupCache->ClearCache();
+  lookupCache->InvalidateExpiredCacheEntries();
 
   FallibleTArray<uint32_t> AddPrefixHashes;
   rv = lookupCache->GetPrefixes(AddPrefixHashes);
@@ -1336,7 +1334,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   // Remove cache entries whose negative cache time is expired when update.
   // We don't check if positive cache time is expired here because we want to
   // keep the eviction rule simple when doing an update.
-  lookupCache->InvalidateExpiredCacheEntry();
+  lookupCache->InvalidateExpiredCacheEntries();
 
   nsresult rv = NS_OK;
 
@@ -1431,7 +1429,8 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
   auto lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
   if (lookupV2) {
     auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
-    lookupV2->AddCompletionsToCache(updateV2->AddCompletes());
+    lookupV2->AddGethashResultToCache(updateV2->AddCompletes(),
+                                      updateV2->MissPrefixes());
   } else {
     auto lookupV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
     if (!lookupV4) {

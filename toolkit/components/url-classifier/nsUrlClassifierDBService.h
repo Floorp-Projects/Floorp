@@ -104,7 +104,6 @@ public:
   bool GetCompleter(const nsACString& tableName,
                     nsIUrlClassifierHashCompleter** completer);
   nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray *results);
-  nsresult CacheMisses(mozilla::safebrowsing::PrefixArray *results);
 
   static nsIThread* BackgroundThread();
 
@@ -218,7 +217,6 @@ public:
   nsresult GCC_MANGLING_WORKAROUND CloseDb();
 
   nsresult CacheCompletions(CacheResultArray * aEntries);
-  nsresult CacheMisses(PrefixArray * aEntries);
 
   // Used to probe the state of the worker thread. When the update begins,
   // mUpdateObserver will be set. When the update finished, mUpdateObserver
@@ -278,10 +276,6 @@ private:
   nsTArray<mozilla::safebrowsing::TableUpdate*> mTableUpdates;
 
   uint32_t mUpdateWaitSec;
-
-  // Entries that cannot be completed. We expect them to die at
-  // the next update
-  PrefixArray mMissCache;
 
   // Stores the last results that triggered a table update.
   nsAutoPtr<CacheResultArray> mLastResults;

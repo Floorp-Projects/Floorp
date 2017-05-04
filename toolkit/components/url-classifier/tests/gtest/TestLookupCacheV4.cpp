@@ -14,24 +14,23 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
                        };
 
   RunTestInNewThread([&] () -> void {
-    UniquePtr<LookupCache> cache = SetupLookupCacheV4(array);
+    UniquePtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
 
     Completion lookupHash;
     nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
     lookupHash.FromPlaintext(aFragment, cryptoHash);
 
-    bool has, confirmed, fromCache;
+    bool has, confirmed;
     uint32_t matchLength;
     // Freshness is not used in V4 so we just put dummy values here.
     TableFreshnessMap dummy;
-    nsresult rv = cache->Has(lookupHash, dummy, 0,
-                             &has, &matchLength, &confirmed, &fromCache);
+    nsresult rv =
+      cache->Has(lookupHash, &has, &matchLength, &confirmed);
 
     EXPECT_EQ(rv, NS_OK);
     EXPECT_EQ(has, aExpectedHas);
     EXPECT_EQ(matchLength == COMPLETE_SIZE, aExpectedComplete);
     EXPECT_EQ(confirmed, false);
-    EXPECT_EQ(fromCache, false);
 
     cache->ClearAll();
   });
