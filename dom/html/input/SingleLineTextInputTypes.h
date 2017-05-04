@@ -85,6 +85,8 @@ public:
     return new (aMemory) URLInputType(aInputElement);
   }
 
+  bool HasTypeMismatch() const override;
+
 private:
   explicit URLInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : SingleLineTextInputTypeBase(aInputElement)
@@ -101,10 +103,54 @@ public:
     return new (aMemory) EmailInputType(aInputElement);
   }
 
+  bool HasTypeMismatch() const override;
+
 private:
   explicit EmailInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : SingleLineTextInputTypeBase(aInputElement)
   {}
+
+  /**
+   * This helper method returns true if aValue is a valid email address.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address
+   *
+   * @param aValue  the email address to check.
+   * @result        whether the given string is a valid email address.
+   */
+  static bool IsValidEmailAddress(const nsAString& aValue);
+
+  /**
+   * This helper method returns true if aValue is a valid email address list.
+   * Email address list is a list of email address separated by comas (,) which
+   * can be surrounded by space charecters.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address-list
+   *
+   * @param aValue  the email address list to check.
+   * @result        whether the given string is a valid email address list.
+   */
+  static bool IsValidEmailAddressList(const nsAString& aValue);
+
+  /**
+   * Takes aEmail and attempts to convert everything after the first "@"
+   * character (if anything) to punycode before returning the complete result
+   * via the aEncodedEmail out-param. The aIndexOfAt out-param is set to the
+   * index of the "@" character.
+   *
+   * If no "@" is found in aEmail, aEncodedEmail is simply set to aEmail and
+   * the aIndexOfAt out-param is set to kNotFound.
+   *
+   * Returns true in all cases unless an attempt to punycode encode fails. If
+   * false is returned, aEncodedEmail has not been set.
+   *
+   * This function exists because ConvertUTF8toACE() splits on ".", meaning that
+   * for 'user.name@sld.tld' it would treat "name@sld" as a label. We want to
+   * encode the domain part only.
+   */
+ static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
+                                        nsAutoCString& aEncodedEmail,
+                                        uint32_t* aIndexOfAt);
 };
 
 // input type=password

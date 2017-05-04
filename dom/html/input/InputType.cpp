@@ -115,6 +115,12 @@ InputType::IsValueEmpty() const
 }
 
 void
+InputType::GetNonFileValueInternal(nsAString& aValue) const
+{
+  return mInputElement->GetNonFileValueInternal(aValue);
+}
+
+void
 InputType::DropReference()
 {
   // Drop our (non ref-counted) reference.
@@ -135,6 +141,12 @@ InputType::IsTooShort() const
 
 bool
 InputType::IsValueMissing() const
+{
+  return false;
+}
+
+bool
+InputType::HasTypeMismatch() const
 {
   return false;
 }
