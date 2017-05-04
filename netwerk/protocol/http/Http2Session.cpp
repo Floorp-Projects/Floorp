@@ -502,7 +502,8 @@ Http2Session::NetworkRead(nsAHttpSegmentWriter *writer, char *buf,
 void
 Http2Session::SetWriteCallbacks()
 {
-  if (mConnection && (GetWriteQueueSize() || mOutputQueueUsed)) {
+  if (mConnection &&
+      (GetWriteQueueSize() || (mOutputQueueUsed > mOutputQueueSent))) {
     Unused << mConnection->ResumeSend();
   }
 }
