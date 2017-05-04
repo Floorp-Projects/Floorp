@@ -474,6 +474,16 @@ inline uint32_t GetMaxTextureSizeForFeatureLevel(D3D_FEATURE_LEVEL aFeatureLevel
 
 uint32_t GetMaxTextureSizeFromDevice(ID3D11Device* aDevice);
 
+class AutoLockD3D11Texture
+{
+public:
+  explicit AutoLockD3D11Texture(ID3D11Texture2D* aTexture);
+  ~AutoLockD3D11Texture();
+
+private:
+  RefPtr<IDXGIKeyedMutex> mMutex;
+};
+
 } // namespace layers
 } // namespace mozilla
 
