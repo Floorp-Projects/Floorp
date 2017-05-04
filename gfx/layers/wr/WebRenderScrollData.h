@@ -55,7 +55,6 @@ public:
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
   ScrollDirection GetScrollbarDirection() const { return mScrollbarDirection; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
-  int32_t GetScrollThumbLength() const { return mScrollThumbLength; }
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
 
@@ -85,7 +84,6 @@ private:
   EventRegionsOverride mEventRegionsOverride;
   ScrollDirection mScrollbarDirection;
   FrameMetrics::ViewID mScrollbarTargetContainerId;
-  int32_t mScrollThumbLength;
   bool mIsScrollbarContainer;
   FrameMetrics::ViewID mFixedPosScrollContainerId;
 };
@@ -168,7 +166,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mEventRegionsOverride);
     WriteParam(aMsg, aParam.mScrollbarDirection);
     WriteParam(aMsg, aParam.mScrollbarTargetContainerId);
-    WriteParam(aMsg, aParam.mScrollThumbLength);
     WriteParam(aMsg, aParam.mIsScrollbarContainer);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
   }
@@ -186,7 +183,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarDirection)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarTargetContainerId)
-        && ReadParam(aMsg, aIter, &aResult->mScrollThumbLength)
         && ReadParam(aMsg, aIter, &aResult->mIsScrollbarContainer)
         && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId);
   }
