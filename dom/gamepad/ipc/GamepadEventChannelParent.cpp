@@ -45,8 +45,8 @@ GamepadEventChannelParent::GamepadEventChannelParent()
   RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
-  service->AddChannelParent(this);
   mBackgroundThread = NS_GetCurrentThread();
+  service->AddChannelParent(this);
 }
 
 mozilla::ipc::IPCResult
