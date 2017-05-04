@@ -524,7 +524,6 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 BreakpointSite::BreakpointSite(Type type)
   : type_(type), enabledCount(0)
 {
-    JS_INIT_CLIST(&breakpoints);
 }
 
 void
@@ -547,21 +546,22 @@ BreakpointSite::dec(FreeOp* fop)
 bool
 BreakpointSite::isEmpty() const
 {
-    return JS_CLIST_IS_EMPTY(&breakpoints);
+    return breakpoints.isEmpty();
 }
 
 Breakpoint*
 BreakpointSite::firstBreakpoint() const
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints))
+    if (isEmpty())
         return nullptr;
-    return Breakpoint::fromSiteLinks(JS_NEXT_LINK(&breakpoints));
+    return &(*breakpoints.begin());
 }
 
 bool
-BreakpointSite::hasBreakpoint(Breakpoint* bp)
+BreakpointSite::hasBreakpoint(Breakpoint* toFind)
 {
-    for (Breakpoint* p = firstBreakpoint(); p; p = p->nextInSite())
+    const BreakpointList::Iterator bp(toFind);
+    for (auto p = breakpoints.begin(); p; p++)
         if (p == bp)
             return true;
     return false;
@@ -571,20 +571,8 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handl
     : debugger(debugger), site(site), handler(handler)
 {
     MOZ_ASSERT(handler->compartment() == debugger->object->compartment());
-    JS_APPEND_LINK(&debuggerLinks, &debugger->breakpoints);
-    JS_APPEND_LINK(&siteLinks, &site->breakpoints);
-}
-
-Breakpoint*
-Breakpoint::fromDebuggerLinks(JSCList* links)
-{
-    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, debuggerLinks));
-}
-
-Breakpoint*
-Breakpoint::fromSiteLinks(JSCList* links)
-{
-    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, siteLinks));
+    debugger->breakpoints.pushBack(this);
+    site->breakpoints.pushBack(this);
 }
 
 void
@@ -592,8 +580,8 @@ Breakpoint::destroy(FreeOp* fop)
 {
     if (debugger->enabled)
         site->dec(fop);
-    JS_REMOVE_LINK(&debuggerLinks);
-    JS_REMOVE_LINK(&siteLinks);
+    debugger->breakpoints.remove(this);
+    site->breakpoints.remove(this);
     site->destroyIfEmpty(fop);
     fop->delete_(this);
 }
@@ -601,15 +589,13 @@ Breakpoint::destroy(FreeOp* fop)
 Breakpoint*
 Breakpoint::nextInDebugger()
 {
-    JSCList* link = JS_NEXT_LINK(&debuggerLinks);
-    return (link == &debugger->breakpoints) ? nullptr : fromDebuggerLinks(link);
+    return debuggerLink.mNext;
 }
 
 Breakpoint*
 Breakpoint::nextInSite()
 {
-    JSCList* link = JS_NEXT_LINK(&siteLinks);
-    return (link == &site->breakpoints) ? nullptr : fromSiteLinks(link);
+    return siteLink.mNext;
 }
 
 JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
@@ -684,7 +670,6 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 {
     assertSameCompartment(cx, dbg);
 
-    JS_INIT_CLIST(&breakpoints);
     JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
 
 #ifdef JS_TRACE_LOGGING
