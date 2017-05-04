@@ -25,7 +25,7 @@ add_task(function*() {
 
   win = SessionStore.undoCloseWindow(0);
   yield BrowserTestUtils.waitForEvent(win, "load");
-  yield BrowserTestUtils.waitForEvent(win.gBrowser.tabs[0], "SSTabRestored");
+  yield BrowserTestUtils.waitForEvent(win.gBrowser.tabContainer, "SSTabRestored");
 
   is(win.gBrowser.tabs.length, 1, "Should have restored one tab");
   is(win.gBrowser.selectedBrowser.currentURI.spec, uri, "Should have restored the right page");
