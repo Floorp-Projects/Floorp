@@ -13,21 +13,20 @@
     visible: true
   });
 
-  var test;
-  var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+  const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
   function addRIDExtension(pc, extensionId) {
-    var receivers = pc._pc.getReceivers();
+    const receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");
-    var receiver = receivers[0];
+    const receiver = receivers[0];
 
     SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
   }
 
   function selectRecvRID(pc, rid) {
-    var receivers = pc._pc.getReceivers();
+    const receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");
-    var receiver = receivers[0];
+    const receiver = receivers[0];
 
     SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
   }
@@ -38,23 +37,24 @@
               // the 80Kbps+overhead needed for the two simulcast streams.
               // 100Kbps was apparently too low.
               ['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
-      var helper;
+      let emitter, helper;
 
       test = new PeerConnectionTest({bundle: false});
       test.setMediaConstraints([{video: true}], [{video: true}]);
 
       test.chain.replace("PC_REMOTE_GUM", [
         function PC_REMOTE_CANVAS_CAPTURESTREAM(test) {
+          emitter = new VideoFrameEmitter();
           helper = new VideoStreamHelper();
-          test.pcRemote.attachLocalStream(helper.stream());
+          test.pcRemote.attachLocalStream(emitter.stream());
         }
       ]);
 
       test.chain.insertAfter('PC_REMOTE_GET_OFFER', [
         function PC_REMOTE_SET_RIDS(test) {
-          var senders = test.pcRemote._pc.getSenders();
+          const senders = test.pcRemote._pc.getSenders();
           is(senders.length, 1, "We have exactly one RTP sender");
-          var sender = senders[0];
+          const sender = senders[0];
           ok(sender.track, "Sender has a track");
 
           return sender.setParameters({
@@ -88,7 +88,7 @@
       // has been created.
       test.chain.insertAfter('PC_LOCAL_SET_REMOTE_DESCRIPTION',[
         function PC_LOCAL_SET_RTP_FIRST_RID(test) {
-          var extmap_id = test._local_offer.sdp.match(
+          const extmap_id = test._local_offer.sdp.match(
               "a=extmap:([0-9+])/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
           ok(extmap_id, "Local offer has extmap id for simulcast: " + extmap_id[1]);
           // Cause pcLocal to filter out everything but RID "bar", only
@@ -99,14 +99,16 @@
       ]);
 
       test.chain.append([
-        function PC_LOCAL_WAIT_FOR_FRAMES() {
-          var vremote = test.pcLocal.remoteMediaElements[0];
+        async function PC_LOCAL_WAIT_FOR_FRAMES() {
+          const vremote = test.pcLocal.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcLocal");
-          return helper.waitForFrames(vremote);
+          emitter.start();
+          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          emitter.stop();
         },
         function PC_LOCAL_CHECK_SIZE_1() {
-          var vlocal = test.pcRemote.localMediaElements[0];
-          var vremote = test.pcLocal.remoteMediaElements[0];
+          const vlocal = test.pcRemote.localMediaElements[0];
+          const vremote = test.pcLocal.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcRemote");
           ok(vremote, "Should have remote video element for pcLocal");
           ok(vlocal.videoWidth > 0, "source width is positive");
@@ -122,21 +124,25 @@
         function PC_LOCAL_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
           return test.pcLocal.waitForMediaFlow();
         },
-        function PC_LOCAL_WAIT_FOR_FRAMES_2() {
-          var vremote = test.pcLocal.remoteMediaElements[0];
+        async function PC_LOCAL_WAIT_FOR_FRAMES_2() {
+          const vremote = test.pcLocal.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcLocal");
-          return helper.waitForFrames(vremote);
+          emitter.start();
+          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          emitter.stop();
         },
         // For some reason, even though we're getting a 25x25 stream, sometimes
         // the resolution isn't updated on the video element on the first frame.
-        function PC_LOCAL_WAIT_FOR_FRAMES_3() {
-          var vremote = test.pcLocal.remoteMediaElements[0];
+        async function PC_LOCAL_WAIT_FOR_FRAMES_3() {
+          const vremote = test.pcLocal.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcLocal");
-          return helper.waitForFrames(vremote);
+          emitter.start();
+          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          emitter.stop();
         },
         function PC_LOCAL_CHECK_SIZE_2() {
-          var vlocal = test.pcRemote.localMediaElements[0];
-          var vremote = test.pcLocal.remoteMediaElements[0];
+          const vlocal = test.pcRemote.localMediaElements[0];
+          const vremote = test.pcLocal.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcRemote");
           ok(vremote, "Should have remote video element for pcLocal");
           ok(vlocal.videoWidth > 0, "source width is positive");
