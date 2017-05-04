@@ -1,6 +1,6 @@
 {
   "addonDescription": {
-    "message": "Ṭṭef imrayen akked igdilen si Web sakin sekles-iten s wudem askudan neɣ s wudem yezgan."
+    "message": "Ṭṭef imrayen akked igdilen si Web sakin sekles-iten s wudem askudan neγ s wudem yezgan."
   },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.org>"
@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Immed"
   },
-  "termsAndPrivacyNotice": {
-    "message": "S useqdec Firefox Screenshots,  ad tqebleḍ $TERMSANDPRIVACYNOTICETERMSLINK$ n Screenshots akked $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "S useqdec n Firefox Screenshots, ad tqebleḍ tiwuriwin n usigna Firefox $TERMSANDPRIVACYNOTICETERMSLINK$ akked $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

@@ -1,6 +1,6 @@
 "use strict";
 
-this.documentMetadata = (function () {
+this.documentMetadata = (function() {
 
   function findSiteName() {
     let el = document.querySelector("meta[property='og:site_name']");
@@ -42,7 +42,7 @@ this.documentMetadata = (function () {
             value.push(v);
           }
         }
-        if (! value.length) {
+        if (!value.length) {
           value = null;
         }
       } else if (elems.length === 1) {

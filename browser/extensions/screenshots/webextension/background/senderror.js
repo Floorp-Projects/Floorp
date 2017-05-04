@@ -2,8 +2,10 @@
 
 "use strict";
 
-this.senderror = (function () {
+this.senderror = (function() {
   let exports = {};
+
+  let manifest = browser.runtime.getManifest();
 
   // Do not show an error more than every ERROR_TIME_LIMIT milliseconds:
   const ERROR_TIME_LIMIT = 3000;
@@ -48,14 +50,14 @@ this.senderror = (function () {
 
   let lastErrorTime;
 
-  exports.showError = function (error) {
+  exports.showError = function(error) {
     if (lastErrorTime && (Date.now() - lastErrorTime) < ERROR_TIME_LIMIT) {
       return;
     }
     lastErrorTime = Date.now();
     let id = makeUuid();
     let popupMessage = error.popupMessage || "generic";
-    if (! messages[popupMessage]) {
+    if (!messages[popupMessage]) {
       popupMessage = "generic";
     }
     let title = messages[popupMessage].title;
@@ -76,38 +78,38 @@ this.senderror = (function () {
     });
   };
 
-  exports.reportError = function (e) {
+  exports.reportError = function(e) {
     if (!analytics.getTelemetryPrefSync()) {
       log.error("Telemetry disabled. Not sending critical error:", e);
       return;
     }
     let dsn = auth.getSentryPublicDSN();
-    if (! dsn) {
+    if (!dsn) {
       log.warn("Error:", e);
       return;
     }
-    if (! Raven.isSetup()) {
+    if (!Raven.isSetup()) {
       Raven.config(dsn).install();
     }
     let exception = new Error(e.message);
     exception.stack = e.multilineStack || e.stack || undefined;
     let rest = {};
     for (let attr in e) {
-      if (! ["name", "message", "stack", "multilineStack", "popupMessage", "version", "sentryPublicDSN", "help"].includes(attr)) {
+      if (!["name", "message", "stack", "multilineStack", "popupMessage", "version", "sentryPublicDSN", "help"].includes(attr)) {
         rest[attr] = e[attr];
       }
     }
     rest.stack = e.multilineStack || e.stack;
     Raven.captureException(exception, {
       logger: 'addon',
-      tags: {version: e.version, category: e.popupMessage},
+      tags: {version: manifest.version, category: e.popupMessage},
       message: exception.message,
       extra: rest
     });
   };
 
   catcher.registerHandler((errorObj) => {
-    if (! errorObj.noPopup) {
+    if (!errorObj.noPopup) {
       exports.showError(errorObj);
     }
     exports.reportError(errorObj);

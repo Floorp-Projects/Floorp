@@ -62,7 +62,7 @@ body {
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  background-color: #f2f2f2;
+  background-color: #f5f5f7;
   border-radius: 5px;
   height: 520px;
   overflow: hidden;
@@ -91,8 +91,7 @@ body {
       color: #fff;
       font-size: 16px;
       margin-left: 5px;
-      padding: 2px;
-      text-transform: uppercase; }
+      padding: 2px; }
   .slide p {
     animation-duration: 350ms;
     font-size: 16px;
@@ -146,7 +145,7 @@ body {
 
 .goto-slide {
   background: transparent;
-  background-color: #f2f2f2;
+  background-color: #f5f5f7;
   border-radius: 50%;
   border: 0;
   flex: 0 0 9px;
@@ -182,6 +181,7 @@ body {
   width: 70px; }
 
 #prev {
+  background-image: url("MOZ_EXTENSION/icons/back.svg");
   left: 50%;
   margin-left: -385px; }
 
@@ -196,9 +196,22 @@ body {
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 20px 20px; }
+  #prev:hover,
+  #next:hover,
+  #done:hover {
+    background-color: #fff;
+    background-size: 22px 22px; }
+  #prev:active,
+  #next:active,
+  #done:active {
+    background-color: #fff;
+    background-size: 24px 24px; }
 
 #next {
+  background-image: url("MOZ_EXTENSION/icons/back.svg");
   transform: rotate(180deg); }
+  .active-slide-1 #next {
+    background-image: url("MOZ_EXTENSION/icons/back-highlight.svg"); }
 
 #skip {
   background: none;
@@ -214,18 +227,6 @@ body {
   transition: opacity 100ms cubic-bezier(0.07, 0.95, 0, 1);
   z-index: 10; }
 
-#prev:hover,
-#next:hover,
-#done:hover {
-  background-color: #fff;
-  background-size: 22px 22px; }
-
-#prev:active,
-#next:active,
-#done:active {
-  background-color: #fff;
-  background-size: 24px 24px; }
-
 #skip:hover {
   opacity: 1; }
 
@@ -234,10 +235,41 @@ body {
   display: none; }
 
 #done {
+  background-image: url("MOZ_EXTENSION/icons/done.svg");
   display: none; }
 
 .active-slide-4 #done {
   display: inline-block; }
+
+/* for smaller screen sizes */
+@media screen and (max-width: 768px) {
+  .slide {
+    height: 360px;
+    width: 450px; }
+    .slide .slide-image {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      flex: 0 0 200px; }
+    .slide .slide-content {
+      flex: 0 0 160px; }
+      .slide .slide-content h1 {
+        font-size: 24px; }
+      .slide .slide-content p {
+        font-size: 14px;
+        line-height: 21px;
+        width: 85%; }
+      .slide .slide-content .onboarding-legal-notice {
+        font-size: 10px;
+        line-height: 16px; }
+  #skip {
+    margin-left: -205px;
+    margin-top: 177px; }
+  #prev {
+    margin-left: -260px; }
+  #next,
+  #done {
+    margin-left: 190px; } }
 
 `;
 null;

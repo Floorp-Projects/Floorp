@@ -1,8 +1,8 @@
-/* globals catcher, onboardingHtml, onboardingCss, browser, util, shooter, callBackground, assertIsTrusted */
+/* globals log, catcher, onboardingHtml, onboardingCss, browser, util, shooter, callBackground, assertIsTrusted */
 
 "use strict";
 
-this.slides = (function () {
+this.slides = (function() {
   let exports = {};
 
   const { watchFunction } = catcher;
@@ -12,9 +12,8 @@ this.slides = (function () {
   let currentSlide = 1;
   let numberOfSlides;
   let callbacks;
-  let backend;
 
-  exports.display = function (addCallbacks) {
+  exports.display = function(addCallbacks) {
     if (iframe) {
       throw new Error("Attemted to call slides.display() twice");
     }
@@ -46,26 +45,21 @@ this.slides = (function () {
           doc.adoptNode(parsedDom.documentElement),
           doc.documentElement
         );
-        doc.addEventListener("keyup", onKeyUp, false);
-        callBackground("getBackend").then((backendResult) => {
-          backend = backendResult;
-          localizeText(doc);
-          activateSlide(doc);
-          resolve();
-        }).catch((error) => {
-          // Handled in communication.js
-        });
+        doc.addEventListener("keyup", onKeyUp);
+        localizeText(doc);
+        activateSlide(doc);
+        resolve();
       });
       document.body.appendChild(iframe);
       iframe.focus();
-      window.addEventListener("resize", onResize, false);
+      window.addEventListener("resize", onResize);
     });
   };
 
-  exports.remove = exports.unload = function () {
-    window.removeEventListener("resize", onResize, false);
+  exports.remove = exports.unload = function() {
+    window.removeEventListener("resize", onResize);
     if (doc) {
-      doc.removeEventListener("keyup", onKeyUp, false);
+      doc.removeEventListener("keyup", onKeyUp);
     }
     util.removeNode(iframe);
     iframe = doc = null;
@@ -87,32 +81,33 @@ this.slides = (function () {
       let text = browser.i18n.getMessage(id);
       el.setAttribute("aria-label", text);
     }
-    // termsAndPrivacyNotice is a more complicated substitution:
+    // termsAndPrivacyNoticeCloudServices is a more complicated substitution:
     let termsContainer = doc.querySelector(".onboarding-legal-notice");
     termsContainer.innerHTML = "";
-    let termsSentinal = "__TERMS__";
-    let privacySentinal = "__PRIVACY__";
-    let sentinalSplitter = "!!!";
+    let termsSentinel = "__TERMS__";
+    let privacySentinel = "__PRIVACY__";
+    let sentinelSplitter = "!!!";
     let linkTexts = {
-      [termsSentinal]: browser.i18n.getMessage("termsAndPrivacyNoticeTermsLink"),
-      [privacySentinal]: browser.i18n.getMessage("termsAndPrivacyNoticyPrivacyLink")
+      [termsSentinel]: browser.i18n.getMessage("termsAndPrivacyNoticeTermsLink"),
+      [privacySentinel]: browser.i18n.getMessage("termsAndPrivacyNoticyPrivacyLink")
     };
     let linkUrls = {
-      [termsSentinal]: "https://www.mozilla.org/about/legal/terms/services/",
-      [privacySentinal]: "https://www.mozilla.org/privacy/firefox-cloud/"
+      [termsSentinel]: "https://www.mozilla.org/about/legal/terms/services/",
+      [privacySentinel]: "https://www.mozilla.org/privacy/firefox-cloud/"
     };
     let text = browser.i18n.getMessage(
-      "termsAndPrivacyNotice",
-      [sentinalSplitter + termsSentinal + sentinalSplitter,
-       sentinalSplitter + privacySentinal + sentinalSplitter]);
-    let parts = text.split(sentinalSplitter);
+      "termsAndPrivacyNoticeCloudServices",
+      [sentinelSplitter + termsSentinel + sentinelSplitter,
+       sentinelSplitter + privacySentinel + sentinelSplitter]);
+    let parts = text.split(sentinelSplitter);
     for (let part of parts) {
       let el;
-      if (part === termsSentinal || part === privacySentinal) {
+      if (part === termsSentinel || part === privacySentinel) {
         el = doc.createElement("a");
         el.href = linkUrls[part];
         el.textContent = linkTexts[part];
         el.target = "_blank";
+        el.id = (part === termsSentinel) ? "terms" : "privacy";
       } else {
         el = doc.createTextNode(part);
       }
@@ -125,27 +120,37 @@ this.slides = (function () {
     doc.querySelector("#next").addEventListener("click", watchFunction(assertIsTrusted(() => {
       shooter.sendEvent("navigate-slide", "next");
       next();
-    })), false);
+    })));
     doc.querySelector("#prev").addEventListener("click", watchFunction(assertIsTrusted(() => {
       shooter.sendEvent("navigate-slide", "prev");
       prev();
-    })), false);
+    })));
     for (let el of doc.querySelectorAll(".goto-slide")) {
       el.addEventListener("click", watchFunction(assertIsTrusted((event) => {
         shooter.sendEvent("navigate-slide", "goto");
         let el = event.target;
         let index = parseInt(el.getAttribute("data-number"), 10);
         setSlide(index);
-      })), false);
+      })));
     }
     doc.querySelector("#skip").addEventListener("click", watchFunction(assertIsTrusted((event) => {
       shooter.sendEvent("cancel-slides", "skip");
       callbacks.onEnd();
-    })), false);
+    })));
     doc.querySelector("#done").addEventListener("click", watchFunction(assertIsTrusted((event) => {
       shooter.sendEvent("finish-slides", "done");
       callbacks.onEnd();
-    })), false);
+    })));
+    // Note: e10s breaks the terms and privacy anchor tags. Work around this by
+    // manually opening the correct URLs on click until bug 1357589 is fixed.
+    doc.querySelector("#terms").addEventListener("click", watchFunction(assertIsTrusted((event) => {
+      event.preventDefault();
+      callBackground("openTermsPage");
+    })));
+    doc.querySelector("#privacy").addEventListener("click", watchFunction(assertIsTrusted((event) => {
+      event.preventDefault();
+      callBackground("openPrivacyPage");
+    })));
     setSlide(1);
   }
 
@@ -157,8 +162,8 @@ this.slides = (function () {
     setSlide(currentSlide - 1);
   }
 
-  const onResize = catcher.watchFunction(function () {
-    if (! iframe) {
+  const onResize = catcher.watchFunction(function() {
+    if (!iframe) {
       log.warn("slides onResize called when iframe is not setup");
       return;
     }
@@ -170,10 +175,18 @@ this.slides = (function () {
     iframe.style.width = window.innerWidth + "px";
   }
 
-  const onKeyUp = catcher.watchFunction(assertIsTrusted(function (event) {
+  const onKeyUp = catcher.watchFunction(assertIsTrusted(function(event) {
     if ((event.key || event.code) === "Escape") {
       shooter.sendEvent("cancel-slides", "keyboard-escape");
       callbacks.onEnd();
+    }
+    if ((event.key || event.code) === "ArrowRight") {
+      shooter.sendEvent("navigate-slide", "keyboard-arrowright");
+      next();
+    }
+    if ((event.key || event.code) === "ArrowLeft") {
+      shooter.sendEvent("navigate-slide", "keyboard-arrowleft");
+      prev();
     }
   }));
 
@@ -187,7 +200,7 @@ this.slides = (function () {
     shooter.sendEvent("visited-slide", `slide-${index}`);
     currentSlide = index;
     let slideEl = doc.querySelector("#slide-container");
-    for (let i=1; i<=numberOfSlides; i++) {
+    for (let i = 1; i <= numberOfSlides; i++) {
       let className = `active-slide-${i}`;
       if (i == currentSlide) {
         slideEl.classList.add(className);

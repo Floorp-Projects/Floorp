@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Готово"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Коришћењем услуге Firefox Screenshots, слажете се са $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Коришћењем Firefox Screenshots-а, прихватате Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

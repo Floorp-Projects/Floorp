@@ -1,0 +1,74 @@
+{
+  "addonDescription": {
+    "message": "ဝဘ်ထံမှ ဓါတ်ပုံများနှင့် မျက်နှာပြင်ပုံဖမ်းချက်များကို ရိုက်ယူပြီး ယာယီ သို့မဟုတ် အမြဲတမ်းသိုလှောင်ရာတွင် သိမ်းဆည်းပါ။"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "မျက်နှာပြင်ပုံရိပ် ဖမ်းယူပါ"
+  },
+  "myShotsLink": {
+    "message": "ရိုက်ကူးထားသော ပုံများ"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "သိမ်းရန်"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "မြင်ရသည်များကို သိမ်းပါ"
+  },
+  "saveScreenshotFullPage": {
+    "message": "စာမျက်နှာတစ်ခုလုံးကို သိမ်းပါ"
+  },
+  "cancelScreenshot": {
+    "message": "မဆောင်ရွက်တော့ပါ"
+  },
+  "downloadScreenshot": {
+    "message": "ဆွဲယူရန်"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "လင့်ခ်ကို ကူယူပြီး"
+  },
+  "requestErrorTitle": {
+    "message": "ပျက်နေသည်"
+  },
+  "requestErrorDetails": {
+    "message": "စိတ်မကောင်းပါ၊ သင်ရိုက်ကူးထားသော ပုံကို မသိမ်းနိုင်ပါ။ နောင်တွင် ပြန်စမ်းကြည့်ပါ။"
+  },
+  "connectionErrorTitle": {
+    "message": "သင်ရိုက်ကူးထားသော မျက်နှာပြင်ပုံရိပ်များထံ မချိတ်ဆက်နိုင်ပါ။"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ဒီစာမျက်နှာ၏ မျက်နှာပြင်ပုံရိပ်ကို မရိုက်ကူးနိုင်ပါ။"
+  },
+  "tourBodyOne": {
+    "message": "Firefox ကနေ ထွက်ခွာရန် မလိုဘဲ မျက်နှာပြင်ပုံရိပ်များကို ရိုက်ကူး၊ သိမ်းဆည်း၊ မျှဝေပါ။"
+  },
+  "tourHeaderTwo": {
+    "message": "ကိုယ်နှစ်သက်ရာ စာမျက်နှာများကို ဖမ်းယူပါ"
+  },
+  "tourHeaderThree": {
+    "message": "နှစ်သက်သလို"
+  },
+  "tourHeaderFour": {
+    "message": "ဝင်ဒိုးများ သို့မဟုတ် စာမျက်နှာတစ်ခုလုံးကို ဖမ်းယူပါ"
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "နောက်ဆလိုက်"
+  },
+  "tourPrevious": {
+    "message": "အရင်ကဆလိုက်"
+  },
+  "tourDone": {
+    "message": "ပြီးပြီ"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "စကားရပ်များ"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ကိုယ်ရေးကာကွယ်မှု သတိပေးချက်"
+  }
+}

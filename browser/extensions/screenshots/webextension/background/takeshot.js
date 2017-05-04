@@ -2,7 +2,7 @@
 
 "use strict";
 
-this.takeshot = (function () {
+this.takeshot = (function() {
   let exports = {};
   const Shot = shot.AbstractShot;
   const { sendEvent } = analytics;
@@ -10,9 +10,10 @@ this.takeshot = (function () {
   communication.register("takeShot", catcher.watchFunction((sender, options) => {
     let { captureType, captureText, scroll, selectedPos, shotId, shot } = options;
     shot = new Shot(main.getBackend(), shotId, shot);
+    shot.favicon = sender.tab.favIconUrl;
     let capturePromise = Promise.resolve();
     let openedTab;
-    if (! shot.clipNames().length) {
+    if (!shot.clipNames().length) {
       // canvas.drawWindow isn't available, so we fall back to captureVisibleTab
       capturePromise = screenshotPage(selectedPos, scroll).then((dataUrl) => {
         shot.addClip({
@@ -100,16 +101,15 @@ this.takeshot = (function () {
     return auth.authHeaders().then((headers) => {
       headers["content-type"] = "application/json";
       let body = JSON.stringify(shot.asJson());
-      let req = new Request(shot.jsonUrl, {
+      sendEvent("upload", "started", {eventValue: Math.floor(body.length / 1000)});
+      return fetch(shot.jsonUrl, {
         method: "PUT",
         mode: "cors",
         headers,
         body
       });
-      sendEvent("upload", "started", {eventValue: Math.floor(body.length / 1000)});
-      return fetch(req);
     }).then((resp) => {
-      if (! resp.ok) {
+      if (!resp.ok) {
         sendEvent("upload-failed", `status-${resp.status}`);
         let exc = new Error(`Response failed with status ${resp.status}`);
         exc.popupMessage = "REQUEST_ERROR";
@@ -120,6 +120,7 @@ this.takeshot = (function () {
     }, (error) => {
       // FIXME: I'm not sure what exceptions we can expect
       sendEvent("upload-failed", "connection");
+      error.popupMessage = "CONNECTION_ERROR";
       throw error;
     });
   }

@@ -2,23 +2,23 @@
 
 "use strict";
 
-this.analytics = (function () {
+this.analytics = (function() {
   let exports = {};
 
   let telemetryPrefKnown = false;
   let telemetryPref;
 
-  exports.sendEvent = function (action, label, options) {
+  exports.sendEvent = function(action, label, options) {
     let eventCategory = "addon";
-    if (! telemetryPrefKnown) {
+    if (!telemetryPrefKnown) {
       log.warn("sendEvent called before we were able to refresh");
       return Promise.resolve();
     }
-    if (! telemetryPref) {
+    if (!telemetryPref) {
       log.info(`Cancelled sendEvent ${eventCategory}/${action}/${label || 'none'} ${JSON.stringify(options)}`);
       return Promise.resolve();
     }
-    if (typeof label == "object" && (! options)) {
+    if (typeof label == "object" && (!options)) {
       options = label;
       label = undefined;
     }
@@ -56,7 +56,7 @@ this.analytics = (function () {
     });
   };
 
-  exports.refreshTelemetryPref = function () {
+  exports.refreshTelemetryPref = function() {
     return communication.sendToBootstrap("getTelemetryPref").then((result) => {
       telemetryPrefKnown = true;
       if (result === communication.NO_BOOTSTRAP) {

@@ -34,10 +34,10 @@ function isUrl(url) {
 }
 
 function assertUrl(url) {
-  if (! url) {
+  if (!url) {
     throw new Error("Empty value is not URL");
   }
-  if (! isUrl(url)) {
+  if (!isUrl(url)) {
     let exc = new Error("Not a URL");
     exc.scheme = url.split(":")[0];
     throw exc;
@@ -48,14 +48,14 @@ function assertOrigin(url) {
   assertUrl(url);
   if (url.search(/^https?:/i) != -1) {
     let match = (/^https?:\/\/[^/:]+\/?$/i).exec(url);
-    if (! match) {
+    if (!match) {
       throw new Error("Bad origin, might include path");
     }
   }
 }
 
 function originFromUrl(url) {
-  if (! url) {
+  if (!url) {
     return null;
   }
   if (url.search(/^https?:/i) == -1) {
@@ -77,7 +77,7 @@ function checkObject(obj, required, optional) {
   }
   required = required || [];
   for (let attr of required) {
-    if (! (attr in obj)) {
+    if (!(attr in obj)) {
       return false;
     }
   }
@@ -146,14 +146,14 @@ function deepEqual(a, b) {
     return a === b;
   }
   if (Array.isArray(a)) {
-    if (! Array.isArray(b)) {
+    if (!Array.isArray(b)) {
       return false;
     }
     if (a.length != b.length) {
       return false;
     }
-    for (let i=0; i<a.length; i++) {
-      if (! deepEqual(a[i], b[i])) {
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) {
         return false;
       }
     }
@@ -163,14 +163,14 @@ function deepEqual(a, b) {
   }
   let seen = new Set();
   for (let attr of Object.keys(a)) {
-    if (! deepEqual(a[attr], b[attr])) {
+    if (!deepEqual(a[attr], b[attr])) {
       return false;
     }
     seen.add(attr);
   }
   for (let attr of Object.keys(b)) {
-    if (! seen.has(attr)) {
-      if (! deepEqual(a[attr], b[attr])) {
+    if (!seen.has(attr)) {
+      if (!deepEqual(a[attr], b[attr])) {
         return false;
       }
     }
@@ -183,7 +183,7 @@ function makeRandomId() {
   let id = "";
   while (id.length < 12) {
     let num;
-    if (! id) {
+    if (!id) {
       num = Date.now() % Math.pow(36, 3);
     } else {
       num = Math.floor(Math.random() * Math.pow(36, 3));
@@ -202,7 +202,7 @@ class AbstractShot {
     this._id = id;
     this.origin = attrs.origin || null;
     this.fullUrl = attrs.fullUrl || null;
-    if ((! attrs.fullUrl) && attrs.url) {
+    if ((!attrs.fullUrl) && attrs.url) {
       console.warn("Received deprecated attribute .url");
       this.fullUrl = attrs.url;
     }
@@ -254,7 +254,7 @@ class AbstractShot {
         if (val.asJson) {
           val = val.asJson();
         }
-        if (! deepEqual(json[attr], val)) {
+        if (!deepEqual(json[attr], val)) {
           this[attr] = json[attr];
         }
       } else if (json[attr] !== this[attr] &&
@@ -264,11 +264,11 @@ class AbstractShot {
     }
     if (json.clips) {
       for (let clipId in json.clips) {
-        if (! json.clips[clipId]) {
+        if (!json.clips[clipId]) {
           this.delClip(clipId);
-        } else if (! this.getClip(clipId)) {
+        } else if (!this.getClip(clipId)) {
           this.setClip(clipId, json.clips[clipId]);
-        } else if (! deepEqual(this.getClip(clipId).asJson(), json.clips[clipId])) {
+        } else if (!deepEqual(this.getClip(clipId).asJson(), json.clips[clipId])) {
           this.setClip(clipId, json.clips[clipId]);
         }
       }
@@ -360,7 +360,7 @@ class AbstractShot {
   }
 
   get urlDisplay() {
-    if (! this.url) {
+    if (!this.url) {
       return null;
     }
     if (this.url.search(/^https?/i) != -1) {
@@ -371,11 +371,10 @@ class AbstractShot {
       return txt;
     } else if (this.url.startsWith("data:")) {
       return "data:url";
-    } else {
-      let txt = this.url;
-      txt = txt.replace(/\?.*/, "");
-      return txt;
     }
+    let txt = this.url;
+    txt = txt.replace(/\?.*/, "");
+    return txt;
   }
 
   get viewUrl() {
@@ -472,7 +471,7 @@ class AbstractShot {
 
   clipNames() {
     let names = Object.getOwnPropertyNames(this._clips);
-    names.sort(function (a, b) {
+    names.sort(function(a, b) {
       return a.sortOrder < b.sortOrder ? 1 : 0;
     });
     return names;
@@ -490,7 +489,7 @@ class AbstractShot {
     this._clips[name] = clip;
   }
   delClip(name) {
-    if (! this._clips[name]) {
+    if (!this._clips[name]) {
       throw new Error("No existing clip with id: " + name);
     }
     delete this._clips[name];
@@ -515,7 +514,7 @@ class AbstractShot {
     return this._siteName || null;
   }
   set siteName(val) {
-    assert(typeof val == "string" || ! val);
+    assert(typeof val == "string" || !val);
     this._siteName = val;
   }
 
@@ -523,7 +522,7 @@ class AbstractShot {
     return this._documentSize;
   }
   set documentSize(val) {
-    assert(typeof val == "object" || ! val);
+    assert(typeof val == "object" || !val);
     if (val) {
       assert(checkObject(val, ["height", "width"], "Bad attr to documentSize:", Object.keys(val)));
       assert(typeof val.height == "number");
@@ -538,7 +537,7 @@ class AbstractShot {
     return this._fullScreenThumbnail;
   }
   set fullScreenThumbnail(val) {
-    assert(typeof val == "string" || ! val);
+    assert(typeof val == "string" || !val);
     if (val) {
       assert(isUrl(val));
       this._fullScreenThumbnail = val;
@@ -556,7 +555,7 @@ class AbstractShot {
       return;
     }
     assert(typeof val == "object", "abTests should be an object, not:", typeof val);
-    assert(! Array.isArray(val), "abTests should not be an Array");
+    assert(!Array.isArray(val), "abTests should not be an Array");
     for (let name in val) {
       assert(val[name] && typeof val[name] == "string", `abTests.${name} should be a string:`, typeof val[name]);
     }
@@ -606,13 +605,13 @@ class _Image {
     assert(checkObject(json, ["url"], ["dimensions", "title", "alt"]), "Bad attrs for Image:", Object.keys(json));
     assert(isUrl(json.url), "Bad Image url:", json.url);
     this.url = json.url;
-    assert((! json.dimensions) ||
+    assert((!json.dimensions) ||
            (typeof json.dimensions.x == "number" && typeof json.dimensions.y == "number"),
            "Bad Image dimensions:", json.dimensions);
     this.dimensions = json.dimensions;
-    assert(typeof json.title == "string" || ! json.title, "Bad Image title:", json.title);
+    assert(typeof json.title == "string" || !json.title, "Bad Image title:", json.title);
     this.title = json.title;
-    assert(typeof json.alt == "string" || ! json.alt, "Bad Image alt:", json.alt);
+    assert(typeof json.alt == "string" || !json.alt, "Bad Image alt:", json.alt);
     this.alt = json.alt;
   }
 
@@ -632,7 +631,7 @@ class _Clip {
     this._id = id;
     this.createdDate = json.createdDate;
     if ('sortOrder' in json) {
-      assert(typeof json.sortOrder == "number" || ! json.sortOrder, "Bad Clip sortOrder:", json.sortOrder);
+      assert(typeof json.sortOrder == "number" || !json.sortOrder, "Bad Clip sortOrder:", json.sortOrder);
     }
     if ('sortOrder' in json) {
       this.sortOrder = json.sortOrder;
@@ -659,7 +658,7 @@ class _Clip {
     return this._createdDate;
   }
   set createdDate(val) {
-    assert(typeof val == "number" || ! val, "Bad Clip createdDate:", val);
+    assert(typeof val == "number" || !val, "Bad Clip createdDate:", val);
     this._createdDate = val;
   }
 
@@ -667,14 +666,14 @@ class _Clip {
     return this._image;
   }
   set image(image) {
-    if (! image) {
+    if (!image) {
       this._image = undefined;
       return;
     }
     assert(checkObject(image, ["url"], ["dimensions", "text", "location", "captureType"]), "Bad attrs for Clip Image:", Object.keys(image));
     assert(isUrl(image.url), "Bad Clip image URL:", image.url);
-    assert(image.captureType == "madeSelection" || image.captureType == "selection" || image.captureType == "visible" || image.captureType == "auto" || image.captureType == "fullPage" || ! image.captureType, "Bad image.captureType:", image.captureType);
-    assert(typeof image.text == "string" || ! image.text, "Bad Clip image text:", image.text);
+    assert(image.captureType == "madeSelection" || image.captureType == "selection" || image.captureType == "visible" || image.captureType == "auto" || image.captureType == "fullPage" || !image.captureType, "Bad image.captureType:", image.captureType);
+    assert(typeof image.text == "string" || !image.text, "Bad Clip image text:", image.text);
     if (image.dimensions) {
       assert(typeof image.dimensions.x == "number" && typeof image.dimensions.y == "number", "Bad Clip image dimensions:", image.dimensions);
     }
@@ -702,13 +701,14 @@ class _Clip {
     if (this.image) {
       return this.image.url.startsWith("data:");
     }
+    return false;
   }
 
   get sortOrder() {
     return this._sortOrder || null;
   }
   set sortOrder(val) {
-    assert(typeof val == "number" || ! val, "Bad Clip sortOrder:", val);
+    assert(typeof val == "number" || !val, "Bad Clip sortOrder:", val);
     this._sortOrder = val;
   }
 
