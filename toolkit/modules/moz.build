@@ -222,7 +222,6 @@ EXTRA_JS_MODULES += [
     'Promise.jsm',
     'PromiseMessage.jsm',
     'PromiseUtils.jsm',
-    'PropertyListUtils.jsm',
     'RemoteController.jsm',
     'RemoteFinder.jsm',
     'RemotePageManager.jsm',
@@ -249,6 +248,12 @@ EXTRA_JS_MODULES += [
     'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXTRA_JS_MODULES += [
+        'PropertyListUtils.jsm',
+    ]
+
 EXTRA_JS_MODULES.third_party.jsesc += ['third_party/jsesc/jsesc.js']
 EXTRA_JS_MODULES.sessionstore += [
     'sessionstore/PrivacyLevel.jsm',
