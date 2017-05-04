@@ -17,7 +17,11 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'CheckableInputTypes.cpp',
+    'DateTimeInputTypes.cpp',
+    'FileInputType.cpp',
     'InputType.cpp',
+    'NumericInputTypes.cpp',
     'SingleLineTextInputTypes.cpp',
 ]
 

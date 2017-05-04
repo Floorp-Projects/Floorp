@@ -37,11 +37,30 @@ public:
 
   virtual bool IsTooLong() const;
   virtual bool IsTooShort() const;
+  virtual bool IsValueMissing() const;
 
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
     : mInputElement(aInputElement)
   {}
+
+  /**
+   * Get the mutable state of the element.
+   * When the element isn't mutable (immutable), the value or checkedness
+   * should not be changed by the user.
+   *
+   * See: https://html.spec.whatwg.org/multipage/forms.html#the-input-element:concept-fe-mutable
+   */
+  virtual bool IsMutable() const;
+
+  /**
+   * Returns whether the input element's current value is the empty string.
+   * This only makes sense for some input types; does NOT make sense for file
+   * inputs.
+   *
+   * @return whether the input element's current value is the empty string.
+   */
+  bool IsValueEmpty() const;
 
   mozilla::dom::HTMLInputElement* mInputElement;
 };

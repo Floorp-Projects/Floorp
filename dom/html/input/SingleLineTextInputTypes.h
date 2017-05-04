@@ -16,12 +16,15 @@ public:
 
   bool IsTooLong() const override;
   bool IsTooShort() const override;
+  bool IsValueMissing() const override;
 
 protected:
   explicit SingleLineTextInputTypeBase(
     mozilla::dom::HTMLInputElement* aInputElement)
       : InputType(aInputElement)
   {}
+
+  bool IsMutable() const override;
 };
 
 // input type=text

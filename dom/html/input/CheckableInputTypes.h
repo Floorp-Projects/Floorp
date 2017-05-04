@@ -30,6 +30,8 @@ public:
     return new (aMemory) CheckboxInputType(aInputElement);
   }
 
+  bool IsValueMissing() const override;
+
 private:
   explicit CheckboxInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : CheckableInputTypeBase(aInputElement)

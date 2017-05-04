@@ -30,10 +30,14 @@ public:
     return new (aMemory) NumberInputType(aInputElement);
   }
 
+  bool IsValueMissing() const override;
+
 private:
   explicit NumberInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : NumericInputTypeBase(aInputElement)
   {}
+
+  bool IsMutable() const override;
 };
 
 // input type=range

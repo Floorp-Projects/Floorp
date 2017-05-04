@@ -102,6 +102,18 @@ InputType::Create(mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
   return inputType;
 }
 
+bool
+InputType::IsMutable() const
+{
+  return !mInputElement->IsDisabled();
+}
+
+bool
+InputType::IsValueEmpty() const
+{
+  return mInputElement->IsValueEmpty();
+}
+
 void
 InputType::DropReference()
 {
@@ -117,6 +129,12 @@ InputType::IsTooLong() const
 
 bool
 InputType::IsTooShort() const
+{
+  return false;
+}
+
+bool
+InputType::IsValueMissing() const
 {
   return false;
 }

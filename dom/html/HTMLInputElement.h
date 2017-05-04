@@ -134,6 +134,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
+  friend class ::InputType;
 
 public:
   using nsIConstraintValidation::GetValidationMessage;
