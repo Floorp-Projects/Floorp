@@ -51,7 +51,6 @@
 #include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
-#include "nsIIOService.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsDateTimeControlFrame.h"
@@ -86,8 +85,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "nsIFile.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"
 #include "nsIMIMEService.h"
@@ -7550,40 +7547,7 @@ HTMLInputElement::IsValueMissing() const
 bool
 HTMLInputElement::HasTypeMismatch() const
 {
-  if (mType != NS_FORM_INPUT_EMAIL && mType != NS_FORM_INPUT_URL) {
-    return false;
-  }
-
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-
-  if (value.IsEmpty()) {
-    return false;
-  }
-
-  if (mType == NS_FORM_INPUT_EMAIL) {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)
-             ? !IsValidEmailAddressList(value) : !IsValidEmailAddress(value);
-  } else if (mType == NS_FORM_INPUT_URL) {
-    /**
-     * TODO:
-     * The URL is not checked as the HTML5 specifications want it to be because
-     * there is no code to check for a valid URI/IRI according to 3986 and 3987
-     * RFC's at the moment, see bug 561586.
-     *
-     * RFC 3987 (IRI) implementation: bug 42899
-     *
-     * HTML5 specifications:
-     * http://dev.w3.org/html5/spec/infrastructure.html#valid-url
-     */
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-    nsCOMPtr<nsIURI> uri;
-
-    return !NS_SUCCEEDED(ioService->NewURI(NS_ConvertUTF16toUTF8(value), nullptr,
-                                           nullptr, getter_AddRefs(uri)));
-  }
-
-  return false;
+  return mInputType->HasTypeMismatch();
 }
 
 bool
@@ -8157,88 +8121,6 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
   }
 
   return rv;
-}
-
-//static
-bool
-HTMLInputElement::IsValidEmailAddressList(const nsAString& aValue)
-{
-  HTMLSplitOnSpacesTokenizer tokenizer(aValue, ',');
-
-  while (tokenizer.hasMoreTokens()) {
-    if (!IsValidEmailAddress(tokenizer.nextToken())) {
-      return false;
-    }
-  }
-
-  return !tokenizer.separatorAfterCurrentToken();
-}
-
-//static
-bool
-HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
-{
-  // Email addresses can't be empty and can't end with a '.' or '-'.
-  if (aValue.IsEmpty() || aValue.Last() == '.' || aValue.Last() == '-') {
-    return false;
-  }
-
-  uint32_t atPos;
-  nsAutoCString value;
-  if (!PunycodeEncodeEmailAddress(aValue, value, &atPos) ||
-      atPos == (uint32_t)kNotFound || atPos == 0 || atPos == value.Length() - 1) {
-    // Could not encode, or "@" was not found, or it was at the start or end
-    // of the input - in all cases, not a valid email address.
-    return false;
-  }
-
-  uint32_t length = value.Length();
-  uint32_t i = 0;
-
-  // Parsing the username.
-  for (; i < atPos; ++i) {
-    char16_t c = value[i];
-
-    // The username characters have to be in this list to be valid.
-    if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
-          c == '.' || c == '!' || c == '#' || c == '$' || c == '%' ||
-          c == '&' || c == '\''|| c == '*' || c == '+' || c == '-' ||
-          c == '/' || c == '=' || c == '?' || c == '^' || c == '_' ||
-          c == '`' || c == '{' || c == '|' || c == '}' || c == '~' )) {
-      return false;
-    }
-  }
-
-  // Skip the '@'.
-  ++i;
-
-  // The domain name can't begin with a dot or a dash.
-  if (value[i] == '.' || value[i] == '-') {
-    return false;
-  }
-
-  // Parsing the domain name.
-  for (; i < length; ++i) {
-    char16_t c = value[i];
-
-    if (c == '.') {
-      // A dot can't follow a dot or a dash.
-      if (value[i-1] == '.' || value[i-1] == '-') {
-        return false;
-      }
-    } else if (c == '-'){
-      // A dash can't follow a dot.
-      if (value[i-1] == '.') {
-        return false;
-      }
-    } else if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
-                 c == '-')) {
-      // The domain characters have to be in this list to be valid.
-      return false;
-    }
-  }
-
-  return true;
 }
 
 NS_IMETHODIMP_(bool)

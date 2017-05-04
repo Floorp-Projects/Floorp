@@ -8,6 +8,12 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "HTMLSplitOnSpacesTokenizer.h"
+#include "nsCRTGlue.h"
+#include "nsIIDNService.h"
+#include "nsIIOService.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 
 bool
 SingleLineTextInputTypeBase::IsMutable() const
@@ -60,4 +66,167 @@ SingleLineTextInputTypeBase::IsValueMissing() const
   }
 
   return IsValueEmpty();
+}
+
+/* input type=url */
+
+bool
+URLInputType::HasTypeMismatch() const
+{
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+
+  if (value.IsEmpty()) {
+    return false;
+  }
+
+  /**
+   * TODO:
+   * The URL is not checked as the HTML5 specifications want it to be because
+   * there is no code to check for a valid URI/IRI according to 3986 and 3987
+   * RFC's at the moment, see bug 561586.
+   *
+   * RFC 3987 (IRI) implementation: bug 42899
+   *
+   * HTML5 specifications:
+   * http://dev.w3.org/html5/spec/infrastructure.html#valid-url
+   */
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService();
+  nsCOMPtr<nsIURI> uri;
+
+  return !NS_SUCCEEDED(ioService->NewURI(NS_ConvertUTF16toUTF8(value), nullptr,
+                                         nullptr, getter_AddRefs(uri)));
+
+}
+
+/* input type=email */
+
+bool
+EmailInputType::HasTypeMismatch() const
+{
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+
+  if (value.IsEmpty()) {
+    return false;
+  }
+
+  return mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+    !IsValidEmailAddressList(value) : !IsValidEmailAddress(value);
+}
+
+/* static */ bool
+EmailInputType::IsValidEmailAddressList(const nsAString& aValue)
+{
+  HTMLSplitOnSpacesTokenizer tokenizer(aValue, ',');
+
+  while (tokenizer.hasMoreTokens()) {
+    if (!IsValidEmailAddress(tokenizer.nextToken())) {
+      return false;
+    }
+  }
+
+  return !tokenizer.separatorAfterCurrentToken();
+}
+
+/* static */ bool
+EmailInputType::IsValidEmailAddress(const nsAString& aValue)
+{
+  // Email addresses can't be empty and can't end with a '.' or '-'.
+  if (aValue.IsEmpty() || aValue.Last() == '.' || aValue.Last() == '-') {
+    return false;
+  }
+
+  uint32_t atPos;
+  nsAutoCString value;
+  if (!PunycodeEncodeEmailAddress(aValue, value, &atPos) ||
+      atPos == (uint32_t)kNotFound || atPos == 0 || atPos == value.Length() - 1) {
+    // Could not encode, or "@" was not found, or it was at the start or end
+    // of the input - in all cases, not a valid email address.
+    return false;
+  }
+
+  uint32_t length = value.Length();
+  uint32_t i = 0;
+
+  // Parsing the username.
+  for (; i < atPos; ++i) {
+    char16_t c = value[i];
+
+    // The username characters have to be in this list to be valid.
+    if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
+          c == '.' || c == '!' || c == '#' || c == '$' || c == '%' ||
+          c == '&' || c == '\''|| c == '*' || c == '+' || c == '-' ||
+          c == '/' || c == '=' || c == '?' || c == '^' || c == '_' ||
+          c == '`' || c == '{' || c == '|' || c == '}' || c == '~' )) {
+      return false;
+    }
+  }
+
+  // Skip the '@'.
+  ++i;
+
+  // The domain name can't begin with a dot or a dash.
+  if (value[i] == '.' || value[i] == '-') {
+    return false;
+  }
+
+  // Parsing the domain name.
+  for (; i < length; ++i) {
+    char16_t c = value[i];
+
+    if (c == '.') {
+      // A dot can't follow a dot or a dash.
+      if (value[i-1] == '.' || value[i-1] == '-') {
+        return false;
+      }
+    } else if (c == '-'){
+      // A dash can't follow a dot.
+      if (value[i-1] == '.') {
+        return false;
+      }
+    } else if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
+                 c == '-')) {
+      // The domain characters have to be in this list to be valid.
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/* static */ bool
+EmailInputType::PunycodeEncodeEmailAddress(const nsAString& aEmail,
+                                           nsAutoCString& aEncodedEmail,
+                                           uint32_t* aIndexOfAt)
+{
+  nsAutoCString value = NS_ConvertUTF16toUTF8(aEmail);
+  *aIndexOfAt = (uint32_t)value.FindChar('@');
+
+  if (*aIndexOfAt == (uint32_t)kNotFound ||
+      *aIndexOfAt == value.Length() - 1) {
+    aEncodedEmail = value;
+    return true;
+  }
+
+  nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
+  if (!idnSrv) {
+    NS_ERROR("nsIIDNService isn't present!");
+    return false;
+  }
+
+  uint32_t indexOfDomain = *aIndexOfAt + 1;
+
+  const nsDependentCSubstring domain = Substring(value, indexOfDomain);
+  bool ace;
+  if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
+    nsAutoCString domainACE;
+    if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
+      return false;
+    }
+    value.Replace(indexOfDomain, domain.Length(), domainACE);
+  }
+
+  aEncodedEmail = value;
+  return true;
 }
