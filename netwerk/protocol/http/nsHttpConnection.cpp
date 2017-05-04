@@ -2305,10 +2305,24 @@ nsAHttpTransaction *
 nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
 {
     MOZ_ASSERT(!mCurrentBytesRead);
+
+    RefPtr<nsAHttpTransaction> trans;
     if (mUsingSpdyVersion) {
+        // If we have a http2 connection just restart it as if 0rtt failed.
+        // For http2 we do not nee to do similar thing as for http1 because
+        // backup connection will pick immediately all this transaction anyway.
         DontReuse();
         mUsingSpdyVersion = 0;
+        if (mSpdySession) {
+            mSpdySession->Finish0RTT(true, true);
+        }
         mSpdySession = nullptr;
+    } else {
+        // For http1 we want to make this transaction an absolute priority to
+        // get the backup connection so we will return it from here.
+        if (NS_SUCCEEDED(mTransaction->RestartOnFastOpenError())) {
+            trans = mTransaction;
+        }
     }
 
     {
@@ -2316,10 +2330,6 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
         mCallbacks = nullptr;
     }
 
-    RefPtr<nsAHttpTransaction> trans = nullptr;
-    if (NS_SUCCEEDED(mTransaction->RestartOnFastOpenError())) {
-        trans = mTransaction;
-    }
     mTransaction = nullptr;
     Close(NS_ERROR_NET_RESET);
     return trans;
