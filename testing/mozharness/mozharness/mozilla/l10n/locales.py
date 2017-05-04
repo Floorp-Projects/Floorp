@@ -146,11 +146,10 @@ class LocalesMixin(ChunkingMixin):
     def run_compare_locales(self, locale, halt_on_failure=False):
         dirs = self.query_abs_dirs()
         env = self.query_l10n_env()
-        python = self.query_exe('python2.7')
         compare_locales_error_list = list(PythonErrorList)
         self.rmtree(dirs['abs_merge_dir'])
         self.mkdir_p(dirs['abs_merge_dir'])
-        command = [python, 'mach', 'compare-locales',
+        command = [sys.executable, 'mach', 'compare-locales',
                    '--merge-dir', dirs['abs_merge_dir'],
                    '--l10n-ini', os.path.join(dirs['abs_locales_src_dir'], 'l10n.ini'),
                    '--l10n-base', dirs['abs_l10n_dir'], locale]

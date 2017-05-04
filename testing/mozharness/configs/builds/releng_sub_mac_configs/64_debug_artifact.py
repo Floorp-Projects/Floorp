@@ -17,7 +17,6 @@ config = {
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
-        'python2.7': sys.executable,
         "buildbot": "/tools/buildbot/bin/buildbot",
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
