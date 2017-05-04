@@ -233,6 +233,10 @@ public:
 
     void ThrottleResponse(bool aThrottle);
 
+    void SetFastOpenStatus(uint8_t tfoStatus) {
+        mFastOpenStatus = tfoStatus;
+    }
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
@@ -400,6 +404,7 @@ private:
     bool                           mResumeRecvOnUnthrottle;
 
     PRFileDesc                    *mFastOpen;
+    uint8_t                        mFastOpenStatus;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
