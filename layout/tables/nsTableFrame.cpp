@@ -1311,7 +1311,8 @@ PaintRowBackground(nsTableRowFrame* aRow,
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame, cellRect,
                                                          aLists.BorderBackground(),
                                                          true, nullptr,
-                                                         aFrame->GetRectRelativeToSelf());
+                                                         aFrame->GetRectRelativeToSelf(),
+                                                         cell);
   }
 }
 
@@ -1343,7 +1344,8 @@ PaintRowGroupBackgroundByColIdx(nsTableRowGroupFrame* aRowGroup,
         nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame, cellRect,
                                                              aLists.BorderBackground(),
                                                              true, nullptr,
-                                                             aFrame->GetRectRelativeToSelf());
+                                                             aFrame->GetRectRelativeToSelf(),
+                                                             cell);
       }
     }
   }
