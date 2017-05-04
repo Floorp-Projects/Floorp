@@ -56,6 +56,14 @@ function openContextMenu(aMessage) {
                             };
   let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
   let event = gContextMenuContentData.event;
+
+  // Set touch mode to get larger menu items.
+  if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
+    popup.setAttribute("touchmode", "true");
+  } else {
+    popup.removeAttribute("touchmode");
+  }
+
   popup.openPopupAtScreen(event.screenX, event.screenY, true);
 }
 
