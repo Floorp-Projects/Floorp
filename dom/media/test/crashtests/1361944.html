@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<body>
+
+<video id="v1">
+  <source src="bogus.ogv">
+  <source src="small-shot.m4a">
+</video>
+
+<script type="text/javascript">
+v1.onloadedmetadata = () => {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</body>
+</html>
