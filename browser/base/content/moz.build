@@ -154,9 +154,6 @@ with Files("contentSearch*"):
 with Files("*.svg"):
     BUG_COMPONENT = ("Firefox", "Theme")
 
-with Files("gcli*"):
-    BUG_COMPONENT = ("Core", "DOM: Security")
-
 with Files("hiddenWindow.xul"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
