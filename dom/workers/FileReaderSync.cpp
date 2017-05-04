@@ -82,7 +82,12 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-  NS_ASSERTION(numRead == blobSize, "failed to read data");
+
+  // The file is changed in the meantime?
+  if (numRead != blobSize) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   JSObject* arrayBuffer = JS_NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
   if (!arrayBuffer) {
@@ -147,6 +152,12 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   uint32_t numRead = 0;
   aRv = SyncRead(stream, sniffBuf.BeginWriting(), sniffBuf.Length(), &numRead);
   if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  // No data, we don't need to continue.
+  if (numRead == 0) {
+    aResult.Truncate();
     return;
   }
 
@@ -244,19 +255,30 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
     return;
   }
 
-  uint64_t size = aBlob.GetSize(aRv);
+  nsCOMPtr<nsIInputStream> syncStream;
+  aRv = ConvertAsyncToSyncStream(stream, getter_AddRefs(syncStream));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  uint64_t size;
+  aRv = syncStream->Available(&size);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  uint64_t blobSize = aBlob.GetSize(aRv);
   if (NS_WARN_IF(aRv.Failed())){
     return;
   }
 
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  aRv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, size);
-  if (NS_WARN_IF(aRv.Failed())){
+  // The file is changed in the meantime?
+  if (blobSize != size) {
     return;
   }
 
   nsAutoString encodedData;
-  aRv = Base64EncodeInputStream(bufferedStream, encodedData, size);
+  aRv = Base64EncodeInputStream(syncStream, encodedData, size);
   if (NS_WARN_IF(aRv.Failed())){
     return;
   }
