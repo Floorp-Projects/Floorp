@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Τέλος"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Χρησιμοποιώντας το Firefox Screenshots, συμφωνείτε με τους $TERMSANDPRIVACYNOTICETERMSLINK$ Στιγμιότυπων και τη $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Χρησιμοποιώντας το Firefox Screenshots, συμφωνείτε με τους $TERMSANDPRIVACYNOTICETERMSLINK$ και την $TERMSANDPRIVACYNOTICEPRIVACYLINK$ των Υπηρεσιών Cloud του Firefox.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

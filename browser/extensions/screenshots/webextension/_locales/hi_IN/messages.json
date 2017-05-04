@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "वेब से फ़ोटो और स्क्रीनशॉट लें और उन्हें अस्थायी या स्थायी रूप से सहेजें."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "स्क्रीनशॉट लें"
+  },
+  "myShotsLink": {
+    "message": "मेरे चित्र"
+  },
+  "screenshotInstructions": {
+    "message": "किसी क्षेत्र को चुनने के लिए पृष्ठ पर खींचें या क्लिक करें. रद्द करने के लिए ESC दबाएँ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "सहेजें"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "दृश्यमान सहेजें"
+  },
+  "saveScreenshotFullPage": {
+    "message": "पूर्ण पृष्ठ सहेजें"
+  },
+  "cancelScreenshot": {
+    "message": "रद्द करें"
+  },
+  "downloadScreenshot": {
+    "message": "डाउनलोड करें"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "लिंक की नक़ल की गयी"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "आपके शॉट के लिंक क्लिपबोर्ड पर कॉपी किए गए हैं. पेस्ट करने के लिए $META_KEY$-V दबाएँ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "कार्यरत नहीं है."
+  },
+  "requestErrorDetails": {
+    "message": "क्षमा करें! हम आपके शॉट को सहेज़ नहीं सके. कृपया बाद में पुन: प्रयास करें."
+  },
+  "connectionErrorTitle": {
+    "message": "हम आपके स्क्रीनशॉट से जुड़ नहीं सकते हैं."
+  },
+  "connectionErrorDetails": {
+    "message": "कृपया अपने इंटरनेट संपर्क की जाँच करें. यदि आप इंटरनेट से जुड़ने में सक्षम हैं, तो Firefox स्क्रीनशॉट सेवा के साथ एक अस्थायी समस्या हो सकती है."
+  },
+  "loginErrorDetails": {
+    "message": "हम आपका शॉट सहेज नहीं सके क्योंकि Firefox स्क्रीनशॉट सेवा में कोई समस्या है. कृपया बाद में पुन: प्रयास करें."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "हम इस पृष्ठ का स्क्रीनशॉट नहीं ले सकते."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "यह एक मानक वेब पेज नहीं है, इसलिए आप इसका स्क्रीनशॉट नहीं ले सकते."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "आप एक Firefox स्क्रीनशॉट पृष्ठ का शॉट नहीं ले सकते!"
+  },
+  "genericErrorTitle": {
+    "message": "ओह! Firefox स्क्रीनशॉट बिगड़ गया."
+  },
+  "genericErrorDetails": {
+    "message": "हम सुनिश्चित नहीं हैं कि अभी क्या हुआ. पुन: प्रयास या एक भिन्न पृष्ठ का एक शॉट लेना चाहते हैं?"
+  },
+  "tourBodyOne": {
+    "message": "Firefox छोड़े बिना स्क्रीनशॉट लें, सहेजें, और साझा करें."
+  },
+  "tourHeaderTwo": {
+    "message": "जो आप चाहते हैं उसे कैद करें"
+  },
+  "tourBodyTwo": {
+    "message": "पृष्ठ के बस एक हिस्से को कैद करने के लिए क्लिक करें और खींचें. आप अपने चयन को हाइलाइट करने के लिए भी जा सकते हैं."
+  },
+  "tourHeaderThree": {
+    "message": "जैसा आप इसे चाहते हैं"
+  },
+  "tourBodyThree": {
+    "message": "आसानी से साझा करने या उन्हें अपने कंप्यूटर पर डाउनलोड करने के लिए अपने क्रॉप किये गये शॉट को वेब पर सहेजें. आपके द्वारा लिए गये सभी शॉट्स को ढूंढने के लिए आप मेरे शॉट्स बटन पर भी क्लिक कर सकते हैं."
+  },
+  "tourHeaderFour": {
+    "message": "विंडोज़ या संपूर्ण पृष्ठों को कैद करें"
+  },
+  "tourBodyFour": {
+    "message": "विंडो में दिखाई देने वाले क्षेत्र या एक पूरे पृष्ठ को कैद करने के लिए ऊपर में दाहिनी तरफ़ के बटन का चयन करें."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "अगली स्लाइड"
+  },
+  "tourPrevious": {
+    "message": "पिछली स्लाइड"
+  },
+  "tourDone": {
+    "message": "पूर्ण"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox स्क्रीनशॉट का उपयोग करके, आप Firefox क्लाउड सेवाओं $TERMSANDPRIVACYNOTICETERMSLINK$ और $TERMSANDPRIVACYNOTICEPRIVACYLINK$ के लिए सहमत हैं.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "शर्तें"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "गोपनीयता सूचना"
+  }
+}

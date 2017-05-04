@@ -1,6 +1,18 @@
 {
+  "addonDescription": {
+    "message": "ຖ່າຍຄຣິບ ແລະ ພາບຫນ້າຈໍຈາກຫນ້າເວັບ ແລ້ວບັນທຶກໄວ້ຊົ່ວຄາວ ຫລື ຖາວອນ."
+  },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "ຖ່າຍພາບຫນ້າຈໍ"
+  },
+  "myShotsLink": {
+    "message": "ພາບຂອງຂ້ອຍ"
+  },
+  "screenshotInstructions": {
+    "message": "ລາກ ຫລື ຄິກໃສ່ຫນ້າເວັບເພື່ອເລືອກເອົາບ່ອນທີ່ຕ້ອງການ. ກົດ ESC ເພື່ອຍົກເລີກ."
   },
   "saveScreenshotSelectedArea": {
     "message": "ບັນທຶກ"
@@ -20,8 +32,64 @@
   "notificationLinkCopiedTitle": {
     "message": "ໄດ້ສຳເນົາລີ້ງໄວ້ແລ້ວ"
   },
+  "notificationLinkCopiedDetails": {
+    "message": "ລີ້ງໄປຫາຮູບພາບຂອງທ່ານໄດ້ຖືກບັນທຶກໄວ້ໃນຄຣິບບອດ. ກົດ $META_KEY$-V ເພື່ອວາງ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "ໃຊ້ວຽກບໍ່ໄດ້."
+  },
+  "requestErrorDetails": {
+    "message": "ຂໍອະໄພ! ພວກເຮົາບໍ່ສາມາດບັນທຶກພາບຂອງທ່ານໄດ້. ກະລູນາລອງໃຫມ່ອີກຄັ້ງ."
+  },
+  "connectionErrorTitle": {
+    "message": "ພວກເຮົາບໍ່ສາມາດເຊື່ອມຕໍ່ໄປຫາພາບຫນ້າຈໍຂອງທ່ານໄດ້."
+  },
+  "connectionErrorDetails": {
+    "message": "ກະລູນາກວດເບິງການເຊື່ອມຕໍ່ກັບອິນເຕີເນັດຂອງທ່ານ. ຖ້າຫາກວ່າທ່ານສາມາດເຊື່ອມຕໍ່ກັບອິນເຕີເນັດໄດ້ແມ່ນ ບໍລິການພາບຖ່າຍຫນ້າຈໍຂອງ Firefox ອາດຈະເກີດມີບັນຫາຊົ່ວຄາວ."
+  },
+  "loginErrorDetails": {
+    "message": "ພວກເຮົາບໍ່ສາມາດບັນທຶກພາບຖ່າຍຂອງທ່ານໄດ້ ເພາະວ່າບໍລິການພາບຖ່າຍຫນ້າຈໍຂອງ Firefox ໄດ້ເກີດມີບັນຫາ. ກະລູນາລອງໃຫມ່ອີກຄັ້ງ."
+  },
   "unshootablePageErrorTitle": {
     "message": "ພວກເຮົາບໍ່ສາມາດຖ່າຍຮູບຫນ້າຈໍຂອງຫນ້ານີ້ໄດ້."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ນີ້ບໍ່ແມ່ນຫນ້າເວັບມາດຕະຖານ, ສະນັ້ນທ່ານຈຶ່ງບໍ່ສາມາດຖ່າຍພາບຫນ້າຈໍໄດ້."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "ທ່ານບໍ່ສາມາດຖ່າຍພາບຫນ້າຈໍຂອງ Firefox ໄດ້!"
+  },
+  "genericErrorTitle": {
+    "message": "ໂອ! Firefox Screenshots ລວນ."
+  },
+  "genericErrorDetails": {
+    "message": "ພວກເຮົາບໍ່ແນ່ໃຈວ່າມັນຫາກະເກີດຫຍັງຂື້ນ. ກະລຸນາລອງໃຫມ່ອີກຄັ້ງ ຫລື ຖ່າຍພາບຫນ້າຈໍອື່ນລອງເບິງ"
+  },
+  "tourBodyOne": {
+    "message": "ຖ່າຍ, ບັນທຶກ ແລະ ແບ່ງປັນພາບຫນ້າຈໍໂດຍບໍ່ຕ້ອງອອກຈາກ Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "ຖ່າຍພາບຕາມທີ່ທ່ານຕ້ອງການ"
+  },
+  "tourBodyTwo": {
+    "message": "ຄິກ ຫລື ລາກເພື່ອຖ່າຍພາບສະເພາະບາງສ່ວນຂອງຫນ້າເວັບ. ພ້ອມດຽວກັນນັ້ນທ່ານຍັງສາມາດເລື່ອນມາເພື່ອເນັ້ນພາບທີ່ທ່ານເລືອກ."
+  },
+  "tourHeaderThree": {
+    "message": "ຕາມທີ່ທ່ານມັກ"
+  },
+  "tourBodyThree": {
+    "message": "ບັນທຶກຮູບພາບທີ່ທ່ານໄດ້ຄັອບເອົາໄວ້ລົງໄປໄວ້ໃນເວັບເພື່ອເຮັດໃຫ້ແບ່ງປັນໄດ້ງ່າຍ ຫລື ດາວໂຫລດໄປໄວ້ໃນຄອມພິວເຕີຂອງທ່ານ. ທ່ານຍັງສາມາດຄິກໃສ່ໃນປຸ່ມກົດ \"ຮູບພາບຂອງຂ້ອຍ\" ເພື່ອຊອກຫາຮູບພາບທັງຫມົດທີ່ທ່ານໄດ້ຖ່າຍເອົາໄວ້."
+  },
+  "tourHeaderFour": {
+    "message": "ຖ່າຍພາບວິນໂດ ຫລື ຫມົດທັ້ງຫນ້າ"
+  },
+  "tourBodyFour": {
+    "message": "ເລືອກປຸ່ມກົດທີ່ຢູ່ເທິງເບື້ອງຂວາມືເພື່ອຈັບພາບໃນບໍລິເວນທີ່ເບິງເຫັນໄດ້ໃນວິນໂດ ຫລື ເພື່ອຈັບພາບທັງຫມົດໃນຫນ້າເວັບ."
   },
   "tourSkip": {
     "message": "ຂ້າມໄປ"
@@ -34,5 +102,22 @@
   },
   "tourDone": {
     "message": "ສຳເລັດ"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "ການນຳໃຊ້ Firefox Screenshots ແມ່ນທ່ານໄດ້ຍອມຮັບເງືອນໄຂການໃຫ້ບໍລິການຂອງ Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ ແລະ $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "ຂໍ້ກຳນົດ"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ຄຳເຕືອນກ່ຽວກັບຄວາມເປັນສ່ວນຕົວ"
   }
 }

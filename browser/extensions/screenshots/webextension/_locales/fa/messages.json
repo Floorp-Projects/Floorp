@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "انجام شد"
   },
-  "termsAndPrivacyNotice": {
-    "message": "با استفاده از سرویسِ تصاویرِ صفحهٔ فایرفاکس، شما با $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$ موافقت می‌کنید.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "با استفاده از سرویس تصاویرِ صفحه فایرفاکس، شما با شرایط سرویس‌های ابری فایرفاکس $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$ موافقت می‌کنید.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

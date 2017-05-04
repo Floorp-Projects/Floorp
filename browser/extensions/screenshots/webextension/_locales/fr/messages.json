@@ -65,7 +65,7 @@
     "message": "Vous ne pouvez pas effectuer une capture d’écran d’une page Firefox Screenshots."
   },
   "genericErrorTitle": {
-    "message": "Firefox Screenshots semble avoir un petit problème."
+    "message": "Firefox Screenshots semble avoir un problème."
   },
   "genericErrorDetails": {
     "message": "Un problème non identifié est survenu. Vous pouvez réessayer ou effectuer une capture d’écran d’une autre page."
@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Terminé"
   },
-  "termsAndPrivacyNotice": {
-    "message": "En utilisant Firefox Screenshots, vous acceptez les $TERMSANDPRIVACYNOTICETERMSLINK$ et la $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Screenshots.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "En utilisant Firefox Screenshots, vous acceptez les $TERMSANDPRIVACYNOTICETERMSLINK$ et la $TERMSANDPRIVACYNOTICEPRIVACYLINK$ des services en ligne de Firefox.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

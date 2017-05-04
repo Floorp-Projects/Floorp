@@ -1,0 +1,38 @@
+{
+  "addonDescription": {
+    "message": "Realizează decupaje și capturi de ecran de pe web și salvează-le temporar sau permanent."
+  },
+  "contextMenuLabel": {
+    "message": "Realizează o captură de ecran"
+  },
+  "myShotsLink": {
+    "message": "Capturile mele"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Salvează"
+  },
+  "cancelScreenshot": {
+    "message": "Renunță"
+  },
+  "downloadScreenshot": {
+    "message": "Descarcă"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link copiat"
+  },
+  "tourSkip": {
+    "message": "OMITE"
+  },
+  "tourNext": {
+    "message": "Diapozitivul următor"
+  },
+  "tourPrevious": {
+    "message": "Diapozitivul anterior"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termenii"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Politica de confidenţialitate"
+  }
+}

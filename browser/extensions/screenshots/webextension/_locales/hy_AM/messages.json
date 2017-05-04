@@ -102,5 +102,22 @@
   },
   "tourDone": {
     "message": "Պատրաստ է"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Օգտագործելով Firefox Screenshots-ը՝ դուք ընդունում եք Firefox Cloud ծառայությունների $TERMSANDPRIVACYNOTICETERMSLINK$ը և $TERMSANDPRIVACYNOTICEPRIVACYLINK$ը:",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Պայմաններ"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Գաղտնիության ծանուցում"
   }
 }

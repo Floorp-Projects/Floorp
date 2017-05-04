@@ -102,5 +102,22 @@
   },
   "tourDone": {
     "message": "Fæto"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Se ti deuvi Firefox Screenshots, ti e d'acordio con $TERMSANDPRIVACYNOTICETERMSLINK$ e $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Firefox Cloud Services.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termini"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Informativa in sciâ privacy"
   }
 }

@@ -1,9 +1,9 @@
-/* globals browser, console, XMLHttpRequest, Image, document, setTimeout, navigator */
-/* globals selectorLoader, analytics, communication, catcher, makeUuid, auth, senderror */
+/* globals browser, XMLHttpRequest, Image, document, setTimeout, navigator */
+/* globals selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror */
 
 "use strict";
 
-this.main = (function () {
+this.main = (function() {
   let exports = {};
 
   const pasteSymbol = (window.navigator.platform.match(/Mac/i)) ? "\u2318" : "Ctrl";
@@ -15,8 +15,8 @@ this.main = (function () {
   let hasSeenOnboarding;
 
   browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
-    hasSeenOnboarding = !! result.hasSeenOnboarding;
-    if (! hasSeenOnboarding) {
+    hasSeenOnboarding = !!result.hasSeenOnboarding;
+    if (!hasSeenOnboarding) {
       setIconActive(false, null);
       // Note that the branded name 'Firefox Screenshots' is not localized:
       browser.browserAction.setTitle({
@@ -27,12 +27,12 @@ this.main = (function () {
     log.error("Error getting hasSeenOnboarding:", error);
   });
 
-  exports.setBackend = function (newBackend) {
+  exports.setBackend = function(newBackend) {
     backend = newBackend;
     backend = backend.replace(/\/*$/, "");
   };
 
-  exports.getBackend = function () {
+  exports.getBackend = function() {
     return backend;
   };
 
@@ -52,9 +52,9 @@ this.main = (function () {
   }
 
   function setIconActive(active, tabId) {
-    let path = active ? "icons/icon-highlight-38.png" : "icons/icon-38.png";
-    if ((! hasSeenOnboarding) && ! active) {
-      path = "icons/icon-starred-38.png";
+    let path = active ? "icons/icon-highlight-32.svg" : "icons/icon-32.svg";
+    if ((!hasSeenOnboarding) && !active) {
+      path = "icons/icon-starred-32.svg";
     }
     browser.browserAction.setIcon({path, tabId});
   }
@@ -72,13 +72,25 @@ this.main = (function () {
       });
   }
 
+  function startSelectionWithOnboarding(tab) {
+    return analytics.refreshTelemetryPref().then(() => {
+      return selectorLoader.testIfLoaded(tab.id);
+    }).then((isLoaded) => {
+      if (!isLoaded) {
+        sendEvent("start-shot", "site-request");
+        setIconActive(true, tab.id);
+        selectorLoader.toggle(tab.id, false);
+      }
+    });
+  }
+
   function shouldOpenMyShots(url) {
     return /^about:(?:newtab|blank)/i.test(url) || /^resource:\/\/activity-streams\//i.test(url);
   }
 
   browser.browserAction.onClicked.addListener(catcher.watchFunction((tab) => {
     if (shouldOpenMyShots(tab.url)) {
-      if (! hasSeenOnboarding) {
+      if (!hasSeenOnboarding) {
         catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
           sendEvent("goto-onboarding", "selection-button");
           return forceOnboarding();
@@ -98,7 +110,7 @@ this.main = (function () {
             const event = active ? "start-shot" : "cancel-shot";
             sendEvent(event, "toolbar-button");
           }, (error) => {
-            if ((! hasSeenOnboarding) && error.popupMessage == "UNSHOOTABLE_PAGE") {
+            if ((!hasSeenOnboarding) && error.popupMessage == "UNSHOOTABLE_PAGE") {
               sendEvent("goto-onboarding", "selection-button");
               return forceOnboarding();
             }
@@ -126,7 +138,7 @@ this.main = (function () {
   });
 
   browser.contextMenus.onClicked.addListener(catcher.watchFunction((info, tab) => {
-    if (! tab) {
+    if (!tab) {
       // Not in a page/tab context, ignore
       return;
     }
@@ -147,14 +159,14 @@ this.main = (function () {
 
   function isShotOrMyShotPage(url) {
     // It's okay to take a shot of any pages except shot pages and My Shots
-    if (! url.startsWith(backend)) {
+    if (!url.startsWith(backend)) {
       return false;
     }
-    let path = url.substr(backend.length).replace(/^\/*/, "").replace(/#.*/, "").replace(/\?.*/, "");
+    let path = url.substr(backend.length).replace(/^\/*/, "").replace(/[?#].*/, "");
     if (path == "shots") {
       return true;
     }
-    if (/^[^/]+\/[^/]+$/.test(url)) {
+    if (/^[^/]+\/[^/]+$/.test(path)) {
       // Blocks {:id}/{:domain}, but not /, /privacy, etc
       return true;
     }
@@ -173,15 +185,28 @@ this.main = (function () {
     return badDomains.includes(domain);
   }
 
+  function enableButton(tabId) {
+    browser.browserAction.enable(tabId);
+    // We have to manually toggle the icon state, because disabled toolbar
+    // buttons aren't automatically dimmed for WebExtensions on Windows or
+    // Linux (bug 1204609).
+    setIconActive(false, tabId);
+  }
+
+  function disableButton(tabId) {
+    browser.browserAction.disable(tabId);
+    setIconActive(true, tabId);
+  }
+
   browser.tabs.onUpdated.addListener(catcher.watchFunction((id, info, tab) => {
     if (info.url && tab.active) {
       if (urlEnabled(info.url)) {
-        browser.browserAction.enable(tab.id);
+        enableButton(tab.id);
       } else if (hasSeenOnboarding) {
-        browser.browserAction.disable(tab.id);
+        disableButton(tab.id);
       }
     }
-  }));
+  }, true));
 
   browser.tabs.onActivated.addListener(catcher.watchFunction(({tabId, windowId}) => {
     catcher.watchPromise(browser.tabs.get(tabId).then((tab) => {
@@ -190,11 +215,11 @@ this.main = (function () {
         return;
       }
       if (urlEnabled(tab.url)) {
-        browser.browserAction.enable(tabId);
+        enableButton(tabId);
       } else if (hasSeenOnboarding) {
-        browser.browserAction.disable(tabId);
+        disableButton(tabId);
       }
-    }));
+    }), true);
   }));
 
   communication.register("sendEvent", (sender, ...args) => {
@@ -227,9 +252,23 @@ this.main = (function () {
     const binary = atob(info.url.split(',')[1]); // just the base64 data
     const data = Uint8Array.from(binary, char => char.charCodeAt(0))
     const blob = new Blob([data], {type: "image/png"})
+    let url = URL.createObjectURL(blob);
+    let downloadId;
+    let onChangedCallback = catcher.watchFunction(function(change) {
+      if (!downloadId || downloadId != change.id) {
+        return;
+      }
+      if (change.state && change.state.current != "in_progress") {
+        URL.revokeObjectURL(url);
+        browser.downloads.onChanged.removeListener(onChangedCallback);
+      }
+    });
+    browser.downloads.onChanged.addListener(onChangedCallback)
     return browser.downloads.download({
-      url: URL.createObjectURL(blob),
+      url,
       filename: info.filename
+    }).then((id) => {
+      downloadId = id;
     });
   });
 
@@ -238,7 +277,7 @@ this.main = (function () {
   });
 
   catcher.watchPromise(communication.sendToBootstrap("getOldDeviceInfo").then((deviceInfo) => {
-    if (deviceInfo === communication.NO_BOOTSTRAP || ! deviceInfo) {
+    if (deviceInfo === communication.NO_BOOTSTRAP || !deviceInfo) {
       return;
     }
     deviceInfo = JSON.parse(deviceInfo);
@@ -270,6 +309,21 @@ this.main = (function () {
     senderror.showError({
       popupMessage: "UNSHOOTABLE_PAGE"
     });
+  });
+
+  // Note: this signal is only needed until bug 1357589 is fixed.
+  communication.register("openTermsPage", () => {
+    return catcher.watchPromise(browser.tabs.create({url: "https://www.mozilla.org/about/legal/terms/services/"}));
+  });
+
+  // Note: this signal is also only needed until bug 1357589 is fixed.
+  communication.register("openPrivacyPage", () => {
+    return catcher.watchPromise(browser.tabs.create({url: "https://www.mozilla.org/privacy/firefox-cloud/"}));
+  });
+
+  // A Screenshots page wants us to start/force onboarding
+  communication.register("requestOnboarding", (sender) => {
+    return startSelectionWithOnboarding(sender.tab);
   });
 
   return exports;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "6.3.0",
+  "version": "6.6.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -21,8 +21,8 @@
   },
   "browser_action": {
     "default_icon": {
-      "19": "icons/icon-19.png",
-      "38": "icons/icon-38.png"
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg"
     },
     "default_title": "__MSG_contextMenuLabel__",
     "browser_style": false
@@ -64,6 +64,7 @@
     "icons/download.svg",
     "icons/icon-256.png",
     "icons/back.svg",
+    "icons/back-highlight.svg",
     "icons/menu-fullpage.svg",
     "icons/menu-visible.svg",
     "icons/menu-myshot.svg",
@@ -71,7 +72,8 @@
     "icons/onboarding-2.png",
     "icons/onboarding-3.png",
     "icons/onboarding-4.png",
-    "icons/done.svg"
+    "icons/done.svg",
+    "icons/icon-welcome-face-without-eyes.svg"
   ],
   "permissions": [
     "activeTab",

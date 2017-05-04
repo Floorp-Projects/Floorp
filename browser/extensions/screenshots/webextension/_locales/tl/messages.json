@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Tapos"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Sa pamamagitan ng paggamit ng Firefox screenshot, sumasang-ayon ka sa mga screenshot $TERMSANDPRIVACYNOTICETERMSLINK$ at $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Sa paggamit ng Firefox Screenshots, tinatanggap mo ang Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ at $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
