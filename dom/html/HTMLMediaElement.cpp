@@ -4580,8 +4580,8 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
 nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                                        nsIStreamListener** aListener)
 {
-  NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
-  NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
+  MOZ_DIAGNOSTIC_ASSERT(mLoadingSrc, "mLoadingSrc must already be set");
+  MOZ_DIAGNOSTIC_ASSERT(!mDecoder, "Shouldn't have a decoder");
 
   nsAutoCString mimeType;
 
