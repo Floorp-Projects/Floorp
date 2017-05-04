@@ -2302,7 +2302,7 @@ nsHttpConnection::CheckForTraffic(bool check)
 }
 
 nsAHttpTransaction *
-nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
+nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTransport)
 {
     MOZ_ASSERT(!mCurrentBytesRead);
 
@@ -2314,7 +2314,7 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
         DontReuse();
         mUsingSpdyVersion = 0;
         if (mSpdySession) {
-            mSpdySession->Finish0RTT(true, true);
+            Unused << mSpdySession->Finish0RTT(true, true);
         }
         mSpdySession = nullptr;
     } else {
@@ -2323,6 +2323,7 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
         if (NS_SUCCEEDED(mTransaction->RestartOnFastOpenError())) {
             trans = mTransaction;
         }
+        mTransaction->SetConnection(nullptr);
     }
 
     {
@@ -2331,6 +2332,14 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError()
     }
 
     mTransaction = nullptr;
+    if (!aCloseSocketTransport) {
+        if (mSocketOut) {
+            mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
+        }
+        mSocketTransport->SetEventSink(nullptr, nullptr);
+        mSocketTransport->SetSecurityCallbacks(nullptr);
+        mSocketTransport = nullptr;
+    }
     Close(NS_ERROR_NET_RESET);
     return trans;
 }
