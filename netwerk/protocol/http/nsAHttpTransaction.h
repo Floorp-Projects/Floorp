@@ -198,6 +198,8 @@ public:
         MOZ_ASSERT(false);
         return 0;
     }
+
+    virtual void SetFastOpenStatus(uint8_t aStatus) {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)

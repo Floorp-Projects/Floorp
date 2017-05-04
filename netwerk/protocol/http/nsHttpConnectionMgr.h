@@ -376,8 +376,9 @@ private:
 
         bool FastOpenEnabled() override;
         nsresult StartFastOpen(PRFileDesc *) override;
-        void FastOpenConnected(nsresult) override;
+        void SetFastOpenConnected(nsresult) override;
         void FastOpenNotSupported() override;
+        void SetFastOpenStatus(uint8_t tfoStatus) override;
     private:
         nsresult SetupConn(nsIAsyncOutputStream *out,
                            PRFileDesc *aFastOpen);

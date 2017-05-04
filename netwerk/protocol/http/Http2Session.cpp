@@ -3158,6 +3158,20 @@ Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged)
   return NS_OK;
 }
 
+void
+Http2Session::SetFastOpenStatus(uint8_t aStatus)
+{
+  LOG3(("Http2Session::SetFastOpenStatus %d [this=%p]",
+        aStatus, this));
+
+  for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
+    Http2Stream *stream = mStreamIDHash.Get(m0RTTStreams[i]);
+    if (stream) {
+      stream->Transaction()->SetFastOpenStatus(aStatus);
+    }
+  }
+}
+
 nsresult
 Http2Session::ProcessConnectedPush(Http2Stream *pushConnectedStream,
                                    nsAHttpSegmentWriter * writer,

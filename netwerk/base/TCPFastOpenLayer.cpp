@@ -345,8 +345,8 @@ AttachTCPFastOpenIOLayer(PRFileDesc *fd)
 }
 
 void
-TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
-                  bool *fastOpenNotSupported)
+TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
+                  bool &fastOpenNotSupported, uint8_t &tfoStatus)
 {
   PRFileDesc *tfoFd = PR_GetIdentitiesLayer(fd, sTCPFastOpenLayerIdentity);
   MOZ_RELEASE_ASSERT(tfoFd);
@@ -356,7 +356,8 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
 
   MOZ_ASSERT(secret->mState == TCPFastOpenSecret::COLLECT_DATA_FOR_FIRST_PACKET);
 
-  *fastOpenNotSupported = false;
+  fastOpenNotSupported = false;
+  tfoStatus = TFO_NOT_TRIED;
   PRErrorCode result = 0;
 
   // If we do not have data to send with syn packet or nspr version does not
@@ -380,7 +381,7 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
         // sendto is not implemented, it is equal to _PR_InvalidInt!
         // We will disable Fast Open.
         SOCKET_LOG(("TCPFastOpenFinish - sendto not implemented.\n"));
-        *fastOpenNotSupported = true;
+        fastOpenNotSupported = true;
     }
   } else {
     // We have some data ready in the buffer we will send it with the syn
@@ -401,6 +402,7 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
                 secret->mFirstPacketBuf + rv,
                 secret->mFirstPacketBufLen);
       }
+      tfoStatus = TFO_DATA_SENT;
     } else {
       result = PR_GetError();
       SOCKET_LOG(("TCPFastOpenFinish - sendto error=%d.\n", result));
@@ -408,7 +410,7 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
       if (result == PR_NOT_IMPLEMENTED_ERROR || // When a windows version does not support Fast Open it will return this error.
           result == PR_NOT_TCP_SOCKET_ERROR) { // SendTo will return PR_NOT_TCP_SOCKET_ERROR if TCP Fast Open is turned off on Linux.
         // We can call connect again.
-        *fastOpenNotSupported = true;
+        fastOpenNotSupported = true;
         rv = (tfoFd->lower->methods->connect)(tfoFd->lower, &secret->mAddr,
                                               PR_INTERVAL_NO_WAIT);
 
@@ -417,6 +419,8 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
         } else {
           result = PR_GetError();
         }
+      } else {
+        tfoStatus = TFO_TRIED;
       }
     }
   }
@@ -431,7 +435,7 @@ TCPFastOpenFinish(PRFileDesc * fd, PRErrorCode *err,
     // state to CONNECT anyway.
     secret->mState = TCPFastOpenSecret::CONNECTED;
   }
-  *err = result;
+  err = result;
 }
 
 /* This function returns the size of the remaining free space in the

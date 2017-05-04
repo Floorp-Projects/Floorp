@@ -3538,7 +3538,7 @@ nsHalfOpenSocket::StartFastOpen(PRFileDesc *fd)
 
 void
 nsHttpConnectionMgr::
-nsHalfOpenSocket::FastOpenConnected(nsresult aError)
+nsHalfOpenSocket::SetFastOpenConnected(nsresult aError)
 {
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
 
@@ -3593,6 +3593,13 @@ nsHalfOpenSocket::FastOpenConnected(nsresult aError)
     }
 
     mConnectionNegotiatingFastOpen = nullptr;
+}
+
+void
+nsHttpConnectionMgr::
+nsHalfOpenSocket::SetFastOpenStatus(uint8_t tfoStatus)
+{
+    mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
 }
 
 void
