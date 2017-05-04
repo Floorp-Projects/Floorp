@@ -235,8 +235,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/Manifest.jsm"},
   // Bug 1351089
   {file: "resource://gre/modules/PresentationDeviceInfoManager.jsm"},
-  // Bug 1351091
-  {file: "resource://gre/modules/Profiler.jsm"},
   // Bug 1351658
   {file: "resource://gre/modules/PropertyListUtils.jsm", platforms: ["linux", "win"]},
   // Bug 1351097
