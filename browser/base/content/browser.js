@@ -2931,6 +2931,10 @@ var gMenuButtonUpdateBadge = {
         this.clearCallbacks();
         this.showUpdateAvailableNotification(update, false);
         break;
+      case "cant-apply":
+        this.clearCallbacks();
+        this.showManualUpdateNotification(update, false);
+        break;
     }
   },
 
