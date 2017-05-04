@@ -378,7 +378,6 @@ hb_ot_shape_setup_masks_fraction (hb_ot_shape_context_t *c)
     post_mask = c->plan->numr_mask | c->plan->frac_mask;
   }
 
-  /* TODO look in pre/post context text also. */
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = 0; i < count; i++)
