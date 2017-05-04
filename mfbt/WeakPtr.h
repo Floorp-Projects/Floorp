@@ -112,11 +112,8 @@
     _empty = !p; \
   } while (false)
 #define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() \
-  do { \
-    if (!(_empty || _owningThread == std::this_thread::get_id())) { \
-      WeakPtrTraits<T>::AssertSafeToAccessFromNonOwningThread(); \
-    } \
-  } while (false)
+  MOZ_DIAGNOSTIC_ASSERT(_empty || _owningThread == std::this_thread::get_id(), \
+                        "WeakPtr used on multiple threads")
 #define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
   (that)->AssertThreadSafety();
 
@@ -142,15 +139,6 @@ template <typename T> class SupportsWeakPtr;
 #else
 #define MOZ_DECLARE_WEAKREFERENCE_TYPENAME(T)
 #endif
-
-template<class T>
-struct WeakPtrTraits
-{
-  static void AssertSafeToAccessFromNonOwningThread()
-  {
-    MOZ_DIAGNOSTIC_ASSERT(false, "WeakPtr accessed from multiple threads");
-  }
-};
 
 namespace detail {
 
