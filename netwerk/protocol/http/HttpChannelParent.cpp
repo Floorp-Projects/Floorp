@@ -590,7 +590,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
       bool chooseAppCache = false;
       // This works because we've already called SetNotificationCallbacks and
       // done mPBOverride logic by this point.
-      chooseAppCache = NS_ShouldCheckAppCache(principal, NS_UsePrivateBrowsing(mChannel));
+      chooseAppCache = NS_ShouldCheckAppCache(principal);
 
       appCacheChan->SetChooseApplicationCache(chooseAppCache);
     }
