@@ -4,19 +4,11 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.media.AudioFocusAgent.State;
 
 import android.media.AudioManager;
 
-import com.robotium.solo.Condition;
-
-public class testAudioFocus extends BaseTest {
-    private boolean mPrevTabAudioPlaying = false;
-
+public class testAudioFocus extends MediaPlaybackTest {
     public void testAudioFocus() {
         info("- wait for gecko ready -");
         blockForGeckoReady();
@@ -131,53 +123,12 @@ public class testAudioFocus extends BaseTest {
         final String BLANK_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         addTab(BLANK_URL);
 
-        info("-  should still own the audio focus -");
+        info("- should still own the audio focus -");
         mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
                      State.OWN_FOCUS,
                      "Should own audio focus.");
 
         info("- close tab -");
         closeAllTabs();
-    }
-
-    /**
-     * Testing tool functions
-     */
-    private void info(String msg) {
-        mAsserter.dumpLog(msg);
-    }
-
-    private AudioFocusAgent getAudioFocusAgent() {
-        return AudioFocusAgent.getInstance();
-    }
-
-    private void requestAudioFocus() {
-        getAudioFocusAgent().notifyStartedPlaying();
-        if (getAudioFocusAgent().getAudioFocusState() == State.OWN_FOCUS) {
-            return;
-        }
-
-        // Request audio focus might fail, depend on the andriod's audio mode.
-        waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                getAudioFocusAgent().notifyStartedPlaying();
-                return getAudioFocusAgent().getAudioFocusState() == State.OWN_FOCUS;
-            }
-        }, MAX_WAIT_MS);
-    }
-
-    private void waitUntilTabAudioPlayingStateChanged() {
-        final Tab tab = Tabs.getInstance().getSelectedTab();
-        waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                if (tab.isAudioPlaying() != mPrevTabAudioPlaying) {
-                    mPrevTabAudioPlaying = tab.isAudioPlaying();
-                    return true;
-                }
-                return false;
-            }
-        }, MAX_WAIT_MS);
     }
 }
