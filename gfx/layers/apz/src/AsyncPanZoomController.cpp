@@ -911,6 +911,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  const ScrollThumbData& thumbData = node->GetScrollThumbData();
+
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
@@ -927,7 +929,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
                         GetAxisStart(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
 
   CSSCoord scrollMax = GetAxisLength(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
-  scrollMax -= aDragMetrics.mScrollThumbLength;
+  scrollMax -= thumbData.mThumbLength;
 
   float scrollPercent = mousePosition / scrollMax;
 
