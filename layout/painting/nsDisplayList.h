@@ -3072,8 +3072,7 @@ public:
                                          nsDisplayList* aList,
                                          bool aAllowWillPaintBorderOptimization = true,
                                          nsStyleContext* aStyleContext = nullptr,
-                                         const nsRect& aBackgroundOriginRect = nsRect(),
-                                         nsIFrame* aSecondaryReferenceFrame = nullptr);
+                                         const nsRect& aBackgroundOriginRect = nsRect());
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -3175,25 +3174,6 @@ protected:
   bool mShouldFixToViewport;
 };
 
-enum class TableType : uint8_t {
-  TABLE,
-  TABLE_COL,
-  TABLE_COL_GROUP,
-  TABLE_ROW,
-  TABLE_ROW_GROUP,
-  TABLE_CELL,
-
-  TABLE_TYPE_MAX
-};
-
-enum class TableTypeBits : uint8_t {
-  COUNT = 3
-};
-
-static_assert(
-  static_cast<uint8_t>(TableType::TABLE_TYPE_MAX) < (1 << (static_cast<uint8_t>(TableTypeBits::COUNT) + 1)),
-  "TableType cannot fit with TableTypeBits::COUNT");
-TableType GetTableTypeFromFrame(nsIFrame* aFrame);
 
 /**
  * A display item to paint the native theme background for a frame.
@@ -4143,7 +4123,7 @@ public:
     return mAnimatedGeometryRootForScrollMetadata;
   }
 
-protected:
+private:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList, uint32_t aIndex);
@@ -4152,27 +4132,6 @@ protected:
   AnimatedGeometryRoot* mAnimatedGeometryRootForScrollMetadata;
   uint32_t mIndex;
   bool mIsFixedBackground;
-};
-
-class nsDisplayTableFixedPosition : public nsDisplayFixedPosition
-{
-public:
-  static nsDisplayTableFixedPosition* CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
-                                                               nsIFrame* aFrame,
-                                                               nsDisplayBackgroundImage* aImage,
-                                                               uint32_t aIndex,
-                                                               nsIFrame* aAncestorFrame);
-
-  virtual uint32_t GetPerFrameKey() override {
-    return (mIndex << (nsDisplayItem::TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
-           (static_cast<uint8_t>(mTableType) << nsDisplayItem::TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
-  }
-protected:
-  nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              nsDisplayList* aList, uint32_t aIndex, nsIFrame* aAncestorFrame);
-
-  TableType mTableType;
 };
 
 /**
