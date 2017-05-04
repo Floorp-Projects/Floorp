@@ -45,6 +45,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
 //-------------------------------------------------------------------------
 //
