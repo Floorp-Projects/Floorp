@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/hawkclient.js");
 
 const SECOND_MS = 1000;
@@ -490,9 +489,9 @@ function getTimestampDelta(authHeader, now = Date.now()) {
 }
 
 function deferredStop(server) {
-  let deferred = Promise.defer();
-  server.stop(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    server.stop(resolve);
+  });
 }
 
 function run_test() {

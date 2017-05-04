@@ -35,16 +35,19 @@ public:
   VRLayerChild(uint32_t aVRDisplayID, VRManagerChild* aVRManagerChild);
   void Initialize(dom::HTMLCanvasElement* aCanvasElement);
   void SubmitFrame();
+  bool IsIPCOpen();
 
 protected:
   virtual ~VRLayerChild();
   void ClearSurfaces();
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   uint32_t mVRDisplayID;
 
   RefPtr<dom::HTMLCanvasElement> mCanvasElement;
   RefPtr<layers::SharedSurfaceTextureClient> mShSurfClient;
   RefPtr<layers::TextureClient> mFront;
+  bool mIPCOpen;
 };
 
 } // namespace gfx

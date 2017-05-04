@@ -12,7 +12,6 @@ this.EXPORTED_SYMBOLS = ["FxAccountsOAuthGrantClient", "FxAccountsOAuthGrantClie
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-common/rest.js");

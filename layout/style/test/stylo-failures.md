@@ -117,6 +117,8 @@ to mochitest command.
   * test_initial_storage.html `grid` [*]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
   * test_value_storage.html `'grid` [*]
+* Some issue with font-feature-settings:
+  * test_inherit_computation.html `value for 'font'` [8]
 * Unimplemented prefixed properties:
   * -moz-transform: need different parsing rules servo/servo#16003
     * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
@@ -130,12 +132,9 @@ to mochitest command.
     * test_specified_value_serialization.html `bug-721136` [1]
 * Properties implemented but not in geckolib:
   * font-feature-settings property servo/servo#15975
-    * test_compute_data_with_start_struct.html `font-feature-settings` [2]
-    * test_inherit_computation.html `font-feature-settings` [8]
-    * test_inherit_storage.html `font-feature-settings` [12]
-    * test_initial_computation.html `font-feature-settings` [4]
-    * test_initial_storage.html `font-feature-settings` [6]
-    * test_value_storage.html `font-feature-settings` [112]
+    * test_inherit_storage.html `font-feature-settings` [2]
+    * test_initial_storage.html `font-feature-settings` [1]
+    * test_value_storage.html `font-feature-settings` [118]
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
 * Stylesheet cloning is somehow busted bug 1348481

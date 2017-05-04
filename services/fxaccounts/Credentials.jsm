@@ -17,7 +17,6 @@ const {utils: Cu, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -94,42 +93,41 @@ this.Credentials = Object.freeze({
   },
 
   setup(emailInput, passwordInput, options = {}) {
-    let deferred = Promise.defer();
-    log.debug("setup credentials for " + emailInput);
+    return new Promise(resolve => {
+      log.debug("setup credentials for " + emailInput);
 
-    let hkdfSalt = options.hkdfSalt || HKDF_SALT;
-    let hkdfLength = options.hkdfLength || HKDF_LENGTH;
-    let hmacLength = options.hmacLength || HMAC_LENGTH;
-    let hmacAlgorithm = options.hmacAlgorithm || HMAC_ALGORITHM;
-    let stretchedPWLength = options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
-    let pbkdf2Rounds = options.pbkdf2Rounds || PBKDF2_ROUNDS;
+      let hkdfSalt = options.hkdfSalt || HKDF_SALT;
+      let hkdfLength = options.hkdfLength || HKDF_LENGTH;
+      let hmacLength = options.hmacLength || HMAC_LENGTH;
+      let hmacAlgorithm = options.hmacAlgorithm || HMAC_ALGORITHM;
+      let stretchedPWLength = options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
+      let pbkdf2Rounds = options.pbkdf2Rounds || PBKDF2_ROUNDS;
 
-    let result = {};
+      let result = {};
 
-    let password = CommonUtils.encodeUTF8(passwordInput);
-    let salt = this.keyWordExtended("quickStretch", emailInput);
+      let password = CommonUtils.encodeUTF8(passwordInput);
+      let salt = this.keyWordExtended("quickStretch", emailInput);
 
-    let runnable = () => {
-      let start = Date.now();
-      let quickStretchedPW = CryptoUtils.pbkdf2Generate(
-          password, salt, pbkdf2Rounds, stretchedPWLength, hmacAlgorithm, hmacLength);
+      let runnable = () => {
+        let start = Date.now();
+        let quickStretchedPW = CryptoUtils.pbkdf2Generate(
+            password, salt, pbkdf2Rounds, stretchedPWLength, hmacAlgorithm, hmacLength);
 
-      result.quickStretchedPW = quickStretchedPW;
+        result.quickStretchedPW = quickStretchedPW;
 
-      result.authPW =
-        CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("authPW"), hkdfLength);
+        result.authPW =
+          CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("authPW"), hkdfLength);
 
-      result.unwrapBKey =
-        CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("unwrapBkey"), hkdfLength);
+        result.unwrapBKey =
+          CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("unwrapBkey"), hkdfLength);
 
-      log.debug("Credentials set up after " + (Date.now() - start) + " ms");
-      deferred.resolve(result);
-    }
+        log.debug("Credentials set up after " + (Date.now() - start) + " ms");
+        resolve(result);
+      }
 
-    Services.tm.dispatchToMainThread(runnable);
-    log.debug("Dispatched thread for credentials setup crypto work");
-
-    return deferred.promise;
+      Services.tm.dispatchToMainThread(runnable);
+      log.debug("Dispatched thread for credentials setup crypto work");
+    });
   }
 });
 
