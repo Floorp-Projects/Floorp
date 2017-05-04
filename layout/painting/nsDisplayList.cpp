@@ -3062,11 +3062,16 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      const nsRect& aBackgroundRect,
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization,
-                                                     nsStyleContext* aStyleContext)
+                                                     nsStyleContext* aStyleContext,
+                                                     const nsRect& aBackgroundOriginRect)
 {
   nsStyleContext* bgSC = aStyleContext;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
+  nsRect bgOriginRect = bgRect;
+  if (!aBackgroundOriginRect.IsEmpty()) {
+    bgOriginRect = aBackgroundOriginRect + aBuilder->ToReferenceFrame(aFrame);
+  }
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
   if (!isThemed) {
@@ -3175,7 +3180,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage::InitData bgData =
-      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgRect, bg,
+      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
                                             LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
 
     if (bgData.shouldFixToViewport) {
