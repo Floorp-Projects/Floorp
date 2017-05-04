@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 public class AudioFocusAgent {
@@ -19,14 +18,12 @@ public class AudioFocusAgent {
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAfChangeListener;
 
-    public enum State {
-        OWN_FOCUS,
-        LOST_FOCUS,
-        LOST_FOCUS_TRANSIENT,
-        LOST_FOCUS_TRANSIENT_CAN_DUCK
-    }
+    public static final String OWN_FOCUS = "own_focus";
+    public static final String LOST_FOCUS = "lost_focus";
+    public static final String LOST_FOCUS_TRANSIENT = "lost_focus_transient";
+    public static final String LOST_FOCUS_TRANSIENT_CAN_DUCK = "lost_focus_transient_can_duck";
 
-    private State mAudioFocusState = State.LOST_FOCUS;
+    private String mAudioFocusState = LOST_FOCUS;
 
     @WrapForJNI(calledFrom = "gecko")
     public static void notifyStartedPlaying() {
@@ -61,29 +58,29 @@ public class AudioFocusAgent {
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS");
                         notifyObservers("audioFocusChanged", "lostAudioFocus");
                         notifyMediaControlService(MediaControlService.ACTION_PAUSE_BY_AUDIO_FOCUS);
-                        mAudioFocusState = State.LOST_FOCUS;
+                        mAudioFocusState = LOST_FOCUS;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS_TRANSIENT");
                         notifyObservers("audioFocusChanged", "lostAudioFocusTransiently");
                         notifyMediaControlService(MediaControlService.ACTION_PAUSE_BY_AUDIO_FOCUS);
-                        mAudioFocusState = State.LOST_FOCUS_TRANSIENT;
+                        mAudioFocusState = LOST_FOCUS_TRANSIENT;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
                         notifyMediaControlService(MediaControlService.ACTION_START_AUDIO_DUCK);
-                        mAudioFocusState = State.LOST_FOCUS_TRANSIENT_CAN_DUCK;
+                        mAudioFocusState = LOST_FOCUS_TRANSIENT_CAN_DUCK;
                         break;
                     case AudioManager.AUDIOFOCUS_GAIN:
-                        if (mAudioFocusState.equals(State.LOST_FOCUS_TRANSIENT_CAN_DUCK)) {
+                        if (mAudioFocusState.equals(LOST_FOCUS_TRANSIENT_CAN_DUCK)) {
                             Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN (from DUCKING)");
                             notifyMediaControlService(MediaControlService.ACTION_STOP_AUDIO_DUCK);
-                        } else if (mAudioFocusState.equals(State.LOST_FOCUS_TRANSIENT)) {
+                        } else if (mAudioFocusState.equals(LOST_FOCUS_TRANSIENT)) {
                             Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
                             notifyObservers("audioFocusChanged", "gainAudioFocus");
                             notifyMediaControlService(MediaControlService.ACTION_RESUME_BY_AUDIO_FOCUS);
                         }
-                        mAudioFocusState = State.OWN_FOCUS;
+                        mAudioFocusState = OWN_FOCUS;
                         break;
                     default:
                 }
@@ -112,7 +109,7 @@ public class AudioFocusAgent {
     private AudioFocusAgent() {}
 
     private void requestAudioFocusIfNeeded() {
-        if (mAudioFocusState.equals(State.OWN_FOCUS)) {
+        if (mAudioFocusState.equals(OWN_FOCUS)) {
             return;
         }
 
@@ -124,33 +121,23 @@ public class AudioFocusAgent {
             "AudioFocus request granted" : "AudioFoucs request failed";
         Log.d(LOGTAG, focusMsg);
         if (result == AudioManager.AUDIOFOCUS_GAIN) {
-            mAudioFocusState = State.OWN_FOCUS;
+            mAudioFocusState = OWN_FOCUS;
         }
     }
 
     private void abandonAudioFocusIfNeeded() {
-        if (!mAudioFocusState.equals(State.OWN_FOCUS)) {
+        if (!mAudioFocusState.equals(OWN_FOCUS)) {
             return;
         }
 
         Log.d(LOGTAG, "Abandon AudioFocus");
         mAudioManager.abandonAudioFocus(mAfChangeListener);
-        mAudioFocusState = State.LOST_FOCUS;
+        mAudioFocusState = LOST_FOCUS;
     }
 
     private void notifyMediaControlService(String action) {
         Intent intent = new Intent(mContext, MediaControlService.class);
         intent.setAction(action);
         mContext.startService(intent);
-    }
-
-    @VisibleForTesting
-    public State getAudioFocusState() {
-        return mAudioFocusState;
-    }
-
-    @VisibleForTesting
-    public void changeAudioFocus(int focusChange) {
-        mAfChangeListener.onAudioFocusChange(focusChange);
     }
 }
