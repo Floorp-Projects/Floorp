@@ -540,7 +540,7 @@ impl Parameters for TimeoutsParameters {
             Some(json) => {
                 Some(try_opt!(json.as_u64(),
                               ErrorStatus::InvalidArgument,
-                              "Script timeout duration was not a signed integer"))
+                              "Page load timeout duration was not a signed integer"))
             }
             None => None,
         };
@@ -549,7 +549,7 @@ impl Parameters for TimeoutsParameters {
             Some(json) => {
                 Some(try_opt!(json.as_u64(),
                               ErrorStatus::InvalidArgument,
-                              "Script timeout duration was not a signed integer"))
+                              "Implicit timeout duration was not a signed integer"))
             }
             None => None,
         };
