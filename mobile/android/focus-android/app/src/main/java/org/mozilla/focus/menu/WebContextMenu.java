@@ -66,10 +66,10 @@ public class WebContextMenu {
                                               final @NonNull IWebView.HitTarget hitTarget) {
         navigationView.inflateMenu(R.menu.menu_browser_context);
 
-        navigationView.getMenu().findItem(R.id.menu_link_share).setEnabled(hitTarget.isLink);
-        navigationView.getMenu().findItem(R.id.menu_link_copy).setEnabled(hitTarget.isLink);
-        navigationView.getMenu().findItem(R.id.menu_image_share).setEnabled(hitTarget.isImage);
-        navigationView.getMenu().findItem(R.id.menu_image_copy).setEnabled(hitTarget.isImage);
+        navigationView.getMenu().findItem(R.id.menu_link_share).setVisible(hitTarget.isLink);
+        navigationView.getMenu().findItem(R.id.menu_link_copy).setVisible(hitTarget.isLink);
+        navigationView.getMenu().findItem(R.id.menu_image_share).setVisible(hitTarget.isImage);
+        navigationView.getMenu().findItem(R.id.menu_image_copy).setVisible(hitTarget.isImage);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
