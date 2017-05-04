@@ -28,3 +28,57 @@ DateTimeInputTypeBase::IsValueMissing() const
 
   return IsValueEmpty();
 }
+
+bool
+DateTimeInputTypeBase::IsRangeOverflow() const
+{
+  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  if (maximum.isNaN()) {
+    return false;
+  }
+
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    return false;
+  }
+
+  return value > maximum;
+}
+
+bool
+DateTimeInputTypeBase::IsRangeUnderflow() const
+{
+  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  if (minimum.isNaN()) {
+    return false;
+  }
+
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    return false;
+  }
+
+  return value < minimum;
+}
+
+bool
+DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
+{
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    if (aUseZeroIfValueNaN) {
+      value = mozilla::Decimal(0);
+    } else {
+      // The element can't suffer from step mismatch if it's value isn't a number.
+      return false;
+    }
+  }
+
+  mozilla::Decimal step = mInputElement->GetStep();
+  if (step == kStepAny) {
+    return false;
+  }
+
+  // Value has to be an integral multiple of step.
+  return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+}

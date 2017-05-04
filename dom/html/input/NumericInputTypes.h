@@ -14,6 +14,10 @@ class NumericInputTypeBase : public ::InputType
 public:
   ~NumericInputTypeBase() override {}
 
+  bool IsRangeOverflow() const override;
+  bool IsRangeUnderflow() const override;
+  bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
+
 protected:
   explicit NumericInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)
@@ -49,6 +53,8 @@ public:
   {
     return new (aMemory) RangeInputType(aInputElement);
   }
+
+  nsresult MinMaxStepAttrChanged() override;
 
 private:
   explicit RangeInputType(mozilla::dom::HTMLInputElement* aInputElement)

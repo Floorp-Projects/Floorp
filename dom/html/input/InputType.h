@@ -8,8 +8,18 @@
 #define InputType_h__
 
 #include <stdint.h>
+#include "mozilla/Decimal.h"
 #include "mozilla/UniquePtr.h"
 #include "nsString.h"
+#include "nsError.h"
+
+// This must come outside of any namespace, or else it won't overload with the
+// double based version in nsMathUtils.h
+inline mozilla::Decimal
+NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y)
+{
+  return (x - y * (x / y).floor());
+}
 
 namespace mozilla {
 namespace dom {
@@ -31,6 +41,9 @@ public:
 
   virtual ~InputType() {}
 
+  // Float value returned by GetStep() when the step attribute is set to 'any'.
+  static const mozilla::Decimal kStepAny;
+
   /**
    * Drop the reference to the input element.
    */
@@ -41,6 +54,11 @@ public:
   virtual bool IsValueMissing() const;
   virtual bool HasTypeMismatch() const;
   virtual bool HasPatternMismatch() const;
+  virtual bool IsRangeOverflow() const;
+  virtual bool IsRangeUnderflow() const;
+  virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
+
+  virtual nsresult MinMaxStepAttrChanged();
 
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -68,6 +86,22 @@ protected:
   // A getter for callers that know we're not dealing with a file input, so they
   // don't have to think about the caller type.
   void GetNonFileValueInternal(nsAString& aValue) const;
+
+  /**
+   * Setting the input element's value.
+   *
+   * @param aValue      String to set.
+   * @param aFlags      See nsTextEditorState::SetValueFlags.
+   */
+  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
+
+  /**
+   * Return the base used to compute if a value matches step.
+   * Basically, it's the min attribute if present and a default value otherwise.
+   *
+   * @return The step base.
+   */
+  mozilla::Decimal GetStepBase() const;
 
   mozilla::dom::HTMLInputElement* mInputElement;
 };
