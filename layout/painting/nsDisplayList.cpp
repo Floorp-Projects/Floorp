@@ -3214,12 +3214,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         // clip for the nsDisplayBackgroundImage inside.
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
-        if (aSecondaryReferenceFrame) {
-          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData,
-                                                                aSecondaryReferenceFrame);
-        } else {
-          bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
-        }
+        bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
       }
       if (aSecondaryReferenceFrame) {
         thisItemList.AppendNewToTop(
@@ -3234,13 +3229,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       }
 
     } else {
-      if (aSecondaryReferenceFrame) {
-        thisItemList.AppendNewToTop(
-          new (aBuilder) nsDisplayTableBackgroundImage(bgData,
-                                                       aSecondaryReferenceFrame));
-      } else {
-        thisItemList.AppendNewToTop(new (aBuilder) nsDisplayBackgroundImage(bgData));
-      }
+      thisItemList.AppendNewToTop(new (aBuilder) nsDisplayBackgroundImage(bgData));
     }
 
     if (bg->mImage.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -3346,7 +3335,7 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
     return WHENEVER_POSSIBLE;
   }
 
-  nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(StyleFrame());
+  nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(mFrame);
   if (ActiveLayerTracker::IsBackgroundPositionAnimated(aBuilder,
                                                        backgroundStyleFrame)) {
     return WHENEVER_POSSIBLE;
@@ -3455,8 +3444,8 @@ bool
 nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems()
 {
   return mBackgroundStyle->mImage.mLayers[mLayer].mClip != StyleGeometryBox::Text &&
-         nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(*StyleFrame()->PresContext(),
-                                                                         StyleFrame(),
+         nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(*mFrame->PresContext(),
+                                                                         mFrame,
                                                                          mBackgroundStyle,
                                                                          mLayer);
 }
@@ -3467,9 +3456,9 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
                                                   WebRenderDisplayItemLayer* aLayer)
 {
   nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
                                                   mVisibleRect, mBackgroundRect,
-                                                  StyleFrame(), 0, mLayer,
+                                                  mFrame, 0, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
 
@@ -3638,15 +3627,15 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == StyleGeometryBox::Text) {
-    if (!GenerateAndPushTextMask(StyleFrame(), aCtx, mBackgroundRect, aBuilder)) {
+    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
       return;
     }
   }
 
   nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
                                                   aBounds, mBackgroundRect,
-                                                  StyleFrame(), flags, mLayer,
+                                                  mFrame, flags, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
@@ -3739,23 +3728,6 @@ nsDisplayBackgroundImage::GetPerFrameKey()
 {
   return (mLayer << nsDisplayItem::TYPE_BITS) |
     nsDisplayItem::GetPerFrameKey();
-}
-
-nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(const InitData& aData,
-                                                             nsIFrame* aCellFrame)
-  : nsDisplayBackgroundImage(aData)
-  , mStyleFrame(aData.frame)
-  , mTableType(GetTableTypeFromFrame(mStyleFrame))
-{
-  mFrame = aCellFrame;
-}
-
-bool
-nsDisplayTableBackgroundImage::IsInvalid(nsRect& aRect)
-{
-  bool result = mStyleFrame ? mStyleFrame->IsInvalid(aRect) : false;
-  aRect += ToReferenceFrame();
-  return result;
 }
 
 nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder,
