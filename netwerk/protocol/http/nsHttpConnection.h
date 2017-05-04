@@ -83,7 +83,7 @@ public:
     MOZ_MUST_USE nsresult Activate(nsAHttpTransaction *, uint32_t caps,
                                    int32_t pri);
 
-    void SetFastOpen(bool aFastOpen) { mFastOpen = aFastOpen; }
+    void SetFastOpen(PRFileDesc *aFastOpen) { mFastOpen = aFastOpen; }
     // Close this connection and return the transaction. The transaction is
     // restarted as well. This will only happened before connection is
     // connected.
@@ -399,7 +399,7 @@ private:
     // to ResumeRecv() when untrottled again. Only accessed on the socket thread.
     bool                           mResumeRecvOnUnthrottle;
 
-    bool                           mFastOpen;
+    PRFileDesc                    *mFastOpen;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
