@@ -166,6 +166,7 @@
   "prefs.js": ["PrefsEngine", "PrefRec"],
   "prefs.jsm": ["Preference"],
   "PresentationDeviceInfoManager.jsm": ["PresentationDeviceInfoService"],
+  "ProfileStorage.jsm": ["profileStorage"],
   "PromiseWorker.jsm": ["BasePromiseWorker"],
   "PushCrypto.jsm": ["PushCrypto", "concatArray"],
   "quit.js": ["goQuitApplication"],

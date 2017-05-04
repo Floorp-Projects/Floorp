@@ -50,13 +50,15 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ProfileStorage"];
+// We expose a singleton from this module. Some tests may import the
+// constructor via a backstage pass.
+this.EXPORTED_SYMBOLS = ["profileStorage"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
@@ -71,6 +73,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+
+const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
 const SCHEMA_VERSION = 1;
 
@@ -90,6 +94,7 @@ const VALID_FIELDS = [
 
 function ProfileStorage(path) {
   this._path = path;
+  this._initializePromise = null;
 }
 
 ProfileStorage.prototype = {
@@ -104,11 +109,14 @@ ProfileStorage.prototype = {
    * @rejects  JavaScript exception.
    */
   initialize() {
-    this._store = new JSONFile({
-      path: this._path,
-      dataPostProcessor: this._dataPostProcessor.bind(this),
-    });
-    return this._store.load();
+    if (!this._initializePromise) {
+      this._store = new JSONFile({
+        path: this._path,
+        dataPostProcessor: this._dataPostProcessor.bind(this),
+      });
+      this._initializePromise = this._store.load();
+    }
+    return this._initializePromise;
   },
 
   /**
@@ -378,3 +386,7 @@ ProfileStorage.prototype = {
     return this._store._save();
   },
 };
+
+// The singleton exposed by this module.
+this.profileStorage = new ProfileStorage(
+  OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME));

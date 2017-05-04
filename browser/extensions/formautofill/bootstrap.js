@@ -59,7 +59,7 @@ function startup() {
 
   Services.wm.addListener(windowListener);
 
-  parent.init();
+  parent.init().catch(Cu.reportError);
   Services.ppmm.loadProcessScript("data:,new " + function() {
     Components.utils.import("resource://formautofill/FormAutofillContent.jsm");
   }, true);
