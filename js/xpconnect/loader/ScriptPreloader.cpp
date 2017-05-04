@@ -13,6 +13,8 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "MainThreadUtils.h"
@@ -40,6 +42,9 @@ static LazyLogModule gLog("ScriptPreloader");
 
 using mozilla::dom::AutoJSAPI;
 using namespace mozilla::loader;
+
+ProcessType ScriptPreloader::sProcessType;
+
 
 nsresult
 ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
@@ -85,6 +90,15 @@ ScriptPreloader::GetSingleton()
 }
 
 
+ProcessType
+ScriptPreloader::GetChildProcessType(const nsAString& remoteType)
+{
+    if (remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+        return ProcessType::Extension;
+    }
+    return ProcessType::Web;
+}
+
 namespace {
 
 struct MOZ_RAII AutoSafeJSAPI : public AutoJSAPI
@@ -120,6 +134,12 @@ ScriptPreloader::ScriptPreloader()
   : mMonitor("[ScriptPreloader.mMonitor]")
   , mSaveMonitor("[ScriptPreloader.mSaveMonitor]")
 {
+    if (XRE_IsParentProcess()) {
+        sProcessType = ProcessType::Parent;
+    } else {
+        sProcessType = GetChildProcessType(dom::ContentChild::GetSingleton()->GetRemoteType());
+    }
+
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     MOZ_RELEASE_ASSERT(obs);
     obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false);
@@ -241,7 +261,7 @@ ScriptPreloader::GetCacheFile(const char* leafName)
     return Move(cacheFile);
 }
 
-static const uint8_t MAGIC[] = "mozXDRcache";
+static const uint8_t MAGIC[] = "mozXDRcachev001";
 
 Result<Ok, nsresult>
 ScriptPreloader::OpenCache()
@@ -353,7 +373,8 @@ ScriptPreloader::InitCache()
 
     JS::CompileOptions options(cx, JSVERSION_LATEST);
     for (auto script : mRestoredScripts) {
-        if (script->mSize > MIN_OFFTHREAD_SIZE &&
+        if (script->mProcessTypes.contains(CurrentProcessType()) &&
+            script->mSize > MIN_OFFTHREAD_SIZE &&
             JS::CanCompileOffThread(cx, options, script->mSize)) {
             DecodeScriptOffThread(cx, script);
         } else {
@@ -443,6 +464,7 @@ ScriptPreloader::PrepareCacheWrite()
 //   - Its cache key.
 //   - The offset of its XDR data within the XDR data block.
 //   - The size of its XDR data in the XDR data block.
+//   - A bit field describing which process types the script is used in.
 //
 // - A block of XDR data for the encoded scripts, with each script's data at
 //   an offset from the start of the block, as specified above.
@@ -564,10 +586,13 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         mSavedScripts.insertBack(restored);
 
         MOZ_ASSERT(script);
+        restored->mProcesses += CurrentProcessType();
         restored->mScript = script;
         restored->mReadyToExecute = true;
     } else if (!exists) {
         auto cachedScript = new CachedScript(url, cachePath, script);
+        cachedScript->mProcesses += CurrentProcessType();
+
         mSavedScripts.insertBack(cachedScript);
         mScripts.Put(cachePath, cachedScript);
     }
