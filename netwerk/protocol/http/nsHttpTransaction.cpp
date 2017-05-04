@@ -548,6 +548,9 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
             SetConnectEnd(TimeStamp::Now(), true);
         } else if (status == NS_NET_STATUS_TLS_HANDSHAKE_ENDED) {
             SetConnectEnd(TimeStamp::Now(), false);
+        } else if (status == NS_NET_STATUS_SENDING_TO) {
+            // Set the timestamp to Now(), only if it null
+            SetRequestStart(TimeStamp::Now(), true);
         }
     }
 
@@ -679,11 +682,6 @@ nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
     nsHttpTransaction *trans = (nsHttpTransaction *) closure;
     nsresult rv = trans->mReader->OnReadSegment(buf, count, countRead);
     if (NS_FAILED(rv)) return rv;
-
-    if (trans->TimingEnabled()) {
-        // Set the timestamp to Now(), only if it null
-        trans->SetRequestStart(TimeStamp::Now(), true);
-    }
 
     trans->mSentData = true;
     return NS_OK;
