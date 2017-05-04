@@ -28,6 +28,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/ScriptPreloader.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Unused.h"
@@ -193,7 +194,8 @@ EvalScript(JSContext* cx,
            HandleObject targetObj,
            MutableHandleValue retval,
            nsIURI* uri,
-           bool cache,
+           bool startupCache,
+           bool preloadCache,
            MutableHandleScript script,
            HandleFunction function)
 {
@@ -207,7 +209,7 @@ EvalScript(JSContext* cx,
         }
     } else {
         if (JS_IsGlobalObject(targetObj)) {
-            if (!JS_ExecuteScript(cx, script, retval)) {
+            if (!JS::CloneAndExecuteScript(cx, script, retval)) {
                 return false;
             }
         } else {
@@ -215,7 +217,7 @@ EvalScript(JSContext* cx,
             if (!envChain.append(targetObj)) {
                 return false;
             }
-            if (!JS_ExecuteScript(cx, envChain, script, retval)) {
+            if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
                 return false;
             }
         }
@@ -226,7 +228,7 @@ EvalScript(JSContext* cx,
         return false;
     }
 
-    if (cache && !!script) {
+    if (script && (startupCache || preloadCache)) {
         nsAutoCString cachePath;
         JSVersion version = JS_GetVersion(cx);
         cachePath.AppendPrintf("jssubloader/%d", version);
@@ -245,8 +247,16 @@ EvalScript(JSContext* cx,
             return false;
         }
 
-        WriteCachedScript(StartupCache::GetSingleton(),
-                          cachePath, cx, principal, script);
+        nsCString uriStr;
+        if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
+            ScriptPreloader::GetSingleton().NoteScript(uriStr, cachePath, script);
+        }
+
+        if (startupCache) {
+            JSAutoCompartment ac(cx, script);
+            WriteCachedScript(StartupCache::GetSingleton(),
+                              cachePath, cx, principal, script);
+        }
     }
 
     return true;
@@ -400,7 +410,9 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
 
     JS::Rooted<JS::Value> retval(cx);
-    if (EvalScript(cx, targetObj, &retval, uri, mCache, &script, function)) {
+    if (EvalScript(cx, targetObj, &retval, uri, mCache,
+                   mCache && !mWantReturnValue,
+                   &script, function)) {
         autoPromise.ResolvePromise(retval);
     }
 
@@ -631,9 +643,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     JSAutoCompartment ac(cx, targetObj);
 
     // Suppress caching if we're compiling as content.
-    StartupCache* cache = (principal == mSystemPrincipal)
-                          ? StartupCache::GetSingleton()
-                          : nullptr;
+    bool ignoreCache = options.ignoreCache || principal != mSystemPrincipal;
+    StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
+
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {
         ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOSERVICE));
@@ -686,8 +698,11 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     RootedFunction function(cx);
     RootedScript script(cx);
     if (cache && !options.ignoreCache) {
-        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
-        if (NS_FAILED(rv)) {
+        if (!options.wantReturnValue)
+            script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
+        if (!script)
+            rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+        if (NS_FAILED(rv) || !script) {
             // ReadCachedScript may have set a pending exception.
             JS_ClearPendingException(cx);
         }
@@ -712,7 +727,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         cache = nullptr;
     }
 
-    Unused << EvalScript(cx, targetObj, retval, uri, !!cache, &script, function);
+    Unused << EvalScript(cx, targetObj, retval, uri, !!cache,
+                         !ignoreCache && !options.wantReturnValue,
+                         &script, function);
     return NS_OK;
 }
 
