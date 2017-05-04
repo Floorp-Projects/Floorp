@@ -121,7 +121,8 @@ var sandboxName = "default";
  */
 var loadListener = {
   command_id: null,
-  seenUnload: null,
+  seenBeforeUnload: false,
+  seenUnload: false,
   timeout: null,
   timerPageLoad: null,
   timerPageUnload: null,
@@ -142,6 +143,7 @@ var loadListener = {
     this.command_id = command_id;
     this.timeout = timeout;
 
+    this.seenBeforeUnload = false;
     this.seenUnload = false;
 
     this.timerPageLoad = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -213,17 +215,7 @@ var loadListener = {
 
     switch (event.type) {
       case "beforeunload":
-        if (this.timerPageUnload) {
-          // In the case when a document has a beforeunload handler registered,
-          // the currently active command will return immediately due to the
-          // modal dialog observer in proxy.js.
-          // Otherwise the timeout waiting for the document to start navigating
-          // is increased by 5000 ms to ensure a possible load event is not missed.
-          // In the common case such an event should occur pretty soon after
-          // beforeunload, and we optimise for this.
-          this.timerPageUnload.cancel();
-          this.timerPageUnload.initWithCallback(this, 5000, Ci.nsITimer.TYPE_ONE_SHOT)
-        }
+        this.seenBeforeUnload = true;
         break;
 
       case "unload":
@@ -282,10 +274,21 @@ var loadListener = {
    */
   notify: function (timer) {
     switch (timer) {
-      // If the page unload timer is raised, ensure to properly stop the load
-      // listener, and return from the currently active command.
       case this.timerPageUnload:
-        if (!this.seenUnload) {
+        // In the case when a document has a beforeunload handler registered,
+        // the currently active command will return immediately due to the
+        // modal dialog observer in proxy.js.
+        // Otherwise the timeout waiting for the document to start navigating
+        // is increased by 5000 ms to ensure a possible load event is not missed.
+        // In the common case such an event should occur pretty soon after
+        // beforeunload, and we optimise for this.
+        if (this.seenBeforeUnload) {
+          this.seenBeforeUnload = null;
+          this.timerPageUnload.initWithCallback(this, 5000, Ci.nsITimer.TYPE_ONE_SHOT)
+
+        // If no page unload has been detected, ensure to properly stop the load
+        // listener, and return from the currently active command.
+        } else if (!this.seenUnload) {
           logger.debug("Canceled page load listener because no navigation " +
               "has been detected");
           this.stop();
