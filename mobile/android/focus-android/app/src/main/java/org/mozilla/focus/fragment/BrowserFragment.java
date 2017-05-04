@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -32,11 +33,9 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -185,8 +184,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         final ViewGroup eraseContainer = (ViewGroup) erase.getParent();
         eraseContainer.removeView(erase);
 
+        final View toolbar = view.findViewById(R.id.urlbar);
         if (customTabConfig.toolbarColor != null) {
-            view.findViewById(R.id.appbar).setBackgroundColor(customTabConfig.toolbarColor);
+            toolbar.setBackgroundColor(customTabConfig.toolbarColor);
         }
 
         final ImageView closeButton = (ImageView) view.findViewById(R.id.customtab_close);
@@ -199,6 +199,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         } else {
             // Always set the icon in case it's been overridden by a previous CT invocation
             closeButton.setImageResource(R.drawable.ic_close);
+        }
+
+        if (customTabConfig.disableUrlbarHiding) {
+            AppBarLayout.LayoutParams params = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+            params.setScrollFlags(0);
         }
     }
 
