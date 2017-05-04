@@ -262,6 +262,7 @@ typedef FallibleTArray<AddPrefix>   AddPrefixArray;
 typedef FallibleTArray<AddComplete> AddCompleteArray;
 typedef FallibleTArray<SubPrefix>   SubPrefixArray;
 typedef FallibleTArray<SubComplete> SubCompleteArray;
+typedef FallibleTArray<Prefix>      MissPrefixArray;
 
 /**
  * Compares chunks by their add chunk, then their prefix.

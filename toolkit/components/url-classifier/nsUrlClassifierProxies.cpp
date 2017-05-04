@@ -211,20 +211,6 @@ UrlClassifierDBServiceWorkerProxy::CacheCompletionsRunnable::Run()
   return NS_OK;
 }
 
-nsresult
-UrlClassifierDBServiceWorkerProxy::CacheMisses(PrefixArray * aEntries)
-{
-  nsCOMPtr<nsIRunnable> r = new CacheMissesRunnable(mTarget, aEntries);
-  return DispatchToWorkerThread(r);
-}
-
-NS_IMETHODIMP
-UrlClassifierDBServiceWorkerProxy::CacheMissesRunnable::Run()
-{
-  mTarget->CacheMisses(mEntries);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::SetLastUpdateTime(const nsACString& table,
                                                      uint64_t lastUpdateTime)
