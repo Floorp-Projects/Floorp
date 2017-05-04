@@ -17,6 +17,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
@@ -27,7 +28,27 @@
 #include "mozilla/Decimal.h"
 #include "nsContentUtils.h"
 #include "nsTextEditorState.h"
+#include "mozilla/Variant.h"
+#include "SingleLineTextInputTypes.h"
+#include "NumericInputTypes.h"
+#include "CheckableInputTypes.h"
+#include "ButtonInputTypes.h"
+#include "DateTimeInputTypes.h"
+#include "ColorInputType.h"
+#include "FileInputType.h"
+#include "HiddenInputType.h"
 
+static constexpr size_t INPUT_TYPE_SIZE = sizeof(
+  mozilla::Variant<TextInputType, SearchInputType, TelInputType, URLInputType,
+                   EmailInputType, PasswordInputType, NumberInputType,
+                   RangeInputType, RadioInputType, CheckboxInputType,
+                   ButtonInputType, ImageInputType, ResetInputType,
+                   SubmitInputType, DateInputType, TimeInputType, WeekInputType,
+                   MonthInputType, DateTimeLocalInputType, FileInputType,
+                   ColorInputType, HiddenInputType> );
+
+class InputType;
+struct DoNotDelete;
 class nsIRadioGroupContainer;
 class nsIRadioVisitor;
 
@@ -1566,6 +1587,14 @@ protected:
    * nsTextEditorState cannot do its job.
    */
   nsTextEditorState::SelectionProperties mSelectionProperties;
+
+  /*
+   * InputType object created based on input type.
+   */
+  UniquePtr<InputType, DoNotDelete> mInputType;
+
+  // Memory allocated for mInputType, reused when type changes.
+  char mInputTypeMem[INPUT_TYPE_SIZE];
 
   // Step scale factor values, for input types that have one.
   static const Decimal kStepScaleFactorDate;
