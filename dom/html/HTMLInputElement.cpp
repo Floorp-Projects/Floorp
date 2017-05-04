@@ -7527,96 +7527,10 @@ HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const
   return mInputType->HasStepMismatch(aUseZeroIfValueNaN);
 }
 
-/**
- * Takes aEmail and attempts to convert everything after the first "@"
- * character (if anything) to punycode before returning the complete result via
- * the aEncodedEmail out-param. The aIndexOfAt out-param is set to the index of
- * the "@" character.
- *
- * If no "@" is found in aEmail, aEncodedEmail is simply set to aEmail and
- * the aIndexOfAt out-param is set to kNotFound.
- *
- * Returns true in all cases unless an attempt to punycode encode fails. If
- * false is returned, aEncodedEmail has not been set.
- *
- * This function exists because ConvertUTF8toACE() splits on ".", meaning that
- * for 'user.name@sld.tld' it would treat "name@sld" as a label. We want to
- * encode the domain part only.
- */
-static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
-                                       nsAutoCString& aEncodedEmail,
-                                       uint32_t* aIndexOfAt)
-{
-  nsAutoCString value = NS_ConvertUTF16toUTF8(aEmail);
-  *aIndexOfAt = (uint32_t)value.FindChar('@');
-
-  if (*aIndexOfAt == (uint32_t)kNotFound ||
-      *aIndexOfAt == value.Length() - 1) {
-    aEncodedEmail = value;
-    return true;
-  }
-
-  nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
-  if (!idnSrv) {
-    NS_ERROR("nsIIDNService isn't present!");
-    return false;
-  }
-
-  uint32_t indexOfDomain = *aIndexOfAt + 1;
-
-  const nsDependentCSubstring domain = Substring(value, indexOfDomain);
-  bool ace;
-  if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
-    nsAutoCString domainACE;
-    if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
-      return false;
-    }
-    value.Replace(indexOfDomain, domain.Length(), domainACE);
-  }
-
-  aEncodedEmail = value;
-  return true;
-}
-
 bool
 HTMLInputElement::HasBadInput() const
 {
-  if (mType == NS_FORM_INPUT_NUMBER) {
-    nsAutoString value;
-    GetNonFileValueInternal(value);
-    if (!value.IsEmpty()) {
-      // The input can't be bad, otherwise it would have been sanitized to the
-      // empty string.
-      NS_ASSERTION(!GetValueAsDecimal().isNaN(), "Should have sanitized");
-      return false;
-    }
-    nsNumberControlFrame* numberControlFrame =
-      do_QueryFrame(GetPrimaryFrame());
-    if (numberControlFrame &&
-        !numberControlFrame->AnonTextControlIsEmpty()) {
-      // The input the user entered failed to parse as a number.
-      return true;
-    }
-    return false;
-  }
-  if (mType == NS_FORM_INPUT_EMAIL) {
-    // With regards to suffering from bad input the spec says that only the
-    // punycode conversion works, so we don't care whether the email address is
-    // valid or not here. (If the email address is invalid then we will be
-    // suffering from a type mismatch.)
-    nsAutoString value;
-    nsAutoCString unused;
-    uint32_t unused2;
-    GetNonFileValueInternal(value);
-    HTMLSplitOnSpacesTokenizer tokenizer(value, ',');
-    while (tokenizer.hasMoreTokens()) {
-      if (!PunycodeEncodeEmailAddress(tokenizer.nextToken(), unused, &unused2)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  return false;
+  return mInputType->HasBadInput();
 }
 
 void

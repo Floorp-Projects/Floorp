@@ -30,6 +30,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
+    '/layout/forms',
 ]
 
 FINAL_LIBRARY = 'xul'

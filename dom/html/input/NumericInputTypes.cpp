@@ -7,6 +7,7 @@
 #include "NumericInputTypes.h"
 
 #include "mozilla/dom/HTMLInputElement.h"
+#include "nsNumberControlFrame.h"
 #include "nsTextEditorState.h"
 
 bool
@@ -84,6 +85,28 @@ NumberInputType::IsValueMissing() const
   }
 
   return IsValueEmpty();
+}
+
+bool
+NumberInputType::HasBadInput() const
+{
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+  if (!value.IsEmpty()) {
+    // The input can't be bad, otherwise it would have been sanitized to the
+    // empty string.
+    NS_ASSERTION(!mInputElement->GetValueAsDecimal().isNaN(),
+                 "Should have sanitized");
+    return false;
+  }
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(GetPrimaryFrame());
+  if (numberControlFrame &&
+      !numberControlFrame->AnonTextControlIsEmpty()) {
+    // The input the user entered failed to parse as a number.
+    return true;
+  }
+  return false;
 }
 
 /* input type=range */
