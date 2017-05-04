@@ -368,10 +368,14 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     if (thumbGetsLayer) {
       MOZ_ASSERT((flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR) ||
                  (flags & nsDisplayOwnLayer::VERTICAL_SCROLLBAR));
-      ScrollDirection scrollDirection =
-            (flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR)
+      bool isHorizontal = (flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR);
+      ScrollDirection scrollDirection = isHorizontal
           ? ScrollDirection::HORIZONTAL
           : ScrollDirection::VERTICAL;
+      const float appUnitsPerCss = float(AppUnitsPerCSSPixel());
+      CSSCoord thumbLength = NSAppUnitsToFloatPixels(
+          isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
+
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
       nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
@@ -393,7 +397,9 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
                           flags, scrollTargetId,
-                          ScrollThumbData{scrollDirection, GetThumbRatio()}));
+                          ScrollThumbData{scrollDirection,
+                                          GetThumbRatio(),
+                                          thumbLength}));
 
       return;
     }
@@ -1044,13 +1050,7 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     }
   }
 
-  nsIFrame* thumbFrame = mFrames.FirstChild();
-  if (!thumbFrame) {
-    return;
-  }
   bool isHorizontal = IsXULHorizontal();
-  nsSize thumbSize = thumbFrame->GetSize();
-  nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
 
   mozilla::layers::FrameMetrics::ViewID scrollTargetId;
   bool hasID = nsLayoutUtils::FindIDFor(scrollableContent, &scrollTargetId);
@@ -1077,8 +1077,6 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
                                NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
                                sliderTrackCSS,
-                               NSAppUnitsToFloatPixels(thumbLength,
-                                 float(AppUnitsPerCSSPixel())),
                                isHorizontal ? AsyncDragMetrics::HORIZONTAL :
                                               AsyncDragMetrics::VERTICAL);
 

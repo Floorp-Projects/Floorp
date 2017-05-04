@@ -34,7 +34,6 @@ public:
     , mPresShellId(0)
     , mDragStartSequenceNumber(0)
     , mScrollbarDragOffset(0)
-    , mScrollThumbLength(0)
     , mDirection(NONE)
   {}
 
@@ -43,14 +42,12 @@ public:
                    uint64_t aDragStartSequenceNumber,
                    CSSCoord aScrollbarDragOffset,
                    const CSSRect& aScrollTrack,
-                   CSSCoord aScrollThumbLength,
                    DragDirection aDirection)
     : mViewId(aViewId)
     , mPresShellId(aPresShellId)
     , mDragStartSequenceNumber(aDragStartSequenceNumber)
     , mScrollbarDragOffset(aScrollbarDragOffset)
     , mScrollTrack(aScrollTrack)
-    , mScrollThumbLength(aScrollThumbLength)
     , mDirection(aDirection)
   {}
 
@@ -59,7 +56,6 @@ public:
   uint64_t mDragStartSequenceNumber;
   CSSCoord mScrollbarDragOffset;
   CSSRect mScrollTrack;
-  CSSCoord mScrollThumbLength;
   DragDirection mDirection;
 };
 

@@ -97,6 +97,7 @@ public:
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   bool IsScrollbarNode() const;
   FrameMetrics::ViewID GetScrollTargetId() const;
+  const ScrollThumbData& GetScrollThumbData() const;
 
   /* Fixed pos info */
 

@@ -124,6 +124,12 @@ HitTestingTreeNode::GetScrollTargetId() const
   return mScrollViewId;
 }
 
+const ScrollThumbData&
+HitTestingTreeNode::GetScrollThumbData() const
+{
+  return mScrollThumbData;
+}
+
 void
 HitTestingTreeNode::SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget)
 {
