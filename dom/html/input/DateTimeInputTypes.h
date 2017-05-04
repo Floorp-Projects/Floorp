@@ -15,6 +15,9 @@ public:
   ~DateTimeInputTypeBase() override {}
 
   bool IsValueMissing() const override;
+  bool IsRangeOverflow() const override;
+  bool IsRangeUnderflow() const override;
+  bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
 
 protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
