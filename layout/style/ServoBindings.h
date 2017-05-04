@@ -334,6 +334,11 @@ void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 void Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* grid_template,
                                        const nsStyleGridTemplate* other);
 
+mozilla::css::GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(uint32_t areas,
+                                                                      uint32_t templates,
+                                                                      uint32_t columns);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue, GridTemplateAreasValue);
+
 // Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
 // needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,

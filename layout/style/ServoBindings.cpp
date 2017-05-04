@@ -1328,6 +1328,18 @@ Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* aGridTemplate,
   *aGridTemplate = *aOther;
 }
 
+mozilla::css::GridTemplateAreasValue*
+Gecko_NewGridTemplateAreasValue(uint32_t aAreas, uint32_t aTemplates, uint32_t aColumns)
+{
+  RefPtr<mozilla::css::GridTemplateAreasValue> value = new mozilla::css::GridTemplateAreasValue;
+  value->mNamedAreas.SetLength(aAreas);
+  value->mTemplates.SetLength(aTemplates);
+  value->mNColumns = aColumns;
+  return value.forget().take();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue, GridTemplateAreasValue);
+
 void
 Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent, uint32_t aHowMany)
 {
