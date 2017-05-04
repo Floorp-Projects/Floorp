@@ -1963,3 +1963,17 @@ class Repackage(MachCommandBase):
 
         from mozbuild.repackaging.dmg import repackage_dmg
         repackage_dmg(input, output)
+
+    @SubCommand('repackage', 'installer',
+                description='Repackage into a Windows installer exe')
+    @CommandArgument('--tag', type=str, required=True,
+        help='The .tag file used to build the installer')
+    @CommandArgument('--setupexe', type=str, required=True,
+        help='setup.exe file inside the installer')
+    @CommandArgument('--package', type=str, required=False,
+        help='Optional package .zip for building a full installer')
+    @CommandArgument('--output', '-o', type=str, required=True,
+        help='Output filename')
+    def repackage_installer(self, tag, setupexe, package, output):
+        from mozbuild.repackaging.installer import repackage_installer
+        repackage_installer(self.topsrcdir, tag, setupexe, package, output)
