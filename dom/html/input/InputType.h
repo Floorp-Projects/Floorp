@@ -35,6 +35,9 @@ public:
    */
   void DropReference();
 
+  virtual bool IsTooLong() const;
+  virtual bool IsTooShort() const;
+
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
     : mInputElement(aInputElement)

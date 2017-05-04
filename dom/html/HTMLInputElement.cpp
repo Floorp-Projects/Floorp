@@ -1466,9 +1466,9 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
         UpdateBarredFromConstraintValidation();
       }
-    } else if (MinOrMaxLengthApplies() && aName == nsGkAtoms::maxlength) {
+    } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
-    } else if (MinOrMaxLengthApplies() && aName == nsGkAtoms::minlength) {
+    } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
     } else if (aName == nsGkAtoms::pattern && mDoneCreating) {
       UpdatePatternMismatchValidityState();
@@ -7520,42 +7520,22 @@ bool
 HTMLInputElement::IsTooLong()
 {
   if (!mValueChanged ||
-      !mLastValueChangeWasInteractive ||
-      !MinOrMaxLengthApplies() ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength)) {
+      !mLastValueChangeWasInteractive) {
     return false;
   }
 
-  int32_t maxLength = MaxLength();
-
-  // Maxlength of -1 means parsing error.
-  if (maxLength == -1) {
-    return false;
-  }
-
-  return InputTextLength(CallerType::System) > maxLength;
+  return mInputType->IsTooLong();
 }
 
 bool
 HTMLInputElement::IsTooShort()
 {
   if (!mValueChanged ||
-      !mLastValueChangeWasInteractive ||
-      !MinOrMaxLengthApplies() ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::minlength)) {
+      !mLastValueChangeWasInteractive) {
     return false;
   }
 
-  int32_t minLength = MinLength();
-
-  // Minlength of -1 means parsing error.
-  if (minLength == -1) {
-    return false;
-  }
-
-  int32_t textLength = InputTextLength(CallerType::System);
-
-  return textLength && textLength < minLength;
+  return mInputType->IsTooShort();
 }
 
 bool

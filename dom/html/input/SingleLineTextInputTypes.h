@@ -14,6 +14,9 @@ class SingleLineTextInputTypeBase : public ::InputType
 public:
   ~SingleLineTextInputTypeBase() override {}
 
+  bool IsTooLong() const override;
+  bool IsTooShort() const override;
+
 protected:
   explicit SingleLineTextInputTypeBase(
     mozilla::dom::HTMLInputElement* aInputElement)
