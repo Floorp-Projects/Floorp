@@ -57,17 +57,20 @@ public:
   TCPFastOpenSecret()
     : mState(WAITING_FOR_CONNECT)
     , mFirstPacketBufLen(0)
+    , mCondition(0)
   {}
 
   enum {
     CONNECTED,
     WAITING_FOR_CONNECTCONTINUE,
     COLLECT_DATA_FOR_FIRST_PACKET,
-    WAITING_FOR_CONNECT
+    WAITING_FOR_CONNECT,
+    SOCKET_ERROR_STATE
   } mState;
   PRNetAddr mAddr;
   char mFirstPacketBuf[1460];
   uint16_t mFirstPacketBufLen;
+  PRErrorCode mCondition;
 };
 
 static PRStatus
@@ -161,6 +164,9 @@ TCPFastOpenSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
   case TCPFastOpenSecret::WAITING_FOR_CONNECT:
     PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
     return -1;
+  case TCPFastOpenSecret::SOCKET_ERROR_STATE:
+    PR_SetError(secret->mCondition, 0);
+    return -1;
   }
   PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
   return PR_FAILURE;
@@ -215,6 +221,9 @@ TCPFastOpenRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
     break;
   case TCPFastOpenSecret::WAITING_FOR_CONNECT:
     PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
+    break;
+  case TCPFastOpenSecret::SOCKET_ERROR_STATE:
+    PR_SetError(secret->mCondition, 0);
   }
   return rv;
 }
@@ -247,6 +256,10 @@ TCPFastOpenConnectContinue(PRFileDesc *fd, PRInt16 out_flags)
 
     SOCKET_LOG(("TCPFastOpenConnectContinue result=%d.\n", rv));
     secret->mState = TCPFastOpenSecret::CONNECTED;
+    break;
+  case TCPFastOpenSecret::SOCKET_ERROR_STATE:
+    PR_SetError(secret->mCondition, 0);
+    rv = PR_FAILURE;
   }
   return rv;
 }
@@ -469,6 +482,60 @@ TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd)
 
   return (sizeLeft > TFO_TLS_RECORD_HEADER_SIZE) ?
     sizeLeft - TFO_TLS_RECORD_HEADER_SIZE : 0;
+}
+
+bool
+TCPFastOpenGetCurrentBufferSize(PRFileDesc *fd)
+{
+  PRFileDesc *tfoFd = PR_GetIdentitiesLayer(fd, sTCPFastOpenLayerIdentity);
+  MOZ_RELEASE_ASSERT(tfoFd);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(tfoFd->secret);
+
+  return secret->mFirstPacketBufLen;
+}
+
+bool
+TCPFastOpenFlushBuffer(PRFileDesc *fd)
+{
+  PRFileDesc *tfoFd = PR_GetIdentitiesLayer(fd, sTCPFastOpenLayerIdentity);
+  MOZ_RELEASE_ASSERT(tfoFd);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  TCPFastOpenSecret *secret = reinterpret_cast<TCPFastOpenSecret *>(tfoFd->secret);
+  MOZ_ASSERT(secret->mState == TCPFastOpenSecret::CONNECTED);
+
+  if (secret->mFirstPacketBufLen) {
+    SOCKET_LOG(("TCPFastOpenFlushBuffer - %d bytes to drain from "
+                "mFirstPacketBufLen.\n",
+                secret->mFirstPacketBufLen ));
+    PRInt32 rv = (tfoFd->lower->methods->send)(tfoFd->lower,
+                                               secret->mFirstPacketBuf,
+                                               secret->mFirstPacketBufLen,
+                                               0, // flags
+                                               PR_INTERVAL_NO_WAIT);
+    if (rv <= 0) {
+      PRErrorCode err = PR_GetError();
+      if (err == PR_WOULD_BLOCK_ERROR) {
+        // We still need to send this data.
+        return true;
+      } else {
+        // There is an error, let nsSocketTransport pick it up properly.
+        secret->mCondition = err;
+        secret->mState = TCPFastOpenSecret::SOCKET_ERROR_STATE;
+        return false;
+      }
+    }
+
+    secret->mFirstPacketBufLen -= rv;
+    if (secret->mFirstPacketBufLen) {
+      memmove(secret->mFirstPacketBuf,
+              secret->mFirstPacketBuf + rv,
+              secret->mFirstPacketBufLen);
+    }
+  }
+  return secret->mFirstPacketBufLen;
 }
 
 }

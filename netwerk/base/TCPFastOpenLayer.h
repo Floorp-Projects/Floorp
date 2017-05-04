@@ -31,6 +31,9 @@ void TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
                        bool &fastOpenNotSupported, uint8_t &tfoStatus);
 
 int32_t TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd);
+
+bool TCPFastOpenGetCurrentBufferSize(PRFileDesc *fd);
+bool TCPFastOpenFlushBuffer(PRFileDesc *fd);
 }
 }
 

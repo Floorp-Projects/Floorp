@@ -416,6 +416,7 @@ private:
     PRFileDesc *GetFD_Locked();
     PRFileDesc *GetFD_LockedAlsoDuringFastOpen();
     void        ReleaseFD_Locked(PRFileDesc *fd);
+    bool FastOpenInProgress();
 
     //
     // stream state changes (called outside mLock):
@@ -475,6 +476,7 @@ private:
 
     // A Fast Open callback.
     TCPFastOpen *mFastOpenCallback;
+    bool mFastOpenLayerHasBufferedData;
 };
 
 } // namespace net
