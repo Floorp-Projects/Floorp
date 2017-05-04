@@ -1539,13 +1539,13 @@ var gBrowserInit = {
       Cu.reportError("Could not end startup crash tracking: " + ex);
     }
 
-    // Delay this a minute because there's no rush
-    setTimeout(() => {
+    // Delay this a minute into the idle time because there's no rush.
+    requestIdleCallback(() => {
       this.gmpInstallManager = new GMPInstallManager();
       // We don't really care about the results, if someone is interested they
       // can check the log.
       this.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
-    }, 1000 * 60);
+    }, {timeout: 1000 * 60});
 
     // Report via telemetry whether we're able to play MP4/H.264/AAC video.
     // We suspect that some Windows users have a broken or have not installed

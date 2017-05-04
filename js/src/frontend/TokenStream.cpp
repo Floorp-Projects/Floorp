@@ -31,23 +31,21 @@
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
-using namespace js;
-using namespace js::frontend;
-
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodAssign;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-struct ReservedWordInfo {
+struct ReservedWordInfo
+{
     const char* chars;         // C string with reserved word text
-    TokenKind   tokentype;
+    js::frontend::TokenKind tokentype;
 };
 
 static const ReservedWordInfo reservedWords[] = {
 #define RESERVED_WORD_INFO(word, name, type) \
-    {js_##word##_str, type},
+    {js_##word##_str, js::frontend::type},
     FOR_EACH_JAVASCRIPT_RESERVED_WORD(RESERVED_WORD_INFO)
 #undef RESERVED_WORD_INFO
 };
@@ -105,6 +103,8 @@ template <typename CharT>
 static bool
 IsIdentifier(const CharT* chars, size_t length)
 {
+    using namespace js;
+
     if (length == 0)
         return false;
 
@@ -123,6 +123,8 @@ IsIdentifier(const CharT* chars, size_t length)
 static uint32_t
 GetSingleCodePoint(const char16_t** p, const char16_t* end)
 {
+    using namespace js;
+
     uint32_t codePoint;
     if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(**p)) && *p + 1 < end) {
         char16_t lead = **p;
@@ -141,6 +143,8 @@ GetSingleCodePoint(const char16_t** p, const char16_t* end)
 static bool
 IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
 {
+    using namespace js;
+
     if (IsIdentifier(chars, length))
         return true;
 
@@ -164,8 +168,12 @@ IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
     return true;
 }
 
+namespace js {
+
+namespace frontend {
+
 bool
-frontend::IsIdentifier(JSLinearString* str)
+IsIdentifier(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
@@ -174,19 +182,19 @@ frontend::IsIdentifier(JSLinearString* str)
 }
 
 bool
-frontend::IsIdentifier(const char* chars, size_t length)
+IsIdentifier(const char* chars, size_t length)
 {
     return ::IsIdentifier(chars, length);
 }
 
 bool
-frontend::IsIdentifier(const char16_t* chars, size_t length)
+IsIdentifier(const char16_t* chars, size_t length)
 {
     return ::IsIdentifier(chars, length);
 }
 
 bool
-frontend::IsKeyword(JSLinearString* str)
+IsKeyword(JSLinearString* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return TokenKindIsKeyword(rw->tokentype);
@@ -195,7 +203,7 @@ frontend::IsKeyword(JSLinearString* str)
 }
 
 TokenKind
-frontend::ReservedWordTokenKind(PropertyName* str)
+ReservedWordTokenKind(PropertyName* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return rw->tokentype;
@@ -204,7 +212,7 @@ frontend::ReservedWordTokenKind(PropertyName* str)
 }
 
 const char*
-frontend::ReservedWordToCharZ(PropertyName* str)
+ReservedWordToCharZ(PropertyName* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return ReservedWordToCharZ(rw->tokentype);
@@ -213,7 +221,7 @@ frontend::ReservedWordToCharZ(PropertyName* str)
 }
 
 const char*
-frontend::ReservedWordToCharZ(TokenKind tt)
+ReservedWordToCharZ(TokenKind tt)
 {
     MOZ_ASSERT(tt != TOK_NAME);
     switch (tt) {
@@ -227,7 +235,7 @@ frontend::ReservedWordToCharZ(TokenKind tt)
 }
 
 PropertyName*
-TokenStreamBase::reservedWordToPropertyName(TokenKind tt) const
+TokenStreamAnyChars::reservedWordToPropertyName(TokenKind tt) const
 {
     MOZ_ASSERT(tt != TOK_NAME);
     switch (tt) {
@@ -293,7 +301,7 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
 }
 
 MOZ_ALWAYS_INLINE bool
-TokenStreamBase::SourceCoords::fill(const TokenStreamBase::SourceCoords& other)
+TokenStreamAnyChars::SourceCoords::fill(const TokenStreamAnyChars::SourceCoords& other)
 {
     MOZ_ASSERT(lineStartOffsets_.back() == MAX_PTR);
     MOZ_ASSERT(other.lineStartOffsets_.back() == MAX_PTR);
@@ -312,7 +320,7 @@ TokenStreamBase::SourceCoords::fill(const TokenStreamBase::SourceCoords& other)
 }
 
 MOZ_ALWAYS_INLINE uint32_t
-TokenStreamBase::SourceCoords::lineIndexOf(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::lineIndexOf(uint32_t offset) const
 {
     uint32_t iMin, iMax, iMid;
 
@@ -363,14 +371,14 @@ TokenStreamBase::SourceCoords::lineIndexOf(uint32_t offset) const
 }
 
 uint32_t
-TokenStreamBase::SourceCoords::lineNum(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::lineNum(uint32_t offset) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     return lineIndexToNum(lineIndex);
 }
 
 uint32_t
-TokenStreamBase::SourceCoords::columnIndex(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
@@ -379,8 +387,8 @@ TokenStreamBase::SourceCoords::columnIndex(uint32_t offset) const
 }
 
 void
-TokenStreamBase::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
-                                                     uint32_t* columnIndex) const
+TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
+                                                         uint32_t* columnIndex) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     *lineNum = lineIndexToNum(lineIndex);
@@ -394,8 +402,8 @@ TokenStreamBase::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* 
 #pragma warning(disable:4351)
 #endif
 
-TokenStreamBase::TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& options,
-                                 StrictModeGetter* smg)
+TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                         StrictModeGetter* smg)
   : srcCoords(cx, options.lineno),
     options_(options),
     tokens(),
@@ -416,7 +424,7 @@ TokenStreamBase::TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& op
 
 TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
                          const CharT* base, size_t length, StrictModeGetter* smg)
-  : TokenStreamBase(cx, options, smg),
+  : TokenStreamAnyChars(cx, options, smg),
     userbuf(cx, base, length, options.column),
     tokenbuf(cx)
 {
@@ -439,7 +447,7 @@ TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
 #endif
 
 bool
-TokenStreamBase::checkOptions()
+TokenStreamAnyChars::checkOptions()
 {
     // Constrain starting columns to half of the range of a signed 32-bit value,
     // to avoid overflow.
@@ -470,7 +478,7 @@ TokenStream::updateLineInfoForEOL()
 }
 
 MOZ_ALWAYS_INLINE void
-TokenStreamBase::updateFlagsForEOL()
+TokenStreamAnyChars::updateFlagsForEOL()
 {
     flags.isDirtyLine = false;
 }
@@ -500,7 +508,7 @@ TokenStream::getChar(int32_t* cp)
             break;
         }
 
-        if (MOZ_UNLIKELY(c == LINE_SEPARATOR || c == PARA_SEPARATOR))
+        if (MOZ_UNLIKELY(c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR))
             break;
 
         *cp = c;
@@ -683,8 +691,8 @@ TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32
 }
 
 bool
-TokenStreamBase::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
-                                unsigned flags, unsigned errorNumber, va_list args)
+TokenStreamAnyChars::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
+                                    unsigned flags, unsigned errorNumber, va_list args)
 {
     if (options().werrorOption) {
         flags &= ~JSREPORT_WARNING;
@@ -696,7 +704,7 @@ TokenStreamBase::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes
 }
 
 void
-TokenStreamBase::computeErrorMetadataNoOffset(ErrorMetadata* err)
+TokenStreamAnyChars::computeErrorMetadataNoOffset(ErrorMetadata* err)
 {
     err->isMuted = mutedErrors;
     err->filename = filename;
@@ -707,17 +715,12 @@ TokenStreamBase::computeErrorMetadataNoOffset(ErrorMetadata* err)
 }
 
 bool
-TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
+TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
 {
-    if (offset == NoOffset) {
-        computeErrorMetadataNoOffset(err);
-        return true;
-    }
-
     err->isMuted = mutedErrors;
 
-    // If this TokenStream doesn't have location information, try to get it
-    // from the caller.
+    // If this TokenStreamAnyChars doesn't have location information, try to
+    // get it from the caller.
     if (!filename && !cx->helperThread()) {
         NonBuiltinFrameIter iter(cx,
                                  FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
@@ -725,17 +728,30 @@ TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
         if (!iter.done() && iter.filename()) {
             err->filename = iter.filename();
             err->lineNumber = iter.computeLine(&err->columnNumber);
-
-            // We can't get a line of context if we're using the caller's
-            // location, so we're done.
-            return true;
+            return false;
         }
     }
 
-    // Otherwise this TokenStream's location information should be used.
+    // Otherwise use this TokenStreamAnyChars's location information.
     err->filename = filename;
-    srcCoords.lineNumAndColumnIndex(offset,
-                                    &err->lineNumber, &err->columnNumber);
+    srcCoords.lineNumAndColumnIndex(offset, &err->lineNumber, &err->columnNumber);
+    return true;
+}
+
+bool
+TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
+{
+    if (offset == NoOffset) {
+        computeErrorMetadataNoOffset(err);
+        return true;
+    }
+
+    // This function's return value isn't a success/failure indication: it
+    // returns true if this TokenStream's location information could be used,
+    // and it returns false when that information can't be used (and so we
+    // can't provide a line of context).
+    if (!fillExcludingContext(err, offset))
+        return true;
 
     // Add a line of context from this TokenStream to help with debugging.
     return computeLineOfContext(err, offset);
@@ -755,12 +771,7 @@ TokenStream::computeLineOfContext(ErrorMetadata* err, uint32_t offset)
     if (err->lineNumber != lineno)
         return true;
 
-    // We show only a portion (a "window") of the line around the erroneous
-    // token -- the first char in the token, plus |windowRadius| chars before
-    // it and |windowRadius - 1| chars after it.  This is because for a very
-    // long line, printing the whole line is (a) not that helpful, and (b) can
-    // waste a lot of memory.  See bug 634444.
-    constexpr size_t windowRadius = 60;
+    constexpr size_t windowRadius = ErrorMetadata::lineOfContextRadius;
 
     // The window must start within the current line, no earlier than
     // |windowRadius| characters before |offset|.
@@ -823,7 +834,7 @@ TokenStream::reportError(unsigned errorNumber, ...)
 }
 
 void
-TokenStreamBase::reportErrorNoOffset(unsigned errorNumber, ...)
+TokenStreamAnyChars::reportErrorNoOffset(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -1325,7 +1336,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     // early allows subsequent checking to be faster.
     if (MOZ_UNLIKELY(c >= 128)) {
         if (unicode::IsSpaceOrBOM2(c)) {
-            if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
+            if (c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR) {
                 if (!updateLineInfoForEOL())
                     goto error;
 
@@ -2181,36 +2192,8 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
     return true;
 }
 
-JS_FRIEND_API(int)
-js_fgets(char* buf, int size, FILE* file)
-{
-    int n, i, c;
-    bool crflag;
-
-    n = size - 1;
-    if (n < 0)
-        return -1;
-
-    crflag = false;
-    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
-        buf[i] = c;
-        if (c == '\n') {        // any \n ends a line
-            i++;                // keep the \n; we know there is room for \0
-            break;
-        }
-        if (crflag) {           // \r not followed by \n ends line at the \r
-            ungetc(c, file);
-            break;              // and overwrite c in buf with \0
-        }
-        crflag = (c == '\r');
-    }
-
-    buf[i] = '\0';
-    return i;
-}
-
 const char*
-frontend::TokenKindToDesc(TokenKind tt)
+TokenKindToDesc(TokenKind tt)
 {
     switch (tt) {
 #define EMIT_CASE(name, desc) case TOK_##name: return desc;
@@ -2238,3 +2221,36 @@ TokenKindToString(TokenKind tt)
     return "<bad TokenKind>";
 }
 #endif
+
+} // namespace frontend
+
+} // namespace js
+
+
+JS_FRIEND_API(int)
+js_fgets(char* buf, int size, FILE* file)
+{
+    int n, i, c;
+    bool crflag;
+
+    n = size - 1;
+    if (n < 0)
+        return -1;
+
+    crflag = false;
+    for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
+        buf[i] = c;
+        if (c == '\n') {        // any \n ends a line
+            i++;                // keep the \n; we know there is room for \0
+            break;
+        }
+        if (crflag) {           // \r not followed by \n ends line at the \r
+            ungetc(c, file);
+            break;              // and overwrite c in buf with \0
+        }
+        crflag = (c == '\r');
+    }
+
+    buf[i] = '\0';
+    return i;
+}
