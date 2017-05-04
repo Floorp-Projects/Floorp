@@ -386,6 +386,14 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+void
+nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
+                                       const nsDisplayListSet& aLists)
+{
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
+}
+
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()
 {
   return GetNextColumn(nullptr);

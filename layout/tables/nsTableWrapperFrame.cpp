@@ -190,7 +190,11 @@ nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // Now we have to sort everything by content order, since the caption
   // may be somewhere inside the table
-  set.SortAllByContentOrder(GetContent());
+  set.BlockBorderBackgrounds()->SortByContentOrder(GetContent());
+  set.Floats()->SortByContentOrder(GetContent());
+  set.Content()->SortByContentOrder(GetContent());
+  set.PositionedDescendants()->SortByContentOrder(GetContent());
+  set.Outlines()->SortByContentOrder(GetContent());
   set.MoveTo(aLists);
 }
 

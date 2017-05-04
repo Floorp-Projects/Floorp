@@ -621,21 +621,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsDisplayTableItem* item = nullptr;
-  if (IsVisibleInSelection(aBuilder)) {
-    bool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
-    if (isRoot) {
-      // This background is created regardless of whether this frame is
-      // visible or not. Visibility decisions are delegated to the
-      // table background painter.
-      // We would use nsDisplayGeneric for this rare case except that we
-      // need the background to be larger than the row frame in some
-      // cases.
-      item = new (aBuilder) nsDisplayTableRowBackground(aBuilder, this);
-      aLists.BorderBackground()->AppendNewToTop(item);
-    }
-  }
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
 }
 
 nsIFrame::LogicalSides
