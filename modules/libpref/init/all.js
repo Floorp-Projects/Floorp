@@ -5220,11 +5220,6 @@ pref("urlclassifier.update.response_timeout_ms", 5000);
 // Download update timeout for Safebrowsing.
 pref("urlclassifier.update.timeout_ms", 60000);
 
-// If an urlclassifier table has not been updated in this number of seconds,
-// a gethash request will be forced to check that the result is still in
-// the database.
-pref("urlclassifier.max-complete-age", 2700);
-
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)
 pref("urlclassifier.alternate_error_page", "blocked");

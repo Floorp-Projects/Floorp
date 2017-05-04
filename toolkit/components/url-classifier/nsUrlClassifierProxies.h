@@ -155,24 +155,6 @@ public:
     mozilla::safebrowsing::LookupResultArray* mResults;
   };
 
-  class SetLastUpdateTimeRunnable : public mozilla::Runnable
-  {
-  public:
-    SetLastUpdateTimeRunnable(nsUrlClassifierDBServiceWorker* aTarget,
-                              const nsACString& table,
-                              uint64_t updateTime)
-      : mTarget(aTarget),
-        mTable(table),
-        mUpdateTime(updateTime)
-    { }
-
-    NS_DECL_NSIRUNNABLE
-  private:
-    RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
-    nsCString mTable;
-    uint64_t mUpdateTime;
-  };
-
   class ClearLastResultsRunnable : public mozilla::Runnable
   {
   public:

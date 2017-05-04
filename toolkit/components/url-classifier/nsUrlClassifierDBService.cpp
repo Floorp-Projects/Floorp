@@ -100,9 +100,6 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
 
-#define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
-#define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
-
 // 30 minutes as the maximum negative cache duration.
 #define MAXIMUM_NEGATIVE_CACHE_DURATION_SEC (30 * 60 * 1000)
 
@@ -122,7 +119,6 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 // thread.
 static bool gShuttingDownThread = false;
 
-static mozilla::Atomic<uint32_t, Relaxed> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
 static uint32_t sGethashNoise = GETHASH_NOISE_DEFAULT;
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
@@ -724,15 +720,8 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ReloadDatabase()
 {
   nsTArray<nsCString> tables;
-  nsTArray<int64_t> lastUpdateTimes;
   nsresult rv = mClassifier->ActiveTables(tables);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // We need to make sure lastupdatetime is set after reload database
-  // Otherwise request will be skipped if it is not confirmed.
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    lastUpdateTimes.AppendElement(mClassifier->GetLastUpdateTime(tables[table]));
-  }
 
   // This will null out mClassifier
   rv = CloseDb();
@@ -741,13 +730,6 @@ nsUrlClassifierDBServiceWorker::ReloadDatabase()
   // Create new mClassifier and load prefixset and completions from disk.
   rv = OpenDb();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    int64_t time = lastUpdateTimes[table];
-    if (time) {
-      mClassifier->SetLastUpdateTime(tables[table], lastUpdateTimes[table]);
-    }
-  }
 
   return NS_OK;
 }
@@ -948,18 +930,6 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mClassifier = classifier;
-
-  return NS_OK;
-}
-
-nsresult
-nsUrlClassifierDBServiceWorker::SetLastUpdateTime(const nsACString &table,
-                                                  uint64_t updateTime)
-{
-  MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
-  MOZ_ASSERT(mClassifier, "Classifier connection must be opened");
-
-  mClassifier->SetLastUpdateTime(table, updateTime);
 
   return NS_OK;
 }
@@ -1676,8 +1646,6 @@ nsUrlClassifierDBService::Init()
 
   sGethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
     GETHASH_NOISE_DEFAULT);
-  gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
-    CONFIRM_AGE_DEFAULT_SEC);
   ReadTablesFromPrefs();
   nsresult rv;
 
@@ -1744,8 +1712,6 @@ nsUrlClassifierDBService::Init()
   //       situations. See Bug 1247798 and Bug 1244803.
   Preferences::AddUintVarCache(&sGethashNoise, GETHASH_NOISE_PREF,
     GETHASH_NOISE_DEFAULT);
-  Preferences::AddAtomicUintVarCache(&gFreshnessGuarantee, CONFIRM_AGE_PREF,
-    CONFIRM_AGE_DEFAULT_SEC);
 
   for (uint8_t i = 0; i < kObservedPrefs.Length(); i++) {
     Preferences::AddStrongObserver(this, kObservedPrefs[i].get());
@@ -2105,15 +2071,6 @@ nsUrlClassifierDBService::SetHashCompleter(const nsACString &tableName,
   }
   ClearLastResults();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsUrlClassifierDBService::SetLastUpdateTime(const nsACString &tableName,
-                                            uint64_t lastUpdateTime)
-{
-  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
-
-  return mWorkerProxy->SetLastUpdateTime(tableName, lastUpdateTime);
 }
 
 NS_IMETHODIMP
