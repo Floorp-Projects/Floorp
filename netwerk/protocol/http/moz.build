@@ -122,3 +122,9 @@ EXTRA_COMPONENTS += [
     'WellKnownOpportunisticUtils.js',
     'WellKnownOpportunisticUtils.manifest',
 ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    if CONFIG['HOST_MAJOR_VERSION'] == '15':
+        DEFINES.update(
+            HAS_CONNECTX=True,
+        )
