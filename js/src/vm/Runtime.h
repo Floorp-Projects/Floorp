@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DoublyLinkedList.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -19,7 +20,6 @@
 #include <setjmp.h>
 
 #include "jsatom.h"
-#include "jsclist.h"
 #include "jsscript.h"
 
 #ifdef XP_DARWIN
@@ -560,14 +560,34 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         weakCaches().insertBack(cachep);
     }
 
+    template <typename T>
+    struct GlobalObjectWatchersSiblingAccess {
+      static T* GetNext(T* elm) {
+        return elm->onNewGlobalObjectWatchersLink.mNext;
+      }
+      static void SetNext(T* elm, T* next) {
+        elm->onNewGlobalObjectWatchersLink.mNext = next;
+      }
+      static T* GetPrev(T* elm) {
+        return elm->onNewGlobalObjectWatchersLink.mPrev;
+      }
+      static void SetPrev(T* elm, T* prev) {
+        elm->onNewGlobalObjectWatchersLink.mPrev = prev;
+      }
+    };
+
+    using WatchersList =
+        mozilla::DoublyLinkedList<js::Debugger,
+                                  GlobalObjectWatchersSiblingAccess<js::Debugger>>;
   private:
     /*
-     * Head of circular list of all enabled Debuggers that have
-     * onNewGlobalObject handler methods established.
+     * List of all enabled Debuggers that have onNewGlobalObject handler
+     * methods established.
      */
-    js::ActiveThreadData<JSCList> onNewGlobalObjectWatchers_;
+    js::ActiveThreadData<WatchersList> onNewGlobalObjectWatchers_;
+
   public:
-    JSCList& onNewGlobalObjectWatchers() { return onNewGlobalObjectWatchers_.ref(); }
+    WatchersList& onNewGlobalObjectWatchers() { return onNewGlobalObjectWatchers_.ref(); }
 
   private:
     /*

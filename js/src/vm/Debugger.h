@@ -14,7 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
-#include "jsclist.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsweakmap.h"
@@ -260,6 +259,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
+    friend struct JSRuntime::GlobalObjectWatchersSiblingAccess<Debugger>;
     friend class SavedStacks;
     friend class ScriptedOnStepHandler;
     friend class ScriptedOnPopHandler;
@@ -467,11 +467,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     /*
      * If this Debugger is enabled, and has a onNewGlobalObject handler, then
-     * this link is inserted into the circular list headed by
-     * JSRuntime::onNewGlobalObjectWatchers. Otherwise, this is set to a
-     * singleton cycle.
+     * this link is inserted into the list headed by
+     * JSRuntime::onNewGlobalObjectWatchers.
      */
-    JSCList onNewGlobalObjectWatchersLink;
+    mozilla::DoublyLinkedListElement<Debugger> onNewGlobalObjectWatchersLink;
 
     /*
      * Map from stack frames that are currently on the stack to Debugger.Frame
@@ -810,8 +809,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                              MutableHandleDebuggerFrame result);
 
     inline Breakpoint* firstBreakpoint() const;
-
-    static inline Debugger* fromOnNewGlobalObjectWatchersLink(JSCList* link);
 
     static MOZ_MUST_USE bool replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
                                               AbstractFramePtr to,
@@ -1746,12 +1743,6 @@ Debugger::firstBreakpoint() const
     return &(*breakpoints.begin());
 }
 
-/* static */ Debugger*
-Debugger::fromOnNewGlobalObjectWatchersLink(JSCList* link) {
-    char* p = reinterpret_cast<char*>(link);
-    return reinterpret_cast<Debugger*>(p - offsetof(Debugger, onNewGlobalObjectWatchersLink));
-}
-
 const js::GCPtrNativeObject&
 Debugger::toJSObject() const
 {
@@ -1810,7 +1801,7 @@ Debugger::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 #ifdef DEBUG
     global->compartment()->firedOnNewGlobalObject = true;
 #endif
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers()))
+    if (!cx->runtime()->onNewGlobalObjectWatchers().isEmpty())
         Debugger::slowPathOnNewGlobalObject(cx, global);
 }
 
