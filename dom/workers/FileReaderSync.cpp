@@ -78,7 +78,7 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
 
   uint32_t numRead;
-  aRv = SyncRead(stream, bufferData.get(), blobSize, &numRead);
+  aRv = Read(stream, bufferData.get(), blobSize, &numRead);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -110,7 +110,7 @@ FileReaderSync::ReadAsBinaryString(Blob& aBlob,
   uint32_t numRead;
   do {
     char readBuf[4096];
-    aRv = SyncRead(stream, readBuf, sizeof(readBuf), &numRead);
+    aRv = Read(stream, readBuf, sizeof(readBuf), &numRead);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -145,7 +145,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   uint32_t numRead = 0;
-  aRv = SyncRead(stream, sniffBuf.BeginWriting(), sniffBuf.Length(), &numRead);
+  aRv = Read(stream, sniffBuf.BeginWriting(), sniffBuf.Length(), &numRead);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -361,8 +361,8 @@ NS_INTERFACE_MAP_END
 } // anonymous
 
 nsresult
-FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
-                         uint32_t aBufferSize, uint32_t* aRead)
+FileReaderSync::Read(nsIInputStream* aStream, char* aBuffer, uint32_t aBufferSize,
+                     uint32_t* aRead)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aBuffer);
@@ -370,32 +370,8 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
 
   // Let's try to read, directly.
   nsresult rv = aStream->Read(aBuffer, aBufferSize, aRead);
-
-  // Nothing else to read.
-  if (rv == NS_BASE_STREAM_CLOSED ||
-      (NS_SUCCEEDED(rv) && *aRead == 0)) {
-    return NS_OK;
-  }
-
-  // An error.
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+  if (NS_SUCCEEDED(rv) || rv != NS_BASE_STREAM_WOULD_BLOCK) {
     return rv;
-  }
-
-  // All good.
-  if (NS_SUCCEEDED(rv)) {
-    // Not enough data, let's read recursively.
-    if (*aRead != aBufferSize) {
-      uint32_t byteRead = 0;
-      rv = SyncRead(aStream, aBuffer + *aRead, aBufferSize - *aRead, &byteRead);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      *aRead += byteRead;
-    }
-
-    return NS_OK;
   }
 
   // We need to proceed async.
@@ -432,5 +408,5 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
   }
 
   // Now, we can try to read again.
-  return SyncRead(aStream, aBuffer, aBufferSize, aRead);
+  return Read(aStream, aBuffer, aBufferSize, aRead);
 }
