@@ -9,6 +9,7 @@ way, and certainly anything using mozharness should use this approach.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
+import slugid
 
 from textwrap import dedent
 
@@ -244,3 +245,27 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         ' '.join(hg_command),
         ' '.join(mh_command)
     ])
+
+
+@run_job_using('buildbot-bridge', 'mozharness', schema=mozharness_run_schema)
+def mozharness_on_buildbot_bridge(config, job, taskdesc):
+    run = job['run']
+    worker = taskdesc['worker']
+    branch = config.params['project']
+    product = run.get('index', {}).get('product', 'firefox')
+
+    worker.pop('env', None)
+
+    worker.update({
+        'buildername': 'OS X 10.7 {} build'.format(branch),
+        'sourcestamp': {
+            'branch': branch,
+            'repository': config.params['head_repository'],
+            'revision': config.params['head_rev'],
+        },
+        'properties': {
+            'product': product,
+            'who': config.params['owner'],
+            'upload_to_task_id': slugid.nice(),
+        }
+    })
