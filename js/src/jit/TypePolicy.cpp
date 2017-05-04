@@ -673,6 +673,7 @@ CacheIdPolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
     }
 }
 
+template bool CacheIdPolicy<0>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
 template bool CacheIdPolicy<1>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
 
 bool
@@ -1250,6 +1251,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(MixPolicy<IntPolicy<0>, IntPolicy<1> >)                           \
     _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >)                        \
     _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, CacheIdPolicy<1>>) \
+    _(MixPolicy<CacheIdPolicy<0>, ObjectPolicy<1> >)                    \
     _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >)            \
     _(MixPolicy<ObjectPolicy<0>, IntPolicy<1> >)                        \
     _(MixPolicy<ObjectPolicy<0>, IntPolicy<2> >)                        \

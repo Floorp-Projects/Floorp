@@ -2,19 +2,15 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.gecko.home.activitystream.topsites;
+package org.mozilla.gecko.activitystream.homepanel.topsites;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.View;
 
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.widget.RecyclerViewClickSupport;
-
-import java.util.EnumSet;
 
 public class TopSitesPage
         extends RecyclerView {

@@ -440,7 +440,7 @@ get_valid_path(NS_tchar **line, bool isdir = false)
 {
   NS_tchar *path = mstrtok(kQuote, line);
   if (!path) {
-    LOG(("get_valid_path: unable to determine path: " LOG_S, line));
+    LOG(("get_valid_path: unable to determine path: " LOG_S, *line));
     return nullptr;
   }
 

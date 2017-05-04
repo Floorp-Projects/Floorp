@@ -1,4 +1,4 @@
-package org.mozilla.gecko.home.activitystream.model;
+package org.mozilla.gecko.activitystream.homepanel.model;
 
 import android.support.annotation.Nullable;
 

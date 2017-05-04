@@ -9,9 +9,9 @@ config = {
         'checkout-sources',
         # 'setup-mock',
         'build',
+        # 'generate-build-stats',
         'upload-files',
         'sendchange',
-        # 'generate-build-stats',
         'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'macosx64-debug',
