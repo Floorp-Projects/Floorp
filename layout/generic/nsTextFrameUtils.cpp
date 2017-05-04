@@ -16,7 +16,7 @@
 using namespace mozilla;
 
 static bool
-IsDiscardable(char16_t ch, uint32_t* aFlags)
+IsDiscardable(char16_t ch, uint16_t* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
   // and discarding it would force us to copy text in many cases of preformatted
@@ -29,7 +29,7 @@ IsDiscardable(char16_t ch, uint32_t* aFlags)
 }
 
 static bool
-IsDiscardable(uint8_t ch, uint32_t* aFlags)
+IsDiscardable(uint8_t ch, uint16_t* aFlags)
 {
   if (ch == CH_SHY) {
     *aFlags |= nsTextFrameUtils::TEXT_HAS_SHY;
@@ -93,7 +93,7 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
                      bool aHasSegmentBreak,
                      bool& aInWhitespace,
                      CharT* aOutput,
-                     uint32_t& aFlags,
+                     uint16_t& aFlags,
                      nsTextFrameUtils::CompressionMode aCompression,
                      gfxSkipChars* aSkipChars)
 {
@@ -209,9 +209,9 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags)
+                                uint16_t* aAnalysisFlags)
 {
-  uint32_t flags = 0;
+  uint16_t flags = 0;
   CharT* outputStart = aOutput;
 #ifdef DEBUG
   int32_t skipCharsOffset = aSkipChars->GetOriginalCharCount();
@@ -358,14 +358,14 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags);
+                                uint16_t* aAnalysisFlags);
 template char16_t*
 nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
                                 char16_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags);
+                                uint16_t* aAnalysisFlags);
 template bool
 nsTextFrameUtils::IsSkippableCharacterForTransformText(uint8_t aChar);
 template bool

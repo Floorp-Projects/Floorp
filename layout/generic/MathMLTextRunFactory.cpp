@@ -542,7 +542,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   bool mergeNeeded = false;
 
   bool singleCharMI =
-    aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
+    aTextRun->GetFlags2() & nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
 
   uint32_t length = aTextRun->GetLength();
   const char16_t* str = aTextRun->mString.BeginReading();
@@ -710,7 +710,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     }
   }
 
-  uint32_t flags;
+  uint16_t flags;
   gfxTextRunFactory::Parameters innerParams =
       GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
 
@@ -760,12 +760,12 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, newFontGroup, flags, Move(styleArray), false);
+        &innerParams, newFontGroup, flags, 0, Move(styleArray), false);
     child = transformedChild.get();
   } else {
     cachedChild = newFontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags, aMFR);
+        &innerParams, flags, 0, aMFR);
     child = cachedChild.get();
   }
   if (!child)

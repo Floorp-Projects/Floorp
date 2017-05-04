@@ -393,7 +393,7 @@ nsPropertiesTable::MakeTextRun(DrawTarget*        aDrawTarget,
                "nsPropertiesTable can only access glyphs by code point");
   return aFontGroup->
     MakeTextRun(aGlyph.code, aGlyph.Length(), aDrawTarget,
-                aAppUnitsPerDevPixel, 0, nullptr);
+                aAppUnitsPerDevPixel, 0, 0, nullptr);
 }
 
 // An instance of nsOpenTypeTable is associated with one gfxFontEntry that
@@ -474,7 +474,7 @@ nsOpenTypeTable::UpdateCache(DrawTarget*   aDrawTarget,
 {
   if (mCharCache != aChar) {
     RefPtr<gfxTextRun> textRun = aFontGroup->
-      MakeTextRun(&aChar, 1, aDrawTarget, aAppUnitsPerDevPixel, 0, nullptr);
+      MakeTextRun(&aChar, 1, aDrawTarget, aAppUnitsPerDevPixel, 0, 0, nullptr);
     const gfxTextRun::CompressedGlyph& data = textRun->GetCharacterGlyphs()[0];
     if (data.IsSimpleGlyph()) {
       mGlyphID = data.GetSimpleGlyph();
@@ -568,7 +568,7 @@ nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
     aDrawTarget, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevPixel
   };
   RefPtr<gfxTextRun> textRun =
-    gfxTextRun::Create(&params, 1, aFontGroup, 0);
+    gfxTextRun::Create(&params, 1, aFontGroup, 0, 0);
   textRun->AddGlyphRun(aFontGroup->GetFirstValidFont(),
                        gfxTextRange::kFontGroup, 0,
                        false, gfxTextRunFactory::TEXT_ORIENT_HORIZONTAL);
@@ -1535,7 +1535,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   uint32_t len = uint32_t(mData.Length());
   mGlyphs[0] = fm->GetThebesFontGroup()->
     MakeTextRun(static_cast<const char16_t*>(mData.get()), len, aDrawTarget,
-                aPresContext->AppUnitsPerDevPixel(), 0,
+                aPresContext->AppUnitsPerDevPixel(), 0, 0,
                 aPresContext->MissingFontRecorder());
   aDesiredStretchSize = MeasureTextRun(aDrawTarget, mGlyphs[0].get());
 

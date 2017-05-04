@@ -461,43 +461,34 @@ class gfxTextRunFactory {
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
-    // Flags in the mask 0xFFFF0000 are reserved for textrun clients
-    // Flags in the mask 0x0000F000 are reserved for per-platform fonts
-    // Flags in the mask 0x00000FFF are set by the textrun creator.
+    // Flags that live in the gfxShapedText::mFlags field.
+    // (Note that gfxTextRun has an additional mFlags2 field for use
+    // by textrun clients like nsTextFrame.)
     enum {
-        CACHE_TEXT_FLAGS    = 0xF0000000,
-        USER_TEXT_FLAGS     = 0x0FFF0000,
-        TEXTRUN_TEXT_FLAGS  = 0x0000FFFF,
-        SETTABLE_FLAGS      = CACHE_TEXT_FLAGS | USER_TEXT_FLAGS,
-
         /**
          * When set, the text string pointer used to create the text run
          * is guaranteed to be available during the lifetime of the text run.
          */
         TEXT_IS_PERSISTENT           = 0x0001,
         /**
-         * When set, the text is known to be all-ASCII (< 128).
-         */
-        TEXT_IS_ASCII                = 0x0002,
-        /**
          * When set, the text is RTL.
          */
-        TEXT_IS_RTL                  = 0x0004,
+        TEXT_IS_RTL                  = 0x0002,
         /**
          * When set, spacing is enabled and the textrun needs to call GetSpacing
          * on the spacing provider.
          */
-        TEXT_ENABLE_SPACING          = 0x0008,
+        TEXT_ENABLE_SPACING          = 0x0004,
+        /**
+         * When set, the text has no characters above 255 and it is stored
+         * in the textrun in 8-bit format.
+         */
+        TEXT_IS_8BIT                 = 0x0008,
         /**
          * When set, GetHyphenationBreaks may return true for some character
          * positions, otherwise it will always return false for all characters.
          */
         TEXT_ENABLE_HYPHEN_BREAKS    = 0x0010,
-        /**
-         * When set, the text has no characters above 255 and it is stored
-         * in the textrun in 8-bit format.
-         */
-        TEXT_IS_8BIT                 = 0x0020,
         /**
          * When set, the RunMetrics::mBoundingBox field will be initialized
          * properly based on glyph extents, in particular, glyph extents that
@@ -505,31 +496,41 @@ public:
          * and advance width of the glyph). When not set, it may just be the
          * standard font-box even if glyphs overflow.
          */
-        TEXT_NEED_BOUNDING_BOX       = 0x0040,
+        TEXT_NEED_BOUNDING_BOX       = 0x0020,
         /**
          * When set, optional ligatures are disabled. Ligatures that are
          * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0080,
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0040,
         /**
          * When set, the textrun should favour speed of construction over
          * quality. This may involve disabling ligatures and/or kerning or
          * other effects.
          */
-        TEXT_OPTIMIZE_SPEED          = 0x0100,
-        /**
-         * For internal use by the memory reporter when accounting for
-         * storage used by textruns.
-         * Because the reporter may visit each textrun multiple times while
-         * walking the frame trees and textrun cache, it needs to mark
-         * textruns that have been seen so as to avoid multiple-accounting.
-         */
-        TEXT_RUN_SIZE_ACCOUNTED      = 0x0200,
+        TEXT_OPTIMIZE_SPEED          = 0x0080,
         /**
          * When set, the textrun should discard control characters instead of
          * turning them into hexboxes.
          */
-        TEXT_HIDE_CONTROL_CHARACTERS = 0x0400,
+        TEXT_HIDE_CONTROL_CHARACTERS = 0x0100,
+
+        /**
+         * nsTextFrameThebes sets these, but they're defined here rather than
+         * in nsTextFrameUtils.h because ShapedWord creation/caching also needs
+         * to check the _INCOMING flag
+         */
+        TEXT_TRAILING_ARABICCHAR     = 0x0200,
+        /**
+         * When set, the previous character for this textrun was an Arabic
+         * character.  This is used for the context detection necessary for
+         * bidi.numeral implementation.
+         */
+        TEXT_INCOMING_ARABICCHAR     = 0x0400,
+
+        /**
+         * Set if the textrun should use the OpenType 'math' script.
+         */
+        TEXT_USE_MATH_SCRIPT         = 0x0800,
 
         /**
          * Field for orientation of the textrun and glyphs within it.
@@ -549,28 +550,12 @@ public:
          * characters, and separate glyphRuns created for the resulting
          * glyph orientations.
          */
-        TEXT_ORIENT_MASK                    = 0xF000,
+        TEXT_ORIENT_MASK                    = 0x7000,
         TEXT_ORIENT_HORIZONTAL              = 0x0000,
         TEXT_ORIENT_VERTICAL_UPRIGHT        = 0x1000,
         TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT = 0x2000,
+        TEXT_ORIENT_VERTICAL_MIXED          = 0x3000,
         TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT  = 0x4000,
-        TEXT_ORIENT_VERTICAL_MIXED          = 0x8000,
-
-        /**
-         * nsTextFrameThebes sets these, but they're defined here rather than
-         * in nsTextFrameUtils.h because ShapedWord creation/caching also needs
-         * to check the _INCOMING flag
-         */
-        TEXT_TRAILING_ARABICCHAR = 0x20000000,
-        /**
-         * When set, the previous character for this textrun was an Arabic
-         * character.  This is used for the context detection necessary for
-         * bidi.numeral implementation.
-         */
-        TEXT_INCOMING_ARABICCHAR = 0x40000000,
-
-        // Set if the textrun should use the OpenType 'math' script.
-        TEXT_USE_MATH_SCRIPT = 0x80000000,
     };
 
     /**
@@ -691,7 +676,7 @@ class gfxShapedText
 public:
     typedef mozilla::unicode::Script Script;
 
-    gfxShapedText(uint32_t aLength, uint32_t aFlags,
+    gfxShapedText(uint32_t aLength, uint16_t aFlags,
                   int32_t aAppUnitsPerDevUnit)
         : mLength(aLength)
         , mFlags(aFlags)
@@ -968,7 +953,7 @@ public:
                                 const uint8_t *aString,
                                 uint32_t       aLength);
 
-    uint32_t GetFlags() const {
+    uint16_t GetFlags() const {
         return mFlags;
     }
 
@@ -1161,9 +1146,9 @@ protected:
     uint32_t                        mLength;
 
     // Shaping flags (direction, ligature-suppression)
-    uint32_t                        mFlags;
+    uint16_t                        mFlags;
 
-    int32_t                         mAppUnitsPerDevUnit;
+    uint16_t                        mAppUnitsPerDevUnit;
 };
 
 /*
@@ -1190,7 +1175,7 @@ public:
     static gfxShapedWord* Create(const uint8_t *aText, uint32_t aLength,
                                  Script aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags,
+                                 uint16_t aFlags,
                                  gfxFontShaper::RoundingFlags aRounding) {
         NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
                      "excessive length for gfxShapedWord!");
@@ -1214,7 +1199,7 @@ public:
     static gfxShapedWord* Create(const char16_t *aText, uint32_t aLength,
                                  Script aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags,
+                                 uint16_t aFlags,
                                  gfxFontShaper::RoundingFlags aRounding) {
         NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
                      "excessive length for gfxShapedWord!");
@@ -1301,7 +1286,7 @@ private:
     // Construct storage for a ShapedWord, ready to receive glyph data
     gfxShapedWord(const uint8_t *aText, uint32_t aLength,
                   Script aRunScript,
-                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags,
+                  int32_t aAppUnitsPerDevUnit, uint16_t aFlags,
                   gfxFontShaper::RoundingFlags aRounding)
         : gfxShapedText(aLength, aFlags | gfxTextRunFactory::TEXT_IS_8BIT,
                         aAppUnitsPerDevUnit)
@@ -1316,7 +1301,7 @@ private:
 
     gfxShapedWord(const char16_t *aText, uint32_t aLength,
                   Script aRunScript,
-                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags,
+                  int32_t aAppUnitsPerDevUnit, uint16_t aFlags,
                   gfxFontShaper::RoundingFlags aRounding)
         : gfxShapedText(aLength, aFlags, aAppUnitsPerDevUnit)
         , mScript(aRunScript)
@@ -1787,7 +1772,7 @@ public:
                                  Script aRunScript,
                                  bool aVertical,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags,
+                                 uint16_t aFlags,
                                  RoundingFlags aRounding,
                                  gfxTextPerfMetrics *aTextPerf);
 
@@ -2042,7 +2027,7 @@ protected:
             const char16_t *mDouble;
         }                mText;
         uint32_t         mLength;
-        uint32_t         mFlags;
+        uint16_t         mFlags;
         Script           mScript;
         int32_t          mAppUnitsPerDevUnit;
         PLDHashNumber    mHashKey;
@@ -2052,7 +2037,7 @@ protected:
         CacheHashKey(const uint8_t *aText, uint32_t aLength,
                      uint32_t aStringHash,
                      Script aScriptCode, int32_t aAppUnitsPerDevUnit,
-                     uint32_t aFlags, RoundingFlags aRounding)
+                     uint16_t aFlags, RoundingFlags aRounding)
             : mLength(aLength),
               mFlags(aFlags),
               mScript(aScriptCode),
@@ -2073,7 +2058,7 @@ protected:
         CacheHashKey(const char16_t *aText, uint32_t aLength,
                      uint32_t aStringHash,
                      Script aScriptCode, int32_t aAppUnitsPerDevUnit,
-                     uint32_t aFlags, RoundingFlags aRounding)
+                     uint16_t aFlags, RoundingFlags aRounding)
             : mLength(aLength),
               mFlags(aFlags),
               mScript(aScriptCode),
