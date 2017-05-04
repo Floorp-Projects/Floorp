@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/Range.h"
 #include "mozilla/Result.h"
 #include "mozilla/Unused.h"
@@ -53,6 +54,22 @@ public:
         auto buf = data.AppendElements(size);
         cursor_ += size;
         return buf;
+    }
+
+    void
+    codeUint8(const uint8_t& val)
+    {
+        *write(sizeof val) = val;
+    }
+
+    template<typename T>
+    void
+    codeUint8(const EnumSet<T>& val)
+    {
+        // EnumSets are always represented as uint32_t values, so we need to
+        // assert that the value actually fits in a uint8 before writing it.
+        uint32_t value = val.serialize();
+        codeUint8(CheckedUint8(value).value());
     }
 
     void
@@ -103,6 +120,26 @@ public:
         auto buf = &data[cursor_];
         cursor_ += size;
         return buf;
+    }
+
+    bool
+    codeUint8(uint8_t& val)
+    {
+        if (checkCapacity(sizeof val)) {
+            val = *read(sizeof val);
+        }
+        return !error_;
+    }
+
+    template<typename T>
+    bool
+    codeUint8(EnumSet<T>& val)
+    {
+        uint8_t value;
+        if (codeUint8(value)) {
+            val.deserialize(value);
+        }
+        return !error_;
     }
 
     bool

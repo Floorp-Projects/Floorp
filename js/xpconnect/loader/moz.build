@@ -43,5 +43,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-shadow']
