@@ -908,55 +908,94 @@ AudioStreamHelper.prototype = {
   }
 }
 
-function VideoStreamHelper() {
-  this._helper = new CaptureStreamTestHelper2D(50,50);
-  this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
-  // Make sure this is initted
-  this._helper.drawColor(this._canvas, this._helper.green);
-  this._stream = this._canvas.captureStream(10);
-}
+class VideoFrameEmitter {
+  constructor(color1, color2) {
+    this._helper = new CaptureStreamTestHelper2D(50,50);
+    this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
+    this._color1 = color1 ? color1 : this._helper.green;
+    this._color2 = color2 ? color2 : this._helper.red;
+    // Make sure this is initted
+    this._helper.drawColor(this._canvas, this._color1);
+    this._stream = this._canvas.captureStream();
+    this._started = false;
+  }
 
-VideoStreamHelper.prototype = {
-  stream: function() {
+  stream() {
     return this._stream;
-  },
+  }
 
-  startCapturingFrames: function() {
-    var i = 0;
-    var helper = this;
-    return setInterval(function() {
+  start() {
+    if (this._started) {
+      return;
+    }
+
+    let i = 0;
+    this._started = true;
+    this._intervalId = setInterval(() => {
       try {
-        helper._helper.drawColor(helper._canvas,
-                                 i ? helper._helper.green : helper._helper.red);
+        this._helper.drawColor(this._canvas, i ? this._color1: this._color2);
         i = 1 - i;
-        helper._stream.requestFrame();
       } catch (e) {
         // ignore; stream might have shut down, and we don't bother clearing
         // the setInterval.
       }
     }, 500);
-  },
+  }
 
-  waitForFrames: function(canvas, timeout_value) {
-    var intervalId = this.startCapturingFrames();
-    timeout_value = timeout_value || 8000;
+  stop() {
+    if (this._started) {
+      clearInterval(this._intervalId);
+      this._started = false;
+    }
+  }
+}
 
-    return addFinallyToPromise(timeout(
-      Promise.all([
-        this._helper.waitForPixelColor(canvas, this._helper.green, 128,
-                                       canvas.id + " should become green"),
-        this._helper.waitForPixelColor(canvas, this._helper.red, 128,
-                                       canvas.id + " should become red")
-      ]),
-      timeout_value,
-      "Timed out waiting for frames")).finally(() => clearInterval(intervalId));
-  },
+class VideoStreamHelper {
+  constructor() {
+    this._helper = new CaptureStreamTestHelper2D(50,50);
+  }
 
-  verifyNoFrames: function(canvas) {
-    return this.waitForFrames(canvas).then(
-      () => ok(false, "Color should not change"),
-      () => ok(true, "Color should not change")
-    );
+  checkHasFrame(video, offsetX, offsetY, threshold) {
+    const h = this._helper;
+    return h.waitForPixel(video, offsetX, offsetY, px => {
+      let result = h.isOpaquePixelNot(px, h.black, threshold);
+      info("Checking that we have a frame, got [" +
+           Array.slice(px) + "]. Ref=[" +
+           Array.slice(h.black.data) + "]. Threshold=" + threshold +
+           ". Pass=" + result);
+      return result;
+    });
+  }
+
+  async checkVideoPlaying(video, offsetX, offsetY, threshold) {
+    const h = this._helper;
+    await this.checkHasFrame(video, offsetX, offsetY, threshold);
+    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
+                     , name: "startcolor"
+                     };
+    return h.waitForPixel(video, offsetX, offsetY, px => {
+      let result = h.isPixelNot(px, startPixel, threshold)
+      info("Checking playing, [" +
+           Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
+           "]. Threshold=" + threshold + " Pass=" + result);
+      return result;
+    });
+  }
+
+  async checkVideoPaused(video, offsetX, offsetY, threshold, timeout) {
+    const h = this._helper;
+    await this.checkHasFrame(video, offsetX, offsetY, threshold);
+    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
+                     , name: "startcolor"
+                     };
+    const changed = await h.waitForPixel(video, offsetX, offsetY, px => {
+      let result = h.isOpaquePixelNot(px, startPixel, threshold);
+      info("Checking paused, [" +
+           Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
+           "]. Threshold=" + threshold + " Pass=" + result);
+      return result;
+    }, timeout);
+    ok(!changed, "Frame shouldn't change within " + timeout / 1000 + " seconds.");
   }
 }
 

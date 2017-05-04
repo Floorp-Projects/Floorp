@@ -3,7 +3,6 @@
 <head>
   <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
-  <script type="application/javascript" src="head.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -24,43 +23,11 @@ const offsetX = 20;
 const offsetY = 20;
 const threshold = 16;
 const pausedTimeout = 1000;
-const h = new CaptureStreamTestHelper2D(50, 50);
-
-var checkHasFrame = video => h.waitForPixel(video, offsetX, offsetY, px => {
-  let result = h.isOpaquePixelNot(px, h.black, threshold);
-  info("Checking that we have a frame, got [" +
-       Array.slice(px) + "]. Pass=" + result);
-  return result;
-});
-
-var checkVideoPlaying = video => checkHasFrame(video)
-  .then(() => {
-    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
-                     , name: "startcolor"
-                     };
-    return h.waitForPixel(video, offsetX, offsetY, px => {
-      let result = h.isPixelNot(px, startPixel, threshold)
-      info("Checking playing, [" + Array.slice(px) + "] vs [" +
-           Array.slice(startPixel.data) + "]. Pass=" + result);
-      return result;
-    });
-  });
-
-var checkVideoPaused = video => checkHasFrame(video)
-  .then(() => {
-    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
-                     , name: "startcolor"
-                     };
-    return h.waitForPixel(video, offsetX, offsetY, px => {
-      let result = h.isOpaquePixelNot(px, startPixel, threshold);
-      info("Checking paused, [" + Array.slice(px) + "] vs [" +
-           Array.slice(startPixel.data) + "]. Pass=" + result);
-      return result;
-    }, pausedTimeout);
-  }).then(result => ok(!result, "Frame shouldn't change within " + pausedTimeout / 1000 + " seconds."));
+let h;
 
 runTest(() => getUserMedia({video: true, fake: true})
   .then(stream => {
+    h = new VideoStreamHelper();
     gUMVideoElement =
       createMediaElement("video", "gUMVideo");
     gUMVideoElement.srcObject = stream;
@@ -80,43 +47,45 @@ runTest(() => getUserMedia({video: true, fake: true})
     let osc = createOscillatorStream(new AudioContext(), 1000);
     captureStreamElement.srcObject.addTrack(osc.getTracks()[0]);
 
-    return checkVideoPlaying(captureStreamElement);
+    return h.checkVideoPlaying(captureStreamElement, 10, 10, 16);
   })
   .then(() => {
     info("Video flowing. Pausing.");
     gUMVideoElement.pause();
 
-    return checkVideoPaused(captureStreamElement);
+    return h.checkVideoPaused(captureStreamElement, 10, 10, 16, pausedTimeout);
   })
   .then(() => {
     info("Video stopped flowing. Playing.");
     gUMVideoElement.play();
 
-    return checkVideoPlaying(captureStreamElement);
+    return h.checkVideoPlaying(captureStreamElement, 10, 10, 16);
   })
   .then(() => {
     info("Video flowing. Removing source.");
     var stream = gUMVideoElement.srcObject;
     gUMVideoElement.srcObject = null;
 
-    return checkVideoPaused(captureStreamElement).then(() => stream);
+    return h.checkVideoPaused(captureStreamElement, 10, 10, 16, pausedTimeout)
+        .then(() => stream);
   })
   .then(stream => {
     info("Video stopped flowing. Setting source.");
     gUMVideoElement.srcObject = stream;
-    return checkVideoPlaying(captureStreamElement);
+    return h.checkVideoPlaying(captureStreamElement, 10, 10, 16);
   })
   .then(() => {
     info("Video flowing. Changing source by track manipulation. Remove first.");
     var track = gUMVideoElement.srcObject.getTracks()[0];
     gUMVideoElement.srcObject.removeTrack(track);
-    return checkVideoPaused(captureStreamElement).then(() => track);
+    return h.checkVideoPaused(captureStreamElement, 10, 10, 16, pausedTimeout)
+        .then(() => track);
   })
   .then(track => {
     info("Video paused. Changing source by track manipulation. Add first.");
     gUMVideoElement.srcObject.addTrack(track);
     gUMVideoElement.play();
-    return checkVideoPlaying(captureStreamElement);
+    return h.checkVideoPlaying(captureStreamElement, 10, 10, 16);
   })
   .then(() => {
     gUMVideoElement.srcObject.getTracks().forEach(t => t.stop());
