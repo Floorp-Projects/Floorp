@@ -577,18 +577,6 @@ nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
 static bool
 AllowMessage(size_t aDataLength, const nsAString& aMessageName)
 {
-  static const size_t kMinTelemetryMessageSize = 8192;
-
-  if (aDataLength < kMinTelemetryMessageSize) {
-    return true;
-  }
-
-  NS_ConvertUTF16toUTF8 messageName(aMessageName);
-  messageName.StripChars("0123456789");
-
-  Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE2, messageName,
-                        aDataLength);
-
   // A message includes more than structured clone data, so subtract
   // 20KB to make it more likely that a message within this bound won't
   // result in an overly large IPC message.
@@ -596,6 +584,9 @@ AllowMessage(size_t aDataLength, const nsAString& aMessageName)
   if (aDataLength < kMaxMessageSize) {
     return true;
   }
+
+  NS_ConvertUTF16toUTF8 messageName(aMessageName);
+  messageName.StripChars("0123456789");
 
   Telemetry::Accumulate(Telemetry::REJECTED_MESSAGE_MANAGER_MESSAGE,
                         messageName);
