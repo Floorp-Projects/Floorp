@@ -74,6 +74,8 @@
     macro(constructor, constructor, "constructor") \
     macro(continue, continue_, "continue") \
     macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
+    macro(CopyDataProperties, CopyDataProperties, "CopyDataProperties") \
+    macro(CopyDataPropertiesUnfiltered, CopyDataPropertiesUnfiltered, "CopyDataPropertiesUnfiltered") \
     macro(copyWithin, copyWithin, "copyWithin") \
     macro(count, count, "count") \
     macro(CreateResolvingFunctions, CreateResolvingFunctions, "CreateResolvingFunctions") \
