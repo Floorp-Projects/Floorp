@@ -9,10 +9,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   min-height: 100vh;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-inline-start: calc(48px + 4.6em);
-  padding-inline-end: 48px;
+  padding: 0 48px;
   align-items: center;
   justify-content: center;
 }
@@ -37,7 +34,7 @@ body {
   background-size: 1.6em;
   margin-inline-start: -2.3em;
   padding-inline-start: 2.3em;
-  font-size: 2.5em;
+  font-size: 2.2em;
 }
 
 .title:-moz-locale-dir(rtl),
@@ -51,11 +48,7 @@ body {
   padding-bottom: 0.4em;
 }
 
-@media (max-width: 675px) {
-  body {
-    padding: 0 48px;
-  }
-
+@media (max-width: 970px) {
   .title {
     background-image: none !important;
     padding-inline-start: 0;

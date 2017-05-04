@@ -5,52 +5,26 @@
 @import url("chrome://global/skin/in-content/info-pages.css");
 
 :root {
-  --color-grey-lightest: #fbfbfb;
   --color-grey: #b1b1b1;
-
-  --color-blue: #0996f8;
-  --color-blue-dark: #0670cc;
-  --color-blue-darker: #005bab;
-
-  --icon-margin: 64px;
 }
 
 html.private {
-  --in-content-page-color: #beb8cc;
-  --in-content-text-color: #beb8cc;
-  --in-content-page-background: #1c023c;
-}
-
-body {
-  padding: 40px;
+  --in-content-page-color: white;
+  --in-content-text-color: white;
+  --in-content-page-background: #25003e;
 }
 
 a:link {
-  color: var(--color-blue);
-  text-decoration: none;
-}
-
-a:hover {
-  color: var(--color-blue-dark);
+  color: inherit;
   text-decoration: underline;
 }
 
-a:hover:active {
-  color: var(--color-blue-darker);
-}
-
-a:visited {
-  color: var(--color-blue-darker);
-}
-
-.about-content-container {
-  max-width: 780px;
+.container {
+  max-width: 48em;
 }
 
 .section-main {
   margin-bottom: 48px;
-  margin-inline-start: var(--icon-margin);
-  padding-inline-start: 24px;
 }
 
 .section-main:last-child {
@@ -67,8 +41,8 @@ p {
 
 .list-row > ul > li {
   float: left;
-  width: 220px;
-  line-height: 1.5em;
+  width: 16em;
+  line-height: 2em;
   margin-inline-start: 1em;
   margin-bottom: 0;
 }
@@ -79,17 +53,15 @@ p {
 
 .title {
   background-image: url("chrome://browser/skin/privatebrowsing/private-browsing.svg");
-  background-size: 64px;
-  background-position: left, center;
-  font-weight: lighter;
-  line-height: 1.5em;
-  min-height: 64px;
-  margin-inline-start: 0;
-  padding-inline-start: calc(var(--icon-margin) + 24px);
+  background-position: left center;
+  background-size: 2em;
+  line-height: 2em;
+  margin-inline-start: calc(-2em - 10px);
+  padding-inline-start: calc(2em + 10px);
 }
 
 .title:dir(rtl) {
-  background-position: right, center;
+  background-position: right center;
 }
 
 .about-subheader {
@@ -97,12 +69,13 @@ p {
   align-items: center;
   font-size: 1.5em;
   font-weight: lighter;
-  min-height: 32px;
   background-image: url("chrome://browser/skin/privatebrowsing/tracking-protection.svg");
   background-repeat: no-repeat;
-  background-size: 32px;
-  margin-inline-start: calc(var(--icon-margin) - 32px);
-  padding-inline-start: 56px;
+  background-position: left center;
+  background-size: 1.5em;
+  line-height: 1.5em;
+  margin-inline-start: calc(-1.5em - 10px);
+  padding-inline-start: calc(1.5em + 10px);
 }
 
 .about-subheader:dir(rtl) {
@@ -114,23 +87,17 @@ p {
 }
 
 .about-info {
-  font-size: .875em;
+  font-size: .9em;
 }
 
 .tpTitle {
   margin-inline-end: 12px;
 }
 
-.private strong {
-  color: var(--color-grey-lightest);
-  font-weight: normal;
-}
-
 a.button {
-  padding: 5px 40px;
-  background-color: #381e59;
-  border: 1px solid #43256a;
-  border-radius: 4px;
+  padding: 3px 20px;
+  background-color: #8000d7;
+  border: 1px solid #6000a1;
   text-decoration: none;
   display: inline-block;
 }
@@ -155,40 +122,23 @@ a.button {
 .toggle + .toggle-btn {
   box-sizing: border-box;
   cursor: pointer;
-  min-width: 60px;
-  height: 24px;
-  border-radius: 12px;
+  min-width: 42px;
+  height: 26px;
+  border-radius: 13px;
   background-color: var(--color-grey);
-  border: 1px var(--color-grey) solid;
-  padding: 2px;
-}
-
-.toggle + .toggle-btn::after,
-.toggle + .toggle-btn::before {
-  position: relative;
-  display: block;
-  content: "";
-  width: 19px;
-  height: 100%;
+  padding: 1px;
 }
 
 .toggle + .toggle-btn::after {
+  position: relative;
+  display: block;
+  content: "";
+  width: 24px;
+  height: 100%;
   left: 0;
-  box-shadow: 0 0 1px 1px hsla(0, 0%, 0%, .1),
-              0 1px 0 hsla(0, 0%, 0%, .2);
   border-radius: 50%;
   background: white;
   transition: left .2s ease;
-}
-
-.toggle + .toggle-btn::before {
-  float: left;
-  left: 9px;
-  visibility: hidden;
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-color: transparent;
-  background-image: url("chrome://browser/skin/privatebrowsing/check.svg");
 }
 
 .toggle + .toggle-btn:dir(rtl)::after {
@@ -197,27 +147,17 @@ a.button {
   transition-property: right;
 }
 
-.toggle + .toggle-btn:dir(rtl)::before {
-  float: right;
-  left: auto;
-  right: 9px;
-}
-
 .toggle:checked + .toggle-btn {
-  background: #3fc455;
-  border: 1px solid #269939;
+  background: #16da00;
 }
 
 .toggle:checked + .toggle-btn::after {
-  left: 35px;
+  left: 16px;
 }
 
 .toggle:checked + .toggle-btn:dir(rtl)::after {
-  right: 35px;
-}
-
-.toggle:checked + .toggle-btn::before {
-  visibility: visible;
+  left: auto;
+  right: 16px;
 }
 
 .toggle:-moz-focusring + .toggle-btn {
