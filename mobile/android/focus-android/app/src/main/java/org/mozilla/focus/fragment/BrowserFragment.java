@@ -39,6 +39,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
+import org.mozilla.focus.menu.WebContextMenu;
 import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -245,90 +246,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void onLongPress(final IWebView.HitTarget hitTarget) {
-                // TODO: move this code into its own class once the UX is decided.
-                if (!(hitTarget.isLink || hitTarget.isImage)) {
-                    // We don't support any other classes yet:
-                    throw new IllegalStateException("BrowserFragment can only handle long-press on images and/or links.");
-                }
-
-                TelemetryWrapper.openWebContextMenuEvent();
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                if (hitTarget.isLink) {
-                    builder.setTitle(hitTarget.linkURL);
-                } else if (hitTarget.isImage) {
-                    builder.setTitle(hitTarget.imageURL);
-                }
-
-                final NavigationView menu = new NavigationView(getContext());
-                menu.inflateMenu(R.menu.menu_browser_context);
-
-                menu.getMenu().findItem(R.id.menu_link_share).setEnabled(hitTarget.isLink);
-                menu.getMenu().findItem(R.id.menu_link_copy).setEnabled(hitTarget.isLink);
-                menu.getMenu().findItem(R.id.menu_image_share).setEnabled(hitTarget.isImage);
-                menu.getMenu().findItem(R.id.menu_image_copy).setEnabled(hitTarget.isImage);
-
-                builder.setView(menu);
-
-                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        // This even is only sent when the back button is pressed, or when a user
-                        // taps outside of the dialog:
-                        TelemetryWrapper.cancelWebContextMenuEvent();
-                    }
-                });
-
-                final Dialog dialog = builder.create();
-
-                menu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        dialog.dismiss();
-
-                        switch (item.getItemId()) {
-                            case R.id.menu_link_share: {
-                                TelemetryWrapper.shareLinkEvent();
-                                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                                shareIntent.setType("text/plain");
-                                shareIntent.putExtra(Intent.EXTRA_TEXT, hitTarget.linkURL);
-                                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
-                                return true;
-                            }
-                            case R.id.menu_image_share: {
-                                TelemetryWrapper.shareImageEvent();
-                                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                                shareIntent.setType("text/plain");
-                                shareIntent.putExtra(Intent.EXTRA_TEXT, hitTarget.imageURL);
-                                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
-                                return true;
-                            }
-                            case R.id.menu_link_copy:
-                            case R.id.menu_image_copy:
-                                final ClipboardManager clipboard = (ClipboardManager)
-                                        getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                                final Uri uri;
-
-                                if (item.getItemId() == R.id.menu_link_copy) {
-                                    TelemetryWrapper.copyLinkEvent();
-                                    uri = Uri.parse(hitTarget.linkURL);
-                                } else if (item.getItemId() == R.id.menu_image_copy) {
-                                    TelemetryWrapper.copyImageEvent();
-                                    uri = Uri.parse(hitTarget.imageURL);
-                                } else {
-                                    throw new IllegalStateException("Unknown hitTarget type - cannot copy to clipboard");
-                                }
-
-                                final ClipData clip = ClipData.newUri(getContext().getContentResolver(), "URI", uri);
-                                clipboard.setPrimaryClip(clip);
-                                return true;
-                            default:
-                                throw new IllegalArgumentException("Unhandled menu item id=" + item.getItemId());
-                        }
-                    }
-                });
-
-                dialog.show();
+                WebContextMenu.show(getActivity(), hitTarget);
             }
 
             @Override
