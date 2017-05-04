@@ -7544,31 +7544,7 @@ HTMLInputElement::IsValueMissing() const
   // Should use UpdateValueMissingValidityStateForRadio() for type radio.
   MOZ_ASSERT(mType != NS_FORM_INPUT_RADIO);
 
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) ||
-      !DoesRequiredApply()) {
-    return false;
-  }
-
-  if (!IsMutable()) {
-    return false;
-  }
-
-  switch (GetValueMode()) {
-    case VALUE_MODE_VALUE:
-      return IsValueEmpty();
-
-    case VALUE_MODE_FILENAME:
-      return GetFilesOrDirectoriesInternal().IsEmpty();
-
-    case VALUE_MODE_DEFAULT_ON:
-      // This should not be used for type radio.
-      // See the MOZ_ASSERT at the beginning of the method.
-      return !mChecked;
-
-    case VALUE_MODE_DEFAULT:
-    default:
-      return false;
-  }
+  return mInputType->IsValueMissing();
 }
 
 bool

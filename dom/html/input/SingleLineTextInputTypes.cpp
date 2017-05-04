@@ -10,6 +10,13 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 bool
+SingleLineTextInputTypeBase::IsMutable() const
+{
+  return !mInputElement->IsDisabled() &&
+         !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+}
+
+bool
 SingleLineTextInputTypeBase::IsTooLong() const
 {
   int32_t maxLength = mInputElement->MaxLength();
@@ -39,4 +46,18 @@ SingleLineTextInputTypeBase::IsTooShort() const
     mInputElement->InputTextLength(mozilla::dom::CallerType::System);
 
   return textLength && textLength < minLength;
+}
+
+bool
+SingleLineTextInputTypeBase::IsValueMissing() const
+{
+  if (!mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    return false;
+  }
+
+  if (!IsMutable()) {
+    return false;
+  }
+
+  return IsValueEmpty();
 }

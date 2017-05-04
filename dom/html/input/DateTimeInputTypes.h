@@ -14,10 +14,14 @@ class DateTimeInputTypeBase : public ::InputType
 public:
   ~DateTimeInputTypeBase() override {}
 
+  bool IsValueMissing() const override;
+
 protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)
   {}
+
+  bool IsMutable() const override;
 };
 
 // input type=date
