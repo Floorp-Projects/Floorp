@@ -18,6 +18,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'InputType.cpp',
+    'SingleLineTextInputTypes.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
