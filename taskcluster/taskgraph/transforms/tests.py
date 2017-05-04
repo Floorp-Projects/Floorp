@@ -346,7 +346,13 @@ def set_target(config, tests):
     for test in tests:
         build_platform = test['build-platform']
         if build_platform.startswith('macosx'):
-            target = 'target.dmg'
+            if build_platform.split('/')[1] == 'opt':
+                target = 'firefox-{}.en-US.{}.dmg'.format(
+                    get_firefox_version(),
+                    'mac',
+                )
+            else:
+                target = 'target.dmg'
         elif build_platform.startswith('android'):
             if 'geckoview' in test['test-name']:
                 target = 'geckoview_example.apk'
@@ -534,7 +540,12 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-e10s'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'].append('--e10s')
+            if test['suite'] == 'talos':
+                for i, option in enumerate(test['mozharness']['extra-options']):
+                    if option.startswith('--suite='):
+                        test['mozharness']['extra-options'][i] += '-e10s'
+            else:
+                test['mozharness']['extra-options'].append('--e10s')
         yield test
 
 
