@@ -2,13 +2,13 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.gecko.home.activitystream;
+package org.mozilla.gecko.activitystream.homepanel;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 
-import org.mozilla.gecko.home.activitystream.stream.TopPanel;
+import org.mozilla.gecko.activitystream.homepanel.stream.TopPanel;
 
 /**
  * We need our own item animator override to avoid default RV-style animations for certain panels.

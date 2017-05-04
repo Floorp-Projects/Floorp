@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.gecko.home.activitystream;
+package org.mozilla.gecko.activitystream.homepanel;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -20,25 +20,25 @@ import org.mozilla.gecko.home.HomeFragment;
  */
 public class ActivityStreamHomeFragment
         extends HomeFragment {
-    private ActivityStream activityStream;
+    private ActivityStreamPanel activityStreamPanel;
 
     private boolean isSessionActive;
 
     @Override
     protected void load() {
-        activityStream.load(getLoaderManager());
+        activityStreamPanel.load(getLoaderManager());
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        if (activityStream == null) {
-            activityStream = (ActivityStream) inflater.inflate(R.layout.activity_stream, container, false);
-            activityStream.setOnUrlOpenListeners(mUrlOpenListener, mUrlOpenInBackgroundListener);
+        if (activityStreamPanel == null) {
+            activityStreamPanel = (ActivityStreamPanel) inflater.inflate(R.layout.activity_stream, container, false);
+            activityStreamPanel.setOnUrlOpenListeners(mUrlOpenListener, mUrlOpenInBackgroundListener);
         }
 
-        return activityStream;
+        return activityStreamPanel;
     }
 
     @Override

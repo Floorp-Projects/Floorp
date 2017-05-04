@@ -1,8 +1,8 @@
 == boxshadow-basic.html boxshadow-basic-ref.html
 != boxshadow-blur.html boxshadow-blur-notref.html
 != boxshadow-blur.html boxshadow-blur-notref2.html
-random fails-if(stylo) == boxshadow-blur-2.html boxshadow-blur-2-ref.html # fixedpoint division in blur code makes this fail
-random fails-if(stylo) != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
+random == boxshadow-blur-2.html boxshadow-blur-2-ref.html # fixedpoint division in blur code makes this fail
+random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
 == tableboxshadow-basic.html tableboxshadow-basic-ref.html
@@ -44,4 +44,4 @@ fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fiel
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
 fuzzy(159,2) fails-if(!dwrite) fails-if(stylo) == 1212823-1.html 1212823-1-ref.html
-fails-if(stylo) == boxshadow-large-offset.html boxshadow-large-offset-ref.html
+== boxshadow-large-offset.html boxshadow-large-offset-ref.html

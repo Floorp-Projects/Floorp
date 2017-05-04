@@ -4,7 +4,6 @@
 "use strict";
 
 const {
-  createFactory,
   createClass,
   DOM: dom,
   PropTypes
@@ -22,7 +21,7 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 const {
   MESSAGE_LEVEL
 } = require("../constants");
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
+const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
 
 const FilterBar = createClass({
 
@@ -34,7 +33,7 @@ const FilterBar = createClass({
     serviceContainer: PropTypes.shape({
       attachRefToHud: PropTypes.func.isRequired,
     }).isRequired,
-    ui: PropTypes.object.isRequired,
+    filterBarVisible: PropTypes.bool.isRequired,
   },
 
   componentDidMount() {
@@ -59,8 +58,7 @@ const FilterBar = createClass({
   },
 
   render() {
-    const {dispatch, filter, ui} = this.props;
-    let filterBarVisible = ui.filterBarVisible;
+    const {dispatch, filter, filterBarVisible} = this.props;
     let children = [];
 
     children.push(dom.div({className: "devtools-toolbar webconsole-filterbar-primary"},
@@ -157,7 +155,7 @@ const FilterBar = createClass({
 function mapStateToProps(state) {
   return {
     filter: getAllFilters(state),
-    ui: getAllUi(state)
+    filterBarVisible: getAllUi(state).filterBarVisible,
   };
 }
 

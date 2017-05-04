@@ -75,6 +75,8 @@ function onConnect(connection) {
     iframeWindow: window,
     chromeWindow: window,
     hudId: "hud_0",
+    getDebuggerFrames: () => { },
+    getInspectorSelection: () => { },
     target: connection.tabConnection.tabTarget,
     _browserConsole: false,
     NewConsoleOutputWrapper,

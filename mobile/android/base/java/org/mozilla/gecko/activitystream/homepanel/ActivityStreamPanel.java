@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- package org.mozilla.gecko.home.activitystream;
+ package org.mozilla.gecko.activitystream.homepanel;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -21,14 +21,14 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.model.Highlight;
-import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
+import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.Collections;
 import java.util.List;
 
-public class ActivityStream extends FrameLayout {
+public class ActivityStreamPanel extends FrameLayout {
     private final StreamRecyclerAdapter adapter;
 
     private static final int LOADER_ID_HIGHLIGHTS = 0;
@@ -51,7 +51,7 @@ public class ActivityStream extends FrameLayout {
     private int desiredTilesHeight;
     private int tileMargin;
 
-    public ActivityStream(Context context, AttributeSet attrs) {
+    public ActivityStreamPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setBackgroundColor(ContextCompat.getColor(context, R.color.about_page_header_grey));
