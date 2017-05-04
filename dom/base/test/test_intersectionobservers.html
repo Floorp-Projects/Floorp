@@ -369,7 +369,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.display = 'none';
@@ -379,7 +379,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(0);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.display = 'block';
@@ -389,7 +389,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             rootEl.style.display = 'none';
@@ -399,7 +399,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(0);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             rootEl.style.display = 'block';
@@ -409,7 +409,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
         ], done);
       });
@@ -430,7 +430,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.left = '-40px';
@@ -440,7 +440,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(0);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             parentEl.style.overflow = 'visible';
@@ -450,7 +450,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
       });
@@ -471,7 +471,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be.greaterThan(0.5);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.left = '-15px';
@@ -481,7 +481,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be.lessThan(0.5);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.left = '-25px';
@@ -498,7 +498,7 @@ limitations under the License.
               expect(records.length).to.be(1);
               expect(records[0].intersectionRatio).to.be(0.5);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
 
@@ -534,7 +534,7 @@ limitations under the License.
               expect(records[1].target).to.be(targetEl2);
               expect(records[1].intersectionRatio).to.be(0.75);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.top = '0px';
@@ -554,7 +554,7 @@ limitations under the License.
               expect(records[2].target).to.be(targetEl3);
               expect(records[2].intersectionRatio).to.be(0.25);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.top = '0px';
@@ -574,7 +574,7 @@ limitations under the License.
               expect(records[2].target).to.be(targetEl3);
               expect(records[2].intersectionRatio).to.be(0.75);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.top = '0px';
@@ -590,7 +590,7 @@ limitations under the License.
               expect(records[0].target).to.be(targetEl3);
               expect(records[0].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
       });
@@ -709,7 +709,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(0);
               expect(records[0].target).to.be(targetEl2);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.top = '0px';
@@ -725,7 +725,7 @@ limitations under the License.
               expect(records[1].intersectionRatio).to.be(0);
               expect(records[1].target).to.be(targetEl2);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl1.style.top = '-20px';
@@ -739,7 +739,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(0);
               expect(records[0].target).to.be(targetEl2);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             targetEl3.style.top = '20px';
@@ -757,7 +757,7 @@ limitations under the License.
               expect(records[1].intersectionRatio).to.be(0);
               expect(records[1].target).to.be(targetEl4);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
 
@@ -799,7 +799,7 @@ limitations under the License.
             callDelayed(function() {
               expect(spy.callCount).to.be(0);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             parentEl.insertBefore(targetEl1, targetEl2);
@@ -810,7 +810,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(1);
               expect(records[0].target).to.be(targetEl1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             grandParentEl.remove();
@@ -821,7 +821,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(0);
               expect(records[0].target).to.be(targetEl1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             rootEl.appendChild(targetEl1);
@@ -832,7 +832,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(1);
               expect(records[0].target).to.be(targetEl1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             rootEl.remove();
@@ -843,7 +843,7 @@ limitations under the License.
               expect(records[0].intersectionRatio).to.be(0);
               expect(records[0].target).to.be(targetEl1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
       });
@@ -898,10 +898,12 @@ limitations under the License.
         io.observe(targetEl1);
         io.observe(targetEl1);
 
-        callDelayed(function () {
-          expect(spy.callCount).to.be(1);
-          done();
-        }, ASYNC_TIMEOUT * 3);
+        spy.waitForNotification(function() {
+          callDelayed(function () {
+            expect(spy.callCount).to.be(1);
+            done();
+          }, ASYNC_TIMEOUT);
+        });
       });
 
     });
@@ -1007,7 +1009,7 @@ limitations under the License.
               expect(records[1].target).to.be(targetEl2);
               expect(records[1].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             io.unobserve(targetEl1);
@@ -1020,7 +1022,7 @@ limitations under the License.
               expect(records[0].target).to.be(targetEl2);
               expect(records[0].intersectionRatio).to.be(0);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             io.unobserve(targetEl2);
@@ -1059,7 +1061,7 @@ limitations under the License.
               expect(records[1].target).to.be(targetEl2);
               expect(records[1].intersectionRatio).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           },
           function(done) {
             io.disconnect();
@@ -1068,7 +1070,7 @@ limitations under the License.
             callDelayed(function() {
               expect(spy.callCount).to.be(1);
               done();
-            }, ASYNC_TIMEOUT);
+            });
           }
         ], done);
 
