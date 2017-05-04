@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.sitehelper = (function () {
+this.sitehelper = (function() {
 
   catcher.registerHandler((errorObj) => {
     callBackground("reportError", errorObj);
@@ -31,11 +31,15 @@ this.sitehelper = (function () {
     }));
   }));
 
+  document.addEventListener("request-onboarding", catcher.watchFunction((event) => {
+    callBackground("requestOnboarding");
+  }));
+
   // Depending on the script loading order, the site might get the addon-present event,
   // but probably won't - instead the site will ask for that event after it has loaded
   document.addEventListener("request-addon-present", catcher.watchFunction(() => {
     sendCustomEvent("addon-present");
-  }), false);
+  }));
 
   sendCustomEvent("addon-present");
 

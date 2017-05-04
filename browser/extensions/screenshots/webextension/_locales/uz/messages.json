@@ -1,0 +1,64 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Rasmini olish"
+  },
+  "myShotsLink": {
+    "message": "Rasmlarim"
+  },
+  "screenshotInstructions": {
+    "message": "Hududni belgilash uchun sahifa ustiga tashlang yoki bosing. Chiqish uchun “ESC” tugmasidan foydalaning."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Saqlash"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Ko‘rinadiganini saqlash"
+  },
+  "saveScreenshotFullPage": {
+    "message": "To‘liq sahifani saqlash"
+  },
+  "cancelScreenshot": {
+    "message": "Bekor qilish"
+  },
+  "downloadScreenshot": {
+    "message": "Yuklab olish"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Havoladan nusxa olindi"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Rasm havolasidan maxsus xotiraga nusxa olindi. Qo‘yish uchun $META_KEY$-V tugmalarini bosing.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Xizmat hozircha ishlamayapti"
+  },
+  "requestErrorDetails": {
+    "message": "Uzr! Rasmni saqlay olmaymiz. Keyinroq urinib ko‘ring."
+  },
+  "connectionErrorTitle": {
+    "message": "Ekran rasmiga ulana olmadik."
+  },
+  "connectionErrorDetails": {
+    "message": "Internetga ulanishni tekshiring. Ulana olsangiz, demak Firefox Screenshot xizmatida vaqtinchalik muammo bo‘lishi mumkin."
+  },
+  "loginErrorDetails": {
+    "message": "Olingan rasmni saqlay olmaymiz, chunki Firefox Screenshot xizmatida muammo mavjud. Keyinroq urinib ko‘ring."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Bu sahifani rasmga tushira olmaymiz."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Bu sahifa standart sahifa emas, shuning uchun uni rasmga tushira olmaymiz."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshot sahifasini rasmga tushirish mumkin emas!"
+  }
+}

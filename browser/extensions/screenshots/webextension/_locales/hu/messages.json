@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Kész"
   },
-  "termsAndPrivacyNotice": {
-    "message": "A Firefox képernyőképek használatával, Ön beleegyezik a képernyőképek $TERMSANDPRIVACYNOTICETERMSLINK$ és $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "A Firefox képernyőképek használatával beleegyezik a Firefox felhőszolgáltatások $TERMSANDPRIVACYNOTICETERMSLINK$ és $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

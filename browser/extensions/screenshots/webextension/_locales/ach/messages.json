@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Otum"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Tic ki Firefox Screenshots nyuto ni, i yee $TERMSANDPRIVACYNOTICETERMSLINK$ ki $TERMSANDPRIVACYNOTICEPRIVACYLINK$ me Screenshots.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Tic ki Firefox Screenshots nyuto, ni i yee $TERMSANDPRIVACYNOTICETERMSLINK$ ki $TERMSANDPRIVACYNOTICEPRIVACYLINK$ me tic me Cloud pa Firefox.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "เสร็จสิ้น"
   },
-  "termsAndPrivacyNotice": {
-    "message": "เพื่อใช้  Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของ Screenshots",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "สำหรับการใช้งาน Firefox Screenshots คุณยอมรับใน Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

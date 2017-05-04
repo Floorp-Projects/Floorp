@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Dien"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Troch Firefox Screenshots te brûken, gean jo akkoard mei de $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$ fan Screenshots.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Troch Firefox Screenshots te brûken, geane jo akkoard mei de $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$ fan Firefox-cloudtsjinsten.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

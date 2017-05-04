@@ -1,0 +1,23 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Tallenna"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Tallenna näkyvä osuus"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Tallenna koko sivu"
+  },
+  "cancelScreenshot": {
+    "message": "Peruuta"
+  },
+  "downloadScreenshot": {
+    "message": "Lataa"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Linkki kopioitu"
+  }
+}

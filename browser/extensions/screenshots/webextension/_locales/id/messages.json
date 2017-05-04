@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Selesai"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Dengan menggunakan Firefox Screenshots, Anda setuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Screenshots.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Dengan menggunakan Firefox Screenshots, Anda setuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Cloud Services.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

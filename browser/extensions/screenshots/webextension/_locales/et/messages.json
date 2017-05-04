@@ -103,8 +103,8 @@
   "tourDone": {
     "message": "Valmis"
   },
-  "termsAndPrivacyNotice": {
-    "message": "Firefox Screenshots kasutamisel nõustud Screenshots $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox Screenshots kasutamisel nõustud Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

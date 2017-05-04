@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "آپ Firefox اسکرین شاٹس صفحے! کی ایک شاٹ نہیں لے سکت"
   },
+  "genericErrorTitle": {
+    "message": "لاجواب! Firefox Screenshots بہت مشہور ہو گیا۔"
+  },
   "genericErrorDetails": {
     "message": "ہمیں یقین نہیں کہ کیا ہوا تھا۔ خیال رکھ کر پھر کوشش کریں یا بھر مختلف صفحہ کی تصویرلیں؟"
   },
@@ -99,5 +102,22 @@
   },
   "tourDone": {
     "message": "ہوگیا"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "۔Firefox Screenshots کے استعمال کے ساتھ  آپ Firefox Cloud Services کے $TERMSANDPRIVACYNOTICETERMSLINK$ اور $TERMSANDPRIVACYNOTICEPRIVACYLINK$ کے ساتھ متفق ہیں۔",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "شرائط"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "اطلاع نامہ نجی نوعیت"
   }
 }
