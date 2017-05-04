@@ -577,45 +577,6 @@ nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput)
   return GetInitialBSize();
 }
 
-/**
- * We need a custom display item for table row backgrounds. This is only used
- * when the table row is the root of a stacking context (e.g., has 'opacity').
- * Table row backgrounds can extend beyond the row frame bounds, when
- * the row contains row-spanning cells.
- */
-class nsDisplayTableRowBackground : public nsDisplayTableItem {
-public:
-  nsDisplayTableRowBackground(nsDisplayListBuilder* aBuilder,
-                              nsTableRowFrame*      aFrame) :
-    nsDisplayTableItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayTableRowBackground);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayTableRowBackground() {
-    MOZ_COUNT_DTOR(nsDisplayTableRowBackground);
-  }
-#endif
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext*   aCtx) override;
-  NS_DISPLAY_DECL_NAME("TableRowBackground", TYPE_TABLE_ROW_BACKGROUND)
-};
-
-void
-nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsRenderingContext*   aCtx)
-{
-  auto rowFrame = static_cast<nsTableRowFrame*>(mFrame);
-  TableBackgroundPainter painter(rowFrame->GetTableFrame(),
-                                 TableBackgroundPainter::eOrigin_TableRow,
-                                 mFrame->PresContext(), *aCtx,
-                                 mVisibleRect, ToReferenceFrame(),
-                                 aBuilder->GetBackgroundPaintFlags());
-
-  DrawResult result = painter.PaintRow(rowFrame);
-  nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
-}
-
 void
 nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
