@@ -85,6 +85,13 @@ CaptivePortalService::RearmTimer()
     mTimer->Cancel();
   }
 
+  // If we have successfully determined the state, and we have never detected
+  // a captive portal, we don't need to keep polling, but will rely on events
+  // to trigger detection.
+  if (mState == NOT_CAPTIVE) {
+    return NS_OK;
+  }
+
   if (!mTimer) {
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
