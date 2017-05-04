@@ -335,14 +335,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     }
 
-    private void setMediaStateForTab(boolean isTabPlaying) {
-        final Tab tab = mTabReference.get();
-        if (tab == null) {
-            return;
-        }
-        tab.setIsMediaPlaying(isTabPlaying);
-    }
-
     private void notifyObservers(String topic, String data) {
         GeckoAppShell.notifyObservers(topic, data);
     }
@@ -353,7 +345,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     private void setState(State newState) {
         mMediaState = newState;
-        setMediaStateForTab(mMediaState.equals(State.PLAYING));
         onStateChanged();
     }
 
