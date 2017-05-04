@@ -9,6 +9,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "HTMLSplitOnSpacesTokenizer.h"
+#include "nsContentUtils.h"
 #include "nsCRTGlue.h"
 #include "nsIIDNService.h"
 #include "nsIIOService.h"
@@ -66,6 +67,26 @@ SingleLineTextInputTypeBase::IsValueMissing() const
   }
 
   return IsValueEmpty();
+}
+
+bool
+SingleLineTextInputTypeBase::HasPatternMismatch() const
+{
+  nsAutoString pattern;
+ if (!mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern)) {
+    return false;
+  }
+
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+
+  if (value.IsEmpty()) {
+    return false;
+  }
+
+  nsIDocument* doc = mInputElement->OwnerDoc();
+
+  return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }
 
 /* input type=url */
