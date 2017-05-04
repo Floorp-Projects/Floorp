@@ -16,6 +16,7 @@
 #include "NumericInputTypes.h"
 #include "SingleLineTextInputTypes.h"
 
+const mozilla::Decimal InputType::kStepAny = mozilla::Decimal(0);
 
 /* static */ mozilla::UniquePtr<InputType, DoNotDelete>
 InputType::Create(mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
@@ -120,6 +121,18 @@ InputType::GetNonFileValueInternal(nsAString& aValue) const
   return mInputElement->GetNonFileValueInternal(aValue);
 }
 
+nsresult
+InputType::SetValueInternal(const nsAString& aValue, uint32_t aFlags)
+{
+  return mInputElement->SetValueInternal(aValue, aFlags);
+}
+
+mozilla::Decimal
+InputType::GetStepBase() const
+{
+  return mInputElement->GetStepBase();
+}
+
 void
 InputType::DropReference()
 {
@@ -155,4 +168,28 @@ bool
 InputType::HasPatternMismatch() const
 {
   return false;
+}
+
+bool
+InputType::IsRangeOverflow() const
+{
+  return false;
+}
+
+bool
+InputType::IsRangeUnderflow() const
+{
+  return false;
+}
+
+bool
+InputType::HasStepMismatch(bool aUseZeroIfValueNaN) const
+{
+  return false;
+}
+
+nsresult
+InputType::MinMaxStepAttrChanged()
+{
+  return NS_OK;
 }

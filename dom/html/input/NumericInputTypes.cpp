@@ -7,6 +7,7 @@
 #include "NumericInputTypes.h"
 
 #include "mozilla/dom/HTMLInputElement.h"
+#include "nsTextEditorState.h"
 
 bool
 NumberInputType::IsMutable() const
@@ -14,6 +15,62 @@ NumberInputType::IsMutable() const
   return !mInputElement->IsDisabled() &&
          !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
 }
+
+bool
+NumericInputTypeBase::IsRangeOverflow() const
+{
+  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  if (maximum.isNaN()) {
+    return false;
+  }
+
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    return false;
+  }
+
+  return value > maximum;
+}
+
+bool
+NumericInputTypeBase::IsRangeUnderflow() const
+{
+  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  if (minimum.isNaN()) {
+    return false;
+  }
+
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    return false;
+  }
+
+  return value < minimum;
+}
+
+bool
+NumericInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
+{
+  mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+  if (value.isNaN()) {
+    if (aUseZeroIfValueNaN) {
+      value = mozilla::Decimal(0);
+    } else {
+      // The element can't suffer from step mismatch if it's value isn't a number.
+      return false;
+    }
+  }
+
+  mozilla::Decimal step = mInputElement->GetStep();
+  if (step == kStepAny) {
+    return false;
+  }
+
+  // Value has to be an integral multiple of step.
+  return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+}
+
+/* input type=numer */
 
 bool
 NumberInputType::IsValueMissing() const
@@ -27,4 +84,23 @@ NumberInputType::IsValueMissing() const
   }
 
   return IsValueEmpty();
+}
+
+/* input type=range */
+nsresult
+RangeInputType::MinMaxStepAttrChanged()
+{
+  // The value may need to change when @min/max/step changes since the value may
+  // have been invalid and can now change to a valid value, or vice versa. For
+  // example, consider: <input type=range value=-1 max=1 step=3>. The valid
+  // range is 0 to 1 while the nearest valid steps are -1 and 2 (the max value
+  // having prevented there being a valid step in range). Changing @max to/from
+  // 1 and a number greater than on equal to 3 should change whether we have a
+  // step mismatch or not.
+  // The value may also need to change between a value that results in a step
+  // mismatch and a value that results in overflow. For example, if @max in the
+  // example above were to change from 1 to -1.
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+  return SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
 }
