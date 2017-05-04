@@ -21,7 +21,6 @@ add_task(function* () {
   assertNumberOfTabs(2, "there are two tabs, now");
 
   let [tab1, tab2] = gBrowser.tabs;
-  let linkedBrowser = tab1.linkedBrowser;
   gBrowser.pinTab(tab1);
   gBrowser.pinTab(tab2);
   assertNumberOfPinnedTabs(2, "both tabs are now pinned");
@@ -31,5 +30,4 @@ add_task(function* () {
 
   assertNumberOfTabs(1, "one tab left after setBrowserState()");
   assertNumberOfPinnedTabs(0, "there are no pinned tabs");
-  is(gBrowser.tabs[0].linkedBrowser, linkedBrowser, "first tab's browser got re-used");
 });

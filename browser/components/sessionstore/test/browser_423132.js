@@ -52,5 +52,5 @@ add_task(function*() {
 
   // clean up
   Services.cookies.removeAll();
-  yield promiseRemoveTab(tab);
+  yield promiseRemoveTab(gBrowser.tabs[1]);
 });
