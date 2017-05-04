@@ -551,7 +551,7 @@ gfxDWriteFont::Measure(const gfxTextRun* aTextRun,
                        BoundingBoxType aBoundingBoxType,
                        DrawTarget* aRefDrawTarget,
                        Spacing* aSpacing,
-                       uint16_t aOrientation)
+                       gfx::ShapedTextFlags aOrientation)
 {
     gfxFont::RunMetrics metrics =
         gfxFont::Measure(aTextRun, aStart, aEnd, aBoundingBoxType,

@@ -6997,28 +6997,28 @@ nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
   }
 }
 
-/* static */ uint16_t
+/* static */ gfx::ShapedTextFlags
 nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
                                        const nsStyleFont* aStyleFont,
                                        const nsStyleText* aStyleText,
                                        nscoord aLetterSpacing)
 {
-  uint16_t result = 0;
+  gfx::ShapedTextFlags result = gfx::ShapedTextFlags();
   if (aLetterSpacing != 0 ||
       aStyleText->mTextJustify == StyleTextJustify::InterCharacter) {
-    result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
+    result |= gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
   if (aStyleText->mControlCharacterVisibility == NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN) {
-    result |= gfxTextRunFactory::TEXT_HIDE_CONTROL_CHARACTERS;
+    result |= gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS;
   }
   switch (aStyleContext->StyleText()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
-    result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+    result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     break;
   case NS_STYLE_TEXT_RENDERING_AUTO:
     if (aStyleFont->mFont.size <
         aStyleContext->PresContext()->GetAutoQualityMinFontSize()) {
-      result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+      result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     }
     break;
   default:
@@ -7027,37 +7027,37 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   return result | GetTextRunOrientFlagsForStyle(aStyleContext);
 }
 
-/* static */ uint16_t
+/* static */ gfx::ShapedTextFlags
 nsLayoutUtils::GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext)
 {
   uint8_t writingMode = aStyleContext->StyleVisibility()->mWritingMode;
   switch (writingMode) {
   case NS_STYLE_WRITING_MODE_HORIZONTAL_TB:
-    return gfxTextRunFactory::TEXT_ORIENT_HORIZONTAL;
+    return gfx::ShapedTextFlags::TEXT_ORIENT_HORIZONTAL;
 
   case NS_STYLE_WRITING_MODE_VERTICAL_LR:
   case NS_STYLE_WRITING_MODE_VERTICAL_RL:
     switch (aStyleContext->StyleVisibility()->mTextOrientation) {
     case NS_STYLE_TEXT_ORIENTATION_MIXED:
-      return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED;
+      return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED;
     case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
-      return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+      return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
     case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
-      return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+      return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
     default:
       NS_NOTREACHED("unknown text-orientation");
-      return 0;
+      return gfx::ShapedTextFlags();
     }
 
   case NS_STYLE_WRITING_MODE_SIDEWAYS_LR:
-    return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT;
+    return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT;
 
   case NS_STYLE_WRITING_MODE_SIDEWAYS_RL:
-    return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+    return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
 
   default:
     NS_NOTREACHED("unknown writing-mode");
-    return 0;
+    return gfx::ShapedTextFlags();
   }
 }
 
