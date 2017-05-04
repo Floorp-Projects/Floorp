@@ -1042,6 +1042,47 @@ protected:
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
+      } else if (origBytes[nOrigBytes] == 0x80 &&
+                 origBytes[nOrigBytes + 1] == 0x3d) {
+        // cmp byte ptr [rip-relative address], imm8
+        // We'll compute the absolute address and do the cmp in r11
+
+        // push r11 (to save the old value)
+        tramp[nTrampBytes] = 0x49;
+        ++nTrampBytes;
+        tramp[nTrampBytes] = 0x53;
+        ++nTrampBytes;
+
+        byteptr_t absAddr =
+          reinterpret_cast<byteptr_t>(origBytes + nOrigBytes + 7 +
+                                      *reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 2));
+        nOrigBytes += 6;
+
+        // mov r11, absolute address
+        tramp[nTrampBytes] = 0x49;
+        ++nTrampBytes;
+        tramp[nTrampBytes] = 0xbb;
+        ++nTrampBytes;
+
+        *reinterpret_cast<byteptr_t*>(tramp + nTrampBytes) = absAddr;
+        nTrampBytes += 8;
+
+        // cmp byte ptr [r11],...
+        tramp[nTrampBytes] = 0x41;
+        ++nTrampBytes;
+        tramp[nTrampBytes] = 0x80;
+        ++nTrampBytes;
+        tramp[nTrampBytes] = 0x3b;
+        ++nTrampBytes;
+
+        // ...imm8
+        COPY_CODES(1);
+
+        // pop r11 (doesn't affect the flags from the cmp)
+        tramp[nTrampBytes] = 0x49;
+        ++nTrampBytes;
+        tramp[nTrampBytes] = 0x5b;
+        ++nTrampBytes;
       } else if (origBytes[nOrigBytes] == 0x90) {
         // nop
         COPY_CODES(1);

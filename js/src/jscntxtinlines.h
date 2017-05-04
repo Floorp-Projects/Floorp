@@ -14,9 +14,9 @@
 
 #include "builtin/Object.h"
 #include "jit/JitFrames.h"
+#include "proxy/Proxy.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
-#include "vm/ProxyObject.h"
 #include "vm/Symbol.h"
 
 namespace js {

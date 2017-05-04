@@ -13,7 +13,6 @@
 #include "nsICollation.h"
 #include "nsIObserver.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -75,8 +74,11 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   {
     MOZ_COUNT_CTOR(XPCLocaleCallbacks);
 
-    localeToUpperCase = LocaleToUpperCase;
-    localeToLowerCase = LocaleToLowerCase;
+    // Disable the toLocaleUpper/Lower case hooks to use the standard,
+    // locale-insensitive definition from String.prototype. (These hooks are
+    // only consulted when EXPOSE_INTL_API is not set.)
+    localeToUpperCase = nullptr;
+    localeToLowerCase = nullptr;
     localeCompare = LocaleCompare;
     localeToUnicode = LocaleToUnicode;
 
@@ -102,26 +104,14 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     // assert and double-check this.
     const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(cx);
     MOZ_ASSERT(lc);
-    MOZ_ASSERT(lc->localeToUpperCase == LocaleToUpperCase);
-    MOZ_ASSERT(lc->localeToLowerCase == LocaleToLowerCase);
+    MOZ_ASSERT(lc->localeToUpperCase == nullptr);
+    MOZ_ASSERT(lc->localeToLowerCase == nullptr);
     MOZ_ASSERT(lc->localeCompare == LocaleCompare);
     MOZ_ASSERT(lc->localeToUnicode == LocaleToUnicode);
 
     const XPCLocaleCallbacks* ths = static_cast<const XPCLocaleCallbacks*>(lc);
     ths->AssertThreadSafety();
     return const_cast<XPCLocaleCallbacks*>(ths);
-  }
-
-  static bool
-  LocaleToUpperCase(JSContext* cx, HandleString src, MutableHandleValue rval)
-  {
-    return ChangeCase(cx, src, rval, ToUpperCase);
-  }
-
-  static bool
-  LocaleToLowerCase(JSContext* cx, HandleString src, MutableHandleValue rval)
-  {
-    return ChangeCase(cx, src, rval, ToLowerCase);
   }
 
   static bool
@@ -137,28 +127,6 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
 private:
-  static bool
-  ChangeCase(JSContext* cx, HandleString src, MutableHandleValue rval,
-             void(*changeCaseFnc)(const nsAString&, nsAString&))
-  {
-    nsAutoJSString autoStr;
-    if (!autoStr.init(cx, src)) {
-      return false;
-    }
-
-    nsAutoString result;
-    changeCaseFnc(autoStr, result);
-
-    JSString* ucstr =
-      JS_NewUCStringCopyN(cx, result.get(), result.Length());
-    if (!ucstr) {
-      return false;
-    }
-
-    rval.setString(ucstr);
-    return true;
-  }
-
   bool
   Compare(JSContext* cx, HandleString src1, HandleString src2, MutableHandleValue rval)
   {
