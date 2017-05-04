@@ -2,7 +2,7 @@
 <html>
 <head>
 <style>
-#target5 {
+#target {
         position: absolute;
         top: 0px;
         left: 0px;
@@ -12,12 +12,6 @@
 }
 </style>
 <body>
-<div id="target5"></div>
-<script>
-        var io = new IntersectionObserver(function (records) {
-                window.parent.postMessage(records[0].rootBounds == null, 'http://mochi.test:8888');
-        }, {});
-        io.observe(document.getElementById("target5"));
-</script>
+<div id="target"></div>
 </body>
 </html>
