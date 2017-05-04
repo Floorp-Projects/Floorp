@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Task.jsm");
 
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser
@@ -194,12 +193,12 @@ FxAccountsPushService.prototype = {
    * @returns {Promise}
    * @private
    */
-  _onPasswordChanged: Task.async(function* () {
-    if (!(yield this.fxAccounts.sessionStatus())) {
-      yield this.fxAccounts.resetCredentials();
+  async _onPasswordChanged() {
+    if (!(await this.fxAccounts.sessionStatus())) {
+      await this.fxAccounts.resetCredentials();
       Services.obs.notifyObservers(null, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION);
     }
-  }),
+  },
   /**
    * Fired when the Push server drops a subscription, or the subscription identifier changes.
    *

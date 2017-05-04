@@ -591,20 +591,6 @@ if (AddonsChild) {
   });
 }
 
-addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
-  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
-                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
-  loadGroup.adjustPriority(msg.data.adjustment);
-});
-
-addMessageListener("NetworkPrioritizer:SetPriority", (msg) => {
-  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
-                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
-  loadGroup.priority = msg.data.priority;
-});
-
 addMessageListener("InPermitUnload", msg => {
   let inPermitUnload = docShell.contentViewer && docShell.contentViewer.inPermitUnload;
   sendAsyncMessage("InPermitUnload", {id: msg.data.id, inPermitUnload});

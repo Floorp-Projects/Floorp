@@ -84,9 +84,6 @@ function resetState() {
  */
 var tests = (function*() {
 
-  // enable referrer attribute
-  yield SpecialPowers.pushPrefEnv({"set": [['network.http.enablePerElementReferrer', true]]}, advance);
-
   var iframe = document.getElementById("testframe");
   var sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test";
 

@@ -4,7 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
+if (CONFIG['OS_TARGET'] in ('Android', 'Linux') and
+    CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64')):
     UNIFIED_SOURCES += [
         'LulTest.cpp',
         'LulTestDwarf.cpp',

@@ -576,13 +576,28 @@ struct AnimationValue
     : mServo(aValue) { }
   AnimationValue() = default;
 
-  // mGecko and mServo are mutually exclusive: only one or the other should
-  // ever be set.
-  // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and
-  // make AnimationValue a wrapper of RawServoAnimationValue to hide these
-  // FFIs.
-  StyleAnimationValue mGecko;
-  RefPtr<RawServoAnimationValue> mServo;
+  AnimationValue(const AnimationValue& aOther)
+    : mGecko(aOther.mGecko), mServo(aOther.mServo) { }
+  AnimationValue(AnimationValue&& aOther)
+    : mGecko(Move(aOther.mGecko)), mServo(Move(aOther.mServo)) { }
+
+  AnimationValue& operator=(const AnimationValue& aOther)
+  {
+    if (this != &aOther) {
+      mGecko = aOther.mGecko;
+      mServo = aOther.mServo;
+    }
+    return *this;
+  }
+  AnimationValue& operator=(AnimationValue&& aOther)
+  {
+    MOZ_ASSERT(this != &aOther, "Do not move itself");
+    if (this != &aOther) {
+      mGecko = Move(aOther.mGecko);
+      mServo = Move(aOther.mServo);
+    }
+    return *this;
+  }
 
   bool operator==(const AnimationValue& aOther) const;
   bool operator!=(const AnimationValue& aOther) const;
@@ -602,6 +617,28 @@ struct AnimationValue
   // Check if |*this| and |aToValue| can be interpolated.
   bool IsInterpolableWith(nsCSSPropertyID aProperty,
                           const AnimationValue& aToValue) const;
+
+  // Compute the distance between *this and aOther.
+  // If |aStyleContext| is nullptr, we will return 0.0 if we have mismatched
+  // transform lists.
+  double ComputeDistance(nsCSSPropertyID aProperty,
+                         const AnimationValue& aOther,
+                         nsStyleContext* aStyleContext) const;
+
+  // Create an AnimaitonValue from a string. This method flushes style, so we
+  // should use this carefully. Now, it is only used by
+  // nsDOMWindowUtils::ComputeAnimationDistance.
+  static AnimationValue FromString(nsCSSPropertyID aProperty,
+                                   const nsAString& aValue,
+                                   dom::Element* aElement);
+
+  // mGecko and mServo are mutually exclusive: only one or the other should
+  // ever be set.
+  // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and
+  // make AnimationValue a wrapper of RawServoAnimationValue to hide these
+  // FFIs.
+  StyleAnimationValue mGecko;
+  RefPtr<RawServoAnimationValue> mServo;
 };
 
 struct PropertyStyleAnimationValuePair

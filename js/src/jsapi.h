@@ -4568,9 +4568,14 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerCallb
 
 /**
  * Returns a new instance of the Promise builtin class in the current
- * compartment, with the right slot layout. If a `proto` is passed, that gets
- * set as the instance's [[Prototype]] instead of the original value of
- * `Promise.prototype`.
+ * compartment, with the right slot layout.
+ *
+ * The `executor` can be a `nullptr`. In that case, the only way to resolve or
+ * reject the returned promise is via the `JS::ResolvePromise` and
+ * `JS::RejectPromise` JSAPI functions.
+ *
+ * If a `proto` is passed, that gets set as the instance's [[Prototype]]
+ * instead of the original value of `Promise.prototype`.
  */
 extern JS_PUBLIC_API(JSObject*)
 NewPromiseObject(JSContext* cx, JS::HandleObject executor, JS::HandleObject proto = nullptr);
@@ -4603,6 +4608,9 @@ enum class PromiseState {
 
 /**
  * Returns the given Promise's state as a JS::PromiseState enum value.
+ *
+ * Returns JS::PromiseState::Pending if the given object is a wrapper that
+ * can't safely be unwrapped.
  */
 extern JS_PUBLIC_API(PromiseState)
 GetPromiseState(JS::HandleObject promise);
@@ -4701,12 +4709,12 @@ AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
  * Unforgeable version of the JS builtin Promise.all.
  *
  * Takes an AutoObjectVector of Promise objects and returns a promise that's
- * resolved with an array of resolution values when all those promises ahve
+ * resolved with an array of resolution values when all those promises have
  * been resolved, or rejected with the rejection value of the first rejected
  * promise.
  *
- * Asserts if the array isn't dense or one of the entries isn't an unwrapped
- * instance of Promise or a subclass.
+ * Asserts that all objects in the `promises` vector are, maybe wrapped,
+ * instances of `Promise` or a subclass of `Promise`.
  */
 extern JS_PUBLIC_API(JSObject*)
 GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);

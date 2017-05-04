@@ -359,9 +359,6 @@ protected:
   // Only class' own members can be initialized in constructor initializer list.
   explicit MediaEngineSource(MediaEngineState aState)
     : mState(aState)
-#ifdef DEBUG
-    , mOwningThread(PR_GetCurrentThread())
-#endif
     , mInShutdown(false)
   {}
 
@@ -439,13 +436,13 @@ protected:
 
   void AssertIsOnOwningThread()
   {
-    MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+    NS_ASSERT_OWNINGTHREAD(MediaEngineSource);
   }
 
   MediaEngineState mState;
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
+
+  NS_DECL_OWNINGTHREAD
+
   nsTArray<RefPtr<AllocationHandle>> mRegisteredHandles;
   bool mInShutdown;
 

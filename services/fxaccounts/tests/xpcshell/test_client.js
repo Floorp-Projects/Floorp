@@ -4,7 +4,6 @@
 "use strict";
 
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://services-crypto/utils.js");
@@ -35,9 +34,9 @@ var ACCOUNT_KEYS = {
 };
 
 function deferredStop(server) {
-  let deferred = Promise.defer();
-  server.stop(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    server.stop(resolve);
+  });
 }
 
 add_task(function* test_authenticated_get_request() {

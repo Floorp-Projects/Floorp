@@ -11,7 +11,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -48,7 +47,7 @@ const UITOUR_FRAME_SCRIPT = "chrome://browser/content/content-UITour.js";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
-const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_TELEMETRY_UNIFIED, false);
+const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(PREF_TELEMETRY_UNIFIED, false);
 
 var gLogAppenderDump = null;
 
@@ -75,6 +74,10 @@ var SelfSupportBackendInternal = {
   // Whether we're invited to let test code talk to our frame.
   _testing: false,
 
+  // Whether self-support is enabled, and we want to continue lazy UI
+  // startup after the session has been restored.
+  _lazyStartupEnabled: false,
+
   /**
    * Initializes the self support backend.
    */
@@ -93,25 +96,30 @@ var SelfSupportBackendInternal = {
     }
 
     // Make sure UITour is enabled.
-    let uiTourEnabled = Preferences.get(PREF_UITOUR_ENABLED, false);
+    let uiTourEnabled = Services.prefs.getBoolPref(PREF_UITOUR_ENABLED, false);
     if (!uiTourEnabled) {
       this._log.config("init - Disabling SelfSupport because UITour is disabled.");
       return;
     }
 
     // Check the preferences to see if we want this to be active.
-    if (!Preferences.get(PREF_ENABLED, true)) {
+    if (!Services.prefs.getBoolPref(PREF_ENABLED, true)) {
       this._log.config("init - SelfSupport is disabled.");
       return;
     }
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
+    this._lazyStartupEnabled = true;
   },
 
   /**
    * Shut down the self support backend, if active.
    */
   uninit() {
+    if (!this._log) {
+      // We haven't been initialized yet, so just return.
+      return;
+    }
+
     this._log.trace("uninit");
 
     Services.prefs.removeObserver(PREF_BRANCH_LOG, this);
@@ -148,12 +156,15 @@ var SelfSupportBackendInternal = {
    * Handle notifications. Once all windows are created, we wait a little bit more
    * since tabs might still be loading. Then, we open the self support.
    */
+  // Observers are added in nsBrowserGlue.js
   observe(aSubject, aTopic, aData) {
     this._log.trace("observe - Topic " + aTopic);
 
     if (aTopic === "sessionstore-windows-restored") {
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
-      this._delayedLoadTimerId = setTimeout(this._loadSelfSupport.bind(this), STARTUP_DELAY_MS);
+      if (this._lazyStartupEnabled) {
+        this._delayedLoadTimerId = setTimeout(this._loadSelfSupport.bind(this), STARTUP_DELAY_MS);
+        this._lazyStartupEnabled = false;
+      }
     } else if (aTopic === "nsPref:changed") {
       this._configureLogging();
     }
@@ -172,10 +183,10 @@ var SelfSupportBackendInternal = {
     }
 
     // Make sure the logger keeps up with the logging level preference.
-    this._log.level = Log.Level[Preferences.get(PREF_LOG_LEVEL, "Warn")];
+    this._log.level = Log.Level[Services.prefs.getStringPref(PREF_LOG_LEVEL, "Warn")];
 
     // If enabled in the preferences, add a dump appender.
-    let logDumping = Preferences.get(PREF_LOG_DUMP, false);
+    let logDumping = Services.prefs.getBoolPref(PREF_LOG_DUMP, false);
     if (logDumping != !!gLogAppenderDump) {
       if (logDumping) {
         gLogAppenderDump = new Log.DumpAppender(new Log.BasicFormatter());
@@ -253,7 +264,7 @@ var SelfSupportBackendInternal = {
    */
   _loadSelfSupport() {
     // Fetch the Self Support URL from the preferences.
-    let unformattedURL = Preferences.get(PREF_URL, null);
+    let unformattedURL = Services.prefs.getStringPref(PREF_URL, "");
     let url = Services.urlFormatter.formatURL(unformattedURL);
     if (!url.startsWith("https:")) {
       this._log.error("_loadSelfSupport - Non HTTPS URL provided: " + url);

@@ -123,8 +123,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     let webIDEEnabled = Services.prefs.getBoolPref("devtools.webide.enabled");
     toggleMenuItem("menu_webide", webIDEEnabled);
 
-    let showWebIDEWidget = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
-    if (webIDEEnabled && showWebIDEWidget) {
+    if (webIDEEnabled) {
       gDevToolsBrowser.installWebIDEWidget();
     } else {
       gDevToolsBrowser.uninstallWebIDEWidget();
@@ -475,19 +474,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       return;
     }
 
-    let defaultArea;
-    if (Services.prefs.getBoolPref("devtools.webide.widget.inNavbarByDefault")) {
-      defaultArea = CustomizableUI.AREA_NAVBAR;
-    } else {
-      defaultArea = CustomizableUI.AREA_PANEL;
-    }
-
     CustomizableUI.createWidget({
       id: "webide-button",
       shortcutId: "key_webide",
       label: "devtools-webide-button2.label",
       tooltiptext: "devtools-webide-button2.tooltiptext",
-      defaultArea: defaultArea,
       onCommand(event) {
         gDevToolsBrowser.openWebIDE();
       }
@@ -531,14 +522,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       CustomizableUI.removeWidgetFromArea("webide-button");
     }
     CustomizableUI.destroyWidget("webide-button");
-  },
-
-  /**
-   * Move WebIDE widget to the navbar
-   */
-   // Used by webide.js
-  moveWebIDEWidgetInNavbar() {
-    CustomizableUI.addWidgetToArea("webide-button", CustomizableUI.AREA_NAVBAR);
   },
 
   /**

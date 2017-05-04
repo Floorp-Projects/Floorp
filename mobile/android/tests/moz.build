@@ -15,8 +15,6 @@ if not CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
 
 TEST_DIRS += [
     'browser',
-    'javaaddons', # Must be built before browser/robocop/roboextender.
-                  # This is enforced in config/recurse.mk.
 ]
 
 ANDROID_INSTRUMENTATION_MANIFESTS += ['browser/robocop/robocop.ini']

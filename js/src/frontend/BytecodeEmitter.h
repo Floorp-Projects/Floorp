@@ -9,26 +9,21 @@
 #ifndef frontend_BytecodeEmitter_h
 #define frontend_BytecodeEmitter_h
 
+#include "mozilla/Attributes.h"
+
 #include "jscntxt.h"
 #include "jsiter.h"
 #include "jsopcode.h"
 #include "jsscript.h"
 
 #include "ds/InlineTable.h"
-#include "frontend/Parser.h"
+#include "frontend/EitherParser.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Interpreter.h"
 
 namespace js {
 namespace frontend {
-
-template <typename CharT> class FullParseHandler;
-class ObjectBox;
-class ParseNode;
-template <template <typename CharT> class ParseHandler, typename CharT> class Parser;
-class SharedContext;
-class TokenStream;
 
 class CGConstList {
     Vector<Value> list;
@@ -208,7 +203,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     };
     EmitSection prologue, main, *current;
 
-    Parser<FullParseHandler, char16_t>* const parser;
+    EitherParser<FullParseHandler> parser;
 
     PooledMapPtr<AtomIndexMap> atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
@@ -282,15 +277,31 @@ struct MOZ_STACK_CLASS BytecodeEmitter
      * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
      * destruction.
      */
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, char16_t>* parser,
+    BytecodeEmitter(BytecodeEmitter* parent, const EitherParser<FullParseHandler>& parser,
                     SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
                     uint32_t lineNum, EmitterMode emitterMode = Normal);
 
+    template<typename CharT>
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, CharT>* parser,
+                    SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
+                    uint32_t lineNum, EmitterMode emitterMode = Normal)
+      : BytecodeEmitter(parent, EitherParser<FullParseHandler>(parser), sc, script, lazyScript,
+                        lineNum, emitterMode)
+    {}
+
     // An alternate constructor that uses a TokenPos for the starting
     // line and that sets functionBodyEndPos as well.
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, char16_t>* parser,
+    BytecodeEmitter(BytecodeEmitter* parent, const EitherParser<FullParseHandler>& parser,
                     SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
                     TokenPos bodyPosition, EmitterMode emitterMode = Normal);
+
+    template<typename CharT>
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, CharT>* parser,
+                    SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
+                    TokenPos bodyPosition, EmitterMode emitterMode = Normal)
+      : BytecodeEmitter(parent, EitherParser<FullParseHandler>(parser), sc, script, lazyScript,
+                        bodyPosition, emitterMode)
+    {}
 
     MOZ_MUST_USE bool init();
 
@@ -360,7 +371,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool maybeSetSourceMap();
     void tellDebuggerAboutCompiledScript(JSContext* cx);
 
-    inline TokenStream& tokenStream();
+    inline TokenStreamAnyChars& tokenStream();
 
     BytecodeVector& code() const { return current->code; }
     jsbytecode* code(ptrdiff_t offset) const { return current->code.begin() + offset; }

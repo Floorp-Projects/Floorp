@@ -1449,10 +1449,6 @@ var gBrowserInit = {
     if (!getBoolPref("ui.click_hold_context_menus", false))
       SetClickAndHoldHandlers();
 
-    let NP = {};
-    Cu.import("resource:///modules/NetworkPrioritizer.jsm", NP);
-    NP.trackBrowserWindow(window);
-
     PlacesToolbarHelper.init();
 
     ctrlTab.readPref();
@@ -1507,8 +1503,7 @@ var gBrowserInit = {
     PointerLock.init();
 
     // initialize the sync UI
-    gSyncUI.init();
-    gFxAccounts.init();
+    gSync.init();
 
     if (AppConstants.MOZ_DATA_REPORTING)
       gDataNotificationInfoBar.init();
@@ -1544,13 +1539,13 @@ var gBrowserInit = {
       Cu.reportError("Could not end startup crash tracking: " + ex);
     }
 
-    // Delay this a minute because there's no rush
-    setTimeout(() => {
+    // Delay this a minute into the idle time because there's no rush.
+    requestIdleCallback(() => {
       this.gmpInstallManager = new GMPInstallManager();
       // We don't really care about the results, if someone is interested they
       // can check the log.
       this.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
-    }, 1000 * 60);
+    }, {timeout: 1000 * 60});
 
     // Report via telemetry whether we're able to play MP4/H.264/AAC video.
     // We suspect that some Windows users have a broken or have not installed
@@ -1655,7 +1650,7 @@ var gBrowserInit = {
 
     FullScreen.uninit();
 
-    gFxAccounts.uninit();
+    gSync.uninit();
 
     gExtensionsNotifications.uninit();
 
@@ -1818,7 +1813,7 @@ if (AppConstants.platform == "macosx") {
     gPrivateBrowsingUI.init();
 
     // initialize the sync UI
-    gSyncUI.init();
+    gSync.init();
 
     if (AppConstants.E10S_TESTING_ONLY) {
       gRemoteTabsUI.init();
@@ -5836,8 +5831,7 @@ function handleLinkClick(event, href, linkNode) {
   // get referrer attribute from clicked link and parse it and
   // allow per element referrer to overrule the document wide referrer if enabled
   let referrerPolicy = doc.referrerPolicy;
-  if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer") &&
-      linkNode) {
+  if (linkNode) {
     let referrerAttrValue = Services.netUtils.parseAttributePolicyString(linkNode.
                             getAttribute("referrerpolicy"));
     if (referrerAttrValue != Ci.nsIHttpChannel.REFERRER_POLICY_UNSET) {
@@ -6804,7 +6798,7 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
 }
 
 function BrowserOpenSyncTabs() {
-  gSyncUI.openSyncedTabsPanel();
+  gSync.openSyncedTabsPanel();
 }
 
 function ReportFalseDeceptiveSite() {
@@ -8178,7 +8172,7 @@ var TabContextMenu = {
     this.contextTab.addEventListener("TabAttrModified", this);
     aPopupMenu.addEventListener("popuphiding", this);
 
-    gFxAccounts.updateTabContextMenu(aPopupMenu, this.contextTab);
+    gSync.updateTabContextMenu(aPopupMenu, this.contextTab);
   },
   handleEvent(aEvent) {
     switch (aEvent.type) {

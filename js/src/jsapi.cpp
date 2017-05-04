@@ -4868,11 +4868,14 @@ JS_PUBLIC_API(JSObject*)
 JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(IsCallable(executor));
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, executor, proto);
 
+    if (!executor)
+        return PromiseObject::createSkippingExecutor(cx);
+
+    MOZ_ASSERT(IsCallable(executor));
     return PromiseObject::create(cx, executor, proto);
 }
 
@@ -4899,9 +4902,13 @@ JS::GetPromisePrototype(JSContext* cx)
 }
 
 JS_PUBLIC_API(JS::PromiseState)
-JS::GetPromiseState(JS::HandleObject promise)
+JS::GetPromiseState(JS::HandleObject promiseObj_)
 {
-    return promise->as<PromiseObject>().state();
+    JSObject* promiseObj = CheckedUnwrap(promiseObj_);
+    if (!promiseObj || !promiseObj->is<PromiseObject>())
+        return JS::PromiseState::Pending;
+
+    return promiseObj->as<PromiseObject>().state();
 }
 
 JS_PUBLIC_API(uint64_t)
@@ -4974,60 +4981,114 @@ JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
     return promise;
 }
 
-JS_PUBLIC_API(bool)
-JS::ResolvePromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue resolutionValue)
+static bool
+ResolveOrRejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue resultOrReason_,
+                       bool reject)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promiseObj, resolutionValue);
+    assertSameCompartment(cx, promiseObj, resultOrReason_);
 
-    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
-    return PromiseObject::resolve(cx, promise, resolutionValue);
+    mozilla::Maybe<AutoCompartment> ac;
+    Rooted<PromiseObject*> promise(cx);
+    RootedValue resultOrReason(cx, resultOrReason_);
+    if (IsWrapper(promiseObj)) {
+        JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
+        if (!unwrappedPromiseObj) {
+            ReportAccessDenied(cx);
+            return false;
+        }
+        promise = &unwrappedPromiseObj->as<PromiseObject>();
+        ac.emplace(cx, promise);
+        if (!cx->compartment()->wrap(cx, &resultOrReason))
+            return false;
+    } else {
+        promise = promiseObj.as<PromiseObject>();
+    }
+
+    return reject
+           ? PromiseObject::reject(cx, promise, resultOrReason)
+           : PromiseObject::resolve(cx, promise, resultOrReason);
+}
+
+JS_PUBLIC_API(bool)
+JS::ResolvePromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue resolutionValue)
+{
+    return ResolveOrRejectPromise(cx, promiseObj, resolutionValue, false);
 }
 
 JS_PUBLIC_API(bool)
 JS::RejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue rejectionValue)
 {
+    return ResolveOrRejectPromise(cx, promiseObj, rejectionValue, true);
+}
+
+static bool
+CallOriginalPromiseThenImpl(JSContext* cx, JS::HandleObject promiseObj,
+                            JS::HandleObject onResolvedObj_, JS::HandleObject onRejectedObj_,
+                            JS::MutableHandleObject resultObj, bool createDependent)
+{
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promiseObj, rejectionValue);
+    assertSameCompartment(cx, promiseObj, onResolvedObj_, onRejectedObj_);
 
-    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
-    return PromiseObject::reject(cx, promise, rejectionValue);
+    MOZ_ASSERT_IF(onResolvedObj_, IsCallable(onResolvedObj_));
+    MOZ_ASSERT_IF(onRejectedObj_, IsCallable(onRejectedObj_));
+
+    {
+        mozilla::Maybe<AutoCompartment> ac;
+        Rooted<PromiseObject*> promise(cx);
+        RootedObject onResolvedObj(cx, onResolvedObj_);
+        RootedObject onRejectedObj(cx, onRejectedObj_);
+        if (IsWrapper(promiseObj)) {
+            JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
+            if (!unwrappedPromiseObj) {
+                ReportAccessDenied(cx);
+                return false;
+            }
+            promise = &unwrappedPromiseObj->as<PromiseObject>();
+            ac.emplace(cx, promise);
+            if (!cx->compartment()->wrap(cx, &onResolvedObj) ||
+                !cx->compartment()->wrap(cx, &onRejectedObj))
+            {
+                return false;
+            }
+        } else {
+            promise = promiseObj.as<PromiseObject>();
+        }
+
+        RootedValue onFulfilled(cx, ObjectOrNullValue(onResolvedObj));
+        RootedValue onRejected(cx, ObjectOrNullValue(onRejectedObj));
+        if (!OriginalPromiseThen(cx, promise, onFulfilled, onRejected, resultObj, createDependent))
+            return false;
+    }
+
+    if (resultObj) {
+        if (!cx->compartment()->wrap(cx, resultObj))
+            return false;
+    }
+    return true;
+
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promiseObj,
-                            JS::HandleObject onResolveObj, JS::HandleObject onRejectObj)
+                            JS::HandleObject onResolvedObj, JS::HandleObject onRejectedObj)
 {
-    AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promiseObj, onResolveObj, onRejectObj);
-
-    MOZ_ASSERT_IF(onResolveObj, IsCallable(onResolveObj));
-    MOZ_ASSERT_IF(onRejectObj, IsCallable(onRejectObj));
-
-    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
-    RootedValue onFulfilled(cx, ObjectOrNullValue(onResolveObj));
-    RootedValue onRejected(cx, ObjectOrNullValue(onRejectObj));
-    return OriginalPromiseThen(cx, promise, onFulfilled, onRejected);
+    RootedObject resultPromise(cx);
+    if (!CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj, &resultPromise, true))
+        return nullptr;
+    return resultPromise;
 }
 
 JS_PUBLIC_API(bool)
 JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promiseObj,
                         JS::HandleObject onResolvedObj, JS::HandleObject onRejectedObj)
 {
-    AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promiseObj, onResolvedObj, onRejectedObj);
-
-    MOZ_ASSERT(IsCallable(onResolvedObj));
-    MOZ_ASSERT(IsCallable(onRejectedObj));
-
-    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
-    RootedValue onResolved(cx, ObjectValue(*onResolvedObj));
-    RootedValue onRejected(cx, ObjectValue(*onRejectedObj));
-    return EnqueuePromiseReactions(cx, promise, nullptr, onResolved, onRejected);
+    RootedObject resultPromise(cx);
+    bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj, &resultPromise, false);
+    MOZ_ASSERT(!resultPromise);
+    return result;
 }
 
 /**

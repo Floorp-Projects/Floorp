@@ -5,8 +5,6 @@
 
 // Tests for the FxA push service.
 
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Log.jsm");
 

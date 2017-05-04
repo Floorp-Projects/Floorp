@@ -171,10 +171,6 @@ widget/android/bindings/export: build/annotationProcessors/export
 # .xpt generation needs the xpidl lex/yacc files
 xpcom/xpidl/export: xpcom/idl-parser/xpidl/export
 
-# The roboextender addon includes a classes.dex containing a test Java addon.
-# The test addon must be built first.
-mobile/android/tests/browser/robocop/roboextender/tools: mobile/android/tests/javaaddons/tools
-
 ifdef ENABLE_CLANG_PLUGIN
 $(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
 build/clang-plugin/tests/target: build/clang-plugin/target

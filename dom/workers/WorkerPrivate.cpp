@@ -894,21 +894,6 @@ private:
   }
 };
 
-class CloseRunnable final : public WorkerControlRunnable
-{
-public:
-  explicit CloseRunnable(WorkerPrivate* aWorkerPrivate)
-  : WorkerControlRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
-  { }
-
-private:
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return aWorkerPrivate->Close();
-  }
-};
-
 class FreezeRunnable final : public WorkerControlRunnable
 {
 public:
@@ -3296,14 +3281,10 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::Close()
 {
-  AssertIsOnParentThread();
+  mMutex.AssertCurrentThreadOwns();
 
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (mParentStatus < Closing) {
-      mParentStatus = Closing;
-    }
+  if (mParentStatus < Closing) {
+    mParentStatus = Closing;
   }
 
   return true;
@@ -6165,6 +6146,12 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     previousStatus = mStatus;
     mStatus = aStatus;
 
+    // Mark parent status as closing immediately to avoid new events being
+    // dispatched after we clear the queue below.
+    if (aStatus == Closing) {
+      Close();
+    }
+
     mEventTarget.swap(eventTarget);
   }
 
@@ -6212,14 +6199,8 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     return true;
   }
 
+  // Don't abort the script.
   if (aStatus == Closing) {
-    // Notify parent to stop sending us messages and balance our busy count.
-    RefPtr<CloseRunnable> runnable = new CloseRunnable(this);
-    if (!runnable->Dispatch()) {
-      return false;
-    }
-
-    // Don't abort the script.
     return true;
   }
 

@@ -946,6 +946,17 @@ ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
                                                         aPseudoTag).Consume();
 }
 
+already_AddRefed<RawServoAnimationValue>
+ServoStyleSet::ComputeAnimationValue(
+  RawServoDeclarationBlock* aDeclarations,
+  const ServoComputedValuesWithParent& aComputedValues)
+{
+  return Servo_AnimationValue_Compute(aDeclarations,
+                                      aComputedValues.mCurrentStyle,
+                                      aComputedValues.mParentStyle,
+                                      mRawSet.get()).Consume();
+}
+
 void
 ServoStyleSet::RebuildData()
 {

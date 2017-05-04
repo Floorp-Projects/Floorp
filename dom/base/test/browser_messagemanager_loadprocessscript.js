@@ -50,6 +50,13 @@ function promiseMessage(messageManager, message) {
 }
 
 add_task(function*(){
+  // We want to count processes in this test, so let's disable the pre-allocated process manager.
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["dom.ipc.processPrelaunch.enabled", false],
+  ]});
+})
+
+add_task(function*(){
   // This test is only relevant in e10s.
   if (!gMultiProcessBrowser)
     return;

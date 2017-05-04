@@ -206,7 +206,7 @@ function Editor(config) {
 
     let num = cm.getOption("indentUnit");
     if (cm.getCursor().ch !== 0) {
-      num -= 1;
+      num -= cm.getCursor().ch % num;
     }
     cm.replaceSelection(" ".repeat(num), "end", "+input");
   };

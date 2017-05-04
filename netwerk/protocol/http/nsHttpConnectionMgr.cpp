@@ -2846,10 +2846,10 @@ nsHttpConnectionMgr::TimeoutTick()
                     LOG(("Force timeout of half open to %s after %.2fms.\n",
                          ent->mConnInfo->HashKey().get(), delta));
                     if (half->SocketTransport()) {
-                        half->SocketTransport()->Close(NS_ERROR_ABORT);
+                        half->SocketTransport()->Close(NS_ERROR_NET_TIMEOUT);
                     }
                     if (half->BackupTransport()) {
-                        half->BackupTransport()->Close(NS_ERROR_ABORT);
+                        half->BackupTransport()->Close(NS_ERROR_NET_TIMEOUT);
                     }
                 }
 

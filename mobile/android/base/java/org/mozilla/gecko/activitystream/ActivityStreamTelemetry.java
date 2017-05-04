@@ -12,7 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.home.activitystream.model.TopSite;
+import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
 
 import java.util.HashMap;
 

@@ -70,7 +70,7 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   }
 
   int64_t startTime = StartTime().ToMicroseconds();
-  return InvokeAsync<bool, media::TimeUnit&&>(
+  return InvokeAsync(
     mReader->OwnerThread(), mReader.get(), __func__,
     &MediaDecoderReader::RequestVideoData,
     aSkipToNextKeyframe, aTimeThreshold)
@@ -87,7 +87,7 @@ MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   SeekTarget adjustedTarget = aTarget;
   adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
-  return InvokeAsync<SeekTarget&&>(
+  return InvokeAsync(
            mReader->OwnerThread(), mReader.get(), __func__,
            &MediaDecoderReader::Seek,
            Move(adjustedTarget));

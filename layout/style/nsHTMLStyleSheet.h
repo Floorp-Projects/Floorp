@@ -81,7 +81,9 @@ private:
   private:
     ~HTMLColorRule() {}
   public:
-    HTMLColorRule() {}
+    explicit HTMLColorRule(nscolor aColor)
+      : mColor(aColor)
+    {}
 
     NS_DECL_ISUPPORTS
 
@@ -94,7 +96,7 @@ private:
     virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
   #endif
 
-    nscolor             mColor;
+    nscolor mColor;
   };
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor

@@ -192,28 +192,39 @@ namespace jit {
 
     class GenericAssembler
     {
+#ifdef JS_JITSPEW
         Sprinter* printer;
-
+#endif
       public:
 
-        GenericAssembler() : printer(nullptr) {}
+        GenericAssembler()
+#ifdef JS_JITSPEW
+          : printer(nullptr)
+#endif
+        {}
 
         void setPrinter(Sprinter* sp)
         {
+#ifdef JS_JITSPEW
             printer = sp;
+#endif
         }
 
-        void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
+        MOZ_ALWAYS_INLINE void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
         {
+#ifdef JS_JITSPEW
             if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
                 va_list va;
                 va_start(va, fmt);
                 spew(fmt, va);
                 va_end(va);
             }
+#endif
         }
 
+#ifdef JS_JITSPEW
         MOZ_COLD void spew(const char* fmt, va_list va);
+#endif
     };
 
 } // namespace jit
