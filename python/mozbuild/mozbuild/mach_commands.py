@@ -1977,3 +1977,15 @@ class Repackage(MachCommandBase):
     def repackage_installer(self, tag, setupexe, package, output):
         from mozbuild.repackaging.installer import repackage_installer
         repackage_installer(self.topsrcdir, tag, setupexe, package, output)
+
+    @SubCommand('repackage', 'mar',
+                description='Repackage into complete MAR file')
+    @CommandArgument('--input', '-i', type=str, required=True,
+        help='Input filename')
+    @CommandArgument('--mar', type=str, required=True,
+        help='Mar binary path')
+    @CommandArgument('--output', '-o', type=str, required=True,
+        help='Output filename')
+    def repackage_mar(self, input, mar, output):
+        from mozbuild.repackaging.mar import repackage_mar
+        repackage_mar(self.topsrcdir, input, mar, output)
