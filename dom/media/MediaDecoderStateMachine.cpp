@@ -1293,12 +1293,6 @@ private:
       return;
     }
 
-    if (aReject.mError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      HandleEndOfAudio();
-      HandleEndOfVideo();
-      return;
-    }
-
     MOZ_ASSERT(NS_FAILED(aReject.mError),
                "Cancels should also disconnect mSeekRequest");
     mMaster->DecodeError(aReject.mError);
