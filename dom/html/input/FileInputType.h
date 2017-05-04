@@ -19,6 +19,8 @@ public:
     return new (aMemory) FileInputType(aInputElement);
   }
 
+  bool IsValueMissing() const override;
+
 private:
   explicit FileInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)
