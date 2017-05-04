@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     'nsTableColFrame.cpp',
     'nsTableColGroupFrame.cpp',
     'nsTableFrame.cpp',
-    'nsTablePainter.cpp',
     'nsTableRowFrame.cpp',
     'nsTableRowGroupFrame.cpp',
     'nsTableWrapperFrame.cpp',
