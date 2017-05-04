@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include "mozilla/Assertions.h"
+
 /**
  * Where mozilla::LinkedList strives for ease of use above all other
  * considerations, mozilla::DoublyLinkedList strives for flexibility. The
