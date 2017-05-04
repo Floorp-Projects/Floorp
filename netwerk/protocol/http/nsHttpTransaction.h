@@ -184,6 +184,8 @@ public:
     {
         return mTopLevelOuterContentWindowId;
     }
+
+    void SetFastOpenStatus(uint8_t aStatus) override;
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
@@ -423,6 +425,8 @@ private:
         EARLY_SENT,
         EARLY_ACCEPTED
     } mEarlyDataDisposition;
+
+    uint8_t mFastOpenStatus;
 };
 
 } // namespace net

@@ -18,11 +18,17 @@ namespace net {
  * At the beginning of TCPFastOpenLayer.cpp there is explanation what this
  * layer do.
  **/
+
+#define TFO_NOT_TRIED 0
+#define TFO_TRIED     1
+#define TFO_DATA_SENT 2
+#define TFO_FAILED    3
+
 nsresult AttachTCPFastOpenIOLayer(PRFileDesc *fd);
 
 // Get the result of TCP Fast Open.
-void TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode *err,
-                       bool *fastOpenNotSupported);
+void TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
+                       bool &fastOpenNotSupported, uint8_t &tfoStatus);
 
 int32_t TCPFastOpenGetBufferSizeLeft(PRFileDesc *fd);
 }

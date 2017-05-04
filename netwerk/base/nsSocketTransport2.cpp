@@ -1522,11 +1522,13 @@ nsSocketTransport::InitiateSocket()
         status = PR_FAILURE;
         connectCalled = false;
         bool fastOpenNotSupported = false;
-
-        TCPFastOpenFinish(fd, &code, &fastOpenNotSupported);
+        uint8_t tfoStatus = TFO_NOT_TRIED;
+        TCPFastOpenFinish(fd, code, fastOpenNotSupported, tfoStatus);
+        mFastOpenCallback->SetFastOpenStatus(tfoStatus);
         SOCKET_LOG(("called StartFastOpen - code=%d; fastOpen is %s "
                     "supported.\n", code,
                     fastOpenNotSupported ? "not" : ""));
+        SOCKET_LOG(("TFO status %d\n", tfoStatus));
 
         if (fastOpenNotSupported) {
           // When TCP_FastOpen is turned off on the local host
@@ -1681,7 +1683,7 @@ nsSocketTransport::RecoverFromError()
         // without it.
         tryAgain = true;
         MOZ_ASSERT(mFastOpenCallback);
-        mFastOpenCallback->FastOpenConnected(mCondition);
+        mFastOpenCallback->SetFastOpenConnected(mCondition);
         mFastOpenCallback = nullptr;
     } else {
 
@@ -1812,7 +1814,7 @@ nsSocketTransport::OnSocketConnected()
         // mFastOpenCallback can be null when for example h2 is negotiated on
         // another connection to the same host and all connections are
         // abandoned.
-        mFastOpenCallback->FastOpenConnected(NS_OK);
+        mFastOpenCallback->SetFastOpenConnected(NS_OK);
         mFastOpenCallback = nullptr;
     }
 
@@ -2227,13 +2229,13 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         secCtrl->SetNotificationCallbacks(nullptr);
 
     // The error can happened before we start fast open. In that case do not
-    // call mFastOpenCallback->FastOpenConnected; If error happends during
+    // call mFastOpenCallback->SetFastOpenConnected; If error happends during
     // fast open, inform the halfOpenSocket.
     // If we cancel the connection because backup socket was successfully
     // connected, mFDFastOpenInProgress will be true but mFastOpenCallback
     // will be nullptr.
     if (mFDFastOpenInProgress && mFastOpenCallback) {
-        mFastOpenCallback->FastOpenConnected(mCondition);
+        mFastOpenCallback->SetFastOpenConnected(mCondition);
     }
     mFastOpenCallback = nullptr;
 

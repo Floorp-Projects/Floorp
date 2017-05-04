@@ -21,6 +21,7 @@
 #include "nsIPipe.h"
 #include "nsCRT.h"
 #include "mozilla/Tokenizer.h"
+#include "TCPFastOpenLayer.h"
 
 #include "nsISeekableStream.h"
 #include "nsMultiplexInputStream.h"
@@ -143,6 +144,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mClassOfService(0)
     , m0RTTInProgress(false)
     , mEarlyDataDisposition(EARLY_NONE)
+    , mFastOpenStatus(TFO_NOT_TRIED)
 {
     LOG(("Creating nsHttpTransaction @%p\n", this));
 
@@ -1442,6 +1444,14 @@ nsHttpTransaction::HandleContentStart()
             Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data, NS_LITERAL_CSTRING("sent"));
         } // no header on NONE case
 
+        if (mFastOpenStatus == TFO_DATA_SENT) {
+            Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open, NS_LITERAL_CSTRING("data sent"));
+        } else if (mFastOpenStatus == TFO_TRIED) {
+            Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open, NS_LITERAL_CSTRING("tried negotiating"));
+        } else if (mFastOpenStatus == TFO_FAILED) {
+            Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open, NS_LITERAL_CSTRING("failed"));
+        } // no header on TFO_NOT_TRIED case
+
         if (LOG3_ENABLED()) {
             LOG3(("http response [\n"));
             nsAutoCString headers;
@@ -2218,7 +2228,16 @@ nsHttpTransaction::RestartOnFastOpenError()
     }
     mEarlyDataDisposition = EARLY_NONE;
     m0RTTInProgress = false;
+    mFastOpenStatus = TFO_FAILED;
     return NS_OK;
+}
+
+void
+nsHttpTransaction::SetFastOpenStatus(uint8_t aStatus)
+{
+    LOG(("nsHttpTransaction::SetFastOpenStatus %d [this=%p]\n",
+         aStatus, this));
+    mFastOpenStatus = aStatus;
 }
 
 void

@@ -2314,6 +2314,7 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTr
         DontReuse();
         mUsingSpdyVersion = 0;
         if (mSpdySession) {
+            mTransaction->SetFastOpenStatus(TFO_FAILED);
             Unused << mSpdySession->Finish0RTT(true, true);
         }
         mSpdySession = nullptr;
