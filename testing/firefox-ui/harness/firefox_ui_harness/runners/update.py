@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import sys
 
 import mozfile
@@ -32,6 +33,15 @@ class UpdateTestRunner(FirefoxUITestRunner):
         self.run_fallback_update = not kwargs.pop('update_direct_only', False)
 
         self.test_handlers = [UpdateTestCase]
+
+        # With bug 1355888 Marionette uses an environment variable to identify
+        # if it should be active. It's important especially for restarts of the
+        # application to set this, because if it is not present Marionette will
+        # not start. To allow updates from builds before this change, the
+        # environment variable has to be pre-emptively set.
+        # TODO: Can be removed once we no longer have to test updates from
+        # Firefox 55.0 and earlier.
+        os.environ['MOZ_MARIONETTE'] = '1'
 
     def run_tests(self, tests):
         # Used to store the last occurred exception because we execute
