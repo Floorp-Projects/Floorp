@@ -1602,7 +1602,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
 
-  // Step 12. Check that the script is not an eventhandler
+  // Step 13. Check that the script is not an eventhandler
   if (IsScriptEventHandler(scriptContent)) {
     return false;
   }
@@ -1636,7 +1636,18 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     }
   }
 
-  // Step 14. in the HTML5 spec
+  // "In modern user agents that support module scripts, the script element with
+  // the nomodule attribute will be ignored".
+  // "The nomodule attribute must not be specified on module scripts (and will
+  // be ignored if it is)."
+  if (ModuleScriptsEnabled() &&
+      scriptKind == nsScriptKind::Classic &&
+      scriptContent->IsHTMLElement() &&
+      scriptContent->HasAttr(kNameSpaceID_None, nsGkAtoms::nomodule)) {
+    return false;
+  }
+
+  // Step 15. and later in the HTML5 spec
   nsresult rv = NS_OK;
   RefPtr<nsScriptLoadRequest> request;
   if (aElement->GetScriptExternal()) {

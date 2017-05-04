@@ -90,6 +90,8 @@ public:
   }
   bool Async();
   void SetAsync(bool aValue, ErrorResult& rv);
+  bool NoModule();
+  void SetNoModule(bool aValue, ErrorResult& rv);
 
 protected:
   virtual ~HTMLScriptElement();

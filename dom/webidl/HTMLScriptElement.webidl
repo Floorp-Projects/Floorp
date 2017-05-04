@@ -14,6 +14,8 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString src;
   [SetterThrows]
   attribute DOMString type;
+  [SetterThrows, Pref="dom.moduleScripts.enabled"]
+  attribute boolean noModule;
   [SetterThrows]
   attribute DOMString charset;
   [SetterThrows]
