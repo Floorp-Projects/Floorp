@@ -53,7 +53,7 @@ public:
   EventRegions GetEventRegions() const { return mEventRegions; }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
-  ScrollDirection GetScrollbarDirection() const { return mScrollbarDirection; }
+  const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
@@ -82,7 +82,7 @@ private:
   EventRegions mEventRegions;
   Maybe<uint64_t> mReferentId;
   EventRegionsOverride mEventRegionsOverride;
-  ScrollDirection mScrollbarDirection;
+  ScrollThumbData mScrollThumbData;
   FrameMetrics::ViewID mScrollbarTargetContainerId;
   bool mIsScrollbarContainer;
   FrameMetrics::ViewID mFixedPosScrollContainerId;
@@ -148,6 +148,17 @@ private:
 
 namespace IPC {
 
+// When ScrollThumbData is stored on the layer tree, it's part of
+// SimpleAttributes which itself uses PlainOldDataSerializer, so
+// we don't need a ParamTraits specialization for ScrollThumbData
+// separately. Here, however, ScrollThumbData is stored as part
+// of WebRenderLayerScrollData whose fields are serialized
+// individually, so we do.
+template<>
+struct ParamTraits<mozilla::layers::ScrollThumbData>
+  : public PlainOldDataSerializer<mozilla::layers::ScrollThumbData>
+{ };
+
 template<>
 struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
 {
@@ -164,7 +175,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mEventRegions);
     WriteParam(aMsg, aParam.mReferentId);
     WriteParam(aMsg, aParam.mEventRegionsOverride);
-    WriteParam(aMsg, aParam.mScrollbarDirection);
+    WriteParam(aMsg, aParam.mScrollThumbData);
     WriteParam(aMsg, aParam.mScrollbarTargetContainerId);
     WriteParam(aMsg, aParam.mIsScrollbarContainer);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
@@ -181,7 +192,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mEventRegions)
         && ReadParam(aMsg, aIter, &aResult->mReferentId)
         && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
-        && ReadParam(aMsg, aIter, &aResult->mScrollbarDirection)
+        && ReadParam(aMsg, aIter, &aResult->mScrollThumbData)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarTargetContainerId)
         && ReadParam(aMsg, aIter, &aResult->mIsScrollbarContainer)
         && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId);

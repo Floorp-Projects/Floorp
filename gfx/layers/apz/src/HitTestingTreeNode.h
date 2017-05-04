@@ -92,7 +92,7 @@ public:
   /* Scrollbar info */
 
   void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
-                        ScrollDirection aDir,
+                        const ScrollThumbData& aThumbData,
                         bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   bool IsScrollbarNode() const;
@@ -132,7 +132,7 @@ private:
   FrameMetrics::ViewID mScrollViewId;
 
   // This is set for scroll thumb Container layers only.
-  ScrollDirection mScrollDir;
+  ScrollThumbData mScrollThumbData;
 
   // This is set for scroll track Container layers only.
   bool mIsScrollbarContainer;

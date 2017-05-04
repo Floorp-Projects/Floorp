@@ -27,7 +27,6 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
   , mLayersId(aLayersId)
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
-  , mScrollDir(ScrollDirection::NONE)
   , mIsScrollbarContainer(false)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mOverride(EventRegionsOverride::NoOverride)
@@ -95,20 +94,20 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 
 void
 HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
-                                     ScrollDirection aDir,
+                                     const ScrollThumbData& aThumbData,
                                      bool aIsScrollContainer)
 {
   mScrollViewId = aScrollViewId;
-  mScrollDir = aDir;
+  mScrollThumbData = aThumbData;
   mIsScrollbarContainer = aIsScrollContainer;
 }
 
 bool
 HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const
 {
-  return ((mScrollDir == ScrollDirection::HORIZONTAL &&
+  return ((mScrollThumbData.mDirection == ScrollDirection::HORIZONTAL &&
            aDragMetrics.mDirection == AsyncDragMetrics::HORIZONTAL) ||
-          (mScrollDir == ScrollDirection::VERTICAL &&
+          (mScrollThumbData.mDirection == ScrollDirection::VERTICAL &&
            aDragMetrics.mDirection == AsyncDragMetrics::VERTICAL)) &&
          mScrollViewId == aDragMetrics.mViewId;
 }
@@ -116,7 +115,7 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
 bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
-  return mIsScrollbarContainer || (mScrollDir != ScrollDirection::NONE);
+  return mIsScrollbarContainer || (mScrollThumbData.mDirection != ScrollDirection::NONE);
 }
 
 FrameMetrics::ViewID
