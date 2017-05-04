@@ -534,10 +534,11 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
                         target == c.get());
 
         // Iterate only the wrappers that have target compartment matched unless
-        // |nukeAll| is true. The wrappers for strings that we're not interested
-        // in won't be here because they have compartment nullptr. Use Maybe to
-        // avoid copying from conditionally initializing WrapperEnum.
-        mozilla::Maybe<JSCompartment::WrapperEnum> e;
+        // |nukeAll| is true. The string wrappers that we're not interested in
+        // won't be iterated, we can exclude them easily because they have
+        // compartment nullptr. Use Maybe to avoid copying from conditionally
+        // initializing NonStringWrapperEnum.
+        mozilla::Maybe<JSCompartment::NonStringWrapperEnum> e;
         if (MOZ_LIKELY(!nukeAll))
             e.emplace(c, target);
         else
@@ -691,14 +692,10 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
             continue;
 
         // Iterate over the wrappers, filtering appropriately.
-        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
+        for (JSCompartment::NonStringWrapperEnum e(c, targetFilter); !e.empty(); e.popFront()) {
             // Filter out non-objects.
             CrossCompartmentKey& k = e.front().mutableKey();
             if (!k.is<JSObject*>())
-                continue;
-
-            // Filter by target compartment.
-            if (!targetFilter.match(k.compartment()))
                 continue;
 
             // Add it to the list.
