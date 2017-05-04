@@ -31,6 +31,8 @@ from mach.decorators import (
 
 from mach.mixin.logging import LoggingMixin
 
+from mach.main import Mach
+
 from mozbuild.base import (
     BuildEnvironmentNotFoundException,
     MachCommandBase,
@@ -2044,6 +2046,396 @@ class PackageFrontend(MachCommandBase):
 
         return 0
 
+class StaticAnalysisSubCommand(SubCommand):
+    def __call__(self, func):
+        after = SubCommand.__call__(self, func)
+        args = [
+            CommandArgument('--verbose', '-v', action='store_true',
+                            help='Print verbose output.'),
+        ]
+        for arg in args:
+            after = arg(after)
+        return after
+
+
+class StaticAnalysisMonitor(object):
+    def __init__(self, srcdir, objdir, total):
+        self._total = total
+        self._processed = 0
+        self._current = None
+        self._srcdir = srcdir
+
+        from mozbuild.compilation.warnings import (
+            WarningsCollector,
+            WarningsDatabase,
+        )
+
+        self._warnings_database = WarningsDatabase()
+
+        def on_warning(warning):
+            filename = warning['filename']
+            self._warnings_database.insert(warning)
+
+        self._warnings_collector = WarningsCollector(on_warning, objdir=objdir)
+
+    @property
+    def num_files(self):
+        return self._total
+
+    @property
+    def num_files_processed(self):
+        return self._processed
+
+    @property
+    def current_file(self):
+        return self._current
+
+    @property
+    def warnings_db(self):
+        return self._warnings_database
+
+    def on_line(self, line):
+        warning = None
+
+        try:
+            warning = self._warnings_collector.process_line(line)
+        except:
+            pass
+
+        if line.find('clang-tidy') != -1:
+            filename = line.split(' ')[-1]
+            if os.path.isfile(filename):
+                self._current = os.path.relpath(filename, self._srcdir)
+            else:
+                self._current = None
+            self._processed = self._processed + 1
+            return (warning, False)
+        return (warning, True)
+
+
+class StaticAnalysisFooter(Footer):
+    """Handles display of a static analysis progress indicator in a terminal.
+    """
+
+    def __init__(self, terminal, monitor):
+        Footer.__init__(self, terminal)
+        self.monitor = monitor
+
+    def draw(self):
+        """Draws this footer in the terminal."""
+
+        monitor = self.monitor
+        total = monitor.num_files
+        processed = monitor.num_files_processed
+        percent = '(%.2f%%)' % (processed * 100.0 / total)
+        parts = [
+            ('dim', 'Processing'),
+            ('yellow', str(processed)),
+            ('dim', 'of'),
+            ('yellow', str(total)),
+            ('dim', 'files'),
+            ('green', percent)
+        ]
+        if monitor.current_file:
+            parts.append(('bold', monitor.current_file))
+
+        self.write(parts)
+
+
+class StaticAnalysisOutputManager(OutputManager):
+    """Handles writing static analysis output to a terminal."""
+
+    def __init__(self, log_manager, monitor, footer):
+        self.monitor = monitor
+        OutputManager.__init__(self, log_manager, footer)
+
+    def on_line(self, line):
+        warning, relevant = self.monitor.on_line(line)
+
+        if warning:
+            self.log(logging.INFO, 'compiler_warning', warning,
+                'Warning: {flag} in {filename}: {message}')
+
+        if relevant:
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+        else:
+            have_handler = hasattr(self, 'handler')
+            if have_handler:
+                self.handler.acquire()
+            try:
+                self.refresh()
+            finally:
+                if have_handler:
+                    self.handler.release()
+
+
+@CommandProvider
+class StaticAnalysis(MachCommandBase):
+    """Utilities for running C++ static analysis checks."""
+
+    @Command('static-analysis', category='testing',
+             description='Run C++ static analysis checks')
+    def static_analysis(self):
+        # If not arguments are provided, just print a help message.
+        mach = Mach(os.getcwd())
+        mach.run(['static-analysis', '--help'])
+
+    @StaticAnalysisSubCommand('static-analysis', 'check',
+                              'Run the checks using the helper tool')
+    @CommandArgument('source', nargs='*', default=['.*'],
+                     help='Source files to be analyzed (regex on path). '
+                          'Can be omitted, in which case the entire code base '
+                          'is analyzed.  The source argument is ignored if '
+                          'there is anything fed through stdin, in which case '
+                          'the analysis is only performed on the files changed '
+                          'in the patch streamed through stdin.  This is called '
+                          'the diff mode.')
+    @CommandArgument('--checks', '-c', default='-*,mozilla-*', metavar='checks',
+        help='Static analysis checks to enable.  By default, this enables only '
+             'custom Mozilla checks, but can be any clang-tidy checks syntax.')
+    @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
+        help='Number of concurrent jobs to run. Default is the number of CPUs.')
+    @CommandArgument('--strip', '-p', default='1', metavar='NUM',
+                     help='Strip NUM leading components from file names in diff mode.')
+    @CommandArgument('--fix', '-f', default=False, action='store_true',
+                     help='Try to autofix errors detected by clang-tidy checkers.')
+    def check(self, source=None, jobs=2, strip=1, verbose=False,
+              checks='-*,mozilla-*', fix=False):
+        self._set_log_level(verbose)
+        rc = self._build_compile_db(verbose=verbose)
+        if rc != 0:
+            return rc
+
+        rc = self._build_export(jobs=jobs, verbose=verbose)
+        if rc != 0:
+            return rc
+
+        rc = self._get_clang_tidy(verbose=verbose)
+        if rc != 0:
+            return rc
+
+        python = self.virtualenv_manager.python_path
+
+        common_args = ['-clang-tidy-binary', self._clang_tidy_path,
+                       '-checks=%s' % checks,
+                       '-extra-arg=-DMOZ_CLANG_PLUGIN']
+        if fix:
+            common_args.append('-fix')
+
+        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
+
+        compile_db = json.loads(open(self._compile_db, 'r').read())
+        total = 0
+        files = []
+        import re
+        name_re = re.compile('(' + ')|('.join(source) + ')')
+        for f in compile_db:
+            if name_re.search(f['file']):
+                total = total + 1
+                files.append(f['file'])
+
+        if not total:
+            return 0
+
+        args = [python, self._run_clang_tidy_path, '-p', self.topobjdir]
+        args += ['-j', str(jobs)] + files + common_args
+        cwd = self.topobjdir
+
+        monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
+
+        footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
+        with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output:
+            rc = self.run_process(args=args, line_handler=output.on_line, cwd=cwd)
+
+            self.log(logging.WARNING, 'warning_summary',
+                     {'count': len(monitor.warnings_db)},
+                     '{count} warnings present.')
+            return rc
+
+    @StaticAnalysisSubCommand('static-analysis', 'install',
+                              'Install the static analysis helper tool')
+    @CommandArgument('source', nargs='?', type=str,
+                     help='Where to fetch a local archive containing the clang-tidy helper tool.'
+                          'It will be installed in ~/.mozbuild/clang-tidy/.'
+                          'Can be omitted, in which case the latest clang-tidy '
+                          ' helper for the platform would be automatically '
+                          'detected and installed.')
+    @CommandArgument('--skip-cache', action='store_true',
+                     help='Skip all local caches to force re-fetching the helper tool.',
+                     default=False)
+    def install(self, source=None, skip_cache=False, verbose=False):
+        self._set_log_level(verbose)
+        rc = self._get_clang_tidy(force=True, skip_cache=skip_cache,
+                                  source=source, verbose=verbose)
+        return rc
+
+    @StaticAnalysisSubCommand('static-analysis', 'clear-cache',
+                              'Delete local helpers and reset static analysis helper tool cache')
+    def clear_cache(self, verbose=False):
+        self._set_log_level(verbose)
+        rc = self._get_clang_tidy(force=True, download_if_needed=False,
+                                  verbose=verbose)
+        if rc != 0:
+            return rc
+
+        self._artifact_manager.artifact_clear_cache()
+
+    @StaticAnalysisSubCommand('static-analysis', 'print-checks',
+                              'Print a list of the static analysis checks performed by default')
+    def print_checks(self, verbose=False):
+        self._set_log_level(verbose)
+        rc = self._get_clang_tidy(verbose=verbose)
+        if rc != 0:
+            return rc
+        args = [self._clang_tidy_path, '-list-checks', '-checks=-*,mozilla-*']
+        return self._run_command_in_objdir(args=args, pass_thru=True)
+
+    def _get_config_environment(self):
+        ran_configure = False
+        config = None
+        builder = Build(self._mach_context)
+
+        try:
+            config = self.config_environment
+        except Exception:
+            print('Looks like configure has not run yet, running it now...')
+            rc = builder.configure()
+            if rc != 0:
+                return (rc, config, ran_configure)
+            ran_configure = True
+            try:
+                config = self.config_environment
+            except Exception as e:
+                pass
+
+        return (0, config, ran_configure)
+
+    def _build_compile_db(self, verbose=False):
+        self._compile_db = mozpath.join(self.topobjdir, 'compile_commands.json')
+        if os.path.exists(self._compile_db):
+            return 0
+        else:
+            rc, config, ran_configure = self._get_config_environment()
+            if rc != 0:
+                return rc
+
+            if ran_configure:
+                # Configure may have created the compilation database if the
+                # mozconfig enables building the CompileDB backend by default,
+                # So we recurse to see if the file exists once again.
+                return self._build_compile_db(verbose=verbose)
+
+            if config:
+                print('Looks like a clang compilation database has not been '
+                      'created yet, creating it now...')
+                builder = Build(self._mach_context)
+                rc = builder.build_backend(['CompileDB'], verbose=verbose)
+                if rc != 0:
+                    return rc
+                assert os.path.exists(self._compile_db)
+                return 0
+
+    def _build_export(self, jobs, verbose=False):
+        def on_line(line):
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+
+        builder = Build(self._mach_context)
+        # First install what we can through install manifests.
+        rc = builder._run_make(directory=self.topobjdir, target='pre-export',
+                               line_handler=None, silent=not verbose)
+        if rc != 0:
+            return rc
+
+        # Then build the rest of the build dependencies by running the full
+        # export target, because we can't do anything better.
+        return builder._run_make(directory=self.topobjdir, target='export',
+                                 line_handler=None, silent=not verbose,
+                                 num_jobs=jobs)
+
+    def _get_clang_tidy(self, force=False, skip_cache=False,
+                        source=None, download_if_needed=True,
+                        verbose=False):
+        rc, config, _ = self._get_config_environment()
+
+        if rc != 0:
+            return rc
+
+        clang_tidy_path = mozpath.join(self._mach_context.state_dir,
+                                       "clang-tidy")
+        self._clang_tidy_path = mozpath.join(clang_tidy_path, "clang", "bin",
+                                             "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
+        self._run_clang_tidy_path = mozpath.join(clang_tidy_path, "clang", "share",
+                                                 "clang", "run-clang-tidy.py")
+
+        if os.path.exists(self._clang_tidy_path) and \
+           os.path.exists(self._run_clang_tidy_path) and \
+           not force:
+            return 0
+        else:
+            if os.path.isdir(clang_tidy_path) and download_if_needed:
+                # The directory exists, perhaps it's corrupted?  Delete it
+                # and start from scratch.
+                import shutil
+                shutil.rmtree(clang_tidy_path)
+                return self._get_clang_tidy(force=force, skip_cache=skip_cache,
+                                            source=source, verbose=verbose,
+                                            download_if_needed=download_if_needed)
+
+            # Create base directory where we store clang binary
+            os.mkdir(clang_tidy_path)
+
+            if source:
+                return self._get_clang_tidy_from_source(source)
+
+            self._artifact_manager = PackageFrontend(self._mach_context)
+
+            if not download_if_needed:
+                return 0
+
+            job, _ = self.platform
+
+            if job is None:
+                raise Exception('The current platform isn\'t supported. '
+                                'Currently only the following platforms are '
+                                'supported: win32/win64, linux64 and macosx64.')
+            else:
+                job += '-clang-tidy'
+
+            # We want to unpack data in the clang-tidy mozbuild folder
+            currentWorkingDir = os.getcwd()
+            os.chdir(clang_tidy_path)
+            rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
+                                                           skip_cache=skip_cache,
+                                                           from_build=[job],
+                                                           no_unpack=False,
+                                                           retry=0)
+            # Change back the cwd
+            os.chdir(currentWorkingDir)
+
+            return rc
+
+    def _get_clang_tidy_from_source(self, filename):
+        from mozbuild.action.tooltool import unpack_file
+        clang_tidy_path = mozpath.join(self._mach_context.state_dir,
+                                       "clang-tidy")
+
+        currentWorkingDir = os.getcwd()
+        os.chdir(clang_tidy_path)
+
+        unpack_file(filename)
+
+        # Change back the cwd
+        os.chdir(currentWorkingDir)
+
+        clang_path = mozpath.join(clang_tidy_path, 'clang')
+
+        if not os.path.isdir(clang_path):
+            raise Exception('Extracted the archive but didn\'t find '
+                            'the expected output')
+
+        assert os.path.exists(self._clang_tidy_path)
+        assert os.path.exists(self._run_clang_tidy_path)
+        return 0
 
 @CommandProvider
 class Vendor(MachCommandBase):
