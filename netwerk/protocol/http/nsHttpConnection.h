@@ -405,6 +405,9 @@ private:
 
     PRFileDesc                    *mFastOpen;
     uint8_t                        mFastOpenStatus;
+
+    bool                           mForceSendDuringFastOpenPending;
+    bool                           mReceivedSocketWouldBlockDuringFastOpen;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)

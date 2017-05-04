@@ -90,6 +90,8 @@ nsHttpConnection::nsHttpConnection()
     , mResumeRecvOnUnthrottle(false)
     , mFastOpen(nullptr)
     , mFastOpenStatus(TFO_NOT_TRIED)
+    , mForceSendDuringFastOpenPending(false)
+    , mReceivedSocketWouldBlockDuringFastOpen(false)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -463,6 +465,9 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
                 LOG(("nsHttpConnection::EnsureNPNComplete [this=%p] - written %d "
                      "bytes during 0RTT", this, aOut0RTTBytesWritten));
                 mContentBytesWritten0RTT += aOut0RTTBytesWritten;
+                if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
+                    mReceivedSocketWouldBlockDuringFastOpen = true;
+                }
             }
         }
 
@@ -1389,6 +1394,50 @@ nsHttpConnection::PushBack(const char *data, uint32_t length)
     return NS_OK;
 }
 
+class HttpConnectionForceIO : public Runnable
+{
+public:
+  HttpConnectionForceIO(nsHttpConnection *aConn, bool doRecv,
+                        bool isFastOpenForce)
+     : mConn(aConn)
+     , mDoRecv(doRecv)
+     , mIsFastOpenForce(isFastOpenForce)
+    {}
+
+    NS_IMETHOD Run() override
+    {
+        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+        if (mDoRecv) {
+            if (!mConn->mSocketIn)
+                return NS_OK;
+            return mConn->OnInputStreamReady(mConn->mSocketIn);
+        }
+
+        // This runnable will be called when the ForceIO timer expires
+        // (mIsFastOpenForce==false) or during the TCP Fast Open to force
+        // writes (mIsFastOpenForce==true).
+        if (mIsFastOpenForce && !mConn->mWaitingFor0RTTResponse) {
+            // If we have exit the TCP Fast Open in the meantime we can skip
+            // this.
+            return NS_OK;
+        }
+        if (!mIsFastOpenForce) {
+            MOZ_ASSERT(mConn->mForceSendPending);
+            mConn->mForceSendPending = false;
+        }
+
+        if (!mConn->mSocketOut) {
+            return NS_OK;
+        }
+        return mConn->OnOutputStreamReady(mConn->mSocketOut);
+    }
+private:
+    RefPtr<nsHttpConnection> mConn;
+    bool mDoRecv;
+    bool mIsFastOpenForce;
+};
+
 nsresult
 nsHttpConnection::ResumeSend()
 {
@@ -1396,8 +1445,23 @@ nsHttpConnection::ResumeSend()
 
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-    if (mSocketOut)
-        return mSocketOut->AsyncWait(this, 0, 0, nullptr);
+    if (mSocketOut) {
+        nsresult rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
+        LOG(("nsHttpConnection::ResumeSend [this=%p] "
+             "mWaitingFor0RTTResponse=%d mForceSendDuringFastOpenPending=%d "
+             "mReceivedSocketWouldBlockDuringFastOpen=%d\n",
+             this, mWaitingFor0RTTResponse, mForceSendDuringFastOpenPending,
+             mReceivedSocketWouldBlockDuringFastOpen));
+        if (mWaitingFor0RTTResponse && !mForceSendDuringFastOpenPending &&
+            !mReceivedSocketWouldBlockDuringFastOpen &&
+            NS_SUCCEEDED(rv)) {
+            // During TCP Fast Open, poll does not work properly so we will
+            // trigger writes manually.
+            mForceSendDuringFastOpenPending = true;
+            NS_DispatchToCurrentThread(new HttpConnectionForceIO(this, false, true));
+        }
+        return rv;
+    }
 
     NS_NOTREACHED("no socket output stream");
     return NS_ERROR_UNEXPECTED;
@@ -1440,37 +1504,6 @@ nsHttpConnection::ResumeRecv()
     return NS_ERROR_UNEXPECTED;
 }
 
-
-class HttpConnectionForceIO : public Runnable
-{
-public:
-  HttpConnectionForceIO(nsHttpConnection *aConn, bool doRecv)
-     : mConn(aConn)
-     , mDoRecv(doRecv)
-    {}
-
-    NS_IMETHOD Run() override
-    {
-        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-        if (mDoRecv) {
-            if (!mConn->mSocketIn)
-                return NS_OK;
-            return mConn->OnInputStreamReady(mConn->mSocketIn);
-        }
-
-        MOZ_ASSERT(mConn->mForceSendPending);
-        mConn->mForceSendPending = false;
-        if (!mConn->mSocketOut) {
-            return NS_OK;
-        }
-        return mConn->OnOutputStreamReady(mConn->mSocketOut);
-    }
-private:
-    RefPtr<nsHttpConnection> mConn;
-    bool mDoRecv;
-};
-
 void
 nsHttpConnection::ForceSendIO(nsITimer *aTimer, void *aClosure)
 {
@@ -1478,7 +1511,7 @@ nsHttpConnection::ForceSendIO(nsITimer *aTimer, void *aClosure)
     nsHttpConnection *self = static_cast<nsHttpConnection *>(aClosure);
     MOZ_ASSERT(aTimer == self->mForceSendTimer);
     self->mForceSendTimer = nullptr;
-    NS_DispatchToCurrentThread(new HttpConnectionForceIO(self, false));
+    NS_DispatchToCurrentThread(new HttpConnectionForceIO(self, false, false));
 }
 
 nsresult
@@ -1509,7 +1542,7 @@ nsHttpConnection::ForceRecv()
     LOG(("nsHttpConnection::ForceRecv [this=%p]\n", this));
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-    return NS_DispatchToCurrentThread(new HttpConnectionForceIO(this, true));
+    return NS_DispatchToCurrentThread(new HttpConnectionForceIO(this, true, false));
 }
 
 // trigger an asynchronous write
@@ -1665,6 +1698,8 @@ nsHttpConnection::OnSocketWritable()
     const uint32_t maxWriteAttempts = 128;
     uint32_t writeAttempts = 0;
 
+    mForceSendDuringFastOpenPending = false;
+
     do {
         ++writeAttempts;
         rv = mSocketOutCondition = NS_OK;
@@ -1711,9 +1746,10 @@ nsHttpConnection::OnSocketWritable()
         }
 
         LOG(("nsHttpConnection::OnSocketWritable %p "
-             "ReadSegments returned [rv=%" PRIx32 " read=%u sock-cond=%" PRIx32 "]\n",
+             "ReadSegments returned [rv=%" PRIx32 " read=%u "
+             "sock-cond=%" PRIx32 " again=%d]\n",
              this, static_cast<uint32_t>(rv), transactionBytes,
-             static_cast<uint32_t>(mSocketOutCondition)));
+             static_cast<uint32_t>(mSocketOutCondition), again));
 
         // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
         if (rv == NS_BASE_STREAM_CLOSED && !mTransaction->IsDone()) {
@@ -1721,11 +1757,20 @@ nsHttpConnection::OnSocketWritable()
             transactionBytes = 0;
         }
 
+        if (!again && (mFastOpen || mWaitingFor0RTTResponse)) {
+            // Continue waiting;
+            rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
+        }
         if (NS_FAILED(rv)) {
             // if the transaction didn't want to write any more data, then
             // wait for the transaction to call ResumeSend.
-            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 rv = NS_OK;
+                if (mFastOpen || mWaitingFor0RTTResponse) {
+                    // Continue waiting;
+                    rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
+                }
+            }
             again = false;
         } else if (NS_FAILED(mSocketOutCondition)) {
             if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -1739,13 +1784,13 @@ nsHttpConnection::OnSocketWritable()
                 rv = mSocketOutCondition;
             }
             again = false;
-        } else if (mFastOpen) {
-            rv = mSocketOut->AsyncWait(this, 0, 0, nullptr); // wait for connected event.
-            again = false;
         } else if (!transactionBytes) {
             rv = NS_OK;
 
-            if (mTransaction && !mWaitingFor0RTTResponse) { // in case the ReadSegments stack called CloseTransaction()
+            if (mWaitingFor0RTTResponse || mFastOpen) {
+                // Wait for tls handshake to finish or waiting for connect.
+                rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
+            } else if (mTransaction) { // in case the ReadSegments stack called CloseTransaction()
                 //
                 // at this point we've written out the entire transaction, and now we
                 // must wait for the server's response.  we manufacture a status message
