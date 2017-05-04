@@ -13,10 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=287465
 <p id="display"></p>
 <div id="content" style="display:none">
 
-<iframe id="i1" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>"></iframe>
-<object id="o1" data="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>"></object>
-<iframe id="i2" src="data:text/html,<html></html>"></iframe>
-<object id="o2" data="data:text/html,<html></html>"></object>
+<iframe id="i1" srcdoc="<svg xmlns='http://www.w3.org/2000/svg'></svg>"></iframe>
+<object id="o1" data="object_bug287465_o1.html"></object>
+<iframe id="i2" srcdoc="<html></html>"></iframe>
+<object id="o2" data="object_bug287465_o2.html"></object>
 
 </div>
 <pre id="test">
