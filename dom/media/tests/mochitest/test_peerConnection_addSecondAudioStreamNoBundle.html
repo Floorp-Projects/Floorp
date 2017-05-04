@@ -11,11 +11,9 @@
     title: "Renegotiation: add second audio stream, no bundle"
   });
 
-  var test;
-  runNetworkTest(function (options) {
-    options = options || { };
+  runNetworkTest(function (options = {}) {
     options.bundle = false;
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
@@ -28,6 +26,19 @@
         },
         function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
           test.pcRemote.expectIceChecking();
+        },
+      ],
+      [
+        function PC_REMOTE_CHECK_ADDED_TRACK(test) {
+          // We test both tracks to avoid an ordering problem
+          is(test.pcRemote._pc.getReceivers().length, 2,
+             "pcRemote should have two receivers");
+          return Promise.all(test.pcRemote._pc.getReceivers().map(r => {
+            const analyser = new AudioStreamAnalyser(
+                new AudioContext(), new MediaStream([r.track]));
+            const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+            return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
+          }));
         },
       ]
     );
