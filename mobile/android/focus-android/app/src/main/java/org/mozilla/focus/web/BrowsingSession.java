@@ -7,6 +7,12 @@ package org.mozilla.focus.web;
 
 import java.lang.ref.WeakReference;
 
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import org.mozilla.focus.utils.SafeIntent;
+
 /**
  * A global object keeping the state of the current browsing session.
  *
@@ -29,6 +35,7 @@ public class BrowsingSession {
     private boolean isActive;
     private int blockedTrackers;
     private WeakReference<TrackingCountListener> listenerWeakReference;
+    private @Nullable CustomTabConfig customTabConfig;
 
     private BrowsingSession() {
         listenerWeakReference = new WeakReference<>(null);
@@ -40,6 +47,7 @@ public class BrowsingSession {
 
     public void stop() {
         isActive = false;
+        customTabConfig = null;
     }
 
     public boolean isActive() {
@@ -62,5 +70,26 @@ public class BrowsingSession {
 
     public void resetTrackerCount() {
         blockedTrackers = 0;
+    }
+
+    public void loadCustomTabConfig(final @NonNull SafeIntent intent) {
+        if (!CustomTabConfig.isCustomTabIntent(intent.getUnsafe())) {
+            customTabConfig = null;
+            return;
+        }
+
+        customTabConfig = CustomTabConfig.parseCustomTabIntent(intent);
+    }
+
+    public boolean isCustomTab() {
+        return customTabConfig != null;
+    }
+
+    public @NonNull CustomTabConfig getCustomTabConfig() {
+        if (!isCustomTab()) {
+            throw new IllegalStateException("Can't retrieve custom tab config for normal browsing session");
+        }
+
+        return customTabConfig;
     }
 }

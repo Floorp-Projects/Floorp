@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
             if (Intent.ACTION_VIEW.equals(intent.getAction())) {
                 final String url = intent.getDataString();
 
+                BrowsingSession.getInstance().loadCustomTabConfig(intent);
+
                 if (Settings.getInstance(this).shouldShowFirstrun()) {
                     pendingUrl = url;
                     showFirstrun();
@@ -115,10 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent unsafeIntent) {
-        // getAction is safe, so we don't need to wrap with SafeIntent until we know if we need
-        // to read actual data:
-        if (Intent.ACTION_VIEW.equals(unsafeIntent.getAction())) {
-            final SafeIntent intent = new SafeIntent(unsafeIntent);
+        final SafeIntent intent = new SafeIntent(unsafeIntent);
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             // We can't update our fragment right now because we need to wait until the activity is
             // resumed. So just remember this URL and load it in onResumeFragments().
             pendingUrl = intent.getDataString();
@@ -126,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
         // We do not care about the previous intent anymore. But let's remember this one.
         setIntent(unsafeIntent);
+        BrowsingSession.getInstance().loadCustomTabConfig(intent);
     }
 
     @Override
