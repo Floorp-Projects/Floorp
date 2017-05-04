@@ -62,7 +62,9 @@ import org.mozilla.focus.web.IWebView;
                             throw new IllegalStateException("WebView did not supply url or src for image link");
                         }
 
-                        callback.onLongPress(new IWebView.HitTarget(true, url, true, src));
+                        if (callback != null) {
+                            callback.onLongPress(new IWebView.HitTarget(true, url, true, src));
+                        }
                     }
                 });
 
