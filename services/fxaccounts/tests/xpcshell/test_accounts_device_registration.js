@@ -7,7 +7,6 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
 initTestLogging("Trace");
@@ -77,9 +76,7 @@ function MockFxAccountsClient(device) {
   };
 
   this.accountStatus = function(uid) {
-    let deferred = Promise.defer();
-    deferred.resolve(!!uid && (!this._deletedOnServer));
-    return deferred.promise;
+    return Promise.resolve(!!uid && (!this._deletedOnServer));
   };
 
   const { id: deviceId, name: deviceName, type: deviceType, sessionToken } = device;

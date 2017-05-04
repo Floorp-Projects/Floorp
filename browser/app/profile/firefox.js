@@ -683,6 +683,10 @@ pref("plugin.defaultXpi.state", 2);
 pref("plugin.state.flash", 2);
 pref("plugin.state.java", 1);
 
+#ifdef NIGHTLY_BUILD
+pref("plugins.flashBlock.enabled", true);
+#endif
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else
@@ -1384,9 +1388,6 @@ pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox
 // The remote URL of the FxA OAuth Server
 pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
 
-// Whether we display profile images in the UI or not.
-pref("identity.fxaccounts.profile_image.enabled", true);
-
 // Token server used by the FxA Sync identity.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
@@ -1517,6 +1518,11 @@ pref("browser.tabs.crashReporting.email", "");
 pref("extensions.interposition.enabled", true);
 pref("extensions.interposition.prefetching", true);
 
+// But don't allow non-MPC extensions by default on Nightly
+#if defined(NIGHTLY_BUILD)
+pref("extensions.allow-non-mpc-extensions", false);
+#endif
+
 // Enable blocking of e10s and e10s-multi for add-on users on beta/release.
 #ifdef RELEASE_OR_BETA
 pref("extensions.e10sBlocksEnabling", true);
@@ -1575,6 +1581,8 @@ pref("media.webspeech.synth.enabled", true);
 pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
+
+pref("dom.ipc.processPrelaunch.enabled", true);
 
 #ifdef EARLY_BETA_OR_EARLIER
 pref("browser.migrate.automigrate.enabled", true);

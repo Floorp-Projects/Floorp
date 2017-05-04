@@ -22,6 +22,7 @@ TEST_DIRS += [
     'test_cert_version',
     'test_certDB_import',
     'test_content_signing',
+    'test_ct',
     'test_ev_certs',
     'test_getchain',
     'test_intermediate_basic_usage_constraints',

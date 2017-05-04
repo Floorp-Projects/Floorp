@@ -7,6 +7,12 @@
 #ifndef gc_NurseryAwareHashMap_h
 #define gc_NurseryAwareHashMap_h
 
+#include "gc/Barrier.h"
+#include "gc/Marking.h"
+#include "js/GCHashTable.h"
+#include "js/GCPolicyAPI.h"
+#include "js/HashTable.h"
+
 namespace js {
 
 namespace detail {

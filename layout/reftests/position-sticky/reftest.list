@@ -17,15 +17,15 @@ fuzzy-if(Android,2,4) == left-2.html left-2-ref.html
 fuzzy-if(Android,2,4) == right-2.html right-2-ref.html
 fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
-fails-if(stylo) == padding-1.html padding-1-ref.html
+== padding-1.html padding-1-ref.html
 == padding-2.html padding-2-ref.html
-fails-if(stylo) == padding-3.html padding-3-ref.html
+== padding-3.html padding-3-ref.html
 == overcontain-1.html overcontain-1-ref.html
-fails-if(stylo) == initial-1.html initial-1-ref.html
+== initial-1.html initial-1-ref.html
 == initial-scroll-1.html initial-scroll-1-ref.html
 == scrollframe-reflow-1.html scrollframe-reflow-1-ref.html
 == scrollframe-reflow-2.html scrollframe-reflow-2-ref.html
-fails-if(stylo) == scrollframe-auto-1.html scrollframe-auto-1-ref.html
+== scrollframe-auto-1.html scrollframe-auto-1-ref.html
 fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1-ref.html
 == top-bottom-1.html top-bottom-1-ref.html
 == top-bottom-2.html top-bottom-2-ref.html

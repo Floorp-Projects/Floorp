@@ -43,13 +43,16 @@ public class AnnotationInfo {
     public final ExceptionMode exceptionMode;
     public final CallingThread callingThread;
     public final DispatchTarget dispatchTarget;
+    public final boolean noLiteral;
 
     public AnnotationInfo(String wrapperName, ExceptionMode exceptionMode,
-                          CallingThread callingThread, DispatchTarget dispatchTarget) {
+                          CallingThread callingThread, DispatchTarget dispatchTarget,
+                          boolean noLiteral) {
 
         this.wrapperName = wrapperName;
         this.exceptionMode = exceptionMode;
         this.callingThread = callingThread;
         this.dispatchTarget = dispatchTarget;
+        this.noLiteral = noLiteral;
     }
 }

@@ -839,6 +839,18 @@ nsSocketTransportService::Run()
 {
     SOCKET_LOG(("STS thread init %d sockets\n", gMaxCount));
 
+#if defined(XP_WIN)
+    // see bug 1361495, gethostname() triggers winsock initialization.
+    // so do it here (on parent and child) to protect against it being done first
+    // accidentally on the main thread.. especially via PR_GetSystemInfo(). This
+    // will also improve latency of first real winsock operation
+    // ..
+    // If STS-thread is no longer needed this should still be run before exiting
+
+    char ignoredStackBuffer[255];
+    Unused << gethostname(ignoredStackBuffer, 255);
+#endif
+
     psm::InitializeSSLServerCertVerificationThreads();
 
     gSocketThread = PR_GetCurrentThread();

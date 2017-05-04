@@ -228,15 +228,6 @@ Promise::Then(JSContext* aCx,
   aRetval.setObject(*retval);
 }
 
-// We need a dummy function to pass to JS::NewPromiseObject.
-static bool
-DoNothingPromiseExecutor(JSContext*, unsigned aArgc, JS::Value* aVp)
-{
-  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
-  args.rval().setUndefined();
-  return true;
-}
-
 void
 Promise::CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv)
 {
@@ -246,18 +237,7 @@ Promise::CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv)
     return;
   }
   JSContext* cx = jsapi.cx();
-
-  JSFunction* doNothingFunc =
-    JS_NewFunction(cx, DoNothingPromiseExecutor, /* nargs = */ 2,
-                   /* flags = */ 0, nullptr);
-  if (!doNothingFunc) {
-    JS_ClearPendingException(cx);
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
-  JS::Rooted<JSObject*> doNothingObj(cx, JS_GetFunctionObject(doNothingFunc));
-  mPromiseObj = JS::NewPromiseObject(cx, doNothingObj, aDesiredProto);
+  mPromiseObj = JS::NewPromiseObject(cx, nullptr, aDesiredProto);
   if (!mPromiseObj) {
     JS_ClearPendingException(cx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

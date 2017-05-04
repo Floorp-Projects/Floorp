@@ -723,13 +723,14 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     pCallback = new PrefCallback(aDomain, aObserver, this);
   }
 
-  if (mObservers.Get(pCallback)) {
+  auto p = mObservers.LookupForAdd(pCallback);
+  if (p) {
     NS_WARNING("Ignoring duplicate observer.");
     delete pCallback;
     return NS_OK;
   }
 
-  mObservers.Put(pCallback, pCallback);
+  mObservers.Insert(p, pCallback);
 
   // We must pass a fully qualified preference name to the callback
   // aDomain == nullptr is the only possible failure, and we trapped it with

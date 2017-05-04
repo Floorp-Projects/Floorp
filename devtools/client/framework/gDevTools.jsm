@@ -133,9 +133,6 @@ let gDevToolsBrowserMethods = [
   // Used by browser-sets.inc, command
   "openContentProcessToolbox",
 
-  // Used by webide.js
-  "moveWebIDEWidgetInNavbar",
-
   // Used by browser.js
   "registerBrowserWindow",
 

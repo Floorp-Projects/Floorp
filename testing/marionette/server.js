@@ -6,20 +6,27 @@
 
 const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-const ServerSocket = CC("@mozilla.org/network/server-socket;1", "nsIServerSocket", "initSpecialConnection");
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+    .getService(Ci.mozIJSSubScriptLoader);
+const ServerSocket = CC(
+    "@mozilla.org/network/server-socket;1",
+    "nsIServerSocket",
+    "initSpecialConnection");
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/driver.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
-
 Cu.import("chrome://marionette/content/transport.js");
+
+XPCOMUtils.defineLazyServiceGetter(
+    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 
 const logger = Log.repository.getLogger("Marionette");
 
@@ -29,6 +36,8 @@ this.EXPORTED_SYMBOLS = ["server"];
 this.server = {};
 
 const PROTOCOL_VERSION = 3;
+
+const ENV_ENABLED = "MOZ_MARIONETTE";
 
 const PREF_CONTENT_LISTENER = "marionette.contentListener";
 const PREF_PORT = "marionette.port";
@@ -333,6 +342,7 @@ server.TCPListener = class {
 
     this.alive = true;
     this._acceptConnections = true;
+    env.set(ENV_ENABLED, "1");
   }
 
   stop () {

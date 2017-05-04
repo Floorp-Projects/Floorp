@@ -297,11 +297,15 @@ WebContentConverterRegistrar.prototype = {
     if (handler) {
       request.cancel(Cr.NS_ERROR_FAILURE);
 
+      let triggeringPrincipal = channel.loadInfo
+        ? channel.loadInfo.triggeringPrincipal
+        : Services.scriptSecurityManager.getSystemPrincipal();
+
       let webNavigation =
           channel.notificationCallbacks.getInterface(Ci.nsIWebNavigation);
       webNavigation.loadURI(handler.getHandlerURI(channel.URI.spec),
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                            null, null, null);
+                            null, null, null, triggeringPrincipal);
     }
   },
 

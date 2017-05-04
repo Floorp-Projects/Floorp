@@ -20,6 +20,7 @@
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 

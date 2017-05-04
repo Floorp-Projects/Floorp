@@ -304,6 +304,10 @@ public:
   ResolveForDeclarations(ServoComputedValuesBorrowedOrNull aParentOrNull,
                          RawServoDeclarationBlockBorrowed aDeclarations);
 
+  already_AddRefed<RawServoAnimationValue>
+  ComputeAnimationValue(RawServoDeclarationBlock* aDeclaration,
+                        const ServoComputedValuesWithParent& aComputedValues);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,

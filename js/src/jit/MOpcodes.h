@@ -266,7 +266,7 @@ namespace jit {
     _(Ceil)                                                                 \
     _(Round)                                                                \
     _(NearbyInt)                                                            \
-    _(In)                                                                   \
+    _(InCache)                                                              \
     _(HasOwnCache)                                                          \
     _(InstanceOf)                                                           \
     _(CallInstanceOf)                                                       \

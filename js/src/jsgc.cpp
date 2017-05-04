@@ -2217,7 +2217,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->sweepSavedStacks();
         c->sweepTemplateLiteralMap();
         c->sweepVarNames();
-        c->sweepGlobalObject(fop);
+        c->sweepGlobalObject();
         c->sweepSelfHostingScriptSource();
         c->sweepDebugEnvironments();
         c->sweepJitCompartment(fop);
@@ -4957,20 +4957,21 @@ class SweepWeakCacheTask : public GCSweepTask
     }
 };
 
-#define MAKE_GC_SWEEP_TASK(name)                                              \
+#define MAKE_GC_SWEEP_TASK(name, phase)                                       \
     class name : public GCSweepTask {                                         \
         void run() override;                                                  \
       public:                                                                 \
         explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
+        static const gcstats::Phase StatsPhase = phase;                       \
     }
-MAKE_GC_SWEEP_TASK(SweepAtomsTask);
-MAKE_GC_SWEEP_TASK(SweepCCWrappersTask);
-MAKE_GC_SWEEP_TASK(SweepBaseShapesTask);
-MAKE_GC_SWEEP_TASK(SweepInitialShapesTask);
-MAKE_GC_SWEEP_TASK(SweepObjectGroupsTask);
-MAKE_GC_SWEEP_TASK(SweepRegExpsTask);
-MAKE_GC_SWEEP_TASK(SweepMiscTask);
-MAKE_GC_SWEEP_TASK(SweepCompressionTasksTask);
+MAKE_GC_SWEEP_TASK(SweepAtomsTask,            gcstats::PHASE_SWEEP_ATOMS);
+MAKE_GC_SWEEP_TASK(SweepCCWrappersTask,       gcstats::PHASE_SWEEP_CC_WRAPPER);
+MAKE_GC_SWEEP_TASK(SweepObjectGroupsTask,     gcstats::PHASE_SWEEP_TYPE_OBJECT);
+MAKE_GC_SWEEP_TASK(SweepRegExpsTask,          gcstats::PHASE_SWEEP_REGEXP);
+MAKE_GC_SWEEP_TASK(SweepMiscTask,             gcstats::PHASE_SWEEP_MISC);
+MAKE_GC_SWEEP_TASK(SweepCompressionTasksTask, gcstats::PHASE_SWEEP_COMPRESSION);
+MAKE_GC_SWEEP_TASK(SweepWeakMapsTask,         gcstats::PHASE_SWEEP_WEAKMAPS);
+MAKE_GC_SWEEP_TASK(SweepUniqueIdsTask,        gcstats::PHASE_SWEEP_UNIQUEIDS);
 #undef MAKE_GC_SWEEP_TASK
 
 /* virtual */ void
@@ -5018,10 +5019,13 @@ SweepRegExpsTask::run()
 SweepMiscTask::run()
 {
     for (GCCompartmentGroupIter c(runtime()); !c.done(); c.next()) {
+        c->sweepGlobalObject();
+        c->sweepTemplateObjects();
         c->sweepSavedStacks();
         c->sweepTemplateLiteralMap();
         c->sweepSelfHostingScriptSource();
         c->sweepNativeIterators();
+        c->sweepWatchpoints();
     }
 }
 
@@ -5048,6 +5052,35 @@ SweepCompressionTasksTask::run()
     }
 }
 
+/* virtual */ void
+SweepWeakMapsTask::run()
+{
+    for (GCSweepGroupIter zone(runtime()); !zone.done(); zone.next()) {
+        /* Clear all weakrefs that point to unmarked things. */
+        for (auto edge : zone->gcWeakRefs()) {
+            /* Edges may be present multiple times, so may already be nulled. */
+            if (*edge && IsAboutToBeFinalizedDuringSweep(**edge))
+                *edge = nullptr;
+        }
+        zone->gcWeakRefs().clear();
+
+        /* No need to look up any more weakmap keys from this sweep group. */
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!zone->gcWeakKeys().clear())
+            oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
+
+        zone->sweepWeakMaps();
+    }
+}
+
+/* virtual */ void
+SweepUniqueIdsTask::run()
+{
+    FreeOp fop(nullptr);
+    for (GCSweepGroupIter zone(runtime()); !zone.done(); zone.next())
+        zone->sweepUniqueIds(&fop);
+}
+
 void
 GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
@@ -5065,33 +5098,130 @@ GCRuntime::joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperTh
     task.joinWithLockHeld(locked);
 }
 
+void
+GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
+{
+    // Detach unreachable debuggers and global objects from each other.
+    // This can modify weakmaps and so must happen before weakmap sweeping.
+    Debugger::sweepAll(fop);
+
+    gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
+
+    // Sweep debug environment information. This performs lookups in the Zone's
+    // unique IDs table and so must not happen in parallel with sweeping that
+    // table.
+    {
+        gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_MISC);
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+            c->sweepDebugEnvironments();
+    }
+
+    // Sweep breakpoints. This is done here to be with the other debug sweeping,
+    // although note that it can cause JIT code to be patched.
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->sweepBreakpoints(fop);
+    }
+}
+
+void
+GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
+{
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_JIT_DATA);
+
+        // Cancel any active or pending off thread compilations.
+        js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+            c->sweepJitCompartment(fop);
+
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+            if (jit::JitZone* jitZone = zone->jitZone())
+                jitZone->sweep(fop);
+        }
+
+        // Bug 1071218: the following method has not yet been refactored to
+        // work on a single zone-group at once.
+
+        // Sweep entries containing about-to-be-finalized JitCode and
+        // update relocated TypeSet::Types inside the JitcodeGlobalTable.
+        jit::JitRuntime::SweepJitcodeGlobalTable(rt);
+    }
+
+    {
+        gcstats::AutoPhase apdc(stats(), gcstats::PHASE_SWEEP_DISCARD_CODE);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->discardJitCode(fop);
+    }
+
+    {
+        gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_TYPES);
+        gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES_BEGIN);
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+            zone->beginSweepTypes(fop, releaseObservedTypes && !zone->isPreservingCode());
+    }
+}
+
 using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
 
-static void
-SweepWeakCachesFromActiveCooperatingThread(JSRuntime* rt)
+template <typename Functor>
+static bool
+IterateWeakCaches(JSRuntime* rt, Functor f)
 {
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         for (JS::WeakCache<void*>* cache : zone->weakCaches()) {
-            SweepWeakCacheTask task(rt, *cache);
-            task.runFromActiveCooperatingThread(rt);
+            if (!f(cache))
+                return false;
         }
     }
+
+    for (JS::WeakCache<void*>* cache : rt->weakCaches()) {
+        if (!f(cache))
+            return false;
+    }
+
+    return true;
 }
 
 static WeakCacheTaskVector
 PrepareWeakCacheTasks(JSRuntime* rt)
 {
+    // Build a vector of sweep tasks to run on a helper thread.
     WeakCacheTaskVector out;
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        for (JS::WeakCache<void*>* cache : zone->weakCaches()) {
-            if (!out.append(SweepWeakCacheTask(rt, *cache))) {
-                SweepWeakCachesFromActiveCooperatingThread(rt);
-                return WeakCacheTaskVector();
-            }
-        }
+    if (IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
+        return out.emplaceBack(rt, *cache);
+    })) {
+        return out;
     }
-    return out;
+
+    // If we ran out of memory, do all the work now and return an empty list.
+    IterateWeakCaches(rt, [&] (JS::WeakCache<void*>* cache) {
+        SweepWeakCacheTask(rt, *cache).runFromActiveCooperatingThread(rt);
+        return true;
+    });
+    return WeakCacheTaskVector();
 }
+
+template <typename Task>
+class js::gc::AutoRunGCSweepTask
+{
+    Task task_;
+    GCRuntime* gc_;
+    AutoLockHelperThreadState& lock_;
+
+  public:
+    AutoRunGCSweepTask(GCRuntime* gc, AutoLockHelperThreadState& lock)
+      : task_(gc->rt), gc_(gc), lock_(lock)
+    {
+        gc_->startTask(task_, Task::StatsPhase, lock_);
+    }
+
+    ~AutoRunGCSweepTask() {
+        gc_->joinTask(task_, Task::StatsPhase, lock_);
+    }
+};
 
 void
 GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
@@ -5121,28 +5251,7 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
     validateIncrementalMarking();
 
     FreeOp fop(rt);
-    SweepAtomsTask sweepAtomsTask(rt);
-    SweepCCWrappersTask sweepCCWrappersTask(rt);
-    SweepObjectGroupsTask sweepObjectGroupsTask(rt);
-    SweepRegExpsTask sweepRegExpsTask(rt);
-    SweepMiscTask sweepMiscTask(rt);
-    SweepCompressionTasksTask sweepCompressionTasksTask(rt);
     WeakCacheTaskVector sweepCacheTasks = PrepareWeakCacheTasks(rt);
-
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        /* Clear all weakrefs that point to unmarked things. */
-        for (auto edge : zone->gcWeakRefs()) {
-            /* Edges may be present multiple times, so may already be nulled. */
-            if (*edge && IsAboutToBeFinalizedDuringSweep(**edge))
-                *edge = nullptr;
-        }
-        zone->gcWeakRefs().clear();
-
-        /* No need to look up any more weakmap keys from this sweep group. */
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!zone->gcWeakKeys().clear())
-            oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
-    }
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_FINALIZE_START);
@@ -5161,131 +5270,50 @@ GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
         callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
     }
 
-    if (sweepingAtoms) {
-        AutoLockHelperThreadState helperLock;
-        startTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
-    }
+    sweepDebuggerOnMainThread(&fop);
 
     {
+        AutoLockHelperThreadState helperLock;
+
+        Maybe<AutoRunGCSweepTask<SweepAtomsTask>> sweepAtoms;
+        if (sweepingAtoms)
+            sweepAtoms.emplace(this, helperLock);
+
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
         gcstats::AutoSCC scc(stats(), sweepGroupIndex);
 
-        {
-            AutoLockHelperThreadState helperLock;
-            startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
-            startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
-            startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
-            startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-            startTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-            for (auto& task : sweepCacheTasks)
-                startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
-        }
-
-        // The remainder of the tasks run in parallel on the active thread
-        // until we join, below.
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_MISC);
-
-            // Cancel any active or pending off thread compilations.
-            js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
-
-            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-                c->sweepGlobalObject(&fop);
-                c->sweepDebugEnvironments();
-                c->sweepJitCompartment(&fop);
-                c->sweepTemplateObjects();
-            }
-
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-                zone->sweepWeakMaps();
-                if (jit::JitZone* jitZone = zone->jitZone())
-                    jitZone->sweep(&fop);
-            }
-
-            // Bug 1071218: the following two methods have not yet been
-            // refactored to work on a single zone-group at once.
-
-            // Collect watch points associated with unreachable objects.
-            WatchpointMap::sweepAll(rt);
-
-            // Detach unreachable debuggers and global objects from each other.
-            Debugger::sweepAll(&fop);
-
-            // Sweep entries containing about-to-be-finalized JitCode and
-            // update relocated TypeSet::Types inside the JitcodeGlobalTable.
-            jit::JitRuntime::SweepJitcodeGlobalTable(rt);
-
-            // Sweep runtime-wide weak caches.
-            for (JS::WeakCache<void*>* cache : rt->weakCaches())
-                cache->sweep();
-        }
-
-        {
-            gcstats::AutoPhase apdc(stats(), gcstats::PHASE_SWEEP_DISCARD_CODE);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->discardJitCode(&fop);
-        }
-
-        {
-            gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_TYPES);
-            gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES_BEGIN);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
-        }
-
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->sweepBreakpoints(&fop);
-        }
-
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
-                zone->sweepUniqueIds(&fop);
-        }
-    }
-
-    // Rejoin our off-thread tasks.
-    if (sweepingAtoms) {
-        AutoLockHelperThreadState helperLock;
-        joinTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
-    }
-
-    {
-        gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
-
-        AutoLockHelperThreadState helperLock;
-        joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
-        joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
-        joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
-        joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
-        joinTask(sweepCompressionTasksTask, gcstats::PHASE_SWEEP_MISC, helperLock);
+        AutoRunGCSweepTask<SweepCCWrappersTask> sweepCCWrappers(this, helperLock);
+        AutoRunGCSweepTask<SweepObjectGroupsTask> sweepObjectGroups(this, helperLock);
+        AutoRunGCSweepTask<SweepRegExpsTask> sweepRegExps(this, helperLock);
+        AutoRunGCSweepTask<SweepMiscTask> sweepMisc(this, helperLock);
+        AutoRunGCSweepTask<SweepCompressionTasksTask> sweepCompressionTasks(this, helperLock);
+        AutoRunGCSweepTask<SweepWeakMapsTask> sweepWeakMaps(this, helperLock);
+        AutoRunGCSweepTask<SweepUniqueIdsTask> sweepUniqueIds(this, helperLock);
         for (auto& task : sweepCacheTasks)
-            joinTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
+            startTask(task, gcstats::PHASE_SWEEP_WEAK_CACHES, helperLock);
+
+        {
+            AutoUnlockHelperThreadState unlock(helperLock);
+            sweepJitDataOnMainThread(&fop);
+        }
+
+        for (auto& task : sweepCacheTasks)
+            joinTask(task, gcstats::PHASE_SWEEP_WEAK_CACHES, helperLock);
     }
 
-    /*
-     * Queue all GC things in all zones for sweeping, either in the
-     * foreground or on the background thread.
-     *
-     * Note that order is important here for the background case.
-     */
+    // Queue all GC things in all zones for sweeping, either on the foreground
+    // or on the background thread.
 
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(stats(), sweepGroupIndex);
+
         zone->arenas.queueForForegroundSweep(&fop, ForegroundObjectFinalizePhase);
         for (unsigned i = 0; i < ArrayLength(IncrementalFinalizePhases); ++i)
             zone->arenas.queueForForegroundSweep(&fop, IncrementalFinalizePhases[i]);
-    }
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
+
         for (unsigned i = 0; i < ArrayLength(BackgroundFinalizePhases); ++i)
             zone->arenas.queueForBackgroundSweep(&fop, BackgroundFinalizePhases[i]);
-    }
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
+
         zone->arenas.queueForegroundThingsForSweep(&fop);
     }
 

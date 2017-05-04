@@ -1643,8 +1643,11 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
 {
     // The absence of a resolve/reject function can mean that, as an
     // optimization, those weren't created. In that case, a flag is set on
-    // the Promise object. There are also reactions where the Promise
-    // itself is missing. For those, there's nothing left to do here.
+    // the Promise object. (It's also possible to not have a resolution
+    // function without that flag being set. This can occur if a Promise
+    // subclass constructor passes null/undefined to `super()`.)
+    // There are also reactions where the Promise itself is missing. For
+    // those, there's nothing left to do here.
     assertSameCompartment(cx, resolutionFun);
     assertSameCompartment(cx, result);
     assertSameCompartment(cx, promiseObj);
@@ -2164,34 +2167,39 @@ NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfi
 }
 
 // ES2016, 25.4.5.3., steps 3-5.
-MOZ_MUST_USE JSObject*
-js::OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
-                        HandleValue onRejected)
+MOZ_MUST_USE bool
+js::OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
+                        HandleValue onFulfilled, HandleValue onRejected,
+                        MutableHandleObject dependent, bool createDependent)
 {
     RootedObject promiseObj(cx, promise);
     if (promise->compartment() != cx->compartment()) {
         if (!cx->compartment()->wrap(cx, &promiseObj))
-            return nullptr;
+            return false;
     }
 
-    // Step 3.
-    RootedValue ctorVal(cx);
-    if (!SpeciesConstructor(cx, promiseObj, JSProto_Promise, &ctorVal))
-        return nullptr;
-    RootedObject C(cx, &ctorVal.toObject());
-
-    // Step 4.
     RootedObject resultPromise(cx);
     RootedObject resolve(cx);
     RootedObject reject(cx);
-    if (!NewPromiseCapability(cx, C, &resultPromise, &resolve, &reject, true))
-        return nullptr;
+
+    if (createDependent) {
+        // Step 3.
+        RootedValue ctorVal(cx);
+        if (!SpeciesConstructor(cx, promiseObj, JSProto_Promise, &ctorVal))
+            return false;
+        RootedObject C(cx, &ctorVal.toObject());
+
+        // Step 4.
+        if (!NewPromiseCapability(cx, C, &resultPromise, &resolve, &reject, true))
+            return false;
+    }
 
     // Step 5.
     if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultPromise, resolve, reject))
-        return nullptr;
+        return false;
 
-    return resultPromise;
+    dependent.set(resultPromise);
+    return true;
 }
 
 static MOZ_MUST_USE bool PerformPromiseThenWithReaction(JSContext* cx,
@@ -2655,8 +2663,8 @@ js::Promise_then(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 3-5.
-    RootedObject resultPromise(cx, OriginalPromiseThen(cx, promise, onFulfilled, onRejected));
-    if (!resultPromise)
+    RootedObject resultPromise(cx);
+    if (!OriginalPromiseThen(cx, promise, onFulfilled, onRejected, &resultPromise, true))
         return false;
 
     args.rval().setObject(*resultPromise);
@@ -2829,8 +2837,10 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
     mozilla::Maybe<AutoCompartment> ac;
     if (IsProxy(promiseObj)) {
         unwrappedPromiseObj = CheckedUnwrap(promiseObj);
-        if (!unwrappedPromiseObj)
+        if (!unwrappedPromiseObj) {
+            ReportAccessDenied(cx);
             return false;
+        }
         if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
@@ -3052,7 +3062,7 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
         return true;
 
     if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_REJECT_FUNCTION))
-        return RejectMaybeWrappedPromise(cx, promise, rejectionValue);
+        return ResolvePromise(cx, promise, rejectionValue, JS::PromiseState::Rejected);
 
     RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
     MOZ_ASSERT(IsCallable(funVal));
@@ -3081,16 +3091,6 @@ PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
         cx->runtime()->addUnhandledRejectedPromise(cx, promise);
 
     JS::dbg::onPromiseSettled(cx, promise);
-}
-
-MOZ_MUST_USE bool
-js::EnqueuePromiseReactions(JSContext* cx, Handle<PromiseObject*> promise,
-                            HandleObject dependentPromise,
-                            HandleValue onFulfilled, HandleValue onRejected)
-{
-    MOZ_ASSERT_IF(dependentPromise, dependentPromise->is<PromiseObject>());
-    return PerformPromiseThen(cx, promise, onFulfilled, onRejected, dependentPromise,
-                              nullptr, nullptr);
 }
 
 PromiseTask::PromiseTask(JSContext* cx, Handle<PromiseObject*> promise)

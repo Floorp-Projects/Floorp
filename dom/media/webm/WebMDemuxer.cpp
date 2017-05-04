@@ -9,6 +9,7 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "OpusDecoder.h"
+#include "VPXDecoder.h"
 #include "WebMDemuxer.h"
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
@@ -26,12 +27,8 @@
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
-#include <stdint.h>
-
-#define VPX_DONT_DEFINE_STDINT_TYPES
-#include "vpx/vp8dx.h"
-#include "vpx/vpx_decoder.h"
 #include <numeric>
+#include <stdint.h>
 
 #define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 extern mozilla::LazyLogModule gMediaDemuxerLog;
@@ -677,31 +674,32 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         isKeyframe = nestegg_packet_has_keyframe(holder->Packet())
                      == NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
       } else {
-        vpx_codec_stream_info_t si;
-        PodZero(&si);
-        si.sz = sizeof(si);
+        auto sample = MakeSpan(data, length);
         switch (mVideoCodec) {
         case NESTEGG_CODEC_VP8:
-          vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);
+          isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP8);
           break;
         case NESTEGG_CODEC_VP9:
-          vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), data, length, &si);
+          isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP9);
           break;
+        default:
+          NS_WARNING("Cannot detect keyframes in unknown WebM video codec");
+          return NS_ERROR_FAILURE;
         }
-        isKeyframe = si.is_kf;
         if (isKeyframe) {
-          // We only look for resolution changes on keyframes for both VP8 and
-          // VP9. Other resolution changes are invalid.
-          if (mLastSeenFrameWidth.isSome()
-              && mLastSeenFrameHeight.isSome()
-              && (si.w != mLastSeenFrameWidth.value()
-                  || si.h != mLastSeenFrameHeight.value())) {
-            mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
+          // For both VP8 and VP9, we only look for resolution changes
+          // on keyframes. Other resolution changes are invalid.
+          auto codec = mVideoCodec == NESTEGG_CODEC_VP8
+                       ? VPXDecoder::Codec::VP8
+                       : VPXDecoder::Codec::VP9;
+          auto dimensions = VPXDecoder::GetFrameSize(sample, codec);
+          if (mLastSeenFrameSize.isSome()
+              && (dimensions != mLastSeenFrameSize.value())) {
+            mInfo.mVideo.mDisplay = dimensions;
             mSharedVideoTrackInfo =
               new TrackInfoSharedPtr(mInfo.mVideo, ++sStreamSourceID);
           }
-          mLastSeenFrameWidth = Some(si.w);
-          mLastSeenFrameHeight = Some(si.h);
+          mLastSeenFrameSize = Some(dimensions);
         }
       }
     }

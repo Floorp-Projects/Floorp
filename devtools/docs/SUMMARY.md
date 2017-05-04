@@ -20,6 +20,7 @@
   * [Telemetry](frontend/telemetry.md)
 * [Backend](backend/backend.md)
   * [Remote Debugging Protocol](backend/protocol.md)
+  * [Client API](backend/client-api.md)
   * [Debugger API](backend/debugger-api.md)
   * [Backward Compatibility](backend/backward-compatibility.md)
   * Actors

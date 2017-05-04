@@ -302,7 +302,7 @@ interaction.flushEventLoop = function* (win) {
       return;
     }
 
-    win.addEventListener("beforeunload", handleEvent);
+    win.addEventListener("beforeunload", handleEvent, false);
     win.requestAnimationFrame(handleEvent);
   });
 };

@@ -17,9 +17,9 @@ add_task(function* test() {
   is(document.getElementById("context_reloadAllTabs").disabled, false, "Reload All Tabs is enabled");
 
 
-  if (gFxAccounts.sendTabToDeviceEnabled) {
-    const origIsSendableURI = gFxAccounts.isSendableURI;
-    gFxAccounts.isSendableURI = () => true;
+  if (gSync.sendTabToDeviceEnabled) {
+    const origIsSendableURI = gSync.isSendableURI;
+    gSync.isSendableURI = () => true;
     // Check the send tab to device menu item
     yield ensureSyncReady();
     const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
@@ -31,11 +31,11 @@ add_task(function* test() {
     is(targets[0].getAttribute("label"), "Foo", "Foo target is present");
     is(targets[1].getAttribute("label"), "Bar", "Bar target is present");
     is(targets[3].getAttribute("label"), "All Devices", "All Devices target is present");
-    gFxAccounts.isSendableURI = () => false;
+    gSync.isSendableURI = () => false;
     updateTabContextMenu(origTab);
     is(document.getElementById("context_sendTabToDevice").hidden, true, "Send tab to device is hidden");
     restoreRemoteClients(oldGetter);
-    gFxAccounts.isSendableURI = origIsSendableURI;
+    gSync.isSendableURI = origIsSendableURI;
   }
 
   // Hide the original tab.

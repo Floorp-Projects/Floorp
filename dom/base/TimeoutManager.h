@@ -115,10 +115,13 @@ public:
     }
   }
 
+  void BeginSyncOperation();
+  void EndSyncOperation();
 private:
   nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
   void MaybeStartThrottleTrackingTimout();
 
+  bool IsBackground() const;
 private:
   struct Timeouts {
     Timeouts()

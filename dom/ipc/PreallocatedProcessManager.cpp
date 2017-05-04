@@ -110,6 +110,8 @@ PreallocatedProcessManagerImpl::Init()
                     /* weakRef = */ false);
     os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                     /* weakRef = */ false);
+    os->AddObserver(this, "profile-change-teardown",
+                    /* weakRef = */ false);
   }
   RereadPrefs();
 }
@@ -124,14 +126,18 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
   } else if (!strcmp("nsPref:changed", aTopic)) {
     // The only other observer we registered was for our prefs.
     RereadPrefs();
-  } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+  } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) ||
+             !strcmp("profile-change-teardown", aTopic)) {
     Preferences::RemoveObserver(this, "dom.ipc.processPrelaunch.enabled");
     Preferences::RemoveObserver(this, "dom.ipc.processCount");
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->RemoveObserver(this, "ipc:content-shutdown");
       os->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      os->RemoveObserver(this, "profile-change-teardown");
     }
+    mShutdown = true;
+    CloseProcess();
   } else {
     MOZ_ASSERT(false);
   }
@@ -142,7 +148,8 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
 void
 PreallocatedProcessManagerImpl::RereadPrefs()
 {
-  if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled")) {
+  if (mozilla::BrowserTabsRemoteAutostart() &&
+      Preferences::GetBool("dom.ipc.processPrelaunch.enabled")) {
     Enable();
   } else {
     Disable();
@@ -173,7 +180,7 @@ PreallocatedProcessManagerImpl::Enable()
 void
 PreallocatedProcessManagerImpl::AllocateAfterDelay()
 {
-  if (!mEnabled || mPreallocatedProcess) {
+  if (!mEnabled || mPreallocatedProcess || mShutdown) {
     return;
   }
 
@@ -189,7 +196,7 @@ PreallocatedProcessManagerImpl::AllocateAfterDelay()
 void
 PreallocatedProcessManagerImpl::AllocateOnIdle()
 {
-  if (!mEnabled || mPreallocatedProcess) {
+  if (!mEnabled || mPreallocatedProcess || mShutdown) {
     return;
   }
 
@@ -199,7 +206,7 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
 void
 PreallocatedProcessManagerImpl::AllocateNow()
 {
-  if (!mEnabled || mPreallocatedProcess ||
+  if (!mEnabled || mPreallocatedProcess || mShutdown ||
       ContentParent::IsMaxProcessCountReached(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
     return;
   }

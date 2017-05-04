@@ -565,14 +565,6 @@ var gTests = [
   }
 },
 
-{
-  desc: "getUserMedia init & uninit",
-  run: function* checkInitAndUninit() {
-    webrtcUI.uninit();
-    webrtcUI.init();
-  }
-}
-
 ];
 
 add_task(async function test() {

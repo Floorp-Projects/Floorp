@@ -10,13 +10,13 @@
 // binary libraries into the GeckoView AAR and the Fennec APK, and that's hard
 // to achieve.  In particular:
 //
-// * :app:automation wants :geckoview to not include Gecko binaries (automation
-// * build, before package)
+// * :app:official* wants :geckoview to not include Gecko binaries (official
+// *  automation build, before package)
 //
 // * :geckoview:withLibraries wants :geckoview to include Gecko binaries
 // * (automation build, after package)
 //
-// * non-:app:automation wants :geckoview to include Gecko binaries (local
+// * non-:app:official* wants :geckoview to include Gecko binaries (local
 // * build, always after package)
 //
 // publishNonDefault (see
@@ -96,8 +96,17 @@ task syncAssetsFromDistDir(type: Sync, dependsOn: checkAssetsExistInDistDir) {
 }
 
 ext.configureVariantWithGeckoBinaries = { variant ->
-    // Like 'local' or 'localOld'; may be null.
-    def productFlavor = variant.productFlavors ? variant.productFlavors[0].name : ""
+    // Like 'localAustralis' or 'localOldAustralis'; may be null.
+    def productFlavor = ""
+    def productFlavorNames = variant.productFlavors.collect { it.name.capitalize() }
+    if (!productFlavorNames.isEmpty()) {
+        productFlavor = productFlavorNames.join()
+        // Groovy's `uncapitilize` is not yet available.
+        def c = productFlavor.toCharArray()
+        c[0] = Character.toLowerCase(c[0])
+        productFlavor = new String(c)
+    }
+
     // Like 'debug' or 'release'.
     def buildType = variant.buildType.name
 

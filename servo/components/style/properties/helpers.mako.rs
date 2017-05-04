@@ -252,7 +252,7 @@
         use properties::{DeclaredValue, LonghandId, LonghandIdSet};
         use properties::{CSSWideKeyword, ComputedValues, PropertyDeclaration};
         use properties::style_structs;
-        use std::sync::Arc;
+        use stylearc::Arc;
         use values::computed::{Context, ToComputedValue};
         use values::{computed, generics, specified};
         use Atom;
@@ -309,7 +309,7 @@
                                                                                       computed,
                                                                                       inherited_style.get_font());
                                 % else:
-                                    % if property.has_uncacheable_values:
+                                    % if property.has_uncacheable_values == "True":
                                     context.mutate_style().mutate_${data.current_style_struct.name_lower}()
                                                           .set_${property.ident}(computed, cacheable ${maybe_wm});
                                     % else:
@@ -716,7 +716,7 @@
         use properties::{PropertyDeclaration, ParsedDeclaration};
         use properties::{ShorthandId, UnparsedValue, longhands};
         use std::fmt;
-        use std::sync::Arc;
+        use stylearc::Arc;
         use style_traits::ToCss;
 
         pub struct Longhands {

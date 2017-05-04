@@ -590,7 +590,6 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
       return;
     }
     applyToDirPath = NS_ConvertUTF16toUTF8(applyToDirPathW);
-    rv = updatedDir->GetNativePath(applyToDirPath);
 #else
     rv = updatedDir->GetNativePath(applyToDirPath);
 #endif

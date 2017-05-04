@@ -27,10 +27,6 @@ class RequestBase
   : public nsIQuotaRequestBase
 {
 protected:
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
-
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   nsresult mResultCode;
