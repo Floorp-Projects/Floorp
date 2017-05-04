@@ -1725,6 +1725,8 @@ NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> 
 static void
 NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
+  JS::AutoAssertGCCallback inCallback;
+
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
     if (sNPObjWrappers) {
