@@ -172,8 +172,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
 
     def repack(self):
         """creates the repacks"""
-        python = self.query_exe("python2.7")
-        repack_cmd = [python, "partner-repacks.py",
+        repack_cmd = [sys.executable, "partner-repacks.py",
                       "-v", self.config['version'],
                       "-n", str(self.config['build_number'])]
         if self.config.get('platform'):
