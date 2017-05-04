@@ -43,7 +43,7 @@ skip css-values-3/vh_not_refreshing_on_chrome_iframe.html
 skip css-values-3/vh-support-transform-origin.html
 skip css-values-3/vh-support-transform-translate.html
 
-fails-if(stylo) css-values-3/calc-in-calc.html
+css-values-3/calc-in-calc.html
 fails-if(stylo) css-values-3/vh-support-atviewport.html
 
 #### CSS Writing Modes 3 #############################################

@@ -83,7 +83,7 @@ fails-if(stylo) HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-chec
 
 # OpenType features should work across inter-word spaces
 HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html
-fails-if(stylo) HTTP(..) == spacelookups.html spacelookups-ref.html
+HTTP(..) == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
 fails-if(stylo) HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
