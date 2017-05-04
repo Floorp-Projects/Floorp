@@ -409,11 +409,11 @@ public:
     return EventRegionsOverride::NoOverride;
   }
 
-  ScrollDirection GetScrollbarDirection() const
+  const ScrollThumbData& GetScrollThumbData() const
   {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetScrollThumbData().mDirection;
+    return mLayer->GetScrollThumbData();
   }
 
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const
