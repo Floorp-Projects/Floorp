@@ -1,6 +1,9 @@
-android.media.MediaCodec
-android.media.MediaCodec$BufferInfo
-android.media.MediaCodec$CryptoInfo
-android.media.MediaCrypto
-android.media.MediaDrm$KeyStatus
-android.media.MediaFormat
+[android.media.MediaCodec = exceptionMode:nsresult]
+[android.media.MediaCodec$BufferInfo = exceptionMode:nsresult]
+[android.media.MediaCodec$CryptoInfo = exceptionMode:nsresult]
+
+# We only use constants from KeyStatus
+[android.media.MediaDrm$KeyStatus = skip:true]
+<field> = skip:false
+
+[android.media.MediaFormat = exceptionMode:nsresult]

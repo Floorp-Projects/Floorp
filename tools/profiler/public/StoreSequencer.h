@@ -20,16 +20,19 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
 
+#elif defined(__aarch64__)
+# define STORE_SEQUENCER() asm volatile("dmb ish" ::: "memory")
+
 #elif defined(__i386__) || defined(__x86_64__) || \
       defined(_M_IX86) || defined(_M_X64)
 
 # if defined(_MSC_VER)
 #  include <intrin.h>
-#  define STORE_SEQUENCER() _ReadWriteBarrier();
+#  define STORE_SEQUENCER() _ReadWriteBarrier()
 # elif defined(__INTEL_COMPILER)
-#  define STORE_SEQUENCER() __memory_barrier();
+#  define STORE_SEQUENCER() __memory_barrier()
 # elif __GNUC__
-#  define STORE_SEQUENCER() asm volatile("" ::: "memory");
+#  define STORE_SEQUENCER() asm volatile("" ::: "memory")
 # else
 #  error "STORE_SEQUENCER not supported for your compiler."
 # endif

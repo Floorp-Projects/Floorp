@@ -68,6 +68,76 @@ public:
    * @param aKey the key to get and remove from the hashtable
    */
   void RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut);
+
+  struct EntryPtr {
+  private:
+    typename base_type::EntryType& mEntry;
+    // For debugging purposes
+#ifdef DEBUG
+    base_type& mTable;
+    uint32_t mTableGeneration;
+#endif
+
+  public:
+    EntryPtr(base_type& aTable, typename base_type::EntryType* aEntry)
+      : mEntry(*aEntry)
+#ifdef DEBUG
+      , mTable(aTable)
+      , mTableGeneration(aTable.GetGeneration())
+#endif
+    {
+    }
+    ~EntryPtr()
+    {
+      MOZ_ASSERT(mEntry.mData, "Entry should have been added by now");
+    }
+
+    explicit operator bool() const
+    {
+      // Is there something stored in the table already?
+      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
+      return !!mEntry.mData;
+    }
+
+    T& operator*()
+    {
+      MOZ_ASSERT(mEntry.mData);
+      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
+      return *mEntry.mData;
+    }
+
+    void TakeOwnership(T* aPtr)
+    {
+      MOZ_ASSERT(!mEntry.mData);
+      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
+      mEntry.mData = aPtr;
+    }
+  };
+
+  /**
+   * Looks up aKey in the hash table and returns an object that allows you to
+   * insert a new entry into the hashtable for that key if an existing entry
+   * isn't found for it.
+   *
+   * A typical usage of this API looks like this:
+   *
+   *   auto p = table.LookupForAdd(key);
+   *   if (p) {
+   *     // The entry already existed in the table.
+   *     Use(*p);
+   *   } else {
+   *     // An existing entry wasn't found, store a new entry in the hashtable.
+   *     table.Insert(p, newValue);
+   *   }
+   *
+   * We ensure that the hashtable isn't modified before Insert() is called.
+   * This is useful for cases where you want to insert a new entry into the
+   * hashtable if one doesn't exist before but would like to avoid two hashtable
+   * lookups.
+   */
+  MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey);
+
+  void Insert(EntryPtr& aEntryPtr, T* aPtr);
 };
 
 //
@@ -85,6 +155,22 @@ nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
     ent->mData = new T(mozilla::Forward<Args>(aConstructionArgs)...);
   }
   return ent->mData;
+}
+
+template<class KeyClass, class T>
+typename nsClassHashtable<KeyClass, T>::EntryPtr
+nsClassHashtable<KeyClass, T>::LookupForAdd(KeyType aKey)
+{
+  typename base_type::EntryType* ent = this->PutEntry(aKey);
+  return EntryPtr(*this, ent);
+}
+
+template<class KeyClass, class T>
+void
+nsClassHashtable<KeyClass, T>::Insert(typename nsClassHashtable<KeyClass, T>::EntryPtr& aEntryPtr,
+                                      T* aPtr)
+{
+  aEntryPtr.TakeOwnership(aPtr);
 }
 
 template<class KeyClass, class T>

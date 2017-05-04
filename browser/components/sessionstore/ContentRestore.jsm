@@ -10,6 +10,7 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
@@ -222,7 +223,8 @@ ContentRestoreInternal.prototype = {
         // Load userTypedValue and fix up the URL if it's partial/broken.
         webNavigation.loadURI(tabData.userTypedValue,
                               Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-                              null, null, null);
+                              null, null, null,
+                              Services.scriptSecurityManager.getSystemPrincipal());
       } else if (tabData.entries.length) {
         // Stash away the data we need for restoreDocument.
         let activeIndex = tabData.index - 1;
@@ -239,7 +241,8 @@ ContentRestoreInternal.prototype = {
         // If there's nothing to restore, we should still blank the page.
         webNavigation.loadURI("about:blank",
                               Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                              null, null, null);
+                              null, null, null,
+                              Services.scriptSecurityManager.getSystemPrincipal());
       }
 
       return true;
@@ -375,7 +378,9 @@ HistoryListener.prototype = {
     // STATE_START notification to be sent and the ProgressListener will then
     // notify the parent and do the rest.
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    this.webNavigation.loadURI(newURI.spec, flags, null, null, null);
+    this.webNavigation.loadURI(newURI.spec, flags,
+                               null, null, null,
+                               Services.scriptSecurityManager.getSystemPrincipal());
   },
 
   OnHistoryReload(reloadURI, reloadFlags) {

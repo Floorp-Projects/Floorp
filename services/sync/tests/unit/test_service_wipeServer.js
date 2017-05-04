@@ -4,7 +4,7 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
+Svc.Prefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
 // configure the identity we use for this test.

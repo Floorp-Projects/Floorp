@@ -5,7 +5,6 @@
 
 // Tests for the FxA storage manager.
 
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -28,15 +27,15 @@ function MockedPlainStorage(accountData) {
   this.numReads = 0;
 }
 MockedPlainStorage.prototype = {
-  get: Task.async(function* () {
+  async get() {
     this.numReads++;
     Assert.equal(this.numReads, 1, "should only ever be 1 read of acct data");
     return this.data;
-  }),
+  },
 
-  set: Task.async(function* (data) {
+  async set(data) {
     this.data = data;
-  }),
+  },
 };
 
 function MockedSecureStorage(accountData) {
@@ -60,7 +59,7 @@ MockedSecureStorage.prototype = {
   // "TypeError: this.STORAGE_LOCKED is not a constructor"
   STORAGE_LOCKED: function() {},
   /* eslint-enable object-shorthand */
-  get: Task.async(function* (uid, email) {
+  async get(uid, email) {
     this.fetchCount++;
     if (this.locked) {
       throw new this.STORAGE_LOCKED();
@@ -68,11 +67,11 @@ MockedSecureStorage.prototype = {
     this.numReads++;
     Assert.equal(this.numReads, 1, "should only ever be 1 read of unlocked data");
     return this.data;
-  }),
+  },
 
-  set: Task.async(function* (uid, contents) {
+  async set(uid, contents) {
     this.data = contents;
-  }),
+  },
 }
 
 function add_storage_task(testFunction) {
@@ -336,12 +335,12 @@ add_task(function* checkLockedUpdates() {
 // A helper for our queued tests. It creates a StorageManager and then queues
 // an unresolved promise. The tests then do additional setup and checks, then
 // resolves or rejects the blocked promise.
-var setupStorageManagerForQueueTest = Task.async(function* () {
+async function setupStorageManagerForQueueTest() {
   let sm = new FxAccountsStorageManager();
   sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   sm.secureStorage.locked = true;
-  yield sm.initialize();
+  await sm.initialize();
 
   let resolveBlocked, rejectBlocked;
   let blockedPromise = new Promise((resolve, reject) => {
@@ -351,7 +350,7 @@ var setupStorageManagerForQueueTest = Task.async(function* () {
 
   sm._queueStorageOperation(() => blockedPromise);
   return {sm, blockedPromise, resolveBlocked, rejectBlocked}
-});
+}
 
 // First the general functionality.
 add_task(function* checkQueueSemantics() {

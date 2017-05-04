@@ -46,9 +46,6 @@ with Files('java/org/mozilla/gecko/home/**'):
 with Files('java/org/mozilla/gecko/icons/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Favicon Handling')
 
-with Files('java/org/mozilla/gecko/javaaddons/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
 with Files('java/org/mozilla/gecko/mdns/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
@@ -469,6 +466,29 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'activitystream/ActivityStream.java',
     'activitystream/ActivityStreamPreference.java',
     'activitystream/ActivityStreamTelemetry.java',
+    'activitystream/homepanel/ActivityStreamHomeFragment.java',
+    'activitystream/homepanel/ActivityStreamHomeScreen.java',
+    'activitystream/homepanel/ActivityStreamPanel.java',
+    'activitystream/homepanel/HighlightsLoader.java',
+    'activitystream/homepanel/menu/ActivityStreamContextMenu.java',
+    'activitystream/homepanel/menu/BottomSheetContextMenu.java',
+    'activitystream/homepanel/menu/PopupContextMenu.java',
+    'activitystream/homepanel/model/Highlight.java',
+    'activitystream/homepanel/model/Item.java',
+    'activitystream/homepanel/model/Metadata.java',
+    'activitystream/homepanel/model/TopSite.java',
+    'activitystream/homepanel/stream/HighlightItem.java',
+    'activitystream/homepanel/stream/HighlightsTitle.java',
+    'activitystream/homepanel/stream/StreamItem.java',
+    'activitystream/homepanel/stream/TopPanel.java',
+    'activitystream/homepanel/stream/WelcomePanel.java',
+    'activitystream/homepanel/StreamItemAnimator.java',
+    'activitystream/homepanel/StreamRecyclerAdapter.java',
+    'activitystream/homepanel/topsites/CirclePageIndicator.java',
+    'activitystream/homepanel/topsites/TopSitesCard.java',
+    'activitystream/homepanel/topsites/TopSitesPage.java',
+    'activitystream/homepanel/topsites/TopSitesPageAdapter.java',
+    'activitystream/homepanel/topsites/TopSitesPagerAdapter.java',
     'activitystream/ranking/HighlightCandidate.java',
     'activitystream/ranking/HighlightsRanking.java',
     'activitystream/ranking/RankingUtils.java',
@@ -603,29 +623,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'health/HealthRecorder.java',
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',
-    'home/activitystream/ActivityStream.java',
-    'home/activitystream/ActivityStreamHomeFragment.java',
-    'home/activitystream/ActivityStreamHomeScreen.java',
-    'home/activitystream/HighlightsLoader.java',
-    'home/activitystream/menu/ActivityStreamContextMenu.java',
-    'home/activitystream/menu/BottomSheetContextMenu.java',
-    'home/activitystream/menu/PopupContextMenu.java',
-    'home/activitystream/model/Highlight.java',
-    'home/activitystream/model/Item.java',
-    'home/activitystream/model/Metadata.java',
-    'home/activitystream/model/TopSite.java',
-    'home/activitystream/stream/HighlightItem.java',
-    'home/activitystream/stream/HighlightsTitle.java',
-    'home/activitystream/stream/StreamItem.java',
-    'home/activitystream/stream/TopPanel.java',
-    'home/activitystream/stream/WelcomePanel.java',
-    'home/activitystream/StreamItemAnimator.java',
-    'home/activitystream/StreamRecyclerAdapter.java',
-    'home/activitystream/topsites/CirclePageIndicator.java',
-    'home/activitystream/topsites/TopSitesCard.java',
-    'home/activitystream/topsites/TopSitesPage.java',
-    'home/activitystream/topsites/TopSitesPageAdapter.java',
-    'home/activitystream/topsites/TopSitesPagerAdapter.java',
     'home/BookmarkFolderView.java',
     'home/BookmarkScreenshotRow.java',
     'home/BookmarksListAdapter.java',
@@ -725,8 +722,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'icons/storage/FailureCache.java',
     'icons/storage/MemoryStorage.java',
     'IntentHelper.java',
-    'javaaddons/JavaAddonManager.java',
-    'javaaddons/JavaAddonManagerV1.java',
     'LauncherActivity.java',
     'lwt/LightweightTheme.java',
     'lwt/LightweightThemeDrawable.java',
@@ -1011,7 +1006,6 @@ if max_sdk_version >= 11:
     ]]
 
 gbjar.extra_jars += [
-    OBJDIR + '/../javaaddons/javaaddons-1.0.jar',
     'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-thirdparty.jar',

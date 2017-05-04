@@ -175,8 +175,6 @@ DEFAULTS = dict(
             'https://127.0.0.1/experiments-dummy/manifest',
         'network.http.speculative-parallel-limit': 0,
         'lightweightThemes.selectedThemeID': "",
-        'devtools.webide.widget.enabled': False,
-        'devtools.webide.widget.inNavbarByDefault': False,
         'devtools.chrome.enabled': False,
         'devtools.debugger.remote-enabled': False,
         'devtools.theme': "light",

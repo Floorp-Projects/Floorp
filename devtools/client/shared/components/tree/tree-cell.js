@@ -42,7 +42,8 @@ define(function (require, exports, module) {
      */
     shouldComponentUpdate: function (nextProps, nextState) {
       return (this.props.value != nextProps.value) ||
-        (this.state !== nextState);
+        (this.state !== nextState) ||
+        (this.props.member.open != nextProps.member.open);
     },
 
     getCellClass: function (object, id) {

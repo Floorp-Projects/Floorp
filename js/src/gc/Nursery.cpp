@@ -42,7 +42,7 @@ using mozilla::PodCopy;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-static const uintptr_t CanaryMagicValue = 0xDEADB15D;
+constexpr uintptr_t CanaryMagicValue = 0xDEADB15D;
 
 struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 {

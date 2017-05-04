@@ -609,6 +609,7 @@ public:
     , mParent(nullptr)
     , mNextSibling(nullptr)
     , mPrevSibling(nullptr)
+    , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
     , mType(aType)
   {
     mozilla::PodZero(&mOverflow);

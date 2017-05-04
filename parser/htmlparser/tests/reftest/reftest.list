@@ -4,7 +4,7 @@ fails-if(stylo) == view-source:bug535530-2.html bug535530-2-ref.html
 == bug569229-1.xml bug569229-1-ref.xml
 == bug577418-1.html bug577418-1-ref.html
 == bug582788-1.html bug582788-1-ref.html
-fuzzy-if(skiaContent,2,5) fails-if(stylo) == bug582940-1.html bug582940-1-ref.html
+fuzzy-if(skiaContent,2,5) == bug582940-1.html bug582940-1-ref.html
 == bug592656-1.html bug592656-1-ref.html
 fuzzy-if(skiaContent,1,5) == bug599320-1.html bug599320-1-ref.html
 fuzzy-if(skiaContent,2,5) == bug608373-1.html bug608373-1-ref.html

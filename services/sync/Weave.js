@@ -8,9 +8,11 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://services-sync/util.js");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyGetter(this, "Utils", () => {
+  return Cu.import("resource://services-sync/util.js", {}).Utils;
+});
 
 const SYNC_PREFS_BRANCH = "services.sync.";
 
@@ -82,14 +84,14 @@ WeaveService.prototype = {
     if (this.ready) {
       return Promise.resolve();
     }
-    let deferred = Promise.defer();
-
-    Services.obs.addObserver(function onReady() {
-      Services.obs.removeObserver(onReady, "weave:service:ready");
-      deferred.resolve();
-    }, "weave:service:ready");
+    let onReadyPromise = new Promise(resolve => {
+      Services.obs.addObserver(function onReady() {
+        Services.obs.removeObserver(onReady, "weave:service:ready");
+        resolve();
+      }, "weave:service:ready");
+    });
     this.ensureLoaded();
-    return deferred.promise;
+    return onReadyPromise;
   },
 
   /**

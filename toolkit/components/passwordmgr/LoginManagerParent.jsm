@@ -36,25 +36,24 @@ var LoginManagerParent = {
    */
   _recipeManager: null,
 
+  // This should only be called on Android. Listeners are added in
+  // nsBrowserGlue.js on desktop. Please make sure that the list of
+  // listeners added here stays in sync with the listeners added in
+  // nsBrowserGlue when you change either.
   init() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
     mm.addMessageListener("RemoteLogins:findLogins", this);
     mm.addMessageListener("RemoteLogins:findRecipes", this);
     mm.addMessageListener("RemoteLogins:onFormSubmit", this);
     mm.addMessageListener("RemoteLogins:autoCompleteLogins", this);
     mm.addMessageListener("RemoteLogins:removeLogin", this);
     mm.addMessageListener("RemoteLogins:insecureLoginFormPresent", this);
-
-    XPCOMUtils.defineLazyGetter(this, "recipeParentPromise", () => {
-      const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
-      this._recipeManager = new LoginRecipesParent({
-        defaults: Services.prefs.getStringPref("signon.recipes.path"),
-      });
-      return this._recipeManager.initializationPromise;
-    });
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
   },
 
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(msg) {
     let data = msg.data;
     switch (msg.name) {
@@ -476,3 +475,11 @@ var LoginManagerParent = {
                                  .CustomEvent("InsecureLoginFormsStateChange"));
   },
 };
+
+XPCOMUtils.defineLazyGetter(LoginManagerParent, "recipeParentPromise", function() {
+  const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
+  this._recipeManager = new LoginRecipesParent({
+    defaults: Services.prefs.getStringPref("signon.recipes.path"),
+  });
+  return this._recipeManager.initializationPromise;
+});

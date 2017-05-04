@@ -370,6 +370,13 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   // for an HTML5 scoped style sheet.
   bool mForScopedStyle;
 
+  // An enum that communicates the consumer's intensions for this
+  // TreeMatchContext in terms of :visited handling.  eNeverMatchVisited means
+  // that this TreeMatchContext's VisitedHandlingType will always be
+  // eRelevantLinkUnvisited (in other words, this value will be passed to the
+  // constructor and ResetForVisitedMatching() will never be called).
+  // eMatchVisitedDefault doesn't communicate any information about the current
+  // or future VisitedHandlingType of this TreeMatchContext.
   enum MatchVisited {
     eNeverMatchVisited,
     eMatchVisitedDefault
@@ -404,6 +411,9 @@ struct MOZ_STACK_CLASS TreeMatchContext {
       if (loadContext) {
         mUsingPrivateBrowsing = loadContext->UsePrivateBrowsing();
       }
+    } else {
+      MOZ_ASSERT(aVisitedHandling == nsRuleWalker::eRelevantLinkUnvisited,
+                 "You promised you'd never try to match :visited!");
     }
   }
 

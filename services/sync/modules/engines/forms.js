@@ -16,6 +16,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/collection_validator.js");
 Cu.import("resource://gre/modules/Log.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
 
 const FORMS_TTL = 3 * 365 * 24 * 60 * 60;   // Three years in seconds.
 
@@ -48,7 +50,7 @@ var FormWrapper = {
           resolve(results);
         }
       };
-      Svc.FormHistory.search(terms, searchData, callbacks);
+      FormHistory.search(terms, searchData, callbacks);
     })
   },
 
@@ -58,7 +60,7 @@ var FormWrapper = {
   },
 
   _updateSpinningly(changes) {
-    if (!Svc.FormHistory.enabled) {
+    if (!FormHistory.enabled) {
       return; // update isn't going to do anything.
     }
     let cb = Async.makeSpinningCallback();
@@ -67,7 +69,7 @@ var FormWrapper = {
         cb();
       }
     };
-    Svc.FormHistory.update(changes, callbacks);
+    FormHistory.update(changes, callbacks);
     cb.wait();
   },
 

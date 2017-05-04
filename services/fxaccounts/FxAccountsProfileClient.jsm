@@ -11,11 +11,9 @@ this.EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientErro
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/rest.js");
 
 Cu.importGlobalProperties(["URL"]);
@@ -82,14 +80,14 @@ this.FxAccountsProfileClient.prototype = {
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
-  _createRequest: Task.async(function* (path, method = "GET", etag = null) {
+  async _createRequest(path, method = "GET", etag = null) {
     let token = this.token;
     if (!token) {
       // tokens are cached, so getting them each request is cheap.
-      token = yield this.fxa.getOAuthToken(this.oauthOptions);
+      token = await this.fxa.getOAuthToken(this.oauthOptions);
     }
     try {
-      return (yield this._rawRequest(path, method, token, etag));
+      return (await this._rawRequest(path, method, token, etag));
     } catch (ex) {
       if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
         throw ex;
@@ -100,22 +98,22 @@ this.FxAccountsProfileClient.prototype = {
       }
       // it's an auth error - assume our token expired and retry.
       log.info("Fetching the profile returned a 401 - revoking our token and retrying");
-      yield this.fxa.removeCachedOAuthToken({token});
-      token = yield this.fxa.getOAuthToken(this.oauthOptions);
+      await this.fxa.removeCachedOAuthToken({token});
+      token = await this.fxa.getOAuthToken(this.oauthOptions);
       // and try with the new token - if that also fails then we fail after
       // revoking the token.
       try {
-        return (yield this._rawRequest(path, method, token, etag));
+        return (await this._rawRequest(path, method, token, etag));
       } catch (ex) {
         if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
           throw ex;
         }
         log.info("Retry fetching the profile still returned a 401 - revoking our token and failing");
-        yield this.fxa.removeCachedOAuthToken({token});
+        await this.fxa.removeCachedOAuthToken({token});
         throw ex;
       }
     }
-  }),
+  },
 
   /**
    * Remote "raw" request helper - doesn't handle auth errors and tokens.

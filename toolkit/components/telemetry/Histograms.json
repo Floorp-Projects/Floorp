@@ -5664,13 +5664,15 @@
     "n_buckets": 10,
     "description": "Session restore: Time to collect all window and tab data (ms)"
   },
-  "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "default",
+  "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_MS": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com", "mdeboer@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "exponential",
+    "keyed": true,
     "high": 30000,
-    "n_buckets": 10,
-    "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
+    "n_buckets": 20,
+    "bug_numbers": [1360916],
+    "description": "Session restore: Duration of data collection in the content process (ms). Possible keys currently are: historychange, scroll, formdata, pageStyle, disallow, storage, storagechange."
   },
   "FX_SESSION_RESTORE_PRIVACY_LEVEL": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
@@ -11268,6 +11270,47 @@
     "n_values": 99,
     "description": "Count of which layout display items are being created. Display items are created by layout to determine what content to render. A full description is above the class definition for nsDisplayItem. The list of types is kept in nsDisplayItemTypes.h."
   },
+  "TIMEOUT_EXECUTION_FG_MS":
+  {
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1355480],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 20,
+    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the foreground and the script is not on the tracking list. Multiple events are aggregated over a 1s interval."
+  },
+  "TIMEOUT_EXECUTION_FG_TRACKING_MS":
+  {
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1355480],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 20,
+    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the foreground and the script is on the tracking list. Multiple events are aggregated over a 1s interval."
+  },
+  "TIMEOUT_EXECUTION_BG_MS":
+  {
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1355480],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 20,
+    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the background and the script is not on the tracking list. Multiple events are aggregated over a 1s interval."
+  },
+  "TIMEOUT_EXECUTION_BG_TRACKING_MS":
+  {
+    "alert_emails": ["farre@mozilla.com"],
+    "bug_numbers": [1355480],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "low": 1,
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the background and the script is on the tracking list. Multiple events are aggregated over a 1s interval."
+  },
   "TIME_TO_DOM_LOADING_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
@@ -11339,5 +11382,59 @@
     "n_buckets": 100,
     "bug_numbers": [1344893],
     "description": "Time in milliseconds from navigationStart to responseStart."
+  },
+  "INPUT_EVENT_HANDLED_MOUSE_UP_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the mouse up event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_MOUSE_DOWN_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the mouse down event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_KEYBOARD_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the keyboard event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_TOUCH_MOVE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled touch move event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_MOUSE_MOVE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled mouse move event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_WHEEL_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled wheel event spent in handlers."
   }
 }

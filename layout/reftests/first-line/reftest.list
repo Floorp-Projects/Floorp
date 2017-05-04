@@ -8,7 +8,7 @@ fails-if(stylo) == out-of-flow-1b.html out-of-flow-1-ref.html
 fails fails-if(stylo) == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 
 # parent style context correct
-fails-if(stylo) == parent-style-1.html parent-style-1-ref.html
+== parent-style-1.html parent-style-1-ref.html
 == parent-style-2.html parent-style-2-ref.html
 == parent-style-3.html parent-style-3-ref.html
 

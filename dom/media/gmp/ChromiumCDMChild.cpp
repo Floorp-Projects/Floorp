@@ -715,7 +715,11 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
       // key status changing to "output-restricted", and is supposed to switch
       // to a stream that doesn't require OP. In order to keep the playback
       // pipeline rolling, just output a black frame. See bug 1343140.
-      frame.InitToBlack(mCodedSize.width, mCodedSize.height, input.timestamp);
+      if (!frame.InitToBlack(mCodedSize.width, mCodedSize.height,
+                             input.timestamp)) {
+        Unused << SendDecodeFailed(cdm::kDecodeError);
+        break;
+      }
       MOZ_FALLTHROUGH;
     case cdm::kSuccess:
       if (frame.FrameBuffer()) {

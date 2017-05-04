@@ -11,7 +11,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/ContentPrefUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "_methodsCallableFromChild",
+                                  "resource://gre/modules/ContentPrefUtils.jsm");
 
 let loadContext = Cc["@mozilla.org/loadcontext;1"].
                     createInstance(Ci.nsILoadContext);
@@ -25,21 +28,27 @@ function contextArg(context) {
 }
 
 var ContentPrefServiceParent = {
-  _cps2: null,
+  // Called on all platforms.
+  alwaysInit() {
+    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
 
+    globalMM.addMessageListener("child-process-shutdown", this);
+  },
+
+  // Only called on Android. Listeners are added in nsBrowserGlue.js on other
+  // platforms.
   init() {
     let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                      .getService(Ci.nsIMessageListenerManager);
 
-    this._cps2 = Cc["@mozilla.org/content-pref/service;1"]
-                  .getService(Ci.nsIContentPrefService2);
-
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
     globalMM.addMessageListener("ContentPrefs:FunctionCall", this);
+    globalMM.addMessageListener("ContentPrefs:AddObserverForName", this);
+    globalMM.addMessageListener("ContentPrefs:RemoveObserverForName", this);
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
 
-    let observerChangeHandler = this.handleObserverChange.bind(this);
-    globalMM.addMessageListener("ContentPrefs:AddObserverForName", observerChangeHandler);
-    globalMM.addMessageListener("ContentPrefs:RemoveObserverForName", observerChangeHandler);
-    globalMM.addMessageListener("child-process-shutdown", observerChangeHandler);
+    this.alwaysInit();
   },
 
   // Map from message manager -> content pref observer.
@@ -105,7 +114,13 @@ var ContentPrefServiceParent = {
     }
   },
 
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(msg) {
+    if (msg.name != "ContentPrefs:FunctionCall") {
+      this.handleObserverChange(msg);
+      return;
+    }
+
     let data = msg.data;
     let signature;
 
@@ -159,3 +174,7 @@ var ContentPrefServiceParent = {
     this._cps2[data.call](...args);
   }
 };
+
+XPCOMUtils.defineLazyServiceGetter(ContentPrefServiceParent, "_cps2",
+                                   "@mozilla.org/content-pref/service;1",
+                                   "nsIContentPrefService2");

@@ -332,7 +332,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
         aNode->HasFlag(ADDED_TO_FORM)) {
       // Tell the form (if any) this node is going away.  Don't
       // notify, since we're being destroyed in any case.
-      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(true);
+      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(true, true);
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::img) &&

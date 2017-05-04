@@ -524,7 +524,6 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 BreakpointSite::BreakpointSite(Type type)
   : type_(type), enabledCount(0)
 {
-    JS_INIT_CLIST(&breakpoints);
 }
 
 void
@@ -547,21 +546,22 @@ BreakpointSite::dec(FreeOp* fop)
 bool
 BreakpointSite::isEmpty() const
 {
-    return JS_CLIST_IS_EMPTY(&breakpoints);
+    return breakpoints.isEmpty();
 }
 
 Breakpoint*
 BreakpointSite::firstBreakpoint() const
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints))
+    if (isEmpty())
         return nullptr;
-    return Breakpoint::fromSiteLinks(JS_NEXT_LINK(&breakpoints));
+    return &(*breakpoints.begin());
 }
 
 bool
-BreakpointSite::hasBreakpoint(Breakpoint* bp)
+BreakpointSite::hasBreakpoint(Breakpoint* toFind)
 {
-    for (Breakpoint* p = firstBreakpoint(); p; p = p->nextInSite())
+    const BreakpointList::Iterator bp(toFind);
+    for (auto p = breakpoints.begin(); p; p++)
         if (p == bp)
             return true;
     return false;
@@ -571,20 +571,8 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handl
     : debugger(debugger), site(site), handler(handler)
 {
     MOZ_ASSERT(handler->compartment() == debugger->object->compartment());
-    JS_APPEND_LINK(&debuggerLinks, &debugger->breakpoints);
-    JS_APPEND_LINK(&siteLinks, &site->breakpoints);
-}
-
-Breakpoint*
-Breakpoint::fromDebuggerLinks(JSCList* links)
-{
-    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, debuggerLinks));
-}
-
-Breakpoint*
-Breakpoint::fromSiteLinks(JSCList* links)
-{
-    return (Breakpoint*) ((unsigned char*) links - offsetof(Breakpoint, siteLinks));
+    debugger->breakpoints.pushBack(this);
+    site->breakpoints.pushBack(this);
 }
 
 void
@@ -592,8 +580,8 @@ Breakpoint::destroy(FreeOp* fop)
 {
     if (debugger->enabled)
         site->dec(fop);
-    JS_REMOVE_LINK(&debuggerLinks);
-    JS_REMOVE_LINK(&siteLinks);
+    debugger->breakpoints.remove(this);
+    site->breakpoints.remove(this);
     site->destroyIfEmpty(fop);
     fop->delete_(this);
 }
@@ -601,15 +589,13 @@ Breakpoint::destroy(FreeOp* fop)
 Breakpoint*
 Breakpoint::nextInDebugger()
 {
-    JSCList* link = JS_NEXT_LINK(&debuggerLinks);
-    return (link == &debugger->breakpoints) ? nullptr : fromDebuggerLinks(link);
+    return debuggerLink.mNext;
 }
 
 Breakpoint*
 Breakpoint::nextInSite()
 {
-    JSCList* link = JS_NEXT_LINK(&siteLinks);
-    return (link == &site->breakpoints) ? nullptr : fromSiteLinks(link);
+    return siteLink.mNext;
 }
 
 JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
@@ -684,9 +670,6 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 {
     assertSameCompartment(cx, dbg);
 
-    JS_INIT_CLIST(&breakpoints);
-    JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
-
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     if (logger) {
@@ -705,15 +688,15 @@ Debugger::~Debugger()
     allocationsLog.clear();
 
     /*
-     * Since the inactive state for this link is a singleton cycle, it's always
-     * safe to apply JS_REMOVE_LINK to it, regardless of whether we're in the list or not.
-     *
      * We don't have to worry about locking here since Debugger is not
      * background finalized.
      */
-    JS_REMOVE_LINK(&onNewGlobalObjectWatchersLink);
-
     JSContext* cx = TlsContext.get();
+    if (onNewGlobalObjectWatchersLink.mPrev ||
+        onNewGlobalObjectWatchersLink.mNext ||
+        cx->runtime()->onNewGlobalObjectWatchers().begin() == JSRuntime::WatchersList::Iterator(this))
+        cx->runtime()->onNewGlobalObjectWatchers().remove(this);
+
     cx->runtime()->endSingleThreadedExecution(cx);
 }
 
@@ -2178,7 +2161,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
 void
 Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers()));
+    MOZ_ASSERT(!cx->runtime()->onNewGlobalObjectWatchers().isEmpty());
     if (global->compartment()->creationOptions().invisibleToDebugger())
         return;
 
@@ -2188,13 +2171,9 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
      * can be mutated while we're walking it.
      */
     AutoObjectVector watchers(cx);
-    for (JSCList* link = JS_LIST_HEAD(&cx->runtime()->onNewGlobalObjectWatchers());
-         link != &cx->runtime()->onNewGlobalObjectWatchers();
-         link = JS_NEXT_LINK(link))
-    {
-        Debugger* dbg = fromOnNewGlobalObjectWatchersLink(link);
-        MOZ_ASSERT(dbg->observesNewGlobalObject());
-        JSObject* obj = dbg->object;
+    for (auto& dbg : cx->runtime()->onNewGlobalObjectWatchers()) {
+        MOZ_ASSERT(dbg.observesNewGlobalObject());
+        JSObject* obj = dbg.object;
         JS::ExposeObjectToActiveJS(obj);
         if (!watchers.append(obj)) {
             if (cx->isExceptionPending())
@@ -3223,16 +3202,20 @@ Debugger::sweepAll(FreeOp* fop)
         Debugger* dbg = group->debuggerList().getFirst();
         while (dbg) {
             Debugger* next = dbg->getNext();
-            if (IsAboutToBeFinalized(&dbg->object)) {
-                /*
-                 * dbg is being GC'd. Detach it from its debuggees. The debuggee
-                 * might be GC'd too. Since detaching requires access to both
-                 * objects, this must be done before finalize time.
-                 */
-                for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+
+            // Detach dying debuggers and debuggees from each other. Since this
+            // requires access to both objects it must be done before either
+            // object is finalized.
+            bool debuggerDying = IsAboutToBeFinalized(&dbg->object);
+            for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+                GlobalObject* global = e.front().unbarrieredGet();
+                if (debuggerDying || IsAboutToBeFinalizedUnbarriered(&global))
                     dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e);
-                fop->delete_(dbg);
             }
+
+            if (debuggerDying)
+                fop->delete_(dbg);
+
             dbg = next;
         }
     }
@@ -3371,14 +3354,9 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
          */
         if (dbg->getHook(OnNewGlobalObject)) {
             if (!wasEnabled) {
-                /* If we were not enabled, the link should be a singleton list. */
-                MOZ_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
-                JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
-                               &cx->runtime()->onNewGlobalObjectWatchers());
+                cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
             } else {
-                /* If we were enabled, the link should be inserted in the list. */
-                MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
-                JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
+                cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
             }
         }
 
@@ -3538,14 +3516,9 @@ Debugger::setOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp)
     if (dbg->enabled) {
         JSObject* newHook = dbg->getHook(OnNewGlobalObject);
         if (!oldHook && newHook) {
-            /* If we didn't have a hook, the link should be a singleton list. */
-            MOZ_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
-            JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
-                           &cx->runtime()->onNewGlobalObjectWatchers());
+            cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
         } else if (oldHook && !newHook) {
-            /* If we did have a hook, the link should be inserted in the list. */
-            MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
-            JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
+            cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
         }
     }
 
