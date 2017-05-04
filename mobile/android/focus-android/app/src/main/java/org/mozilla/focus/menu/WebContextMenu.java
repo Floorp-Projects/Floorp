@@ -14,13 +14,23 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.AlertDialog;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.web.IWebView;
 
 public class WebContextMenu {
+
+    private static View createTitleView(final @NonNull Context context, final @NonNull String title) {
+        final View titleView = LayoutInflater.from(context).inflate(R.layout.dialog_title, null);
+        ((TextView) titleView.findViewById(R.id.title)).setText(title);
+
+        return titleView;
+    }
 
     public static void show(final @NonNull Context context, final @NonNull IWebView.HitTarget hitTarget) {
         if (!(hitTarget.isLink || hitTarget.isImage)) {
@@ -31,11 +41,16 @@ public class WebContextMenu {
         TelemetryWrapper.openWebContextMenuEvent();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        final View titleView;
         if (hitTarget.isLink) {
-            builder.setTitle(hitTarget.linkURL);
+           titleView = createTitleView(context, hitTarget.linkURL);
         } else if (hitTarget.isImage) {
-            builder.setTitle(hitTarget.imageURL);
+            titleView = createTitleView(context, hitTarget.imageURL);
+        } else {
+            throw new IllegalStateException("Unhandled long press target type");
         }
+        builder.setCustomTitle(titleView);
 
         final NavigationView menu = new NavigationView(context);
         builder.setView(menu);
