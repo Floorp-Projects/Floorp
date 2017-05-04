@@ -42,8 +42,8 @@ function expectJSAllowed(allowed, testCondition, callback) {
     is(self_.ICanRunMyJS, allowed, msg);
     callback();
   }, {once: true});
-  var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
-  innerFrame.src = iframeSrc;
+  var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
+  innerFrame.srcdoc = iframeSrc;
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -109,8 +109,8 @@ function testDocumentDisabledJS() {
     is(self_.ICanRunMyJS, false, msg);
     SimpleTest.finish();
   }, {once: true});
-  var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
-  innerFrame.src = iframeSrc;
+  var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
+  innerFrame.srcdoc = iframeSrc;
 }
 
 </script>
