@@ -1645,6 +1645,7 @@ or run without that action (ie: --no-{action})"
                        "log for errors.")
 
         self.generate_build_props(console_output=True, halt_on_failure=True)
+        self._generate_build_stats()
 
     def multi_l10n(self):
         if not self.query_is_nightly():
@@ -2002,13 +2003,15 @@ or run without that action (ie: --no-{action})"
                 "subtests": size_measurements
             }
 
-    def generate_build_stats(self):
+    def _generate_build_stats(self):
         """grab build stats following a compile.
 
         This action handles all statistics from a build: 'count_ctors'
         and then posts to graph server the results.
         We only post to graph server for non nightly build
         """
+        self.info('Collecting build metrics')
+
         if self.config.get('forced_artifact_build'):
             self.info('Skipping due to forced artifact build.')
             return
