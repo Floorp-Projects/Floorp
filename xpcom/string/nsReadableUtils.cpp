@@ -88,8 +88,19 @@ LossyCopyUTF16toASCII(const nsAString& aSource, nsACString& aDest)
 void
 CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
 {
+  if (!CopyASCIItoUTF16(aSource, aDest, mozilla::fallible)) {
+    // Note that this may wildly underestimate the allocation that failed, as
+    // we report the length of aSource as UTF-16 instead of UTF-8.
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
+
+bool
+CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
+                 const mozilla::fallible_t& aFallible)
+{
   aDest.Truncate();
-  AppendASCIItoUTF16(aSource, aDest);
+  return AppendASCIItoUTF16(aSource, aDest, aFallible);
 }
 
 void
