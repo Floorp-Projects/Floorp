@@ -15,12 +15,16 @@ EXPORTS.mozilla.dom += [
     'NSSU2FTokenRemote.h',
     'ScopedCredential.h',
     'ScopedCredentialInfo.h',
+    'U2FSoftTokenManager.h',
+    'U2FTokenManager.h',
+    'U2FTokenTransport.h',
     'WebAuthentication.h',
     'WebAuthnAssertion.h',
     'WebAuthnAttestation.h',
     'WebAuthnManager.h',
     'WebAuthnRequest.h',
     'WebAuthnTransactionChild.h',
+    'WebAuthnTransactionParent.h',
     'WebAuthnUtil.h'
 ]
 
@@ -28,11 +32,14 @@ UNIFIED_SOURCES += [
     'NSSU2FTokenRemote.cpp',
     'ScopedCredential.cpp',
     'ScopedCredentialInfo.cpp',
+    'U2FSoftTokenManager.cpp',
+    'U2FTokenManager.cpp',
     'WebAuthentication.cpp',
     'WebAuthnAssertion.cpp',
     'WebAuthnAttestation.cpp',
     'WebAuthnManager.cpp',
     'WebAuthnTransactionChild.cpp',
+    'WebAuthnTransactionParent.cpp',
     'WebAuthnUtil.cpp'
 ]
 
