@@ -94,11 +94,17 @@ FormAutofillParent.prototype = {
     log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "advanced-pane-loaded": {
-        let formAutofillPreferences = new FormAutofillPreferences();
+        let useOldOrganization = Services.prefs.getBoolPref("browser.preferences.useOldOrganization",
+                                                            false);
+        let formAutofillPreferences = new FormAutofillPreferences({useOldOrganization});
         let document = subject.document;
         let prefGroup = formAutofillPreferences.init(document);
-        let parentNode = document.getElementById("mainPrefPane");
-        let insertBeforeNode = document.getElementById("locationBarGroup");
+        let parentNode = useOldOrganization ?
+                         document.getElementById("mainPrefPane") :
+                         document.getElementById("passwordsGroup");
+        let insertBeforeNode = useOldOrganization ?
+                               document.getElementById("locationBarGroup") :
+                               null;
         parentNode.insertBefore(prefGroup, insertBeforeNode);
         break;
       }

@@ -116,8 +116,6 @@ function run_test() {
 
   ok(!token.isHardwareToken(),
      "The internal token should not be considered a hardware token");
-  ok(token.isFriendly(),
-     "The internal token should always be considered friendly");
   ok(token.needsLogin(),
      "The internal token should always need authentication");
 }

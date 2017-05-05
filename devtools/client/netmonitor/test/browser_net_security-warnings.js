@@ -17,10 +17,10 @@ const TEST_CASES = [
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   for (let test of TEST_CASES) {
     info("Testing site with " + test.desc);
@@ -50,7 +50,7 @@ add_task(function* () {
       test.warnCipher,
       "Cipher suite warning is hidden.");
 
-    gStore.dispatch(Actions.clearRequests());
+    store.dispatch(Actions.clearRequests());
   }
 
   return teardown(monitor);

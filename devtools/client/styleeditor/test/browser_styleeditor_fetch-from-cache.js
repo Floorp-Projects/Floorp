@@ -14,13 +14,13 @@ add_task(function* () {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
   let monitor = toolbox.getPanel("netmonitor");
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   info("Navigating to test page");
   yield navigateTo(TEST_URL);
@@ -33,7 +33,7 @@ add_task(function* () {
 
   info("Checking Netmonitor contents.");
   let items = [];
-  for (let item of getSortedRequests(gStore.getState())) {
+  for (let item of getSortedRequests(store.getState())) {
     if (item.url.endsWith("doc_uncached.css")) {
       items.push(item);
     }

@@ -537,10 +537,8 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, nsIDOMElement* aStartElem
     NS_ENSURE_TRUE(startContent, NS_ERROR_INVALID_ARG);
 
     window = GetCurrentWindow(startContent);
-  }
-  else {
+  } else {
     window = aWindow ? nsPIDOMWindowOuter::From(aWindow) : mFocusedWindow.get();
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
   }
 
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -865,7 +863,7 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
       }
     }
 
-    NotifyFocusStateChange(content, shouldShowFocusRing, false);
+    NotifyFocusStateChange(content, nullptr, shouldShowFocusRing, false);
   }
 
   return NS_OK;
@@ -971,6 +969,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow)
 
   if (oldFocusedContent && oldFocusedContent->IsInComposedDoc()) {
     NotifyFocusStateChange(oldFocusedContent,
+                           nullptr,
                            mFocusedWindow->ShouldShowFocusRing(),
                            false);
     window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
@@ -1090,12 +1089,21 @@ nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive)
 /* static */
 void
 nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
+                                       nsIContent* aContentToFocus,
                                        bool aWindowShouldShowFocusRing,
                                        bool aGettingFocus)
 {
+  MOZ_ASSERT_IF(aContentToFocus, !aGettingFocus);
   if (!aContent->IsElement()) {
     return;
   }
+
+  nsIContent* commonAncestor = nullptr;
+  if (aContentToFocus && aContentToFocus->IsElement()) {
+    commonAncestor =
+      nsContentUtils::GetCommonFlattenedTreeAncestor(aContent, aContentToFocus);
+  }
+
   EventStates eventState = NS_EVENT_STATE_FOCUS;
   if (aWindowShouldShowFocusRing) {
     eventState |= NS_EVENT_STATE_FOCUSRING;
@@ -1107,9 +1115,18 @@ nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
     aContent->AsElement()->RemoveStates(eventState);
   }
 
-  for (Element* element = aContent->AsElement(); element;
-       element = element->GetParentElementCrossingShadowRoot()) {
+  for (nsIContent* content = aContent;
+       content && content != commonAncestor;
+       content = content->GetFlattenedTreeParent()) {
+    if (!content->IsElement()) {
+      continue;
+    }
+
+    Element* element = content->AsElement();
     if (aGettingFocus) {
+      if (element->State().HasState(NS_EVENT_STATE_FOCUS_WITHIN)) {
+        break;
+      }
       element->AddStates(NS_EVENT_STATE_FOCUS_WITHIN);
     } else {
       element->RemoveStates(NS_EVENT_STATE_FOCUS_WITHIN);
@@ -1663,7 +1680,10 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
     content && content->IsInComposedDoc() && !IsNonFocusableRoot(content);
   if (content) {
     if (sendBlurEvent) {
-      NotifyFocusStateChange(content, shouldShowFocusRing, false);
+      NotifyFocusStateChange(content,
+                             aContentToFocus,
+                             shouldShowFocusRing,
+                             false);
     }
 
     // if an object/plug-in/remote browser is being blurred, move the system focus
@@ -1914,7 +1934,10 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
       aContent && aContent->IsInComposedDoc() && !IsNonFocusableRoot(aContent);
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
-      NotifyFocusStateChange(aContent, aWindow->ShouldShowFocusRing(), true);
+      NotifyFocusStateChange(aContent,
+                             nullptr,
+                             aWindow->ShouldShowFocusRing(),
+                             true);
 
       // if this is an object/plug-in/remote browser, focus its widget.  Note that we might
       // no longer be in the same document, due to the events we fired above when
