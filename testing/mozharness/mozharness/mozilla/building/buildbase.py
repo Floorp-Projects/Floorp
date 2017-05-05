@@ -1644,6 +1644,8 @@ or run without that action (ie: --no-{action})"
             self.fatal("'mach build' did not run successfully. Please check "
                        "log for errors.")
 
+        self.generate_build_props(console_output=True, halt_on_failure=True)
+
     def multi_l10n(self):
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
@@ -1737,10 +1739,8 @@ or run without that action (ie: --no-{action})"
         self._taskcluster_upload(abs_files, self.routes_json['l10n'],
                                  locale='multi')
 
-    def postflight_build(self, console_output=True):
+    def postflight_build(self):
         """grabs properties from post build and calls ccache -s"""
-        self.generate_build_props(console_output=console_output,
-                                  halt_on_failure=True)
         # A list of argument lists.  Better names gratefully accepted!
         mach_commands = self.config.get('postflight_build_mach_commands', [])
         for mach_command in mach_commands:
