@@ -107,6 +107,10 @@
 #include "CacheStorageService.h"
 #include "HttpChannelParent.h"
 #include "nsIThrottlingService.h"
+#include "nsIBufferedStreams.h"
+#include "nsIFileStreams.h"
+#include "nsIMIMEInputStream.h"
+#include "nsIMultiplexInputStream.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -288,6 +292,8 @@ nsHttpChannel::nsHttpChannel()
     , mStronglyFramed(false)
     , mUsedNetwork(0)
     , mAuthConnectionRestartable(0)
+    , mReqContentLengthDetermined(0)
+    , mReqContentLength(0U)
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
     , mWarningReporter(nullptr)
@@ -508,9 +514,118 @@ nsHttpChannel::TryHSTSPriming()
     return ContinueConnect();
 }
 
+// nsIInputAvailableCallback (nsIStreamTransportService.idl)
+NS_IMETHODIMP
+nsHttpChannel::OnInputAvailableComplete(uint64_t size, nsresult status)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread.");
+    LOG(("nsHttpChannel::OnInputAvailableComplete %p %" PRIx32 "\n",
+         this, static_cast<uint32_t>(status)));
+    if (NS_SUCCEEDED(status)) {
+        mReqContentLength = size;
+    } else {
+        // fall back to synchronous on the error path. should not happen.
+        if (NS_SUCCEEDED(mUploadStream->Available(&size))) {
+            mReqContentLength = size;
+        }
+    }
+
+    LOG(("nsHttpChannel::DetermineContentLength %p from sts\n", this));
+    mReqContentLengthDetermined = 1;
+    nsresult rv = mCanceled ? mStatus : ContinueConnect();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        Unused << AsyncAbort(rv);
+    }
+    return NS_OK;
+}
+
+// nsIFileStream needs to be sent to a worker thread
+// to do Available() as it may cause disk/IO. Unfortunately
+// we have to look at the streams wrapped by a few other
+// abstractions to be sure.
+static
+bool isFileStream(nsIInputStream *stream)
+{
+    if (!stream) {
+        return false;
+    }
+
+    nsCOMPtr<nsIFileInputStream> fileStream = do_QueryInterface(stream);
+    if (fileStream) {
+        return true;
+    }
+
+    nsCOMPtr<nsIBufferedInputStream> bufferedStream = do_QueryInterface(stream);
+    if (bufferedStream) {
+        nsCOMPtr<nsIInputStream> innerStream;
+        if (NS_SUCCEEDED(bufferedStream->GetData(getter_AddRefs(innerStream)))) {
+            return isFileStream(innerStream);
+        }
+    }
+
+    nsCOMPtr<nsIMIMEInputStream> mimeStream = do_QueryInterface(stream);
+    if (mimeStream) {
+        nsCOMPtr<nsIInputStream> innerStream;
+        if (NS_SUCCEEDED(mimeStream->GetData(getter_AddRefs(innerStream)))) {
+            return isFileStream(innerStream);
+        }
+    }
+
+    nsCOMPtr<nsIMultiplexInputStream> muxStream = do_QueryInterface(stream);
+    uint32_t muxCount = 0;
+    if (muxStream) {
+        muxStream->GetCount(&muxCount);
+        for (uint32_t i = 0; i < muxCount; ++i) {
+            nsCOMPtr<nsIInputStream> subStream;
+            if (NS_SUCCEEDED(muxStream->GetStream(i, getter_AddRefs(subStream))) &&
+                isFileStream(subStream)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void
+nsHttpChannel::DetermineContentLength()
+{
+    nsCOMPtr<nsIStreamTransportService> sts(services::GetStreamTransportService());
+
+    if (!mUploadStream || !sts) {
+        LOG(("nsHttpChannel::DetermineContentLength %p no body\n", this));
+        mReqContentLength = 0U;
+        mReqContentLengthDetermined = 1;
+        return;
+    }
+
+    if (!isFileStream(mUploadStream)) {
+        mUploadStream->Available(&mReqContentLength);
+        LOG(("nsHttpChannel::DetermineContentLength %p from mem\n", this));
+        mReqContentLengthDetermined = 1;
+        return;
+    }
+
+    LOG(("nsHttpChannel::DetermineContentLength Async [this=%p]\n", this));
+    sts->InputAvailable(mUploadStream, this);
+}
+
 nsresult
 nsHttpChannel::ContinueConnect()
 {
+    // If we have a request body that is going to require bouncing to the STS
+    // in order to determine the content-length as doing it on the main thread
+    // will incur file IO some of the time.
+    if (!mReqContentLengthDetermined) {
+        // C-L might be determined sync or async. Sync will set
+        // mReqContentLengthDetermined to true in DetermineContentLength()
+        DetermineContentLength();
+    }
+    if (!mReqContentLengthDetermined) {
+        return NS_OK;
+    }
+
     // If we have had HSTS priming, we need to reevaluate whether we need
     // a CORS preflight. Bug: 1272440
     // If we need to start a CORS preflight, do it now!
@@ -1004,7 +1119,8 @@ nsHttpChannel::SetupTransaction()
 
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
-                            mUploadStream, mUploadStreamHasHeaders,
+                            mUploadStream, mReqContentLength,
+                            mUploadStreamHasHeaders,
                             NS_GetCurrentThread(), callbacks, this,
                             mTopLevelOuterContentWindowId,
                             getter_AddRefs(responseStream));
@@ -5690,6 +5806,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
     NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
+    NS_INTERFACE_MAP_ENTRY(nsIInputAvailableCallback)
     NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpAuthenticableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
