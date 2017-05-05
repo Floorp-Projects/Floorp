@@ -37,7 +37,7 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html
-fails-if(stylo) == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
+== unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fuzzy-if(skiaContent,104,32) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
 fails-if(stylo) == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
 fails-if(stylo) == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
