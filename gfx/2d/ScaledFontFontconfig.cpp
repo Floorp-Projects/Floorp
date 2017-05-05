@@ -242,13 +242,23 @@ UnscaledFontFontconfig::CreateScaledFont(Float aGlyphSize,
   }
   const ScaledFontFontconfig::InstanceData *instanceData =
     reinterpret_cast<const ScaledFontFontconfig::InstanceData*>(aInstanceData);
-  return ScaledFontFontconfig::CreateFromInstanceData(*instanceData, this, aGlyphSize);
+  return ScaledFontFontconfig::CreateFromInstanceData(*instanceData, this, aGlyphSize,
+                                                      mNativeFontResource.get());
+}
+
+static cairo_user_data_key_t sNativeFontResourceKey;
+
+static void
+ReleaseNativeFontResource(void* aData)
+{
+  static_cast<NativeFontResource*>(aData)->Release();
 }
 
 already_AddRefed<ScaledFont>
 ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
                                              UnscaledFontFontconfig* aUnscaledFont,
-                                             Float aSize)
+                                             Float aSize,
+                                             NativeFontResource* aNativeFontResource)
 {
   FcPattern* pattern = FcPatternCreate();
   if (!pattern) {
@@ -269,6 +279,22 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
     gfxWarning() << "Failed creating Cairo font face for Fontconfig pattern";
     FcPatternDestroy(pattern);
     return nullptr;
+  }
+
+  if (aNativeFontResource) {
+    // Bug 1362117 - Cairo may keep the font face alive after the owning NativeFontResource
+    // was freed. To prevent this, we must bind the NativeFontResource to the font face so that
+    // it stays alive at least as long as the font face.
+    if (cairo_font_face_set_user_data(font,
+                                      &sNativeFontResourceKey,
+                                      aNativeFontResource,
+                                      ReleaseNativeFontResource) != CAIRO_STATUS_SUCCESS) {
+      gfxWarning() << "Failed binding NativeFontResource to Cairo font face";
+      cairo_font_face_destroy(font);
+      FcPatternDestroy(pattern);
+      return nullptr;
+    }
+    aNativeFontResource->AddRef();
   }
 
   cairo_matrix_t sizeMatrix;

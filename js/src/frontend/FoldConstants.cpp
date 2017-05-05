@@ -1348,15 +1348,8 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, Parser<FullParseHandler, char16_
     if (!name)
         return true;
 
-    // Also don't optimize if the name doesn't map directly to its id for TI's
-    // purposes.
-    if (NameToId(name) != IdToTypeId(NameToId(name)))
-        return true;
-
     // Optimization 3: We have expr["foo"] where foo is not an index.  Convert
     // to a property access (like expr.foo) that optimizes better downstream.
-    // Don't bother with this for names that TI considers to be indexes, to
-    // simplify downstream analysis.
     ParseNode* dottedAccess = parser.handler.newPropertyAccess(expr, name, node->pn_pos.end);
     if (!dottedAccess)
         return false;

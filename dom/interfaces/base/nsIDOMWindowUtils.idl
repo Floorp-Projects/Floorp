@@ -48,6 +48,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
+interface nsIDOMStorage;
 
 [scriptable, uuid(c471d440-004b-4c50-a6f2-747db5f443b6)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -2005,6 +2006,14 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void removeManuallyManagedState(in nsIDOMElement element,
                                   in AString state);
+
+  /**
+   * Returns usage data for a given storage object.
+   *
+   * @param aStorage
+   *    The storage object to get usage data for.
+   */
+  int64_t getStorageUsage(in nsIDOMStorage aStorage);
 
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;

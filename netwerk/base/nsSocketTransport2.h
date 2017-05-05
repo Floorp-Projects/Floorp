@@ -20,6 +20,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIDNSListener.h"
 #include "nsIClassInfo.h"
+#include "TCPFastOpen.h"
 #include "mozilla/net/DNS.h"
 #include "nsASocketHandler.h"
 #include "mozilla/Telemetry.h"
@@ -209,6 +210,7 @@ private:
     {
     public:
       explicit PRFileDescAutoLock(nsSocketTransport *aSocketTransport,
+                                  bool aAlsoDuringFastOpen,
                                   nsresult *aConditionWhileLocked = nullptr)
         : mSocketTransport(aSocketTransport)
         , mFd(nullptr)
@@ -221,7 +223,11 @@ private:
             return;
           }
         }
-        mFd = mSocketTransport->GetFD_Locked();
+        if (!aAlsoDuringFastOpen) {
+          mFd = mSocketTransport->GetFD_Locked();
+        } else {
+          mFd = mSocketTransport->GetFD_LockedAlsoDuringFastOpen();
+        }
       }
       ~PRFileDescAutoLock() {
         MutexAutoLock lock(mSocketTransport->mLock);
@@ -379,6 +385,9 @@ private:
     LockedPRFileDesc mFD;
     nsrefcnt         mFDref;       // mFD is closed when mFDref goes to zero.
     bool             mFDconnected; // mFD is available to consumer when TRUE.
+    bool             mFDFastOpenInProgress; // Fast Open is in progress, so
+                                            // socket available for some
+                                            // operations.
 
     // A delete protector reference to gSocketTransportService held for lifetime
     // of 'this'. Sometimes used interchangably with gSocketTransportService due
@@ -405,7 +414,9 @@ private:
     // mFD access methods: called with mLock held.
     //
     PRFileDesc *GetFD_Locked();
+    PRFileDesc *GetFD_LockedAlsoDuringFastOpen();
     void        ReleaseFD_Locked(PRFileDesc *fd);
+    bool FastOpenInProgress();
 
     //
     // stream state changes (called outside mLock):
@@ -462,6 +473,10 @@ private:
     int32_t mKeepaliveIdleTimeS;
     int32_t mKeepaliveRetryIntervalS;
     int32_t mKeepaliveProbeCount;
+
+    // A Fast Open callback.
+    TCPFastOpen *mFastOpenCallback;
+    bool mFastOpenLayerHasBufferedData;
 };
 
 } // namespace net

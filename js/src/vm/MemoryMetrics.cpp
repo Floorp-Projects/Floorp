@@ -272,6 +272,7 @@ struct StatsClosure
     SourceSet seenSources;
     wasm::Metadata::SeenSet wasmSeenMetadata;
     wasm::ShareableBytes::SeenSet wasmSeenBytes;
+    wasm::Code::SeenSet wasmSeenCode;
     wasm::Table::SeenSet wasmSeenTables;
     bool anonymize;
 
@@ -285,6 +286,7 @@ struct StatsClosure
         return seenSources.init() &&
                wasmSeenMetadata.init() &&
                wasmSeenBytes.init() &&
+               wasmSeenCode.init() &&
                wasmSeenTables.init();
     }
 };
@@ -475,6 +477,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
             module.addSizeOfMisc(rtStats->mallocSizeOf_,
                                  &closure->wasmSeenMetadata,
                                  &closure->wasmSeenBytes,
+                                 &closure->wasmSeenCode,
                                  &info.objectsNonHeapCodeWasm,
                                  &info.objectsMallocHeapMisc);
         } else if (obj->is<WasmInstanceObject>()) {
@@ -484,6 +487,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
             instance.addSizeOfMisc(rtStats->mallocSizeOf_,
                                    &closure->wasmSeenMetadata,
                                    &closure->wasmSeenBytes,
+                                   &closure->wasmSeenCode,
                                    &closure->wasmSeenTables,
                                    &info.objectsNonHeapCodeWasm,
                                    &info.objectsMallocHeapMisc);

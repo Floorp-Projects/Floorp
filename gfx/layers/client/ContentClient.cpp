@@ -102,7 +102,7 @@ ContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << aPrefix;
   aStream << nsPrintfCString("ContentClient (0x%p)", this).get();
 
-  if (profiler_feature_active("displaylistdump")) {
+  if (profiler_feature_active(ProfilerFeature::DisplayListDump)) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
 

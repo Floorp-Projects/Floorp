@@ -38,11 +38,12 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
                              const char16_t* aString, uint32_t aLength,
-                             const uint32_t aFlags,
+                             const gfx::ShapedTextFlags aFlags,
+                             const nsTextFrameUtils::Flags aFlags2,
                              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                              bool aOwnsFactory)
 {
-  NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
+  NS_ASSERTION(!(aFlags & gfx::ShapedTextFlags::TEXT_IS_8BIT),
                "didn't expect text to be marked as 8-bit here");
 
   void *storage = AllocateStorageForTextRun(sizeof(nsTransformedTextRun), aLength);
@@ -52,7 +53,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
 
   RefPtr<nsTransformedTextRun> result =
     new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
-                                       aString, aLength, aFlags,
+                                       aString, aLength, aFlags, aFlags2,
                                        Move(aStyles), aOwnsFactory);
   return result.forget();
 }
@@ -102,19 +103,23 @@ nsTransformedTextRun::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
+                                          gfxFontGroup* aFontGroup,
+                                          gfx::ShapedTextFlags aFlags,
+                                          nsTextFrameUtils::Flags aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
   return nsTransformedTextRun::Create(aParams, this, aFontGroup,
-                                      aString, aLength, aFlags, Move(aStyles),
+                                      aString, aLength, aFlags, aFlags2, Move(aStyles),
                                       aOwnsFactory);
 }
 
 already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
+                                          gfxFontGroup* aFontGroup,
+                                          gfx::ShapedTextFlags aFlags,
+                                          nsTextFrameUtils::Flags aFlags2,
                                           nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
@@ -122,7 +127,9 @@ nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLeng
   // for these rarely used features
   NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
-                     aFlags & ~(gfxFontGroup::TEXT_IS_PERSISTENT | gfxFontGroup::TEXT_IS_8BIT),
+                     aFlags & ~(gfx::ShapedTextFlags::TEXT_IS_PERSISTENT |
+                                 gfx::ShapedTextFlags::TEXT_IS_8BIT),
+                     aFlags2,
                      Move(aStyles), aOwnsFactory);
 }
 
@@ -213,14 +220,15 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 }
 
 gfxTextRunFactory::Parameters
-GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
+GetParametersForInner(nsTransformedTextRun* aTextRun,
+                      gfx::ShapedTextFlags* aFlags,
                       DrawTarget* aRefDrawTarget)
 {
   gfxTextRunFactory::Parameters params =
     { aRefDrawTarget, nullptr, nullptr,
       nullptr, 0, aTextRun->GetAppUnitsPerDevUnit()
     };
-  *aFlags = aTextRun->GetFlags() & ~gfxFontGroup::TEXT_IS_PERSISTENT;
+  *aFlags = aTextRun->GetFlags() & ~gfx::ShapedTextFlags::TEXT_IS_PERSISTENT;
   return params;
 }
 
@@ -660,7 +668,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                                      &canBreakBeforeArray,
                                      &styleArray);
 
-  uint32_t flags;
+  gfx::ShapedTextFlags flags;
   gfxTextRunFactory::Parameters innerParams =
     GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
@@ -672,12 +680,13 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, fontGroup, flags, Move(styleArray), false);
+        &innerParams, fontGroup, flags, nsTextFrameUtils::Flags(),
+        Move(styleArray), false);
     child = transformedChild.get();
   } else {
     cachedChild = fontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags, aMFR);
+        &innerParams, flags, nsTextFrameUtils::Flags(), aMFR);
     child = cachedChild.get();
   }
   if (!child)

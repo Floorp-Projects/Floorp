@@ -259,7 +259,7 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
   if (!existingData) {
     RestyleData* rd =
       new RestyleData(aRestyleHint, aMinChangeHint, aRestyleHintData);
-    if (profiler_feature_active("restyle")) {
+    if (profiler_feature_active(ProfilerFeature::Restyle)) {
       rd->mBacktrace = profiler_get_backtrace();
     }
     mPendingRestyles.Put(aElement, rd);

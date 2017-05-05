@@ -171,3 +171,36 @@ add_task(function* test_CtoPtoC_bc_small() {
   yield BrowserTestUtils.removeTab(tab1);
   yield BrowserTestUtils.removeTab(tab2);
 });
+
+// Multipart Blob childA-parent-childB.
+add_task(function* test_CtoPtoC_multipart() {
+  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
+  let browser1 = gBrowser.getBrowserForTab(tab1);
+
+  let blob = yield ContentTask.spawn(browser1, null, function() {
+    return new Blob(["!"]);
+  });
+
+  ok(blob, "CtoPtoC-,ultipart: We have a blob!");
+  is(blob.size, "!".length, "CtoPtoC-multipart: The size matches");
+
+  let newBlob = new Blob(["world", blob]);
+
+  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
+  let browser2 = gBrowser.getBrowserForTab(tab2);
+
+  let status = yield ContentTask.spawn(browser2, newBlob, function(blob) {
+    return new Promise(resolve => {
+      let fr = new content.FileReader();
+      fr.readAsText(new Blob(["hello ", blob]));
+      fr.onloadend = function() {
+        resolve(fr.result == "hello world!");
+      }
+    });
+  });
+
+  ok(status, "CtoPtoC-multipart: Data match!");
+
+  yield BrowserTestUtils.removeTab(tab1);
+  yield BrowserTestUtils.removeTab(tab2);
+});

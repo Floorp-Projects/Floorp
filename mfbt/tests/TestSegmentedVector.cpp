@@ -269,11 +269,93 @@ void TestSegmentCapacitiesAndAlignments()
   SegmentedVector<mozilla::AlignedElem<16>, 100> v7(100);
 }
 
+void
+TestIterator()
+{
+  SegmentedVector<int, 4> v;
+
+  auto iter = v.Iter();
+  auto iterFromLast = v.IterFromLast();
+  MOZ_RELEASE_ASSERT(iter.Done());
+  MOZ_RELEASE_ASSERT(iterFromLast.Done());
+
+  gDummy = v.Append(1);
+  iter = v.Iter();
+  iterFromLast = v.IterFromLast();
+  MOZ_RELEASE_ASSERT(!iter.Done());
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+
+  iter.Next();
+  MOZ_RELEASE_ASSERT(iter.Done());
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(iterFromLast.Done());
+
+  iter = v.Iter();
+  iterFromLast = v.IterFromLast();
+  MOZ_RELEASE_ASSERT(!iter.Done());
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+
+  iter.Prev();
+  MOZ_RELEASE_ASSERT(iter.Done());
+  iterFromLast.Prev();
+  MOZ_RELEASE_ASSERT(iterFromLast.Done());
+
+  // Append enough entries to ensure we have at least two segments.
+  gDummy = v.Append(1);
+  gDummy = v.Append(1);
+  gDummy = v.Append(1);
+  gDummy = v.Append(1);
+
+  iter = v.Iter();
+  iterFromLast = v.IterFromLast();
+  MOZ_RELEASE_ASSERT(!iter.Done());
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+
+  iter.Prev();
+  MOZ_RELEASE_ASSERT(iter.Done());
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(iterFromLast.Done());
+
+  iter = v.Iter();
+  iterFromLast = v.IterFromLast();
+  MOZ_RELEASE_ASSERT(!iter.Done());
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+
+  iter.Next();
+  MOZ_RELEASE_ASSERT(!iter.Done());
+  iterFromLast.Prev();
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+
+  iter = v.Iter();
+  iterFromLast = v.IterFromLast();
+  int count = 0;
+  for (; !iter.Done() && !iterFromLast.Done(); iter.Next(), iterFromLast.Prev()) {
+    ++count;
+  }
+  MOZ_RELEASE_ASSERT(count == 5);
+
+  // Modify the vector while using the iterator.
+  iterFromLast = v.IterFromLast();
+  gDummy = v.Append(2);
+  gDummy = v.Append(3);
+  gDummy = v.Append(4);
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(!iterFromLast.Done());
+  MOZ_RELEASE_ASSERT(iterFromLast.Get() == 2);
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(iterFromLast.Get() == 3);
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(iterFromLast.Get() == 4);
+  iterFromLast.Next();
+  MOZ_RELEASE_ASSERT(iterFromLast.Done());
+}
+
 int main(void)
 {
   TestBasics();
   TestConstructorsAndDestructors();
   TestSegmentCapacitiesAndAlignments();
+  TestIterator();
 
   return 0;
 }

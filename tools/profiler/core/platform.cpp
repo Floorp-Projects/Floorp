@@ -253,67 +253,47 @@ NewSamplerThread(PSLockRef aLock, uint32_t aGeneration, double aInterval);
 class ActivePS
 {
 private:
-  bool HasFeature(const char** aFeatures, uint32_t aFeatureCount,
-                  const char* aFeature)
+  static uint32_t AdjustFeatures(uint32_t aFeatures, uint32_t aFilterCount)
   {
-    for (size_t i = 0; i < aFeatureCount; i++) {
-      if (strcmp(aFeatures[i], aFeature) == 0) {
-        return true;
-      }
+    // Filter out any features unavailable in this platform/configuration.
+    aFeatures &= profiler_get_available_features();
+
+#if defined(PROFILE_JAVA)
+    if (!mozilla::jni::IsFennec()) {
+      aFeatures &= ~ProfilerFeature::Java;
     }
-    return false;
+#endif
+
+    // Always enable ProfilerFeature::Threads if we have a filter, because
+    // users sometimes ask to filter by a list of threads but forget to
+    // explicitly specify ProfilerFeature::Threads.
+    if (aFilterCount > 0) {
+      aFeatures |= ProfilerFeature::Threads;
+    }
+
+    return aFeatures;
   }
 
   ActivePS(PSLockRef aLock, int aEntries, double aInterval,
-           const char** aFeatures, uint32_t aFeatureCount,
-           const char** aFilters, uint32_t aFilterCount)
+           uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount)
     : mGeneration(sNextGeneration++)
     , mEntries(aEntries)
     , mInterval(aInterval)
-#define HAS_FEATURE(feature) HasFeature(aFeatures, aFeatureCount, feature)
-    , mFeatureDisplayListDump(HAS_FEATURE("displaylistdump"))
-    , mFeatureGPU(HAS_FEATURE("gpu"))
-#if defined(PROFILE_JAVA)
-    , mFeatureJava(mozilla::jni::IsFennec() && HAS_FEATURE("java"))
-#else
-    , mFeatureJava(false)
-#endif
-    , mFeatureJS(HAS_FEATURE("js"))
-    , mFeatureLayersDump(HAS_FEATURE("layersdump"))
-    , mFeatureLeaf(HAS_FEATURE("leaf"))
-    , mFeatureMainThreadIO(HAS_FEATURE("mainthreadio"))
-    , mFeatureMemory(HAS_FEATURE("memory"))
-    , mFeaturePrivacy(HAS_FEATURE("privacy"))
-    , mFeatureRestyle(HAS_FEATURE("restyle"))
-    , mFeatureStackWalk(HAS_FEATURE("stackwalk"))
-#ifdef MOZ_TASK_TRACER
-    , mFeatureTaskTracer(HAS_FEATURE("tasktracer"))
-#else
-    , mFeatureTaskTracer(false)
-#endif
-      // Profile non-main threads if we have a filter, because users sometimes
-      // ask to filter by a list of threads but forget to explicitly request.
-    , mFeatureThreads(HAS_FEATURE("threads") || aFilterCount > 0)
-#undef HAS_FEATURE
+    , mFeatures(AdjustFeatures(aFeatures, aFilterCount))
     , mBuffer(new ProfileBuffer(aEntries))
       // The new sampler thread doesn't start sampling immediately because the
       // main loop within Run() is blocked until this function's caller unlocks
       // gPSMutex.
     , mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval))
-    , mInterposeObserver(mFeatureMainThreadIO
+    , mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
                          ? new mozilla::ProfilerIOInterposeObserver()
                          : nullptr)
+#undef HAS_FEATURE
     , mIsPaused(false)
 #if defined(GP_OS_linux)
     , mWasPaused(false)
 #endif
   {
-    // Deep copy aFeatures.
-    MOZ_ALWAYS_TRUE(mFeatures.resize(aFeatureCount));
-    for (uint32_t i = 0; i < aFeatureCount; ++i) {
-      mFeatures[i] = aFeatures[i];
-    }
-
     // Deep copy aFilters.
     MOZ_ALWAYS_TRUE(mFilters.resize(aFilterCount));
     for (uint32_t i = 0; i < aFilterCount; ++i) {
@@ -362,11 +342,11 @@ private:
 
 public:
   static void Create(PSLockRef aLock, int aEntries, double aInterval,
-                     const char** aFeatures, uint32_t aFeatureCount,
+                     uint32_t aFeatures,
                      const char** aFilters, uint32_t aFilterCount)
   {
     sInstance = new ActivePS(aLock, aEntries, aInterval, aFeatures,
-                             aFeatureCount, aFilters, aFilterCount);
+                             aFilters, aFilterCount);
   }
 
   static MOZ_MUST_USE SamplerThread* Destroy(PSLockRef aLock)
@@ -395,7 +375,7 @@ public:
 
     MOZ_RELEASE_ASSERT(sInstance);
 
-    return ((aInfo->IsMainThread() || sInstance->mFeatureThreads) &&
+    return ((aInfo->IsMainThread() || FeatureThreads(aLock)) &&
             sInstance->ThreadSelected(aInfo->Name()));
   }
 
@@ -405,23 +385,19 @@ public:
 
   PS_GET(double, Interval)
 
-  PS_GET(const Vector<std::string>&, Features)
+  PS_GET(uint32_t, Features)
+
+  #define PS_GET_FEATURE(n_, str_, Name_) \
+    static bool Feature##Name_(PSLockRef) \
+    { \
+      return ProfilerFeature::Has##Name_(sInstance->mFeatures); \
+    }
+
+  PROFILER_FOR_EACH_FEATURE(PS_GET_FEATURE)
+
+  #undef PS_GET_FEATURE
 
   PS_GET(const Vector<std::string>&, Filters)
-
-  PS_GET(bool, FeatureDisplayListDump)
-  PS_GET(bool, FeatureGPU)
-  PS_GET(bool, FeatureJava)
-  PS_GET(bool, FeatureJS)
-  PS_GET(bool, FeatureLayersDump)
-  PS_GET(bool, FeatureLeaf)
-  PS_GET(bool, FeatureMainThreadIO)
-  PS_GET(bool, FeatureMemory)
-  PS_GET(bool, FeaturePrivacy)
-  PS_GET(bool, FeatureRestyle)
-  PS_GET(bool, FeatureStackWalk)
-  PS_GET(bool, FeatureTaskTracer)
-  PS_GET(bool, FeatureThreads)
 
   static ProfileBuffer* Buffer(PSLockRef) { return sInstance->mBuffer.get(); }
 
@@ -462,25 +438,10 @@ private:
   const double mInterval;
 
   // The profile features that are enabled.
-  Vector<std::string> mFeatures;
+  const uint32_t mFeatures;
 
   // Substrings of names of threads we want to profile.
   Vector<std::string> mFilters;
-
-  // Configuration flags derived from mFeatures.
-  const bool mFeatureDisplayListDump;
-  const bool mFeatureGPU;
-  const bool mFeatureJava;
-  const bool mFeatureJS;
-  const bool mFeatureLayersDump;
-  const bool mFeatureLeaf;
-  const bool mFeatureMainThreadIO;
-  const bool mFeatureMemory;
-  const bool mFeaturePrivacy;
-  const bool mFeatureRestyle;
-  const bool mFeatureStackWalk;
-  const bool mFeatureTaskTracer;
-  const bool mFeatureThreads;
 
   // The buffer into which all samples are recorded. Always used in conjunction
   // with CorePS::m{Live,Dead}Threads.
@@ -1998,8 +1959,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 }
 
 static void
-NotifyProfilerStarted(const int aEntries, double aInterval,
-                      const char** aFeatures, uint32_t aFeatureCount,
+NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
   if (!CanNotifyObservers()) {
@@ -2011,18 +1971,13 @@ NotifyProfilerStarted(const int aEntries, double aInterval,
     return;
   }
 
-  nsTArray<nsCString> featuresArray;
-  for (size_t i = 0; i < aFeatureCount; ++i) {
-    featuresArray.AppendElement(aFeatures[i]);
-  }
-
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
   }
 
   nsCOMPtr<nsIProfilerStartParams> params =
-    new nsProfilerStartParams(aEntries, aInterval, featuresArray, filtersArray);
+    new nsProfilerStartParams(aEntries, aInterval, aFeatures, filtersArray);
 
   os->NotifyObservers(params, "profiler-started", nullptr);
 }
@@ -2044,7 +1999,7 @@ NotifyObservers(const char* aTopic)
 
 static void
 locked_profiler_start(PSLockRef aLock, const int aEntries, double aInterval,
-                      const char** aFeatures, uint32_t aFeatureCount,
+                      uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount);
 
 void
@@ -2054,18 +2009,19 @@ profiler_init(void* aStackTop)
 
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
-  const char* features[] = { "js"
+  uint32_t features =
 #if defined(PROFILE_JAVA)
-                           , "java"
+                      ProfilerFeature::Java |
 #endif
-                           , "leaf"
+                      ProfilerFeature::JS |
+                      ProfilerFeature::Leaf |
 #if defined(HAVE_NATIVE_UNWIND)
-                           , "stackwalk"
+                      ProfilerFeature::StackWalk |
 #endif
-                           , "threads"
-                           };
+                      ProfilerFeature::Threads |
+                      0;
 
-  const char* threadFilters[] = { "GeckoMain", "Compositor" };
+  const char* filters[] = { "GeckoMain", "Compositor" };
 
   if (getenv("MOZ_PROFILER_HELP")) {
     PrintUsageThenExit(0); // terminates execution
@@ -2129,16 +2085,14 @@ profiler_init(void* aStackTop)
       }
     }
 
-    locked_profiler_start(lock, entries, interval,
-                          features, MOZ_ARRAY_LENGTH(features),
-                          threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
+    locked_profiler_start(lock, entries, interval, features,
+                          filters, MOZ_ARRAY_LENGTH(filters));
   }
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
   NotifyProfilerStarted(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                        features, MOZ_ARRAY_LENGTH(features),
-                        threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
+                        features, filters, MOZ_ARRAY_LENGTH(filters));
 }
 
 static void
@@ -2216,8 +2170,7 @@ profiler_get_profile(double aSinceTime)
 }
 
 void
-profiler_get_start_params(int* aEntries, double* aInterval,
-                          mozilla::Vector<const char*>* aFeatures,
+profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
                           mozilla::Vector<const char*>* aFilters)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -2233,19 +2186,14 @@ profiler_get_start_params(int* aEntries, double* aInterval,
   if (!ActivePS::Exists(lock)) {
     *aEntries = 0;
     *aInterval = 0;
-    aFeatures->clear();
+    *aFeatures = 0;
     aFilters->clear();
     return;
   }
 
   *aEntries = ActivePS::Entries(lock);
   *aInterval = ActivePS::Interval(lock);
-
-  const Vector<std::string>& features = ActivePS::Features(lock);
-  MOZ_ALWAYS_TRUE(aFeatures->resize(features.length()));
-  for (size_t i = 0; i < features.length(); ++i) {
-    (*aFeatures)[i] = features[i].c_str();
-  }
+  *aFeatures = ActivePS::Features(lock);
 
   const Vector<std::string>& filters = ActivePS::Filters(lock);
   MOZ_ALWAYS_TRUE(aFilters->resize(filters.length()));
@@ -2298,46 +2246,31 @@ profiler_save_profile_to_file(const char* aFilename)
   locked_profiler_save_profile_to_file(lock, aFilename);
 }
 
-const char**
-profiler_get_features()
+uint32_t
+profiler_get_available_features()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  static const char* features[] = {
-#if defined(HAVE_NATIVE_UNWIND)
-    // Walk the C++ stack.
-    "stackwalk",
+  uint32_t features = 0;
+
+  #define ADD_FEATURE(n_, str_, Name_) ProfilerFeature::Set##Name_(features);
+
+  // Add all the possible features.
+  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE)
+
+  #undef ADD_FEATURE
+
+  // Now remove features not supported on this platform/configuration.
+#if !defined(PROFILE_JAVA)
+  ProfilerFeature::ClearJava(features);
 #endif
-    // Include the C++ leaf node if not stackwalking. DevTools
-    // profiler doesn't want the native addresses.
-    "leaf",
-    // Profile Java code (Android only).
-    "java",
-    // Tell the JS engine to emit pseudostack entries in the prologue/epilogue.
-    "js",
-    // GPU Profiling (may not be supported by the GL)
-    "gpu",
-    // Profile the registered secondary threads.
-    "threads",
-    // Do not include user-identifiable information
-    "privacy",
-    // Dump the layer tree with the textures.
-    "layersdump",
-    // Dump the display list with the textures.
-    "displaylistdump",
-    // Add main thread I/O to the profile
-    "mainthreadio",
-    // Add RSS collection
-    "memory",
-    // Restyle profiling.
-    "restyle",
-#ifdef MOZ_TASK_TRACER
-    // Start profiling with feature TaskTracer.
-    "tasktracer",
+#if !defined(HAVE_NATIVE_UNWIND)
+  ProfilerFeature::ClearStackWalk(features);
 #endif
-    nullptr
-  };
+#if !defined(MOZ_TASK_TRACER)
+  ProfilerFeature::ClearTaskTracer(features);
+#endif
 
   return features;
 }
@@ -2366,16 +2299,23 @@ profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
 
 static void
 locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
-                      const char** aFeatures, uint32_t aFeatureCount,
+                      uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
   if (LOG_TEST) {
     LOG("locked_profiler_start");
     LOG("- entries  = %d", aEntries);
     LOG("- interval = %.2f", aInterval);
-    for (uint32_t i = 0; i < aFeatureCount; i++) {
-      LOG("- feature  = %s", aFeatures[i]);
-    }
+
+    #define LOG_FEATURE(n_, str_, Name_) \
+      if (ProfilerFeature::Has##Name_(aFeatures)) { \
+        LOG("- feature  = %s", str_); \
+      }
+
+    PROFILER_FOR_EACH_FEATURE(LOG_FEATURE)
+
+    #undef LOG_FEATURE
+
     for (uint32_t i = 0; i < aFilterCount; i++) {
       LOG("- threads  = %s", aFilters[i]);
     }
@@ -2388,8 +2328,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   int entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
-  ActivePS::Create(aLock, entries, interval, aFeatures, aFeatureCount,
-                   aFilters, aFilterCount);
+  ActivePS::Create(aLock, entries, interval, aFeatures, aFilters, aFilterCount);
 
   // Set up profiling for each registered thread, if appropriate.
   Thread::tid_t tid = Thread::GetCurrentId();
@@ -2434,8 +2373,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 }
 
 void
-profiler_start(int aEntries, double aInterval,
-               const char** aFeatures, uint32_t aFeatureCount,
+profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
                const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_start");
@@ -2456,7 +2394,7 @@ profiler_start(int aEntries, double aInterval,
       samplerThread = locked_profiler_stop(lock);
     }
 
-    locked_profiler_start(lock, aEntries, aInterval, aFeatures, aFeatureCount,
+    locked_profiler_start(lock, aEntries, aInterval, aFeatures,
                           aFilters, aFilterCount);
   }
 
@@ -2466,7 +2404,7 @@ profiler_start(int aEntries, double aInterval,
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
-  NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
+  NotifyProfilerStarted(aEntries, aInterval, aFeatures,
                         aFilters, aFilterCount);
 }
 
@@ -2614,7 +2552,7 @@ profiler_resume()
 }
 
 bool
-profiler_feature_active(const char* aName)
+profiler_feature_active(uint32_t aFeature)
 {
   // This function runs both on and off the main thread.
 
@@ -2626,23 +2564,7 @@ profiler_feature_active(const char* aName)
     return false;
   }
 
-  if (strcmp(aName, "displaylistdump") == 0) {
-    return ActivePS::FeatureDisplayListDump(lock);
-  }
-
-  if (strcmp(aName, "gpu") == 0) {
-    return ActivePS::FeatureGPU(lock);
-  }
-
-  if (strcmp(aName, "layersdump") == 0) {
-    return ActivePS::FeatureLayersDump(lock);
-  }
-
-  if (strcmp(aName, "restyle") == 0) {
-    return ActivePS::FeatureRestyle(lock);
-  }
-
-  return false;
+  return !!(ActivePS::Features(lock) & aFeature);
 }
 
 bool

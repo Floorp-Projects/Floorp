@@ -178,6 +178,7 @@ EXPORTS.mozilla.net += [
     'MemoryDownloader.h',
     'Predictor.h',
     'ReferrerPolicy.h',
+    'TCPFastOpen.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -247,6 +248,7 @@ UNIFIED_SOURCES += [
     'SimpleBuffer.cpp',
     'SimpleChannel.cpp',
     'StreamingProtocolService.cpp',
+    'TCPFastOpenLayer.cpp',
     'ThrottleQueue.cpp',
     'ThrottlingService.cpp',
     'Tickler.cpp',

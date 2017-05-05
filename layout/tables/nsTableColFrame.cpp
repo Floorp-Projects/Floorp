@@ -122,6 +122,14 @@ nsTableColFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+void
+nsTableColFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
+{
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
+}
+
 int32_t nsTableColFrame::GetSpan()
 {
   return StyleTable()->mSpan;

@@ -213,9 +213,6 @@ class CodeGeneratorShared : public LElementVisitor
     // For arguments to the current function.
     inline int32_t ArgToStackOffset(int32_t slot) const;
 
-    // For the callee of the current function.
-    inline int32_t CalleeStackOffset() const;
-
     inline int32_t SlotToStackOffset(int32_t slot) const;
     inline int32_t StackOffsetToSlot(int32_t offset) const;
 
