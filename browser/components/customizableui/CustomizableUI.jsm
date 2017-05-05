@@ -29,6 +29,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "gELS",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure", "browser.photon.structure.enabled", false,
+  (pref, oldValue, newValue) => {
+    CustomizableUIInternal._updateAreasForPhoton();
+    CustomizableUIInternal.notifyListeners("onPhotonChanged");
+  });
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -230,7 +235,6 @@ var CustomizableUIInternal = {
 
     gDefaultPanelPlacements = panelPlacements;
     this._updateAreasForPhoton();
-    Services.prefs.addObserver("browser.photon.structure.enabled", this);
 
     let navbarPlacements = [
       "urlbar-container",
@@ -298,7 +302,7 @@ var CustomizableUIInternal = {
   },
 
   _updateAreasForPhoton() {
-    if (Services.prefs.getBoolPref("browser.photon.structure.enabled")) {
+    if (gPhotonStructure) {
       if (gAreas.has(CustomizableUI.AREA_PANEL)) {
         this.unregisterArea(CustomizableUI.AREA_PANEL, true);
       }
@@ -322,14 +326,6 @@ var CustomizableUIInternal = {
         defaultPlacements: placementsToUse,
       }, true);
       PanelWideWidgetTracker.init();
-    }
-  },
-
-  observe(subject, topic, data) {
-    // Currently only used for pref change observers.
-    if (data == "browser.photon.structure.enabled") {
-      this._updateAreasForPhoton();
-      this.notifyListeners("onPhotonChanged");
     }
   },
 
@@ -3755,7 +3751,7 @@ this.CustomizableUI = {
     while (node && !place) {
       if (node.localName == "toolbar")
         place = "toolbar";
-      else if (node.id == CustomizableUI.AREA_PANEL)
+      else if (node.id == CustomizableUI.AREA_PANEL || node.id == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL)
         place = "panel";
       else if (node.id == "customization-palette")
         place = "palette";
