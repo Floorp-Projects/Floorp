@@ -25,7 +25,7 @@ fails-if(!stylo) needs-focus selectors-4/focus-within-shadow-001.html
 #### CSS Values 3 ####################################################
 
 # Fuzzy
-fuzzy-if(OSX,40,6) fails-if(stylo) css-values-3/ch-unit-001.html
+fuzzy-if(OSX,40,6) css-values-3/ch-unit-001.html
 
 # Bug 435426
 fails-if(!stylo) css-values-3/attr-*.html

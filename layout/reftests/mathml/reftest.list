@@ -3,8 +3,8 @@
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
-fails-if(stylo) == dir-6.html dir-6-ref.html
-fails-if(stylo) == dir-6a.html dir-6a-ref.html
+== dir-6.html dir-6-ref.html
+== dir-6a.html dir-6a-ref.html
 == dir-7.html dir-7-ref.html
 fails-if(!stylo) == dir-8.html dir-8-ref.html
 fails-if(!stylo) == dir-9.html dir-9-ref.html # Bug 787215
@@ -41,7 +41,7 @@ random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-r
 == mfenced-7.html mfenced-7-ref.html
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
-fails-if(stylo) == mfenced-10.html mfenced-10-ref.html
+== mfenced-10.html mfenced-10-ref.html
 fails-if(gtkWidget&&!stylo) == mfenced-11.html mfenced-11-ref.html # bug 670592, bug 1328771
 fails-if(gtkWidget&&!stylo) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
@@ -87,14 +87,14 @@ fails-if(!stylo) == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
 == stretchy-largeop-2.html stretchy-largeop-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
-fails-if(stylo) == table-width-1.xhtml table-width-1-ref.xhtml
+== table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
 == table-width-3.html table-width-3-ref.html
 == table-width-4.html table-width-4-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
-fails-if(stylo) == mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html
-fails-if(stylo) == mtable-align-negative-rownumber-2.html mtable-align-negative-rownumber-2-ref.html
+== mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html
+== mtable-align-negative-rownumber-2.html mtable-align-negative-rownumber-2-ref.html
 != embellished-op-1-1.html embellished-op-1-1-ref.html
 != embellished-op-1-2.html embellished-op-1-2-ref.html
 != embellished-op-1-3.html embellished-op-1-3-ref.html
@@ -127,7 +127,7 @@ fails-if(gtkWidget&&!stylo) random-if(winWidget) == semantics-1.xhtml semantics-
 != mathbackground-3.xml mathbackground-3-ref.xml
 == mathbackground-4.xml mathbackground-4-ref.xml
 == mstyle-1.xhtml mstyle-1-ref.xhtml
-fails-if(stylo) == mstyle-2.xhtml mstyle-2-ref.xhtml
+== mstyle-2.xhtml mstyle-2-ref.xhtml
 == mstyle-3.xhtml mstyle-3-ref.xhtml
 == mstyle-4.xhtml mstyle-4-ref.xhtml
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
@@ -163,26 +163,26 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 == positive-namedspace.html positive-namedspace-ref.html
-fails-if(stylo) == mtable-align-whitespace.html mtable-align-whitespace-ref.html
+== mtable-align-whitespace.html mtable-align-whitespace-ref.html
 == mtable-width.html mtable-width-ref.html
-fails-if(stylo) == mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
-fails-if(stylo) == mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
-fails-if(stylo) == mtable-rowalign-single-mtr.html mtable-rowalign-single-ref.html
-fails-if(stylo) == mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-ref.html
-fails-if(stylo) == mtable-rowalign-single-mtable.html mtable-rowalign-single-ref.html
-fails-if(stylo) == mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-ref.html
-fails-if(stylo) == mtable-rowalign-multi-mtable.html mtable-rowalign-multi-ref.html
-fails-if(stylo) == mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-ref.html
-fails-if(stylo) == mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-ref.html
-fails-if(stylo) == mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-ref.html
-fails-if(stylo) == mtable-columnalign-single-mtr.html mtable-columnalign-single-ref.html
-fails-if(stylo) == mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-ref.html
-fails-if(stylo) == mtable-columnalign-single-mtable.html mtable-columnalign-single-ref.html
-fails-if(stylo) == mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-ref.html
-fails-if(stylo) == mtable-columnalign-multi-mtr.html mtable-columnalign-multi-ref.html
-fails-if(stylo) == mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
-fails-if(stylo) == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
-fails-if(stylo) == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
+== mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
+== mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
+== mtable-rowalign-single-mtr.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtable.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-ref.html
+== mtable-rowalign-multi-mtable.html mtable-rowalign-multi-ref.html
+== mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-ref.html
+== mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-ref.html
+== mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-ref.html
+== mtable-columnalign-single-mtr.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtable.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-ref.html
+== mtable-columnalign-multi-mtr.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
@@ -306,28 +306,28 @@ fails-if(stylo) == mathscript-2.html mathscript-2-ref.html
 == mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
 == munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
 == munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html
-fails-if(stylo) == columnlines-1a.html columnlines-1-ref.html
-fails-if(stylo) != columnlines-1b.html columnlines-1-ref.html
-fails-if(stylo) != columnlines-1c.html columnlines-1-ref.html
+== columnlines-1a.html columnlines-1-ref.html
+!= columnlines-1b.html columnlines-1-ref.html
+!= columnlines-1c.html columnlines-1-ref.html
 == columnlines-2a.html columnlines-2-ref.html
 == columnlines-2b.html columnlines-2-ref.html
 != columnlines-3-1.html columnlines-3-1-ref.html
 == columnlines-3-2.html columnlines-3-2-ref.html
-fails-if(stylo) == rowlines-1a.html rowlines-1-ref.html
-fails-if(stylo) != rowlines-1b.html rowlines-1-ref.html
-fails-if(stylo) != rowlines-1c.html rowlines-1-ref.html
-fails-if(stylo) == rowlines-2a.html rowlines-2-ref.html
-fails-if(stylo) == rowlines-2b.html rowlines-2-ref.html
+== rowlines-1a.html rowlines-1-ref.html
+!= rowlines-1b.html rowlines-1-ref.html
+!= rowlines-1c.html rowlines-1-ref.html
+== rowlines-2a.html rowlines-2-ref.html
+== rowlines-2b.html rowlines-2-ref.html
 != rowlines-3-1.html rowlines-3-1-ref.html
 random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
-fails-if(stylo) == tablespacing-1.html tablespacing-1-ref.html
+== tablespacing-1.html tablespacing-1-ref.html
 == tablespacing-2.html tablespacing-2-ref.html
 == tablespacing-3.html tablespacing-3-ref.html
 == tablespacing-4.html tablespacing-4-ref.html
-fails-if(stylo) == tablespacing-5.html tablespacing-5-ref.html
-fails-if(stylo) == tablespacing-5a.html tablespacing-5a-ref.html
-fails-if(stylo) == tablespacing-6.html tablespacing-6-ref.html
-fails-if(stylo) == tablespacing-7.html tablespacing-7-ref.html
+== tablespacing-5.html tablespacing-5-ref.html
+== tablespacing-5a.html tablespacing-5a-ref.html
+== tablespacing-6.html tablespacing-6-ref.html
+== tablespacing-7.html tablespacing-7-ref.html
 != tablespacing-8a.html tablespacing-8-ref.html
 != tablespacing-8b.html tablespacing-8-ref.html
 != op-dict-1.html op-dict-1-ref.html

@@ -20,6 +20,7 @@ class nsIPrincipal;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class PostTraversalTask;
 namespace css {
 class FontFamilyListRefCnt;
 } // namespace css
@@ -36,6 +37,7 @@ class FontFaceSet final : public DOMEventTargetHelper
                         , public nsIDOMEventListener
                         , public nsICSSLoaderObserver
 {
+  friend class mozilla::PostTraversalTask;
   friend class UserFontSet;
 
 public:
@@ -92,7 +94,7 @@ public:
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
-                                   gfxSparseBitSet* aUnicodeRanges,
+                                   gfxCharacterMap* aUnicodeRanges,
                                    uint8_t aFontDisplay) override;
 
   private:
@@ -302,6 +304,9 @@ private:
                              const nsAString& aText,
                              nsTArray<FontFace*>& aFontFaces,
                              mozilla::ErrorResult& aRv);
+
+  void DispatchLoadingEventAndReplaceReadyPromise();
+  void DispatchCheckLoadingFinishedAfterDelay();
 
   TimeStamp GetNavigationStartTimeStamp();
 

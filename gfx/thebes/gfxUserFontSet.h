@@ -17,6 +17,9 @@
 #include "mozilla/net/ReferrerPolicy.h"
 #include "gfxFontConstants.h"
 
+namespace mozilla {
+class PostTraversalTask;
+} // namespace mozilla
 class nsFontFaceLoader;
 
 //#define DEBUG_USERFONT_CACHE
@@ -175,7 +178,7 @@ class gfxUserFontSet {
 
 public:
 
-    NS_INLINE_DECL_REFCOUNTING(gfxUserFontSet)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxUserFontSet)
 
     gfxUserFontSet();
 
@@ -215,7 +218,7 @@ public:
                               uint8_t aStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               uint32_t aLanguageOverride,
-                              gfxSparseBitSet* aUnicodeRanges,
+                              gfxCharacterMap* aUnicodeRanges,
                               uint8_t aFontDisplay) = 0;
 
     // creates a font face for the specified family, or returns an existing
@@ -228,7 +231,7 @@ public:
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay);
 
     // add in a font face for which we have the gfxUserFontEntry already
@@ -521,7 +524,7 @@ protected:
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
-                                   gfxSparseBitSet* aUnicodeRanges,
+                                   gfxCharacterMap* aUnicodeRanges,
                                    uint8_t aFontDisplay);
 
     // creates a new gfxUserFontFamily in mFontFamilies, or returns an existing
@@ -548,6 +551,7 @@ protected:
 // acts a placeholder until the real font is downloaded
 
 class gfxUserFontEntry : public gfxFontEntry {
+    friend class mozilla::PostTraversalTask;
     friend class gfxUserFontSet;
     friend class nsUserFontSet;
     friend class nsFontFaceLoader;
@@ -556,6 +560,7 @@ class gfxUserFontEntry : public gfxFontEntry {
 public:
     enum UserFontLoadState {
         STATUS_NOT_LOADED = 0,
+        STATUS_LOAD_PENDING,
         STATUS_LOADING,
         STATUS_LOADED,
         STATUS_FAILED
@@ -568,7 +573,7 @@ public:
                      uint8_t aStyle,
                      const nsTArray<gfxFontFeature>& aFeatureSettings,
                      uint32_t aLanguageOverride,
-                     gfxSparseBitSet* aUnicodeRanges,
+                     gfxCharacterMap* aUnicodeRanges,
                      uint8_t aFontDisplay);
 
     virtual ~gfxUserFontEntry();
@@ -580,7 +585,7 @@ public:
                  uint8_t aStyle,
                  const nsTArray<gfxFontFeature>& aFeatureSettings,
                  uint32_t aLanguageOverride,
-                 gfxSparseBitSet* aUnicodeRanges,
+                 gfxCharacterMap* aUnicodeRanges,
                  uint8_t aFontDisplay);
 
     virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,
@@ -593,7 +598,8 @@ public:
 
     // whether to wait before using fallback font or not
     bool WaitForUserFont() const {
-        return mUserFontLoadState == STATUS_LOADING &&
+        return (mUserFontLoadState == STATUS_LOAD_PENDING ||
+                mUserFontLoadState == STATUS_LOADING) &&
                mFontDataLoadingState < LOADING_SLOWLY;
     }
 
@@ -633,6 +639,8 @@ protected:
 
     // attempt to load the next resource in the src list.
     void LoadNextSrc();
+    void ContinueLoad();
+    void DoLoadNextSrc(bool aForceAsync);
 
     // change the load state
     virtual void SetLoadState(UserFontLoadState aLoadState);
