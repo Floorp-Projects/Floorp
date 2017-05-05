@@ -461,8 +461,6 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     mReadbackClient = nullptr;
   }
 
-  surf->Commit();
-
   if (asyncRenderer) {
     // If surface type is Basic, above codes will readback
     // the GLContext to mReadbackClient in order to send frame to
