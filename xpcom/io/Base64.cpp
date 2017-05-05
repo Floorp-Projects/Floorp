@@ -469,8 +469,12 @@ Base64Decode(const nsAString& aBase64, nsAString& aBinary)
 
   nsresult rv = Base64Decode(base64, binary);
   if (NS_SUCCEEDED(rv)) {
-    CopyASCIItoUTF16(binary, aBinary);
-  } else {
+    if (!CopyASCIItoUTF16(binary, aBinary, mozilla::fallible)) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (NS_FAILED(rv)) {
     aBinary.Truncate();
   }
 
