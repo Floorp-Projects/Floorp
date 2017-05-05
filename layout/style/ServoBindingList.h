@@ -208,7 +208,8 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Compute,
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
