@@ -118,6 +118,11 @@ class ParseContext : public Nestable<ParseContext>
         // the scope in which it is declared.
         PooledMapPtr<DeclaredNameMap> declared_;
 
+        // FunctionBoxes in this scope that need to be considered for Annex
+        // B.3.3 semantics. This is checked on Scope exit, as by then we have
+        // all the declared names and would know if Annex B.3.3 is applicable.
+        PooledVectorPtr<FunctionBoxVector> possibleAnnexBFunctionBoxes_;
+
         // Monotonically increasing id.
         uint32_t id_;
 
@@ -164,9 +169,12 @@ class ParseContext : public Nestable<ParseContext>
             return maybeReportOOM(pc, declared_->add(p, name, DeclaredNameInfo(kind, pos)));
         }
 
-        // Remove all VarForAnnexBLexicalFunction declarations of a certain
-        // name from all scopes in pc's scope stack.
-        static void removeVarForAnnexBLexicalFunction(ParseContext* pc, JSAtom* name);
+        // Add a FunctionBox as a possible candidate for Annex B.3.3 semantics.
+        MOZ_MUST_USE bool addPossibleAnnexBFunctionBox(ParseContext* pc, FunctionBox* funbox);
+
+        // Check if the candidate function boxes for Annex B.3.3 should in
+        // fact get Annex B semantics. Checked on Scope exit.
+        MOZ_MUST_USE bool propagateAndMarkAnnexBFunctionBoxes(ParseContext* pc);
 
         // Add and remove catch parameter names. Used to implement the odd
         // semantics of catch bodies.
@@ -297,10 +305,6 @@ class ParseContext : public Nestable<ParseContext>
     // expressions.
     Scope* varScope_;
 
-    // Inner function boxes in this context to try Annex B.3.3 semantics
-    // on. Only used when full parsing.
-    PooledVectorPtr<FunctionBoxVector> innerFunctionBoxesForAnnexB_;
-
     // Simple formal parameter names, in order of appearance. Only used when
     // isFunctionBox().
     PooledVectorPtr<AtomVector> positionalFormalParameterNames_;
@@ -361,7 +365,6 @@ class ParseContext : public Nestable<ParseContext>
         innermostStatement_(nullptr),
         innermostScope_(nullptr),
         varScope_(nullptr),
-        innerFunctionBoxesForAnnexB_(prs->context->frontendCollectionPool()),
         positionalFormalParameterNames_(prs->context->frontendCollectionPool()),
         closedOverBindingsForLazy_(prs->context->frontendCollectionPool()),
         scriptId_(prs->usedNames.nextScriptId()),
@@ -380,8 +383,6 @@ class ParseContext : public Nestable<ParseContext>
             functionScope_.emplace(prs);
         }
     }
-
-    ~ParseContext();
 
     MOZ_MUST_USE bool init();
 
@@ -449,10 +450,6 @@ class ParseContext : public Nestable<ParseContext>
     AtomVector& closedOverBindingsForLazy() {
         return *closedOverBindingsForLazy_;
     }
-
-    MOZ_MUST_USE bool addInnerFunctionBoxForAnnexB(FunctionBox* funbox);
-    void removeInnerFunctionBoxesForAnnexB(JSAtom* name);
-    void finishInnerFunctionBoxesForAnnexB();
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at
@@ -533,6 +530,23 @@ class ParseContext : public Nestable<ParseContext>
     uint32_t scriptId() const {
         return scriptId_;
     }
+
+    bool annexBAppliesToLexicalFunctionInInnermostScope(FunctionBox* funbox);
+
+    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
+                       mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
+
+  private:
+    mozilla::Maybe<DeclarationKind> isVarRedeclaredInInnermostScope(HandlePropertyName name,
+                                                                    DeclarationKind kind);
+    mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
+                                                          DeclarationKind kind);
+
+    enum DryRunOption { NotDryRun, DryRunInnermostScopeOnly };
+    template <DryRunOption dryRunOption>
+    bool tryDeclareVarHelper(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
+                             mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
+
 };
 
 template <>
@@ -963,6 +977,7 @@ inline
 ParseContext::Scope::Scope(ParserBase* parser)
   : Nestable<Scope>(&parser->pc->innermostScope_),
     declared_(parser->context->frontendCollectionPool()),
+    possibleAnnexBFunctionBoxes_(parser->context->frontendCollectionPool()),
     id_(parser->usedNames.nextScopeId())
 { }
 
@@ -1133,8 +1148,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
                                 Directives directives,
-                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                                bool tryAnnexB);
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     void trace(JSTracer* trc);
 
@@ -1512,12 +1526,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
-    mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
-                                                          DeclarationKind kind);
-    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
-                       mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
-    bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, uint32_t beginPos,
-                                               bool* tryAnnexB);
+
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
     bool noteDeclaredName(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
