@@ -370,40 +370,43 @@ this.browserAction = class extends ExtensionAPI {
   // in |tabData|.
   updateButton(node, tabData) {
     let title = tabData.title || this.extension.name;
-    node.setAttribute("tooltiptext", title);
-    node.setAttribute("label", title);
 
-    if (tabData.badgeText) {
-      node.setAttribute("badge", tabData.badgeText);
-    } else {
-      node.removeAttribute("badge");
-    }
+    node.ownerGlobal.requestAnimationFrame(() => {
+      node.setAttribute("tooltiptext", title);
+      node.setAttribute("label", title);
 
-    if (tabData.enabled) {
-      node.removeAttribute("disabled");
-    } else {
-      node.setAttribute("disabled", "true");
-    }
-
-    let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
-                                        "class", "toolbarbutton-badge");
-    if (badgeNode) {
-      let color = tabData.badgeBackgroundColor;
-      if (color) {
-        color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] / 255})`;
+      if (tabData.badgeText) {
+        node.setAttribute("badge", tabData.badgeText);
+      } else {
+        node.removeAttribute("badge");
       }
-      badgeNode.style.backgroundColor = color || "";
-    }
 
-    let {style, legacy} = this.iconData.get(tabData.icon);
-    const LEGACY_CLASS = "toolbarbutton-legacy-addon";
-    if (legacy) {
-      node.classList.add(LEGACY_CLASS);
-    } else {
-      node.classList.remove(LEGACY_CLASS);
-    }
+      if (tabData.enabled) {
+        node.removeAttribute("disabled");
+      } else {
+        node.setAttribute("disabled", "true");
+      }
 
-    node.setAttribute("style", style);
+      let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
+                                          "class", "toolbarbutton-badge");
+      if (badgeNode) {
+        let color = tabData.badgeBackgroundColor;
+        if (color) {
+          color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] / 255})`;
+        }
+        badgeNode.style.backgroundColor = color || "";
+      }
+
+      let {style, legacy} = this.iconData.get(tabData.icon);
+      const LEGACY_CLASS = "toolbarbutton-legacy-addon";
+      if (legacy) {
+        node.classList.add(LEGACY_CLASS);
+      } else {
+        node.classList.remove(LEGACY_CLASS);
+      }
+
+      node.setAttribute("style", style);
+    });
   }
 
   getIconData(icons) {
