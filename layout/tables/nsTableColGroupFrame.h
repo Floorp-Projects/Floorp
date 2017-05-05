@@ -50,12 +50,9 @@ public:
     return static_cast<nsTableFrame*>(parent);
   }
 
-  /**
-   * ColGroups never paint anything, nor receive events.
-   */
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) override {}
+                                const nsDisplayListSet& aLists) override;
 
   /** A colgroup can be caused by three things:
     * 1)	An element with table-column-group display
