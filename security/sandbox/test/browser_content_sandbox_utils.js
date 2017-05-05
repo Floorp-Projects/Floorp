@@ -3,6 +3,8 @@
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);
+const environment = Cc["@mozilla.org/process/environment;1"]
+                    .getService(Ci.nsIEnvironment);
 
 /*
  * Utility functions for the browser content sandbox tests.
@@ -74,4 +76,15 @@ function GetProfileEntry(name) {
   let entry = GetProfileDir();
   entry.append(name);
   return (entry);
+}
+
+function GetDir(path) {
+  let dir = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsILocalFile);
+  dir.initWithPath(path);
+  Assert.ok(dir.isDirectory(), `${path} is a directory`);
+  return (dir);
+}
+
+function GetDirFromEnvVariable(varName) {
+  return GetDir(environment.get(varName));
 }
