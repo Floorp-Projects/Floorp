@@ -18,6 +18,7 @@ class nsCSSFontFaceRule;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
+class PostTraversalTask;
 namespace dom {
 class FontFaceBufferSource;
 struct FontFaceDescriptors;
@@ -33,6 +34,7 @@ namespace dom {
 class FontFace final : public nsISupports,
                        public nsWrapperCache
 {
+  friend class mozilla::PostTraversalTask;
   friend class mozilla::dom::FontFaceBufferSource;
   friend class Entry;
 
@@ -48,7 +50,7 @@ public:
           uint8_t aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,
           uint32_t aLanguageOverride,
-          gfxSparseBitSet* aUnicodeRanges,
+          gfxCharacterMap* aUnicodeRanges,
           uint8_t aFontDisplay)
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
                          aStyle, aFeatureSettings, aLanguageOverride,
@@ -127,6 +129,11 @@ public:
    * ArrayBuffer or ArrayBufferView.
    */
   bool GetData(uint8_t*& aBuffer, uint32_t& aLength);
+
+  /**
+   * Returns the value of the unicode-range descriptor as a gfxCharacterMap.
+   */
+  gfxCharacterMap* GetUnicodeRangeAsCharacterMap();
 
   // Web IDL
   static already_AddRefed<FontFace>
@@ -207,6 +214,9 @@ private:
   // reject mLoaded based on mStatus and mLoadedRejection.
   void EnsurePromise();
 
+  void DoResolve();
+  void DoReject(nsresult aResult);
+
   nsCOMPtr<nsISupports> mParent;
 
   // A Promise that is fulfilled once the font represented by this FontFace is
@@ -251,6 +261,10 @@ private:
   // the descriptors stored in mRule.
   nsAutoPtr<mozilla::CSSFontFaceDescriptors> mDescriptors;
 
+  // The value of the unicode-range descriptor as a gfxCharacterMap.  Valid
+  // only when mUnicodeRangeDirty is false.
+  RefPtr<gfxCharacterMap> mUnicodeRange;
+
   // The primary FontFaceSet this FontFace is associated with,
   // regardless of whether it is currently "in" the set.
   RefPtr<FontFaceSet> mFontFaceSet;
@@ -258,6 +272,10 @@ private:
   // Other FontFaceSets (apart from mFontFaceSet) that this FontFace
   // appears in.
   nsTArray<RefPtr<FontFaceSet>> mOtherFontFaceSets;
+
+  // Whether mUnicodeRange needs to be rebuilt before being returned from
+  // GetUnicodeRangeAsCharacterMap.
+  bool mUnicodeRangeDirty;
 
   // Whether this FontFace appears in mFontFaceSet.
   bool mInFontFaceSet;

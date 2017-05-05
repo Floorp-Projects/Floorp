@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -11,28 +12,50 @@
     title: "Renegotiation: remove then add video track, no bundle"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
+    const helper = new VideoStreamHelper();
+    var originalTrack;
     addRenegotiation(test.chain,
       [
-        function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
+        function PC_REMOTE_FIND_RECEIVER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver");
+          originalTrack = test.pcRemote._pc.getReceivers()[0].track;
+        },
+        function PC_LOCAL_REMOVE_VIDEO_TRACK(test) {
           // The new track's pipeline will start with a packet count of
           // 0, but the remote side will keep its old pipeline and packet
           // count.
           test.pcLocal.disableRtpCountChecking = true;
           return test.pcLocal.removeSender(0);
         },
-        function PC_LOCAL_ADD_AUDIO_TRACK(test) {
-          return test.pcLocal.getAllUserMedia([{video: true}]);
+        function PC_LOCAL_ADD_VIDEO_TRACK(test) {
+          // Use fake:true here since the native fake device on linux doesn't
+          // change color as needed by checkVideoPlaying() below.
+          return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
+        },
+      ],
+      [
+        function PC_REMOTE_CHECK_ADDED_TRACK(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+              "pcRemote should still have one receiver");
+          const track = test.pcRemote._pc.getReceivers()[0].track;
+          isnot(originalTrack.id, track.id, "Receiver should have changed");
+
+          const vOriginal = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(originalTrack.id));
+          const vAdded = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(track.id));
+          ok(vOriginal.ended, "Original video element should have ended");
+          return helper.checkVideoPlaying(vAdded, 10, 10, 16);
         },
       ]
     );
 
     test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
-                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
+                               PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.run();
   });

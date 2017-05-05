@@ -98,7 +98,7 @@ with Files("DynamicsCompressorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("DesktopNotification.webidl"):
-    BUG_COMPONENT = ("Toolkit", "Notification and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")

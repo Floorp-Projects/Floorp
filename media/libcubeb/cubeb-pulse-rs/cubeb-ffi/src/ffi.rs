@@ -487,7 +487,7 @@ fn bindgen_test_layout_cubeb_device_info() {
 #[test]
 fn bindgen_test_layout_cubeb_device_collection() {
     assert_eq!(::std::mem::size_of::<DeviceCollection>(),
-               16usize,
+               8usize,
                concat!("Size of: ", stringify!(DeviceCollection)));
     assert_eq!(::std::mem::align_of::<DeviceCollection>(),
                8usize,
@@ -505,16 +505,4 @@ fn bindgen_test_layout_cubeb_device_collection() {
                        "::",
                        stringify!(device)));
 
-}
-
-#[test]
-fn test_normal_logging() {
-    log!("This is log at normal level");
-    log!("This is {} at normal level", "log with param");
-}
-
-#[test]
-fn test_verbose_logging() {
-    logv!("This is a log at verbose level");
-    logv!("This is {} at verbose level", "log with param");
 }

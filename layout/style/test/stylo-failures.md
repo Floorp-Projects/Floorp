@@ -156,8 +156,6 @@ to mochitest command.
     * ... `-moz-min-content` [6]
     * ... `-moz-fit-content` [6]
     * ... `-moz-available` [4]
-  * several prefixed values in cursor property bug 1356072
-    * test_value_storage.html `cursor` [4]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values

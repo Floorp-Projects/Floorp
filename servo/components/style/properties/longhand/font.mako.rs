@@ -741,6 +741,10 @@ ${helpers.single_keyword_system("font-variant-caps",
         }
     % endif
 
+    /// This is the ratio applied for font-size: larger
+    /// and smaller by both Firefox and Chrome
+    const LARGER_FONT_SIZE_RATIO: f32 = 1.2;
+
     impl SpecifiedValue {
         /// https://html.spec.whatwg.org/multipage/#rules-for-parsing-a-legacy-font-size
         pub fn from_html_size(size: u8) -> Self {
@@ -768,6 +772,10 @@ ${helpers.single_keyword_system("font-variant-caps",
                         return Some(em)
                     }
                 }
+            } else if let SpecifiedValue::Larger = *self {
+                return Some(LARGER_FONT_SIZE_RATIO)
+            } else if let SpecifiedValue::Smaller = *self {
+                return Some(1. / LARGER_FONT_SIZE_RATIO)
             }
             None
         }
@@ -799,11 +807,11 @@ ${helpers.single_keyword_system("font-variant-caps",
                     key.to_computed_value(context).scale_by(fraction)
                 }
                 SpecifiedValue::Smaller => {
-                    FontRelativeLength::Em(0.85)
+                    FontRelativeLength::Em(1. / LARGER_FONT_SIZE_RATIO)
                         .to_computed_value(context, base_size)
                 }
                 SpecifiedValue::Larger => {
-                    FontRelativeLength::Em(1.2)
+                    FontRelativeLength::Em(LARGER_FONT_SIZE_RATIO)
                         .to_computed_value(context, base_size)
                 }
 
@@ -2429,3 +2437,12 @@ ${helpers.single_keyword("-moz-math-variant",
         }
     }
 % endif
+
+${helpers.single_keyword("-moz-osx-font-smoothing",
+                         "auto grayscale",
+                         gecko_constant_prefix="NS_FONT_SMOOTHING",
+                         gecko_ffi_name="mFont.smoothing",
+                         products="gecko",
+                         spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/font-smooth)",
+                         animation_value_type="none",
+                         need_clone=True)}
