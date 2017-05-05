@@ -870,6 +870,8 @@ pref("browser.sessionstore.debug", false);
 pref("browser.sessionstore.debug.no_auto_updates", false);
 // Forget closed windows/tabs after two weeks
 pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
+// Maximum number of bytes of DOMSessionStorage data we collect per origin.
+pref("browser.sessionstore.dom_storage_limit", 2048);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
