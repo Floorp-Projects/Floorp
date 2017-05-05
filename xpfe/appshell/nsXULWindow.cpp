@@ -915,7 +915,7 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const char16_t* aTitle)
 {
   NS_ENSURE_STATE(mWindow);
   mTitle.Assign(aTitle);
-  mTitle.StripChars("\n\r");
+  mTitle.StripCRLF();
   NS_ENSURE_SUCCESS(mWindow->SetTitle(mTitle), NS_ERROR_FAILURE);
 
   // Tell the window mediator that a title has changed
