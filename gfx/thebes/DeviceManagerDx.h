@@ -103,11 +103,11 @@ public:
   void ForceDeviceReset(ForcedDeviceResetReason aReason);
   void NotifyD3D9DeviceReset();
 
+private:
   // Pre-load any compositor resources that are expensive, and are needed when we
   // attempt to create a compositor.
   static void PreloadAttachmentsOnCompositorThread();
 
-private:
   IDXGIAdapter1 *GetDXGIAdapter();
 
   void DisableD3D11AfterCrash();
