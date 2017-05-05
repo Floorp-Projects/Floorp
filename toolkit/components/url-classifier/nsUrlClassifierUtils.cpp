@@ -92,7 +92,8 @@ GetPlatformType()
 #elif defined(XP_WIN)
   return WINDOWS_PLATFORM;
 #else
-  return PLATFORM_TYPE_UNSPECIFIED;
+  // Default to Linux for other platforms (see bug 1362501).
+  return LINUX_PLATFORM;
 #endif
 }
 
