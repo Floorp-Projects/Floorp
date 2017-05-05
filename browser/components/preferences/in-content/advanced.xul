@@ -155,7 +155,7 @@
                 disabled="true"/>
       </hbox>
       <hbox id="restarting" align="center">
-        <label>&update.restarting;</label>
+        <image class="update-throbber"/><label>&update.restarting;</label>
         <spacer flex="1"/>
         <button label="&update.updateButton.label3;"
                 accesskey="&update.updateButton.accesskey;"
