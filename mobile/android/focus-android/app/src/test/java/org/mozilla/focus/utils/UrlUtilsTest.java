@@ -88,6 +88,9 @@ public class UrlUtilsTest {
     @Test
     @SuppressLint("AuthLeak")
     public void testStripUserInfo() {
+        assertEquals("", UrlUtils.stripUserInfo(null));
+        assertEquals("", UrlUtils.stripUserInfo(""));
+
         assertEquals("https://www.mozilla.org", UrlUtils.stripUserInfo("https://user:password@www.mozilla.org"));
         assertEquals("https://www.mozilla.org", UrlUtils.stripUserInfo("https://user@www.mozilla.org"));
 

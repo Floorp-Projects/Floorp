@@ -8,6 +8,7 @@ package org.mozilla.focus.utils;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.mozilla.focus.search.SearchEngine;
@@ -51,7 +52,11 @@ public class UrlUtils {
         return searchEngine.buildSearchUrl(searchTerm);
     }
 
-    public static String stripUserInfo(String url) {
+    public static String stripUserInfo(@Nullable String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+
         try {
             URI uri = new URI(url);
 
