@@ -137,6 +137,7 @@ class TlsAgent : public PollTarget {
   void EnableFalseStart();
   void ExpectResumption();
   void ExpectShortHeaders();
+  void SkipVersionChecks();
   void SetSignatureSchemes(const SSLSignatureScheme* schemes, size_t count);
   void EnableAlpn(const uint8_t* val, size_t len);
   void CheckAlpn(SSLNextProtoState expected_state,
@@ -388,6 +389,7 @@ class TlsAgent : public PollTarget {
   AuthCertificateCallbackFunction auth_certificate_callback_;
   SniCallbackFunction sni_callback_;
   bool expect_short_headers_;
+  bool skip_version_checks_;
 };
 
 inline std::ostream& operator<<(std::ostream& stream,
@@ -484,6 +486,10 @@ class TlsAgentDgramTestClient : public TlsAgentTestBase {
  public:
   TlsAgentDgramTestClient() : TlsAgentTestBase(TlsAgent::CLIENT, DGRAM) {}
 };
+
+inline bool operator==(const SSLVersionRange& vr1, const SSLVersionRange& vr2) {
+  return vr1.min == vr2.min && vr1.max == vr2.max;
+}
 
 }  // namespace nss_test
 
