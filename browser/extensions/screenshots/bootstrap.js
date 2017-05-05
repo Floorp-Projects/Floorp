@@ -46,28 +46,9 @@ const prefObserver = {
   }
 };
 
-const appStartupObserver = {
-  register() {
-    Services.obs.addObserver(this, "sessionstore-windows-restored", false); // eslint-disable-line mozilla/no-useless-parameters
-  },
-
-  unregister() {
-    Services.obs.removeObserver(this, "sessionstore-windows-restored", false); // eslint-disable-line mozilla/no-useless-parameters
-  },
-
-  observe() {
-    appStartupDone();
-    this.unregister();
-  }
-}
-
 const APP_STARTUP = 1;
 function startup(data, reason) { // eslint-disable-line no-unused-vars
-  if (reason === APP_STARTUP) {
-    appStartupObserver.register();
-  } else {
-    appStartupDone();
-  }
+  appStartupDone();
   prefObserver.register();
   addonResourceURI = data.resourceURI;
   // eslint-disable-next-line promise/catch-or-return
