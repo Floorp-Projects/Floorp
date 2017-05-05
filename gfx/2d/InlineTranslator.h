@@ -36,7 +36,9 @@ public:
 
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final
   {
-    return mBaseDT;
+    DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   Path* LookupPath(ReferencePtr aRefPtr) final
@@ -88,7 +90,10 @@ public:
     return result;
   }
 
-  void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final { }
+  void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final
+  {
+    mDrawTargets.Put(aRefPtr, aDT);
+  }
 
   void AddPath(ReferencePtr aRefPtr, Path *aPath) final
   {
@@ -126,7 +131,10 @@ public:
     mNativeFontResources.Put(aKey, aScaledFontResouce);
   }
 
-  void RemoveDrawTarget(ReferencePtr aRefPtr) final { }
+  void RemoveDrawTarget(ReferencePtr aRefPtr) final
+  {
+    mDrawTargets.Remove(aRefPtr);
+  }
 
   void RemovePath(ReferencePtr aRefPtr) final
   {
@@ -171,6 +179,7 @@ private:
   RefPtr<DrawTarget> mBaseDT;
   Matrix             mBaseTransform;
 
+  nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
   nsRefPtrHashtable<nsPtrHashKey<void>, Path> mPaths;
   nsRefPtrHashtable<nsPtrHashKey<void>, SourceSurface> mSourceSurfaces;
   nsRefPtrHashtable<nsPtrHashKey<void>, FilterNode> mFilterNodes;
