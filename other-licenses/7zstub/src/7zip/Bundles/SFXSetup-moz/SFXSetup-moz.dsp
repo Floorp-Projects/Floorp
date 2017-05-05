@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 comctl32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"C:\Util\7zS.sfx" /opt:NOWIN98
+# ADD LINK32 comctl32.lib kernel32.lib user32.lib shell32.lib oleaut32.lib delayimp.lib /nologo /subsystem:windows /machine:I386 /out:"C:\Util\7zS.sfx" /delayload:comctl32.dll /delayload:user32.dll /delayload:shell32.dll /delayload:oleaut32.dll /opt:NOWIN98
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "SFXSetup-moz - Win32 Debug"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"C:\UTIL\7zSfxS.exe" /pdbtype:sept
+# ADD LINK32 comctl32.lib kernel32.lib user32.lib shell32.lib oleaut32.lib delayimp.lib /nologo /subsystem:windows /debug /machine:I386 /out:"C:\UTIL\7zSfxS.exe" /pdbtype:sept /delayload:comctl32.dll /delayload:user32.dll /delayload:shell32.dll /delayload:oleaut32.dll
 
 !ELSEIF  "$(CFG)" == "SFXSetup-moz - Win32 ReleaseD"
 
@@ -109,7 +109,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 comctl32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"C:\UTIL\7zWinSR.exe"
 # SUBTRACT BASE LINK32 /debug /nodefaultlib
-# ADD LINK32 comctl32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"ReleaseD\7zSD.sfx" /opt:NOWIN98
+# ADD LINK32 comctl32.lib kernel32.lib user32.lib shell32.lib oleaut32.lib delayimp.lib /nologo /subsystem:windows /machine:I386 /out:"ReleaseD\7zSD.sfx" /delayload:comctl32.dll /delayload:user32.dll /delayload:shell32.dll /delayload:oleaut32.dll /opt:NOWIN98
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
