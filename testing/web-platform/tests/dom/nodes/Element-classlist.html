@@ -424,7 +424,7 @@ function testClassList(e, desc) {
   // Implementations agree on the first one here, so I test it, but disagree on
   // the second, so no test until the spec decides what to say.
   checkReplace("a b c", "c", "a", "a b");
-  //checkReplace("c b a", "c", "a", ???);
+  checkReplace("c b a", "c", "a", "a b");
   checkReplace("a b a", "a", "c", "c b");
   checkReplace("a b a", "b", "c", "a c");
   checkReplace("   a  a b", "a", "c", "c b");
