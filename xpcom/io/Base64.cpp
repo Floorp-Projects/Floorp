@@ -357,15 +357,26 @@ Base64Encode(const nsACString& aBinary, nsACString& aBase64)
 nsresult
 Base64Encode(const nsAString& aBinary, nsAString& aBase64)
 {
-  NS_LossyConvertUTF16toASCII binary(aBinary);
+  auto truncater = mozilla::MakeScopeExit([&]() { aBase64.Truncate(); });
+
+  // XXX We should really consider decoding directly from the string, rather
+  // than making a separate copy here.
+  nsAutoCString binary;
+  if (!binary.SetCapacity(aBinary.Length(), mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  LossyCopyUTF16toASCII(aBinary, binary);
+
   nsAutoCString base64;
 
   nsresult rv = Base64Encode(binary, base64);
-  if (NS_SUCCEEDED(rv)) {
-    CopyASCIItoUTF16(base64, aBase64);
-  } else {
-    aBase64.Truncate();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!CopyASCIItoUTF16(base64, aBase64, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  truncater.release();
 
   return rv;
 }
@@ -478,7 +489,7 @@ Base64Decode(const nsAString& aBase64, nsAString& aBinary)
   nsAutoCString binary;
 
   nsresult rv = Base64Decode(base64, binary);
-  NS_ENSURE_STATE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!CopyASCIItoUTF16(binary, aBinary, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
