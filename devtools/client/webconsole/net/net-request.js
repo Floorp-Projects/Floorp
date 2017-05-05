@@ -163,8 +163,7 @@ NetRequest.prototype = {
     // As soon as Redux is in place state and actions will come from
     // separate modules.
     let body = NetInfoBody({
-      actions: this,
-      sourceMapService: this.owner.sourceMapURLService,
+      actions: this
     });
 
     // Render net info body!

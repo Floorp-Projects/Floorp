@@ -3556,12 +3556,9 @@ Widgets.Stacktrace.prototype = extend(Widgets.BaseWidget.prototype, {
     result.className = "stacktrace devtools-monospace";
 
     if (this.stacktrace) {
-      const target = this.message.output.toolboxTarget;
-      const toolbox = gDevTools.getToolbox(target);
       this.output.owner.ReactDOM.render(this.output.owner.StackTraceView({
         stacktrace: this.stacktrace,
-        onViewSourceInDebugger: frame => this.output.openLocationInDebugger(frame),
-        sourceMapService: toolbox ? toolbox.sourceMapURLService : null,
+        onViewSourceInDebugger: frame => this.output.openLocationInDebugger(frame)
       }), result);
     }
 

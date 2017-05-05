@@ -20,7 +20,6 @@ PageError.propTypes = {
   open: PropTypes.bool,
   indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
-  serviceContainer: PropTypes.object,
 };
 
 PageError.defaultProps = {
