@@ -34,26 +34,26 @@ add_task(function* test_openDownloadsFolder() {
 add_task(function* test_clearList() {
   const kTestCases = [{
     downloads: [
-      { state: nsIDM.DOWNLOAD_NOTSTARTED },
-      { state: nsIDM.DOWNLOAD_FINISHED },
-      { state: nsIDM.DOWNLOAD_FAILED },
-      { state: nsIDM.DOWNLOAD_CANCELED },
+      { state: DownloadsCommon.DOWNLOAD_NOTSTARTED },
+      { state: DownloadsCommon.DOWNLOAD_FINISHED },
+      { state: DownloadsCommon.DOWNLOAD_FAILED },
+      { state: DownloadsCommon.DOWNLOAD_CANCELED },
     ],
     expectClearListShown: true,
     expectedItemNumber: 0,
   }, {
     downloads: [
-      { state: nsIDM.DOWNLOAD_NOTSTARTED },
-      { state: nsIDM.DOWNLOAD_FINISHED },
-      { state: nsIDM.DOWNLOAD_FAILED },
-      { state: nsIDM.DOWNLOAD_PAUSED },
-      { state: nsIDM.DOWNLOAD_CANCELED },
+      { state: DownloadsCommon.DOWNLOAD_NOTSTARTED },
+      { state: DownloadsCommon.DOWNLOAD_FINISHED },
+      { state: DownloadsCommon.DOWNLOAD_FAILED },
+      { state: DownloadsCommon.DOWNLOAD_PAUSED },
+      { state: DownloadsCommon.DOWNLOAD_CANCELED },
     ],
     expectClearListShown: true,
     expectedItemNumber: 1,
   }, {
     downloads: [
-      { state: nsIDM.DOWNLOAD_PAUSED },
+      { state: DownloadsCommon.DOWNLOAD_PAUSED },
     ],
     expectClearListShown: false,
     expectedItemNumber: 1,
