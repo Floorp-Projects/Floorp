@@ -19,9 +19,6 @@ namespace gl {
 
 class AndroidNativeWindow {
 public:
-  AndroidNativeWindow() : mNativeWindow(nullptr) {
-  }
-
   AndroidNativeWindow(java::sdk::Surface::Param aSurface) {
     mNativeWindow = ANativeWindow_fromSurface(jni::GetEnvForThread(),
                                               aSurface.Get());
