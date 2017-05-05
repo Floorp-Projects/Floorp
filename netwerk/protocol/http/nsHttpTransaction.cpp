@@ -652,15 +652,6 @@ nsHttpTransaction::SetDNSWasRefreshed()
     mCapsToClear |= NS_HTTP_REFRESH_DNS;
 }
 
-uint64_t
-nsHttpTransaction::Available()
-{
-    uint64_t size;
-    if (NS_FAILED(mRequestStream->Available(&size)))
-        size = 0;
-    return size;
-}
-
 nsresult
 nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
                                       void *closure,
