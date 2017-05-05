@@ -107,22 +107,24 @@ this.pageAction = class extends ExtensionAPI {
       return;
     }
 
-    let button = this.getButton(window);
+    window.requestAnimationFrame(() => {
+      let button = this.getButton(window);
 
-    if (tabData.show) {
-      // Update the title and icon only if the button is visible.
+      if (tabData.show) {
+        // Update the title and icon only if the button is visible.
 
-      let title = tabData.title || this.extension.name;
-      button.setAttribute("tooltiptext", title);
-      button.setAttribute("aria-label", title);
-      button.classList.add("webextension-page-action");
+        let title = tabData.title || this.extension.name;
+        button.setAttribute("tooltiptext", title);
+        button.setAttribute("aria-label", title);
+        button.classList.add("webextension-page-action");
 
-      let {style} = this.iconData.get(tabData.icon);
+        let {style} = this.iconData.get(tabData.icon);
 
-      button.setAttribute("style", style);
-    }
+        button.setAttribute("style", style);
+      }
 
-    button.hidden = !tabData.show;
+      button.hidden = !tabData.show;
+    });
   }
 
   getIconData(icons) {
