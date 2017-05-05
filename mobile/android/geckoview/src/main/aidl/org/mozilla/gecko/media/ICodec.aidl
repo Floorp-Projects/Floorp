@@ -13,7 +13,7 @@ import org.mozilla.gecko.media.Sample;
 
 interface ICodec {
     void setCallbacks(in ICodecCallbacks callbacks);
-    boolean configure(in FormatParam format, in Surface surface, int flags, in String drmStubId);
+    boolean configure(in FormatParam format, inout Surface surface, int flags, in String drmStubId);
     boolean isAdaptivePlaybackSupported();
     void start();
     void stop();
