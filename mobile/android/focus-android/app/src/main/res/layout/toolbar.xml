@@ -51,6 +51,13 @@
         android:textSize="15sp" />
 
     <ImageButton
+        android:id="@+id/customtab_actionbutton"
+        android:visibility="gone"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
+
+    <ImageButton
         android:id="@+id/menu"
         android:layout_width="48dp"
         android:layout_height="48dp"
