@@ -98,7 +98,7 @@ public:
   // Buffer Append Algorithm
   // 3.5.5 Buffer Append Algorithm.
   // http://w3c.github.io/media-source/index.html#sourcebuffer-buffer-append
-  RefPtr<AppendPromise> AppendData(MediaByteBuffer* aData,
+  RefPtr<AppendPromise> AppendData(already_AddRefed<MediaByteBuffer> aData,
                                    const SourceBufferAttributes& aAttributes);
 
   // Queue a task to abort any pending AppendData.
@@ -174,7 +174,7 @@ private:
   friend class MediaSourceDemuxer;
   ~TrackBuffersManager();
   // All following functions run on the taskqueue.
-  RefPtr<AppendPromise> DoAppendData(MediaByteBuffer* aData,
+  RefPtr<AppendPromise> DoAppendData(already_AddRefed<MediaByteBuffer> aData,
                                      const SourceBufferAttributes& aAttributes);
   void ScheduleSegmentParserLoop();
   void SegmentParserLoop();
