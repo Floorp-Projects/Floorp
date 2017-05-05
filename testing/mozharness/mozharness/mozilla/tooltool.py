@@ -47,6 +47,9 @@ class TooltoolMixin(object):
     def tooltool_fetch(self, manifest,
                        output_dir=None, privileged=False, cache=None):
         """docstring for tooltool_fetch"""
+        for d in (output_dir, cache):
+            if d is not None and not os.path.exists(d):
+                self.mkdir_p(d)
         # Use vendored tooltool.py if available.
         if self.topsrcdir:
             cmd = [
