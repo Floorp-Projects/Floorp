@@ -1729,6 +1729,12 @@ Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut aCSSValue,
 }
 
 void
+Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut aCSSValue, nsIAtom* aAtom)
+{
+  aCSSValue->SetAtomIdentValue(already_AddRefed<nsIAtom>(aAtom));
+}
+
+void
 Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
