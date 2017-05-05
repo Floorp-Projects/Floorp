@@ -66,15 +66,11 @@ class SurfaceTextureImage : public GLImage {
 public:
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize,
-                      bool aContinuous,
                       gl::OriginPos aOriginPos);
 
   gfx::IntSize GetSize() override { return mSize; }
   AndroidSurfaceTextureHandle GetHandle() const {
     return mHandle;
-  }
-  bool GetContinuous() const {
-    return mContinuous;
   }
   gl::OriginPos GetOriginPos() const {
     return mOriginPos;
@@ -87,7 +83,6 @@ public:
 private:
   AndroidSurfaceTextureHandle mHandle;
   gfx::IntSize mSize;
-  bool mContinuous;
   gl::OriginPos mOriginPos;
 };
 
