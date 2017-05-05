@@ -450,13 +450,6 @@ public:
   GetParameters(dom::MediaStreamTrack& aTrack,
                 std::vector<JsepTrack::JsConstraints>* aOutConstraints);
 
-  NS_IMETHODIMP_TO_ERRORRESULT(SelectSsrc, ErrorResult &rv,
-                               dom::MediaStreamTrack& aRecvTrack,
-                               unsigned short aSsrcIndex)
-  {
-    rv = SelectSsrc(aRecvTrack, aSsrcIndex);
-  }
-
   NS_IMETHODIMP_TO_ERRORRESULT(AddRIDExtension, ErrorResult &rv,
                                dom::MediaStreamTrack& aRecvTrack,
                                unsigned short aExtensionId)
