@@ -182,15 +182,9 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   // Let's recreate the full stream using a:
-  // multiplexStream(stringStream + original stream)
+  // multiplexStream(syncStream + original stream)
   // In theory, we could try to see if the inputStream is a nsISeekableStream,
   // but this doesn't work correctly for nsPipe3 - See bug 1349570.
-
-  nsCOMPtr<nsIInputStream> stringStream;
-  aRv = NS_NewCStringInputStream(getter_AddRefs(stringStream), sniffBuf);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -199,12 +193,24 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     return;
   }
 
-  aRv = multiplexStream->AppendStream(stringStream);
+  nsCOMPtr<nsIInputStream> sniffStringStream;
+  aRv = NS_NewCStringInputStream(getter_AddRefs(sniffStringStream), sniffBuf);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  aRv = multiplexStream->AppendStream(stream);
+  aRv = multiplexStream->AppendStream(sniffStringStream);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsCOMPtr<nsIInputStream> syncStream;
+  aRv = ConvertAsyncToSyncStream(stream, getter_AddRefs(syncStream));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  aRv = multiplexStream->AppendStream(syncStream);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -433,4 +439,45 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
 
   // Now, we can try to read again.
   return SyncRead(aStream, aBuffer, aBufferSize, aRead);
+}
+
+nsresult
+FileReaderSync::ConvertAsyncToSyncStream(nsIInputStream* aAsyncStream,
+                                         nsIInputStream** aSyncStream)
+{
+  // If the stream is not async, we have nothing to do here.
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aAsyncStream);
+  if (!asyncStream) {
+    nsCOMPtr<nsIInputStream> stream = aAsyncStream;
+    stream.forget(aSyncStream);
+    return NS_OK;
+  }
+
+  uint64_t length;
+  nsresult rv = aAsyncStream->Available(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString buffer;
+  if (!buffer.SetLength(length, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint32_t read;
+  rv = SyncRead(aAsyncStream, buffer.BeginWriting(), length, &read);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (read != length) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = NS_NewCStringInputStream(aSyncStream, buffer);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
