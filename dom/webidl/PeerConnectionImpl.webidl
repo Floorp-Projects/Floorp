@@ -63,7 +63,6 @@ interface PeerConnectionImpl  {
   sequence<MediaStream> getLocalStreams();
   sequence<MediaStream> getRemoteStreams();
 
-  void selectSsrc(MediaStreamTrack recvTrack, unsigned short ssrcIndex);
   void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
   void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);
 
