@@ -7,10 +7,7 @@
 #ifndef nsSHTransaction_h
 #define nsSHTransaction_h
 
-// Helper Classes
 #include "nsCOMPtr.h"
-
-// Needed interfaces
 #include "nsISHTransaction.h"
 
 class nsISHEntry;
@@ -27,11 +24,10 @@ protected:
   virtual ~nsSHTransaction();
 
 protected:
-  bool mPersist;
-
   nsISHTransaction* mPrev;  // Weak Reference
   nsCOMPtr<nsISHTransaction> mNext;
   nsCOMPtr<nsISHEntry> mSHEntry;
+  bool mPersist;
 };
 
 #endif /* nsSHTransaction_h */

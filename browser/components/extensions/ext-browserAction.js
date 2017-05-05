@@ -321,7 +321,7 @@ this.browserAction = class extends ExtensionAPI {
 
     if (pendingPopup) {
       if (pendingPopup.window === window && pendingPopup.popupURL === popupURL) {
-        if (!this.blockParser) {
+        if (!blockParser) {
           pendingPopup.unblockParser();
         }
 

@@ -568,6 +568,23 @@ description > html|a {
   }
 }
 
+#updateDeck > hbox > label {
+  margin-inline-end: 5px ! important;
+}
+
+.update-throbber {
+  width: 16px;
+  min-height: 16px;
+  margin-inline-end: 3px;
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .update-throbber {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
+}
+
 .help-button {
   position: fixed;
   left: 0;

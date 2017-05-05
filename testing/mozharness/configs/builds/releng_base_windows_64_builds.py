@@ -56,7 +56,6 @@ config = {
     'stage_platform': 'win64',
     'publish_nightly_en_US_routes': True,
     'env': {
-        'MOZ_AUTOMATION': '1',
         'HG_SHARE_BASE_DIR': 'C:/builds/hg-shared',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'MOZ_OBJDIR': 'obj-firefox',

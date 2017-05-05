@@ -256,16 +256,22 @@ nsLayoutStylesheetCache::Shutdown()
 {
   gCSSLoader_Gecko = nullptr;
   gCSSLoader_Servo = nullptr;
+  MOZ_ASSERT(!gStyleCache_Gecko || !gUserContentSheetURL_Gecko,
+             "Got the URL but never used by Gecko?");
+  MOZ_ASSERT(!gStyleCache_Servo || !gUserContentSheetURL_Servo,
+             "Got the URL but never used by Servo?");
   gStyleCache_Gecko = nullptr;
   gStyleCache_Servo = nullptr;
-  gUserContentSheetURL = nullptr;
+  gUserContentSheetURL_Gecko = nullptr;
+  gUserContentSheetURL_Servo = nullptr;
 }
 
 void
 nsLayoutStylesheetCache::SetUserContentCSSURL(nsIURI* aURI)
 {
   MOZ_ASSERT(XRE_IsContentProcess(), "Only used in content processes.");
-  gUserContentSheetURL = aURI;
+  gUserContentSheetURL_Gecko = aURI;
+  gUserContentSheetURL_Servo = aURI;
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(LayoutStylesheetCacheMallocSizeOf)
@@ -351,10 +357,13 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache(StyleBackendType aType)
     XULSheet();
   }
 
-  if (gUserContentSheetURL) {
+  auto& userContentSheetURL = aType == StyleBackendType::Gecko ?
+                              gUserContentSheetURL_Gecko :
+                              gUserContentSheetURL_Servo;
+  if (userContentSheetURL) {
     MOZ_ASSERT(XRE_IsContentProcess(), "Only used in content processes.");
-    LoadSheet(gUserContentSheetURL, &mUserContentSheet, eUserSheetFeatures, eLogToConsole);
-    gUserContentSheetURL = nullptr;
+    LoadSheet(userContentSheetURL, &mUserContentSheet, eUserSheetFeatures, eLogToConsole);
+    userContentSheetURL = nullptr;
   }
 
   // The remaining sheets are created on-demand do to their use being rarer
@@ -1008,4 +1017,7 @@ mozilla::StaticRefPtr<mozilla::css::Loader>
 nsLayoutStylesheetCache::gCSSLoader_Servo;
 
 mozilla::StaticRefPtr<nsIURI>
-nsLayoutStylesheetCache::gUserContentSheetURL;
+nsLayoutStylesheetCache::gUserContentSheetURL_Gecko;
+
+mozilla::StaticRefPtr<nsIURI>
+nsLayoutStylesheetCache::gUserContentSheetURL_Servo;
