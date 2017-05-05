@@ -417,7 +417,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   StartUpdating();
 
-  mTrackBuffersManager->AppendData(data, mCurrentAttributes)
+  mTrackBuffersManager->AppendData(data.forget(), mCurrentAttributes)
     ->Then(mAbstractMainThread, __func__, this,
            &SourceBuffer::AppendDataCompletedWithSuccess,
            &SourceBuffer::AppendDataErrored)
