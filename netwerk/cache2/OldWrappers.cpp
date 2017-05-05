@@ -1076,6 +1076,14 @@ NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
   return NS_OK;
 }
 
+NS_IMETHODIMP _OldStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
+                                                   const nsACString &aIdExtension,
+                                                   bool *aHasAltData,
+                                                   uint32_t *aSizeInKB)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // Internal
 
 nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,

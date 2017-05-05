@@ -49,9 +49,14 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
 
     The bits labelled 'x', 'p', and 'g' are feature flags.
 
-    The bit labelled 'x' is 1 if the build is for an x86 architecture and 0
-    otherwise, which means the build is for an ARM architecture.  (Fennec no
-    longer supports ARMv6, so ARM is equivalent to ARMv7 and above.)
+    The bit labelled 'x' is 1 if the build is for an x86 or ARM64 architecture,
+    and 0 otherwise, which means the build is for a (32-bit) ARM architecture.
+    (Fennec no longer supports ARMv6, so ARM is equivalent to ARMv7.
+     ARM64 is also known as AArch64; it is logically ARMv8.)
+
+    For the same release, x86 and ARM64 builds have higher version codes and
+    take precedence over ARM builds, so that they are preferred over ARM on
+    devices that have ARM emulation.
 
     The bit labelled 'p' is a placeholder that is always 0 (for now).
 
@@ -120,7 +125,7 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
         else:
             raise ValueError("Don't know how to compute android:versionCode "
                              "for CPU arch %s and min SDK %s" % (cpu_arch, min_sdk))
-    elif cpu_arch in ['x86']:
+    elif cpu_arch in ['x86', 'arm64-v8a']:
         version |= 1 << 2
     else:
         raise ValueError("Don't know how to compute android:versionCode "
@@ -143,7 +148,11 @@ def main(argv):
                         default=False,
                         help='Be verbose')
     parser.add_argument('--with-android-cpu-arch', dest='cpu_arch',
-                        choices=['armeabi', 'armeabi-v7a', 'mips', 'x86'],
+                        choices=['armeabi',
+                                 'armeabi-v7a',
+                                 'arm64-v8a',
+                                 'mips',
+                                 'x86'],
                         help='The target CPU architecture')
     parser.add_argument('--with-android-min-sdk-version', dest='min_sdk',
                         type=int, default=0,

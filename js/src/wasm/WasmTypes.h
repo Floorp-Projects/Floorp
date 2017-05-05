@@ -89,6 +89,7 @@ using mozilla::Unused;
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
 typedef UniquePtr<Bytes> UniqueBytes;
+typedef UniquePtr<const Bytes> UniqueConstBytes;
 typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
 
 typedef int8_t I8x16[16];

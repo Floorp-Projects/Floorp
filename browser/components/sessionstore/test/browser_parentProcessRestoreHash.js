@@ -26,6 +26,7 @@ let TestAboutPage = {
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
     channel.originalURI = aURI;
+    aLoadInfo.resultPrincipalURI = aURI;
     return channel;
   },
 

@@ -245,7 +245,6 @@ public:
                                       nsFrame* aFrame,
                                       const nsRect& aDirtyRect,
                                       const nsDisplayListSet& aLists,
-                                      nsDisplayTableItem* aDisplayItem,
                                       DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
@@ -266,16 +265,6 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
-
-  /**
-   * Paint the background of the table and its parts (column groups,
-   * columns, row groups, rows, and cells), and the table border, and all
-   * internal borders if border-collapse is on.
-   */
-  DrawResult PaintTableBorderBackground(nsDisplayListBuilder* aBuilder,
-                                        nsRenderingContext& aRenderingContext,
-                                        const nsRect& aDirtyRect,
-                                        nsPoint aPt);
 
   /** Get the outer half (i.e., the part outside the height and width of
    *  the table) of the largest segment (?) of border-collapsed border on

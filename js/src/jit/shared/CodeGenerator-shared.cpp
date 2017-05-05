@@ -89,14 +89,14 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
         if (gen->usesSimd()) {
             // If the function uses any SIMD then we may need to insert padding
             // so that local slots are aligned for SIMD.
-            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(wasm::Frame),
-                                                           WasmStackAlignment);
+            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(wasm::Frame), WasmStackAlignment);
             frameDepth_ += frameInitialAdjustment_;
+
             // Keep the stack aligned. Some SIMD sequences build values on the
             // stack and need the stack aligned.
             frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
                                                 WasmStackAlignment);
-        } else if (gen->performsCall()) {
+        } else if (gen->needsStaticStackAlignment()) {
             // An MWasmCall does not align the stack pointer at calls sites but
             // instead relies on the a priori stack adjustment. This must be the
             // last adjustment of frameDepth_.
@@ -1490,7 +1490,7 @@ CodeGeneratorShared::omitOverRecursedCheck() const
     // stack overflow check. Note that the actual number here is somewhat
     // arbitrary, and codegen actually uses small bounded amounts of
     // additional stack space in some cases too.
-    return frameSize() < 64 && !gen->performsCall();
+    return frameSize() < 64 && !gen->needsOverrecursedCheck();
 }
 
 void

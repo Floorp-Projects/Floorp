@@ -220,6 +220,18 @@ HTMLScriptElement::SetAsync(bool aValue, ErrorResult& rv)
   SetHTMLBoolAttr(nsGkAtoms::async, aValue, rv);
 }
 
+bool
+HTMLScriptElement::NoModule()
+{
+  return GetBoolAttr(nsGkAtoms::nomodule);
+}
+
+void
+HTMLScriptElement::SetNoModule(bool aValue, ErrorResult& aRv)
+{
+  SetHTMLBoolAttr(nsGkAtoms::nomodule, aValue, aRv);
+}
+
 nsresult
 HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify)

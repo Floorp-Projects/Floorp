@@ -385,6 +385,7 @@ public:
     virtual nsIEventTarget*
     GetActorEventTarget();
 
+    virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 protected:
     // Override this method in top-level protocols to change the event target
     // for a new actor (and its sub-actors).

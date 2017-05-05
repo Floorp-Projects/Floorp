@@ -198,46 +198,6 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame
   return NS_OK;
 }
 
-/**
- * We need a custom display item for table row backgrounds. This is only used
- * when the table row is the root of a stacking context (e.g., has 'opacity').
- * Table row backgrounds can extend beyond the row frame bounds, when
- * the row contains row-spanning cells.
- */
-class nsDisplayTableRowGroupBackground : public nsDisplayTableItem {
-public:
-  nsDisplayTableRowGroupBackground(nsDisplayListBuilder* aBuilder,
-                                   nsTableRowGroupFrame* aFrame) :
-    nsDisplayTableItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayTableRowGroupBackground);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayTableRowGroupBackground() {
-    MOZ_COUNT_DTOR(nsDisplayTableRowGroupBackground);
-  }
-#endif
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
-
-  NS_DISPLAY_DECL_NAME("TableRowGroupBackground", TYPE_TABLE_ROW_GROUP_BACKGROUND)
-};
-
-void
-nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                        nsRenderingContext* aCtx)
-{
-  auto rgFrame = static_cast<nsTableRowGroupFrame*>(mFrame);
-  TableBackgroundPainter painter(rgFrame->GetTableFrame(),
-                                 TableBackgroundPainter::eOrigin_TableRowGroup,
-                                 mFrame->PresContext(), *aCtx,
-                                 mVisibleRect, ToReferenceFrame(),
-                                 aBuilder->GetBackgroundPaintFlags());
-
-  DrawResult result = painter.PaintRowGroup(rgFrame);
-  nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
-}
-
 // Handle the child-traversal part of DisplayGenericTablePart
 static void
 DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
@@ -293,19 +253,8 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
-  nsDisplayTableItem* item = nullptr;
-  if (IsVisibleInSelection(aBuilder)) {
-    bool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
-    if (isRoot) {
-      // This background is created regardless of whether this frame is
-      // visible or not. Visibility decisions are delegated to the
-      // table background painter.
-      item = new (aBuilder) nsDisplayTableRowGroupBackground(aBuilder, this);
-      aLists.BorderBackground()->AppendNewToTop(item);
-    }
-  }
   nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect,
-                                        aLists, item, DisplayRows);
+                                        aLists, DisplayRows);
 }
 
 nsIFrame::LogicalSides

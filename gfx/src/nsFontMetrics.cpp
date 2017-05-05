@@ -38,7 +38,7 @@ public:
             reinterpret_cast<const uint8_t*>(aString), aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
+            ComputeFlags(aMetrics), nsTextFrameUtils::Flags(),
             nullptr);
     }
 
@@ -49,7 +49,7 @@ public:
             aString, aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
+            ComputeFlags(aMetrics), nsTextFrameUtils::Flags(),
             nullptr);
     }
 
@@ -57,21 +57,21 @@ public:
     gfxTextRun *operator->() { return mTextRun.get(); }
 
 private:
-    static uint32_t ComputeFlags(nsFontMetrics* aMetrics) {
-        uint32_t flags = 0;
+    static gfx::ShapedTextFlags ComputeFlags(nsFontMetrics* aMetrics) {
+        gfx::ShapedTextFlags flags = gfx::ShapedTextFlags();
         if (aMetrics->GetTextRunRTL()) {
-            flags |= gfxTextRunFactory::TEXT_IS_RTL;
+            flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
         }
         if (aMetrics->GetVertical()) {
             switch (aMetrics->GetTextOrientation()) {
             case NS_STYLE_TEXT_ORIENTATION_MIXED:
-                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED;
+                flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED;
                 break;
             case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
-                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+                flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
                 break;
             case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
-                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+                flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
                 break;
             }
         }

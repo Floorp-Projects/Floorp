@@ -53,7 +53,7 @@ already_AddRefed<UnscaledFont>
 NativeFontResourceFontconfig::CreateUnscaledFont(uint32_t aIndex,
                                                  const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
 {
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(mFace);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(mFace, this);
   return unscaledFont.forget();
 }
 

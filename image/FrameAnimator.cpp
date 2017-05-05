@@ -435,11 +435,20 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
 LookupResult
 FrameAnimator::GetCompositedFrame(AnimationState& aState)
 {
+  LookupResult result =
+    SurfaceCache::Lookup(ImageKey(mImage),
+                         RasterSurfaceKey(mSize,
+                                          DefaultSurfaceFlags(),
+                                          PlaybackType::eAnimated));
+
   if (aState.mCompositedFrameInvalid) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
     MOZ_ASSERT(aState.GetHasBeenDecoded());
     MOZ_ASSERT(!aState.GetIsCurrentlyDecoded());
-    return LookupResult(MatchType::NOT_FOUND);
+    if (result.Type() == MatchType::NOT_FOUND) {
+      return result;
+    }
+    return LookupResult(MatchType::PENDING);
   }
 
   // If we have a composited version of this frame, return that.
@@ -451,11 +460,6 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
   // hit this case if the frame is not paletted and doesn't require compositing.
-  LookupResult result =
-    SurfaceCache::Lookup(ImageKey(mImage),
-                         RasterSurfaceKey(mSize,
-                                          DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
   if (!result) {
     return result;
   }
@@ -463,7 +467,10 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
   // Seek to the appropriate frame. If seeking fails, it means that we couldn't
   // get the frame we're looking for; treat this as if the lookup failed.
   if (NS_FAILED(result.Surface().Seek(aState.mCurrentAnimationFrameIndex))) {
-    return LookupResult(MatchType::NOT_FOUND);
+    if (result.Type() == MatchType::NOT_FOUND) {
+      return result;
+    }
+    return LookupResult(MatchType::PENDING);
   }
 
   MOZ_ASSERT(!result.Surface()->GetIsPaletted(),
