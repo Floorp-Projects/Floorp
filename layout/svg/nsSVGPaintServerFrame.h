@@ -66,6 +66,8 @@ protected:
   }
 
 public:
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+
   NS_DECL_ABSTRACT_FRAME(nsSVGPaintServerFrame)
 
   /**

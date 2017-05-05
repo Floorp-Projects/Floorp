@@ -384,9 +384,10 @@ public:
     : mBuilder(aBuilder), mLayerManager(aManager),
       mUserSpaceToFrameSpaceOffset(aUserSpaceToFrameSpaceOffset) {}
 
-  virtual DrawResult Paint(gfxContext& aContext, nsIFrame *aTarget,
-                           const gfxMatrix& aTransform,
-                           const nsIntRect* aDirtyRect) override
+  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
+                     const gfxMatrix& aTransform,
+                     const nsIntRect* aDirtyRect,
+                     imgDrawingParams& aImgParams) override
   {
     BasicLayerManager* basic = mLayerManager->AsBasicLayerManager();
     RefPtr<gfxContext> oldCtx = basic->GetTarget();
@@ -397,7 +398,6 @@ public:
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
     basic->SetTarget(oldCtx);
-    return DrawResult::SUCCESS;
   }
 
 private:
@@ -1058,8 +1058,9 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   return result;
 }
 
-DrawResult
-nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
+void
+nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
+                                   imgDrawingParams& aImgParams)
 {
   MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
              "Filter effect is discarded while generating glyph mask.");
@@ -1068,12 +1069,12 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   float opacity = nsSVGUtils::ComputeOpacity(frame, aParams.handleOpacity);
   if (opacity == 0.0f) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   /* Properties are added lazily and may have been removed by a restyle,
@@ -1084,7 +1085,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
     nsSVGEffects::GetEffectProperties(firstFrame);
 
   if (effectProperties.HasInvalidFilter()) {
-    return DrawResult::NOT_READY;
+    return;
   }
 
   gfxContext& context = aParams.ctx;
@@ -1112,15 +1113,13 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   gfxMatrix tm =
     scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
-  DrawResult result =
-    nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
-                                         tm, &callback, &dirtyRegion);
+  nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
+                                       tm, &callback, &dirtyRegion,
+                                       aImgParams);
 
   if (opacity != 1.0f) {
     context.PopGroupAndBlend();
   }
-
-  return result;
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {
