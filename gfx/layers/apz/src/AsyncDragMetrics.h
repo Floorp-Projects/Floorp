@@ -41,13 +41,11 @@ public:
                    uint32_t aPresShellId,
                    uint64_t aDragStartSequenceNumber,
                    CSSCoord aScrollbarDragOffset,
-                   const CSSRect& aScrollTrack,
                    DragDirection aDirection)
     : mViewId(aViewId)
     , mPresShellId(aPresShellId)
     , mDragStartSequenceNumber(aDragStartSequenceNumber)
     , mScrollbarDragOffset(aScrollbarDragOffset)
-    , mScrollTrack(aScrollTrack)
     , mDirection(aDirection)
   {}
 
@@ -55,7 +53,6 @@ public:
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
   CSSCoord mScrollbarDragOffset;
-  CSSRect mScrollTrack;
   DragDirection mDirection;
 };
 
