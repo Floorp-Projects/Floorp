@@ -361,10 +361,10 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     thumb->GetXULMargin(m);
     thumbRect.Inflate(m);
 
-    nsRect crect;
-    GetXULClientRect(crect);
+    nsRect sliderTrack;
+    GetXULClientRect(sliderTrack);
 
-    if (crect.width < thumbRect.width || crect.height < thumbRect.height)
+    if (sliderTrack.width < thumbRect.width || sliderTrack.height < thumbRect.height)
       return;
 
     // If this scrollbar is the scrollbar of an actively scrolled scroll frame,
@@ -394,6 +394,21 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       nsIFrame* scrollbarBox = GetScrollbar();
       bool isAsyncDraggable = !UsesCustomScrollbarMediator(scrollbarBox);
 
+      nsPoint scrollPortOrigin;
+      if (nsIScrollableFrame* scrollFrame = do_QueryFrame(scrollbarBox->GetParent())) {
+        scrollPortOrigin = scrollFrame->GetScrollPortRect().TopLeft();
+      } else {
+        isAsyncDraggable = false;
+      }
+
+      // This rect is the range in which the scroll thumb can slide in.
+      sliderTrack = sliderTrack + GetRect().TopLeft() + scrollbarBox->GetPosition() -
+                    scrollPortOrigin;
+      CSSCoord sliderTrackStart = NSAppUnitsToFloatPixels(
+          isHorizontal ? sliderTrack.x : sliderTrack.y, appUnitsPerCss);
+      CSSCoord sliderTrackLength = NSAppUnitsToFloatPixels(
+          isHorizontal ? sliderTrack.width : sliderTrack.height, appUnitsPerCss);
+
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
       nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
@@ -418,7 +433,9 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                           ScrollThumbData{scrollDirection,
                                           GetThumbRatio(),
                                           thumbLength,
-                                          isAsyncDraggable}));
+                                          isAsyncDraggable,
+                                          sliderTrackStart,
+                                          sliderTrackLength}));
 
       return;
     }
@@ -1044,11 +1061,6 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
-  nsIScrollableFrame* scrollFrameAsScrollable = do_QueryFrame(scrollFrame);
-  if (!scrollFrameAsScrollable) {
-    return;
-  }
-
   // APZ dragging requires the scrollbar to be layerized, which doesn't
   // happen for scroll info layers.
   if (ScrollFrameWillBuildScrollInfoLayer(scrollFrame)) {
@@ -1072,21 +1084,12 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
 
   nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
 
-  nsRect sliderTrack;
-  GetXULClientRect(sliderTrack);
-
-  // This rect is the range in which the scroll thumb can slide in.
-  sliderTrack = sliderTrack + GetRect().TopLeft() + scrollbarBox->GetPosition() -
-                scrollFrameAsScrollable->GetScrollPortRect().TopLeft();
-  CSSRect sliderTrackCSS = CSSRect::FromAppUnits(sliderTrack);
-
   nsIPresShell* shell = PresContext()->PresShell();
   uint64_t inputblockId = InputAPZContext::GetInputBlockId();
   uint32_t presShellId = shell->GetPresShellId();
   AsyncDragMetrics dragMetrics(scrollTargetId, presShellId, inputblockId,
                                NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
-                               sliderTrackCSS,
                                isHorizontal ? AsyncDragMetrics::HORIZONTAL :
                                               AsyncDragMetrics::VERTICAL);
 
