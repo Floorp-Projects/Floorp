@@ -2954,6 +2954,11 @@ bool AsyncPanZoomController::IsPannable() const {
   return mX.CanScroll() || mY.CanScroll();
 }
 
+bool AsyncPanZoomController::IsScrollInfoLayer() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mFrameMetrics.IsScrollInfoLayer();
+}
+
 int32_t AsyncPanZoomController::GetLastTouchIdentifier() const {
   RefPtr<GestureEventListener> listener = GetGestureEventListener();
   return listener ? listener->GetLastTouchIdentifier() : -1;
