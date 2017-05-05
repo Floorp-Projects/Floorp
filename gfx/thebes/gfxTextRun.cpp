@@ -1968,6 +1968,7 @@ gfxFontGroup::FamilyFace::CheckState(bool& aSkipDrawing)
         gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
         gfxUserFontEntry::UserFontLoadState state = ufe->LoadState();
         switch (state) {
+            case gfxUserFontEntry::STATUS_LOAD_PENDING:
             case gfxUserFontEntry::STATUS_LOADING:
                 SetLoading(true);
                 break;

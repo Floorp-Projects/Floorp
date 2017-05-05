@@ -11,7 +11,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 # in the "obvious" way, but it is unclear what the behavior should really be;
 # see bug #366138 for some (inconclusive) discussion
 # == font-size-adjust-03.html font-size-adjust-03-ref.html
-fails-if(stylo) == justification-1.html justification-1-ref.html
+== justification-1.html justification-1-ref.html
 == justification-2a.html justification-2-ref.html
 == justification-2b.html justification-2-ref.html
 == justification-2c.html justification-2-ref.html
@@ -34,7 +34,7 @@ fuzzy-if(Android,255,147) == pre-line-1.html pre-line-1-ref.html
 == pre-line-3.html pre-line-3-ref.html
 == pre-line-4.html pre-line-4-ref.html
 == pre-space-1.html pre-space-1-ref.html
-fails-if(stylo) == pre-wrap-1.html pre-wrap-1-ref.html
+== pre-wrap-1.html pre-wrap-1-ref.html
 == soft-hyphens-1a.html soft-hyphens-1-ref.html
 == soft-hyphens-1b.html soft-hyphens-1-ref.html
 == soft-hyphens-1c.html soft-hyphens-1-ref.html
@@ -122,7 +122,7 @@ HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
 fails-if(!stylo) HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
-fails-if(stylo) == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
+== wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
 fails-if(stylo) == wordwrap-01.html wordwrap-01-ref.html
 fails-if(stylo) HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
 fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) fails-if(stylo) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
@@ -317,9 +317,9 @@ fails-if(stylo) == auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
 
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
 
-fails-if(stylo) == hyphenation-control-1.html hyphenation-control-1-ref.html
-fails-if(stylo) == hyphenation-control-2.html hyphenation-control-2-ref.html
-fails-if(stylo) == hyphenation-control-3.html hyphenation-control-3-ref.html
+== hyphenation-control-1.html hyphenation-control-1-ref.html
+== hyphenation-control-2.html hyphenation-control-2-ref.html
+== hyphenation-control-3.html hyphenation-control-3-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
 fails-if(!cocoaWidget&&!stylo) != osx-font-smoothing.html osx-font-smoothing-ref.html

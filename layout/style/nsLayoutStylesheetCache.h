@@ -109,7 +109,8 @@ private:
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Servo;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Gecko;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Servo;
-  static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL;
+  static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL_Gecko;
+  static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL_Servo;
   mozilla::StyleBackendType mBackendType;
   RefPtr<mozilla::StyleSheet> mChromePreferenceSheet;
   RefPtr<mozilla::StyleSheet> mContentEditableSheet;

@@ -11,9 +11,8 @@
     title: "Renegotiation: add second audio stream"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
@@ -21,10 +20,22 @@
                                    [{audio: true}]);
           return test.pcLocal.getAllUserMedia([{audio: true}]);
         },
+      ],
+      [
+        function PC_REMOTE_CHECK_ADDED_TRACK(test) {
+          // We test both tracks to avoid an ordering problem
+          is(test.pcRemote._pc.getReceivers().length, 2,
+             "pcRemote should have two receivers");
+          return Promise.all(test.pcRemote._pc.getReceivers().map(r => {
+            const analyser = new AudioStreamAnalyser(
+                new AudioContext(), new MediaStream([r.track]));
+            const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+            return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
+          }));
+        },
       ]
     );
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });
