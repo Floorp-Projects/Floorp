@@ -483,6 +483,42 @@ TREEHERDER_ROUTE_ROOTS = {
 
 COALESCE_KEY = 'builds.{project}.{name}'
 
+DEFAULT_BRANCH_PRIORITY = 'low'
+BRANCH_PRIORITIES = {
+    'mozilla-release': 'highest',
+    'comm-esr45': 'highest',
+    'comm-esr52': 'highest',
+    'mozilla-esr45': 'very-high',
+    'mozilla-esr52': 'very-high',
+    'mozilla-beta': 'high',
+    'comm-beta': 'high',
+    'mozilla-central': 'medium',
+    'comm-central': 'medium',
+    'mozilla-aurora': 'medium',
+    'comm-aurora': 'medium',
+    'autoland': 'low',
+    'mozilla-inbound': 'low',
+    'try': 'very-low',
+    'try-comm-central': 'very-low',
+    'alder': 'very-low',
+    'ash': 'very-low',
+    'birch': 'very-low',
+    'cedar': 'very-low',
+    'cypress': 'very-low',
+    'date': 'very-low',
+    'elm': 'very-low',
+    'fig': 'very-low',
+    'gum': 'very-low',
+    'holly': 'very-low',
+    'jamun': 'very-low',
+    'larch': 'very-low',
+    'maple': 'very-low',
+    'oak': 'very-low',
+    'pine': 'very-low',
+    'graphics': 'very-low',
+    'ux': 'very-low',
+}
+
 # define a collection of payload builders, depending on the worker implementation
 payload_builders = {}
 
@@ -921,6 +957,11 @@ def build_task(config, tasks):
                 name=task['coalesce-name'])
             routes.append('coalesce.v1.' + key)
 
+        if 'priority' not in task:
+            task['priority'] = BRANCH_PRIORITIES.get(
+                config.params['project'],
+                DEFAULT_BRANCH_PRIORITY)
+
         tags = task.get('tags', {})
         tags.update({'createdForUser': config.params['owner']})
 
@@ -943,6 +984,7 @@ def build_task(config, tasks):
             },
             'extra': extra,
             'tags': tags,
+            'priority': task['priority'],
         }
 
         if task_th:
