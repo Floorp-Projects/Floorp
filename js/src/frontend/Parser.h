@@ -1185,7 +1185,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
-    Node standaloneLazyFunction(HandleFunction fun, bool strict,
+    Node standaloneLazyFunction(HandleFunction fun, uint32_t toStringStart, bool strict,
                                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     // Parse an inner function given an enclosing ParseContext and a
