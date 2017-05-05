@@ -77,6 +77,7 @@ InlineTranslator::CreateDrawTarget(ReferencePtr aRefPtr,
                                   gfx::SurfaceFormat aFormat)
 {
   RefPtr<DrawTarget> drawTarget = mBaseDT;
+  AddDrawTarget(aRefPtr, drawTarget);
   return drawTarget.forget();
 }
 
