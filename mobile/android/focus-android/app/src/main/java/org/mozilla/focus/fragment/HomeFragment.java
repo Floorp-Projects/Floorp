@@ -39,6 +39,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
         super.onAttach(context);
 
         final FragmentActivity activity = getActivity();
+        // No safe intent needed here - intent.getAction() is always safe:
         if (activity != null && Intent.ACTION_VIEW.equals(activity.getIntent().getAction())) {
             // If this activity was launched from a ACTION_VIEW intent then pressing back will send
             // the user back to the previous application (finishing this activity). However if the

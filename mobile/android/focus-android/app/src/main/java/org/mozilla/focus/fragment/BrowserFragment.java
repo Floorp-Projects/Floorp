@@ -321,6 +321,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             return false;
         }
 
+        // No SafeIntent needed here because intent.getAction() is safe (SafeIntent simply calls intent.getAction()
+        // without any wrapping):
         final Intent intent = activity.getIntent();
         return intent != null && Intent.ACTION_VIEW.equals(intent.getAction());
     }
