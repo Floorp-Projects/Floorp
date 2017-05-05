@@ -105,9 +105,23 @@ public class SafeIntent {
         }
     }
 
+    public CharSequence getCharSequenceExtra(final String name) {
+        try {
+            return intent.getCharSequenceExtra(name);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
+            return null;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent extras.", e);
+            return null;
+        }
+    }
+
     public String getAction() {
         return intent.getAction();
     }
+
+    public int getFlags() { return intent.getFlags(); }
 
     public String getDataString() {
         try {
