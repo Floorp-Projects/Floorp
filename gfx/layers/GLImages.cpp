@@ -98,15 +98,14 @@ GLImage::GetAsSourceSurface()
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-SurfaceTextureImage::SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
+SurfaceTextureImage::SurfaceTextureImage(gl::AndroidSurfaceTexture* aSurfTex,
                                          const gfx::IntSize& aSize,
                                          gl::OriginPos aOriginPos)
  : GLImage(ImageFormat::SURFACE_TEXTURE),
-   mHandle(aHandle),
+   mSurfaceTexture(aSurfTex),
    mSize(aSize),
    mOriginPos(aOriginPos)
 {
-  MOZ_ASSERT(mHandle);
 }
 #endif
 

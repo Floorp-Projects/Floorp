@@ -42,18 +42,13 @@ public final class SurfaceAllocator {
     }
 
     @WrapForJNI
-    public static GeckoSurface acquireSurface(int width, int height, boolean singleBufferMode) {
+    public static GeckoSurface acquireSurface(int width, int height, boolean singleBufferMode) throws Exception {
+        ensureConnection();
+
         try {
-            ensureConnection();
-
-            if (singleBufferMode && !GeckoSurfaceTexture.isSingleBufferSupported()) {
-                return null;
-            }
-
             return sConnection.getAllocator().acquireSurface(width, height, singleBufferMode);
-        } catch (Exception e) {
-            Log.w(LOGTAG, "Failed to acquire GeckoSurface", e);
-            return null;
+        } catch (RemoteException e) {
+            throw new Exception("Failed to acquire GeckoSurface", e);
         }
     }
 
