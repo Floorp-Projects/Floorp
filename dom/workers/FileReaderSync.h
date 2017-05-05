@@ -32,11 +32,8 @@ private:
   nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
                          nsAString &aResult);
 
-  nsresult ConvertAsyncToSyncStream(nsIInputStream* aAsyncStream,
-                                    nsIInputStream** aSyncStream);
-
-  nsresult SyncRead(nsIInputStream* aStream, char* aBuffer,
-                    uint32_t aBufferSize, uint32_t* aRead);
+  nsresult Read(nsIInputStream* aStream, char* aBuffer, uint32_t aBufferSize,
+                uint32_t* aRead);
 
 public:
   static already_AddRefed<FileReaderSync>
