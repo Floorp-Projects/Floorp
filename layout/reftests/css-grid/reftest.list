@@ -3,7 +3,7 @@ default-preferences pref(layout.css.grid.enabled,true)
 fails-if(!stylo) == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
 fails-if(!stylo) skip-if(stylo) == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
-fails-if(stylo) == grid-placement-definite-001.html grid-placement-definite-001-ref.html
+== grid-placement-definite-001.html grid-placement-definite-001-ref.html
 fails-if(stylo) == grid-placement-definite-002.html grid-placement-definite-002-ref.html
 fails-if(stylo) == grid-placement-definite-003.html grid-placement-definite-003-ref.html
 fails-if(stylo) == grid-placement-negative-lines-001.html grid-placement-negative-lines-001-ref.html
@@ -39,7 +39,7 @@ skip-if(Android) fails-if(stylo) == grid-placement-definite-implicit-001.html gr
 fails-if(stylo) == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
 skip-if(Android) fuzzy-if(winWidget,1,32) fails-if(stylo) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
-fails-if(stylo) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
+== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 fails-if(stylo) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
 fails-if(stylo) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
 fails-if(stylo) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
