@@ -1741,7 +1741,6 @@ class InterpreterFrameIterator
 class WasmActivation : public Activation
 {
     wasm::Frame* exitFP_;
-    wasm::ExitReason exitReason_;
 
   public:
     explicit WasmActivation(JSContext* cx);
@@ -1755,12 +1754,8 @@ class WasmActivation : public Activation
     // WasmActivation.
     wasm::Frame* exitFP() const { return exitFP_; }
 
-    // Returns the reason why wasm code called out of wasm code.
-    wasm::ExitReason exitReason() const { return exitReason_; }
-
     // Written by JIT code:
     static unsigned offsetOfExitFP() { return offsetof(WasmActivation, exitFP_); }
-    static unsigned offsetOfExitReason() { return offsetof(WasmActivation, exitReason_); }
 
     // Interrupts are started from the interrupt signal handler (or the ARM
     // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
