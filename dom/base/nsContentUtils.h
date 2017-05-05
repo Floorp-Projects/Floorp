@@ -2747,7 +2747,7 @@ public:
                                                 nsIHttpChannel* aChannel,
                                                 mozilla::net::ReferrerPolicy aReferrerPolicy);
 
-    /*
+  /*
    * Parse a referrer policy from a Referrer-Policy header
    * https://www.w3.org/TR/referrer-policy/#parse-referrer-policy-from-header
    *
@@ -2755,6 +2755,8 @@ public:
    * @return referrer policy from the response header.
    */
   static mozilla::net::ReferrerPolicy GetReferrerPolicyFromHeader(const nsAString& aHeader);
+
+  static bool PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj);
 
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
 
