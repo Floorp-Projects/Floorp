@@ -221,7 +221,7 @@ TabGroup::FindItemWithName(const nsAString& aName,
 }
 
 nsTArray<nsPIDOMWindowOuter*>
-TabGroup::GetTopLevelWindows()
+TabGroup::GetTopLevelWindows() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<nsPIDOMWindowOuter*> array;
@@ -263,5 +263,17 @@ TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
   return SchedulerGroup::AbstractMainThreadForImpl(aCategory);
 }
 
+bool
+TabGroup::IsBackground() const
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  for (nsPIDOMWindowOuter* outerWindow : GetTopLevelWindows()) {
+    if (!outerWindow->IsBackground()) {
+      return false;
+    }
+  }
+  return true;
+}
 } // namespace dom
 } // namespace mozilla

@@ -1725,10 +1725,18 @@ NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> 
 static void
 NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
+  JS::AutoAssertGCCallback inCallback;
+
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
     if (sNPObjWrappers) {
-      sNPObjWrappers->Remove(npobj);
+      // If the sNPObjWrappers map contains an entry that refers to this
+      // wrapper, remove it.
+      auto entry =
+        static_cast<NPObjWrapperHashEntry*>(sNPObjWrappers->Search(npobj));
+      if (entry && entry->mJSObj == obj) {
+        sNPObjWrappers->Remove(npobj);
+      }
     }
   }
 
@@ -1907,13 +1915,23 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   }
 
   if (entry->mJSObj) {
-    // Found a live NPObject wrapper. It may not be in the same compartment
-    // as cx, so we need to wrap it before returning it.
-    JS::Rooted<JSObject*> obj(cx, entry->mJSObj);
-    if (!JS_WrapObject(cx, &obj)) {
-      return nullptr;
+    // Found a NPObject wrapper. First check it is still alive.
+    JSObject* obj = entry->mJSObj;
+    if (js::gc::EdgeNeedsSweepUnbarriered(&obj)) {
+      // The object is dead (finalization will happen at a later time). By the
+      // time we leave this function, this entry will either be updated with a
+      // new wrapper or removed if that fails. Clear it anyway to make sure
+      // nothing touches the dead object.
+      entry->mJSObj = nullptr;
+    } else {
+      // It may not be in the same compartment as cx, so we need to wrap it
+      // before returning it.
+      JS::Rooted<JSObject*> obj(cx, entry->mJSObj);
+      if (!JS_WrapObject(cx, &obj)) {
+        return nullptr;
+      }
+      return obj;
     }
-    return obj;
   }
 
   entry->mNPObj = npobj;

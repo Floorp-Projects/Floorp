@@ -114,12 +114,16 @@ public:
                    nsIDocShellTreeItem* aOriginalRequestor,
                    nsIDocShellTreeItem** aFoundItem);
 
-  nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
+  nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows() const;
   const nsTArray<nsPIDOMWindowOuter*>& GetWindows() { return mWindows; }
 
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
   nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+
+  // Returns true if all of the TabGroup's top-level windows are in
+  // the background.
+  bool IsBackground() const override;
 
 private:
   virtual AbstractThread*

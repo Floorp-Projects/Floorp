@@ -14,7 +14,12 @@ js_option('--with-android-toolchain', nargs=1,
 js_option('--with-android-gnu-compiler-version', nargs=1,
           help='GNU compiler version to use')
 
-min_android_version = dependable(lambda: '9')
+@depends(target)
+def min_android_version(target):
+    if target.cpu in ['aarch64', 'x86_64', 'mips64']:
+        # 64-bit support was added in API 21.
+        return '21'
+    return '9'
 
 js_option('--with-android-version',
           nargs=1,
@@ -51,6 +56,47 @@ def ndk(value, build_project):
 
 set_config('ANDROID_NDK', ndk)
 add_old_configure_assignment('android_ndk', ndk)
+
+@depends(ndk)
+@checking('for android ndk version')
+@imports(_from='__builtin__', _import='open')
+def ndk_version(ndk):
+    if not ndk:
+        # Building 'js/src' for non-Android.
+        return
+    with open(os.path.join(ndk, 'source.properties'), 'r') as f:
+        for line in f:
+            if not line.startswith('Pkg.Revision'):
+                continue
+            (_, version) = line.split('=')
+            if version:
+                return version.strip()
+            die('Unexpected Pkg.Revision line in source.properties')
+    die('Cannot determine NDK version from source.properties')
+
+@depends(ndk_version)
+def ndk_major_version(ndk_version):
+    if not ndk_version:
+        # Building 'js/src' for non-Android.
+        return
+    (major, minor, revision) = ndk_version.split('.')
+    if major:
+        return major
+    die('Unexpected NDK version string: ' + ndk_version)
+
+set_config('ANDROID_NDK_MAJOR_VERSION', ndk_major_version);
+
+@depends(ndk_version)
+def ndk_minor_version(ndk_version):
+    if not ndk_version:
+        # Building 'js/src' for non-Android.
+        return
+    (major, minor, revision) = ndk_version.split('.')
+    if minor:
+        return minor
+    die('Unexpected NDK version string: ' + ndk_version)
+
+set_config('ANDROID_NDK_MINOR_VERSION', ndk_minor_version);
 
 @depends(target, android_version, ndk)
 @checking('for android platform directory')

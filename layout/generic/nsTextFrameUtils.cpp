@@ -16,23 +16,23 @@
 using namespace mozilla;
 
 static bool
-IsDiscardable(char16_t ch, uint32_t* aFlags)
+IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
   // and discarding it would force us to copy text in many cases of preformatted
   // text containing \r\n.
   if (ch == CH_SHY) {
-    *aFlags |= nsTextFrameUtils::TEXT_HAS_SHY;
+    *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
     return true;
   }
   return IsBidiControl(ch);
 }
 
 static bool
-IsDiscardable(uint8_t ch, uint32_t* aFlags)
+IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags)
 {
   if (ch == CH_SHY) {
-    *aFlags |= nsTextFrameUtils::TEXT_HAS_SHY;
+    *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
     return true;
   }
   return false;
@@ -93,7 +93,7 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
                      bool aHasSegmentBreak,
                      bool& aInWhitespace,
                      CharT* aOutput,
-                     uint32_t& aFlags,
+                     nsTextFrameUtils::Flags& aFlags,
                      nsTextFrameUtils::CompressionMode aCompression,
                      gfxSkipChars* aSkipChars)
 {
@@ -190,7 +190,7 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
       aInWhitespace = IsSpaceOrTab(ch);
     } else if (keepTransformedWhiteSpace) {
       if (ch != ' ') {
-        aFlags |= nsTextFrameUtils::TEXT_WAS_TRANSFORMED;
+        aFlags |= nsTextFrameUtils::Flags::TEXT_WAS_TRANSFORMED;
       }
       *aOutput++ = ' ';
       aSkipChars->KeepChar();
@@ -209,9 +209,9 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags)
+                                Flags* aAnalysisFlags)
 {
-  uint32_t flags = 0;
+  Flags flags = Flags();
   CharT* outputStart = aOutput;
 #ifdef DEBUG
   int32_t skipCharsOffset = aSkipChars->GetOriginalCharCount();
@@ -233,12 +233,12 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
         } else if (aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
           if (ch == '\t' || ch == '\n') {
             ch = ' ';
-            flags |= TEXT_WAS_TRANSFORMED;
+            flags |= Flags::TEXT_WAS_TRANSFORMED;
           }
         } else {
           // aCompression == COMPRESS_NONE
           if (ch == '\t') {
-            flags |= TEXT_HAS_TAB;
+            flags |= Flags::TEXT_HAS_TAB;
           }
         }
         *aOutput++ = ch;
@@ -333,7 +333,7 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
   }
 
   if (outputStart + aLength != aOutput) {
-    flags |= TEXT_WAS_TRANSFORMED;
+    flags |= Flags::TEXT_WAS_TRANSFORMED;
   }
   *aAnalysisFlags = flags;
 
@@ -358,14 +358,14 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags);
+                                Flags* aAnalysisFlags);
 template char16_t*
 nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
                                 char16_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags);
+                                Flags* aAnalysisFlags);
 template bool
 nsTextFrameUtils::IsSkippableCharacterForTransformText(uint8_t aChar);
 template bool

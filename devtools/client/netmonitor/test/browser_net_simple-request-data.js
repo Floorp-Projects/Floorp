@@ -8,6 +8,11 @@
  */
 
 function test() {
+  // Disable tcp fast open, because it is setting a response header indicator
+  // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
+  // number of response headers will vary depending on the platform.
+  Services.prefs.setBoolPref("network.tcp.tcp_fastopen_enable", false);
+
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {

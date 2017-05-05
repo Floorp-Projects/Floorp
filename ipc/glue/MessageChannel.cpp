@@ -1088,6 +1088,8 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
     if (MaybeInterceptSpecialIOMessage(aMsg))
         return;
 
+    mListener->OnChannelReceivedMessage(aMsg);
+
     // Regardless of the Interrupt stack, if we're awaiting a sync reply,
     // we know that it needs to be immediately handled to unblock us.
     if (aMsg.is_sync() && aMsg.is_reply()) {

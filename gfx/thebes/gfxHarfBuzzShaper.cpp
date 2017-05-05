@@ -1482,7 +1482,7 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
                                         (isRightToLeft ? HB_DIRECTION_RTL :
                                                          HB_DIRECTION_LTR));
     hb_script_t scriptTag;
-    if (aShapedText->GetFlags() & gfxTextRunFactory::TEXT_USE_MATH_SCRIPT) {
+    if (aShapedText->GetFlags() & gfx::ShapedTextFlags::TEXT_USE_MATH_SCRIPT) {
         scriptTag = sMathScript;
     } else {
         scriptTag = GetHBScriptUsedForShaping(aScript);

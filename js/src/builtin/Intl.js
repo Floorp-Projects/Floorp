@@ -382,7 +382,7 @@ function CanonicalizeLanguageTag(locale) {
     if (hasOwn(locale, langTagMappings))
         return langTagMappings[locale];
 
-    var subtags = StringSplitString(ToString(locale), "-");
+    var subtags = StringSplitString(locale, "-");
     var i = 0;
 
     // Handle the standard part: All subtags before the first singleton or "x".
@@ -930,10 +930,7 @@ function LookupMatcher(availableLocales, requestedLocales) {
         if (locale !== noExtensionsLocale) {
             var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
             var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, locale);
-            var extension = extensionMatch[0];
-            var extensionIndex = extensionMatch.index;
-            result.extension = extension;
-            result.extensionIndex = extensionIndex;
+            result.extension = extensionMatch[0];
         }
     } else {
         result.locale = DefaultLocale();
@@ -958,6 +955,79 @@ function BestFitMatcher(availableLocales, requestedLocales) {
 
 
 /**
+ * Returns the Unicode extension value subtags for the requested key subtag.
+ *
+ * NOTE: PR to add UnicodeExtensionValue to ECMA-402 isn't yet written.
+ */
+function UnicodeExtensionValue(extension, key) {
+    assert(typeof extension === "string", "extension is a string value");
+    assert(function() {
+        var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
+        var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, extension);
+        return extensionMatch !== null && extensionMatch[0] === extension;
+    }(), "extension is a Unicode extension subtag");
+    assert(typeof key === "string", "key is a string value");
+    assert(key.length === 2, "key is a Unicode extension key subtag");
+
+    // Step 1.
+    var size = extension.length;
+
+    // Step 2.
+    var searchValue = "-" + key + "-";
+
+    // Step 3.
+    var pos = callFunction(std_String_indexOf, extension, searchValue);
+
+    // Step 4.
+    if (pos !== -1) {
+        // Step 4.a.
+        var start = pos + 4;
+
+        // Step 4.b.
+        var end = start;
+
+        // Step 4.c.
+        var k = start;
+
+        // Steps 4.d-e.
+        while (true) {
+            // Step 4.e.i.
+            var e = callFunction(std_String_indexOf, extension, "-", k);
+
+            // Step 4.e.ii.
+            var len = e === -1 ? size - k : e - k;
+
+            // Step 4.e.iii.
+            if (len === 2)
+                break;
+
+            // Step 4.e.iv.
+            if (e === -1) {
+                end = size;
+                break;
+            }
+
+            // Step 4.e.v.
+            end = e;
+            k = e + 1;
+        }
+
+        // Step 4.f.
+        return callFunction(String_substring, extension, start, end);
+    }
+
+    // Step 5.
+    searchValue = "-" + key;
+
+    // Steps 6-7.
+    if (callFunction(std_String_endsWith, extension, searchValue))
+        return "";
+
+    // Step 8 (implicit).
+}
+
+
+/**
  * Compares a BCP 47 language priority list against availableLocales and
  * determines the best available language to meet the request. Options specified
  * through Unicode extension subsequences are negotiated separately, taking the
@@ -978,19 +1048,8 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     // Step 4.
     var foundLocale = r.locale;
 
-    // Step 5.a.
+    // Step 5 (Not applicable in this implementation).
     var extension = r.extension;
-    var extensionIndex, extensionSubtags, extensionSubtagsLength;
-
-    // Step 5.
-    if (extension !== undefined) {
-        // Step 5.b.
-        extensionIndex = r.extensionIndex;
-
-        // Steps 5.d-e.
-        extensionSubtags = StringSplitString(ToString(extension), "-");
-        extensionSubtagsLength = extensionSubtags.length;
-    }
 
     // Steps 6-7.
     var result = new Record();
@@ -999,68 +1058,57 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     // Step 8.
     var supportedExtension = "-u";
 
-    // Steps 9-11.
+    // Steps 9-12.
     var i = 0;
     var len = relevantExtensionKeys.length;
     var foundLocaleData;
     if (len > 0) {
         // In this implementation, localeData is a function, not an object.
-        // Step 11.b.
+        // Step 12.b.
         foundLocaleData = localeData(foundLocale);
     }
     while (i < len) {
-        // Step 11.a.
+        // Step 12.a.
         var key = relevantExtensionKeys[i];
 
-        // Step 11.c.
+        // Step 12.c.
         var keyLocaleData = foundLocaleData[key];
 
         // Locale data provides default value.
-        // Step 11.d.
+        // Step 12.d.
         var value = keyLocaleData[0];
+        assert(typeof value === "string" || value === null, "unexpected locale data value");
 
         // Locale tag may override.
 
-        // Step 11.e.
+        // Step 12.e.
         var supportedExtensionAddition = "";
 
-        // Step 11.f is implemented by Utilities.js.
+        // Step 12.f.
+        if (extension !== undefined) {
+            // NB: The step annotations don't yet match the ES2017 Intl draft,
+            // 94045d234762ad107a3d09bb6f7381a65f1a2f9b, because the PR to add
+            // the new UnicodeExtensionValue abstract operation still needs to
+            // be written.
 
-        var valuePos;
+            // Step 12.f.i.
+            var requestedValue = UnicodeExtensionValue(extension, key);
 
-        // Step 11.g.
-        if (extensionSubtags !== undefined) {
-            // Step 11.g.i.
-            var keyPos = callFunction(ArrayIndexOf, extensionSubtags, key);
-
-            // Step 11.g.ii.
-            if (keyPos !== -1) {
-                // Step 11.g.ii.1.
-                if (keyPos + 1 < extensionSubtagsLength &&
-                    extensionSubtags[keyPos + 1].length > 2)
-                {
-                    // Step 11.g.ii.1.a.
-                    var requestedValue = extensionSubtags[keyPos + 1];
-
-                    // Step 11.g.ii.1.b.
-                    valuePos = callFunction(ArrayIndexOf, keyLocaleData, requestedValue);
-
-                    // Step 11.g.ii.1.c.
-                    if (valuePos !== -1) {
+            // Step 12.f.ii.
+            if (requestedValue !== undefined) {
+                // Step 12.f.ii.1.
+                if (requestedValue !== "") {
+                    // Step 12.f.ii.1.a.
+                    if (callFunction(ArrayIndexOf, keyLocaleData, requestedValue) !== -1) {
                         value = requestedValue;
                         supportedExtensionAddition = "-" + key + "-" + value;
                     }
                 } else {
-                    // Step 11.g.ii.2.
+                    // Step 12.f.ii.2.
 
                     // According to the LDML spec, if there's no type value,
                     // and true is an allowed value, it's used.
-
-                    // Step 11.g.ii.2.a.
-                    valuePos = callFunction(ArrayIndexOf, keyLocaleData, "true");
-
-                    // Step 11.g.ii.2.b.
-                    if (valuePos !== -1)
+                    if (callFunction(ArrayIndexOf, keyLocaleData, "true") !== -1)
                         value = "true";
                 }
             }
@@ -1068,35 +1116,53 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
         // Options override all.
 
-        // Step 11.h.i.
+        // Step 12.g.i.
         var optionsValue = options[key];
 
-        // Step 11.h, 11.h.ii.
+        // Step 12.g, 12.g.ii.
         if (optionsValue !== undefined &&
+            optionsValue !== value &&
             callFunction(ArrayIndexOf, keyLocaleData, optionsValue) !== -1)
         {
-            // Step 11.h.ii.1.
-            if (optionsValue !== value) {
-                value = optionsValue;
-                supportedExtensionAddition = "";
-            }
+            value = optionsValue;
+            supportedExtensionAddition = "";
         }
 
-        // Steps 11.i-k.
+        // Steps 12.h-j.
         result[key] = value;
         supportedExtension += supportedExtensionAddition;
         i++;
     }
 
-    // Step 12.
+    // Step 13.
     if (supportedExtension.length > 2) {
-        var preExtension = callFunction(String_substring, foundLocale, 0, extensionIndex);
-        var postExtension = callFunction(String_substring, foundLocale, extensionIndex);
-        foundLocale = preExtension + supportedExtension + postExtension;
+        assert(!callFunction(std_String_startsWith, foundLocale, "x-"),
+               "unexpected privateuse-only locale returned from ICU");
+
+        // Step 13.a.
+        var privateIndex = callFunction(std_String_indexOf, foundLocale, "-x-");
+
+        // Steps 13.b-c.
+        if (privateIndex === -1) {
+            foundLocale += supportedExtension;
+        } else {
+            var preExtension = callFunction(String_substring, foundLocale, 0, privateIndex);
+            var postExtension = callFunction(String_substring, foundLocale, privateIndex);
+            foundLocale = preExtension + supportedExtension + postExtension;
+        }
+
+        // Step 13.d.
+        assert(IsStructurallyValidLanguageTag(foundLocale), "invalid locale after concatenation");
+
+        // Step 13.e (Not required in this implementation, because we don't
+        // canonicalize Unicode extension subtags).
+        assert(foundLocale === CanonicalizeLanguageTag(foundLocale), "same locale with extension");
     }
 
-    // Steps 13-14.
+    // Step 14.
     result.locale = foundLocale;
+
+    // Step 15.
     return result;
 }
 

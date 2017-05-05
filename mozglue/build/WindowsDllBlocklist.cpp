@@ -238,6 +238,8 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
 
   // Nahimic 2 breaks applicaton update (bug 1356637)
   { "nahimic2devprops.dll", ALL_VERSIONS },
+  // Nahimic is causing crashes, bug 1233556
+  { "nahimicmsiosd.dll", ALL_VERSIONS },
 
   { nullptr, 0 }
 };

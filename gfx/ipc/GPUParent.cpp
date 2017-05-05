@@ -389,19 +389,12 @@ GPUParent::RecvNotifyGpuObservers(const nsCString& aTopic)
 mozilla::ipc::IPCResult
 GPUParent::RecvStartProfiler(const ProfilerInitParams& params)
 {
-  nsTArray<const char*> featureArray;
-  for (size_t i = 0; i < params.features().Length(); ++i) {
-    featureArray.AppendElement(params.features()[i].get());
+  nsTArray<const char*> filterArray;
+  for (size_t i = 0; i < params.filters().Length(); ++i) {
+    filterArray.AppendElement(params.filters()[i].get());
   }
-
-  nsTArray<const char*> threadNameFilterArray;
-  for (size_t i = 0; i < params.threadFilters().Length(); ++i) {
-    threadNameFilterArray.AppendElement(params.threadFilters()[i].get());
-  }
-  profiler_start(params.entries(), params.interval(),
-                 featureArray.Elements(), featureArray.Length(),
-                 threadNameFilterArray.Elements(),
-                 threadNameFilterArray.Length());
+  profiler_start(params.entries(), params.interval(), params.features(),
+                 filterArray.Elements(), filterArray.Length());
 
  return IPC_OK();
 }

@@ -17,29 +17,20 @@ ANRReporter::RequestNativeStack(bool aUnwind)
         // Don't proceed if profiler is already running
         return false;
     }
+
     // WARNING: we are on the ANR reporter thread at this point and it is
     // generally unsafe to use the profiler from off the main thread. However,
     // the risk here is limited because for most users, the profiler is not run
     // elsewhere. See the discussion in Bug 863777, comment 13
-    const char *NATIVE_STACK_FEATURES[] =
-        {"leaf", "threads", "privacy"};
-    const char *NATIVE_STACK_UNWIND_FEATURES[] =
-        {"leaf", "threads", "privacy", "stackwalk"};
+    uint32_t features = ProfilerFeature::Leaf |
+                        ProfilerFeature::Privacy |
+                        (aUnwind ? ProfilerFeature::StackWalk : 0) |
+                        ProfilerFeature::Threads;
 
-    const char **features = NATIVE_STACK_FEATURES;
-    size_t features_size = sizeof(NATIVE_STACK_FEATURES);
-    if (aUnwind) {
-        features = NATIVE_STACK_UNWIND_FEATURES;
-        features_size = sizeof(NATIVE_STACK_UNWIND_FEATURES);
-        // We want the new unwinder if the unwind mode has not been set yet
-        putenv("MOZ_PROFILER_NEW=1");
-    }
+    const char *NATIVE_STACK_THREADS[] = {"GeckoMain", "Compositor"};
 
-    const char *NATIVE_STACK_THREADS[] =
-        {"GeckoMain", "Compositor"};
     // Buffer one sample and let the profiler wait a long time
-    profiler_start(/* entries */ 100, /* interval */ 10000,
-                   features, features_size / sizeof(char*),
+    profiler_start(/* entries */ 100, /* interval */ 10000, features,
                    NATIVE_STACK_THREADS,
                    sizeof(NATIVE_STACK_THREADS) / sizeof(char*));
     return true;

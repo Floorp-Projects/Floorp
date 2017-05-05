@@ -33,7 +33,7 @@ typedef Vector<ZoneGroup*, 4, SystemAllocPolicy> ZoneGroupVector;
 using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 
 class AutoMaybeStartBackgroundAllocation;
-template <typename Task> class AutoRunGCSweepTask;
+class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
@@ -987,7 +987,7 @@ class GCRuntime
     MOZ_MUST_USE bool findInterZoneEdges();
     void getNextSweepGroup();
     void endMarkingSweepGroup();
-    void beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock);
+    void beginSweepingSweepGroup();
     bool shouldReleaseObservedTypes();
     void sweepDebuggerOnMainThread(FreeOp* fop);
     void sweepJitDataOnMainThread(FreeOp* fop);
@@ -1230,7 +1230,7 @@ class GCRuntime
      */
     void startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
     void joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
-    template <typename Task> friend class AutoRunGCSweepTask;
+    friend class AutoRunParallelTask;
 
     /*
      * List head of arenas allocated during the sweep phase.

@@ -39,7 +39,7 @@ public:
                        BoundingBoxType aBoundingBoxType,
                        DrawTarget *aDrawTargetForTightBoundingBox,
                        Spacing *aSpacing,
-                       uint16_t aOrientation) override;
+                       mozilla::gfx::ShapedTextFlags aOrientation) override;
 
     // We need to provide hinted (non-linear) glyph widths if using a font
     // with embedded color bitmaps (Apple Color Emoji), as Core Text renders

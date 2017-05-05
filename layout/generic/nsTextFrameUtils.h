@@ -22,45 +22,53 @@ struct nsStyleText;
 class nsTextFrameUtils {
 public:
   // These constants are used as textrun flags for textframe textruns.
-  enum {
+  enum class Flags : uint16_t {
     // The following flags are set by TransformText
 
     // the text has at least one untransformed tab character
-    TEXT_HAS_TAB             = 0x010000,
+    TEXT_HAS_TAB             = 0x01,
     // the original text has at least one soft hyphen character
-    TEXT_HAS_SHY             = 0x020000,
-    TEXT_WAS_TRANSFORMED     = 0x040000,
-    TEXT_UNUSED_FLAG         = 0x080000,
+    TEXT_HAS_SHY             = 0x02,
+    TEXT_WAS_TRANSFORMED     = 0x04,
+    TEXT_UNUSED_FLAG         = 0x08,
 
     // The following flags are set by nsTextFrame
 
-    TEXT_IS_SIMPLE_FLOW      = 0x100000,
-    TEXT_INCOMING_WHITESPACE = 0x200000,
-    TEXT_TRAILING_WHITESPACE = 0x400000,
-    TEXT_COMPRESSED_LEADING_WHITESPACE = 0x800000,
-    TEXT_NO_BREAKS           = 0x1000000,
-    TEXT_IS_TRANSFORMED      = 0x2000000,
+    TEXT_IS_SIMPLE_FLOW      = 0x10,
+    TEXT_INCOMING_WHITESPACE = 0x20,
+    TEXT_TRAILING_WHITESPACE = 0x40,
+    TEXT_COMPRESSED_LEADING_WHITESPACE = 0x80,
+    TEXT_NO_BREAKS           = 0x100,
+    TEXT_IS_TRANSFORMED      = 0x200,
     // This gets set if there's a break opportunity at the end of the textrun.
     // We normally don't use this break opportunity because the following text
     // will have a break opportunity at the start, but it's useful for line
     // layout to know about it in case the following content is not text
-    TEXT_HAS_TRAILING_BREAK  = 0x4000000,
+    TEXT_HAS_TRAILING_BREAK  = 0x400,
 
     // This is set if the textrun was created for a textframe whose
     // NS_FRAME_IS_IN_SINGLE_CHAR_MI flag is set.  This occurs if the textframe
     // belongs to a MathML <mi> element whose embedded text consists of a
     // single character.
-    TEXT_IS_SINGLE_CHAR_MI   = 0x8000000,
+    TEXT_IS_SINGLE_CHAR_MI   = 0x800,
 
     // This is set if the text run might be observing for glyph changes.
-    TEXT_MIGHT_HAVE_GLYPH_CHANGES = 0x10000000,
+    TEXT_MIGHT_HAVE_GLYPH_CHANGES = 0x1000,
 
-    // The following are defined by gfxTextRunWordCache rather than here,
-    // so that it also has access to the _INCOMING flag
+    // For internal use by the memory reporter when accounting for
+    // storage used by textruns.
+    // Because the reporter may visit each textrun multiple times while
+    // walking the frame trees and textrun cache, it needs to mark
+    // textruns that have been seen so as to avoid multiple-accounting.
+    TEXT_RUN_SIZE_ACCOUNTED      = 0x2000,
+
+    // The following are defined by gfxTextRunFactory rather than here,
+    // so that it also has access to the _INCOMING and MATH_SCRIPT flags
+    // for shaping purposes.
+    // They live in the gfxShapedText::mFlags field rather than the
+    // gfxTextRun::mFlags2 field.
     // TEXT_TRAILING_ARABICCHAR
     // TEXT_INCOMING_ARABICCHAR
-
-    // This is defined in gfxTextRunFactory to allow access in gfxFont.
     // TEXT_USE_MATH_SCRIPT
   };
 
@@ -119,7 +127,7 @@ public:
                               CompressionMode aCompression,
                               uint8_t* aIncomingFlags,
                               gfxSkipChars* aSkipChars,
-                              uint32_t* aAnalysisFlags);
+                              nsTextFrameUtils::Flags* aAnalysisFlags);
 
   /**
    * Returns whether aChar is a character that nsTextFrameUtils::TransformText
@@ -144,6 +152,8 @@ public:
                                                     const nsStyleText*
                                                       aStyleText);
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrameUtils::Flags)
 
 class nsSkipCharsRunIterator {
 public:

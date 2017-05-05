@@ -9,12 +9,12 @@ NS_IMPL_ISUPPORTS(nsProfilerStartParams, nsIProfilerStartParams)
 
 nsProfilerStartParams::nsProfilerStartParams(uint32_t aEntries,
                                              double aInterval,
-                                             const nsTArray<nsCString>& aFeatures,
-                                             const nsTArray<nsCString>& aThreadFilterNames) :
+                                             uint32_t aFeatures,
+                                             const nsTArray<nsCString>& aFilters) :
   mEntries(aEntries),
   mInterval(aInterval),
   mFeatures(aFeatures),
-  mThreadFilterNames(aThreadFilterNames)
+  mFilters(aFilters)
 {
 }
 
@@ -31,14 +31,6 @@ nsProfilerStartParams::GetEntries(uint32_t* aEntries)
 }
 
 NS_IMETHODIMP
-nsProfilerStartParams::SetEntries(uint32_t aEntries)
-{
-  NS_ENSURE_ARG(aEntries);
-  mEntries = aEntries;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProfilerStartParams::GetInterval(double* aInterval)
 {
   NS_ENSURE_ARG_POINTER(aInterval);
@@ -47,21 +39,15 @@ nsProfilerStartParams::GetInterval(double* aInterval)
 }
 
 NS_IMETHODIMP
-nsProfilerStartParams::SetInterval(double aInterval)
+nsProfilerStartParams::GetFeatures(uint32_t* aFeatures)
 {
-  NS_ENSURE_ARG(aInterval);
-  mInterval = aInterval;
+  NS_ENSURE_ARG_POINTER(aFeatures);
+  *aFeatures = mFeatures;
   return NS_OK;
 }
 
 const nsTArray<nsCString>&
-nsProfilerStartParams::GetFeatures()
+nsProfilerStartParams::GetFilters()
 {
-  return mFeatures;
-}
-
-const nsTArray<nsCString>&
-nsProfilerStartParams::GetThreadFilterNames()
-{
-  return mThreadFilterNames;
+  return mFilters;
 }

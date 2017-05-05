@@ -222,9 +222,6 @@ const RECOMMENDED_PREFS = new Map([
   // Show chrome errors and warnings in the error console
   ["javascript.options.showInConsole", true],
 
-  // Make sure the disk cache doesn't get auto disabled
-  ["network.http.bypass-cachelock-threshold", 200000],
-
   // Do not prompt for temporary redirects
   ["network.http.prompt-temp-redirect", false],
 

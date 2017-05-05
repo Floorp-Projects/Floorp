@@ -344,7 +344,7 @@ public:
   /**
    * Update the tree on content removal.
    */
-  void ContentRemoved(Accessible* aContent);
+  void ContentRemoved(Accessible* aAccessible);
   void ContentRemoved(nsIContent* aContentNode);
 
   /**
@@ -503,11 +503,6 @@ protected:
    * invalidate their containers later.
    */
   void ProcessInvalidationList();
-
-  /**
-   * Validates all aria-owns connections and updates the tree accordingly.
-   */
-  void ValidateARIAOwned();
 
   /**
    * Steals or puts back accessible subtrees.

@@ -82,8 +82,6 @@ class GeckoInstance(object):
 
         "media.volume_scale": "0.01",
 
-        # Make sure the disk cache doesn't get auto disabled
-        "network.http.bypass-cachelock-threshold": 200000,
         # Do not prompt for temporary redirects
         "network.http.prompt-temp-redirect": False,
         # Disable speculative connections so they aren"t reported as leaking when they"re

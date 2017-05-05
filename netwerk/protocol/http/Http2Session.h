@@ -249,6 +249,7 @@ public:
   MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *, uint32_t , uint32_t *, bool *) override final;
   MOZ_MUST_USE bool Do0RTT() override final { return true; }
   MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) override final;
+  void SetFastOpenStatus(uint8_t aStatus) override final;
 
   // For use by an HTTP2Stream
   void Received421(nsHttpConnectionInfo *ci);

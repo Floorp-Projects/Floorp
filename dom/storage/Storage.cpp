@@ -72,6 +72,12 @@ Storage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return StorageBinding::Wrap(aCx, this, aGivenProto);
 }
 
+int64_t
+Storage::GetOriginQuotaUsage() const
+{
+  return mCache->GetOriginQuotaUsage(this);
+}
+
 uint32_t
 Storage::GetLength(nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aRv)

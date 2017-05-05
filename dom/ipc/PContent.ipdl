@@ -734,7 +734,9 @@ parent:
 
     async PHeapSnapshotTempFileHelper();
 
-    async PNecko();
+    // Giving high priority to prevent other messages sending before this one.
+    // See bug 1360549 for details.
+    prio(high) async PNecko();
 
     async PPrinting();
 
