@@ -926,9 +926,9 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   CSSCoord mousePosition = GetAxisStart(aDragMetrics.mDirection, scrollbarPoint) -
                         aDragMetrics.mScrollbarDragOffset -
                         GetAxisStart(aDragMetrics.mDirection, cssCompositionBound) -
-                        GetAxisStart(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
+                        thumbData.mScrollTrackStart;
 
-  CSSCoord scrollMax = GetAxisLength(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
+  CSSCoord scrollMax = thumbData.mScrollTrackLength;
   scrollMax -= thumbData.mThumbLength;
 
   float scrollPercent = mousePosition / scrollMax;

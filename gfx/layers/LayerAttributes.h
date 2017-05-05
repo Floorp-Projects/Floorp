@@ -27,11 +27,15 @@ struct ScrollThumbData {
   ScrollThumbData(ScrollDirection aDirection,
                   float aThumbRatio,
                   CSSCoord aThumbLength,
-                  bool aIsAsyncDraggable)
+                  bool aIsAsyncDraggable,
+                  CSSCoord aScrollTrackStart,
+                  CSSCoord aScrollTrackLength)
     : mDirection(aDirection)
     , mThumbRatio(aThumbRatio)
     , mThumbLength(aThumbLength)
     , mIsAsyncDraggable(aIsAsyncDraggable)
+    , mScrollTrackStart(aScrollTrackStart)
+    , mScrollTrackLength(aScrollTrackLength)
   {}
 
   ScrollDirection mDirection;
@@ -42,12 +46,16 @@ struct ScrollThumbData {
   CSSCoord mThumbLength;
   // Whether the scrollbar thumb can be dragged asynchronously.
   bool mIsAsyncDraggable;
+  CSSCoord mScrollTrackStart;
+  CSSCoord mScrollTrackLength;
 
   bool operator==(const ScrollThumbData& aOther) const {
     return mDirection == aOther.mDirection &&
            mThumbRatio == aOther.mThumbRatio &&
            mThumbLength == aOther.mThumbLength &&
-           mIsAsyncDraggable == aOther.mIsAsyncDraggable;
+           mIsAsyncDraggable == aOther.mIsAsyncDraggable &&
+           mScrollTrackStart == aOther.mScrollTrackStart &&
+           mScrollTrackLength == aOther.mScrollTrackLength;
   }
   bool operator!=(const ScrollThumbData& aOther) const {
     return !(*this == aOther);
