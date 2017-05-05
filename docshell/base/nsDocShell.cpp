@@ -4780,7 +4780,7 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
   // Cleanup the empty spaces that might be on each end.
   uriString.Trim(" ");
   // Eliminate embedded newlines, which single-line text fields now allow:
-  uriString.StripChars("\r\n");
+  uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
