@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLScriptElement with nomodule attribute</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+  <script>
+onmessage = (e) => {
+  if ("done" in e.data) {
+    next();
+  } else if ("check" in e.data) {
+    ok(e.data.check, e.data.msg);
+  } else {
+    ok(false, "Unknown message");
+  }
+}
+
+var tests = [
+  function() {
+    SpecialPowers.pushPrefEnv({"set":[["dom.moduleScripts.enabled", true]]})
+    .then(() => {
+      var ifr = document.createElement('iframe');
+      ifr.src = "file_script_module.html";
+      document.body.appendChild(ifr);
+    });
+  },
+
+  function() {
+    SpecialPowers.pushPrefEnv({"set":[["dom.moduleScripts.enabled", false]]})
+    .then(() => {
+      var ifr = document.createElement('iframe');
+      ifr.src = "file_script_nomodule.html";
+      document.body.appendChild(ifr);
+    });
+  },
+];
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+  </script>
+
+</body>
+</html>

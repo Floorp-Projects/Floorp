@@ -31,7 +31,6 @@
   "layout.css.report_errors": true,
   "layout.css.grid.enabled": true,
   "layout.spammy_warnings.enabled": false,
-  "network.http.bypass-cachelock-threshold": 200000,
   "geo.provider.testing": true,
   "browser.pagethumbnails.capturing_disabled": true,
   "browser.download.panel.shown": true,

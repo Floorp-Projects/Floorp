@@ -23,6 +23,7 @@ const RequestListColumnFile = createClass({
 
   propTypes: {
     item: PropTypes.object.isRequired,
+    onThumbnailMouseDown: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps) {
@@ -30,7 +31,10 @@ const RequestListColumnFile = createClass({
   },
 
   render() {
-    let { responseContentDataUri, urlDetails } = this.props.item;
+    let {
+      item: { responseContentDataUri, urlDetails },
+      onThumbnailMouseDown
+    } = this.props;
 
     return (
       div({
@@ -40,6 +44,7 @@ const RequestListColumnFile = createClass({
         img({
           className: "requests-list-icon",
           src: responseContentDataUri,
+          onMouseDown: onThumbnailMouseDown,
         }),
         urlDetails.baseNameWithQuery
       )

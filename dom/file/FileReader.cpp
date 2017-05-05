@@ -280,6 +280,8 @@ FileReader::DoReadData(uint64_t aCount)
 {
   MOZ_ASSERT(mAsyncStream);
 
+  uint32_t bytesRead = 0;
+
   if (mDataFormat == FILE_AS_BINARY) {
     //Continuously update our binary string as data comes in
     uint32_t oldLen = mResult.Length();
@@ -301,14 +303,13 @@ FileReader::DoReadData(uint64_t aCount)
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    uint32_t bytesRead = 0;
     rv = mBufferedStream->ReadSegments(ReadFuncBinaryString, buf + oldLen,
                                        aCount, &bytesRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    MOZ_ASSERT(bytesRead == aCount, "failed to read data");
+    mResult.Truncate(oldLen + bytesRead);
   }
   else {
     CheckedInt<uint64_t> size = mDataLen;
@@ -322,22 +323,16 @@ FileReader::DoReadData(uint64_t aCount)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (mDataFormat != FILE_AS_ARRAYBUFFER) {
-      mFileData = (char *) realloc(mFileData, mDataLen + aCount);
-      NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    uint32_t bytesRead = 0;
     MOZ_DIAGNOSTIC_ASSERT(mFileData);
+    MOZ_RELEASE_ASSERT((mDataLen + aCount) <= mTotal);
+
     nsresult rv = mAsyncStream->Read(mFileData + mDataLen, aCount, &bytesRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    MOZ_ASSERT(bytesRead == aCount, "failed to read data");
   }
 
-  mDataLen += aCount;
+  mDataLen += bytesRead;
   return NS_OK;
 }
 
@@ -416,8 +411,15 @@ FileReader::ReadFileContent(Blob& aBlob,
     return;
   }
 
-  if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    mFileData = js_pod_malloc<char>(mTotal);
+  // Binary Format doesn't need a post-processing of the data. Everything is
+  // written directly into mResult.
+  if (mDataFormat != FILE_AS_BINARY) {
+    if (mDataFormat == FILE_AS_ARRAYBUFFER) {
+      mFileData = js_pod_malloc<char>(mTotal);
+    } else {
+      mFileData = (char *) malloc(mTotal);
+    }
+
     if (!mFileData) {
       NS_WARNING("Preallocation failed for ReadFileData");
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

@@ -17,7 +17,7 @@ const RequestListColumnCause = createClass({
 
   propTypes: {
     item: PropTypes.object.isRequired,
-    onCauseBadgeClick: PropTypes.func.isRequired,
+    onCauseBadgeMouseDown: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps) {
@@ -27,7 +27,7 @@ const RequestListColumnCause = createClass({
   render() {
     let {
       item: { cause },
-      onCauseBadgeClick,
+      onCauseBadgeMouseDown,
     } = this.props;
 
     let causeType = "unknown";
@@ -43,7 +43,7 @@ const RequestListColumnCause = createClass({
       div({ className: "requests-list-column requests-list-cause", title: causeType },
         causeHasStack && div({
           className: "requests-list-cause-stack",
-          onClick: onCauseBadgeClick,
+          onMouseDown: onCauseBadgeMouseDown,
         }, "JS"),
         causeType
       )

@@ -167,6 +167,7 @@ IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
 mozilla::ipc::IPCResult
 IPCBlobInputStreamChild::RecvStreamReady(const OptionalIPCStream& aStream)
 {
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(!mPendingOperations.IsEmpty());
 
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);

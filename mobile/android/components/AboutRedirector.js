@@ -123,6 +123,7 @@ AboutRedirector.prototype = {
     }
 
     channel.originalURI = aURI;
+    aLoadInfo.resultPrincipalURI = aURI;
 
     return channel;
   }

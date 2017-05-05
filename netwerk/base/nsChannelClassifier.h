@@ -5,6 +5,7 @@
 #ifndef nsChannelClassifier_h__
 #define nsChannelClassifier_h__
 
+#include "nsIObserver.h"
 #include "nsIURIClassifier.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"

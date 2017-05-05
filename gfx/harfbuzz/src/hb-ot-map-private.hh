@@ -113,7 +113,7 @@ struct hb_ot_map_t
     assert (stage <= stages[table_index].len);
     unsigned int start = stage ? stages[table_index][stage - 1].last_lookup : 0;
     unsigned int end   = stage < stages[table_index].len ? stages[table_index][stage].last_lookup : lookups[table_index].len;
-    *plookups = &lookups[table_index][start];
+    *plookups = end == start ? NULL : &lookups[table_index][start];
     *lookup_count = end - start;
   }
 

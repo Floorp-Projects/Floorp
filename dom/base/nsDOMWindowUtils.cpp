@@ -4251,6 +4251,19 @@ nsDOMWindowUtils::RemoveManuallyManagedState(nsIDOMElement* aElement,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetStorageUsage(nsIDOMStorage* aStorage, int64_t* aRetval)
+{
+  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
+  if (!storage) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aRetval = storage->GetOriginQuotaUsage();
+
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)
