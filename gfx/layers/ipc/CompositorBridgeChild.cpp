@@ -330,10 +330,7 @@ CompositorBridgeChild::CompositorIsInGPUProcess()
 }
 
 PLayerTransactionChild*
-CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
-                                                   const uint64_t& aId,
-                                                   TextureFactoryIdentifier*,
-                                                   bool*)
+CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints, const uint64_t& aId)
 {
   LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
