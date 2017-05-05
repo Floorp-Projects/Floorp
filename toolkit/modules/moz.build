@@ -183,6 +183,7 @@ EXTRA_JS_MODULES += [
     'ClientID.jsm',
     'Color.jsm',
     'Console.jsm',
+    'css-selector.js',
     'DateTimePickerHelper.jsm',
     'debug.js',
     'DeferredTask.jsm',

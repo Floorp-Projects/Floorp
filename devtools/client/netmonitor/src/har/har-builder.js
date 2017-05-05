@@ -8,7 +8,7 @@ const Services = require("Services");
 const appInfo = Services.appinfo;
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { CurlUtils } = require("devtools/client/shared/curl");
-const { getLongString } = require("../utils/client");
+const { getLongString } = require("../connector/index");
 const {
   getFormDataSections,
   getUrlQuery,

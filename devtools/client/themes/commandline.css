@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  overflow-x: hidden;
+}
 
 /* NOTE: THESE NEED TO STAY IN SYNC WITH LIGHT-THEME.CSS AND DARK-THEME.CSS.
    We are copy/pasting variables from light-theme and dark-theme,
@@ -43,16 +46,18 @@
 
 #gcli-tooltip-root {
   padding: 5px 0px;
+  overflow-x: hidden;
 }
 
 #gcli-tooltip-connector {
   margin-top: -1px;
   margin-left: 8px;
-  width: 20px;
-  height: 10px;
-  border-left: 1px solid var(--gcli-border-color);
-  border-right: 1px solid var(--gcli-border-color);
-  background-color: var(--gcli-background-color);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  background-color: transparent;
+  border-top: 10px solid var(--gcli-background-color);
 }
 
 .gcli-tt-description,
