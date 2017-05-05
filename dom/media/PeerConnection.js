@@ -1164,10 +1164,6 @@ class RTCPeerConnection {
     return this._receivers;
   }
 
-  mozSelectSsrc(receiver, ssrcIndex) {
-    this._impl.selectSsrc(receiver.track, ssrcIndex);
-  }
-
   mozAddRIDExtension(receiver, extensionId) {
     this._impl.addRIDExtension(receiver.track, extensionId);
   }
