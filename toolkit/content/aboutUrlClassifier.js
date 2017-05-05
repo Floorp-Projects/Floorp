@@ -85,7 +85,17 @@ var Provider = {
     document.getElementById("update-" + p).disabled = false;
 
     let elem = document.getElementById(p + "-col-lastupdateresult");
-    elem.childNodes[0].nodeValue = aData;
+    if (aData.startsWith("success")) {
+      elem.childNodes[0].nodeValue = bundle.GetStringFromName("success");
+    } else if (aData.startsWith("update error")) {
+      elem.childNodes[0].nodeValue =
+        bundle.formatStringFromName("updateError", [aData.split(": ")[1]], 1);
+    } else if (aData.startsWith("download error")) {
+      elem.childNodes[0].nodeValue =
+        bundle.formatStringFromName("downloadError", [aData.split(": ")[1]], 1);
+    } else {
+      elem.childNodes[0].nodeValue = aData;
+    }
   },
 
   register() {
