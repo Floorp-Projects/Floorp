@@ -88,7 +88,7 @@ public final class SurfaceAllocator {
             while (mAllocator == null) {
                 try {
                     this.wait();
-                } catch(InterruptedException e) {}
+                } catch (InterruptedException e) { }
             }
 
             return mAllocator;
