@@ -136,7 +136,12 @@ DeviceManagerDx::CreateCompositorDevices()
   mD3D11Module.disown();
 
   MOZ_ASSERT(mCompositorDevice);
-  return d3d11.IsEnabled();
+  if (!d3d11.IsEnabled()) {
+    return false;
+  }
+
+  PreloadAttachmentsOnCompositorThread();
+  return true;
 }
 
 void
