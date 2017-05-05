@@ -70,14 +70,17 @@ linux64/debug:
         tooltool-downloads: public
         need-xvfb: true
 
-linux64-devedition/opt:
-    description: "Linux64 devedition Opt"
+linux64-devedition-nightly/opt:
+    description: "Linux64 devedition Nightly"
+    attributes:
+        nightly: true
     index:
         product: devedition
         job-name: linux64-opt
+        type: nightly
     treeherder:
         platform: linux64-devedition/opt
-        symbol: tc(B)
+        symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -87,6 +90,7 @@ linux64-devedition/opt:
         actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
+            - disable_signing.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -169,14 +173,17 @@ linux/pgo:
         tooltool-downloads: public
         need-xvfb: true
 
-linux-devedition/opt:
-    description: "Linux32 devedition Opt"
+linux-devedition-nightly/opt:
+    description: "Linux32 devedition Nightly"
+    attributes:
+        nightly: true
     index:
         product: devedition
         job-name: linux-opt
+        type: nightly
     treeherder:
         platform: linux32-devedition/opt
-        symbol: tc(B)
+        symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -186,6 +193,7 @@ linux-devedition/opt:
         actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
+            - disable_signing.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
