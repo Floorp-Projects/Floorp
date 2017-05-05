@@ -1,45 +1,11 @@
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-const MANAGE_PROFILES_DIALOG_URL = "chrome://formautofill/content/manageProfiles.xhtml";
 const TEST_SELECTORS = {
   selProfiles: "#profiles",
   btnRemove: "#remove",
   btnAdd: "#add",
   btnEdit: "#edit",
 };
-
-const TEST_PROFILE_1 = {
-  organization: "World Wide Web Consortium",
-  "street-address": "32 Vassar Street\nMIT Room 32-G524",
-  "address-level2": "Cambridge",
-  "address-level1": "MA",
-  "postal-code": "02139",
-  country: "US",
-  tel: "+1 617 253 5702",
-  email: "timbl@w3.org",
-};
-
-const TEST_PROFILE_2 = {
-  "street-address": "Some Address",
-  country: "US",
-};
-
-const TEST_PROFILE_3 = {
-  "street-address": "Other Address",
-  "postal-code": "12345",
-};
-
-function saveProfile(profile) {
-  Services.cpmm.sendAsyncMessage("FormAutofill:SaveProfile", {profile});
-  return TestUtils.topicObserved("formautofill-storage-changed");
-}
-
-function removeProfiles(guids) {
-  Services.cpmm.sendAsyncMessage("FormAutofill:RemoveProfiles", {guids});
-  return TestUtils.topicObserved("formautofill-storage-changed");
-}
 
 function waitForProfiles() {
   return new Promise(resolve => {
@@ -52,8 +18,7 @@ function waitForProfiles() {
 }
 
 registerCleanupFunction(function* () {
-  Services.cpmm.sendAsyncMessage("FormAutofill:GetProfiles", {});
-  let profiles = yield waitForProfiles();
+  let profiles = yield getProfiles();
   if (profiles.length) {
     yield removeProfiles(profiles.map(profile => profile.guid));
   }

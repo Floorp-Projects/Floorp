@@ -14,6 +14,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const PREF_AUTOFILL_ENABLED = "browser.formautofill.enabled";
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const MANAGE_PROFILES_URL = "chrome://formautofill/content/manageProfiles.xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -22,7 +23,8 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-function FormAutofillPreferences() {
+function FormAutofillPreferences({useOldOrganization}) {
+  this.useOldOrganization = useOldOrganization;
   this.bundle = Services.strings.createBundle(BUNDLE_URI);
 }
 
@@ -34,15 +36,6 @@ FormAutofillPreferences.prototype = {
    */
   get isAutofillEnabled() {
     return Services.prefs.getBoolPref(PREF_AUTOFILL_ENABLED);
-  },
-
-  /**
-   * Check if the current page is Preferences/Privacy.
-   *
-   * @returns {boolean}
-   */
-  get isPrivacyPane() {
-    return this.refs.document.location.href == "about:preferences#privacy";
   },
 
   /**
@@ -72,45 +65,49 @@ FormAutofillPreferences.prototype = {
    * @param  {XULDocument} document
    */
   createPreferenceGroup(document) {
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-    let formAutofillGroup = document.createElementNS(XUL_NS, "groupbox");
-    let caption = document.createElementNS(XUL_NS, "caption");
-    let captionLabel = document.createElementNS(XUL_NS, "label");
-    let hbox = document.createElementNS(XUL_NS, "hbox");
-    let enabledCheckbox = document.createElementNS(XUL_NS, "checkbox");
+    let formAutofillGroup;
+    let profileAutofill = document.createElementNS(XUL_NS, "hbox");
+    let profileAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
     let spacer = document.createElementNS(XUL_NS, "spacer");
     let savedProfilesBtn = document.createElementNS(XUL_NS, "button");
 
+    if (this.useOldOrganization) {
+      let caption = document.createElementNS(XUL_NS, "caption");
+      let captionLabel = document.createElementNS(XUL_NS, "label");
+
+      formAutofillGroup = document.createElementNS(XUL_NS, "groupbox");
+      formAutofillGroup.hidden = document.location.href != "about:preferences#privacy";
+      // Use .setAttribute because HTMLElement.dataset is not available on XUL elements
+      formAutofillGroup.setAttribute("data-category", "panePrivacy");
+      formAutofillGroup.appendChild(caption);
+      caption.appendChild(captionLabel);
+      captionLabel.textContent = this.bundle.GetStringFromName("preferenceGroupTitle");
+    } else {
+      formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
+    }
+
     this.refs = {
-      document,
       formAutofillGroup,
-      enabledCheckbox,
+      profileAutofillCheckbox,
       savedProfilesBtn,
     };
 
     formAutofillGroup.id = "formAutofillGroup";
-    formAutofillGroup.hidden = !this.isPrivacyPane;
-    // Use .setAttribute because HTMLElement.dataset is not available on XUL elements
-    formAutofillGroup.setAttribute("data-category", "panePrivacy");
-
-    captionLabel.textContent = this.bundle.GetStringFromName("preferenceGroupTitle");
+    profileAutofill.id = "profileAutofill";
     savedProfilesBtn.setAttribute("label", this.bundle.GetStringFromName("savedProfiles"));
-    enabledCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableProfileAutofill"));
+    profileAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableProfileAutofill"));
 
     // Manually set the checked state
     if (this.isAutofillEnabled) {
-      enabledCheckbox.setAttribute("checked", true);
+      profileAutofillCheckbox.setAttribute("checked", true);
     }
 
     spacer.flex = 1;
 
-    formAutofillGroup.appendChild(caption);
-    caption.appendChild(captionLabel);
-    formAutofillGroup.appendChild(hbox);
-    hbox.appendChild(enabledCheckbox);
-    hbox.appendChild(spacer);
-    hbox.appendChild(savedProfilesBtn);
+    formAutofillGroup.appendChild(profileAutofill);
+    profileAutofill.appendChild(profileAutofillCheckbox);
+    profileAutofill.appendChild(spacer);
+    profileAutofill.appendChild(savedProfilesBtn);
   },
 
   /**
@@ -123,7 +120,7 @@ FormAutofillPreferences.prototype = {
       case "command": {
         let target = event.target;
 
-        if (target == this.refs.enabledCheckbox) {
+        if (target == this.refs.profileAutofillCheckbox) {
           // Set preference directly instead of relying on <Preference>
           Services.prefs.setBoolPref(PREF_AUTOFILL_ENABLED, target.checked);
         } else if (target == this.refs.savedProfilesBtn) {

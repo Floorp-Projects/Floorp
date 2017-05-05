@@ -3228,9 +3228,6 @@ var SessionStoreInternal = {
     let overwriteTabs = aOptions && aOptions.overwriteTabs;
     let isFollowUp = aOptions && aOptions.isFollowUp;
     let firstWindow = aOptions && aOptions.firstWindow;
-    // See SessionStoreInternal.restoreTabs for a description of what
-    // selectTab represents.
-    let selectTab = (overwriteTabs ? parseInt(winData.selected || 1, 10) : 0);
 
     if (isFollowUp) {
       this.windowToFocus = aWindow;
@@ -3255,21 +3252,24 @@ var SessionStoreInternal = {
       winData.tabs = [];
     }
 
-    var tabbrowser = aWindow.gBrowser;
-    var openTabCount = overwriteTabs ? tabbrowser.browsers.length : -1;
-    var newTabCount = winData.tabs.length;
+    // See SessionStoreInternal.restoreTabs for a description of what
+    // selectTab represents.
+    let selectTab = 0;
+    if (overwriteTabs) {
+      selectTab = parseInt(winData.selected || 1, 10);
+      selectTab = Math.max(selectTab, 1);
+      selectTab = Math.min(selectTab, winData.tabs.length);
+    }
+
+    let tabbrowser = aWindow.gBrowser;
+    let tabsToRemove = overwriteTabs ? tabbrowser.browsers.length : 0;
+    let newTabCount = winData.tabs.length;
     var tabs = [];
 
     // disable smooth scrolling while adding, moving, removing and selecting tabs
-    var tabstrip = tabbrowser.tabContainer.mTabstrip;
-    var smoothScroll = tabstrip.smoothScroll;
+    let tabstrip = tabbrowser.tabContainer.mTabstrip;
+    let smoothScroll = tabstrip.smoothScroll;
     tabstrip.smoothScroll = false;
-
-    // unpin all tabs to ensure they are not reordered in the next loop
-    if (overwriteTabs) {
-      for (let t = tabbrowser._numPinnedTabs - 1; t > -1; t--)
-        tabbrowser.unpinTab(tabbrowser.tabs[t]);
-    }
 
     // We need to keep track of the initially open tabs so that they
     // can be moved to the end of the restored tabs.
@@ -3278,36 +3278,31 @@ var SessionStoreInternal = {
       initialTabs = Array.slice(tabbrowser.tabs);
     }
 
-    // make sure that the selected tab won't be closed in order to
-    // prevent unnecessary flickering
-    if (overwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
-      tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
-
     let numVisibleTabs = 0;
 
     let restoreTabsLazily = this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
       this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
 
     for (var t = 0; t < newTabCount; t++) {
-      // When trying to restore into existing tab, we also take the userContextId
-      // into account if present.
       let userContextId = winData.tabs[t].userContextId;
-      let createLazyBrowser = restoreTabsLazily && !winData.tabs[t].pinned;
-      let reuseExisting = t < openTabCount &&
-                          (tabbrowser.tabs[t].getAttribute("usercontextid") == (userContextId || ""));
-      let tab = reuseExisting ? this._maybeUpdateBrowserRemoteness(tabbrowser.tabs[t])
-                              : tabbrowser.addTab("about:blank",
-                                                  { createLazyBrowser,
-                                                    skipAnimation: true,
-                                                    userContextId,
-                                                    skipBackgroundNotify: true });
+      let select = t == selectTab - 1;
+      let createLazyBrowser = restoreTabsLazily && !select && !winData.tabs[t].pinned;
+      let tab = tabbrowser.addTab("about:blank",
+                                  { createLazyBrowser,
+                                    skipAnimation: true,
+                                    userContextId,
+                                    skipBackgroundNotify: true });
 
-      // If we inserted a new tab because the userContextId didn't match with the
-      // open tab, even though `t < openTabCount`, we need to remove that open tab
-      // and put the newly added tab in its place.
-      if (!reuseExisting && t < openTabCount) {
-        tabbrowser.removeTab(tabbrowser.tabs[t]);
-        tabbrowser.moveTabTo(tab, t);
+      if (select) {
+        // Select a new tab first to prevent the removeTab loop from changing
+        // the selected tab over and over again.
+        tabbrowser.selectedTab = tab;
+
+        // Remove superfluous tabs.
+        for (let i = 0; i < tabsToRemove; i++) {
+          tabbrowser.removeTab(tabbrowser.tabs[0]);
+        }
+        tabsToRemove = 0;
       }
 
       tabs.push(tab);
@@ -3317,47 +3312,6 @@ var SessionStoreInternal = {
       } else {
         tabbrowser.showTab(tabs[t]);
         numVisibleTabs++;
-      }
-
-      if (!!winData.tabs[t].muted != tabs[t].linkedBrowser.audioMuted) {
-        tabs[t].toggleMuteAudio(winData.tabs[t].muteReason);
-      }
-    }
-
-    if (selectTab > 0 && selectTab <= tabs.length) {
-      // The state we're restoring wants to select a particular tab. This
-      // implies that we're overwriting tabs.
-      let currentIndex = tabbrowser.tabContainer.selectedIndex;
-      let targetIndex = selectTab - 1;
-
-      if (currentIndex != targetIndex) {
-        // We need to change the selected tab. There are two ways of doing this:
-        //
-        // 1) The fast path: swap the currently selected tab with the one in the
-        //    position of the selected tab in the restored state. Note that this
-        //    can only work if the user contexts between the two tabs being swapped
-        //    match. This should be the common case.
-        //
-        // 2) The slow path: switch to the selected tab.
-        //
-        // We'll try to do (1), and then fallback to (2).
-
-        let selectedTab = tabbrowser.selectedTab;
-        let tabAtTargetIndex = tabs[targetIndex];
-        let userContextsMatch = selectedTab.userContextId == tabAtTargetIndex.userContextId;
-
-        if (userContextsMatch) {
-          tabbrowser.moveTabTo(selectedTab, targetIndex);
-          tabbrowser.moveTabTo(tabAtTargetIndex, currentIndex);
-          // We also have to do a similar "move" in the aTabs Array to
-          // make sure that the restored content shows up in the right
-          // order.
-          tabs[targetIndex] = tabs[currentIndex];
-          tabs[currentIndex] = tabAtTargetIndex;
-        } else {
-          // Otherwise, go the slow path, and switch to the target tab.
-          tabbrowser.selectedTab = tabs[targetIndex];
-        }
       }
     }
 
@@ -3376,6 +3330,7 @@ var SessionStoreInternal = {
       // Move the originally open tabs to the end
       let endPosition = tabbrowser.tabs.length - 1;
       for (let i = 0; i < initialTabs.length; i++) {
+        tabbrowser.unpinTab(initialTabs[i]);
         tabbrowser.moveTabTo(initialTabs[i], endPosition);
       }
     }
@@ -3386,30 +3341,12 @@ var SessionStoreInternal = {
       tabbrowser.showTab(tabs[0]);
     }
 
-    // If overwriting tabs, we want to reset each tab's "restoring" state. Since
-    // we're overwriting those tabs, they should no longer be restoring. The
-    // tabs will be rebuilt and marked if they need to be restored after loading
-    // state (in restoreTabs).
-    if (overwriteTabs) {
-      for (let i = 0; i < tabbrowser.tabs.length; i++) {
-        let tab = tabbrowser.tabs[i];
-        if (tabbrowser.browsers[i].__SS_restoreState)
-          this._resetTabRestoringState(tab);
-      }
-    }
-
     // We want to correlate the window with data from the last session, so
     // assign another id if we have one. Otherwise clear so we don't do
     // anything with it.
     delete aWindow.__SS_lastSessionWindowID;
     if (winData.__lastSessionWindowID)
       aWindow.__SS_lastSessionWindowID = winData.__lastSessionWindowID;
-
-    // when overwriting tabs, remove all superflous ones
-    if (overwriteTabs && newTabCount < openTabCount) {
-      Array.slice(tabbrowser.tabs, newTabCount, openTabCount)
-           .forEach(tabbrowser.removeTab, tabbrowser);
-    }
 
     if (overwriteTabs) {
       this.restoreWindowFeatures(aWindow, winData);
@@ -3829,7 +3766,6 @@ var SessionStoreInternal = {
         loadArguments: aLoadArguments,
         isRemotenessUpdate,
       });
-
     }
 
     // If the restored browser wants to show view source content, start up a
@@ -4075,27 +4011,6 @@ var SessionStoreInternal = {
     setTimeout(() => {
       Services.obs.notifyObservers(null, NOTIFY_CLOSED_OBJECTS_CHANGED);
     }, 0);
-  },
-
-  /**
-   * Determines whether or not a tab that is being restored needs
-   * to have its remoteness flipped first.
-   *
-   * @param tab (<xul:tab>):
-   *        The tab being restored.
-   *
-   * @returns tab (<xul:tab>)
-   *        The tab that was passed.
-   */
-  _maybeUpdateBrowserRemoteness(tab) {
-    let win = tab.ownerGlobal;
-    let tabbrowser = win.gBrowser;
-    let browser = tab.linkedBrowser;
-    if (win.gMultiProcessBrowser && !browser.isRemoteBrowser) {
-      tabbrowser.updateBrowserRemoteness(browser, true);
-    }
-
-    return tab;
   },
 
   /**

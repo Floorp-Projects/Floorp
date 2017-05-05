@@ -9,16 +9,16 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   info("Requesting a resource over HTTPS.");
   yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
   yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
 
-  is(gStore.getState().requests.requests.size, 2, "Two events event logged.");
+  is(store.getState().requests.requests.size, 2, "Two events event logged.");
 
   yield clickAndTestSecurityIcon();
 

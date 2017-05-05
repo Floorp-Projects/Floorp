@@ -51,6 +51,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "findCssSelector",
+  "resource://gre/modules/css-selector.js");
 
 Cu.importGlobalProperties(["URL"]);
 
@@ -164,6 +166,7 @@ var handleContentContextMenu = function(event) {
 
   let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
   let userContextId = loadContext.originAttributes.userContextId;
+  let popupNodeSelectors = getNodeSelectors(event.target);
 
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
     let editFlags = SpellCheckHelper.isEditable(event.target, content);
@@ -183,13 +186,18 @@ var handleContentContextMenu = function(event) {
 
     let customMenuItems = PageMenuChild.build(event.target);
     let principal = doc.nodePrincipal;
+
     sendRpcMessage("contextmenu",
                    { editFlags, spellInfo, customMenuItems, addonInfo,
                      principal, docLocation, charSet, baseURI, referrer,
                      referrerPolicy, contentType, contentDisposition,
                      frameOuterWindowID, selectionInfo, disableSetDesktopBg,
-                     loginFillInfo, parentAllowsMixedContent, userContextId },
-                   { event, popupNode: event.target });
+                     loginFillInfo, parentAllowsMixedContent, userContextId,
+                     popupNodeSelectors,
+                   }, {
+                     event,
+                     popupNode: event.target,
+                   });
   } else {
     // Break out to the parent window and pass the add-on info along
     let browser = docShell.chromeEventHandler;
@@ -198,6 +206,7 @@ var handleContentContextMenu = function(event) {
       isRemote: false,
       event,
       popupNode: event.target,
+      popupNodeSelectors,
       browser,
       addonInfo,
       documentURIObject: doc.documentURIObject,
@@ -245,6 +254,28 @@ const PREF_SSL_IMPACT = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
   return prefs.concat(Services.prefs.getChildList(root));
 }, []);
 
+/**
+ * Retrieve the array of CSS selectors corresponding to the provided node. The first item
+ * of the array is the selector of the node in its owner document. Additional items are
+ * used if the node is inside a frame, each representing the CSS selector for finding the
+ * frame element in its parent document.
+ *
+ * This format is expected by DevTools in order to handle the Inspect Node context menu
+ * item.
+ *
+ * @param  {Node}
+ *         The node for which the CSS selectors should be computed
+ * @return {Array} array of css selectors (strings).
+ */
+function getNodeSelectors(node) {
+  let selectors = [];
+  while (node) {
+    selectors.push(findCssSelector(node));
+    node = node.ownerGlobal.frameElement;
+  }
+
+  return selectors;
+}
 
 function getSerializedSecurityInfo(docShell) {
   let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]

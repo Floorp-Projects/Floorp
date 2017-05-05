@@ -10,7 +10,6 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { NetMonitorController } = require("../netmonitor-controller");
 const {
   getFormattedIPAndPort,
   getFormattedSize,
@@ -201,7 +200,7 @@ const HeadersPanel = createClass({
           statusCodeDocURL ? MDNLink({
             url: statusCodeDocURL,
           }) : null,
-          NetMonitorController.supportsCustomRequest && button({
+          button({
             className: "devtools-button",
             onClick: cloneSelectedRequest,
           }, EDIT_AND_RESEND),
