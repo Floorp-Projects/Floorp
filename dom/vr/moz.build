@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "WebVR")
 
 EXPORTS.mozilla.dom += [
     'VRDisplay.h',
@@ -29,3 +29,4 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+REFTEST_MANIFESTS += ['test/reftest/reftest.list']

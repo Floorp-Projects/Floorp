@@ -1,0 +1,7 @@
+# WebVR Reftests
+default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,true) pref(dom.vr.require-gesture,false) pref(dom.vr.puppet.submitframe,1)
+
+# VR SubmitFrame is only implemented for D3D11 now.
+# We need to continue to investigate why these reftests can be run well in local,
+# but will be suspended until terminating on reftest debug build.
+skip-if(!winWidget||!layersGPUAccelerated||isDebugBuild) == draw_rect.html wrapper.html?draw_rect.png
