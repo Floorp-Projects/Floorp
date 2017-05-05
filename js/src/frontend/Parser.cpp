@@ -3573,7 +3573,9 @@ Parser<ParseHandler, CharT>::appendToCallSiteObj(Node callSiteObj)
 
 template <>
 ParseNode*
-Parser<FullParseHandler, char16_t>::standaloneLazyFunction(HandleFunction fun, bool strict,
+Parser<FullParseHandler, char16_t>::standaloneLazyFunction(HandleFunction fun,
+                                                           uint32_t toStringStart,
+                                                           bool strict,
                                                            GeneratorKind generatorKind,
                                                            FunctionAsyncKind asyncKind)
 {
@@ -3584,8 +3586,8 @@ Parser<FullParseHandler, char16_t>::standaloneLazyFunction(HandleFunction fun, b
         return null();
 
     Directives directives(strict);
-    FunctionBox* funbox = newFunctionBox(pn, fun, /* toStringStart = */ 0, directives,
-                                         generatorKind, asyncKind, /* tryAnnexB = */ false);
+    FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, directives, generatorKind,
+                                         asyncKind, /* tryAnnexB = */ false);
     if (!funbox)
         return null();
     funbox->initFromLazyFunction();
@@ -3759,14 +3761,14 @@ Parser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling inHandli
         MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_CURLY_AFTER_BODY,
                                                               JSMSG_CURLY_OPENED, openedPos));
-        funbox->setEnd(pos().end);
+        funbox->setEnd(tokenStream);
     } else {
 #if !JS_HAS_EXPR_CLOSURES
         MOZ_ASSERT(kind == Arrow);
 #endif
         if (tokenStream.hadError())
             return false;
-        funbox->setEnd(pos().end);
+        funbox->setEnd(tokenStream);
         if (kind == Statement && !matchOrInsertSemicolonAfterExpression())
             return false;
     }
@@ -8629,7 +8631,7 @@ Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
     uint32_t end = pos().end;
     handler.setBeginPosition(comp, begin);
     handler.setEndPosition(comp, end);
-    genFunbox->setEnd(end);
+    genFunbox->setEnd(tokenStream);
     handler.addStatementToList(body, comp);
     handler.setEndPosition(body, end);
     handler.setBeginPosition(genfn, begin);
