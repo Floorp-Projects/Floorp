@@ -750,7 +750,18 @@ const CustomizableWidgets = [
             return;
           aArea = aArea || this.currentArea;
           updateCombinedWidgetStyle(node, aArea, true);
-        }
+        },
+
+        // Hack. This can go away when the old menu panel goes away (post photon).
+        // We need it right now for the case where we re-register the old-style
+        // main menu panel if photon is disabled at runtime, and we automatically
+        // put the widgets in there, so they get the right style in the panel.
+        onAreaNodeRegistered(aArea, aContainer) {
+          if (aContainer.ownerDocument == node.ownerDocument &&
+              aArea == CustomizableUI.AREA_PANEL) {
+            updateCombinedWidgetStyle(node, aArea, true);
+          }
+        },
       };
       CustomizableUI.addListener(listener);
 
@@ -846,7 +857,18 @@ const CustomizableWidgets = [
             return;
           aArea = aArea || this.currentArea;
           updateCombinedWidgetStyle(node, aArea);
-        }
+        },
+
+        // Hack. This can go away when the old menu panel goes away (post photon).
+        // We need it right now for the case where we re-register the old-style
+        // main menu panel if photon is disabled at runtime, and we automatically
+        // put the widgets in there, so they get the right style in the panel.
+        onAreaNodeRegistered(aArea, aContainer) {
+          if (aContainer.ownerDocument == node.ownerDocument &&
+              aArea == CustomizableUI.AREA_PANEL) {
+            updateCombinedWidgetStyle(node, aArea);
+          }
+        },
       };
       CustomizableUI.addListener(listener);
 
