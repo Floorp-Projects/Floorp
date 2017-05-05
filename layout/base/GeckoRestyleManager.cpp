@@ -247,6 +247,8 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
                                       int32_t aModType,
                                       const nsAttrValue* aOldValue)
 {
+  MOZ_ASSERT(!mInStyleRefresh);
+
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
   // destroyed from inside this function?

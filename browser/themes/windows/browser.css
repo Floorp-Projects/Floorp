@@ -37,7 +37,6 @@
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
 
-  --toolbarbutton-disabled-opacity: 0.4;
   --backbutton-border-color: var(--urlbar-border-color-hover);
 
   --backbutton-background: rgba(255,255,255,.15);
@@ -1519,7 +1518,6 @@ html|span.ac-emphasize-text-url {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.svg");
-  margin: 0 0 var(--tab-toolbar-navbar-overlap);
 }
 
 #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,
@@ -1527,23 +1525,9 @@ html|span.ac-emphasize-text-url {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.svg);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
-.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
-  opacity: .4;
-}
-
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
   transform: scaleX(-1);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  transition: 1s background-color ease-out;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down[highlight] {
-  background-color: Highlight;
-  transition: none;
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
@@ -1581,10 +1565,6 @@ html|span.ac-emphasize-text-url {
 #TabsToolbar[brighttext] > #alltabs-button,
 #TabsToolbar[brighttext] > toolbarpaletteitem > #alltabs-button {
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
-}
-
-#alltabs-button > .toolbarbutton-icon {
-  margin: 0 2px;
 }
 
 #alltabs-button > .toolbarbutton-menu-dropmarker {

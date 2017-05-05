@@ -8,7 +8,7 @@ const {
   setImageTooltip,
   getImageDimensions,
 } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const { getLongString } = require("./utils/client");
+const { getLongString } = require("./connector/index");
 const { formDataURI } = require("./utils/request-utils");
 
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px

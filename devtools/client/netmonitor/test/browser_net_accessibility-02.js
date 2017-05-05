@@ -14,10 +14,10 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { window, document, gStore, windowRequire } = monitor.panelWin;
+  let { window, document, windowRequire, store } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let count = 0;
   function check(selectedIndex, panelVisibility) {

@@ -403,20 +403,6 @@ nsPK11Token::NeedsLogin(bool* _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPK11Token::IsFriendly(bool* _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  *_retval = PK11_IsFriendly(mSlot.get());
-
-  return NS_OK;
-}
-
 /*=========================================================*/
 
 NS_IMPL_ISUPPORTS(nsPK11TokenDB, nsIPK11TokenDB)

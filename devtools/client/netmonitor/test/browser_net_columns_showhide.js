@@ -11,9 +11,9 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, gStore, parent } = monitor.panelWin;
+  let { document, store, parent } = monitor.panelWin;
 
-  for (let [column, shown] of gStore.getState().ui.columns) {
+  for (let [column, shown] of store.getState().ui.columns) {
     if (shown) {
       yield testVisibleColumnContextMenuItem(column, document, parent);
       yield testHiddenColumnContextMenuItem(column, document, parent);

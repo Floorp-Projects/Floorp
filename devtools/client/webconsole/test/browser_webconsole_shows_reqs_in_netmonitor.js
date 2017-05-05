@@ -62,14 +62,14 @@ function loadDocument(browser) {
 
 function* testNetmonitor(toolbox) {
   let monitor = toolbox.getCurrentPanel();
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let { getSortedRequests } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  yield waitUntil(() => gStore.getState().requests.requests.size > 0);
+  yield waitUntil(() => store.getState().requests.requests.size > 0);
 
-  is(gStore.getState().requests.requests.size, 1, "Network request appears in the network panel");
+  is(store.getState().requests.requests.size, 1, "Network request appears in the network panel");
 
-  let item = getSortedRequests(gStore.getState()).get(0);
+  let item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The request method is correct.");
   is(item.url, TEST_PATH, "The request url is correct.");
 }

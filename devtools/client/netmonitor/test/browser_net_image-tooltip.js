@@ -14,14 +14,14 @@ add_task(function* test() {
   const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
+  let { triggerActivity } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
   let toolboxDoc = monitor.panelWin.parent.document;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
   yield performRequests();
@@ -40,7 +40,7 @@ add_task(function* test() {
   onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
 
   info("Reloading the debuggee and performing all requests again...");
-  yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+  yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
   yield performRequests();
   yield onEvents;
   yield waitUntil(() => !!document.querySelector(SELECTOR));

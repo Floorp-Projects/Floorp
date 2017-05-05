@@ -19,7 +19,7 @@ function test() {
   initNetMonitor(URL).then(({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { document, gStore, windowRequire } = monitor.panelWin;
+    let { document, store, windowRequire } = monitor.panelWin;
     let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
     let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
     let {
@@ -27,7 +27,7 @@ function test() {
       getSortedRequests,
     } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-    gStore.dispatch(Actions.batchEnable(false));
+    store.dispatch(Actions.batchEnable(false));
 
     waitForNetworkEvents(monitor, 1)
       .then(() => teardown(monitor))
@@ -36,8 +36,8 @@ function test() {
     monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
       verifyRequestItemTarget(
         document,
-        getDisplayedRequests(gStore.getState()),
-        getSortedRequests(gStore.getState()).get(0),
+        getDisplayedRequests(store.getState()),
+        getSortedRequests(store.getState()).get(0),
         "GET", URL,
         {
           type: "plain",

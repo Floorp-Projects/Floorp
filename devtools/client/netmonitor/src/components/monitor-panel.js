@@ -14,7 +14,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
-const { getLongString } = require("../utils/client");
+const { getLongString } = require("../connector/index");
 const { getFormDataSections } = require("../utils/request-utils");
 const { getSelectedRequest } = require("../selectors/index");
 

@@ -27,7 +27,7 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
@@ -35,7 +35,7 @@ add_task(function* () {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   // The test assumes that the first HTML request here has a longer response
   // body than the other HTML requests performed later during the test.
@@ -52,9 +52,9 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  isnot(getSelectedRequest(gStore.getState()), null,
+  isnot(getSelectedRequest(store.getState()), null,
     "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(gStore.getState()), 0,
+  is(getSelectedIndex(store.getState()), 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should be visible after toggle button was pressed.");
@@ -111,16 +111,16 @@ add_task(function* () {
   }
 
   function testContents(order, visible, selection) {
-    isnot(getSelectedRequest(gStore.getState()), null,
+    isnot(getSelectedRequest(store.getState()), null,
       "There should still be a selected item after filtering.");
-    is(getSelectedIndex(gStore.getState()), selection,
+    is(getSelectedIndex(store.getState()), selection,
       "The first item should be still selected after filtering.");
     is(!!document.querySelector(".network-details-panel"), true,
       "The network details panel should still be visible after filtering.");
 
-    is(getSortedRequests(gStore.getState()).length, order.length,
+    is(getSortedRequests(store.getState()).length, order.length,
       "There should be a specific amount of items in the requests menu.");
-    is(getDisplayedRequests(gStore.getState()).length, visible,
+    is(getDisplayedRequests(store.getState()).length, visible,
       "There should be a specific amount of visible items in the requests menu.");
   }
 });

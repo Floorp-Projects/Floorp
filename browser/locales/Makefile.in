@@ -190,9 +190,11 @@ l10n-check::
 	$(RM) -rf x-test
 	$(NSINSTALL) -D x-test/toolkit
 	echo '#define MOZ_LANG_TITLE Just testing' > x-test/toolkit/defines.inc
-	@# ZIP_IN='$(ZIP_IN)' will pass down the *current* value of ZIP_IN, based
-	@# on MOZ_SIMPLE_PACKAGE_NAME not being reset, overwriting the value it
-	@# would get with MOZ_SIMPLE_PACKAGE_NAME reset.
-	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' LOCALE_MERGEDIR='$(PWD)/mergedir' ZIP_IN='$(ZIP_IN)' MOZ_SIMPLE_PACKAGE_NAME=
+	@# ZIP_IN='$(ZIP_IN)' will pass down the *current* value of ZIP_IN, and
+	@# we do the same for WIN32_INSTALLER_IN, which are based on MOZ_SIMPLE_PACKAGE_NAME
+	@# not being reset, overwriting the value they would get with MOZ_SIMPLE_PACKAGE_NAME
+	@# reset.
+	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' LOCALE_MERGEDIR='$(PWD)/mergedir' \
+	    ZIP_IN='$(ZIP_IN)' WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)' MOZ_SIMPLE_PACKAGE_NAME=
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(MOZ_PKG_DIR)$(_RESPATH)
 	cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test
