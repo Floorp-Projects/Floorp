@@ -144,6 +144,12 @@ public:
     return stream->Init(aStream, aBufferSize);
   }
 
+  NS_IMETHODIMP
+  GetData(nsIInputStream **aResult) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   void
   MaybeStartReading();
 
