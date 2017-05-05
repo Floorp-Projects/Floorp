@@ -958,13 +958,7 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if !defined(MOZ_JSDOWNLOADS)
-  // When MOZ_JSDOWNLOADS is undefined, we still check the preference that can
-  // be used to enable the JavaScript API during the migration process.
-  mUseJSTransfer = Preferences::GetBool(PREF_BD_USEJSTRANSFER, false);
-#else
   mUseJSTransfer = true;
-#endif
 
   if (mUseJSTransfer)
     return NS_OK;
