@@ -175,7 +175,8 @@ public:
     explicit gfxFontconfigFontFamily(const nsAString& aName) :
         gfxFontFamily(aName),
         mContainsAppFonts(false),
-        mHasNonScalableFaces(false)
+        mHasNonScalableFaces(false),
+        mForceScalable(false)
     { }
 
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) override;
@@ -201,6 +202,7 @@ protected:
 
     bool      mContainsAppFonts;
     bool      mHasNonScalableFaces;
+    bool      mForceScalable;
 };
 
 class gfxFontconfigFont : public gfxFontconfigFontBase {
