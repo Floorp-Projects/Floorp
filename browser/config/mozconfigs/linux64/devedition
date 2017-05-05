@@ -1,3 +1,8 @@
+if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}
+  MOZ_AUTOMATION_UPDATE_PACKAGING=1
+fi
+
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 
 # Add-on signing is not required for DevEdition

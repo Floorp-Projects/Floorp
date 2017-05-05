@@ -1,3 +1,8 @@
+if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
+  MOZ_AUTOMATION_UPDATE_PACKAGING=1
+fi
+
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
