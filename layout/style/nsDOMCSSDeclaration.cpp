@@ -130,7 +130,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    newdecl = ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData);
+    newdecl = ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
+                                                 servoEnv.mCompatMode);
   } else {
     CSSParsingEnvironment geckoEnv;
     GetCSSParsingEnvironment(geckoEnv);
