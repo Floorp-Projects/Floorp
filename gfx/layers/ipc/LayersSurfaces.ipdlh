@@ -62,7 +62,6 @@ struct SurfaceDescriptorMacIOSurface {
 struct SurfaceTextureDescriptor {
   uint64_t handle;
   IntSize size;
-  bool continuous;
 };
 
 struct EGLImageDescriptor {
