@@ -148,7 +148,7 @@ DSO_LDOPTS		= -shared $(ARCHFLAG) -Wl,--gc-sections
 # against the libsanitizer runtime built into the main executable.
 ZDEFS_FLAG		= -Wl,-z,defs
 DSO_LDOPTS		+= $(if $(findstring 2.11.90.0.8,$(shell ld -v)),,$(ZDEFS_FLAG))
-LDFLAGS			+= $(ARCHFLAG)
+LDFLAGS			+= $(ARCHFLAG) -z noexecstack
 
 # On Maemo, we need to use the -rpath-link flag for even the standard system
 # library directories.

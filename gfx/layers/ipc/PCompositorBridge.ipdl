@@ -205,6 +205,10 @@ parent:
   // block until they are completed.
   sync FlushRendering();
 
+  // Same as FlushRendering, but asynchronous, since not all platforms require
+  // synchronous repaints on resize.
+  async FlushRenderingAsync();
+
   // Force an additional frame presentation to be executed. This is used to
   // work around a windows presentation bug (See Bug 1232042)
   async ForcePresent();

@@ -965,9 +965,6 @@ gfxPlatform::InitLayersIPC()
             wr::RenderThread::Start();
         }
         layers::CompositorThreadHolder::Start();
-#ifdef XP_WIN
-        gfx::DeviceManagerDx::PreloadAttachmentsOnCompositorThread();
-#endif
     }
 }
 

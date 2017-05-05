@@ -68,11 +68,13 @@ TEST_F(B64EncodeDecodeTest, FakeEncDecTest) {
 }
 
 // These takes a while ...
-TEST_F(B64EncodeDecodeTest, LongFakeDecTest1) {
+TEST_F(B64EncodeDecodeTest, DISABLED_LongFakeDecTest1) {
   EXPECT_TRUE(TestFakeDecode(0x66666666));
 }
-TEST_F(B64EncodeDecodeTest, LongFakeEncDecTest1) { TestFakeEncode(0x3fffffff); }
-TEST_F(B64EncodeDecodeTest, LongFakeEncDecTest2) {
+TEST_F(B64EncodeDecodeTest, DISABLED_LongFakeEncDecTest1) {
+  TestFakeEncode(0x3fffffff);
+}
+TEST_F(B64EncodeDecodeTest, DISABLED_LongFakeEncDecTest2) {
   EXPECT_FALSE(TestFakeEncode(0x40000000));
 }
 

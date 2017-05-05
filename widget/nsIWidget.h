@@ -1951,6 +1951,13 @@ public:
     { return nullptr; }
 
     /**
+     * Returns true if the widget requires synchronous repaints on resize,
+     * false otherwise.
+     */
+    virtual bool SynchronouslyRepaintOnResize()
+    { return true; }
+
+    /**
      * Some platforms (only cocoa right now) round widget coordinates to the
      * nearest even pixels (see bug 892994), this function allows us to
      * determine how widget coordinates will be rounded.
