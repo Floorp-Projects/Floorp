@@ -72,7 +72,8 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
       handshake_callback_(),
       auth_certificate_callback_(),
       sni_callback_(),
-      expect_short_headers_(false) {
+      expect_short_headers_(false),
+      skip_version_checks_(false) {
   memset(&info_, 0, sizeof(info_));
   memset(&csinfo_, 0, sizeof(csinfo_));
   SECStatus rv = SSL_VersionRangeGetDefault(
@@ -165,9 +166,12 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
   }
   dummy_fd.release();  // Now subsumed by ssl_fd_.
 
-  SECStatus rv = SSL_VersionRangeSet(ssl_fd(), &vrange_);
-  EXPECT_EQ(SECSuccess, rv);
-  if (rv != SECSuccess) return false;
+  SECStatus rv;
+  if (!skip_version_checks_) {
+    rv = SSL_VersionRangeSet(ssl_fd(), &vrange_);
+    EXPECT_EQ(SECSuccess, rv);
+    if (rv != SECSuccess) return false;
+  }
 
   if (role_ == SERVER) {
     EXPECT_TRUE(ConfigServerCert(name_, true));
@@ -434,6 +438,8 @@ void TlsAgent::SetServerKeyBits(uint16_t bits) { server_key_bits_ = bits; }
 void TlsAgent::ExpectReadWriteError() { expect_readwrite_error_ = true; }
 
 void TlsAgent::ExpectShortHeaders() { expect_short_headers_ = true; }
+
+void TlsAgent::SkipVersionChecks() { skip_version_checks_ = true; }
 
 void TlsAgent::SetSignatureSchemes(const SSLSignatureScheme* schemes,
                                    size_t count) {
