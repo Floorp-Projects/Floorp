@@ -14,6 +14,7 @@
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
+#include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
 
 namespace TestStrings {
 
@@ -276,6 +277,22 @@ TEST(Strings, trim)
   nsCString s(text);
   s.Trim(set);
   EXPECT_STREQ(s.get(), "a");
+
+  s.AssignLiteral("\t  \t\t  \t");
+  s.Trim(set);
+  EXPECT_STREQ(s.get(), "");
+
+  s.AssignLiteral(" ");
+  s.Trim(set);
+  EXPECT_STREQ(s.get(), "");
+
+  s.AssignLiteral(" ");
+  s.Trim(set, false, true);
+  EXPECT_STREQ(s.get(), "");
+
+  s.AssignLiteral(" ");
+  s.Trim(set, true, false);
+  EXPECT_STREQ(s.get(), "");
 }
 
 TEST(Strings, replace_substr)
@@ -285,16 +302,16 @@ TEST(Strings, replace_substr)
   s.ReplaceSubstring("ppp", "www");
   EXPECT_STREQ(s.get(), "abc-www-qqq-www-xyz");
 
-  s.Assign("foobar");
+  s.AssignLiteral("foobar");
   s.ReplaceSubstring("foo", "bar");
   s.ReplaceSubstring("bar", "");
   EXPECT_STREQ(s.get(), "");
 
-  s.Assign("foofoofoo");
+  s.AssignLiteral("foofoofoo");
   s.ReplaceSubstring("foo", "foo");
   EXPECT_STREQ(s.get(), "foofoofoo");
 
-  s.Assign("foofoofoo");
+  s.AssignLiteral("foofoofoo");
   s.ReplaceSubstring("of", "fo");
   EXPECT_STREQ(s.get(), "fofoofooo");
 }
@@ -320,77 +337,86 @@ TEST(Strings, replace_substr_2)
 TEST(Strings, replace_substr_3)
 {
   nsCString s;
-  s.Assign("abcabcabc");
+  s.AssignLiteral("abcabcabc");
   s.ReplaceSubstring("ca", "X");
   EXPECT_STREQ(s.get(), "abXbXbc");
 
-  s.Assign("abcabcabc");
+  s.AssignLiteral("abcabcabc");
   s.ReplaceSubstring("ca", "XYZ");
   EXPECT_STREQ(s.get(), "abXYZbXYZbc");
 
-  s.Assign("abcabcabc");
+  s.AssignLiteral("abcabcabc");
   s.ReplaceSubstring("ca", "XY");
   EXPECT_STREQ(s.get(), "abXYbXYbc");
 
-  s.Assign("abcabcabc");
+  s.AssignLiteral("abcabcabc");
   s.ReplaceSubstring("ca", "XYZ!");
   EXPECT_STREQ(s.get(), "abXYZ!bXYZ!bc");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "X");
   EXPECT_STREQ(s.get(), "aXaXaX");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ!");
   EXPECT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XY");
   EXPECT_STREQ(s.get(), "aXYaXYaXY");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZABC");
   EXPECT_STREQ(s.get(), "aXYZABCaXYZABCaXYZABC");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ");
   EXPECT_STREQ(s.get(), "aXYZaXYZaXYZ");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ!");
   EXPECT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("ab", "X");
   EXPECT_STREQ(s.get(), "XcdXcdXcd");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XYZABC");
   EXPECT_STREQ(s.get(), "XYZABCcdXYZABCcdXYZABCcd");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XY");
   EXPECT_STREQ(s.get(), "XYcdXYcdXYcd");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XYZ!");
   EXPECT_STREQ(s.get(), "XYZ!cdXYZ!cdXYZ!cd");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("notfound", "X");
   EXPECT_STREQ(s.get(), "abcdabcdabcd");
 
-  s.Assign("abcdabcdabcd");
+  s.AssignLiteral("abcdabcdabcd");
   s.ReplaceSubstring("notfound", "longlongstring");
   EXPECT_STREQ(s.get(), "abcdabcdabcd");
 }
 
 TEST(Strings, strip_ws)
 {
-  const char text[] = " a    $   ";
-  nsCString s(text);
-  s.StripWhitespace();
-  EXPECT_STREQ(s.get(), "a$");
+  const char* texts[] = {"",
+                         " a    $   ",
+                         "Some\fother\t thing\r\n",
+                         "And   \f\t\r\n even\nmore\r \f"};
+  const char* results[] = {"",
+                           "a$",
+                           "Someotherthing",
+                           "Andevenmore"};
+  for (size_t i=0; i<sizeof(texts)/sizeof(texts[0]); i++) {
+    nsCString s(texts[i]);
+    s.StripWhitespace();
+    EXPECT_STREQ(s.get(), results[i]);
+  }
 }
 
 TEST(Strings, equals_ic)
@@ -645,7 +671,7 @@ TEST(Strings, rfindcharinset)
   index = buf.RFindCharInSet("l", 5);
   EXPECT_EQ(index, 3);
 
-  buf.Assign("abcdefghijkabc");
+  buf.AssignLiteral("abcdefghijkabc");
 
   index = buf.RFindCharInSet("ab");
   EXPECT_EQ(index, 12);
@@ -1061,5 +1087,152 @@ TEST(Strings, Split)
   }
   EXPECT_EQ(counter, (size_t)2);
 }
+
+template <typename T> void
+CompressWhitespaceHelper()
+{
+  T s;
+  s.AssignLiteral("abcabcabc");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral("abcabcabc"));
+
+  s.AssignLiteral("   \n\rabcabcabc\r\n");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral("abcabcabc"));
+
+  s.AssignLiteral("   \n\rabc   abc   abc\r\n");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral("abc abc abc"));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral("abc abc abc"));
+
+  s.AssignLiteral("   \n\rabc\r  \nabc\n   \rabc\r\n");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral("abc abc abc"));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.CompressWhitespace(false, true);
+  EXPECT_TRUE(s.EqualsLiteral(" abc abc abc"));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.CompressWhitespace(true, false);
+  EXPECT_TRUE(s.EqualsLiteral("abc abc abc "));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.CompressWhitespace(false, false);
+  EXPECT_TRUE(s.EqualsLiteral(" abc abc abc "));
+
+  s.AssignLiteral("  \r\n  ");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("  \r\n  \t");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("\n  \r\n  \t");
+  s.CompressWhitespace(false, false);
+  EXPECT_TRUE(s.EqualsLiteral(" "));
+
+  s.AssignLiteral("\n  \r\n  \t");
+  s.CompressWhitespace(false, true);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("\n  \r\n  \t");
+  s.CompressWhitespace(true, false);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("");
+  s.CompressWhitespace(false, false);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("");
+  s.CompressWhitespace(false, true);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("");
+  s.CompressWhitespace(true, false);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+
+  s.AssignLiteral("");
+  s.CompressWhitespace(true, true);
+  EXPECT_TRUE(s.EqualsLiteral(""));
+}
+
+TEST(Strings, CompressWhitespace)
+{
+  CompressWhitespaceHelper<nsCString>();
+}
+
+TEST(Strings, CompressWhitespaceW)
+{
+  CompressWhitespaceHelper<nsString>();
+
+  nsString str, result;
+  str.AssignLiteral(u"\u263A    is\r\n   ;-)");
+  result.AssignLiteral(u"\u263A is ;-)");
+  str.CompressWhitespace(true, true);
+  EXPECT_TRUE(str == result);
+}
+
+#define TestExample1 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
+
+#define TestExample2 "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda       est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
+
+#define TestExample3 " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra id sit amet neque. Sed id consectetur mi, vestibulum aliquet arcu. Curabitur sagittis accumsan convallis. Sed eu condimentum ipsum, a laoreet tortor. Orci varius natoque penatibus et magnis dis    \r\r\n\n parturient montes, nascetur ridiculus mus. Sed non tellus nec ante sodales placerat a nec risus. Cras vel bibendum sapien, nec ullamcorper felis. Pellentesque congue eget nisi sit amet vehicula. Morbi pulvinar turpis justo, in commodo dolor vulputate id. Curabitur in dui urna. Vestibulum placerat dui in sem congue, ut faucibus nibh rutrum. Duis mattis turpis facilisis ullamcorper tincidunt. Vestibulum pharetra tortor at enim sagittis, dapibus consectetur ex blandit. Curabitur ac fringilla quam. In ornare lectus ut ipsum mattis venenatis. Etiam in mollis lectus, sed luctus risus.\nCras dapibus\f\t  \n finibus justo sit amet dictum. Aliquam non elit diam. Fusce magna nulla, bibendum in massa a, commodo finibus lectus. Sed rutrum a augue id imperdiet. Aliquam sagittis sodales felis, a tristique ligula. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Duis volutpat interdum lorem et congue. Phasellus porttitor posuere justo eget euismod. Nam a condimentum turpis, sit amet gravida lacus. Vestibulum dolor diam, lobortis ac metus et, convallis dapibus tellus. Ut nec metus in velit malesuada tincidunt et eget justo. Curabitur ut libero bibendum, porttitor diam vitae, aliquet justo. "
+
+#define TestExample4 " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa et convallis mollis, felis augue vestibulum augue, in lobortis metus eros a quam. Nam              ac diam ornare, vestibulum elit sit amet, consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, tempus gravida neque. Praesent id quam sit amet est maximus molestie eget at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a aliquet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet mauris. Nulla blandit libero non magna dapibus tristique. Integer hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, maximus mollis laoreet id, iaculis at turpis. "
+
+#define TestExample5 "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. Sed ac est tempus, consequat dolor mattis, mattis mi. "
+
+// Note the five calls in the loop, so divide by 100k
+MOZ_GTEST_BENCH(Strings, PerfStripWhitespace, [] {
+    nsCString test1(TestExample1);
+    nsCString test2(TestExample2);
+    nsCString test3(TestExample3);
+    nsCString test4(TestExample4);
+    nsCString test5(TestExample5);
+    for (int i = 0; i < 20000; i++) {
+      test1.StripWhitespace();
+      test2.StripWhitespace();
+      test3.StripWhitespace();
+      test4.StripWhitespace();
+      test5.StripWhitespace();
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfStripCharsWhitespace, [] {
+    // This is the unoptimized (original) version of
+    // StripWhitespace using StripChars.
+    nsCString test1(TestExample1);
+    nsCString test2(TestExample2);
+    nsCString test3(TestExample3);
+    nsCString test4(TestExample4);
+    nsCString test5(TestExample5);
+    for (int i = 0; i < 20000; i++) {
+      test1.StripChars("\f\t\r\n ");
+      test2.StripChars("\f\t\r\n ");
+      test3.StripChars("\f\t\r\n ");
+      test4.StripChars("\f\t\r\n ");
+      test5.StripChars("\f\t\r\n ");
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfCompressWhitespace, [] {
+    nsCString test1(TestExample1);
+    nsCString test2(TestExample2);
+    nsCString test3(TestExample3);
+    nsCString test4(TestExample4);
+    nsCString test5(TestExample5);
+    for (int i = 0; i < 20000; i++) {
+      test1.CompressWhitespace();
+      test2.CompressWhitespace();
+      test3.CompressWhitespace();
+      test4.CompressWhitespace();
+      test5.CompressWhitespace();
+    }
+});
 
 } // namespace TestStrings
