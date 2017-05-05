@@ -645,10 +645,10 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
 
   if (NS_SUCCEEDED(rv) && count) {
     rv = DoReadData(count);
+  }
 
-    if (NS_SUCCEEDED(rv)) {
-      rv = DoAsyncWait();
-    }
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoAsyncWait();
   }
 
   if (NS_FAILED(rv) || !count) {
