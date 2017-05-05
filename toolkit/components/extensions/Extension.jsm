@@ -61,8 +61,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestCommon",
                                   "resource://testing-common/ExtensionTestCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Locale",
-                                  "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
@@ -907,7 +905,7 @@ this.Extension = class extends ExtensionData {
   }
 
   parseManifest() {
-    return StartupCache.manifests.get([this.id, this.version, Locale.getLocale()],
+    return StartupCache.manifests.get([this.id, this.version, Services.locale.getAppLocaleAsLangTag()],
                                       () => super.parseManifest());
   }
 
@@ -1028,12 +1026,12 @@ this.Extension = class extends ExtensionData {
     if (locale === undefined) {
       let locales = await this.promiseLocales();
 
-      let localeList = Array.from(locales.keys(), locale => {
-        return {name: locale, locales: [locale]};
-      });
+      let matches = Services.locale.negotiateLanguages(
+        Services.locale.getAppLocalesAsLangTags(),
+        Array.from(locales.keys()),
+        this.defaultLocale);
 
-      let match = Locale.findClosestLocale(localeList);
-      locale = match ? match.name : this.defaultLocale;
+      locale = matches[0];
     }
 
     return super.initLocale(locale);

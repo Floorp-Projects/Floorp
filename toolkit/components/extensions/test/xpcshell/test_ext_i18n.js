@@ -13,6 +13,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 do_register_cleanup(() => {
   Preferences.reset("intl.accept_languages");
+  Preferences.reset("intl.locale.matchOS");
   Preferences.reset("general.useragent.locale");
 });
 
@@ -161,6 +162,82 @@ add_task(async function test_i18n() {
   await extension.unload();
 });
 
+add_task(async function test_i18n_negotiation() {
+  function runTests(expected) {
+    let _ = browser.i18n.getMessage.bind(browser.i18n);
+
+    browser.test.assertEq(expected, _("foo"), "Got expected message");
+  }
+
+  let extensionData = {
+    manifest: {
+      "default_locale": "en_US",
+
+      content_scripts: [
+        {"matches": ["http://*/*/file_sample.html"],
+         "js": ["content.js"]},
+      ],
+    },
+
+
+    files: {
+      "_locales/en_US/messages.json": {
+        "foo": {
+          "message": "English.",
+          "description": "foo",
+        },
+      },
+
+      "_locales/jp/messages.json": {
+        "foo": {
+          "message": "\u65e5\u672c\u8a9e",
+          "description": "foo",
+        },
+      },
+
+      "content.js": "new " + function(runTestsFn) {
+        browser.test.onMessage.addListener(expected => {
+          runTestsFn(expected);
+
+          browser.test.sendMessage("content-script-finished");
+        });
+        browser.test.sendMessage("content-ready");
+      } + `(${runTests})`,
+    },
+
+    background: "new " + function(runTestsFn) {
+      browser.test.onMessage.addListener(expected => {
+        runTestsFn(expected);
+
+        browser.test.sendMessage("background-script-finished");
+      });
+    } + `(${runTests})`,
+  };
+
+  Components.manager.addBootstrappedManifestLocation(do_get_file("data/locales/"));
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+
+  Preferences.set("intl.locale.matchOS", false);
+  for (let [lang, msg] of [["en-US", "English."], ["jp", "\u65e5\u672c\u8a9e"]]) {
+    Preferences.set("general.useragent.locale", lang);
+
+    let extension = ExtensionTestUtils.loadExtension(extensionData);
+    await extension.startup();
+    await extension.awaitMessage("content-ready");
+
+    extension.sendMessage(msg);
+    await extension.awaitMessage("background-script-finished");
+    await extension.awaitMessage("content-script-finished");
+
+    await extension.unload();
+  }
+  Preferences.reset("general.useragent.locale");
+
+  await contentPage.close();
+});
+
+
 add_task(async function test_get_accept_languages() {
   function checkResults(source, results, expected) {
     browser.test.assertEq(
@@ -294,12 +371,15 @@ add_task(async function test_get_ui_language() {
   await extension.awaitMessage("background-done");
   await extension.awaitMessage("content-done");
 
-  Preferences.set("general.useragent.locale", "he");
+  // We don't currently have a good way to mock this.
+  if (false) {
+    Preferences.set("general.useragent.locale", "he");
 
-  extension.sendMessage(["expect-results", "he"]);
+    extension.sendMessage(["expect-results", "he"]);
 
-  await extension.awaitMessage("background-done");
-  await extension.awaitMessage("content-done");
+    await extension.awaitMessage("background-done");
+    await extension.awaitMessage("content-done");
+  }
 
   await contentPage.close();
 
