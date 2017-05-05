@@ -6,6 +6,7 @@
 #include "MediaDecoder.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
+#include "TimeUnits.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
@@ -37,6 +38,32 @@ MediaStreamVideoRecorderSink::SetCurrentFrames(const VideoSegment& aSegment)
   if (!mSuspended) {
     mVideoEncoder->SetCurrentFrames(aSegment);
   }
+}
+
+void
+MediaEncoder::Suspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mLastPauseStartTime = TimeStamp::Now();
+  mSuspended = true;
+  mVideoSink->Suspend();
+}
+
+void
+MediaEncoder::Resume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mSuspended) {
+    return;
+  }
+  media::TimeUnit timeSpentPaused =
+    media::TimeUnit::FromTimeDuration(
+      TimeStamp::Now() - mLastPauseStartTime);
+  MOZ_ASSERT(timeSpentPaused.ToMicroseconds() >= 0);
+  MOZ_RELEASE_ASSERT(timeSpentPaused.IsValid());
+  mMicrosecondsSpentPaused += timeSpentPaused.ToMicroseconds();;
+  mSuspended = false;
+  mVideoSink->Resume();
 }
 
 void
@@ -321,6 +348,29 @@ MediaEncoder::WriteEncodedDataToMuxer(TrackEncoder *aTrackEncoder)
     mState = ENCODE_ERROR;
     return rv;
   }
+
+  // Update timestamps to accommodate pauses
+  const nsTArray<RefPtr<EncodedFrame> >& encodedFrames =
+    encodedVideoData.GetEncodedFrames();
+  // Take a copy of the atomic so we don't continually access it
+  uint64_t microsecondsSpentPaused = mMicrosecondsSpentPaused;
+  for (size_t i = 0; i < encodedFrames.Length(); ++i) {
+    RefPtr<EncodedFrame> frame = encodedFrames[i];
+    if (frame->GetTimeStamp() > microsecondsSpentPaused &&
+        frame->GetTimeStamp() - microsecondsSpentPaused > mLastMuxedTimestamp) {
+      // Use the adjusted timestamp if it's after the last timestamp
+      frame->SetTimeStamp(frame->GetTimeStamp() - microsecondsSpentPaused);
+    } else {
+      // If not, we force the last time stamp. We do this so the frames are
+      // still around and in order in case the codec needs to reference them.
+      // Dropping them here may result in artifacts in playback.
+      frame->SetTimeStamp(mLastMuxedTimestamp);
+    }
+    MOZ_ASSERT(mLastMuxedTimestamp <= frame->GetTimeStamp(),
+      "Our frames should be ordered by this point!");
+    mLastMuxedTimestamp = frame->GetTimeStamp();
+  }
+
   rv = mWriter->WriteEncodedTrack(encodedVideoData,
                                   aTrackEncoder->IsEncodingComplete() ?
                                   ContainerWriter::END_OF_STREAM : 0);
