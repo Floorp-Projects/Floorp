@@ -96,6 +96,10 @@ Converter.prototype = {
     this.charset =
       request.QueryInterface(Ci.nsIChannel).contentCharset || "UTF-8";
 
+    // Let "save as" save the original JSON, not the viewer
+    request.QueryInterface(Ci.nsIWritablePropertyBag);
+    request.setProperty("contentType", "application/json");
+
     this.channel = request;
     this.channel.contentType = "text/html";
     this.channel.contentCharset = "UTF-8";

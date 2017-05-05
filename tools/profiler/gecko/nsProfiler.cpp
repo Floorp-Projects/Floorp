@@ -93,18 +93,38 @@ nsProfiler::CanProfile(bool *aCanProfile)
   return NS_OK;
 }
 
+static bool
+HasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
+{
+  for (size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aThreadNameFilters, uint32_t aFilterCount)
+                          const char** aFilters, uint32_t aFilterCount)
 {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  profiler_start(aEntries, aInterval,
-                 aFeatures, aFeatureCount,
-                 aThreadNameFilters, aFilterCount);
+  #define ADD_FEATURE_BIT(n_, str_, Name_) \
+    if (HasFeature(aFeatures, aFeatureCount, str_)) { \
+      features |= ProfilerFeature::Name_; \
+    }
+
+  // Convert the array of strings to a bitfield.
+  uint32_t features = 0;
+  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE_BIT)
+
+  #undef ADD_FEATURE_BIT
+
+  profiler_start(aEntries, aInterval, features, aFilters, aFilterCount);
 
   // Do this after profiler_start().
   mGatherer = new ProfileGatherer();
@@ -341,31 +361,38 @@ nsProfiler::IsActive(bool *aIsActive)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
+nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList)
 {
+  uint32_t features = profiler_get_available_features();
+
+  #define COUNT_IF_SET(n_, str_, Name_) \
+    if (ProfilerFeature::Has##Name_(features)) { \
+      len++; \
+    }
+
+  // Count the number of features in use.
   uint32_t len = 0;
+  PROFILER_FOR_EACH_FEATURE(COUNT_IF_SET)
 
-  const char **features = profiler_get_features();
-  if (!features) {
-    *aCount = 0;
-    *aFeatures = nullptr;
-    return NS_OK;
-  }
+  #undef COUNT_IF_SET
 
-  while (features[len]) {
-    len++;
-  }
+  auto featureList = static_cast<char**>(moz_xmalloc(len * sizeof(char*)));
 
-  char **featureList = static_cast<char **>
-                       (moz_xmalloc(len * sizeof(char*)));
+  #define DUP_IF_SET(n_, str_, Name_) \
+    if (ProfilerFeature::Has##Name_(features)) { \
+      size_t strLen = strlen(str_); \
+      featureList[i] = static_cast<char*>( \
+        nsMemory::Clone(str_, (strLen + 1) * sizeof(char))); \
+      i++; \
+    }
 
-  for (size_t i = 0; i < len; i++) {
-    size_t strLen = strlen(features[i]);
-    featureList[i] = static_cast<char *>
-                         (nsMemory::Clone(features[i], (strLen + 1) * sizeof(char)));
-  }
+  // Insert the strings for the features in use.
+  size_t i = 0;
+  PROFILER_FOR_EACH_FEATURE(DUP_IF_SET)
 
-  *aFeatures = featureList;
+  #undef STRDUP_IF_SET
+
+  *aFeatureList = featureList;
   *aCount = len;
   return NS_OK;
 }
@@ -378,14 +405,9 @@ nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
   } else {
     int entries = 0;
     double interval = 0;
+    uint32_t features = 0;
     mozilla::Vector<const char*> filters;
-    mozilla::Vector<const char*> features;
     profiler_get_start_params(&entries, &interval, &features, &filters);
-
-    nsTArray<nsCString> featuresArray;
-    for (size_t i = 0; i < features.length(); ++i) {
-      featuresArray.AppendElement(features[i]);
-    }
 
     nsTArray<nsCString> filtersArray;
     for (uint32_t i = 0; i < filters.length(); ++i) {
@@ -393,7 +415,7 @@ nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
     }
 
     nsCOMPtr<nsIProfilerStartParams> startParams =
-      new nsProfilerStartParams(entries, interval, featuresArray, filtersArray);
+      new nsProfilerStartParams(entries, interval, features, filtersArray);
 
     startParams.forget(aRetVal);
   }

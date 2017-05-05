@@ -14,7 +14,7 @@ namespace mozilla {
 void
 ContextStateTrackerOGL::PushOGLSection(GLContext* aGL, const char* aSectionName)
 {
-  if (!profiler_feature_active("gpu")) {
+  if (!profiler_feature_active(ProfilerFeature::GPU)) {
     return;
   }
 

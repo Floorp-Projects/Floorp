@@ -111,7 +111,7 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, int32_t aSign)
 static bool
 NeedsGlyphExtents(gfxTextRun *aTextRun)
 {
-    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX)
+    if (aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_NEED_BOUNDING_BOX)
         return true;
     uint32_t numRuns;
     const gfxTextRun::GlyphRun *glyphRuns = aTextRun->GetGlyphRuns(&numRuns);
@@ -145,7 +145,9 @@ gfxTextRun::AllocateStorageForTextRun(size_t aSize, uint32_t aLength)
 
 already_AddRefed<gfxTextRun>
 gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
-                   uint32_t aLength, gfxFontGroup *aFontGroup, uint32_t aFlags)
+                   uint32_t aLength, gfxFontGroup *aFontGroup,
+                   gfx::ShapedTextFlags aFlags, 
+                   nsTextFrameUtils::Flags aFlags2)
 {
     void *storage = AllocateStorageForTextRun(sizeof(gfxTextRun), aLength);
     if (!storage) {
@@ -153,16 +155,20 @@ gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
     }
 
     RefPtr<gfxTextRun> result = new (storage) gfxTextRun(aParams, aLength,
-                                                         aFontGroup, aFlags);
+                                                         aFontGroup,
+                                                         aFlags, aFlags2);
     return result.forget();
 }
 
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
-                       uint32_t aLength, gfxFontGroup *aFontGroup, uint32_t aFlags)
+                       uint32_t aLength, gfxFontGroup *aFontGroup,
+                       gfx::ShapedTextFlags aFlags,
+                       nsTextFrameUtils::Flags aFlags2)
     : gfxShapedText(aLength, aFlags, aParams->mAppUnitsPerDevUnit)
     , mSingleGlyphRun()
     , mUserData(aParams->mUserData)
     , mFontGroup(aFontGroup)
+    , mFlags2(aFlags2)
     , mReleasedFontGroup(false)
     , mHasGlyphRunArray(false)
     , mShapingState(eShapingState_Normal)
@@ -197,7 +203,8 @@ gfxTextRun::~gfxTextRun()
 #endif
 #ifdef DEBUG
     // Make it easy to detect a dead text run
-    mFlags = 0xFFFFFFFF;
+    mFlags = ~gfx::ShapedTextFlags();
+    mFlags2 = ~nsTextFrameUtils::Flags();
 #endif
 
     if (mHasGlyphRunArray) {
@@ -318,7 +325,7 @@ gfxTextRun::ComputeLigatureData(Range aPartRange,
         result.mClipAfterPart = partClusterIndex + partClusterCount < totalClusterCount;
     }
 
-    if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
+    if (aProvider && (mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
         gfxFont::Spacing spacing;
         if (aPartRange.start == result.mRange.start) {
             aProvider->GetSpacing(
@@ -390,7 +397,7 @@ gfxTextRun::GetAdjustedSpacingArray(Range aRange, PropertyProvider *aProvider,
                                     nsTArray<PropertyProvider::Spacing>*
                                         aSpacing) const
 {
-    if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
+    if (!aProvider || !(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING))
         return false;
     if (!aSpacing->AppendElements(aRange.Length()))
         return false;
@@ -426,7 +433,8 @@ gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange) const
 void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, Range aRange, gfxPoint *aPt,
                        PropertyProvider *aProvider, Range aSpacingRange,
-                       TextRunDrawParams& aParams, uint16_t aOrientation) const
+                       TextRunDrawParams& aParams,
+                       gfx::ShapedTextFlags aOrientation) const
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aRange, aProvider,
@@ -463,7 +471,7 @@ void
 gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
                                 TextRunDrawParams& aParams,
-                                uint16_t aOrientation) const
+                                gfx::ShapedTextFlags aOrientation) const
 {
     if (aRange.start >= aRange.end) {
         return;
@@ -766,7 +774,7 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
                                     DrawTarget* aRefDrawTarget,
                                     PropertyProvider *aProvider,
                                     Range aSpacingRange,
-                                    uint16_t aOrientation,
+                                    gfx::ShapedTextFlags aOrientation,
                                     Metrics *aMetrics) const
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
@@ -782,7 +790,7 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
 void
 gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont, Range aRange,
     gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
-    PropertyProvider *aProvider, uint16_t aOrientation,
+    PropertyProvider *aProvider, gfx::ShapedTextFlags aOrientation,
     Metrics *aMetrics) const
 {
     if (aRange.start >= aRange.end)
@@ -949,7 +957,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     Range bufferRange(aStart, aStart +
         std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE));
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
-    bool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
+    bool haveSpacing = aProvider &&
+        !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING);
     if (haveSpacing) {
         GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
     }
@@ -959,7 +968,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     bool haveHyphenation = aProvider &&
         (aProvider->GetHyphensOption() == StyleHyphens::Auto ||
          (aProvider->GetHyphensOption() == StyleHyphens::Manual &&
-          (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
+          !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_HYPHEN_BREAKS)));
     if (haveHyphenation) {
         if (hyphenBuffer.AppendElements(bufferRange.Length(), fallible)) {
             aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer.Elements());
@@ -1224,7 +1233,7 @@ gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
 
     // Account for all remaining spacing here. This is more efficient than
     // processing it along with the glyphs.
-    if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
+    if (aProvider && (mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
         uint32_t i;
         AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
         if (spacingBuffer.AppendElements(aRange.Length())) {
@@ -1289,10 +1298,10 @@ gfxTextRun::FindFirstGlyphRunContaining(uint32_t aOffset) const
 nsresult
 gfxTextRun::AddGlyphRun(gfxFont *aFont, uint8_t aMatchType,
                         uint32_t aUTF16Offset, bool aForceNewRun,
-                        uint16_t aOrientation)
+                        gfx::ShapedTextFlags aOrientation)
 {
     NS_ASSERTION(aFont, "adding glyph run for null font!");
-    NS_ASSERTION(aOrientation != gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED,
+    NS_ASSERTION(aOrientation != gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED,
                  "mixed orientation should have been resolved");
     if (!aFont) {
         return NS_OK;
@@ -1392,7 +1401,7 @@ gfxTextRun::SortGlyphRuns()
     // Now copy back, coalescing adjacent glyph runs that have the same font
     mGlyphRunArray.Clear();
     gfxFont* prevFont = nullptr;
-    uint16_t prevOrient = 0;
+    gfx::ShapedTextFlags prevOrient = gfx::ShapedTextFlags();
     DebugOnly<uint32_t> prevOffset = 0;
     for (auto& run : runs) {
         // a GlyphRun with the same font and orientation as the previous can
@@ -1593,7 +1602,8 @@ gfxTextRun::ClearGlyphsAndCharacters()
 
 void
 gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
-                          uint32_t aCharIndex, uint16_t aOrientation)
+                          uint32_t aCharIndex,
+                          gfx::ShapedTextFlags aOrientation)
 {
     if (SetSpaceGlyphIfSimple(aFont, aCharIndex, ' ', aOrientation)) {
         return;
@@ -1601,12 +1611,12 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
 
     aFont->InitWordCache();
     static const uint8_t space = ' ';
-    uint32_t flags = gfxTextRunFactory::TEXT_IS_8BIT |
-                     gfxTextRunFactory::TEXT_IS_ASCII |
-                     gfxTextRunFactory::TEXT_IS_PERSISTENT |
-                     aOrientation;
+    gfx::ShapedTextFlags
+        flags = gfx::ShapedTextFlags::TEXT_IS_8BIT |
+                gfx::ShapedTextFlags::TEXT_IS_PERSISTENT |
+                aOrientation;
     bool vertical =
-        (GetFlags() & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) != 0;
+        !!(GetFlags() & gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT);
     gfxFontShaper::RoundingFlags roundingFlags =
         aFont->GetRoundOffsetsToPixels(aDrawTarget);
     gfxShapedWord* sw = aFont->GetShapedWord(aDrawTarget,
@@ -1627,7 +1637,8 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
 
 bool
 gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
-                                  char16_t aSpaceChar, uint16_t aOrientation)
+                                  char16_t aSpaceChar,
+                                  gfx::ShapedTextFlags aOrientation)
 {
     uint32_t spaceGlyph = aFont->GetSpaceGlyph();
     if (!spaceGlyph || !CompressedGlyph::IsSimpleGlyphID(spaceGlyph)) {
@@ -1635,7 +1646,7 @@ gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
     }
 
     gfxFont::Orientation fontOrientation =
-        (aOrientation & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) ?
+        (aOrientation & gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT) ?
             gfxFont::eVertical : gfxFont::eHorizontal;
     uint32_t spaceWidthAppUnits =
         NS_lroundf(aFont->GetMetrics(fontOrientation).spaceWidth *
@@ -2169,26 +2180,30 @@ gfxFontGroup::IsInvalidChar(char16_t ch)
 }
 
 already_AddRefed<gfxTextRun>
-gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags)
+gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams,
+                               gfx::ShapedTextFlags aFlags,
+                               nsTextFrameUtils::Flags aFlags2)
 {
-    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return gfxTextRun::Create(aParams, 0, this, aFlags);
+    aFlags |= ShapedTextFlags::TEXT_IS_8BIT | ShapedTextFlags::TEXT_IS_PERSISTENT;
+    return gfxTextRun::Create(aParams, 0, this, aFlags, aFlags2);
 }
 
 already_AddRefed<gfxTextRun>
-gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
+gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams,
+                               gfx::ShapedTextFlags aFlags,
+                               nsTextFrameUtils::Flags aFlags2)
 {
-    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
+    aFlags |= ShapedTextFlags::TEXT_IS_8BIT | ShapedTextFlags::TEXT_IS_PERSISTENT;
 
     RefPtr<gfxTextRun> textRun =
-        gfxTextRun::Create(aParams, 1, this, aFlags);
+        gfxTextRun::Create(aParams, 1, this, aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
 
-    uint16_t orientation = aFlags & TEXT_ORIENT_MASK;
-    if (orientation == TEXT_ORIENT_VERTICAL_MIXED) {
-        orientation = TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+    gfx::ShapedTextFlags orientation = aFlags & ShapedTextFlags::TEXT_ORIENT_MASK;
+    if (orientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED) {
+        orientation = ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
     }
 
     gfxFont *font = GetFirstValidFont();
@@ -2227,17 +2242,19 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
-                               const Parameters *aParams, uint32_t aFlags)
+                               const Parameters *aParams,
+                               gfx::ShapedTextFlags aFlags,
+                               nsTextFrameUtils::Flags aFlags2)
 {
     RefPtr<gfxTextRun> textRun =
-        gfxTextRun::Create(aParams, aLength, this, aFlags);
+        gfxTextRun::Create(aParams, aLength, this, aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
 
-    uint16_t orientation = aFlags & TEXT_ORIENT_MASK;
-    if (orientation == TEXT_ORIENT_VERTICAL_MIXED) {
-        orientation = TEXT_ORIENT_VERTICAL_UPRIGHT;
+    gfx::ShapedTextFlags orientation = aFlags & ShapedTextFlags::TEXT_ORIENT_MASK;
+    if (orientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED) {
+        orientation = ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
     }
     textRun->AddGlyphRun(GetFirstValidFont(), gfxTextRange::kFontGroup, 0, false,
                          orientation);
@@ -2255,12 +2272,14 @@ gfxFontGroup::MakeHyphenTextRun(DrawTarget* aDrawTarget,
     gfxFont *font = GetFirstValidFont(uint32_t(hyphen));
     if (font->HasCharacter(hyphen)) {
         return MakeTextRun(&hyphen, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                           gfxFontGroup::TEXT_IS_PERSISTENT, nullptr);
+                           ShapedTextFlags::TEXT_IS_PERSISTENT,
+                           nsTextFrameUtils::Flags(), nullptr);
     }
 
     static const uint8_t dash = '-';
     return MakeTextRun(&dash, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                       gfxFontGroup::TEXT_IS_PERSISTENT, nullptr);
+                       ShapedTextFlags::TEXT_IS_PERSISTENT,
+                       nsTextFrameUtils::Flags(), nullptr);
 }
 
 gfxFloat
@@ -2280,28 +2299,30 @@ gfxFontGroup::GetHyphenWidth(const gfxTextRun::PropertyProvider* aProvider)
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
-                          const Parameters *aParams, uint32_t aFlags,
+                          const Parameters *aParams,
+                          gfx::ShapedTextFlags aFlags,
+                          nsTextFrameUtils::Flags aFlags2,
                           gfxMissingFontRecorder *aMFR)
 {
     if (aLength == 0) {
-        return MakeEmptyTextRun(aParams, aFlags);
+        return MakeEmptyTextRun(aParams, aFlags, aFlags2);
     }
     if (aLength == 1 && aString[0] == ' ') {
-        return MakeSpaceTextRun(aParams, aFlags);
+        return MakeSpaceTextRun(aParams, aFlags, aFlags2);
     }
 
-    aFlags |= TEXT_IS_8BIT;
+    aFlags |= ShapedTextFlags::TEXT_IS_8BIT;
 
     if (MOZ_UNLIKELY(GetStyle()->size == 0) ||
         MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0f)) {
         // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
         // them, and always create at least size 1 fonts, i.e. they still
         // render something for size 0 fonts.
-        return MakeBlankTextRun(aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
     }
 
     RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
-                                                    aFlags);
+                                                    aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2315,22 +2336,24 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
 
 already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
-                          const Parameters *aParams, uint32_t aFlags,
+                          const Parameters *aParams,
+                          gfx::ShapedTextFlags aFlags, 
+                          nsTextFrameUtils::Flags aFlags2,
                           gfxMissingFontRecorder *aMFR)
 {
     if (aLength == 0) {
-        return MakeEmptyTextRun(aParams, aFlags);
+        return MakeEmptyTextRun(aParams, aFlags, aFlags2);
     }
     if (aLength == 1 && aString[0] == ' ') {
-        return MakeSpaceTextRun(aParams, aFlags);
+        return MakeSpaceTextRun(aParams, aFlags, aFlags2);
     }
     if (MOZ_UNLIKELY(GetStyle()->size == 0) ||
         MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0f)) {
-        return MakeBlankTextRun(aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
     }
 
     RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
-                                                    aFlags);
+                                                    aFlags, aFlags2);
     if (!textRun) {
         return nullptr;
     }
@@ -2361,7 +2384,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
         // if we find any, we'll make a local copy here and use that for
         // font matching and glyph generation/shaping
         bool prevIsArabic =
-            (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_INCOMING_ARABICCHAR) != 0;
+            !!(aTextRun->GetFlags() & ShapedTextFlags::TEXT_INCOMING_ARABICCHAR);
         for (uint32_t i = 0; i < aLength; ++i) {
             char16_t origCh = aString[i];
             char16_t newCh = HandleNumberInChar(origCh, prevIsArabic, numOption);
@@ -2541,7 +2564,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
     uint32_t runStart = 0;
     AutoTArray<gfxTextRange,3> fontRanges;
     ComputeRanges(fontRanges, aString, aLength, aRunScript,
-                  aTextRun->GetFlags() & gfxTextRunFactory::TEXT_ORIENT_MASK);
+                  aTextRun->GetFlags() & ShapedTextFlags::TEXT_ORIENT_MASK);
     uint32_t numRanges = fontRanges.Length();
     bool missingChars = false;
 
@@ -2550,7 +2573,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
         uint32_t matchedLength = range.Length();
         gfxFont *matchedFont = range.font;
         bool vertical =
-            range.orientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+            range.orientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
         // create the glyph run for this range
         if (matchedFont && mStyle.noFallbackVariantFeatures) {
             // common case - just do glyph layout and record the
@@ -2748,13 +2771,14 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
 }
 
 gfxTextRun *
-gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
+gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
+                                 gfx::ShapedTextFlags aFlags,
                                  LazyReferenceDrawTargetGetter& aRefDrawTargetGetter)
 {
-    MOZ_ASSERT(!(aFlags & ~TEXT_ORIENT_MASK),
+    MOZ_ASSERT(!(aFlags & ~ShapedTextFlags::TEXT_ORIENT_MASK),
                "flags here should only be used to specify orientation");
     if (mCachedEllipsisTextRun &&
-        (mCachedEllipsisTextRun->GetFlags() & TEXT_ORIENT_MASK) == aFlags &&
+        (mCachedEllipsisTextRun->GetFlags() & ShapedTextFlags::TEXT_ORIENT_MASK) == aFlags &&
         mCachedEllipsisTextRun->GetAppUnitsPerDevUnit() == aAppUnitsPerDevPixel) {
         return mCachedEllipsisTextRun.get();
     }
@@ -2774,7 +2798,8 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
     };
     mCachedEllipsisTextRun =
         MakeTextRun(ellipsis.get(), ellipsis.Length(), &params,
-                    aFlags | TEXT_IS_PERSISTENT, nullptr);
+                    aFlags | ShapedTextFlags::TEXT_IS_PERSISTENT,
+                    nsTextFrameUtils::Flags(), nullptr);
     if (!mCachedEllipsisTextRun) {
         return nullptr;
     }
@@ -3077,7 +3102,8 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
 template<typename T>
 void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
                                  const T *aString, uint32_t aLength,
-                                 Script aRunScript, uint16_t aOrientation)
+                                 Script aRunScript,
+                                 gfx::ShapedTextFlags aOrientation)
 {
     NS_ASSERTION(aRanges.Length() == 0, "aRanges must be initially empty");
     NS_ASSERTION(aLength > 0, "don't call ComputeRanges for zero-length text");
@@ -3151,18 +3177,18 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
 
         prevCh = ch;
 
-        uint16_t orient = aOrientation;
-        if (aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
+        ShapedTextFlags orient = aOrientation;
+        if (aOrientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED) {
             // For CSS text-orientation:mixed, we need to resolve orientation
             // on a per-character basis using the UTR50 orientation property.
             switch (GetVerticalOrientation(ch)) {
             case VERTICAL_ORIENTATION_U:
             case VERTICAL_ORIENTATION_Tr:
             case VERTICAL_ORIENTATION_Tu:
-                orient = TEXT_ORIENT_VERTICAL_UPRIGHT;
+                orient = ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
                 break;
             case VERTICAL_ORIENTATION_R:
-                orient = TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+                orient = ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
                 break;
             }
         }

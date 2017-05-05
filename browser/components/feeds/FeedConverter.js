@@ -253,6 +253,7 @@ FeedConverter.prototype = {
         let aboutFeedsURI = ios.newURI("about:feeds");
         chromeChannel = ios.newChannelFromURIWithLoadInfo(aboutFeedsURI, loadInfo);
         chromeChannel.originalURI = result.uri;
+        loadInfo.resultPrincipalURI = result.uri;
 
         // carry the origin attributes from the channel that loaded the feed.
         chromeChannel.owner =
@@ -560,10 +561,12 @@ GenericProtocolHandler.prototype = {
     const schemeId = this._getTelemetrySchemeId();
     Services.telemetry.getHistogramById("FEED_PROTOCOL_USAGE").add(schemeId);
 
-    if (channel instanceof Components.interfaces.nsIHttpChannel)
+    if (channel instanceof Components.interfaces.nsIHttpChannel) {
       // Set this so we know this is supposed to be a feed
       channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
+    }
     channel.originalURI = aUri;
+    aLoadInfo.resultPrincipalURI = aUri;
     return channel;
   },
 

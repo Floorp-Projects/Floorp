@@ -283,6 +283,53 @@
     "high": 1000,
     "n_buckets": 50
   },
+  "CONTENT_JS_FOREGROUND_TICK_DELAY_TOTAL_MS": {
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1305153, 1296486],
+    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is (partially) in the foreground. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
+  },
+  "CONTENT_JS_FOREGROUND_TICK_DELAY_EVENTS_MS": {
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "61",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1305153, 1296486],
+    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is (partially) in the foreground. The time is measured from the vsync event's time stamp to when the runnable finishes execution. The histogram is keyed by the label of the runnable, indicating which type of task the runnable is performing."
+  },
+  "CONTENT_JS_BACKGROUND_TICK_DELAY_TOTAL_MS": {
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1305153, 1296486],
+    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is completely in the background. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
+  },
+  "CONTENT_JS_BACKGROUND_TICK_DELAY_EVENTS_MS": {
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "61",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1305153, 1296486],
+    "description" : "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is completely in the background. The time is measured from the vsync event's time stamp to when the runnable finishes execution. The histogram is keyed by the label of the runnable, indicating which type of task the runnable is performing."
+  },
+  "CONTENT_JS_KNOWN_TICK_DELAY_MS": {
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "65",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1305153, 1296486],
+    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup when the vsync event's timestamp is before the starting time of the runnable. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
+  },
   "COMPOSITOR_ANIMATION_DURATION" : {
     "expires_in_version": "58",
     "description": "Duration of animations running on the compositor in milliseconds",
@@ -2079,6 +2126,14 @@
     "n_values": 8,
     "releaseChannelCollection": "opt-out",
     "description": "Recorded once for each HTTP 401 response. The value records the type of authentication and the TLS-enabled status. (0=basic/clear, 1=basic/tls, 2=digest/clear, 3=digest/tls, 4=ntlm/clear, 5=ntlm/tls, 6=negotiate/clear, 7=negotiate/tls)"
+  },
+  "TCP_FAST_OPEN": {
+    "expires_in_version": "61",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "When a http connection is closed, track whether or not TCP Fast Open was used: 0=TFO_NOT_TRIED, 1=TFO_TRIED_NEGOTIATING, 2=TFO_DATA_SENT, 3=TFO_FAILED.",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1352271]
   },
   "TLS_EARLY_DATA_NEGOTIATED": {
     "expires_in_version": "58",

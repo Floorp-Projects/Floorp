@@ -66,7 +66,8 @@ private:
   static already_AddRefed<ScaledFont>
     CreateFromInstanceData(const InstanceData& aInstanceData,
                            UnscaledFontFontconfig* aUnscaledFont,
-                           Float aSize);
+                           Float aSize,
+                           NativeFontResource* aNativeFontResource = nullptr);
 
   FcPattern* mPattern;
 };

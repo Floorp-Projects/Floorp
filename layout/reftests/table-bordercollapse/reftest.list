@@ -104,4 +104,4 @@ fuzzy(255,40) == border-style-outset-becomes-groove.html border-style-outset-bec
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
 fuzzy(255,40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
-fuzzy(2,8301) == 1324524.html 1324524-ref.html
+fuzzy(2,11000) == 1324524.html 1324524-ref.html

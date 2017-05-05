@@ -732,6 +732,9 @@ js::fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp)
 bool
 JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v, bool* bp)
 {
+    AssertHeapIsIdle();
+    assertSameCompartment(cx, objArg, v);
+
     RootedObject obj(cx, objArg);
 
     /* Step 1. */

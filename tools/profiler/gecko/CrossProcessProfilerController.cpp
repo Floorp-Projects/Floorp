@@ -104,8 +104,8 @@ CrossProcessProfilerController::StartProfiler(nsIProfilerStartParams* aParams)
   ipcParams.enabled() = true;
   aParams->GetEntries(&ipcParams.entries());
   aParams->GetInterval(&ipcParams.interval());
-  ipcParams.features() = aParams->GetFeatures();
-  ipcParams.threadFilters() = aParams->GetThreadFilterNames();
+  aParams->GetFeatures(&ipcParams.features());
+  ipcParams.filters() = aParams->GetFilters();
 
   mProcess->SendStartProfiler(ipcParams);
 }

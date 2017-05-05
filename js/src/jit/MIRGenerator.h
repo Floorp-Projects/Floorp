@@ -146,12 +146,21 @@ class MIRGenerator
     uint32_t minWasmHeapLength() const {
         return minWasmHeapLength_;
     }
-    void setPerformsCall() {
-        performsCall_ = true;
+
+    void setNeedsOverrecursedCheck() {
+        needsOverrecursedCheck_ = true;
     }
-    bool performsCall() const {
-        return performsCall_;
+    bool needsOverrecursedCheck() const {
+        return needsOverrecursedCheck_;
     }
+
+    void setNeedsStaticStackAlignment() {
+        needsStaticStackAlignment_ = true;
+    }
+    bool needsStaticStackAlignment() const {
+        return needsOverrecursedCheck_;
+    }
+
     // Traverses the graph to find if there's any SIMD instruction. Costful but
     // the value is cached, so don't worry about calling it several times.
     bool usesSimd();
@@ -182,7 +191,8 @@ class MIRGenerator
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
 
     uint32_t wasmMaxStackArgBytes_;
-    bool performsCall_;
+    bool needsOverrecursedCheck_;
+    bool needsStaticStackAlignment_;
     bool usesSimd_;
     bool cachedUsesSimd_;
 

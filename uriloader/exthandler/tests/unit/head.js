@@ -21,22 +21,91 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
 Cu.import("resource://testing-common/TestUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceJSON",
+                                   "@mozilla.org/uriloader/handler-service;1",
+                                   "nsIHandlerService");
+XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceRDF",
+                                   "@mozilla.org/uriloader/handler-service-rdf;1",
+                                   "nsIHandlerService");
+
 HandlerServiceTestUtils.Assert = Assert;
 
 do_get_profile();
 
 let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
-
 let rdfFile = FileUtils.getFile("ProfD", ["mimeTypes.rdf"]);
 
-function deleteDatasourceFile() {
-  if (rdfFile.exists()) {
-    rdfFile.remove(false);
-  }
-}
+/**
+ * Unloads the nsIHandlerService data store, so the back-end file can be
+ * accessed or modified, and the new data will be loaded at the next access.
+ */
+let unloadHandlerStoreJSON = Task.async(function* () {
+  // If this function is called before the nsIHandlerService instance has been
+  // initialized for the first time, the observer below will not be registered.
+  // We have to force initialization to prevent the function from stalling.
+  gHandlerServiceJSON;
 
-// Delete the existing datasource file, if any, so we start from scratch.
-// We also do this after finishing the tests, so there shouldn't be an old
-// file lying around, but just in case we delete it here as well.
-deleteDatasourceFile();
-do_register_cleanup(deleteDatasourceFile);
+  let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
+  Services.obs.notifyObservers(null, "handlersvc-json-replace", null);
+  yield promise;
+});
+let unloadHandlerStoreRDF = Task.async(function* () {
+  // If this function is called before the nsIHandlerService instance has been
+  // initialized for the first time, the observer below will not be registered.
+  // We have to force initialization to prevent the function from stalling.
+  gHandlerServiceRDF;
+
+  let promise = TestUtils.topicObserved("handlersvc-rdf-replace-complete");
+  Services.obs.notifyObservers(null, "handlersvc-rdf-replace", null);
+  yield promise;
+});
+
+/**
+ * Unloads the data store and deletes it.
+ */
+let deleteHandlerStoreJSON = Task.async(function* () {
+  yield unloadHandlerStoreJSON();
+
+  yield OS.File.remove(jsonPath, { ignoreAbsent: true });
+});
+let deleteHandlerStoreRDF = Task.async(function* () {
+  yield unloadHandlerStoreRDF();
+
+  yield OS.File.remove(rdfFile.path, { ignoreAbsent: true });
+});
+
+/**
+ * Unloads the data store and replaces it with the test data file.
+ */
+let copyTestDataToHandlerStoreJSON = Task.async(function* () {
+  yield unloadHandlerStoreJSON();
+
+  yield OS.File.copy(do_get_file("handlers.json").path, jsonPath);
+});
+let copyTestDataToHandlerStoreRDF = Task.async(function* () {
+  yield unloadHandlerStoreRDF();
+
+  let fileName = AppConstants.platform == "android" ? "mimeTypes-android.rdf"
+                                                    : "mimeTypes.rdf";
+  yield OS.File.copy(do_get_file(fileName).path, rdfFile.path);
+});
+
+/**
+ * Ensures the JSON implementation doesn't migrate entries from the legacy RDF
+ * data source during the other tests. This is important for both back-ends,
+ * because the JSON implementation is the default one and is always invoked by
+ * the MIME service when building new nsIHandlerInfo objects.
+ */
+add_task(function* test_initialize() {
+  // We don't need to reset this preference when the tests end, because it's
+  // irrelevant for any other test in the tree.
+  Services.prefs.setBoolPref("gecko.handlerService.migrated", true);
+});
+
+/**
+ * Ensures the files are removed and the services unloaded when the tests end.
+ */
+do_register_cleanup(function* test_terminate() {
+  yield deleteHandlerStoreJSON();
+  yield deleteHandlerStoreRDF();
+});

@@ -342,7 +342,7 @@ struct hb_apply_context_t :
     inline void init (hb_apply_context_t *c_, bool context_match = false)
     {
       c = c_;
-      match_glyph_data = NULL,
+      match_glyph_data = NULL;
       matcher.set_match_func (NULL, NULL);
       matcher.set_lookup_props (c->lookup_props);
       /* Ignore ZWNJ if we are matching GSUB context, or matching GPOS. */

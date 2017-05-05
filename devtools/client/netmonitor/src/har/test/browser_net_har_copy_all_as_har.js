@@ -7,6 +7,10 @@
  * Basic tests for exporting Network panel content into HAR format.
  */
 add_task(function* () {
+  // Disable tcp fast open, because it is setting a response header indicator
+  // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
+  // number of response headers will vary depending on the platform.
+  Services.prefs.setBoolPref("network.tcp.tcp_fastopen_enable", false);
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");

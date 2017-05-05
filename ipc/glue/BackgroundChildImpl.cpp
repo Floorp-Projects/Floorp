@@ -15,6 +15,7 @@
 #endif
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
@@ -546,6 +547,18 @@ BackgroundChildImpl::DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* a
   delete static_cast<dom::GamepadTestChannelChild*>(aActor);
   return true;
 }
+
+#ifdef EARLY_BETA_OR_EARLIER
+void
+BackgroundChildImpl::OnChannelReceivedMessage(const Message& aMsg)
+{
+  if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
+    // Not really necessary to look at the message payload, it will be
+    // <0.5ms away from TimeStamp::Now()
+    SchedulerGroup::MarkVsyncReceived();
+  }
+}
+#endif
 
 } // namespace ipc
 } // namespace mozilla

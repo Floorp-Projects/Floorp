@@ -165,7 +165,13 @@ public:
     virtual void DisableSpdy() { }
     virtual void ReuseConnectionOnRestartOK(bool) { }
 
-    // Returns true if early-data is possible.
+    // Returns true if early-data or fast open is possible.
+    virtual MOZ_MUST_USE bool CanDo0RTT() {
+        return false;
+    }
+    // Returns true if early-data is possible and transaction will remember
+    // that it is in 0RTT mode (to know should it rewide transaction or not
+    // in the case of an error).
     virtual MOZ_MUST_USE bool Do0RTT() {
         return false;
     }
@@ -184,10 +190,16 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
+    virtual MOZ_MUST_USE nsresult RestartOnFastOpenError() {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
     virtual uint64_t TopLevelOuterContentWindowId() {
         MOZ_ASSERT(false);
         return 0;
     }
+
+    virtual void SetFastOpenStatus(uint8_t aStatus) {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)

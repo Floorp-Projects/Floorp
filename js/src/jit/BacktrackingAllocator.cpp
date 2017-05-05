@@ -590,18 +590,12 @@ BacktrackingAllocator::buildLivenessInfo()
                 if (!callRanges.insert(callRange))
                     return false;
             }
-            DebugOnly<bool> hasDoubleDef = false;
-            DebugOnly<bool> hasFloat32Def = false;
+
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 LDefinition* def = ins->getDef(i);
                 if (def->isBogusTemp())
                     continue;
-#ifdef DEBUG
-                if (def->type() == LDefinition::DOUBLE)
-                    hasDoubleDef = true;
-                if (def->type() == LDefinition::FLOAT32)
-                    hasFloat32Def = true;
-#endif
+
                 CodePosition from = outputOf(*ins);
 
                 if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
@@ -646,8 +640,7 @@ BacktrackingAllocator::buildLivenessInfo()
                     }
                 }
 
-                CodePosition to =
-                    ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
+                CodePosition to = ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
 
                 if (!vreg(temp).addInitialRange(alloc(), from, to))
                     return false;

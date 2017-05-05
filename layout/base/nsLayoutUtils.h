@@ -82,6 +82,7 @@ class Selection;
 } // namespace dom
 namespace gfx {
 struct RectCornerRadii;
+enum class ShapedTextFlags : uint16_t;
 } // namespace gfx
 namespace layers {
 class Image;
@@ -1997,15 +1998,17 @@ public:
    * -- TEXT_OPTIMIZE_SPEED if the text-rendering CSS property and font size
    * and prefs indicate we should be optimizing for speed over quality
    */
-  static uint32_t GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
-                                          const nsStyleFont* aStyleFont,
-                                          const nsStyleText* aStyleText,
-                                          nscoord aLetterSpacing);
+  static mozilla::gfx::ShapedTextFlags
+  GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                          const nsStyleFont* aStyleFont,
+                          const nsStyleText* aStyleText,
+                          nscoord aLetterSpacing);
 
   /**
    * Get orientation flags for textrun construction.
    */
-  static uint32_t GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext);
+  static mozilla::gfx::ShapedTextFlags
+  GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext);
 
   /**
    * Takes two rectangles whose origins must be the same, and computes

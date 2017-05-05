@@ -177,10 +177,15 @@ public:
     // restart - this indicates that state for dev tools
     void Refused0RTT();
 
+    MOZ_MUST_USE bool CanDo0RTT() override;
+    MOZ_MUST_USE nsresult RestartOnFastOpenError() override;
+
     uint64_t TopLevelOuterContentWindowId() override
     {
         return mTopLevelOuterContentWindowId;
     }
+
+    void SetFastOpenStatus(uint8_t aStatus) override;
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
@@ -420,6 +425,8 @@ private:
         EARLY_SENT,
         EARLY_ACCEPTED
     } mEarlyDataDisposition;
+
+    uint8_t mFastOpenStatus;
 };
 
 } // namespace net
