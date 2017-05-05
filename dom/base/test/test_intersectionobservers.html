@@ -29,7 +29,6 @@ limitations under the License.
 <p id="display"></p>
 <pre id="test">
 <script type="application/javascript">
-
   var tests = [];
   var curDescribeMsg = '';
   var curItMsg = '';
@@ -797,7 +796,7 @@ limitations under the License.
             callDelayed(function() {
               expect(spy.callCount).to.be(0);
               done();
-            });
+            }, ASYNC_TIMEOUT);
           },
           function(done) {
             parentEl.insertBefore(targetEl1, targetEl2);
@@ -1070,7 +1069,7 @@ limitations under the License.
             callDelayed(function() {
               expect(spy.callCount).to.be(1);
               done();
-            });
+            }, ASYNC_TIMEOUT);
           }
         ], done);
 
