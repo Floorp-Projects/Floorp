@@ -437,6 +437,10 @@ public abstract class GeckoApp extends GeckoActivity
                 resetOptionsMenu();
                 resetFormAssistPopup();
 
+                if (foregrounded) {
+                    tab.setWasSelectedInForeground(true);
+                }
+
                 if (mLastSelectedTabId != INVALID_TAB_ID && foregrounded &&
                         // mSuppressActivitySwitch implies that we want to defer a pending
                         // activity switch because we're actually about to leave the app.
@@ -2284,16 +2288,31 @@ public abstract class GeckoApp extends GeckoActivity
         GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        // When backing out of the app triggers a tab close and therefore selects another tab, we
-        // don't switch activities even if the new selected tab is of a different type, because
-        // doing so would bring us into the foreground again.
-        // As this means that the currently selected tab doesn't match the last active GeckoApp, we
-        // need to check mSuppressActivitySwitch as well here.
-        if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this ||
-                mSuppressActivitySwitch) {
-            mSuppressActivitySwitch = false;
-            restoreLastSelectedTab();
+        // If mIgnoreLastSelectedTab is set, we're either the first activity to run, so our startup
+        // code will (have) handle(d) tab selection, or else we've received a new intent and want to
+        // open and select a new tab as well.
+        if (!mIgnoreLastSelectedTab) {
+            Tab selectedTab = Tabs.getInstance().getSelectedTab();
+
+            // We need to check if we've selected a different tab while no GeckoApp-based activity
+            // was in foreground and catch up with any activity switches that might be needed.
+            if (selectedTab != null && !selectedTab.getWasSelectedInForeground()) {
+                selectedTab.setWasSelectedInForeground(true);
+                if (!selectedTab.matchesActivity(this)) {
+                    startActivity(IntentHelper.getTabSwitchIntent(selectedTab));
+                }
+
+                // When backing out of the app closes the current tab and therefore selects
+                // another tab, we don't switch activities even if the newly selected tab has a
+                // different type, because doing so would bring us into the foreground again.
+                // As this means that the currently selected tab doesn't match the last active
+                // GeckoApp, we need to check mSuppressActivitySwitch here as well.
+            } else if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this ||
+                    mSuppressActivitySwitch) {
+                restoreLastSelectedTab();
+            }
         }
+        mSuppressActivitySwitch = false;
         mIgnoreLastSelectedTab = false;
 
         int newOrientation = getResources().getConfiguration().orientation;
