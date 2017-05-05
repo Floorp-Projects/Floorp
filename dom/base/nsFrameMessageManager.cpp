@@ -9,7 +9,6 @@
 #include "nsFrameMessageManager.h"
 
 #include "ContentChild.h"
-#include "nsASCIIMask.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
@@ -592,7 +591,7 @@ AllowMessage(size_t aDataLength, const nsAString& aMessageName)
   }
 
   NS_ConvertUTF16toUTF8 messageName(aMessageName);
-  messageName.StripTaggedASCII(ASCIIMask::Mask0to9());
+  messageName.StripChars("0123456789");
 
   Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE2, messageName,
                         aDataLength);
@@ -678,7 +677,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     // NOTE: We need to strip digit characters from the message name in order to
     // avoid a large number of buckets due to generated names from addons (such
     // as "ublock:sb:{N}"). See bug 1348113 comment 10.
-    messageName.StripTaggedASCII(ASCIIMask::Mask0to9());
+    messageName.StripChars("0123456789");
     Telemetry::Accumulate(Telemetry::IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS,
                           messageName, latencyMs);
   }
