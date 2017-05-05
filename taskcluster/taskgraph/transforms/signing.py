@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema, Schema
-from taskgraph.util.scriptworker import get_signing_cert_scope
+from taskgraph.util.scriptworker import get_signing_cert_scope, get_devedition_signing_cert_scope
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -106,7 +106,14 @@ def make_task_description(config, jobs):
             # Used for l10n attribute passthrough
             attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
-        signing_cert_scope = get_signing_cert_scope(config)
+        # This code wasn't originally written with the possibility of using different
+        # signing cert scopes for different platforms on the same branch. This isn't
+        # ideal, but it's what we currently have to make this possible.
+        if dep_job.attributes.get('build_platform') in set(['linux64-devedition-nightly', 'linux-devedition-nightly']):
+            signing_cert_scope = get_devedition_signing_cert_scope(config)
+        else:
+            signing_cert_scope = get_signing_cert_scope(config)
+
         task = {
             'label': label,
             'description': "{} Signing".format(
