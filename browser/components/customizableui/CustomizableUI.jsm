@@ -154,6 +154,8 @@ var gUIStateBeforeReset = {
   currentTheme: null,
 };
 
+var gDefaultPanelPlacements = null;
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
@@ -226,19 +228,9 @@ var CustomizableUIInternal = {
       }
     }
 
-    this.registerArea(CustomizableUI.AREA_PANEL, {
-      anchor: "PanelUI-menu-button",
-      type: CustomizableUI.TYPE_MENU_PANEL,
-      defaultPlacements: panelPlacements
-    }, true);
-    PanelWideWidgetTracker.init();
-
-    if (Services.prefs.getBoolPref("browser.photon.structure.enabled")) {
-      this.registerArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, {
-        type: CustomizableUI.TYPE_MENU_PANEL,
-        defaultPlacements: [],
-      }, true);
-    }
+    gDefaultPanelPlacements = panelPlacements;
+    this._updateAreasForPhoton();
+    Services.prefs.addObserver("browser.photon.structure.enabled", this);
 
     let navbarPlacements = [
       "urlbar-container",
@@ -303,6 +295,42 @@ var CustomizableUIInternal = {
       defaultPlacements: ["addonbar-closebutton", "status-bar"],
       defaultCollapsed: false,
     }, true);
+  },
+
+  _updateAreasForPhoton() {
+    if (Services.prefs.getBoolPref("browser.photon.structure.enabled")) {
+      if (gAreas.has(CustomizableUI.AREA_PANEL)) {
+        this.unregisterArea(CustomizableUI.AREA_PANEL, true);
+      }
+      this.registerArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, {
+        type: CustomizableUI.TYPE_MENU_PANEL,
+        defaultPlacements: [],
+      }, true);
+    } else {
+      if (gAreas.has(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL)) {
+        this.unregisterArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, true);
+      }
+      // In tests we destroy some widgets. Those should be removed from the
+      // default placements when re-registering the panel.
+      let placementsToUse = Array.from(gDefaultPanelPlacements);
+      if (!gPalette.has("e10s-button") && placementsToUse.includes("e10s-button")) {
+        placementsToUse.splice(placementsToUse.indexOf("e10s-button"), 1);
+      }
+      this.registerArea(CustomizableUI.AREA_PANEL, {
+        anchor: "PanelUI-menu-button",
+        type: CustomizableUI.TYPE_MENU_PANEL,
+        defaultPlacements: placementsToUse,
+      }, true);
+      PanelWideWidgetTracker.init();
+    }
+  },
+
+  observe(subject, topic, data) {
+    // Currently only used for pref change observers.
+    if (data == "browser.photon.structure.enabled") {
+      this._updateAreasForPhoton();
+      this.notifyListeners("onPhotonChanged");
+    }
   },
 
   get _builtinToolbars() {
