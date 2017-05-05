@@ -2738,6 +2738,17 @@ int NS_main(int argc, NS_tchar **argv)
     return 1;
   }
 
+#if defined(TEST_UPDATER) && defined(XP_WIN)
+  // The tests use nsIProcess to launch the updater and it is simpler for the
+  // tests to just set an environment variable and have the test updater set
+  // the current working directory than it is to set the current working
+  // directory in the test itself.
+  if (EnvHasValue("CURWORKDIRPATH")) {
+    const WCHAR *val = _wgetenv(L"CURWORKDIRPATH");
+    NS_tchdir(val);
+  }
+#endif
+
   // This check is also performed in workmonitor.cpp since the maintenance
   // service can be called directly.
   if (!IsValidFullPath(argv[1])) {
