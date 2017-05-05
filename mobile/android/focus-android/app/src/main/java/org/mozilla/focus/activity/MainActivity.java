@@ -21,6 +21,7 @@ import org.mozilla.focus.fragment.HomeFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
 import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.SafeIntent;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.web.BrowsingSession;
 import org.mozilla.focus.web.IWebView;
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        Intent intent = getIntent();
+        SafeIntent intent = new SafeIntent(getIntent());
 
         if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
                 && !BrowsingSession.getInstance().isActive()) {
@@ -55,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
             // original Intent (which might be a VIEW intent). However if there's no active browsing
             // session then we do not want to re-process the Intent and potentially re-open a website
             // from a session that the user already "erased".
-            setIntent(intent = new Intent(Intent.ACTION_MAIN));
+            intent = new SafeIntent(new Intent(Intent.ACTION_MAIN));
+            setIntent(intent.getUnsafe());
         }
 
         if (savedInstanceState == null) {
@@ -112,22 +114,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+    protected void onNewIntent(Intent unsafeIntent) {
+        // getAction is safe, so we don't need to wrap with SafeIntent until we know if we need
+        // to read actual data:
+        if (Intent.ACTION_VIEW.equals(unsafeIntent.getAction())) {
+            final SafeIntent intent = new SafeIntent(unsafeIntent);
             // We can't update our fragment right now because we need to wait until the activity is
             // resumed. So just remember this URL and load it in onResumeFragments().
             pendingUrl = intent.getDataString();
         }
 
         // We do not care about the previous intent anymore. But let's remember this one.
-        setIntent(intent);
+        setIntent(unsafeIntent);
     }
 
     @Override
     protected void onResumeFragments() {
         super.onResumeFragments();
 
-        final Intent intent = getIntent();
+        final SafeIntent intent = new SafeIntent(getIntent());
 
         if (ACTION_ERASE.equals(intent.getAction())) {
             processEraseAction(intent);
@@ -145,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void processEraseAction(Intent intent) {
+    private void processEraseAction(final SafeIntent intent) {
         final boolean finishActivity = intent.getBooleanExtra(EXTRA_FINISH, false);
         final boolean fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false);
 
@@ -205,8 +210,9 @@ public class MainActivity extends AppCompatActivity {
                         BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
                 .commit();
 
+        final SafeIntent intent = new SafeIntent(getIntent());
 
-        if (getIntent().getBooleanExtra(EXTRA_TEXT_SELECTION, false)) {
+        if (intent.getBooleanExtra(EXTRA_TEXT_SELECTION, false)) {
             TelemetryWrapper.textSelectionIntentEvent();
         } else {
             TelemetryWrapper.browseIntentEvent();
