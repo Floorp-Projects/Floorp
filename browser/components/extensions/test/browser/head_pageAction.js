@@ -6,6 +6,18 @@
 // This file is imported into the same scope as head.js.
 /* import-globals-from head.js */
 
+{
+  const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+
+  let localeDir = new URL("locale/", gTestPath).href;
+  let {file} = chromeRegistry.convertChromeURL(Services.io.newURI(localeDir)).QueryInterface(Ci.nsIFileURL);
+
+  Components.manager.addBootstrappedManifestLocation(file);
+  registerCleanupFunction(() => {
+    Components.manager.removeBootstrappedManifestLocation(file);
+  });
+}
+
 async function runTests(options) {
   function background(getTests) {
     let tabs;
