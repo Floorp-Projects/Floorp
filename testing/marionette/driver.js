@@ -2906,7 +2906,7 @@ GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
     }
   });
 
-  return {
+  resp.body.value = {
     x: win.screenX,
     y: win.screenY,
     width: win.outerWidth,
