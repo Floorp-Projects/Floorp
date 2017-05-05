@@ -37,7 +37,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(false);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(nullptr);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
     ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());

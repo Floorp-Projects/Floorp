@@ -27,7 +27,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   DumpLayerInfo("ColorLayer", rect);
 
   LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegion clip = aBuilder.BuildClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));

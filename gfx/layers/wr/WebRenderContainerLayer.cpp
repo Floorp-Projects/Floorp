@@ -94,7 +94,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   aBuilder.PushClip(sc.ToRelativeWrRect(rect), mask.ptrOr(nullptr));
 
   for (LayerPolygon& child : children) {

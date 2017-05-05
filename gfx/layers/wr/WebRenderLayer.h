@@ -55,7 +55,13 @@ protected:
   Maybe<LayerRect> ClipRect();
 
   void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
+
+  // Builds a WrImageMask from the mask layer on this layer, if there is one.
+  // If this layer is pushing a stacking context, then the WrImageMask will be
+  // interpreted as relative to that stacking context by WR. The caller needs
+  // to pass in the StackingContextHelper for *this* layer, if there is one, in
+  // order for this function to make the necessary adjustments.
+  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper* aUnapplySc);
 };
 
 } // namespace layers
