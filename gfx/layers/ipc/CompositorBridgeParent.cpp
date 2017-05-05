@@ -550,6 +550,12 @@ CompositorBridgeParent::RecvFlushRendering()
 }
 
 mozilla::ipc::IPCResult
+CompositorBridgeParent::RecvFlushRenderingAsync()
+{
+  return RecvFlushRendering();
+}
+
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvForcePresent()
 {
   // During the shutdown sequence mLayerManager may be null

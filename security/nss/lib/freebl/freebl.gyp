@@ -158,8 +158,6 @@
           'VCCLCompilerTool': {
             #TODO: -Ox optimize flags
             'PreprocessorDefinitions': [
-              'NSS_X86_OR_X64',
-              'NSS_X86',
               'MP_ASSEMBLY_MULTIPLY',
               'MP_ASSEMBLY_SQUARE',
               'MP_ASSEMBLY_DIV_2DX1D',
@@ -176,9 +174,6 @@
           'VCCLCompilerTool': {
             #TODO: -Ox optimize flags
             'PreprocessorDefinitions': [
-              'NSS_USE_64',
-              'NSS_X86_OR_X64',
-              'NSS_X64',
               'MP_IS_LITTLE_ENDIAN',
               'NSS_BEVAND_ARCFOUR',
               'MPI_AMD64',
@@ -192,23 +187,14 @@
       }],
       [ 'OS!="win"', {
         'conditions': [
-          [ 'target_arch=="x64"', {
+          [ 'target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
             'defines': [
-              'NSS_USE_64',
-              'NSS_X86_OR_X64',
-              'NSS_X64',
               # The Makefile does version-tests on GCC, but we're not doing that here.
               'HAVE_INT128_SUPPORT',
             ],
           }, {
             'sources': [
               'ecl/uint128.c',
-            ],
-          }],
-          [ 'target_arch=="ia32"', {
-            'defines': [
-              'NSS_X86_OR_X64',
-              'NSS_X86',
             ],
           }],
         ],
@@ -251,11 +237,7 @@
               'MP_ASSEMBLY_SQUARE',
               'MP_USE_UINT_DIGIT',
               'SHA_NO_LONG_LONG',
-            ],
-          }],
-          [ 'target_arch=="arm64" or target_arch=="aarch64"', {
-            'defines': [
-              'NSS_USE_64',
+              'ARMHF',
             ],
           }],
         ],

@@ -46,7 +46,7 @@ class DataBuffer {
     len_ = len;
   }
 
-  void Truncate(size_t len) { len_ = std::min(len_, len); }
+  void Truncate(size_t len) { len_ = (std::min)(len_, len); }
 
   void Assign(const DataBuffer& other) { Assign(other.data(), other.len()); }
 
@@ -126,14 +126,14 @@ class DataBuffer {
     size_t old_len = len_;
 
     // The amount of stuff remaining from the tail of the old.
-    size_t tail_len = old_len - std::min(old_len, index + remove);
+    size_t tail_len = old_len - (std::min)(old_len, index + remove);
     // The new length: the head of the old, the new, and the tail of the old.
     len_ = index + ins_len + tail_len;
     data_ = new uint8_t[len_ ? len_ : 1];
 
     // The head of the old.
     if (old_value) {
-      Write(0, old_value, std::min(old_len, index));
+      Write(0, old_value, (std::min)(old_len, index));
     }
     // Maybe a gap.
     if (old_value && index > old_len) {

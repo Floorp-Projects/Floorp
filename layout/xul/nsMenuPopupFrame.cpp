@@ -2510,11 +2510,13 @@ nsMenuPopupFrame::ShouldFollowAnchor(nsRect& aRect)
   }
 
   nsIFrame* anchorFrame = mAnchorContent->GetPrimaryFrame();
-  if (anchorFrame) {
-    nsPresContext* rootPresContext = PresContext()->GetRootPresContext();
-    if (rootPresContext) {
-      aRect = ComputeAnchorRect(rootPresContext, anchorFrame);
-    }
+  if (!anchorFrame) {
+    return false;
+  }
+
+  nsPresContext* rootPresContext = PresContext()->GetRootPresContext();
+  if (rootPresContext) {
+    aRect = ComputeAnchorRect(rootPresContext, anchorFrame);
   }
 
   return true;

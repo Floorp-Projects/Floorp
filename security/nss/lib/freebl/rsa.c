@@ -1551,7 +1551,7 @@ cleanup:
     return rv;
 }
 
-static SECStatus
+SECStatus
 RSA_Init(void)
 {
     if (PR_CallOnce(&coBPInit, init_blinding_params_list) != PR_SUCCESS) {
@@ -1559,12 +1559,6 @@ RSA_Init(void)
         return SECFailure;
     }
     return SECSuccess;
-}
-
-SECStatus
-BL_Init(void)
-{
-    return RSA_Init();
 }
 
 /* cleanup at shutdown */

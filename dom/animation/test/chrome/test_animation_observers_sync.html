@@ -817,6 +817,32 @@ function createPseudo(test, element, type) {
       [], "no records after applying the same order");
   }, "animtion_order_change");
 
+  test(t => {
+    var div = addDiv(t);
+    var observer =
+      setupSynchronousObserver(t,
+                               aOptions.subtree ? div.parentNode : div,
+                               aOptions.subtree);
+
+    var anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 100 * MS_PER_SEC,
+                             iterationComposite: 'replace' });
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation is added");
+
+    anim.effect.iterationComposite = 'accumulate';
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [anim], removed: [] }],
+      "records after iterationComposite is changed");
+
+    anim.effect.iterationComposite = 'accumulate';
+    assert_equals_records(observer.takeRecords(),
+      [], "no record after setting the same iterationComposite");
+
+  }, "set_iterationComposite");
+
 });
 
 test(t => {

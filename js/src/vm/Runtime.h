@@ -1060,6 +1060,23 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<js::RuntimeCaches> caches_;
   public:
     js::RuntimeCaches& caches() { return caches_.ref(); }
+
+  private:
+    // When wasm is interrupted, the pc at which we should return if the
+    // interrupt hasn't stopped execution of the current running code. Since
+    // this is used only by the interrupt handler and the latter is not
+    // reentrant, this value can't be clobbered so there is at most one
+    // resume PC at a time.
+    js::ActiveThreadData<void*> wasmResumePC_;
+
+  public:
+    void* wasmResumePC() const {
+        return wasmResumePC_;
+    }
+    void setWasmResumePC(void* resumePC) {
+        MOZ_ASSERT(!!resumePC == !wasmResumePC_);
+        wasmResumePC_ = resumePC;
+    }
 };
 
 namespace js {

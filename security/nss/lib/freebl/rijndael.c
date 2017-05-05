@@ -26,17 +26,11 @@
 #include "mpi.h"
 
 #ifdef USE_HW_AES
-static int has_intel_aes = 0;
 static PRBool use_hw_aes = PR_FALSE;
 
 #ifdef INTEL_GCM
 #include "intel-gcm.h"
-static int has_intel_avx = 0;
-static int has_intel_clmul = 0;
 static PRBool use_hw_gcm = PR_FALSE;
-#if defined(_MSC_VER) && !defined(_M_IX86)
-#include <intrin.h> /* for _xgetbv() */
-#endif
 #endif
 #endif /* USE_HW_AES */
 
@@ -999,39 +993,6 @@ AES_AllocateContext(void)
     return PORT_ZNew(AESContext);
 }
 
-#ifdef INTEL_GCM
-/*
- * Adapted from the example code in "How to detect New Instruction support in
- * the 4th generation Intel Core processor family" by Max Locktyukhin.
- *
- * XGETBV:
- *   Reads an extended control register (XCR) specified by ECX into EDX:EAX.
- */
-static PRBool
-check_xcr0_ymm()
-{
-    PRUint32 xcr0;
-#if defined(_MSC_VER)
-#if defined(_M_IX86)
-    __asm {
-        mov ecx, 0
-        xgetbv
-        mov xcr0, eax
-    }
-#else
-    xcr0 = (PRUint32)_xgetbv(0); /* Requires VS2010 SP1 or later. */
-#endif
-#else
-    __asm__("xgetbv"
-            : "=a"(xcr0)
-            : "c"(0)
-            : "%edx");
-#endif
-    /* Check if xmm and ymm state are enabled in XCR0. */
-    return (xcr0 & 6) == 6;
-}
-#endif
-
 /*
 ** Initialize a new AES context suitable for AES encryption/decryption in
 ** the ECB or CBC mode.
@@ -1070,33 +1031,9 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
         return SECFailure;
     }
 #ifdef USE_HW_AES
-    if (has_intel_aes == 0) {
-        unsigned long eax, ebx, ecx, edx;
-        char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
-
-        if (disable_hw_aes == NULL) {
-            freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
-            has_intel_aes = (ecx & (1 << 25)) != 0 ? 1 : -1;
+    use_hw_aes = aesni_support() && (keysize % 8) == 0 && blocksize == 16;
 #ifdef INTEL_GCM
-            has_intel_clmul = (ecx & (1 << 1)) != 0 ? 1 : -1;
-            if ((ecx & (1 << 27)) != 0 && (ecx & (1 << 28)) != 0 &&
-                check_xcr0_ymm()) {
-                has_intel_avx = 1;
-            } else {
-                has_intel_avx = -1;
-            }
-#endif
-        } else {
-            has_intel_aes = -1;
-#ifdef INTEL_GCM
-            has_intel_avx = -1;
-            has_intel_clmul = -1;
-#endif
-        }
-    }
-    use_hw_aes = (PRBool)(has_intel_aes > 0 && (keysize % 8) == 0 && blocksize == 16);
-#ifdef INTEL_GCM
-    use_hw_gcm = (PRBool)(use_hw_aes && has_intel_avx > 0 && has_intel_clmul > 0);
+    use_hw_gcm = use_hw_aes && avx_support() && clmul_support();
 #endif
 #endif /* USE_HW_AES */
     /* Nb = (block size in bits) / 32 */

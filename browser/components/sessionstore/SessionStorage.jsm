@@ -15,6 +15,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
 
+// A bound to the size of data to store for DOM Storage.
+const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
+
 // Returns the principal for a given |frame| contained in a given |docShell|.
 function getPrincipalForFrame(docShell, frame) {
   let ssm = Services.scriptSecurityManager;
@@ -179,14 +182,25 @@ var SessionStorageInternal = {
       storage = null;
     }
 
-    if (storage && storage.length) {
-       for (let i = 0; i < storage.length; i++) {
-        try {
-          let key = storage.key(i);
-          hostData[key] = storage.getItem(key);
-        } catch (e) {
-          // This currently throws for secured items (cf. bug 442048).
-        }
+    if (!storage || !storage.length) {
+      return hostData;
+    }
+
+    // If the DOMSessionStorage contains too much data, ignore it.
+    let usage = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils)
+                      .getStorageUsage(storage);
+    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS").add(usage);
+    if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
+      return hostData;
+    }
+
+    for (let i = 0; i < storage.length; i++) {
+      try {
+        let key = storage.key(i);
+        hostData[key] = storage.getItem(key);
+      } catch (e) {
+        // This currently throws for secured items (cf. bug 442048).
       }
     }
 

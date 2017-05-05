@@ -110,7 +110,8 @@ TlsConnectTestBase::TlsConnectTestBase(Mode mode, uint16_t version)
       expected_resumption_mode_(RESUME_NONE),
       session_ids_(),
       expect_extended_master_secret_(false),
-      expect_early_data_accepted_(false) {
+      expect_early_data_accepted_(false),
+      skip_version_checks_(false) {
   std::string v;
   if (mode_ == DGRAM && version_ == SSL_LIBRARY_VERSION_TLS_1_1) {
     v = "1.0";
@@ -209,6 +210,10 @@ void TlsConnectTestBase::Reset(const std::string& server_name,
                                const std::string& client_name) {
   client_.reset(new TlsAgent(client_name, TlsAgent::CLIENT, mode_));
   server_.reset(new TlsAgent(server_name, TlsAgent::SERVER, mode_));
+  if (skip_version_checks_) {
+    client_->SkipVersionChecks();
+    server_->SkipVersionChecks();
+  }
 
   Init();
 }
@@ -268,10 +273,12 @@ void TlsConnectTestBase::ConnectWithCipherSuite(uint16_t cipher_suite) {
 }
 
 void TlsConnectTestBase::CheckConnected() {
-  // Check the version is as expected
   EXPECT_EQ(client_->version(), server_->version());
-  EXPECT_EQ(std::min(client_->max_version(), server_->max_version()),
-            client_->version());
+  if (!skip_version_checks_) {
+    // Check the version is as expected
+    EXPECT_EQ(std::min(client_->max_version(), server_->max_version()),
+              client_->version());
+  }
 
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
@@ -510,6 +517,10 @@ void TlsConnectTestBase::EnsureModelSockets() {
         new TlsAgent(TlsAgent::kClient, TlsAgent::CLIENT, mode_));
     server_model_.reset(
         new TlsAgent(TlsAgent::kServerRsa, TlsAgent::SERVER, mode_));
+    if (skip_version_checks_) {
+      client_model_->SkipVersionChecks();
+      server_model_->SkipVersionChecks();
+    }
   }
 }
 
@@ -633,6 +644,12 @@ void TlsConnectTestBase::CheckEarlyDataAccepted() {
 
 void TlsConnectTestBase::DisableECDHEServerKeyReuse() {
   server_->DisableECDHEServerKeyReuse();
+}
+
+void TlsConnectTestBase::SkipVersionChecks() {
+  skip_version_checks_ = true;
+  client_->SkipVersionChecks();
+  server_->SkipVersionChecks();
 }
 
 TlsConnectGeneric::TlsConnectGeneric()
