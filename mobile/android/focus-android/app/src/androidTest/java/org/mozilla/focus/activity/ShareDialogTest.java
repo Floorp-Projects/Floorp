@@ -54,7 +54,7 @@ public class ShareDialogTest {
                 .enabled(true));
         UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("android:id/title")
-                .text("Share with")
+                .text("Share via")
                 .enabled(true));
         UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("android:id/resolver_list")

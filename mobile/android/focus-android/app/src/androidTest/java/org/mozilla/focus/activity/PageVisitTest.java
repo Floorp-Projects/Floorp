@@ -100,6 +100,9 @@ public class PageVisitTest {
         TestHelper.HelpItem.click();
         helpView.waitForExists(waitTime * 3);
         assertTrue(helpHeading.exists());
-        assertTrue(helpView.exists());
+
+        // https://github.com/mozilla-mobile/focus-android/issues/475
+        // Disabled for now since it lies outside the scope of Focus
+        //assertTrue(helpView.exists());
     }
 }

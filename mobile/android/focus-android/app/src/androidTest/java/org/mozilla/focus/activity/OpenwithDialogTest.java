@@ -81,5 +81,6 @@ public class OpenwithDialogTest {
         openWithTitle.waitForExists(waitingTime);
         assertTrue(openWithTitle.exists());
         assertTrue(openWithList.exists());
+        TestHelper.pressBackKey();
     }
 }
