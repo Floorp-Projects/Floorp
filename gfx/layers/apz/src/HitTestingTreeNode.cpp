@@ -113,9 +113,15 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
 }
 
 bool
+HitTestingTreeNode::IsScrollThumbNode() const
+{
+  return mScrollThumbData.mDirection != ScrollDirection::NONE;
+}
+
+bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
-  return mIsScrollbarContainer || (mScrollThumbData.mDirection != ScrollDirection::NONE);
+  return mIsScrollbarContainer || IsScrollThumbNode();
 }
 
 FrameMetrics::ViewID
