@@ -111,6 +111,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void ExpectExtendedMasterSecret(bool expected);
   void ExpectEarlyDataAccepted(bool expected);
   void DisableECDHEServerKeyReuse();
+  void SkipVersionChecks();
 
  protected:
   Mode mode_;
@@ -139,6 +140,7 @@ class TlsConnectTestBase : public ::testing::Test {
 
   bool expect_extended_master_secret_;
   bool expect_early_data_accepted_;
+  bool skip_version_checks_;
 
   // Track groups and make sure that there are no duplicates.
   class DuplicateGroupChecker {

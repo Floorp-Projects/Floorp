@@ -12,6 +12,7 @@ apt-get install -y --no-install-recommends apt-utils
 apt_packages=()
 apt_packages+=('ca-certificates')
 apt_packages+=('curl')
+apt_packages+=('locales')
 apt_packages+=('xz-utils')
 
 # Latest Mercurial.

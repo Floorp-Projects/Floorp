@@ -17,6 +17,8 @@
 #endif
 #include "databuffer.h"
 
+#include "sslt.h"
+
 namespace nss_test {
 
 const uint8_t kTlsChangeCipherSpecType = 20;
@@ -132,6 +134,10 @@ class TlsParser {
   DataBuffer buffer_;
   size_t offset_;
 };
+
+inline std::ostream& operator<<(std::ostream& os, SSLProtocolVariant v) {
+  return os << ((v == ssl_variant_stream) ? "TLS" : "DTLS");
+}
 
 }  // namespace nss_test
 

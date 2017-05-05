@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyGetter(this, "gContentRestore",
 var gCurrentEpoch = 0;
 
 // A bound to the size of data to store for DOM Storage.
-const DOM_STORAGE_MAX_CHARS = 10000000; // 10M characters
+const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
 
 // This pref controls whether or not we send updates to the parent on a timeout
 // or not, and should only be used for tests or debugging.
@@ -580,37 +580,6 @@ var SessionStorageListener = {
     setTimeout(() => this.collect(), 0);
   },
 
-  // Before DOM Storage can be written to disk, it needs to be serialized
-  // for sending across frames/processes, then again to be sent across
-  // threads, then again to be put in a buffer for the disk. Each of these
-  // serializations is an opportunity to OOM and (depending on the site of
-  // the OOM), either crash, lose all data for the frame or lose all data
-  // for the application.
-  //
-  // In order to avoid this, compute an estimate of the size of the
-  // object, and block SessionStorage items that are too large. As
-  // we also don't want to cause an OOM here, we use a quick and memory-
-  // efficient approximation: we compute the total sum of string lengths
-  // involved in this object.
-  estimateStorageSize(collected) {
-    if (!collected) {
-      return 0;
-    }
-
-    let size = 0;
-    for (let host of Object.keys(collected)) {
-      size += host.length;
-      let perHost = collected[host];
-      for (let key of Object.keys(perHost)) {
-        size += key.length;
-        let perKey = perHost[key];
-        size += perKey.length;
-      }
-    }
-
-    return size;
-  },
-
   // We don't want to send all the session storage data for all the frames
   // for every change. So if only a few value changed we send them over as
   // a "storagechange" event. If however for some reason before we send these
@@ -623,55 +592,56 @@ var SessionStorageListener = {
   },
 
   collectFromEvent(event) {
-    // TODO: we should take browser.sessionstore.dom_storage_limit into an account here.
-    if (docShell) {
-      let {url, key, newValue} = event;
-      let uri = Services.io.newURI(url);
-      let domain = uri.prePath;
-      if (!this._changes) {
-        this._changes = {};
-      }
-      if (!this._changes[domain]) {
-        this._changes[domain] = {};
-      }
-      this._changes[domain][key] = newValue;
-
-      MessageQueue.push("storagechange", () => {
-        let tmp = this._changes;
-        // If there were multiple changes we send them merged.
-        // First one will collect all the changes the rest of
-        // these messages will be ignored.
-        this.resetChanges();
-        return tmp;
-      });
+    if (!docShell) {
+      return;
     }
+
+    // How much data does DOMSessionStorage contain?
+    let usage = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils)
+                       .getStorageUsage(event.storageArea);
+    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS").add(usage);
+
+    // Don't store any data if we exceed the limit. Wipe any data we previously
+    // collected so that we don't confuse websites with partial state.
+    if (usage > Preferences.get(DOM_STORAGE_LIMIT_PREF)) {
+      MessageQueue.push("storage", () => null);
+      return;
+    }
+
+    let {url, key, newValue} = event;
+    let uri = Services.io.newURI(url);
+    let domain = uri.prePath;
+    if (!this._changes) {
+      this._changes = {};
+    }
+    if (!this._changes[domain]) {
+      this._changes[domain] = {};
+    }
+    this._changes[domain][key] = newValue;
+
+    MessageQueue.push("storagechange", () => {
+      let tmp = this._changes;
+      // If there were multiple changes we send them merged.
+      // First one will collect all the changes the rest of
+      // these messages will be ignored.
+      this.resetChanges();
+      return tmp;
+    });
   },
 
   collect() {
-    if (docShell) {
-      // We need the entire session storage, let's reset the pending individual change
-      // messages.
-      this.resetChanges();
-      MessageQueue.push("storage", () => {
-        let collected = SessionStorage.collect(docShell, gFrameTree);
-
-        if (collected == null) {
-          return collected;
-        }
-
-        let size = this.estimateStorageSize(collected);
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS").add(size);
-
-        if (size > Preferences.get("browser.sessionstore.dom_storage_limit", DOM_STORAGE_MAX_CHARS)) {
-          // Rather than keeping the old storage, which wouldn't match the rest
-          // of the state of the page, empty the storage. DOM storage will be
-          // recollected the next time and stored if it is now small enough.
-          return {};
-        }
-
-        return collected;
-      });
+    if (!docShell) {
+      return;
     }
+
+    // We need the entire session storage, let's reset the pending individual change
+    // messages.
+    this.resetChanges();
+
+    MessageQueue.push("storage", () => {
+      return SessionStorage.collect(docShell, gFrameTree);
+    });
   },
 
   onFrameTreeCollected() {

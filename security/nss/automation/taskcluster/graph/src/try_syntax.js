@@ -23,7 +23,7 @@ function parseOptions(opts) {
 
   // Parse platforms.
   let allPlatforms = ["linux", "linux64", "linux64-asan", "win64",
-                      "linux64-gyp", "linux64-fuzz", "aarch64"];
+                      "linux64-make", "linux-make", "linux64-fuzz", "aarch64"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
@@ -82,11 +82,10 @@ function filter(opts) {
     // Filter unit tests.
     if (task.tests) {
       let found = opts.unittests.some(test => {
-        // TODO: think of something more intelligent here.
-        if (task.symbol.toLowerCase().startsWith("mpi") && test == "mpi") {
+        if (task.group && task.group.toLowerCase() == "ssl" && test == "ssl") {
           return true;
         }
-        return (task.group || task.symbol).toLowerCase().startsWith(test);
+        return task.symbol.toLowerCase().startsWith(test);
       });
 
       if (!found) {
@@ -107,7 +106,8 @@ function filter(opts) {
         "linux": "linux32",
         "linux64-asan": "linux64",
         "linux64-fuzz": "linux64",
-        "linux64-gyp": "linux64",
+        "linux64-make": "linux64",
+        "linux-make": "linux32",
         "win64": "windows2012-64"
       };
 
@@ -117,8 +117,8 @@ function filter(opts) {
       // Additional checks.
       if (platform == "linux64-asan") {
         keep &= coll("asan");
-      } else if (platform == "linux64-gyp") {
-        keep &= coll("gyp");
+      } else if (platform == "linux64-make" || platform == "linux-make") {
+        keep &= coll("make");
       } else if (platform == "linux64-fuzz") {
         keep &= coll("fuzz");
       } else {
@@ -133,7 +133,7 @@ function filter(opts) {
     }
 
     // Finally, filter by build type.
-    let isDebug = coll("debug") || coll("asan") || coll("gyp") ||
+    let isDebug = coll("debug") || coll("asan") || coll("make") ||
                   coll("fuzz");
     return (isDebug && opts.builds.includes("d")) ||
            (!isDebug && opts.builds.includes("o"));
