@@ -214,10 +214,6 @@ var whitelist = new Set([
   // Bug 1348533
   {file: "chrome://mozapps/skin/downloads/buttons.png", platforms: ["macosx"]},
   {file: "chrome://mozapps/skin/downloads/downloadButtons.png", platforms: ["linux", "win"]},
-  // Bug 1348555
-  {file: "chrome://mozapps/skin/extensions/dictionaryGeneric-16.png"},
-  {file: "chrome://mozapps/skin/extensions/search.png", platforms: ["macosx"]},
-  {file: "chrome://mozapps/skin/extensions/themeGeneric-16.png"},
   // Bug 1348556
   {file: "chrome://mozapps/skin/plugins/pluginBlocked.png"},
   // Bug 1348558
