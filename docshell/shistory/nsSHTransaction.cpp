@@ -8,8 +8,8 @@
 #include "nsISHEntry.h"
 
 nsSHTransaction::nsSHTransaction()
-  : mPersist(true)
-  , mPrev(nullptr)
+  : mPrev(nullptr)
+  , mPersist(true)
 {
 }
 

@@ -18,8 +18,6 @@ job-defaults:
         implementation: docker-worker
         max-run-time: 36000
         docker-image: {in-tree: desktop-build}
-        env:
-            MOZ_AUTOMATION: "1"
 
 jobs:
     linux64-shell-haz/debug:

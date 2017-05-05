@@ -8,6 +8,8 @@
 #include <windows.h>
 #include <wininet.h>
 
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
 namespace PingSender {
 
 using std::string;

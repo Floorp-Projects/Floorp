@@ -1,37 +1,36 @@
 import os
 
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
+
 config = {
-    "log_name": "central_to_aurora",
+    "log_name": "central_to_beta",
     "version_files": [
         {"file": "browser/config/version.txt", "suffix": ""},
-        {"file": "browser/config/version_display.txt", "suffix": ""},
+        {"file": "browser/config/version_display.txt", "suffix": "b1"},
         {"file": "config/milestone.txt", "suffix": ""},
     ],
     "replacements": [
         # File, from, to
         ("{}/{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/nightly",
-        "ac_add_options --with-branding=mobile/android/branding/aurora")
+        "ac_add_options --with-branding=mobile/android/branding/beta")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["debug", "nightly", "l10n-nightly"]
     ] + [
         # File, from, to
-        ("{}/{}".format(d, f),
-        "ac_add_options --with-branding=browser/branding/nightly",
-        "ac_add_options --with-branding=browser/branding/aurora")
-        for d in ["browser/config/mozconfigs/linux32",
-                  "browser/config/mozconfigs/linux64",
-                  "browser/config/mozconfigs/win32",
-                  "browser/config/mozconfigs/win64",
-                  "browser/config/mozconfigs/macosx64"]
-        for f in ["debug", "nightly", "l10n-mozconfig"]
+        (f, "ac_add_options --with-branding=browser/branding/nightly",
+        "ac_add_options --enable-official-branding")
+        for f in ["browser/config/mozconfigs/linux32/l10n-mozconfig",
+                  "browser/config/mozconfigs/linux64/l10n-mozconfig",
+                  "browser/config/mozconfigs/win32/l10n-mozconfig",
+                  "browser/config/mozconfigs/win64/l10n-mozconfig",
+                  "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
         ("{}/{}".format(d, f),
         "ac_add_options --with-l10n-base=../../l10n-central",
-        "ac_add_options --with-l10n-base=../../mozilla-aurora")
+        "ac_add_options --with-l10n-base=../../mozilla-beta")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["l10n-nightly", "l10n-release"]
@@ -49,20 +48,18 @@ config = {
         # File, from, to
         ("browser/confvars.sh",
          "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-aurora"),
+         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release"),
         ("browser/confvars.sh",
          "MAR_CHANNEL_ID=firefox-mozilla-central",
-         "MAR_CHANNEL_ID=firefox-mozilla-aurora"),
-        ("browser/config/mozconfigs/whitelist",
-         "ac_add_options --with-branding=browser/branding/nightly",
-         "ac_add_options --with-branding=browser/branding/aurora"),
-    ],
-    "locale_files": [
-        "browser/locales/shipped-locales",
-        "browser/locales/all-locales",
-        "mobile/android/locales/maemo-locales",
-        "mobile/android/locales/all-locales",
-        "mobile/locales/l10n-changesets.json",
+         "MAR_CHANNEL_ID=firefox-mozilla-beta"),
+    ] + [
+        # File, from, to
+        ("build/mozconfig.common",
+         "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
+         "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}"),
+        ("build/mozconfig.common",
+         "# Disable enforcing that add-ons are signed by the trusted root",
+         "# Enable enforcing that add-ons are signed by the trusted root")
     ],
 
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
@@ -70,19 +67,12 @@ config = {
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",
     "from_repo_url": "ssh://hg.mozilla.org/mozilla-central",
-    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-aurora",
+    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-beta",
 
-    "base_tag": "FIREFOX_AURORA_%(major_version)s_BASE",
-    "end_tag": "FIREFOX_AURORA_%(major_version)s_END",
+    "base_tag": "FIREFOX_BETA_%(major_version)s_BASE",
+    "end_tag": "FIREFOX_BETA_%(major_version)s_END",
 
-    "migration_behavior": "central_to_aurora",
-
-    "balrog_rules_to_lock": [
-        8,  # Fennec aurora channel
-        10,  # Firefox aurora channel
-        18,  # MetroFirefox aurora channel
-    ],
-    "balrog_credentials_file": "oauth.txt",
+    "migration_behavior": "central_to_beta",
 
     "virtualenv_modules": [
         "requests==2.8.1",
@@ -90,7 +80,6 @@ config = {
 
     "post_merge_builders": [],
     "post_merge_nightly_branches": [
-        "mozilla-central",
-        "mozilla-aurora",
+        # No nightlies on mozilla-beta
     ],
 }

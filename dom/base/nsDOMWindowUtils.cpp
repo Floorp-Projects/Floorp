@@ -2690,10 +2690,12 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsIPresShell* shell = element->GetComposedDoc()->GetShell();
-  RefPtr<nsStyleContext> styleContext = shell
-    ? nsComputedDOMStyle::GetStyleContext(element, nullptr, shell)
-    : nullptr;
+  RefPtr<nsStyleContext> styleContext;
+  nsIDocument* doc = element->GetComposedDoc();
+  if (doc && doc->GetShell()) {
+    styleContext =
+      nsComputedDOMStyle::GetStyleContext(element, nullptr, doc->GetShell());
+  }
   *aResult = v1.ComputeDistance(property, v2, styleContext);
   return NS_OK;
 }

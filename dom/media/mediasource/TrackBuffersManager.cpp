@@ -116,24 +116,24 @@ TrackBuffersManager::~TrackBuffersManager()
 }
 
 RefPtr<TrackBuffersManager::AppendPromise>
-TrackBuffersManager::AppendData(MediaByteBuffer* aData,
+TrackBuffersManager::AppendData(already_AddRefed<MediaByteBuffer> aData,
                                 const SourceBufferAttributes& aAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("Appending %" PRIuSIZE " bytes", aData->Length());
+  RefPtr<MediaByteBuffer> data(aData);
+  MSE_DEBUG("Appending %" PRIuSIZE " bytes", data->Length());
 
   mEnded = false;
 
-  return InvokeAsync<RefPtr<MediaByteBuffer>, SourceBufferAttributes&&>(
-           GetTaskQueue(), this, __func__,
-           &TrackBuffersManager::DoAppendData, aData, aAttributes);
+  return InvokeAsync(GetTaskQueue(), this, __func__,
+    &TrackBuffersManager::DoAppendData, data.forget(), aAttributes);
 }
 
 RefPtr<TrackBuffersManager::AppendPromise>
-TrackBuffersManager::DoAppendData(MediaByteBuffer* aData,
+TrackBuffersManager::DoAppendData(already_AddRefed<MediaByteBuffer> aData,
                                   const SourceBufferAttributes& aAttributes)
 {
-  RefPtr<AppendBufferTask> task = new AppendBufferTask(aData, aAttributes);
+  RefPtr<AppendBufferTask> task = new AppendBufferTask(Move(aData), aAttributes);
   RefPtr<AppendPromise> p = task->mPromise.Ensure(__func__);
   QueueTask(task);
 

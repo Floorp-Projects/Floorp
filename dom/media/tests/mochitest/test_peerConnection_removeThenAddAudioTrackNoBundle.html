@@ -11,11 +11,16 @@
     title: "Renegotiation: remove then add audio track"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
+    let originalTrack;
     addRenegotiation(test.chain,
       [
+        function PC_REMOTE_FIND_RECEIVER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver");
+          originalTrack = test.pcRemote._pc.getReceivers()[0].track;
+        },
         function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
           // The new track's pipeline will start with a packet count of
           // 0, but the remote side will keep its old pipeline and packet
@@ -26,13 +31,25 @@
         function PC_LOCAL_ADD_AUDIO_TRACK(test) {
           return test.pcLocal.getAllUserMedia([{audio: true}]);
         },
+      ],
+      [
+        function PC_REMOTE_CHECK_ADDED_TRACK(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+              "pcRemote should still have one receiver");
+          const track = test.pcRemote._pc.getReceivers()[0].track;
+          isnot(originalTrack.id, track.id, "Receiver should have changed");
+
+          const analyser = new AudioStreamAnalyser(
+              new AudioContext(), new MediaStream([track]));
+          const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
+        },
       ]
     );
 
     test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
-                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
+                               PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });
