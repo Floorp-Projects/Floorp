@@ -2150,10 +2150,13 @@ public abstract class GeckoApp extends GeckoActivity
         super.onNewIntent(externalIntent);
 
         final SafeIntent intent = new SafeIntent(externalIntent);
+        final String action = intent.getAction();
 
         final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
         mWasFirstTabShownAfterActivityUnhidden = true; // Reset since we'll be loading a tab.
-        mIgnoreLastSelectedTab = true;
+        if (!Intent.ACTION_MAIN.equals(action)) {
+            mIgnoreLastSelectedTab = true;
+        }
 
         // if we were previously OOM killed, we can end up here when launching
         // from external shortcuts, so set this as the intent for initialization
@@ -2161,8 +2164,6 @@ public abstract class GeckoApp extends GeckoActivity
             setIntent(externalIntent);
             return;
         }
-
-        final String action = intent.getAction();
 
         final String uri = getURIFromIntent(intent);
         final String passedUri;
