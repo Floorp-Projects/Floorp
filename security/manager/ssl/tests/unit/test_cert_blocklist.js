@@ -189,7 +189,7 @@ function fetch_blocklist(blocklistPath) {
   blocklist.notify(null);
 }
 
-function check_revocations_txt_contents(expected) {
+function* generate_revocations_txt_lines() {
   let profile = do_get_profile();
   let revocations = profile.clone();
   revocations.append("revocations.txt");
@@ -198,14 +198,59 @@ function check_revocations_txt_contents(expected) {
                       .createInstance(Ci.nsIFileInputStream);
   inputStream.init(revocations, -1, -1, 0);
   inputStream.QueryInterface(Ci.nsILineInputStream);
-  let contents = "";
   let hasmore = false;
   do {
     let line = {};
     hasmore = inputStream.readLine(line);
-    contents += (contents.length == 0 ? "" : "\n") + line.value;
+    yield line.value;
   } while (hasmore);
-  equal(contents, expected, "revocations.txt should be as expected");
+}
+
+// Check that revocations.txt contains, in any order, the lines
+// ("top-level lines") that are the keys in |expected|, each followed
+// immediately by the lines ("sublines") in expected[topLevelLine]
+// (again, in any order).
+function check_revocations_txt_contents(expected) {
+  let lineGenerator = generate_revocations_txt_lines();
+  let firstLine = lineGenerator.next();
+  equal(firstLine.done, false,
+        "first line of revocations.txt should be present");
+  equal(firstLine.value, "# Auto generated contents. Do not edit.",
+        "first line of revocations.txt");
+  let line = lineGenerator.next();
+  let topLevelFound = {};
+  while (true) {
+    if (line.done) {
+      break;
+    }
+
+    ok(line.value in expected,
+       `${line.value} should be an expected top-level line in revocations.txt`);
+    ok(!(line.value in topLevelFound),
+       `should not have seen ${line.value} before in revocations.txt`);
+    topLevelFound[line.value] = true;
+    let topLevelLine = line.value;
+
+    let sublines = expected[line.value];
+    let subFound = {};
+    while (true) {
+      line = lineGenerator.next();
+      if (line.done || !(line.value in sublines)) {
+        break;
+      }
+      ok(!(line.value in subFound),
+         `should not have seen ${line.value} before in revocations.txt`);
+      subFound[line.value] = true;
+    }
+    for (let subline in sublines) {
+      ok(subFound[subline],
+         `should have found ${subline} below ${topLevelLine} in revocations.txt`);
+    }
+  }
+  for (let topLevelLine in expected) {
+    ok(topLevelFound[topLevelLine],
+       `should have found ${topLevelLine} in revocations.txt`);
+  }
 }
 
 function run_test() {
@@ -217,16 +262,16 @@ function run_test() {
   let certList = Cc["@mozilla.org/security/certblocklist;1"]
                   .getService(Ci.nsICertBlocklist);
 
-  let expected = "# Auto generated contents. Do not edit.\n" +
-                 "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5\n" +
-                 "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=\n" +
-                 "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=\n" +
-                 " BVio/iQ21GCi2iUven8oJ/gae74=\n" +
-                 "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=\n" +
-                 " exJUIJpq50jgqOwQluhVrAzTF74=\n" +
-                 "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy\n" +
-                 " YW5vdGhlciBzZXJpYWwu\n" +
-                 " c2VyaWFsMi4=";
+  let expected = { "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5":
+                     { "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=": true },
+                   "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=":
+                     { " BVio/iQ21GCi2iUven8oJ/gae74=": true },
+                   "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=":
+                     { " exJUIJpq50jgqOwQluhVrAzTF74=": true },
+                   "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy":
+                     { " YW5vdGhlciBzZXJpYWwu": true,
+                       " c2VyaWFsMi4=": true }
+                 };
 
   // This test assumes OneCRL updates via AMO
   Services.prefs.setBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED, false);

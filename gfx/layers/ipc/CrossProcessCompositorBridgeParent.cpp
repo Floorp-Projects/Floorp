@@ -128,7 +128,10 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& 
   // to unmap our layers id, and we could get here without a parent compositor.
   // In this case return an empty APZCTM.
   if (!state.mParent) {
+    // Note: we immediately call ClearTree since otherwise the APZCTM will
+    // retain a reference to itself, through the checkerboard observer.
     RefPtr<APZCTreeManager> temp = new APZCTreeManager();
+    temp->ClearTree();
     return new APZCTreeManagerParent(aLayersId, temp);
   }
 

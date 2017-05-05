@@ -2514,6 +2514,9 @@ BytecodeEmitter::emitDupAt(unsigned slotFromTop)
 {
     MOZ_ASSERT(slotFromTop < unsigned(stackDepth));
 
+    if (slotFromTop == 0)
+        return emit1(JSOP_DUP);
+
     if (slotFromTop >= JS_BIT(24)) {
         reportError(nullptr, JSMSG_TOO_MANY_LOCALS);
         return false;
@@ -5787,13 +5790,8 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
         }
 
-        if (emitted) {
-            if (!emitDupAt(emitted))                              // ... OBJ ITER *LREF ITER
-                return false;
-        } else {
-            if (!emit1(JSOP_DUP))                                 // ... OBJ ITER *LREF ITER
-                return false;
-        }
+        if (!emitDupAt(emitted))                                  // ... OBJ ITER *LREF ITER
+            return false;
         if (!emitIteratorNext(pattern))                           // ... OBJ ITER *LREF RESULT
             return false;
         if (!emit1(JSOP_DUP))                                     // ... OBJ ITER *LREF RESULT RESULT
@@ -5888,30 +5886,67 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
 
     MOZ_ASSERT(this->stackDepth > 0);                             // ... RHS
 
-    if (!emitRequireObjectCoercible())                            // ... RHS
+    if (!emit1(JSOP_CHECKOBJCOERCIBLE))                           // ... RHS
         return false;
+
+    bool needsRestPropertyExcludedSet = pattern->pn_count > 1 &&
+                                        pattern->last()->isKind(PNK_SPREAD);
+    if (needsRestPropertyExcludedSet) {
+        if (!emitDestructuringObjRestExclusionSet(pattern))       // ... RHS SET
+            return false;
+
+        if (!emit1(JSOP_SWAP))                                    // ... SET RHS
+            return false;
+    }
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         ParseNode* subpattern;
-        if (member->isKind(PNK_MUTATEPROTO))
+        if (member->isKind(PNK_MUTATEPROTO) || member->isKind(PNK_SPREAD))
             subpattern = member->pn_kid;
         else
             subpattern = member->pn_right;
+
         ParseNode* lhs = subpattern;
+        MOZ_ASSERT_IF(member->isKind(PNK_SPREAD), !lhs->isKind(PNK_ASSIGN));
         if (lhs->isKind(PNK_ASSIGN))
             lhs = lhs->pn_left;
 
         size_t emitted;
-        if (!emitDestructuringLHSRef(lhs, &emitted))              // ... RHS *LREF
+        if (!emitDestructuringLHSRef(lhs, &emitted))              // ... *SET RHS *LREF
             return false;
 
         // Duplicate the value being destructured to use as a reference base.
-        if (emitted) {
-            if (!emitDupAt(emitted))                              // ... RHS *LREF RHS
+        if (!emitDupAt(emitted))                                  // ... *SET RHS *LREF RHS
+            return false;
+
+        if (member->isKind(PNK_SPREAD)) {
+            if (!updateSourceCoordNotes(member->pn_pos.begin))
                 return false;
-        } else {
-            if (!emit1(JSOP_DUP))                                 // ... RHS RHS
+
+            if (!emitNewInit(JSProto_Object))                     // ... *SET RHS *LREF RHS TARGET
                 return false;
+            if (!emit1(JSOP_DUP))                                 // ... *SET RHS *LREF RHS TARGET TARGET
+                return false;
+            if (!emit2(JSOP_PICK, 2))                             // ... *SET RHS *LREF TARGET TARGET RHS
+                return false;
+
+            if (needsRestPropertyExcludedSet) {
+                if (!emit2(JSOP_PICK, emitted + 4))               // ... RHS *LREF TARGET TARGET RHS SET
+                    return false;
+            }
+
+            CopyOption option = needsRestPropertyExcludedSet
+                                ? CopyOption::Filtered
+                                : CopyOption::Unfiltered;
+            if (!emitCopyDataProperties(option))                  // ... RHS *LREF TARGET
+                return false;
+
+            // Destructure TARGET per this member's lhs.
+            if (!emitSetOrInitializeDestructuring(lhs, flav))     // ... RHS
+                return false;
+
+            MOZ_ASSERT(member == pattern->last(), "Rest property is always last");
+            break;
         }
 
         // Now push the property name currently being matched, which is the
@@ -5920,7 +5955,7 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
         bool needsGetElem = true;
 
         if (member->isKind(PNK_MUTATEPROTO)) {
-            if (!emitAtomOp(cx->names().proto, JSOP_GETPROP))     // ... RHS *LREF PROP
+            if (!emitAtomOp(cx->names().proto, JSOP_GETPROP))     // ... *SET RHS *LREF PROP
                 return false;
             needsGetElem = false;
         } else {
@@ -5928,40 +5963,131 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
 
             ParseNode* key = member->pn_left;
             if (key->isKind(PNK_NUMBER)) {
-                if (!emitNumberOp(key->pn_dval))                  // ... RHS *LREF RHS KEY
+                if (!emitNumberOp(key->pn_dval))                  // ... *SET RHS *LREF RHS KEY
                     return false;
             } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
-                PropertyName* name = key->pn_atom->asPropertyName();
-
-                // The parser already checked for atoms representing indexes and
-                // used PNK_NUMBER instead, but also watch for ids which TI treats
-                // as indexes for simplification of downstream analysis.
-                jsid id = NameToId(name);
-                if (id != IdToTypeId(id)) {
-                    if (!emitTree(key))                           // ... RHS *LREF RHS KEY
-                        return false;
-                } else {
-                    if (!emitAtomOp(name, JSOP_GETPROP))          // ... RHS *LREF PROP
-                        return false;
-                    needsGetElem = false;
-                }
-            } else {
-                if (!emitComputedPropertyName(key))               // ... RHS *LREF RHS KEY
+                if (!emitAtomOp(key->pn_atom, JSOP_GETPROP))      // ... *SET RHS *LREF PROP
                     return false;
+                needsGetElem = false;
+            } else {
+                if (!emitComputedPropertyName(key))               // ... *SET RHS *LREF RHS KEY
+                    return false;
+
+                // Add the computed property key to the exclusion set.
+                if (needsRestPropertyExcludedSet) {
+                    if (!emitDupAt(emitted + 3))                  // ... SET RHS *LREF RHS KEY SET
+                        return false;
+                    if (!emitDupAt(1))                            // ... SET RHS *LREF RHS KEY SET KEY
+                        return false;
+                    if (!emit1(JSOP_UNDEFINED))                   // ... SET RHS *LREF RHS KEY SET KEY UNDEFINED
+                        return false;
+                    if (!emit1(JSOP_INITELEM))                    // ... SET RHS *LREF RHS KEY SET
+                        return false;
+                    if (!emit1(JSOP_POP))                         // ... SET RHS *LREF RHS KEY
+                        return false;
+                }
             }
         }
 
         // Get the property value if not done already.
-        if (needsGetElem && !emitElemOpBase(JSOP_GETELEM))        // ... RHS *LREF PROP
+        if (needsGetElem && !emitElemOpBase(JSOP_GETELEM))        // ... *SET RHS *LREF PROP
             return false;
 
         if (subpattern->isKind(PNK_ASSIGN)) {
-            if (!emitDefault(subpattern->pn_right, lhs))          // ... RHS *LREF VALUE
+            if (!emitDefault(subpattern->pn_right, lhs))          // ... *SET RHS *LREF VALUE
                 return false;
         }
 
         // Destructure PROP per this member's lhs.
-        if (!emitSetOrInitializeDestructuring(subpattern, flav))  // ... RHS
+        if (!emitSetOrInitializeDestructuring(subpattern, flav))  // ... *SET RHS
+            return false;
+    }
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitDestructuringObjRestExclusionSet(ParseNode* pattern)
+{
+    MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
+    MOZ_ASSERT(pattern->isArity(PN_LIST));
+    MOZ_ASSERT(pattern->last()->isKind(PNK_SPREAD));
+
+    ptrdiff_t offset = this->offset();
+    if (!emitNewInit(JSProto_Object))
+        return false;
+
+    // Try to construct the shape of the object as we go, so we can emit a
+    // JSOP_NEWOBJECT with the final shape instead.
+    // In the case of computed property names and indices, we cannot fix the
+    // shape at bytecode compile time. When the shape cannot be determined,
+    // |obj| is nulled out.
+
+    // No need to do any guessing for the object kind, since we know the upper
+    // bound of how many properties we plan to have.
+    gc::AllocKind kind = gc::GetGCObjectKind(pattern->pn_count - 1);
+    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject));
+    if (!obj)
+        return false;
+
+    RootedAtom pnatom(cx);
+    for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
+        if (member->isKind(PNK_SPREAD))
+            break;
+
+        bool isIndex = false;
+        if (member->isKind(PNK_MUTATEPROTO)) {
+            pnatom.set(cx->names().proto);
+        } else {
+            ParseNode* key = member->pn_left;
+            if (key->isKind(PNK_NUMBER)) {
+                if (!emitNumberOp(key->pn_dval))
+                    return false;
+                isIndex = true;
+            } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
+                pnatom.set(key->pn_atom);
+            } else {
+                // Otherwise this is a computed property name which needs to
+                // be added dynamically.
+                obj.set(nullptr);
+                continue;
+            }
+        }
+
+        // Initialize elements with |undefined|.
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+
+        if (isIndex) {
+            obj.set(nullptr);
+            if (!emit1(JSOP_INITELEM))
+                return false;
+        } else {
+            uint32_t index;
+            if (!makeAtomIndex(pnatom, &index))
+                return false;
+
+            if (obj) {
+                MOZ_ASSERT(!obj->inDictionaryMode());
+                Rooted<jsid> id(cx, AtomToId(pnatom));
+                if (!NativeDefineProperty(cx, obj, id, UndefinedHandleValue, nullptr, nullptr,
+                                          JSPROP_ENUMERATE))
+                {
+                    return false;
+                }
+                if (obj->inDictionaryMode())
+                    obj.set(nullptr);
+            }
+
+            if (!emitIndex32(JSOP_INITPROP, index))
+                return false;
+        }
+    }
+
+    if (obj) {
+        // The object survived and has a predictable shape: update the
+        // original bytecode.
+        if (!replaceNewInitWithNewObject(obj, offset))
             return false;
     }
 
@@ -6796,38 +6922,49 @@ BytecodeEmitter::emitWith(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitRequireObjectCoercible()
+BytecodeEmitter::emitCopyDataProperties(CopyOption option)
 {
-    // For simplicity, handle this in self-hosted code, at cost of 13 bytes of
-    // bytecode versus 1 byte for a dedicated opcode.  As more places need this
-    // behavior, we may want to reconsider this tradeoff.
+    DebugOnly<int32_t> depth = this->stackDepth;
 
-#ifdef DEBUG
-    auto depth = this->stackDepth;
-#endif
-    MOZ_ASSERT(depth > 0);                 // VAL
-    if (!emit1(JSOP_DUP))                  // VAL VAL
-        return false;
+    uint32_t argc;
+    if (option == CopyOption::Filtered) {
+        MOZ_ASSERT(depth > 2);                 // TARGET SOURCE SET
+        argc = 3;
 
-    // Note that "intrinsic" is a misnomer: we're calling a *self-hosted*
-    // function that's not an intrinsic!  But it nonetheless works as desired.
-    if (!emitAtomOp(cx->names().RequireObjectCoercible,
-                    JSOP_GETINTRINSIC))    // VAL VAL REQUIREOBJECTCOERCIBLE
-    {
-        return false;
+        if (!emitAtomOp(cx->names().CopyDataProperties,
+                        JSOP_GETINTRINSIC))    // TARGET SOURCE SET COPYDATAPROPERTIES
+        {
+            return false;
+        }
+    } else {
+        MOZ_ASSERT(depth > 1);                 // TARGET SOURCE
+        argc = 2;
+
+        if (!emitAtomOp(cx->names().CopyDataPropertiesUnfiltered,
+                        JSOP_GETINTRINSIC))    // TARGET SOURCE COPYDATAPROPERTIES
+        {
+            return false;
+        }
     }
-    if (!emit1(JSOP_UNDEFINED))            // VAL VAL REQUIREOBJECTCOERCIBLE UNDEFINED
+
+    if (!emit1(JSOP_UNDEFINED))                // TARGET SOURCE *SET COPYDATAPROPERTIES UNDEFINED
         return false;
-    if (!emit2(JSOP_PICK, 2))              // VAL REQUIREOBJECTCOERCIBLE UNDEFINED VAL
+    if (!emit2(JSOP_PICK, argc + 1))           // SOURCE *SET COPYDATAPROPERTIES UNDEFINED TARGET
         return false;
-    if (!emitCall(JSOP_CALL_IGNORES_RV, 1))// VAL IGNORED
+    if (!emit2(JSOP_PICK, argc + 1))           // *SET COPYDATAPROPERTIES UNDEFINED TARGET SOURCE
+        return false;
+    if (option == CopyOption::Filtered) {
+        if (!emit2(JSOP_PICK, argc + 1))       // COPYDATAPROPERTIES UNDEFINED TARGET SOURCE SET
+            return false;
+    }
+    if (!emitCall(JSOP_CALL_IGNORES_RV, argc)) // IGNORED
         return false;
     checkTypeSet(JSOP_CALL_IGNORES_RV);
 
-    if (!emit1(JSOP_POP))                  // VAL
+    if (!emit1(JSOP_POP))                      // -
         return false;
 
-    MOZ_ASSERT(depth == this->stackDepth);
+    MOZ_ASSERT(depth - int(argc) == this->stackDepth);
     return true;
 }
 
@@ -9720,6 +9857,22 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
             continue;
         }
 
+        if (propdef->isKind(PNK_SPREAD)) {
+            MOZ_ASSERT(type == ObjectLiteral);
+
+            if (!emit1(JSOP_DUP))
+                return false;
+
+            if (!emitTree(propdef->pn_kid))
+                return false;
+
+            if (!emitCopyDataProperties(CopyOption::Unfiltered))
+                return false;
+
+            objp.set(nullptr);
+            continue;
+        }
+
         bool extraPop = false;
         if (type == ClassBody && propdef->as<ClassMethod>().isStatic()) {
             extraPop = true;
@@ -9742,16 +9895,6 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 !propdef->as<ClassMethod>().isStatic())
             {
                 continue;
-            }
-
-            // The parser already checked for atoms representing indexes and
-            // used PNK_NUMBER instead, but also watch for ids which TI treats
-            // as indexes for simpliciation of downstream analysis.
-            jsid id = NameToId(key->pn_atom->asPropertyName());
-            if (id != IdToTypeId(id)) {
-                if (!emitTree(key))
-                    return false;
-                isIndex = true;
             }
         } else {
             if (!emitComputedPropertyName(key))
@@ -9833,8 +9976,7 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 MOZ_ASSERT(!IsHiddenInitOp(op));
                 MOZ_ASSERT(!objp->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
-                RootedValue undefinedValue(cx, UndefinedValue());
-                if (!NativeDefineProperty(cx, objp, id, undefinedValue, nullptr, nullptr,
+                if (!NativeDefineProperty(cx, objp, id, UndefinedHandleValue, nullptr, nullptr,
                                           JSPROP_ENUMERATE))
                 {
                     return false;
@@ -9877,15 +10019,16 @@ BytecodeEmitter::emitObject(ParseNode* pn)
     if (!emitNewInit(JSProto_Object))
         return false;
 
-    /*
-     * Try to construct the shape of the object as we go, so we can emit a
-     * JSOP_NEWOBJECT with the final shape instead.
-     */
-    RootedPlainObject obj(cx);
-    // No need to do any guessing for the object kind, since we know exactly
-    // how many properties we plan to have.
+    // Try to construct the shape of the object as we go, so we can emit a
+    // JSOP_NEWOBJECT with the final shape instead.
+    // In the case of computed property names and indices, we cannot fix the
+    // shape at bytecode compile time. When the shape cannot be determined,
+    // |obj| is nulled out.
+
+    // No need to do any guessing for the object kind, since we know the upper
+    // bound of how many properties we plan to have.
     gc::AllocKind kind = gc::GetGCObjectKind(pn->pn_count);
-    obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
+    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject));
     if (!obj)
         return false;
 
@@ -9893,25 +10036,34 @@ BytecodeEmitter::emitObject(ParseNode* pn)
         return false;
 
     if (obj) {
-        /*
-         * The object survived and has a predictable shape: update the original
-         * bytecode.
-         */
-        ObjectBox* objbox = parser.newObjectBox(obj);
-        if (!objbox)
+        // The object survived and has a predictable shape: update the original
+        // bytecode.
+        if (!replaceNewInitWithNewObject(obj, offset))
             return false;
-
-        static_assert(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
-                      "newinit and newobject must have equal length to edit in-place");
-
-        uint32_t index = objectList.add(objbox);
-        jsbytecode* code = this->code(offset);
-        code[0] = JSOP_NEWOBJECT;
-        code[1] = jsbytecode(index >> 24);
-        code[2] = jsbytecode(index >> 16);
-        code[3] = jsbytecode(index >> 8);
-        code[4] = jsbytecode(index);
     }
+
+    return true;
+}
+
+bool
+BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset)
+{
+    ObjectBox* objbox = parser.newObjectBox(obj);
+    if (!objbox)
+        return false;
+
+    static_assert(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
+                  "newinit and newobject must have equal length to edit in-place");
+
+    uint32_t index = objectList.add(objbox);
+    jsbytecode* code = this->code(offset);
+
+    MOZ_ASSERT(code[0] == JSOP_NEWINIT);
+    code[0] = JSOP_NEWOBJECT;
+    code[1] = jsbytecode(index >> 24);
+    code[2] = jsbytecode(index >> 16);
+    code[3] = jsbytecode(index >> 8);
+    code[4] = jsbytecode(index);
 
     return true;
 }

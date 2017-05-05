@@ -864,6 +864,8 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   }
 
   channel->SetOriginalURI(uri);
+  aLoadInfo->SetResultPrincipalURI(uri);
+
   channel->SetContentType(NS_ConvertUTF16toUTF8(contentType));
   channel->SetContentLength(size);
 

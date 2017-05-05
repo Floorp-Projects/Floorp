@@ -40,8 +40,6 @@ SizeOfFramePrefix = {
     'JitFrame_BaselineJS': 'JitFrameLayout',
     'JitFrame_BaselineStub': 'BaselineStubFrameLayout',
     'JitFrame_IonStub': 'JitStubFrameLayout',
-    # Technically EntryFrameLayout, but that doesn't wind up in the
-    # debuginfo because there are no uses of it.
     'JitFrame_Entry': 'JitFrameLayout',
     'JitFrame_Rectifier': 'RectifierFrameLayout',
     'JitFrame_IonAccessorIC': 'IonAccessorICFrameLayout',

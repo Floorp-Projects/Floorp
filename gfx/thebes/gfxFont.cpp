@@ -2032,7 +2032,7 @@ gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
 void
 gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               gfxPoint *aPt, const TextRunDrawParams& aRunParams,
-              uint16_t aOrientation)
+              gfx::ShapedTextFlags aOrientation)
 {
     NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
                  !(int(aRunParams.drawMode) & int(DrawMode::GLYPH_PATH)),
@@ -2057,7 +2057,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     fontParams.contextPaint = aRunParams.runContextPaint;
     fontParams.isVerticalFont =
-        aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+        aOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
 
     bool sideways = false;
     gfxPoint origPt = *aPt;
@@ -2071,7 +2071,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         // with 90-degree CW rotation.
         const gfxFloat
             rotation = (aOrientation ==
-                        gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT)
+                        gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT)
                        ? -M_PI / 2.0 : M_PI / 2.0;
         gfxMatrix mat =
             aRunParams.context->CurrentMatrix().
@@ -2192,7 +2192,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         // adjust updated aPt to account for the transform we were using
         gfxFloat advance = aPt->x - origPt.x;
         if (aOrientation ==
-            gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT) {
+            gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT) {
             *aPt = gfxPoint(origPt.x, origPt.y - advance);
         } else {
             *aPt = gfxPoint(origPt.x, origPt.y + advance);
@@ -2290,7 +2290,7 @@ UnionRange(gfxFloat aX, gfxFloat* aDestMin, gfxFloat* aDestMax)
 static bool
 NeedsGlyphExtents(gfxFont *aFont, const gfxTextRun *aTextRun)
 {
-    return (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX) ||
+    return (aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_NEED_BOUNDING_BOX) ||
         aFont->GetFontEntry()->IsUserFont();
 }
 
@@ -2318,7 +2318,7 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                  BoundingBoxType aBoundingBoxType,
                  DrawTarget* aRefDrawTarget,
                  Spacing *aSpacing,
-                 uint16_t aOrientation)
+                 gfx::ShapedTextFlags aOrientation)
 {
     // If aBoundingBoxType is TIGHT_HINTED_OUTLINE_EXTENTS
     // and the underlying cairo font may be antialiased,
@@ -2341,7 +2341,7 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
     const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // Current position in appunits
     gfxFont::Orientation orientation =
-        aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT
+        aOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT
         ? eVertical : eHorizontal;
     const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
@@ -2571,7 +2571,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
                        Script      aRunScript,
                        bool        aVertical,
                        int32_t     aAppUnitsPerDevUnit,
-                       uint32_t    aFlags,
+                       gfx::ShapedTextFlags aFlags,
                        RoundingFlags aRounding,
                        gfxTextPerfMetrics *aTextPerf GFX_MAYBE_UNUSED)
 {
@@ -2669,7 +2669,7 @@ gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
         }
         return true;
     }
-    NS_ASSERTION((aKey->mFlags & gfxTextRunFactory::TEXT_IS_8BIT) == 0 &&
+    NS_ASSERTION(!(aKey->mFlags & gfx::ShapedTextFlags::TEXT_IS_8BIT) &&
                  !aKey->mTextIs8Bit, "didn't expect 8-bit text here");
     return (0 == memcmp(sw->TextUnicode(), aKey->mText.mDouble,
                         aKey->mLength * sizeof(char16_t)));
@@ -2872,7 +2872,7 @@ gfxFont::ShapeTextWithoutWordCache(DrawTarget *aDrawTarget,
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aOffset + i);
         } else if (IsInvalidControlChar(ch) &&
-            !(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_HIDE_CONTROL_CHARACTERS)) {
+            !(aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS)) {
             if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {
                 ShapeFragmentWithoutWordCache(aDrawTarget, aText + i,
                                               aOffset + i, 1,
@@ -2966,13 +2966,13 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
     InitWordCache();
 
     // the only flags we care about for ShapedWord construction/caching
-    uint32_t flags = aTextRun->GetFlags();
-    flags &= (gfxTextRunFactory::TEXT_IS_RTL |
-              gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES |
-              gfxTextRunFactory::TEXT_USE_MATH_SCRIPT |
-              gfxTextRunFactory::TEXT_ORIENT_MASK);
+    gfx::ShapedTextFlags flags = aTextRun->GetFlags();
+    flags &= (gfx::ShapedTextFlags::TEXT_IS_RTL |
+              gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES |
+              gfx::ShapedTextFlags::TEXT_USE_MATH_SCRIPT |
+              gfx::ShapedTextFlags::TEXT_ORIENT_MASK);
     if (sizeof(T) == sizeof(uint8_t)) {
-        flags |= gfxTextRunFactory::TEXT_IS_8BIT;
+        flags |= gfx::ShapedTextFlags::TEXT_IS_8BIT;
     }
 
     uint32_t wordStart = 0;
@@ -3018,13 +3018,13 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                 return false;
             }
         } else if (length > 0) {
-            uint32_t wordFlags = flags;
+            gfx::ShapedTextFlags wordFlags = flags;
             // in the 8-bit version of this method, TEXT_IS_8BIT was
             // already set as part of |flags|, so no need for a per-word
             // adjustment here
             if (sizeof(T) == sizeof(char16_t)) {
                 if (wordIs8Bit) {
-                    wordFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
+                    wordFlags |= gfx::ShapedTextFlags::TEXT_IS_8BIT;
                 }
             }
             gfxShapedWord* sw = GetShapedWord(aDrawTarget,
@@ -3041,11 +3041,12 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
 
         if (boundary) {
             // word was terminated by a space: add that to the textrun
-            uint16_t orientation = flags & gfxTextRunFactory::TEXT_ORIENT_MASK;
-            if (orientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
+            gfx::ShapedTextFlags orientation =
+                flags & gfx::ShapedTextFlags::TEXT_ORIENT_MASK;
+            if (orientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED) {
                 orientation = aVertical ?
-                    gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT :
-                    gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+                    gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT :
+                    gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
             }
             if (boundary != ' ' ||
                 !aTextRun->SetSpaceGlyphIfSimple(this, aRunStart + i, ch,
@@ -3061,7 +3062,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                     GetShapedWord(aDrawTarget, &boundary, 1,
                                   gfxShapedWord::HashMix(0, boundary),
                                   aRunScript, aVertical, appUnitsPerDevUnit,
-                                  flags | gfxTextRunFactory::TEXT_IS_8BIT,
+                                  flags | gfx::ShapedTextFlags::TEXT_IS_8BIT,
                                   rounding, tp);
                 if (sw) {
                     aTextRun->CopyGlyphDataFrom(sw, aRunStart + i);
@@ -3090,7 +3091,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aRunStart + i);
         } else if (IsInvalidControlChar(ch) &&
-            !(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_HIDE_CONTROL_CHARACTERS)) {
+            !(aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS)) {
             if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {
                 ShapeFragmentWithoutWordCache(aDrawTarget, aString + i,
                                               aRunStart + i, 1,
@@ -3135,7 +3136,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                               uint32_t        aOffset,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
-                              uint16_t        aOrientation,
+                              gfx::ShapedTextFlags aOrientation,
                               Script          aScript,
                               bool            aSyntheticLower,
                               bool            aSyntheticUpper)
@@ -3157,7 +3158,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
     RunCaseAction runAction = kNoChange;
     uint32_t runStart = 0;
     bool vertical =
-        aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+        aOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
 
     for (uint32_t i = 0; i <= aLength; ++i) {
         uint32_t extraCodeUnits = 0; // Will be set to 1 if we need to consume
@@ -3257,7 +3258,9 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                     };
                     RefPtr<gfxTextRun> tempRun(
                         gfxTextRun::Create(&params, convertedString.Length(),
-                                           aTextRun->GetFontGroup(), 0));
+                                           aTextRun->GetFontGroup(),
+                                           gfx::ShapedTextFlags(), 
+                                           nsTextFrameUtils::Flags()));
                     tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation);
                     if (!f->SplitAndInitTextRun(aDrawTarget, tempRun.get(),
                                                 convertedString.BeginReading(),
@@ -3267,7 +3270,9 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                     } else {
                         RefPtr<gfxTextRun> mergedRun(
                             gfxTextRun::Create(&params, runLength,
-                                               aTextRun->GetFontGroup(), 0));
+                                               aTextRun->GetFontGroup(),
+                                               gfx::ShapedTextFlags(), 
+                                               nsTextFrameUtils::Flags()));
                         MergeCharactersInTextRun(mergedRun.get(), tempRun.get(),
                                                  charsToMergeArray.Elements(),
                                                  deletedCharsArray.Elements());
@@ -3308,7 +3313,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                               uint32_t        aOffset,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
-                              uint16_t        aOrientation,
+                              gfx::ShapedTextFlags aOrientation,
                               Script          aScript,
                               bool            aSyntheticLower,
                               bool            aSyntheticUpper)

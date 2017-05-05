@@ -171,5 +171,13 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisito
   return NS_OK;
 }
 
+NS_IMETHODIMP AppCacheStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
+                                                       const nsACString &aIdExtension,
+                                                       bool *aHasAltData,
+                                                       uint32_t *aSizeInKB)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace net
 } // namespace mozilla

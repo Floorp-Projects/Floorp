@@ -73,6 +73,11 @@ public:
                                   uint32_t aIndex = 0)
     : UnscaledFontFreeType(aFile, aIndex)
   {}
+  UnscaledFontFontconfig(FT_Face aFace,
+                         NativeFontResource* aNativeFontResource)
+    : UnscaledFontFreeType(aFace, false)
+    , mNativeFontResource(aNativeFontResource)
+  {}
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
 
@@ -83,6 +88,9 @@ public:
     CreateScaledFont(Float aGlyphSize,
                      const uint8_t* aInstanceData,
                      uint32_t aInstanceDataLength) override;
+
+private:
+  RefPtr<NativeFontResource> mNativeFontResource;
 };
 #endif
 

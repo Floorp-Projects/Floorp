@@ -1600,14 +1600,6 @@ pref("network.http.rendering-critical-requests-prioritization", true);
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
 
-// The maximum amount of time the cache session lock can be held
-// before a new transaction bypasses the cache. In milliseconds.
-#ifdef RELEASE_OR_BETA
-pref("network.http.bypass-cachelock-threshold", 200000);
-#else
-pref("network.http.bypass-cachelock-threshold", 250);
-#endif
-
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
 pref("network.http.spdy.enabled.http2", true);
@@ -4623,6 +4615,9 @@ pref("network.tcp.keepalive.retry_interval", 1); // seconds
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 pref("network.tcp.keepalive.probe_count", 4);
 #endif
+
+pref("network.tcp.tcp_fastopen_enable", true);
+pref("network.tcp.tcp_fastopen_consecutive_failure_limit", 5);
 
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);

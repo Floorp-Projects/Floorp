@@ -38,6 +38,7 @@ AboutFlyWeb.prototype = Object.freeze({
     let uri = Services.io.newURI("chrome://flyweb/content/aboutFlyWeb.xhtml");
     let channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
+    aLoadInfo.resultPrincipalURI = aURI;
     return channel;
   }
 });

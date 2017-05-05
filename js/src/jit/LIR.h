@@ -1188,6 +1188,18 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
     }
 };
 
+template <size_t Defs, size_t Temps>
+class LBinaryCallInstructionHelper : public LCallInstructionHelper<Defs, 2, Temps>
+{
+  public:
+    const LAllocation* lhs() {
+        return this->getOperand(0);
+    }
+    const LAllocation* rhs() {
+        return this->getOperand(1);
+    }
+};
+
 class LRecoverInfo : public TempObject
 {
   public:

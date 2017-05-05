@@ -26,6 +26,7 @@ AboutPage.prototype = {
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
     channel.originalURI = aURI;
+    aLoadInfo.resultPrincipalURI = aURI;
 
     if (this.uriFlags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) {
       channel.owner = null;

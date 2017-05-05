@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsTablePainter.h"
 #include "nsTableRowGroupFrame.h"
 #include "mozilla/WritingModes.h"
 
