@@ -46,8 +46,7 @@ function* cleanup() {
 do_register_cleanup(cleanup);
 
 /**
- * @param aSearches
- *        Array of AutoCompleteSearch names.
+ * @param {Array} aSearches Array of AutoCompleteSearch names.
  */
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
@@ -105,8 +104,21 @@ AutoCompleteInput.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }
 
-// A helper for check_autocomplete to check a specific match against data from
-// the controller.
+/**
+ * A helper for check_autocomplete to check a specific match against data from
+ * the controller.
+ *
+ * @param {Object} match The expected match for the result, in the following form:
+ * {
+ *   uri: {nsIURI} The expected uri.
+ *   title: {String} The title of the entry.
+ *   tags: {String} The tags for the entry.
+ *   style: {String} The style of the entry.
+ * }
+ * @param {Object} result The result to compare the result against with the same
+ *                        properties as the match param.
+ * @returns {boolean} Returns true if the result matches.
+ */
 function* _check_autocomplete_matches(match, result) {
   let { uri, title, tags, style } = match;
   if (tags)
@@ -136,6 +148,18 @@ function* _check_autocomplete_matches(match, result) {
   return true;
 }
 
+/**
+ * Helper function to test an autocomplete entry and check the resultant matches.
+ *
+ * @param {Object} test An object representing the test to run, in the following form:
+ * {
+ *   search: {String} The string to enter for autocompleting.
+ *   searchParam: {String} The search parameters to apply to the
+ *                         autocomplete search.
+ *   matches: {Object[]} The expected results in match format. see
+ *                       _check_autocomplete_matches.
+ * }
+ */
 function* check_autocomplete(test) {
   // At this point frecency could still be updating due to latest pages
   // updates.
@@ -326,9 +350,9 @@ function resetRestrict(aType) {
 /**
  * Strip prefixes from the URI that we don't care about for searching.
  *
- * @param spec
+ * @param {String} spec
  *        The text to modify.
- * @return the modified spec.
+ * @return {String} the modified spec.
  */
 function stripPrefix(spec) {
   ["http://", "https://", "ftp://"].some(scheme => {
