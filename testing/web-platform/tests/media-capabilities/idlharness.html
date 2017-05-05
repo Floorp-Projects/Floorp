@@ -24,13 +24,19 @@ interface WorkerNavigator {
 </pre>
 <pre id='idl'>
 dictionary MediaConfiguration {
-  required MediaConfigurationType type;
-
   VideoConfiguration video;
   AudioConfiguration audio;
 };
 
-enum MediaConfigurationType {
+dictionary MediaDecodingConfiguration : MediaConfiguration {
+  required MediaDecodingType type;
+};
+
+dictionary MediaEncodingConfiguration : MediaConfiguration {
+  required MediaEncodingType type;
+};
+
+enum MediaDecodingType {
   "file",
   "media-source",
 };
@@ -50,7 +56,7 @@ dictionary AudioConfiguration {
   unsigned long samplerate;
 };
 
-interface MediaDecodingAbility {
+interface MediaCapabilitiesInfo {
   readonly attribute boolean supported;
   readonly attribute boolean smooth;
   readonly attribute boolean powerEfficient;
@@ -68,7 +74,8 @@ partial interface WorkerNavigator {
 
 [Exposed=(Window, Worker)]
 interface MediaCapabilities {
-  Promise<MediaDecodingAbility> query(MediaConfiguration configuration);
+  Promise<MediaCapabilitiesInfo> decodingInfo(MediaDecodingConfiguration configuration);
+  Promise<MediaCapabilitiesInfo> encodingInfo(MediaEncodingConfiguration configuration);
 };
 </pre>
 <script>
