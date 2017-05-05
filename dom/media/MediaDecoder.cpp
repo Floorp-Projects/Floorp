@@ -33,9 +33,14 @@
 #include "mozilla/Telemetry.h"
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "nsIIdleService.h"
+#include "MP4Decoder.h"
 
 #ifdef MOZ_ANDROID_OMX
 #include "AndroidBridge.h"
+#endif
+#ifdef XP_WIN
+#include "Objbase.h"
 #endif
 
 using namespace mozilla::dom;
@@ -125,10 +130,108 @@ LazyLogModule gMediaTimerLog("MediaTimer");
 
 constexpr TimeUnit MediaDecoder::DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED;
 
+class MediaIdleListener : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+private:
+  virtual ~MediaIdleListener() {}
+};
+
+NS_IMPL_ISUPPORTS(MediaIdleListener, nsIObserver)
+
+const unsigned long sMediaTelemetryIdleSeconds = 30u;
+
+NS_IMETHODIMP
+MediaIdleListener::Observe(nsISupports*,
+                           const char* aTopic,
+                           const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!NS_LITERAL_CSTRING(OBSERVER_TOPIC_IDLE).EqualsASCII(aTopic)) {
+    return NS_OK;
+  }
+
+  // Collect telemetry about whether the user's machine can decode AAC
+  // and H.264. We do this off main thread, as determining whether we
+  // can create a decoder requires us to load decoding libraries, which
+  // requires disk I/O, and we don't want to be blocking the main thread
+  // on the chrome process for I/O.
+
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  RefPtr<MediaIdleListener> self = this;
+  rv = idleService->RemoveIdleObserver(self, sMediaTelemetryIdleSeconds);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  RefPtr<nsIThread> thread;
+  rv = NS_NewNamedThread("MediaTelemetry", getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  thread->Dispatch(
+    NS_NewRunnableFunction([thread]() {
+#if XP_WIN
+      // Windows Media Foundation requires MSCOM to be inited.
+      HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+      MOZ_ASSERT(hr == S_OK);
+#endif
+      bool aac = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("audio/mp4")), nullptr);
+      bool h264 = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("video/mp4")), nullptr);
+
+      AbstractThread::MainThread()->Dispatch(
+        NS_NewRunnableFunction([thread, aac, h264]() {
+          MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("MediaTelemetry aac=%d h264=%d", aac, h264));
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_AAC_DECODER, aac);
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_H264_DECODER, h264);
+          thread->AsyncShutdown();
+        }));
+    }),
+    NS_DISPATCH_NORMAL);
+
+  return NS_OK;
+}
+
 void
 MediaDecoder::InitStatics()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("%s", __func__));
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  // Add an idle listener so that we can record some telemetry when the
+  // user is idle.
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  if (NS_WARN_IF(NS_FAILED((rv)))) {
+    return;
+  }
+
+  RefPtr<MediaIdleListener> listener = new MediaIdleListener();
+  rv = idleService->AddIdleObserver(listener, sMediaTelemetryIdleSeconds);
+  if (NS_WARN_IF(NS_FAILED((rv)))) {
+    return;
+  }
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
