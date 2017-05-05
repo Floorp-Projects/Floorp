@@ -90,6 +90,7 @@ public class Tab {
     private volatile boolean mIsMediaPlaying;
     private String mMostRecentHomePanel;
     private boolean mShouldShowToolbarWithoutAnimationOnFirstSelection;
+    private boolean mWasSelectedInForeground;
 
     /*
      * Bundle containing restore data for the panel referenced in mMostRecentHomePanel. This can be
@@ -791,6 +792,14 @@ public class Tab {
 
     public boolean isPrivate() {
         return false;
+    }
+
+    public void setWasSelectedInForeground(boolean state) {
+        mWasSelectedInForeground = state;
+    }
+
+    public boolean getWasSelectedInForeground() {
+        return mWasSelectedInForeground;
     }
 
     public TabType getType() {
