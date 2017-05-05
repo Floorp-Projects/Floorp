@@ -13,17 +13,15 @@ const StackTraceTab = createClass({
     data: PropTypes.object.isRequired,
     actions: PropTypes.shape({
       onViewSourceInDebugger: PropTypes.func.isRequired
-    }),
-    // Service to enable the source map feature.
-    sourceMapService: PropTypes.object,
+    })
   },
 
   render() {
     let { stacktrace } = this.props.data.cause;
-    let { actions, sourceMapService } = this.props;
+    let { actions } = this.props;
     let onViewSourceInDebugger = actions.onViewSourceInDebugger.bind(actions);
 
-    return StackTrace({ stacktrace, onViewSourceInDebugger, sourceMapService });
+    return StackTrace({ stacktrace, onViewSourceInDebugger });
   }
 });
 
