@@ -1420,7 +1420,7 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
     });
   }
 
-  return {
+  resp.body = {
     "x": win.screenX,
     "y": win.screenY,
     "width": win.outerWidth,
@@ -2906,7 +2906,7 @@ GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
     }
   });
 
-  resp.body.value = {
+  resp.body = {
     x: win.screenX,
     y: win.screenY,
     width: win.outerWidth,
