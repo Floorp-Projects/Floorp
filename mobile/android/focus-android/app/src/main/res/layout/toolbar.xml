@@ -50,7 +50,10 @@
         android:textColor="#ffffff"
         android:textSize="15sp" />
 
+    <!-- The contentDescription is supplied by other applications in the Custom Tab Intent, and
+         is therefore set programatically. -->
     <ImageButton
+        tools:ignore="contentDescription"
         android:id="@+id/customtab_actionbutton"
         android:visibility="gone"
         android:background="?android:attr/selectableItemBackgroundBorderless"

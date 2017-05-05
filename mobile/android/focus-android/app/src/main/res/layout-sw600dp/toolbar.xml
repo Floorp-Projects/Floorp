@@ -117,7 +117,10 @@
         android:contentDescription="@string/content_description_stop"
         android:src="@drawable/ic_close" />
 
+    <!-- The contentDescription is supplied by other applications in the Custom Tab Intent, and
+         is therefore set programatically. -->
     <ImageButton
+        tools:ignore="contentDescription"
         android:id="@+id/customtab_actionbutton"
         android:visibility="gone"
         android:background="?android:attr/selectableItemBackgroundBorderless"
