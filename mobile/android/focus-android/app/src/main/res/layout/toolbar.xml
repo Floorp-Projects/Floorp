@@ -11,10 +11,12 @@
     android:paddingStart="16dp"
     android:paddingEnd="0dp">
 
-    <ImageView
+    <ImageButton
         android:id="@+id/customtab_close"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:contentDescription="@string/content_description_customtab_exit"
         android:visibility="gone"/>
 
     <ImageView
