@@ -2077,7 +2077,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           delta /= 1000;
 
-          // This code is taken from nsDownloadManager.cpp
+          // This algorithm is the same used by the downloads code.
           let speed = (aProgress - this.notification.lastProgress) / delta;
           if (this.notification.speed)
             speed = speed * 0.9 + this.notification.speed * 0.1;

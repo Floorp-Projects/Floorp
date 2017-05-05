@@ -634,17 +634,11 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function() {
 
 /**
  * Retrieves the list of past and completed downloads from the underlying
- * Download Manager data, and provides asynchronous notifications allowing to
+ * Downloads API data, and provides asynchronous notifications allowing to
  * build a consistent view of the available data.
  *
- * This object responds to real-time changes in the underlying Download Manager
- * data.  For example, the deletion of one or more downloads is notified through
- * the nsIObserver interface, while any state or progress change is notified
- * through the nsIDownloadProgressListener interface.
- *
- * Note that using this object does not automatically start the Download Manager
- * service.  Consumers will see an empty list of downloads until the service is
- * actually started.  This is useful to display a neutral progress indicator in
+ * Note that using this object does not automatically initialize the list of
+ * downloads. This is useful to display a neutral progress indicator in
  * the main browser window until the autostart timeout elapses.
  *
  * Note that DownloadsData and PrivateDownloadsData are two equivalent singleton
