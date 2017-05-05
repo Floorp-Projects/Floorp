@@ -103,28 +103,19 @@ public :
     , mShutdown(false)
     , mDirectConnected(false)
     , mSuspended(false)
+    , mMicrosecondsSpentPaused(0)
+    , mLastMuxedTimestamp(0)
 {}
 
   ~MediaEncoder() {};
 
   /* Note - called from control code, not on MSG threads. */
-  void Suspend()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mSuspended = true;
-    mVideoSink->Suspend();
-  }
+  void Suspend();
 
   /**
    * Note - called from control code, not on MSG threads.
-   * Arm to collect the Duration of the next video frame and give it
-   * to the next frame, in order to avoid any possible loss of sync. */
-  void Resume()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mSuspended = false;
-    mVideoSink->Resume();
-  }
+   * Calculates time spent paused in order to offset frames. */
+  void Resume();
 
   /**
    * Tells us which Notify to pay attention to for media
@@ -244,7 +235,18 @@ private:
   int mState;
   bool mShutdown;
   bool mDirectConnected;
+  // Tracks if the encoder is suspended (paused). Used on the main thread and
+  // MediaRecorder's read thread.
   Atomic<bool> mSuspended;
+  // Timestamp of when the last pause happened. Should only be accessed on the
+  // main thread.
+  TimeStamp mLastPauseStartTime;
+  // Exposes the time spend paused in microseconds. Read by the main thread
+  // and MediaRecorder's read thread. Should only be written by main thread.
+  Atomic<uint64_t> mMicrosecondsSpentPaused;
+  // The timestamp of the last muxed sample. Should only be used on
+  // MediaRecorder's read thread.
+  uint64_t mLastMuxedTimestamp;
   // Get duration from create encoder, for logging purpose
   double GetEncodeTimeStamp()
   {
