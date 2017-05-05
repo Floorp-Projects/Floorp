@@ -4035,13 +4035,6 @@ Http2Session::SetDNSWasRefreshed()
   MOZ_ASSERT(false, "Http2Session::SetDNSWasRefreshed()");
 }
 
-uint64_t
-Http2Session::Available()
-{
-  MOZ_ASSERT(false, "Http2Session::Available()");
-  return 0;
-}
-
 nsHttpRequestHead *
 Http2Session::RequestHead()
 {
