@@ -107,17 +107,11 @@ public :
 
   ~MediaEncoder() {};
 
-  enum SuspendState {
-    RECORD_NOT_SUSPENDED,
-    RECORD_SUSPENDED,
-    RECORD_RESUMED
-  };
-
   /* Note - called from control code, not on MSG threads. */
   void Suspend()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mSuspended = RECORD_SUSPENDED;
+    mSuspended = true;
     mVideoSink->Suspend();
   }
 
@@ -128,9 +122,7 @@ public :
   void Resume()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mSuspended == RECORD_SUSPENDED) {
-      mSuspended = RECORD_RESUMED;
-    }
+    mSuspended = false;
     mVideoSink->Resume();
   }
 
@@ -252,7 +244,7 @@ private:
   int mState;
   bool mShutdown;
   bool mDirectConnected;
-  Atomic<int> mSuspended;
+  Atomic<bool> mSuspended;
   // Get duration from create encoder, for logging purpose
   double GetEncodeTimeStamp()
   {
