@@ -27,7 +27,13 @@ public class TextActionActivity extends Activity {
 
         final SafeIntent intent = new SafeIntent(getIntent());
 
-        final String searchText = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT).toString();
+        final CharSequence searchTextCharSequence = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
+        final String searchText;
+        if (searchTextCharSequence != null) {
+            searchText = searchTextCharSequence.toString();
+        } else {
+            searchText = "";
+        }
         final String searchUrl = UrlUtils.createSearchUrl(this, searchText);
 
         final Intent searchIntent = new Intent(this, MainActivity.class);
