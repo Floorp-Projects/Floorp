@@ -145,6 +145,7 @@ TRAILING WHITESPACE:webgl/tools/*.patch
 SET TIMEOUT: *-manual.*
 SET TIMEOUT: 2dcontext/*
 SET TIMEOUT: annotation-model/scripts/ajv.min.js
+SET TIMEOUT: apng/animated-png-timeout.html
 SET TIMEOUT: cookies/resources/testharness-helpers.js
 SET TIMEOUT: common/reftest-wait.js
 SET TIMEOUT: conformance-checkers/*
@@ -171,6 +172,7 @@ SET TIMEOUT: old-tests/submission/Opera/script_scheduling/*
 SET TIMEOUT: old-tests/webdriver/timeouts/res/implicit_waits_tests.html
 SET TIMEOUT: page-visibility/resources/pagevistestharness.js
 SET TIMEOUT: payment-request/allowpaymentrequest/setting-allowpaymentrequest-timing.https.sub.html
+SET TIMEOUT: payment-request/payment-request-response-id.html
 SET TIMEOUT: pointerevents/pointerevent_support.js
 SET TIMEOUT: preload/single-download-preload.html
 SET TIMEOUT: resource-timing/resource-timing.js
@@ -212,6 +214,9 @@ SET TIMEOUT: XMLHttpRequest/open-url-multi-window-6.htm
 SET TIMEOUT: XMLHttpRequest/xmlhttprequest-timeout-reused.html
 SET TIMEOUT: XMLHttpRequest/resources/init.htm
 SET TIMEOUT: XMLHttpRequest/resources/xmlhttprequest-timeout.js
+
+# Intentional use of setTimeout
+SET TIMEOUT: html/webappapis/timers/*
 
 # CI scripts
 PRINT STATEMENT:check_stability.py
@@ -763,3 +768,12 @@ CSS-COLLIDING-SUPPORT-NAME: css/CSS2/css1/support/pattern-gg-gr.png
 CSS-COLLIDING-SUPPORT-NAME: css/css-display-3/support/util.js
 CSS-COLLIDING-SUPPORT-NAME: css/CSS2/normal-flow/support/replaced-min-max-1.png
 CSS-COLLIDING-SUPPORT-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/ui3/support/replaced-min-max-1.png
+
+# TODO https://github.com/w3c/web-platform-tests/issues/5770
+MISSING-LINK: css/geometry-1/DOMMatrix-css-string.worker.js
+MISSING-LINK: css/geometry-1/WebKitCSSMatrix.worker.js
+
+WEBIDL2.JS:.gitmodules
+
+# Manual test that uses console.logs for feedback
+CONSOLE:payment-request/payment-request-response-id.html

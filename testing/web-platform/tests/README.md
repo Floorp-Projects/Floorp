@@ -40,13 +40,6 @@ following entries are required:
 If you are behind a proxy, you also need to make sure the domains above are
 excluded from your proxy lookups.
 
-Because web-platform-tests uses git submodules, you must ensure that
-these are up to date. In the root of your checkout, run:
-
-```
-git submodule update --init --recursive
-```
-
 The test environment can then be started using
 
     ./serve
@@ -76,6 +69,55 @@ like:
 ```
 "ssl": {"openssl": {"binary": "/path/to/openssl"}}
 ```
+
+<span id="submodules">Submodules</span>
+=======================================
+
+Some optional components of web-platform-tests (test components from
+third party software and pieces of the CSS build system) are included
+as submodules. To obtain these components run the following in the
+root of your checkout:
+
+```
+git submodule update --init --recursive
+```
+
+Prior to commit `39d07eb01fab607ab1ffd092051cded1bdd64d78` submodules
+were requried for basic functionality. If you are working with an
+older checkout, the above command is required in all cases.
+
+When moving between a commit prior to `39d07eb` and one after it git
+may complain
+
+```
+$ git checkout master
+error: The following untracked working tree files would be overwritten by checkout:
+[…]
+```
+
+followed by a long list of files. To avoid this error remove
+the `resources` and `tools` directories before switching branches:
+
+```
+$ rm -r resources/ tools/
+$ git checkout master
+Switched to branch 'master'
+Your branch is up-to-date with 'origin/master'
+```
+
+When moving in the opposite direction, i.e. to a commit that does have
+submodules, you will need to `git submodule update`, as above. If git
+throws an error like:
+
+```
+fatal: No url found for submodule path 'resources/webidl2/test/widlproc' in .gitmodules
+Failed to recurse into submodule path 'resources/webidl2'
+fatal: No url found for submodule path 'tools/html5lib' in .gitmodules
+Failed to recurse into submodule path 'resources'
+Failed to recurse into submodule path 'tools'
+```
+
+then remove the `tools` and `resources` directories, as above.
 
 <span id="windows-notes">Windows Notes</span>
 =============================================
@@ -257,8 +299,8 @@ is [archived][ircarchive].
 
 [contributing]: https://github.com/w3c/web-platform-tests/blob/master/CONTRIBUTING.md
 [ircw3org]: https://www.w3.org/wiki/IRC
-[ircarchive]: http://krijnhoetmer.nl/irc-logs/testing/
-[mailarchive]: http://lists.w3.org/Archives/Public/public-test-infra/
+[ircarchive]: http://logs.glob.uno/?c=w3%23testing
+[mailarchive]: https://lists.w3.org/Archives/Public/public-test-infra/
 
 Documentation
 =============
