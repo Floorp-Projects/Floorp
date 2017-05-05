@@ -37,6 +37,7 @@ var {
   EventEmitter,
   ExtensionError,
   SpreadArgs,
+  defineLazyGetter,
   getConsole,
   getInnerWindowID,
   getUniqueId,
@@ -1160,15 +1161,17 @@ LocaleData.prototype = {
   // https://developer.chrome.com/extensions/i18n
   localizeMessage(message, substitutions = [], options = {}) {
     let defaultOptions = {
-      locale: this.selectedLocale,
       defaultValue: "",
       cloneScope: null,
     };
 
-    options = Object.assign(defaultOptions, options);
+    let locales = this.availableLocales;
+    if (options.locale) {
+      locales = new Set([this.BUILTIN, options.locale, this.defaultLocale]
+                        .filter(locale => this.messages.has(locale)));
+    }
 
-    let locales = new Set([this.BUILTIN, options.locale, this.defaultLocale]
-                          .filter(locale => this.messages.has(locale)));
+    options = Object.assign(defaultOptions, options);
 
     // Message names are case-insensitive, so normalize them to lower-case.
     message = message.toLowerCase();
@@ -1176,6 +1179,10 @@ LocaleData.prototype = {
       let messages = this.messages.get(locale);
       if (messages.has(message)) {
         let str = messages.get(message);
+
+        if (!str.includes("$")) {
+          return str;
+        }
 
         if (!Array.isArray(substitutions)) {
           substitutions = [substitutions];
@@ -1310,6 +1317,11 @@ LocaleData.prototype = {
     return Locale.getLocale().replace(/-/g, "_");
   },
 };
+
+defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
+  return new Set([this.BUILTIN, this.selectedLocale, this.defaultLocale]
+                 .filter(locale => this.messages.has(locale)));
+});
 
 // This is a generic class for managing event listeners. Example usage:
 //

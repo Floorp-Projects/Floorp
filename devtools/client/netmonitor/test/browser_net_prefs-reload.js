@@ -25,7 +25,7 @@ add_task(function* () {
   let getDoc = () => monitor.panelWin.document;
   let getPrefs = () => monitor.panelWin
     .windowRequire("devtools/client/netmonitor/src/utils/prefs").Prefs;
-  let getStore = () => monitor.panelWin.gStore;
+  let getStore = () => monitor.panelWin.store;
   let getState = () => getStore().getState();
 
   let prefsToCheck = {

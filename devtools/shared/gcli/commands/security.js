@@ -16,9 +16,9 @@
 const { Ci } = require("chrome");
 const l10n = require("gcli/l10n");
 
-const GOOD_IMG_SRC = "chrome://browser/content/gcli_sec_good.svg";
-const MOD_IMG_SRC = "chrome://browser/content/gcli_sec_moderate.svg";
-const BAD_IMG_SRC = "chrome://browser/content/gcli_sec_bad.svg";
+const GOOD_IMG_SRC = "chrome://devtools/skin/images/gcli_sec_good.svg";
+const MOD_IMG_SRC = "chrome://devtools/skin/images/gcli_sec_moderate.svg";
+const BAD_IMG_SRC = "chrome://devtools/skin/images/gcli_sec_bad.svg";
 
 // special handling within policy
 const POLICY_REPORT_ONLY = "report-only";
@@ -153,7 +153,7 @@ exports.items = [
           html:
             "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
             "  <tr>" +
-            "    <td> <img src='chrome://browser/content/gcli_sec_bad.svg' width='20px' /> </td> " +
+            "    <td> <img src='" + BAD_IMG_SRC + "' width='20px' /> </td> " +
             "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + url + "</b></td>" +
             "  </tr>" +
             "</table>"});

@@ -110,17 +110,17 @@ const EXPECTED_REQUESTS = [
 
 add_task(function* () {
   let { monitor } = yield initNetMonitor(FILTERING_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   function setFreetextFilter(value) {
-    gStore.dispatch(Actions.setRequestFilterText(value));
+    store.dispatch(Actions.setRequestFilterText(value));
   }
 
   info("Starting test... ");
@@ -190,8 +190,8 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testContents(visibility) {
-    const items = getSortedRequests(gStore.getState());
-    const visibleItems = getDisplayedRequests(gStore.getState());
+    const items = getSortedRequests(store.getState());
+    const visibleItems = getDisplayedRequests(store.getState());
 
     is(items.size, visibility.length,
       "There should be a specific amount of items in the requests menu.");
@@ -209,8 +209,8 @@ add_task(function* () {
         let { method, url, data } = EXPECTED_REQUESTS[i];
         verifyRequestItemTarget(
           document,
-          getDisplayedRequests(gStore.getState()),
-          getSortedRequests(gStore.getState()).get(i),
+          getDisplayedRequests(store.getState()),
+          getSortedRequests(store.getState()).get(i),
           method,
           url,
           data

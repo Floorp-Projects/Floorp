@@ -12,14 +12,14 @@ add_task(function* () {
   info("Starting test... ");
 
   let panel = monitor.panelWin;
-  let { document, gStore, windowRequire } = panel;
+  let { document, store, windowRequire } = panel;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   ok(document.querySelector(".monitor-panel"),
     "The current main panel is correct.");
 
   info("Displaying statistics panel");
-  gStore.dispatch(Actions.openStatistics(true));
+  store.dispatch(Actions.openStatistics(true));
 
   ok(document.querySelector(".statistics-panel"),
     "The current main panel is correct.");

@@ -366,11 +366,18 @@ public:
                                     nsIDOMNode** aCommonAncestor);
 
   /**
-   * Returns the common ancestor, if any, for two nodes. Returns null if the
-   * nodes are disconnected.
+   * Returns the common ancestor, if any, for two nodes.
+   *
+   * Returns null if the nodes are disconnected.
    */
-  static nsINode* GetCommonAncestor(nsINode* aNode1,
-                                    nsINode* aNode2);
+  static nsINode* GetCommonAncestor(nsINode* aNode1, nsINode* aNode2);
+
+  /**
+   * Returns the common flattened tree ancestor, if any, for two given content
+   * nodes.
+   */
+  static nsIContent* GetCommonFlattenedTreeAncestor(nsIContent* aContent1,
+                                                    nsIContent* aContent2);
 
   /**
    * Returns true if aNode1 is before aNode2 in the same connected

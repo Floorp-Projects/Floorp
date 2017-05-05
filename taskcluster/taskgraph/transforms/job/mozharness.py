@@ -200,6 +200,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
+        'MOZ_SIMPLE_PACKAGE_NAME': 'target',
     })
 
     if not job['attributes']['build_platform'].startswith('win'):

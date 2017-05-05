@@ -10,12 +10,14 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
-const { NetMonitorController } = require("./netmonitor-controller");
+const {
+  getLongString,
+  getTabTarget,
+} = require("./connector/index");
 const {
   getSelectedRequest,
   getSortedRequests,
 } = require("./selectors/index");
-const { getLongString } = require("./utils/client");
 const { L10N } = require("./utils/l10n");
 const { showMenu } = require("./utils/menu");
 const {
@@ -33,11 +35,15 @@ function RequestListContextMenu({
 
 RequestListContextMenu.prototype = {
   get selectedRequest() {
-    return getSelectedRequest(window.gStore.getState());
+    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
+    // Remove window.store
+    return getSelectedRequest(window.store.getState());
   },
 
   get sortedRequests() {
-    return getSortedRequests(window.gStore.getState());
+    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
+    // Remove window.store
+    return getSortedRequests(window.store.getState());
   },
 
   /**
@@ -164,16 +170,14 @@ RequestListContextMenu.prototype = {
 
     menu.push({
       type: "separator",
-      visible: !!(NetMonitorController.supportsCustomRequest &&
-               selectedRequest && !selectedRequest.isCustom),
+      visible: !!(selectedRequest && !selectedRequest.isCustom),
     });
 
     menu.push({
       id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(NetMonitorController.supportsCustomRequest &&
-               selectedRequest && !selectedRequest.isCustom),
+      visible: !!(selectedRequest && !selectedRequest.isCustom),
       click: this.cloneSelectedRequest,
     });
 
@@ -345,7 +349,7 @@ RequestListContextMenu.prototype = {
   },
 
   getDefaultHarOptions() {
-    let form = NetMonitorController._target.form;
+    let form = getTabTarget().form;
     let title = form.title || form.url;
 
     return {

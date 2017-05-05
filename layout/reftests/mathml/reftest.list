@@ -109,9 +109,9 @@ fails-if(!stylo) == stretchy-mover-2a.html stretchy-mover-2-ref.html
 != embellished-op-3-3.html embellished-op-3-3-ref.html
 != embellished-op-3-4.html embellished-op-3-4-ref.html
 != embellished-op-3-5.html embellished-op-3-5-ref.html
-fails-if(stylo) == embellished-op-4-1.html embellished-op-4-1-ref.html
-fails-if(stylo) == embellished-op-4-2.html embellished-op-4-2-ref.html
-fails-if(stylo) == embellished-op-4-3.html embellished-op-4-3-ref.html
+== embellished-op-4-1.html embellished-op-4-1-ref.html
+== embellished-op-4-2.html embellished-op-4-2-ref.html
+== embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
 fails-if(gtkWidget&&!stylo) random-if(winWidget) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429, bug 1328771
@@ -136,7 +136,7 @@ fails-if(gtkWidget&&!stylo) random-if(winWidget) == semantics-1.xhtml semantics-
 fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
-fails-if(stylo) != stretchy-1.html stretchy-1-ref.html
+!= stretchy-1.html stretchy-1-ref.html
 == mspace-1.html mspace-1-ref.html
 == mpadded-1.html mpadded-1-ref.html
 == mpadded-2.html mpadded-2-ref.html
@@ -340,7 +340,7 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == op-dict-8.html op-dict-8-ref.html
 != op-dict-9.html op-dict-9-ref.html
 == op-dict-10.html op-dict-10-ref.html
-fails-if(stylo) != op-dict-11.html op-dict-11-ref.html
+!= op-dict-11.html op-dict-11-ref.html
 == op-dict-12.html op-dict-12-ref.html
 != op-dict-13.html op-dict-13-ref.html
 == mfrac-A-1.html mfrac-A-1-ref.html

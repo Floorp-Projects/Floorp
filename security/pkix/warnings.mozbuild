@@ -26,6 +26,18 @@ elif CONFIG['_MSC_VER']:
     '-wd4800', # forcing value to bool 'true' or 'false'
     '-wd4820', # 'bytes' bytes padding added after construct 'member_name'
 
+    # The following warnings are disabled because MSVC 2017 headers aren't
+    # warning free at the -Wall level.
+    '-wd4365', # 'action' : conversion from 'type_1' to 'type_2',
+               # signed/unsigned mismatch
+    '-wd4619', # #pragma warning : there is no warning number 'number'
+    '-wd4623', # 'derived class' : default constructor was implicitly defined as
+               # deleted because a base class default constructor is
+               # inaccessible or deleted
+    '-wd4774', # '<function>' : format string expected in argument <position> is
+               # not a string literal
+    '-wd4987', # nonstandard extension used: 'throw (...)'
+
     # XXX: We cannot use /Za (Disable Microsoft Extensions) because windows.h
     # won't copmile with it.
     '-Zc:forScope', # Standard C++ rules for variable scope in for loops.
