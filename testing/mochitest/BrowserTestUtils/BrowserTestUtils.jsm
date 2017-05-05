@@ -96,7 +96,7 @@ this.BrowserTestUtils = {
    *
    * @param {tabbrowser} tabbrowser
    *        The tabbrowser to open the tab new in.
-   * @param {string} opening (or url)
+   * @param {string} opening
    *        May be either a string URL to load in the tab, or a function that
    *        will be called to open a foreground tab. Defaults to "about:blank".
    * @param {boolean} waitForLoad
@@ -104,44 +104,12 @@ this.BrowserTestUtils = {
    * @param {boolean} waitForStateStop
    *        True to wait for the web progress listener to send STATE_STOP for the
    *        document in the tab. Defaults to false.
-   * @param {boolean} forceNewProcess
-   *        True to force the new tab to load in a new process. Defaults to
-   *        false.
-   * NB: tabbrowser may be an options object containing the rest of the
-   *     parameters.
    *
    * @return {Promise}
    *         Resolves when the tab is ready and loaded as necessary.
    * @resolves The new tab.
    */
-  openNewForegroundTab(tabbrowser, ...args) {
-    let options;
-    if (tabbrowser instanceof Ci.nsIDOMXULElement) {
-      // tabbrowser is a tabbrowser, read the rest of the arguments from args.
-      let [
-        opening = "about:blank",
-        waitForLoad = true,
-        waitForStateStop = false,
-      ] = args;
-
-      options = { opening, waitForLoad, waitForStateStop };
-    } else {
-      if ("url" in tabbrowser && !("opening" in tabbrowser)) {
-        tabbrowser.opening = tabbrowser.url;
-      }
-
-      let {
-        opening = "about:blank",
-        waitForLoad = true,
-        waitForStateStop = false,
-      } = tabbrowser;
-
-      tabbrowser = tabbrowser.gBrowser;
-      options = { opening, waitForLoad, waitForStateStop };
-    }
-
-    let { opening: opening, waitForLoad: aWaitForLoad, waitForStateStop: aWaitForStateStop } = options;
-
+  openNewForegroundTab(tabbrowser, opening = "about:blank", aWaitForLoad = true, aWaitForStateStop = false) {
     let tab;
     let promises = [
       BrowserTestUtils.switchTab(tabbrowser, function () {
