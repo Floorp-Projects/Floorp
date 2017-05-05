@@ -18,6 +18,7 @@ if test "$OS_ARCH" = "WINNT"; then
   if ! test "$HAVE_64BIT_BUILD"; then
     if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
             "$MOZ_UPDATE_CHANNEL" = "aurora" -o \
+            "$MOZ_UPDATE_CHANNEL" = "aurora-dev" -o \
             "$MOZ_UPDATE_CHANNEL" = "beta" -o \
             "$MOZ_UPDATE_CHANNEL" = "beta-dev" -o \
             "$MOZ_UPDATE_CHANNEL" = "release" -o \
