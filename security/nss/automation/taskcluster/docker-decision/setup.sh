@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get -y update && apt-get -y upgrade
 
 # Need those to install newer packages below.
-apt-get install -y --no-install-recommends apt-utils curl ca-certificates
+apt-get install -y --no-install-recommends apt-utils curl ca-certificates locales
 
 # Latest Mercurial.
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 41BD8711B1F0EC2B0D85B91CF59CE3A8323293EE

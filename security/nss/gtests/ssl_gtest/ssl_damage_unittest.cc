@@ -70,11 +70,7 @@ TEST_P(TlsConnectGenericPre13, DamageServerSignature) {
   server_->SetTlsRecordFilter(filter);
   ExpectAlert(client_, kTlsAlertDecryptError);
   ConnectExpectFail();
-  // TODO(ttaubert@mozilla.com): This is the wrong error code in
-  // 1.1 and below. Bug 1354488.
-  client_->CheckErrorCode(version_ >= SSL_LIBRARY_VERSION_TLS_1_2
-                              ? SEC_ERROR_BAD_SIGNATURE
-                              : SEC_ERROR_PKCS11_DEVICE_ERROR);
+  client_->CheckErrorCode(SEC_ERROR_BAD_SIGNATURE);
   server_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
 }
 
@@ -117,11 +113,7 @@ TEST_P(TlsConnectGeneric, DamageClientSignature) {
                 ? TlsAgent::STATE_CONNECTED
                 : TlsAgent::STATE_CONNECTING,
             client_->state());
-  // TODO(ttaubert@mozilla.com): This is the wrong error code in
-  // 1.1 and below. Bug 1354488.
-  server_->CheckErrorCode(version_ >= SSL_LIBRARY_VERSION_TLS_1_2
-                              ? SEC_ERROR_BAD_SIGNATURE
-                              : SEC_ERROR_PKCS11_DEVICE_ERROR);
+  server_->CheckErrorCode(SEC_ERROR_BAD_SIGNATURE);
 }
 
 }  // namespace nspr_test

@@ -208,10 +208,6 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   RecvGetDeviceStatus(&data);
   Unused << SendInitComplete(data);
 
-#ifdef XP_WIN
-  DeviceManagerDx::PreloadAttachmentsOnCompositorThread();
-#endif
-
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_INITIALIZATION_TIME_MS, mLaunchTime);
   return IPC_OK();
 }

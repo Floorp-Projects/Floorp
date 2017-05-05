@@ -26,49 +26,6 @@
     'defines': [
       'MOZILLA_CLIENT=1',
     ],
-    'conditions': [
-      [ 'OS=="win"', {
-        'configurations': {
-          'x86_Base': {
-            'msvs_settings': {
-              'VCCLCompilerTool': {
-                'PreprocessorDefinitions': [
-                  'NSS_X86_OR_X64',
-                  'NSS_X86',
-                ],
-              },
-            },
-          },
-          'x64_Base': {
-            'msvs_settings': {
-              'VCCLCompilerTool': {
-                'PreprocessorDefinitions': [
-                  'NSS_USE_64',
-                  'NSS_X86_OR_X64',
-                  'NSS_X64',
-                ],
-              },
-            },
-          },
-        },
-      }, {
-        'conditions': [
-          [ 'target_arch=="x64"', {
-            'defines': [
-              'NSS_USE_64',
-              'NSS_X86_OR_X64',
-              'NSS_X64',
-            ],
-          }],
-          [ 'target_arch=="ia32"', {
-            'defines': [
-              'NSS_X86_OR_X64',
-              'NSS_X86',
-            ],
-          }],
-        ],
-      }],
-    ],
   },
   'variables': {
     'module': 'nss'

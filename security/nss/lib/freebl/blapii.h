@@ -58,4 +58,11 @@ SEC_END_PROTOS
 
 #undef HAVE_NO_SANITIZE_ATTR
 
+SECStatus RSA_Init();
+
+/* Freebl state. */
+PRBool aesni_support();
+PRBool clmul_support();
+PRBool avx_support();
+
 #endif /* _BLAPII_H_ */

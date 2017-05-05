@@ -63,6 +63,7 @@ public:
                                 const gfx::IntRect& aRect) override
   { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override { return IPC_OK(); }
+  virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvForcePresent() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override { return IPC_OK(); }

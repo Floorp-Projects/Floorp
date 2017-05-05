@@ -27,6 +27,9 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo "NSS_AIA_OCSP=${NSS_AIA_OCSP}"
     echo "IOPR_HOSTADDR_LIST=${IOPR_HOSTADDR_LIST}"
     echo "PKITS_DATA=${PKITS_DATA}"
+    echo "NSS_DISABLE_HW_AES=${NSS_DISABLE_HW_AES}"
+    echo "NSS_DISABLE_PCLMUL=${NSS_DISABLE_PCLMUL}"
+    echo "NSS_DISABLE_AVX=${NSS_DISABLE_AVX}"
     echo
     echo "Tests summary:"
     echo "--------------"

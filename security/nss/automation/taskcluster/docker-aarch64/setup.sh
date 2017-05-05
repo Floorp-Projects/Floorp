@@ -26,6 +26,7 @@ apt_packages+=('zlib1g-dev')
 apt_packages+=('ninja-build')
 apt_packages+=('gyp')
 apt_packages+=('mercurial')
+apt_packages+=('locales')
 
 # Install packages.
 apt-get install -y --no-install-recommends ${apt_packages[@]}

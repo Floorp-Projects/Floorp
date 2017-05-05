@@ -2152,11 +2152,11 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         ss->sniSocketConfig = sm->sniSocketConfig;
     if (sm->sniSocketConfigArg)
         ss->sniSocketConfigArg = sm->sniSocketConfigArg;
-    if (ss->alertReceivedCallback) {
+    if (sm->alertReceivedCallback) {
         ss->alertReceivedCallback = sm->alertReceivedCallback;
         ss->alertReceivedCallbackArg = sm->alertReceivedCallbackArg;
     }
-    if (ss->alertSentCallback) {
+    if (sm->alertSentCallback) {
         ss->alertSentCallback = sm->alertSentCallback;
         ss->alertSentCallbackArg = sm->alertSentCallbackArg;
     }
@@ -2173,61 +2173,82 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
     return fd;
 }
 
-/*
- * Get the user supplied range
- */
-static SECStatus
-ssl3_GetRangePolicy(SSLProtocolVariant protocolVariant, SSLVersionRange *prange)
+SECStatus
+ssl3_GetEffectiveVersionPolicy(SSLProtocolVariant variant,
+                               SSLVersionRange *effectivePolicy)
 {
     SECStatus rv;
-    PRUint32 policy;
-    PRInt32 option;
+    PRUint32 policyFlag;
+    PRInt32 minPolicy, maxPolicy;
 
-    /* only use policy constraints if we've set the apply ssl policy bit */
-    rv = NSS_GetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, &policy);
-    if ((rv != SECSuccess) || !(policy & NSS_USE_POLICY_IN_SSL)) {
+    if (variant == ssl_variant_stream) {
+        effectivePolicy->min = SSL_LIBRARY_VERSION_MIN_SUPPORTED_STREAM;
+        effectivePolicy->max = SSL_LIBRARY_VERSION_MAX_SUPPORTED;
+    } else {
+        effectivePolicy->min = SSL_LIBRARY_VERSION_MIN_SUPPORTED_DATAGRAM;
+        effectivePolicy->max = SSL_LIBRARY_VERSION_MAX_SUPPORTED;
+    }
+
+    rv = NSS_GetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, &policyFlag);
+    if ((rv != SECSuccess) || !(policyFlag & NSS_USE_POLICY_IN_SSL)) {
+        /* Policy is not active, report library extents. */
+        return SECSuccess;
+    }
+
+    rv = NSS_OptionGet(VERSIONS_POLICY_MIN(variant), &minPolicy);
+    if (rv != SECSuccess) {
         return SECFailure;
     }
-    rv = NSS_OptionGet(VERSIONS_POLICY_MIN(protocolVariant), &option);
+    rv = NSS_OptionGet(VERSIONS_POLICY_MAX(variant), &maxPolicy);
     if (rv != SECSuccess) {
-        return rv;
+        return SECFailure;
     }
-    prange->min = (PRUint16)option;
-    rv = NSS_OptionGet(VERSIONS_POLICY_MAX(protocolVariant), &option);
-    if (rv != SECSuccess) {
-        return rv;
+
+    if (minPolicy > effectivePolicy->max ||
+        maxPolicy < effectivePolicy->min ||
+        minPolicy > maxPolicy) {
+        return SECFailure;
     }
-    prange->max = (PRUint16)option;
-    if (prange->max < prange->min) {
-        return SECFailure; /* don't accept an invalid policy */
-    }
+    effectivePolicy->min = PR_MAX(effectivePolicy->min, minPolicy);
+    effectivePolicy->max = PR_MIN(effectivePolicy->max, maxPolicy);
     return SECSuccess;
 }
 
-/*
- * Constrain a single protocol variant's range based on the user policy
+/* 
+ * Assumes that rangeParam values are within the supported boundaries,
+ * but should contain all potentially allowed versions, even if they contain
+ * conflicting versions.
+ * Will return the overlap, or a NONE range if system policy is invalid.
  */
 static SECStatus
-ssl3_ConstrainVariantRangeByPolicy(SSLProtocolVariant protocolVariant)
+ssl3_CreateOverlapWithPolicy(SSLProtocolVariant protocolVariant,
+                             SSLVersionRange *input,
+                             SSLVersionRange *overlap)
 {
-    SSLVersionRange vrange;
-    SSLVersionRange pvrange;
     SECStatus rv;
+    SSLVersionRange effectivePolicyBoundary;
+    SSLVersionRange vrange;
 
-    vrange = *VERSIONS_DEFAULTS(protocolVariant);
-    rv = ssl3_GetRangePolicy(protocolVariant, &pvrange);
-    if (rv != SECSuccess) {
-        return SECSuccess; /* we don't have any policy */
+    PORT_Assert(input != NULL);
+
+    rv = ssl3_GetEffectiveVersionPolicy(protocolVariant,
+                                        &effectivePolicyBoundary);
+    if (rv == SECFailure) {
+        /* SECFailure means internal failure or invalid configuration. */
+        overlap->min = overlap->max = SSL_LIBRARY_VERSION_NONE;
+        return SECFailure;
     }
-    vrange.min = PR_MAX(vrange.min, pvrange.min);
-    vrange.max = PR_MIN(vrange.max, pvrange.max);
-    if (vrange.max >= vrange.min) {
-        *VERSIONS_DEFAULTS(protocolVariant) = vrange;
-    } else {
+
+    vrange.min = PR_MAX(input->min, effectivePolicyBoundary.min);
+    vrange.max = PR_MIN(input->max, effectivePolicyBoundary.max);
+
+    if (vrange.max < vrange.min) {
         /* there was no overlap, turn off range altogether */
-        pvrange.min = pvrange.max = SSL_LIBRARY_VERSION_NONE;
-        *VERSIONS_DEFAULTS(protocolVariant) = pvrange;
+        overlap->min = overlap->max = SSL_LIBRARY_VERSION_NONE;
+        return SECFailure;
     }
+
+    *overlap = vrange;
     return SECSuccess;
 }
 
@@ -2235,16 +2256,17 @@ static PRBool
 ssl_VersionIsSupportedByPolicy(SSLProtocolVariant protocolVariant,
                                SSL3ProtocolVersion version)
 {
-    SSLVersionRange pvrange;
     SECStatus rv;
+    SSLVersionRange effectivePolicyBoundary;
 
-    rv = ssl3_GetRangePolicy(protocolVariant, &pvrange);
-    if (rv == SECSuccess) {
-        if ((version > pvrange.max) || (version < pvrange.min)) {
-            return PR_FALSE; /* disallowed by policy */
-        }
+    rv = ssl3_GetEffectiveVersionPolicy(protocolVariant,
+                                        &effectivePolicyBoundary);
+    if (rv == SECFailure) {
+        /* SECFailure means internal failure or invalid configuration. */
+        return PR_FALSE;
     }
-    return PR_TRUE;
+    return version >= effectivePolicyBoundary.min &&
+           version <= effectivePolicyBoundary.max;
 }
 
 /*
@@ -2254,16 +2276,34 @@ ssl_VersionIsSupportedByPolicy(SSLProtocolVariant protocolVariant,
 SECStatus
 ssl3_ConstrainRangeByPolicy(void)
 {
-    SECStatus rv;
-    rv = ssl3_ConstrainVariantRangeByPolicy(ssl_variant_stream);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    rv = ssl3_ConstrainVariantRangeByPolicy(ssl_variant_datagram);
-    if (rv != SECSuccess) {
-        return rv;
-    }
+    /* We ignore failures in ssl3_CreateOverlapWithPolicy. Although an empty
+     * overlap disables all connectivity, it's an allowed state.
+     */
+    ssl3_CreateOverlapWithPolicy(ssl_variant_stream,
+                                 VERSIONS_DEFAULTS(ssl_variant_stream),
+                                 VERSIONS_DEFAULTS(ssl_variant_stream));
+    ssl3_CreateOverlapWithPolicy(ssl_variant_datagram,
+                                 VERSIONS_DEFAULTS(ssl_variant_datagram),
+                                 VERSIONS_DEFAULTS(ssl_variant_datagram));
     return SECSuccess;
+}
+
+PRBool
+ssl3_VersionIsSupportedByCode(SSLProtocolVariant protocolVariant,
+                              SSL3ProtocolVersion version)
+{
+    switch (protocolVariant) {
+        case ssl_variant_stream:
+            return (version >= SSL_LIBRARY_VERSION_MIN_SUPPORTED_STREAM &&
+                    version <= SSL_LIBRARY_VERSION_MAX_SUPPORTED);
+        case ssl_variant_datagram:
+            return (version >= SSL_LIBRARY_VERSION_MIN_SUPPORTED_DATAGRAM &&
+                    version <= SSL_LIBRARY_VERSION_MAX_SUPPORTED);
+    }
+
+    /* Can't get here */
+    PORT_Assert(PR_FALSE);
+    return PR_FALSE;
 }
 
 PRBool
@@ -2273,33 +2313,7 @@ ssl3_VersionIsSupported(SSLProtocolVariant protocolVariant,
     if (!ssl_VersionIsSupportedByPolicy(protocolVariant, version)) {
         return PR_FALSE;
     }
-    switch (protocolVariant) {
-        case ssl_variant_stream:
-            return (version >= SSL_LIBRARY_VERSION_3_0 &&
-                    version <= SSL_LIBRARY_VERSION_MAX_SUPPORTED);
-        case ssl_variant_datagram:
-            return (version >= SSL_LIBRARY_VERSION_TLS_1_1 &&
-                    version <= SSL_LIBRARY_VERSION_MAX_SUPPORTED);
-        default:
-            /* Can't get here */
-            PORT_Assert(PR_FALSE);
-            return PR_FALSE;
-    }
-}
-
-/* Returns PR_TRUE if the given version range is valid and
-** fully supported; otherwise, returns PR_FALSE.
-*/
-static PRBool
-ssl3_VersionRangeIsValid(SSLProtocolVariant protocolVariant,
-                         const SSLVersionRange *vrange)
-{
-    return vrange &&
-           vrange->min <= vrange->max &&
-           ssl3_VersionIsSupported(protocolVariant, vrange->min) &&
-           ssl3_VersionIsSupported(protocolVariant, vrange->max) &&
-           (vrange->min > SSL_LIBRARY_VERSION_3_0 ||
-            vrange->max < SSL_LIBRARY_VERSION_TLS_1_3);
+    return ssl3_VersionIsSupportedByCode(protocolVariant, version);
 }
 
 const SECItem *
@@ -2325,6 +2339,8 @@ SECStatus
 SSL_VersionRangeGetSupported(SSLProtocolVariant protocolVariant,
                              SSLVersionRange *vrange)
 {
+    SECStatus rv;
+
     if (!vrange) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -2332,20 +2348,31 @@ SSL_VersionRangeGetSupported(SSLProtocolVariant protocolVariant,
 
     switch (protocolVariant) {
         case ssl_variant_stream:
-            vrange->min = SSL_LIBRARY_VERSION_3_0;
+            vrange->min = SSL_LIBRARY_VERSION_MIN_SUPPORTED_STREAM;
             vrange->max = SSL_LIBRARY_VERSION_MAX_SUPPORTED;
-            // We don't allow SSLv3 and TLSv1.3 together.
-            if (vrange->max == SSL_LIBRARY_VERSION_TLS_1_3) {
-                vrange->min = SSL_LIBRARY_VERSION_TLS_1_0;
-            }
+            /* We don't allow SSLv3 and TLSv1.3 together.
+             * However, don't check yet, apply the policy first.
+             * Because if the effective supported range doesn't use TLS 1.3,
+             * then we don't need to increase the minimum. */
             break;
         case ssl_variant_datagram:
-            vrange->min = SSL_LIBRARY_VERSION_TLS_1_1;
+            vrange->min = SSL_LIBRARY_VERSION_MIN_SUPPORTED_DATAGRAM;
             vrange->max = SSL_LIBRARY_VERSION_MAX_SUPPORTED;
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             return SECFailure;
+    }
+
+    rv = ssl3_CreateOverlapWithPolicy(protocolVariant, vrange, vrange);
+    if (rv != SECSuccess) {
+        /* Library default and policy don't overlap. */
+        return rv;
+    }
+
+    /* We don't allow SSLv3 and TLSv1.3 together */
+    if (vrange->max >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        vrange->min = PR_MAX(vrange->min, SSL_LIBRARY_VERSION_TLS_1_0);
     }
 
     return SECSuccess;
@@ -2363,6 +2390,43 @@ SSL_VersionRangeGetDefault(SSLProtocolVariant protocolVariant,
     }
 
     *vrange = *VERSIONS_DEFAULTS(protocolVariant);
+    return ssl3_CreateOverlapWithPolicy(protocolVariant, vrange, vrange);
+}
+
+static PRBool
+ssl3_HasConflictingSSLVersions(const SSLVersionRange *vrange)
+{
+    return (vrange->min <= SSL_LIBRARY_VERSION_3_0 &&
+            vrange->max >= SSL_LIBRARY_VERSION_TLS_1_3);
+}
+
+static SECStatus
+ssl3_CheckRangeValidAndConstrainByPolicy(SSLProtocolVariant protocolVariant,
+                                         SSLVersionRange *vrange)
+{
+    SECStatus rv;
+
+    if (vrange->min > vrange->max ||
+        !ssl3_VersionIsSupportedByCode(protocolVariant, vrange->min) ||
+        !ssl3_VersionIsSupportedByCode(protocolVariant, vrange->max) ||
+        ssl3_HasConflictingSSLVersions(vrange)) {
+        PORT_SetError(SSL_ERROR_INVALID_VERSION_RANGE);
+        return SECFailure;
+    }
+
+    /* Try to adjust the received range using our policy.
+     * If there's overlap, we'll use the (possibly reduced) range.
+     * If there isn't overlap, it's failure. */
+
+    rv = ssl3_CreateOverlapWithPolicy(protocolVariant, vrange, vrange);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+
+    /* We don't allow SSLv3 and TLSv1.3 together */
+    if (vrange->max >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        vrange->min = PR_MAX(vrange->min, SSL_LIBRARY_VERSION_TLS_1_0);
+    }
 
     return SECSuccess;
 }
@@ -2371,13 +2435,21 @@ SECStatus
 SSL_VersionRangeSetDefault(SSLProtocolVariant protocolVariant,
                            const SSLVersionRange *vrange)
 {
-    if (!ssl3_VersionRangeIsValid(protocolVariant, vrange)) {
-        PORT_SetError(SSL_ERROR_INVALID_VERSION_RANGE);
+    SSLVersionRange constrainedRange;
+    SECStatus rv;
+
+    if (!vrange) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
-    *VERSIONS_DEFAULTS(protocolVariant) = *vrange;
+    constrainedRange = *vrange;
+    rv = ssl3_CheckRangeValidAndConstrainByPolicy(protocolVariant,
+                                                  &constrainedRange);
+    if (rv != SECSuccess)
+        return rv;
 
+    *VERSIONS_DEFAULTS(protocolVariant) = constrainedRange;
     return SECSuccess;
 }
 
@@ -2405,24 +2477,33 @@ SSL_VersionRangeGet(PRFileDesc *fd, SSLVersionRange *vrange)
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
 
-    return SECSuccess;
+    return ssl3_CreateOverlapWithPolicy(ss->protocolVariant, vrange, vrange);
 }
 
 SECStatus
 SSL_VersionRangeSet(PRFileDesc *fd, const SSLVersionRange *vrange)
 {
-    sslSocket *ss = ssl_FindSocket(fd);
+    SSLVersionRange constrainedRange;
+    sslSocket *ss;
+    SECStatus rv;
 
+    if (!vrange) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    ss = ssl_FindSocket(fd);
     if (!ss) {
         SSL_DBG(("%d: SSL[%d]: bad socket in SSL_VersionRangeSet",
                  SSL_GETPID(), fd));
         return SECFailure;
     }
 
-    if (!ssl3_VersionRangeIsValid(ss->protocolVariant, vrange)) {
-        PORT_SetError(SSL_ERROR_INVALID_VERSION_RANGE);
-        return SECFailure;
-    }
+    constrainedRange = *vrange;
+    rv = ssl3_CheckRangeValidAndConstrainByPolicy(ss->protocolVariant,
+                                                  &constrainedRange);
+    if (rv != SECSuccess)
+        return rv;
 
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
@@ -2435,7 +2516,7 @@ SSL_VersionRangeSet(PRFileDesc *fd, const SSLVersionRange *vrange)
         return SECFailure;
     }
 
-    ss->vrange = *vrange;
+    ss->vrange = constrainedRange;
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
@@ -3684,7 +3765,10 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     ss->opt.noLocks = !makeLocks;
     ss->vrange = *VERSIONS_DEFAULTS(protocolVariant);
     ss->protocolVariant = protocolVariant;
-
+    /* Ignore overlap failures, because returning NULL would trigger assertion
+     * failures elsewhere. We don't want this scenario to be fatal, it's just
+     * a state where no SSL connectivity is possible. */
+    ssl3_CreateOverlapWithPolicy(ss->protocolVariant, &ss->vrange, &ss->vrange);
     ss->peerID = NULL;
     ss->rTimeout = PR_INTERVAL_NO_TIMEOUT;
     ss->wTimeout = PR_INTERVAL_NO_TIMEOUT;

@@ -34,14 +34,8 @@ queue.filter(task => {
       return false;
     }
 
-    // Remove extra builds w/o libpkix for non-linux64-debug.
-    if (task.symbol == "noLibpkix" &&
-        (task.platform != "linux64" || task.collection != "debug")) {
-      return false;
-    }
-
-    // Make modular builds only on Linux x64.
-    if (task.symbol == "modular" && task.platform != "linux64") {
+    // Make modular builds only on Linux make.
+    if (task.symbol == "modular" && task.collection != "make") {
       return false;
     }
   }
@@ -58,9 +52,29 @@ queue.filter(task => {
     }
   }
 
-  // GYP builds with -Ddisable_libpkix=1 by default.
-  if ((task.collection == "gyp" || task.collection == "asan"
-       || task.platform == "aarch64") && task.tests == "chains") {
+  // Only old make builds have -Ddisable_libpkix=0 and can run chain tests.
+  if (task.tests == "chains" && task.collection != "make" &&
+      task.platform != "windows2012-64") {
+    return false;
+  }
+
+  if (task.group == "Test") {
+    // Don't run test builds on old make platforms
+    if (task.collection == "make") {
+      return false;
+    }
+
+    // Disable mpi tests for now on 32-bit builds (bug 1362392)
+    if (task.platform == "linux32") {
+      return false;
+    }
+  }
+
+
+  // Don't run additional hardware tests on ARM (we don't have anything there).
+  if (task.group == "Cipher" && task.platform == "aarch64" && task.env &&
+      (task.env.NSS_DISABLE_PCLMUL == "1" || task.env.NSS_DISABLE_HW_AES == "1"
+       || task.env.NSS_DISABLE_AVX == "1")) {
     return false;
   }
 
@@ -87,47 +101,51 @@ queue.map(task => {
 
 export default async function main() {
   await scheduleLinux("Linux 32 (opt)", {
-    env: {BUILD_OPT: "1"},
     platform: "linux32",
     image: LINUX_IMAGE
-  });
+  }, "-m32 --opt");
 
   await scheduleLinux("Linux 32 (debug)", {
     platform: "linux32",
     collection: "debug",
     image: LINUX_IMAGE
-  });
+  }, "-m32");
 
   await scheduleLinux("Linux 64 (opt)", {
-    env: {USE_64: "1", BUILD_OPT: "1"},
     platform: "linux64",
     image: LINUX_IMAGE
-  });
+  }, "--opt");
 
   await scheduleLinux("Linux 64 (debug)", {
-    env: {USE_64: "1"},
     platform: "linux64",
     collection: "debug",
     image: LINUX_IMAGE
   });
 
-  await scheduleLinux("Linux 64 (debug, gyp)", {
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh"
-    ],
+  await scheduleLinux("Linux 64 (debug, make)", {
+    env: {USE_64: "1"},
     platform: "linux64",
-    collection: "gyp",
-    image: LINUX_IMAGE
+    image: LINUX_IMAGE,
+    collection: "make",
+    command: [
+       "/bin/bash",
+       "-c",
+       "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
+    ],
   });
 
-  await scheduleLinux("Linux 64 (GYP, ASan, debug)", {
+  await scheduleLinux("Linux 32 (debug, make)", {
+    platform: "linux32",
+    image: LINUX_IMAGE,
+    collection: "make",
     command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh -g -v --ubsan --asan"
+       "/bin/bash",
+       "-c",
+       "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
     ],
+  });
+
+  await scheduleLinux("Linux 64 (ASan, debug)", {
     env: {
       UBSAN_OPTIONS: "print_stacktrace=1",
       NSS_DISABLE_ARENA_FREE_LIST: "1",
@@ -139,7 +157,7 @@ export default async function main() {
     collection: "asan",
     image: LINUX_IMAGE,
     features: ["allowPtrace"],
-  });
+  }, "--ubsan --asan");
 
   await scheduleWindows("Windows 2012 64 (opt)", {
     env: {BUILD_OPT: "1"}
@@ -150,8 +168,6 @@ export default async function main() {
   });
 
   await scheduleFuzzing();
-
-  await scheduleTestBuilds();
 
   await scheduleTools();
 
@@ -188,13 +204,13 @@ export default async function main() {
 
 /*****************************************************************************/
 
-async function scheduleLinux(name, base) {
+async function scheduleLinux(name, base, args = "") {
   // Build base definition.
   let build_base = merge({
     command: [
       "/bin/bash",
       "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh " + args
     ],
     artifacts: {
       public: {
@@ -261,16 +277,17 @@ async function scheduleLinux(name, base) {
   }));
 
   queue.scheduleTask(merge(extra_base, {
-    name: `${name} w/ NSS_DISABLE_LIBPKIX=1`,
-    env: {NSS_DISABLE_LIBPKIX: "1"},
-    symbol: "noLibpkix"
-  }));
-
-  queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ modular builds`,
     env: {NSS_BUILD_MODULAR: "1"},
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh",
+    ],
     symbol: "modular"
   }));
+
+  await scheduleTestBuilds(merge(base, {group: "Test"}), args);
 
   return queue.submit();
 }
@@ -400,21 +417,14 @@ async function scheduleFuzzing() {
 
 /*****************************************************************************/
 
-async function scheduleTestBuilds() {
-  let base = {
-    platform: "linux64",
-    collection: "gyp",
-    group: "Test",
-    image: LINUX_IMAGE
-  };
-
+async function scheduleTestBuilds(base, args = "") {
   // Build base definition.
   let build = merge({
     command: [
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test --ct-verif"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test --ct-verif " + args
     ],
     artifacts: {
       public: {
@@ -425,7 +435,7 @@ async function scheduleTestBuilds() {
     },
     kind: "build",
     symbol: "B",
-    name: "Linux 64 (debug, gyp, test)"
+    name: "Linux 64 (debug, test)"
   }, base);
 
   // The task that builds NSPR+NSS.
@@ -529,7 +539,19 @@ function scheduleTests(task_build, task_cert, test_base) {
     name: "Chains tests", symbol: "Chains", tests: "chains"
   }));
   queue.scheduleTask(merge(no_cert_base, {
-    name: "Cipher tests", symbol: "Cipher", tests: "cipher"
+    name: "Cipher tests", symbol: "Default", tests: "cipher", group: "Cipher"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Cipher tests", symbol: "NoAESNI", tests: "cipher",
+    env: {NSS_DISABLE_HW_AES: "1"}, group: "Cipher"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Cipher tests", symbol: "NoPCLMUL", tests: "cipher",
+    env: {NSS_DISABLE_PCLMUL: "1"}, group: "Cipher"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Cipher tests", symbol: "NoAVX", tests: "cipher",
+    env: {NSS_DISABLE_AVX: "1"}, group: "Cipher"
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "EC tests", symbol: "EC", tests: "ec"

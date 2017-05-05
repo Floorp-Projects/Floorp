@@ -33,6 +33,7 @@
     'ecl/ecp_jm.c',
     'ecl/ecp_mont.c',
     'fipsfreebl.c',
+    'blinit.c',
     'freeblver.c',
     'gcm.c',
     'hmacct.c',

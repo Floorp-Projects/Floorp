@@ -1027,7 +1027,12 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    HandleMemoryAccess(&context, pc, faultingAddress, *instance, activation, ppc);
+    {
+        // HandleMemoryAccess may call startInterrupt, which sets the wasm
+        // resume PC in the runtime.
+        AutoNoteSingleThreadedRegion anstr;
+        HandleMemoryAccess(&context, pc, faultingAddress, *instance, activation, ppc);
+    }
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(cxThread, float_state, (thread_state_t)&context.float_, float_state_count);
