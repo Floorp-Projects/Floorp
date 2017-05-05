@@ -38,8 +38,6 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
   , mLength(aLength)
   , mCurPos(0)
   , mClosed(false)
-  , mAsyncWaitFlags(0)
-  , mAsyncWaitRequestedCount(0)
 {
   MOZ_ASSERT(aInputStream);
   SetSourceStream(aInputStream);
@@ -54,8 +52,6 @@ SlicedInputStream::SlicedInputStream()
   , mLength(0)
   , mCurPos(0)
   , mClosed(false)
-  , mAsyncWaitFlags(0)
-  , mAsyncWaitRequestedCount(0)
 {}
 
 SlicedInputStream::~SlicedInputStream()
