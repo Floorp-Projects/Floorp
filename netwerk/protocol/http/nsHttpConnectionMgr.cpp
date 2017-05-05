@@ -22,6 +22,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsISocketTransport.h"
 #include "nsISSLSocketControl.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "NullHttpTransaction.h"
@@ -133,11 +134,13 @@ nsHttpConnectionMgr::~nsHttpConnectionMgr()
 nsresult
 nsHttpConnectionMgr::EnsureSocketThreadTarget()
 {
-    nsresult rv;
     nsCOMPtr<nsIEventTarget> sts;
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-    if (NS_SUCCEEDED(rv))
-        sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIIOService> ioService = services::GetIOService();
+    if (ioService) {
+        nsCOMPtr<nsISocketTransportService> realSTS =
+            services::GetSocketTransportService();
+        sts = do_QueryInterface(realSTS);
+    }
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -147,7 +150,7 @@ nsHttpConnectionMgr::EnsureSocketThreadTarget()
 
     mSocketThreadTarget = sts;
 
-    return rv;
+    return sts ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult
@@ -3113,8 +3116,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     nsCOMPtr<nsISocketTransport> socketTransport;
     nsCOMPtr<nsISocketTransportService> sts;
 
-    sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    sts = services::GetSocketTransportService();
+    if (!sts) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     LOG(("nsHalfOpenSocket::SetupStreams [this=%p ent=%s] "
          "setup routed transport to origin %s:%d via %s:%d\n",
