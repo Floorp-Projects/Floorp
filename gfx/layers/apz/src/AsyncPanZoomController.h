@@ -344,6 +344,11 @@ public:
   bool IsPannable() const;
 
   /**
+   * Returns whether this APZC represents a scroll info layer.
+   */
+  bool IsScrollInfoLayer() const;
+
+  /**
    * Returns true if the APZC has been flung with a velocity greater than the
    * stop-on-tap fling velocity threshold (which is pref-controlled).
    */
