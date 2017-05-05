@@ -16,14 +16,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(TEST_URL, true);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   const REQUEST_DATA = [
     {
@@ -54,12 +54,12 @@ add_task(function* () {
 
   let index = 0;
   for (let request of REQUEST_DATA) {
-    let item = getSortedRequests(gStore.getState()).get(index);
+    let item = getSortedRequests(store.getState()).get(index);
 
     info(`Verifying request #${index}`);
     yield verifyRequestItemTarget(
       document,
-      getDisplayedRequests(gStore.getState()),
+      getDisplayedRequests(store.getState()),
       item,
       request.method,
       request.uri,

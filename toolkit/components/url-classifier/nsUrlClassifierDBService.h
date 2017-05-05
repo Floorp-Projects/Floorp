@@ -100,8 +100,9 @@ public:
   NS_DECL_NSIURICLASSIFIER
   NS_DECL_NSIOBSERVER
 
+  bool CanComplete(const nsACString &tableName);
   bool GetCompleter(const nsACString& tableName,
-                      nsIUrlClassifierHashCompleter** completer);
+                    nsIUrlClassifierHashCompleter** completer);
   nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray *results);
   nsresult CacheMisses(mozilla::safebrowsing::PrefixArray *results);
 
@@ -190,7 +191,9 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
 
-  nsresult Init(uint32_t aGethashNoise, nsCOMPtr<nsIFile> aCacheDir);
+  nsresult Init(uint32_t aGethashNoise,
+                nsCOMPtr<nsIFile> aCacheDir,
+                nsUrlClassifierDBService* aDBService);
 
   // Queue a lookup for the worker to perform, called in the main thread.
   // tables is a comma-separated list of tables to query
@@ -267,6 +270,8 @@ private:
 
   // Directory where to store the SB databases.
   nsCOMPtr<nsIFile> mCacheDir;
+
+  RefPtr<nsUrlClassifierDBService> mDBService;
 
   // XXX: maybe an array of autoptrs.  Or maybe a class specifically
   // storing a series of updates.

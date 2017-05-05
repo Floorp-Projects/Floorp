@@ -331,6 +331,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
                                             nsChangeHint* aOutChangeHint,
                                             nsRestyleHint* aOutRestyleHint)
 {
+  MOZ_ASSERT(!mInStyleRefresh);
   MOZ_ASSERT(aOutChangeHint);
   MOZ_ASSERT(aOutRestyleHint);
 

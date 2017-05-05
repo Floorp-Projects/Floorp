@@ -359,10 +359,7 @@ def set_target(config, tests):
             else:
                 target = 'target.apk'
         elif build_platform.startswith('win'):
-            target = 'firefox-{}.en-US.{}.zip'.format(
-                get_firefox_version(),
-                build_platform.split('/')[0]
-            )
+            target = 'target.zip'
         else:
             target = 'target.tar.bz2'
         test['mozharness']['build-artifact-name'] = 'public/build/' + target
@@ -624,9 +621,9 @@ def remove_linux_pgo_try_talos(config, tests):
     """linux64-pgo talos tests don't run on try."""
     def predicate(test):
         return not(
-            test['test-platform'] == 'linux64-pgo/opt'
-            and (test['suite'] == 'talos' or test['suite'] == 'awsy')
-            and config.params['project'] == 'try'
+            test['test-platform'] == 'linux64-pgo/opt' and
+            (test['suite'] == 'talos' or test['suite'] == 'awsy') and
+            config.params['project'] == 'try'
         )
     for test in filter(predicate, tests):
         yield test
