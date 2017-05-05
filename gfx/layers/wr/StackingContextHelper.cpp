@@ -23,12 +23,14 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const Maybe<gfx::Matrix4x4>& aTransform)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->BoundsForStackingContext();
+  WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  mOffsetToParent.x = scBounds.x;
+  mOffsetToParent.y = scBounds.y;
   Layer* layer = aLayer->GetLayer();
-  gfx::Matrix4x4 transform = aTransform.valueOr(layer->GetTransform());
-  mBuilder->PushStackingContext(aParentSC.ToRelativeWrRect(scBounds),
+  mTransform = aTransform.valueOr(layer->GetTransform());
+  mBuilder->PushStackingContext(scBounds,
                                 1.0f,
-                                transform,
+                                mTransform,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()));
   mOrigin = aLayer->Bounds().TopLeft();
 }
@@ -41,8 +43,13 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              gfx::Matrix4x4* aTransformPtr)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->BoundsForStackingContext();
-  mBuilder->PushStackingContext(aParentSC.ToRelativeWrRect(scBounds),
+  WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  mOffsetToParent.x = scBounds.x;
+  mOffsetToParent.y = scBounds.y;
+  if (aTransformPtr) {
+    mTransform = *aTransformPtr;
+  }
+  mBuilder->PushStackingContext(scBounds,
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
@@ -79,6 +86,14 @@ WrRect
 StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const
 {
   return wr::ToWrRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
+}
+
+gfx::Matrix4x4
+StackingContextHelper::TransformToParentSC() const
+{
+  gfx::Matrix4x4 inv = mTransform.Inverse();
+  inv.PostTranslate(-mOffsetToParent.x, -mOffsetToParent.y, 0);
+  return inv;
 }
 
 } // namespace layers

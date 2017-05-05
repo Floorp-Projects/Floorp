@@ -98,7 +98,7 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
   DumpLayerInfo("PaintedLayer", rect);
 
   LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegion clip = aBuilder.BuildClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));
