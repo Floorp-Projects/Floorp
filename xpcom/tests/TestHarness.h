@@ -13,6 +13,7 @@
 #define TestHarness_h__
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "prenv.h"
 #include "nsComponentManagerUtils.h"
@@ -39,7 +40,7 @@ static uint32_t gFailCount = 0;
  * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void fail(const char* msg, ...)
+MOZ_FORMAT_PRINTF(1, 2) void fail(const char* msg, ...)
 {
   va_list ap;
 
@@ -58,7 +59,7 @@ void fail(const char* msg, ...)
  * "TEST-PASS " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void passed(const char* msg, ...)
+MOZ_FORMAT_PRINTF(1, 2) void passed(const char* msg, ...)
 {
   va_list ap;
 
@@ -88,7 +89,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       nsresult rv = NS_InitXPCOM2(&mServMgr, nullptr, this);
       if (NS_FAILED(rv))
       {
-        fail("NS_InitXPCOM2 returned failure code 0x%x", rv);
+        fail("NS_InitXPCOM2 returned failure code 0x%" PRIx32, static_cast<uint32_t>(rv));
         mServMgr = nullptr;
         return;
       }
@@ -120,7 +121,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
         nsresult rv = NS_ShutdownXPCOM(nullptr);
         if (NS_FAILED(rv))
         {
-          fail("XPCOM shutdown failed with code 0x%x", rv);
+          fail("XPCOM shutdown failed with code 0x%" PRIx32, static_cast<uint32_t>(rv));
           exit(1);
         }
       }
