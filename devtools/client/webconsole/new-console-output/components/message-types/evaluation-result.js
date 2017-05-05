@@ -20,7 +20,6 @@ EvaluationResult.propTypes = {
   message: PropTypes.object.isRequired,
   indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
-  serviceContainer: PropTypes.object,
 };
 
 EvaluationResult.defaultProps = {

@@ -38,9 +38,7 @@ var NetInfoBody = React.createClass({
     data: PropTypes.shape({
       request: PropTypes.object.isRequired,
       response: PropTypes.object.isRequired
-    }),
-    // Service to enable the source map feature.
-    sourceMapService: PropTypes.object,
+    })
   },
 
   displayName: "NetInfoBody",
@@ -78,7 +76,7 @@ var NetInfoBody = React.createClass({
   },
 
   getTabPanels() {
-    let { actions, sourceMapService } = this.props;
+    let actions = this.props.actions;
     let data = this.state.data;
     let {request} = data;
 
@@ -155,8 +153,7 @@ var NetInfoBody = React.createClass({
           title: Locale.$STR("netRequest.callstack")},
           StackTraceTab({
             data: data,
-            actions: actions,
-            sourceMapService: sourceMapService,
+            actions: actions
           })
         )
       );

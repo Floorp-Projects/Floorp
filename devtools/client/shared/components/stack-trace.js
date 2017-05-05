@@ -35,16 +35,13 @@ const StackTrace = createClass({
     stacktrace: PropTypes.array.isRequired,
     onViewSourceInDebugger: PropTypes.func.isRequired,
     onViewSourceInScratchpad: PropTypes.func,
-    // Service to enable the source map feature.
-    sourceMapService: PropTypes.object,
   },
 
   render() {
     let {
       stacktrace,
       onViewSourceInDebugger,
-      onViewSourceInScratchpad,
-      sourceMapService,
+      onViewSourceInScratchpad
     } = this.props;
 
     let frames = [];
@@ -70,8 +67,7 @@ const StackTrace = createClass({
         showFullSourceUrl: true,
         onClick: (/^Scratchpad\/\d+$/.test(source))
           ? onViewSourceInScratchpad
-          : onViewSourceInDebugger,
-        sourceMapService,
+          : onViewSourceInDebugger
       }), "\n");
     });
 
