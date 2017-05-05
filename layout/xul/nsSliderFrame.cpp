@@ -332,6 +332,21 @@ nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
+static bool
+UsesCustomScrollbarMediator(nsIFrame* scrollbarBox) {
+  if (nsScrollbarFrame* scrollbarFrame = do_QueryFrame(scrollbarBox)) {
+    if (nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator()) {
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(mediator);
+      // The scrollbar mediator is not the scroll frame.
+      // That means this scroll frame has a custom scrollbar mediator.
+      if (!scrollFrame) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 void
 nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
@@ -376,6 +391,9 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       CSSCoord thumbLength = NSAppUnitsToFloatPixels(
           isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
 
+      nsIFrame* scrollbarBox = GetScrollbar();
+      bool isAsyncDraggable = !UsesCustomScrollbarMediator(scrollbarBox);
+
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
       nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
@@ -399,7 +417,8 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                           flags, scrollTargetId,
                           ScrollThumbData{scrollDirection,
                                           GetThumbRatio(),
-                                          thumbLength}));
+                                          thumbLength,
+                                          isAsyncDraggable}));
 
       return;
     }
@@ -1036,18 +1055,9 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
-  nsScrollbarFrame* scrollbarFrame = do_QueryFrame(scrollbarBox);
-  if (!scrollbarFrame) {
+  // Custom scrollbar mediators are not supported in the APZ codepath.
+  if (UsesCustomScrollbarMediator(scrollbarBox)) {
     return;
-  }
-  if (nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator()) {
-    nsIScrollableFrame* scrollFrame = do_QueryFrame(mediator);
-    // The scrollbar mediator is not the scroll frame.
-    // That means this scroll frame has a custom scrollbar mediator.
-    // That's not supported in the APZ codepath.
-    if (!scrollFrame) {
-      return;
-    }
   }
 
   bool isHorizontal = IsXULHorizontal();
