@@ -73,8 +73,11 @@ def main(argv):
                   action='store_true',
                   help="don't print output for failed tests"
                   " (no-op with --show-output)")
-    op.add_option('-x', '--exclude', dest='exclude', action='append',
+    op.add_option('-x', '--exclude', dest='exclude',
+                  default=[], action='append',
                   help='exclude given test dir or path')
+    op.add_option('--exclude-from', dest='exclude_from', type=str,
+                  help='exclude each test dir or path in FILE')
     op.add_option('--slow', dest='run_slow', action='store_true',
                   help='also run tests marked as slow')
     op.add_option('--no-slow', dest='run_slow', action='store_false',
@@ -234,10 +237,11 @@ def main(argv):
 
     # If code coverage is enabled, exclude tests. (bug 1347245)
     if os.getenv('GCOV_PREFIX') is not None:
-        if options.exclude:
-            options.exclude += ['asm.js/testSIMD.js']
-        else:
-            options.exclude = ['asm.js/testSIMD.js']
+        options.exclude += ['asm.js/testSIMD.js']
+
+    if options.exclude_from:
+        with open(options.exclude_from) as fh:
+            options.exclude += [_.strip() for _ in fh]
 
     if options.exclude:
         exclude_list = []
