@@ -27,7 +27,7 @@ add_task(function* test_telemetry() {
   // There is no good way to make sure that the parent received the histogram entries from the child processes.
   // Let's stick to the ugly, spinning the event loop until we have a good approach (Bug 1357509).
   yield BrowserTestUtils.waitForCondition(() => {
-    return histogram.snapshot().counts[5] > snap1.counts[5];
+    return histogram.snapshot().counts[4] > snap1.counts[4];
   });
 
   Assert.ok(true);
