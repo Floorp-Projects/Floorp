@@ -18,7 +18,7 @@ struct PRFileDesc;
 [ptr] native PRFileDescPtr(PRFileDesc);
 [ptr] native nsASocketHandlerPtr(nsASocketHandler);
 
-[scriptable, uuid(ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1)]
+[builtinclass, scriptable, uuid(ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1)]
 interface nsISocketTransportService : nsISupports 
 {
     /**
@@ -119,7 +119,7 @@ interface nsISocketTransportService : nsISupports
     [noscript] void notifyWhenCanAttachSocket(in nsIRunnable aEvent);
 };
 
-[scriptable, uuid(c5204623-5b58-4a16-8b2e-67c34dd02e3f)]
+[builtinclass, scriptable, uuid(c5204623-5b58-4a16-8b2e-67c34dd02e3f)]
 interface nsIRoutedSocketTransportService : nsISocketTransportService
 {
     // use this instead of createTransport when you have a transport
