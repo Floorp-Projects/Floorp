@@ -11,7 +11,6 @@
  */
 
 [Constructor,
- Constructor(AudioChannel audioChannelType),
  Pref="dom.webaudio.enabled"]
 interface AudioContext : BaseAudioContext {
 

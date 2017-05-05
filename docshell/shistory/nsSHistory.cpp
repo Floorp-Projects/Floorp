@@ -5,41 +5,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSHistory.h"
+
 #include <algorithm>
 
-// Helper Classes
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPtr.h"
-
-// Interfaces Needed
-#include "nsILayoutHistoryState.h"
+#include "nsCOMArray.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDocShell.h"
+#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIURI.h"
-#include "nsIContentViewer.h"
+#include "nsILayoutHistoryState.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
+#include "nsISHContainer.h"
+#include "nsISHEntry.h"
+#include "nsISHistoryListener.h"
+#include "nsISHTransaction.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsTArray.h"
-#include "nsCOMArray.h"
-#include "nsDocShell.h"
+#include "prsystem.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
-#include "nsISHEntry.h"
-#include "nsISHTransaction.h"
-#include "nsISHistoryListener.h"
-#include "nsComponentManagerUtils.h"
-#include "nsNetUtil.h"
-
-// For calculating max history entries and max cachable contentviewers
-#include "prsystem.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/dom/TabGroup.h"
 
 using namespace mozilla;
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 #define PREF_SHISTORY_MAX_TOTAL_VIEWERS "browser.sessionhistory.max_total_viewers"
+#define CONTENT_VIEWER_TIMEOUT_SECONDS "browser.sessionhistory.contentViewerTimeout"
+
+// Default this to time out unused content viewers after 30 minutes
+#define CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT (30 * 60)
 
 static const char* kObservedPrefs[] = {
   PREF_SHISTORY_SIZE,
@@ -233,10 +235,10 @@ nsSHistory::nsSHistory()
   : mIndex(-1)
   , mLength(0)
   , mRequestedIndex(-1)
-  , mIsPartial(false)
   , mGlobalIndexOffset(0)
   , mEntriesInFollowingPartialHistories(0)
   , mRootDocShell(nullptr)
+  , mIsPartial(false)
 {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
@@ -254,6 +256,7 @@ NS_INTERFACE_MAP_BEGIN(nsSHistory)
   NS_INTERFACE_MAP_ENTRY(nsISHistory)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsISHistoryInternal)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 // static
@@ -381,6 +384,8 @@ NS_IMETHODIMP
 nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 {
   NS_ENSURE_ARG(aSHEntry);
+
+  aSHEntry->SetSHistory(this);
 
   // If we have a root docshell, update the docshell id of the root shentry to
   // match the id of that docshell
@@ -1299,6 +1304,30 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aEntry)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHistory::AddToExpirationTracker(nsIBFCacheEntry* aEntry)
+{
+  RefPtr<nsSHEntryShared> entry = static_cast<nsSHEntryShared*>(aEntry);
+  if (!mHistoryTracker || !entry) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mHistoryTracker->AddObject(entry);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::RemoveFromExpirationTracker(nsIBFCacheEntry* aEntry)
+{
+  RefPtr<nsSHEntryShared> entry = static_cast<nsSHEntryShared*>(aEntry);
+  if (!mHistoryTracker || !entry) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mHistoryTracker->RemoveObject(entry);
+  return NS_OK;
+}
+
 // Evicts all content viewers in all history objects.  This is very
 // inefficient, because it requires a linear search through all SHistory
 // objects for each viewer to be evicted.  However, this method is called
@@ -1899,6 +1928,23 @@ NS_IMETHODIMP
 nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
 {
   mRootDocShell = aDocShell;
+
+  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
+  // target to the tabGroup.
+  if (mRootDocShell) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
+    if (!win) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
+    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
+      this,
+      mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
+                                    CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
+      tabGroup->EventTargetFor(mozilla::TaskCategory::Other));
+  }
+
   return NS_OK;
 }
 

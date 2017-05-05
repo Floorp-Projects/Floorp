@@ -2,10 +2,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This test asserts that the new debugger works from the browser toolbox process
+// Its pass a big piece of Javascript string to the browser toolbox process via
+// MOZ_TOOLBOX_TEST_SCRIPT env variable. It does that as test resources fetched from
+// chrome://mochitests/ package isn't available from browser toolbox process.
+
 // On debug test runner, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
 const { setInterval, clearInterval } = require("sdk/timers");
+const { fetch } = require("devtools/shared/DevToolsUtils");
+
+const debuggerHeadURL = CHROME_URL_ROOT + "../../debugger/new/test/mochitest/head.js";
+const testScriptURL = CHROME_URL_ROOT + "test_browser_toolbox_debugger.js";
 
 add_task(function* runTest() {
   yield new Promise(done => {
@@ -41,73 +50,64 @@ add_task(function* runTest() {
   // which lives in another process. So do not try to use any scope variable!
   let env = Components.classes["@mozilla.org/process/environment;1"]
                       .getService(Components.interfaces.nsIEnvironment);
-  let testScript = function () {
-    const { Task } = Components.utils.import("resource://gre/modules/Task.jsm", {});
-    dump("Opening the browser toolbox and debugger panel\n");
-    let window, document;
-    let testUrl = "http://mozilla.org/browser-toolbox-test.js";
-    Task.spawn(function* () {
-      dump("Waiting for debugger load\n");
-      let panel = yield toolbox.selectTool("jsdebugger");
-      let window = panel.panelWin;
-      let document = window.document;
-
-      yield window.once(window.EVENTS.SOURCE_SHOWN);
-
-      dump("Loaded, selecting the test script to debug\n");
-      let item = document.querySelector(`.dbg-source-item[tooltiptext="${testUrl}"]`);
-      let onSourceShown = window.once(window.EVENTS.SOURCE_SHOWN);
-      item.click();
-      yield onSourceShown;
-
-      dump("Selected, setting a breakpoint\n");
-      let { Sources, editor } = window.DebuggerView;
-      let onBreak = window.once(window.EVENTS.FETCHED_SCOPES);
-      editor.emit("gutterClick", 1);
-      yield onBreak;
-
-      dump("Paused, asserting breakpoint position\n");
-      let url = Sources.selectedItem.attachment.source.url;
-      if (url != testUrl) {
-        throw new Error("Breaking on unexpected script: " + url);
+  // First inject a very minimal head, with simplest assertion methods
+  // and very common globals
+  let testHead = (function () {
+    const info = msg => dump(msg + "\n");
+    const is = (a, b, description) => {
+      let msg = "'" + JSON.stringify(a) + "' is equal to '" + JSON.stringify(b) + "'";
+      if (description) {
+        msg += " - " + description;
       }
-      let cursor = editor.getCursor();
-      if (cursor.line != 1) {
-        throw new Error("Breaking on unexpected line: " + cursor.line);
+      if (a !== b) {
+        msg = "FAILURE: " + msg;
+        dump(msg + "\n");
+        throw new Error(msg);
+      } else {
+        msg = "SUCCESS: " + msg;
+        dump(msg + "\n");
       }
-
-      dump("Now, stepping over\n");
-      let stepOver = window.document.querySelector("#step-over");
-      let onFetchedScopes = window.once(window.EVENTS.FETCHED_SCOPES);
-      stepOver.click();
-      yield onFetchedScopes;
-
-      dump("Stepped, asserting step position\n");
-      url = Sources.selectedItem.attachment.source.url;
-      if (url != testUrl) {
-        throw new Error("Stepping on unexpected script: " + url);
+    };
+    const ok = (a, description) => {
+      let msg = "'" + JSON.stringify(a) + "' is true";
+      if (description) {
+        msg += " - " + description;
       }
-      cursor = editor.getCursor();
-      if (cursor.line != 2) {
-        throw new Error("Stepping on unexpected line: " + cursor.line);
+      if (!a) {
+        msg = "FAILURE: " + msg;
+        dump(msg + "\n");
+        throw new Error(msg);
+      } else {
+        msg = "SUCCESS: " + msg;
+        dump(msg + "\n");
       }
+    };
+    const registerCleanupFunction = () => {};
 
-      dump("Resume script execution\n");
-      let resume = window.document.querySelector("#resume");
-      let onResume = toolbox.target.once("thread-resumed");
-      resume.click();
-      yield onResume;
+    const Cu = Components.utils;
+    const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  }).toSource().replace(/^\(function \(\) \{|\}\)$/g, "");
+  // Stringify testHead's function and remove `(function {` prefix and `})` suffix
+  // to ensure inner symbols gets exposed to next pieces of code
 
-      dump("Close the browser toolbox\n");
-      toolbox.destroy();
+  // Then inject new debugger head file
+  let { content } = yield fetch(debuggerHeadURL);
+  let debuggerHead = content;
+  // We remove its import of shared-head, which isn't available in browser toolbox process
+  // And isn't needed thanks to testHead's symbols
+  debuggerHead = debuggerHead.replace(/Services.scriptloader.loadSubScript[^\)]*\);/, "");
 
-    }).catch(error => {
-      dump("Error while running code in the browser toolbox process:\n");
-      dump(error + "\n");
-      dump("stack:\n" + error.stack + "\n");
-    });
-  };
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + testScript);
+  // Finally, fetch the debugger test script that is going to be execute in the browser
+  // toolbox process
+  let testScript = (yield fetch(testScriptURL)).content;
+  let source =
+    "try {" + testHead + debuggerHead + testScript + "} catch (e) {" +
+    "  dump('Exception: '+ e + ' at ' + e.fileName + ':' + " +
+    "       e.lineNumber + '\\nStack: ' + e.stack + '\\n');" +
+    "}";
+  env.set("MOZ_TOOLBOX_TEST_SCRIPT", source);
   registerCleanupFunction(() => {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });

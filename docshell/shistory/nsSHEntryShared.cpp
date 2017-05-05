@@ -6,20 +6,21 @@
 
 #include "nsSHEntryShared.h"
 
-#include "nsIDOMDocument.h"
-#include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
-#include "nsIDocument.h"
-#include "nsIWebNavigation.h"
+#include "nsArray.h"
+#include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsDocShellEditorData.h"
-#include "nsThreadUtils.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsILayoutHistoryState.h"
+#include "nsISHistory.h"
+#include "nsISHistoryInternal.h"
+#include "nsIWebNavigation.h"
+#include "nsThreadUtils.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
-#include "nsArray.h"
 
 namespace dom = mozilla::dom;
 
@@ -29,78 +30,27 @@ uint64_t gSHEntrySharedID = 0;
 
 } // namespace
 
-#define CONTENT_VIEWER_TIMEOUT_SECONDS "browser.sessionhistory.contentViewerTimeout"
-// Default this to time out unused content viewers after 30 minutes
-#define CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT (30 * 60)
-
-typedef nsExpirationTracker<nsSHEntryShared, 3> HistoryTrackerBase;
-class HistoryTracker final : public HistoryTrackerBase
-{
-public:
-  explicit HistoryTracker(uint32_t aTimeout)
-    : HistoryTrackerBase(1000 * aTimeout / 2, "HistoryTracker")
-  {
-  }
-
-protected:
-  virtual void NotifyExpired(nsSHEntryShared* aObj)
-  {
-    RemoveObject(aObj);
-    aObj->Expire();
-  }
-};
-
-static HistoryTracker* gHistoryTracker = nullptr;
-
-void
-nsSHEntryShared::EnsureHistoryTracker()
-{
-  if (!gHistoryTracker) {
-    // nsExpirationTracker doesn't allow one to change the timer period,
-    // so just set it once when the history tracker is used for the first time.
-    gHistoryTracker = new HistoryTracker(
-      mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
-                                    CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT));
-  }
-}
-
 void
 nsSHEntryShared::Shutdown()
 {
-  delete gHistoryTracker;
-  gHistoryTracker = nullptr;
 }
 
 nsSHEntryShared::nsSHEntryShared()
   : mDocShellID({0})
+  , mLastTouched(0)
+  , mID(gSHEntrySharedID++)
+  , mViewerBounds(0, 0, 0, 0)
   , mIsFrameNavigation(false)
   , mSaveLayoutState(true)
   , mSticky(true)
   , mDynamicallyCreated(false)
-  , mLastTouched(0)
-  , mID(gSHEntrySharedID++)
   , mExpired(false)
-  , mViewerBounds(0, 0, 0, 0)
 {
 }
 
 nsSHEntryShared::~nsSHEntryShared()
 {
   RemoveFromExpirationTracker();
-
-#ifdef DEBUG
-  if (gHistoryTracker) {
-    // Check that we're not still on track to expire.  We shouldn't be, because
-    // we just removed ourselves!
-    nsExpirationTracker<nsSHEntryShared, 3>::Iterator iterator(gHistoryTracker);
-
-    nsSHEntryShared* elem;
-    while ((elem = iterator.Next()) != nullptr) {
-      NS_ASSERTION(elem != this, "Found dead entry still in the tracker!");
-    }
-  }
-#endif
-
   if (mContentViewer) {
     RemoveFromBFCacheSync();
   }
@@ -131,8 +81,9 @@ nsSHEntryShared::Duplicate(nsSHEntryShared* aEntry)
 void
 nsSHEntryShared::RemoveFromExpirationTracker()
 {
-  if (gHistoryTracker && GetExpirationState()->IsTracked()) {
-    gHistoryTracker->RemoveObject(this);
+  nsCOMPtr<nsISHistoryInternal> shistory = do_QueryReferent(mSHistory);
+  if (shistory && GetExpirationState()->IsTracked()) {
+    shistory->RemoveFromExpirationTracker(this);
   }
 }
 
@@ -173,34 +124,6 @@ nsSHEntryShared::DropPresentationState()
   mEditorData = nullptr;
 }
 
-void
-nsSHEntryShared::Expire()
-{
-  // This entry has timed out. If we still have a content viewer, we need to
-  // evict it.
-  if (!mContentViewer) {
-    return;
-  }
-  nsCOMPtr<nsIDocShell> container;
-  mContentViewer->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
-  if (!treeItem) {
-    return;
-  }
-  // We need to find the root DocShell since only that object has an
-  // SHistory and we need the SHistory to evict content viewers
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(root);
-  nsCOMPtr<nsISHistory> history;
-  webNav->GetSessionHistory(getter_AddRefs(history));
-  nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
-  if (!historyInt) {
-    return;
-  }
-  historyInt->EvictExpiredContentViewerForEntry(this);
-}
-
 nsresult
 nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
 {
@@ -214,8 +137,13 @@ nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
   mContentViewer = aViewer;
 
   if (mContentViewer) {
-    EnsureHistoryTracker();
-    gHistoryTracker->AddObject(this);
+    // mSHistory is only set for root entries, but in general bfcache only
+    // applies to root entries as well. BFCache for subframe navigation has been
+    // disabled since 2005 in bug 304860.
+    nsCOMPtr<nsISHistoryInternal> shistory = do_QueryReferent(mSHistory);
+    if (shistory) {
+      shistory->AddToExpirationTracker(this);
+    }
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));

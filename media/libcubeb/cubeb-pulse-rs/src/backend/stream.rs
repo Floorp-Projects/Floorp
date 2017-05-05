@@ -190,7 +190,7 @@ impl<'ctx> Stream<'ctx> {
                 return Err(cubeb::ERROR);
             }
 
-            if cubeb::g_cubeb_log_level != cubeb::LogLevel::Disabled {
+            if cubeb::log_enabled() {
                 if output_stream_params.is_some() {
                     let output_att = *pa_stream_get_buffer_attr(stm.output_stream);
                     log!("Output buffer attributes maxlength %u, tlength %u, \

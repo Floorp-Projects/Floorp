@@ -47,7 +47,7 @@ protected:
 
 class AppendBufferTask : public SourceBufferTask {
 public:
-  AppendBufferTask(MediaByteBuffer* aData,
+  AppendBufferTask(already_AddRefed<MediaByteBuffer> aData,
                    const SourceBufferAttributes& aAttributes)
   : mBuffer(aData)
   , mAttributes(aAttributes)
