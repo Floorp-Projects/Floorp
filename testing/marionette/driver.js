@@ -1280,7 +1280,7 @@ GeckoDriver.prototype.getWindowHandle = function (cmd, resp) {
  *     Unique window handles.
  */
 GeckoDriver.prototype.getWindowHandles = function (cmd, resp) {
-  return this.windowHandles;
+  return this.windowHandles.map(String);
 }
 
 /**
@@ -1313,7 +1313,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function (cmd, resp) {
  *     Unique window handles.
  */
 GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
-  return this.chromeWindowHandles;
+  return this.chromeWindowHandles.map(String);
 }
 
 /**
