@@ -166,7 +166,7 @@ test_description_schema = Schema({
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.
     Required('docker-image', default={'in-tree': 'desktop-test'}): optionally_keyed_by(
-        'test-platform', 'test-platform-phylum',
+        'test-platform',
         Any(
             # a raw Docker image path (repo/image:tag)
             basestring,
@@ -193,7 +193,7 @@ test_description_schema = Schema({
 
     # What to run
     Required('mozharness'): optionally_keyed_by(
-        'test-platform', 'test-platform-phylum', {
+        'test-platform', {
             # the mozharness script used to run this task
             Required('script'): basestring,
 
