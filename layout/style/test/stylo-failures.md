@@ -159,8 +159,6 @@ to mochitest command.
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
-  * SVG-only values of pointer-events not recognized
-    * test_value_storage.html `pointer-events` [1]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
     * test_computed_style.html `css-color-4` [2]
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
