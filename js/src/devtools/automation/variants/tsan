@@ -5,7 +5,7 @@
     "compiler": "clang",
     "env": {
         "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer",
-        "JITTEST_EXTRA_ARGS": "--jitflags=debug --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt --unusable-error-status",
+        "JITTEST_EXTRA_ARGS": "--jitflags=tsan --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt --unusable-error-status",
         "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt",
         "TSAN_OPTIONS": "exitcode=0 log_path={OUTDIR}/sanitize_log"
     },
