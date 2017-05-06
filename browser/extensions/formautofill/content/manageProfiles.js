@@ -139,6 +139,7 @@ ManageProfileDialog.prototype = {
     //       as option text. Possibly improve the algorithm in
     //       ProfileAutoCompleteResult.jsm and reuse it here.
     const fieldOrder = [
+      "name",
       "street-address",  // Street address
       "address-level2",  // City/Town
       "organization",    // Company or organization name
@@ -169,7 +170,7 @@ ManageProfileDialog.prototype = {
    */
   openEditDialog(profile) {
     window.openDialog(EDIT_PROFILE_URL, null,
-                      "chrome,centerscreen,modal,width=600,height=370",
+                      "chrome,centerscreen,modal,width=600,height=450",
                       profile);
   },
 
