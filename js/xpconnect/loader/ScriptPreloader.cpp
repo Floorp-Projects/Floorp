@@ -546,6 +546,12 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         return;
     }
 
+    // Don't bother caching files that belong to the mochitest harness.
+    NS_NAMED_LITERAL_CSTRING(mochikitPrefix, "chrome://mochikit/");
+    if (StringHead(url, mochikitPrefix.Length()) == mochikitPrefix) {
+        return;
+    }
+
     bool exists = mScripts.Get(cachePath);
 
     CachedScript* restored = nullptr;
