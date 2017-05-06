@@ -29,7 +29,6 @@
 #define DELAYED_STARTUP_TOPIC "browser-delayed-startup-finished"
 #define CLEANUP_TOPIC "xpcom-shutdown"
 #define SHUTDOWN_TOPIC "quit-application-granted"
-#define CACHE_FLUSH_TOPIC "startupcache-invalidate"
 
 namespace mozilla {
 namespace {
@@ -125,7 +124,6 @@ ScriptPreloader::ScriptPreloader()
     obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false);
     obs->AddObserver(this, SHUTDOWN_TOPIC, false);
     obs->AddObserver(this, CLEANUP_TOPIC, false);
-    obs->AddObserver(this, CACHE_FLUSH_TOPIC, false);
 
     AutoSafeJSAPI jsapi;
     JS_AddExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
@@ -163,44 +161,6 @@ ScriptPreloader::Cleanup()
     UnregisterWeakMemoryReporter(this);
 }
 
-void
-ScriptPreloader::FlushScripts(LinkedList<CachedScript>& scripts)
-{
-    for (auto next = scripts.getFirst(); next; ) {
-        auto script = next;
-        next = script->getNext();
-
-        // We can only purge finished scripts here. Async scripts that are
-        // still being parsed off-thread have a non-refcounted reference to
-        // this script, which needs to stay alive until they finish parsing.
-        if (script->mReadyToExecute) {
-            script->Cancel();
-            script->remove();
-            delete script;
-        }
-    }
-}
-
-void
-ScriptPreloader::FlushCache()
-{
-    MonitorAutoLock mal(mMonitor);
-
-    FlushScripts(mSavedScripts);
-    FlushScripts(mRestoredScripts);
-
-    // If we've already finished saving the cache at this point, start a new
-    // delayed save operation. This will write out an empty cache file in place
-    // of any cache file we've already written out this session, which will
-    // prevent us from falling back to the current session's cache file on the
-    // next startup.
-    if (mSaveComplete) {
-        mSaveComplete = false;
-
-        Unused << NS_NewNamedThread("SaveScripts",
-                                    getter_AddRefs(mSaveThread), this);
-    }
-}
 
 nsresult
 ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t* data)
@@ -219,8 +179,6 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
         ForceWriteCacheFile();
     } else if (!strcmp(topic, CLEANUP_TOPIC)) {
         Cleanup();
-    } else if (!strcmp(topic, CACHE_FLUSH_TOPIC)) {
-        FlushCache();
     }
 
     return NS_OK;
@@ -651,7 +609,6 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
     mal.NotifyAll();
 }
 
-inline
 ScriptPreloader::CachedScript::CachedScript(InputBuffer& buf)
 {
     Code(buf);
@@ -672,20 +629,6 @@ ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
     }
     JS_ClearPendingException(cx);
     return false;
-}
-
-void
-ScriptPreloader::CachedScript::Cancel()
-{
-    if (mToken) {
-        GetSingleton().mMonitor.AssertCurrentThreadOwns();
-
-        AutoSafeJSAPI jsapi;
-        JS::CancelOffThreadScriptDecoder(jsapi.cx(), mToken);
-
-        mReadyToExecute = true;
-        mToken = nullptr;
-    }
 }
 
 JSScript*

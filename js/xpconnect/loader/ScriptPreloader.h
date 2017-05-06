@@ -111,8 +111,6 @@ private:
             cache.mScripts.Remove(mCachePath);
         }
 
-        void Cancel();
-
         // Encodes this script into XDR data, and stores the result in mXDRData.
         // Returns true on success, false on failure.
         bool XDREncode(JSContext* cx);
@@ -211,9 +209,6 @@ private:
 
     void ForceWriteCacheFile();
     void Cleanup();
-
-    void FlushCache();
-    void FlushScripts(LinkedList<CachedScript>& scripts);
 
     // Opens the cache file for reading.
     Result<Ok, nsresult> OpenCache();
