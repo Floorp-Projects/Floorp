@@ -5,14 +5,19 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Profile Autofill - Manage Profiles</title>
+  <title>Form Autofill - Manage Addresses</title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
   <link rel="stylesheet" href="chrome://formautofill/content/manageProfiles.css" />
   <script src="chrome://formautofill/content/manageProfiles.js"></script>
 </head>
 <body>
+  <p style="padding-left: 30px; background: url(chrome://browser/skin/warning.svg) no-repeat left center">
+    Autofill of addresses is only ready for testing in en-US on &lt;input&gt;s which specify field types
+    using the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#attr-autocomplete" target="_blank">autocomplete attribute</a>.
+    <a href="https://luke-chang.github.io/autofill-demo/basic.html" target="_blank">Demo page</a>
+  </p>
   <fieldset>
-    <legend>Profiles</legend>
+    <legend>Addresses</legend>
     <select id="profiles" size="9" multiple="multiple"/>
   </fieldset>
   <div id="controls-container">
