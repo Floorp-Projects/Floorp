@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -76,6 +77,8 @@ public:
   public:
     static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
                                               nsresult& aResult);
+    static PermissionKey* CreateFromURI(nsIURI* aURI,
+                                        nsresult& aResult);
 
     explicit PermissionKey(const nsACString& aOrigin)
       : mOrigin(aOrigin)
@@ -273,12 +276,36 @@ private:
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t      aType,
                                           bool          aExactHostMatch);
+  PermissionHashKey* GetPermissionHashKey(nsIURI*       aURI,
+                                          uint32_t      aType,
+                                          bool          aExactHostMatch);
 
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
-                                const char *aType,
-                                uint32_t   *aPermission,
+                                const char  * aType,
+                                uint32_t    * aPermission,
+                                bool          aExactHostMatch,
+                                bool          aIncludingSession)
+  {
+    return CommonTestPermissionInternal(aPrincipal, nullptr, aType,
+                                        aPermission, aExactHostMatch,
+                                        aIncludingSession);
+  }
+  nsresult CommonTestPermission(nsIURI    * aURI,
+                                const char* aType,
+                                uint32_t  * aPermission,
                                 bool        aExactHostMatch,
-                                bool        aIncludingSession);
+                                bool        aIncludingSession)
+  {
+    return CommonTestPermissionInternal(nullptr, aURI, aType, aPermission,
+                                        aExactHostMatch, aIncludingSession);
+  }
+  // Only one of aPrincipal or aURI is allowed to be passed in.
+  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal,
+                                        nsIURI      * aURI,
+                                        const char  * aType,
+                                        uint32_t    * aPermission,
+                                        bool          aExactHostMatch,
+                                        bool          aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
