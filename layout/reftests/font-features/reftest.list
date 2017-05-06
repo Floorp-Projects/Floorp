@@ -11,7 +11,7 @@ HTTP(..) != font-features-turkish.html font-features-ref.html
 HTTP(..) != font-features-noliga.html font-features-ref.html
 
 # check that enabling optional ligatures causes a change
-fails-if(stylo) HTTP(..) != font-features-hlig.html font-features-ref.html
+HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
 HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
@@ -24,7 +24,7 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 # though they're not really meaningful unless the tests above passed already.
 
 # compare feature specified within @font-face to same feature in style rule
-HTTP(..) == font-features-hlig-2.html font-features-hlig.html
+fails-if(stylo) HTTP(..) == font-features-hlig-2.html font-features-hlig.html
 HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
 HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
