@@ -104,7 +104,7 @@ FormAutofillParent.prototype = {
                          document.getElementById("passwordsGroup");
         let insertBeforeNode = useOldOrganization ?
                                document.getElementById("locationBarGroup") :
-                               null;
+                               document.getElementById("passwordGrid");
         parentNode.insertBefore(prefGroup, insertBeforeNode);
         break;
       }
