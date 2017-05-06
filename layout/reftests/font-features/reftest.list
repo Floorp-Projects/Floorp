@@ -48,7 +48,7 @@ HTTP(..) == font-features-order-2.html font-features-noliga.html
 # check priority of feature settings vs. font-variant subproperty
 HTTP(..) == font-features-order-3.html font-features-noliga.html
 HTTP(..) == font-features-order-4.html font-features-noliga.html
-HTTP(..) == font-features-order-5.html font-features-hlig.html
+fails-if(stylo) HTTP(..) == font-features-order-5.html font-features-hlig.html
 
 # check priority involving feature settings and font-variant-alternates
 fails-if(stylo) HTTP(..) == alternates-order.html alternates-order-ref.html
