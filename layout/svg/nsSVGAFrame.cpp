@@ -7,6 +7,7 @@
 #include "gfxMatrix.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMMutationEvent.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
@@ -92,6 +93,21 @@ nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
     // return nsChangeHint_UpdateOverflow for "transform" attribute changes
     // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
     NotifySVGChanged(TRANSFORM_CHANGED);
+  }
+
+  // Currently our SMIL implementation does not modify the DOM attributes. Once
+  // we implement the SVG 2 SMIL behaviour this can be removed
+  // SVGAElement::SetAttr/UnsetAttr's ResetLinkState() call will be sufficient.
+  if (aModType == nsIDOMMutationEvent::SMIL &&
+      aAttribute == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_None ||
+       aNameSpaceID == kNameSpaceID_XLink)) {
+
+    dom::SVGAElement* content = static_cast<dom::SVGAElement*>(mContent);
+
+    // SMIL may change whether an <a> element is a link, in which case we will
+    // need to update the link state.
+    content->ResetLinkState(true, content->ElementHasHref());
   }
 
  return NS_OK;
