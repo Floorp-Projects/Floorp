@@ -507,6 +507,14 @@ void nsCSSValue::SetStringValue(const nsString& aValue,
     mUnit = eCSSUnit_Null;
 }
 
+void
+nsCSSValue::SetAtomIdentValue(already_AddRefed<nsIAtom> aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_AtomIdent;
+  mValue.mAtom = aValue.take();
+}
+
 void nsCSSValue::SetColorValue(nscolor aValue)
 {
   SetIntegerColorValue(aValue, eCSSUnit_RGBAColor);
