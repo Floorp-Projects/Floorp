@@ -56,13 +56,8 @@ InlineTranslator::TranslateRecording(std::istream& aRecording)
       return false;
     }
 
-    if (recordedEvent->GetType() == RecordedEvent::SETTRANSFORM) {
-      RecordedSetTransform* event = static_cast<RecordedSetTransform*>(recordedEvent.get());
-      mBaseDT->SetTransform(event->mTransform * mBaseTransform);
-    } else {
-      if (!recordedEvent->PlayEvent(this)) {
-        return false;
-      }
+    if (!recordedEvent->PlayEvent(this)) {
+      return false;
     }
 
     ReadElement(aRecording, eventType);
