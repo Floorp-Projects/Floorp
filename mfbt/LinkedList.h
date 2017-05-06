@@ -648,17 +648,6 @@ class AutoCleanLinkedList : public LinkedList<T>
 public:
   ~AutoCleanLinkedList()
   {
-    clear();
-  }
-
-  AutoCleanLinkedList& operator=(AutoCleanLinkedList&& aOther)
-  {
-    LinkedList<T>::operator=(Forward<LinkedList<T>>(aOther));
-    return *this;
-  }
-
-  void clear()
-  {
     while (T* element = this->popFirst()) {
       delete element;
     }
