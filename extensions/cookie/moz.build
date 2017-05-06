@@ -14,6 +14,10 @@ UNIFIED_SOURCES += [
     'nsPopupWindowManager.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/caps',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
