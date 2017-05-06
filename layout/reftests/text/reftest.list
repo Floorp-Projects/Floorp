@@ -209,7 +209,7 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html grap
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
 fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html graphite-03-notref.html
-pref(gfx.font_rendering.graphite.enabled,true) fails-if(stylo) HTTP(..) != graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-02.html graphite-02-ref.html
 # test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well
@@ -225,13 +225,13 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html 
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ur.html
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
-fails-if(stylo) HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
-fails-if(stylo) HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
+HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
+HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
 HTTP(..) == graphite-05-simple.html graphite-05-ref.html
 HTTP(..) == graphite-05-multipass.html graphite-05-ref.html
 HTTP(..) == graphite-05-lang.html graphite-05-ref.html
 HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
-fails-if(stylo) HTTP(..) == graphite-05-feat.html graphite-05-ref.html
+HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping
@@ -304,7 +304,7 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.h
 == auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
 == auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
 == auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
-fails-if(stylo) == auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
+== auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
 == auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
 == auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
 == auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
