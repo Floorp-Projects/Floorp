@@ -49,10 +49,8 @@ nsCounterUseNode::GetCounterStyle()
     if (!mCounterStyle) {
         const nsCSSValue& style = mCounterFunction->Item(mAllCounters ? 2 : 1);
         CounterStyleManager* manager = mPresContext->CounterStyleManager();
-        if (style.GetUnit() == eCSSUnit_Ident) {
-            nsString ident;
-            style.GetStringValue(ident);
-            mCounterStyle = manager->BuildCounterStyle(ident);
+        if (style.GetUnit() == eCSSUnit_AtomIdent) {
+            mCounterStyle = manager->BuildCounterStyle(style.GetAtomValue());
         } else if (style.GetUnit() == eCSSUnit_Symbols) {
             mCounterStyle = new AnonymousCounterStyle(style.GetArrayValue());
         } else {

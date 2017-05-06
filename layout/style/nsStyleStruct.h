@@ -1482,8 +1482,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
     MOZ_ASSERT(NS_IsMainThread() || !aStyle->IsDependentStyle());
     mCounterStyle = aStyle;
   }
-  void SetListStyleType(const nsSubstring& aType,
-                        nsPresContext* aPresContext)
+  void SetListStyleType(nsIAtom* aType, nsPresContext* aPresContext)
   {
     SetCounterStyle(aPresContext->CounterStyleManager()->BuildCounterStyle(aType));
   }
