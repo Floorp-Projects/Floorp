@@ -15,7 +15,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/MaybeOneOf.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
@@ -535,7 +534,7 @@ StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 bool
 StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                           const JS::TranscodeRange& range,
+                           JS::TranscodeBuffer& buffer, size_t cursor,
                            JS::OffThreadCompileCallback callback, void* callbackData);
 
 /*
@@ -594,9 +593,21 @@ struct ParseTask
 {
     ParseTaskKind kind;
     OwningCompileOptions options;
-
-    mozilla::MaybeOneOf<const JS::TranscodeRange, JS::TwoByteChars> data;
-
+    // Anonymous union, the only correct interpretation is provided by the
+    // ParseTaskKind value, or from the virtual parse function.
+    union {
+        struct {
+            const char16_t* chars;
+            size_t length;
+        };
+        struct {
+            // This should be a reference, but C++ prevents us from using union
+            // with references as it assumes the reference constness might be
+            // violated.
+            JS::TranscodeBuffer* const buffer;
+            size_t cursor;
+        };
+    };
     LifoAlloc alloc;
 
     // Rooted pointer to the global object to use while parsing.
@@ -624,7 +635,7 @@ struct ParseTask
               const char16_t* chars, size_t length,
               JS::OffThreadCompileCallback callback, void* callbackData);
     ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
-              const JS::TranscodeRange& range,
+              JS::TranscodeBuffer& buffer, size_t cursor,
               JS::OffThreadCompileCallback callback, void* callbackData);
     bool init(JSContext* cx, const ReadOnlyCompileOptions& options);
 
@@ -660,7 +671,7 @@ struct ModuleParseTask : public ParseTask
 struct ScriptDecodeTask : public ParseTask
 {
     ScriptDecodeTask(JSContext* cx, JSObject* parseGlobal,
-                     const JS::TranscodeRange& range,
+                     JS::TranscodeBuffer& buffer, size_t cursor,
                      JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
