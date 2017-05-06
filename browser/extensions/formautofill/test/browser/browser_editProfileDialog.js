@@ -61,7 +61,7 @@ add_task(function* test_saveProfile() {
   is(profiles.length, 1, "only one profile is in storage");
   is(Object.keys(TEST_PROFILE_1).length, 11, "Sanity check number of properties");
   for (let [fieldName, fieldValue] of Object.entries(TEST_PROFILE_1)) {
-    is(profiles[0][fieldName], TEST_PROFILE_1[fieldName], "check " + fieldName);
+    is(profiles[0][fieldName], fieldValue, "check " + fieldName);
   }
 });
 
