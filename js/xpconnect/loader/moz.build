@@ -5,11 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'AutoMemMap.cpp',
     'ChromeScriptLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
-    'ScriptPreloader.cpp',
 ]
 
 # mozJSComponentLoader.cpp cannot be built in unified mode because it uses
@@ -18,16 +16,8 @@ SOURCES += [
     'mozJSComponentLoader.cpp'
 ]
 
-EXPORTS.mozilla += [
-    'ScriptPreloader.h',
-]
-
 EXPORTS.mozilla.dom += [
     'PrecompiledScript.h',
-]
-
-EXPORTS.mozilla.loader += [
-    'AutoMemMap.h',
 ]
 
 EXTRA_JS_MODULES += [
