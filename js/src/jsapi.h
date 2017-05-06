@@ -4383,15 +4383,6 @@ extern JS_PUBLIC_API(bool)
 CloneAndExecuteScript(JSContext* cx, JS::Handle<JSScript*> script,
                       JS::MutableHandleValue rval);
 
-/**
- * Like CloneAndExecuteScript above, but allows executing under a non-syntactic
- * environment chain.
- */
-extern JS_PUBLIC_API(bool)
-CloneAndExecuteScript(JSContext* cx, JS::AutoObjectVector& envChain,
-                      JS::Handle<JSScript*> script,
-                      JS::MutableHandleValue rval);
-
 } /* namespace JS */
 
 namespace JS {
