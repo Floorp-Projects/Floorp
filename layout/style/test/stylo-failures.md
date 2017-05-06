@@ -134,7 +134,7 @@ to mochitest command.
   * font-feature-settings property servo/servo#15975
     * test_inherit_storage.html `font-feature-settings` [2]
     * test_initial_storage.html `font-feature-settings` [1]
-    * test_value_storage.html `font-feature-settings` [118]
+    * test_value_storage.html `font-feature-settings` [40]
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
 * Stylesheet cloning is somehow busted bug 1348481
