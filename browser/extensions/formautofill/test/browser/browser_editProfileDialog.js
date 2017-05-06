@@ -29,6 +29,12 @@ add_task(function* test_saveProfile() {
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_PROFILE_1["given-name"], {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_PROFILE_1["additional-name"], {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_PROFILE_1["family-name"], {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey(TEST_PROFILE_1.organization, {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey(TEST_PROFILE_1["street-address"], {}, win);
@@ -46,20 +52,17 @@ add_task(function* test_saveProfile() {
       EventUtils.synthesizeKey(TEST_PROFILE_1.tel, {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
+      info("saving profile");
       EventUtils.synthesizeKey("VK_RETURN", {}, win);
     }, {once: true});
   });
   let profiles = yield getProfiles();
 
   is(profiles.length, 1, "only one profile is in storage");
-  is(profiles[0].organization, TEST_PROFILE_1.organization, "match organization");
-  is(profiles[0]["street-address"], TEST_PROFILE_1["street-address"], "match street-address");
-  is(profiles[0]["address-level2"], TEST_PROFILE_1["address-level2"], "match address-level2");
-  is(profiles[0]["address-level1"], TEST_PROFILE_1["address-level1"], "match address-level1");
-  is(profiles[0]["postal-code"], TEST_PROFILE_1["postal-code"], "match postal-code");
-  is(profiles[0].country, TEST_PROFILE_1.country, "match country");
-  is(profiles[0].email, TEST_PROFILE_1.email, "match email");
-  is(profiles[0].tel, TEST_PROFILE_1.tel, "match tel");
+  is(Object.keys(TEST_PROFILE_1).length, 11, "Sanity check number of properties");
+  for (let [fieldName, fieldValue] of Object.entries(TEST_PROFILE_1)) {
+    is(profiles[0][fieldName], TEST_PROFILE_1[fieldName], "check " + fieldName);
+  }
 });
 
 add_task(function* test_editProfile() {
@@ -79,7 +82,7 @@ add_task(function* test_editProfile() {
   profiles = yield getProfiles();
 
   is(profiles.length, 1, "only one profile is in storage");
-  is(profiles[0].organization, TEST_PROFILE_1.organization + "test", "organization changed");
+  is(profiles[0]["given-name"], TEST_PROFILE_1["given-name"] + "test", "given-name changed");
   yield removeProfiles([profiles[0].guid]);
 
   profiles = yield getProfiles();
