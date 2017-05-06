@@ -159,6 +159,9 @@ public:
 protected:
   explicit nsMathMLmtableFrame(nsStyleContext* aContext)
     : nsTableFrame(aContext)
+    , mFrameSpacingX(0)
+    , mFrameSpacingY(0)
+    , mUseCSSSpacing(false)
   {}
 
   virtual ~nsMathMLmtableFrame();
