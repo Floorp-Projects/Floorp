@@ -605,8 +605,8 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
     mCounterStyle =
       CounterStyleManager::GetBuiltinStyle(NS_STYLE_LIST_STYLE_DISC);
   } else {
-    mCounterStyle = aContext->CounterStyleManager()->
-      BuildCounterStyle(NS_LITERAL_STRING("disc"));
+    mCounterStyle = aContext->
+      CounterStyleManager()->BuildCounterStyle(nsGkAtoms::disc);
   }
   SetQuotesInitial();
 }

@@ -308,7 +308,7 @@ class nsStyleSet final
   nsCSSKeyframesRule* KeyframesRuleForName(const nsString& aName);
 
   // Return the winning (in the cascade) @counter-style rule for the given name.
-  nsCSSCounterStyleRule* CounterStyleRuleForName(const nsAString& aName);
+  nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
   // Fetch object for looking up font feature values
   already_AddRefed<gfxFontFeatureValueSet> GetFontFeatureValuesLookup();

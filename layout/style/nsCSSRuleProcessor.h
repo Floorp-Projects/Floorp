@@ -210,7 +210,7 @@ public:
                                            const nsString& aName);
 
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsPresContext* aPresContext,
-                                                 const nsAString& aName);
+                                                 nsIAtom* aName);
 
   bool AppendPageRules(nsPresContext* aPresContext,
                        nsTArray<nsCSSPageRule*>& aArray);

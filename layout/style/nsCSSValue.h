@@ -905,6 +905,7 @@ public:
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
+  void SetAtomIdentValue(already_AddRefed<nsIAtom> aValue);
   void SetColorValue(nscolor aValue);
   void SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit);
   // converts the nscoord to pixels
