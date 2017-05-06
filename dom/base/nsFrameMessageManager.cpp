@@ -32,7 +32,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ScriptPreloader.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessagePort.h"
@@ -1599,62 +1598,53 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     return;
   }
 
-  // Compile the script in the compilation scope instead of the current global
-  // to avoid keeping the current compartment alive.
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(xpc::CompilationScope())) {
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel),
+                uri,
+                nsContentUtils::GetSystemPrincipal(),
+                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                nsIContentPolicy::TYPE_OTHER);
+
+  if (!channel) {
     return;
   }
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSScript*> script(cx);
 
-  if (XRE_IsParentProcess()) {
-    script = ScriptPreloader::GetSingleton().GetCachedScript(cx, url);
+  nsCOMPtr<nsIInputStream> input;
+  rv = channel->Open2(getter_AddRefs(input));
+  NS_ENSURE_SUCCESS_VOID(rv);
+  nsString dataString;
+  char16_t* dataStringBuf = nullptr;
+  size_t dataStringLength = 0;
+  uint64_t avail64 = 0;
+  if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {
+    if (avail64 > UINT32_MAX) {
+      return;
+    }
+    nsCString buffer;
+    uint32_t avail = (uint32_t)std::min(avail64, (uint64_t)UINT32_MAX);
+    if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
+      return;
+    }
+    nsScriptLoader::ConvertToUTF16(channel, (uint8_t*)buffer.get(), avail,
+                                   EmptyString(), nullptr,
+                                   dataStringBuf, dataStringLength);
   }
 
-  if (!script) {
-    nsCOMPtr<nsIChannel> channel;
-    NS_NewChannel(getter_AddRefs(channel),
-                  uri,
-                  nsContentUtils::GetSystemPrincipal(),
-                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                  nsIContentPolicy::TYPE_OTHER);
+  JS::SourceBufferHolder srcBuf(dataStringBuf, dataStringLength,
+                                JS::SourceBufferHolder::GiveOwnership);
 
-    if (!channel) {
+  if (dataStringBuf && dataStringLength > 0) {
+    // Compile the script in the compilation scope instead of the current global
+    // to avoid keeping the current compartment alive.
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::CompilationScope())) {
       return;
     }
-
-    nsCOMPtr<nsIInputStream> input;
-    rv = channel->Open2(getter_AddRefs(input));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    nsString dataString;
-    char16_t* dataStringBuf = nullptr;
-    size_t dataStringLength = 0;
-    uint64_t avail64 = 0;
-    if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {
-      if (avail64 > UINT32_MAX) {
-        return;
-      }
-      nsCString buffer;
-      uint32_t avail = (uint32_t)std::min(avail64, (uint64_t)UINT32_MAX);
-      if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
-        return;
-      }
-      nsScriptLoader::ConvertToUTF16(channel, (uint8_t*)buffer.get(), avail,
-                                     EmptyString(), nullptr,
-                                     dataStringBuf, dataStringLength);
-    }
-
-    JS::SourceBufferHolder srcBuf(dataStringBuf, dataStringLength,
-                                  JS::SourceBufferHolder::GiveOwnership);
-
-    if (!dataStringBuf || dataStringLength == 0) {
-      return;
-    }
-
+    JSContext* cx = jsapi.cx();
     JS::CompileOptions options(cx, JSVERSION_LATEST);
     options.setFileAndLine(url.get(), 1);
     options.setNoScriptRval(true);
+    JS::Rooted<JSScript*> script(cx);
 
     if (aRunInGlobalScope) {
       if (!JS::Compile(cx, options, srcBuf, &script)) {
@@ -1664,21 +1654,18 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     } else if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
       return;
     }
-  }
 
-  MOZ_ASSERT(script);
-  aScriptp.set(script);
+    MOZ_ASSERT(script);
+    aScriptp.set(script);
 
-  nsAutoCString scheme;
-  uri->GetScheme(scheme);
-  // We don't cache data: scripts!
-  if (aShouldCache && !scheme.EqualsLiteral("data")) {
-    if (XRE_IsParentProcess()) {
-      ScriptPreloader::GetSingleton().NoteScript(url, url, script);
+    nsAutoCString scheme;
+    uri->GetScheme(scheme);
+    // We don't cache data: scripts!
+    if (aShouldCache && !scheme.EqualsLiteral("data")) {
+      // Root the object also for caching.
+      auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
+      sCachedScripts->Put(aURL, holder);
     }
-    // Root the object also for caching.
-    auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
-    sCachedScripts->Put(aURL, holder);
   }
 }
 
