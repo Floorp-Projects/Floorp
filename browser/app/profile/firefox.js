@@ -1636,7 +1636,12 @@ pref("browser.crashReports.unsubmittedCheck.chancesUntilSuppress", 4);
 pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 
 // Preferences for the form autofill system extension
+#ifdef NIGHTLY_BUILD
+pref("browser.formautofill.experimental", true);
+pref("dom.forms.autocomplete.experimental", true);
+#else
 pref("browser.formautofill.experimental", false);
+#endif
 pref("browser.formautofill.enabled", true);
 pref("browser.formautofill.loglevel", "Warn");
 
