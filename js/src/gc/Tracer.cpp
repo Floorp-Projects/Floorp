@@ -468,6 +468,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
           {
             js::Scope* scope = static_cast<js::Scope*>(thing);
             snprintf(buf, bufsize, " %s", js::ScopeKindString(scope->kind()));
+            break;
           }
 
           default:
