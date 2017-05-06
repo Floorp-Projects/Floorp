@@ -47,9 +47,8 @@ const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm
 const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                         .createInstance(Ci.nsIPrincipal);
 
-var { loadSubScript, loadSubScriptWithOptions } =
-  Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader);
+var { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                        .getService(Ci.mozIJSSubScriptLoader);
 
 /**
  * Initializes any test that needs to work with add-ons.
