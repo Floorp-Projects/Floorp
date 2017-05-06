@@ -32,6 +32,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 
@@ -606,6 +607,9 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
   }
 
   dllName[len] = 0;
+
+  PROFILER_LABEL_DYNAMIC("WindowsDllBlocklist", "patched_LdrLoadDll",
+                         js::ProfileEntry::Category::OTHER, dllName);
 
 #ifdef DEBUG_very_verbose
   printf_stderr("LdrLoadDll: dll name '%s'\n", dllName);
