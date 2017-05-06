@@ -44,7 +44,6 @@
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ScriptPreloader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
@@ -685,10 +684,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
     if (cache) {
         if (!mReuseLoaderGlobal) {
-            script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
-            if (!script) {
-                rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
-            }
+            rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
         } else {
             rv = ReadCachedFunction(cache, cachePath, cx, mSystemPrincipal,
                                     function.address());
@@ -852,10 +848,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     MOZ_ASSERT(!!script != !!function);
     MOZ_ASSERT(!!script == JS_IsGlobalObject(obj));
 
-    if (script) {
-        ScriptPreloader::GetSingleton().NoteScript(nativePath, cachePath, script);
-    }
-
     if (writeToCache) {
         // We successfully compiled the script, so cache it.
         if (script) {
@@ -898,8 +890,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         JSContext* aescx = aes.cx();
         bool ok;
         if (script) {
-            JS::RootedValue rval(cx);
-            ok = JS::CloneAndExecuteScript(aescx, script, &rval);
+            ok = JS_ExecuteScript(aescx, script);
         } else {
             RootedValue rval(cx);
             ok = JS_CallFunction(aescx, obj, function,
