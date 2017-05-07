@@ -295,6 +295,12 @@ struct AsVariantTemporary
 
 } // namespace detail
 
+// Used to unambiguously specify one of the Variant's type.
+template<typename T> struct VariantType { using Type = T; };
+
+// Used to specify one of the Variant's type by index.
+template<size_t N> struct VariantIndex { static constexpr size_t index = N; };
+
 /**
  * # mozilla::Variant
  *
@@ -315,18 +321,32 @@ struct AsVariantTemporary
  *
  *     Variant<char, uint32_t> v1('a');
  *     Variant<UniquePtr<A>, B, C> v2(MakeUnique<A>());
+ *     Variant<bool, char> v3(VariantType<char>, 0); // disambiguation needed
+ *     Variant<int, int> v4(VariantIndex<1>, 0); // 2nd int
  *
  * Because specifying the full type of a Variant value is often verbose,
- * AsVariant() can be used to construct a Variant value using type inference in
- * contexts such as expressions or when returning values from functions. Because
- * AsVariant() must copy or move the value into a temporary and this cannot
- * necessarily be elided by the compiler, it's mostly appropriate only for use
- * with primitive or very small types.
+ * there are two easier ways to construct values:
  *
+ * A. AsVariant() can be used to construct a Variant value using type inference
+ * in contexts such as expressions or when returning values from functions.
+ * Because AsVariant() must copy or move the value into a temporary and this
+ * cannot necessarily be elided by the compiler, it's mostly appropriate only
+ * for use with primitive or very small types.
  *
  *     Variant<char, uint32_t> Foo() { return AsVariant('x'); }
  *     // ...
  *     Variant<char, uint32_t> v1 = Foo();  // v1 holds char('x').
+ *
+ * B. Brace-construction with VariantType or VariantIndex; this also allows
+ * in-place construction with any number of arguments.
+ *
+ *     struct AB { AB(int, int){...} };
+ *     static Variant<AB, bool> foo()
+ *     {
+ *       return {VariantIndex<0>{}, 1, 2};
+ *     }
+ *     // ...
+ *     Variant<AB, bool> v0 = Foo();  // v0 holds AB(1,2).
  *
  * All access to the contained value goes through type-safe accessors.
  * Either the stored type, or the type index may be provided.
@@ -355,11 +375,13 @@ struct AsVariantTemporary
  *    struct ResultOrError
  *    {
  *      Variant<T, int> m;
+ *      ResultOrError() : m(int(0)) {} // Error '0' by default
+ *      ResultOrError(const T& r) : m(r) {}
  *      bool IsResult() const { return m.is<T>(); }
  *      bool IsError() const { return m.is<int>(); }
  *    };
  *    // Now instantiante with the result being an int too:
- *    ResultOrError<int> myResult; // Fail!
+ *    ResultOrError<int> myResult(123); // Fail!
  *    // In Variant<int, int>, which 'int' are we refering to, from inside
  *    // ResultOrError functions?
  *
@@ -368,11 +390,13 @@ struct AsVariantTemporary
  *    struct ResultOrError
  *    {
  *      Variant<T, int> m;
+ *      ResultOrError() : m(VariantIndex<1>{}, 0) {} // Error '0' by default
+ *      ResultOrError(const T& r) : m(VariantIndex<0>{}, r) {}
  *      bool IsResult() const { return m.is<0>(); } // 0 -> T
  *      bool IsError() const { return m.is<1>(); } // 1 -> int
  *    };
  *    // Now instantiante with the result being an int too:
- *    ResultOrError<int> myResult; // It now works!
+ *    ResultOrError<int> myResult(123); // It now works!
  *
  * Attempting to use the contained value as type `T1` when the `Variant`
  * instance contains a value of type `T2` causes an assertion failure.
@@ -502,15 +526,43 @@ public:
   }
 
   /**
+   * Perfect forwarding construction for some variant type T, by
+   * explicitly giving the type.
+   * This is necessary to construct from any number of arguments,
+   * or to convert from a type that is not in the Variant's type list.
+   */
+  template<typename T, typename... Args>
+  MOZ_IMPLICIT Variant(const VariantType<T>&, Args&&... aTs)
+    : tag(Impl::template tag<T>())
+  {
+    ::new (KnownNotNull, ptr()) T(Forward<Args>(aTs)...);
+  }
+
+  /**
+   * Perfect forwarding construction for some variant type T, by
+   * explicitly giving the type index.
+   * This is necessary to construct from any number of arguments,
+   * or to convert from a type that is not in the Variant's type list,
+   * or to construct a type that is present more than once in the Variant.
+   */
+  template<size_t N, typename... Args>
+  MOZ_IMPLICIT Variant(const VariantIndex<N>&, Args&&... aTs)
+    : tag(N)
+  {
+    using T = typename detail::Nth<N, Ts...>::Type;
+    ::new (KnownNotNull, ptr()) T(Forward<Args>(aTs)...);
+  }
+
+  /**
    * Constructs this Variant from an AsVariantTemporary<T> such that T can be
    * stored in one of the types allowable in this Variant. This is used in the
    * implementation of AsVariant().
    */
-  template<typename RefT,
-           typename T = typename detail::SelectVariantType<RefT, Ts...>::Type>
+  template<typename RefT>
   MOZ_IMPLICIT Variant(detail::AsVariantTemporary<RefT>&& aValue)
-    : tag(Impl::template tag<T>())
+    : tag(Impl::template tag<typename detail::SelectVariantType<RefT, Ts...>::Type>())
   {
+    using T = typename detail::SelectVariantType<RefT, Ts...>::Type;
     static_assert(detail::SelectVariantType<RefT, Ts...>::count == 1,
                   "Variant can only be selected by type if that type is unique");
     ::new (KnownNotNull, ptr()) T(Move(aValue.mValue));
