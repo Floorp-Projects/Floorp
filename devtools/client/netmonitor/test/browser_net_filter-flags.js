@@ -8,6 +8,8 @@
  */
 const REQUESTS = [
   { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" },
+  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=Sample" +
+         "&cookies=1" },
   { url: "sjs_content-type-test-server.sjs?fmt=css&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=js&text=sample" },
   { url: "sjs_content-type-test-server.sjs?fmt=font" },
@@ -18,6 +20,17 @@ const REQUESTS = [
 ];
 
 const EXPECTED_REQUESTS = [
+  {
+    method: "GET",
+    url: CONTENT_TYPE_SJS + "?fmt=html",
+    data: {
+      fuzzyUrl: true,
+      status: 200,
+      statusText: "OK",
+      type: "html",
+      fullMimeType: "text/html; charset=utf-8"
+    }
+  },
   {
     method: "GET",
     url: CONTENT_TYPE_SJS + "?fmt=html",
@@ -125,67 +138,91 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let waitNetwork = waitForNetworkEvents(monitor, 8);
+  let waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
   loadCommonFrameScript();
   yield performRequestsInContent(REQUESTS);
   yield waitNetwork;
 
   // Test running flag once requests finish running
   setFreetextFilter("is:running");
-  testContents([0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test cached flag
   setFreetextFilter("is:from-cache");
-  testContents([0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   setFreetextFilter("is:cached");
-  testContents([0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   // Test negative cached flag
   setFreetextFilter("-is:from-cache");
-  testContents([1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   setFreetextFilter("-is:cached");
-  testContents([1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   // Test status-code flag
   setFreetextFilter("status-code:200");
-  testContents([1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   // Test status-code negative flag
   setFreetextFilter("-status-code:200");
-  testContents([0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   // Test mime-type flag
   setFreetextFilter("mime-type:HtmL");
-  testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test mime-type negative flag
   setFreetextFilter("-mime-type:HtmL");
-  testContents([0, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([0, 0, 1, 1, 1, 1, 1, 1, 1]);
 
   // Test method flag
   setFreetextFilter("method:get");
-  testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Test unmatched method flag
   setFreetextFilter("method:post");
-  testContents([0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test scheme flag (all requests are http)
   setFreetextFilter("scheme:http");
-  testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("scheme:https");
-  testContents([0, 0, 0, 0, 0, 0, 0, 0]);
-
-  // Test mixing flags
-  setFreetextFilter("-mime-type:HtmL status-code:200");
-  testContents([0, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test regex filter
   setFreetextFilter("regexp:content.*?Sam");
-  testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
+
+  // Test set-cookie-name flag
+  setFreetextFilter("set-cookie-name:name2");
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
+
+  setFreetextFilter("set-cookie-name:not-existing");
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+  // Test set-cookie-value flag
+  setFreetextFilter("set-cookie-value:value2");
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
+
+  setFreetextFilter("set-cookie-value:not-existing");
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+  // Test set-cookie-domain flag
+  setFreetextFilter("set-cookie-domain:.example.com");
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
+
+  setFreetextFilter("set-cookie-domain:.foo.example.com");
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
+
+  setFreetextFilter("set-cookie-domain:.not-existing.example.com");
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+  // Test mixing flags
+  setFreetextFilter("-mime-type:HtmL status-code:200");
+  testContents([0, 0, 1, 1, 1, 1, 1, 1, 0]);
 
   yield teardown(monitor);
 

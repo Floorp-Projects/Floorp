@@ -36,6 +36,7 @@ function handleRequest(request, response) {
   let params = request.queryString.split("&");
   let format = (params.filter((s) => s.includes("fmt="))[0] || "").split("=")[1];
   let status = (params.filter((s) => s.includes("sts="))[0] || "").split("=")[1] || 200;
+  let cookies = (params.filter((s) => s.includes("cookies="))[0] || "").split("=")[1] || 0;
 
   let cachedCount = 0;
   let cacheExpire = 60; // seconds
@@ -54,6 +55,13 @@ function handleRequest(request, response) {
       response.setHeader("Expires", Date(Date.now() + cacheExpire * 1000), false);
     }
     cachedCount++;
+  }
+
+  function setCookieHeaders() {
+    if (cookies) {
+      response.setHeader("Set-Cookie", "name1=value1; Domain=.foo.example.com", true);
+      response.setHeader("Set-Cookie", "name2=value2; Domain=.example.com", true);
+    }
   }
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -82,6 +90,7 @@ function handleRequest(request, response) {
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);
         setCacheHeaders();
+        setCookieHeaders();
         response.write(content || "<p>Hello HTML!</p>");
         response.finish();
         break;
