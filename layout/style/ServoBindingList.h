@@ -364,11 +364,6 @@ SERVO_BINDING_FUNC(Servo_Initialize, void,
 // Shut down Servo components. Should be called exactly once at shutdown.
 SERVO_BINDING_FUNC(Servo_Shutdown, void)
 
-// Gets the snapshot for the element. This will return null if the element
-// has never been styled, since snapshotting in that case is wasted work.
-SERVO_BINDING_FUNC(Servo_Element_GetSnapshot, ServoElementSnapshot*,
-                   RawGeckoElementBorrowed element)
-
 // Gets the source style rules for the element. This returns the result via
 // rules, which would include a list of unowned pointers to RawServoStyleRule.
 SERVO_BINDING_FUNC(Servo_Element_GetStyleRuleList, void,
@@ -404,13 +399,18 @@ SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
 // The tree must be in a consistent state such that a normal traversal could be
 // performed, and this function maintains that invariant.
 SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawGeckoElementBorrowed element,
+                   nsIAtom* pseudo_tag,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
 
 // Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
 // directly
-SERVO_BINDING_FUNC(Servo_TraverseSubtree, bool,
-                   RawGeckoElementBorrowed root, RawServoStyleSetBorrowed set,
+SERVO_BINDING_FUNC(Servo_TraverseSubtree,
+                   bool,
+                   RawGeckoElementBorrowed root,
+                   RawServoStyleSetBorrowed set,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    mozilla::TraversalRootBehavior root_behavior,
                    mozilla::TraversalRestyleBehavior restyle_behavior)
 
@@ -422,6 +422,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    nsIAtom* pseudo_tag)
 
 // Style-struct management.
