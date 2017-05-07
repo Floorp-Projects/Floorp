@@ -197,6 +197,10 @@ this.pageAction = class extends ExtensionAPI {
         break;
 
       case "popupshowing":
+        if (!global.actionContextMenu) {
+          break;
+        }
+
         const menu = event.target;
         const trigger = menu.triggerNode;
 
