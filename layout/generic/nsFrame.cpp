@@ -8560,27 +8560,12 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
     if (NS_FAILED(result))
       return result;
 
-    auto Advance = [&frameTraversal, aDirection] () {
-      if (aDirection == eDirNext) {
-        frameTraversal->Next();
-      } else {
-        frameTraversal->Prev();
-      }
-      return frameTraversal->CurrentItem();
-    };
+    if (aDirection == eDirNext)
+      frameTraversal->Next();
+    else
+      frameTraversal->Prev();
 
-    traversedFrame = Advance();
-
-    if (nsIContent* content = GetContent()) {
-      // Advance until the frame is inside the same tree as 'this'.
-      for (nsIContent* traversedContent;
-           traversedFrame &&
-             !traversedFrame->IsGeneratedContentFrame() &&
-             (traversedContent = traversedFrame->GetContent()) &&
-             !nsContentUtils::IsInSameAnonymousTree(content, traversedContent);) {
-        traversedFrame = Advance();
-      }
-    }
+    traversedFrame = frameTraversal->CurrentItem();
 
     // Skip anonymous elements, but watch out for generated content
     if (!traversedFrame ||
@@ -9467,31 +9452,23 @@ nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
 void
 nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
 {
-  if (!aFrame || !*aFrame) {
+  if (!aFrame || !*aFrame)
     return;
-  }
-
-  nsIFrame* child = *aFrame;
-  while (true) {
+  nsIFrame *child = *aFrame;
+  //if we are a block frame then go for the last line of 'this'
+  while (1){
     child = child->PrincipalChildList().FirstChild();
-    if (!child) {
-      return; // done
-    }
-
-    // Ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
-    // see bug 278197 comment #12 #13 for details.
-    nsIFrame* nonAnonymousChild = nullptr;
-    const nsIContent* content;
-    while (child &&
-           (content = child->GetContent()) &&
-           !content->IsRootOfNativeAnonymousSubtree()) {
-      nonAnonymousChild = child;
-      child = child->GetNextSibling();
-    }
-    if (!nonAnonymousChild) {
-      return;
-    }
-    *aFrame = child = nonAnonymousChild;
+    if (!child)
+      return;//nothing to do
+    nsIFrame* siblingFrame;
+    nsIContent* content;
+    //ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
+    //see bug 278197 comment #12 #13 for details
+    while ((siblingFrame = child->GetNextSibling()) &&
+           (content = siblingFrame->GetContent()) &&
+           !content->IsRootOfNativeAnonymousSubtree())
+      child = siblingFrame;
+    *aFrame = child;
   }
 }
 
