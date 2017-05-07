@@ -28,6 +28,12 @@ testSimple()
   MOZ_RELEASE_ASSERT(v.is<uint64_t>());
   MOZ_RELEASE_ASSERT(!v.is<uint32_t>());
   MOZ_RELEASE_ASSERT(v.as<uint64_t>() == 1);
+
+  MOZ_RELEASE_ASSERT(v.is<1>());
+  MOZ_RELEASE_ASSERT(!v.is<0>());
+  static_assert(mozilla::IsSame<decltype(v.as<1>()), uint64_t&>::value,
+                "as<1>() should return a uint64_t");
+  MOZ_RELEASE_ASSERT(v.as<1>() == 1);
 }
 
 static void
