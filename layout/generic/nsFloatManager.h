@@ -596,7 +596,7 @@ private:
 
   // Translation from local to global coordinate space.
   nscoord mLineLeft, mBlockStart;
-  nsTArray<FloatInfo> mFloats;
+  AutoTArray<FloatInfo, 10> mFloats;
   nsIntervalSet   mFloatDamage;
 
   // Did we try to place a float that could not fit at all and had to be
