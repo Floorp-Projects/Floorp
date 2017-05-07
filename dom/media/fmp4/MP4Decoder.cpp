@@ -181,7 +181,7 @@ MP4Decoder::IsAAC(const nsACString& aMimeType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return MediaPrefs::MP4Enabled();
+  return Preferences::GetBool("media.mp4.enabled", true);
 }
 
 // sTestH264ExtraData represents the content of the avcC atom found in
