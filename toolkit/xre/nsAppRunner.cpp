@@ -3143,7 +3143,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   }
 
   if (gfxPlatform::IsHeadless()) {
-#ifdef XP_LINUX
+#ifdef MOZ_WIDGET_GTK
     Output(false, "*** You are running in headless mode.\n");
 #else
     Output(true, "Error: headless mode is not currently supported on this platform.\n");
