@@ -33,7 +33,6 @@ class nsIPrincipal;
 class nsIURI;
 struct nsFont;
 namespace mozilla {
-  class ServoStyleSheet;
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
   struct Keyframe;
@@ -45,6 +44,8 @@ namespace mozilla {
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
+  class ServoStyleSheet;
+  class ServoElementSnapshotTable;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -319,8 +320,11 @@ nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 
-// Element snapshot.
-ServoElementSnapshotOwned Gecko_CreateElementSnapshot(RawGeckoElementBorrowed element);
+// Get an element snapshot for a given element from the table.
+const ServoElementSnapshot*
+Gecko_GetElementSnapshot(const mozilla::ServoElementSnapshotTable* table,
+                         RawGeckoElementBorrowed element);
+
 void Gecko_DropElementSnapshot(ServoElementSnapshotOwned snapshot);
 
 // `array` must be an nsTArray

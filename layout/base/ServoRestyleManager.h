@@ -7,15 +7,11 @@
 #ifndef mozilla_ServoRestyleManager_h
 #define mozilla_ServoRestyleManager_h
 
-#include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/ServoElementSnapshotTable.h"
 #include "nsChangeHint.h"
-#include "nsHashKeys.h"
-#include "nsINode.h"
-#include "nsISupportsImpl.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
@@ -37,7 +33,9 @@ namespace mozilla {
 class ServoRestyleManager : public RestyleManager
 {
   friend class ServoStyleSet;
+
 public:
+  typedef ServoElementSnapshotTable SnapshotTable;
   typedef RestyleManager base_type;
 
   explicit ServoRestyleManager(nsPresContext* aPresContext);
@@ -136,6 +134,10 @@ private:
     return PresContext()->StyleSet()->AsServo();
   }
 
+  const SnapshotTable& Snapshots() const { return mSnapshots; }
+  void ClearSnapshots();
+  ServoElementSnapshot& SnapshotFor(mozilla::dom::Element* aElement);
+
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be
   // attached yet.
@@ -155,6 +157,10 @@ private:
   // increase mAnimationGeneration before creating new transitions, so their
   // creation sequence will be correct.
   bool mHaveNonAnimationRestyles = false;
+
+  // A hashtable with the elements that have changed state or attributes, in
+  // order to calculate restyle hints during the traversal.
+  SnapshotTable mSnapshots;
 };
 
 } // namespace mozilla
