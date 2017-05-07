@@ -158,10 +158,8 @@ var whitelist = new Set([
   {file: "chrome://global/skin/arrow/panelarrow-vertical.svg",
    platforms: ["linux"]},
   // Bug 1348362
-  {file: "chrome://global/skin/icons/Close.gif", platforms: ["win"]},
   {file: "chrome://global/skin/icons/Error.png", platforms: ["linux", "macosx"]},
   {file: "chrome://global/skin/icons/Landscape.png", platforms: ["linux"]},
-  {file: "chrome://global/skin/icons/Minimize.gif", platforms: ["win"]},
   {file: "chrome://global/skin/icons/Portrait.png", platforms: ["linux"]},
   {file: "chrome://global/skin/icons/Print-preview.png", platforms: ["linux"]},
   {file: "chrome://global/skin/icons/Question.png", platforms: ["linux"]},
