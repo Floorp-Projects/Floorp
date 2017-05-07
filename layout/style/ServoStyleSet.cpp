@@ -13,6 +13,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoComputedValuesWithParent.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
@@ -237,6 +238,12 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   return result.forget();
 }
 
+const ServoElementSnapshotTable&
+ServoStyleSet::Snapshots()
+{
+  return mPresContext->RestyleManager()->AsServo()->Snapshots();
+}
+
 void
 ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
 {
@@ -285,10 +292,10 @@ ServoStyleSet::PreTraverse(Element* aRoot)
 }
 
 bool
-ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                         TraversalRootBehavior aRootBehavior,
-                                         TraversalRestyleBehavior
-                                           aRestyleBehavior)
+ServoStyleSet::PrepareAndTraverseSubtree(
+  RawGeckoElementBorrowed aRoot,
+  TraversalRootBehavior aRootBehavior,
+  TraversalRestyleBehavior aRestyleBehavior)
 {
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
@@ -297,11 +304,13 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
 
   AutoSetInServoTraversal guard(this);
 
+  const SnapshotTable& snapshots = Snapshots();
+
   bool isInitial = !aRoot->HasServoData();
   bool forReconstruct =
     aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
-  bool postTraversalRequired =
-    Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior, aRestyleBehavior);
+  bool postTraversalRequired = Servo_TraverseSubtree(
+    aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
   MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
 
   auto root = const_cast<Element*>(aRoot);
@@ -316,8 +325,8 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   EffectCompositor* compositor = mPresContext->EffectCompositor();
   if (forReconstruct ? compositor->PreTraverseInSubtree(root)
                      : compositor->PreTraverse()) {
-    if (Servo_TraverseSubtree(aRoot, mRawSet.get(),
-                              aRootBehavior, aRestyleBehavior)) {
+    if (Servo_TraverseSubtree(
+          aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior)) {
       MOZ_ASSERT(!forReconstruct);
       if (isInitial) {
         // We're doing initial styling, and the additional animation
@@ -948,6 +957,7 @@ ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
 {
   return Servo_StyleSet_GetBaseComputedValuesForElement(mRawSet.get(),
                                                         aElement,
+                                                        &Snapshots(),
                                                         aPseudoTag).Consume();
 }
 
@@ -1019,12 +1029,14 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
   RefPtr<ServoComputedValues> computedValues =
     Servo_ResolveStyleLazily(elementForStyleResolution,
                              pseudoTagForStyleResolution,
+                             &Snapshots(),
                              mRawSet.get()).Consume();
 
   if (mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag)) {
     computedValues =
       Servo_ResolveStyleLazily(elementForStyleResolution,
                                pseudoTagForStyleResolution,
+                               &Snapshots(),
                                mRawSet.get()).Consume();
   }
 
