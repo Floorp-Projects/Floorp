@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "js/TypeDecls.h"
