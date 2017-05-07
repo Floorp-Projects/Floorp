@@ -532,19 +532,24 @@ nsHttpHandler::InitConnectionMgr()
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpRequestHead *request, bool isSecure)
 {
+    // This method only gets called during the initialization of the HTTP channel,
+    // so we don't need to hold any locks when setting the headers on the request
+    // head object.  Therefore the usage of the SetHeaderNonThreadSafe here is safe.
+
     nsresult rv;
 
     // Add the "User-Agent" header
-    rv = request->SetHeader(nsHttp::User_Agent, UserAgent(),
-                            false, nsHttpHeaderArray::eVarietyRequestDefault);
+    rv = request->SetHeaderNonThreadSafe(nsHttp::User_Agent, UserAgent(),
+                                         false,
+                                         nsHttpHeaderArray::eVarietyRequestDefault);
     if (NS_FAILED(rv)) return rv;
 
     // MIME based content negotiation lives!
     // Add the "Accept" header.  Note, this is set as an override because the
     // service worker expects to see it.  The other "default" headers are
     // hidden from service worker interception.
-    rv = request->SetHeader(nsHttp::Accept, mAccept,
-                            false, nsHttpHeaderArray::eVarietyRequestOverride);
+    rv = request->SetHeaderNonThreadSafe(nsHttp::Accept, mAccept,
+                                         false, nsHttpHeaderArray::eVarietyRequestOverride);
     if (NS_FAILED(rv)) return rv;
 
     // Add the "Accept-Language" header.  This header is also exposed to the
@@ -556,29 +561,29 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpRequestHead *request, bool isSecu
 
     // Add the "Accept-Language" header
     if (!mAcceptLanguages.IsEmpty()) {
-        rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages,
-                                false,
-                                nsHttpHeaderArray::eVarietyRequestOverride);
+        rv = request->SetHeaderNonThreadSafe(nsHttp::Accept_Language, mAcceptLanguages,
+                                             false,
+                                             nsHttpHeaderArray::eVarietyRequestOverride);
         if (NS_FAILED(rv)) return rv;
     }
 
     // Add the "Accept-Encoding" header
     if (isSecure) {
-        rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
-                                false,
-                                nsHttpHeaderArray::eVarietyRequestDefault);
+        rv = request->SetHeaderNonThreadSafe(nsHttp::Accept_Encoding, mHttpsAcceptEncodings,
+                                             false,
+                                             nsHttpHeaderArray::eVarietyRequestDefault);
     } else {
-        rv = request->SetHeader(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
-                                false,
-                                nsHttpHeaderArray::eVarietyRequestDefault);
+        rv = request->SetHeaderNonThreadSafe(nsHttp::Accept_Encoding, mHttpAcceptEncodings,
+                                             false,
+                                             nsHttpHeaderArray::eVarietyRequestDefault);
     }
     if (NS_FAILED(rv)) return rv;
 
     // add the "Send Hint" header
     if (mSafeHintEnabled || mParentalControlEnabled) {
-      rv = request->SetHeader(nsHttp::Prefer, NS_LITERAL_CSTRING("safe"),
-                              false,
-                              nsHttpHeaderArray::eVarietyRequestDefault);
+      rv = request->SetHeaderNonThreadSafe(nsHttp::Prefer, NS_LITERAL_CSTRING("safe"),
+                                           false,
+                                           nsHttpHeaderArray::eVarietyRequestDefault);
       if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;
