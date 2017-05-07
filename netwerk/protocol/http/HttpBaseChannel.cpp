@@ -271,6 +271,12 @@ HttpBaseChannel::Init(nsIURI *aURI,
 
   NS_PRECONDITION(aURI, "null uri");
 
+#ifdef DEBUG
+  typedef nsHttpRequestHead::AutoEnableCallingSetHeaderNonThreadSafe
+    AutoEnableCallingSetHeaderNonThreadSafe;
+  AutoEnableCallingSetHeaderNonThreadSafe enabler(&mRequestHead);
+#endif
+
   mURI = aURI;
   mOriginalURI = aURI;
   mDocumentURI = nullptr;
@@ -311,7 +317,8 @@ HttpBaseChannel::Init(nsIURI *aURI,
   rv = nsHttpHandler::GenerateHostPort(host, port, hostLine);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
+  rv = mRequestHead.SetHeaderNonThreadSafe(nsHttp::Host, hostLine, false,
+                                           nsHttpHeaderArray::eVarietyRequestDefault);
   if (NS_FAILED(rv)) return rv;
 
   rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead, isHTTPS);
