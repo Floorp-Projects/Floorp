@@ -164,6 +164,25 @@ nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString &v, bool m,
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
+#ifdef DEBUG
+    AutoEnableCallingSetHeaderNonThreadSafe enabler(this);
+#endif
+
+    return SetHeaderNonThreadSafe(h, v, m, variety);
+}
+
+
+// This function is designed to only be called during the creation of this
+// object, and doesn't grab the lock of the object before setting the header.
+// Please do not use it if you are not sure why you need it.
+nsresult
+nsHttpRequestHead::SetHeaderNonThreadSafe(nsHttpAtom h,
+                                          const nsACString &v,
+                                          bool m,
+                                          nsHttpHeaderArray::HeaderVariety variety)
+{
+    MOZ_ASSERT(mCanCallSetHeaderNonThreadSafe);
+
     if (mInVisitHeaders) {
         return NS_ERROR_FAILURE;
     }
