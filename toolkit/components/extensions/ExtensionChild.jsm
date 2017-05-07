@@ -758,7 +758,9 @@ class ChildAPIManager {
         let listener = map.ids.get(data.listenerId);
 
         if (listener) {
-          return this.context.runSafe(listener, ...data.args);
+          let args = data.args.deserialize(this.context.cloneScope);
+
+          return this.context.runSafeWithoutClone(listener, ...args);
         }
         if (!map.removedIds.has(data.listenerId)) {
           Services.console.logStringMessage(

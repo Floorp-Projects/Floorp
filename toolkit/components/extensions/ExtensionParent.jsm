@@ -656,7 +656,7 @@ ParentAPIManager = {
           childId,
           listenerId: data.listenerId,
           path: data.path,
-          args: listenerArgs,
+          args: new StructuredCloneHolder(listenerArgs),
         },
         {
           recipient: {childId},
