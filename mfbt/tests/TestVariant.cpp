@@ -59,6 +59,29 @@ testDuplicate()
 }
 
 static void
+testConstructionWithVariantType()
+{
+  Variant<uint32_t, uint64_t, uint32_t> v(mozilla::VariantType<uint64_t>{}, 3);
+  MOZ_RELEASE_ASSERT(v.is<uint64_t>());
+  //MOZ_RELEASE_ASSERT(!v.is<uint32_t>()); // uint32_t is not unique!
+  MOZ_RELEASE_ASSERT(v.as<uint64_t>() == 3);
+}
+
+static void
+testConstructionWithVariantIndex()
+{
+  Variant<uint32_t, uint64_t, uint32_t> v(mozilla::VariantIndex<2>{}, 2);
+  MOZ_RELEASE_ASSERT(!v.is<uint64_t>());
+  // Note: uint32_t is not unique, so `v.is<uint32_t>()` is not allowed.
+
+  MOZ_RELEASE_ASSERT(!v.is<1>());
+  MOZ_RELEASE_ASSERT(!v.is<0>());
+  MOZ_RELEASE_ASSERT(v.is<2>());
+  MOZ_RELEASE_ASSERT(v.as<2>() == 2);
+  MOZ_RELEASE_ASSERT(v.extract<2>() == 2);
+}
+
+static void
 testCopy()
 {
   printf("testCopy\n");
@@ -205,6 +228,8 @@ main()
 {
   testSimple();
   testDuplicate();
+  testConstructionWithVariantType();
+  testConstructionWithVariantIndex();
   testCopy();
   testMove();
   testDestructor();
