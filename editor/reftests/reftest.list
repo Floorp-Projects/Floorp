@@ -87,7 +87,7 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) fails-if(stylo) == 642800.htm
 fails-if(stylo) == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 fails-if(stylo) != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
 fails-if(stylo) != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
-== 672709.html 672709-ref.html
+skip-if(webrender) == 672709.html 672709-ref.html # re-enable for webrender once bug 1361820 is fixed.
 fails-if(stylo) == 338427-1.html 338427-1-ref.html
 skip-if(Android) needs-focus == 674212-spellcheck.html 674212-spellcheck-ref.html
 skip-if(Android) needs-focus == 338427-2.html 338427-2-ref.html
