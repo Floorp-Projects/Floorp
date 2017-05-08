@@ -13,6 +13,7 @@
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupports.h"
@@ -151,6 +152,7 @@ protected:
   ScreenIntCoord GetFixedLayerMarginsBottom();
   void NotifyControllerSnapshotFailed();
   void CheckForResetOnNextMove(ScreenIntCoord aCurrentTouch);
+  void QueueMessage(int32_t aMessage);
 
   // Read only Compositor and Controller threads after Initialize()
   uint64_t mRootLayerTreeId;
@@ -195,6 +197,17 @@ protected:
   // Controller thread only
   FrameMetricsState mControllerFrameMetrics;
 
+  class QueuedMessage : public LinkedListElement<QueuedMessage> {
+  public:
+    explicit QueuedMessage(int32_t aMessage) :
+      mMessage(aMessage) {}
+    int32_t mMessage;
+  private:
+    QueuedMessage() = delete;
+    QueuedMessage(const QueuedMessage&) = delete;
+    QueuedMessage& operator=(const QueuedMessage&) = delete;
+  };
+
   // Compositor thread only
   bool    mCompositorShutdown;
   bool    mCompositorAnimationDeferred;           // An animation has been deferred until the toolbar is unlocked
@@ -211,6 +224,7 @@ protected:
   RefPtr<DataTextureSource> mCompositorToolbarTexture; // The OGL texture used to render the snapshot in the compositor
   RefPtr<EffectRGB> mCompositorToolbarEffect;          // Effect used to render the snapshot in the compositor
   TimeStamp mCompositorAnimationStartTimeStamp;        // Time stamp when the current animation started
+  AutoCleanLinkedList<QueuedMessage> mCompositorQueuedMessages; // Queue to contain messages sent before Initialize() called
 };
 
 } // namespace layers
