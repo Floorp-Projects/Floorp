@@ -36,51 +36,23 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
+#include "nsHtml5AttributeName.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
-#include "nsHtml5AttributeName.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5StateSnapshot.h"
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5ElementName.h"
-
-int32_t 
-nsHtml5ElementName::getGroup()
-{
-  return flags & NS_HTML5ELEMENT_NAME_GROUP_MASK;
-}
-
-bool
-nsHtml5ElementName::isInterned()
-{
-  return !(flags & NS_HTML5ELEMENT_NAME_NOT_INTERNED);
-}
-
-nsHtml5ElementName* 
-nsHtml5ElementName::elementNameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
-{
-  uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
-  int32_t index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
-  if (index < 0) {
-    return nullptr;
-  } else {
-    nsHtml5ElementName* elementName = nsHtml5ElementName::ELEMENT_NAMES[index];
-    nsIAtom* name = elementName->name;
-    if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-      return nullptr;
-    }
-    return elementName;
-  }
-}
 
 
 nsHtml5ElementName::nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags)
@@ -94,7 +66,7 @@ nsHtml5ElementName::nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, in
 nsHtml5ElementName::nsHtml5ElementName()
   : name(nullptr)
   , camelCaseName(nullptr)
-  , flags(NS_HTML5TREE_BUILDER_OTHER | NS_HTML5ELEMENT_NAME_NOT_INTERNED)
+  , flags(nsHtml5TreeBuilder::OTHER | NOT_INTERNED)
 {
   MOZ_COUNT_CTOR(nsHtml5ElementName);
 }
@@ -103,15 +75,6 @@ nsHtml5ElementName::nsHtml5ElementName()
 nsHtml5ElementName::~nsHtml5ElementName()
 {
   MOZ_COUNT_DTOR(nsHtml5ElementName);
-}
-
-void
-nsHtml5ElementName::setNameForNonInterned(nsIAtom* name)
-{
-  this->name = name;
-  this->camelCaseName = name;
-  MOZ_ASSERT(this->flags ==
-             (NS_HTML5TREE_BUILDER_OTHER | NS_HTML5ELEMENT_NAME_NOT_INTERNED));
 }
 
 nsHtml5ElementName* nsHtml5ElementName::ELT_ANNOTATION_XML = nullptr;
@@ -360,611 +323,660 @@ staticJArray<int32_t,int32_t> nsHtml5ElementName::ELEMENT_HASHES = { ELEMENT_HAS
 void
 nsHtml5ElementName::initializeStatics()
 {
-  ELT_ANNOTATION_XML =
-    new nsHtml5ElementName(nsHtml5Atoms::annotation_xml,
-                           nsHtml5Atoms::annotation_xml,
-                           NS_HTML5TREE_BUILDER_ANNOTATION_XML |
-                             NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
-  ELT_ISINDEX = new nsHtml5ElementName(nsHtml5Atoms::isindex,
-                                       nsHtml5Atoms::isindex,
-                                       NS_HTML5TREE_BUILDER_ISINDEX |
-                                         NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_BIG = new nsHtml5ElementName(nsHtml5Atoms::big, nsHtml5Atoms::big, NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_BDO = new nsHtml5ElementName(nsHtml5Atoms::bdo, nsHtml5Atoms::bdo, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_COL = new nsHtml5ElementName(nsHtml5Atoms::col, nsHtml5Atoms::col, NS_HTML5TREE_BUILDER_COL | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_DEL = new nsHtml5ElementName(nsHtml5Atoms::del, nsHtml5Atoms::del, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_DFN = new nsHtml5ElementName(nsHtml5Atoms::dfn, nsHtml5Atoms::dfn, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_DIR = new nsHtml5ElementName(nsHtml5Atoms::dir, nsHtml5Atoms::dir, NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_DIV = new nsHtml5ElementName(nsHtml5Atoms::div, nsHtml5Atoms::div, NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_IMG = new nsHtml5ElementName(nsHtml5Atoms::img, nsHtml5Atoms::img, NS_HTML5TREE_BUILDER_IMG | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_INS = new nsHtml5ElementName(nsHtml5Atoms::ins, nsHtml5Atoms::ins, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_KBD = new nsHtml5ElementName(nsHtml5Atoms::kbd, nsHtml5Atoms::kbd, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_MAP = new nsHtml5ElementName(nsHtml5Atoms::map, nsHtml5Atoms::map, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_NAV = new nsHtml5ElementName(nsHtml5Atoms::nav, nsHtml5Atoms::nav, NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_PRE = new nsHtml5ElementName(nsHtml5Atoms::pre, nsHtml5Atoms::pre, NS_HTML5TREE_BUILDER_PRE_OR_LISTING | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_A = new nsHtml5ElementName(
-    nsHtml5Atoms::a, nsHtml5Atoms::a, NS_HTML5TREE_BUILDER_A);
+  ELT_ANNOTATION_XML = new nsHtml5ElementName(
+    nsGkAtoms::annotation_xml_,
+    nsGkAtoms::annotation_xml_,
+    nsHtml5TreeBuilder::ANNOTATION_XML | SCOPING_AS_MATHML);
+  ELT_ISINDEX = new nsHtml5ElementName(nsGkAtoms::isindex,
+                                       nsGkAtoms::isindex,
+                                       nsHtml5TreeBuilder::ISINDEX | SPECIAL);
+  ELT_BIG = new nsHtml5ElementName(
+    nsGkAtoms::big,
+    nsGkAtoms::big,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_BDO = new nsHtml5ElementName(
+    nsGkAtoms::bdo, nsGkAtoms::bdo, nsHtml5TreeBuilder::OTHER);
+  ELT_COL = new nsHtml5ElementName(
+    nsGkAtoms::col, nsGkAtoms::col, nsHtml5TreeBuilder::COL | SPECIAL);
+  ELT_DEL = new nsHtml5ElementName(
+    nsGkAtoms::del, nsGkAtoms::del, nsHtml5TreeBuilder::OTHER);
+  ELT_DFN = new nsHtml5ElementName(
+    nsGkAtoms::dfn, nsGkAtoms::dfn, nsHtml5TreeBuilder::OTHER);
+  ELT_DIR = new nsHtml5ElementName(
+    nsGkAtoms::dir,
+    nsGkAtoms::dir,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_DIV = new nsHtml5ElementName(
+    nsGkAtoms::div,
+    nsGkAtoms::div,
+    nsHtml5TreeBuilder::DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+  ELT_IMG = new nsHtml5ElementName(
+    nsGkAtoms::img, nsGkAtoms::img, nsHtml5TreeBuilder::IMG | SPECIAL);
+  ELT_INS = new nsHtml5ElementName(
+    nsGkAtoms::ins, nsGkAtoms::ins, nsHtml5TreeBuilder::OTHER);
+  ELT_KBD = new nsHtml5ElementName(
+    nsGkAtoms::kbd, nsGkAtoms::kbd, nsHtml5TreeBuilder::OTHER);
+  ELT_MAP = new nsHtml5ElementName(
+    nsGkAtoms::map, nsGkAtoms::map, nsHtml5TreeBuilder::OTHER);
+  ELT_NAV = new nsHtml5ElementName(
+    nsGkAtoms::nav,
+    nsGkAtoms::nav,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_PRE =
+    new nsHtml5ElementName(nsGkAtoms::pre,
+                           nsGkAtoms::pre,
+                           nsHtml5TreeBuilder::PRE_OR_LISTING | SPECIAL);
+  ELT_A =
+    new nsHtml5ElementName(nsGkAtoms::a, nsGkAtoms::a, nsHtml5TreeBuilder::A);
   ELT_B = new nsHtml5ElementName(
-    nsHtml5Atoms::b,
-    nsHtml5Atoms::b,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_RTC = new nsHtml5ElementName(nsHtml5Atoms::rtc, nsHtml5Atoms::rtc, NS_HTML5TREE_BUILDER_RB_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_SUB = new nsHtml5ElementName(nsHtml5Atoms::sub, nsHtml5Atoms::sub, NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-  ELT_SVG = new nsHtml5ElementName(nsHtml5Atoms::svg, nsHtml5Atoms::svg, NS_HTML5TREE_BUILDER_SVG);
-  ELT_SUP = new nsHtml5ElementName(nsHtml5Atoms::sup, nsHtml5Atoms::sup, NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-  ELT_SET = new nsHtml5ElementName(nsHtml5Atoms::set, nsHtml5Atoms::set, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_USE = new nsHtml5ElementName(nsHtml5Atoms::use, nsHtml5Atoms::use, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_VAR = new nsHtml5ElementName(nsHtml5Atoms::var, nsHtml5Atoms::var, NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+    nsGkAtoms::b,
+    nsGkAtoms::b,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_RTC =
+    new nsHtml5ElementName(nsGkAtoms::rtc,
+                           nsGkAtoms::rtc,
+                           nsHtml5TreeBuilder::RB_OR_RTC | OPTIONAL_END_TAG);
+  ELT_SUB = new nsHtml5ElementName(
+    nsGkAtoms::sub,
+    nsGkAtoms::sub,
+    nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+  ELT_SVG = new nsHtml5ElementName(
+    nsGkAtoms::svg, nsGkAtoms::svg, nsHtml5TreeBuilder::SVG);
+  ELT_SUP = new nsHtml5ElementName(
+    nsGkAtoms::sup,
+    nsGkAtoms::sup,
+    nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+  ELT_SET = new nsHtml5ElementName(
+    nsGkAtoms::set_, nsGkAtoms::set_, nsHtml5TreeBuilder::OTHER);
+  ELT_USE = new nsHtml5ElementName(
+    nsGkAtoms::use, nsGkAtoms::use, nsHtml5TreeBuilder::OTHER);
+  ELT_VAR = new nsHtml5ElementName(
+    nsGkAtoms::var,
+    nsGkAtoms::var,
+    nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
   ELT_G = new nsHtml5ElementName(
-    nsHtml5Atoms::g, nsHtml5Atoms::g, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_WBR = new nsHtml5ElementName(nsHtml5Atoms::wbr, nsHtml5Atoms::wbr, NS_HTML5TREE_BUILDER_AREA_OR_WBR | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_XMP = new nsHtml5ElementName(nsHtml5Atoms::xmp, nsHtml5Atoms::xmp, NS_HTML5TREE_BUILDER_XMP | NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::g, nsGkAtoms::g, nsHtml5TreeBuilder::OTHER);
+  ELT_WBR = new nsHtml5ElementName(
+    nsGkAtoms::wbr, nsGkAtoms::wbr, nsHtml5TreeBuilder::AREA_OR_WBR | SPECIAL);
+  ELT_XMP = new nsHtml5ElementName(
+    nsGkAtoms::xmp, nsGkAtoms::xmp, nsHtml5TreeBuilder::XMP | SPECIAL);
   ELT_I = new nsHtml5ElementName(
-    nsHtml5Atoms::i,
-    nsHtml5Atoms::i,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_P = new nsHtml5ElementName(nsHtml5Atoms::p,
-                                 nsHtml5Atoms::p,
-                                 NS_HTML5TREE_BUILDER_P |
-                                   NS_HTML5ELEMENT_NAME_SPECIAL |
-                                   NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::i,
+    nsGkAtoms::i,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_P =
+    new nsHtml5ElementName(nsGkAtoms::p,
+                           nsGkAtoms::p,
+                           nsHtml5TreeBuilder::P | SPECIAL | OPTIONAL_END_TAG);
   ELT_Q = new nsHtml5ElementName(
-    nsHtml5Atoms::q, nsHtml5Atoms::q, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::q, nsGkAtoms::q, nsHtml5TreeBuilder::OTHER);
   ELT_S = new nsHtml5ElementName(
-    nsHtml5Atoms::s,
-    nsHtml5Atoms::s,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+    nsGkAtoms::s,
+    nsGkAtoms::s,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
   ELT_U = new nsHtml5ElementName(
-    nsHtml5Atoms::u,
-    nsHtml5Atoms::u,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+    nsGkAtoms::u,
+    nsGkAtoms::u,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
   ELT_H1 = new nsHtml5ElementName(
-    nsHtml5Atoms::h1,
-    nsHtml5Atoms::h1,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h1,
+    nsGkAtoms::h1,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
   ELT_H2 = new nsHtml5ElementName(
-    nsHtml5Atoms::h2,
-    nsHtml5Atoms::h2,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h2,
+    nsGkAtoms::h2,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
   ELT_H3 = new nsHtml5ElementName(
-    nsHtml5Atoms::h3,
-    nsHtml5Atoms::h3,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h3,
+    nsGkAtoms::h3,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
   ELT_H4 = new nsHtml5ElementName(
-    nsHtml5Atoms::h4,
-    nsHtml5Atoms::h4,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h4,
+    nsGkAtoms::h4,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
   ELT_H5 = new nsHtml5ElementName(
-    nsHtml5Atoms::h5,
-    nsHtml5Atoms::h5,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h5,
+    nsGkAtoms::h5,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
   ELT_H6 = new nsHtml5ElementName(
-    nsHtml5Atoms::h6,
-    nsHtml5Atoms::h6,
-    NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_AREA = new nsHtml5ElementName(nsHtml5Atoms::area, nsHtml5Atoms::area, NS_HTML5TREE_BUILDER_AREA_OR_WBR | NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::h6,
+    nsGkAtoms::h6,
+    nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+  ELT_AREA = new nsHtml5ElementName(nsGkAtoms::area,
+                                    nsGkAtoms::area,
+                                    nsHtml5TreeBuilder::AREA_OR_WBR | SPECIAL);
   ELT_FEFUNCA = new nsHtml5ElementName(
-    nsHtml5Atoms::fefunca, nsHtml5Atoms::feFuncA, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::fefunca, nsGkAtoms::feFuncA, nsHtml5TreeBuilder::OTHER);
   ELT_METADATA = new nsHtml5ElementName(
-    nsHtml5Atoms::metadata, nsHtml5Atoms::metadata, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_META = new nsHtml5ElementName(nsHtml5Atoms::meta, nsHtml5Atoms::meta, NS_HTML5TREE_BUILDER_META | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TEXTAREA = new nsHtml5ElementName(nsHtml5Atoms::textarea,
-                                        nsHtml5Atoms::textarea,
-                                        NS_HTML5TREE_BUILDER_TEXTAREA |
-                                          NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::metadata, nsGkAtoms::metadata, nsHtml5TreeBuilder::OTHER);
+  ELT_META = new nsHtml5ElementName(
+    nsGkAtoms::meta, nsGkAtoms::meta, nsHtml5TreeBuilder::META | SPECIAL);
+  ELT_TEXTAREA = new nsHtml5ElementName(nsGkAtoms::textarea,
+                                        nsGkAtoms::textarea,
+                                        nsHtml5TreeBuilder::TEXTAREA | SPECIAL);
   ELT_FEFUNCB = new nsHtml5ElementName(
-    nsHtml5Atoms::fefuncb, nsHtml5Atoms::feFuncB, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_RB = new nsHtml5ElementName(nsHtml5Atoms::rb,
-                                  nsHtml5Atoms::rb,
-                                  NS_HTML5TREE_BUILDER_RB_OR_RTC |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_DESC = new nsHtml5ElementName(nsHtml5Atoms::desc,
-                                    nsHtml5Atoms::desc,
-                                    NS_HTML5TREE_BUILDER_FOREIGNOBJECT_OR_DESC |
-                                      NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG);
-  ELT_DD = new nsHtml5ElementName(nsHtml5Atoms::dd,
-                                  nsHtml5Atoms::dd,
-                                  NS_HTML5TREE_BUILDER_DD_OR_DT |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_BGSOUND =
-    new nsHtml5ElementName(nsHtml5Atoms::bgsound,
-                           nsHtml5Atoms::bgsound,
-                           NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND |
-                             NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_EMBED = new nsHtml5ElementName(nsHtml5Atoms::embed, nsHtml5Atoms::embed, NS_HTML5TREE_BUILDER_EMBED | NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::fefuncb, nsGkAtoms::feFuncB, nsHtml5TreeBuilder::OTHER);
+  ELT_RB =
+    new nsHtml5ElementName(nsGkAtoms::rb,
+                           nsGkAtoms::rb,
+                           nsHtml5TreeBuilder::RB_OR_RTC | OPTIONAL_END_TAG);
+  ELT_DESC = new nsHtml5ElementName(nsGkAtoms::desc,
+                                    nsGkAtoms::desc,
+                                    nsHtml5TreeBuilder::FOREIGNOBJECT_OR_DESC |
+                                      SCOPING_AS_SVG);
+  ELT_DD = new nsHtml5ElementName(nsGkAtoms::dd,
+                                  nsGkAtoms::dd,
+                                  nsHtml5TreeBuilder::DD_OR_DT | SPECIAL |
+                                    OPTIONAL_END_TAG);
+  ELT_BGSOUND = new nsHtml5ElementName(
+    nsGkAtoms::bgsound,
+    nsGkAtoms::bgsound,
+    nsHtml5TreeBuilder::LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
+  ELT_EMBED = new nsHtml5ElementName(
+    nsGkAtoms::embed, nsGkAtoms::embed, nsHtml5TreeBuilder::EMBED | SPECIAL);
   ELT_FEBLEND = new nsHtml5ElementName(
-    nsHtml5Atoms::feblend, nsHtml5Atoms::feBlend, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::feblend, nsGkAtoms::feBlend, nsHtml5TreeBuilder::OTHER);
   ELT_FEFLOOD = new nsHtml5ElementName(
-    nsHtml5Atoms::feflood, nsHtml5Atoms::feFlood, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_HEAD = new nsHtml5ElementName(nsHtml5Atoms::head,
-                                    nsHtml5Atoms::head,
-                                    NS_HTML5TREE_BUILDER_HEAD |
-                                      NS_HTML5ELEMENT_NAME_SPECIAL |
-                                      NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::feflood, nsGkAtoms::feFlood, nsHtml5TreeBuilder::OTHER);
+  ELT_HEAD = new nsHtml5ElementName(nsGkAtoms::head,
+                                    nsGkAtoms::head,
+                                    nsHtml5TreeBuilder::HEAD | SPECIAL |
+                                      OPTIONAL_END_TAG);
   ELT_LEGEND = new nsHtml5ElementName(
-    nsHtml5Atoms::legend, nsHtml5Atoms::legend, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_NOEMBED = new nsHtml5ElementName(nsHtml5Atoms::noembed,
-                                       nsHtml5Atoms::noembed,
-                                       NS_HTML5TREE_BUILDER_NOEMBED |
-                                         NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TD = new nsHtml5ElementName(
-    nsHtml5Atoms::td,
-    nsHtml5Atoms::td,
-    NS_HTML5TREE_BUILDER_TD_OR_TH | NS_HTML5ELEMENT_NAME_SPECIAL |
-      NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_THEAD = new nsHtml5ElementName(nsHtml5Atoms::thead, nsHtml5Atoms::thead, NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::legend, nsGkAtoms::legend, nsHtml5TreeBuilder::OTHER);
+  ELT_NOEMBED = new nsHtml5ElementName(nsGkAtoms::noembed,
+                                       nsGkAtoms::noembed,
+                                       nsHtml5TreeBuilder::NOEMBED | SPECIAL);
+  ELT_TD = new nsHtml5ElementName(nsGkAtoms::td,
+                                  nsGkAtoms::td,
+                                  nsHtml5TreeBuilder::TD_OR_TH | SPECIAL |
+                                    SCOPING | OPTIONAL_END_TAG);
+  ELT_THEAD =
+    new nsHtml5ElementName(nsGkAtoms::thead,
+                           nsGkAtoms::thead,
+                           nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT |
+                             SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
   ELT_ASIDE = new nsHtml5ElementName(
-    nsHtml5Atoms::aside,
-    nsHtml5Atoms::aside,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::aside,
+    nsGkAtoms::aside,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_ARTICLE = new nsHtml5ElementName(
-    nsHtml5Atoms::article,
-    nsHtml5Atoms::article,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::article,
+    nsGkAtoms::article,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_ANIMATE = new nsHtml5ElementName(
-    nsHtml5Atoms::animate, nsHtml5Atoms::animate, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_BASE = new nsHtml5ElementName(nsHtml5Atoms::base,
-                                    nsHtml5Atoms::base,
-                                    NS_HTML5TREE_BUILDER_BASE |
-                                      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::animate, nsGkAtoms::animate, nsHtml5TreeBuilder::OTHER);
+  ELT_BASE = new nsHtml5ElementName(
+    nsGkAtoms::base, nsGkAtoms::base, nsHtml5TreeBuilder::BASE | SPECIAL);
   ELT_BLOCKQUOTE = new nsHtml5ElementName(
-    nsHtml5Atoms::blockquote,
-    nsHtml5Atoms::blockquote,
-    NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::blockquote,
+    nsGkAtoms::blockquote,
+    nsHtml5TreeBuilder::DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
   ELT_CODE = new nsHtml5ElementName(
-    nsHtml5Atoms::code,
-    nsHtml5Atoms::code,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_CIRCLE = new nsHtml5ElementName(nsHtml5Atoms::circle, nsHtml5Atoms::circle, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::code,
+    nsGkAtoms::code,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_CIRCLE = new nsHtml5ElementName(
+    nsGkAtoms::circle, nsGkAtoms::circle, nsHtml5TreeBuilder::OTHER);
   ELT_CITE = new nsHtml5ElementName(
-    nsHtml5Atoms::cite, nsHtml5Atoms::cite, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::cite, nsGkAtoms::cite, nsHtml5TreeBuilder::OTHER);
   ELT_ELLIPSE = new nsHtml5ElementName(
-    nsHtml5Atoms::ellipse, nsHtml5Atoms::ellipse, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FETURBULENCE = new nsHtml5ElementName(nsHtml5Atoms::feturbulence,
-                                            nsHtml5Atoms::feTurbulence,
-                                            NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FEMERGENODE = new nsHtml5ElementName(nsHtml5Atoms::femergenode,
-                                           nsHtml5Atoms::feMergeNode,
-                                           NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::ellipse, nsGkAtoms::ellipse, nsHtml5TreeBuilder::OTHER);
+  ELT_FETURBULENCE = new nsHtml5ElementName(nsGkAtoms::feturbulence,
+                                            nsGkAtoms::feTurbulence,
+                                            nsHtml5TreeBuilder::OTHER);
+  ELT_FEMERGENODE = new nsHtml5ElementName(
+    nsGkAtoms::femergenode, nsGkAtoms::feMergeNode, nsHtml5TreeBuilder::OTHER);
   ELT_FEIMAGE = new nsHtml5ElementName(
-    nsHtml5Atoms::feimage, nsHtml5Atoms::feImage, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::feimage, nsGkAtoms::feImage, nsHtml5TreeBuilder::OTHER);
   ELT_FEMERGE = new nsHtml5ElementName(
-    nsHtml5Atoms::femerge, nsHtml5Atoms::feMerge, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FETILE = new nsHtml5ElementName(nsHtml5Atoms::fetile, nsHtml5Atoms::feTile, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FRAME = new nsHtml5ElementName(nsHtml5Atoms::frame,
-                                     nsHtml5Atoms::frame,
-                                     NS_HTML5TREE_BUILDER_FRAME |
-                                       NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FIGURE = new nsHtml5ElementName(nsHtml5Atoms::figure, nsHtml5Atoms::figure, NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FECOMPOSITE = new nsHtml5ElementName(nsHtml5Atoms::fecomposite,
-                                           nsHtml5Atoms::feComposite,
-                                           NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::femerge, nsGkAtoms::feMerge, nsHtml5TreeBuilder::OTHER);
+  ELT_FETILE = new nsHtml5ElementName(
+    nsGkAtoms::fetile, nsGkAtoms::feTile, nsHtml5TreeBuilder::OTHER);
+  ELT_FRAME = new nsHtml5ElementName(
+    nsGkAtoms::frame, nsGkAtoms::frame, nsHtml5TreeBuilder::FRAME | SPECIAL);
+  ELT_FIGURE = new nsHtml5ElementName(
+    nsGkAtoms::figure,
+    nsGkAtoms::figure,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_FECOMPOSITE = new nsHtml5ElementName(
+    nsGkAtoms::fecomposite, nsGkAtoms::feComposite, nsHtml5TreeBuilder::OTHER);
   ELT_IMAGE = new nsHtml5ElementName(
-    nsHtml5Atoms::image, nsHtml5Atoms::image, NS_HTML5TREE_BUILDER_IMAGE);
-  ELT_IFRAME = new nsHtml5ElementName(nsHtml5Atoms::iframe, nsHtml5Atoms::iframe, NS_HTML5TREE_BUILDER_IFRAME | NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::image, nsGkAtoms::image, nsHtml5TreeBuilder::IMAGE);
+  ELT_IFRAME = new nsHtml5ElementName(
+    nsGkAtoms::iframe, nsGkAtoms::iframe, nsHtml5TreeBuilder::IFRAME | SPECIAL);
   ELT_LINE = new nsHtml5ElementName(
-    nsHtml5Atoms::line, nsHtml5Atoms::line, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_MARQUEE = new nsHtml5ElementName(nsHtml5Atoms::marquee,
-                                       nsHtml5Atoms::marquee,
-                                       NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET |
-                                         NS_HTML5ELEMENT_NAME_SPECIAL |
-                                         NS_HTML5ELEMENT_NAME_SCOPING);
+    nsGkAtoms::line, nsGkAtoms::line, nsHtml5TreeBuilder::OTHER);
+  ELT_MARQUEE = new nsHtml5ElementName(nsGkAtoms::marquee,
+                                       nsGkAtoms::marquee,
+                                       nsHtml5TreeBuilder::MARQUEE_OR_APPLET |
+                                         SPECIAL | SCOPING);
   ELT_POLYLINE = new nsHtml5ElementName(
-    nsHtml5Atoms::polyline, nsHtml5Atoms::polyline, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::polyline, nsGkAtoms::polyline, nsHtml5TreeBuilder::OTHER);
   ELT_PICTURE = new nsHtml5ElementName(
-    nsHtml5Atoms::picture, nsHtml5Atoms::picture, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_SOURCE = new nsHtml5ElementName(nsHtml5Atoms::source, nsHtml5Atoms::source, NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK);
-  ELT_STRIKE = new nsHtml5ElementName(nsHtml5Atoms::strike, nsHtml5Atoms::strike, NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_STYLE = new nsHtml5ElementName(nsHtml5Atoms::style,
-                                     nsHtml5Atoms::style,
-                                     NS_HTML5TREE_BUILDER_STYLE |
-                                       NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TABLE = new nsHtml5ElementName(
-    nsHtml5Atoms::table,
-    nsHtml5Atoms::table,
-    NS_HTML5TREE_BUILDER_TABLE | NS_HTML5ELEMENT_NAME_SPECIAL |
-      NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING);
-  ELT_TITLE = new nsHtml5ElementName(nsHtml5Atoms::title,
-                                     nsHtml5Atoms::title,
-                                     NS_HTML5TREE_BUILDER_TITLE |
-                                       NS_HTML5ELEMENT_NAME_SPECIAL |
-                                       NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG);
+    nsGkAtoms::picture, nsGkAtoms::picture, nsHtml5TreeBuilder::OTHER);
+  ELT_SOURCE =
+    new nsHtml5ElementName(nsGkAtoms::source,
+                           nsGkAtoms::source,
+                           nsHtml5TreeBuilder::PARAM_OR_SOURCE_OR_TRACK);
+  ELT_STRIKE = new nsHtml5ElementName(
+    nsGkAtoms::strike,
+    nsGkAtoms::strike,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_STYLE = new nsHtml5ElementName(
+    nsGkAtoms::style, nsGkAtoms::style, nsHtml5TreeBuilder::STYLE | SPECIAL);
+  ELT_TABLE = new nsHtml5ElementName(nsGkAtoms::table,
+                                     nsGkAtoms::table,
+                                     nsHtml5TreeBuilder::TABLE | SPECIAL |
+                                       FOSTER_PARENTING | SCOPING);
+  ELT_TITLE = new nsHtml5ElementName(nsGkAtoms::title,
+                                     nsGkAtoms::title,
+                                     nsHtml5TreeBuilder::TITLE | SPECIAL |
+                                       SCOPING_AS_SVG);
   ELT_TIME = new nsHtml5ElementName(
-    nsHtml5Atoms::time, nsHtml5Atoms::time, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_TEMPLATE = new nsHtml5ElementName(nsHtml5Atoms::template_,
-                                        nsHtml5Atoms::template_,
-                                        NS_HTML5TREE_BUILDER_TEMPLATE |
-                                          NS_HTML5ELEMENT_NAME_SPECIAL |
-                                          NS_HTML5ELEMENT_NAME_SCOPING);
-  ELT_ALTGLYPHDEF = new nsHtml5ElementName(nsHtml5Atoms::altglyphdef,
-                                           nsHtml5Atoms::altGlyphDef,
-                                           NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::time, nsGkAtoms::time, nsHtml5TreeBuilder::OTHER);
+  ELT_TEMPLATE =
+    new nsHtml5ElementName(nsGkAtoms::_template,
+                           nsGkAtoms::_template,
+                           nsHtml5TreeBuilder::TEMPLATE | SPECIAL | SCOPING);
+  ELT_ALTGLYPHDEF = new nsHtml5ElementName(
+    nsGkAtoms::altglyphdef, nsGkAtoms::altGlyphDef, nsHtml5TreeBuilder::OTHER);
   ELT_GLYPHREF = new nsHtml5ElementName(
-    nsHtml5Atoms::glyphref, nsHtml5Atoms::glyphRef, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::glyphref, nsGkAtoms::glyphRef, nsHtml5TreeBuilder::OTHER);
   ELT_DIALOG = new nsHtml5ElementName(
-    nsHtml5Atoms::dialog,
-    nsHtml5Atoms::dialog,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::dialog,
+    nsGkAtoms::dialog,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_FEFUNCG = new nsHtml5ElementName(
-    nsHtml5Atoms::fefuncg, nsHtml5Atoms::feFuncG, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FEDIFFUSELIGHTING =
-    new nsHtml5ElementName(nsHtml5Atoms::fediffuselighting,
-                           nsHtml5Atoms::feDiffuseLighting,
-                           NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FESPECULARLIGHTING =
-    new nsHtml5ElementName(nsHtml5Atoms::fespecularlighting,
-                           nsHtml5Atoms::feSpecularLighting,
-                           NS_HTML5TREE_BUILDER_OTHER);
-  ELT_LISTING = new nsHtml5ElementName(nsHtml5Atoms::listing,
-                                       nsHtml5Atoms::listing,
-                                       NS_HTML5TREE_BUILDER_PRE_OR_LISTING |
-                                         NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_STRONG = new nsHtml5ElementName(nsHtml5Atoms::strong, nsHtml5Atoms::strong, NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+    nsGkAtoms::fefuncg, nsGkAtoms::feFuncG, nsHtml5TreeBuilder::OTHER);
+  ELT_FEDIFFUSELIGHTING = new nsHtml5ElementName(nsGkAtoms::fediffuselighting,
+                                                 nsGkAtoms::feDiffuseLighting,
+                                                 nsHtml5TreeBuilder::OTHER);
+  ELT_FESPECULARLIGHTING = new nsHtml5ElementName(nsGkAtoms::fespecularlighting,
+                                                  nsGkAtoms::feSpecularLighting,
+                                                  nsHtml5TreeBuilder::OTHER);
+  ELT_LISTING =
+    new nsHtml5ElementName(nsGkAtoms::listing,
+                           nsGkAtoms::listing,
+                           nsHtml5TreeBuilder::PRE_OR_LISTING | SPECIAL);
+  ELT_STRONG = new nsHtml5ElementName(
+    nsGkAtoms::strong,
+    nsGkAtoms::strong,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
   ELT_ALTGLYPH = new nsHtml5ElementName(
-    nsHtml5Atoms::altglyph, nsHtml5Atoms::altGlyph, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::altglyph, nsGkAtoms::altGlyph, nsHtml5TreeBuilder::OTHER);
   ELT_CLIPPATH = new nsHtml5ElementName(
-    nsHtml5Atoms::clippath, nsHtml5Atoms::clipPath, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_MGLYPH =
-    new nsHtml5ElementName(nsHtml5Atoms::mglyph,
-                           nsHtml5Atoms::mglyph,
-                           NS_HTML5TREE_BUILDER_MGLYPH_OR_MALIGNMARK);
+    nsGkAtoms::clippath, nsGkAtoms::clipPath, nsHtml5TreeBuilder::OTHER);
+  ELT_MGLYPH = new nsHtml5ElementName(nsGkAtoms::mglyph_,
+                                      nsGkAtoms::mglyph_,
+                                      nsHtml5TreeBuilder::MGLYPH_OR_MALIGNMARK);
   ELT_MATH = new nsHtml5ElementName(
-    nsHtml5Atoms::math, nsHtml5Atoms::math, NS_HTML5TREE_BUILDER_MATH);
+    nsGkAtoms::math, nsGkAtoms::math, nsHtml5TreeBuilder::MATH);
   ELT_MPATH = new nsHtml5ElementName(
-    nsHtml5Atoms::mpath, nsHtml5Atoms::mpath, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::mpath, nsGkAtoms::mpath, nsHtml5TreeBuilder::OTHER);
   ELT_PATH = new nsHtml5ElementName(
-    nsHtml5Atoms::path, nsHtml5Atoms::path, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_TH = new nsHtml5ElementName(
-    nsHtml5Atoms::th,
-    nsHtml5Atoms::th,
-    NS_HTML5TREE_BUILDER_TD_OR_TH | NS_HTML5ELEMENT_NAME_SPECIAL |
-      NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_SWITCH = new nsHtml5ElementName(nsHtml5Atoms::switch_, nsHtml5Atoms::switch_, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::path, nsGkAtoms::path, nsHtml5TreeBuilder::OTHER);
+  ELT_TH = new nsHtml5ElementName(nsGkAtoms::th,
+                                  nsGkAtoms::th,
+                                  nsHtml5TreeBuilder::TD_OR_TH | SPECIAL |
+                                    SCOPING | OPTIONAL_END_TAG);
+  ELT_SWITCH = new nsHtml5ElementName(
+    nsGkAtoms::_switch, nsGkAtoms::_switch, nsHtml5TreeBuilder::OTHER);
   ELT_TEXTPATH = new nsHtml5ElementName(
-    nsHtml5Atoms::textpath, nsHtml5Atoms::textPath, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_LI = new nsHtml5ElementName(nsHtml5Atoms::li,
-                                  nsHtml5Atoms::li,
-                                  NS_HTML5TREE_BUILDER_LI |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_MI = new nsHtml5ElementName(nsHtml5Atoms::mi,
-                                  nsHtml5Atoms::mi,
-                                  NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT |
-                                    NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
-  ELT_LINK =
-    new nsHtml5ElementName(nsHtml5Atoms::link,
-                           nsHtml5Atoms::link,
-                           NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND |
-                             NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::textpath, nsGkAtoms::textPath, nsHtml5TreeBuilder::OTHER);
+  ELT_LI =
+    new nsHtml5ElementName(nsGkAtoms::li,
+                           nsGkAtoms::li,
+                           nsHtml5TreeBuilder::LI | SPECIAL | OPTIONAL_END_TAG);
+  ELT_MI = new nsHtml5ElementName(nsGkAtoms::mi_,
+                                  nsGkAtoms::mi_,
+                                  nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT |
+                                    SCOPING_AS_MATHML);
+  ELT_LINK = new nsHtml5ElementName(
+    nsGkAtoms::link,
+    nsGkAtoms::link,
+    nsHtml5TreeBuilder::LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
   ELT_MARK = new nsHtml5ElementName(
-    nsHtml5Atoms::mark, nsHtml5Atoms::mark, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::mark, nsGkAtoms::mark, nsHtml5TreeBuilder::OTHER);
   ELT_MALIGNMARK =
-    new nsHtml5ElementName(nsHtml5Atoms::malignmark,
-                           nsHtml5Atoms::malignmark,
-                           NS_HTML5TREE_BUILDER_MGLYPH_OR_MALIGNMARK);
+    new nsHtml5ElementName(nsGkAtoms::malignmark_,
+                           nsGkAtoms::malignmark_,
+                           nsHtml5TreeBuilder::MGLYPH_OR_MALIGNMARK);
   ELT_MASK = new nsHtml5ElementName(
-    nsHtml5Atoms::mask, nsHtml5Atoms::mask, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_TRACK =
-    new nsHtml5ElementName(nsHtml5Atoms::track,
-                           nsHtml5Atoms::track,
-                           NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK |
-                             NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_DL = new nsHtml5ElementName(nsHtml5Atoms::dl,
-                                  nsHtml5Atoms::dl,
-                                  NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_HTML = new nsHtml5ElementName(
-    nsHtml5Atoms::html,
-    nsHtml5Atoms::html,
-    NS_HTML5TREE_BUILDER_HTML | NS_HTML5ELEMENT_NAME_SPECIAL |
-      NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_OL = new nsHtml5ElementName(nsHtml5Atoms::ol,
-                                  nsHtml5Atoms::ol,
-                                  NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::mask, nsGkAtoms::mask, nsHtml5TreeBuilder::OTHER);
+  ELT_TRACK = new nsHtml5ElementName(
+    nsGkAtoms::track,
+    nsGkAtoms::track,
+    nsHtml5TreeBuilder::PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
+  ELT_DL = new nsHtml5ElementName(
+    nsGkAtoms::dl, nsGkAtoms::dl, nsHtml5TreeBuilder::UL_OR_OL_OR_DL | SPECIAL);
+  ELT_HTML = new nsHtml5ElementName(nsGkAtoms::html,
+                                    nsGkAtoms::html,
+                                    nsHtml5TreeBuilder::HTML | SPECIAL |
+                                      SCOPING | OPTIONAL_END_TAG);
+  ELT_OL = new nsHtml5ElementName(
+    nsGkAtoms::ol, nsGkAtoms::ol, nsHtml5TreeBuilder::UL_OR_OL_OR_DL | SPECIAL);
   ELT_LABEL = new nsHtml5ElementName(
-    nsHtml5Atoms::label, nsHtml5Atoms::label, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_UL = new nsHtml5ElementName(nsHtml5Atoms::ul,
-                                  nsHtml5Atoms::ul,
-                                  NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::label, nsGkAtoms::label, nsHtml5TreeBuilder::OTHER);
+  ELT_UL = new nsHtml5ElementName(
+    nsGkAtoms::ul, nsGkAtoms::ul, nsHtml5TreeBuilder::UL_OR_OL_OR_DL | SPECIAL);
   ELT_SMALL = new nsHtml5ElementName(
-    nsHtml5Atoms::small_,
-    nsHtml5Atoms::small_,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_SYMBOL = new nsHtml5ElementName(nsHtml5Atoms::symbol, nsHtml5Atoms::symbol, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_ALTGLYPHITEM = new nsHtml5ElementName(nsHtml5Atoms::altglyphitem,
-                                            nsHtml5Atoms::altGlyphItem,
-                                            NS_HTML5TREE_BUILDER_OTHER);
-  ELT_ANIMATETRANSFORM = new nsHtml5ElementName(nsHtml5Atoms::animatetransform,
-                                                nsHtml5Atoms::animateTransform,
-                                                NS_HTML5TREE_BUILDER_OTHER);
-  ELT_ACRONYM = new nsHtml5ElementName(nsHtml5Atoms::acronym, nsHtml5Atoms::acronym, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::small,
+    nsGkAtoms::small,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_SYMBOL = new nsHtml5ElementName(
+    nsGkAtoms::symbol, nsGkAtoms::symbol, nsHtml5TreeBuilder::OTHER);
+  ELT_ALTGLYPHITEM = new nsHtml5ElementName(nsGkAtoms::altglyphitem,
+                                            nsGkAtoms::altGlyphItem,
+                                            nsHtml5TreeBuilder::OTHER);
+  ELT_ANIMATETRANSFORM = new nsHtml5ElementName(nsGkAtoms::animatetransform,
+                                                nsGkAtoms::animateTransform,
+                                                nsHtml5TreeBuilder::OTHER);
+  ELT_ACRONYM = new nsHtml5ElementName(
+    nsGkAtoms::acronym, nsGkAtoms::acronym, nsHtml5TreeBuilder::OTHER);
   ELT_EM = new nsHtml5ElementName(
-    nsHtml5Atoms::em,
-    nsHtml5Atoms::em,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-  ELT_FORM = new nsHtml5ElementName(nsHtml5Atoms::form,
-                                    nsHtml5Atoms::form,
-                                    NS_HTML5TREE_BUILDER_FORM |
-                                      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_MENUITEM = new nsHtml5ElementName(nsHtml5Atoms::menuitem,
-                                        nsHtml5Atoms::menuitem,
-                                        NS_HTML5TREE_BUILDER_MENUITEM);
-  ELT_PARAM =
-    new nsHtml5ElementName(nsHtml5Atoms::param,
-                           nsHtml5Atoms::param,
-                           NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK |
-                             NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_ANIMATEMOTION = new nsHtml5ElementName(nsHtml5Atoms::animatemotion,
-                                             nsHtml5Atoms::animateMotion,
-                                             NS_HTML5TREE_BUILDER_OTHER);
-  ELT_BUTTON = new nsHtml5ElementName(nsHtml5Atoms::button,
-                                      nsHtml5Atoms::button,
-                                      NS_HTML5TREE_BUILDER_BUTTON |
-                                        NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_CAPTION = new nsHtml5ElementName(nsHtml5Atoms::caption, nsHtml5Atoms::caption, NS_HTML5TREE_BUILDER_CAPTION | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_SCOPING);
+    nsGkAtoms::em,
+    nsGkAtoms::em,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+  ELT_FORM = new nsHtml5ElementName(
+    nsGkAtoms::form, nsGkAtoms::form, nsHtml5TreeBuilder::FORM | SPECIAL);
+  ELT_MENUITEM = new nsHtml5ElementName(
+    nsGkAtoms::menuitem, nsGkAtoms::menuitem, nsHtml5TreeBuilder::MENUITEM);
+  ELT_PARAM = new nsHtml5ElementName(
+    nsGkAtoms::param,
+    nsGkAtoms::param,
+    nsHtml5TreeBuilder::PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
+  ELT_ANIMATEMOTION = new nsHtml5ElementName(nsGkAtoms::animatemotion,
+                                             nsGkAtoms::animateMotion,
+                                             nsHtml5TreeBuilder::OTHER);
+  ELT_BUTTON = new nsHtml5ElementName(
+    nsGkAtoms::button, nsGkAtoms::button, nsHtml5TreeBuilder::BUTTON | SPECIAL);
+  ELT_CAPTION =
+    new nsHtml5ElementName(nsGkAtoms::caption,
+                           nsGkAtoms::caption,
+                           nsHtml5TreeBuilder::CAPTION | SPECIAL | SCOPING);
   ELT_FIGCAPTION = new nsHtml5ElementName(
-    nsHtml5Atoms::figcaption,
-    nsHtml5Atoms::figcaption,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_MN = new nsHtml5ElementName(nsHtml5Atoms::mn,
-                                  nsHtml5Atoms::mn,
-                                  NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT |
-                                    NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
+    nsGkAtoms::figcaption,
+    nsGkAtoms::figcaption,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_MN = new nsHtml5ElementName(nsGkAtoms::mn_,
+                                  nsGkAtoms::mn_,
+                                  nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT |
+                                    SCOPING_AS_MATHML);
   ELT_KEYGEN = new nsHtml5ElementName(
-    nsHtml5Atoms::keygen, nsHtml5Atoms::keygen, NS_HTML5TREE_BUILDER_KEYGEN);
+    nsGkAtoms::keygen, nsGkAtoms::keygen, nsHtml5TreeBuilder::KEYGEN);
   ELT_MAIN = new nsHtml5ElementName(
-    nsHtml5Atoms::main,
-    nsHtml5Atoms::main,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option,
-                                      nsHtml5Atoms::option,
-                                      NS_HTML5TREE_BUILDER_OPTION |
-                                        NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_POLYGON = new nsHtml5ElementName(nsHtml5Atoms::polygon, nsHtml5Atoms::polygon, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_PATTERN = new nsHtml5ElementName(nsHtml5Atoms::pattern, nsHtml5Atoms::pattern, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::main,
+    nsGkAtoms::main,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_OPTION =
+    new nsHtml5ElementName(nsGkAtoms::option,
+                           nsGkAtoms::option,
+                           nsHtml5TreeBuilder::OPTION | OPTIONAL_END_TAG);
+  ELT_POLYGON = new nsHtml5ElementName(
+    nsGkAtoms::polygon, nsGkAtoms::polygon, nsHtml5TreeBuilder::OTHER);
+  ELT_PATTERN = new nsHtml5ElementName(
+    nsGkAtoms::pattern, nsGkAtoms::pattern, nsHtml5TreeBuilder::OTHER);
   ELT_SPAN = new nsHtml5ElementName(
-    nsHtml5Atoms::span,
-    nsHtml5Atoms::span,
-    NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-  ELT_SECTION = new nsHtml5ElementName(nsHtml5Atoms::section, nsHtml5Atoms::section, NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::span,
+    nsGkAtoms::span,
+    nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+  ELT_SECTION = new nsHtml5ElementName(
+    nsGkAtoms::section,
+    nsGkAtoms::section,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_TSPAN = new nsHtml5ElementName(
-    nsHtml5Atoms::tspan, nsHtml5Atoms::tspan, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::tspan, nsGkAtoms::tspan, nsHtml5TreeBuilder::OTHER);
   ELT_AUDIO = new nsHtml5ElementName(
-    nsHtml5Atoms::audio, nsHtml5Atoms::audio, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_MO = new nsHtml5ElementName(nsHtml5Atoms::mo,
-                                  nsHtml5Atoms::mo,
-                                  NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT |
-                                    NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
+    nsGkAtoms::audio, nsGkAtoms::audio, nsHtml5TreeBuilder::OTHER);
+  ELT_MO = new nsHtml5ElementName(nsGkAtoms::mo_,
+                                  nsGkAtoms::mo_,
+                                  nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT |
+                                    SCOPING_AS_MATHML);
   ELT_VIDEO = new nsHtml5ElementName(
-    nsHtml5Atoms::video, nsHtml5Atoms::video, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_COLGROUP = new nsHtml5ElementName(nsHtml5Atoms::colgroup, nsHtml5Atoms::colgroup, NS_HTML5TREE_BUILDER_COLGROUP | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_FEDISPLACEMENTMAP =
-    new nsHtml5ElementName(nsHtml5Atoms::fedisplacementmap,
-                           nsHtml5Atoms::feDisplacementMap,
-                           NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::video, nsGkAtoms::video, nsHtml5TreeBuilder::OTHER);
+  ELT_COLGROUP = new nsHtml5ElementName(nsGkAtoms::colgroup,
+                                        nsGkAtoms::colgroup,
+                                        nsHtml5TreeBuilder::COLGROUP | SPECIAL |
+                                          OPTIONAL_END_TAG);
+  ELT_FEDISPLACEMENTMAP = new nsHtml5ElementName(nsGkAtoms::fedisplacementmap,
+                                                 nsGkAtoms::feDisplacementMap,
+                                                 nsHtml5TreeBuilder::OTHER);
   ELT_HGROUP = new nsHtml5ElementName(
-    nsHtml5Atoms::hgroup,
-    nsHtml5Atoms::hgroup,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_RP = new nsHtml5ElementName(nsHtml5Atoms::rp,
-                                  nsHtml5Atoms::rp,
-                                  NS_HTML5TREE_BUILDER_RT_OR_RP |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_OPTGROUP = new nsHtml5ElementName(
-    nsHtml5Atoms::optgroup,
-    nsHtml5Atoms::optgroup,
-    NS_HTML5TREE_BUILDER_OPTGROUP | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::hgroup,
+    nsGkAtoms::hgroup,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_RP =
+    new nsHtml5ElementName(nsGkAtoms::rp,
+                           nsGkAtoms::rp,
+                           nsHtml5TreeBuilder::RT_OR_RP | OPTIONAL_END_TAG);
+  ELT_OPTGROUP =
+    new nsHtml5ElementName(nsGkAtoms::optgroup,
+                           nsGkAtoms::optgroup,
+                           nsHtml5TreeBuilder::OPTGROUP | OPTIONAL_END_TAG);
   ELT_SAMP = new nsHtml5ElementName(
-    nsHtml5Atoms::samp, nsHtml5Atoms::samp, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::samp, nsGkAtoms::samp, nsHtml5TreeBuilder::OTHER);
   ELT_STOP = new nsHtml5ElementName(
-    nsHtml5Atoms::stop, nsHtml5Atoms::stop, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_BR = new nsHtml5ElementName(nsHtml5Atoms::br,
-                                  nsHtml5Atoms::br,
-                                  NS_HTML5TREE_BUILDER_BR |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::stop, nsGkAtoms::stop, nsHtml5TreeBuilder::OTHER);
+  ELT_BR = new nsHtml5ElementName(
+    nsGkAtoms::br, nsGkAtoms::br, nsHtml5TreeBuilder::BR | SPECIAL);
   ELT_ABBR = new nsHtml5ElementName(
-    nsHtml5Atoms::abbr, nsHtml5Atoms::abbr, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_ANIMATECOLOR = new nsHtml5ElementName(nsHtml5Atoms::animatecolor,
-                                            nsHtml5Atoms::animateColor,
-                                            NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::abbr, nsGkAtoms::abbr, nsHtml5TreeBuilder::OTHER);
+  ELT_ANIMATECOLOR = new nsHtml5ElementName(nsGkAtoms::animatecolor,
+                                            nsGkAtoms::animateColor,
+                                            nsHtml5TreeBuilder::OTHER);
   ELT_CENTER = new nsHtml5ElementName(
-    nsHtml5Atoms::center,
-    nsHtml5Atoms::center,
-    NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_HR = new nsHtml5ElementName(nsHtml5Atoms::hr,
-                                  nsHtml5Atoms::hr,
-                                  NS_HTML5TREE_BUILDER_HR |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::center,
+    nsGkAtoms::center,
+    nsHtml5TreeBuilder::DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+  ELT_HR = new nsHtml5ElementName(
+    nsGkAtoms::hr, nsGkAtoms::hr, nsHtml5TreeBuilder::HR | SPECIAL);
   ELT_FEFUNCR = new nsHtml5ElementName(
-    nsHtml5Atoms::fefuncr, nsHtml5Atoms::feFuncR, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::fefuncr, nsGkAtoms::feFuncR, nsHtml5TreeBuilder::OTHER);
   ELT_FECOMPONENTTRANSFER =
-    new nsHtml5ElementName(nsHtml5Atoms::fecomponenttransfer,
-                           nsHtml5Atoms::feComponentTransfer,
-                           NS_HTML5TREE_BUILDER_OTHER);
+    new nsHtml5ElementName(nsGkAtoms::fecomponenttransfer,
+                           nsGkAtoms::feComponentTransfer,
+                           nsHtml5TreeBuilder::OTHER);
   ELT_FILTER = new nsHtml5ElementName(
-    nsHtml5Atoms::filter, nsHtml5Atoms::filter, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::filter, nsGkAtoms::filter, nsHtml5TreeBuilder::OTHER);
   ELT_FOOTER = new nsHtml5ElementName(
-    nsHtml5Atoms::footer,
-    nsHtml5Atoms::footer,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FEGAUSSIANBLUR = new nsHtml5ElementName(nsHtml5Atoms::fegaussianblur,
-                                              nsHtml5Atoms::feGaussianBlur,
-                                              NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::footer,
+    nsGkAtoms::footer,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_FEGAUSSIANBLUR = new nsHtml5ElementName(nsGkAtoms::fegaussianblur,
+                                              nsGkAtoms::feGaussianBlur,
+                                              nsHtml5TreeBuilder::OTHER);
   ELT_HEADER = new nsHtml5ElementName(
-    nsHtml5Atoms::header,
-    nsHtml5Atoms::header,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::header,
+    nsGkAtoms::header,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_MARKER = new nsHtml5ElementName(
-    nsHtml5Atoms::marker, nsHtml5Atoms::marker, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::marker, nsGkAtoms::marker, nsHtml5TreeBuilder::OTHER);
   ELT_METER = new nsHtml5ElementName(
-    nsHtml5Atoms::meter, nsHtml5Atoms::meter, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::meter, nsGkAtoms::meter, nsHtml5TreeBuilder::OTHER);
   ELT_NOBR = new nsHtml5ElementName(
-    nsHtml5Atoms::nobr, nsHtml5Atoms::nobr, NS_HTML5TREE_BUILDER_NOBR);
-  ELT_TR = new nsHtml5ElementName(nsHtml5Atoms::tr,
-                                  nsHtml5Atoms::tr,
-                                  NS_HTML5TREE_BUILDER_TR |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL |
-                                    NS_HTML5ELEMENT_NAME_FOSTER_PARENTING |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::nobr, nsGkAtoms::nobr, nsHtml5TreeBuilder::NOBR);
+  ELT_TR = new nsHtml5ElementName(nsGkAtoms::tr,
+                                  nsGkAtoms::tr,
+                                  nsHtml5TreeBuilder::TR | SPECIAL |
+                                    FOSTER_PARENTING | OPTIONAL_END_TAG);
   ELT_ADDRESS = new nsHtml5ElementName(
-    nsHtml5Atoms::address,
-    nsHtml5Atoms::address,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::address,
+    nsGkAtoms::address,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
   ELT_CANVAS = new nsHtml5ElementName(
-    nsHtml5Atoms::canvas, nsHtml5Atoms::canvas, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::canvas, nsGkAtoms::canvas, nsHtml5TreeBuilder::OTHER);
   ELT_DEFS = new nsHtml5ElementName(
-    nsHtml5Atoms::defs, nsHtml5Atoms::defs, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::defs, nsGkAtoms::defs, nsHtml5TreeBuilder::OTHER);
   ELT_DETAILS = new nsHtml5ElementName(
-    nsHtml5Atoms::details,
-    nsHtml5Atoms::details,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_MS = new nsHtml5ElementName(nsHtml5Atoms::ms,
-                                  nsHtml5Atoms::ms,
-                                  NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT |
-                                    NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
-  ELT_NOFRAMES = new nsHtml5ElementName(nsHtml5Atoms::noframes,
-                                        nsHtml5Atoms::noframes,
-                                        NS_HTML5TREE_BUILDER_NOFRAMES |
-                                          NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::details,
+    nsGkAtoms::details,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_MS = new nsHtml5ElementName(nsGkAtoms::ms_,
+                                  nsGkAtoms::ms_,
+                                  nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT |
+                                    SCOPING_AS_MATHML);
+  ELT_NOFRAMES = new nsHtml5ElementName(nsGkAtoms::noframes,
+                                        nsGkAtoms::noframes,
+                                        nsHtml5TreeBuilder::NOFRAMES | SPECIAL);
   ELT_PROGRESS = new nsHtml5ElementName(
-    nsHtml5Atoms::progress, nsHtml5Atoms::progress, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_DT = new nsHtml5ElementName(nsHtml5Atoms::dt,
-                                  nsHtml5Atoms::dt,
-                                  NS_HTML5TREE_BUILDER_DD_OR_DT |
-                                    NS_HTML5ELEMENT_NAME_SPECIAL |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_APPLET = new nsHtml5ElementName(nsHtml5Atoms::applet,
-                                      nsHtml5Atoms::applet,
-                                      NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET |
-                                        NS_HTML5ELEMENT_NAME_SPECIAL |
-                                        NS_HTML5ELEMENT_NAME_SCOPING);
-  ELT_BASEFONT =
-    new nsHtml5ElementName(nsHtml5Atoms::basefont,
-                           nsHtml5Atoms::basefont,
-                           NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND |
-                             NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FOREIGNOBJECT =
-    new nsHtml5ElementName(nsHtml5Atoms::foreignobject,
-                           nsHtml5Atoms::foreignObject,
-                           NS_HTML5TREE_BUILDER_FOREIGNOBJECT_OR_DESC |
-                             NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG);
-  ELT_FIELDSET = new nsHtml5ElementName(nsHtml5Atoms::fieldset, nsHtml5Atoms::fieldset, NS_HTML5TREE_BUILDER_FIELDSET | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FRAMESET = new nsHtml5ElementName(nsHtml5Atoms::frameset, nsHtml5Atoms::frameset, NS_HTML5TREE_BUILDER_FRAMESET | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FEOFFSET = new nsHtml5ElementName(nsHtml5Atoms::feoffset, nsHtml5Atoms::feOffset, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FESPOTLIGHT = new nsHtml5ElementName(nsHtml5Atoms::fespotlight, nsHtml5Atoms::feSpotLight, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FEPOINTLIGHT = new nsHtml5ElementName(nsHtml5Atoms::fepointlight, nsHtml5Atoms::fePointLight, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FEDISTANTLIGHT = new nsHtml5ElementName(nsHtml5Atoms::fedistantlight, nsHtml5Atoms::feDistantLight, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::progress, nsGkAtoms::progress, nsHtml5TreeBuilder::OTHER);
+  ELT_DT = new nsHtml5ElementName(nsGkAtoms::dt,
+                                  nsGkAtoms::dt,
+                                  nsHtml5TreeBuilder::DD_OR_DT | SPECIAL |
+                                    OPTIONAL_END_TAG);
+  ELT_APPLET = new nsHtml5ElementName(nsGkAtoms::applet,
+                                      nsGkAtoms::applet,
+                                      nsHtml5TreeBuilder::MARQUEE_OR_APPLET |
+                                        SPECIAL | SCOPING);
+  ELT_BASEFONT = new nsHtml5ElementName(
+    nsGkAtoms::basefont,
+    nsGkAtoms::basefont,
+    nsHtml5TreeBuilder::LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
+  ELT_FOREIGNOBJECT = new nsHtml5ElementName(
+    nsGkAtoms::foreignobject,
+    nsGkAtoms::foreignObject,
+    nsHtml5TreeBuilder::FOREIGNOBJECT_OR_DESC | SCOPING_AS_SVG);
+  ELT_FIELDSET = new nsHtml5ElementName(nsGkAtoms::fieldset,
+                                        nsGkAtoms::fieldset,
+                                        nsHtml5TreeBuilder::FIELDSET | SPECIAL);
+  ELT_FRAMESET = new nsHtml5ElementName(nsGkAtoms::frameset,
+                                        nsGkAtoms::frameset,
+                                        nsHtml5TreeBuilder::FRAMESET | SPECIAL);
+  ELT_FEOFFSET = new nsHtml5ElementName(
+    nsGkAtoms::feoffset, nsGkAtoms::feOffset, nsHtml5TreeBuilder::OTHER);
+  ELT_FESPOTLIGHT = new nsHtml5ElementName(
+    nsGkAtoms::fespotlight, nsGkAtoms::feSpotLight, nsHtml5TreeBuilder::OTHER);
+  ELT_FEPOINTLIGHT = new nsHtml5ElementName(nsGkAtoms::fepointlight,
+                                            nsGkAtoms::fePointLight,
+                                            nsHtml5TreeBuilder::OTHER);
+  ELT_FEDISTANTLIGHT = new nsHtml5ElementName(nsGkAtoms::fedistantlight,
+                                              nsGkAtoms::feDistantLight,
+                                              nsHtml5TreeBuilder::OTHER);
   ELT_FONT = new nsHtml5ElementName(
-    nsHtml5Atoms::font, nsHtml5Atoms::font, NS_HTML5TREE_BUILDER_FONT);
-  ELT_INPUT = new nsHtml5ElementName(nsHtml5Atoms::input,
-                                     nsHtml5Atoms::input,
-                                     NS_HTML5TREE_BUILDER_INPUT |
-                                       NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_LINEARGRADIENT = new nsHtml5ElementName(nsHtml5Atoms::lineargradient, nsHtml5Atoms::linearGradient, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_MTEXT = new nsHtml5ElementName(nsHtml5Atoms::mtext,
-                                     nsHtml5Atoms::mtext,
-                                     NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT |
-                                       NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML);
-  ELT_NOSCRIPT = new nsHtml5ElementName(nsHtml5Atoms::noscript,
-                                        nsHtml5Atoms::noscript,
-                                        NS_HTML5TREE_BUILDER_NOSCRIPT |
-                                          NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_RT = new nsHtml5ElementName(nsHtml5Atoms::rt,
-                                  nsHtml5Atoms::rt,
-                                  NS_HTML5TREE_BUILDER_RT_OR_RP |
-                                    NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_OBJECT = new nsHtml5ElementName(nsHtml5Atoms::object,
-                                      nsHtml5Atoms::object,
-                                      NS_HTML5TREE_BUILDER_OBJECT |
-                                        NS_HTML5ELEMENT_NAME_SPECIAL |
-                                        NS_HTML5ELEMENT_NAME_SCOPING);
+    nsGkAtoms::font, nsGkAtoms::font, nsHtml5TreeBuilder::FONT);
+  ELT_INPUT = new nsHtml5ElementName(
+    nsGkAtoms::input, nsGkAtoms::input, nsHtml5TreeBuilder::INPUT | SPECIAL);
+  ELT_LINEARGRADIENT = new nsHtml5ElementName(nsGkAtoms::lineargradient,
+                                              nsGkAtoms::linearGradient,
+                                              nsHtml5TreeBuilder::OTHER);
+  ELT_MTEXT = new nsHtml5ElementName(nsGkAtoms::mtext_,
+                                     nsGkAtoms::mtext_,
+                                     nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT |
+                                       SCOPING_AS_MATHML);
+  ELT_NOSCRIPT = new nsHtml5ElementName(nsGkAtoms::noscript,
+                                        nsGkAtoms::noscript,
+                                        nsHtml5TreeBuilder::NOSCRIPT | SPECIAL);
+  ELT_RT =
+    new nsHtml5ElementName(nsGkAtoms::rt,
+                           nsGkAtoms::rt,
+                           nsHtml5TreeBuilder::RT_OR_RP | OPTIONAL_END_TAG);
+  ELT_OBJECT =
+    new nsHtml5ElementName(nsGkAtoms::object,
+                           nsGkAtoms::object,
+                           nsHtml5TreeBuilder::OBJECT | SPECIAL | SCOPING);
   ELT_OUTPUT = new nsHtml5ElementName(
-    nsHtml5Atoms::output, nsHtml5Atoms::output, NS_HTML5TREE_BUILDER_OUTPUT);
-  ELT_PLAINTEXT = new nsHtml5ElementName(nsHtml5Atoms::plaintext,
-                                         nsHtml5Atoms::plaintext,
-                                         NS_HTML5TREE_BUILDER_PLAINTEXT |
-                                           NS_HTML5ELEMENT_NAME_SPECIAL);
+    nsGkAtoms::output, nsGkAtoms::output, nsHtml5TreeBuilder::OUTPUT);
+  ELT_PLAINTEXT =
+    new nsHtml5ElementName(nsGkAtoms::plaintext,
+                           nsGkAtoms::plaintext,
+                           nsHtml5TreeBuilder::PLAINTEXT | SPECIAL);
   ELT_TT = new nsHtml5ElementName(
-    nsHtml5Atoms::tt,
-    nsHtml5Atoms::tt,
-    NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+    nsGkAtoms::tt,
+    nsGkAtoms::tt,
+    nsHtml5TreeBuilder::
+      B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
   ELT_RECT = new nsHtml5ElementName(
-    nsHtml5Atoms::rect, nsHtml5Atoms::rect, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_RADIALGRADIENT = new nsHtml5ElementName(nsHtml5Atoms::radialgradient, nsHtml5Atoms::radialGradient, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_SELECT = new nsHtml5ElementName(nsHtml5Atoms::select,
-                                      nsHtml5Atoms::select,
-                                      NS_HTML5TREE_BUILDER_SELECT |
-                                        NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_SCRIPT = new nsHtml5ElementName(nsHtml5Atoms::script,
-                                      nsHtml5Atoms::script,
-                                      NS_HTML5TREE_BUILDER_SCRIPT |
-                                        NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TFOOT = new nsHtml5ElementName(
-    nsHtml5Atoms::tfoot,
-    nsHtml5Atoms::tfoot,
-    NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT |
-      NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_FOSTER_PARENTING |
-      NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::rect, nsGkAtoms::rect, nsHtml5TreeBuilder::OTHER);
+  ELT_RADIALGRADIENT = new nsHtml5ElementName(nsGkAtoms::radialgradient,
+                                              nsGkAtoms::radialGradient,
+                                              nsHtml5TreeBuilder::OTHER);
+  ELT_SELECT = new nsHtml5ElementName(
+    nsGkAtoms::select, nsGkAtoms::select, nsHtml5TreeBuilder::SELECT | SPECIAL);
+  ELT_SCRIPT = new nsHtml5ElementName(
+    nsGkAtoms::script, nsGkAtoms::script, nsHtml5TreeBuilder::SCRIPT | SPECIAL);
+  ELT_TFOOT =
+    new nsHtml5ElementName(nsGkAtoms::tfoot,
+                           nsGkAtoms::tfoot,
+                           nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT |
+                             SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
   ELT_TEXT = new nsHtml5ElementName(
-    nsHtml5Atoms::text, nsHtml5Atoms::text, NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::text, nsGkAtoms::text, nsHtml5TreeBuilder::OTHER);
   ELT_MENU = new nsHtml5ElementName(
-    nsHtml5Atoms::menu,
-    nsHtml5Atoms::menu,
-    NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_FEDROPSHADOW = new nsHtml5ElementName(nsHtml5Atoms::fedropshadow,
-                                            nsHtml5Atoms::feDropShadow,
-                                            NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::menu,
+    nsGkAtoms::menu,
+    nsHtml5TreeBuilder::DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+  ELT_FEDROPSHADOW = new nsHtml5ElementName(nsGkAtoms::fedropshadow,
+                                            nsGkAtoms::feDropShadow,
+                                            nsHtml5TreeBuilder::OTHER);
   ELT_VIEW = new nsHtml5ElementName(
-    nsHtml5Atoms::view, nsHtml5Atoms::view, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FECOLORMATRIX = new nsHtml5ElementName(nsHtml5Atoms::fecolormatrix,
-                                             nsHtml5Atoms::feColorMatrix,
-                                             NS_HTML5TREE_BUILDER_OTHER);
-  ELT_FECONVOLVEMATRIX = new nsHtml5ElementName(nsHtml5Atoms::feconvolvematrix, nsHtml5Atoms::feConvolveMatrix, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_BODY = new nsHtml5ElementName(nsHtml5Atoms::body,
-                                    nsHtml5Atoms::body,
-                                    NS_HTML5TREE_BUILDER_BODY |
-                                      NS_HTML5ELEMENT_NAME_SPECIAL |
-                                      NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_FEMORPHOLOGY = new nsHtml5ElementName(nsHtml5Atoms::femorphology,
-                                            nsHtml5Atoms::feMorphology,
-                                            NS_HTML5TREE_BUILDER_OTHER);
+    nsGkAtoms::view, nsGkAtoms::view, nsHtml5TreeBuilder::OTHER);
+  ELT_FECOLORMATRIX = new nsHtml5ElementName(nsGkAtoms::fecolormatrix,
+                                             nsGkAtoms::feColorMatrix,
+                                             nsHtml5TreeBuilder::OTHER);
+  ELT_FECONVOLVEMATRIX = new nsHtml5ElementName(nsGkAtoms::feconvolvematrix,
+                                                nsGkAtoms::feConvolveMatrix,
+                                                nsHtml5TreeBuilder::OTHER);
+  ELT_BODY = new nsHtml5ElementName(nsGkAtoms::body,
+                                    nsGkAtoms::body,
+                                    nsHtml5TreeBuilder::BODY | SPECIAL |
+                                      OPTIONAL_END_TAG);
+  ELT_FEMORPHOLOGY = new nsHtml5ElementName(nsGkAtoms::femorphology,
+                                            nsGkAtoms::feMorphology,
+                                            nsHtml5TreeBuilder::OTHER);
   ELT_RUBY = new nsHtml5ElementName(
-    nsHtml5Atoms::ruby,
-    nsHtml5Atoms::ruby,
-    NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+    nsGkAtoms::ruby,
+    nsGkAtoms::ruby,
+    nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
   ELT_SUMMARY = new nsHtml5ElementName(
-    nsHtml5Atoms::summary,
-    nsHtml5Atoms::summary,
-    NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
-      NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TBODY = new nsHtml5ElementName(
-    nsHtml5Atoms::tbody,
-    nsHtml5Atoms::tbody,
-    NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT |
-      NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_FOSTER_PARENTING |
-      NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+    nsGkAtoms::summary,
+    nsGkAtoms::summary,
+    nsHtml5TreeBuilder::
+        ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY |
+      SPECIAL);
+  ELT_TBODY =
+    new nsHtml5ElementName(nsGkAtoms::tbody,
+                           nsGkAtoms::tbody,
+                           nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT |
+                             SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
   ELEMENT_NAMES = new nsHtml5ElementName*[204];
   ELEMENT_NAMES[0] = ELT_BIG;
   ELEMENT_NAMES[1] = ELT_BDO;

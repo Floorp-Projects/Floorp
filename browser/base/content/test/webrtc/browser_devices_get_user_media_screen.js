@@ -55,7 +55,7 @@ var gTests = [
     menulist.getItemAtIndex(2).doCommand();
     ok(!document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should now be visible");
-    yield promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+    yield promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden, 100);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(!document.getElementById("webRTC-previewWarning").hidden,
@@ -410,7 +410,7 @@ var gTests = [
     yield check({video: true, audio: true});
 
     info("Stop the camera, everything should stop.");
-    yield stopSharing("camera", false, true);
+    yield stopSharing("camera");
 
     info("Now, share only the screen...");
     indicator = promiseIndicatorWindow();
@@ -423,7 +423,7 @@ var gTests = [
     yield check({video: true, audio: true, screen: "Screen"});
 
     info("Stop the camera, this should stop everything.");
-    yield stopSharing("camera", false, true);
+    yield stopSharing("camera");
   }
 },
 

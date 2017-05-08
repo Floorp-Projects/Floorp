@@ -32,7 +32,7 @@ add_task(function* testMainActionCalled() {
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
     let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
     mainActionButton.click();
@@ -82,7 +82,7 @@ add_task(function* testSecondaryActionWorkflow() {
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
     let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
     secondaryActionButton.click();
@@ -94,7 +94,8 @@ add_task(function* testSecondaryActionWorkflow() {
 
     yield PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is hidden on PanelUI button.");
-    let menuItem = doc.getElementById("PanelUI-update-manual-menu-item");
+    let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
+    is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
     is(menuItem.hidden, false, "update-manual menu item is showing.");
 
     yield PanelUI.hide();
@@ -136,7 +137,7 @@ add_task(function* testInteractionWithBadges() {
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
     let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
     secondaryActionButton.click();
@@ -147,7 +148,8 @@ add_task(function* testInteractionWithBadges() {
 
     yield PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is hidden on PanelUI button.");
-    let menuItem = doc.getElementById("PanelUI-update-manual-menu-item");
+    let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
+    is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
     is(menuItem.hidden, false, "update-manual menu item is showing.");
 
     menuItem.click();
@@ -179,7 +181,7 @@ add_task(function* testAddingBadgeWhileDoorhangerIsShowing() {
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
     let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
     mainActionButton.click();
@@ -265,7 +267,7 @@ add_task(function* testMultipleNonBadges() {
     notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
     PanelUI.showNotification("update-restart", updateRestartAction);
 
@@ -273,7 +275,7 @@ add_task(function* testMultipleNonBadges() {
     notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     doorhanger = notifications[0];
-    is(doorhanger.id, "PanelUI-update-restart-notification", "PanelUI is displaying the update-restart notification.");
+    is(doorhanger.id, "appMenu-update-restart-notification", "PanelUI is displaying the update-restart notification.");
 
     let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
     secondaryActionButton.click();
@@ -281,11 +283,10 @@ add_task(function* testMultipleNonBadges() {
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-restart", "update-restart badge is displaying on PanelUI button.");
 
-    let menuItem;
-
     yield PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-restart", "update-restart badge is hidden on PanelUI button.");
-    menuItem = doc.getElementById("PanelUI-update-restart-menu-item");
+    let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
+    is(menuItem.label, menuItem.getAttribute("label-update-restart"), "Showing correct label");
     is(menuItem.hidden, false, "update-restart menu item is showing.");
 
     menuItem.click();
@@ -296,7 +297,7 @@ add_task(function* testMultipleNonBadges() {
 
     yield PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "update-manual badge is hidden on PanelUI button.");
-    menuItem = doc.getElementById("PanelUI-update-manual-menu-item");
+    is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
     is(menuItem.hidden, false, "update-manual menu item is showing.");
 
     menuItem.click();
@@ -318,7 +319,7 @@ add_task(function* testFullscreen() {
   let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
   is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
   let doorhanger = notifications[0];
-  is(doorhanger.id, "PanelUI-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+  is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popuphidden");
   EventUtils.synthesizeKey("VK_F11", {});

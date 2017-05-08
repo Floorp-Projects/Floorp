@@ -32,7 +32,6 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
@@ -69,8 +68,8 @@ int32_t
 nsHtml5HtmlAttributes::getIndex(nsHtml5AttributeName* aName)
 {
   for (size_t i = 0; i < mStorage.Length(); i++) {
-    if (mStorage[i].GetLocal(NS_HTML5ATTRIBUTE_NAME_HTML) ==
-        aName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {
+    if (mStorage[i].GetLocal(nsHtml5AttributeName::HTML) ==
+        aName->getLocal(nsHtml5AttributeName::HTML)) {
       // It's release asserted elsewhere that i can't be too large.
       return i;
     }
@@ -182,8 +181,8 @@ bool
 nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* aName)
 {
   for (size_t i = 0; i < mStorage.Length(); i++) {
-    if (mStorage[i].GetLocal(NS_HTML5ATTRIBUTE_NAME_HTML) ==
-        aName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {
+    if (mStorage[i].GetLocal(nsHtml5AttributeName::HTML) ==
+        aName->getLocal(nsHtml5AttributeName::HTML)) {
       return true;
     }
   }
@@ -193,13 +192,13 @@ nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* aName)
 void 
 nsHtml5HtmlAttributes::adjustForMath()
 {
-  mMode = NS_HTML5ATTRIBUTE_NAME_MATHML;
+  mMode = nsHtml5AttributeName::MATHML;
 }
 
 void 
 nsHtml5HtmlAttributes::adjustForSvg()
 {
-  mMode = NS_HTML5ATTRIBUTE_NAME_SVG;
+  mMode = nsHtml5AttributeName::SVG;
 }
 
 nsHtml5HtmlAttributes*
@@ -207,7 +206,7 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* aInterner)
 {
   MOZ_ASSERT(mStorage.IsEmpty() || !mMode);
   nsHtml5HtmlAttributes* clone =
-    new nsHtml5HtmlAttributes(NS_HTML5ATTRIBUTE_NAME_HTML);
+    new nsHtml5HtmlAttributes(nsHtml5AttributeName::HTML);
   for (nsHtml5AttributeEntry& entry : mStorage) {
     clone->AddEntry(entry.Clone(aInterner));
   }
@@ -223,9 +222,9 @@ nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* aOther)
   }
   for (nsHtml5AttributeEntry& entry : mStorage) {
     bool found = false;
-    nsIAtom* ownLocal = entry.GetLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
+    nsIAtom* ownLocal = entry.GetLocal(nsHtml5AttributeName::HTML);
     for (nsHtml5AttributeEntry& otherEntry : aOther->mStorage) {
-      if (ownLocal == otherEntry.GetLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {
+      if (ownLocal == otherEntry.GetLocal(nsHtml5AttributeName::HTML)) {
         found = true;
         if (!entry.GetValue().Equals(otherEntry.GetValue())) {
           return false;
@@ -249,7 +248,7 @@ nsHtml5HtmlAttributes::AddEntry(nsHtml5AttributeEntry&& aEntry)
 void
 nsHtml5HtmlAttributes::initializeStatics()
 {
-  EMPTY_ATTRIBUTES = new nsHtml5HtmlAttributes(NS_HTML5ATTRIBUTE_NAME_HTML);
+  EMPTY_ATTRIBUTES = new nsHtml5HtmlAttributes(nsHtml5AttributeName::HTML);
 }
 
 void
