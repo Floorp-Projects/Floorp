@@ -424,30 +424,33 @@ static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
 struct VecU8 {
   WrVecU8 inner;
   VecU8() {
-    inner.data = nullptr;
-    inner.capacity = 0;
+    SetEmpty();
   }
   VecU8(VecU8&) = delete;
   VecU8(VecU8&& src) {
     inner = src.inner;
-    src.inner.data = nullptr;
-    src.inner.capacity = 0;
+    src.SetEmpty();
   }
 
   VecU8&
   operator=(VecU8&& src) {
     inner = src.inner;
-    src.inner.data = nullptr;
-    src.inner.capacity = 0;
+    src.SetEmpty();
     return *this;
   }
 
   WrVecU8
   Extract() {
     WrVecU8 ret = inner;
-    inner.data = nullptr;
-    inner.capacity = 0;
+    SetEmpty();
     return ret;
+  }
+
+  void
+  SetEmpty() {
+    inner.data = (uint8_t*)1;
+    inner.capacity = 0;
+    inner.length = 0;
   }
 
   ~VecU8() {
