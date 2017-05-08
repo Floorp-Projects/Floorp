@@ -27,13 +27,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScopedCredential)
 
 public:
-  explicit ScopedCredential(nsPIDOMWindowInner* aParent);
+  explicit ScopedCredential(WebAuthentication* aParent);
 
 protected:
   ~ScopedCredential();
 
 public:
-  nsISupports*
+  WebAuthentication*
   GetParentObject() const
   {
     return mParent;
@@ -55,7 +55,7 @@ public:
   SetId(CryptoBuffer& aBuffer);
 
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<WebAuthentication> mParent;
   CryptoBuffer mIdBuffer;
   ScopedCredentialType mType;
 };

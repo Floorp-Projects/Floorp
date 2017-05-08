@@ -35,13 +35,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScopedCredentialInfo)
 
 public:
-  explicit ScopedCredentialInfo(nsPIDOMWindowInner* aParent);
+  explicit ScopedCredentialInfo(WebAuthentication* aParent);
 
 protected:
   ~ScopedCredentialInfo();
 
 public:
-  nsISupports*
+  WebAuthentication*
   GetParentObject() const
   {
     return mParent;
@@ -63,7 +63,7 @@ public:
   SetAttestation(RefPtr<WebAuthnAttestation>);
 
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<WebAuthentication> mParent;
   RefPtr<WebAuthnAttestation> mAttestation;
   RefPtr<ScopedCredential> mCredential;
 };
