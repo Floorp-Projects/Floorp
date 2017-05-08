@@ -7,7 +7,6 @@
 
 interface nsIControllers;
 interface nsIDOMBlob;
-interface nsIDOMLocation;
 interface nsIDOMOfflineResourceList;
 interface nsIPrompt;
 interface nsISelection;
