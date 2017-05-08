@@ -18,6 +18,7 @@
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
  *          promisePrefChangeObserved openContextMenuInFrame
+ *          promiseAnimationFrame
  */
 
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
@@ -81,6 +82,13 @@ function getListStyleImage(button) {
   let match = /^url\("(.*)"\)$/.exec(style.listStyleImage);
 
   return match && match[1];
+}
+
+async function promiseAnimationFrame(win = window) {
+  await new Promise(resolve => win.requestAnimationFrame(resolve));
+
+  let {mainThread} = Services.tm;
+  return new Promise(resolve => mainThread.dispatch(resolve, mainThread.DISPATCH_NORMAL));
 }
 
 function promisePopupShown(popup) {
@@ -217,6 +225,7 @@ var showBrowserAction = Task.async(function* (extension, win = window) {
 });
 
 var clickBrowserAction = Task.async(function* (extension, win = window) {
+  yield promiseAnimationFrame(win);
   yield showBrowserAction(extension, win);
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
@@ -279,8 +288,8 @@ async function closeContextMenu(contextMenu) {
   await popupHiddenPromise;
 }
 
-function* openExtensionContextMenu(selector = "#img1") {
-  let contextMenu = yield openContextMenu(selector);
+async function openExtensionContextMenu(selector = "#img1") {
+  let contextMenu = await openContextMenu(selector);
   let topLevelMenu = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
 
   // Return null if the extension only has one item and therefore no extension menu.
@@ -291,23 +300,23 @@ function* openExtensionContextMenu(selector = "#img1") {
   let extensionMenu = topLevelMenu[0].childNodes[0];
   let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(extensionMenu, {});
-  yield popupShownPromise;
+  await popupShownPromise;
   return extensionMenu;
 }
 
-function* closeExtensionContextMenu(itemToSelect, modifiers = {}) {
+async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
   EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 }
 
-function* openChromeContextMenu(menuId, target, win = window) {
+async function openChromeContextMenu(menuId, target, win = window) {
   const node = win.document.querySelector(target);
   const menu = win.document.getElementById(menuId);
   const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"}, win);
-  yield shown;
+  await shown;
   return menu;
 }
 
@@ -330,9 +339,10 @@ function closeChromeContextMenu(menuId, itemToSelect, win = window) {
   return hidden;
 }
 
-function openActionContextMenu(extension, kind, win = window) {
+async function openActionContextMenu(extension, kind, win = window) {
   // See comment from clickPageAction below.
   SetPageProxyState("valid");
+  await promiseAnimationFrame(win);
   const id = `#${makeWidgetId(extension.id)}-${kind}-action`;
   return openChromeContextMenu("toolbar-context-menu", id, win);
 }
@@ -354,7 +364,7 @@ function getPageActionPopup(extension, win = window) {
   return win.document.getElementById(panelId);
 }
 
-function clickPageAction(extension, win = window) {
+async function clickPageAction(extension, win = window) {
   // This would normally be set automatically on navigation, and cleared
   // when the user types a value into the URL bar, to show and hide page
   // identity info and icons such as page action buttons.
@@ -363,6 +373,8 @@ function clickPageAction(extension, win = window) {
   // tests.
   /* globals SetPageProxyState */
   SetPageProxyState("valid");
+
+  await promiseAnimationFrame(win);
 
   let pageActionId = makeWidgetId(extension.id) + "-page-action";
   let elem = win.document.getElementById(pageActionId);

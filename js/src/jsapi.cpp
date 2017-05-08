@@ -4209,8 +4209,18 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
                           OffThreadCompileCallback callback, void* callbackData)
 {
-    MOZ_ASSERT(CanCompileOffThread(cx, options, buffer.length() - cursor));
-    return StartOffThreadDecodeScript(cx, options, buffer, cursor, callback, callbackData);
+    JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
+    MOZ_ASSERT(CanCompileOffThread(cx, options, range.length()));
+    return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
+}
+
+JS_PUBLIC_API(bool)
+JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+                          const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
+                          OffThreadCompileCallback callback, void* callbackData)
+{
+    MOZ_ASSERT(CanCompileOffThread(cx, options, range.length()));
+    return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
 JS_PUBLIC_API(JSScript*)
@@ -4578,6 +4588,23 @@ JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg,
         js::Debugger::onNewScript(cx, script);
     }
     return ExecuteScript(cx, globalLexical, script, rval.address());
+}
+
+JS_PUBLIC_API(bool)
+JS::CloneAndExecuteScript(JSContext* cx, JS::AutoObjectVector& envChain,
+                          HandleScript scriptArg,
+                          JS::MutableHandleValue rval)
+{
+    CHECK_REQUEST(cx);
+    RootedScript script(cx, scriptArg);
+    if (script->compartment() != cx->compartment()) {
+        script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
+        if (!script)
+            return false;
+
+        js::Debugger::onNewScript(cx, script);
+    }
+    return ExecuteScript(cx, envChain, script, rval.address());
 }
 
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
@@ -7025,6 +7052,15 @@ JS::DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript
                  size_t cursorIndex)
 {
     XDRDecoder decoder(cx, buffer, cursorIndex);
+    decoder.codeScript(scriptp);
+    MOZ_ASSERT(bool(scriptp) == (decoder.resultCode() == TranscodeResult_Ok));
+    return decoder.resultCode();
+}
+
+JS_PUBLIC_API(JS::TranscodeResult)
+JS::DecodeScript(JSContext* cx, const TranscodeRange& range, JS::MutableHandleScript scriptp)
+{
+    XDRDecoder decoder(cx, range);
     decoder.codeScript(scriptp);
     MOZ_ASSERT(bool(scriptp) == (decoder.resultCode() == TranscodeResult_Ok));
     return decoder.resultCode();

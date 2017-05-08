@@ -24,7 +24,12 @@ VERSION_PATH = os.path.join(GECKO, "browser", "config", "version_display.txt")
 
 """Map signing scope aliases to sets of projects.
 
-Currently m-c and m-a use nightly signing; m-b and m-r use release signing.
+Currently m-c and DevEdition on m-b use nightly signing; Beta on m-b and m-r
+use release signing. These data structures aren't set-up to handle different
+scopes on the same repo, so we use a different set of them for DevEdition, and
+callers are responsible for using the correct one (by calling the appropriate
+helper below). More context on this in https://bugzilla.mozilla.org/show_bug.cgi?id=1358601.
+
 We will need to add esr support at some point. Eventually we want to add
 nuance so certain m-b and m-r tasks use dep or nightly signing, and we only
 release sign when we have a signed-off set of candidate builds.  This current
@@ -49,6 +54,17 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
 SIGNING_CERT_SCOPES = {
     'all-release-branches': 'project:releng:signing:cert:release-signing',
     'all-nightly-branches': 'project:releng:signing:cert:nightly-signing',
+    'default': 'project:releng:signing:cert:dep-signing',
+}
+
+DEVEDITION_SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
+    'beta', set([
+        'mozilla-beta',
+    ])
+]]
+
+DEVEDITION_SIGNING_CERT_SCOPES = {
+    'beta': 'project:releng:signing:cert:nightly-signing',
     'default': 'project:releng:signing:cert:dep-signing',
 }
 
@@ -312,6 +328,12 @@ get_signing_cert_scope = functools.partial(
     get_scope_from_project,
     SIGNING_SCOPE_ALIAS_TO_PROJECT,
     SIGNING_CERT_SCOPES
+)
+
+get_devedition_signing_cert_scope = functools.partial(
+    get_scope_from_project,
+    DEVEDITION_SIGNING_SCOPE_ALIAS_TO_PROJECT,
+    DEVEDITION_SIGNING_CERT_SCOPES
 )
 
 get_beetmover_bucket_scope = functools.partial(

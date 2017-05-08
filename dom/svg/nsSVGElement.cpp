@@ -1612,7 +1612,7 @@ nsSVGElement::DidAnimateLength(uint8_t aAttrEnum)
     LengthAttributesInfo info = GetLengthInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mLengthInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -1709,7 +1709,7 @@ nsSVGElement::DidAnimateLengthList(uint8_t aAttrEnum)
     LengthListAttributesInfo info = GetLengthListInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mLengthListInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -1797,7 +1797,7 @@ nsSVGElement::DidAnimateNumberList(uint8_t aAttrEnum)
 
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mNumberListInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -1858,7 +1858,7 @@ nsSVGElement::DidAnimatePointList()
   if (frame) {
     frame->AttributeChanged(kNameSpaceID_None,
                             GetPointListAttrName(),
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -1895,7 +1895,7 @@ nsSVGElement::DidAnimatePathSegList()
   if (frame) {
     frame->AttributeChanged(kNameSpaceID_None,
                             GetPathDataAttrName(),
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -1936,7 +1936,7 @@ nsSVGElement::DidAnimateNumber(uint8_t aAttrEnum)
     NumberAttributesInfo info = GetNumberInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mNumberInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2006,7 +2006,7 @@ nsSVGElement::DidAnimateNumberPair(uint8_t aAttrEnum)
     NumberPairAttributesInfo info = GetNumberPairInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mNumberPairInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2047,7 +2047,7 @@ nsSVGElement::DidAnimateInteger(uint8_t aAttrEnum)
     IntegerAttributesInfo info = GetIntegerInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mIntegerInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2118,7 +2118,7 @@ nsSVGElement::DidAnimateIntegerPair(uint8_t aAttrEnum)
     IntegerPairAttributesInfo info = GetIntegerPairInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mIntegerPairInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2166,7 +2166,7 @@ nsSVGElement::DidAnimateAngle(uint8_t aAttrEnum)
     AngleAttributesInfo info = GetAngleInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mAngleInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2205,7 +2205,7 @@ nsSVGElement::DidAnimateBoolean(uint8_t aAttrEnum)
     BooleanAttributesInfo info = GetBooleanInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mBooleanInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2244,7 +2244,7 @@ nsSVGElement::DidAnimateEnum(uint8_t aAttrEnum)
     EnumAttributesInfo info = GetEnumInfo();
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mEnumInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2281,7 +2281,7 @@ nsSVGElement::DidAnimateViewBox()
   if (frame) {
     frame->AttributeChanged(kNameSpaceID_None,
                             nsGkAtoms::viewBox,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2321,7 +2321,7 @@ nsSVGElement::DidAnimatePreserveAspectRatio()
   if (frame) {
     frame->AttributeChanged(kNameSpaceID_None,
                             nsGkAtoms::preserveAspectRatio,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 
@@ -2419,7 +2419,7 @@ nsSVGElement::DidAnimateString(uint8_t aAttrEnum)
     StringAttributesInfo info = GetStringInfo();
     frame->AttributeChanged(info.mStringInfo[aAttrEnum].mNamespaceID,
                             *info.mStringInfo[aAttrEnum].mName,
-                            nsIDOMMutationEvent::MODIFICATION);
+                            nsIDOMMutationEvent::SMIL);
   }
 }
 

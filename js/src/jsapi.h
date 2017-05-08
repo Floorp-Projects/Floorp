@@ -4278,6 +4278,11 @@ DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                       mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
                       OffThreadCompileCallback callback, void* callbackData);
 
+extern JS_PUBLIC_API(bool)
+DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+                      const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
+                      OffThreadCompileCallback callback, void* callbackData);
+
 extern JS_PUBLIC_API(JSScript*)
 FinishOffThreadScriptDecoder(JSContext* cx, void* token);
 
@@ -4376,6 +4381,15 @@ namespace JS {
  */
 extern JS_PUBLIC_API(bool)
 CloneAndExecuteScript(JSContext* cx, JS::Handle<JSScript*> script,
+                      JS::MutableHandleValue rval);
+
+/**
+ * Like CloneAndExecuteScript above, but allows executing under a non-syntactic
+ * environment chain.
+ */
+extern JS_PUBLIC_API(bool)
+CloneAndExecuteScript(JSContext* cx, JS::AutoObjectVector& envChain,
+                      JS::Handle<JSScript*> script,
                       JS::MutableHandleValue rval);
 
 } /* namespace JS */
@@ -6159,6 +6173,7 @@ class MOZ_RAII AutoHideScriptedCaller
  */
 
 typedef mozilla::Vector<uint8_t> TranscodeBuffer;
+typedef mozilla::Range<uint8_t> TranscodeRange;
 
 enum TranscodeResult
 {
@@ -6187,6 +6202,9 @@ EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::HandleObje
 extern JS_PUBLIC_API(TranscodeResult)
 DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
              size_t cursorIndex = 0);
+
+extern JS_PUBLIC_API(TranscodeResult)
+DecodeScript(JSContext* cx, const TranscodeRange& range, JS::MutableHandleScript scriptp);
 
 extern JS_PUBLIC_API(TranscodeResult)
 DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleFunction funp,

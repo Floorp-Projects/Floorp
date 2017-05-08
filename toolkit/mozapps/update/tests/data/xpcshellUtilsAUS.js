@@ -3906,6 +3906,14 @@ function runUpdateUsingApp(aExpectedStatus) {
  * launched.
  */
 function setEnvironment() {
+  if (IS_WIN) {
+    // The tests use nsIProcess to launch the updater and it is simpler to just
+    // set an environment variable and have the test updater set the current
+    // working directory than it is to set the current working directory in the
+    // test itself.
+    gEnv.set("CURWORKDIRPATH", getApplyDirFile().path);
+  }
+
   // Prevent setting the environment more than once.
   if (gShouldResetEnv !== undefined) {
     return;
