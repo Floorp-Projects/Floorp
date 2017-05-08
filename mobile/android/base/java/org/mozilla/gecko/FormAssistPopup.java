@@ -16,6 +16,7 @@ import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallback;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.Resources;
 import android.graphics.PointF;
 import android.util.AttributeSet;
@@ -48,6 +49,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
     private TextView mValidationMessageText;
     private ImageView mValidationMessageArrow;
     private ImageView mValidationMessageArrowInverted;
+    private GeckoApp geckoApp;
 
     private double mX;
     private double mY;
@@ -88,13 +90,20 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
         mAnimation.setDuration(75);
 
         setFocusable(false);
+
+        while (context instanceof ContextWrapper) {
+            if (context instanceof GeckoApp) {
+                geckoApp = (GeckoApp) context;
+            }
+            context = ((ContextWrapper) context).getBaseContext();
+        }
     }
 
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+        geckoApp.getAppEventDispatcher().registerUiThreadListener(this,
             "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
@@ -105,7 +114,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
 
     @Override
     public void onDetachedFromWindow() {
-        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+        geckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
             "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
@@ -153,7 +162,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
                     final TextView textView = (TextView) view;
                     final GeckoBundle message = new GeckoBundle(1);
                     message.putString("value", (String) textView.getTag());
-                    GeckoApp.getEventDispatcher().dispatch("FormAssist:AutoComplete", message);
+                    geckoApp.getAppEventDispatcher().dispatch("FormAssist:AutoComplete", message);
                     hide();
                 }
             });
@@ -172,7 +181,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
                     // Remove the item from form history.
                     final GeckoBundle message = new GeckoBundle(1);
                     message.putString("value", item.second);
-                    GeckoApp.getEventDispatcher().dispatch("FormAssist:Remove", message);
+                    geckoApp.getAppEventDispatcher().dispatch("FormAssist:Remove", message);
 
                     // Update the list
                     adapter.remove(item);
@@ -362,7 +371,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
     public void hide() {
         if (isShown()) {
             setVisibility(GONE);
-            GeckoApp.getEventDispatcher().dispatch("FormAssist:Hidden", null);
+            geckoApp.getAppEventDispatcher().dispatch("FormAssist:Hidden", null);
         }
     }
 
