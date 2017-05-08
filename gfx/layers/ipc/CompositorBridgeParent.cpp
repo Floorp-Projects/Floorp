@@ -472,6 +472,10 @@ CompositorBridgeParent::StopAndClearResources()
 
   // After this point, it is no longer legal to access the widget.
   mWidget = nullptr;
+
+  // Clear mAnimationStorage here to ensure that the compositor thread
+  // still exists when we destroy it.
+  mAnimationStorage = nullptr;
 }
 
 mozilla::ipc::IPCResult
@@ -625,7 +629,6 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   RemoveCompositor(mCompositorID);
 
   mCompositionManager = nullptr;
-  mAnimationStorage = nullptr;
 
   if (mApzcTreeManager) {
     mApzcTreeManager->ClearTree();
