@@ -392,7 +392,6 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"
-#include "nsIMemoryReporter.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
 #ifdef min
@@ -511,21 +510,6 @@ PseudoStack* profiler_get_pseudo_stack();
 
 void profiler_set_js_context(JSContext* aCx);
 void profiler_clear_js_context();
-
-class GeckoProfilerReporter final : public nsIMemoryReporter
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  GeckoProfilerReporter() {}
-
-  NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport,
-                 nsISupports* aData, bool aAnonymize) override;
-
-private:
-  ~GeckoProfilerReporter() {}
-};
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 
