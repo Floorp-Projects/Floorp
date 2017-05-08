@@ -62,6 +62,10 @@ this.FormAutofillUtils = {
     });
   },
 
+  autofillFieldSelector(doc) {
+    return doc.querySelectorAll("input, select");
+  },
+
   ALLOWED_TYPES: ["text", "email", "tel", "number"],
   isFieldEligibleForAutofill(element) {
     if (element.autocomplete == "off") {

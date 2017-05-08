@@ -31,8 +31,8 @@ runHeuristicsTest([
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "family-name"},
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+        {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
         {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "tel"},
       ],
@@ -52,7 +52,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO: select, state
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ],
     ],
