@@ -165,10 +165,10 @@ Converter.prototype = {
 
     try {
       headers = JSON.stringify(headers);
-      outputDoc = this.toHTML(this.data, headers, this.uri);
+      outputDoc = this.toHTML(this.data, headers);
     } catch (e) {
       console.error("JSON Viewer ERROR " + e);
-      outputDoc = this.toErrorPage(e, this.data, this.uri);
+      outputDoc = this.toErrorPage(e, this.data);
     }
 
     let storage = Cc["@mozilla.org/storagestream;1"]
@@ -205,7 +205,7 @@ Converter.prototype = {
       .replace(/>/g, "&gt;") : "";
   },
 
-  toHTML: function (json, headers, title) {
+  toHTML: function (json, headers) {
     let themeClassName = "theme-" + JsonViewUtils.getCurrentTheme();
     let clientBaseUrl = "resource://devtools/client/";
     let baseUrl = clientBaseUrl + "jsonview/";
@@ -228,7 +228,7 @@ Converter.prototype = {
     return "<!DOCTYPE html>\n" +
       "<html platform=\"" + os + "\" class=\"" + themeClassName +
         "\" dir=\"" + dir + "\">" +
-      "<head><title>" + this.htmlEncode(title) + "</title>" +
+      "<head>" +
       "<base href=\"" + this.htmlEncode(baseUrl) + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
         themeVarsUrl + "\">" +
@@ -245,7 +245,7 @@ Converter.prototype = {
       "</body></html>";
   },
 
-  toErrorPage: function (error, data, uri) {
+  toErrorPage: function (error, data) {
     // Escape unicode nulls
     data = data.replace("\u0000", "\uFFFD");
 
@@ -262,7 +262,7 @@ Converter.prototype = {
     let dir = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
 
     return "<!DOCTYPE html>\n" +
-      "<html><head><title>" + this.htmlEncode(uri + " - Error") + "</title>" +
+      "<html><head>" +
       "<base href=\"" + this.htmlEncode(this.data.url()) + "\">" +
       "</head><body dir=\"" + dir + "\">" +
       output +
