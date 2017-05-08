@@ -415,7 +415,7 @@ def check_compiler(compiler, language, target):
 @imports('subprocess')
 def get_vc_paths(topsrcdir):
     def vswhere(args):
-        return json.loads(subprocess.check_output([os.path.join(topsrcdir, 'build/win32/vswhere.exe'), '-format', 'json'] + args))
+        return json.loads(subprocess.check_output([os.path.join(topsrcdir, 'build/win32/vswhere.exe'), '-format', 'json'] + args).decode('mbcs', 'replace'))
 
     # Can't pass -requires with -legacy, so query each separately.
     # Legacy versions first (VS2015)
