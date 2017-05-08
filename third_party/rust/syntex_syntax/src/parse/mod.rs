@@ -43,7 +43,7 @@ pub mod obsolete;
 
 /// Info about a parsing session.
 pub struct ParseSess {
-    pub span_diagnostic: Handler, // better be the same as the one in the reader!
+    pub span_diagnostic: Handler,
     pub unstable_features: UnstableFeatures,
     pub config: CrateConfig,
     /// Used to determine and report recursive mod inclusions
@@ -194,7 +194,7 @@ pub fn new_parser_from_tts<'a>(sess: &'a ParseSess, tts: Vec<tokenstream::TokenT
 }
 
 pub fn new_parser_from_ts<'a>(sess: &'a ParseSess, ts: tokenstream::TokenStream) -> Parser<'a> {
-    tts_to_parser(sess, ts.to_tts())
+    tts_to_parser(sess, ts.trees().cloned().collect())
 }
 
 
@@ -217,19 +217,15 @@ fn file_to_filemap(sess: &ParseSess, path: &Path, spanopt: Option<Span>)
 }
 
 /// Given a filemap, produce a sequence of token-trees
-pub fn filemap_to_tts(sess: &ParseSess, filemap: Rc<FileMap>)
-    -> Vec<tokenstream::TokenTree> {
-    // it appears to me that the cfg doesn't matter here... indeed,
-    // parsing tt's probably shouldn't require a parser at all.
-    let srdr = lexer::StringReader::new(&sess.span_diagnostic, filemap);
-    let mut p1 = Parser::new(sess, Box::new(srdr), None, false);
-    panictry!(p1.parse_all_token_trees())
+pub fn filemap_to_tts(sess: &ParseSess, filemap: Rc<FileMap>) -> Vec<tokenstream::TokenTree> {
+    let mut srdr = lexer::StringReader::new(sess, filemap);
+    srdr.real_token();
+    panictry!(srdr.parse_all_token_trees())
 }
 
 /// Given tts and the ParseSess, produce a parser
 pub fn tts_to_parser<'a>(sess: &'a ParseSess, tts: Vec<tokenstream::TokenTree>) -> Parser<'a> {
-    let trdr = lexer::new_tt_reader(&sess.span_diagnostic, None, tts);
-    let mut p = Parser::new(sess, Box::new(trdr), None, false);
+    let mut p = Parser::new(sess, tts, None, false);
     p.check_unknown_macro_variable();
     p
 }
@@ -729,24 +725,20 @@ mod tests {
                 sp(5, 14),
                 Rc::new(tokenstream::Delimited {
                     delim: token::DelimToken::Paren,
-                    open_span: sp(5, 6),
                     tts: vec![
                         TokenTree::Token(sp(6, 7), token::Ident(Ident::from_str("b"))),
                         TokenTree::Token(sp(8, 9), token::Colon),
                         TokenTree::Token(sp(10, 13), token::Ident(Ident::from_str("i32"))),
                     ],
-                    close_span: sp(13, 14),
                 })),
             TokenTree::Delimited(
                 sp(15, 21),
                 Rc::new(tokenstream::Delimited {
                     delim: token::DelimToken::Brace,
-                    open_span: sp(15, 16),
                     tts: vec![
                         TokenTree::Token(sp(17, 18), token::Ident(Ident::from_str("b"))),
                         TokenTree::Token(sp(18, 19), token::Semi),
                     ],
-                    close_span: sp(20, 21),
                 }))
         ];
 
@@ -847,7 +839,7 @@ mod tests {
                                     Abi::Rust,
                                     ast::Generics{ // no idea on either of these:
                                         lifetimes: Vec::new(),
-                                        ty_params: P::new(),
+                                        ty_params: Vec::new(),
                                         where_clause: ast::WhereClause {
                                             id: ast::DUMMY_NODE_ID,
                                             predicates: Vec::new(),

@@ -13,6 +13,8 @@ Supported on the stable, beta, and nightly Rust channels.
 
 Released under the Apache License 2.0.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to this repository.
+
 ## Supported Versions
 
 To target a version of `libclang`, enable one of the following Cargo features:
@@ -27,6 +29,8 @@ To target a version of `libclang`, enable one of the following Cargo features:
   ([Documentation](https://kylemayes.github.io/clang-sys/3_8/clang_sys))
 * `clang_3_9` - requires `libclang` 3.9 or later
   ([Documentation](https://kylemayes.github.io/clang-sys/3_9/clang_sys))
+* `clang_4_0` - requires `libclang` 4.0 or later
+  ([Documentation](https://kylemayes.github.io/clang-sys/4_0/clang_sys))
 
 If you do not enable one of these features, the API provided by `libclang` 3.5 will be available by
 default.

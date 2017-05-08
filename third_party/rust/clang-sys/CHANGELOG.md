@@ -1,3 +1,29 @@
+## [0.16.0] - 2017-05-02
+
+### Changed
+- Bumped `libloading` version to `0.4.0`
+
+## [0.15.2] - 2017-04-28
+
+### Fixed
+- Fixed finding of `libclang.so.1` on Linux
+
+## [0.15.1] - 2017-03-29
+
+### Fixed
+- Fixed static linking when libraries are in [different directories](https://github.com/KyleMayes/clang-sys/issues/50)
+
+## [0.15.0] - 2017-03-13
+
+### Added
+- Added support for `clang` 4.0.x
+
+### Changed
+- Changed functions in the `Functions` struct to be `unsafe` (`runtime` feature only)
+- Changed `Clang::find` method to ignore directories and non-executable files
+- Changed `Clang::find` to skip dynamic libraries for an incorrect architecture on FreeBSD and Linux
+- Bumped `bitflags` version to `0.7.0`
+
 ## [0.14.0] - 2017-01-30
 
 ### Changed

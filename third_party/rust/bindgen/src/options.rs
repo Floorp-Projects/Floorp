@@ -35,11 +35,14 @@ pub fn builder_from_flags<I>
                 .number_of_values(1),
             Arg::with_name("blacklist-type")
                 .long("blacklist-type")
-                .help("Mark a type as hidden.")
+                .help("Mark <type> as hidden.")
                 .value_name("type")
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("no-layout-tests")
+                .long("no-layout-tests")
+                .help("Avoid generating layout tests for any type."),
             Arg::with_name("no-derive-debug")
                 .long("no-derive-debug")
                 .help("Avoid deriving Debug on any type."),
@@ -49,17 +52,20 @@ pub fn builder_from_flags<I>
                 .help("Avoid deriving Default on any type."),
             Arg::with_name("with-derive-default")
                 .long("with-derive-default")
-                .help("Deriving Default on any type."),
+                .help("Derive Default on any type."),
             Arg::with_name("no-doc-comments")
                 .long("no-doc-comments")
                 .help("Avoid including doc comments in the output, see: \
                       https://github.com/servo/rust-bindgen/issues/426"),
             Arg::with_name("no-recursive-whitelist")
                 .long("no-recursive-whitelist")
-                .help("Avoid whitelisting types recursively"),
+                .help("Avoid whitelisting types recursively."),
             Arg::with_name("objc-extern-crate")
                 .long("objc-extern-crate")
-                .help("Use extern crate instead of use for objc"),
+                .help("Use extern crate instead of use for objc."),
+            Arg::with_name("distrust-clang-mangling")
+                .long("distrust-clang-mangling")
+                .help("Do not trust the libclang-provided mangling"),
             Arg::with_name("builtins")
                 .long("builtins")
                 .help("Output bindings for builtin definitions, e.g. \
@@ -94,7 +100,9 @@ pub fn builder_from_flags<I>
                 .help("Enable support for C++ namespaces."),
             Arg::with_name("disable-name-namespacing")
                 .long("disable-name-namespacing")
-                .help("Disable name namespacing if namespaces are disabled."),
+                .help("Disable namespacing via mangling, causing bindgen to \
+                       generate names like \"Baz\" instead of \"foo_bar_Baz\" \
+                       for an input name \"foo::bar::Baz\"."),
             Arg::with_name("framework")
                 .long("framework-link")
                 .help("Link to framework.")
@@ -107,9 +115,9 @@ pub fn builder_from_flags<I>
                        is useful when you only care about struct layouts."),
             Arg::with_name("generate")
                 .long("generate")
-                .help("Generate a given kind of items, split by commas. \
-                       Valid values are \"functions\",\"types\", \"vars\" and \
-                       \"methods\".")
+                .help("Generate only given items, split by commas. \
+                       Valid values are \"functions\",\"types\", \"vars\", \
+                       \"methods\", \"constructors\" and \"destructors\".")
                 .takes_value(true),
             Arg::with_name("ignore-methods")
                 .long("ignore-methods")
@@ -123,14 +131,17 @@ pub fn builder_from_flags<I>
                 .number_of_values(1),
             Arg::with_name("no-convert-floats")
                 .long("no-convert-floats")
-                .help("Don't automatically convert floats to f32/f64."),
+                .help("Do not automatically convert floats to f32/f64."),
+            Arg::with_name("no-prepend-enum-name")
+                .long("no-prepend-enum-name")
+                .help("Do not prepend the enum name to bitfield or constant variants."),
             Arg::with_name("no-unstable-rust")
                 .long("no-unstable-rust")
                 .help("Do not generate unstable Rust code.")
                 .multiple(true), // FIXME: Pass legacy test suite
             Arg::with_name("opaque-type")
                 .long("opaque-type")
-                .help("Mark a type as opaque.")
+                .help("Mark <type> as opaque.")
                 .value_name("type")
                 .takes_value(true)
                 .multiple(true)
@@ -171,6 +182,9 @@ pub fn builder_from_flags<I>
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("generate-inline-functions")
+                .long("generate-inline-functions")
+                .help("Generate inline functions."),
             Arg::with_name("whitelist-type")
                 .long("whitelist-type")
                 .help("Whitelist the type. Other non-whitelisted types will \
@@ -190,7 +204,7 @@ pub fn builder_from_flags<I>
                 .number_of_values(1),
             Arg::with_name("verbose")
                 .long("verbose")
-                .help("Print verbose error messages"),
+                .help("Print verbose error messages."),
         ]) // .args()
         .get_matches_from(args);
 
@@ -224,6 +238,10 @@ pub fn builder_from_flags<I>
         builder = builder.emit_builtins();
     }
 
+    if matches.is_present("no-layout-tests") {
+        builder = builder.layout_tests(false);
+    }
+
     if matches.is_present("no-derive-debug") {
         builder = builder.derive_debug(false);
     }
@@ -234,6 +252,10 @@ pub fn builder_from_flags<I>
 
     if matches.is_present("no-derive-default") {
         builder = builder.derive_default(false);
+    }
+
+    if matches.is_present("no-prepend-enum-name") {
+        builder = builder.prepend_enum_name(false);
     }
 
     if let Some(prefix) = matches.value_of("ctypes-prefix") {
@@ -258,6 +280,8 @@ pub fn builder_from_flags<I>
                 "types" => config.types = true,
                 "vars" => config.vars = true,
                 "methods" => config.methods = true,
+                "constructors" => config.constructors = true,
+                "destructors" => config.destructors = true,
                 _ => {
                     return Err(Error::new(ErrorKind::Other,
                                           "Unknown generate item"));
@@ -317,6 +341,10 @@ pub fn builder_from_flags<I>
         builder = builder.whitelist_recursively(false);
     }
 
+    if matches.is_present("objc-extern-crate") {
+        builder = builder.objc_extern_crate(true);
+    }
+
     if let Some(opaque_types) = matches.values_of("opaque-type") {
         for ty in opaque_types {
             builder = builder.opaque_type(ty);
@@ -339,8 +367,16 @@ pub fn builder_from_flags<I>
         builder = builder.use_core();
     }
 
+    if matches.is_present("distrust-clang-mangling") {
+        builder = builder.trust_clang_mangling(false);
+    }
+
     if matches.is_present("conservative-inline-namespaces") {
         builder = builder.conservative_inline_namespaces();
+    }
+
+    if matches.is_present("generate-inline-functions") {
+        builder = builder.generate_inline_functions(true);
     }
 
     if let Some(whitelist) = matches.values_of("whitelist-function") {

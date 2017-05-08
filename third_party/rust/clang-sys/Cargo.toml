@@ -3,7 +3,7 @@
 name = "clang-sys"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 
-version = "0.14.0"
+version = "0.16.0"
 
 readme = "README.md"
 license = "Apache-2.0"
@@ -22,22 +22,23 @@ clang_3_6 = ["gte_clang_3_6"]
 clang_3_7 = ["gte_clang_3_6", "gte_clang_3_7"]
 clang_3_8 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8"]
 clang_3_9 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9"]
+clang_4_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9", "gte_clang_4_0"]
 
 gte_clang_3_6 = []
 gte_clang_3_7 = []
 gte_clang_3_8 = []
 gte_clang_3_9 = []
+gte_clang_4_0 = []
 
-runtime = ["lazy_static", "libloading"]
+runtime = ["libloading"]
 static = []
 
 [dependencies]
 
-bitflags = "0.7.0"
+bitflags = "0.8.0"
 glob = "0.2.11"
-lazy_static = { version = "0.2.1", optional = true }
 libc = "0.2.14"
-libloading = { version = "0.3.0", optional = true }
+libloading = { version = "0.4.0", optional = true }
 
 clippy = { version = "0.0.*", optional = true }
 

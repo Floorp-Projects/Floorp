@@ -9,14 +9,24 @@ addons:
 
 os:
   - linux
-  - osx
 
 rust:
   - stable
 
 env:
-  - CARGO_TARGET_DIR=/tmp/bindgen LLVM_VERSION=3.8 BINDGEN_FEATURES=testing_only_llvm_stable
-  - CARGO_TARGET_DIR=/tmp/bindgen LLVM_VERSION=3.9 BINDGEN_FEATURES=
+  global:
+    - CARGO_TARGET_DIR=/tmp/bindgen
+  matrix:
+    - LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_llvm_stable
+    - LLVM_VERSION=3.8.1 BINDGEN_FEATURES=testing_only_llvm_stable
+    - LLVM_VERSION=3.9.0 BINDGEN_FEATURES=
+    - LLVM_VERSION=4.0.0 BINDGEN_FEATURES=
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: LLVM_VERSION=4.0.0 BINDGEN_FEATURES=
+    - env: LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_llvm_stable
 
 cache:
   directories:
@@ -25,9 +35,17 @@ cache:
 before_install: . ./ci/before_install.sh
 
 script:
-  - ./ci/assert-rustfmt.sh
+  # - ./ci/assert-rustfmt.sh
   - BINDGEN_FEATURES="$BINDGEN_FEATURES" ./ci/assert-docs.sh
   - BINDGEN_FEATURES="$BINDGEN_FEATURES" ./ci/test.sh
+  - ./ci/test-book.sh
+
+after_success:
+  - test "$TRAVIS_PULL_REQUEST" == "false" &&
+    test "$TRAVIS_BRANCH" == "master" &&
+    test "$BINDGEN_FEATURES" == "" &&
+    test "$LLVM_VERSION" == "3.9.0" &&
+    ./ci/deploy-book.sh
 
 notifications:
   webhooks: http://build.servo.org:54856/travis

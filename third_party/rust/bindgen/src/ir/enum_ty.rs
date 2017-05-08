@@ -54,13 +54,15 @@ impl Enum {
                    ctx: &mut BindgenContext)
                    -> Result<Self, ParseError> {
         use clang_sys::*;
+        debug!("Enum::from_ty {:?}", ty);
+
         if ty.kind() != CXType_Enum {
             return Err(ParseError::Continue);
         }
 
         let declaration = ty.declaration().canonical();
         let repr = declaration.enum_type()
-            .and_then(|et| Item::from_ty(&et, None, None, ctx).ok());
+            .and_then(|et| Item::from_ty(&et, declaration, None, ctx).ok());
         let mut variants = vec![];
 
         // Assume signedness since the default type by the C standard is an int.
@@ -82,7 +84,8 @@ impl Enum {
         };
         let type_name = type_name.as_ref().map(String::as_str);
 
-        declaration.visit(|cursor| {
+        let definition = declaration.definition().unwrap_or(declaration);
+        definition.visit(|cursor| {
             if cursor.kind() == CXCursor_EnumConstantDecl {
                 let value = if is_signed {
                     cursor.enum_val_signed().map(EnumVariantValue::Signed)
@@ -91,7 +94,7 @@ impl Enum {
                 };
                 if let Some(val) = value {
                     let name = cursor.spelling();
-                    let custom_behavior = ctx.type_chooser()
+                    let custom_behavior = ctx.parse_callbacks()
                         .and_then(|t| {
                             t.enum_variant_behavior(type_name, &name, val)
                         })

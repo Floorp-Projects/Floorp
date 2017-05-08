@@ -350,15 +350,11 @@ pub fn walk_ty<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Ty) {
             }
             visitor.visit_path(path, typ.id);
         }
-        TyKind::ObjectSum(ref ty, ref bounds) => {
-            visitor.visit_ty(ty);
-            walk_list!(visitor, visit_ty_param_bound, bounds);
-        }
         TyKind::Array(ref ty, ref expression) => {
             visitor.visit_ty(ty);
             visitor.visit_expr(expression)
         }
-        TyKind::PolyTraitRef(ref bounds) => {
+        TyKind::TraitObject(ref bounds) => {
             walk_list!(visitor, visit_ty_param_bound, bounds);
         }
         TyKind::ImplTrait(ref bounds) => {
@@ -435,6 +431,7 @@ pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
         PatKind::Struct(ref path, ref fields, _) => {
             visitor.visit_path(path, pattern.id);
             for field in fields {
+                walk_list!(visitor, visit_attribute, field.node.attrs.iter());
                 visitor.visit_ident(field.span, field.node.ident);
                 visitor.visit_pat(&field.node.pat)
             }
@@ -451,9 +448,9 @@ pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
             walk_opt!(visitor, visit_pat, optional_subpattern);
         }
         PatKind::Lit(ref expression) => visitor.visit_expr(expression),
-        PatKind::Range(ref lower_bound, ref upper_bound) => {
+        PatKind::Range(ref lower_bound, ref upper_bound, _) => {
             visitor.visit_expr(lower_bound);
-            visitor.visit_expr(upper_bound)
+            visitor.visit_expr(upper_bound);
         }
         PatKind::Wild => (),
         PatKind::Slice(ref prepatterns, ref slice_pattern, ref postpatterns) => {
@@ -515,12 +512,11 @@ pub fn walk_generics<'a, V: Visitor<'a>>(visitor: &mut V, generics: &'a Generics
                 visitor.visit_lifetime(lifetime);
                 walk_list!(visitor, visit_lifetime, bounds);
             }
-            WherePredicate::EqPredicate(WhereEqPredicate{id,
-                                                         ref path,
-                                                         ref ty,
+            WherePredicate::EqPredicate(WhereEqPredicate{ref lhs_ty,
+                                                         ref rhs_ty,
                                                          ..}) => {
-                visitor.visit_path(path, id);
-                visitor.visit_ty(ty);
+                visitor.visit_ty(lhs_ty);
+                visitor.visit_ty(rhs_ty);
             }
         }
     }
@@ -657,7 +653,7 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
             visitor.visit_expr(place);
             visitor.visit_expr(subexpression)
         }
-        ExprKind::Vec(ref subexpressions) => {
+        ExprKind::Array(ref subexpressions) => {
             walk_list!(visitor, visit_expr, subexpressions);
         }
         ExprKind::Repeat(ref element, ref count) => {
@@ -667,6 +663,7 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
         ExprKind::Struct(ref path, ref fields, ref optional_base) => {
             visitor.visit_path(path, expression.id);
             for field in fields {
+                walk_list!(visitor, visit_attribute, field.attrs.iter());
                 visitor.visit_ident(field.ident.span, field.ident.node);
                 visitor.visit_expr(&field.expr)
             }
