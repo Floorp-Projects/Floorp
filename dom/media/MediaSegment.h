@@ -461,7 +461,14 @@ protected:
       StreamTime nextOffset = offset + c.GetDuration();
       StreamTime end = std::min(aEnd, nextOffset);
       if (start < end) {
-        mChunks.AppendElement(c)->SliceTo(start - offset, end - offset);
+        if (!mChunks.IsEmpty() &&
+            mChunks[mChunks.Length() - 1].CanCombineWithFollowing(c)) {
+          MOZ_ASSERT(start - offset >= 0 && end - offset <= aSource.mDuration,
+                     "Slice out of bounds");
+          mChunks[mChunks.Length() - 1].mDuration += end - start;
+        } else {
+          mChunks.AppendElement(c)->SliceTo(start - offset, end - offset);
+        }
       }
       offset = nextOffset;
     }
