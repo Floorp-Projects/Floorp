@@ -18,23 +18,30 @@ public abstract class FocusString {
 
     protected abstract boolean isReversed();
 
-    private FocusString(final String string) {
+    private FocusString(final String string, final int offsetStart, final int offsetEnd) {
         this.string = string;
+        this.offsetStart = offsetStart;
+        this.offsetEnd = offsetEnd;
     }
 
     public static FocusString create(final String string) {
-        return new ForwardString(string);
+        return new ForwardString(string, 0, string.length());
     }
 
     public int length() {
-        return string.length();
+        return offsetEnd - offsetStart;
     }
+
+    // offset at the start of the  _raw_ input String
+    final int offsetStart;
+    // offset at the end of the _raw_ input String
+    final int offsetEnd;
 
     @CheckResult public FocusString reverse() {
         if (isReversed()) {
-            return new ForwardString(string);
+            return new ForwardString(string, offsetStart, offsetEnd);
         } else {
-            return new ReverseString(string);
+            return new ReverseString(string, offsetStart, offsetEnd);
         }
     }
 
@@ -43,8 +50,8 @@ public abstract class FocusString {
     public abstract FocusString substring(final int startIndex);
 
     private static class ForwardString extends FocusString {
-        public ForwardString(String string) {
-            super(string);
+        public ForwardString(final String string, final int offsetStart, final int offsetEnd) {
+            super(string, offsetStart, offsetEnd);
         }
 
         @Override
@@ -54,18 +61,19 @@ public abstract class FocusString {
 
         @Override
         public char charAt(int position) {
-            return string.charAt(position);
+            return string.charAt(position + offsetStart);
         }
 
         @Override
         public FocusString substring(final int startIndex) {
-            return new ForwardString(string.substring(startIndex));
+            // Just a normal substring
+            return new ForwardString(string, offsetStart + startIndex, offsetEnd);
         }
     }
 
     private static class ReverseString extends FocusString {
-        public ReverseString(String string) {
-            super(string);
+        public ReverseString(final String string, final int offsetStart, final int offsetEnd) {
+            super(string, offsetStart, offsetEnd);
         }
 
         @Override
@@ -75,12 +83,12 @@ public abstract class FocusString {
 
         @Override
         public char charAt(int position) {
-            return string.charAt(length() - 1 - position);
+            return string.charAt(length() - 1 - position + offsetStart);
         }
 
         @Override
         public FocusString substring(int startIndex) {
-            return new ReverseString(string.substring(0, length() - startIndex));
+            return new ReverseString(string, offsetStart, offsetEnd - startIndex);
         }
     }
 }
