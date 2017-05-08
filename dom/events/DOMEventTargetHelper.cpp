@@ -8,7 +8,7 @@
 #include "nsIDocument.h"
 #include "mozilla/Sprintf.h"
 #include "nsGlobalWindow.h"
-#include "ScriptSettings.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
