@@ -10438,26 +10438,15 @@ nsGlobalWindow::GetPrivateRoot()
 }
 
 Location*
-nsGlobalWindow::GetLocation(ErrorResult& aError)
+nsGlobalWindow::Location()
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mLocation) {
-    mLocation = new Location(AsInner(), GetDocShell());
+    mLocation = new dom::Location(AsInner(), GetDocShell());
   }
 
   return mLocation;
-}
-
-nsIDOMLocation*
-nsGlobalWindow::GetLocation()
-{
-  FORWARD_TO_INNER(GetLocation, (), nullptr);
-
-  ErrorResult dummy;
-  nsIDOMLocation* location = GetLocation(dummy);
-  dummy.SuppressException();
-  return location;
 }
 
 void
