@@ -459,15 +459,10 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
         case 'S':
 #if defined(XP_WIN)
             nas[cn].type = TYPE_WSTRING;
-            break;
-#endif
-            /* Fall through here when not XP_WIN.  */
-        case 'C':
-        case 'E':
-        case 'G':
-            // XXX not supported I suppose
+#else
             MOZ_ASSERT(0);
             nas[cn].type = TYPE_UNKNOWN;
+#endif
             break;
 
         case 's':
@@ -816,15 +811,6 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
             radix = 16;
             goto fetch_and_convert;
 
-#if 0
-          case 'C':
-          case 'E':
-          case 'G':
-            // XXX not supported I suppose
-            MOZ_ASSERT(0);
-            break;
-#endif
-
           case 's':
             if (type == TYPE_INTN) {
                 u.s = va_arg(ap, const char*);
@@ -876,9 +862,6 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 
           default:
             // Not a % token after all... skip it
-#if 0
-            MOZ_ASSERT(0);
-#endif
             if (!emit("%", 1))
                 return false;
             if (!emit(fmt - 1, 1))
