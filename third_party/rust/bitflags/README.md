@@ -13,12 +13,31 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bitflags = "0.6"
+bitflags = "0.7"
 ```
 
 and this to your crate root:
 
 ```rust
+#[macro_use]
+extern crate bitflags;
+```
+
+## 128-bit integer bitflags (nightly only)
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies.bitflags]
+version = "0.7"
+features = ["i128"]
+```
+
+and this to your crate root:
+
+```rust
+#![feature(i128_type)]
+
 #[macro_use]
 extern crate bitflags;
 ```

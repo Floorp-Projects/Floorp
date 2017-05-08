@@ -246,9 +246,7 @@ impl ToTokens for ast::Attribute {
         }
         r.push(TokenTree::Delimited(self.span, Rc::new(tokenstream::Delimited {
             delim: token::Bracket,
-            open_span: self.span,
             tts: self.value.to_tokens(cx),
-            close_span: self.span,
         })));
         r
     }
@@ -276,9 +274,7 @@ impl ToTokens for () {
     fn to_tokens(&self, _cx: &ExtCtxt) -> Vec<TokenTree> {
         vec![TokenTree::Delimited(DUMMY_SP, Rc::new(tokenstream::Delimited {
             delim: token::Paren,
-            open_span: DUMMY_SP,
             tts: vec![],
-            close_span: DUMMY_SP,
         }))]
     }
 }
