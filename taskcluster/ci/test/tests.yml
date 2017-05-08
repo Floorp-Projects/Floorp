@@ -1169,6 +1169,14 @@ talos-chrome:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1195,6 +1203,14 @@ talos-dromaeojs:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1221,6 +1237,14 @@ talos-g1:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1247,6 +1271,14 @@ talos-g2:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1273,6 +1305,14 @@ talos-g3:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1299,6 +1339,14 @@ talos-g4:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1325,6 +1373,14 @@ talos-other:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1351,6 +1407,14 @@ talos-perf-reftest:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1372,6 +1436,14 @@ talos-svgr:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1398,6 +1470,14 @@ talos-tp5o:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
+    e10s:
+        # Bug 1358562 - remove non-e10s linux64-stylo talos job
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-central: true
+                    try: true
+            default: both
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
