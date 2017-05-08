@@ -225,12 +225,6 @@ protected:
 
   virtual bool
   DeallocPGamepadTestChannelParent(PGamepadTestChannelParent* aActor) override;
-
-  virtual PWebAuthnTransactionParent*
-  AllocPWebAuthnTransactionParent() override;
-
-  virtual bool
-  DeallocPWebAuthnTransactionParent(PWebAuthnTransactionParent* aActor) override;
 };
 
 } // namespace ipc
