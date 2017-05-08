@@ -7,6 +7,7 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsMathMLmmultiscriptsFrame.h"
+#include "nsMathMLElement.h"
 #include <algorithm>
 #include "gfxMathTable.h"
 
@@ -71,6 +72,15 @@ nsMathMLmunderoverFrame::InheritAutomaticData(nsIFrame* aParent)
   return NS_OK;
 }
 
+void
+nsMathMLmunderoverFrame::DestroyFrom(nsIFrame* aDestroyRoot)
+{
+  if (!mPostReflowIncrementScriptLevelCommands.IsEmpty()) {
+    PresContext()->PresShell()->CancelReflowCallback(this);
+  }
+  nsMathMLContainerFrame::DestroyFrom(aDestroyRoot);
+}
+
 uint8_t
 nsMathMLmunderoverFrame::ScriptIncrement(nsIFrame* aFrame)
 {
@@ -90,6 +100,61 @@ nsMathMLmunderoverFrame::ScriptIncrement(nsIFrame* aFrame)
     return mIncrementOver ? 1 : 0;
   }
   return 0;  // frame not found
+}
+
+void
+nsMathMLmunderoverFrame::SetIncrementScriptLevel(uint32_t aChildIndex,
+                                                 bool aIncrement)
+{
+  nsIFrame* child = PrincipalChildList().FrameAt(aChildIndex);
+  if (!child || !child->GetContent()->IsMathMLElement()) {
+    return;
+  }
+
+  auto element = static_cast<nsMathMLElement*>(child->GetContent());
+  if (element->GetIncrementScriptLevel() == aIncrement) {
+    return;
+  }
+
+  if (mPostReflowIncrementScriptLevelCommands.IsEmpty()) {
+    PresContext()->PresShell()->PostReflowCallback(this);
+  }
+
+  mPostReflowIncrementScriptLevelCommands.AppendElement(
+      SetIncrementScriptLevelCommand { aChildIndex, aIncrement });
+}
+
+bool
+nsMathMLmunderoverFrame::ReflowFinished()
+{
+  SetPendingPostReflowIncrementScriptLevel();
+  return true;
+}
+
+void
+nsMathMLmunderoverFrame::ReflowCallbackCanceled()
+{
+  // Do nothing, at this point our work will just be useless.
+  mPostReflowIncrementScriptLevelCommands.Clear();
+}
+
+void
+nsMathMLmunderoverFrame::SetPendingPostReflowIncrementScriptLevel()
+{
+  MOZ_ASSERT(!mPostReflowIncrementScriptLevelCommands.IsEmpty());
+
+  nsTArray<SetIncrementScriptLevelCommand> commands;
+  commands.SwapElements(mPostReflowIncrementScriptLevelCommands);
+
+  for (const auto& command : commands) {
+    nsIFrame* child = PrincipalChildList().FrameAt(command.mChildIndex);
+    if (!child || !child->GetContent()->IsMathMLElement()) {
+      continue;
+    }
+
+    auto element = static_cast<nsMathMLElement*>(child->GetContent());
+    element->SetIncrementScriptLevel(command.mDoIncrement, true);
+  }
 }
 
 NS_IMETHODIMP
@@ -163,7 +228,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
     } else {
       mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
-    }    
+    }
 
     // if we have an accentunder attribute, it overrides what the underscript said
     if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accentunder_, value)) {
@@ -232,7 +297,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
     mIncrementOver =
       !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) ||
       subsupDisplay;
-    SetIncrementScriptLevel(mContent->IsMathMLElement(nsGkAtoms::mover_) ? 1 : 2, mIncrementOver);
+    SetIncrementScriptLevel(
+        mContent->IsMathMLElement(nsGkAtoms::mover_) ? 1 : 2, mIncrementOver);
     if (mIncrementOver) {
       PropagateFrameFlagFor(overscriptFrame,
                             NS_FRAME_MATHML_SCRIPT_DESCENDANT);

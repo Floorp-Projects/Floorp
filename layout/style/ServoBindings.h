@@ -334,6 +334,11 @@ void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 void Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* grid_template,
                                        const nsStyleGridTemplate* other);
 
+mozilla::css::GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(uint32_t areas,
+                                                                      uint32_t templates,
+                                                                      uint32_t columns);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue, GridTemplateAreasValue);
+
 // Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
 // needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
@@ -420,6 +425,8 @@ void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
                               const uint8_t* string, uint32_t len, nsCSSUnit unit);
 void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
                                       nsIAtom* atom, nsCSSUnit unit);
+// Take an addrefed nsIAtom and set it to the nsCSSValue
+void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsIAtom* atom);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
 void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
@@ -429,6 +436,8 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
+void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
+                                        RawGeckoPresContextBorrowed pres_context);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
 
 struct GeckoFontMetrics

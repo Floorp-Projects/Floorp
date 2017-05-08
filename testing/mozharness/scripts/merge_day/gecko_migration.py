@@ -7,8 +7,8 @@
 # ***** END LICENSE BLOCK *****
 """ gecko_migration.py
 
-Merge day script for gecko (mozilla-central -> mozilla-aurora,
-mozilla-aurora -> mozilla-beta, mozilla-beta -> mozilla-release).
+Merge day script for gecko (mozilla-central -> mozilla-beta,
+mozilla-beta -> mozilla-release).
 
 Ported largely from
 http://hg.mozilla.org/build/tools/file/084bc4e2fc76/release/beta2release.py
@@ -33,8 +33,7 @@ from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 
 VALID_MIGRATION_BEHAVIORS = (
-    "beta_to_release", "aurora_to_beta", "central_to_aurora", "release_to_esr",
-    "bump_second_digit",
+    "beta_to_release", "central_to_beta", "release_to_esr", "bump_second_digit",
 )
 
 
@@ -170,7 +169,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
     def query_commit_dirs(self):
         dirs = self.query_abs_dirs()
         commit_dirs = [dirs['abs_to_dir']]
-        if self.config['migration_behavior'] == 'central_to_aurora':
+        if self.config['migration_behavior'] == 'central_to_beta':
             commit_dirs.append(dirs['abs_from_dir'])
         return commit_dirs
 
@@ -288,8 +287,8 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         self.write_to_file(clobber_file, new_contents)
 
     def bump_version(self, cwd, curr_version, next_version, curr_suffix,
-                     next_suffix, bump_major=False):
-        """ Bump versions (m-c, m-a, m-b).
+                     next_suffix, bump_major=False, use_config_suffix=False):
+        """ Bump versions (m-c, m-b).
 
             At some point we may want to unhardcode these filenames into config
             """
@@ -297,7 +296,10 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         next_weave_version = str(int(curr_weave_version) + 1)
         for f in self.config["version_files"]:
             from_ = "%s.0%s" % (curr_version, curr_suffix)
-            to = "%s.0%s%s" % (next_version, next_suffix, f["suffix"])
+            if use_config_suffix:
+                to = "%s.0%s%s" % (next_version, next_suffix, f["suffix"])
+            else:
+                to = "%s.0%s" % (next_version, next_suffix)
             self.replace(os.path.join(cwd, f["file"]), from_, to)
 
         # only applicable for m-c
@@ -314,8 +316,8 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             )
 
     # Branch-specific workflow helper methods {{{1
-    def central_to_aurora(self, end_tag):
-        """ mozilla-central -> mozilla-aurora behavior.
+    def central_to_beta(self, end_tag):
+        """ mozilla-central -> mozilla-beta behavior.
 
             We could have all of these individually toggled by flags, but
             by separating into workflow methods we can be more precise about
@@ -323,48 +325,21 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             staging beta user repo migrations.
             """
         dirs = self.query_abs_dirs()
-        self.info("Reverting locales")
-        hg = self.query_exe("hg", return_type="list")
-        for f in self.config["locale_files"]:
-            self.run_command(
-                hg + ["revert", "-r", end_tag, f],
-                cwd=dirs['abs_to_dir'],
-                error_list=HgErrorList,
-                halt_on_failure=True,
-            )
-        next_ma_version = self.get_version(dirs['abs_to_dir'])[0]
-        self.bump_version(dirs['abs_to_dir'], next_ma_version, next_ma_version, "a1", "a2")
+        next_mb_version = self.get_version(dirs['abs_to_dir'])[0]
+        self.bump_version(dirs['abs_to_dir'], next_mb_version, next_mb_version, "a1", "", use_config_suffix=True)
         self.apply_replacements()
         # bump m-c version
         curr_mc_version = self.get_version(dirs['abs_from_dir'])[0]
         next_mc_version = str(int(curr_mc_version) + 1)
         self.bump_version(
             dirs['abs_from_dir'], curr_mc_version, next_mc_version, "a1", "a1",
-            bump_major=True
+            bump_major=True,
+            use_config_suffix=False
         )
         # touch clobber files
         self.touch_clobber_file(dirs['abs_from_dir'])
         self.touch_clobber_file(dirs['abs_to_dir'])
 
-    def aurora_to_beta(self, *args, **kwargs):
-        """ mozilla-aurora -> mozilla-beta behavior.
-
-            We could have all of these individually toggled by flags, but
-            by separating into workflow methods we can be more precise about
-            what happens in each workflow, while allowing for things like
-            staging beta user repo migrations.
-            """
-        dirs = self.query_abs_dirs()
-        mb_version = self.get_version(dirs['abs_to_dir'])[0]
-        self.bump_version(dirs['abs_to_dir'], mb_version, mb_version, "a2", "")
-        self.apply_replacements()
-        self.touch_clobber_file(dirs['abs_to_dir'])
-        # TODO mozconfig diffing
-        # The build/tools version only checks the mozconfigs from hgweb, so
-        # can't help pre-push.  The in-tree mozconfig diffing requires a mach
-        # virtualenv to be installed.  If we want this sooner we can put this
-        # in the push action; otherwise we may just wait until we have in-tree
-        # mozconfig checking.
 
     def beta_to_release(self, *args, **kwargs):
         """ mozilla-beta -> mozilla-release behavior.

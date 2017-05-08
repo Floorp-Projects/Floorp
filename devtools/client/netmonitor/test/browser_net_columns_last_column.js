@@ -11,10 +11,10 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, gStore, parent } = monitor.panelWin;
+  let { document, store, parent } = monitor.panelWin;
 
-  for (let [column, shown] of gStore.getState().ui.columns) {
-    let visibleColumns = [...gStore.getState().ui.columns]
+  for (let [column, shown] of store.getState().ui.columns) {
+    let visibleColumns = [...store.getState().ui.columns]
       .filter(([_, visible]) => visible);
 
     if (visibleColumns.length === 1) {

@@ -265,6 +265,12 @@ class TestAgent {
     rv = SSL_VersionRangeSet(ssl_fd_, &vrange);
     if (rv != SECSuccess) return false;
 
+    SSLVersionRange verify_vrange;
+    rv = SSL_VersionRangeGet(ssl_fd_, &verify_vrange);
+    if (rv != SECSuccess) return false;
+    if (vrange.min != verify_vrange.min || vrange.max != verify_vrange.max)
+      return false;
+
     rv = SSL_OptionSet(ssl_fd_, SSL_NO_CACHE, false);
     if (rv != SECSuccess) return false;
 

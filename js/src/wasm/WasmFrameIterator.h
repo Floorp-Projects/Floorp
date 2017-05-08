@@ -118,6 +118,7 @@ class ExitReason
 
     bool isFixed() const { return (payload_ & 0x1) == 0; }
     bool isNone() const { return isFixed() && fixed() == Fixed::None; }
+    bool isNative() const { return !isFixed() || fixed() == Fixed::BuiltinNative; }
 
     uint32_t raw() const {
         return payload_;

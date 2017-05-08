@@ -79,6 +79,11 @@ stylo-tests:
     - mochitest-style
     - mochitest-chrome-style
 
+stylo-sequential-tests:
+    - crashtest
+    - reftest-stylo
+    - mochitest-style
+
 qr-tests:
     - cppunit
     - crashtest

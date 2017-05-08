@@ -33,6 +33,9 @@ if CONFIG['MOZ_WEBM_ENCODER']:
 if not CONFIG['MOZ_SYSTEM_LIBVPX']:
     external_dirs += ['media/libvpx']
 
+if CONFIG['MOZ_AV1']:
+    external_dirs += ['media/libaom']
+
 if not CONFIG['MOZ_SYSTEM_PNG']:
     external_dirs += ['media/libpng']
 

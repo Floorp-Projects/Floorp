@@ -7,7 +7,7 @@ var g = newGlobal();
 g.eval(`
 function initWasm(s) { return new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(s))); }
 o = initWasm('(module (func) (export "" 0))');
-o = initWasm('(module (func) (func) (export "" 1))');
+o2 = initWasm('(module (func) (func) (export "" 1))');
 `);
 
 function isWasm(script) { return script.format === "wasm"; }

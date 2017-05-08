@@ -70,6 +70,7 @@ enum class LayoutFrameType : uint8_t;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
 class WritingMode;
+class DisplayItemClip;
 namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
@@ -82,6 +83,7 @@ class Selection;
 } // namespace dom
 namespace gfx {
 struct RectCornerRadii;
+enum class ShapedTextFlags : uint16_t;
 } // namespace gfx
 namespace layers {
 class Image;
@@ -2001,15 +2003,17 @@ public:
    * -- TEXT_OPTIMIZE_SPEED if the text-rendering CSS property and font size
    * and prefs indicate we should be optimizing for speed over quality
    */
-  static uint32_t GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
-                                          const nsStyleFont* aStyleFont,
-                                          const nsStyleText* aStyleText,
-                                          nscoord aLetterSpacing);
+  static mozilla::gfx::ShapedTextFlags
+  GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                          const nsStyleFont* aStyleFont,
+                          const nsStyleText* aStyleText,
+                          nscoord aLetterSpacing);
 
   /**
    * Get orientation flags for textrun construction.
    */
-  static uint32_t GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext);
+  static mozilla::gfx::ShapedTextFlags
+  GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext);
 
   /**
    * Takes two rectangles whose origins must be the same, and computes
@@ -2590,7 +2594,9 @@ public:
   /**
    * Helper method to transform |aBounds| from aFrame to aAncestorFrame,
    * and combine it with |aPreciseTargetDest| if it is axis-aligned, or
-   * combine it with |aImpreciseTargetDest| if not.
+   * combine it with |aImpreciseTargetDest| if not. The transformed rect is
+   * clipped to |aClip|; if |aClip| has rounded corners, that also causes
+   * the imprecise target to be used.
    */
   static void
   TransformToAncestorAndCombineRegions(
@@ -2599,7 +2605,8 @@ public:
     const nsIFrame* aAncestorFrame,
     nsRegion* aPreciseTargetDest,
     nsRegion* aImpreciseTargetDest,
-    mozilla::Maybe<Matrix4x4>* aMatrixCache);
+    mozilla::Maybe<Matrix4x4>* aMatrixCache,
+    const mozilla::DisplayItemClip* aClip);
 
   /**
    * Populate aOutSize with the size of the content viewer corresponding

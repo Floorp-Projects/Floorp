@@ -202,6 +202,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const gfx::IntRect& aRect) override;
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
+  virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
   virtual mozilla::ipc::IPCResult RecvForcePresent() override;
 
   virtual mozilla::ipc::IPCResult RecvAcknowledgeCompositorUpdate(const uint64_t&, const uint64_t&) override {
@@ -510,9 +511,7 @@ protected:
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
-                                 const uint64_t& aId,
-                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                 bool* aSuccess) override;
+                                 const uint64_t& aId) override;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
   virtual void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
 

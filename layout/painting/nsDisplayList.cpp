@@ -83,6 +83,8 @@
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
+#include "nsTableCellFrame.h"
+#include "nsTableColFrame.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -976,7 +978,7 @@ AnimatedGeometryRoot*
 nsDisplayListBuilder::WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
                                       AnimatedGeometryRoot* aParent /* = nullptr */)
 {
-  MOZ_ASSERT(IsAnimatedGeometryRoot(aAnimatedGeometryRoot));
+  MOZ_ASSERT(IsAnimatedGeometryRoot(aAnimatedGeometryRoot) == AGR_YES);
 
   AnimatedGeometryRoot* result = nullptr;
   if (!mFrameToAnimatedGeometryRootMap.Get(aAnimatedGeometryRoot, &result)) {
@@ -1480,72 +1482,94 @@ IsStickyFrameActive(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* 
   return sf->IsScrollingActive(aBuilder) && sf->GetScrolledFrame() == cursor;
 }
 
-bool
-nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParent)
+nsDisplayListBuilder::AGRState
+nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
+                                             nsIFrame** aParent)
 {
   if (aFrame == mReferenceFrame) {
-    return true;
+    return AGR_YES;
   }
   if (!IsPaintingToWindow()) {
     if (aParent) {
       *aParent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
     }
-    return false;
+    return AGR_NO;
   }
 
   if (nsLayoutUtils::IsPopup(aFrame))
-    return true;
+    return AGR_YES;
   if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(aFrame)) {
     const bool inBudget = AddToAGRBudget(aFrame);
     if (inBudget) {
-      return true;
+      return AGR_YES;
     }
   }
   if (!aFrame->GetParent() &&
       nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext())) {
     // Viewport frames in a display port need to be animated geometry roots
     // for background-attachment:fixed elements.
-    return true;
+    return AGR_YES;
   }
   if (aFrame->IsTransformed()) {
-    return true;
+    return AGR_YES;
   }
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   if (!parent)
-    return true;
+    return AGR_YES;
+
+  bool maybe = false; // Possible to transition from not being an AGR
+                      // to being an AGR without a style change.
 
   LayoutFrameType parentType = parent->Type();
   // Treat the slider thumb as being as an active scrolled root when it wants
   // its own layer so that it can move without repainting.
-  if (parentType == LayoutFrameType::Slider &&
-      nsLayoutUtils::IsScrollbarThumbLayerized(aFrame)) {
-    return true;
+  if (parentType == LayoutFrameType::Slider) {
+    if (nsLayoutUtils::IsScrollbarThumbLayerized(aFrame)) {
+      return AGR_YES;
+    }
+    maybe = true;
   }
 
-  if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
-      IsStickyFrameActive(this, aFrame, parent))
-  {
-    return true;
+  if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
+    if (IsStickyFrameActive(this, aFrame, parent)) {
+      return AGR_YES;
+    }
+    maybe = true;
   }
 
   if (parentType == LayoutFrameType::Scroll ||
       parentType == LayoutFrameType::ListControl) {
     nsIScrollableFrame* sf = do_QueryFrame(parent);
-    if (sf->IsScrollingActive(this) && sf->GetScrolledFrame() == aFrame) {
-      return true;
+    if (sf->GetScrolledFrame() == aFrame) {
+      if (sf->IsScrollingActive(this)) {
+        return AGR_YES;
+      }
+      maybe = true;
     }
   }
 
   // Fixed-pos frames are parented by the viewport frame, which has no parent.
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame)) {
-    return true;
+    return AGR_YES;
+  }
+
+  if ((aFrame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED) &&
+      aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    // For SVG containers, they always have
+    // NS_FRAME_MAY_BE_TRANSFORMED bit.  However, they would be
+    // affected by the fragement identifiers in the svgView form at
+    // runtime without a new style context.
+    // For example, layout/reftests/svg/fragmentIdentifier-01.xhtml
+    //
+    // see https://www.w3.org/TR/SVG/linking.html#SVGFragmentIdentifiers
+    maybe = true;
   }
 
   if (aParent) {
     *aParent = parent;
   }
-  return false;
+  return !maybe ? AGR_NO : AGR_MAYBE;
 }
 
 nsIFrame*
@@ -1555,7 +1579,7 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame)
   nsIFrame* cursor = aFrame;
   while (cursor != RootReferenceFrame()) {
     nsIFrame* next;
-    if (IsAnimatedGeometryRoot(cursor, &next))
+    if (IsAnimatedGeometryRoot(cursor, &next) == AGR_YES)
       return cursor;
     cursor = next;
   }
@@ -1566,7 +1590,7 @@ void
 nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot()
 {
   if (*mCurrentAGR != mCurrentFrame &&
-      IsAnimatedGeometryRoot(const_cast<nsIFrame*>(mCurrentFrame))) {
+      IsAnimatedGeometryRoot(const_cast<nsIFrame*>(mCurrentFrame)) == AGR_YES) {
     AnimatedGeometryRoot* oldAGR = mCurrentAGR;
     mCurrentAGR = WrapAGRForFrame(const_cast<nsIFrame*>(mCurrentFrame), mCurrentAGR);
 
@@ -3067,11 +3091,17 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      const nsRect& aBackgroundRect,
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization,
-                                                     nsStyleContext* aStyleContext)
+                                                     nsStyleContext* aStyleContext,
+                                                     const nsRect& aBackgroundOriginRect,
+                                                     nsIFrame* aSecondaryReferenceFrame)
 {
   nsStyleContext* bgSC = aStyleContext;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
+  nsRect bgOriginRect = bgRect;
+  if (!aBackgroundOriginRect.IsEmpty()) {
+    bgOriginRect = aBackgroundOriginRect + aBuilder->ToReferenceFrame(aFrame);
+  }
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
   if (!isThemed) {
@@ -3180,7 +3210,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage::InitData bgData =
-      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgRect, bg,
+      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
                                             LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
 
     if (bgData.shouldFixToViewport) {
@@ -3211,13 +3241,33 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         // clip for the nsDisplayBackgroundImage inside.
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
-        bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
+        if (aSecondaryReferenceFrame) {
+          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData,
+                                                                aSecondaryReferenceFrame);
+        } else {
+          bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
+        }
       }
-      thisItemList.AppendNewToTop(
-        nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, aFrame, bgItem, i));
+      if (aSecondaryReferenceFrame) {
+        thisItemList.AppendNewToTop(
+          nsDisplayTableFixedPosition::CreateForFixedBackground(aBuilder,
+                                                                aSecondaryReferenceFrame,
+                                                                bgItem,
+                                                                i,
+                                                                aFrame));
+      } else {
+        thisItemList.AppendNewToTop(
+          nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, aFrame, bgItem, i));
+      }
 
     } else {
-      thisItemList.AppendNewToTop(new (aBuilder) nsDisplayBackgroundImage(bgData));
+      if (aSecondaryReferenceFrame) {
+        thisItemList.AppendNewToTop(
+          new (aBuilder) nsDisplayTableBackgroundImage(bgData,
+                                                       aSecondaryReferenceFrame));
+      } else {
+        thisItemList.AppendNewToTop(new (aBuilder) nsDisplayBackgroundImage(bgData));
+      }
     }
 
     if (bg->mImage.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -3323,7 +3373,7 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
     return WHENEVER_POSSIBLE;
   }
 
-  nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(mFrame);
+  nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(StyleFrame());
   if (ActiveLayerTracker::IsBackgroundPositionAnimated(aBuilder,
                                                        backgroundStyleFrame)) {
     return WHENEVER_POSSIBLE;
@@ -3433,8 +3483,8 @@ nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager)
 {
   return mBackgroundStyle->mImage.mLayers[mLayer].mClip != StyleGeometryBox::Text &&
          nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(aManager,
-                                                                         *mFrame->PresContext(),
-                                                                         mFrame,
+                                                                         *StyleFrame()->PresContext(),
+                                                                         StyleFrame(),
                                                                          mBackgroundStyle,
                                                                          mLayer);
 }
@@ -3446,9 +3496,9 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
                                                   WebRenderDisplayItemLayer* aLayer)
 {
   nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
                                                   mVisibleRect, mBackgroundRect,
-                                                  mFrame, 0, mLayer,
+                                                  StyleFrame(), 0, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
 
@@ -3617,15 +3667,15 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == StyleGeometryBox::Text) {
-    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
+    if (!GenerateAndPushTextMask(StyleFrame(), aCtx, mBackgroundRect, aBuilder)) {
       return;
     }
   }
 
   nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
                                                   aBounds, mBackgroundRect,
-                                                  mFrame, flags, mLayer,
+                                                  StyleFrame(), flags, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
@@ -3718,6 +3768,23 @@ nsDisplayBackgroundImage::GetPerFrameKey()
 {
   return (mLayer << nsDisplayItem::TYPE_BITS) |
     nsDisplayItem::GetPerFrameKey();
+}
+
+nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(const InitData& aData,
+                                                             nsIFrame* aCellFrame)
+  : nsDisplayBackgroundImage(aData)
+  , mStyleFrame(aData.frame)
+  , mTableType(GetTableTypeFromFrame(mStyleFrame))
+{
+  mFrame = aCellFrame;
+}
+
+bool
+nsDisplayTableBackgroundImage::IsInvalid(nsRect& aRect)
+{
+  bool result = mStyleFrame ? mStyleFrame->IsInvalid(aRect) : false;
+  aRect += ToReferenceFrame();
+  return result;
 }
 
 nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder,
@@ -6435,6 +6502,60 @@ bool nsDisplayFixedPosition::TryMerge(nsDisplayItem* aItem) {
     return false;
   MergeFromTrackingMergedFrames(other);
   return true;
+}
+
+TableType
+GetTableTypeFromFrame(nsIFrame* aFrame)
+{
+  if (aFrame->IsTableFrame()) {
+    return TableType::TABLE;
+  }
+
+  if (aFrame->IsTableColFrame()) {
+    return TableType::TABLE_COL;
+  }
+
+  if (aFrame->IsTableColGroupFrame()) {
+    return TableType::TABLE_COL_GROUP;
+  }
+
+  if (aFrame->IsTableRowFrame()) {
+    return TableType::TABLE_ROW;
+  }
+
+  if (aFrame->IsTableRowGroupFrame()) {
+    return TableType::TABLE_ROW_GROUP;
+  }
+
+  if (aFrame->IsTableCellFrame()) {
+    return TableType::TABLE_CELL;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Invalid frame.");
+  return TableType::TABLE;
+}
+
+nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder,
+                                                         nsIFrame* aFrame,
+                                                         nsDisplayList* aList,
+                                                         uint32_t aIndex,
+                                                         nsIFrame* aAncestorFrame)
+  : nsDisplayFixedPosition(aBuilder, aFrame, aList, aIndex)
+  , mTableType(GetTableTypeFromFrame(aAncestorFrame))
+{
+}
+
+/* static */ nsDisplayTableFixedPosition*
+nsDisplayTableFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
+                                                      nsIFrame* aFrame,
+                                                      nsDisplayBackgroundImage* aImage,
+                                                      uint32_t aIndex,
+                                                      nsIFrame* aAncestorFrame)
+{
+  nsDisplayList temp;
+  temp.AppendToTop(aImage);
+
+  return new (aBuilder) nsDisplayTableFixedPosition(aBuilder, aFrame, &temp, aIndex + 1, aAncestorFrame);
 }
 
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,

@@ -18,14 +18,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getDisplayedRequestsSummary } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
   let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
   let { PluralForm } = windowRequire("devtools/shared/plural-form");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
   testStatus();
 
   for (let i = 0; i < 2; i++) {
@@ -49,7 +49,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    let state = gStore.getState();
+    let state = store.getState();
     let totalRequestsCount = state.requests.requests.size;
     let requestsSummary = getDisplayedRequestsSummary(state);
     info(`Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`);

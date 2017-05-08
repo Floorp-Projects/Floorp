@@ -1103,6 +1103,7 @@ reftest-stylo:
     run-on-projects:
         by-test-platform:
             linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
+            linux64-stylo-sequential/opt: [ 'mozilla-central']
             default: built-projects
     e10s:
         # run only e10s tests for this platform see bug 1343301
@@ -1121,6 +1122,14 @@ reftest-stylo:
                     mozilla-central: true
                     mozilla-inbound: true
                     default: true
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-central: true
+                    default: true
+            linux64-stylo-sequential/debug:
+                by-project:
+                    mozilla-central: true
+                    default: true 
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

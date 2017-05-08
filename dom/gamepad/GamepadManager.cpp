@@ -268,55 +268,6 @@ GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType)
 }
 
 void
-GamepadManager::NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                               uint32_t aButton, bool aPressed, bool aTouched,
-                               double aValue)
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
-
-  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
-  if (!gamepad) {
-    return;
-  }
-
-  gamepad->SetButton(aButton, aPressed, aTouched, aValue);
-
-  // Hold on to listeners in a separate array because firing events
-  // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
-  MOZ_ASSERT(!listeners.IsEmpty());
-
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-
-    MOZ_ASSERT(listeners[i]->IsInnerWindow());
-
-    // Only send events to non-background windows
-    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
-        listeners[i]->GetOuterWindow()->IsBackground()) {
-      continue;
-    }
-
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
-
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
-    if (listenerGamepad) {
-      listenerGamepad->SetButton(aButton, aPressed, aTouched, aValue);
-      if (firstTime) {
-        FireConnectionEvent(listeners[i], listenerGamepad, true);
-      }
-      if (mNonstandardEventsEnabled) {
-        // Fire event
-        FireButtonEvent(listeners[i], listenerGamepad, aButton, aValue);
-      }
-    }
-  }
-}
-
-void
 GamepadManager::FireButtonEvent(EventTarget* aTarget,
                                 Gamepad* aGamepad,
                                 uint32_t aButton,
@@ -336,53 +287,6 @@ GamepadManager::FireButtonEvent(EventTarget* aTarget,
 
   bool defaultActionEnabled = true;
   aTarget->DispatchEvent(event, &defaultActionEnabled);
-}
-
-void
-GamepadManager::NewAxisMoveEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                                 uint32_t aAxis, double aValue)
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
-
-  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
-  if (!gamepad) {
-    return;
-  }
-  gamepad->SetAxis(aAxis, aValue);
-
-  // Hold on to listeners in a separate array because firing events
-  // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
-  MOZ_ASSERT(!listeners.IsEmpty());
-
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-
-    MOZ_ASSERT(listeners[i]->IsInnerWindow());
-
-    // Only send events to non-background windows
-    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
-        listeners[i]->GetOuterWindow()->IsBackground()) {
-      continue;
-    }
-
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
-
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
-    if (listenerGamepad) {
-      listenerGamepad->SetAxis(aAxis, aValue);
-      if (firstTime) {
-        FireConnectionEvent(listeners[i], listenerGamepad, true);
-      }
-      if (mNonstandardEventsEnabled) {
-        // Fire event
-        FireAxisMoveEvent(listeners[i], listenerGamepad, aAxis, aValue);
-      }
-    }
-  }
 }
 
 void
@@ -406,92 +310,6 @@ GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
 
   bool defaultActionEnabled = true;
   aTarget->DispatchEvent(event, &defaultActionEnabled);
-}
-
-void
-GamepadManager::NewPoseEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                             const GamepadPoseState& aPose)
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
-
-  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
-  if (!gamepad) {
-    return;
-  }
-  gamepad->SetPose(aPose);
-
-  // Hold on to listeners in a separate array because firing events
-  // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
-  MOZ_ASSERT(!listeners.IsEmpty());
-
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-
-    MOZ_ASSERT(listeners[i]->IsInnerWindow());
-
-    // Only send events to non-background windows
-    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
-        listeners[i]->GetOuterWindow()->IsBackground()) {
-      continue;
-    }
-
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
-
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
-    if (listenerGamepad) {
-      listenerGamepad->SetPose(aPose);
-      if (firstTime) {
-        FireConnectionEvent(listeners[i], listenerGamepad, true);
-      }
-    }
-  }
-}
-
-void
-GamepadManager::NewHandChangeEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                                   GamepadHand aHand)
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
-
-  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
-  if (!gamepad) {
-    return;
-  }
-  gamepad->SetHand(aHand);
-
-  // Hold on to listeners in a separate array because firing events
-  // can mutate the mListeners array.
-  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
-  MOZ_ASSERT(!listeners.IsEmpty());
-
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-
-    MOZ_ASSERT(listeners[i]->IsInnerWindow());
-
-    // Only send events to non-background windows
-    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
-        listeners[i]->GetOuterWindow()->IsBackground()) {
-      continue;
-    }
-
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
-
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
-    if (listenerGamepad) {
-      listenerGamepad->SetHand(aHand);
-      if (firstTime) {
-        FireConnectionEvent(listeners[i], listenerGamepad, true);
-      }
-    }
-  }
 }
 
 void
@@ -676,6 +494,10 @@ GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
 void
 GamepadManager::Update(const GamepadChangeEvent& aEvent)
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (aEvent.type() == GamepadChangeEvent::TGamepadAdded) {
     const GamepadAdded& a = aEvent.get_GamepadAdded();
     AddGamepad(a.index(), a.id(),
@@ -691,30 +513,137 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
     RemoveGamepad(a.index(), a.service_type());
     return;
   }
-  if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
-    const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-    NewButtonEvent(a.index(), a.service_type(), a.button(),
-                   a.pressed(), a.touched(), a.value());
-    return;
-  }
-  if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
-    const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
-    NewAxisMoveEvent(a.index(), a.service_type(), a.axis(), a.value());
-    return;
-  }
-  if (aEvent.type() == GamepadChangeEvent::TGamepadPoseInformation) {
-    const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
-    NewPoseEvent(a.index(), a.service_type(), a.pose_state());
-    return;
-  }
-   if (aEvent.type() == GamepadChangeEvent::TGamepadHandInformation) {
-    const GamepadHandInformation& a = aEvent.get_GamepadHandInformation();
-    NewHandChangeEvent(a.index(), a.service_type(), a.hand());
+
+  if (!SetGamepadByEvent(aEvent)) {
     return;
   }
 
-  MOZ_CRASH("We shouldn't be here!");
+  // Hold on to listeners in a separate array because firing events
+  // can mutate the mListeners array.
+  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
+  MOZ_ASSERT(!listeners.IsEmpty());
 
+  for (uint32_t i = 0; i < listeners.Length(); i++) {
+    MOZ_ASSERT(listeners[i]->IsInnerWindow());
+
+    // Only send events to non-background windows
+    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
+        listeners[i]->GetOuterWindow()->IsBackground()) {
+      continue;
+    }
+
+    SetGamepadByEvent(aEvent, listeners[i]);
+    MaybeConvertToNonstandardGamepadEvent(aEvent, listeners[i]);
+  }
+}
+
+void
+GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& aEvent,
+                                                      nsGlobalWindow* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  if (!mNonstandardEventsEnabled) {
+    return;
+  }
+
+  RefPtr<Gamepad> gamepad;
+
+  switch (aEvent.type()) {
+    case GamepadChangeEvent::TGamepadButtonInformation:
+      {
+        const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
+        gamepad = aWindow->GetGamepad(a.index());
+        if (gamepad) {
+          FireButtonEvent(aWindow, gamepad, a.button(), a.value());
+        }
+      }
+      break;
+    case GamepadChangeEvent::TGamepadAxisInformation:
+      {
+        const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
+        gamepad = aWindow->GetGamepad(a.index());
+        if (gamepad) {
+          FireAxisMoveEvent(aWindow, gamepad, a.axis(), a.value());
+        }
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+bool
+GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindow *aWindow)
+{
+  uint32_t index;
+  RefPtr<Gamepad> gamepad;
+  bool ret = false;
+  bool firstTime = false;
+
+  switch (aEvent.type()) {
+    case GamepadChangeEvent::TGamepadButtonInformation:
+    {
+      const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
+      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
+      if (aWindow) {
+        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+      }
+      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+      if (gamepad) {
+        gamepad->SetButton(a.button(), a.pressed(), a.touched(), a.value());
+        ret = true;
+      }
+    } break;
+    case GamepadChangeEvent::TGamepadAxisInformation:
+    {
+      const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
+      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
+      if (aWindow) {
+        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+      }
+      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+      if (gamepad) {
+        gamepad->SetAxis(a.axis(), a.value());
+        ret = true;
+      }
+    } break;
+    case GamepadChangeEvent::TGamepadPoseInformation:
+    {
+      const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
+      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
+      if (aWindow) {
+        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+      }
+      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+      if (gamepad) {
+        gamepad->SetPose(a.pose_state());
+         ret = true;
+      }
+    } break;
+    case GamepadChangeEvent::TGamepadHandInformation:
+    {
+      const GamepadHandInformation& a = aEvent.get_GamepadHandInformation();
+      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
+      if (aWindow) {
+        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+      }
+      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+      if (gamepad) {
+        gamepad->SetHand(a.hand());
+        ret = true;
+      }
+    } break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+
+  if (aWindow && firstTime) {
+    FireConnectionEvent(aWindow, gamepad, true);
+  }
+
+  return ret;
 }
 
 already_AddRefed<Promise>

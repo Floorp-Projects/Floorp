@@ -9,14 +9,14 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SEND_BEACON_URL);
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getSortedRequests } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
-  is(gStore.getState().requests.requests.size, 0, "The requests menu should be empty.");
+  is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -24,8 +24,8 @@ add_task(function* () {
   });
   yield wait;
 
-  is(gStore.getState().requests.requests.size, 1, "The beacon should be recorded.");
-  let request = getSortedRequests(gStore.getState()).get(0);
+  is(store.getState().requests.requests.size, 1, "The beacon should be recorded.");
+  let request = getSortedRequests(store.getState()).get(0);
   is(request.method, "POST", "The method is correct.");
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");
   is(request.status, "404", "The status is correct.");

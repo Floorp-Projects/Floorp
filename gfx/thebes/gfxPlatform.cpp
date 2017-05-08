@@ -965,9 +965,6 @@ gfxPlatform::InitLayersIPC()
             wr::RenderThread::Start();
         }
         layers::CompositorThreadHolder::Start();
-#ifdef XP_WIN
-        gfx::DeviceManagerDx::PreloadAttachmentsOnCompositorThread();
-#endif
     }
 }
 
@@ -2045,7 +2042,7 @@ static void ShutdownCMS()
 void
 gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const char16_t *aString)
 {
-    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) {
+    if (aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_IS_8BIT) {
         // 8-bit text doesn't have clusters.
         // XXX is this true in all languages???
         // behdad: don't think so.  Czech for example IIRC has a

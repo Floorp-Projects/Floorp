@@ -277,7 +277,7 @@ struct GridTemplateAreasValue final {
     return !(*this == aOther);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(GridTemplateAreasValue)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GridTemplateAreasValue)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -905,6 +905,7 @@ public:
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
+  void SetAtomIdentValue(already_AddRefed<nsIAtom> aValue);
   void SetColorValue(nscolor aValue);
   void SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit);
   // converts the nscoord to pixels

@@ -7,6 +7,10 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 
+:root {
+  --toolbarbutton-disabled-opacity: 0.4;
+}
+
 toolbar:-moz-lwtheme {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
@@ -20,6 +24,8 @@ toolbar:-moz-lwtheme {
 
 /* ::::: primary toolbar buttons ::::: */
 
+.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled=true],
+.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled=true],
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
@@ -52,6 +58,37 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   max-width: 18px;
+}
+
+#TabsToolbar .toolbarbutton-1,
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  margin: 0 0 calc(var(--navbar-tab-toolbar-highlight-overlap) + var(--tab-toolbar-navbar-overlap));
+}
+
+#TabsToolbar .toolbarbutton-1,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  -moz-appearance: none;
+  padding: 0;
+  min-width: 26px;
+  border: 1px solid transparent;
+  border-bottom-style: none;
+  border-radius: var(--toolbarbutton-border-radius) var(--toolbarbutton-border-radius) 0 0;
+}
+
+#navigator-toolbox:not(:hover) > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
+  transition: 1s background-color ease-out;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[highlight] {
+  background-color: Highlight;
+}
+
+.findbar-button {
+  -moz-appearance: none;
+  padding: 0;
 }
 
 #nav-bar .toolbarbutton-1,
@@ -204,11 +241,11 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   opacity: .3;
 }
 
-.findbar-button {
-  -moz-appearance: none;
-  padding: 0;
-}
-
+#TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
+#TabsToolbar .toolbarbutton-1[open],
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled=true]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover,
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]) > .toolbarbutton-menubutton-button[open] + .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
@@ -238,32 +275,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
   transition: background-color .4s;
-}
-
-#TabsToolbar .toolbarbutton-1,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  -moz-appearance: none;
-  border-style: none;
-  padding: 0 3px;
-}
-
-#TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
-}
-
-#TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
-#TabsToolbar .toolbarbutton-1[open],
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled=true]):hover,
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover {
-  background-image: linear-gradient(transparent, rgba(255,255,255,.5)),
-                    linear-gradient(transparent, rgba(0,0,0,.25) 30%),
-                    linear-gradient(transparent, rgba(0,0,0,.25) 30%);
-  background-position: 1px -1px, 0 -1px, 100% -1px;
-  background-size: calc(100% - 2px) 100%, 1px 100%, 1px 100%;
-  background-repeat: no-repeat;
 }
 
 /* unified back/forward button */

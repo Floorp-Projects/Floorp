@@ -19,20 +19,20 @@ add_task(function* () {
   ];
 
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
   yield performRequests(2, HSTS_SJS);
   yield wait;
 
   EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
-    let item = getSortedRequests(gStore.getState()).get(i);
+    let item = getSortedRequests(store.getState()).get(i);
 
     is(item.status, status, `Request #${i} has the expected status`);
 

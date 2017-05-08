@@ -68,9 +68,11 @@ class CompartmentChecker
     }
 
     void check(JSObject* obj) {
-        MOZ_ASSERT(JS::ObjectIsNotGray(obj));
-        if (obj)
+        if (obj) {
+            MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+            MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
             check(obj->compartment());
+        }
     }
 
     template<typename T>
