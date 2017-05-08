@@ -22,14 +22,14 @@ use std::fmt;
 
 /// A one-dimensional distance, with value represented by `T` and unit of measurement `Unit`.
 ///
-/// `T` can be any numeric type, for example a primitive type like u64 or f32.
+/// `T` can be any numeric type, for example a primitive type like `u64` or `f32`.
 ///
-/// `Unit` is not used in the representation of a Length value. It is used only at compile time
-/// to ensure that a Length stored with one unit is converted explicitly before being used in an
+/// `Unit` is not used in the representation of a `Length` value. It is used only at compile time
+/// to ensure that a `Length` stored with one unit is converted explicitly before being used in an
 /// expression that requires a different unit.  It may be a type without values, such as an empty
 /// enum.
 ///
-/// You can multiply a Length by a `scale_factor::ScaleFactor` to convert it from one unit to
+/// You can multiply a `Length` by a `scale_factor::ScaleFactor` to convert it from one unit to
 /// another. See the `ScaleFactor` docs for an example.
 // Uncomment the derive, and remove the macro call, once heapsize gets
 // PhantomData<T> support.

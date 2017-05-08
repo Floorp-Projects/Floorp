@@ -18,15 +18,16 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc)
 {
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("ColorLayer", rect);
 
   LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegion clip = aBuilder.BuildClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));

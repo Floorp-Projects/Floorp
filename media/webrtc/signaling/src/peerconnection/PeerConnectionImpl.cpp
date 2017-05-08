@@ -60,6 +60,7 @@
 #include "nsIDocument.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
+#include "mozilla/dom/Location.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -74,7 +75,6 @@
 #include "nsNetUtil.h"
 #include "nsIURLParser.h"
 #include "nsIDOMDataChannel.h"
-#include "nsIDOMLocation.h"
 #include "NullPrincipal.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
@@ -609,7 +609,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   nsAutoCString locationCStr;
 
-  if (nsCOMPtr<nsIDOMLocation> location = mWindow->GetLocation()) {
+  if (RefPtr<Location> location = mWindow->Location()) {
     nsAutoString locationAStr;
     location->ToString(locationAStr);
 

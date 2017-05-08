@@ -55,7 +55,7 @@ impl<T, U> TypedSize2D<T, U> {
 }
 
 impl<T: Clone, U> TypedSize2D<T, U> {
-    /// Constructor taking scalar stronlgy typed lengths.
+    /// Constructor taking scalar strongly typed lengths.
     pub fn from_lengths(width: Length<T, U>, height: Length<T, U>) -> TypedSize2D<T, U> {
         TypedSize2D::new(width.get(), height.get())
     }
@@ -71,7 +71,7 @@ impl<T: Round, U> TypedSize2D<T, U> {
 }
 
 impl<T: Ceil, U> TypedSize2D<T, U> {
-    /// Rounds each component to the smallest integer equal or greater than the orginal value.
+    /// Rounds each component to the smallest integer equal or greater than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn ceil(&self) -> Self {
@@ -80,7 +80,7 @@ impl<T: Ceil, U> TypedSize2D<T, U> {
 }
 
 impl<T: Floor, U> TypedSize2D<T, U> {
-    /// Rounds each component to the biggest integer equal or lower than the orginal value.
+    /// Rounds each component to the biggest integer equal or lower than the original value.
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn floor(&self) -> Self {
@@ -183,8 +183,8 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
     /// Cast from one numeric representation to another, preserving the units.
     ///
     /// When casting from floating point to integer coordinates, the decimals are truncated
-    /// as one would expect from a simple cast, but this behavior does not always marke sense
-    /// geometrically. Consider using round(), ceil or floor() before casting.
+    /// as one would expect from a simple cast, but this behavior does not always make sense
+    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedSize2D<NewT, Unit>> {
         match (NumCast::from(self.width), NumCast::from(self.height)) {
             (Some(w), Some(h)) => Some(TypedSize2D::new(w, h)),
@@ -194,40 +194,40 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
 
     // Convenience functions for common casts
 
-    /// Cast into an f32 size.
+    /// Cast into an `f32` size.
     pub fn to_f32(&self) -> TypedSize2D<f32, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an usize size, truncating decimals if any.
+    /// Cast into an `uint` size, truncating decimals if any.
     ///
     /// When casting from floating point sizes, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_uint(&self) -> TypedSize2D<usize, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i32 size, truncating decimals if any.
+    /// Cast into an `i32` size, truncating decimals if any.
     ///
     /// When casting from floating point sizes, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i32(&self) -> TypedSize2D<i32, Unit> {
         self.cast().unwrap()
     }
 
-    /// Cast into an i64 size, truncating decimals if any.
+    /// Cast into an `i64` size, truncating decimals if any.
     ///
     /// When casting from floating point sizes, it is worth considering whether
-    /// to round(), ceil() or floor() before the cast in order to obtain the desired
-    /// conversion behavior.
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
     pub fn to_i64(&self) -> TypedSize2D<i64, Unit> {
         self.cast().unwrap()
     }
 }
 
-/// Shorthand for TypedSize2D::new(w, h).
+/// Shorthand for `TypedSize2D::new(w, h)`.
 pub fn size2<T, U>(w: T, h: T) -> TypedSize2D<T, U> {
     TypedSize2D::new(w, h)
 }

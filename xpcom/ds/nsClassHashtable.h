@@ -99,18 +99,14 @@ public:
       return !!mEntry.mData;
     }
 
-    T& operator*()
+    template <class F>
+    T* OrInsert(F func)
     {
-      MOZ_ASSERT(mEntry.mData);
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      return *mEntry.mData;
-    }
-
-    void TakeOwnership(T* aPtr)
-    {
-      MOZ_ASSERT(!mEntry.mData);
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      mEntry.mData = aPtr;
+      if (!mEntry.mData) {
+        mEntry.mData = func();
+      }
+      return mEntry.mData;
     }
   };
 
@@ -121,23 +117,25 @@ public:
    *
    * A typical usage of this API looks like this:
    *
+   *   auto insertedValue = table.LookupForAdd(key).OrInsert([]() {
+   *     return newValue;
+   *   });
+   *
    *   auto p = table.LookupForAdd(key);
    *   if (p) {
    *     // The entry already existed in the table.
-   *     Use(*p);
+   *     DoSomething();
    *   } else {
    *     // An existing entry wasn't found, store a new entry in the hashtable.
-   *     table.Insert(p, newValue);
+   *     p.OrInsert([]() { return newValue; });
    *   }
    *
-   * We ensure that the hashtable isn't modified before Insert() is called.
+   * We ensure that the hashtable isn't modified before OrInsert() is called.
    * This is useful for cases where you want to insert a new entry into the
    * hashtable if one doesn't exist before but would like to avoid two hashtable
    * lookups.
    */
   MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey);
-
-  void Insert(EntryPtr& aEntryPtr, T* aPtr);
 };
 
 //
@@ -163,14 +161,6 @@ nsClassHashtable<KeyClass, T>::LookupForAdd(KeyType aKey)
 {
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   return EntryPtr(*this, ent);
-}
-
-template<class KeyClass, class T>
-void
-nsClassHashtable<KeyClass, T>::Insert(typename nsClassHashtable<KeyClass, T>::EntryPtr& aEntryPtr,
-                                      T* aPtr)
-{
-  aEntryPtr.TakeOwnership(aPtr);
 }
 
 template<class KeyClass, class T>

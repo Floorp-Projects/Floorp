@@ -29,7 +29,7 @@ protected:
   {
 
     if (gfxPrefs::WebRenderOMTAEnabled() &&
-        GetAnimations().Length()) {
+        !GetAnimations().IsEmpty()) {
       mManager->AsWebRenderLayerManager()->
         AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
     }
@@ -38,10 +38,14 @@ protected:
     MOZ_COUNT_DTOR(WebRenderContainerLayer);
   }
 
+  void UpdateTransformDataForAnimation();
+
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   const StackingContextHelper& aSc) override;
 
+  void ClearAnimations() override;
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
@@ -65,7 +69,8 @@ protected:
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   const StackingContextHelper& aSc) override;
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
   {

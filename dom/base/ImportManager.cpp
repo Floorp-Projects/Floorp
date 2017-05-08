@@ -6,6 +6,7 @@
 
 #include "ImportManager.h"
 
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/EventListenerManager.h"
 #include "HTMLLinkElement.h"
 #include "nsContentPolicyUtils.h"
@@ -18,7 +19,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsScriptLoader.h"
 #include "nsNetUtil.h"
 
 //-----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ ImportLoader::Updater::UpdateMainReferrer(uint32_t aNewIdx)
     // Our nearest predecessor has changed. So let's add the ScriptLoader to the
     // new one if there is any. And remove it from the old one.
     RefPtr<ImportManager> manager = mLoader->Manager();
-    nsScriptLoader* loader = mLoader->mDocument->ScriptLoader();
+    ScriptLoader* loader = mLoader->mDocument->ScriptLoader();
     ImportLoader*& pred = mLoader->mBlockingPredecessor;
     ImportLoader* newPred = manager->GetNearestPredecessor(newMainReferrer);
     if (pred) {
@@ -339,7 +339,7 @@ ImportLoader::DispatchEventIfFinished(nsINode* aNode)
 }
 
 void
-ImportLoader::AddBlockedScriptLoader(nsScriptLoader* aScriptLoader)
+ImportLoader::AddBlockedScriptLoader(ScriptLoader* aScriptLoader)
 {
   if (mBlockedScriptLoaders.Contains(aScriptLoader)) {
     return;
@@ -352,7 +352,7 @@ ImportLoader::AddBlockedScriptLoader(nsScriptLoader* aScriptLoader)
 }
 
 bool
-ImportLoader::RemoveBlockedScriptLoader(nsScriptLoader* aScriptLoader)
+ImportLoader::RemoveBlockedScriptLoader(ScriptLoader* aScriptLoader)
 {
   aScriptLoader->RemoveParserBlockingScriptExecutionBlocker();
   return mBlockedScriptLoaders.RemoveElement(aScriptLoader);

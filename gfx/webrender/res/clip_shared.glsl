@@ -88,6 +88,8 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     gl_Position = uTransform * vec4(vertex_pos, 0.0, 1);
 
+    vLocalBounds = vec4(clipped_local_rect.p0, clipped_local_rect.p0 + clipped_local_rect.size);
+
     return ClipVertexInfo(layer_pos.xyw, actual_pos, clipped_local_rect);
 }
 

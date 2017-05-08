@@ -33,7 +33,7 @@ async function editExpression(dbg, input) {
   info("updating the expression");
   dblClickElement(dbg, "expressionNode", 1);
   // Position cursor reliably at the end of the text.
-  pressKey(dbg, "End")
+  pressKey(dbg, "End");
   type(dbg, input);
   pressKey(dbg, "Enter");
   await waitForDispatch(dbg, "EVALUATE_EXPRESSION");

@@ -141,6 +141,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        WebRenderDisplayItemLayer* aLayer) override;
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground", TYPE_BUTTON_BORDER_BACKGROUND)
@@ -206,6 +207,7 @@ nsDisplayButtonBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                               const StackingContextHelper& aSc,
                                                nsTArray<WebRenderParentCommand>& aCommands,
                                                WebRenderDisplayItemLayer* aLayer)
 {
@@ -214,10 +216,11 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
   // paint border.
   nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder,
+                                                                 aSc,
                                                                  aLayer,
                                                                  mFrame,
                                                                  buttonRect);
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc, aLayer);
 }
 
 void
@@ -286,6 +289,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
    virtual void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) override;
   NS_DISPLAY_DECL_NAME("ButtonForeground", TYPE_BUTTON_FOREGROUND)
@@ -371,11 +375,12 @@ nsDisplayButtonForeground::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayButtonForeground::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                   const StackingContextHelper& aSc,
                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
                                                    mozilla::layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(mBorderRenderer.isSome());
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc, aLayer);
 }
 
 nsresult

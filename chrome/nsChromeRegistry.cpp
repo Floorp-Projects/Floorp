@@ -19,7 +19,6 @@
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMLocation.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
@@ -31,6 +30,7 @@
 #include "mozilla/Printf.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/dom/Location.h"
 
 #ifdef ENABLE_INTL_API
 #include "unicode/uloc.h"
@@ -42,6 +42,7 @@ nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 // mozilla::TextRange and a TextRange in OSX headers.
 using mozilla::StyleSheet;
 using mozilla::dom::IsChromeURI;
+using mozilla::dom::Location;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -508,7 +509,7 @@ nsChromeRegistry::ReloadChrome()
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryInterface(protoWindow);
           if (domWindow) {
-            nsIDOMLocation* location = domWindow->GetLocation();
+            Location* location = domWindow->Location();
             if (location) {
               rv = location->Reload(false);
               if (NS_FAILED(rv)) return rv;

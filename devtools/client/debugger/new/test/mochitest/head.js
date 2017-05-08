@@ -38,7 +38,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 var { Toolbox } = require("devtools/client/framework/toolbox");
-const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/new/test/mochitest/examples/";
+const EXAMPLE_URL =
+  "http://example.com/browser/devtools/client/debugger/new/test/mochitest/examples/";
 
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
 
@@ -336,7 +337,7 @@ window.resumeTest = undefined;
  */
 function pauseTest() {
   info("Test paused. Invoke resumeTest to continue.");
-  return new Promise(resolve => resumeTest = resolve);
+  return new Promise(resolve => (resumeTest = resolve));
 }
 
 // Actions
@@ -563,12 +564,12 @@ const cmdOrCtrl = isLinux ? { ctrlKey: true } : { metaKey: true };
 // On Mac, going to beginning/end only works with meta+left/right.  On
 // Windows, it only works with home/end.  On Linux, apparently, either
 // ctrl+left/right or home/end work.
-const endKey = isMac ?
-      { code: "VK_RIGHT", modifiers: cmdOrCtrl } :
-      { code: "VK_END" };
-const startKey = isMac ? 
-      { code: "VK_LEFT", modifiers: cmdOrCtrl } :
-      { code: "VK_HOME" };
+const endKey = isMac
+  ? { code: "VK_RIGHT", modifiers: cmdOrCtrl }
+  : { code: "VK_END" };
+const startKey = isMac
+  ? { code: "VK_LEFT", modifiers: cmdOrCtrl }
+  : { code: "VK_HOME" };
 const keyMappings = {
   sourceSearch: { code: "p", modifiers: cmdOrCtrl },
   fileSearch: { code: "f", modifiers: cmdOrCtrl },
@@ -622,16 +623,14 @@ function isVisibleWithin(outerEl, innerEl) {
 const selectors = {
   callStackHeader: ".call-stack-pane ._header",
   callStackBody: ".call-stack-pane .pane",
-  expressionNode: i =>
-    `.expressions-list .tree-node:nth-child(${i}) .object-label`,
-  expressionValue: i =>
-    `.expressions-list .tree-node:nth-child(${i}) .object-value`,
-  expressionClose: i =>
-    `.expressions-list .expression-container:nth-child(${i}) .close`,
+  expressionNode: i => `.expressions-list .tree-node:nth-child(${i}) .object-label`,
+  expressionValue: i => `.expressions-list .tree-node:nth-child(${i}) .object-value`,
+  expressionClose: i => `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionNodes: ".expressions-list .tree-node",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list .breakpoint:nth-child(${i})`,
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
+  scopeValue: i => `.scopes-list .tree-node:nth-child(${i}) .object-value`,
   frame: i => `.frames ul li:nth-child(${i})`,
   frames: ".frames ul li",
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,

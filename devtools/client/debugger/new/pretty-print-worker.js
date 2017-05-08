@@ -65,13 +65,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = assert;
 	function assert(condition, message) {
 	  if (!condition) {
 	    throw new Error(`Assertion failure: ${message}`);
 	  }
 	}
-
-	module.exports = assert;
 
 /***/ },
 
@@ -94,7 +96,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else {
 	    root.prettyFast = factory();
 	  }
-	}(this, () => {
+	}(this, function () {
 	  "use strict";
 
 	  var acorn = this.acorn || __webpack_require__(803);
@@ -952,7 +954,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result.toStringWithSourceMap({ file: options.url });
 	  };
 
-	}));
+	}.bind(this)));
 
 
 /***/ },
@@ -5855,8 +5857,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	var prettyFast = __webpack_require__(802);
-	var assert = __webpack_require__(223);
+	var _prettyFast = __webpack_require__(802);
+
+	var _prettyFast2 = _interopRequireDefault(_prettyFast);
+
+	var _assert = __webpack_require__(223);
+
+	var _assert2 = _interopRequireDefault(_assert);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function prettyPrint(_ref) {
 	  var url = _ref.url,
@@ -5864,7 +5873,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      source = _ref.source;
 
 	  try {
-	    var prettified = prettyFast(source, {
+	    var prettified = (0, _prettyFast2.default)(source, {
 	      url: url,
 	      indent: " ".repeat(indent)
 	    });
@@ -5903,7 +5912,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      id = _msg$data.id,
 	      args = _msg$data.args;
 
-	  assert(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
+	  (0, _assert2.default)(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
 
 	  try {
 	    var _prettyPrint = prettyPrint(args[0]),

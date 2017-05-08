@@ -6,34 +6,50 @@
 #include "mozilla/layers/StackingContextHelper.h"
 
 #include "mozilla/layers/WebRenderLayer.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
 
-StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+StackingContextHelper::StackingContextHelper()
+  : mBuilder(nullptr)
+{
+  // mOrigin remains at 0,0
+}
+
+StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              const Maybe<gfx::Matrix4x4>& aTransform)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->RelativeToParent(aLayer->BoundsForStackingContext());
+  WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  mOffsetToParent.x = scBounds.x;
+  mOffsetToParent.y = scBounds.y;
   Layer* layer = aLayer->GetLayer();
-  gfx::Matrix4x4 transform = aTransform.valueOr(layer->GetTransform());
-  mBuilder->PushStackingContext(wr::ToWrRect(scBounds),
+  mTransform = aTransform.valueOr(layer->GetTransform());
+  mBuilder->PushStackingContext(scBounds,
                                 1.0f,
-                                transform,
+                                mTransform,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()));
   mOrigin = aLayer->Bounds().TopLeft();
 }
 
-StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
+StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr)
   : mBuilder(&aBuilder)
 {
-  LayerRect scBounds = aLayer->RelativeToParent(aLayer->BoundsForStackingContext());
-  mBuilder->PushStackingContext(wr::ToWrRect(scBounds),
+  WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  mOffsetToParent.x = scBounds.x;
+  mOffsetToParent.y = scBounds.y;
+  if (aTransformPtr) {
+    mTransform = *aTransformPtr;
+  }
+  mBuilder->PushStackingContext(scBounds,
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
@@ -43,13 +59,41 @@ StackingContextHelper::StackingContextHelper(wr::DisplayListBuilder& aBuilder,
 
 StackingContextHelper::~StackingContextHelper()
 {
-  mBuilder->PopStackingContext();
+  if (mBuilder) {
+    mBuilder->PopStackingContext();
+  }
 }
 
 WrRect
-StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect)
+StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect) const
 {
   return wr::ToWrRect(aRect - mOrigin);
+}
+
+WrRect
+StackingContextHelper::ToRelativeWrRect(const LayoutDeviceRect& aRect) const
+{
+  return wr::ToWrRect(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin);
+}
+
+WrPoint
+StackingContextHelper::ToRelativeWrPoint(const LayerPoint& aPoint) const
+{
+  return wr::ToWrPoint(aPoint - mOrigin);
+}
+
+WrRect
+StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const
+{
+  return wr::ToWrRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
+}
+
+gfx::Matrix4x4
+StackingContextHelper::TransformToParentSC() const
+{
+  gfx::Matrix4x4 inv = mTransform.Inverse();
+  inv.PostTranslate(-mOffsetToParent.x, -mOffsetToParent.y, 0);
+  return inv;
 }
 
 } // namespace layers

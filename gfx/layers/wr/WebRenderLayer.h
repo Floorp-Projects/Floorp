@@ -14,6 +14,7 @@ namespace mozilla {
 namespace layers {
 
 class ImageClientSingle;
+class StackingContextHelper;
 class WebRenderBridgeChild;
 class WebRenderLayerManager;
 
@@ -23,7 +24,8 @@ class WebRenderLayer
 {
 public:
   virtual Layer* GetLayer() = 0;
-  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
+  virtual void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                           const StackingContextHelper& aSc) = 0;
   virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
@@ -46,21 +48,20 @@ public:
   WebRenderBridgeChild* WrBridge();
   WrImageKey GetImageKey();
 
-  LayerRect RelativeToParent(const LayerRect& aRect);
-  LayerRect RelativeToParent(const LayoutDeviceRect& aRect);
-  LayerPoint GetOffsetToParent();
-
   LayerRect Bounds();
   LayerRect BoundsForStackingContext();
 protected:
   BoundsTransformMatrix BoundsTransform();
-  LayerRect ParentBounds();
   Maybe<LayerRect> ClipRect();
 
-  gfx::Rect TransformedVisibleBoundsRelativeToParent();
-
   void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
+
+  // Builds a WrImageMask from the mask layer on this layer, if there is one.
+  // If this layer is pushing a stacking context, then the WrImageMask will be
+  // interpreted as relative to that stacking context by WR. The caller needs
+  // to pass in the StackingContextHelper for *this* layer, if there is one, in
+  // order for this function to make the necessary adjustments.
+  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper* aUnapplySc);
 };
 
 } // namespace layers
