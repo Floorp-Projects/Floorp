@@ -96,9 +96,28 @@ Converter.prototype = {
     this.charset =
       request.QueryInterface(Ci.nsIChannel).contentCharset || "UTF-8";
 
-    // Let "save as" save the original JSON, not the viewer
+    // Let "save as" save the original JSON, not the viewer.
+    // To save with the proper extension we need the original content type,
+    // which has been replaced by application/vnd.mozilla.json.view
+    let originalType;
+    if (request instanceof Ci.nsIHttpChannel) {
+      try {
+        originalType = request.getResponseHeader("Content-Type");
+      } catch (err) {
+        // Handled below
+      }
+    } else {
+      let match = this.uri.match(/^data:(.*?)[,;]/);
+      if (match) {
+        originalType = match[1];
+      }
+    }
+    const JSON_TYPES = ["application/json", "application/manifest+json"];
+    if (!JSON_TYPES.includes(originalType)) {
+      originalType = JSON_TYPES[0];
+    }
     request.QueryInterface(Ci.nsIWritablePropertyBag);
-    request.setProperty("contentType", "application/json");
+    request.setProperty("contentType", originalType);
 
     this.channel = request;
     this.channel.contentType = "text/html";
