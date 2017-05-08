@@ -1356,4 +1356,10 @@ ServoStyleSet::RunPostTraversalTasks()
   }
 }
 
+bool
+ServoStyleSet::MightHaveAttributeDependency(nsIAtom* aAttribute)
+{
+  return Servo_StyleSet_MightHaveAttributeDependency(mRawSet.get(), aAttribute);
+}
+
 ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;
