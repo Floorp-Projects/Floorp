@@ -171,7 +171,7 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     const uint16 * const o_actions = reinterpret_cast<const uint16 *>(p);
     be::skip<uint16>(p, m_numRules + 1);
     const byte * const states = p;
-    if (e.test(p + 2u*m_numTransition*m_numColumns >= pass_end, E_BADPASSLENGTH)) return face.error(e);
+    if (e.test(2u*m_numTransition*m_numColumns >= (unsigned)(pass_end - p), E_BADPASSLENGTH)) return face.error(e);
     be::skip<int16>(p, m_numTransition*m_numColumns);
     be::skip<uint8>(p);
     if (e.test(p != pcCode, E_BADPASSCCODEPTR)) return face.error(e);
@@ -192,7 +192,7 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
         m_cPConstraint = vm::Machine::Code(true, pcCode, pcCode + pass_constraint_len, 
                                   precontext[0], be::peek<uint16>(sort_keys), *m_silf, face, PASS_TYPE_UNKNOWN);
         if (e.test(!m_cPConstraint, E_OUTOFMEM)
-                || e.test(!m_cPConstraint, m_cPConstraint.status() + E_CODEFAILURE))
+                || e.test(m_cPConstraint.status() != Code::loaded, m_cPConstraint.status() + E_CODEFAILURE))
             return face.error(e);
         face.error_context(face.error_context() - 1);
     }
@@ -974,7 +974,7 @@ bool Pass::resolveCollisions(Segment *seg, Slot *slotFix, Slot *start,
                             || !(cNbor->flags() & SlotCollision::COLL_FIX)     // merge in immovable stuff
                             || ((cNbor->flags() & SlotCollision::COLL_KERN) && !sameCluster)     // ignore other kernable clusters
                             || (cNbor->flags() & SlotCollision::COLL_ISCOL))   // test against other collided glyphs
-                      && !coll.mergeSlot(seg, nbor, cNbor->shift(), !ignoreForKern, sameCluster, collides, false, dbgout))
+                      && !coll.mergeSlot(seg, nbor, cNbor, cNbor->shift(), !ignoreForKern, sameCluster, collides, false, dbgout))
             return false;
         else if (nbor == slotFix)
             // Switching sides of this glyph - if we were ignoring kernable stuff before, don't anymore.

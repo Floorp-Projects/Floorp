@@ -262,7 +262,7 @@ inline void ShiftCollider::removeBox(const Rect &box, const BBox &bb, const Slan
 // Adjust the movement limits for the target to avoid having it collide
 // with the given neighbor slot. Also determine if there is in fact a collision
 // between the target and the given slot.
-bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift,
+bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *cslot, const Position &currShift,
 		bool isAfter,  // slot is logically after _target
 		bool sameCluster, bool &hasCol, bool isExclusion,
         GR_MAYBE_UNUSED json * const dbgout )
@@ -282,7 +282,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShif
         return false;
     const BBox &bb = gc.getBoundingBBox(gid);
 
-    SlotCollision * cslot = seg->collisionInfo(slot);
+    // SlotCollision * cslot = seg->collisionInfo(slot);
     int orderFlags = 0;
     bool sameClass = _seqProxClass == 0 && cslot->seqClass() == _seqClass;
     if (sameCluster && _seqClass 
@@ -561,7 +561,8 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShif
         exclSlot->setGlyph(seg, cslot->exclGlyph());
         Position exclOrigin(slot->origin() + cslot->exclOffset());
         exclSlot->origin(exclOrigin);
-        res &= mergeSlot(seg, exclSlot, currShift, isAfter, sameCluster, isCol, true, dbgout );
+        SlotCollision exclInfo(seg, exclSlot);
+        res &= mergeSlot(seg, exclSlot, &exclInfo, currShift, isAfter, sameCluster, isCol, true, dbgout );
         seg->freeSlot(exclSlot);
     }
     hasCol |= isCol;
