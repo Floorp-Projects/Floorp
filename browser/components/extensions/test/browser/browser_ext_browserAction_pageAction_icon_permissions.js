@@ -105,6 +105,8 @@ add_task(function* testDefaultDetails() {
     let browserActionId = makeWidgetId(extension.id) + "-browser-action";
     let pageActionId = makeWidgetId(extension.id) + "-page-action";
 
+    yield promiseAnimationFrame();
+
     let browserActionButton = document.getElementById(browserActionId);
     let image = getListStyleImage(browserActionButton);
 

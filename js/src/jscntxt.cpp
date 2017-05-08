@@ -1449,6 +1449,9 @@ JSContext::findVersion()
     if (compartment() && compartment()->behaviors().version() != JSVERSION_UNKNOWN)
         return compartment()->behaviors().version();
 
+    if (!CurrentThreadCanAccessRuntime(runtime()))
+        return JSVERSION_DEFAULT;
+
     return runtime()->defaultVersion();
 }
 
