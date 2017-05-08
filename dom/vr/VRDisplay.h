@@ -308,8 +308,11 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  uint32_t PresentingGroups() const;
+  uint32_t GroupMask() const;
+  void SetGroupMask(const uint32_t& aGroupMask);
+  bool IsAnyPresenting(uint32_t aGroupMask) const;
   bool IsPresenting() const;
-  bool IsAnyPresenting() const;
   bool IsConnected() const;
 
   VRDisplayCapabilities* Capabilities();

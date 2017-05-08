@@ -5,6 +5,7 @@
 
 #include "VRDisplayHost.h"
 #include "gfxVR.h"
+#include "ipc/VRLayerParent.h"
 
 #if defined(XP_WIN)
 
@@ -20,12 +21,13 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 VRDisplayHost::VRDisplayHost(VRDeviceType aType)
-  : mInputFrameID(0)
 {
   MOZ_COUNT_CTOR(VRDisplayHost);
   mDisplayInfo.mType = aType;
   mDisplayInfo.mDisplayID = VRSystemManager::AllocateDisplayID();
-  mDisplayInfo.mIsPresenting = false;
+  mDisplayInfo.mPresentingGroups = 0;
+  mDisplayInfo.mGroupMask = kVRGroupContent;
+  mDisplayInfo.mFrameId = 0;
 }
 
 VRDisplayHost::~VRDisplayHost()
@@ -34,13 +36,19 @@ VRDisplayHost::~VRDisplayHost()
 }
 
 void
+VRDisplayHost::SetGroupMask(uint32_t aGroupMask)
+{
+  mDisplayInfo.mGroupMask = aGroupMask;
+}
+
+void
 VRDisplayHost::AddLayer(VRLayerParent *aLayer)
 {
   mLayers.AppendElement(aLayer);
+  mDisplayInfo.mPresentingGroups |= aLayer->GetGroup();
   if (mLayers.Length() == 1) {
     StartPresentation();
   }
-  mDisplayInfo.mIsPresenting = mLayers.Length() > 0;
 
   // Ensure that the content process receives the change immediately
   VRManager* vm = VRManager::Get();
@@ -54,43 +62,99 @@ VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
   if (mLayers.Length() == 0) {
     StopPresentation();
   }
-  mDisplayInfo.mIsPresenting = mLayers.Length() > 0;
+  mDisplayInfo.mPresentingGroups = 0;
+  for (auto layer : mLayers) {
+    mDisplayInfo.mPresentingGroups |= layer->GetGroup();
+  }
 
   // Ensure that the content process receives the change immediately
   VRManager* vm = VRManager::Get();
   vm->RefreshVRDisplays();
 }
 
+void
+VRDisplayHost::StartFrame()
+{
+  mLastFrameStart = TimeStamp::Now();
+  ++mDisplayInfo.mFrameId;
+  mDisplayInfo.mLastSensorState[mDisplayInfo.mFrameId % kVRMaxLatencyFrames] = GetSensorState();
+}
+
+void
+VRDisplayHost::NotifyVSync()
+{
+  /**
+   * We will trigger a new frame immediately after a successful frame texture
+   * submission.  If content fails to call VRDisplay.submitFrame after
+   * kVRDisplayRAFMaxDuration milliseconds has elapsed since the last
+   * VRDisplay.requestAnimationFrame, we act as a "watchdog" and kick-off
+   * a new VRDisplay.requestAnimationFrame to avoid a render loop stall and
+   * to give content a chance to recover.
+   *
+   * If the lower level VR platform API's are rejecting submitted frames,
+   * such as when the Oculus "Health and Safety Warning" is displayed,
+   * we will not kick off the next frame immediately after VRDisplay.submitFrame
+   * as it would result in an unthrottled render loop that would free run at
+   * potentially extreme frame rates.  To ensure that content has a chance to
+   * resume its presentation when the frames are accepted once again, we rely
+   * on this "watchdog" to act as a VR refresh driver cycling at a rate defined
+   * by kVRDisplayRAFMaxDuration.
+   *
+   * kVRDisplayRAFMaxDuration is the number of milliseconds since last frame
+   * start before triggering a new frame.  When content is failing to submit
+   * frames on time or the lower level VR platform API's are rejecting frames,
+   * kVRDisplayRAFMaxDuration determines the rate at which RAF callbacks
+   * will be called.
+   *
+   * This number must be larger than the slowest expected frame time during
+   * normal VR presentation, but small enough not to break content that
+   * makes assumptions of reasonably minimal VSync rate.
+   *
+   * The slowest expected refresh rate for a VR display currently is an
+   * Oculus CV1 when ASW (Asynchronous Space Warp) is enabled, at 45hz.
+   * A kVRDisplayRAFMaxDuration value of 50 milliseconds results in a 20hz
+   * rate, which avoids inadvertent triggering of the watchdog during
+   * Oculus ASW even if every second frame is dropped.
+   */
+  const double kVRDisplayRAFMaxDuration = 50;
+
+  bool bShouldStartFrame = false;
+
+  if (mDisplayInfo.mPresentingGroups == 0) {
+    // If this display isn't presenting, refresh the sensors and trigger
+    // VRDisplay.requestAnimationFrame at the normal 2d display refresh rate.
+    bShouldStartFrame = true;
+  } else {
+    // If content fails to call VRDisplay.submitFrame, we must eventually
+    // time-out and trigger a new frame.
+    if (mLastFrameStart.IsNull()) {
+      bShouldStartFrame = true;
+    } else {
+      TimeDuration duration = TimeStamp::Now() - mLastFrameStart;
+      if (duration.ToMilliseconds() > kVRDisplayRAFMaxDuration) {
+        bShouldStartFrame = true;
+      }
+    }
+  }
+
+  if (bShouldStartFrame) {
+    VRManager *vm = VRManager::Get();
+    MOZ_ASSERT(vm);
+    vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  }
+}
+
 #if defined(XP_WIN)
 
 void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
-  PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
-  const gfx::Rect& aRightEyeRect)
+VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect)
 {
-  // aInputFrameID is no longer controlled by content with the WebVR 1.1 API
-  // update; however, we will later use this code to enable asynchronous
-  // submission of multiple layers to be composited.  This will enable
-  // us to build browser UX that remains responsive even when content does
-  // not consistently submit frames.
-
-  int32_t inputFrameID = aInputFrameID;
-  if (inputFrameID == 0) {
-    inputFrameID = mInputFrameID;
+  if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
+    // Suppress layers hidden by the group mask
+    return;
   }
-  if (inputFrameID < 0) {
-    // Sanity check to prevent invalid memory access on builds with assertions
-    // disabled.
-    inputFrameID = 0;
-  }
-
-  VRHMDSensorState sensorState = mLastSensorState[inputFrameID % kMaxLatencyFrames];
-  // It is possible to get a cache miss on mLastSensorState if latency is
-  // longer than kMaxLatencyFrames.  An optimization would be to find a frame
-  // that is closer than the one selected with the modulus.
-  // If we hit this; however, latency is already so high that the site is
-  // un-viewable and a more accurate pose prediction is not likely to
-  // compensate.
 
   TextureHost* th = TextureHost::AsTextureHost(aTexture);
   // WebVR doesn't use the compositor to compose the frame, so use
@@ -116,15 +180,31 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
     return;
   }
 
-  SubmitFrame(sourceD3D11, texSize, sensorState, aLeftEyeRect, aRightEyeRect);
+  if (!SubmitFrame(sourceD3D11, texSize, aLeftEyeRect, aRightEyeRect)) {
+    return;
+  }
+
+  /**
+   * Trigger the next VSync immediately after we are successfully
+   * submitting frames.  As SubmitFrame is responsible for throttling
+   * the render loop, if we don't successfully call it, we shouldn't trigger
+   * NotifyVRVsync immediately, as it will run unbounded.
+   * If NotifyVRVsync is not called here due to SubmitFrame failing, the
+   * fallback "watchdog" code in VRDisplayHost::NotifyVSync() will cause
+   * frames to continue at a lower refresh rate until frame submission
+   * succeeds again.
+   */
+  VRManager *vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
 }
 
 #else
 
 void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
-  PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
-  const gfx::Rect& aRightEyeRect)
+VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect)
 {
   NS_WARNING("WebVR only supported in Windows.");
 }
