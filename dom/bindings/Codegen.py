@@ -80,7 +80,7 @@ def idlTypeNeedsCycleCollection(type):
         type.isObject() or
         type.isSpiderMonkeyInterface()):
         return False
-    elif type.isCallback() or type.isGeckoInterface():
+    elif type.isCallback() or type.isPromise() or type.isGeckoInterface():
         return True
     elif type.isUnion():
         return any(idlTypeNeedsCycleCollection(t) for t in type.flatMemberTypes)

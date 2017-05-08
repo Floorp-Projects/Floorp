@@ -46,7 +46,6 @@ const prefObserver = {
   }
 };
 
-const APP_STARTUP = 1;
 function startup(data, reason) { // eslint-disable-line no-unused-vars
   appStartupDone();
   prefObserver.register();
