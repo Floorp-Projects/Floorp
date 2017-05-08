@@ -9,6 +9,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
+#include "nsScriptLoader.h"
 #include "nsEscape.h"
 #include "nsIParser.h"
 #include "nsIDTD.h"
@@ -35,7 +36,6 @@
 #include "nsTreeSanitizer.h"
 #include "nsHtml5Module.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/ScriptLoader.h"
 #include "NullPrincipal.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
@@ -148,7 +148,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
   // stop scripts
-  RefPtr<ScriptLoader> loader;
+  RefPtr<nsScriptLoader> loader;
   bool scripts_enabled = false;
   if (document) {
     loader = document->ScriptLoader();
