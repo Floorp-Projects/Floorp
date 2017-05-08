@@ -17,6 +17,7 @@ import android.content.Context;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.service.notification.StatusBarNotification;
 
@@ -128,11 +129,12 @@ abstract class MediaPlaybackTest extends BaseTest {
         if (clearNotification) {
             checkIfMediaNotificationBeCleared();
         } else {
-            checkMediaNotificationStates(isTabPlaying);
+            checkMediaNotificationStates(tab, isTabPlaying);
         }
     }
 
-    protected final void checkMediaNotificationStates(boolean isTabPlaying) {
+    protected final void checkMediaNotificationStates(final Tab tab,
+                                                      final boolean isTabPlaying) {
         if (!isAvailableToCheckNotification()) {
             return;
         }
@@ -144,9 +146,17 @@ abstract class MediaPlaybackTest extends BaseTest {
                      "Should only have one notification in system's status bar.");
 
         Notification notification = sbns[0].getNotification();
+        mAsserter.is(notification.icon,
+                     R.drawable.flat_icon,
+                     "Notification shows correct small icon.");
+        mAsserter.is(notification.extras.get(Notification.EXTRA_TITLE),
+                     tab.getTitle(),
+                     "Notification shows correct title.");
+        mAsserter.is(notification.extras.get(Notification.EXTRA_TEXT),
+                     tab.getURL(),
+                     "Notification shows correct text.");
         mAsserter.is(notification.actions.length, 1,
                      "Only has one action in notification.");
-
         mAsserter.is(notification.actions[0].title,
                      getContext().getString(isTabPlaying ? R.string.media_pause : R.string.media_play),
                      "Action has correct title.");

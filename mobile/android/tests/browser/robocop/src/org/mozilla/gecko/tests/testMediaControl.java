@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.media.MediaControlService;
 
 import android.media.AudioManager;
@@ -112,8 +114,9 @@ public class testMediaControl extends MediaPlaybackTest {
         final String BLANK_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         addTab(BLANK_URL);
 
-        info("- the media control shouldn't be changed -");
-        checkMediaNotificationStates(true /* playing */);
+        info("- the media control shouldn't be changed and display the info of audible tab -");
+        final Tab tab = Tabs.getInstance().getFirstTabForUrl(MEDIA_URL);
+        checkMediaNotificationStates(tab, true /* playing */);
 
         info("- close tab -");
         closeAllTabs();
