@@ -1,0 +1,10 @@
+[
+  {
+    "size": 15380470,
+    "visibility": "public",
+    "digest": "cd78b88d95b69bef99d7192b71dd34118700f44db0a0069a13bfd4943b131e8d7fdac83859f8ac15d873d4b329eef69d8d75d0a6746d06fdcfc5d06da0c9784c",
+    "algorithm": "sha512",
+    "unpack": true,
+    "filename": "python3.6.zip"
+  }
+]
