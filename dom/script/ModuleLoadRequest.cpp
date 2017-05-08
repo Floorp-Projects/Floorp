@@ -27,7 +27,7 @@ NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 ModuleLoadRequest::ModuleLoadRequest(nsIScriptElement* aElement,
                                      uint32_t aVersion,
                                      CORSMode aCORSMode,
-                                     const SRIMetadata& aIntegrity,
+                                     const SRIMetadata &aIntegrity,
                                      ScriptLoader* aLoader)
   : ScriptLoadRequest(ScriptKind::Module,
                       aElement,
