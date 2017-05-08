@@ -339,6 +339,16 @@ public:
     mPostTraversalTasks.AppendElement(aTask);
   }
 
+  /**
+   * Returns true if a modification to an an attribute with the specified
+   * local name might require us to restyle the element.
+   *
+   * This function allows us to skip taking a an attribute snapshot when
+   * the modified attribute doesn't appear in an attribute selector in
+   * a style sheet.
+   */
+  bool MightHaveAttributeDependency(nsIAtom* aAttribute);
+
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.
   // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
