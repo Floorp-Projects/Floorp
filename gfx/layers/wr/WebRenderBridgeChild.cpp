@@ -102,14 +102,13 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
 
   wr::BuiltDisplayList dl = aBuilder.Finalize();
   ByteBuffer dlData(Move(dl.dl));
-  ByteBuffer auxData(Move(dl.aux));
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
+                        dlData, dl.dl_desc, aScrollData);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
+                    dlData, dl.dl_desc, aScrollData);
   }
 
   mParentCommands.Clear();
@@ -188,8 +187,6 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
   WrFontKey key = GetFontKeyForScaledFont(aFont);
   MOZ_ASSERT(key.mNamespace && key.mHandle);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(aClip));
-
   for (size_t i = 0; i < aGlyphs.Length(); i++) {
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
@@ -202,6 +199,8 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
       wr_glyph_instances[j].point = aSc.ToRelativeWrPoint(
               LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
     }
+
+    WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(aClip));
     aBuilder.PushText(aSc.ToRelativeWrRect(aBounds),
                       clipRegion,
                       glyph_array.color().value(),

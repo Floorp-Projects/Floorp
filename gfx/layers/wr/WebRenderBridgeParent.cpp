@@ -306,8 +306,6 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const uint64_t& aTransactionId,
                                  const ByteBuffer& dl,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
-                                 const ByteBuffer& aux,
-                                 const WrAuxiliaryListsDescriptor& auxDesc,
                                  const WebRenderScrollData& aScrollData)
 {
   UpdateFwdTransactionId(aFwdTransactionId);
@@ -325,7 +323,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
 
   ++mWrEpoch; // Update webrender epoch
   ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
-                           dl, dlDesc, aux, auxDesc);
+                           dl, dlDesc);
   HoldPendingTransactionId(mWrEpoch, aTransactionId);
 
   mScrollData = aScrollData;
@@ -389,12 +387,10 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const uint64_t& aTransactionId,
                                  const ByteBuffer& dl,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
-                                 const ByteBuffer& aux,
-                                 const WrAuxiliaryListsDescriptor& auxDesc,
                                  const WebRenderScrollData& aScrollData)
 {
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              dl, dlDesc, aux, auxDesc, aScrollData);
+              dl, dlDesc, aScrollData);
   return IPC_OK();
 }
 
@@ -406,12 +402,10 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const uint64_t& aTransactionId,
                                      const ByteBuffer& dl,
                                      const WrBuiltDisplayListDescriptor& dlDesc,
-                                     const ByteBuffer& aux,
-                                     const WrAuxiliaryListsDescriptor& auxDesc,
                                      const WebRenderScrollData& aScrollData)
 {
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              dl, dlDesc, aux, auxDesc, aScrollData);
+              dl, dlDesc, aScrollData);
   return IPC_OK();
 }
 
@@ -419,9 +413,7 @@ void
 WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
                                                 const ByteBuffer& dl,
-                                                const WrBuiltDisplayListDescriptor& dlDesc,
-                                                const ByteBuffer& aux,
-                                                const WrAuxiliaryListsDescriptor& auxDesc)
+                                                const WrBuiltDisplayListDescriptor& dlDesc)
 {
   mCompositableHolder->SetCompositionTime(TimeStamp::Now());
 
@@ -527,8 +519,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
   }
   mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height),
                            mPipelineId,
-                           dlDesc, dl.mData, dl.mLength,
-                           auxDesc, aux.mData, aux.mLength);
+                           dlDesc, dl.mData, dl.mLength);
 
   ScheduleComposition();
   DeleteOldImages();

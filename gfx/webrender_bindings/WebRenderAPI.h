@@ -55,10 +55,7 @@ public:
                           WrPipelineId pipeline_id,
                           WrBuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
-                          size_t dl_size,
-                          WrAuxiliaryListsDescriptor aux_descriptor,
-                          uint8_t *aux_data,
-                          size_t aux_size);
+                          size_t dl_size);
 
   void ClearRootDisplayList(Epoch aEpoch,
                             WrPipelineId pipeline_id);
@@ -164,11 +161,11 @@ public:
 
 
   void PushRect(const WrRect& aBounds,
-                const WrClipRegion& aClip,
+                const WrClipRegionToken aClip,
                 const WrColor& aColor);
 
   void PushLinearGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
                           const nsTArray<WrGradientStop>& aStops,
@@ -177,7 +174,7 @@ public:
                           const WrSize aTileSpacing);
 
   void PushRadialGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aCenter,
                           const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
@@ -186,36 +183,36 @@ public:
                           const WrSize aTileSpacing);
 
   void PushImage(const WrRect& aBounds,
-                 const WrClipRegion& aClip,
+                 const WrClipRegionToken aClip,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushImage(const WrRect& aBounds,
-                 const WrClipRegion& aClip,
+                 const WrClipRegionToken aClip,
                  const WrSize& aStretchSize,
                  const WrSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushYCbCrPlanarImage(const WrRect& aBounds,
-                            const WrClipRegion& aClip,
+                            const WrClipRegionToken aClip,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
                             WrYuvColorSpace aColorSpace);
 
   void PushNV12Image(const WrRect& aBounds,
-                     const WrClipRegion& aClip,
+                     const WrClipRegionToken aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      WrYuvColorSpace aColorSpace);
 
   void PushIFrame(const WrRect& aBounds,
-                  const WrClipRegion& aClip,
+                  const WrClipRegionToken aClip,
                   wr::PipelineId aPipeline);
 
   void PushBorder(const WrRect& aBounds,
-                  const WrClipRegion& aClip,
+                  const WrClipRegionToken aClip,
                   const WrBorderWidths& aWidths,
                   const WrBorderSide& aTop,
                   const WrBorderSide& aRight,
@@ -224,7 +221,7 @@ public:
                   const WrBorderRadius& aRadius);
 
   void PushBorderImage(const WrRect& aBounds,
-                       const WrClipRegion& aClip,
+                       const WrClipRegionToken aClip,
                        const WrBorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const WrNinePatchDescriptor& aPatch,
@@ -233,7 +230,7 @@ public:
                        const WrRepeatMode& aRepeatVertical);
 
   void PushBorderGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrBorderWidths& aWidths,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
@@ -242,7 +239,7 @@ public:
                           const WrSideOffsets2Df32& aOutset);
 
   void PushBorderRadialGradient(const WrRect& aBounds,
-                                const WrClipRegion& aClip,
+                                const WrClipRegionToken aClip,
                                 const WrBorderWidths& aWidths,
                                 const WrPoint& aCenter,
                                 const WrSize& aRadius,
@@ -251,14 +248,14 @@ public:
                                 const WrSideOffsets2Df32& aOutset);
 
   void PushText(const WrRect& aBounds,
-                const WrClipRegion& aClip,
+                const WrClipRegionToken aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
                 Range<const WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
   void PushBoxShadow(const WrRect& aRect,
-                     const WrClipRegion& aClip,
+                     const WrClipRegionToken aClip,
                      const WrRect& aBoxBounds,
                      const WrPoint& aOffset,
                      const WrColor& aColor,
@@ -267,11 +264,11 @@ public:
                      const float& aBorderRadius,
                      const WrBoxShadowClipMode& aClipMode);
 
-  WrClipRegion BuildClipRegion(const WrRect& aMain,
-                               const WrImageMask* aMask = nullptr);
-  WrClipRegion BuildClipRegion(const WrRect& aMain,
-                               const nsTArray<WrComplexClipRegion>& aComplex,
-                               const WrImageMask* aMask = nullptr);
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const WrImageMask* aMask = nullptr);
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const nsTArray<WrComplexClipRegion>& aComplex,
+                                   const WrImageMask* aMask = nullptr);
 
   // Try to avoid using this when possible.
   WrState* Raw() { return mWrState; }
