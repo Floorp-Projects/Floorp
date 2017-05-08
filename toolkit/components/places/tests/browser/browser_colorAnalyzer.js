@@ -200,7 +200,7 @@ add_task(function* test_saturationDependence() {
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "hsl(0, 90%, 35%)";
     ctx.fillRect(0, 0, 8, 16);
-  }, 0xA90808, "saturationDependence analysis returns lighter red");
+  }, 0xAA0909, "saturationDependence analysis returns lighter red");
 });
 
 // make sure the preference for interesting colors won't stupidly pick 1 pixel
