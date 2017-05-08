@@ -351,13 +351,13 @@ LIRGeneratorARM::lowerDivI(MDiv* div)
         return;
     }
 
-    gen->setPerformsCall();
+    LSoftDivI* lir = new(alloc()) LSoftDivI(useFixedAtStart(div->lhs(), r0),
+                                            useFixedAtStart(div->rhs(), r1));
 
-    LSoftDivI* lir = new(alloc()) LSoftDivI(useFixedAtStart(div->lhs(), r0), useFixedAtStart(div->rhs(), r1),
-                                            tempFixed(r1), tempFixed(r2), tempFixed(r3));
     if (div->fallible())
         assignSnapshot(lir, Bailout_DoubleOutput);
-    defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+
+    defineReturn(lir, div);
 }
 
 void
@@ -405,14 +405,14 @@ LIRGeneratorARM::lowerModI(MMod* mod)
         return;
     }
 
-    gen->setPerformsCall();
+    LSoftModI* lir = new(alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0),
+                                            useFixedAtStart(mod->rhs(), r1),
+                                            temp());
 
-    LSoftModI* lir = new(alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0), useFixedAtStart(mod->rhs(), r1),
-                                            tempFixed(r0), tempFixed(r2), tempFixed(r3),
-                                            temp(LDefinition::GENERAL));
     if (mod->fallible())
         assignSnapshot(lir, Bailout_DoubleOutput);
-    defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+
+    defineReturn(lir, mod);
 }
 
 void
@@ -422,8 +422,6 @@ LIRGeneratorARM::lowerDivI64(MDiv* div)
         lowerUDivI64(div);
         return;
     }
-
-    gen->setPerformsCall();
 
     LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(div->lhs()),
                                                   useInt64RegisterAtStart(div->rhs()));
@@ -438,8 +436,6 @@ LIRGeneratorARM::lowerModI64(MMod* mod)
         return;
     }
 
-    gen->setPerformsCall();
-
     LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
                                                   useInt64RegisterAtStart(mod->rhs()));
     defineReturn(lir, mod);
@@ -448,8 +444,6 @@ LIRGeneratorARM::lowerModI64(MMod* mod)
 void
 LIRGeneratorARM::lowerUDivI64(MDiv* div)
 {
-    gen->setPerformsCall();
-
     LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(div->lhs()),
                                                     useInt64RegisterAtStart(div->rhs()));
     defineReturn(lir, div);
@@ -458,8 +452,6 @@ LIRGeneratorARM::lowerUDivI64(MDiv* div)
 void
 LIRGeneratorARM::lowerUModI64(MMod* mod)
 {
-    gen->setPerformsCall();
-
     LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
                                                     useInt64RegisterAtStart(mod->rhs()));
     defineReturn(lir, mod);
@@ -573,13 +565,13 @@ LIRGeneratorARM::lowerUDiv(MDiv* div)
         return;
     }
 
-    gen->setPerformsCall();
+    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0),
+                                                      useFixedAtStart(rhs, r1));
 
-    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
-                                                      tempFixed(r1), tempFixed(r2), tempFixed(r3));
     if (div->fallible())
         assignSnapshot(lir, Bailout_DoubleOutput);
-    defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+
+    defineReturn(lir, div);
 }
 
 void
@@ -598,13 +590,13 @@ LIRGeneratorARM::lowerUMod(MMod* mod)
         return;
     }
 
-    gen->setPerformsCall();
+    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0),
+                                                      useFixedAtStart(rhs, r1));
 
-    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
-                                                      tempFixed(r0), tempFixed(r2), tempFixed(r3));
     if (mod->fallible())
         assignSnapshot(lir, Bailout_DoubleOutput);
-    defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+
+    defineReturn(lir, mod);
 }
 
 void
@@ -910,8 +902,6 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
-        gen->setPerformsCall();
-
         LAsmJSCompareExchangeCallout* lir =
             new(alloc()) LAsmJSCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
                                                       useFixedAtStart(ins->oldValue(), IntArgReg3),
@@ -939,8 +929,6 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     MOZ_ASSERT(ins->access().offset() == 0);
 
     if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
-        gen->setPerformsCall();
-
         // Call out on ARMv6.
         defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
                                                               useFixedAtStart(ins->value(), IntArgReg3),
@@ -965,8 +953,6 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
-        gen->setPerformsCall();
-
         LAsmJSAtomicBinopCallout* lir =
             new(alloc()) LAsmJSAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
                                                   useFixedAtStart(ins->value(), IntArgReg3),
@@ -1024,8 +1010,6 @@ LIRGeneratorARM::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
 
-    gen->setPerformsCall();
-
     defineReturn(new(alloc()) LWasmTruncateToInt64(useRegisterAtStart(opd)), ins);
 }
 
@@ -1034,9 +1018,7 @@ LIRGeneratorARM::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Float32);
 
-    gen->setPerformsCall();
-
-    auto lir = new(alloc()) LInt64ToFloatingPointCall();
+    auto* lir = new(alloc()) LInt64ToFloatingPointCall();
     lir->setInt64Operand(0, useInt64RegisterAtStart(ins->input()));
     defineReturn(lir, ins);
 }

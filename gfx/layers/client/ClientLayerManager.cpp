@@ -647,7 +647,11 @@ ClientLayerManager::FlushRendering()
 {
   if (mWidget) {
     if (CompositorBridgeChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
-      remoteRenderer->SendFlushRendering();
+      if (mWidget->SynchronouslyRepaintOnResize() || gfxPrefs::LayersForceSynchronousResize()) {
+        remoteRenderer->SendFlushRendering();
+      } else {
+        remoteRenderer->SendFlushRenderingAsync();
+      }
     }
   }
 }

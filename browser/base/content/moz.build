@@ -29,7 +29,7 @@ with Files("sync/**"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
 with Files("test/alerts/**"):
-    BUG_COMPONENT = ("Toolkit", "Notification and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("test/appUpdate/**"):
     BUG_COMPONENT = ("Toolkit", "Application Update")
@@ -153,9 +153,6 @@ with Files("contentSearch*"):
 
 with Files("*.svg"):
     BUG_COMPONENT = ("Firefox", "Theme")
-
-with Files("gcli*"):
-    BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("hiddenWindow.xul"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")

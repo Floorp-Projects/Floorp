@@ -796,27 +796,16 @@ or run without that action (ie: --no-{action})"
 
         buildid = None
         if c.get("is_automation"):
-            if self.buildbot_config.get('properties'):
-                # We're on buildbot
-                if self.buildbot_config.get('properties').get('buildid'):
-                    # Try may not provide a buildid. This means, it's gonna be generated
-                    # below.
-                    self.info("Determining buildid from buildbot properties")
-                    buildid = self.buildbot_config['properties']['buildid'].encode(
-                        'ascii', 'replace'
-                    )
+            if self.buildbot_config['properties'].get('buildid'):
+                self.info("Determining buildid from buildbot properties")
+                buildid = self.buildbot_config['properties']['buildid'].encode(
+                    'ascii', 'replace'
+                )
             else:
-                # We're on taskcluster.
-                # In this case, there are no buildbot properties, and we must pass
+                # for taskcluster, there are no buildbot properties, and we pass
                 # MOZ_BUILD_DATE into mozharness as an environment variable, only
                 # to have it pass the same value out with the same name.
-                try:
-                    buildid = os.environ['MOZ_BUILD_DATE']
-                except KeyError:
-                    self.fatal(
-                        "MOZ_BUILD_DATE must be provided as an environment var on Taskcluster"
-                    )
-
+                buildid = os.environ.get('MOZ_BUILD_DATE')
 
         if not buildid:
             self.info("Creating buildid through current time")
@@ -1942,12 +1931,6 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-    def get_firefox_version(self):
-        versionFilePath = os.path.join(
-            self.query_abs_dirs()['abs_src_dir'], 'browser/config/version.txt')
-        with open(versionFilePath, 'r') as versionFile:
-            return versionFile.readline().strip()
-
     def generate_build_stats(self):
         """grab build stats following a compile.
 
@@ -1978,17 +1961,9 @@ or run without that action (ie: --no-{action})"
         # then assume we are using MOZ_SIMPLE_PACKAGE_NAME, which means the
         # package is named one of target.{tar.bz2,zip,dmg}.
         if not packageName:
-            firefox_version = self.get_firefox_version()
             dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
             for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
                 name = 'target.' + ext
-                if os.path.exists(os.path.join(dist_dir, name)):
-                    packageName = name
-                    break
-                # if we are not using MOZ_SIMPLE_PACKAGE_NAME, check for the
-                # default package naming convention
-                name = 'firefox-{}.en-US.{}.{}'.format(
-                    firefox_version, c.get('platform'), ext)
                 if os.path.exists(os.path.join(dist_dir, name)):
                     packageName = name
                     break

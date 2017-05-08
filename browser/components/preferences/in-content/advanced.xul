@@ -4,6 +4,10 @@
 
 <!-- Advanced panel -->
 
+#ifdef MOZ_UPDATER
+  <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
+#endif
+
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/advanced.js"/>
 
@@ -52,23 +56,16 @@
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneAdvanced" hidden="true">
   <caption><label>&updateApplication.label;</label></caption>
-#ifdef MOZ_UPDATER
-  <description>&updateApplication.description;</description>
   <hbox align="start">
     <vbox flex="1">
-      <radiogroup id="updateRadioGroup">
-        <radio id="autoDesktop"
-               value="auto"
-               label="&updateAuto2.label;"
-               accesskey="&updateAuto2.accesskey;"/>
-        <radio value="checkOnly"
-              label="&updateCheckChoose2.label;"
-              accesskey="&updateCheckChoose2.accesskey;"/>
-        <radio value="manual"
-              label="&updateManual2.label;"
-              accesskey="&updateManual2.accesskey;"/>
-      </radiogroup>
+      <description>
+        &updateApplication.version.pre;<label id="version"/>&updateApplication.version.post;
+        <label id="releasenotes" class="learnMore text-link" hidden="true">&releaseNotes.link;</label>
+      </description>
+      <description id="distribution" class="text-blurb" hidden="true"/>
+      <description id="distributionId" class="text-blurb" hidden="true"/>
     </vbox>
+#ifdef MOZ_UPDATER
     <spacer flex="1"/>
     <vbox>
       <button id="showUpdateHistory"
@@ -77,7 +74,112 @@
               accesskey="&updateHistory2.accesskey;"
               preference="app.update.disable_button.showUpdateHistory"/>
     </vbox>
+#endif
   </hbox>
+#ifdef MOZ_UPDATER
+  <vbox id="updateBox">
+    <deck id="updateDeck" orient="vertical">
+      <hbox id="checkForUpdates" align="center">
+        <spacer flex="1"/>
+        <button id="checkForUpdatesButton"
+                label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="downloadAndInstall" align="center">
+        <spacer flex="1"/>
+        <button id="downloadAndInstallButton"
+                oncommand="gAppUpdater.startDownload();"/>
+                <!-- label and accesskey will be filled by JS -->
+      </hbox>
+      <hbox id="apply" align="center">
+        <spacer flex="1"/>
+        <button id="updateButton"
+                label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+      </hbox>
+      <hbox id="checkingForUpdates" align="center">
+        <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="downloading" align="center">
+        <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+      </hbox>
+      <hbox id="applying" align="center">
+        <image class="update-throbber"/><label>&update.applying;</label>
+      </hbox>
+      <hbox id="downloadFailed" align="center">
+        <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="adminDisabled" align="center">
+        <label>&update.adminDisabled;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="noUpdatesFound" align="center">
+        <label>&update.noUpdatesFound;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="otherInstanceHandlingUpdates" align="center">
+        <label>&update.otherInstanceHandlingUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="manualUpdate" align="center">
+        <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="unsupportedSystem" align="center">
+        <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="restarting" align="center">
+        <label>&update.restarting;</label>
+        <spacer flex="1"/>
+        <button label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+    </deck>
+  </vbox>
+#endif
+
+  <separator/>
+#ifdef MOZ_UPDATER
+  <description>&updateApplication.description;</description>
+  <radiogroup id="updateRadioGroup">
+    <radio id="autoDesktop"
+           value="auto"
+           label="&updateAuto2.label;"
+           accesskey="&updateAuto2.accesskey;"/>
+    <radio value="checkOnly"
+          label="&updateCheckChoose2.label;"
+          accesskey="&updateCheckChoose2.accesskey;"/>
+    <radio value="manual"
+          label="&updateManual2.label;"
+          accesskey="&updateManual2.accesskey;"/>
+  </radiogroup>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"
             label="&useService.label;"

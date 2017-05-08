@@ -22,21 +22,49 @@ this.runtime = class extends ExtensionAPI {
           return context.messenger.connect(context.messageManager, name, recipient);
         },
 
-        sendMessage: function(...args) {
-          let options; // eslint-disable-line no-unused-vars
-          let extensionId, message, responseCallback;
+        sendMessage(...args) {
+          let extensionId, message, options, responseCallback;
           if (typeof args[args.length - 1] === "function") {
             responseCallback = args.pop();
           }
+
+          function checkOptions(options) {
+            let toProxyScript = false;
+            if (typeof options !== "object") {
+              return [false, "runtime.sendMessage's options argument is invalid"];
+            }
+
+            for (let key of Object.keys(options)) {
+              if (key === "toProxyScript") {
+                let value = options[key];
+                if (typeof value !== "boolean") {
+                  return [false, "runtime.sendMessage's options.toProxyScript argument is invalid"];
+                }
+                toProxyScript = value;
+              } else {
+                return [false, `Unexpected property ${key}`];
+              }
+            }
+
+            return [true, {toProxyScript}];
+          }
+
           if (!args.length) {
             return Promise.reject({message: "runtime.sendMessage's message argument is missing"});
           } else if (args.length === 1) {
             message = args[0];
           } else if (args.length === 2) {
-            if (typeof args[0] === "string" && args[0]) {
-              [extensionId, message] = args;
-            } else {
+            // With two optional arguments, this is the ambiguous case,
+            // particularly sendMessage("string", {});
+            // Given that sending a message within the extension is generally
+            // more common than sending the empty object to another extension,
+            // we prefer that conclusion, as long as the second argument looks
+            // like valid options.
+            let [validOpts] = checkOptions(args[1]);
+            if (validOpts) {
               [message, options] = args;
+            } else {
+              [extensionId, message] = args;
             }
           } else if (args.length === 3) {
             [extensionId, message, options] = args;
@@ -54,14 +82,11 @@ this.runtime = class extends ExtensionAPI {
           let recipient = {extensionId};
 
           if (options != null) {
-            if (typeof options !== "object") {
-              return Promise.reject({message: "runtime.sendMessage's options argument is invalid"});
+            let [valid, arg] = checkOptions(options);
+            if (!valid) {
+              return Promise.reject({message: arg});
             }
-            if (typeof options.toProxyScript === "boolean") {
-              recipient.toProxyScript = options.toProxyScript;
-            } else {
-              return Promise.reject({message: "runtime.sendMessage's options.toProxyScript argument is invalid"});
-            }
+            Object.assign(recipient, arg);
           }
 
           return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);

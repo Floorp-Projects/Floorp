@@ -327,39 +327,39 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
 
 @media not all and (min-resolution: 1.1dppx) {
   .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image);
+    list-style-image: var(--webextension-toolbar-image, inherit);
   }
 
   .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action {
-    list-style-image: var(--webextension-menupanel-image);
+    list-style-image: var(--webextension-menupanel-image, inherit);
   }
 
   .webextension-page-action {
-    list-style-image: var(--webextension-urlbar-image);
+    list-style-image: var(--webextension-urlbar-image, inherit);
   }
 
   .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image);
+    list-style-image: var(--webextension-menuitem-image, inherit);
   }
 }
 
 @media (min-resolution: 1.1dppx) {
   .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x);
+    list-style-image: var(--webextension-toolbar-image-2x, inherit);
   }
 
   .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action {
-    list-style-image: var(--webextension-menupanel-image-2x);
+    list-style-image: var(--webextension-menupanel-image-2x, inherit);
   }
 
   .webextension-page-action {
-    list-style-image: var(--webextension-urlbar-image-2x);
+    list-style-image: var(--webextension-urlbar-image-2x, inherit);
   }
 
   .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image-2x);
+    list-style-image: var(--webextension-menuitem-image-2x, inherit);
   }
 }
 
@@ -1187,7 +1187,8 @@ toolbarpaletteitem[place="palette"][hidden] {
   max-width: 10em;
 }
 
-#main-window[customizing=true] .PanelUI-notification-menu-item {
+#main-window[customizing=true] .addon-banner-item,
+#main-window[customizing=true] .panel-banner-item {
   display: none;
 }
 

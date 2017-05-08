@@ -16,9 +16,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/shared-libraries.h',
         'public/StoreSequencer.h',
     ]
-    EXTRA_JS_MODULES += [
-        'gecko/Profiler.jsm',
-    ]
     UNIFIED_SOURCES += [
         'core/platform.cpp',
         'core/ProfileBuffer.cpp',

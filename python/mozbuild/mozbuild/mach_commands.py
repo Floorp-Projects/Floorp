@@ -1836,6 +1836,19 @@ class Vendor(MachCommandBase):
         vendor_command = self._spawn(VendorRust)
         vendor_command.vendor(**kwargs)
 
+    @SubCommand('vendor', 'aom',
+                description='Vendor av1 video codec reference implementation into the source repository.')
+    @CommandArgument('-r', '--revision',
+        help='Repository tag or commit to update to.')
+    @CommandArgument('--ignore-modified', action='store_true',
+        help='Ignore modified files in current checkout',
+        default=False)
+    def vendor_aom(self, **kwargs):
+        from mozbuild.vendor_aom import VendorAOM
+        vendor_command = self._spawn(VendorAOM)
+        vendor_command.vendor(**kwargs)
+
+
 @CommandProvider
 class WebRTCGTestCommands(GTestCommands):
     @Command('webrtc-gtest', category='testing',

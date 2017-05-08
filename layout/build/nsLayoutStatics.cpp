@@ -51,7 +51,6 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsCORSListenerProxy.h"
 #include "nsHTMLDNSPrefetch.h"
-#include "nsHtml5Atoms.h"
 #include "nsHtml5Module.h"
 #include "nsHTMLTags.h"
 #include "nsIRDFContentSink.h"	// for RDF atom initialization
@@ -158,7 +157,6 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
-  nsHtml5Atoms::AddRefAtoms();
   nsTextServicesDocument::RegisterAtoms();
   nsHTMLTags::RegisterAtoms();
   nsRDFAtoms::RegisterAtoms();

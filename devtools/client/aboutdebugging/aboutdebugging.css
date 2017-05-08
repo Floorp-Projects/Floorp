@@ -197,8 +197,18 @@ button {
   flex: 1;
 }
 
-.addons-debugging-label {
+.addons-debugging-label,
+.addons-web-ext-tip {
   display: inline-block;
+  margin-inline-end: 1ch;
+}
+
+.addons-tip {
+  display: flex;
+  align-items: center;
+}
+
+.addons-tip-icon {
   margin-inline-end: 1ch;
 }
 

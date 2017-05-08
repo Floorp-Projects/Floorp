@@ -338,9 +338,9 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                                     nsNodeInfoManager* aNodeInfoManager,
                                     nsHtml5DocumentBuilder* aBuilder)
 {
-  bool isKeygen = (aName == nsHtml5Atoms::keygen && aNs == kNameSpaceID_XHTML);
+  bool isKeygen = (aName == nsGkAtoms::keygen && aNs == kNameSpaceID_XHTML);
   if (MOZ_UNLIKELY(isKeygen)) {
-    aName = nsHtml5Atoms::select;
+    aName = nsGkAtoms::select;
   }
 
   nsCOMPtr<dom::Element> newElement;
@@ -355,7 +355,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
   dom::Element* newContent = newElement;
   aBuilder->HoldElement(newElement.forget());
 
-  if (MOZ_UNLIKELY(aName == nsHtml5Atoms::style || aName == nsHtml5Atoms::link)) {
+  if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(newContent));
     if (ssle) {
       ssle->InitStyleLinkElement(false);
@@ -383,11 +383,8 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                         theAttribute,
                         false);
 
-    RefPtr<dom::NodeInfo> optionNodeInfo =
-      aNodeInfoManager->GetNodeInfo(nsHtml5Atoms::option,
-                                    nullptr,
-                                    kNameSpaceID_XHTML,
-                                    nsIDOMNode::ELEMENT_NODE);
+    RefPtr<dom::NodeInfo> optionNodeInfo = aNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::option, nullptr, kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
 
     for (uint32_t i = 0; i < theContent.Length(); ++i) {
       nsCOMPtr<dom::Element> optionElt;
@@ -419,9 +416,8 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
 
     nsString value; // Not Auto, because using it to hold nsStringBuffer*
     aAttributes->getValueNoBoundsCheck(i).ToString(value);
-    if (aNs == kNameSpaceID_XHTML &&
-        nsHtml5Atoms::a == aName &&
-        nsHtml5Atoms::name == localName) {
+    if (aNs == kNameSpaceID_XHTML && nsGkAtoms::a == aName &&
+        nsGkAtoms::name == localName) {
       // This is an HTML5-incompliant Geckoism.
       // Remove when fixing bug 582361
       NS_ConvertUTF16toUTF8 cname(value);

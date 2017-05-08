@@ -38,24 +38,24 @@ add_task(function* () {
   is(toolbox.currentToolId, "netmonitor", "Network panel was opened");
 
   let panel = toolbox.getCurrentPanel();
-  let { gStore, windowRequire } = panel.panelWin;
+  let { store, windowRequire } = panel.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  let selected = getSelectedRequest(gStore.getState());
+  let selected = getSelectedRequest(store.getState());
   is(selected.method, htmlRequest.request.method,
      "The correct request is selected");
   is(selected.url, htmlRequest.request.url,
      "The correct request is definitely selected");
 
   // Filter out the HTML request.
-  gStore.dispatch(Actions.toggleRequestFilterType("js"));
+  store.dispatch(Actions.toggleRequestFilterType("js"));
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "Web console was selected");
   yield hud.ui.openNetworkPanel(htmlRequest.actor);
 
-  selected = getSelectedRequest(gStore.getState());
+  selected = getSelectedRequest(store.getState());
   is(selected.method, htmlRequest.request.method,
      "The correct request is selected");
   is(selected.url, htmlRequest.request.url,

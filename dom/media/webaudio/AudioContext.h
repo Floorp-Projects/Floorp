@@ -154,12 +154,6 @@ public:
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  // Constructor for regular AudioContext. A default audio channel is needed.
-  static already_AddRefed<AudioContext>
-  Constructor(const GlobalObject& aGlobal,
-              AudioChannel aChannel,
-              ErrorResult& aRv);
-
   // Constructor for offline AudioContext
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal,

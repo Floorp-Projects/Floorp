@@ -160,7 +160,7 @@ function check_hazards () {
         exit 1
     fi
 
-    NUM_ALLOWED_WRITE_HAZARDS=3
+    NUM_ALLOWED_WRITE_HAZARDS=4
     if [ $NUM_WRITE_HAZARDS -gt $NUM_ALLOWED_WRITE_HAZARDS ]; then
         echo "TEST-UNEXPECTED-FAIL $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_heap_write_hazard_failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"

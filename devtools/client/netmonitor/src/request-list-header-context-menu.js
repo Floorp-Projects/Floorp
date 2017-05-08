@@ -19,7 +19,9 @@ class RequestListHeaderContextMenu {
   }
 
   get columns() {
-    return window.gStore.getState().ui.columns;
+    // FIXME: Bug 1362059 - Implement RequestListHeaderContextMenu React component
+    // Remove window.store
+    return window.store.getState().ui.columns;
   }
 
   get visibleColumns() {

@@ -107,7 +107,7 @@ CaptureStreamTestHelper.prototype = {
    */
   isOpaquePixelNot: function(px, refColor, threshold) {
     px[3] = refColor.data[3];
-    return h.isPixelNot(px, refColor, threshold);
+    return this.isPixelNot(px, refColor, threshold);
   },
 
   /*

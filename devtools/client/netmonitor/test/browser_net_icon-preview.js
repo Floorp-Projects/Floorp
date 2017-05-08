@@ -12,13 +12,13 @@ add_task(function* () {
   const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
+  let { triggerActivity } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
 
-  gStore.dispatch(Actions.batchEnable(false));
+  store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
   yield performRequests();
@@ -28,11 +28,11 @@ add_task(function* () {
   info("Checking the image thumbnail when all items are shown.");
   checkImageThumbnail();
 
-  gStore.dispatch(Actions.sortBy("contentSize"));
+  store.dispatch(Actions.sortBy("contentSize"));
   info("Checking the image thumbnail when all items are sorted.");
   checkImageThumbnail();
 
-  gStore.dispatch(Actions.toggleRequestFilterType("images"));
+  store.dispatch(Actions.toggleRequestFilterType("images"));
   info("Checking the image thumbnail when only images are shown.");
   checkImageThumbnail();
 
@@ -54,7 +54,7 @@ add_task(function* () {
   }
 
   function* reloadAndPerformRequests() {
-    yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+    yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
     yield performRequests();
   }
 

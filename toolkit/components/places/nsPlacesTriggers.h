@@ -63,28 +63,30 @@
  * have higher priority, and more generically "www." prefixed hosts come before
  * unprefixed ones.
  * Given a host, examine associated pages and:
- *  - if all of the typed pages start with https://www. return https://www.
- *  - if all of the typed pages start with https:// return https://
+ *  - if at least half the typed pages start with https://www. return https://www.
+ *  - if at least half the typed pages start with https:// return https://
  *  - if all of the typed pages start with ftp: return ftp://
- *  - if all of the typed pages start with www. return www.
+ *     - This is because mostly people will want to visit the http version
+ *       of the site.
+ *  - if at least half the typed pages start with www. return www.
  *  - otherwise don't use any prefix
  */
 #define HOSTS_PREFIX_PRIORITY_FRAGMENT \
   "SELECT CASE " \
-    "WHEN 1 = ( " \
-      "SELECT min(substr(url,1,12) = 'https://www.') FROM moz_places h " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,12) = 'https://www.')) FROM moz_places h " \
       "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'https://www.' " \
-    "WHEN 1 = ( " \
-      "SELECT min(substr(url,1,8) = 'https://') FROM moz_places h " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,8) = 'https://')) FROM moz_places h " \
       "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'https://' " \
     "WHEN 1 = ( " \
       "SELECT min(substr(url,1,4) = 'ftp:') FROM moz_places h " \
       "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'ftp://' " \
-    "WHEN 1 = ( " \
-      "SELECT min(substr(url,1,11) = 'http://www.') FROM moz_places h " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,11) = 'http://www.')) FROM moz_places h " \
       "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
     ") THEN 'www.' " \
   "END "

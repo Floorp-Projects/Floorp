@@ -291,7 +291,7 @@
             return { permitUnload: true, timedOut: false };
           }
 
-          const kTimeout = 5000;
+          const kTimeout = 1000;
 
           let finished = false;
           let responded = false;

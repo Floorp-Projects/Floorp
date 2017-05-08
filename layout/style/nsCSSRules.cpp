@@ -1081,6 +1081,9 @@ nsCSSFontFaceStyleDecl::SetProperty(const nsAString & propertyName,
                                     const nsAString & value,
                                     const nsAString & priority)
 {
+  // FIXME(heycam): If we are changing unicode-range, then a FontFace object
+  // representing this rule must have its mUnicodeRange value invalidated.
+
   return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
 }
 
@@ -1295,6 +1298,9 @@ nsCSSFontFaceRule::SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue)
                   "aDescID out of range in nsCSSFontFaceRule::SetDesc");
 
   // FIXME: handle dynamic changes
+
+  // FIXME(heycam): If we are changing unicode-range, then a FontFace object
+  // representing this rule must have its mUnicodeRange value invalidated.
 
   mDecl.mDescriptors.Get(aDescID) = aValue;
 }
@@ -2419,8 +2425,9 @@ nsCSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
   descInd = baseInd;
   descInd.AppendLiteral("  ");
 
+  nsDependentAtomString name(mName);
   fprintf_stderr(out, "%s@counter-style %s (rev.%u) {\n",
-                 baseInd.get(), NS_ConvertUTF16toUTF8(mName).get(),
+                 baseInd.get(), NS_ConvertUTF16toUTF8(name).get(),
                  mGeneration);
   // TODO
   fprintf_stderr(out, "%s}\n", baseInd.get());
@@ -2443,7 +2450,8 @@ void
 nsCSSCounterStyleRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral(u"@counter-style ");
-  nsStyleUtil::AppendEscapedCSSIdent(mName, aCssText);
+  nsDependentAtomString name(mName);
+  nsStyleUtil::AppendEscapedCSSIdent(name, aCssText);
   aCssText.AppendLiteral(u" {\n");
   for (nsCSSCounterDesc id = nsCSSCounterDesc(0);
        id < eCSSCounterDesc_COUNT;
@@ -2469,7 +2477,8 @@ NS_IMETHODIMP
 nsCSSCounterStyleRule::GetName(nsAString& aName)
 {
   aName.Truncate();
-  nsStyleUtil::AppendEscapedCSSIdent(mName, aName);
+  nsDependentAtomString name(mName);
+  nsStyleUtil::AppendEscapedCSSIdent(name, aName);
   return NS_OK;
 }
 
@@ -2477,8 +2486,7 @@ NS_IMETHODIMP
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
   nsCSSParser parser;
-  nsAutoString name;
-  if (parser.ParseCounterStyleName(aName, nullptr, name)) {
+  if (nsCOMPtr<nsIAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
     nsIDocument* doc = GetDocument();
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
@@ -2669,13 +2677,18 @@ nsCSSCounterStyleRule::GetSpeakAs(nsAString& aSpeakAs)
       break;
 
     case eCSSUnit_Auto:
-    case eCSSUnit_Ident:
+    case eCSSUnit_AtomIdent:
       aSpeakAs.Truncate();
       value.AppendToString(eCSSProperty_UNKNOWN,
                            aSpeakAs, nsCSSValue::eNormalized);
       break;
 
+    case eCSSUnit_Null:
+      aSpeakAs.Truncate();
+      break;
+
     default:
+      NS_NOTREACHED("Unknown speech synthesis");
       aSpeakAs.Truncate();
   }
   return NS_OK;

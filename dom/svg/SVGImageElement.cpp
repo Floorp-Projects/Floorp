@@ -156,16 +156,10 @@ SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
       (aNamespaceID == kNameSpaceID_None ||
        aNamespaceID == kNameSpaceID_XLink)) {
 
-    // If there isn't a frame we still need to load the image in case
-    // the frame is created later e.g. by attaching to a document.
-    // If there is a frame then it should deal with loading as the image
-    // url may be animated
-    if (!GetPrimaryFrame()) {
-      if (aValue) {
-        LoadSVGImage(true, aNotify);
-      } else {
-        CancelImageRequests(aNotify);
-      }
+    if (aValue) {
+      LoadSVGImage(true, aNotify);
+    } else {
+      CancelImageRequests(aNotify);
     }
   }
   return SVGImageElementBase::AfterSetAttr(aNamespaceID, aName,

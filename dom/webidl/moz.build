@@ -98,7 +98,7 @@ with Files("DynamicsCompressorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("DesktopNotification.webidl"):
-    BUG_COMPONENT = ("Toolkit", "Notification and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
@@ -1082,6 +1082,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PresentationConnectionAvailableEvent.webidl',
     'PresentationConnectionCloseEvent.webidl',
     'ProgressEvent.webidl',
+    'PromiseRejectionEvent.webidl',
     'RecordErrorEvent.webidl',
     'ScrollViewChangeEvent.webidl',
     'StyleRuleChangeEvent.webidl',

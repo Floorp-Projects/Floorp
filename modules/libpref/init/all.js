@@ -296,11 +296,11 @@ pref("media.dormant-on-pause-timeout-ms", 5000);
 pref("media.cache_size", 512000);
 // When a network connection is suspended, don't resume it until the
 // amount of buffered data falls below this threshold (in seconds).
-pref("media.cache_resume_threshold", 999999);
+pref("media.cache_resume_threshold", 30);
 // Stop reading ahead when our buffered data is this many seconds ahead
 // of the current playback position. This limit can stop us from using arbitrary
 // amounts of network bandwidth prefetching huge videos.
-pref("media.cache_readahead_limit", 999999);
+pref("media.cache_readahead_limit", 60);
 
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
@@ -1599,14 +1599,6 @@ pref("network.http.rendering-critical-requests-prioritization", true);
 // Disable IPv6 for backup connections to workaround problems about broken
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
-
-// The maximum amount of time the cache session lock can be held
-// before a new transaction bypasses the cache. In milliseconds.
-#ifdef RELEASE_OR_BETA
-pref("network.http.bypass-cachelock-threshold", 200000);
-#else
-pref("network.http.bypass-cachelock-threshold", 250);
-#endif
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
@@ -4624,6 +4616,9 @@ pref("network.tcp.keepalive.retry_interval", 1); // seconds
 pref("network.tcp.keepalive.probe_count", 4);
 #endif
 
+pref("network.tcp.tcp_fastopen_enable", true);
+pref("network.tcp.tcp_fastopen_consecutive_failure_limit", 5);
+
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
 // Preference that when switched at runtime will run a series of benchmarks
@@ -4944,6 +4939,11 @@ pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
 
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
+
+// WHATWG promise rejection events. See
+// https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
+// TODO: Enable the event interface once actually firing it (bug 1362272).
+pref("dom.promise_rejection_events.enabled", false);
 
 // W3C draft ImageCapture API
 pref("dom.imagecapture.enabled", false);

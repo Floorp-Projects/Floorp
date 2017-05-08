@@ -50,13 +50,44 @@ const ErrorDocs = {
   JSMSG_CURLY_AFTER_LIST: "Missing_curly_after_property_list",
   JSMSG_DEPRECATED_FOR_EACH: "For-each-in_loops_are_deprecated",
   JSMSG_STRICT_NON_SIMPLE_PARAMS: "Strict_Non_Simple_Params",
+  JSMSG_DEAD_OBJECT: "Dead_object",
+  JSMSG_NOT_NONNULL_OBJECT: "No_non-null_object",
+  JSMSG_IDSTART_AFTER_NUMBER: "Identifier_after_number",
+  JSMSG_DEPRECATED_EXPR_CLOSURE: "Deprecated_expression_closures",
+  JSMSG_ILLEGAL_CHARACTER: "Illegal_character",
+  JSMSG_BAD_REGEXP_FLAG: "Bad_regexp_flag",
+  JSMSG_INVALID_FOR_IN_DECL_WITH_INIT: "Invalid_for-in_initializer",
+  JSMSG_CANT_REDEFINE_PROP: "Cant_redefine_property",
+  JSMSG_COLON_AFTER_ID: "Missing_colon_after_property_id",
+  JSMSG_IN_NOT_OBJECT: "in_operator_no_object",
+  JSMSG_CURLY_AFTER_BODY: "Missing_curly_after_function_body",
+  JSMSG_NAME_AFTER_DOT: "Missing_name_after_dot_operator",
+  JSMSG_DEPRECATED_OCTAL: "Deprecated_octal",
+  JSMSG_PAREN_AFTER_COND: "Missing_parenthesis_after_condition",
+  JSMSG_JSON_CYCLIC_VALUE: "Cyclic_object_value",
+  JSMSG_NO_VARIABLE_NAME: "No_variable_name",
+  JSMSG_UNNAMED_FUNCTION_STMT: "Unnamed_function_statement",
+  JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE:
+    "Cant_define_property_object_not_extensible",
+  JSMSG_TYPED_ARRAY_BAD_ARGS: "Typed_array_invalid_arguments",
+  JSMSG_GETTER_ONLY: "Getter_only",
+  JSMSG_INVALID_DATE: "Invalid_date",
+  JSMSG_DEPRECATED_STRING_METHOD: "Deprecated_String_generics",
+  JSMSG_DEPRECATED_TOLOCALEFORMAT: "Deprecated_toLocaleFormat",
+  JSMSG_RESERVED_ID: "Reserved_identifier",
+  JSMSG_BAD_CONST_ASSIGN: "Invalid_const_assignment",
+  JSMSG_BAD_CONST_DECL: "Missing_initializer_in_const",
+  JSMSG_OF_AFTER_FOR_LOOP_DECL: "Invalid_for-of_initializer",
+  JSMSG_BAD_URI: "Malformed_URI",
+  JSMSG_DEPRECATED_DELETE_OPERAND: "Delete_in_strict_mode",
+  JSMSG_MISSING_FORMAL: "Missing_formal_parameter",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";
 const TRACKING_PROTECTION_LEARN_MORE = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
 const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Insecure_passwords";
-const PUBLIC_KEY_PINS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Public_Key_Pinning";
-const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/HTTP_strict_transport_security";
+const PUBLIC_KEY_PINS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/HTTP/Public_Key_Pinning";
+const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Web/HTTP/Headers/Strict-Transport-Security";
 const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Weak_Signature_Algorithm";
 const MIME_TYPE_MISMATCH_LEARN_MORE = "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Content-Type-Options";
 const ErrorCategories = {

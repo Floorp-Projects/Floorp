@@ -1204,6 +1204,9 @@ input[type="number"] > div > div > div:hover {
   background-color: lightblue;
 }
 
-:-moz-autofill {
+:-moz-autofill, :-moz-autofill-preview {
   filter: grayscale(21%) brightness(88%) contrast(161%) invert(10%) sepia(40%) saturate(206%);
+}
+:-moz-autofill-preview {
+  color: GrayText;
 }

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -109,6 +110,64 @@ using UniqueProfilerBacktrace =
 
 #else   // defined(MOZ_GECKO_PROFILER)
 
+// Higher-order macro containing all the feature info in one place. Define
+// |macro| appropriately to extract the relevant parts. Note that the number
+// values are used internally only and so can be changed without consequence.
+#define PROFILER_FOR_EACH_FEATURE(macro) \
+  /* Dump the display list with the textures. */ \
+  macro(0, "displaylistdump", DisplayListDump) \
+  \
+  /* GPU Profiling (may not be supported by the GL). */ \
+  macro(1, "gpu", GPU) \
+  \
+  /* Profile Java code (Android only). */ \
+  macro(2, "java", Java) \
+  \
+  /* Get the JS engine to emit pseudostack entries in prologues/epilogues */ \
+  macro(3, "js", JS) \
+  \
+  /* Dump the layer tree with the textures. */ \
+  macro(4, "layersdump", LayersDump) \
+  \
+  /* Include the C++ leaf node if not stackwalking. */ \
+  /* The DevTools profiler doesn't want the native addresses. */ \
+  macro(5, "leaf", Leaf) \
+  \
+  /* Add main thread I/O to the profile. */ \
+  macro(6, "mainthreadio", MainThreadIO) \
+  \
+  /* Add memory measurements (e.g. RSS). */ \
+  macro(7, "memory", Memory) \
+  \
+  /* Do not include user-identifiable information. */ \
+  macro(8, "privacy", Privacy) \
+  \
+  /* Restyle profiling. */ \
+  macro(9, "restyle", Restyle) \
+  \
+  /* Walk the C++ stack. Not available on all platforms. */ \
+  macro(10, "stackwalk", StackWalk) \
+  \
+  /* Start profiling with feature TaskTracer. */ \
+  macro(11, "tasktracer", TaskTracer) \
+  \
+  /* Profile the registered secondary threads. */ \
+  macro(12, "threads", Threads)
+
+struct ProfilerFeature
+{
+  #define DECLARE(n_, str_, Name_) \
+    static const uint32_t Name_ = (1u << n_); \
+    static bool Has##Name_(uint32_t aFeatures) { return aFeatures & Name_; } \
+    static void Set##Name_(uint32_t& aFeatures) { aFeatures |= Name_; } \
+    static void Clear##Name_(uint32_t& aFeatures) { aFeatures &= ~Name_; }
+
+  // Define a bitfield constant, a getter, and two setters for each feature.
+  PROFILER_FOR_EACH_FEATURE(DECLARE)
+
+  #undef DECLARE
+};
+
 #if defined(__GNUC__) || defined(_MSC_VER)
 # define PROFILER_FUNCTION_NAME __FUNCTION__
 #else
@@ -172,11 +231,11 @@ PROFILER_FUNC_VOID(profiler_shutdown())
 // circular buffer.
 //   "aEntries" is the number of entries in the profiler's circular buffer.
 //   "aInterval" the sampling interval, measured in millseconds.
+//   "aFeatures" is the feature set. Features unsupported by this
+//               platform/configuration are ignored.
 PROFILER_FUNC_VOID(profiler_start(int aEntries, double aInterval,
-                                  const char** aFeatures,
-                                  uint32_t aFeatureCount,
-                                  const char** aThreadNameFilters,
-                                  uint32_t aFilterCount))
+                                  uint32_t aFeatures,
+                                  const char** aFilters, uint32_t aFilterCount))
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
 // profiler is inactive. After stopping the profiler is "inactive".
@@ -226,11 +285,9 @@ ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 //
 PROFILER_FUNC(bool profiler_is_active(), false)
 
-// Check if a profiler feature is active. Returns false if the profiler is
-// inactive.
-//
-// Supported features: "displaylistdump", "gpu", "layersdump", "restyle".
-PROFILER_FUNC(bool profiler_feature_active(const char*), false)
+// Check if a profiler feature (specified via the ProfilerFeature type) is
+// active. Returns false if the profiler is inactive.
+PROFILER_FUNC(bool profiler_feature_active(uint32_t aFeature), false)
 
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.
@@ -243,11 +300,13 @@ PROFILER_FUNC(bool profiler_stream_json_for_this_process(SpliceableJSONWriter& a
                                                          double aSinceTime = 0),
               false)
 
-// Get the params used to start the profiler. Returns 0 and empty vectors (via
-// outparams) if the profile is inactive.
+// Get the params used to start the profiler. Returns 0 and an empty vector
+// (via outparams) if the profile is inactive. It's possible that the features
+// returned may be slightly different to those requested due to requied
+// adjustments.
 PROFILER_FUNC_VOID(profiler_get_start_params(int* aEntrySize,
                                              double* aInterval,
-                                             mozilla::Vector<const char*>* aFeatures,
+                                             uint32_t* aFeatures,
                                              mozilla::Vector<const char*>* aFilters))
 
 // Get the profile and write it into a file. A no-op if the profile is
@@ -260,10 +319,10 @@ extern "C" {
 PROFILER_FUNC_VOID(profiler_save_profile_to_file(const char* aFilename))
 }
 
-// Get the features supported by the profiler that are accepted by
-// profiler_init(). Returns a null terminated char* array. The result is the
-// same whether the profiler is active or not.
-PROFILER_FUNC(const char** profiler_get_features(), nullptr)
+// Get all the features supported by the profiler that are accepted by
+// profiler_start(). The result is the same whether the profiler is active or
+// not.
+PROFILER_FUNC(uint32_t profiler_get_available_features(), 0)
 
 // Get information about the current buffer status. A no-op when the profiler
 // is inactive. Do not call this function; call profiler_get_buffer_info()

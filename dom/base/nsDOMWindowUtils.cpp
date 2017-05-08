@@ -2690,10 +2690,12 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsIPresShell* shell = element->GetComposedDoc()->GetShell();
-  RefPtr<nsStyleContext> styleContext = shell
-    ? nsComputedDOMStyle::GetStyleContext(element, nullptr, shell)
-    : nullptr;
+  RefPtr<nsStyleContext> styleContext;
+  nsIDocument* doc = element->GetComposedDoc();
+  if (doc && doc->GetShell()) {
+    styleContext =
+      nsComputedDOMStyle::GetStyleContext(element, nullptr, doc->GetShell());
+  }
   *aResult = v1.ComputeDistance(property, v2, styleContext);
   return NS_OK;
 }
@@ -4193,6 +4195,7 @@ struct StateTableEntry
 
 static constexpr StateTableEntry kManuallyManagedStates[] = {
   { "-moz-autofill", NS_EVENT_STATE_AUTOFILL },
+  { "-moz-autofill-preview", NS_EVENT_STATE_AUTOFILL_PREVIEW },
   { nullptr, EventStates() },
 };
 
@@ -4246,6 +4249,19 @@ nsDOMWindowUtils::RemoveManuallyManagedState(nsIDOMElement* aElement,
   }
 
   element->RemoveManuallyManagedStates(state);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetStorageUsage(nsIDOMStorage* aStorage, int64_t* aRetval)
+{
+  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
+  if (!storage) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aRetval = storage->GetOriginQuotaUsage();
+
   return NS_OK;
 }
 

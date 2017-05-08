@@ -359,10 +359,7 @@ def set_target(config, tests):
             else:
                 target = 'target.apk'
         elif build_platform.startswith('win'):
-            target = 'firefox-{}.en-US.{}.zip'.format(
-                get_firefox_version(),
-                build_platform.split('/')[0]
-            )
+            target = 'target.zip'
         else:
             target = 'target.tar.bz2'
         test['mozharness']['build-artifact-name'] = 'public/build/' + target
@@ -624,9 +621,9 @@ def remove_linux_pgo_try_talos(config, tests):
     """linux64-pgo talos tests don't run on try."""
     def predicate(test):
         return not(
-            test['test-platform'] == 'linux64-pgo/opt'
-            and (test['suite'] == 'talos' or test['suite'] == 'awsy')
-            and config.params['project'] == 'try'
+            test['test-platform'] == 'linux64-pgo/opt' and
+            (test['suite'] == 'talos' or test['suite'] == 'awsy') and
+            config.params['project'] == 'try'
         )
     for test in filter(predicate, tests):
         yield test
@@ -647,7 +644,8 @@ def parallel_stylo_tests(config, tests):
     parallel traversal in the style system."""
 
     for test in tests:
-        if not test['test-platform'].startswith('linux64-stylo/'):
+        if (not test['test-platform'].startswith('linux64-stylo/')) and \
+           (not test['test-platform'].startswith('linux64-stylo-sequential/')):
             yield test
             continue
 
@@ -658,9 +656,15 @@ def parallel_stylo_tests(config, tests):
             yield test
             continue
 
-        test['mozharness'].setdefault('extra-options', [])\
-                          .append('--parallel-stylo-traversal')
-        yield test
+        # Bug 1356122 - Run Stylo tests in sequential mode
+        if test['test-platform'].startswith('linux64-stylo-sequential/'):
+            yield test
+
+        if test['test-platform'].startswith('linux64-stylo/'):
+            # add parallel stylo tests
+            test['mozharness'].setdefault('extra-options', [])\
+                              .append('--parallel-stylo-traversal')
+            yield test
 
 
 @transforms.add

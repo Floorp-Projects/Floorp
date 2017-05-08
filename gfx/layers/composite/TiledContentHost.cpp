@@ -625,7 +625,8 @@ TiledContentHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << aPrefix;
   aStream << nsPrintfCString("TiledContentHost (0x%p)", this).get();
 
-  if (gfxPrefs::LayersDumpTexture() || profiler_feature_active("layersdump")) {
+  if (gfxPrefs::LayersDumpTexture() ||
+      profiler_feature_active(ProfilerFeature::LayersDump)) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
 
