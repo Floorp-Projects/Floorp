@@ -11,6 +11,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsICacheInfoChannel.h"
@@ -23,7 +24,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
-#include "nsScriptLoader.h"
 #include "ServiceWorkerManager.h"
 #include "Workers.h"
 #include "nsStringStream.h"
@@ -828,9 +828,9 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   char16_t* buffer = nullptr;
   size_t len = 0;
 
-  rv = nsScriptLoader::ConvertToUTF16(httpChannel, aString, aLen,
-                                      NS_LITERAL_STRING("UTF-8"), nullptr,
-                                      buffer, len);
+  rv = ScriptLoader::ConvertToUTF16(httpChannel, aString, aLen,
+                                    NS_LITERAL_STRING("UTF-8"), nullptr,
+                                    buffer, len);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mManager->NetworkFinished(rv);
     return rv;
@@ -882,9 +882,9 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
   char16_t* buffer = nullptr;
   size_t len = 0;
 
-  nsresult rv = nsScriptLoader::ConvertToUTF16(nullptr, aString, aLen,
-                                               NS_LITERAL_STRING("UTF-8"),
-                                               nullptr, buffer, len);
+  nsresult rv = ScriptLoader::ConvertToUTF16(nullptr, aString, aLen,
+                                             NS_LITERAL_STRING("UTF-8"),
+                                             nullptr, buffer, len);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mManager->CacheFinished(rv, false);
     return rv;
