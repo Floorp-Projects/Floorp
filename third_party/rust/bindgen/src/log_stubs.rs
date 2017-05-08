@@ -1,12 +1,12 @@
 macro_rules! log {
-    (target: $target:expr, $lvl:expr, $($arg)+) => {
+    (target: $target:expr, $lvl:expr, $($arg:tt)+) => {
         let _ = $target;
         let _ = log!($lvl, $($arg)+);
     };
-    ($lvl:expr, $($arg:tt)+) => {
+    ($lvl:expr, $($arg:tt)+) => {{
         let _ = $lvl;
         let _ = format_args!($($arg)+);
-    };
+    }};
 }
 macro_rules! error {
     (target: $target:expr, $($arg:tt)*) => { log!($target, $($arg)*); };

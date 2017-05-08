@@ -14,7 +14,7 @@
 
 //! Provides helper functionality.
 
-use std::env;
+use std::{io, env};
 use std::process::{Command};
 use std::path::{Path, PathBuf};
 
@@ -119,10 +119,27 @@ fn find(directory: &Path, patterns: &[&str]) -> Option<PathBuf> {
     for pattern in patterns {
         let pattern = directory.join(pattern).to_string_lossy().into_owned();
         if let Some(path) = try_opt!(glob::glob(&pattern).ok()).filter_map(|p| p.ok()).next() {
-            return Some(path);
+            if path.is_file() && is_executable(&path).unwrap_or(false) {
+                return Some(path);
+            }
         }
     }
     None
+}
+
+#[cfg(unix)]
+fn is_executable(path: &Path) -> io::Result<bool> {
+    use libc;
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
+    let cpath = CString::new(path.as_os_str().as_bytes())?;
+    let res = unsafe { libc::access(cpath.as_ptr(), libc::X_OK) };
+    Ok(res == 0)
+}
+
+#[cfg(not(unix))]
+fn is_executable(path: &Path) -> io::Result<bool> {
+    Ok(true)
 }
 
 /// Attempts to run an executable, returning the `stdout` and `stderr` output if successful.

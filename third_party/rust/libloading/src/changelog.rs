@@ -1,5 +1,24 @@
 //! Project changelog
 
+/// Release 0.4.0 (2017-05-01)
+///
+/// * Remove build-time dependency on target_build_utils (and by extension serde/phf);
+/// * Require at least version 1.14.0 of rustc to build;
+///   * Actually, it is cargo which has to be more recent here. The one shipped with rustc 1.14.0
+///     is what’s being required from now on.
+pub mod r0_4_0 {}
+
+/// Release 0.3.4 (2017-03-25)
+///
+/// * Remove rogue println!
+pub mod r0_3_4 {}
+
+/// Release 0.3.3 (2017-03-25)
+///
+/// * Panics when `Library::get` is called for incompatibly sized type such as named function
+///   types (which are zero-sized).
+pub mod r0_3_3 {}
+
 /// Release 0.3.2 (2017-02-10)
 ///
 /// * Minimum version required is now rustc 1.12.0;

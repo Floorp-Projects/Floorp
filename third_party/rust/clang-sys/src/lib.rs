@@ -21,6 +21,7 @@
 //! * 3.7 - [Documentation](https://kylemayes.github.io/clang-sys/3_7/clang_sys)
 //! * 3.8 - [Documentation](https://kylemayes.github.io/clang-sys/3_8/clang_sys)
 //! * 3.9 - [Documentation](https://kylemayes.github.io/clang-sys/3_9/clang_sys)
+//! * 4.0 - [Documentation](https://kylemayes.github.io/clang-sys/4_0/clang_sys)
 
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
 
@@ -30,9 +31,6 @@
 
 #[macro_use]
 extern crate bitflags;
-#[cfg(feature="runtime")]
-#[macro_use]
-extern crate lazy_static;
 
 extern crate glob;
 extern crate libc;
@@ -60,7 +58,7 @@ pub type CXInclusionVisitor = extern fn(CXFile, *mut CXSourceLocation, c_uint, C
 
 // cenum! ________________________________________
 
-/// Defines a type-safe C enum as a series of constants.
+/// Defines a C enum as a series of constants.
 macro_rules! cenum {
     ($(#[$meta:meta])* enum $name:ident {
         $($(#[$vmeta:meta])* const $variant:ident = $value:expr), +,
@@ -116,6 +114,8 @@ cenum! {
         const CXCallingConv_X86Pascal = 5,
         const CXCallingConv_AAPCS = 6,
         const CXCallingConv_AAPCS_VFP = 7,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCallingConv_X86RegCall = 8,
         const CXCallingConv_IntelOclBicc = 9,
         const CXCallingConv_X86_64Win64 = 10,
         const CXCallingConv_X86_64SysV = 11,
@@ -408,6 +408,26 @@ cenum! {
         const CXCursor_OMPDistributeSimdDirective = 268,
         /// Only produced by `libclang` 3.9 and later.
         const CXCursor_OMPTargetParallelForSimdDirective = 269,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetSimdDirective = 270,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTeamsDistributeDirective = 271,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTeamsDistributeSimdDirective = 272,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTeamsDistributeParallelForSimdDirective = 273,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTeamsDistributeParallelForDirective = 274,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetTeamsDirective = 275,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetTeamsDistributeDirective = 276,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetTeamsDistributeParallelForDirective = 277,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetTeamsDistributeParallelForSimdDirective = 278,
+        /// Only producer by `libclang` 4.0 and later.
+        const CXCursor_OMPTargetTeamsDistributeSimdDirective = 279,
         const CXCursor_TranslationUnit = 300,
         const CXCursor_UnexposedAttr = 400,
         const CXCursor_IBActionAttr = 401,
@@ -443,6 +463,8 @@ cenum! {
         const CXCursor_TypeAliasTemplateDecl = 601,
         /// Only produced by `libclang` 3.9 and later.
         const CXCursor_StaticAssert = 602,
+        /// Only produced by `libclang` 4.0 and later.
+        const CXCursor_FriendDecl = 603,
         /// Only produced by `libclang` 3.7 and later.
         const CXCursor_OverloadCandidate = 700,
     }
@@ -1421,10 +1443,16 @@ link! {
     pub fn clang_EvalResult_getAsDouble(result: CXEvalResult) -> libc::c_double;
     #[cfg(feature="gte_clang_3_9")]
     pub fn clang_EvalResult_getAsInt(result: CXEvalResult) -> c_int;
+    #[cfg(feature="gte_clang_4_0")]
+    pub fn clang_EvalResult_getAsLongLong(result: CXEvalResult) -> c_longlong;
     #[cfg(feature="gte_clang_3_9")]
     pub fn clang_EvalResult_getAsStr(result: CXEvalResult) -> *const c_char;
+    #[cfg(feature="gte_clang_4_0")]
+    pub fn clang_EvalResult_getAsUnsigned(result: CXEvalResult) -> c_ulonglong;
     #[cfg(feature="gte_clang_3_9")]
     pub fn clang_EvalResult_getKind(result: CXEvalResult) -> CXEvalResultKind;
+    #[cfg(feature="gte_clang_4_0")]
+    pub fn clang_EvalResult_isUnsignedInt(result: CXEvalResult) -> c_uint;
     #[cfg(feature="gte_clang_3_6")]
     pub fn clang_File_isEqual(left: CXFile, right: CXFile) -> c_int;
     pub fn clang_IndexAction_create(index: CXIndex) -> CXIndexAction;
@@ -1501,6 +1529,8 @@ link! {
     pub fn clang_formatDiagnostic(diagnostic: CXDiagnostic, flags: CXDiagnosticDisplayOptions) -> CXString;
     #[cfg(feature="gte_clang_3_7")]
     pub fn clang_free(buffer: *mut c_void);
+    #[cfg(feature="gte_clang_4_0")]
+    pub fn clang_getAllSkippedRanges(tu: CXTranslationUnit) -> *mut CXSourceRangeList;
     pub fn clang_getArgType(type_: CXType, index: c_uint) -> CXType;
     pub fn clang_getArrayElementType(type_: CXType) -> CXType;
     pub fn clang_getArraySize(type_: CXType) -> c_longlong;
