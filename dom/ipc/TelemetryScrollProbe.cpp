@@ -8,7 +8,6 @@
 
 #include "nsIDOMDocument.h"     // for nsIDOMDocument
 #include "nsIDOMEvent.h"        // for nsIDOMEvent
-#include "nsIDOMLocation.h"     // for nsIDOMLocation
 #include "nsIURI.h"             // for nsIURI
 #include "TabChild.h"           // for TabChildGlobal, TabChildBase
 #include "mozilla/Telemetry.h"  // for mozilla::Telemetry

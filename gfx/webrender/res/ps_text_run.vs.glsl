@@ -19,7 +19,6 @@ void main(void) {
                                                     prim.layer,
                                                     prim.task,
                                                     local_rect.p0);
-    vLocalRect = local_rect;
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy / vi.local_pos.z - local_rect.p0) / local_rect.size;
 #else

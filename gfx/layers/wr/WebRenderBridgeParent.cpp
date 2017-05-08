@@ -197,7 +197,7 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
-                        				        const gfx::IntSize& aSize,
+                                        const gfx::IntSize& aSize,
                                         const uint32_t& aStride,
                                         const gfx::SurfaceFormat& aFormat,
                                         const ByteBuffer& aBuffer)
@@ -268,6 +268,26 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
   mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
+  uint64_t storageId = mWidget ? 0 : mPipelineId.mHandle;
+  CompositorAnimationStorage* storage =
+    mCompositorBridge->GetAnimationStorage(storageId);
+  MOZ_ASSERT(storage);
+
+  for (uint32_t i = 0; i < aIds.Length(); i++) {
+    storage->ClearById(aIds[i]);
+  }
+
+  return IPC_OK();
+}
+
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
@@ -482,18 +502,15 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
             storage->SetAnimations(data.id(), data.animations());
-          }
-        }
-        break;
-      }
-      case WebRenderParentCommand::TOpRemoveCompositorAnimations: {
-        const OpRemoveCompositorAnimations& op = cmd.get_OpRemoveCompositorAnimations();
-        if (op.id()) {
-          uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
-          CompositorAnimationStorage* storage =
-            mCompositorBridge->GetAnimationStorage(id);
-          if (storage) {
-            storage->ClearById(op.id());
+            // Store the default opacity
+            if (op.opacity().type() == OptionalOpacity::Tfloat) {
+              storage->SetAnimatedValue(data.id(), op.opacity().get_float());
+            }
+            // Store the default transform
+            if (op.transform().type() == OptionalTransform::TMatrix4x4) {
+              Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
+              storage->SetAnimatedValue(data.id(), Move(transform));
+            }
           }
         }
         break;

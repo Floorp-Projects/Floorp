@@ -134,7 +134,11 @@
 <!ENTITY downloadsHistory.label           "Show All Downloads">
 <!ENTITY downloadsHistory.accesskey       "S">
 
-<!ENTITY openDownloadsFolder.label       "Open Downloads Folder">
+<!-- LOCALIZATION NOTE (openDownloadsFolder.label):
+     This command is not currently available in the user interface, but the
+     string was preserved by bug 1362207 to be used in a future version.
+     -->
+<!ENTITY openDownloadsFolder.label        "Open Downloads Folder">
 
 <!ENTITY clearDownloadsButton.label       "Clear Downloads">
 <!ENTITY clearDownloadsButton.tooltip     "Clears completed, canceled and failed downloads">

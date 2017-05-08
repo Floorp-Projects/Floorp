@@ -1223,7 +1223,7 @@ public:
   // A later animation overrides an earlier one.
   Animation* AddAnimation();
   // ClearAnimations clears animations on this layer.
-  void ClearAnimations();
+  virtual void ClearAnimations();
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
   void SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations);

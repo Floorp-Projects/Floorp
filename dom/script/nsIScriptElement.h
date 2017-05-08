@@ -24,7 +24,8 @@
 /**
  * Internal interface implemented by script elements
  */
-class nsIScriptElement : public nsIScriptLoaderObserver {
+class nsIScriptElement : public nsIScriptLoaderObserver
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTELEMENT_IID)
 
@@ -118,6 +119,7 @@ public:
   {
     mLineNumber = aLineNumber;
   }
+
   uint32_t GetScriptLineNumber()
   {
     return mLineNumber;
@@ -127,6 +129,7 @@ public:
   {
     mMalformed = true;
   }
+
   bool IsMalformed()
   {
     return mMalformed;

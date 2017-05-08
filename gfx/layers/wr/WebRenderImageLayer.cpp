@@ -84,7 +84,8 @@ WebRenderImageLayer::ClearCachedResources()
 }
 
 void
-WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc)
 {
   if (!mContainer) {
      return;
@@ -104,7 +105,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     // Static anaysis tool does not permit to pass refcounted variable to lambda.
     // And we do not want to use RefPtr<WebRenderImageLayer> here.
     Holder holder(this);
-    Manager()->AllocPipelineId()
+    WrManager()->AllocPipelineId()
       ->Then(AbstractThread::GetCurrent(), __func__,
       [holder] (const wr::PipelineId& aPipelineId) {
         holder->mPipelineIdRequest.Complete();
@@ -149,7 +150,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     // Always allocate key
     WrImageKey key = GetImageKey();
     WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
-    Manager()->AddImageKeyForDiscard(key);
+    WrManager()->AddImageKeyForDiscard(key);
     mKey = Some(key);
   } else {
     // Handle CompositableType::IMAGE case
@@ -164,7 +165,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     return;
   }
 
-  StackingContextHelper sc(aBuilder, this);
+  StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
@@ -174,7 +175,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
 
   LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegion clip = aBuilder.BuildClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));

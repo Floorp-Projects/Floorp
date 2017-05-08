@@ -211,12 +211,9 @@ nsControllerCommandGroup::AddCommandToGroup(const char* aCommand,
                                             const char* aGroup)
 {
   nsDependentCString groupKey(aGroup);
-  nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey);
-  if (!commandList) {
-    // make this list
-    commandList = new AutoTArray<nsCString, 8>;
-    mGroupsHash.Put(groupKey, commandList);
-  }
+  auto commandList = mGroupsHash.LookupForAdd(groupKey).OrInsert([]() {
+      return new AutoTArray<nsCString, 8>();
+    });
 
 #ifdef DEBUG
   nsCString* appended =

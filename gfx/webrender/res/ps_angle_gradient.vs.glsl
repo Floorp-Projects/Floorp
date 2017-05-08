@@ -29,6 +29,9 @@ void main(void) {
     // V coordinate of gradient row in lookup texture.
     vGradientIndex = float(prim.sub_index);
 
+    // The texture size of the lookup texture
+    vGradientTextureSize = vec2(textureSize(sGradients, 0));
+
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.extend_mode.x) == EXTEND_MODE_REPEAT);
 }

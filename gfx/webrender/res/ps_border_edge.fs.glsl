@@ -8,7 +8,7 @@ void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
     alpha = 0.0;
-    vec2 local_pos = init_transform_fs(vLocalPos, vLocalRect, alpha);
+    vec2 local_pos = init_transform_fs(vLocalPos, alpha);
 #else
     vec2 local_pos = vLocalPos;
 #endif
@@ -24,11 +24,11 @@ void main(void) {
     // no effect.
 
     // Select the x/y coord, depending on which axis this edge is.
-    float pos = mix(local_pos.x, local_pos.y, vAxisSelect);
+    vec2 pos = mix(local_pos.xy, local_pos.yx, vAxisSelect);
 
     // Get signed distance from each of the inner edges.
-    float d0 = pos - vEdgeDistance.x;
-    float d1 = vEdgeDistance.y - pos;
+    float d0 = pos.x - vEdgeDistance.x;
+    float d1 = vEdgeDistance.y - pos.x;
 
     // SDF union to select both outer edges.
     float d = min(d0, d1);
@@ -42,6 +42,8 @@ void main(void) {
     // TODO(gw): Support AA for groove/ridge border edge with transforms.
     vec4 color = mix(vColor0, vColor1, bvec4(d0 * vEdgeDistance.y > 0.0));
 
-    //oFragColor = vec4(d0 * vEdgeDistance.y, -d0 * vEdgeDistance.y, 0, 1.0);
+    // Apply dashing parameters.
+    alpha = min(alpha, step(mod(pos.y - vDashParams.x, vDashParams.y), vDashParams.z));
+
     oFragColor = color * vec4(1.0, 1.0, 1.0, alpha);
 }

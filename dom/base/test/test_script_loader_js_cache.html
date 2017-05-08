@@ -2,7 +2,7 @@
 <html>
 <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=900784 -->
 <!-- The JS bytecode cache is not supposed to be observable. To make it
-     observable, the nsScriptLoader is instrumented to trigger events on the
+     observable, the ScriptLoader is instrumented to trigger events on the
      script tag. These events are followed to reconstruct the code path taken by
      the script loader and associate a simple name which is checked in these
      test cases.
@@ -14,7 +14,7 @@
   <script src="/resources/testharnessreport.js"></script>
   <script type="application/javascript">
     // This is the state machine of the trace events produced by the
-    // nsScriptLoader. This state machine is used to give a name to each
+    // ScriptLoader. This state machine is used to give a name to each
     // code path, such that we can assert each code path with a single word.
     var scriptLoaderStateMachine = {
       "scriptloader_load_source": {
@@ -112,7 +112,7 @@
     promise_test(async function() {
       // Setting dom.expose_test_interfaces pref causes the
       // nsScriptLoadRequest to fire event on script tags, with information
-      // about its internal state. The nsScriptLoader source send events to
+      // about its internal state. The ScriptLoader source send events to
       // trace these and resolve a promise with the path taken by the
       // script loader.
       //

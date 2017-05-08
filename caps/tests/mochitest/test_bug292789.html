@@ -25,6 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
  ** even for ALLOW_CHROME mechanisms (<script>, <img> etc)
  **/
 
+/* import-globals-from ../../../toolkit/content/treeUtils.js */
+
 SimpleTest.waitForExplicitFinish();
 
 /** <script src=""> test **/
@@ -75,14 +77,14 @@ function finishTest() {
 
 function fail(event) {
     is("fail", event.target.expected,
-       "content should not be allowed to load "+event.target.src);
+       "content should not be allowed to load " + event.target.src);
     if (event.target.callback)
       event.target.callback();
 }
 
 function success(event) {
     is("success", event.target.expected,
-       "content should be able to load "+event.target.src);
+       "content should be able to load " + event.target.src);
     if (event.target.callback)
       event.target.callback();
 }
@@ -94,7 +96,7 @@ function loadImage(uri, expect, callback) {
     img.expected = expect;
     img.callback = callback;
     img.src = uri;
-    //document.getElementById("content").appendChild(img);
+    // document.getElementById("content").appendChild(img);
 }
 
 // Start off the script src test, and have it start the img tests when complete.
