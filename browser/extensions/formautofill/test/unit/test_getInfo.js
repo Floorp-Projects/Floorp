@@ -69,6 +69,33 @@ const TESTCASES = [
     },
   },
   {
+    description: "Select element in a label element",
+    document: `<form>
+                 <label> State
+                   <select id="targetElement"></select>
+                 </label>
+               </form>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "address-level1",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
+  {
+    description: "A select element without a form wrapped",
+    document: `<label for="targetElement">State</label>
+               <select id="targetElement"></select>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "address-level1",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
+  {
     description: "2 address line inputs",
     document: `<label for="targetElement">street</label>
                <input id="targetElement" type="text">`,
