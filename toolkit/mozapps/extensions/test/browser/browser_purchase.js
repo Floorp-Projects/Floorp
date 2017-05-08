@@ -145,12 +145,8 @@ add_test(function() {
 
       gBrowser.removeCurrentTab();
 
-      if (gUseInContentUI) {
-        is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
-        run_next_test();
-      } else {
-        waitForFocus(run_next_test, gManagerWindow);
-      }
+      is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
+      run_next_test();
     });
   }, {capture: true, once: true});
 
@@ -169,12 +165,8 @@ add_test(function() {
 
       gBrowser.removeCurrentTab();
 
-      if (gUseInContentUI) {
-        is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
-        run_next_test();
-      } else {
-        waitForFocus(run_next_test, gManagerWindow);
-      }
+      is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
+      run_next_test();
     });
   }, {capture: true, once: true});
 

@@ -150,13 +150,6 @@ add_task(function* testExperimentLearnMore() {
   yield gCategoryUtilities.openType("experiment");
   let btn = gManagerWindow.document.getElementById("experiments-learn-more");
 
-  if (!gUseInContentUI) {
-    is_element_hidden(btn, "Learn more button hidden if not using in-content UI.");
-    Services.prefs.clearUserPref("toolkit.telemetry.infoURL");
-
-    return;
-  }
-
   is_element_visible(btn, "Learn more button visible.");
 
   let deferred = Promise.defer();
@@ -183,11 +176,6 @@ add_task(function* testExperimentLearnMore() {
 add_task(function* testOpenPreferences() {
   yield gCategoryUtilities.openType("experiment");
   let btn = gManagerWindow.document.getElementById("experiments-change-telemetry");
-  if (!gUseInContentUI) {
-    is_element_hidden(btn, "Change telemetry button not enabled in out of window UI.");
-    info("Skipping preferences open test because not using in-content UI.");
-    return;
-  }
 
   is_element_visible(btn, "Change telemetry button visible in in-content UI.");
 
