@@ -63,7 +63,6 @@ void main(void) {
                                                     prim.layer,
                                                     prim.task,
                                                     prim.local_rect.p0);
-    vLocalRect = segment_rect;
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy - prim.local_rect.p0) / prim.local_rect.size;
 #else

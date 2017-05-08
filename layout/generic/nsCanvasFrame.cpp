@@ -23,6 +23,7 @@
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/PresShell.h"
 // for focus
 #include "nsIScrollableFrame.h"
@@ -304,6 +305,7 @@ nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                        const StackingContextHelper& aSc,
                                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                                         WebRenderDisplayItemLayer* aLayer)
 {
@@ -315,9 +317,9 @@ nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayList
   LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
           bgClipRect, appUnitsPerDevPixel);
 
-  LayerRect transformedRect = aLayer->RelativeToParent(rect);
-  aBuilder.PushRect(wr::ToWrRect(transformedRect),
-                    aBuilder.BuildClipRegion(wr::ToWrRect(transformedRect)),
+  WrRect transformedRect = aSc.ToRelativeWrRect(rect);
+  aBuilder.PushRect(transformedRect,
+                    aBuilder.BuildClipRegion(transformedRect),
                     wr::ToWrColor(ToDeviceColor(mColor)));
 }
 

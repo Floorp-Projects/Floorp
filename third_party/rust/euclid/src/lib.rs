@@ -12,7 +12,7 @@
 //! A collection of strongly typed math tools for computer graphics with an inclination
 //! towards 2d graphics and layout.
 //!
-//! All types are generic over the the scalar type of their component (f32, i32, etc.),
+//! All types are generic over the scalar type of their component (`f32`, `i32`, etc.),
 //! and tagged with a generic Unit parameter which is useful to prevent mixing
 //! values from different spaces. For example it should not be legal to translate
 //! a screen-space position by a world-space vector and this can be expressed using
@@ -24,8 +24,8 @@
 //! Client code typically creates a set of aliases for each type and doesn't need
 //! to deal with the specifics of typed units further. For example:
 //!
-//! All euclid types are marked #[repr(C)] in order to facilitate exposing them to
-//! foreign function interfaces (provided the underlying scalar type is also repr(C)).
+//! All euclid types are marked `#[repr(C)]` in order to facilitate exposing them to
+//! foreign function interfaces (provided the underlying scalar type is also `repr(C)`).
 //!
 //! ```rust
 //! use euclid::*;
@@ -94,7 +94,7 @@ pub mod rect;
 pub mod scale_factor;
 pub mod side_offsets;
 pub mod size;
-mod trig;
+pub mod trig;
 
 /// The default unit.
 #[derive(Clone, Copy, RustcDecodable, RustcEncodable)]

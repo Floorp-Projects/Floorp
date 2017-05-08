@@ -15,7 +15,6 @@ void main(void) {
                                                     prim.layer,
                                                     prim.task,
                                                     prim.local_rect.p0);
-    vLocalRect = prim.local_rect;
     vLocalPos = vi.local_pos;
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
@@ -28,9 +27,6 @@ void main(void) {
 #endif
 
     write_clip(vi.screen_pos, prim.clip_area);
-
-    vTileSpacing = image.stretch_size_and_tile_spacing.zw;
-    vStretchSize = image.stretch_size_and_tile_spacing.xy;
 
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
     // non-normalized texture coordinates.
