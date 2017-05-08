@@ -1352,7 +1352,7 @@ impl MarionetteConnection {
 
     fn send(&mut self, msg: Json) -> WebDriverResult<String> {
         let data = self.encode_msg(msg);
-        trace!("→ {}", data);
+        trace!("-> {}", data);
 
         match self.stream {
             Some(ref mut stream) => {
@@ -1426,7 +1426,7 @@ impl MarionetteConnection {
 
         // TODO(jgraham): Need to handle the error here
         let data = String::from_utf8(payload).unwrap();
-        trace!("← {}", data);
+        trace!("<- {}", data);
 
         Ok(data)
     }
