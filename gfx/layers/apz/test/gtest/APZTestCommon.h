@@ -176,6 +176,10 @@ public:
     return mInputQueue;
   }
 
+  void ClearContentController() {
+    mcc = nullptr;
+  }
+
 protected:
   AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
                                           GeckoContentController* aController) override;
