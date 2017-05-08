@@ -18,13 +18,6 @@ var pathParts = gTestPath.split("/");
 // Drop the test filename
 pathParts.splice(pathParts.length - 1, pathParts.length);
 
-var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
-
-// Drop the UI type
-if (gTestInWindow) {
-  pathParts.splice(pathParts.length - 1, pathParts.length);
-}
-
 const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";
 
 const TESTROOT = "http://example.com/" + RELATIVE_DIR;
@@ -63,8 +56,6 @@ var PREF_CHECK_COMPATIBILITY;
 var gPendingTests = [];
 var gTestsRun = 0;
 var gTestStart = null;
-
-var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 
 var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: PREF_CUSTOM_XPINSTALL_CONFIRMATION_UI},
@@ -407,28 +398,18 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       }, aManagerWindow);
     }
 
-    if (gUseInContentUI) {
-      info("Loading manager window in tab");
-      Services.obs.addObserver(function(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        if (aSubject.location.href != MANAGER_URI) {
-          info("Ignoring load event for " + aSubject.location.href);
-          return;
-        }
-        setup_manager(aSubject);
-      }, "EM-loaded");
+    info("Loading manager window in tab");
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      if (aSubject.location.href != MANAGER_URI) {
+        info("Ignoring load event for " + aSubject.location.href);
+        return;
+      }
+      setup_manager(aSubject);
+    }, "EM-loaded");
 
-      gBrowser.selectedTab = gBrowser.addTab();
-      switchToTabHavingURI(MANAGER_URI, true);
-    } else {
-      info("Loading manager window in dialog");
-      Services.obs.addObserver(function(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        setup_manager(aSubject);
-      }, "EM-loaded");
-
-      openDialog(MANAGER_URI);
-    }
+    gBrowser.selectedTab = gBrowser.addTab();
+    switchToTabHavingURI(MANAGER_URI, true);
   });
 
   // The promise resolves with the manager window, so it is passed to the callback

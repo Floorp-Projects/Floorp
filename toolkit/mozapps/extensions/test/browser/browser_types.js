@@ -26,35 +26,16 @@ var gTypes = [
 ];
 
 function go_back(aManager) {
-  if (gUseInContentUI) {
-    gBrowser.goBack();
-  } else {
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("back-btn"),
-                                       { }, aManager);
-  }
+  gBrowser.goBack();
 }
 
 function go_forward(aManager) {
-  if (gUseInContentUI) {
-    gBrowser.goForward();
-  } else {
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("forward-btn"),
-                                       { }, aManager);
-  }
+  gBrowser.goForward();
 }
 
-function check_state(aManager, canGoBack, canGoForward) {
-  var doc = aManager.document;
-
-  if (gUseInContentUI) {
-    is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
-    is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
-  }
-
-  if (!is_hidden(doc.getElementById("back-btn"))) {
-    is(!doc.getElementById("back-btn").disabled, canGoBack, "Back button should have the right state");
-    is(!doc.getElementById("forward-btn").disabled, canGoForward, "Forward button should have the right state");
-  }
+function check_state(canGoBack, canGoForward) {
+  is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
+  is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
 }
 
 function test() {
@@ -150,7 +131,7 @@ add_test(function() {
       go_back(gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gCategoryUtilities.selectedCategory, "type1", "Should be showing the custom view");
-        check_state(gManagerWindow, true, true);
+        check_state(true, true);
 
         AddonManagerPrivate.unregisterProvider(gProvider);
 
@@ -159,27 +140,27 @@ add_test(function() {
         ok(!gCategoryUtilities.get("missing1", true), "Missing 1 should be absent");
 
         is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
-        check_state(gManagerWindow, true, true);
+        check_state(true, true);
 
         go_back(gManagerWindow);
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "extension", "Should be showing the extension view");
-          check_state(gManagerWindow, false, true);
+          check_state(false, true);
 
           go_forward(gManagerWindow);
           wait_for_view_load(gManagerWindow, function() {
             is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
-            check_state(gManagerWindow, true, true);
+            check_state(true, true);
 
             go_forward(gManagerWindow);
             wait_for_view_load(gManagerWindow, function() {
               is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugins view");
-              check_state(gManagerWindow, true, false);
+              check_state(true, false);
 
               go_back(gManagerWindow);
               wait_for_view_load(gManagerWindow, function() {
                 is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
-                check_state(gManagerWindow, true, true);
+                check_state(true, true);
 
                 close_manager(gManagerWindow, run_next_test);
               });
@@ -212,7 +193,7 @@ add_test(function() {
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the first view");
-          check_state(gManagerWindow, false, true);
+          check_state(false, true);
 
           close_manager(gManagerWindow, run_next_test);
         });
@@ -248,7 +229,7 @@ add_test(function() {
 
             wait_for_view_load(gManagerWindow, function() {
               is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugin view");
-              check_state(gManagerWindow, true, false);
+              check_state(true, false);
 
               close_manager(gManagerWindow, run_next_test);
             });
@@ -281,7 +262,7 @@ add_test(function() {
 
       wait_for_view_load(gManagerWindow, function() {
         is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
-        check_state(gManagerWindow, false, true);
+        check_state(false, true);
 
         close_manager(gManagerWindow, run_next_test);
       });
@@ -315,7 +296,7 @@ add_test(function() {
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
-          check_state(gManagerWindow, true, false);
+          check_state(true, false);
 
           close_manager(gManagerWindow, run_next_test);
         });
@@ -346,7 +327,7 @@ add_test(function() {
 
           wait_for_view_load(gManagerWindow, function() {
             is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the first view");
-            check_state(gManagerWindow, false, true);
+            check_state(false, true);
 
             close_manager(gManagerWindow, run_next_test);
           });
@@ -386,7 +367,7 @@ add_test(function() {
 
                 wait_for_view_load(gManagerWindow, function() {
                   is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugin view");
-                  check_state(gManagerWindow, true, false);
+                  check_state(true, false);
 
                   close_manager(gManagerWindow, run_next_test);
                 });
@@ -422,7 +403,7 @@ add_test(function() {
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
-          check_state(gManagerWindow, false, true);
+          check_state(false, true);
 
           close_manager(gManagerWindow, run_next_test);
         });
@@ -461,7 +442,7 @@ add_test(function() {
 
             wait_for_view_load(gManagerWindow, function() {
               is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
-              check_state(gManagerWindow, true, false);
+              check_state(true, false);
 
               close_manager(gManagerWindow, run_next_test);
             });
