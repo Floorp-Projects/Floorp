@@ -59,7 +59,7 @@ async function testNoPrompt(origUrl, id) {
   is(getBadgeStatus(), "", "Should not have addon alert badge");
 
   await PanelUI.show();
-  let addons = document.getElementById("PanelUI-footer-addons");
+  let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 0, "Have 0 updates in the PanelUI menu");
   await PanelUI.hide();
 

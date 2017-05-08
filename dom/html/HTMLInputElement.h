@@ -17,6 +17,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
@@ -27,7 +28,27 @@
 #include "mozilla/Decimal.h"
 #include "nsContentUtils.h"
 #include "nsTextEditorState.h"
+#include "mozilla/Variant.h"
+#include "SingleLineTextInputTypes.h"
+#include "NumericInputTypes.h"
+#include "CheckableInputTypes.h"
+#include "ButtonInputTypes.h"
+#include "DateTimeInputTypes.h"
+#include "ColorInputType.h"
+#include "FileInputType.h"
+#include "HiddenInputType.h"
 
+static constexpr size_t INPUT_TYPE_SIZE = sizeof(
+  mozilla::Variant<TextInputType, SearchInputType, TelInputType, URLInputType,
+                   EmailInputType, PasswordInputType, NumberInputType,
+                   RangeInputType, RadioInputType, CheckboxInputType,
+                   ButtonInputType, ImageInputType, ResetInputType,
+                   SubmitInputType, DateInputType, TimeInputType, WeekInputType,
+                   MonthInputType, DateTimeLocalInputType, FileInputType,
+                   ColorInputType, HiddenInputType> );
+
+class InputType;
+struct DoNotDelete;
 class nsIRadioGroupContainer;
 class nsIRadioVisitor;
 
@@ -113,6 +134,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
+  friend class ::InputType;
 
 public:
   using nsIConstraintValidation::GetValidationMessage;
@@ -903,28 +925,6 @@ protected:
   };
 
   /**
-   * This helper method returns true if aValue is a valid email address.
-   * This is following the HTML5 specification:
-   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address
-   *
-   * @param aValue  the email address to check.
-   * @result        whether the given string is a valid email address.
-   */
-  static bool IsValidEmailAddress(const nsAString& aValue);
-
-  /**
-   * This helper method returns true if aValue is a valid email address list.
-   * Email address list is a list of email address separated by comas (,) which
-   * can be surrounded by space charecters.
-   * This is following the HTML5 specification:
-   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address-list
-   *
-   * @param aValue  the email address list to check.
-   * @result        whether the given string is a valid email address list.
-   */
-  static bool IsValidEmailAddressList(const nsAString& aValue);
-
-  /**
    * This helper method convert a sub-string that contains only digits to a
    * number (unsigned int given that it can't contain a minus sign).
    * This method will return whether the sub-string is correctly formatted
@@ -1082,11 +1082,6 @@ protected:
   bool DoesRequiredApply() const;
 
   /**
-   * Returns if the pattern attribute applies for the current type.
-   */
-  bool DoesPatternApply() const;
-
-  /**
    * Returns if the min and max attributes apply for the current type.
    */
   bool DoesMinMaxApply() const;
@@ -1110,11 +1105,6 @@ protected:
    * Returns if autocomplete attribute applies for the current type.
    */
   bool DoesAutocompleteApply() const;
-
-  /**
-   * Returns if the minlength or maxlength attributes apply for the current type.
-   */
-  bool MinOrMaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;
@@ -1566,6 +1556,14 @@ protected:
    * nsTextEditorState cannot do its job.
    */
   nsTextEditorState::SelectionProperties mSelectionProperties;
+
+  /*
+   * InputType object created based on input type.
+   */
+  UniquePtr<InputType, DoNotDelete> mInputType;
+
+  // Memory allocated for mInputType, reused when type changes.
+  char mInputTypeMem[INPUT_TYPE_SIZE];
 
   // Step scale factor values, for input types that have one.
   static const Decimal kStepScaleFactorDate;

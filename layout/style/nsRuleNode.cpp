@@ -410,6 +410,38 @@ nsRuleNode::GetMetricsFor(nsPresContext* aPresContext,
                                    aFontSize, aUseUserFontSet);
 }
 
+/* static */
+void
+nsRuleNode::FixupNoneGeneric(nsFont* aFont,
+                             const nsPresContext* aPresContext,
+                             uint8_t aGenericFontID,
+                             const nsFont* aDefaultVariableFont)
+{
+  bool useDocumentFonts =
+    aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
+  if (aGenericFontID == kGenericFont_NONE ||
+      (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
+                             aGenericFontID == kGenericFont_fantasy))) {
+    FontFamilyType defaultGeneric =
+      aDefaultVariableFont->fontlist.FirstGeneric();
+    MOZ_ASSERT(aDefaultVariableFont->fontlist.Length() == 1 &&
+               (defaultGeneric == eFamily_serif ||
+                defaultGeneric == eFamily_sans_serif));
+    if (defaultGeneric != eFamily_none) {
+      if (useDocumentFonts) {
+        aFont->fontlist.SetDefaultFontType(defaultGeneric);
+      } else {
+        // Either prioritize the first generic in the list,
+        // or (if there isn't one) prepend the default variable font.
+        if (!aFont->fontlist.PrioritizeFirstGeneric()) {
+          aFont->fontlist.PrependGeneric(defaultGeneric);
+        }
+      }
+    }
+  } else {
+    aFont->fontlist.SetDefaultFontType(eFamily_none);
+  }
+}
 
 static nsSize CalcViewportUnitsScale(nsPresContext* aPresContext)
 {
@@ -3556,30 +3588,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
-    bool useDocumentFonts =
-      aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
-    if (aGenericFontID == kGenericFont_NONE ||
-        (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
-                               aGenericFontID == kGenericFont_fantasy))) {
-      FontFamilyType defaultGeneric =
-        defaultVariableFont->fontlist.FirstGeneric();
-      MOZ_ASSERT(defaultVariableFont->fontlist.Length() == 1 &&
-                 (defaultGeneric == eFamily_serif ||
-                  defaultGeneric == eFamily_sans_serif));
-      if (defaultGeneric != eFamily_none) {
-        if (useDocumentFonts) {
-          aFont->mFont.fontlist.SetDefaultFontType(defaultGeneric);
-        } else {
-          // Either prioritize the first generic in the list,
-          // or (if there isn't one) prepend the default variable font.
-          if (!aFont->mFont.fontlist.PrioritizeFirstGeneric()) {
-            aFont->mFont.fontlist.PrependGeneric(defaultGeneric);
-          }
-        }
-      }
-    } else {
-      aFont->mFont.fontlist.SetDefaultFontType(eFamily_none);
-    }
+    nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
+                                 aGenericFontID, defaultVariableFont);
+
     aFont->mFont.systemFont = false;
     // Technically this is redundant with the code below, but it's good
     // to have since we'll still want it once we get rid of
@@ -7951,12 +7962,10 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       break;
     }
     case eCSSUnit_Initial:
-      list->SetListStyleType(NS_LITERAL_STRING("disc"), mPresContext);
+      list->SetListStyleType(nsGkAtoms::disc, mPresContext);
       break;
-    case eCSSUnit_Ident: {
-      nsString typeIdent;
-      typeValue->GetStringValue(typeIdent);
-      list->SetListStyleType(typeIdent, mPresContext);
+    case eCSSUnit_AtomIdent: {
+      list->SetListStyleType(typeValue->GetAtomValue(), mPresContext);
       break;
     }
     case eCSSUnit_String: {
@@ -7969,23 +7978,23 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       // For compatibility with html attribute map.
       // This branch should never be called for value from CSS.
       int32_t intValue = typeValue->GetIntValue();
-      nsAutoString name;
+      nsCOMPtr<nsIAtom> name;
       switch (intValue) {
         case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-          name.AssignLiteral(u"lower-roman");
+          name = nsGkAtoms::lowerRoman;
           break;
         case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-          name.AssignLiteral(u"upper-roman");
+          name = nsGkAtoms::upperRoman;
           break;
         case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-          name.AssignLiteral(u"lower-alpha");
+          name = nsGkAtoms::lowerAlpha;
           break;
         case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-          name.AssignLiteral(u"upper-alpha");
+          name = nsGkAtoms::upperAlpha;
           break;
         default:
-          CopyASCIItoUTF16(nsCSSProps::ValueToKeyword(
-                  intValue, nsCSSProps::kListStyleKTable), name);
+          name = NS_Atomize(nsCSSProps::ValueToKeyword(
+                  intValue, nsCSSProps::kListStyleKTable));
           break;
       }
       list->SetListStyleType(name, mPresContext);

@@ -1020,7 +1020,7 @@ DependentBuiltinCounterStyle::GetFallback()
       // only case fallback is accessed is that they are extended.
       // Since extending styles will cache the data themselves, we need
       // not cache it here.
-      return mManager->BuildCounterStyle(NS_LITERAL_STRING("cjk-decimal"));
+      return mManager->BuildCounterStyle(nsGkAtoms::cjkDecimal);
     default:
       NS_NOTREACHED("Not a valid dependent builtin style");
       return BuiltinCounterStyle::GetFallback();
@@ -1032,7 +1032,7 @@ class CustomCounterStyle final : public CounterStyle
 private:
   ~CustomCounterStyle() {}
 public:
-  CustomCounterStyle(const nsAString& aName,
+  CustomCounterStyle(nsIAtom* aName,
                      CounterStyleManager* aManager,
                      nsCSSCounterStyleRule* aRule)
     : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM),
@@ -1134,7 +1134,7 @@ private:
   CounterStyle* GetExtends();
   CounterStyle* GetExtendsRoot();
 
-  nsString mName;
+  nsCOMPtr<nsIAtom> mName;
 
   // CounterStyleManager should always overlive any CounterStyle as it
   // is owned by nsPresContext, and will be released after all nodes and
@@ -1234,7 +1234,8 @@ CustomCounterStyle::ResetDependentData()
 /* virtual */ void
 CustomCounterStyle::GetStyleName(nsSubstring& aResult)
 {
-  aResult.Assign(mName);
+  nsDependentAtomString name(mName);
+  aResult.Assign(name);
 }
 
 /* virtual */ void
@@ -1412,13 +1413,15 @@ CustomCounterStyle::GetFallback()
 {
   if (!mFallback) {
     const nsCSSValue& value = mRule->GetDesc(eCSSCounterDesc_Fallback);
-    if (value.UnitHasStringValue()) {
-      mFallback = mManager->BuildCounterStyle(
-          nsDependentString(value.GetStringBufferValue()));
+    mFallback = CounterStyleManager::GetDecimalStyle();
+    if (value.GetUnit() != eCSSUnit_Null) {
+      if (value.GetUnit() == eCSSUnit_AtomIdent) {
+        mFallback = mManager->BuildCounterStyle(value.GetAtomValue());
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Unknown unit!");
+      }
     } else if (IsExtendsSystem()) {
       mFallback = GetExtends()->GetFallback();
-    } else {
-      mFallback = CounterStyleManager::GetDecimalStyle();
     }
   }
   return mFallback;
@@ -1554,10 +1557,9 @@ CustomCounterStyle::ComputeRawSpeakAs(uint8_t& aSpeakAs,
     case eCSSUnit_Enumerated:
       aSpeakAs = value.GetIntValue();
       break;
-    case eCSSUnit_Ident:
+    case eCSSUnit_AtomIdent:
       aSpeakAs = NS_STYLE_COUNTER_SPEAKAS_OTHER;
-      aSpeakAsCounter = mManager->BuildCounterStyle(
-          nsDependentString(value.GetStringBufferValue()));
+      aSpeakAsCounter = mManager->BuildCounterStyle(value.GetAtomValue());
       break;
     case eCSSUnit_Null: {
       if (!IsExtendsSystem()) {
@@ -1664,8 +1666,7 @@ CustomCounterStyle::ComputeExtends()
   }
 
   const nsCSSValue& value = mRule->GetSystemArgument();
-  CounterStyle* nextCounter = mManager->BuildCounterStyle(
-      nsDependentString(value.GetStringBufferValue()));
+  CounterStyle* nextCounter = mManager->BuildCounterStyle(value.GetAtomValue());
   CounterStyle* target = nextCounter;
   if (nextCounter->IsCustomStyle()) {
     mFlags |= FLAG_EXTENDS_VISITED;
@@ -1986,8 +1987,8 @@ CounterStyleManager::CounterStyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
 {
   // Insert the static styles into cache table
-  mCacheTable.Put(NS_LITERAL_STRING("none"), GetNoneStyle());
-  mCacheTable.Put(NS_LITERAL_STRING("decimal"), GetDecimalStyle());
+  mCacheTable.Put(nsGkAtoms::none, GetNoneStyle());
+  mCacheTable.Put(nsGkAtoms::decimal, GetDecimalStyle());
 }
 
 CounterStyleManager::~CounterStyleManager()
@@ -2020,7 +2021,7 @@ CounterStyleManager::Disconnect()
 }
 
 CounterStyle*
-CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
+CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
 {
   CounterStyle* data = mCacheTable.GetWeak(aName);
   if (data) {
@@ -2040,10 +2041,12 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
   nsCSSCounterStyleRule* rule = styleSet->IsGecko() ?
     styleSet->AsGecko()->CounterStyleRuleForName(aName) : nullptr;
   if (rule) {
+    MOZ_ASSERT(rule->Name() == aName);
     data = new (mPresContext) CustomCounterStyle(aName, this, rule);
   } else {
     int32_t type;
-    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aName);
+    nsDependentAtomString name(aName);
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(name);
     if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable, type)) {
       if (gBuiltinStyleTable[type].IsDependentStyle()) {
         data = new (mPresContext) DependentBuiltinCounterStyle(type, this);

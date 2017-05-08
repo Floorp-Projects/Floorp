@@ -37,18 +37,19 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
 class nsHtml5StreamParser;
 
+class nsHtml5ElementName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
-class nsHtml5ElementName;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -73,7 +74,25 @@ class nsHtml5AttributeName
     static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
   public:
     static nsIAtom** SAME_LOCAL(nsIAtom* name);
-    static nsHtml5AttributeName* nameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
+    inline static nsHtml5AttributeName* nameByBuffer(char16_t* buf,
+                                                     int32_t offset,
+                                                     int32_t length,
+                                                     nsHtml5AtomTable* interner)
+    {
+      uint32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
+      int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
+      if (index < 0) {
+        return nullptr;
+      }
+      nsHtml5AttributeName* attributeName =
+        nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
+      nsIAtom* name = attributeName->getLocal(0);
+      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+        return nullptr;
+      }
+      return attributeName;
+    }
+
   private:
     inline static uint32_t bufToHash(char16_t* buf, int32_t length)
     {
@@ -108,6 +127,14 @@ class nsHtml5AttributeName
       return len + first + second + third + fourth + fifth + sixth;
     }
 
+  public:
+    static const int32_t HTML = 0;
+
+    static const int32_t MATHML = 1;
+
+    static const int32_t SVG = 2;
+
+  private:
     int32_t* uri;
     nsIAtom** local;
     nsIAtom** prefix;
@@ -115,8 +142,16 @@ class nsHtml5AttributeName
     nsHtml5AttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix);
   public:
     nsHtml5AttributeName();
-    bool isInterned();
-    void setNameForNonInterned(nsIAtom* name);
+    inline bool isInterned() { return !custom; }
+
+    inline void setNameForNonInterned(nsIAtom* name)
+    {
+      MOZ_ASSERT(custom);
+      local[0] = name;
+      local[1] = name;
+      local[2] = name;
+    }
+
     static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
     ~nsHtml5AttributeName();
     int32_t getUri(int32_t mode);
@@ -136,20 +171,14 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_REV;
     static nsHtml5AttributeName* ATTR_SRC;
     static nsHtml5AttributeName* ATTR_D;
-    static nsHtml5AttributeName* ATTR_K;
     static nsHtml5AttributeName* ATTR_R;
     static nsHtml5AttributeName* ATTR_X;
     static nsHtml5AttributeName* ATTR_Y;
     static nsHtml5AttributeName* ATTR_Z;
-    static nsHtml5AttributeName* ATTR_CAP_HEIGHT;
-    static nsHtml5AttributeName* ATTR_G1;
     static nsHtml5AttributeName* ATTR_K1;
-    static nsHtml5AttributeName* ATTR_U1;
     static nsHtml5AttributeName* ATTR_X1;
     static nsHtml5AttributeName* ATTR_Y1;
-    static nsHtml5AttributeName* ATTR_G2;
     static nsHtml5AttributeName* ATTR_K2;
-    static nsHtml5AttributeName* ATTR_U2;
     static nsHtml5AttributeName* ATTR_X2;
     static nsHtml5AttributeName* ATTR_Y2;
     static nsHtml5AttributeName* ATTR_K3;
@@ -194,11 +223,8 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_ARIA_HASPOPUP;
     static nsHtml5AttributeName* ATTR_ARIA_SETSIZE;
     static nsHtml5AttributeName* ATTR_CLEAR;
-    static nsHtml5AttributeName* ATTR_DATAFORMATAS;
     static nsHtml5AttributeName* ATTR_DISABLED;
-    static nsHtml5AttributeName* ATTR_DATAFLD;
     static nsHtml5AttributeName* ATTR_DEFAULT;
-    static nsHtml5AttributeName* ATTR_DATASRC;
     static nsHtml5AttributeName* ATTR_DATA;
     static nsHtml5AttributeName* ATTR_EQUALCOLUMNS;
     static nsHtml5AttributeName* ATTR_EQUALROWS;
@@ -208,27 +234,21 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_LSPACE;
     static nsHtml5AttributeName* ATTR_MOVABLELIMITS;
     static nsHtml5AttributeName* ATTR_NOTATION;
-    static nsHtml5AttributeName* ATTR_ONDATASETCHANGED;
     static nsHtml5AttributeName* ATTR_ONDATAAVAILABLE;
     static nsHtml5AttributeName* ATTR_ONPASTE;
-    static nsHtml5AttributeName* ATTR_ONDATASETCOMPLETE;
     static nsHtml5AttributeName* ATTR_RSPACE;
     static nsHtml5AttributeName* ATTR_ROWALIGN;
     static nsHtml5AttributeName* ATTR_ROTATE;
     static nsHtml5AttributeName* ATTR_SEPARATOR;
     static nsHtml5AttributeName* ATTR_SEPARATORS;
-    static nsHtml5AttributeName* ATTR_V_MATHEMATICAL;
     static nsHtml5AttributeName* ATTR_VSPACE;
-    static nsHtml5AttributeName* ATTR_V_HANGING;
     static nsHtml5AttributeName* ATTR_XCHANNELSELECTOR;
     static nsHtml5AttributeName* ATTR_YCHANNELSELECTOR;
-    static nsHtml5AttributeName* ATTR_ARABIC_FORM;
     static nsHtml5AttributeName* ATTR_ENABLE_BACKGROUND;
     static nsHtml5AttributeName* ATTR_ONDBLCLICK;
     static nsHtml5AttributeName* ATTR_ONABORT;
     static nsHtml5AttributeName* ATTR_CALCMODE;
     static nsHtml5AttributeName* ATTR_CHECKED;
-    static nsHtml5AttributeName* ATTR_DESCENT;
     static nsHtml5AttributeName* ATTR_FENCE;
     static nsHtml5AttributeName* ATTR_ONSCROLL;
     static nsHtml5AttributeName* ATTR_ONACTIVATE;
@@ -236,11 +256,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_SPACING;
     static nsHtml5AttributeName* ATTR_SPECULAREXPONENT;
     static nsHtml5AttributeName* ATTR_SPECULARCONSTANT;
-    static nsHtml5AttributeName* ATTR_SPECIFICATION;
-    static nsHtml5AttributeName* ATTR_THICKMATHSPACE;
-    static nsHtml5AttributeName* ATTR_UNICODE;
-    static nsHtml5AttributeName* ATTR_UNICODE_BIDI;
-    static nsHtml5AttributeName* ATTR_UNICODE_RANGE;
     static nsHtml5AttributeName* ATTR_BORDER;
     static nsHtml5AttributeName* ATTR_ID;
     static nsHtml5AttributeName* ATTR_GRADIENTTRANSFORM;
@@ -253,14 +268,11 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_SRCDOC;
     static nsHtml5AttributeName* ATTR_STDDEVIATION;
     static nsHtml5AttributeName* ATTR_SANDBOX;
-    static nsHtml5AttributeName* ATTR_V_IDEOGRAPHIC;
     static nsHtml5AttributeName* ATTR_WORD_SPACING;
     static nsHtml5AttributeName* ATTR_ACCENTUNDER;
     static nsHtml5AttributeName* ATTR_ACCEPT_CHARSET;
     static nsHtml5AttributeName* ATTR_ACCESSKEY;
-    static nsHtml5AttributeName* ATTR_ACCENT_HEIGHT;
     static nsHtml5AttributeName* ATTR_ACCENT;
-    static nsHtml5AttributeName* ATTR_ASCENT;
     static nsHtml5AttributeName* ATTR_ACCEPT;
     static nsHtml5AttributeName* ATTR_BEVELLED;
     static nsHtml5AttributeName* ATTR_BASEFREQUENCY;
@@ -278,9 +290,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_EDGEMODE;
     static nsHtml5AttributeName* ATTR_EDGE;
     static nsHtml5AttributeName* ATTR_FACE;
-    static nsHtml5AttributeName* ATTR_HIDEFOCUS;
     static nsHtml5AttributeName* ATTR_INDEX;
-    static nsHtml5AttributeName* ATTR_IRRELEVANT;
     static nsHtml5AttributeName* ATTR_INTERCEPT;
     static nsHtml5AttributeName* ATTR_INTEGRITY;
     static nsHtml5AttributeName* ATTR_LINEBREAK;
@@ -296,39 +306,27 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_ORDER;
     static nsHtml5AttributeName* ATTR_OTHER;
     static nsHtml5AttributeName* ATTR_ONRESET;
-    static nsHtml5AttributeName* ATTR_ONCELLCHANGE;
     static nsHtml5AttributeName* ATTR_ONREADYSTATECHANGE;
     static nsHtml5AttributeName* ATTR_ONMESSAGE;
     static nsHtml5AttributeName* ATTR_ONBEGIN;
-    static nsHtml5AttributeName* ATTR_ONHELP;
     static nsHtml5AttributeName* ATTR_ONBEFOREPRINT;
     static nsHtml5AttributeName* ATTR_ORIENT;
     static nsHtml5AttributeName* ATTR_ORIENTATION;
     static nsHtml5AttributeName* ATTR_ONBEFORECOPY;
     static nsHtml5AttributeName* ATTR_ONSELECTSTART;
     static nsHtml5AttributeName* ATTR_ONBEFOREPASTE;
-    static nsHtml5AttributeName* ATTR_ONBEFOREUPDATE;
-    static nsHtml5AttributeName* ATTR_ONDEACTIVATE;
-    static nsHtml5AttributeName* ATTR_ONBEFOREACTIVATE;
-    static nsHtml5AttributeName* ATTR_ONBEFORDEACTIVATE;
     static nsHtml5AttributeName* ATTR_ONKEYPRESS;
     static nsHtml5AttributeName* ATTR_ONKEYUP;
-    static nsHtml5AttributeName* ATTR_ONBEFOREEDITFOCUS;
     static nsHtml5AttributeName* ATTR_ONBEFORECUT;
     static nsHtml5AttributeName* ATTR_ONKEYDOWN;
     static nsHtml5AttributeName* ATTR_ONRESIZE;
     static nsHtml5AttributeName* ATTR_REPEAT;
-    static nsHtml5AttributeName* ATTR_REPEAT_MAX;
     static nsHtml5AttributeName* ATTR_REFERRERPOLICY;
     static nsHtml5AttributeName* ATTR_RULES;
-    static nsHtml5AttributeName* ATTR_REPEAT_MIN;
     static nsHtml5AttributeName* ATTR_ROLE;
     static nsHtml5AttributeName* ATTR_REPEATCOUNT;
-    static nsHtml5AttributeName* ATTR_REPEAT_START;
-    static nsHtml5AttributeName* ATTR_REPEAT_TEMPLATE;
     static nsHtml5AttributeName* ATTR_REPEATDUR;
     static nsHtml5AttributeName* ATTR_SELECTED;
-    static nsHtml5AttributeName* ATTR_SPEED;
     static nsHtml5AttributeName* ATTR_SIZES;
     static nsHtml5AttributeName* ATTR_SUPERSCRIPTSHIFT;
     static nsHtml5AttributeName* ATTR_STRETCHY;
@@ -337,15 +335,10 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_SELECTION;
     static nsHtml5AttributeName* ATTR_SIZE;
     static nsHtml5AttributeName* ATTR_TYPE;
-    static nsHtml5AttributeName* ATTR_UNSELECTABLE;
-    static nsHtml5AttributeName* ATTR_UNDERLINE_POSITION;
-    static nsHtml5AttributeName* ATTR_UNDERLINE_THICKNESS;
-    static nsHtml5AttributeName* ATTR_X_HEIGHT;
     static nsHtml5AttributeName* ATTR_DIFFUSECONSTANT;
     static nsHtml5AttributeName* ATTR_HREF;
     static nsHtml5AttributeName* ATTR_HREFLANG;
     static nsHtml5AttributeName* ATTR_ONAFTERPRINT;
-    static nsHtml5AttributeName* ATTR_ONAFTERUPDATE;
     static nsHtml5AttributeName* ATTR_PROFILE;
     static nsHtml5AttributeName* ATTR_SURFACESCALE;
     static nsHtml5AttributeName* ATTR_XREF;
@@ -354,7 +347,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_ALIGNMENTSCOPE;
     static nsHtml5AttributeName* ATTR_DRAGGABLE;
     static nsHtml5AttributeName* ATTR_HEIGHT;
-    static nsHtml5AttributeName* ATTR_HANGING;
     static nsHtml5AttributeName* ATTR_IMAGE_RENDERING;
     static nsHtml5AttributeName* ATTR_LANGUAGE;
     static nsHtml5AttributeName* ATTR_LANG;
@@ -363,17 +355,14 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_LENGTHADJUST;
     static nsHtml5AttributeName* ATTR_MARGINHEIGHT;
     static nsHtml5AttributeName* ATTR_MARGINWIDTH;
-    static nsHtml5AttributeName* ATTR_NARGS;
     static nsHtml5AttributeName* ATTR_ORIGIN;
     static nsHtml5AttributeName* ATTR_PING;
     static nsHtml5AttributeName* ATTR_TARGET;
     static nsHtml5AttributeName* ATTR_TARGETX;
     static nsHtml5AttributeName* ATTR_TARGETY;
-    static nsHtml5AttributeName* ATTR_ALPHABETIC;
     static nsHtml5AttributeName* ATTR_ARCHIVE;
     static nsHtml5AttributeName* ATTR_HIGH;
     static nsHtml5AttributeName* ATTR_LIGHTING_COLOR;
-    static nsHtml5AttributeName* ATTR_MATHEMATICAL;
     static nsHtml5AttributeName* ATTR_MATHBACKGROUND;
     static nsHtml5AttributeName* ATTR_METHOD;
     static nsHtml5AttributeName* ATTR_MATHVARIANT;
@@ -392,23 +381,15 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_DOMINANT_BASELINE;
     static nsHtml5AttributeName* ATTR_DIVISOR;
     static nsHtml5AttributeName* ATTR_DEFINITIONURL;
-    static nsHtml5AttributeName* ATTR_HORIZ_ADV_X;
-    static nsHtml5AttributeName* ATTR_HORIZ_ORIGIN_X;
-    static nsHtml5AttributeName* ATTR_HORIZ_ORIGIN_Y;
     static nsHtml5AttributeName* ATTR_LIMITINGCONEANGLE;
-    static nsHtml5AttributeName* ATTR_MEDIUMMATHSPACE;
     static nsHtml5AttributeName* ATTR_MEDIA;
     static nsHtml5AttributeName* ATTR_MANIFEST;
-    static nsHtml5AttributeName* ATTR_ONFILTERCHANGE;
     static nsHtml5AttributeName* ATTR_ONFINISH;
     static nsHtml5AttributeName* ATTR_OPTIMUM;
     static nsHtml5AttributeName* ATTR_RADIOGROUP;
     static nsHtml5AttributeName* ATTR_RADIUS;
     static nsHtml5AttributeName* ATTR_SCRIPTLEVEL;
     static nsHtml5AttributeName* ATTR_SCRIPTSIZEMULTIPLIER;
-    static nsHtml5AttributeName* ATTR_STRING;
-    static nsHtml5AttributeName* ATTR_STRIKETHROUGH_POSITION;
-    static nsHtml5AttributeName* ATTR_STRIKETHROUGH_THICKNESS;
     static nsHtml5AttributeName* ATTR_SCRIPTMINSIZE;
     static nsHtml5AttributeName* ATTR_TABINDEX;
     static nsHtml5AttributeName* ATTR_VALIGN;
@@ -440,7 +421,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_STYLE;
     static nsHtml5AttributeName* ATTR_TABLEVALUES;
     static nsHtml5AttributeName* ATTR_TITLE;
-    static nsHtml5AttributeName* ATTR_V_ALPHABETIC;
     static nsHtml5AttributeName* ATTR_AZIMUTH;
     static nsHtml5AttributeName* ATTR_FORMAT;
     static nsHtml5AttributeName* ATTR_FRAMEBORDER;
@@ -451,9 +431,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_PROMPT;
     static nsHtml5AttributeName* ATTR_PRIMITIVEUNITS;
     static nsHtml5AttributeName* ATTR_SYMMETRIC;
-    static nsHtml5AttributeName* ATTR_STEMH;
-    static nsHtml5AttributeName* ATTR_STEMV;
-    static nsHtml5AttributeName* ATTR_SEAMLESS;
     static nsHtml5AttributeName* ATTR_SUMMARY;
     static nsHtml5AttributeName* ATTR_USEMAP;
     static nsHtml5AttributeName* ATTR_ZOOMANDPAN;
@@ -476,7 +453,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_POINTSATZ;
     static nsHtml5AttributeName* ATTR_SPAN;
     static nsHtml5AttributeName* ATTR_STANDBY;
-    static nsHtml5AttributeName* ATTR_THINMATHSPACE;
     static nsHtml5AttributeName* ATTR_TRANSFORM;
     static nsHtml5AttributeName* ATTR_VLINK;
     static nsHtml5AttributeName* ATTR_WHEN;
@@ -490,7 +466,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_XLINK_SHOW;
     static nsHtml5AttributeName* ATTR_XLINK_ACTUATE;
     static nsHtml5AttributeName* ATTR_AUTOPLAY;
-    static nsHtml5AttributeName* ATTR_AUTOSUBMIT;
     static nsHtml5AttributeName* ATTR_AUTOCOMPLETE;
     static nsHtml5AttributeName* ATTR_AUTOFOCUS;
     static nsHtml5AttributeName* ATTR_BGCOLOR;
@@ -503,41 +478,26 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_EXPONENT;
     static nsHtml5AttributeName* ATTR_FLOOD_COLOR;
     static nsHtml5AttributeName* ATTR_FLOOD_OPACITY;
-    static nsHtml5AttributeName* ATTR_IDEOGRAPHIC;
     static nsHtml5AttributeName* ATTR_LQUOTE;
-    static nsHtml5AttributeName* ATTR_PANOSE_1;
     static nsHtml5AttributeName* ATTR_NUMOCTAVES;
     static nsHtml5AttributeName* ATTR_ONLOAD;
-    static nsHtml5AttributeName* ATTR_ONBOUNCE;
-    static nsHtml5AttributeName* ATTR_ONCONTROLSELECT;
-    static nsHtml5AttributeName* ATTR_ONROWSINSERTED;
     static nsHtml5AttributeName* ATTR_ONMOUSEWHEEL;
-    static nsHtml5AttributeName* ATTR_ONROWENTER;
     static nsHtml5AttributeName* ATTR_ONMOUSEENTER;
     static nsHtml5AttributeName* ATTR_ONMOUSEOVER;
-    static nsHtml5AttributeName* ATTR_ONFORMCHANGE;
     static nsHtml5AttributeName* ATTR_ONFOCUSIN;
-    static nsHtml5AttributeName* ATTR_ONROWEXIT;
-    static nsHtml5AttributeName* ATTR_ONMOVEEND;
     static nsHtml5AttributeName* ATTR_ONCONTEXTMENU;
     static nsHtml5AttributeName* ATTR_ONZOOM;
-    static nsHtml5AttributeName* ATTR_ONLOSECAPTURE;
     static nsHtml5AttributeName* ATTR_ONCOPY;
-    static nsHtml5AttributeName* ATTR_ONMOVESTART;
-    static nsHtml5AttributeName* ATTR_ONROWSDELETE;
     static nsHtml5AttributeName* ATTR_ONMOUSELEAVE;
-    static nsHtml5AttributeName* ATTR_ONMOVE;
     static nsHtml5AttributeName* ATTR_ONMOUSEMOVE;
     static nsHtml5AttributeName* ATTR_ONMOUSEUP;
     static nsHtml5AttributeName* ATTR_ONFOCUS;
     static nsHtml5AttributeName* ATTR_ONMOUSEOUT;
-    static nsHtml5AttributeName* ATTR_ONFORMINPUT;
     static nsHtml5AttributeName* ATTR_ONFOCUSOUT;
     static nsHtml5AttributeName* ATTR_ONMOUSEDOWN;
     static nsHtml5AttributeName* ATTR_TO;
     static nsHtml5AttributeName* ATTR_RQUOTE;
     static nsHtml5AttributeName* ATTR_STROKE_LINECAP;
-    static nsHtml5AttributeName* ATTR_SCROLLDELAY;
     static nsHtml5AttributeName* ATTR_STROKE_DASHARRAY;
     static nsHtml5AttributeName* ATTR_STROKE_DASHOFFSET;
     static nsHtml5AttributeName* ATTR_STROKE_LINEJOIN;
@@ -556,7 +516,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_GLYPH_ORIENTATION_VERTICAL;
     static nsHtml5AttributeName* ATTR_GLYPH_ORIENTATION_HORIZONTAL;
     static nsHtml5AttributeName* ATTR_GLYPHREF;
-    static nsHtml5AttributeName* ATTR_GLYPH_NAME;
     static nsHtml5AttributeName* ATTR_HTTP_EQUIV;
     static nsHtml5AttributeName* ATTR_KEYPOINTS;
     static nsHtml5AttributeName* ATTR_LOOP;
@@ -578,23 +537,18 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_COORDS;
     static nsHtml5AttributeName* ATTR_CHAROFF;
     static nsHtml5AttributeName* ATTR_CHARSET;
-    static nsHtml5AttributeName* ATTR_MACROS;
     static nsHtml5AttributeName* ATTR_NOWRAP;
     static nsHtml5AttributeName* ATTR_NOHREF;
     static nsHtml5AttributeName* ATTR_ONDRAG;
     static nsHtml5AttributeName* ATTR_ONDRAGENTER;
     static nsHtml5AttributeName* ATTR_ONDRAGOVER;
-    static nsHtml5AttributeName* ATTR_ONPROPERTYCHANGE;
     static nsHtml5AttributeName* ATTR_ONDRAGEND;
     static nsHtml5AttributeName* ATTR_ONDROP;
     static nsHtml5AttributeName* ATTR_ONDRAGDROP;
-    static nsHtml5AttributeName* ATTR_OVERLINE_POSITION;
     static nsHtml5AttributeName* ATTR_ONERROR;
     static nsHtml5AttributeName* ATTR_OPERATOR;
     static nsHtml5AttributeName* ATTR_OVERFLOW;
     static nsHtml5AttributeName* ATTR_ONDRAGSTART;
-    static nsHtml5AttributeName* ATTR_ONERRORUPDATE;
-    static nsHtml5AttributeName* ATTR_OVERLINE_THICKNESS;
     static nsHtml5AttributeName* ATTR_ONDRAGLEAVE;
     static nsHtml5AttributeName* ATTR_STARTOFFSET;
     static nsHtml5AttributeName* ATTR_START;
@@ -658,16 +612,11 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_STITCHTILES;
     static nsHtml5AttributeName* ATTR_SYSTEMLANGUAGE;
     static nsHtml5AttributeName* ATTR_TEXT_RENDERING;
-    static nsHtml5AttributeName* ATTR_VERT_ORIGIN_X;
-    static nsHtml5AttributeName* ATTR_VERT_ADV_Y;
-    static nsHtml5AttributeName* ATTR_VERT_ORIGIN_Y;
     static nsHtml5AttributeName* ATTR_TEXT_DECORATION;
     static nsHtml5AttributeName* ATTR_TEXT_ANCHOR;
     static nsHtml5AttributeName* ATTR_TEXTLENGTH;
     static nsHtml5AttributeName* ATTR_TEXT;
-    static nsHtml5AttributeName* ATTR_UNITS_PER_EM;
     static nsHtml5AttributeName* ATTR_WRITING_MODE;
-    static nsHtml5AttributeName* ATTR_WIDTHS;
     static nsHtml5AttributeName* ATTR_WIDTH;
     static nsHtml5AttributeName* ATTR_ACCUMULATE;
     static nsHtml5AttributeName* ATTR_COLUMNSPAN;
@@ -677,7 +626,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_COLUMNWIDTH;
     static nsHtml5AttributeName* ATTR_GROUPALIGN;
     static nsHtml5AttributeName* ATTR_INPUTMODE;
-    static nsHtml5AttributeName* ATTR_OCCURRENCE;
     static nsHtml5AttributeName* ATTR_ONSUBMIT;
     static nsHtml5AttributeName* ATTR_ONCUT;
     static nsHtml5AttributeName* ATTR_REQUIRED;
@@ -693,7 +641,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_CX;
     static nsHtml5AttributeName* ATTR_DX;
     static nsHtml5AttributeName* ATTR_FX;
-    static nsHtml5AttributeName* ATTR_BBOX;
     static nsHtml5AttributeName* ATTR_RX;
     static nsHtml5AttributeName* ATTR_REFX;
     static nsHtml5AttributeName* ATTR_BY;
@@ -702,10 +649,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_FY;
     static nsHtml5AttributeName* ATTR_RY;
     static nsHtml5AttributeName* ATTR_REFY;
-    static nsHtml5AttributeName* ATTR_VERYTHINMATHSPACE;
-    static nsHtml5AttributeName* ATTR_VERYTHICKMATHSPACE;
-    static nsHtml5AttributeName* ATTR_VERYVERYTHINMATHSPACE;
-    static nsHtml5AttributeName* ATTR_VERYVERYTHICKMATHSPACE;
   private:
     static nsHtml5AttributeName** ATTRIBUTE_NAMES;
     static staticJArray<int32_t,int32_t> ATTRIBUTE_HASHES;
@@ -713,11 +656,6 @@ class nsHtml5AttributeName
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#define NS_HTML5ATTRIBUTE_NAME_HTML 0
-#define NS_HTML5ATTRIBUTE_NAME_MATHML 1
-#define NS_HTML5ATTRIBUTE_NAME_SVG 2
-
 
 #endif
 

@@ -1,0 +1,21 @@
+This directory contains build files for the aom video
+codec reference implementation. The actual library
+source is in $TOPSRCDIR/third_party/aom/
+
+Any patches or additional configuration to be applied to the
+upstream source should be kept here in the media/libaom
+directory.
+
+To update the library source and build config files, execute
+
+  ./mach vendor aom
+
+To update to a specific upstream git tag or commit, use
+
+  ./mach vendor aom -r <commit>
+
+The upstream aom git repository is:
+
+    https://aomedia.googlesource.com/aom
+
+The git commit ID used was 4d668d7feb1f8abd809d1bca0418570a7f142a36 (Wed May 03 17:10:13 2017 +0000).

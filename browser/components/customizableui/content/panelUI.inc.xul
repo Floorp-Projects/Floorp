@@ -17,17 +17,12 @@
 
       <footer id="PanelUI-footer">
         <vbox id="PanelUI-footer-addons"></vbox>
-        <toolbarbutton id="PanelUI-update-available-menu-item"
+        <toolbarbutton class="panel-banner-item"
+                       label-update-available="&updateAvailable.panelUI.label;"
+                       label-update-manual="&updateManual.panelUI.label;"
+                       label-update-restart="&updateRestart.panelUI.label;"
+                       oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
-                       label="&updateAvailable.panelUI.label;"
-                       hidden="true"/>
-        <toolbarbutton id="PanelUI-update-manual-menu-item"
-                       wrap="true"
-                       label="&updateManual.panelUI.label;"
-                       hidden="true"/>
-        <toolbarbutton id="PanelUI-update-restart-menu-item"
-                       wrap="true"
-                       label="&updateRestart.panelUI.label;"
                        hidden="true"/>
         <hbox id="PanelUI-footer-fxa">
           <hbox id="PanelUI-fxa-status"
@@ -431,7 +426,7 @@
           oncommand="PanicButtonNotifier.close()"/>
 </panel>
 
-<panel id="PanelUI-notification-popup"
+<panel id="appMenu-notification-popup"
        class="popup-notification-panel"
        type="arrow"
        position="after_start"
@@ -441,7 +436,7 @@
        noautohide="true"
        nopreventnavboxhide="true"
        role="alert">
-  <popupnotification id="PanelUI-update-available-notification"
+  <popupnotification id="appMenu-update-available-notification"
                      popupid="update-available"
                      label="&updateAvailable.header.message;"
                      buttonlabel="&updateAvailable.acceptButton.label;"
@@ -459,7 +454,7 @@
     </popupnotificationcontent>
   </popupnotification>
 
-  <popupnotification id="PanelUI-update-manual-notification"
+  <popupnotification id="appMenu-update-manual-notification"
                      popupid="update-manual"
                      label="&updateManual.header.message;"
                      buttonlabel="&updateManual.acceptButton.label;"
@@ -477,7 +472,7 @@
     </popupnotificationcontent>
   </popupnotification>
 
-  <popupnotification id="PanelUI-update-restart-notification"
+  <popupnotification id="appMenu-update-restart-notification"
                      popupid="update-restart"
                      label="&updateRestart.header.message2;"
                      buttonlabel="&updateRestart.acceptButton.label;"
@@ -505,6 +500,14 @@
   <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
     <panelview id="appMenu-mainView" class="cui-widget-panelview PanelUI-subView">
       <vbox class="panel-subview-body">
+        <vbox id="appMenu-addon-banners"/>
+        <toolbarbutton class="panel-banner-item"
+                       label-update-available="&updateAvailable.panelUI.label;"
+                       label-update-manual="&updateManual.panelUI.label;"
+                       label-update-restart="&updateRestart.panelUI.label;"
+                       oncommand="PanelUI._onBannerItemSelected(event)"
+                       wrap="true"
+                       hidden="true"/>
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
