@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.media.AudioFocusAgent.State;
 
 import android.media.AudioManager;
@@ -88,32 +90,28 @@ public class testAudioFocus extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
-        info("- wait audio starts playing -");
-        waitUntilTabAudioPlayingStateChanged();
-        mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
-                     State.OWN_FOCUS,
-                     "Should request audio focus after media started playing.");
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
+        info("- wait tab becomes audible -");
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
 
         info("- simulate losing audio focus transiently -");
         getAudioFocusAgent().changeAudioFocus(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT);
-        waitUntilTabAudioPlayingStateChanged();
-        mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
-                     State.LOST_FOCUS_TRANSIENT,
-                     "Should lose audio focus.");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
 
         info("- simulate gaining audio focus again -");
         getAudioFocusAgent().changeAudioFocus(AudioManager.AUDIOFOCUS_GAIN);
-        waitUntilTabAudioPlayingStateChanged();
-        mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
-                     State.OWN_FOCUS,
-                     "Should own audio focus.");
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
 
         info("- simulate losing audio focus -");
         getAudioFocusAgent().changeAudioFocus(AudioManager.AUDIOFOCUS_LOSS);
-        waitUntilTabAudioPlayingStateChanged();
-        mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
-                     State.LOST_FOCUS,
-                     "Should abandon audio focus after media stopped playing.");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
 
         info("- close tab -");
         closeAllTabs();
@@ -124,17 +122,20 @@ public class testAudioFocus extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
-        info("- check whether audio starts playing -");
-        waitUntilTabAudioPlayingStateChanged();
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
+        info("- wait tab becomes audible -");
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
 
         info("- switch to the another tab -");
         final String BLANK_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         addTab(BLANK_URL);
 
         info("- should still own the audio focus -");
-        mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
-                     State.OWN_FOCUS,
-                     "Should own audio focus.");
+        checkAudioFocusStateAfterChanged(true);
 
         info("- close tab -");
         closeAllTabs();

@@ -39,6 +39,10 @@ public class testMediaControl extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
         info("- check whether audio starts playing -");
         checkIfMediaPlayingSuccess(true /* playing */);
 
@@ -63,6 +67,10 @@ public class testMediaControl extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
         info("- check whether audio starts playing -");
         checkIfMediaPlayingSuccess(true /* playing */);
 
@@ -82,6 +90,10 @@ public class testMediaControl extends MediaPlaybackTest {
         info("- load URL -");
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
 
         info("- check whether audio starts playing -");
         checkIfMediaPlayingSuccess(true /* playing */);
@@ -107,6 +119,10 @@ public class testMediaControl extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
         info("- check whether audio starts playing -");
         checkIfMediaPlayingSuccess(true /* playing */);
 
@@ -115,7 +131,6 @@ public class testMediaControl extends MediaPlaybackTest {
         addTab(BLANK_URL);
 
         info("- the media control shouldn't be changed and display the info of audible tab -");
-        final Tab tab = Tabs.getInstance().getFirstTabForUrl(MEDIA_URL);
         checkMediaNotificationStates(tab, true /* playing */);
 
         info("- close tab -");
@@ -127,11 +142,14 @@ public class testMediaControl extends MediaPlaybackTest {
         final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
         loadUrlAndWait(MEDIA_URL);
 
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
         info("- check whether audio starts playing -");
         checkIfMediaPlayingSuccess(true /* playing */);
 
         info("- close audible tab -");
-        final Tab tab = Tabs.getInstance().getFirstTabForUrl(MEDIA_URL);
         Tabs.getInstance().closeTab(tab);
 
         info("- media control should disappear -");
