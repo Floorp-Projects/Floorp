@@ -197,6 +197,7 @@ button {
   flex: 1;
 }
 
+.service-worker-disabled-label,
 .addons-debugging-label,
 .addons-web-ext-tip {
   display: inline-block;
