@@ -380,12 +380,16 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
         be::skip<uint16>(gloc,2);
         if (_long_fmt)
         {
+            if (8 + glyphid * sizeof(uint32) > m_pGloc.size())
+                return 0;
             be::skip<uint32>(gloc, glyphid);
             glocs = be::read<uint32>(gloc);
             gloce = be::peek<uint32>(gloc);
         }
         else
         {
+            if (8 + glyphid * sizeof(uint16) > m_pGloc.size())
+                return 0;
             be::skip<uint16>(gloc, glyphid);
             glocs = be::read<uint16>(gloc);
             gloce = be::peek<uint16>(gloc);
