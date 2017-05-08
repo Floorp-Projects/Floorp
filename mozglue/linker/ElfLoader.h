@@ -164,10 +164,10 @@ public:
   bool ReleaseDirectRef()
   {
     const MozRefCountType count = --directRefCnt;
-    mozilla::external::AtomicRefCounted<LibHandle>::Release();
     MOZ_ASSERT(count + 1 > 0);
-    MOZ_ASSERT(count <=
+    MOZ_ASSERT(count + 1 <=
                mozilla::external::AtomicRefCounted<LibHandle>::refCount());
+    mozilla::external::AtomicRefCounted<LibHandle>::Release();
     return !!count;
   }
 
