@@ -20,13 +20,19 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'ScriptElement.h',
     'ScriptLoader.h',
+    'ScriptLoadRequest.h',
     'ScriptSettings.h',
 ]
 
 UNIFIED_SOURCES += [
+    'ModuleLoadRequest.cpp',
+    'ModuleScript.cpp',
     'ScriptElement.cpp',
     'ScriptLoader.cpp',
+    'ScriptLoadHandler.cpp',
+    'ScriptLoadRequest.cpp',
     'ScriptSettings.cpp',
+    'ScriptTrace.cpp',
 ]
 
 LOCAL_INCLUDES += [
