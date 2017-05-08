@@ -136,13 +136,11 @@ async function spawnProcess(name, cmdArgs, processData, stdin = null) {
   await readAllData(proc.stdout, processData);
 }
 
-async function getSymbolsFromNM(path, arch) {
+async function getSymbolsFromNM(path) {
   const parser = new NMParser();
 
   const args = [path];
-  if (Services.appinfo.OS === "Darwin") {
-    args.unshift("-arch", arch);
-  } else {
+  if (Services.appinfo.OS !== "Darwin") {
     // Mac's `nm` doesn't support the demangle option, so we have to
     // post-process the symbols with c++filt.
     args.unshift("--demangle");
@@ -211,8 +209,8 @@ function filePathForSymFileInObjDir(binaryPath, debugName, breakpadId) {
 const symbolCache = new Map();
 
 function primeSymbolStore(libs) {
-  for (const {debugName, breakpadId, path, arch} of libs) {
-    symbolCache.set(urlForSymFile(debugName, breakpadId), {path, arch});
+  for (const {debugName, breakpadId, path} of libs) {
+    symbolCache.set(urlForSymFile(debugName, breakpadId), path);
   }
 }
 
@@ -307,7 +305,7 @@ this.geckoProfiler = class extends ExtensionAPI {
             primeSymbolStore(Services.profiler.sharedLibraries);
           }
 
-          const {path, arch} = symbolCache.get(urlForSymFile(debugName, breakpadId));
+          const path = symbolCache.get(urlForSymFile(debugName, breakpadId));
 
           const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad,remoteBreakpad");
           const haveAbsolutePath = path && OS.Path.split(path).absolute;
@@ -337,7 +335,7 @@ this.geckoProfiler = class extends ExtensionAPI {
                   const url = urlForSymFile(debugName, breakpadId);
                   return await parseSym({url});
                 case "nm":
-                  return await getSymbolsFromNM(path, arch);
+                  return await getSymbolsFromNM(path);
               }
             } catch (e) {
               // Each of our options can go wrong for a variety of reasons, so on failure
