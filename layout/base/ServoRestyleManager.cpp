@@ -611,6 +611,17 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
   }
 
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
+  if (snapshot.HasAttrs()) {
+    return;
+  }
+
+  if (!((aNameSpaceID == kNameSpaceID_None &&
+        (aAttribute == nsGkAtoms::id ||
+         aAttribute == nsGkAtoms::_class)) ||
+        StyleSet()->MightHaveAttributeDependency(aAttribute))) {
+    return;
+  }
+
   snapshot.AddAttrs(aElement);
 
   if (Element* parent = aElement->GetFlattenedTreeParentElementForStyle()) {
@@ -624,7 +635,6 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                       const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(!mInStyleRefresh);
-  MOZ_ASSERT_IF(mSnapshots.Get(aElement), mSnapshots.Get(aElement)->HasAttrs());
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (primaryFrame) {
