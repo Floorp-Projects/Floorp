@@ -48,19 +48,13 @@ public:
   nsIURI* BaseURL() const { return mBaseURL; }
 
   void SetInstantiationResult(JS::Handle<JS::Value> aMaybeException);
-
-  bool IsUninstantiated() const
-  {
+  bool IsUninstantiated() const {
     return mInstantiationState == Uninstantiated;
   }
-
-  bool IsInstantiated() const
-  {
+  bool IsInstantiated() const {
     return mInstantiationState == Instantiated;
   }
-
-  bool InstantiationFailed() const
-  {
+  bool InstantiationFailed() const {
     return mInstantiationState == Errored;
   }
 

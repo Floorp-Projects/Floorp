@@ -58,12 +58,10 @@ class ScriptLoader final : public nsISupports
     {
       mScriptLoader->mCurrentScript = aCurrentScript;
     }
-
     ~AutoCurrentScriptUpdater()
     {
       mScriptLoader->mCurrentScript.swap(mOldScript);
     }
-
   private:
     nsCOMPtr<nsIScriptElement> mOldScript;
     ScriptLoader* mScriptLoader;
@@ -153,7 +151,6 @@ public:
   {
     return mEnabled;
   }
-
   void SetEnabled(bool aEnabled)
   {
     if (!mEnabled && aEnabled) {
@@ -171,7 +168,6 @@ public:
   {
     ++mParserBlockingBlockerCount;
   }
-
   void RemoveParserBlockingScriptExecutionBlocker()
   {
     if (!--mParserBlockingBlockerCount && ReadyToExecuteScripts()) {
@@ -187,7 +183,6 @@ public:
   {
     ++mBlockerCount;
   }
-
   void RemoveExecuteBlocker()
   {
     MOZ_ASSERT(mBlockerCount);
@@ -224,8 +219,8 @@ public:
                  JS::UniqueTwoByteChars& aBufOut, size_t& aLengthOut)
   {
     char16_t* bufOut;
-    nsresult rv = ConvertToUTF16(aChannel, aData, aLength, aHintCharset,
-                                 aDocument, bufOut, aLengthOut);
+    nsresult rv = ConvertToUTF16(aChannel, aData, aLength, aHintCharset, aDocument,
+                                 bufOut, aLengthOut);
     if (NS_SUCCEEDED(rv)) {
       aBufOut.reset(bufOut);
     }
@@ -296,9 +291,9 @@ public:
    * @param aIntegrity The expect hash url, if avail, of the request
    * @param aScriptFromHead Whether or not the script was a child of head
    */
-  virtual void PreloadURI(nsIURI* aURI, const nsAString& aCharset,
-                          const nsAString& aType,
-                          const nsAString& aCrossOrigin,
+  virtual void PreloadURI(nsIURI *aURI, const nsAString &aCharset,
+                          const nsAString &aType,
+                          const nsAString &aCrossOrigin,
                           const nsAString& aIntegrity,
                           bool aScriptFromHead,
                           const mozilla::net::ReferrerPolicy aReferrerPolicy);
@@ -307,10 +302,9 @@ public:
    * Process a request that was deferred so that the script could be compiled
    * off thread.
    */
-  nsresult ProcessOffThreadRequest(ScriptLoadRequest* aRequest);
+  nsresult ProcessOffThreadRequest(ScriptLoadRequest *aRequest);
 
-  bool AddPendingChildLoader(ScriptLoader* aChild)
-  {
+  bool AddPendingChildLoader(ScriptLoader* aChild) {
     return mPendingChildLoaders.AppendElement(aChild) != nullptr;
   }
 
@@ -329,11 +323,12 @@ public:
 private:
   virtual ~ScriptLoader();
 
-  ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind,
-                                       nsIScriptElement* aElement,
-                                       uint32_t aVersion,
-                                       mozilla::CORSMode aCORSMode,
-                                       const mozilla::dom::SRIMetadata& aIntegrity);
+  ScriptLoadRequest* CreateLoadRequest(
+    ScriptKind aKind,
+    nsIScriptElement* aElement,
+    uint32_t aVersion,
+    mozilla::CORSMode aCORSMode,
+    const mozilla::dom::SRIMetadata &aIntegrity);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
@@ -350,22 +345,22 @@ private:
    * Helper function to check the content policy for a given request.
    */
   static nsresult CheckContentPolicy(nsIDocument* aDocument,
-                                     nsISupports* aContext,
-                                     nsIURI* aURI,
-                                     const nsAString& aType,
+                                     nsISupports *aContext,
+                                     nsIURI *aURI,
+                                     const nsAString &aType,
                                      bool aIsPreLoad);
 
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(ScriptLoadRequest* aRequest);
+  nsresult StartLoad(ScriptLoadRequest *aRequest);
 
   /**
    * Abort the current stream, and re-start with a new load request from scratch
    * without requesting any alternate data. Returns NS_BINDING_RETARGETED on
    * success, as this error code is used to abort the input stream.
    */
-  nsresult RestartLoad(ScriptLoadRequest* aRequest);
+  nsresult RestartLoad(ScriptLoadRequest *aRequest);
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
@@ -456,13 +451,13 @@ private:
   bool ModuleScriptsEnabled();
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
-  void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,
+  void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest *aRequest,
                                                       nsresult aResult);
 
-  bool IsFetchingModule(ModuleLoadRequest* aRequest) const;
+  bool IsFetchingModule(ModuleLoadRequest *aRequest) const;
 
-  bool ModuleMapContainsModule(ModuleLoadRequest* aRequest) const;
-  RefPtr<mozilla::GenericPromise> WaitForModuleFetch(ModuleLoadRequest* aRequest);
+  bool ModuleMapContainsModule(ModuleLoadRequest *aRequest) const;
+  RefPtr<mozilla::GenericPromise> WaitForModuleFetch(ModuleLoadRequest *aRequest);
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
 
   friend bool
@@ -496,8 +491,7 @@ private:
   ScriptLoadRequestList mBytecodeEncodingQueue;
 
   // In mRequests, the additional information here is stored by the element.
-  struct PreloadInfo
-  {
+  struct PreloadInfo {
     RefPtr<ScriptLoadRequest> mRequest;
     nsString mCharset;
   };
@@ -507,19 +501,16 @@ private:
                                           ScriptLoader::PreloadInfo& aField,
                                           const char* aName, uint32_t aFlags);
 
-  struct PreloadRequestComparator
-  {
-    bool Equals(const PreloadInfo& aPi, ScriptLoadRequest* const& aRequest) const
+  struct PreloadRequestComparator {
+    bool Equals(const PreloadInfo &aPi, ScriptLoadRequest * const &aRequest)
+        const
     {
       return aRequest == aPi.mRequest;
     }
   };
-
-  struct PreloadURIComparator
-  {
-    bool Equals(const PreloadInfo& aPi, nsIURI* const &aURI) const;
+  struct PreloadURIComparator {
+    bool Equals(const PreloadInfo &aPi, nsIURI * const &aURI) const;
   };
-
   nsTArray<PreloadInfo> mPreloads;
 
   nsCOMPtr<nsIScriptElement> mCurrentScript;
