@@ -8,26 +8,5 @@
 [scriptable, uuid(79de76e5-994e-4f6b-81aa-42d9adb6e67e)]
 interface nsIDOMLocation : nsISupports
 {
-           /**
-            * These properties refer to the current location of the document.
-            * This will correspond to the URI shown in the location bar, which
-            * can be different from the documentURI of the document.
-            */
-           attribute DOMString        hash;
-           attribute DOMString        host;
-           attribute DOMString        hostname;
-           attribute DOMString        href;
-           attribute DOMString        pathname;
-           attribute DOMString        port;
-           attribute DOMString        protocol;
-           attribute DOMString        search;
-
-  readonly attribute DOMString        origin;
-
-  void                      reload([optional] in boolean forceget);
-  void                      replace(in DOMString url);
-  void                      assign(in DOMString url);
-
-  DOMString                 toString();
-  nsIDOMLocation            valueOf();
+  // Empty interface. Location is defined using WebIDL.
 };
