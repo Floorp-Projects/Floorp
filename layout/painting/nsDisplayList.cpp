@@ -4599,12 +4599,12 @@ nsDisplayCaret::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
 
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(caret,
-                    aBuilder.BuildClipRegion(caret),
+                    aBuilder.PushClipRegion(caret),
                     wr::ToWrColor(color));
 
   if (!devHookRect.IsEmpty()) {
     aBuilder.PushRect(hook,
-                      aBuilder.BuildClipRegion(hook),
+                      aBuilder.PushClipRegion(hook),
                       wr::ToWrColor(color));
   }
 }
@@ -4876,7 +4876,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       }
 
       aBuilder.PushBorderImage(dest,
-                               aBuilder.BuildClipRegion(clip),
+                               aBuilder.PushClipRegion(clip),
                                wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                key.value(),
                                wr::ToWrNinePatchDescriptor(
@@ -4909,7 +4909,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
         endPoint = endPoint + ViewAs<LayerPixel>(lineEnd, PixelCastJustification::WebRenderHasUnitResolution);
 
         aBuilder.PushBorderGradient(dest,
-                                    aBuilder.BuildClipRegion(clip),
+                                    aBuilder.PushClipRegion(clip),
                                     wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                     wr::ToWrPoint(startPoint),
                                     wr::ToWrPoint(endPoint),
@@ -4918,7 +4918,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
                                     wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]));
       } else {
         aBuilder.PushBorderRadialGradient(dest,
-                                          aBuilder.BuildClipRegion(clip),
+                                          aBuilder.PushClipRegion(clip),
                                           wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                           wr::ToWrPoint(lineStart),
                                           wr::ToWrSize(gradientRadius),
@@ -5266,17 +5266,17 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
           nsTArray<WrComplexClipRegion> clips;
           clips.AppendElement(roundedRect);
           aBuilder.PushRect(deviceBoxRect,
-                            aBuilder.BuildClipRegion(deviceClipRect,
+                            aBuilder.PushClipRegion(deviceClipRect,
                                                      clips),
                             wr::ToWrColor(shadowColor));
         } else {
           aBuilder.PushRect(deviceBoxRect,
-                            aBuilder.BuildClipRegion(deviceClipRect),
+                            aBuilder.PushClipRegion(deviceClipRect),
                             wr::ToWrColor(shadowColor));
         }
       } else {
         aBuilder.PushBoxShadow(deviceBoxRect,
-                              aBuilder.BuildClipRegion(deviceClipRect),
+                              aBuilder.PushClipRegion(deviceClipRect),
                               deviceBoxRect,
                               wr::ToWrPoint(shadowOffset),
                               wr::ToWrColor(shadowColor),
@@ -5447,7 +5447,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
       float spreadRadius = float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(wr::ToWrRect(deviceBoxRect),
-                             aBuilder.BuildClipRegion(deviceClipRect),
+                             aBuilder.PushClipRegion(deviceClipRect),
                              wr::ToWrRect(deviceBoxRect),
                              wr::ToWrPoint(shadowOffset),
                              wr::ToWrColor(shadowColor),

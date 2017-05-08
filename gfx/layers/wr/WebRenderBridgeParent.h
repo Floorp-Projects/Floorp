@@ -92,8 +92,6 @@ public:
                                     const uint64_t& aTransactionId,
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
-                                    const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc,
                                     const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
@@ -102,8 +100,6 @@ public:
                                         const uint64_t& aTransactionId,
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
-                                        const ByteBuffer& aux,
-                                        const WrAuxiliaryListsDescriptor& auxDesc,
                                         const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
@@ -175,9 +171,7 @@ private:
   void DeleteOldImages();
   void ProcessWebRenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
                                     const ByteBuffer& dl,
-                                    const WrBuiltDisplayListDescriptor& dlDesc,
-                                    const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc);
+                                    const WrBuiltDisplayListDescriptor& dlDesc);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
@@ -189,8 +183,6 @@ private:
                    const uint64_t& aTransactionId,
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
-                   const ByteBuffer& aux,
-                   const WrAuxiliaryListsDescriptor& auxDesc,
                    const WebRenderScrollData& aScrollData);
 
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,

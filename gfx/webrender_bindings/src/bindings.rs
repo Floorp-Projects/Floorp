@@ -22,7 +22,6 @@ extern crate webrender_traits;
 static ENABLE_RECORDING: bool = false;
 
 type WrAPI = RenderApi;
-type WrAuxiliaryListsDescriptor = AuxiliaryListsDescriptor;
 type WrBorderStyle = BorderStyle;
 type WrBoxShadowClipMode = BoxShadowClipMode;
 type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
@@ -143,30 +142,6 @@ impl Into<ExtendMode> for WrGradientExtendMode {
         match self {
             WrGradientExtendMode::Clamp => ExtendMode::Clamp,
             WrGradientExtendMode::Repeat => ExtendMode::Repeat,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-struct WrItemRange {
-    start: usize,
-    length: usize,
-}
-
-impl Into<ItemRange> for WrItemRange {
-    fn into(self) -> ItemRange {
-        ItemRange {
-            start: self.start,
-            length: self.length,
-        }
-    }
-}
-impl From<ItemRange> for WrItemRange {
-    fn from(item_range: ItemRange) -> Self {
-        WrItemRange {
-            start: item_range.start,
-            length: item_range.length,
         }
     }
 }
@@ -481,7 +456,8 @@ impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
 #[derive(Debug, Clone, Copy)]
 pub struct WrClipRegion {
     main: WrRect,
-    complex: WrItemRange,
+    complex: ItemRange<ComplexClipRegion>,
+    complex_count: usize,
     image_mask: WrImageMask,
     has_image_mask: bool,
 }
@@ -490,7 +466,8 @@ impl Into<ClipRegion> for WrClipRegion {
     fn into(self) -> ClipRegion {
         ClipRegion {
             main: self.main.into(),
-            complex: self.complex.into(),
+            complex_clips: self.complex,
+            complex_clip_count: self.complex_count,
             image_mask: if self.has_image_mask {
                 Some(self.image_mask.into())
             } else {
@@ -504,7 +481,8 @@ impl From<ClipRegion> for WrClipRegion {
         if let Some(image_mask) = clip_region.image_mask {
             WrClipRegion {
                 main: clip_region.main.into(),
-                complex: clip_region.complex.into(),
+                complex: clip_region.complex_clips,
+                complex_count: clip_region.complex_clip_count,
                 image_mask: image_mask.into(),
                 has_image_mask: true,
             }
@@ -522,11 +500,31 @@ impl From<ClipRegion> for WrClipRegion {
 
             WrClipRegion {
                 main: clip_region.main.into(),
-                complex: clip_region.complex.into(),
+                complex: clip_region.complex_clips,
+                complex_count: clip_region.complex_clip_count,
                 image_mask: blank,
                 has_image_mask: false,
             }
         }
+    }
+}
+
+#[repr(C)]
+pub struct WrClipRegionToken {
+    _dummy: bool,
+}
+
+impl Into<ClipRegionToken> for WrClipRegionToken {
+    fn into(self) -> ClipRegionToken {
+        // ClipRegionTokens are a zero sized move-only "proof of work"
+        // this doesn't really translate... so uh, pretend it does?
+        unsafe { mem::transmute(()) }
+    }
+}
+
+impl From<ClipRegionToken> for WrClipRegionToken {
+    fn from(_token: ClipRegionToken) -> WrClipRegionToken {
+        WrClipRegionToken { _dummy: true }
     }
 }
 
@@ -1016,10 +1014,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
                                                       pipeline_id: WrPipelineId,
                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
                                                       dl_data: *mut u8,
-                                                      dl_size: usize,
-                                                      aux_descriptor: WrAuxiliaryListsDescriptor,
-                                                      aux_data: *mut u8,
-                                                      aux_size: usize) {
+                                                      dl_size: usize) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
@@ -1032,16 +1027,10 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    let aux_slice = make_slice(aux_data, aux_size);
-    let mut aux_vec = Vec::new();
-    // XXX: see if we can get rid of the copy here
-    aux_vec.extend_from_slice(aux_slice);
-    let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
-
     api.set_display_list(Some(root_background_color),
                          epoch,
                          LayoutSize::new(viewport_width, viewport_height),
-                         (pipeline_id, dl, aux),
+                         (pipeline_id, dl),
                          preserve_frame_state);
 }
 
@@ -1197,7 +1186,7 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
                               width: u32,
                               height: u32) {
     assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.list.clear();
+    state.frame_builder.dl_builder.data.clear();
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
                                  LayoutSize::new(width as f32, height as f32));
@@ -1220,20 +1209,20 @@ pub extern "C" fn wr_dp_end(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_new_clip_region(state: &mut WrState,
-                                        main: WrRect,
-                                        complex: *const WrComplexClipRegion,
-                                        complex_count: usize,
-                                        image_mask: *const WrImageMask)
-                                        -> WrClipRegion {
+pub extern "C" fn wr_dp_push_clip_region(state: &mut WrState,
+                                         main: WrRect,
+                                         complex: *const WrComplexClipRegion,
+                                         complex_count: usize,
+                                         image_mask: *const WrImageMask)
+                                         -> WrClipRegionToken {
     assert!(unsafe { is_in_main_thread() });
 
     let main = main.into();
     let complex_slice = make_slice(complex, complex_count);
-    let complex_vector = complex_slice.iter().map(|x| x.into()).collect();
+    let complex_iter = complex_slice.iter().map(|x| x.into());
     let mask = unsafe { image_mask.as_ref() }.map(|x| x.into());
 
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&main, complex_vector, mask);
+    let clip_region = state.frame_builder.dl_builder.push_clip_region(&main, complex_iter, mask);
 
     clip_region.into()
 }
@@ -1290,8 +1279,8 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
     let content_rect = content_rect.into();
     let clip_rect = clip_rect.into();
     let mask = unsafe { mask.as_ref() }.map(|x| x.into());
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip_rect, vec![], mask);
-    state.frame_builder.dl_builder.push_clip_node(clip_region, content_rect, None);
+    let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
+    state.frame_builder.dl_builder.push_clip_node(content_rect, clip_region, None);
 }
 
 #[no_mangle]
@@ -1303,7 +1292,7 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: WrRect,
-                                    clip: WrClipRegion,
+                                    clip: WrClipRegionToken,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
@@ -1313,7 +1302,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: WrRect,
-                                  clip: WrClipRegion,
+                                  clip: WrClipRegionToken,
                                   color: WrColor) {
     assert!(unsafe { is_in_main_thread() });
 
@@ -1323,7 +1312,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: WrRect,
-                                   clip: WrClipRegion,
+                                   clip: WrClipRegionToken,
                                    stretch_size: WrSize,
                                    tile_spacing: WrSize,
                                    image_rendering: WrImageRendering,
@@ -1344,7 +1333,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               bounds: WrRect,
-                                              clip: WrClipRegion,
+                                              clip: WrClipRegionToken,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
@@ -1363,7 +1352,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             bounds: WrRect,
-                                            clip: WrClipRegion,
+                                            clip: WrClipRegionToken,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace) {
@@ -1380,7 +1369,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   bounds: WrRect,
-                                  clip: WrClipRegion,
+                                  clip: WrClipRegionToken,
                                   color: WrColor,
                                   font_key: WrFontKey,
                                   glyphs: *const WrGlyphInstance,
@@ -1409,7 +1398,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: WrRect,
-                                    clip: WrClipRegion,
+                                    clip: WrClipRegionToken,
                                     widths: WrBorderWidths,
                                     top: WrBorderSide,
                                     right: WrBorderSide,
@@ -1433,7 +1422,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           rect: WrRect,
-                                          clip: WrClipRegion,
+                                          clip: WrClipRegionToken,
                                           widths: WrBorderWidths,
                                           image: WrImageKey,
                                           patch: WrNinePatchDescriptor,
@@ -1457,7 +1446,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegion,
+                                             clip: WrClipRegionToken,
                                              widths: WrBorderWidths,
                                              start_point: WrPoint,
                                              end_point: WrPoint,
@@ -1488,7 +1477,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     rect: WrRect,
-                                                    clip: WrClipRegion,
+                                                    clip: WrClipRegionToken,
                                                     widths: WrBorderWidths,
                                                     center: WrPoint,
                                                     radius: WrSize,
@@ -1520,7 +1509,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegion,
+                                             clip: WrClipRegionToken,
                                              start_point: WrPoint,
                                              end_point: WrPoint,
                                              stops: *const WrGradientStop,
@@ -1550,7 +1539,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegion,
+                                             clip: WrClipRegionToken,
                                              center: WrPoint,
                                              radius: WrSize,
                                              stops: *const WrGradientStop,
@@ -1580,7 +1569,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         rect: WrRect,
-                                        clip: WrClipRegion,
+                                        clip: WrClipRegionToken,
                                         box_bounds: WrRect,
                                         offset: WrPoint,
                                         color: WrColor,
@@ -1606,34 +1595,24 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
                                                  dl_descriptor: &mut WrBuiltDisplayListDescriptor,
-                                                 dl_data: &mut WrVecU8,
-                                                 aux_descriptor: &mut WrAuxiliaryListsDescriptor,
-                                                 aux_data: &mut WrVecU8) {
+                                                 dl_data: &mut WrVecU8) {
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id));
-    let (_, dl, aux) = frame_builder.dl_builder.finalize();
+    let (_, dl) = frame_builder.dl_builder.finalize();
     let (data, descriptor) = dl.into_data();
     *dl_data = WrVecU8::from_vec(data);
     *dl_descriptor = descriptor;
-
-    let (data, descriptor) = aux.into_data();
-    *aux_data = WrVecU8::from_vec(data);
-    *aux_descriptor = descriptor;
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
                                                        dl_descriptor: WrBuiltDisplayListDescriptor,
-                                                       dl_data: WrVecU8,
-                                                       aux_descriptor: WrAuxiliaryListsDescriptor,
-                                                       aux_data: WrVecU8) {
+                                                       dl_data: WrVecU8) {
     let dl_vec = dl_data.to_vec();
-    let aux_vec = aux_data.to_vec();
 
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
-    let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
 
-    state.frame_builder.dl_builder.push_built_display_list(dl, aux);
+    state.frame_builder.dl_builder.push_built_display_list(dl);
 }
 
 struct Moz2dImageRenderer {

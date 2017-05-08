@@ -540,8 +540,6 @@ inline mozilla::Range<uint8_t> MutByteSliceToRange(MutByteSlice aWrSlice) {
 struct BuiltDisplayList {
   VecU8 dl;
   WrBuiltDisplayListDescriptor dl_desc;
-  VecU8 aux;
-  WrAuxiliaryListsDescriptor aux_desc;
 };
 
 } // namespace wr
