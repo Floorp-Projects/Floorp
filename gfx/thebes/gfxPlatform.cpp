@@ -1612,9 +1612,7 @@ gfxPlatform::OpenTypeSVGEnabled()
             Preferences::GetBool(GFX_PREF_OPENTYPE_SVG, false);
     }
 
-    return mOpenTypeSVGEnabled > 0 ||
-           // is e10s parent process:
-           (XRE_IsParentProcess() && BrowserTabsRemoteAutostart());
+    return mOpenTypeSVGEnabled > 0;
 }
 
 uint32_t
