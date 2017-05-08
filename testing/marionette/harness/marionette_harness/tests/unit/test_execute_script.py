@@ -49,6 +49,9 @@ class TestExecuteContent(MarionetteTestCase):
             "return typeof arguments[0] != 'undefined'", [property], sandbox=sandbox),
             "property {} is undefined".format(property))
 
+    def assert_is_web_element(self, element):
+        self.assertIsInstance(element, HTMLElement)
+
     def test_return_number(self):
         self.assertEqual(1, self.marionette.execute_script("return 1"))
         self.assertEqual(1.5, self.marionette.execute_script("return 1.5"))
@@ -330,6 +333,25 @@ class TestExecuteContent(MarionetteTestCase):
         # test inspection of arguments
         self.marionette.execute_script("__webDriverArguments.toString()")
 
+    def test_toJSON(self):
+        foo = self.marionette.execute_script("""
+            return {
+              toJSON () {
+                return "foo";
+              }
+            }""",
+            sandbox=None)
+        self.assertEqual("foo", foo)
+
+    def test_unsafe_toJSON(self):
+        el = self.marionette.execute_script("""
+            return {
+              toJSON () {
+                return document.documentElement;
+              }
+            }""",
+            sandbox=None)
+        self.assert_is_web_element(el)
 
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
