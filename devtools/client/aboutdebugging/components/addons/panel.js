@@ -157,10 +157,9 @@ module.exports = createClass({
         dom.span({
           className: "addons-web-ext-tip",
         }, Strings.GetStringFromName("webExtTip")),
-        "(",
         dom.a({ href: WEB_EXT_URL, target: "_blank" },
-          Strings.GetStringFromName("moreInfo")),
-        ")"
+          Strings.GetStringFromName("webExtTip.learnMore")
+        )
       )
     ),
     dom.div({ id: "addons" },
