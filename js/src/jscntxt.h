@@ -1024,7 +1024,7 @@ SelfHostedFunction(JSContext* cx, HandlePropertyName propName);
 #ifdef va_start
 extern bool
 ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
-              ErrorArgumentsType argumentsType, va_list ap);
+              ErrorArgumentsType argumentsType, va_list ap) MOZ_FORMAT_PRINTF(3, 0);
 
 extern bool
 ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,

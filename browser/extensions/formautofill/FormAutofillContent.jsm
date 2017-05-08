@@ -410,6 +410,13 @@ var FormAutofillContent = {
         continue;
       }
 
+      // For now skip consider fields in forms we've already seen before even
+      // if the specific field wasn't seen before. Ideally whether the field is
+      // already in the handler's form details would be considered.
+      if (this.getFormHandler(field)) {
+        continue;
+      }
+
       let formLike = FormLikeFactory.createFromField(field);
       if (!forms.some(form => form.rootElement === formLike.rootElement)) {
         forms.push(formLike);
