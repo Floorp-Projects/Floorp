@@ -36,6 +36,37 @@ var LoginManagerParent = {
    */
   _recipeManager: null,
 
+  // Tracks the last time the user cancelled the master password prompt,
+  // to avoid spamming master password prompts on autocomplete searches.
+  _lastMPLoginCancelled: Math.NEGATIVE_INFINITY,
+
+  _searchAndDedupeLogins(formOrigin, actionOrigin) {
+    let logins;
+    try {
+      logins = LoginHelper.searchLoginsWithObject({
+        hostname: formOrigin,
+        formSubmitURL: actionOrigin,
+        schemeUpgrades: LoginHelper.schemeUpgrades,
+      });
+    } catch (e) {
+      // Record the last time the user cancelled the MP prompt
+      // to avoid spamming them with MP prompts for autocomplete.
+      if (e.result == Cr.NS_ERROR_ABORT) {
+        log("User cancelled master password prompt.");
+        this._lastMPLoginCancelled = Date.now();
+        return [];
+      }
+      throw e;
+    }
+
+    // Dedupe so the length checks below still make sense with scheme upgrades.
+    let resolveBy = [
+      "scheme",
+      "timePasswordChanged",
+    ];
+    return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
+  },
+
   // This should only be called on Android. Listeners are added in
   // nsBrowserGlue.js on desktop. Please make sure that the list of
   // listeners added here stays in sync with the listeners added in
@@ -201,16 +232,8 @@ var LoginManagerParent = {
       return;
     }
 
-    let logins = LoginHelper.searchLoginsWithObject({
-      formSubmitURL: actionOrigin,
-      hostname: formOrigin,
-      schemeUpgrades: LoginHelper.schemeUpgrades,
-    });
-    let resolveBy = [
-      "scheme",
-      "timePasswordChanged",
-    ];
-    logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
+    let logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
+
     log("sendLoginDataToChild:", logins.length, "deduped logins");
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
@@ -229,6 +252,22 @@ var LoginManagerParent = {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
+    // Cancel if we unsuccessfully prompted for the master password too recently.
+    if (!Services.logins.isLoggedIn) {
+      let timeDiff = Date.now() - this._lastMPLoginCancelled;
+      if (timeDiff < this._repromptTimeout) {
+        log("Not searching logins for autocomplete since the master password " +
+            `prompt was last cancelled ${Math.round(timeDiff / 1000)} seconds ago.`);
+        // Send an empty array to make LoginManagerContent clear the
+        // outstanding request it has temporarily saved.
+        target.messageManager.sendAsyncMessage("RemoteLogins:loginsAutoCompleted", {
+          requestId,
+          logins: [],
+        });
+        return;
+      }
+    }
+
     let searchStringLower = searchString.toLowerCase();
     let logins;
     if (previousResult &&
@@ -241,17 +280,7 @@ var LoginManagerParent = {
     } else {
       log("Creating new autocomplete search result.");
 
-      // Grab the logins from the database.
-      logins = LoginHelper.searchLoginsWithObject({
-        formSubmitURL: actionOrigin,
-        hostname: formOrigin,
-        schemeUpgrades: LoginHelper.schemeUpgrades,
-      });
-      let resolveBy = [
-        "scheme",
-        "timePasswordChanged",
-      ];
-      logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
+      logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
     }
 
     let matchingLogins = logins.filter(function(fullMatch) {
@@ -310,20 +339,9 @@ var LoginManagerParent = {
                    (usernameField ? usernameField.name : ""),
                    newPasswordField.name);
 
-    let logins = LoginHelper.searchLoginsWithObject({
-      formSubmitURL,
-      hostname,
-      schemeUpgrades: LoginHelper.schemeUpgrades,
-    });
-
-    // Dedupe so the length checks below still make sense with scheme upgrades.
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
-    let resolveBy = [
-      "scheme",
-      "timePasswordChanged",
-    ];
-    logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, hostname);
+    let logins = this._searchAndDedupeLogins(hostname, formSubmitURL);
 
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
@@ -483,3 +501,6 @@ XPCOMUtils.defineLazyGetter(LoginManagerParent, "recipeParentPromise", function(
   });
   return this._recipeManager.initializationPromise;
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(LoginManagerParent, "_repromptTimeout",
+  "signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes

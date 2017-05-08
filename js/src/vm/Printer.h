@@ -45,7 +45,7 @@ class GenericPrinter
 
     // Prints a formatted string into the buffer.
     bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-    bool vprintf(const char* fmt, va_list ap);
+    bool vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
 
     // Report that a string operation failed to get the memory it requested.
     virtual void reportOutOfMemory();

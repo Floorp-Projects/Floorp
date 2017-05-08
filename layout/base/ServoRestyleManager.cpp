@@ -134,6 +134,62 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
 }
 
+/**
+ * This struct takes care of encapsulating some common state that text nodes may
+ * need to track during the post-traversal.
+ *
+ * This is currently used to properly compute change hints when the parent
+ * element of this node is a display: contents node.
+ */
+struct ServoRestyleManager::TextPostTraversalState
+{
+  bool mShouldPostHints;
+  bool mShouldComputeHints;
+  nsChangeHint mComputedHint;
+
+  explicit TextPostTraversalState(bool aDisplayContentsParentStyleChanged)
+    : mShouldPostHints(aDisplayContentsParentStyleChanged)
+    , mShouldComputeHints(aDisplayContentsParentStyleChanged)
+    , mComputedHint(nsChangeHint_Empty)
+  {}
+
+  void ComputeHintIfNeeded(nsIContent* aContent,
+                           nsIFrame* aTextFrame,
+                           nsStyleContext& aNewContext,
+                           nsStyleChangeList& aChangeList)
+  {
+    MOZ_ASSERT(aTextFrame);
+    MOZ_ASSERT(aNewContext.GetPseudo() == nsCSSAnonBoxes::mozText);
+
+    if (MOZ_LIKELY(!mShouldPostHints)) {
+      return;
+    }
+
+    nsStyleContext* oldContext = aTextFrame->StyleContext();
+    MOZ_ASSERT(oldContext->GetPseudo() == nsCSSAnonBoxes::mozText);
+
+    // We rely on the fact that all the text children for the same element share
+    // style to avoid recomputing style differences for all of them.
+    //
+    // TODO(emilio): The above may not be true for ::first-{line,letter}, but
+    // we'll cross that bridge when we support those in stylo.
+    //
+    // TODO(emilio): We could also use the same style context itself, can't we?
+    if (mShouldComputeHints) {
+      mShouldComputeHints = false;
+      uint32_t equalStructs, samePointerStructs;
+      mComputedHint =
+        oldContext->CalcStyleDifference(&aNewContext,
+                                        &equalStructs,
+                                        &samePointerStructs);
+    }
+
+    if (mComputedHint) {
+      aChangeList.AppendChange(aTextFrame, aContent, mComputedHint);
+    }
+  }
+};
+
 void
 ServoRestyleManager::ProcessPostTraversal(Element* aElement,
                                           nsStyleContext* aParentContext,
@@ -248,21 +304,24 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     }
   }
 
-  bool descendantsNeedFrames = aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
-  bool traverseElementChildren =
+  const bool descendantsNeedFrames =
+    aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+  const bool traverseElementChildren =
     aElement->HasDirtyDescendantsForServo() || descendantsNeedFrames;
-  bool traverseTextChildren = recreateContext || descendantsNeedFrames;
+  const bool traverseTextChildren = recreateContext || descendantsNeedFrames;
   if (traverseElementChildren || traverseTextChildren) {
     nsStyleContext* upToDateContext =
       recreateContext ? newContext : oldStyleContext;
 
     StyleChildrenIterator it(aElement);
+    TextPostTraversalState textState(displayContentsNode && recreateContext);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
         ProcessPostTraversal(n->AsElement(), upToDateContext,
                              aStyleSet, aChangeList);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        ProcessPostTraversalForText(n, upToDateContext, aStyleSet, aChangeList);
+        ProcessPostTraversalForText(
+            n, upToDateContext, aStyleSet, aChangeList, textState);
       }
     }
   }
@@ -272,10 +331,12 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 }
 
 void
-ServoRestyleManager::ProcessPostTraversalForText(nsIContent* aTextNode,
-                                                 nsStyleContext* aParentContext,
-                                                 ServoStyleSet* aStyleSet,
-                                                 nsStyleChangeList& aChangeList)
+ServoRestyleManager::ProcessPostTraversalForText(
+    nsIContent* aTextNode,
+    nsStyleContext* aParentContext,
+    ServoStyleSet* aStyleSet,
+    nsStyleChangeList& aChangeList,
+    TextPostTraversalState& aPostTraversalState)
 {
   // Handle lazy frame construction.
   if (aTextNode->HasFlag(NODE_NEEDS_FRAME)) {
@@ -289,6 +350,9 @@ ServoRestyleManager::ProcessPostTraversalForText(nsIContent* aTextNode,
     RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
     RefPtr<nsStyleContext> newContext =
       aStyleSet->ResolveStyleForText(aTextNode, aParentContext);
+
+    aPostTraversalState.ComputeHintIfNeeded(
+        aTextNode, primaryFrame, *newContext, aChangeList);
 
     for (nsIFrame* f = primaryFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {

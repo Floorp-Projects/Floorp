@@ -3,5 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 varying vec3 vUv;
+flat varying vec4 vUvBounds;
 flat varying float vAmount;
 flat varying int vOp;

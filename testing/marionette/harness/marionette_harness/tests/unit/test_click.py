@@ -337,6 +337,10 @@ class TestClickNavigation(MarionetteTestCase):
         self.marionette.find_element(By.ID, "showbutton").click()
         self.assertEqual(self.marionette.get_url(), self.test_page)
 
+    def test_click_option_navigate(self):
+        self.marionette.find_element(By.ID, "option").click()
+        self.marionette.find_element(By.ID, "delay")
+
     @run_if_e10s("Requires e10s mode enabled")
     def test_click_remoteness_change(self):
         self.marionette.navigate("about:robots")

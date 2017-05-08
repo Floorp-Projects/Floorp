@@ -6,7 +6,7 @@ void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
     alpha = 0.0;
-    init_transform_fs(vLocalPos, vLocalRect, alpha);
+    init_transform_fs(vLocalPos, alpha);
 #endif
 
 #ifdef WR_FEATURE_CLIP

@@ -2,4 +2,4 @@
 
 This is a small library for geometric types.
 
-[Documentation](http://doc.servo.org/euclid/)
+[Documentation](https://docs.rs/euclid/)

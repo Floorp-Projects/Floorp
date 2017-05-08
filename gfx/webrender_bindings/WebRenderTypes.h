@@ -372,14 +372,20 @@ static inline WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float opa
   return prop;
 }
 
+static inline WrComplexClipRegion ToWrComplexClipRegion(const WrRect& rect,
+                                                        const LayerSize& size)
+{
+  WrComplexClipRegion complex_clip;
+  complex_clip.rect = rect;
+  complex_clip.radii = wr::ToWrUniformBorderRadius(size);
+  return complex_clip;
+}
+
 template<class T>
 static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
                                                         const LayerSize& size)
 {
-  WrComplexClipRegion complex_clip;
-  complex_clip.rect = wr::ToWrRect(rect);
-  complex_clip.radii = wr::ToWrUniformBorderRadius(size);
-  return complex_clip;
+  return ToWrComplexClipRegion(wr::ToWrRect(rect), size);
 }
 
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
@@ -522,6 +528,10 @@ inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
 
 inline mozilla::Range<const uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
   return mozilla::Range<const uint8_t>(aWrSlice.buffer, aWrSlice.len);
+}
+
+inline mozilla::Range<uint8_t> MutByteSliceToRange(MutByteSlice aWrSlice) {
+  return mozilla::Range<uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
 struct BuiltDisplayList {
