@@ -738,11 +738,11 @@ function* execute(script, args, timeout, opts) {
   script = importedScripts.for("content").concat(script);
 
   let sb = sandbox.createMutable(curContainer.frame);
-  let wargs = element.fromJson(
+  let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let res = yield evaluate.sandbox(sb, script, wargs, opts);
 
-  return element.toJson(res, seenEls);
+  return evaluate.toJSON(res, seenEls);
 }
 
 function* executeInSandbox(script, args, timeout, opts) {
@@ -755,15 +755,15 @@ function* executeInSandbox(script, args, timeout, opts) {
     sb = sandbox.augment(sb, new logging.Adapter(contentLog));
   }
 
-  let wargs = element.fromJson(
+  let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
   sendSyncMessage(
       "Marionette:shareData",
-      {log: element.toJson(contentLog.get(), seenEls)});
-  return element.toJson(res, seenEls);
+      {log: evaluate.toJSON(contentLog.get(), seenEls)});
+  return evaluate.toJSON(res, seenEls);
 }
 
 function* executeSimpleTest(script, args, timeout, opts) {
@@ -781,15 +781,15 @@ function* executeSimpleTest(script, args, timeout, opts) {
   // TODO(ato): Not sure this is needed:
   sb = sandbox.augment(sb, new logging.Adapter(contentLog));
 
-  let wargs = element.fromJson(
+  let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
   sendSyncMessage(
       "Marionette:shareData",
-      {log: element.toJson(contentLog.get(), seenEls)});
-  return element.toJson(res, seenEls);
+      {log: evaluate.toJSON(contentLog.get(), seenEls)});
+  return evaluate.toJSON(res, seenEls);
 }
 
 /**
@@ -833,7 +833,7 @@ function emitTouchEvent(type, touch) {
     contentLog.log(loggingInfo, "TRACE");
     sendSyncMessage(
         "Marionette:shareData",
-        {log: element.toJson(contentLog.get(), seenEls)});
+        {log: evaluate.toJSON(contentLog.get(), seenEls)});
     contentLog.clear();
     */
     let domWindowUtils = curContainer.frame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -1068,7 +1068,7 @@ function setDispatch(batches, touches, batchIndex=0) {
  */
 function multiAction(args, maxLen) {
   // unwrap the original nested array
-  let commandArray = element.fromJson(
+  let commandArray = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let concurrentEvent = [];
   let temp;
@@ -1286,7 +1286,7 @@ function* findElementsContent(strategy, selector, opts = {}) {
 /** Find and return the active element on the page. */
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
-  return element.toJson(el, seenEls);
+  return evaluate.toJSON(el, seenEls);
 }
 
 /**
@@ -1642,7 +1642,7 @@ function switchToFrame(msg) {
 
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
-  let frameValue = element.toJson(
+  let frameValue = evaluate.toJSON(
       curContainer.frame.wrappedJSObject, seenEls)[element.Key];
   sendSyncMessage("Marionette:switchedToFrame", {frameValue: frameValue});
 

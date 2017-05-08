@@ -890,9 +890,9 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
 
       opts.timeout = timeout;
       script = this.importedScripts.for(Context.CHROME).concat(script);
-      let wargs = element.fromJson(args, this.curBrowser.seenEls, sb.window);
+      let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
       let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-      return evaluatePromise.then(res => element.toJson(res, this.curBrowser.seenEls));
+      return evaluatePromise.then(res => evaluate.toJSON(res, this.curBrowser.seenEls));
   }
 };
 
@@ -916,7 +916,7 @@ GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let wargs = element.fromJson(args, this.curBrowser.seenEls, win);
+      let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, win);
       let harness = new simpletest.Harness(
           win,
           Context.CHROME,
@@ -930,7 +930,7 @@ GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
       sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
 
       let res = yield evaluate.sandbox(sb, script, wargs, opts);
-      resp.body.value = element.toJson(res, this.curBrowser.seenEls);
+      resp.body.value = evaluate.toJSON(res, this.curBrowser.seenEls);
       break;
 
     case Context.CONTENT:

@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
@@ -59,7 +60,7 @@ action.Chain.prototype.dispatchActions = function (
 
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = element.fromJson(
+  let commandArray = evaluate.fromJSON(
       args, seenEls, container.frame, container.shadowRoot);
 
   if (touchId == null) {
