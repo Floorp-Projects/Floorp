@@ -2347,11 +2347,13 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTr
 
     mFastOpenStatus = TFO_FAILED;
     RefPtr<nsAHttpTransaction> trans;
+
+    DontReuse();
+
     if (mUsingSpdyVersion) {
         // If we have a http2 connection just restart it as if 0rtt failed.
-        // For http2 we do not nee to do similar thing as for http1 because
+        // For http2 we do not need to do similar thing as for http1 because
         // backup connection will pick immediately all this transaction anyway.
-        DontReuse();
         mUsingSpdyVersion = 0;
         if (mSpdySession) {
             mTransaction->SetFastOpenStatus(TFO_FAILED);

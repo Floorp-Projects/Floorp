@@ -3445,7 +3445,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // listens for  OnOutputStreamReady not HalfOpenSocket. So this stream
         // cannot be mStreamOut.
         MOZ_ASSERT(out == mBackupStreamOut);
-        MOZ_ASSERT(mTransaction->IsNullTransaction());
         // Here the backup, non-TFO connection has connected successfully,
         // before the TFO connection.
         //
