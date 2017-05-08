@@ -63,7 +63,6 @@ UNIFIED_SOURCES += [
     'FrozenImage.cpp',
     'IDecodingTask.cpp',
     'Image.cpp',
-    'ImageBlocker.cpp',
     'ImageCacheKey.cpp',
     'ImageFactory.cpp',
     'ImageOps.cpp',

@@ -4195,6 +4195,7 @@ struct StateTableEntry
 
 static constexpr StateTableEntry kManuallyManagedStates[] = {
   { "-moz-autofill", NS_EVENT_STATE_AUTOFILL },
+  { "-moz-autofill-preview", NS_EVENT_STATE_AUTOFILL_PREVIEW },
   { nullptr, EventStates() },
 };
 

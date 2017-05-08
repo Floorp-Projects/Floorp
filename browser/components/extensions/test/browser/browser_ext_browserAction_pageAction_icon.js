@@ -268,6 +268,8 @@ add_task(function* testDetailsObjects() {
     extension.sendMessage("setIcon", test);
     yield extension.awaitMessage("iconSet");
 
+    yield promiseAnimationFrame();
+
     let browserActionButton = browserActionWidget.forWindow(window).node;
     let pageActionImage = document.getElementById(pageActionId);
 
