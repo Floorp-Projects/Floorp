@@ -9,3 +9,7 @@ DISABLE_STL_WRAPPING = True
 GeckoCppUnitTests([
     'ShowSSEConfig',
 ], linkage=None)
+
+CppUnitTests([
+    'TestPrintf',
+])
