@@ -30,8 +30,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-const nsIDM = Ci.nsIDownloadManager;
-
 const DESTINATION_FILE_URI_ANNO  = "downloads/destinationFileURI";
 const DOWNLOAD_META_DATA_ANNO    = "downloads/metaData";
 
@@ -72,17 +70,17 @@ HistoryDownload.prototype = {
     }
 
     if ("state" in metaData) {
-      this.succeeded = metaData.state == nsIDM.DOWNLOAD_FINISHED;
-      this.canceled = metaData.state == nsIDM.DOWNLOAD_CANCELED ||
-                      metaData.state == nsIDM.DOWNLOAD_PAUSED;
+      this.succeeded = metaData.state == DownloadsCommon.DOWNLOAD_FINISHED;
+      this.canceled = metaData.state == DownloadsCommon.DOWNLOAD_CANCELED ||
+                      metaData.state == DownloadsCommon.DOWNLOAD_PAUSED;
       this.endTime = metaData.endTime;
 
       // Recreate partial error information from the state saved in history.
-      if (metaData.state == nsIDM.DOWNLOAD_FAILED) {
+      if (metaData.state == DownloadsCommon.DOWNLOAD_FAILED) {
         this.error = { message: "History download failed." };
-      } else if (metaData.state == nsIDM.DOWNLOAD_BLOCKED_PARENTAL) {
+      } else if (metaData.state == DownloadsCommon.DOWNLOAD_BLOCKED_PARENTAL) {
         this.error = { becauseBlockedByParentalControls: true };
-      } else if (metaData.state == nsIDM.DOWNLOAD_DIRTY) {
+      } else if (metaData.state == DownloadsCommon.DOWNLOAD_DIRTY) {
         this.error = {
           becauseBlockedByReputationCheck: true,
           reputationCheckVerdict: metaData.reputationCheckVerdict || "",

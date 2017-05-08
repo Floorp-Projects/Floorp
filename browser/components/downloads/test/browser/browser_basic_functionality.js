@@ -14,11 +14,11 @@ registerCleanupFunction(function*() {
 add_task(function* test_basic_functionality() {
   // Display one of each download state.
   const DownloadData = [
-    { state: nsIDM.DOWNLOAD_NOTSTARTED },
-    { state: nsIDM.DOWNLOAD_PAUSED },
-    { state: nsIDM.DOWNLOAD_FINISHED },
-    { state: nsIDM.DOWNLOAD_FAILED },
-    { state: nsIDM.DOWNLOAD_CANCELED },
+    { state: DownloadsCommon.DOWNLOAD_NOTSTARTED },
+    { state: DownloadsCommon.DOWNLOAD_PAUSED },
+    { state: DownloadsCommon.DOWNLOAD_FINISHED },
+    { state: DownloadsCommon.DOWNLOAD_FAILED },
+    { state: DownloadsCommon.DOWNLOAD_CANCELED },
   ];
 
   // Wait for focus first

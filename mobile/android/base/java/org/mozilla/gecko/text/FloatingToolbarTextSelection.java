@@ -36,7 +36,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     // floating toolbar overlays the bottom handle(s).
     private static final int HANDLES_OFFSET_DP = 20;
 
-    private final Activity activity;
+    /* package */ final GeckoApp geckoApp;
     private final LayerView layerView;
     private final int[] locationInWindow;
     private final float handlesOffset;
@@ -46,13 +46,13 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     private int selectionID;
     /* package-private */ Rect contentRect;
 
-    public FloatingToolbarTextSelection(Activity activity, LayerView layerView) {
-        this.activity = activity;
+    public FloatingToolbarTextSelection(GeckoApp geckoApp, LayerView layerView) {
+        this.geckoApp = geckoApp;
         this.layerView = layerView;
         this.locationInWindow = new int[2];
 
         this.handlesOffset = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                HANDLES_OFFSET_DP, activity.getResources().getDisplayMetrics());
+                HANDLES_OFFSET_DP, geckoApp.getResources().getDisplayMetrics());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
 
         final GeckoBundle data = new GeckoBundle(1);
         data.putInt("selectionID", selectionID);
-        GeckoApp.getEventDispatcher().dispatch("TextSelection:End", data);
+        geckoApp.getAppEventDispatcher().dispatch("TextSelection:End", data);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void registerForEvents() {
-        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+        geckoApp.getAppEventDispatcher().registerUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -94,7 +94,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void unregisterFromEvents() {
-        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+        geckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -140,7 +140,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
         }
 
         actionModeCallback = new FloatingActionModeCallback(this, actions);
-        actionMode = activity.startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
+        actionMode = geckoApp.startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
     }
 
     private boolean finishActionMode() {

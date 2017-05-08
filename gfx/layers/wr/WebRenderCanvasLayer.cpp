@@ -47,7 +47,8 @@ WebRenderCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                  const StackingContextHelper& aSc)
 {
   UpdateCompositableClient();
 
@@ -61,13 +62,13 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     transform = Some(GetTransform().PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1));
   }
 
-  StackingContextHelper sc(aBuilder, this, transform);
+  StackingContextHelper sc(aSc, aBuilder, this, transform);
 
   LayerRect rect(0, 0, mBounds.width, mBounds.height);
   DumpLayerInfo("CanvasLayer", rect);
 
   LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegion clip = aBuilder.BuildClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));
@@ -82,7 +83,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
-  Manager()->AddImageKeyForDiscard(key);
+  WrManager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, key);
 }
@@ -96,7 +97,7 @@ WebRenderCanvasLayer::AttachCompositable()
 CompositableForwarder*
 WebRenderCanvasLayer::GetForwarder()
 {
-  return Manager()->WrBridge();
+  return WrManager()->WrBridge();
 }
 
 } // namespace layers

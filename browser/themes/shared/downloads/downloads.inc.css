@@ -97,52 +97,12 @@
   padding-inline-end: 10px;
 }
 
-#downloadsPanel[hasdownloads] #downloadsFooterButtons:not(.downloadsHideDropmarker) > #downloadsHistory {
-  padding-inline-start: 68px;
-}
-
-toolbarseparator.downloadsDropmarkerSplitter {
-  margin: 7px 0;
-}
-
 @item@ > toolbarseparator {
   margin: 10px 0;
 }
 
-@item@:hover > toolbarseparator,
-#downloadsFooter:hover toolbarseparator.downloadsDropmarkerSplitter,
-#downloadsFooter[showingdropdown] toolbarseparator {
+@item@:hover > toolbarseparator {
   margin: 0;
-}
-
-.downloadsDropmarker {
-  padding: 0 21px;
-}
-
-.downloadsDropmarker > .button-box > hbox {
-  display: none;
-}
-
-.downloadsDropmarker > .button-box > .button-menu-dropmarker {
-  /* This is to override the linux !important */
-  -moz-appearance: none !important;
-  display: -moz-box;
-  padding: 0;
-  margin: 0;
-}
-
-.downloadsDropmarker > .button-box > .button-menu-dropmarker > .dropmarker-icon {
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://global/skin/icons/menubutton-dropmarker.svg");
-  filter: url("chrome://global/skin/filters.svg#fill");
-  fill: currentColor;
-}
-
-/* Override default icon size which is too small for this dropdown */
-.downloadsDropmarker > .button-box > .button-menu-dropmarker {
-  width: 16px;
-  height: 16px;
 }
 
 #downloadsSummary {

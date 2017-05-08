@@ -91,6 +91,9 @@ enum class FullscreenReason
 
 namespace mozilla {
 namespace dom {
+
+class Location;
+
 // The states in this enum represent the different possible outcomes which the
 // window could be experiencing of loading a document with the
 // Large-Allocation header. The NONE case represents the case where no
@@ -570,7 +573,7 @@ public:
 
   virtual nsIDOMScreen* GetScreen() = 0;
   virtual nsIDOMNavigator* GetNavigator() = 0;
-  virtual nsIDOMLocation* GetLocation() = 0;
+  virtual mozilla::dom::Location* Location() = 0;
   virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
   virtual already_AddRefed<nsISelection> GetSelection() = 0;

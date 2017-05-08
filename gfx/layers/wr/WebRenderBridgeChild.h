@@ -24,6 +24,7 @@ namespace layers {
 
 class CompositableClient;
 class CompositorBridgeChild;
+class StackingContextHelper;
 class TextureForwarder;
 
 class UnscaledFontHashKey : public PLDHashEntryHdr
@@ -92,8 +93,8 @@ public:
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
-                  gfx::ScaledFont* aFont, const LayerPoint& aOffset, const gfx::Rect& aBounds,
-                  const gfx::Rect& aClip);
+                  gfx::ScaledFont* aFont, const StackingContextHelper& aSc,
+                  const LayerRect& aBounds, const LayerRect& aClip);
 
   wr::FontKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
 

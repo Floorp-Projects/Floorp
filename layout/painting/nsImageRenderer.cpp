@@ -12,6 +12,7 @@
 
 #include "gfxDrawable.h"
 #include "ImageOps.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "nsContentUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
@@ -579,6 +580,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 DrawResult
 nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                             mozilla::wr::DisplayListBuilder&            aBuilder,
+                                            const mozilla::layers::StackingContextHelper& aSc,
                                             nsTArray<WebRenderParentCommand>&           aParentCommands,
                                             mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                             const nsRect&        aDirtyRect,
@@ -604,7 +606,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       nsCSSGradientRenderer renderer =
         nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      renderer.BuildWebRenderDisplayItems(aBuilder, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
+      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
       break;
     }
     case eStyleImageType_Image:
@@ -623,17 +625,22 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
           aDest, appUnitsPerDevPixel);
-      LayerRect dest = aLayer->RelativeToParent(destRect);
 
+      nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(aDest.TopLeft(),
+                                                                      aFill.TopLeft(),
+                                                                      aRepeatSize);
       LayoutDeviceRect fillRect = LayoutDeviceRect::FromAppUnits(
-          aFill, appUnitsPerDevPixel);
-      LayerRect fill = aLayer->RelativeToParent(fillRect);
+          nsRect(firstTilePos.x, firstTilePos.y,
+                 aFill.XMost() - firstTilePos.x, aFill.YMost() - firstTilePos.y),
+          appUnitsPerDevPixel);
+      WrRect fill = aSc.ToRelativeWrRect(fillRect);
+      WrRect clip = aSc.ToRelativeWrRect(
+          LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
 
-      LayerRect clip = fill;
-      Size gapSize((aRepeatSize.width - aDest.width) / appUnitsPerDevPixel,
-                   (aRepeatSize.height - aDest.height) / appUnitsPerDevPixel);
-      aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
-                         wr::ToWrSize(dest.Size()), wr::ToWrSize(gapSize),
+      LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
+          aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
+      aBuilder.PushImage(fill, aBuilder.BuildClipRegion(clip),
+                         wr::ToWrSize(destRect.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key.value());
       break;
     }
@@ -707,6 +714,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
 DrawResult
 nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    const mozilla::layers::StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer*       aLayer,
                                                     const nsRect&        aDest,
@@ -725,7 +733,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
     return DrawResult::SUCCESS;
   }
 
-  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aParentCommands, aLayer,
+  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aSc, aParentCommands, aLayer,
                                     aDirty, aDest, aFill, aAnchor, aRepeatSize,
                                     CSSIntRect(0, 0,
                                                nsPresContext::AppUnitsToIntCSSPixels(mSize.width),

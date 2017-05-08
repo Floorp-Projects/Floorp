@@ -2404,6 +2404,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	process.removeListener = noop;
 	process.removeAllListeners = noop;
 	process.emit = noop;
+	process.prependListener = noop;
+	process.prependOnceListener = noop;
+
+	process.listeners = function (name) { return [] }
 
 	process.binding = function (name) {
 	    throw new Error('process.binding is not supported');
@@ -5196,7 +5200,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  "class": new KeywordTokenType("class"),
 	  "extends": new KeywordTokenType("extends", { beforeExpr: beforeExpr }),
 	  "export": new KeywordTokenType("export"),
-	  "import": new KeywordTokenType("import"),
+	  "import": new KeywordTokenType("import", { startsExpr: startsExpr }),
 	  "yield": new KeywordTokenType("yield", { beforeExpr: beforeExpr, startsExpr: startsExpr }),
 	  "null": new KeywordTokenType("null", { startsExpr: startsExpr }),
 	  "true": new KeywordTokenType("true", { startsExpr: startsExpr }),
@@ -5394,6 +5398,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.containsEsc = this.containsOctal = false;
 	    this.octalPosition = null;
+
+	    this.invalidTemplateEscapePosition = null;
 
 	    this.exportedIdentifiers = [];
 
@@ -6111,17 +6117,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Read a string value, interpreting backslash-escapes.
 
-	  Tokenizer.prototype.readCodePoint = function readCodePoint() {
+	  Tokenizer.prototype.readCodePoint = function readCodePoint(throwOnInvalid) {
 	    var ch = this.input.charCodeAt(this.state.pos);
 	    var code = void 0;
 
 	    if (ch === 123) {
+	      // '{'
 	      var codePos = ++this.state.pos;
-	      code = this.readHexChar(this.input.indexOf("}", this.state.pos) - this.state.pos);
+	      code = this.readHexChar(this.input.indexOf("}", this.state.pos) - this.state.pos, throwOnInvalid);
 	      ++this.state.pos;
-	      if (code > 0x10FFFF) this.raise(codePos, "Code point out of bounds");
+	      if (code === null) {
+	        --this.state.invalidTemplateEscapePosition; // to point to the '\'' instead of the 'u'
+	      } else if (code > 0x10FFFF) {
+	        if (throwOnInvalid) {
+	          this.raise(codePos, "Code point out of bounds");
+	        } else {
+	          this.state.invalidTemplateEscapePosition = codePos - 2;
+	          return null;
+	        }
+	      }
 	    } else {
-	      code = this.readHexChar(4);
+	      code = this.readHexChar(4, throwOnInvalid);
 	    }
 	    return code;
 	  };
@@ -6151,7 +6167,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  Tokenizer.prototype.readTmplToken = function readTmplToken() {
 	    var out = "",
-	        chunkStart = this.state.pos;
+	        chunkStart = this.state.pos,
+	        containsInvalid = false;
 	    for (;;) {
 	      if (this.state.pos >= this.input.length) this.raise(this.state.start, "Unterminated template");
 	      var ch = this.input.charCodeAt(this.state.pos);
@@ -6167,12 +6184,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        }
 	        out += this.input.slice(chunkStart, this.state.pos);
-	        return this.finishToken(types.template, out);
+	        return this.finishToken(types.template, containsInvalid ? null : out);
 	      }
 	      if (ch === 92) {
 	        // '\'
 	        out += this.input.slice(chunkStart, this.state.pos);
-	        out += this.readEscapedChar(true);
+	        var escaped = this.readEscapedChar(true);
+	        if (escaped === null) {
+	          containsInvalid = true;
+	        } else {
+	          out += escaped;
+	        }
 	        chunkStart = this.state.pos;
 	      } else if (isNewLine(ch)) {
 	        out += this.input.slice(chunkStart, this.state.pos);
@@ -6199,6 +6221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Used to read escaped characters
 
 	  Tokenizer.prototype.readEscapedChar = function readEscapedChar(inTemplate) {
+	    var throwOnInvalid = !inTemplate;
 	    var ch = this.input.charCodeAt(++this.state.pos);
 	    ++this.state.pos;
 	    switch (ch) {
@@ -6207,9 +6230,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      case 114:
 	        return "\r"; // 'r' -> '\r'
 	      case 120:
-	        return String.fromCharCode(this.readHexChar(2)); // 'x'
+	        {
+	          // 'x'
+	          var code = this.readHexChar(2, throwOnInvalid);
+	          return code === null ? null : String.fromCharCode(code);
+	        }
 	      case 117:
-	        return codePointToString(this.readCodePoint()); // 'u'
+	        {
+	          // 'u'
+	          var _code = this.readCodePoint(throwOnInvalid);
+	          return _code === null ? null : codePointToString(_code);
+	        }
 	      case 116:
 	        return "\t"; // 't' -> '\t'
 	      case 98:
@@ -6227,6 +6258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return "";
 	      default:
 	        if (ch >= 48 && ch <= 55) {
+	          var codePos = this.state.pos - 1;
 	          var octalStr = this.input.substr(this.state.pos - 1, 3).match(/^[0-7]+/)[0];
 	          var octal = parseInt(octalStr, 8);
 	          if (octal > 255) {
@@ -6234,12 +6266,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            octal = parseInt(octalStr, 8);
 	          }
 	          if (octal > 0) {
-	            if (!this.state.containsOctal) {
+	            if (inTemplate) {
+	              this.state.invalidTemplateEscapePosition = codePos;
+	              return null;
+	            } else if (this.state.strict) {
+	              this.raise(codePos, "Octal literal in strict mode");
+	            } else if (!this.state.containsOctal) {
+	              // These properties are only used to throw an error for an octal which occurs
+	              // in a directive which occurs prior to a "use strict" directive.
 	              this.state.containsOctal = true;
-	              this.state.octalPosition = this.state.pos - 2;
-	            }
-	            if (this.state.strict || inTemplate) {
-	              this.raise(this.state.pos - 2, "Octal literal in strict mode");
+	              this.state.octalPosition = codePos;
 	            }
 	          }
 	          this.state.pos += octalStr.length - 1;
@@ -6249,12 +6285,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  };
 
-	  // Used to read character escape sequences ('\x', '\u', '\U').
+	  // Used to read character escape sequences ('\x', '\u').
 
-	  Tokenizer.prototype.readHexChar = function readHexChar(len) {
+	  Tokenizer.prototype.readHexChar = function readHexChar(len, throwOnInvalid) {
 	    var codePos = this.state.pos;
 	    var n = this.readInt(16, len);
-	    if (n === null) this.raise(codePos, "Bad character escape sequence");
+	    if (n === null) {
+	      if (throwOnInvalid) {
+	        this.raise(codePos, "Bad character escape sequence");
+	      } else {
+	        this.state.pos = codePos - 1;
+	        this.state.invalidTemplateEscapePosition = codePos - 1;
+	      }
+	    }
 	    return n;
 	  };
 
@@ -6286,7 +6329,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        ++this.state.pos;
-	        var esc = this.readCodePoint();
+	        var esc = this.readCodePoint(true);
 	        if (!(first ? isIdentifierStart : isIdentifierChar)(esc, true)) {
 	          this.raise(escStart, "Invalid Unicode escape");
 	        }
@@ -7206,11 +7249,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	pp$1.isClassProperty = function () {
-	  return this.match(types.eq) || this.isLineTerminator();
+	  return this.match(types.eq) || this.match(types.semi) || this.match(types.braceR);
 	};
 
-	pp$1.isClassMutatorStarter = function () {
-	  return false;
+	pp$1.isClassMethod = function () {
+	  return this.match(types.parenL);
+	};
+
+	pp$1.isNonstaticConstructor = function (method) {
+	  return !method.computed && !method.static && (method.key.name === "constructor" || // Identifier
+	  method.key.value === "constructor" // Literal
+	  );
 	};
 
 	pp$1.parseClassBody = function (node) {
@@ -7248,91 +7297,103 @@ return /******/ (function(modules) { // webpackBootstrap
 	      decorators = [];
 	    }
 
-	    var isConstructorCall = false;
-	    var isMaybeStatic = this.match(types.name) && this.state.value === "static";
-	    var isGenerator = this.eat(types.star);
-	    var isGetSet = false;
-	    var isAsync = false;
-
-	    this.parsePropertyName(method);
-
-	    method.static = isMaybeStatic && !this.match(types.parenL);
-	    if (method.static) {
-	      isGenerator = this.eat(types.star);
-	      this.parsePropertyName(method);
-	    }
-
-	    if (!isGenerator) {
-	      if (this.isClassProperty()) {
+	    method.static = false;
+	    if (this.match(types.name) && this.state.value === "static") {
+	      var key = this.parseIdentifier(true); // eats 'static'
+	      if (this.isClassMethod()) {
+	        // a method named 'static'
+	        method.kind = "method";
+	        method.computed = false;
+	        method.key = key;
+	        this.parseClassMethod(classBody, method, false, false);
+	        continue;
+	      } else if (this.isClassProperty()) {
+	        // a property named 'static'
+	        method.computed = false;
+	        method.key = key;
 	        classBody.body.push(this.parseClassProperty(method));
 	        continue;
 	      }
-
-	      if (method.key.type === "Identifier" && !method.computed && this.hasPlugin("classConstructorCall") && method.key.name === "call" && this.match(types.name) && this.state.value === "constructor") {
-	        isConstructorCall = true;
-	        this.parsePropertyName(method);
-	      }
+	      // otherwise something static
+	      method.static = true;
 	    }
 
-	    var isAsyncMethod = !this.match(types.parenL) && !method.computed && method.key.type === "Identifier" && method.key.name === "async";
-	    if (isAsyncMethod) {
-	      if (this.hasPlugin("asyncGenerators") && this.eat(types.star)) isGenerator = true;
-	      isAsync = true;
+	    if (this.eat(types.star)) {
+	      // a generator
+	      method.kind = "method";
 	      this.parsePropertyName(method);
-	    }
-
-	    method.kind = "method";
-
-	    if (!method.computed) {
-	      var key = method.key;
-
-	      // handle get/set methods
-	      // eg. class Foo { get bar() {} set bar() {} }
-
-	      if (!isAsync && !isGenerator && !this.isClassMutatorStarter() && key.type === "Identifier" && !this.match(types.parenL) && (key.name === "get" || key.name === "set")) {
-	        isGetSet = true;
-	        method.kind = key.name;
-	        key = this.parsePropertyName(method);
+	      if (this.isNonstaticConstructor(method)) {
+	        this.raise(method.key.start, "Constructor can't be a generator");
 	      }
-
-	      // disallow invalid constructors
-	      var isConstructor = !isConstructorCall && !method.static && (key.name === "constructor" || // Identifier
-	      key.value === "constructor" // Literal
-	      );
-	      if (isConstructor) {
-	        if (hadConstructor) this.raise(key.start, "Duplicate constructor in the same class");
-	        if (isGetSet) this.raise(key.start, "Constructor can't have get/set modifier");
-	        if (isGenerator) this.raise(key.start, "Constructor can't be a generator");
-	        if (isAsync) this.raise(key.start, "Constructor can't be an async function");
-	        method.kind = "constructor";
-	        hadConstructor = true;
+	      if (!method.computed && method.static && (method.key.name === "prototype" || method.key.value === "prototype")) {
+	        this.raise(method.key.start, "Classes may not have static property named prototype");
 	      }
-
-	      // disallow static prototype method
-	      var isStaticPrototype = method.static && (key.name === "prototype" || // Identifier
-	      key.value === "prototype" // Literal
-	      );
-	      if (isStaticPrototype) {
-	        this.raise(key.start, "Classes may not have static property named prototype");
+	      this.parseClassMethod(classBody, method, true, false);
+	    } else {
+	      var isSimple = this.match(types.name);
+	      var _key = this.parsePropertyName(method);
+	      if (!method.computed && method.static && (method.key.name === "prototype" || method.key.value === "prototype")) {
+	        this.raise(method.key.start, "Classes may not have static property named prototype");
 	      }
-	    }
-
-	    // convert constructor to a constructor call
-	    if (isConstructorCall) {
-	      if (hadConstructorCall) this.raise(method.start, "Duplicate constructor call in the same class");
-	      method.kind = "constructorCall";
-	      hadConstructorCall = true;
-	    }
-
-	    // disallow decorators on class constructors
-	    if ((method.kind === "constructor" || method.kind === "constructorCall") && method.decorators) {
-	      this.raise(method.start, "You can't attach decorators to a class constructor");
-	    }
-
-	    this.parseClassMethod(classBody, method, isGenerator, isAsync);
-
-	    if (isGetSet) {
-	      this.checkGetterSetterParamCount(method);
+	      if (this.isClassMethod()) {
+	        // a normal method
+	        if (this.isNonstaticConstructor(method)) {
+	          if (hadConstructor) {
+	            this.raise(_key.start, "Duplicate constructor in the same class");
+	          } else if (method.decorators) {
+	            this.raise(method.start, "You can't attach decorators to a class constructor");
+	          }
+	          hadConstructor = true;
+	          method.kind = "constructor";
+	        } else {
+	          method.kind = "method";
+	        }
+	        this.parseClassMethod(classBody, method, false, false);
+	      } else if (this.isClassProperty()) {
+	        // a normal property
+	        if (this.isNonstaticConstructor(method)) {
+	          this.raise(method.key.start, "Classes may not have a non-static field named 'constructor'");
+	        }
+	        classBody.body.push(this.parseClassProperty(method));
+	      } else if (isSimple && _key.name === "async" && !this.isLineTerminator()) {
+	        // an async method
+	        var isGenerator = this.hasPlugin("asyncGenerators") && this.eat(types.star);
+	        method.kind = "method";
+	        this.parsePropertyName(method);
+	        if (this.isNonstaticConstructor(method)) {
+	          this.raise(method.key.start, "Constructor can't be an async function");
+	        }
+	        this.parseClassMethod(classBody, method, isGenerator, true);
+	      } else if (isSimple && (_key.name === "get" || _key.name === "set") && !(this.isLineTerminator() && this.match(types.star))) {
+	        // `get\n*` is an uninitialized property named 'get' followed by a generator.
+	        // a getter or setter
+	        method.kind = _key.name;
+	        this.parsePropertyName(method);
+	        if (this.isNonstaticConstructor(method)) {
+	          this.raise(method.key.start, "Constructor can't have get/set modifier");
+	        }
+	        this.parseClassMethod(classBody, method, false, false);
+	        this.checkGetterSetterParamCount(method);
+	      } else if (this.hasPlugin("classConstructorCall") && isSimple && _key.name === "call" && this.match(types.name) && this.state.value === "constructor") {
+	        // a (deprecated) call constructor
+	        if (hadConstructorCall) {
+	          this.raise(method.start, "Duplicate constructor call in the same class");
+	        } else if (method.decorators) {
+	          this.raise(method.start, "You can't attach decorators to a class constructor");
+	        }
+	        hadConstructorCall = true;
+	        method.kind = "constructorCall";
+	        this.parsePropertyName(method); // consume "constructor" and make it the method's name
+	        this.parseClassMethod(classBody, method, false, false);
+	      } else if (this.isLineTerminator()) {
+	        // an uninitialized class property (due to ASI, since we don't otherwise recognize the next token)
+	        if (this.isNonstaticConstructor(method)) {
+	          this.raise(method.key.start, "Classes may not have a non-static field named 'constructor'");
+	        }
+	        classBody.body.push(this.parseClassProperty(method));
+	      } else {
+	        this.unexpected();
+	      }
 	    }
 	  }
 
@@ -8070,7 +8131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// the AST node that the inner parser gave them in another node.
 
 	// Parse a full expression. The optional arguments are used to
-	// forbid the `in` operator (in for loops initalization expressions)
+	// forbid the `in` operator (in for loops initialization expressions)
 	// and provide reference for storing '=' operator inside shorthand
 	// property assignment in contexts where both object expression
 	// and object pattern might appear (so it's possible to raise
@@ -8320,7 +8381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (this.match(types.backQuote)) {
 	      var _node5 = this.startNodeAt(startPos, startLoc);
 	      _node5.tag = base;
-	      _node5.quasi = this.parseTemplate();
+	      _node5.quasi = this.parseTemplate(true);
 	      base = this.finishNode(_node5, "TaggedTemplateExpression");
 	    } else {
 	      return base;
@@ -8509,7 +8570,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.parseNew();
 
 	    case types.backQuote:
-	      return this.parseTemplate();
+	      return this.parseTemplate(false);
 
 	    case types.doubleColon:
 	      node = this.startNode();
@@ -8598,7 +8659,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var spreadNodeStartPos = this.state.start;
 	      var spreadNodeStartLoc = this.state.startLoc;
 	      spreadStart = this.state.start;
-	      exprList.push(this.parseParenItem(this.parseRest(), spreadNodeStartLoc, spreadNodeStartPos));
+	      exprList.push(this.parseParenItem(this.parseRest(), spreadNodeStartPos, spreadNodeStartLoc));
 	      break;
 	    } else {
 	      exprList.push(this.parseMaybeAssign(false, refShorthandDefaultPos, this.parseParenItem, refNeedsArrowPos));
@@ -8677,7 +8738,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var meta = this.parseIdentifier(true);
 
 	  if (this.eat(types.dot)) {
-	    return this.parseMetaProperty(node, meta, "target");
+	    var metaProp = this.parseMetaProperty(node, meta, "target");
+
+	    if (!this.state.inFunction) {
+	      this.raise(metaProp.property.start, "new.target can only be used in functions");
+	    }
+
+	    return metaProp;
 	  }
 
 	  node.callee = this.parseNoCallExpr();
@@ -8694,8 +8761,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Parse template expression.
 
-	pp$3.parseTemplateElement = function () {
+	pp$3.parseTemplateElement = function (isTagged) {
 	  var elem = this.startNode();
+	  if (this.state.value === null) {
+	    if (!isTagged || !this.hasPlugin("templateInvalidEscapes")) {
+	      this.raise(this.state.invalidTemplateEscapePosition, "Invalid escape sequence in template");
+	    } else {
+	      this.state.invalidTemplateEscapePosition = null;
+	    }
+	  }
 	  elem.value = {
 	    raw: this.input.slice(this.state.start, this.state.end).replace(/\r\n?/g, "\n"),
 	    cooked: this.state.value
@@ -8705,17 +8779,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this.finishNode(elem, "TemplateElement");
 	};
 
-	pp$3.parseTemplate = function () {
+	pp$3.parseTemplate = function (isTagged) {
 	  var node = this.startNode();
 	  this.next();
 	  node.expressions = [];
-	  var curElt = this.parseTemplateElement();
+	  var curElt = this.parseTemplateElement(isTagged);
 	  node.quasis = [curElt];
 	  while (!curElt.tail) {
 	    this.expect(types.dollarBraceL);
 	    node.expressions.push(this.parseExpression());
 	    this.expect(types.braceR);
-	    node.quasis.push(curElt = this.parseTemplateElement());
+	    node.quasis.push(curElt = this.parseTemplateElement(isTagged));
 	  }
 	  this.next();
 	  return this.finishNode(node, "TemplateLiteral");
@@ -9869,7 +9943,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Interfaces
 
-	pp$8.flowParseInterfaceish = function (node, allowStatic) {
+	pp$8.flowParseInterfaceish = function (node) {
 	  node.id = this.parseIdentifier();
 
 	  if (this.isRelational("<")) {
@@ -9894,7 +9968,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } while (this.eat(types.comma));
 	  }
 
-	  node.body = this.flowParseObjectType(allowStatic);
+	  node.body = this.flowParseObjectType(true, false, false);
 	};
 
 	pp$8.flowParseInterfaceExtends = function () {
@@ -10075,7 +10149,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this.finishNode(node, "ObjectTypeCallProperty");
 	};
 
-	pp$8.flowParseObjectType = function (allowStatic, allowExact) {
+	pp$8.flowParseObjectType = function (allowStatic, allowExact, allowSpread) {
 	  var oldInType = this.state.inType;
 	  this.state.inType = true;
 
@@ -10123,24 +10197,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      nodeStart.callProperties.push(this.flowParseObjectTypeCallProperty(node, isStatic));
 	    } else {
-	      propertyKey = this.flowParseObjectPropertyKey();
-	      if (this.isRelational("<") || this.match(types.parenL)) {
-	        // This is a method property
+	      if (this.match(types.ellipsis)) {
+	        if (!allowSpread) {
+	          this.unexpected(null, "Spread operator cannnot appear in class or interface definitions");
+	        }
 	        if (variance) {
-	          this.unexpected(variancePos);
+	          this.unexpected(variance.start, "Spread properties cannot have variance");
 	        }
-	        nodeStart.properties.push(this.flowParseObjectTypeMethod(startPos, startLoc, isStatic, propertyKey));
-	      } else {
-	        if (this.eat(types.question)) {
-	          optional = true;
-	        }
-	        node.key = propertyKey;
-	        node.value = this.flowParseTypeInitialiser();
-	        node.optional = optional;
-	        node.static = isStatic;
-	        node.variance = variance;
+	        this.expect(types.ellipsis);
+	        node.argument = this.flowParseType();
 	        this.flowObjectTypeSemicolon();
-	        nodeStart.properties.push(this.finishNode(node, "ObjectTypeProperty"));
+	        nodeStart.properties.push(this.finishNode(node, "ObjectTypeSpreadProperty"));
+	      } else {
+	        propertyKey = this.flowParseObjectPropertyKey();
+	        if (this.isRelational("<") || this.match(types.parenL)) {
+	          // This is a method property
+	          if (variance) {
+	            this.unexpected(variance.start);
+	          }
+	          nodeStart.properties.push(this.flowParseObjectTypeMethod(startPos, startLoc, isStatic, propertyKey));
+	        } else {
+	          if (this.eat(types.question)) {
+	            optional = true;
+	          }
+	          node.key = propertyKey;
+	          node.value = this.flowParseTypeInitialiser();
+	          node.optional = optional;
+	          node.static = isStatic;
+	          node.variance = variance;
+	          this.flowObjectTypeSemicolon();
+	          nodeStart.properties.push(this.finishNode(node, "ObjectTypeProperty"));
+	        }
 	      }
 	    }
 
@@ -10302,10 +10389,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.flowIdentToTypeAnnotation(startPos, startLoc, node, this.parseIdentifier());
 
 	    case types.braceL:
-	      return this.flowParseObjectType(false, false);
+	      return this.flowParseObjectType(false, false, true);
 
 	    case types.braceBarL:
-	      return this.flowParseObjectType(false, true);
+	      return this.flowParseObjectType(false, true, true);
 
 	    case types.bracketL:
 	      return this.flowParseTupleType();
@@ -10610,14 +10697,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 
 	  instance.extend("parseParenItem", function (inner) {
-	    return function (node, startLoc, startPos) {
-	      node = inner.call(this, node, startLoc, startPos);
+	    return function (node, startPos, startLoc) {
+	      node = inner.call(this, node, startPos, startLoc);
 	      if (this.eat(types.question)) {
 	        node.optional = true;
 	      }
 
 	      if (this.match(types.colon)) {
-	        var typeCastNode = this.startNodeAt(startLoc, startPos);
+	        var typeCastNode = this.startNodeAt(startPos, startLoc);
 	        typeCastNode.expression = node;
 	        typeCastNode.typeAnnotation = this.flowParseTypeAnnotation();
 
@@ -10781,6 +10868,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        node.typeAnnotation = this.flowParseTypeAnnotation();
 	      }
 	      return inner.call(this, node);
+	    };
+	  });
+
+	  // determine whether or not we're currently in the position where a class method would appear
+	  instance.extend("isClassMethod", function (inner) {
+	    return function () {
+	      return this.isRelational("<") || inner.call(this);
 	    };
 	  });
 
@@ -11118,16 +11212,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  instance.extend("shouldParseArrow", function (inner) {
 	    return function () {
 	      return this.match(types.colon) || inner.call(this);
-	    };
-	  });
-
-	  instance.extend("isClassMutatorStarter", function (inner) {
-	    return function () {
-	      if (this.isRelational("<")) {
-	        return true;
-	      } else {
-	        return inner.call(this);
-	      }
 	    };
 	  });
 	};
@@ -16288,13 +16372,16 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	'use strict';
-	module.exports = function toFastProperties(obj) {
-		function f() {}
-		f.prototype = obj;
-		new f();
-		return;
-		eval(obj);
-	};
+	module.exports = function toFastproperties(o) {
+		function Sub() {}
+		Sub.prototype = o;
+		var receiver = new Sub(); // create an instance
+		function ic() { return typeof receiver.foo; } // perform access
+		ic(); 
+		ic();
+		return o;
+		eval("o" + o); // ensure no dead code elimination
+	}
 
 
 /***/ },
@@ -19290,15 +19377,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // NB: In an Electron preload script, document will be defined but not fully
 	  // initialized. Since we know we're in Chrome, we'll just detect this case
 	  // explicitly
-	  if (typeof window !== 'undefined' && window && typeof window.process !== 'undefined' && window.process.type === 'renderer') {
+	  if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
 	    return true;
 	  }
 
 	  // is webkit? http://stackoverflow.com/a/16459606/376773
 	  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
-	  return (typeof document !== 'undefined' && document && 'WebkitAppearance' in document.documentElement.style) ||
+	  return (typeof document !== 'undefined' && document && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
 	    // is firebug? http://stackoverflow.com/a/398120/376773
-	    (typeof window !== 'undefined' && window && window.console && (console.firebug || (console.exception && console.table))) ||
+	    (typeof window !== 'undefined' && window && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
 	    // is firefox >= v31?
 	    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
 	    (typeof navigator !== 'undefined' && navigator && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
@@ -19453,7 +19540,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(581);
+	exports.humanize = __webpack_require__(1016);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -19583,7 +19670,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  exports.names = [];
 	  exports.skips = [];
 
-	  var split = (namespaces || '').split(/[\s,]+/);
+	  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
 	  var len = split.length;
 
 	  for (var i = 0; i < len; i++) {
@@ -19645,161 +19732,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 581 */
-/***/ function(module, exports) {
-
-	/**
-	 * Helpers.
-	 */
-
-	var s = 1000
-	var m = s * 60
-	var h = m * 60
-	var d = h * 24
-	var y = d * 365.25
-
-	/**
-	 * Parse or format the given `val`.
-	 *
-	 * Options:
-	 *
-	 *  - `long` verbose formatting [false]
-	 *
-	 * @param {String|Number} val
-	 * @param {Object} options
-	 * @throws {Error} throw an error if val is not a non-empty string or a number
-	 * @return {String|Number}
-	 * @api public
-	 */
-
-	module.exports = function (val, options) {
-	  options = options || {}
-	  var type = typeof val
-	  if (type === 'string' && val.length > 0) {
-	    return parse(val)
-	  } else if (type === 'number' && isNaN(val) === false) {
-	    return options.long ?
-				fmtLong(val) :
-				fmtShort(val)
-	  }
-	  throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val))
-	}
-
-	/**
-	 * Parse the given `str` and return milliseconds.
-	 *
-	 * @param {String} str
-	 * @return {Number}
-	 * @api private
-	 */
-
-	function parse(str) {
-	  str = String(str)
-	  if (str.length > 10000) {
-	    return
-	  }
-	  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str)
-	  if (!match) {
-	    return
-	  }
-	  var n = parseFloat(match[1])
-	  var type = (match[2] || 'ms').toLowerCase()
-	  switch (type) {
-	    case 'years':
-	    case 'year':
-	    case 'yrs':
-	    case 'yr':
-	    case 'y':
-	      return n * y
-	    case 'days':
-	    case 'day':
-	    case 'd':
-	      return n * d
-	    case 'hours':
-	    case 'hour':
-	    case 'hrs':
-	    case 'hr':
-	    case 'h':
-	      return n * h
-	    case 'minutes':
-	    case 'minute':
-	    case 'mins':
-	    case 'min':
-	    case 'm':
-	      return n * m
-	    case 'seconds':
-	    case 'second':
-	    case 'secs':
-	    case 'sec':
-	    case 's':
-	      return n * s
-	    case 'milliseconds':
-	    case 'millisecond':
-	    case 'msecs':
-	    case 'msec':
-	    case 'ms':
-	      return n
-	    default:
-	      return undefined
-	  }
-	}
-
-	/**
-	 * Short format for `ms`.
-	 *
-	 * @param {Number} ms
-	 * @return {String}
-	 * @api private
-	 */
-
-	function fmtShort(ms) {
-	  if (ms >= d) {
-	    return Math.round(ms / d) + 'd'
-	  }
-	  if (ms >= h) {
-	    return Math.round(ms / h) + 'h'
-	  }
-	  if (ms >= m) {
-	    return Math.round(ms / m) + 'm'
-	  }
-	  if (ms >= s) {
-	    return Math.round(ms / s) + 's'
-	  }
-	  return ms + 'ms'
-	}
-
-	/**
-	 * Long format for `ms`.
-	 *
-	 * @param {Number} ms
-	 * @return {String}
-	 * @api private
-	 */
-
-	function fmtLong(ms) {
-	  return plural(ms, d, 'day') ||
-	    plural(ms, h, 'hour') ||
-	    plural(ms, m, 'minute') ||
-	    plural(ms, s, 'second') ||
-	    ms + ' ms'
-	}
-
-	/**
-	 * Pluralization helper.
-	 */
-
-	function plural(ms, n, name) {
-	  if (ms < n) {
-	    return
-	  }
-	  if (ms < n * 1.5) {
-	    return Math.floor(ms / n) + ' ' + name
-	  }
-	  return Math.ceil(ms / n) + ' ' + name + 's'
-	}
-
-
-/***/ },
+/* 581 */,
 /* 582 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -28648,6 +28581,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var flag = __webpack_require__(121);
 
+	function isBrowser() {
+	  return typeof window == "object" && typeof module == "undefined";
+	}
+
 	/**
 	 * Gets a config value for a given key
 	 * e.g "chrome.webSocketPort"
@@ -28665,6 +28602,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function isDevelopment() {
+	  if (isBrowser()) {
+	    if (true) {
+	      return false;
+	    }
+	    var href = window.location ? window.location.href : "";
+	    return href.match(/^file:/) || href.match(/localhost:/);
+	  }
+
 	  if (isFirefoxPanel()) {
 	    // Default to production if compiling for the Firefox panel
 	    return ("production") === "development";
@@ -28699,13 +28644,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function updateLocalConfig(relativePath) {
 	  var localConfigPath = path.resolve(relativePath, "../configs/local.json");
-	  try {
-	    var output = JSON.stringify(config, null, 2);
-	    fs.writeFileSync(localConfigPath, output);
-	    return output;
-	  } catch (err) {
-	    return "{}";
-	  }
+	  var output = JSON.stringify(config, null, 2);
+	  fs.writeFileSync(localConfigPath, output, { flag: "w" });
+	  return output;
 	}
 
 	module.exports = {
@@ -28998,9 +28939,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	exports.getSymbols = getSymbols;
+	exports.getClosestExpression = getClosestExpression;
 	exports.resolveToken = resolveToken;
-	exports.getPathClosestToLocation = getPathClosestToLocation;
+	exports.getClosestScope = getClosestScope;
+	exports.getClosestPath = getClosestPath;
+	exports.getVariablesInLocalScope = getVariablesInLocalScope;
 	exports.getVariablesInScope = getVariablesInScope;
+	exports.isExpressionInScope = isExpressionInScope;
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -29012,8 +28957,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isDevelopment = _require.isDevelopment;
 
 	var toPairs = __webpack_require__(195);
-	var get = __webpack_require__(67);
 	var isEmpty = __webpack_require__(963);
+	var uniq = __webpack_require__(561);
 
 	var ASTs = new Map();
 
@@ -29058,6 +29003,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  ASTs.set(sourceText.id, ast);
 	  return ast;
+	}
+
+	function getNodeValue(node) {
+	  if (t.isThisExpression(node)) {
+	    return "this";
+	  }
+
+	  return node.name;
 	}
 
 	function getFunctionName(path) {
@@ -29144,6 +29097,68 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return _getMemberExpression(root, []);
 	}
 
+	function getScopeVariables(scope) {
+	  var bindings = scope.bindings;
+
+
+	  return toPairs(bindings).map((_ref) => {
+	    var _ref2 = _slicedToArray(_ref, 2),
+	        name = _ref2[0],
+	        binding = _ref2[1];
+
+	    return {
+	      name,
+	      references: binding.referencePaths
+	    };
+	  });
+	}
+
+	function getScopeChain(scope) {
+	  var scopes = [scope];
+
+	  do {
+	    scopes.push(scope);
+	  } while (scope = scope.parent);
+
+	  return scopes;
+	}
+
+	/**
+	 * helps find member expressions on one line and function scopes that are
+	 * often many lines
+	 */
+	function nodeContainsLocation(_ref3) {
+	  var node = _ref3.node,
+	      location = _ref3.location;
+	  var _node$loc = node.loc,
+	      start = _node$loc.start,
+	      end = _node$loc.end;
+	  var line = location.line,
+	      column = location.column;
+
+
+	  if (start.line === end.line) {
+	    return start.line === line && start.column <= column && end.column >= column;
+	  }
+
+	  // node is likely a function parameter
+	  if (start.line === line) {
+	    return start.column <= column;
+	  }
+
+	  // node is on the same line as the closing curly
+	  if (end.line === line) {
+	    return end.column >= column;
+	  }
+
+	  // node is either inside the block body or outside of it
+	  return start.line < line && end.line > line;
+	}
+
+	function isLexicalScope(path) {
+	  return isFunction(path) || t.isProgram(path);
+	}
+
 	function getSymbols(source) {
 	  if (symbolDeclarations.has(source.id)) {
 	    var _symbols = symbolDeclarations.get(source.id);
@@ -29156,7 +29171,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var symbols = { functions: [], variables: [] };
 
-	  if (!ast || isEmpty(ast)) {
+	  if (isEmpty(ast)) {
 	    return symbols;
 	  }
 
@@ -29188,59 +29203,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return symbols;
 	}
 
-	function resolveExpression(path, token, location) {
-	  var node = path.node;
-	  if (t.isMemberExpression(node) && node.property.name === token && nodeContainsLocation({ node, location })) {
-	    var expr = getMemberExpression(node);
-	    return {
-	      value: expr.join("."),
-	      location: node.loc
-	    };
+	function getClosestMemberExpression(source, token, location) {
+	  var ast = getAst(source);
+	  if (isEmpty(ast)) {
+	    return null;
 	  }
 
-	  return null;
+	  var expression = null;
+	  traverse(ast, {
+	    enter(path) {
+	      var node = path.node;
+
+	      if (t.isMemberExpression(node) && node.property.name === token && nodeContainsLocation({ node, location })) {
+	        var memberExpression = getMemberExpression(node);
+	        expression = {
+	          value: memberExpression.join("."),
+	          location: node.loc
+	        };
+	      }
+	    }
+	  });
+
+	  return expression;
 	}
 
-	function resolveScope(path, location) {
-	  var node = path.node;
-	  if ((isFunction(path) || t.isProgram(path)) && nodeContainsLocation({ node, location })) {
-	    return path;
+	function getClosestExpression(source, token, location) {
+	  var memberExpression = getClosestMemberExpression(source, token, location);
+	  if (memberExpression) {
+	    return memberExpression;
 	  }
+
+	  var path = getClosestPath(source, location);
+	  if (!path || !path.node) {
+	    return;
+	  }
+
+	  var node = path.node;
+
+	  return { value: getNodeValue(node), location: node.loc };
 	}
 
 	// Resolves a token (at location) in the source to determine if it is in scope
 	// of the given frame and the expression (if any) to which it belongs
 	function resolveToken(source, token, location, frame) {
-	  var ast = getAst(source);
-	  var scopes = [];
-	  var expression = null;
-	  var inScope = false;
+	  var expression = getClosestExpression(source, token, location);
+	  var scope = getClosestScope(source, location);
 
-	  if (isEmpty(ast)) {
+	  if (!expression || !expression.value || !scope) {
 	    return { expression: null, inScope: false };
 	  }
 
-	  traverse(ast, {
-	    enter(path) {
-	      var scope = null;
-
-	      // if we haven't found an expression yet, determine if the token is part
-	      // of one
-	      if (!expression) {
-	        expression = resolveExpression(path, token, location);
-	      }
-
-	      // determine if the current path is a function or program containing the
-	      // frame
-	      scope = resolveScope(path, frame.location);
-	      if (scope) {
-	        scopes.unshift(scope);
-	      }
-	    }
-	  });
-
-	  // determine if the narrowest scope contains the token's location
-	  inScope = nodeContainsLocation({ node: scopes[0].node, location });
+	  var inScope = isExpressionInScope(expression.value, scope);
 
 	  return {
 	    expression,
@@ -29248,48 +29261,69 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 
-	function nodeContainsLocation(_ref) {
-	  var node = _ref.node,
-	      location = _ref.location;
-	  var _node$loc = node.loc,
-	      start = _node$loc.start,
-	      end = _node$loc.end;
-	  var line = location.line,
-	      column = location.column;
-
-
-	  return !(start.line > line || start.line === line && start.column > column || end.line < line || end.line === line && end.column < column);
-	}
-
-	function getPathClosestToLocation(source, location) {
+	function getClosestScope(source, location) {
 	  var ast = getAst(source);
-	  var pathClosestToLocation = null;
+	  if (isEmpty(ast)) {
+	    return null;
+	  }
+
+	  var closestPath = null;
 
 	  traverse(ast, {
 	    enter(path) {
-	      if (nodeContainsLocation({ node: path.node, location })) {
-	        pathClosestToLocation = path;
+	      if (isLexicalScope(path) && nodeContainsLocation({ node: path.node, location })) {
+	        closestPath = path;
 	      }
 	    }
 	  });
 
-	  return pathClosestToLocation;
+	  if (!closestPath) {
+	    return;
+	  }
+
+	  return closestPath.scope;
 	}
 
-	function getVariablesInScope(source, location) {
-	  var path = getPathClosestToLocation(source, location);
-	  var bindings = get(path, "scope.bindings", {});
+	function getClosestPath(source, location) {
+	  var ast = getAst(source);
+	  if (isEmpty(ast)) {
+	    return null;
+	  }
 
-	  return toPairs(bindings).map((_ref2) => {
-	    var _ref3 = _slicedToArray(_ref2, 2),
-	        name = _ref3[0],
-	        binding = _ref3[1];
+	  var closestPath = null;
 
-	    return {
-	      name,
-	      references: binding.referencePaths
-	    };
+	  traverse(ast, {
+	    enter(path) {
+	      if (nodeContainsLocation({ node: path.node, location })) {
+	        closestPath = path;
+	      }
+	    }
 	  });
+
+	  return closestPath;
+	}
+
+	function getVariablesInLocalScope(scope) {
+	  return getScopeVariables(scope);
+	}
+
+	function getVariablesInScope(scope) {
+	  var _ref4;
+
+	  var scopes = getScopeChain(scope);
+	  var scopeVars = scopes.map(getScopeVariables);
+	  var vars = (_ref4 = [{ name: "this" }, { name: "arguments" }]).concat.apply(_ref4, _toConsumableArray(scopeVars)).map(variable => variable.name);
+	  return uniq(vars);
+	}
+
+	function isExpressionInScope(expression, scope) {
+	  if (!scope) {
+	    return false;
+	  }
+
+	  var variables = getVariablesInScope(scope);
+	  var firstPart = expression.split(/\./)[0];
+	  return variables.includes(firstPart);
 	}
 
 /***/ },
@@ -29373,6 +29407,213 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = isEmpty;
+
+
+/***/ },
+/* 964 */,
+/* 965 */,
+/* 966 */,
+/* 967 */,
+/* 968 */,
+/* 969 */,
+/* 970 */,
+/* 971 */,
+/* 972 */,
+/* 973 */,
+/* 974 */,
+/* 975 */,
+/* 976 */,
+/* 977 */,
+/* 978 */,
+/* 979 */,
+/* 980 */,
+/* 981 */,
+/* 982 */,
+/* 983 */,
+/* 984 */,
+/* 985 */,
+/* 986 */,
+/* 987 */,
+/* 988 */,
+/* 989 */,
+/* 990 */,
+/* 991 */,
+/* 992 */,
+/* 993 */,
+/* 994 */,
+/* 995 */,
+/* 996 */,
+/* 997 */,
+/* 998 */,
+/* 999 */,
+/* 1000 */,
+/* 1001 */,
+/* 1002 */,
+/* 1003 */,
+/* 1004 */,
+/* 1005 */,
+/* 1006 */,
+/* 1007 */,
+/* 1008 */,
+/* 1009 */,
+/* 1010 */,
+/* 1011 */,
+/* 1012 */,
+/* 1013 */,
+/* 1014 */,
+/* 1015 */,
+/* 1016 */
+/***/ function(module, exports) {
+
+	/**
+	 * Helpers.
+	 */
+
+	var s = 1000
+	var m = s * 60
+	var h = m * 60
+	var d = h * 24
+	var y = d * 365.25
+
+	/**
+	 * Parse or format the given `val`.
+	 *
+	 * Options:
+	 *
+	 *  - `long` verbose formatting [false]
+	 *
+	 * @param {String|Number} val
+	 * @param {Object} [options]
+	 * @throws {Error} throw an error if val is not a non-empty string or a number
+	 * @return {String|Number}
+	 * @api public
+	 */
+
+	module.exports = function (val, options) {
+	  options = options || {}
+	  var type = typeof val
+	  if (type === 'string' && val.length > 0) {
+	    return parse(val)
+	  } else if (type === 'number' && isNaN(val) === false) {
+	    return options.long ?
+				fmtLong(val) :
+				fmtShort(val)
+	  }
+	  throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val))
+	}
+
+	/**
+	 * Parse the given `str` and return milliseconds.
+	 *
+	 * @param {String} str
+	 * @return {Number}
+	 * @api private
+	 */
+
+	function parse(str) {
+	  str = String(str)
+	  if (str.length > 10000) {
+	    return
+	  }
+	  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str)
+	  if (!match) {
+	    return
+	  }
+	  var n = parseFloat(match[1])
+	  var type = (match[2] || 'ms').toLowerCase()
+	  switch (type) {
+	    case 'years':
+	    case 'year':
+	    case 'yrs':
+	    case 'yr':
+	    case 'y':
+	      return n * y
+	    case 'days':
+	    case 'day':
+	    case 'd':
+	      return n * d
+	    case 'hours':
+	    case 'hour':
+	    case 'hrs':
+	    case 'hr':
+	    case 'h':
+	      return n * h
+	    case 'minutes':
+	    case 'minute':
+	    case 'mins':
+	    case 'min':
+	    case 'm':
+	      return n * m
+	    case 'seconds':
+	    case 'second':
+	    case 'secs':
+	    case 'sec':
+	    case 's':
+	      return n * s
+	    case 'milliseconds':
+	    case 'millisecond':
+	    case 'msecs':
+	    case 'msec':
+	    case 'ms':
+	      return n
+	    default:
+	      return undefined
+	  }
+	}
+
+	/**
+	 * Short format for `ms`.
+	 *
+	 * @param {Number} ms
+	 * @return {String}
+	 * @api private
+	 */
+
+	function fmtShort(ms) {
+	  if (ms >= d) {
+	    return Math.round(ms / d) + 'd'
+	  }
+	  if (ms >= h) {
+	    return Math.round(ms / h) + 'h'
+	  }
+	  if (ms >= m) {
+	    return Math.round(ms / m) + 'm'
+	  }
+	  if (ms >= s) {
+	    return Math.round(ms / s) + 's'
+	  }
+	  return ms + 'ms'
+	}
+
+	/**
+	 * Long format for `ms`.
+	 *
+	 * @param {Number} ms
+	 * @return {String}
+	 * @api private
+	 */
+
+	function fmtLong(ms) {
+	  return plural(ms, d, 'day') ||
+	    plural(ms, h, 'hour') ||
+	    plural(ms, m, 'minute') ||
+	    plural(ms, s, 'second') ||
+	    ms + ' ms'
+	}
+
+	/**
+	 * Pluralization helper.
+	 */
+
+	function plural(ms, n, name) {
+	  if (ms < n) {
+	    return
+	  }
+	  if (ms < n * 1.5) {
+	    return Math.floor(ms / n) + ' ' + name
+	  }
+	  return Math.ceil(ms / n) + ' ' + name + 's'
+	}
 
 
 /***/ }

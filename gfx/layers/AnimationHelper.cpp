@@ -54,7 +54,21 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                              const TransformData& aData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace), Move(aFrameTransform), aData);
+  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
+                                           Move(aFrameTransform),
+                                           aData);
+  mAnimatedValues.Put(aId, value);
+}
+
+void
+CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
+                                             gfx::Matrix4x4&& aTransformInDevSpace)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  const TransformData dontCare = {};
+  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
+                                           gfx::Matrix4x4(),
+                                           dontCare);
   mAnimatedValues.Put(aId, value);
 }
 
@@ -543,21 +557,18 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
                                                           transformData.appUnitsPerDevPixel(),
                                                           0, &transformData.bounds());
         gfx::Matrix4x4 frameTransform = transform;
-
-        //TODO how do we support this without layer information
-        // If our parent layer is a perspective layer, then the offset into reference
-        // frame coordinates is already on that layer. If not, then we need to ask
+        // If the parent has perspective transform, then the offset into reference
+        // frame coordinates is already on this transform. If not, then we need to ask
         // for it to be added here.
-        // if (!aLayer->GetParent() ||
-        //     !aLayer->GetParent()->GetTransformIsPerspective()) {
-        //   nsLayoutUtils::PostTranslate(transform, origin,
-        //                                transformData.appUnitsPerDevPixel(),
-        //                                true);
-        // }
+        if (!transformData.hasPerspectiveParent()) {
+           nsLayoutUtils::PostTranslate(transform, origin,
+                                        transformData.appUnitsPerDevPixel(),
+                                        true);
+        }
 
-        // if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        //   transform.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
-        // }
+        transform.PostScale(transformData.inheritedXScale(),
+                            transformData.inheritedYScale(),
+                            1);
 
         aStorage->SetAnimatedValue(iter.Key(),
                                    Move(transform), Move(frameTransform),

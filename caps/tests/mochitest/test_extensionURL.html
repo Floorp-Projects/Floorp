@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
                                      .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
 
   SimpleTest.registerCleanupFunction(function() {
-      extensionHandler.setSubstitution('cherise', null);
-      extensionHandler.setSubstitution('liebchen', null);
+      extensionHandler.setSubstitution("cherise", null);
+      extensionHandler.setSubstitution("liebchen", null);
       aps.setExtensionURILoadCallback(oldLoadCallback);
       aps.setExtensionURIToAddonIdCallback(oldMapCallback);
   });
@@ -33,16 +33,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // First, get a file:// URI to something - open to suggestions on how to do
     //  this more easily.
-    var resURI = SpecialPowers.Services.io.newURI('resource://testing-common/resource_test_file.html');
+    var resURI = SpecialPowers.Services.io.newURI("resource://testing-common/resource_test_file.html");
     var filePath = resourceHandler.resolveURI(resURI);
-    ok(filePath.startsWith('file://'), 'resource:// URI resolves where we expect: ' + filePath);
+    ok(filePath.startsWith("file://"), "resource:// URI resolves where we expect: " + filePath);
     var fileURI = SpecialPowers.Services.io.newURI(filePath);
 
     // Register a moz-extension:// URI.
-    extensionHandler.setSubstitution('cherise', fileURI);
+    extensionHandler.setSubstitution("cherise", fileURI);
 
     // Alias the above.
-    extensionHandler.setSubstitution('liebchen', SpecialPowers.Services.io.newURI('moz-extension://cherise'));
+    extensionHandler.setSubstitution("liebchen", SpecialPowers.Services.io.newURI("moz-extension://cherise"));
 
     //
     // Make sure that non-file:// URIs don't work.
@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // resource://
     try {
-      extensionHandler.setSubstitution('interdit', resURI);
+      extensionHandler.setSubstitution("interdit", resURI);
       ok(false, "Should have thrown for mapping moz-extension to resource");
     } catch (e) {
       ok(true, "Threw correctly: " + e);
@@ -58,15 +58,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // chrome://
     try {
-      var chromeURI = SpecialPowers.Services.io.newURI('chrome://global/content/mozilla.xhtml');
-      extensionHandler.setSubstitution('verboten', chromeURI);
+      var chromeURI = SpecialPowers.Services.io.newURI("chrome://global/content/mozilla.xhtml");
+      extensionHandler.setSubstitution("verboten", chromeURI);
       ok(false, "Should have thrown for mapping moz-extension to chrome");
     } catch (e) {
       ok(true, "Threw correctly: " + e);
     }
 
     function navigateWithLocation(ifr, url) { ifr.contentWindow.location = url; }
-    function navigateWithSrc(ifr, url) { ifr.setAttribute('src', url); }
+    function navigateWithSrc(ifr, url) { ifr.setAttribute("src", url); }
     function navigateFromChromeWithLocation(ifr, url) { SpecialPowers.wrap(ifr).contentWindow.location = url; }
     function navigateFromChromeWithWebNav(ifr, url) {
       SpecialPowers.wrap(ifr).contentWindow
@@ -81,25 +81,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
       aps.setExtensionURILoadCallback(cb);
     }
 
-    aps.setExtensionURIToAddonIdCallback(SpecialPowers.wrapCallback(function (uri) { return 'imaginaryaddon-' + uri.host[0]; }));
+    aps.setExtensionURIToAddonIdCallback(SpecialPowers.wrapCallback(function(uri) { return "imaginaryaddon-" + uri.host[0]; }));
 
     function testLoad(url, navigate, shouldThrow) {
-      var ifr = document.createElement('iframe');
+      var ifr = document.createElement("iframe");
       var p = new Promise(function(resolve, reject) {
         ifr.onload = function() {
-          ok(true, 'Loaded ' + url);
+          ok(true, "Loaded " + url);
           var prin = SpecialPowers.wrap(ifr.contentWindow).document.nodePrincipal;
-          function stripTrailingSlash(s) { return s.replace(/\/$/, ''); };
-          is(stripTrailingSlash(prin.URI.spec), url, 'Principal uri is correct: ' + url);
-          function stripPath(s) { return s.replace(/(.*\/\/.+)\/.*/, '$1'); };
-          is(prin.originNoSuffix, stripPath(url), 'Principal origin is correct: ' + prin.originNoSuffix);
-          is(prin.addonId, 'imaginaryaddon-' + url[url.indexOf('/') + 2], 'addonId is correct');
+          function stripTrailingSlash(s) { return s.replace(/\/$/, ""); }
+          is(stripTrailingSlash(prin.URI.spec), url, "Principal uri is correct: " + url);
+          function stripPath(s) { return s.replace(/(.*\/\/.+)\/.*/, "$1"); }
+          is(prin.originNoSuffix, stripPath(url), "Principal origin is correct: " + prin.originNoSuffix);
+          is(prin.addonId, "imaginaryaddon-" + url[url.indexOf("/") + 2], "addonId is correct");
           if (/_blank/.test(url)) {
             is(SpecialPowers.wrap(ifr.contentWindow).document.documentElement.innerHTML,
-               '<head></head><body></body>', 'blank document looks right');
+               "<head></head><body></body>", "blank document looks right");
           } else {
-            is(SpecialPowers.wrap(ifr.contentWindow).document.title, 'resource test file',
-               'document looks right');
+            is(SpecialPowers.wrap(ifr.contentWindow).document.title, "resource test file",
+               "document looks right");
           }
           ifr.remove();
           resolve();
@@ -134,20 +134,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     //
     // Perform some loads and make sure they work correctly.
     //
-    testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithLocation)()
-    .then(testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithWebNav))
-    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation, /* shouldThrow = */ true))
-    .then(testXHR.bind(null, 'moz-extension://cherise', /* shouldError = */ true))
+    testLoad.bind(null, "moz-extension://cherise", navigateFromChromeWithLocation)()
+    .then(testLoad.bind(null, "moz-extension://cherise", navigateFromChromeWithWebNav))
+    .then(testLoad.bind(null, "moz-extension://cherise", navigateWithLocation, /* shouldThrow = */ true))
+    .then(testXHR.bind(null, "moz-extension://cherise", /* shouldError = */ true))
     .then(setWhitelistCallback.bind(null, /cherise/))
-    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation))
-    .then(testXHR.bind(null, 'moz-extension://cherise'))
-    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation, /* shouldThrow = */ true))
-    .then(testXHR.bind(null, 'moz-extension://liebchen', /* shouldError = */ true))
+    .then(testLoad.bind(null, "moz-extension://cherise", navigateWithLocation))
+    .then(testXHR.bind(null, "moz-extension://cherise"))
+    .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithLocation, /* shouldThrow = */ true))
+    .then(testXHR.bind(null, "moz-extension://liebchen", /* shouldError = */ true))
     .then(setWhitelistCallback.bind(null, /cherise|liebchen/))
-    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation))
-    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithSrc))
-    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithSrc))
-    .then(testLoad.bind(null, 'moz-extension://cherise/_blank.html', navigateWithSrc))
+    .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithLocation))
+    .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithSrc))
+    .then(testLoad.bind(null, "moz-extension://cherise", navigateWithSrc))
+    .then(testLoad.bind(null, "moz-extension://cherise/_blank.html", navigateWithSrc))
     .then(SimpleTest.finish.bind(SimpleTest),
           function(e) { ok(false, "rejected promise: " + e); SimpleTest.finish() }
     );

@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "WebRenderCanvasLayer.h"
@@ -17,6 +18,7 @@
 #include "WebRenderContainerLayer.h"
 #include "WebRenderImageLayer.h"
 #include "WebRenderPaintedLayer.h"
+#include "WebRenderPaintedLayerBlob.h"
 #include "WebRenderTextLayer.h"
 #include "WebRenderDisplayItemLayer.h"
 
@@ -74,6 +76,7 @@ WebRenderLayerManager::Destroy()
 
   LayerManager::Destroy();
   DiscardImages();
+  DiscardCompositorAnimations();
   WrBridge()->Destroy();
 
   if (mTransactionIdAllocator) {
@@ -188,8 +191,9 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   DiscardCompositorAnimations();
   mRoot->StartPendingAnimations(mAnimationReadyTime);
 
+  StackingContextHelper sc;
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
-  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
+  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
   WrBridge()->ClearReadLocks();
 
   // We can't finish this transaction so return. This usually
@@ -311,16 +315,17 @@ WebRenderLayerManager::DiscardImages()
 void
 WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 {
-  mDiscardedCompositorAnimationsIds.push_back(aId);
+  mDiscardedCompositorAnimationsIds.AppendElement(aId);
 }
 
 void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
-  for (auto id : mDiscardedCompositorAnimationsIds) {
-    WrBridge()->AddWebRenderParentCommand(OpRemoveCompositorAnimations(id));
+  if (!mDiscardedCompositorAnimationsIds.IsEmpty()) {
+    WrBridge()->
+      SendDeleteCompositorAnimations(mDiscardedCompositorAnimationsIds);
+    mDiscardedCompositorAnimationsIds.Clear();
   }
-  mDiscardedCompositorAnimationsIds.clear();
 }
 
 void
@@ -500,7 +505,11 @@ WebRenderLayerManager::SetRoot(Layer* aLayer)
 already_AddRefed<PaintedLayer>
 WebRenderLayerManager::CreatePaintedLayer()
 {
-  return MakeAndAddRef<WebRenderPaintedLayer>(this);
+  if (gfxPrefs::WebRenderBlobImages()) {
+    return MakeAndAddRef<WebRenderPaintedLayerBlob>(this);
+  } else {
+    return MakeAndAddRef<WebRenderPaintedLayer>(this);
+  }
 }
 
 already_AddRefed<ContainerLayer>

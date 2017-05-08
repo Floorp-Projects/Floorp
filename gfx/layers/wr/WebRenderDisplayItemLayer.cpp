@@ -8,10 +8,11 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/Matrix.h"
-#include "mozilla/layers/UpdateImageHelper.h"
 #include "UnitTransforms.h"
 
 namespace mozilla {
@@ -29,30 +30,46 @@ WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
 }
 
 void
-WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc)
 {
   if (mVisibleRegion.IsEmpty()) {
     return;
   }
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(false);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(nullptr);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
-    gfx::Rect rect = TransformedVisibleBoundsRelativeToParent();
-    gfx::Rect clip(0.0, 0.0, rect.width, rect.height);
-    aBuilder.PushClip(wr::ToWrRect(clip), imageMask);
+    ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());
+    // As with WebRenderTextLayer, I'm not 100% sure this is correct, but I
+    // think it is. Because we don't push a stacking context for this layer,
+    // WR doesn't know about the transform on this layer. The display items
+    // that we push as part of this layer already take the transform into
+    // account. When we set the clip rect we also need to explicitly apply
+    // the transform to make sure it gets taken into account.
+    // In a sense this is the opposite of what WebRenderLayer::ClipRect() does,
+    // because there we remove the transform from the clip rect to bring it
+    // into the coordinate space of the local stacking context, but here we
+    // need to apply the transform to the bounds to take it into the coordinate
+    // space of the enclosing stacking context.
+    // The conversion from ParentLayerPixel to LayerPixel below is a result of
+    // changing the reference layer from "this layer" to the "the layer that
+    // created aSc".
+    LayerRect clipInParentLayerSpace = ViewAs<LayerPixel>(clip,
+        PixelCastJustification::MovingDownToChildren);
+    aBuilder.PushClip(aSc.ToRelativeWrRect(clipInParentLayerSpace), imageMask);
   }
 
   if (mItem) {
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
-    mItem->CreateWebRenderCommands(builder, mParentCommands, this);
+    mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, this);
     mBuiltDisplayList = builder.Finalize();
   } else {
     // else we have an empty transaction and just use the
     // old commands.
-    WebRenderLayerManager* manager = static_cast<WebRenderLayerManager*>(Manager());
+    WebRenderLayerManager* manager = WrManager();
     MOZ_ASSERT(manager);
 
     // Since our recording relies on our parent layer's transform and stacking context
@@ -113,28 +130,9 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
 }
 
 bool
-WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
-                                           nsTArray<layers::WebRenderParentCommand>& aParentCommands)
+WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
+                                               const StackingContextHelper& aSc)
 {
-  if (!mImageContainer) {
-    mImageContainer = LayerManager::CreateImageContainer();
-  }
-
-  if (!mImageClient) {
-    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
-                                                  WrBridge(),
-                                                  TextureFlags::DEFAULT);
-    if (!mImageClient) {
-      return false;
-    }
-    mImageClient->Connect();
-  }
-
-  if (mExternalImageId.isNothing()) {
-    MOZ_ASSERT(mImageClient);
-    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
-  }
-
   const int32_t appUnitsPerDevPixel = mItem->Frame()->PresContext()->AppUnitsPerDevPixel();
 
   bool snap;
@@ -145,40 +143,38 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
   LayerRect imageRect;
   imageRect.SizeTo(LayerSize(imageSize));
 
-  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize.ToUnknownSize());
+  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+  RefPtr<gfx::DrawTarget> dummyDt =
+    gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, imageSize.ToUnknownSize(), gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt);
   LayerPoint offset = ViewAs<LayerPixel>(
       LayoutDevicePoint::FromAppUnits(mItem->ToReferenceFrame(), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
   {
-    RefPtr<gfx::DrawTarget> target = helper.GetDrawTarget();
-    if (!target) {
-      return false;
-    }
-
-    target->ClearRect(imageRect.ToUnknownRect());
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset.ToUnknownPoint());
+    dt->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
     MOZ_ASSERT(context);
 
     nsRenderingContext ctx(context);
     mItem->Paint(mBuilder, &ctx);
   }
 
-  if (!helper.UpdateImage()) {
-    return false;
-  }
+  wr::ByteBuffer bytes;
+  bytes.Allocate(recorder->RecordingSize());
+  DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
+  MOZ_ASSERT(ok);
 
-  LayerRect dest = RelativeToParent(imageRect) + offset;
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
   WrImageKey key = GetImageKey();
-  aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                mExternalImageId.value(),
-                                key));
-  aBuilder.PushImage(wr::ToWrRect(dest),
-                     clipRegion,
-                     WrImageRendering::Auto,
-                     key);
+  WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
+  WrManager()->AddImageKeyForDiscard(key);
 
+  aBuilder.PushImage(dest,
+                     clipRegion,
+                     wr::ImageRendering::Auto,
+                     key);
   return true;
 }
 

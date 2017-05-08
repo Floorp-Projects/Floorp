@@ -21,14 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=423375
  ** Test for Bug 423375
  ** (content shouldn't be able to load chrome: or resource:)
  **/
-function tryLoad(url)
-{
+function tryLoad(url) {
     try {
         window.frames[0].location = url;
         return "loaded";
-    } catch (e if /Access.*denied/.test(String(e))) {
-        return "denied";
     } catch (e) {
+        if (/Access.*denied/.test(String(e))) {
+          return "denied";
+        }
         return "unexpected: " + e;
     }
 }
