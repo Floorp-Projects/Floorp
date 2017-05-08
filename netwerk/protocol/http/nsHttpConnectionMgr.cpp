@@ -3536,6 +3536,10 @@ nsHalfOpenSocket::StartFastOpen()
     MOZ_ASSERT(mStreamOut);
     MOZ_ASSERT(mEnt && !mBackupTransport);
     mUsingFastOpen = true;
+    // SetupBackupTimer should setup timer which will hold a ref to this
+    // halfOpen. It will failed only if it cannot create timer. Anyway just
+    // to be sure I will add this deleteProtector!!!
+    RefPtr<nsHalfOpenSocket> deleteProtector(this);
     if (mEnt && !mBackupTransport && !mSynTimer) {
         // For Fast Open we will setup backup timer also for NullTransaction.
         // So maybe it is not set and we need to set it here.
@@ -3822,9 +3826,6 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         }
     }
     if (aFastOpen) {
-        // If it is fast open create a new tranaction for backup stream.
-        mTransaction = new NullHttpTransaction(mEnt->mConnInfo,
-                                               callbacks, mCaps);
         mConnectionNegotiatingFastOpen = conn;
     }
 
