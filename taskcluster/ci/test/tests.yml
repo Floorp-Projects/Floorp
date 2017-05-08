@@ -1178,7 +1178,7 @@ talos-chrome:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1216,7 +1216,7 @@ talos-dromaeojs:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1254,7 +1254,7 @@ talos-g1:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1292,7 +1292,7 @@ talos-g2:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1330,7 +1330,7 @@ talos-g3:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1368,7 +1368,7 @@ talos-g4:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1406,7 +1406,7 @@ talos-other:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1444,7 +1444,7 @@ talos-perf-reftest:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1477,7 +1477,7 @@ talos-svgr:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
@@ -1515,7 +1515,7 @@ talos-tp5o:
                     mozilla-aurora: false
                     mozilla-central: true
                     mozilla-inbound: false
-                    autoland:: false
+                    autoland: false
                     try: true
             default: both
     mozharness:
