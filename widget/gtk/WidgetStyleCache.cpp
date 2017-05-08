@@ -714,6 +714,21 @@ CreateCSSNode(const char* aName, GtkStyleContext* aParentStyle, GType aType)
   gtk_style_context_set_parent(context, aParentStyle);
   gtk_widget_path_unref(path);
 
+  // In GTK 3.4, gtk_render_* functions use |theming_engine| on the style
+  // context without ensuring any style resolution sets it appropriately
+  // in style_data_lookup(). e.g.
+  // https://git.gnome.org/browse/gtk+/tree/gtk/gtkstylecontext.c?h=3.4.4#n3847
+  //
+  // That can result in incorrect drawing on first draw.  To work around this,
+  // force a style look-up to set |theming_engine|.  It is sufficient to do
+  // this only on context creation, instead of after every modification to the
+  // context, because themes typically (Ambiance and oxygen-gtk, at least) set
+  // the "engine" property with the '*' selector.
+  if (GTK_MAJOR_VERSION == 3 && gtk_get_minor_version() < 6) {
+    GdkRGBA unused;
+    gtk_style_context_get_color(context, GTK_STATE_FLAG_NORMAL, &unused);
+  }
+
   return context;
 }
 
