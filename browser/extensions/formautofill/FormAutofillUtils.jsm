@@ -62,6 +62,24 @@ this.FormAutofillUtils = {
     });
   },
 
+  ALLOWED_TYPES: ["text", "email", "tel", "number"],
+  isFieldEligibleForAutofill(element) {
+    if (element.autocomplete == "off") {
+      return false;
+    }
+
+    if (element instanceof Ci.nsIDOMHTMLInputElement) {
+      // `element.type` can be recognized as `text`, if it's missing or invalid.
+      if (!this.ALLOWED_TYPES.includes(element.type)) {
+        return false;
+      }
+    } else if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+      return false;
+    }
+
+    return true;
+  },
+
   // The tag name list is from Chromium except for "STYLE":
   // eslint-disable-next-line max-len
   // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e
