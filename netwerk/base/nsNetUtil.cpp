@@ -476,6 +476,18 @@ NS_GetDefaultPort(const char *scheme,
 {
   nsresult rv;
 
+  // Getting the default port through the protocol handler has a lot of XPCOM
+  // overhead involved.  We optimize the protocols that matter for Web pages
+  // (HTTP and HTTPS) by hardcoding their default ports here.
+  if (strncmp(scheme, "http", 4) == 0) {
+    if (scheme[4] == 's' && scheme[5] == '\0') {
+      return 443;
+    }
+    if (scheme[4] == '\0') {
+      return 80;
+    }
+  }
+
   nsCOMPtr<nsIIOService> grip;
   net_EnsureIOService(&ioService, grip);
   if (!ioService)
