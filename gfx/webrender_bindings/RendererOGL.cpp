@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace wr {
 
-WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
+WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -42,7 +42,7 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
   }
 }
 
-void UnlockExternalImage(void* aObj, WrExternalImageId aId)
+void UnlockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);

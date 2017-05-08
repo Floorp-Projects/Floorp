@@ -6736,6 +6736,16 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
   return imageSize;
 }
 
+/* static */ nsPoint
+nsLayoutUtils::GetBackgroundFirstTilePos(const nsPoint& aDest,
+                                         const nsPoint& aFill,
+                                         const nsSize& aRepeatSize)
+{
+  return nsPoint(NSToIntFloor(float(aFill.x - aDest.x) / aRepeatSize.width) * aRepeatSize.width,
+                 NSToIntFloor(float(aFill.y - aDest.y) / aRepeatSize.height) * aRepeatSize.height) +
+         aDest;
+}
+
 /* static */ DrawResult
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsIFrame*           aForFrame,
@@ -6766,9 +6776,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                              aOpacity);
   }
 
-  nsPoint firstTilePos = aDest.TopLeft() +
-                         nsPoint(NSToIntFloor(float(aFill.x - aDest.x) / aRepeatSize.width) * aRepeatSize.width,
-                                 NSToIntFloor(float(aFill.y - aDest.y) / aRepeatSize.height) * aRepeatSize.height);
+  nsPoint firstTilePos = GetBackgroundFirstTilePos(aDest.TopLeft(), aFill.TopLeft(), aRepeatSize);
   for (int32_t i = firstTilePos.x; i < aFill.XMost(); i += aRepeatSize.width) {
     for (int32_t j = firstTilePos.y; j < aFill.YMost(); j += aRepeatSize.height) {
       nsRect dest(i, j, aDest.width, aDest.height);

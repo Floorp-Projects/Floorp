@@ -77,7 +77,7 @@ class MIRGenerator
     abort(AbortReason r, const char* message, ...) MOZ_FORMAT_PRINTF(3, 4);
 
     mozilla::GenericErrorResult<AbortReason>
-    abortFmt(AbortReason r, const char* message, va_list ap);
+    abortFmt(AbortReason r, const char* message, va_list ap) MOZ_FORMAT_PRINTF(3, 0);
 
     // Collect the evaluation result of phases after IonBuilder, such that
     // off-thread compilation can report what error got encountered.

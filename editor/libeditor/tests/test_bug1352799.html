@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1352799
+-->
+<head>
+  <title>Test for Bug 1352799</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352799">Mozilla Bug 1352799</a>
+<p id="display"></p>
+<div id="content">
+<div id="input-container" style="display: none;">
+<input id="input" maxlength="1">
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1352799 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  var input = document.getElementById("input");
+
+  var inputcontainer = document.getElementById('input-container');
+  input.setAttribute('maxlength', 2);
+  inputcontainer.style.display = 'block';
+
+  input.focus();
+
+  synthesizeKey('1', {});
+  synthesizeKey('2', {});
+  synthesizeKey('3', {});
+
+  is(input.value, '12', 'value should be 12 with maxlength = 2');
+
+  input.value = '';
+  inputcontainer.style.display = 'none';
+
+  window.setTimeout(() => {
+    input.setAttribute('maxlength', 4);
+    inputcontainer.style.display = 'block';
+
+    input.focus();
+
+    synthesizeKey('4', {});
+    synthesizeKey('5', {});
+    synthesizeKey('6', {});
+    synthesizeKey('7', {});
+    synthesizeKey('8', {});
+
+    is(input.value, '4567', 'value should be 4567 with maxlength = 4');
+
+    inputcontainer.style.display = 'none';
+
+    window.setTimeout(() => {
+      input.setAttribute('maxlength', 2);
+      inputcontainer.style.display = 'block';
+
+      input.focus();
+
+      synthesizeKey('1', {});
+      synthesizeKey('2', {});
+
+      todo_is(input.value, '45', 'value should be 45 with maxlength = 2');
+
+      input.value = '';
+      inputcontainer.style.display = 'none';
+
+      window.setTimeout(() => {
+        input.removeAttribute('maxlength');
+        inputcontainer.style.display = 'block';
+
+        input.focus();
+
+        synthesizeKey('1', {});
+        synthesizeKey('2', {});
+        synthesizeKey('3', {});
+        synthesizeKey('4', {});
+        synthesizeKey('5', {});
+        synthesizeKey('6', {});
+        synthesizeKey('7', {});
+        synthesizeKey('8', {});
+
+        is(input.value, '12345678', 'value should be 12345678 without maxlength');
+
+        SimpleTest.finish();
+      }, 0);
+    }, 0);
+  }, 0);
+});
+</script>
+</pre>
+</body>
+</html>

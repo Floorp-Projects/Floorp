@@ -262,6 +262,16 @@ add_test(function test_InvalidArgumentError() {
   run_next_test();
 });
 
+add_test(function test_InvalidCookieDomainError() {
+  let err = new InvalidCookieDomainError("foo");
+  equal("InvalidCookieDomainError", err.name);
+  equal("foo", err.message);
+  equal("invalid cookie domain", err.status);
+  ok(err instanceof WebDriverError);
+
+  run_next_test();
+});
+
 add_test(function test_InvalidElementStateError() {
   let err = new InvalidElementStateError("foo");
   equal("InvalidElementStateError", err.name);

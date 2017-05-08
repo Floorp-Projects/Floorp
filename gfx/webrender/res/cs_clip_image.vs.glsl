@@ -26,7 +26,6 @@ void main(void) {
                                                area,
                                                cci.segment_index);
 
-    vLocalRect = vi.clipped_local_rect;
     vPos = vi.local_pos;
 
     vClipMaskUv = vec3((vPos.xy / vPos.z - local_rect.p0) / local_rect.size, 0.0);

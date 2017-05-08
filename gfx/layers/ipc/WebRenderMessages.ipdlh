@@ -11,9 +11,20 @@ include protocol PTexture;
 
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace layers {
+
+union OptionalTransform {
+  Matrix4x4;
+  void_t;
+};
+
+union OptionalOpacity {
+  float;
+  void_t;
+};
 
 struct OpAddExternalImage {
   ExternalImageId externalImageId;
@@ -22,17 +33,14 @@ struct OpAddExternalImage {
 
 struct OpAddCompositorAnimations {
   CompositorAnimations data;
-};
-
-struct OpRemoveCompositorAnimations {
-  uint64_t id;
+  OptionalTransform transform;
+  OptionalOpacity opacity;
 };
 
 union WebRenderParentCommand {
   OpAddExternalImage;
   CompositableOperation;
   OpAddCompositorAnimations;
-  OpRemoveCompositorAnimations;
 };
 
 } // namespace
