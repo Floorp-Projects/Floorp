@@ -971,8 +971,9 @@ function sidebarToggleVisible() {
  *         item.
  */
 function* performAdd(store) {
-  let toolbar = gPanelWindow.document.getElementById("storage-toolbar");
   let storeName = store.join(" > ");
+  let toolbar = gPanelWindow.document.getElementById("storage-toolbar");
+  let type = store[0];
 
   yield selectTreeItem(store);
 
@@ -993,7 +994,8 @@ function* performAdd(store) {
   let rowId = yield eventEdit;
   yield eventWait;
 
-  let value = getCellValue(rowId, "uniqueKey");
+  let key = type === "cookies" ? "uniqueKey" : "name";
+  let value = getCellValue(rowId, key);
 
   is(rowId, value, `Row '${rowId}' was successfully added.`);
 }
