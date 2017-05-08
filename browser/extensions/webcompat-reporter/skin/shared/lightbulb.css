@@ -1,7 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#webcompat-reporter-button[cui-areatype="menu-panel"] {
+#webcompat-reporter-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #webcompat-reporter-button {
   list-style-image: url("chrome://webcompat-reporter/skin/lightbulb.svg");
 }
 

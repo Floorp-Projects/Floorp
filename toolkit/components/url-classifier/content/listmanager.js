@@ -580,7 +580,7 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
                 this.updateInterval, false);
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
-                               "update error(" + result + ")");
+                               "update error: " + result);
 }
 
 /**
@@ -608,7 +608,7 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
                 delay, false);
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
-                               "download error(" + status + ")");
+                               "download error: " + status);
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {

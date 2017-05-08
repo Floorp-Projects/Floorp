@@ -9853,8 +9853,12 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   if (!aWindowTarget.IsEmpty()) {
     // Locate the target DocShell.
     nsCOMPtr<nsIDocShellTreeItem> targetItem;
-    // Only _self, _parent, and _top are supported in noopener case.
-    if (!(aFlags & INTERNAL_LOAD_FLAGS_NO_OPENER) ||
+    // Only _self, _parent, and _top are supported in noopener case.  But we
+    // have to be careful to not apply that to the noreferrer case.  See bug
+    // 1358469.
+    bool allowNamedTarget = !(aFlags & INTERNAL_LOAD_FLAGS_NO_OPENER) ||
+                            (aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
+    if (allowNamedTarget ||
         aWindowTarget.LowerCaseEqualsLiteral("_self") ||
         aWindowTarget.LowerCaseEqualsLiteral("_parent") ||
         aWindowTarget.LowerCaseEqualsLiteral("_top")) {
@@ -11173,6 +11177,12 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   if (aOriginalURI) {
     channel->SetOriginalURI(aOriginalURI);
+    // The LOAD_REPLACE flag and its handling here will be removed as part
+    // of bug 1319110.  For now preserve its restoration here to not break
+    // any code expecting it being set specially on redirected channels.
+    // If the flag has originally been set to change result of
+    // NS_GetFinalChannelURI it won't have any effect and also won't cause
+    // any harm.
     if (aLoadReplace) {
       uint32_t loadFlags;
       channel->GetLoadFlags(&loadFlags);

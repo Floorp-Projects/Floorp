@@ -37,7 +37,7 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
@@ -45,11 +45,11 @@
 
 class nsHtml5StreamParser;
 
+class nsHtml5AttributeName;
+class nsHtml5ElementName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
-class nsHtml5AttributeName;
-class nsHtml5ElementName;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 
@@ -81,8 +81,6 @@ class nsHtml5Portability
     static void initializeStatics();
     static void releaseStatics();
 };
-
-
 
 #endif
 

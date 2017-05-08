@@ -5,17 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSHEntry.h"
+
+#include <algorithm>
+
+#include "nsDocShellEditorData.h"
+#include "nsIContentViewer.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsDocShellEditorData.h"
-#include "nsSHEntryShared.h"
-#include "nsILayoutHistoryState.h"
-#include "nsIContentViewer.h"
-#include "nsIStructuredCloneContainer.h"
 #include "nsIInputStream.h"
+#include "nsILayoutHistoryState.h"
+#include "nsIStructuredCloneContainer.h"
 #include "nsIURI.h"
+#include "nsSHEntryShared.h"
+#include "nsSHistory.h"
+
 #include "mozilla/net/ReferrerPolicy.h"
-#include <algorithm>
 
 namespace dom = mozilla::dom;
 
@@ -23,13 +27,13 @@ static uint32_t gEntryID = 0;
 
 nsSHEntry::nsSHEntry()
   : mShared(new nsSHEntryShared())
-  , mLoadReplace(false)
   , mReferrerPolicy(mozilla::net::RP_Unset)
   , mLoadType(0)
   , mID(gEntryID++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
   , mParent(nullptr)
+  , mLoadReplace(false)
   , mURIWasModified(false)
   , mIsSrcdocEntry(false)
   , mScrollRestorationIsManual(false)
@@ -40,7 +44,6 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
   : mShared(aOther.mShared)
   , mURI(aOther.mURI)
   , mOriginalURI(aOther.mOriginalURI)
-  , mLoadReplace(aOther.mLoadReplace)
   , mReferrerURI(aOther.mReferrerURI)
   , mReferrerPolicy(aOther.mReferrerPolicy)
   , mTitle(aOther.mTitle)
@@ -50,12 +53,13 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
   , mParent(aOther.mParent)
-  , mURIWasModified(aOther.mURIWasModified)
   , mStateData(aOther.mStateData)
-  , mIsSrcdocEntry(aOther.mIsSrcdocEntry)
-  , mScrollRestorationIsManual(false)
   , mSrcdocData(aOther.mSrcdocData)
   , mBaseURI(aOther.mBaseURI)
+  , mLoadReplace(aOther.mLoadReplace)
+  , mURIWasModified(aOther.mURIWasModified)
+  , mIsSrcdocEntry(aOther.mIsSrcdocEntry)
+  , mScrollRestorationIsManual(false)
 {
 }
 
@@ -956,5 +960,12 @@ NS_IMETHODIMP
 nsSHEntry::SetLastTouched(uint32_t aLastTouched)
 {
   mShared->mLastTouched = aLastTouched;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetSHistory(nsISHistory* aSHistory)
+{
+  mShared->mSHistory = do_GetWeakReference(aSHistory);
   return NS_OK;
 }

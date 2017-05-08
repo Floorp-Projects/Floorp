@@ -681,8 +681,8 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     MOZ_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind(),
-                                                  lazy->asyncKind());
+    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->toStringStart() + lazy->column(),
+                                                  lazy->strict(), lazy->generatorKind(), lazy->asyncKind());
     if (!pn)
         return false;
 

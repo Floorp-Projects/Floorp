@@ -295,8 +295,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   // is necessary to avoid a data race when updating the cache.
   mozilla::Unused << aRoot->OwnerDoc()->GetRootElement();
 
-  MOZ_ASSERT(!sInServoTraversal);
-  sInServoTraversal = true;
+  AutoSetInServoTraversal guard(this);
 
   bool isInitial = !aRoot->HasServoData();
   bool forReconstruct =
@@ -338,7 +337,6 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
     }
   }
 
-  sInServoTraversal = false;
   return postTraversalRequired;
 }
 
@@ -983,8 +981,8 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
-  MOZ_ASSERT(!sInServoTraversal);
-  sInServoTraversal = true;
+
+  AutoSetInServoTraversal guard(this);
 
   /**
    * NB: This is needed because we process animations and transitions on the
@@ -1022,8 +1020,6 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
                                pseudoTagForStyleResolution,
                                mRawSet.get()).Consume();
   }
-
-  sInServoTraversal = false;
 
   return computedValues.forget();
 }
@@ -1110,4 +1106,21 @@ ServoStyleSet::RemoveSheetOfType(SheetType aType,
   return 0;
 }
 
-bool ServoStyleSet::sInServoTraversal = false;
+void
+ServoStyleSet::RunPostTraversalTasks()
+{
+  MOZ_ASSERT(!IsInServoTraversal());
+
+  if (mPostTraversalTasks.IsEmpty()) {
+    return;
+  }
+
+  nsTArray<PostTraversalTask> tasks;
+  tasks.SwapElements(mPostTraversalTasks);
+
+  for (auto& task : tasks) {
+    task.Run();
+  }
+}
+
+ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;

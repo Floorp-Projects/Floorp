@@ -500,6 +500,18 @@ const gExtensionsNotifications = {
     ExtensionsUI.off("change", this.boundUpdate);
   },
 
+  _createAddonButton(text, icon, callback) {
+    let button = document.createElement("toolbarbutton");
+    button.setAttribute("label", text);
+    const DEFAULT_EXTENSION_ICON =
+      "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+    button.setAttribute("image", icon || DEFAULT_EXTENSION_ICON);
+    button.className = "addon-banner-item";
+
+    button.addEventListener("click", callback);
+    PanelUI.addonNotificationContainer.appendChild(button);
+  },
+
   updateAlerts() {
     let sideloaded = ExtensionsUI.sideloaded;
     let updates = ExtensionsUI.updates;
@@ -509,32 +521,21 @@ const gExtensionsNotifications = {
       PanelUI.showBadgeOnlyNotification("addon-alert");
     }
 
-    let container = document.getElementById("PanelUI-footer-addons");
+    let container = PanelUI.addonNotificationContainer;
 
     while (container.firstChild) {
       container.firstChild.remove();
     }
 
-    const DEFAULT_EXTENSION_ICON =
-      "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     let items = 0;
     for (let update of updates) {
       if (++items > 4) {
         break;
       }
-
-      let button = document.createElement("toolbarbutton");
       let text = gNavigatorBundle.getFormattedString("webextPerms.updateMenuItem", [update.addon.name]);
-      button.setAttribute("label", text);
-
-      let icon = update.addon.iconURL || DEFAULT_EXTENSION_ICON;
-      button.setAttribute("image", icon);
-
-      button.addEventListener("click", evt => {
+      this._createAddonButton(text, update.addon.iconURL, evt => {
         ExtensionsUI.showUpdate(gBrowser, update);
       });
-
-      container.appendChild(button);
     }
 
     let appName;
@@ -547,18 +548,10 @@ const gExtensionsNotifications = {
         appName = brandBundle.getString("brandShortName");
       }
 
-      let button = document.createElement("toolbarbutton");
       let text = gNavigatorBundle.getFormattedString("webextPerms.sideloadMenuItem", [addon.name, appName]);
-      button.setAttribute("label", text);
-
-      let icon = addon.iconURL || DEFAULT_EXTENSION_ICON;
-      button.setAttribute("image", icon);
-
-      button.addEventListener("click", evt => {
+      this._createAddonButton(text, addon.iconURL, evt => {
         ExtensionsUI.showSideloaded(gBrowser, addon);
       });
-
-      container.appendChild(button);
     }
   },
 };

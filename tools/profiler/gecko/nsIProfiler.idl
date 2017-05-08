@@ -17,14 +17,14 @@ class nsCString;
  * which, unfortunately, means we need to implement nsISupports in order to
  * go through it.
  */
-[uuid(0a175ba7-8fcf-4ce9-9c4b-ccc6272f4425)]
+[builtinclass, uuid(0a175ba7-8fcf-4ce9-9c4b-ccc6272f4425)]
 interface nsIProfilerStartParams : nsISupports
 {
-  attribute uint32_t entries;
-  attribute double interval;
+  readonly attribute uint32_t entries;
+  readonly attribute double interval;
+  readonly attribute uint32_t features;
 
-  [noscript, notxpcom, nostdcall] StringArrayRef getFeatures();
-  [noscript, notxpcom, nostdcall] StringArrayRef getThreadFilterNames();
+  [noscript, notxpcom, nostdcall] StringArrayRef getFilters();
 };
 
 [scriptable, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
@@ -34,7 +34,7 @@ interface nsIProfiler : nsISupports
   void StartProfiler(in uint32_t aEntries, in double aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
                       in uint32_t aFeatureCount,
-                      [array, size_is(aFilterCount), optional] in string aThreadNameFilters,
+                      [array, size_is(aFilterCount), optional] in string aFilters,
                       [optional] in uint32_t aFilterCount);
   void StopProfiler();
   boolean IsPaused();
@@ -67,7 +67,7 @@ interface nsIProfiler : nsISupports
    * The starting parameters that were sent to the profiler for sampling.
    * If the profiler is not currently sampling, this will return null.
    */
-  readonly attribute nsIProfilerStartParams startParams;
+  [noscript] readonly attribute nsIProfilerStartParams startParams;
 
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);

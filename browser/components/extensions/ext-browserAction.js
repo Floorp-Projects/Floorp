@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 var {
+  DefaultWeakMap,
   IconDetails,
 } = ExtensionUtils;
 
@@ -56,6 +57,8 @@ this.browserAction = class extends ExtensionAPI {
     let {extension} = this;
 
     let options = extension.manifest.browser_action;
+
+    this.iconData = new DefaultWeakMap(icons => this.getIconData(icons));
 
     let widgetId = makeWidgetId(extension.id);
     this.id = `${widgetId}-browser-action`;
@@ -321,7 +324,7 @@ this.browserAction = class extends ExtensionAPI {
 
     if (pendingPopup) {
       if (pendingPopup.window === window && pendingPopup.popupURL === popupURL) {
-        if (!this.blockParser) {
+        if (!blockParser) {
           pendingPopup.unblockParser();
         }
 
@@ -367,58 +370,74 @@ this.browserAction = class extends ExtensionAPI {
   // in |tabData|.
   updateButton(node, tabData) {
     let title = tabData.title || this.extension.name;
-    node.setAttribute("tooltiptext", title);
-    node.setAttribute("label", title);
 
-    if (tabData.badgeText) {
-      node.setAttribute("badge", tabData.badgeText);
-    } else {
-      node.removeAttribute("badge");
-    }
+    node.ownerGlobal.requestAnimationFrame(() => {
+      node.setAttribute("tooltiptext", title);
+      node.setAttribute("label", title);
 
-    if (tabData.enabled) {
-      node.removeAttribute("disabled");
-    } else {
-      node.setAttribute("disabled", "true");
-    }
-
-    let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
-                                        "class", "toolbarbutton-badge");
-    if (badgeNode) {
-      let color = tabData.badgeBackgroundColor;
-      if (color) {
-        color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] / 255})`;
+      if (tabData.badgeText) {
+        node.setAttribute("badge", tabData.badgeText);
+      } else {
+        node.removeAttribute("badge");
       }
-      badgeNode.style.backgroundColor = color || "";
-    }
 
-    const LEGACY_CLASS = "toolbarbutton-legacy-addon";
-    node.classList.remove(LEGACY_CLASS);
+      if (tabData.enabled) {
+        node.removeAttribute("disabled");
+      } else {
+        node.setAttribute("disabled", "true");
+      }
 
+      let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
+                                          "class", "toolbarbutton-badge");
+      if (badgeNode) {
+        let color = tabData.badgeBackgroundColor;
+        if (color) {
+          color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] / 255})`;
+        }
+        badgeNode.style.backgroundColor = color || "";
+      }
+
+      let {style, legacy} = this.iconData.get(tabData.icon);
+      const LEGACY_CLASS = "toolbarbutton-legacy-addon";
+      if (legacy) {
+        node.classList.add(LEGACY_CLASS);
+      } else {
+        node.classList.remove(LEGACY_CLASS);
+      }
+
+      node.setAttribute("style", style);
+    });
+  }
+
+  getIconData(icons) {
     let baseSize = 16;
-    let {icon, size} = IconDetails.getPreferredIcon(tabData.icon, this.extension, baseSize);
+    let {icon, size} = IconDetails.getPreferredIcon(icons, this.extension, baseSize);
+
+    let legacy = false;
 
     // If the best available icon size is not divisible by 16, check if we have
     // an 18px icon to fall back to, and trim off the padding instead.
     if (size % 16 && !icon.endsWith(".svg")) {
-      let result = IconDetails.getPreferredIcon(tabData.icon, this.extension, 18);
+      let result = IconDetails.getPreferredIcon(icons, this.extension, 18);
 
       if (result.size % 18 == 0) {
         baseSize = 18;
         icon = result.icon;
-        node.classList.add(LEGACY_CLASS);
+        legacy = true;
       }
     }
 
     let getIcon = size => IconDetails.escapeUrl(
-      IconDetails.getPreferredIcon(tabData.icon, this.extension, size).icon);
+      IconDetails.getPreferredIcon(icons, this.extension, size).icon);
 
-    node.setAttribute("style", `
+    let style = `
       --webextension-menupanel-image: url("${getIcon(32)}");
       --webextension-menupanel-image-2x: url("${getIcon(64)}");
       --webextension-toolbar-image: url("${IconDetails.escapeUrl(icon)}");
       --webextension-toolbar-image-2x: url("${getIcon(baseSize * 2)}");
-    `);
+    `;
+
+    return {style, legacy};
   }
 
   // Update the toolbar button for a given window.

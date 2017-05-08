@@ -815,6 +815,7 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
 
     obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
     module.AddRef();
+    cx->zone()->updateJitCodeMallocBytes(module.codeLength());
     return obj;
 }
 

@@ -992,7 +992,7 @@ function MessageHandler(sourceName, targetName, comObj) {
   this.postMessageTransfers = true;
   var callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
   var ah = this.actionHandler = Object.create(null);
-  this._onComObjOnMessage = function messageHandlerComObjOnMessage(event) {
+  this._onComObjOnMessage = event => {
     var data = event.data;
     if (data.targetName !== this.sourceName) {
       return;
@@ -1043,7 +1043,7 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else {
       error('Unknown action from worker: ' + data.action);
     }
-  }.bind(this);
+  };
   comObj.addEventListener('message', this._onComObjOnMessage);
 }
 MessageHandler.prototype = {
@@ -4669,9 +4669,13 @@ var Lexer = function LexerClosure() {
         divideBy = 10;
         ch = this.nextChar();
       }
+      if (ch === 0x0A || ch === 0x0D) {
+        do {
+          ch = this.nextChar();
+        } while (ch === 0x0A || ch === 0x0D);
+      }
       if (ch < 0x30 || ch > 0x39) {
-        error('Invalid number: ' + String.fromCharCode(ch));
-        return 0;
+        error(`Invalid number: ${String.fromCharCode(ch)} (charCode ${ch})`);
       }
       var baseValue = ch - 0x30;
       var powerValue = 0;
@@ -14556,7 +14560,7 @@ var ChunkedStreamManager = function ChunkedStreamManagerClosure() {
         };
         rangeReader.read().then(readChunk, reject);
       });
-      promise.then(function (data) {
+      promise.then(data => {
         if (this.aborted) {
           return;
         }
@@ -14564,7 +14568,7 @@ var ChunkedStreamManager = function ChunkedStreamManagerClosure() {
           chunk: data,
           begin
         });
-      }.bind(this));
+      });
     },
     requestAllChunks: function ChunkedStreamManager_requestAllChunks() {
       var missingChunks = this.stream.getMissingChunks();
@@ -16436,7 +16440,7 @@ var reverseIfRtl = coreUnicode.reverseIfRtl;
 var getUnicodeForGlyph = coreUnicode.getUnicodeForGlyph;
 var getGlyphsUnicode = coreGlyphList.getGlyphsUnicode;
 var PartialEvaluator = function PartialEvaluatorClosure() {
-  var DefaultPartialEvaluatorOptions = {
+  const DefaultPartialEvaluatorOptions = {
     forceDataSchema: false,
     maxImageSize: -1,
     disableFontFace: false,
@@ -16481,7 +16485,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     var cs = ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res);
     return (cs.numComps === 1 || cs.numComps === 3) && cs.isDefaultDecode(dict.getArray('Decode', 'D'));
   };
-  function PartialEvaluator(pdfManager, xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache, options) {
+  function PartialEvaluator({ pdfManager, xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache, options = null }) {
     this.pdfManager = pdfManager;
     this.xref = xref;
     this.handler = handler;
@@ -16495,7 +16499,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       if (cachedCMap) {
         return Promise.resolve(cachedCMap);
       }
-      return handler.sendWithPromise('FetchBuiltInCMap', { name }).then(data => {
+      return this.handler.sendWithPromise('FetchBuiltInCMap', { name }).then(data => {
         if (data.compressionType !== CMapCompressionType.NONE) {
           this.builtInCMapCache[name] = data;
         }
@@ -16658,7 +16662,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         operatorList.addOp(OPS.beginGroup, [groupOptions]);
       }
       operatorList.addOp(OPS.paintFormXObjectBegin, [matrix, bbox]);
-      return this.getOperatorList(xobj, task, dict.get('Resources') || resources, operatorList, initialState).then(function () {
+      return this.getOperatorList({
+        stream: xobj,
+        task,
+        resources: dict.get('Resources') || resources,
+        operatorList,
+        initialState
+      }).then(function () {
         operatorList.addOp(OPS.paintFormXObjectEnd, []);
         if (group) {
           operatorList.addOp(OPS.endGroup, [groupOptions]);
@@ -16666,7 +16676,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       });
     },
     buildPaintImageXObject: function PartialEvaluator_buildPaintImageXObject(resources, image, inline, operatorList, cacheKey, imageCache) {
-      var self = this;
       var dict = image.dict;
       var w = dict.get('Width', 'W');
       var h = dict.get('Height', 'H');
@@ -16720,14 +16729,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
       var nativeImageDecoder = null;
       if (useNativeImageDecoder && (image instanceof JpegStream || mask instanceof JpegStream || softMask instanceof JpegStream)) {
-        nativeImageDecoder = new NativeImageDecoder(self.xref, resources, self.handler, self.options.forceDataSchema);
+        nativeImageDecoder = new NativeImageDecoder(this.xref, resources, this.handler, this.options.forceDataSchema);
       }
-      PDFImage.buildImage(self.handler, self.xref, resources, image, inline, nativeImageDecoder).then(function (imageObj) {
+      PDFImage.buildImage(this.handler, this.xref, resources, image, inline, nativeImageDecoder).then(imageObj => {
         var imgData = imageObj.createImageData(false);
-        self.handler.send('obj', [objId, self.pageIndex, 'Image', imgData], [imgData.data.buffer]);
-      }).then(undefined, function (reason) {
+        this.handler.send('obj', [objId, this.pageIndex, 'Image', imgData], [imgData.data.buffer]);
+      }).catch(reason => {
         warn('Unable to decode image: ' + reason);
-        self.handler.send('obj', [objId, self.pageIndex, 'Image', null]);
+        this.handler.send('obj', [objId, this.pageIndex, 'Image', null]);
       });
       operatorList.addOp(OPS.paintImageXObject, args);
       if (cacheKey) {
@@ -16761,7 +16770,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var tilingOpList = new OperatorList();
       var resourcesArray = [patternDict.get('Resources'), resources];
       var patternResources = Dict.merge(this.xref, resourcesArray);
-      return this.getOperatorList(pattern, task, patternResources, tilingOpList).then(function () {
+      return this.getOperatorList({
+        stream: pattern,
+        task,
+        resources: patternResources,
+        operatorList: tilingOpList
+      }).then(function () {
         operatorList.addDependencies(tilingOpList.dependencies);
         operatorList.addOp(fn, getTilingPatternIR({
           fnArray: tilingOpList.fnArray,
@@ -16775,20 +16789,19 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         fontArgs = fontArgs.slice();
         fontName = fontArgs[0].name;
       }
-      var self = this;
-      return this.loadFont(fontName, fontRef, resources).then(function (translated) {
+      return this.loadFont(fontName, fontRef, resources).then(translated => {
         if (!translated.font.isType3Font) {
           return translated;
         }
-        return translated.loadType3Data(self, resources, operatorList, task).then(function () {
+        return translated.loadType3Data(this, resources, operatorList, task).then(function () {
           return translated;
-        }, function (reason) {
-          self.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.font });
+        }).catch(reason => {
+          this.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.font });
           return new TranslatedFont('g_font_error', new ErrorFont('Type3 font load error: ' + reason), translated.font);
         });
-      }).then(function (translated) {
+      }).then(translated => {
         state.font = translated.font;
-        translated.send(self.handler);
+        translated.send(this.handler);
         return translated.loadedName;
       });
     },
@@ -16797,12 +16810,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var glyphs = font.charsToGlyphs(chars);
       var isAddToPathSet = !!(state.textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG);
       if (font.data && (isAddToPathSet || this.options.disableFontFace)) {
-        var buildPath = function (fontChar) {
+        var buildPath = fontChar => {
           if (!font.renderer.hasBuiltPath(fontChar)) {
             var path = font.renderer.getPathJs(fontChar);
             this.handler.send('commonobj', [font.loadedName + '_path_' + fontChar, 'FontPath', path]);
           }
-        }.bind(this);
+        };
         for (var i = 0, ii = glyphs.length; i < ii; i++) {
           var glyph = glyphs[i];
           buildPath(glyph.fontChar);
@@ -16817,11 +16830,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     setGState: function PartialEvaluator_setGState(resources, gState, operatorList, task, stateManager) {
       var gStateObj = [];
       var gStateKeys = gState.getKeys();
-      var self = this;
       var promise = Promise.resolve();
       for (var i = 0, ii = gStateKeys.length; i < ii; i++) {
-        var key = gStateKeys[i];
-        var value = gState.get(key);
+        let key = gStateKeys[i];
+        let value = gState.get(key);
         switch (key) {
           case 'Type':
             break;
@@ -16837,8 +16849,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             gStateObj.push([key, value]);
             break;
           case 'Font':
-            promise = promise.then(function () {
-              return self.handleSetFont(resources, null, value[0], operatorList, task, stateManager.state).then(function (loadedName) {
+            promise = promise.then(() => {
+              return this.handleSetFont(resources, null, value[0], operatorList, task, stateManager.state).then(function (loadedName) {
                 operatorList.addDependency(loadedName);
                 gStateObj.push([key, [loadedName, value[1]]]);
               });
@@ -16853,9 +16865,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
             }
             if (isDict(value)) {
-              promise = promise.then(function (dict) {
-                return self.handleSMask(dict, resources, operatorList, task, stateManager);
-              }.bind(this, value));
+              promise = promise.then(() => {
+                return this.handleSMask(value, resources, operatorList, task, stateManager);
+              });
               gStateObj.push([key, true]);
             } else {
               warn('Unsupported SMask type');
@@ -16965,15 +16977,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       } catch (e) {
         translatedPromise = Promise.reject(e);
       }
-      var self = this;
       translatedPromise.then(function (translatedFont) {
         if (translatedFont.fontType !== undefined) {
           var xrefFontStats = xref.stats.fontTypes;
           xrefFontStats[translatedFont.fontType] = true;
         }
         fontCapability.resolve(new TranslatedFont(font.loadedName, translatedFont, font));
-      }, function (reason) {
-        self.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.font });
+      }).catch(reason => {
+        this.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.font });
         try {
           var descriptor = preEvaluatedFont.descriptor;
           var fontFile3 = descriptor && descriptor.get('FontFile3');
@@ -17020,15 +17031,16 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       operatorList.addOp(fn, args);
       return Promise.resolve();
     },
-    getOperatorList: function PartialEvaluator_getOperatorList(stream, task, resources, operatorList, initialState) {
+    getOperatorList({ stream, task, resources, operatorList, initialState = null }) {
+      resources = resources || Dict.empty;
+      initialState = initialState || new EvalState();
+      assert(operatorList, 'getOperatorList: missing "operatorList" parameter');
       var self = this;
       var xref = this.xref;
       var imageCache = Object.create(null);
-      assert(operatorList);
-      resources = resources || Dict.empty;
       var xobjs = resources.get('XObject') || Dict.empty;
       var patterns = resources.get('Pattern') || Dict.empty;
-      var stateManager = new StateManager(initialState || new EvalState());
+      var stateManager = new StateManager(initialState);
       var preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
       var timeSlotManager = new TimeSlotManager();
       function closePendingRestoreOPS(argument) {
@@ -17273,7 +17285,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
         closePendingRestoreOPS();
         resolve();
-      }).catch(function (reason) {
+      }).catch(reason => {
         if (this.options.ignoreErrors) {
           this.handler.send('UnsupportedFeature', { featureId: UNSUPPORTED_FEATURES.unknown });
           warn('getOperatorList - ignoring errors during task: ' + task.name);
@@ -17281,9 +17293,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           return;
         }
         throw reason;
-      }.bind(this));
+      });
     },
-    getTextContent: function PartialEvaluator_getTextContent(stream, task, resources, stateManager, normalizeWhitespace, combineTextItems) {
+    getTextContent({ stream, task, resources, stateManager = null, normalizeWhitespace = false, combineTextItems = false }) {
+      resources = resources || Dict.empty;
       stateManager = stateManager || new StateManager(new TextState());
       var WhitespaceRegexp = /\s/g;
       var textContent = {
@@ -17312,7 +17325,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var MULTI_SPACE_FACTOR_MAX = 4;
       var self = this;
       var xref = this.xref;
-      resources = xref.fetchIfRef(resources) || Dict.empty;
       var xobjs = null;
       var xobjsCache = Object.create(null);
       var preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
@@ -17660,7 +17672,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               if (isArray(matrix) && matrix.length === 6) {
                 xObjStateManager.transform(matrix);
               }
-              next(self.getTextContent(xobj, task, xobj.dict.get('Resources') || resources, xObjStateManager, normalizeWhitespace, combineTextItems).then(function (formTextContent) {
+              next(self.getTextContent({
+                stream: xobj,
+                task,
+                resources: xobj.dict.get('Resources') || resources,
+                stateManager: xObjStateManager,
+                normalizeWhitespace,
+                combineTextItems
+              }).then(function (formTextContent) {
                 Util.appendToArray(textContent.items, formTextContent.items);
                 Util.extendObj(textContent.styles, formTextContent.styles);
                 xobjsCache.key = name;
@@ -17694,14 +17713,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
         flushTextContentItem();
         resolve(textContent);
-      }).catch(function (reason) {
+      }).catch(reason => {
         if (this.options.ignoreErrors) {
           warn('getTextContent - ignoring errors during task: ' + task.name);
           flushTextContentItem();
           return textContent;
         }
         throw reason;
-      }.bind(this));
+      });
     },
     extractDataStructures: function PartialEvaluator_extractDataStructures(dict, baseDict, properties) {
       var xref = this.xref;
@@ -17777,10 +17796,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       properties.baseEncodingName = baseEncodingName;
       properties.hasEncoding = !!baseEncodingName || differences.length > 0;
       properties.dict = dict;
-      return toUnicodePromise.then(function (toUnicode) {
+      return toUnicodePromise.then(toUnicode => {
         properties.toUnicode = toUnicode;
         return this.buildToUnicode(properties);
-      }.bind(this)).then(function (toUnicode) {
+      }).then(function (toUnicode) {
         properties.toUnicode = toUnicode;
         return properties;
       });
@@ -18160,10 +18179,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             firstChar: 0,
             lastChar: maxCharIndex
           };
-          return this.extractDataStructures(dict, dict, properties).then(function (properties) {
+          return this.extractDataStructures(dict, dict, properties).then(properties => {
             properties.widths = this.buildCharCodeToWidth(metrics.widths, properties);
             return new Font(baseFontName, null, properties);
-          }.bind(this));
+          });
         }
       }
       var firstChar = dict.get('FirstChar') || 0;
@@ -18241,15 +18260,15 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       } else {
         cMapPromise = Promise.resolve(undefined);
       }
-      return cMapPromise.then(function () {
+      return cMapPromise.then(() => {
         return this.extractDataStructures(dict, baseDict, properties);
-      }.bind(this)).then(function (properties) {
+      }).then(properties => {
         this.extractWidths(dict, descriptor, properties);
         if (type === 'Type3') {
           properties.isType3Font = true;
         }
         return new Font(fontName.name, fontFile, properties);
-      }.bind(this));
+      });
     }
   };
   return PartialEvaluator;
@@ -18286,18 +18305,24 @@ var TranslatedFont = function TranslatedFontClosure() {
       var charProcKeys = charProcs.getKeys();
       var charProcOperatorList = Object.create(null);
       for (var i = 0, n = charProcKeys.length; i < n; ++i) {
-        loadCharProcsPromise = loadCharProcsPromise.then(function (key) {
+        let key = charProcKeys[i];
+        loadCharProcsPromise = loadCharProcsPromise.then(function () {
           var glyphStream = charProcs.get(key);
           var operatorList = new OperatorList();
-          return type3Evaluator.getOperatorList(glyphStream, task, fontResources, operatorList).then(function () {
+          return type3Evaluator.getOperatorList({
+            stream: glyphStream,
+            task,
+            resources: fontResources,
+            operatorList
+          }).then(function () {
             charProcOperatorList[key] = operatorList.getIR();
             parentOperatorList.addDependencies(operatorList.dependencies);
-          }, function (reason) {
-            warn('Type3 font resource \"' + key + '\" is not available');
+          }).catch(function (reason) {
+            warn(`Type3 font resource "${key}" is not available.`);
             var operatorList = new OperatorList();
             charProcOperatorList[key] = operatorList.getIR();
           });
-        }.bind(this, charProcKeys[i]));
+        });
       }
       this.type3Loaded = loadCharProcsPromise.then(function () {
         translatedFont.charProcOperatorList = charProcOperatorList;
@@ -21604,22 +21629,20 @@ var Catalog = function CatalogClosure() {
       this.fontCache.forEach(function (promise) {
         promises.push(promise);
       });
-      return Promise.all(promises).then(function (translatedFonts) {
+      return Promise.all(promises).then(translatedFonts => {
         for (var i = 0, ii = translatedFonts.length; i < ii; i++) {
           var font = translatedFonts[i].dict;
           delete font.translated;
         }
         this.fontCache.clear();
         this.builtInCMapCache = Object.create(null);
-      }.bind(this));
+      });
     },
     getPage: function Catalog_getPage(pageIndex) {
       if (!(pageIndex in this.pagePromises)) {
-        this.pagePromises[pageIndex] = this.getPageDict(pageIndex).then(function (a) {
-          var dict = a[0];
-          var ref = a[1];
+        this.pagePromises[pageIndex] = this.getPageDict(pageIndex).then(([dict, ref]) => {
           return this.pageFactory.createPage(pageIndex, dict, ref, this.fontCache, this.builtInCMapCache);
-        }.bind(this));
+        });
       }
       return this.pagePromises[pageIndex];
     },
@@ -22664,7 +22687,7 @@ var ObjectLoader = function () {
         addChildren(currentNode, nodesToVisit);
       }
       if (pendingRequests.length) {
-        this.xref.stream.manager.requestRanges(pendingRequests).then(function pendingRequestCallback() {
+        this.xref.stream.manager.requestRanges(pendingRequests).then(() => {
           nodesToVisit = nodesToRevisit;
           for (var i = 0; i < nodesToRevisit.length; i++) {
             var node = nodesToRevisit[i];
@@ -22673,7 +22696,7 @@ var ObjectLoader = function () {
             }
           }
           this._walk(nodesToVisit);
-        }.bind(this), this.capability.reject);
+        }, this.capability.reject);
         return;
       }
       this.refSet = null;
@@ -23596,7 +23619,7 @@ function setPDFNetworkStreamClass(cls) {
   PDFNetworkStream = cls;
 }
 var WorkerMessageHandler = {
-  setup: function wphSetup(handler, port) {
+  setup(handler, port) {
     var testMessageProcessed = false;
     handler.on('test', function wphSetupTest(data) {
       if (testMessageProcessed) {
@@ -23632,7 +23655,7 @@ var WorkerMessageHandler = {
       return WorkerMessageHandler.createDocumentHandler(data, port);
     });
   },
-  createDocumentHandler: function wphCreateDocumentHandler(docParams, port) {
+  createDocumentHandler(docParams, port) {
     var pdfManager;
     var terminated = false;
     var cancelXHRs = null;
@@ -23913,7 +23936,12 @@ var WorkerMessageHandler = {
         startWorkerTask(task);
         var pageNum = pageIndex + 1;
         var start = Date.now();
-        page.getOperatorList(handler, task, data.intent, data.renderInteractiveForms).then(function (operatorList) {
+        page.getOperatorList({
+          handler,
+          task,
+          intent: data.intent,
+          renderInteractiveForms: data.renderInteractiveForms
+        }).then(function (operatorList) {
           finishWorkerTask(task);
           info('page=' + pageNum + ' - getOperatorList: time=' + (Date.now() - start) + 'ms, len=' + operatorList.totalLength);
         }, function (e) {
@@ -23955,7 +23983,12 @@ var WorkerMessageHandler = {
         startWorkerTask(task);
         var pageNum = pageIndex + 1;
         var start = Date.now();
-        return page.extractTextContent(handler, task, data.normalizeWhitespace, data.combineTextItems).then(function (textContent) {
+        return page.extractTextContent({
+          handler,
+          task,
+          normalizeWhitespace: data.normalizeWhitespace,
+          combineTextItems: data.combineTextItems
+        }).then(function (textContent) {
           finishWorkerTask(task);
           info('text indexing: page=' + pageNum + ' - time=' + (Date.now() - start) + 'ms');
           return textContent;
@@ -23995,15 +24028,18 @@ var WorkerMessageHandler = {
       docParams = null;
     });
     return workerHandlerName;
+  },
+  initializeFromPort(port) {
+    var handler = new MessageHandler('worker', 'main', port);
+    WorkerMessageHandler.setup(handler, port);
+    handler.send('ready', null);
   }
 };
-function initializeWorker() {
-  var handler = new MessageHandler('worker', 'main', self);
-  WorkerMessageHandler.setup(handler, self);
-  handler.send('ready', null);
+function isMessagePort(maybePort) {
+  return typeof maybePort.postMessage === 'function' && 'onmessage' in maybePort;
 }
-if (typeof window === 'undefined' && !isNodeJS()) {
-  initializeWorker();
+if (typeof window === 'undefined' && !isNodeJS() && typeof self !== 'undefined' && isMessagePort(self)) {
+  WorkerMessageHandler.initializeFromPort(self);
 }
 exports.setPDFNetworkStreamClass = setPDFNetworkStreamClass;
 exports.WorkerTask = WorkerTask;
@@ -24270,18 +24306,15 @@ var Annotation = function AnnotationClosure() {
       this.data.contents = stringToPDFString(dict.get('Contents') || '');
     },
     loadResources: function Annotation_loadResources(keys) {
-      return new Promise(function (resolve, reject) {
-        this.appearance.dict.getAsync('Resources').then(function (resources) {
-          if (!resources) {
-            resolve();
-            return;
-          }
-          var objectLoader = new ObjectLoader(resources.map, keys, resources.xref);
-          objectLoader.load().then(function () {
-            resolve(resources);
-          }, reject);
-        }, reject);
-      }.bind(this));
+      return this.appearance.dict.getAsync('Resources').then(resources => {
+        if (!resources) {
+          return;
+        }
+        var objectLoader = new ObjectLoader(resources.map, keys, resources.xref);
+        return objectLoader.load().then(function () {
+          return resources;
+        });
+      });
     },
     getOperatorList: function Annotation_getOperatorList(evaluator, task, renderForms) {
       if (!this.appearance) {
@@ -24293,13 +24326,17 @@ var Annotation = function AnnotationClosure() {
       var bbox = appearanceDict.getArray('BBox') || [0, 0, 1, 1];
       var matrix = appearanceDict.getArray('Matrix') || [1, 0, 0, 1, 0, 0];
       var transform = getTransformMatrix(data.rect, bbox, matrix);
-      var self = this;
-      return resourcesPromise.then(function (resources) {
+      return resourcesPromise.then(resources => {
         var opList = new OperatorList();
         opList.addOp(OPS.beginAnnotation, [data.rect, transform, matrix]);
-        return evaluator.getOperatorList(self.appearance, task, resources, opList).then(function () {
+        return evaluator.getOperatorList({
+          stream: this.appearance,
+          task,
+          resources,
+          operatorList: opList
+        }).then(() => {
           opList.addOp(OPS.endAnnotation, []);
-          self.appearance.reset();
+          this.appearance.reset();
           return opList;
         });
       });
@@ -24464,7 +24501,12 @@ var TextWidgetAnnotation = function TextWidgetAnnotationClosure() {
         return Promise.resolve(operatorList);
       }
       var stream = new Stream(stringToBytes(this.data.defaultAppearance));
-      return evaluator.getOperatorList(stream, task, this.fieldResources, operatorList).then(function () {
+      return evaluator.getOperatorList({
+        stream,
+        task,
+        resources: this.fieldResources,
+        operatorList
+      }).then(function () {
         return operatorList;
       });
     }
@@ -25810,34 +25852,43 @@ var Page = function PageClosure() {
       if (!this.resourcesPromise) {
         this.resourcesPromise = this.pdfManager.ensure(this, 'resources');
       }
-      return this.resourcesPromise.then(function resourceSuccess() {
+      return this.resourcesPromise.then(() => {
         var objectLoader = new ObjectLoader(this.resources.map, keys, this.xref);
         return objectLoader.load();
-      }.bind(this));
+      });
     },
-    getOperatorList: function Page_getOperatorList(handler, task, intent, renderInteractiveForms) {
-      var self = this;
-      var pdfManager = this.pdfManager;
-      var contentStreamPromise = pdfManager.ensure(this, 'getContentStream', []);
+    getOperatorList({ handler, task, intent, renderInteractiveForms }) {
+      var contentStreamPromise = this.pdfManager.ensure(this, 'getContentStream');
       var resourcesPromise = this.loadResources(['ExtGState', 'ColorSpace', 'Pattern', 'Shading', 'XObject', 'Font']);
-      var partialEvaluator = new PartialEvaluator(pdfManager, this.xref, handler, this.pageIndex, this.idFactory, this.fontCache, this.builtInCMapCache, this.evaluatorOptions);
+      var partialEvaluator = new PartialEvaluator({
+        pdfManager: this.pdfManager,
+        xref: this.xref,
+        handler,
+        pageIndex: this.pageIndex,
+        idFactory: this.idFactory,
+        fontCache: this.fontCache,
+        builtInCMapCache: this.builtInCMapCache,
+        options: this.evaluatorOptions
+      });
       var dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
-      var pageListPromise = dataPromises.then(function (data) {
-        var contentStream = data[0];
-        var opList = new OperatorList(intent, handler, self.pageIndex);
+      var pageListPromise = dataPromises.then(([contentStream]) => {
+        var opList = new OperatorList(intent, handler, this.pageIndex);
         handler.send('StartRenderPage', {
-          transparency: partialEvaluator.hasBlendModes(self.resources),
-          pageIndex: self.pageIndex,
+          transparency: partialEvaluator.hasBlendModes(this.resources),
+          pageIndex: this.pageIndex,
           intent
         });
-        return partialEvaluator.getOperatorList(contentStream, task, self.resources, opList).then(function () {
+        return partialEvaluator.getOperatorList({
+          stream: contentStream,
+          task,
+          resources: this.resources,
+          operatorList: opList
+        }).then(function () {
           return opList;
         });
       });
-      var annotationsPromise = pdfManager.ensure(this, 'annotations');
-      return Promise.all([pageListPromise, annotationsPromise]).then(function (datas) {
-        var pageOpList = datas[0];
-        var annotations = datas[1];
+      var annotationsPromise = this.pdfManager.ensure(this, 'annotations');
+      return Promise.all([pageListPromise, annotationsPromise]).then(function ([pageOpList, annotations]) {
         if (annotations.length === 0) {
           pageOpList.flush(true);
           return pageOpList;
@@ -25861,16 +25912,28 @@ var Page = function PageClosure() {
         });
       });
     },
-    extractTextContent: function Page_extractTextContent(handler, task, normalizeWhitespace, combineTextItems) {
-      var self = this;
-      var pdfManager = this.pdfManager;
-      var contentStreamPromise = pdfManager.ensure(this, 'getContentStream', []);
+    extractTextContent({ handler, task, normalizeWhitespace, combineTextItems }) {
+      var contentStreamPromise = this.pdfManager.ensure(this, 'getContentStream');
       var resourcesPromise = this.loadResources(['ExtGState', 'XObject', 'Font']);
       var dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
-      return dataPromises.then(function (data) {
-        var contentStream = data[0];
-        var partialEvaluator = new PartialEvaluator(pdfManager, self.xref, handler, self.pageIndex, self.idFactory, self.fontCache, self.builtInCMapCache, self.evaluatorOptions);
-        return partialEvaluator.getTextContent(contentStream, task, self.resources, null, normalizeWhitespace, combineTextItems);
+      return dataPromises.then(([contentStream]) => {
+        var partialEvaluator = new PartialEvaluator({
+          pdfManager: this.pdfManager,
+          xref: this.xref,
+          handler,
+          pageIndex: this.pageIndex,
+          idFactory: this.idFactory,
+          fontCache: this.fontCache,
+          builtInCMapCache: this.builtInCMapCache,
+          options: this.evaluatorOptions
+        });
+        return partialEvaluator.getTextContent({
+          stream: contentStream,
+          task,
+          resources: this.resources,
+          normalizeWhitespace,
+          combineTextItems
+        });
       });
     },
     getAnnotationsData: function Page_getAnnotationsData(intent) {
@@ -27293,7 +27356,7 @@ var Font = function FontClosure() {
         this.toFontChar = buildToFontChar(properties.defaultEncoding, getGlyphsUnicode(), properties.differences);
       } else {
         glyphsUnicodeMap = getGlyphsUnicode();
-        this.toUnicode.forEach(function (charCode, unicodeCharCode) {
+        this.toUnicode.forEach((charCode, unicodeCharCode) => {
           if (!this.composite) {
             glyphName = properties.differences[charCode] || properties.defaultEncoding[charCode];
             unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
@@ -27302,7 +27365,7 @@ var Font = function FontClosure() {
             }
           }
           this.toFontChar[charCode] = unicodeCharCode;
-        }.bind(this));
+        });
       }
       this.loadedName = fontName.split('-')[0];
       this.loading = false;
@@ -36563,8 +36626,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.290';
-var pdfjsBuild = '60c232bc';
+var pdfjsVersion = '1.8.314';
+var pdfjsBuild = '3adda80f';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

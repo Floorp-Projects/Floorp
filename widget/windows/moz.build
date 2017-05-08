@@ -20,6 +20,8 @@ EXPORTS.mozilla.widget += [
     'CompositorWidgetChild.h',
     'CompositorWidgetParent.h',
     'InProcessWinCompositorWidget.h',
+    'PDFiumEngineShim.h',
+    'PDFViaEMFPrintHelper.h',
     'WinCompositorWidget.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
@@ -92,6 +94,9 @@ if CONFIG['NS_PRINTING']:
         'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
+        'PDFiumEngineShim.cpp',
+        'PDFViaEMFPrintHelper.cpp',
+        'WindowsEMF.cpp',
     ]
 
 if CONFIG['NS_ENABLE_TSF']:

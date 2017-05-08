@@ -741,6 +741,10 @@ ${helpers.single_keyword_system("font-variant-caps",
         }
     % endif
 
+    /// This is the ratio applied for font-size: larger
+    /// and smaller by both Firefox and Chrome
+    const LARGER_FONT_SIZE_RATIO: f32 = 1.2;
+
     impl SpecifiedValue {
         /// https://html.spec.whatwg.org/multipage/#rules-for-parsing-a-legacy-font-size
         pub fn from_html_size(size: u8) -> Self {
@@ -768,6 +772,10 @@ ${helpers.single_keyword_system("font-variant-caps",
                         return Some(em)
                     }
                 }
+            } else if let SpecifiedValue::Larger = *self {
+                return Some(LARGER_FONT_SIZE_RATIO)
+            } else if let SpecifiedValue::Smaller = *self {
+                return Some(1. / LARGER_FONT_SIZE_RATIO)
             }
             None
         }
@@ -799,11 +807,11 @@ ${helpers.single_keyword_system("font-variant-caps",
                     key.to_computed_value(context).scale_by(fraction)
                 }
                 SpecifiedValue::Smaller => {
-                    FontRelativeLength::Em(0.85)
+                    FontRelativeLength::Em(1. / LARGER_FONT_SIZE_RATIO)
                         .to_computed_value(context, base_size)
                 }
                 SpecifiedValue::Larger => {
-                    FontRelativeLength::Em(1.2)
+                    FontRelativeLength::Em(LARGER_FONT_SIZE_RATIO)
                         .to_computed_value(context, base_size)
                 }
 
@@ -1807,10 +1815,10 @@ ${helpers.single_keyword_system("font-variant-position",
         impl ToCss for FeatureTagValue {
             fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
                 use std::str;
-                use byteorder::{WriteBytesExt, NativeEndian};
+                use byteorder::{WriteBytesExt, BigEndian};
 
                 let mut raw: Vec<u8> = vec!();
-                raw.write_u32::<NativeEndian>(self.tag).unwrap();
+                raw.write_u32::<BigEndian>(self.tag).unwrap();
                 let str_print = str::from_utf8(&raw).unwrap_or_default();
 
                 match self.value {
@@ -1828,7 +1836,7 @@ ${helpers.single_keyword_system("font-variant-position",
                 use std::io::Cursor;
                 use std::str;
                 use std::ops::Deref;
-                use byteorder::{ReadBytesExt, NativeEndian};
+                use byteorder::{ReadBytesExt, BigEndian};
 
                 let tag = try!(input.expect_string());
 
@@ -1840,7 +1848,7 @@ ${helpers.single_keyword_system("font-variant-position",
                 }
 
                 let mut raw = Cursor::new(tag.as_bytes());
-                let u_tag = raw.read_u32::<NativeEndian>().unwrap();
+                let u_tag = raw.read_u32::<BigEndian>().unwrap();
 
                 if let Ok(value) = input.try(|input| input.expect_integer()) {
                     // handle integer, throw if it is negative
@@ -2429,3 +2437,12 @@ ${helpers.single_keyword("-moz-math-variant",
         }
     }
 % endif
+
+${helpers.single_keyword("-moz-osx-font-smoothing",
+                         "auto grayscale",
+                         gecko_constant_prefix="NS_FONT_SMOOTHING",
+                         gecko_ffi_name="mFont.smoothing",
+                         products="gecko",
+                         spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/font-smooth)",
+                         animation_value_type="none",
+                         need_clone=True)}

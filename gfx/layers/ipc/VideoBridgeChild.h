@@ -49,7 +49,8 @@ public:
                                LayersBackend aLayersBackend,
                                TextureFlags aFlags,
                                uint64_t aSerial,
-                               wr::MaybeExternalImageId& aExternalImageId) override;
+                               wr::MaybeExternalImageId& aExternalImageId,
+                               nsIEventTarget* aTarget = nullptr) override;
 
   // ClientIPCAllocator
   base::ProcessId GetParentPid() const override { return OtherPid(); }

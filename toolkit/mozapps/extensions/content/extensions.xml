@@ -865,7 +865,7 @@
               <xul:hbox class="name-container">
                 <xul:label anonid="name" class="name" crop="end" flex="1"
                            tooltip="addonitem-tooltip" xbl:inherits="value=name"/>
-                <xul:label anonid="legacy" class="legacy-warning" value="&addon.legacy.label;"/>
+                <xul:label anonid="legacy" class="legacy-warning text-link" value="&addon.legacy.label;"/>
                 <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                 <xul:label class="update-postfix" value="&addon.update.postfix;"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->
@@ -1188,6 +1188,7 @@
             this._description.hidden = true;
 
           this.setAttribute("legacy", this.isLegacy);
+          document.getAnonymousElementByAttribute(this, "anonid", "legacy").href = SUPPORT_URL + "webextensions";
 
           if (!("applyBackgroundUpdates" in this.mAddon) ||
               (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
@@ -1307,7 +1308,7 @@
                 "notification.unsignedAndDisabled", [this.mAddon.name, gStrings.brandShortName], 2
               );
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              this._errorLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._errorLink.href = SUPPORT_URL + "unsigned-addons";
               this._errorLink.hidden = false;
             } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
             || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
@@ -1334,7 +1335,7 @@
                 "notification.unsigned", [this.mAddon.name, gStrings.brandShortName], 2
               );
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              this._warningLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+              this._warningLink.href = SUPPORT_URL + "unsigned-addons";
               this._warningLink.hidden = false;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
               this.setAttribute("notification", "warning");

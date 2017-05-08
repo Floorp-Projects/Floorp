@@ -114,10 +114,6 @@
   padding-bottom: 2px;
 }
 
-#nav-bar-overflow-button {
-  -moz-image-region: rect(-5px, 12px, 11px, -4px);
-}
-
 /* This only has an effect when this element is placed on the bookmarks toolbar.
  * It's 30px to make sure buttons with 18px icons fit along with the default 16px
  * icons, without changing the size of the toolbar.
@@ -309,14 +305,6 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
-
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
-#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled=true] > .toolbarbutton-icon {
-  opacity: 0.4;
-}
 
 /* Fullscreen window controls */
 #window-controls {
@@ -1094,9 +1082,7 @@ html|span.ac-emphasize-text-url {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-  margin: 0 0 var(--tab-toolbar-navbar-overlap);
 }
 
 #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,
@@ -1104,27 +1090,9 @@ html|span.ac-emphasize-text-url {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
-.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
-  opacity: .4;
-}
-
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
   transform: scaleX(-1);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  transition: 1s background-color ease-out;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down[highlight] {
-  background-color: Highlight;
-  transition: none;
-}
-
-#TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
 }
 
 #alltabs-button {
@@ -1134,10 +1102,6 @@ html|span.ac-emphasize-text-url {
 #TabsToolbar[brighttext] > #alltabs-button,
 #TabsToolbar[brighttext] > toolbarpaletteitem > #alltabs-button {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs-inverted.png");
-}
-
-#alltabs-button > .toolbarbutton-icon {
-  padding: 9px 6px 6px;
 }
 
 #alltabs-button > .toolbarbutton-menu-dropmarker {

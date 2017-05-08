@@ -11,19 +11,41 @@
     title: "Renegotiation: remove audio track"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
+    let receivedTrack, analyser, freq;
     addRenegotiation(test.chain,
       [
+        function PC_REMOTE_SETUP_ANALYSER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver before renegotiation");
+
+          receivedTrack = test.pcRemote._pc.getReceivers()[0].track;
+          is(receivedTrack.readyState, "live",
+             "The received track should be live");
+
+          analyser = new AudioStreamAnalyser(
+              new AudioContext(), new MediaStream([receivedTrack]));
+          freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
+        },
         function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
           test.setOfferOptions({ offerToReceiveAudio: true });
           return test.pcLocal.removeSender(0);
         },
+      ],
+      [
+        function PC_REMOTE_CHECK_FLOW_STOPPED(test) {
+          is(test.pcRemote._pc.getReceivers().length, 0,
+             "pcRemote should have no more receivers");
+          is(receivedTrack.readyState, "ended",
+             "The received track should have ended");
+
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] < 50);
+        },
       ]
     );
-
-    // TODO(bug 1093835): figure out how to verify that media stopped flowing from pcLocal
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();

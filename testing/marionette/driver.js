@@ -1280,7 +1280,7 @@ GeckoDriver.prototype.getWindowHandle = function (cmd, resp) {
  *     Unique window handles.
  */
 GeckoDriver.prototype.getWindowHandles = function (cmd, resp) {
-  return this.windowHandles;
+  return this.windowHandles.map(String);
 }
 
 /**
@@ -1313,7 +1313,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function (cmd, resp) {
  *     Unique window handles.
  */
 GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
-  return this.chromeWindowHandles;
+  return this.chromeWindowHandles.map(String);
 }
 
 /**
@@ -1420,7 +1420,7 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
     });
   }
 
-  return {
+  resp.body = {
     "x": win.screenX,
     "y": win.screenY,
     "width": win.outerWidth,
@@ -2906,7 +2906,7 @@ GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
     }
   });
 
-  return {
+  resp.body = {
     x: win.screenX,
     y: win.screenY,
     width: win.outerWidth,

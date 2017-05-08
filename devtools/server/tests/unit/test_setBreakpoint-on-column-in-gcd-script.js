@@ -7,7 +7,7 @@ function run_test() {
     do_test_pending();
 
     let global = testGlobal("test");
-    loadSubScript(SOURCE_URL, global);
+    loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
     Cu.forceGC(); Cu.forceGC(); Cu.forceGC();
 
     DebuggerServer.registerModule("xpcshell-test/testactors");
@@ -33,7 +33,7 @@ function run_test() {
 
     packet = yield executeOnNextTickAndWaitForPause(function () {
       reload(tabClient).then(function () {
-        loadSubScript(SOURCE_URL, global);
+        loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
       });
     }, client);
     do_check_eq(packet.type, "paused");

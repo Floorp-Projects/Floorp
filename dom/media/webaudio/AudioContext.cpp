@@ -198,23 +198,15 @@ AudioContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 AudioContext::Constructor(const GlobalObject& aGlobal,
                           ErrorResult& aRv)
 {
-  return AudioContext::Constructor(aGlobal,
-                                   AudioChannelService::GetDefaultAudioChannel(),
-                                   aRv);
-}
-
-/* static */ already_AddRefed<AudioContext>
-AudioContext::Constructor(const GlobalObject& aGlobal,
-                          AudioChannel aChannel,
-                          ErrorResult& aRv)
-{
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  RefPtr<AudioContext> object = new AudioContext(window, false, aChannel);
+  RefPtr<AudioContext> object =
+    new AudioContext(window, false,
+                     AudioChannelService::GetDefaultAudioChannel());
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
      return nullptr;

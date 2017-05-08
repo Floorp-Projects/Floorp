@@ -37,18 +37,19 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
 class nsHtml5StreamParser;
 
+class nsHtml5AttributeName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
-class nsHtml5AttributeName;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -56,6 +57,25 @@ class nsHtml5Portability;
 
 class nsHtml5ElementName
 {
+public:
+  static const int32_t GROUP_MASK = 127;
+
+  static const int32_t NOT_INTERNED = (1 << 30);
+
+  static const int32_t SPECIAL = (1 << 29);
+
+  static const int32_t FOSTER_PARENTING = (1 << 28);
+
+  static const int32_t SCOPING = (1 << 27);
+
+  static const int32_t SCOPING_AS_SVG = (1 << 26);
+
+  static const int32_t SCOPING_AS_MATHML = (1 << 25);
+
+  static const int32_t HTML_INTEGRATION_POINT = (1 << 24);
+
+  static const int32_t OPTIONAL_END_TAG = (1 << 23);
+
 private:
   nsIAtom* name;
   nsIAtom* camelCaseName;
@@ -68,49 +88,76 @@ public:
 
   inline int32_t getFlags() { return flags; }
 
-  int32_t getGroup();
-  bool isInterned();
-  static nsHtml5ElementName* elementNameByBuffer(char16_t* buf,
-                                                 int32_t offset,
-                                                 int32_t length,
-                                                 nsHtml5AtomTable* interner);
+  inline int32_t getGroup() { return flags & nsHtml5ElementName::GROUP_MASK; }
 
-private:
-  inline static uint32_t bufToHash(char16_t* buf, int32_t length)
+  inline bool isInterned()
   {
-    uint32_t len = length;
-    uint32_t first = buf[0];
-    first <<= 19;
-    uint32_t second = 1 << 23;
-    uint32_t third = 0;
-    uint32_t fourth = 0;
-    uint32_t fifth = 0;
-    if (length >= 4) {
-      second = buf[length - 4];
-      second <<= 4;
-      third = buf[length - 3];
-      third <<= 9;
-      fourth = buf[length - 2];
-      fourth <<= 14;
-      fifth = buf[length - 1];
-      fifth <<= 24;
-    } else if (length == 3) {
-      second = buf[1];
-      second <<= 4;
-      third = buf[2];
-      third <<= 9;
-    } else if (length == 2) {
-      second = buf[1];
-      second <<= 24;
+    return !(flags & nsHtml5ElementName::NOT_INTERNED);
+  }
+
+  inline static nsHtml5ElementName* elementNameByBuffer(
+    char16_t* buf,
+    int32_t offset,
+    int32_t length,
+    nsHtml5AtomTable* interner)
+  {
+    uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
+    int32_t index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
+    if (index < 0) {
+      return nullptr;
+    } else {
+      nsHtml5ElementName* elementName =
+        nsHtml5ElementName::ELEMENT_NAMES[index];
+      nsIAtom* name = elementName->name;
+      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+        return nullptr;
+      }
+      return elementName;
     }
-    return len + first + second + third + fourth + fifth;
+    }
+
+  private:
+    inline static uint32_t bufToHash(char16_t* buf, int32_t length)
+    {
+      uint32_t len = length;
+      uint32_t first = buf[0];
+      first <<= 19;
+      uint32_t second = 1 << 23;
+      uint32_t third = 0;
+      uint32_t fourth = 0;
+      uint32_t fifth = 0;
+      if (length >= 4) {
+        second = buf[length - 4];
+        second <<= 4;
+        third = buf[length - 3];
+        third <<= 9;
+        fourth = buf[length - 2];
+        fourth <<= 14;
+        fifth = buf[length - 1];
+        fifth <<= 24;
+      } else if (length == 3) {
+        second = buf[1];
+        second <<= 4;
+        third = buf[2];
+        third <<= 9;
+      } else if (length == 2) {
+        second = buf[1];
+        second <<= 24;
+      }
+      return len + first + second + third + fourth + fifth;
     }
 
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags);
   public:
     nsHtml5ElementName();
     ~nsHtml5ElementName();
-    void setNameForNonInterned(nsIAtom* name);
+    inline void setNameForNonInterned(nsIAtom* name)
+    {
+      this->name = name;
+      this->camelCaseName = name;
+      MOZ_ASSERT(this->flags == nsHtml5ElementName::NOT_INTERNED);
+    }
+
     static nsHtml5ElementName* ELT_ANNOTATION_XML;
     static nsHtml5ElementName* ELT_ISINDEX;
     static nsHtml5ElementName* ELT_BIG;
@@ -323,17 +370,6 @@ private:
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#define NS_HTML5ELEMENT_NAME_GROUP_MASK 127
-#define NS_HTML5ELEMENT_NAME_NOT_INTERNED (1 << 30)
-#define NS_HTML5ELEMENT_NAME_SPECIAL (1 << 29)
-#define NS_HTML5ELEMENT_NAME_FOSTER_PARENTING (1 << 28)
-#define NS_HTML5ELEMENT_NAME_SCOPING (1 << 27)
-#define NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG (1 << 26)
-#define NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML (1 << 25)
-#define NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT (1 << 24)
-#define NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG (1 << 23)
-
 
 #endif
 

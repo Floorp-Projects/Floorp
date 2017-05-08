@@ -38,6 +38,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
+#include "nsRFPService.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -366,11 +367,18 @@ public:
                                     nsIDOMNode** aCommonAncestor);
 
   /**
-   * Returns the common ancestor, if any, for two nodes. Returns null if the
-   * nodes are disconnected.
+   * Returns the common ancestor, if any, for two nodes.
+   *
+   * Returns null if the nodes are disconnected.
    */
-  static nsINode* GetCommonAncestor(nsINode* aNode1,
-                                    nsINode* aNode2);
+  static nsINode* GetCommonAncestor(nsINode* aNode1, nsINode* aNode2);
+
+  /**
+   * Returns the common flattened tree ancestor, if any, for two given content
+   * nodes.
+   */
+  static nsIContent* GetCommonFlattenedTreeAncestor(nsIContent* aContent1,
+                                                    nsIContent* aContent2);
 
   /**
    * Returns true if aNode1 is before aNode2 in the same connected
@@ -2171,7 +2179,7 @@ public:
   static bool ResistFingerprinting(mozilla::dom::CallerType aCallerType)
   {
     return aCallerType != mozilla::dom::CallerType::System &&
-           sPrivacyResistFingerprinting;
+           mozilla::nsRFPService::IsResistFingerprintingEnabled();
   }
 
   /**
@@ -2739,7 +2747,7 @@ public:
                                                 nsIHttpChannel* aChannel,
                                                 mozilla::net::ReferrerPolicy aReferrerPolicy);
 
-    /*
+  /*
    * Parse a referrer policy from a Referrer-Policy header
    * https://www.w3.org/TR/referrer-policy/#parse-referrer-policy-from-header
    *
@@ -2747,6 +2755,8 @@ public:
    * @return referrer policy from the response header.
    */
   static mozilla::net::ReferrerPolicy GetReferrerPolicyFromHeader(const nsAString& aHeader);
+
+  static bool PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj);
 
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
 
@@ -2927,6 +2937,13 @@ public:
   static bool
   SkipCursorMoveForSameValueSet() { return sSkipCursorMoveForSameValueSet; }
 
+  /**
+   * Determine whether or not the user is currently interacting with the web
+   * browser. This method is safe to call from off of the main thread.
+   */
+  static bool
+  GetUserIsInteracting();
+
 private:
   static bool InitializeEventTable();
 
@@ -3045,7 +3062,6 @@ private:
   static bool sIsExperimentalAutocompleteEnabled;
   static bool sIsWebComponentsEnabled;
   static bool sIsCustomElementsEnabled;
-  static bool sPrivacyResistFingerprinting;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
@@ -3058,6 +3074,9 @@ private:
 
   static int32_t sPrivacyMaxInnerWidth;
   static int32_t sPrivacyMaxInnerHeight;
+
+  class UserInteractionObserver;
+  static UserInteractionObserver* sUserInteractionObserver;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

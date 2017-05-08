@@ -54,6 +54,7 @@
 #include "nsIThrottlingService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXULRuntime.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -99,6 +100,9 @@
 #define ALLOW_EXPERIMENTS        "network.allow-experiments"
 #define SAFE_HINT_HEADER_VALUE   "safeHint.enabled"
 #define SECURITY_PREFIX          "security."
+
+#define TCP_FAST_OPEN_ENABLE        "network.tcp.tcp_fastopen_enable"
+#define TCP_FAST_OPEN_FAILURE_LIMIT "network.tcp.tcp_fastopen_consecutive_failure_limit"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
@@ -241,6 +245,9 @@ nsHttpHandler::nsHttpHandler()
     , mDefaultHpackBuffer(4096)
     , mMaxHttpResponseHeaderSize(393216)
     , mFocusedWindowTransactionRatio(0.9f)
+    , mUseFastOpen(true)
+    , mFastOpenConsecutiveFailureLimit(5)
+    , mFastOpenConsecutiveFailureCounter(0)
     , mProcessId(0)
     , mNextChannelId(1)
 {
@@ -252,6 +259,71 @@ nsHttpHandler::nsHttpHandler()
     if (runtime) {
         runtime->GetProcessID(&mProcessId);
     }
+    SetFastOpenOSSupport();
+}
+
+void
+nsHttpHandler::SetFastOpenOSSupport()
+{
+    mFastOpenSupported = false;
+#if !defined(XP_WIN) && !defined(XP_LINUX) && !defined(ANDROID) && !defined(HAS_CONNECTX)
+    return;
+#else
+
+    nsCOMPtr<nsIPropertyBag2> infoService =
+        do_GetService("@mozilla.org/system-info;1");
+    MOZ_ASSERT(infoService, "Could not find a system info service");
+    nsAutoCString version;
+    nsresult rv;
+#ifdef ANDROID
+    rv = infoService->GetPropertyAsACString(
+        NS_LITERAL_STRING("sdk_version"), version);
+#else
+    rv = infoService->GetPropertyAsACString(
+        NS_LITERAL_STRING("version"), version);
+#endif
+
+    LOG(("nsHttpHandler::SetFastOpenOSSupport version %s", version.get()));
+
+    if (NS_SUCCEEDED(rv)) {
+        // set min version minus 1.
+#ifdef XP_WIN
+        int min_version[] = {10, 0};
+#elif XP_MACOSX
+        int min_version[] = {15, 0};
+#elif ANDROID
+        int min_version[] = {4, 4};
+#elif XP_LINUX
+        int min_version[] = {3, 6};
+#endif
+        int inx = 0;
+        nsCCharSeparatedTokenizer tokenizer(version, '.');
+        while ((inx < 2) && tokenizer.hasMoreTokens()) {
+            nsAutoCString token(tokenizer.nextToken());
+            const char* nondigit = NS_strspnp("0123456789", token.get());
+            if (nondigit && *nondigit) {
+                break;
+            }
+            nsresult rv;
+            int32_t ver = token.ToInteger(&rv);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            if (ver > min_version[inx]) {
+                mFastOpenSupported = true;
+                break;
+            } else if (ver == min_version[inx] && inx == 1) {
+                mFastOpenSupported = true;
+            } else if (ver < min_version[inx]) {
+                break;
+            }
+            inx++;
+        }
+    }
+#endif
+
+    LOG(("nsHttpHandler::SetFastOpenOSSupport %s supported.\n",
+         mFastOpenSupported ? "" : "not"));
 }
 
 nsHttpHandler::~nsHttpHandler()
@@ -314,6 +386,8 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.long_lived_connections"), this, true);
         prefBranch->AddObserver(SAFE_HINT_HEADER_VALUE, this, true);
         prefBranch->AddObserver(SECURITY_PREFIX, this, true);
+        prefBranch->AddObserver(TCP_FAST_OPEN_ENABLE, this, true);
+        prefBranch->AddObserver(TCP_FAST_OPEN_FAILURE_LIMIT, this, true);
         PrefsChanged(prefBranch, nullptr);
     }
 
@@ -554,6 +628,22 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc, bool isSecure)
     LOG(("nsHttpHandler::IsAceptableEncoding %s https=%d %d\n",
          enc, isSecure, rv));
     return rv;
+}
+
+void
+nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter()
+{
+    LOG(("nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter - "
+         "failed=%d failure_limit=%d", mFastOpenConsecutiveFailureCounter,
+         mFastOpenConsecutiveFailureLimit));
+    if (mFastOpenConsecutiveFailureCounter < mFastOpenConsecutiveFailureLimit) {
+        mFastOpenConsecutiveFailureCounter++;
+        if (mFastOpenConsecutiveFailureCounter == mFastOpenConsecutiveFailureLimit) {
+            LOG(("nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter - "
+                 "Fast open failed too many times"));
+            SetFastOpenNotSupported();
+        }
+    }
 }
 
 nsresult
@@ -1646,6 +1736,23 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             } else {
                 mEnforceH1Framing = FRAMECHECK_LAX;
             }
+        }
+    }
+
+    if (PREF_CHANGED(TCP_FAST_OPEN_ENABLE)) {
+        rv = prefs->GetBoolPref(TCP_FAST_OPEN_ENABLE, &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mUseFastOpen = cVar;
+        }
+    }
+
+    if (PREF_CHANGED(TCP_FAST_OPEN_FAILURE_LIMIT)) {
+        rv = prefs->GetIntPref(TCP_FAST_OPEN_FAILURE_LIMIT, &val);
+        if (NS_SUCCEEDED(rv)) {
+            if (val < 0) {
+                val = 0;
+            }
+            mFastOpenConsecutiveFailureLimit = val;
         }
     }
 
