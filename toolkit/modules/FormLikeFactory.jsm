@@ -47,23 +47,23 @@ let FormLikeFactory = {
   },
 
   /**
-   * Create a FormLike object from an <input> in a document.
+   * Create a FormLike object from an <input>/<select> in a document.
    *
    * If the field is in a <form>, construct the FormLike from the form.
    * Otherwise, create a FormLike with a rootElement (wrapper) according to
-   * heuristics. Currently all <input> not in a <form> are one FormLike but this
-   * shouldn't be relied upon as the heuristics may change to detect multiple
-   * "forms" (e.g. registration and login) on one page with a <form>.
+   * heuristics. Currently all <input>/<select> not in a <form> are one FormLike
+   * but this shouldn't be relied upon as the heuristics may change to detect
+   * multiple "forms" (e.g. registration and login) on one page with a <form>.
    *
    * Note that two FormLikes created from the same field won't return the same FormLike object.
    * Use the `rootElement` property on the FormLike as a key instead.
    *
-   * @param {HTMLInputElement} aField - a field in a document
+   * @param {HTMLInputElement|HTMLSelectElement} aField - an <input> or <select> field in a document
    * @return {FormLike}
    * @throws Error if aField isn't a password or username field in a document
    */
   createFromField(aField) {
-    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+    if ((!(aField instanceof Ci.nsIDOMHTMLInputElement) && !(aField instanceof Ci.nsIDOMHTMLSelectElement)) ||
         !aField.ownerDocument) {
       throw new Error("createFromField requires a field in a document");
     }
@@ -75,7 +75,7 @@ let FormLikeFactory = {
 
     let doc = aField.ownerDocument;
     let elements = [];
-    for (let el of rootElement.querySelectorAll("input")) {
+    for (let el of rootElement.querySelectorAll("input, select")) {
       // Exclude elements inside the rootElement that are already in a <form> as
       // they will be handled by their own FormLike.
       if (!el.form) {
@@ -101,7 +101,7 @@ let FormLikeFactory = {
    * an ancestor Element of the username and password fields which doesn't
    * include any of the checkout fields.
    *
-   * @param {HTMLInputElement} aField - a field in a document
+   * @param {HTMLInputElement|HTMLSelectElement} aField - a field in a document
    * @return {HTMLElement} - the root element surrounding related fields
    */
   findRootForField(aField) {
