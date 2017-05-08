@@ -9,8 +9,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-function EditDialog(profile) {
-  this._profile = profile;
+function EditDialog(address) {
+  this._address = address;
   window.addEventListener("DOMContentLoaded", this, {once: true});
 }
 
@@ -25,26 +25,26 @@ EditDialog.prototype = {
   },
 
   /**
-   * Asks FormAutofillParent to save or update a profile.
+   * Asks FormAutofillParent to save or update an address.
    * @param  {object} data
    *         {
    *           {string} guid [optional]
-   *           {object} profile
+   *           {object} address
    *         }
    */
-  saveProfile(data) {
-    Services.cpmm.sendAsyncMessage("FormAutofill:SaveProfile", data);
+  saveAddress(data) {
+    Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", data);
   },
 
   /**
-   * Fill the form with a profile object.
-   * @param  {object} profile
+   * Fill the form with an address object.
+   * @param  {object} address
    */
-  loadInitialValues(profile) {
-    for (let field in profile) {
+  loadInitialValues(address) {
+    for (let field in address) {
       let input = document.getElementById(field);
       if (input) {
-        input.value = profile[field];
+        input.value = address[field];
       }
     }
   },
@@ -53,7 +53,7 @@ EditDialog.prototype = {
    * Get inputs from the form.
    * @returns {object}
    */
-  buildProfileObject() {
+  buildAddressObject() {
     return Array.from(document.forms[0].elements).reduce((obj, input) => {
       if (input.value) {
         obj[input.id] = input.value;
@@ -71,8 +71,8 @@ EditDialog.prototype = {
     switch (event.type) {
       case "DOMContentLoaded": {
         this.init();
-        if (this._profile) {
-          this.loadInitialValues(this._profile);
+        if (this._address) {
+          this.loadInitialValues(this._address);
         }
         break;
       }
@@ -83,7 +83,7 @@ EditDialog.prototype = {
       case "input": {
         // Toggle disabled attribute on the save button based on
         // whether the form is filled or empty.
-        if (Object.keys(this.buildProfileObject()).length == 0) {
+        if (Object.keys(this.buildAddressObject()).length == 0) {
           this.refs.save.setAttribute("disabled", true);
         } else {
           this.refs.save.removeAttribute("disabled");
@@ -104,14 +104,14 @@ EditDialog.prototype = {
       window.close();
     }
     if (event.target == this.refs.save) {
-      if (this._profile) {
-        this.saveProfile({
-          guid: this._profile.guid,
-          profile: this.buildProfileObject(),
+      if (this._address) {
+        this.saveAddress({
+          guid: this._address.guid,
+          address: this.buildAddressObject(),
         });
       } else {
-        this.saveProfile({
-          profile: this.buildProfileObject(),
+        this.saveAddress({
+          address: this.buildAddressObject(),
         });
       }
       this.detachEventListeners();
