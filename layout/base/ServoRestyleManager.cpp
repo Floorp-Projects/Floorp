@@ -139,19 +139,37 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
  * need to track during the post-traversal.
  *
  * This is currently used to properly compute change hints when the parent
- * element of this node is a display: contents node.
+ * element of this node is a display: contents node, and also to avoid computing
+ * the style for text children more than once per element.
  */
 struct ServoRestyleManager::TextPostTraversalState
 {
+  nsStyleContext& mParentContext;
+  ServoStyleSet& mStyleSet;
+  RefPtr<nsStyleContext> mStyle;
   bool mShouldPostHints;
   bool mShouldComputeHints;
   nsChangeHint mComputedHint;
 
-  explicit TextPostTraversalState(bool aDisplayContentsParentStyleChanged)
-    : mShouldPostHints(aDisplayContentsParentStyleChanged)
+  TextPostTraversalState(nsStyleContext& aParentContext,
+                         ServoStyleSet& aStyleSet,
+                         bool aDisplayContentsParentStyleChanged)
+    : mParentContext(aParentContext)
+    , mStyleSet(aStyleSet)
+    , mStyle(nullptr)
+    , mShouldPostHints(aDisplayContentsParentStyleChanged)
     , mShouldComputeHints(aDisplayContentsParentStyleChanged)
     , mComputedHint(nsChangeHint_Empty)
   {}
+
+  nsStyleContext& ComputeStyle(nsIContent* aTextNode)
+  {
+    if (!mStyle) {
+      mStyle = mStyleSet.ResolveStyleForText(aTextNode, &mParentContext);
+    }
+    MOZ_ASSERT(mStyle);
+    return *mStyle;
+  }
 
   void ComputeHintIfNeeded(nsIContent* aContent,
                            nsIFrame* aTextFrame,
@@ -173,8 +191,6 @@ struct ServoRestyleManager::TextPostTraversalState
     //
     // TODO(emilio): The above may not be true for ::first-{line,letter}, but
     // we'll cross that bridge when we support those in stylo.
-    //
-    // TODO(emilio): We could also use the same style context itself, can't we?
     if (mShouldComputeHints) {
       mShouldComputeHints = false;
       uint32_t equalStructs, samePointerStructs;
@@ -314,14 +330,14 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
       recreateContext ? newContext : oldStyleContext;
 
     StyleChildrenIterator it(aElement);
-    TextPostTraversalState textState(displayContentsNode && recreateContext);
+    TextPostTraversalState textState(
+        *upToDateContext, *aStyleSet, displayContentsNode && recreateContext);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
         ProcessPostTraversal(n->AsElement(), upToDateContext,
                              aStyleSet, aChangeList);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        ProcessPostTraversalForText(
-            n, upToDateContext, aStyleSet, aChangeList, textState);
+        ProcessPostTraversalForText(n, aChangeList, textState);
       }
     }
   }
@@ -333,8 +349,6 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 void
 ServoRestyleManager::ProcessPostTraversalForText(
     nsIContent* aTextNode,
-    nsStyleContext* aParentContext,
-    ServoStyleSet* aStyleSet,
     nsStyleChangeList& aChangeList,
     TextPostTraversalState& aPostTraversalState)
 {
@@ -348,15 +362,13 @@ ServoRestyleManager::ProcessPostTraversalForText(
   nsIFrame* primaryFrame = aTextNode->GetPrimaryFrame();
   if (primaryFrame) {
     RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
-    RefPtr<nsStyleContext> newContext =
-      aStyleSet->ResolveStyleForText(aTextNode, aParentContext);
-
+    nsStyleContext& newContext = aPostTraversalState.ComputeStyle(aTextNode);
     aPostTraversalState.ComputeHintIfNeeded(
-        aTextNode, primaryFrame, *newContext, aChangeList);
+        aTextNode, primaryFrame, newContext, aChangeList);
 
     for (nsIFrame* f = primaryFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
-      f->SetStyleContext(newContext);
+      f->SetStyleContext(&newContext);
     }
   }
 }
