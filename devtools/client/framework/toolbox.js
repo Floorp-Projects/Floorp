@@ -2408,14 +2408,17 @@ Toolbox.prototype = {
         .then(() => {
           this._removeHostListeners();
 
-          // `location` may already be null if the toolbox document is already
-          // in process of destruction. Otherwise if it is still around, ensure
-          // releasing toolbox document and triggering cleanup thanks to unload
-          // event. We do that precisely here, before nullifying the target as
-          // various cleanup code depends on the target attribute to be still
+          // `location` may already be 'invalid' if the toolbox document is
+          // already in process of destruction. Otherwise if it is still
+          // around, ensure releasing toolbox document and triggering cleanup
+          // thanks to unload event. We do that precisely here, before
+          // nullifying the target as various cleanup code depends on the
+          // target attribute to be still
           // defined.
-          if (win.location) {
+          try {
             win.location.replace("about:blank");
+          } catch (e) {
+            // Do nothing;
           }
 
           // Targets need to be notified that the toolbox is being torn down.

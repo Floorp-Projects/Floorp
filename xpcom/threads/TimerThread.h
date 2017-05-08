@@ -42,7 +42,6 @@ public:
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 
-  nsresult Init();
   nsresult Shutdown();
 
   nsresult AddTimer(nsTimerImpl* aTimer);
@@ -59,7 +58,6 @@ public:
 private:
   ~TimerThread();
 
-  mozilla::Atomic<bool> mInitInProgress;
   bool    mInitialized;
 
   // These internal helper methods must be called while mMonitor is held.
@@ -68,6 +66,7 @@ private:
   bool    RemoveTimerInternal(nsTimerImpl* aTimer);
   void    RemoveLeadingCanceledTimersInternal();
   void    RemoveFirstTimerInternal();
+  nsresult Init();
 
   already_AddRefed<nsTimerImpl> PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef);
 
