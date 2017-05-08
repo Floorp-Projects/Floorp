@@ -73,10 +73,17 @@ AndroidDynamicToolbarAnimator::AndroidDynamicToolbarAnimator()
 void
 AndroidDynamicToolbarAnimator::Initialize(uint64_t aRootLayerTreeId)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mRootLayerTreeId = aRootLayerTreeId;
   RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeId);
   MOZ_ASSERT(uiController);
   uiController->RegisterAndroidDynamicToolbarAnimator(this);
+
+  // Send queued messages that were posted before Initialize() was called.
+  for (QueuedMessage* message = mCompositorQueuedMessages.getFirst(); message != nullptr; message = message->getNext()) {
+    uiController->ToolbarAnimatorMessageFromCompositor(message->mMessage);
+  }
+  mCompositorQueuedMessages.clear();
 }
 
 static bool
@@ -461,6 +468,7 @@ AndroidDynamicToolbarAnimator::Shutdown()
   mCompositorShutdown = true;
   mCompositorToolbarEffect = nullptr;
   mCompositorToolbarTexture = nullptr;
+  mCompositorQueuedMessages.clear();
   if (mCompositorToolbarPixels) {
     RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeId);
     uiController->DeallocShmem(mCompositorToolbarPixels.ref());
@@ -620,11 +628,19 @@ AndroidDynamicToolbarAnimator::HandleTouchEnd(StaticToolbarState aCurrentToolbar
 
 void
 AndroidDynamicToolbarAnimator::PostMessage(int32_t aMessage) {
+  // if the root layer tree id is zero then Initialize() has not been called yet
+  // so queue the message until Initialize() is called.
+  if (mRootLayerTreeId == 0) {
+    QueueMessage(aMessage);
+    return;
+  }
+
   RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeId);
   if (!uiController) {
     // Looks like IPC may be shutdown.
     return;
   }
+
   // ToolbarAnimatorMessageFromCompositor may be called from any thread.
   uiController->ToolbarAnimatorMessageFromCompositor(aMessage);
 }
@@ -956,6 +972,24 @@ AndroidDynamicToolbarAnimator::CheckForResetOnNextMove(ScreenIntCoord aCurrentTo
     mControllerDragThresholdReached = false;
     mControllerResetOnNextMove = false;
   }
+}
+
+void
+AndroidDynamicToolbarAnimator::QueueMessage(int32_t aMessage)
+{
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<int32_t>(this, &AndroidDynamicToolbarAnimator::QueueMessage, aMessage));
+    return;
+  }
+
+  // If the root layer tree id is no longer zero, Initialize() was called before QueueMessage was processed
+  // so just post the message now.
+  if (mRootLayerTreeId != 0) {
+    PostMessage(aMessage);
+    return;
+  }
+
+  mCompositorQueuedMessages.insertBack(new QueuedMessage(aMessage));
 }
 
 } // namespace layers
