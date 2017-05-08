@@ -124,7 +124,7 @@ struct _utf_codec<8>
 private:
     static const int8 sz_lut[16];
     static const byte mask_lut[5];
-
+    static const uchar_t    limit = 0x110000;
 
 public:
     typedef uint8   codeunit_t;
@@ -157,7 +157,7 @@ public:
             case 0:     l = -1; return 0xFFFD;
         }
 
-        if (l != seq_sz || toolong)
+        if (l != seq_sz || toolong  || u >= limit)
         {
             l = -l;
             return 0xFFFD;
