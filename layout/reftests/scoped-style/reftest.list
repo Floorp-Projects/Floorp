@@ -16,7 +16,7 @@ fails-if(stylo) == scoped-style-015.html scoped-style-015-ref.html
 == scoped-style-016.html scoped-style-016-ref.html
 fails-if(stylo) == scoped-style-017.html scoped-style-017-ref.html
 fails-if(stylo) == scoped-style-018.html scoped-style-018-ref.html
-== scoped-style-019.svg scoped-style-019-ref.svg
+fails-if(stylo) == scoped-style-019.svg scoped-style-019-ref.svg
 == scoped-style-020.html scoped-style-020-ref.html
 == scoped-style-021.html scoped-style-021-ref.html
 == scoped-style-022.html scoped-style-022-ref.html
@@ -40,10 +40,10 @@ fails-if(stylo) == scoped-style-dynamic-008.html scoped-style-dynamic-008-ref.ht
 skip-if(stylo) == scoped-style-dynamic-009.html scoped-style-dynamic-009-ref.html
 asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010-ref.html
 fails-if(stylo) == scoped-style-dynamic-011.html scoped-style-dynamic-011-ref.html
-== scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg
-== scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg
-== scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg
-== scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg
+asserts-if(stylo,1) == scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg
+fails-if(stylo) asserts-if(stylo,1) == scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg
+asserts-if(stylo,1) == scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg
+fails-if(stylo) asserts-if(stylo,1) == scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg
 fails-if(stylo) == scoped-style-import.html scoped-style-import-ref.html
 fails-if(stylo) == scoped-style-media.html scoped-style-media-ref.html
 fails-if(stylo) == scoped-style-namespace.html scoped-style-namespace-ref.html
