@@ -133,13 +133,6 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
-  // FIXME: Bug 1334036: stylo: Implement off-main-thread animations.
-  if (aFrame->StyleContext()->StyleSource().IsServoComputedValues()) {
-    NS_WARNING("stylo: return false in FindAnimationsForCompositor because "
-               "haven't supported compositor-driven animations yet");
-    return false;
-  }
-
   // First check for newly-started transform animations that should be
   // synchronized with geometric animations. We need to do this before any
   // other early returns (the one above is ok) since we can only check this
@@ -288,9 +281,6 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   }
 
   if (aRestyleType == RestyleType::Layer) {
-    // FIXME: Bug 1334036: we call RequestRestyle for both stylo and gecko,
-    // so we should make sure we use mAnimationGecneration properly on OMTA.
-    // Prompt layers to re-sync their animations.
     mPresContext->RestyleManager()->IncrementAnimationGeneration();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aPseudoType);
