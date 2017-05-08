@@ -80,6 +80,14 @@ linux64-stylo/opt:
     test-sets:
         - stylo-tests
         - talos
+linux64-stylo-sequential/debug:
+    build-platform: linux64-stylo/debug
+    test-sets:
+        - stylo-sequential-tests
+linux64-stylo-sequential/opt:
+    build-platform: linux64-stylo/opt
+    test-sets:
+        - stylo-sequential-tests
 
 # QR builds just run a subset right now. Note that the tests in this
 # test set are further restricted in tests.yml to run on certain projects

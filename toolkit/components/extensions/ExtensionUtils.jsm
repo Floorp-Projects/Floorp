@@ -323,6 +323,9 @@ class SpreadArgs extends Array {
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
+  // WeakMap<Extension -> Map<url-string -> object>>
+  iconCache: new DefaultWeakMap(() => new Map()),
+
   // Normalizes the various acceptable input formats into an object
   // with icon size as key and icon URL as value.
   //
@@ -333,6 +336,24 @@ let IconDetails = {
   // If no context is specified, instead of throwing an error, this
   // function simply logs a warning message.
   normalize(details, extension, context = null) {
+    if (!details.imageData && typeof details.path === "string") {
+      let icons = this.iconCache.get(extension);
+
+      let baseURI = context ? context.uri : extension.baseURI;
+      let url = baseURI.resolve(details.path);
+
+      let icon = icons.get(url);
+      if (!icon) {
+        icon = this._normalize(details, extension, context);
+        icons.set(url, icon);
+      }
+      return icon;
+    }
+
+    return this._normalize(details, extension, context);
+  },
+
+  _normalize(details, extension, context = null) {
     let result = {};
 
     try {

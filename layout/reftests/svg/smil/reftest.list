@@ -205,6 +205,7 @@ fails-if(!stylo) == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-targethref-7.svg anim-standard-ref.svg
 == anim-targethref-8.svg anim-standard-ref.svg
 == anim-targethref-9.svg anim-standard-ref.svg
+== anim-targethref-10.svg anim-standard-ref.svg
 
 == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg
 == anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg

@@ -84,6 +84,7 @@ FormAutofillPreferences.prototype = {
       captionLabel.textContent = this.bundle.GetStringFromName("preferenceGroupTitle");
     } else {
       formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
+      savedProfilesBtn.className = "accessory-button";
     }
 
     this.refs = {

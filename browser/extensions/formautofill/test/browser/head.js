@@ -8,6 +8,9 @@ const MANAGE_PROFILES_DIALOG_URL = "chrome://formautofill/content/manageProfiles
 const EDIT_PROFILE_DIALOG_URL = "chrome://formautofill/content/editProfile.xhtml";
 
 const TEST_PROFILE_1 = {
+  "given-name": "John",
+  "additional-name": "R.",
+  "family-name": "Smith",
   organization: "World Wide Web Consortium",
   "street-address": "32 Vassar Street\nMIT Room 32-G524",
   "address-level2": "Cambridge",

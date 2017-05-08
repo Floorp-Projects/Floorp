@@ -2556,16 +2556,6 @@ UpdateThreadFunc(void *param)
   }
 
   if (rv && (sReplaceRequest || sStagedUpdate)) {
-#ifdef XP_WIN
-    // On Windows, the current working directory of the process should be changed
-    // so that it's not locked.
-    if (sStagedUpdate) {
-      NS_tchar sysDir[MAX_PATH + 1] = { L'\0' };
-      if (GetSystemDirectoryW(sysDir, MAX_PATH + 1)) {
-        NS_tchdir(sysDir);
-      }
-    }
-#endif
     ensure_remove_recursive(gWorkingDirPath);
     // When attempting to replace the application, we should fall back
     // to non-staged updates in case of a failure.  We do this by
@@ -2737,6 +2727,17 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
     return 1;
   }
+
+#if defined(TEST_UPDATER) && defined(XP_WIN)
+  // The tests use nsIProcess to launch the updater and it is simpler for the
+  // tests to just set an environment variable and have the test updater set
+  // the current working directory than it is to set the current working
+  // directory in the test itself.
+  if (EnvHasValue("CURWORKDIRPATH")) {
+    const WCHAR *val = _wgetenv(L"CURWORKDIRPATH");
+    NS_tchdir(val);
+  }
+#endif
 
   // This check is also performed in workmonitor.cpp since the maintenance
   // service can be called directly.
@@ -2996,6 +2997,15 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
 
 #ifdef XP_WIN
+  if (sReplaceRequest || sStagedUpdate) {
+    // On Windows, when performing a stage or replace request the current
+    // working directory for the process must be changed so it isn't locked.
+    NS_tchar sysDir[MAX_PATH + 1] = { L'\0' };
+    if (GetSystemDirectoryW(sysDir, MAX_PATH + 1)) {
+      NS_tchdir(sysDir);
+    }
+  }
+
 #ifdef MOZ_MAINTENANCE_SERVICE
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));

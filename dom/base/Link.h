@@ -115,7 +115,7 @@ public:
   virtual size_t
     SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  bool ElementHasHref() const;
+  virtual bool ElementHasHref() const;
 
   // This is called by HTMLAnchorElement.
   void TryDNSPrefetch();

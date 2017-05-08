@@ -62,9 +62,7 @@ CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 PLayerTransactionParent*
 CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   const nsTArray<LayersBackend>&,
-  const uint64_t& aId,
-  TextureFactoryIdentifier* aTextureFactoryIdentifier,
-  bool *aSuccess)
+  const uint64_t& aId)
 {
   MOZ_ASSERT(aId != 0);
 
@@ -85,8 +83,6 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   if (state && state->mLayerManager) {
     state->mCrossProcessParent = this;
     HostLayerManager* lm = state->mLayerManager;
-    *aTextureFactoryIdentifier = lm->GetCompositor()->GetTextureFactoryIdentifier();
-    *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
@@ -97,7 +93,6 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   }
 
   NS_WARNING("Created child without a matching parent?");
-  *aSuccess = false;
   LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
   p->AddIPDLReference();
   return p;
