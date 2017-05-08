@@ -34,12 +34,12 @@ type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 type WrEpoch = Epoch;
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
@@ -601,8 +601,8 @@ impl ExternalImageHandler for WrExternalImageHandler {
 }
 
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrWindowId(u64);
@@ -661,6 +661,7 @@ pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
     v.to_vec();
 }
 
+/// cbindgen:derive-eq=false
 #[repr(C)]
 #[derive(Debug)]
 pub struct WrTransformProperty {
@@ -808,7 +809,7 @@ pub extern "C" fn wr_renderer_current_epoch(renderer: &mut WrRenderer,
     return false;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut WrRenderer) {
     Box::from_raw(renderer);
@@ -840,7 +841,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
     Box::from_raw(pipeline_epochs);
@@ -909,7 +910,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     return true;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(api: *mut WrAPI) {
     let api = Box::from_raw(api);
@@ -1103,7 +1104,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
     api.generate_frame(Some(properties));
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI,
                                              evt: usize) {
@@ -1181,7 +1182,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
     Box::into_raw(state)
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_state_delete(state: *mut WrState) {
     assert!(unsafe { is_in_main_thread() });
