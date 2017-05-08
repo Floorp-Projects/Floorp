@@ -3562,7 +3562,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
     side[i] = wr::ToWrBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
   }
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(transformedRect);
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(transformedRect);
   WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(mBorderRadii[0].width, mBorderRadii[0].height),
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),

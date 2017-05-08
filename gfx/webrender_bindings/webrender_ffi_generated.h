@@ -258,73 +258,11 @@ struct WrRect {
   }
 };
 
-struct WrItemRange {
-  size_t start;
-  size_t length;
+struct WrClipRegionToken {
+  bool _dummy;
 
-  bool operator==(const WrItemRange& aOther) const {
-    return start == aOther.start &&
-           length == aOther.length;
-  }
-};
-
-struct WrImageMask {
-  WrImageKey image;
-  WrRect rect;
-  bool repeat;
-
-  bool operator==(const WrImageMask& aOther) const {
-    return image == aOther.image &&
-           rect == aOther.rect &&
-           repeat == aOther.repeat;
-  }
-};
-
-struct WrClipRegion {
-  WrRect main;
-  WrItemRange complex;
-  WrImageMask image_mask;
-  bool has_image_mask;
-
-  bool operator==(const WrClipRegion& aOther) const {
-    return main == aOther.main &&
-           complex == aOther.complex &&
-           image_mask == aOther.image_mask &&
-           has_image_mask == aOther.has_image_mask;
-  }
-};
-
-struct WrSize {
-  float width;
-  float height;
-
-  bool operator==(const WrSize& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height;
-  }
-};
-
-struct WrBorderRadius {
-  WrSize top_left;
-  WrSize top_right;
-  WrSize bottom_left;
-  WrSize bottom_right;
-
-  bool operator==(const WrBorderRadius& aOther) const {
-    return top_left == aOther.top_left &&
-           top_right == aOther.top_right &&
-           bottom_left == aOther.bottom_left &&
-           bottom_right == aOther.bottom_right;
-  }
-};
-
-struct WrComplexClipRegion {
-  WrRect rect;
-  WrBorderRadius radii;
-
-  bool operator==(const WrComplexClipRegion& aOther) const {
-    return rect == aOther.rect &&
-           radii == aOther.radii;
+  bool operator==(const WrClipRegionToken& aOther) const {
+    return _dummy == aOther._dummy;
   }
 };
 
@@ -363,6 +301,30 @@ struct WrBorderSide {
   bool operator==(const WrBorderSide& aOther) const {
     return color == aOther.color &&
            style == aOther.style;
+  }
+};
+
+struct WrSize {
+  float width;
+  float height;
+
+  bool operator==(const WrSize& aOther) const {
+    return width == aOther.width &&
+           height == aOther.height;
+  }
+};
+
+struct WrBorderRadius {
+  WrSize top_left;
+  WrSize top_right;
+  WrSize bottom_left;
+  WrSize bottom_right;
+
+  bool operator==(const WrBorderRadius& aOther) const {
+    return top_left == aOther.top_left &&
+           top_right == aOther.top_right &&
+           bottom_left == aOther.bottom_left &&
+           bottom_right == aOther.bottom_right;
   }
 };
 
@@ -423,6 +385,28 @@ struct WrNinePatchDescriptor {
     return width == aOther.width &&
            height == aOther.height &&
            slice == aOther.slice;
+  }
+};
+
+struct WrComplexClipRegion {
+  WrRect rect;
+  WrBorderRadius radii;
+
+  bool operator==(const WrComplexClipRegion& aOther) const {
+    return rect == aOther.rect &&
+           radii == aOther.radii;
+  }
+};
+
+struct WrImageMask {
+  WrImageKey image;
+  WrRect rect;
+  bool repeat;
+
+  bool operator==(const WrImageMask& aOther) const {
+    return image == aOther.image &&
+           rect == aOther.rect &&
+           repeat == aOther.repeat;
   }
 };
 
@@ -565,9 +549,7 @@ WR_FUNC;
 WR_INLINE
 void wr_api_finalize_builder(WrState* aState,
                              WrBuiltDisplayListDescriptor* aDlDescriptor,
-                             WrVecU8* aDlData,
-                             WrAuxiliaryListsDescriptor* aAuxDescriptor,
-                             WrVecU8* aAuxData)
+                             WrVecU8* aDlData)
 WR_FUNC;
 
 WR_INLINE
@@ -599,10 +581,7 @@ void wr_api_set_root_display_list(WrAPI* aApi,
                                   WrPipelineId aPipelineId,
                                   WrBuiltDisplayListDescriptor aDlDescriptor,
                                   uint8_t* aDlData,
-                                  size_t aDlSize,
-                                  WrAuxiliaryListsDescriptor aAuxDescriptor,
-                                  uint8_t* aAuxData,
-                                  size_t aAuxSize)
+                                  size_t aDlSize)
 WR_FUNC;
 
 WR_INLINE
@@ -634,14 +613,6 @@ void wr_dp_end(WrState* aState)
 WR_FUNC;
 
 WR_INLINE
-WrClipRegion wr_dp_new_clip_region(WrState* aState,
-                                   WrRect aMain,
-                                   const WrComplexClipRegion* aComplex,
-                                   size_t aComplexCount,
-                                   const WrImageMask* aImageMask)
-WR_FUNC;
-
-WR_INLINE
 void wr_dp_pop_scroll_layer(WrState* aState)
 WR_FUNC;
 
@@ -652,7 +623,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_border(WrState* aState,
                        WrRect aRect,
-                       WrClipRegion aClip,
+                       WrClipRegionToken aClip,
                        WrBorderWidths aWidths,
                        WrBorderSide aTop,
                        WrBorderSide aRight,
@@ -664,7 +635,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_border_gradient(WrState* aState,
                                 WrRect aRect,
-                                WrClipRegion aClip,
+                                WrClipRegionToken aClip,
                                 WrBorderWidths aWidths,
                                 WrPoint aStartPoint,
                                 WrPoint aEndPoint,
@@ -677,7 +648,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_border_image(WrState* aState,
                              WrRect aRect,
-                             WrClipRegion aClip,
+                             WrClipRegionToken aClip,
                              WrBorderWidths aWidths,
                              WrImageKey aImage,
                              WrNinePatchDescriptor aPatch,
@@ -689,7 +660,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_border_radial_gradient(WrState* aState,
                                        WrRect aRect,
-                                       WrClipRegion aClip,
+                                       WrClipRegionToken aClip,
                                        WrBorderWidths aWidths,
                                        WrPoint aCenter,
                                        WrSize aRadius,
@@ -702,7 +673,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_box_shadow(WrState* aState,
                            WrRect aRect,
-                           WrClipRegion aClip,
+                           WrClipRegionToken aClip,
                            WrRect aBoxBounds,
                            WrPoint aOffset,
                            WrColor aColor,
@@ -715,22 +686,28 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_built_display_list(WrState* aState,
                                    WrBuiltDisplayListDescriptor aDlDescriptor,
-                                   WrVecU8 aDlData,
-                                   WrAuxiliaryListsDescriptor aAuxDescriptor,
-                                   WrVecU8 aAuxData)
+                                   WrVecU8 aDlData)
+WR_FUNC;
+
+WR_INLINE
+WrClipRegionToken wr_dp_push_clip_region(WrState* aState,
+                                         WrRect aMain,
+                                         const WrComplexClipRegion* aComplex,
+                                         size_t aComplexCount,
+                                         const WrImageMask* aImageMask)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_iframe(WrState* aState,
                        WrRect aRect,
-                       WrClipRegion aClip,
+                       WrClipRegionToken aClip,
                        WrPipelineId aPipelineId)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_image(WrState* aState,
                       WrRect aBounds,
-                      WrClipRegion aClip,
+                      WrClipRegionToken aClip,
                       WrSize aStretchSize,
                       WrSize aTileSpacing,
                       WrImageRendering aImageRendering,
@@ -740,7 +717,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_linear_gradient(WrState* aState,
                                 WrRect aRect,
-                                WrClipRegion aClip,
+                                WrClipRegionToken aClip,
                                 WrPoint aStartPoint,
                                 WrPoint aEndPoint,
                                 const WrGradientStop* aStops,
@@ -753,7 +730,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_radial_gradient(WrState* aState,
                                 WrRect aRect,
-                                WrClipRegion aClip,
+                                WrClipRegionToken aClip,
                                 WrPoint aCenter,
                                 WrSize aRadius,
                                 const WrGradientStop* aStops,
@@ -766,7 +743,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_rect(WrState* aState,
                      WrRect aRect,
-                     WrClipRegion aClip,
+                     WrClipRegionToken aClip,
                      WrColor aColor)
 WR_FUNC;
 
@@ -789,7 +766,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_text(WrState* aState,
                      WrRect aBounds,
-                     WrClipRegion aClip,
+                     WrClipRegionToken aClip,
                      WrColor aColor,
                      WrFontKey aFontKey,
                      const WrGlyphInstance* aGlyphs,
@@ -800,7 +777,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_yuv_NV12_image(WrState* aState,
                                WrRect aBounds,
-                               WrClipRegion aClip,
+                               WrClipRegionToken aClip,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrYuvColorSpace aColorSpace)
@@ -809,7 +786,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_yuv_planar_image(WrState* aState,
                                  WrRect aBounds,
-                                 WrClipRegion aClip,
+                                 WrClipRegionToken aClip,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,

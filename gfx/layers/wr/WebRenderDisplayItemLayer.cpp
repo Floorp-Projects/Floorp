@@ -167,7 +167,7 @@ WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
   MOZ_ASSERT(ok);
 
   WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(dest);
   WrImageKey key = GetImageKey();
   WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
   WrManager()->AddImageKeyForDiscard(key);

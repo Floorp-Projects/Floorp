@@ -121,7 +121,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
       PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(rect));
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(rect));
   aBuilder.PushIFrame(aSc.ToRelativeWrRect(rect), clipRegion, wr::AsPipelineId(mId));
 }
 

@@ -192,28 +192,6 @@ struct ParamTraits<WrBuiltDisplayListDescriptor>
   }
 };
 
-template<>
-struct ParamTraits<WrAuxiliaryListsDescriptor>
-{
-  static void
-  Write(Message* aMsg, const WrAuxiliaryListsDescriptor& aParam)
-  {
-    WriteParam(aMsg, aParam.gradient_stops_size);
-    WriteParam(aMsg, aParam.complex_clip_regions_size);
-    WriteParam(aMsg, aParam.filters_size);
-    WriteParam(aMsg, aParam.glyph_instances_size);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrAuxiliaryListsDescriptor* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->gradient_stops_size)
-        && ReadParam(aMsg, aIter, &aResult->complex_clip_regions_size)
-        && ReadParam(aMsg, aIter, &aResult->filters_size)
-        && ReadParam(aMsg, aIter, &aResult->glyph_instances_size);
-  }
-};
-
 } // namespace IPC
 
 #endif // GFX_WEBRENDERMESSAGEUTILS_H
