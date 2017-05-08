@@ -173,7 +173,7 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
             req.read_to_string(&mut body).unwrap();
         }
 
-        debug!("→ {} {} {}", req.method, req.uri, body);
+        debug!("-> {} {} {}", req.method, req.uri, body);
 
         match req.uri {
             AbsolutePath(path) => {
@@ -218,7 +218,7 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                     Err(err) => (err.http_status(), err.to_json_string()),
                 };
 
-                debug!("← {} {}", status, resp_body);
+                debug!("<- {} {}", status, resp_body);
 
                 {
                     let resp_status = res.status_mut();
