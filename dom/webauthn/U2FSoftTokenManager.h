@@ -19,11 +19,10 @@
 namespace mozilla {
 namespace dom {
 
-class U2FSoftTokenManager final : public U2FTokenTransport,
-                                  public nsNSSShutDownObject
+class U2FSoftTokenManager final : public U2FTokenTransport
 {
 public:
-  explicit U2FSoftTokenManager(uint32_t aCounter);
+  U2FSoftTokenManager(uint32_t aCounter);
   virtual nsresult Register(nsTArray<uint8_t>& aApplication,
                             nsTArray<uint8_t>& aChallenge,
                             /* out */ nsTArray<uint8_t>& aRegistration,
@@ -35,24 +34,8 @@ public:
   nsresult IsRegistered(nsTArray<uint8_t>& aKeyHandle,
                         nsTArray<uint8_t>& aAppParam,
                         bool& aResult);
-
-  // For nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
-
 private:
   ~U2FSoftTokenManager();
-  nsresult Init();
-  bool IsCompatibleVersion(const nsAString& aVersion);
-
-  bool mInitialized;
-  mozilla::UniquePK11SymKey mWrappingKey;
-
-  static const nsCString mSecretNickname;
-  static const nsString mVersion;
-
-  nsresult GetOrCreateWrappingKey(const mozilla::UniquePK11SlotInfo& aSlot,
-                                  const nsNSSShutDownPreventionLock&);
   uint32_t mCounter;
 };
 
