@@ -42,15 +42,7 @@ to mochitest command.
   * inserting keyframes rule doesn't trigger restyle bug 1364799:
     * test_rule_insertion.html `@keyframes` [36]
   * OMTA
-    * test_animations_effect_timing_duration.html [1]
-    * test_animations_effect_timing_enddelay.html [1]
-    * test_animations_effect_timing_iterations.html [1]
-    * test_animations_iterationstart.html [1]
-    * test_animations_omta.html [1]
-    * test_animations_omta_start.html [1]
-    * test_animations_pausing.html [1]
-    * test_animations_playbackrate.html [1]
-    * test_animations_reverse.html [1]
+    * test_animations_omta.html: bug 1361938, bug 1361663 [88]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * CSSOM support:
