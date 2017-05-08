@@ -627,6 +627,9 @@
  * then the annotation would be:
  *   MOZ_FORMAT_PRINTF(3, 4)
  *
+ * The second argument should be 0 for vprintf-like functions; that
+ * is, those taking a va_list argument.
+ *
  * Note that the checking is limited to standards-conforming
  * printf-likes, and in particular this should not be used for
  * PR_snprintf and friends, which are "printf-like" but which assign
