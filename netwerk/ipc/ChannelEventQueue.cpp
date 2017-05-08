@@ -18,7 +18,7 @@ namespace net {
 ChannelEvent*
 ChannelEventQueue::TakeEvent()
 {
-  MutexAutoLock lock(mMutex);
+  mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFlushing);
 
   if (mSuspended || mEventQueue.IsEmpty()) {
@@ -40,57 +40,58 @@ ChannelEventQueue::FlushQueue()
   nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
   mozilla::Unused << kungFuDeathGrip; // Not used in this function
 
-  bool needResumeOnOtherThread = false;
+  // Prevent flushed events from flushing the queue recursively
   {
-    // Don't allow event enqueued during flush to make sure all events
-    // are run.
-    ReentrantMonitorAutoEnter monitor(mRunningMonitor);
-
-    // Prevent flushed events from flushing the queue recursively
-    {
-      MutexAutoLock lock(mMutex);
-      MOZ_ASSERT(!mFlushing);
-      mFlushing = true;
-    }
-
-    while (true) {
-      UniquePtr<ChannelEvent> event(TakeEvent());
-      if (!event) {
-        break;
-      }
-
-      nsCOMPtr<nsIEventTarget> target = event->GetEventTarget();
-      MOZ_ASSERT(target);
-
-      bool isCurrentThread = false;
-      nsresult rv = target->IsOnCurrentThread(&isCurrentThread);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        // Simply run this event on current thread if we are not sure about it
-        // in release channel, or assert in Aurora/Nightly channel.
-        MOZ_DIAGNOSTIC_ASSERT(false);
-        isCurrentThread = true;
-      }
-
-      if (!isCurrentThread) {
-        // Next event needs to run on another thread. Put it back to
-        // the front of the queue can try resume on that thread.
-        Suspend();
-        PrependEvent(event);
-
-        needResumeOnOtherThread = true;
-        break;
-      }
-
-      event->Run();
-    }
-
-    {
-      MutexAutoLock lock(mMutex);
-      MOZ_ASSERT(mFlushing);
-      mFlushing = false;
-      MOZ_ASSERT(mEventQueue.IsEmpty() || (needResumeOnOtherThread || mSuspended || !!mForcedCount));
-    }
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mFlushing);
+    mFlushing = true;
   }
+
+  bool needResumeOnOtherThread = false;
+
+  while (true) {
+    UniquePtr<ChannelEvent> event;
+    {
+      MutexAutoLock lock(mMutex);
+      event.reset(TakeEvent());
+      if (!event) {
+        MOZ_ASSERT(mFlushing);
+        mFlushing = false;
+        MOZ_ASSERT(mEventQueue.IsEmpty() || (mSuspended || !!mForcedCount));
+        break;
+      }
+    }
+
+    nsCOMPtr<nsIEventTarget> target = event->GetEventTarget();
+    MOZ_ASSERT(target);
+
+    bool isCurrentThread = false;
+    nsresult rv = target->IsOnCurrentThread(&isCurrentThread);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Simply run this event on current thread if we are not sure about it
+      // in release channel, or assert in Aurora/Nightly channel.
+      MOZ_DIAGNOSTIC_ASSERT(false);
+      isCurrentThread = true;
+    }
+
+    if (!isCurrentThread) {
+      // Next event needs to run on another thread. Put it back to
+      // the front of the queue can try resume on that thread.
+      Suspend();
+      PrependEvent(event);
+
+      needResumeOnOtherThread = true;
+      {
+        MutexAutoLock lock(mMutex);
+        MOZ_ASSERT(mFlushing);
+        mFlushing = false;
+        MOZ_ASSERT(!mEventQueue.IsEmpty());
+      }
+      break;
+    }
+
+    event->Run();
+  } // end of while(true)
 
   // The flush procedure is aborted because next event cannot be run on current
   // thread. We need to resume the event processing right after flush procedure
