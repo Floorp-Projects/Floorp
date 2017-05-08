@@ -55,6 +55,8 @@ b2g/locales/en-US/b2g-l10n.js
 browser/app/**
 browser/branding/**/firefox-branding.js
 browser/base/content/test/general/file_csp_block_all_mixedcontent.html
+# Gzipped test file.
+browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
 browser/base/content/newtab/**
 # Test files that are really json not js, and don't need to be linted.
