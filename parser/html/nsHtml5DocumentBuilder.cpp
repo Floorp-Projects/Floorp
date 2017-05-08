@@ -8,9 +8,9 @@
 
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsStyleLinkElement.h"
+#include "nsScriptLoader.h"
 #include "nsIHTMLDocument.h"
 #include "nsNameSpaceManager.h"
-#include "mozilla/dom/ScriptLoader.h"
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder, nsContentSink,
                                    mOwnedElements)

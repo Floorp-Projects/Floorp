@@ -38,7 +38,7 @@ HTMLScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 HTMLScriptElement::HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo)
-  , ScriptElement(aFromParser)
+  , nsScriptElement(aFromParser)
 {
   AddMutationObserver(this);
 }

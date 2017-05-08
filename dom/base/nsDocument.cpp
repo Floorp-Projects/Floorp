@@ -2026,7 +2026,7 @@ nsDocument::Init()
   mScopeObject = do_GetWeakReference(global);
   MOZ_ASSERT(mScopeObject);
 
-  mScriptLoader = new dom::ScriptLoader(this);
+  mScriptLoader = new nsScriptLoader(this);
 
   mozilla::HoldJSObjects(this);
 
@@ -5011,7 +5011,7 @@ nsDocument::GetWindowInternal() const
   return win;
 }
 
-ScriptLoader*
+nsScriptLoader*
 nsDocument::ScriptLoader()
 {
   return mScriptLoader;

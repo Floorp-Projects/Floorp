@@ -11,13 +11,13 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsScriptLoader.h"
 #include "nsFrameLoader.h"
 #include "xpcpublic.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
-#include "mozilla/dom/ScriptLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

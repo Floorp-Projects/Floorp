@@ -45,8 +45,8 @@
 #include "nsIStreamListener.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsRefPtrHashtable.h"
+#include "nsScriptLoader.h"
 #include "nsURIHashKey.h"
-#include "mozilla/dom/ScriptLoader.h"
 
 class nsIDocument;
 class nsIPrincipal;
@@ -184,8 +184,8 @@ public:
   // and wait for that to run its scripts. We keep track of all the
   // ScriptRunners that are waiting for this import. NOTE: updating
   // the main referrer might change this list.
-  void AddBlockedScriptLoader(ScriptLoader* aScriptLoader);
-  bool RemoveBlockedScriptLoader(ScriptLoader* aScriptLoader);
+  void AddBlockedScriptLoader(nsScriptLoader* aScriptLoader);
+  bool RemoveBlockedScriptLoader(nsScriptLoader* aScriptLoader);
   void SetBlockingPredecessor(ImportLoader* aLoader);
 
 private:
@@ -230,7 +230,7 @@ private:
 
   // List of pending ScriptLoaders that are waiting for this import
   // to finish.
-  nsTArray<RefPtr<ScriptLoader>> mBlockedScriptLoaders;
+  nsTArray<RefPtr<nsScriptLoader>> mBlockedScriptLoaders;
 
   // There is always exactly one referrer link that is flagged as
   // the main referrer the primary link. This is the one that is

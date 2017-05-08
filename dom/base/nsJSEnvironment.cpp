@@ -37,6 +37,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
+#include "ScriptSettings.h"
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
@@ -59,7 +60,6 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/ErrorEvent.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "nsAXPCNativeCallContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/SystemGroup.h"

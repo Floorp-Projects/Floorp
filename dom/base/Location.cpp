@@ -32,9 +32,9 @@
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
 #include "NullPrincipal.h"
+#include "ScriptSettings.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/LocationBinding.h"
-#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 namespace dom {
