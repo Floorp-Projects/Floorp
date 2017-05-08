@@ -95,6 +95,22 @@ var gEMEHandler = {
 
     this.showNotificationBar(browser, notificationId, keySystem, params, buttonCallback);
   },
+  safeGetString(notificationId, msgId, labelParams) {
+    let message = ""
+    try {
+      message = labelParams.length ?
+                gNavigatorBundle.getFormattedString(msgId, labelParams) :
+                gNavigatorBundle.getString(msgId);
+    } catch (ex) {
+      if (notificationId == "drmContentDisabled") {
+        // Handle accidentally removed string.
+        message = "You must enable DRM to play some audio or video on this page. " + labelParams[0];
+      } else {
+        Cu.reportError("Malformed media notification with id=" + msgId);
+      }
+    }
+    return message;
+  },
   showNotificationBar(browser, notificationId, keySystem, labelParams, callback) {
     let box = gBrowser.getNotificationBox(browser);
     if (box.getNotificationWithValue(notificationId)) {
@@ -103,11 +119,7 @@ var gEMEHandler = {
 
     let msgPrefix = "emeNotifications." + notificationId + ".";
     let msgId = msgPrefix + "message";
-
-    let message = labelParams.length ?
-                  gNavigatorBundle.getFormattedString(msgId, labelParams) :
-                  gNavigatorBundle.getString(msgId);
-
+    let message = this.safeGetString(notificationId, msgId, labelParams);
     let buttons = [];
     if (callback) {
       let btnLabelId = msgPrefix + "button.label";
