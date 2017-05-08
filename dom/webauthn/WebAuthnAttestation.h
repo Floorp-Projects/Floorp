@@ -26,13 +26,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthnAttestation)
 
 public:
-  explicit WebAuthnAttestation(nsPIDOMWindowInner* aParent);
+  explicit WebAuthnAttestation(WebAuthentication* aParent);
 
 protected:
   ~WebAuthnAttestation();
 
 public:
-  nsISupports*
+  WebAuthentication*
   GetParentObject() const
   {
     return mParent;
@@ -66,7 +66,7 @@ public:
   SetAttestation(CryptoBuffer& aBuffer);
 
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<WebAuthentication> mParent;
   nsString mFormat;
   CryptoBuffer mClientData;
   CryptoBuffer mAuthenticatorData;
