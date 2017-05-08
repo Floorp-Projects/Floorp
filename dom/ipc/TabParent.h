@@ -194,7 +194,7 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvNotifyIMEFocus(const ContentCache& aContentCache,
                      const widget::IMENotification& aEventMessage,
-                     widget::IMENotificationRequests* aRequests) override;
+                     NotifyIMEFocusResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult
   RecvNotifyIMETextChange(const ContentCache& aContentCache,
