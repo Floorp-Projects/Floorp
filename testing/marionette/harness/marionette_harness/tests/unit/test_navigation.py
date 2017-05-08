@@ -44,7 +44,9 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
         self.new_tab = self.open_tab(open_with_link)
         self.marionette.switch_to_window(self.new_tab)
-        self.assertEqual(self.history_length, 1)
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda _: self.history_length == 1,
+            message="The newly opened tab doesn't have a browser history length of 1")
 
     def tearDown(self):
         self.marionette.timeout.reset()
