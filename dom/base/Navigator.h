@@ -198,6 +198,9 @@ public:
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
   VRServiceTest* RequestVRServiceTest();
+  bool IsWebVRContentDetected() const;
+  bool IsWebVRContentPresenting() const;
+  void RequestVRPresentation(VRDisplay& aDisplay);
 #ifdef MOZ_TIME_MANAGER
   time::TimeManager* GetMozTime(ErrorResult& aRv);
 #endif // MOZ_TIME_MANAGER

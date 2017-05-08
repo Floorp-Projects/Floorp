@@ -65,12 +65,14 @@ VRManagerParent::AllocPVRLayerParent(const uint32_t& aDisplayID,
                                      const float& aRightEyeX,
                                      const float& aRightEyeY,
                                      const float& aRightEyeWidth,
-                                     const float& aRightEyeHeight)
+                                     const float& aRightEyeHeight,
+                                     const uint32_t& aGroup)
 {
   RefPtr<VRLayerParent> layer;
   layer = new VRLayerParent(aDisplayID,
                             Rect(aLeftEyeX, aLeftEyeY, aLeftEyeWidth, aLeftEyeHeight),
-                            Rect(aRightEyeX, aRightEyeY, aRightEyeWidth, aRightEyeHeight));
+                            Rect(aRightEyeX, aRightEyeY, aRightEyeWidth, aRightEyeHeight),
+                            aGroup);
   VRManager* vm = VRManager::Get();
   RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
   if (display) {
@@ -254,12 +256,12 @@ VRManagerParent::RecvResetSensor(const uint32_t& aDisplayID)
 }
 
 mozilla::ipc::IPCResult
-VRManagerParent::RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState)
+VRManagerParent::RecvSetGroupMask(const uint32_t& aDisplayID, const uint32_t& aGroupMask)
 {
   VRManager* vm = VRManager::Get();
   RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
   if (display != nullptr) {
-    *aState = display->GetSensorState();
+    display->SetGroupMask(aGroupMask);
   }
   return IPC_OK();
 }

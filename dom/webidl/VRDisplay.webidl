@@ -183,6 +183,26 @@ interface VREyeParameters {
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRDisplay : EventTarget {
+  /**
+   * presentingGroups is a bitmask indicating which VR session groups
+   * have an active VR presentation.
+   */
+  [ChromeOnly] readonly attribute unsigned long presentingGroups;
+  /**
+   * Setting groupMask causes submitted frames by VR sessions that
+   * aren't included in the bitmasked groups to be ignored.
+   * Non-chrome content is not aware of the value of groupMask.
+   * VRDisplay.RequestAnimationFrame will still fire for VR sessions
+   * that are hidden by groupMask, enabling their performance to be
+   * measured by chrome UI that is presented in other groups.
+   * This is expected to be used in cases where chrome UI is presenting
+   * information during link traversal or presenting options when content
+   * performance is too low for comfort.
+   * The VR refresh / VSync cycle is driven by the visible content
+   * and the non-visible content may have a throttled refresh rate.
+   */
+  [ChromeOnly] attribute unsigned long groupMask;
+
   readonly attribute boolean isConnected;
   readonly attribute boolean isPresenting;
 
