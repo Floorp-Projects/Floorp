@@ -1,0 +1,20 @@
+<!doctype html>
+<div id="container" ng-cloak>
+  Should show up
+</div>
+<style>
+[ng-cloak] {
+ display:none !important;
+}
+</style>
+<script>
+document.body.offsetTop;
+</script>
+<style>
+.ng-foo {
+  color: red;
+}
+</style>
+<script>
+container.removeAttribute("ng-cloak");
+</script>
