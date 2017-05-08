@@ -33,7 +33,6 @@ protocol PProcessHangMonitor
 parent:
   async HangEvidence(HangData data);
   async ClearHang();
-  async Ready();
 
 child:
   async TerminateScript();

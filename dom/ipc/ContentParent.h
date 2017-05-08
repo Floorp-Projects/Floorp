@@ -493,8 +493,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                           const ContentParentId& aCpId) override;
 
-  virtual mozilla::ipc::IPCResult RecvTabChildNotReady(const TabId& aTabId) override;
-
   nsTArray<TabContext> GetManagedTabContext();
 
   virtual POfflineCacheUpdateParent*
