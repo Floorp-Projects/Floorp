@@ -37,7 +37,8 @@ public:
                     const SRIMetadata& aIntegrity,
                     ScriptLoader* aLoader);
 
-  bool IsTopLevel() const {
+  bool IsTopLevel() const
+  {
     return mIsTopLevel;
   }
 

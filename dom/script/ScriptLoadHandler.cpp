@@ -21,9 +21,9 @@ namespace dom {
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
-ScriptLoadHandler::ScriptLoadHandler(ScriptLoader *aScriptLoader,
-                                     ScriptLoadRequest *aRequest,
-                                     mozilla::dom::SRICheckDataVerifier *aSRIDataVerifier)
+ScriptLoadHandler::ScriptLoadHandler(ScriptLoader* aScriptLoader,
+                                     ScriptLoadRequest* aRequest,
+                                     SRICheckDataVerifier* aSRIDataVerifier)
   : mScriptLoader(aScriptLoader),
     mRequest(aRequest),
     mSRIDataVerifier(aSRIDataVerifier),
@@ -44,7 +44,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
                                      nsISupports* aContext,
                                      uint32_t aDataLength,
                                      const uint8_t* aData,
-                                     uint32_t *aConsumedLength)
+                                     uint32_t* aConsumedLength)
 {
   if (mRequest->IsCanceled()) {
     // If request cancelled, ignore any incoming data.
@@ -99,7 +99,7 @@ ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
                                  bool aEndOfStream)
 {
   int32_t srcLen = aDataLength;
-  const char* src = reinterpret_cast<const char *>(aData);
+  const char* src = reinterpret_cast<const char*>(aData);
   int32_t dstLen;
   nsresult rv =
     mDecoder->GetMaxLength(src, srcLen, &dstLen);
@@ -130,7 +130,7 @@ ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
 }
 
 bool
-ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
+ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
                                  const uint8_t* aData,
                                  uint32_t aDataLength,
                                  bool aEndOfStream)
@@ -153,7 +153,7 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
 }
 
 bool
-ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
+ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
                                  const uint8_t* aData,
                                  uint32_t aDataLength,
                                  bool aEndOfStream,
@@ -258,7 +258,7 @@ ScriptLoadHandler::MaybeDecodeSRI()
 }
 
 nsresult
-ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader *aLoader)
+ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
 {
   MOZ_ASSERT(mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());

@@ -45,10 +45,10 @@ private:
    * tag, and other indicators.  Returns true if charset has been
    * discovered.
    */
-  bool EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
+  bool EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
                      const uint8_t* aData, uint32_t aDataLength,
                      bool aEndOfStream);
-  bool EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
+  bool EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
                      const uint8_t* aData, uint32_t aDataLength,
                      bool aEndOfStream, nsCString& oCharset);
 
@@ -59,22 +59,22 @@ private:
   nsresult MaybeDecodeSRI();
 
   // Query the channel to find the data type associated with the input stream.
-  nsresult EnsureKnownDataType(nsIIncrementalStreamLoader *aLoader);
+  nsresult EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader);
 
   // ScriptLoader which will handle the parsed script.
-  RefPtr<ScriptLoader>        mScriptLoader;
+  RefPtr<ScriptLoader> mScriptLoader;
 
   // The ScriptLoadRequest for this load. Decoded data are accumulated on it.
-  RefPtr<ScriptLoadRequest>   mRequest;
+  RefPtr<ScriptLoadRequest> mRequest;
 
   // SRI data verifier.
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
 
   // Status of SRI data operations.
-  nsresult                      mSRIStatus;
+  nsresult mSRIStatus;
 
   // Unicode decoder for charset.
-  nsCOMPtr<nsIUnicodeDecoder>   mDecoder;
+  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 };
 
 } // namespace dom
