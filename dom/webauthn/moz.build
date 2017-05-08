@@ -7,10 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
-IPDL_SOURCES += [
-    'PWebAuthnTransaction.ipdl'
-]
-
 EXPORTS.mozilla.dom += [
     'NSSU2FTokenRemote.h',
     'ScopedCredential.h',

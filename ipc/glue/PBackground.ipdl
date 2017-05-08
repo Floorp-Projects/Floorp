@@ -23,7 +23,6 @@ include protocol PQuota;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol PServiceWorkerManager;
-include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
 include protocol PVsync;
 
@@ -70,7 +69,6 @@ sync protocol PBackground
   manages PChildToParentStream;
   manages PParentToChildStream;
   manages PServiceWorkerManager;
-  manages PWebAuthnTransaction;
   manages PUDPSocket;
   manages PVsync;
 
@@ -117,8 +115,6 @@ parent:
   async PGamepadTestChannel();
 
   async PMemoryStream(uint64_t aSize);
-
-  async PWebAuthnTransaction();
 
 child:
   async PCache();
