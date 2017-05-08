@@ -4,13 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsScriptElement_h
-#define nsScriptElement_h
+#ifndef mozilla_dom_ScriptElement_h
+#define mozilla_dom_ScriptElement_h
 
 #include "mozilla/Attributes.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIScriptElement.h"
 #include "nsStubMutationObserver.h"
+
+namespace mozilla {
+namespace dom {
 
 /**
  * Baseclass useful for script elements (such as <xhtml:script> and
@@ -18,8 +21,8 @@
  * attribute and the children of the class affect what script to execute.
  */
 
-class nsScriptElement : public nsIScriptElement,
-                        public nsStubMutationObserver
+class ScriptElement : public nsIScriptElement,
+                      public nsStubMutationObserver
 {
 public:
   // nsIScriptLoaderObserver
@@ -31,7 +34,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
-  explicit nsScriptElement(mozilla::dom::FromParser aFromParser)
+  explicit ScriptElement(FromParser aFromParser)
     : nsIScriptElement(aFromParser)
   {
   }
@@ -49,4 +52,7 @@ protected:
   virtual bool MaybeProcessScript() override;
 };
 
-#endif // nsScriptElement_h
+} // dom namespace
+} // mozilla namespace
+
+#endif // mozilla_dom_ScriptElement_h
