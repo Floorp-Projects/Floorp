@@ -229,7 +229,7 @@ public abstract class GeckoApp
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
         private JSONObject windowObject;
-        private boolean isExternalURL;
+        private boolean loadingExternalURL;
 
         private int selectedTabId = INVALID_TAB_ID;
 
@@ -239,10 +239,14 @@ public abstract class GeckoApp
 
         private SparseIntArray tabIdMap;
 
-        public LastSessionParser(JSONArray tabs, JSONObject windowObject, boolean isExternalURL) {
+        /**
+         * @param loadingExternalURL Pass true if we're going to open an additional tab to load an
+         *                           URL received through our launch intent.
+         */
+        public LastSessionParser(JSONArray tabs, JSONObject windowObject, boolean loadingExternalURL) {
             this.tabs = tabs;
             this.windowObject = windowObject;
-            this.isExternalURL = isExternalURL;
+            this.loadingExternalURL = loadingExternalURL;
 
             tabIdMap = new SparseIntArray();
         }
@@ -293,7 +297,7 @@ public abstract class GeckoApp
             JSONObject tabObject = sessionTab.getTabObject();
 
             int flags = Tabs.LOADURL_NEW_TAB;
-            flags |= ((isExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
+            flags |= ((loadingExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
             flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
             flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
 
