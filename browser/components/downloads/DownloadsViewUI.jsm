@@ -325,18 +325,18 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    */
   get currentDefaultCommandName() {
     switch (DownloadsCommon.stateOfDownload(this.download)) {
-      case Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+      case DownloadsCommon.DOWNLOAD_NOTSTARTED:
         return "downloadsCmd_cancel";
-      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
-      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case DownloadsCommon.DOWNLOAD_FAILED:
+      case DownloadsCommon.DOWNLOAD_CANCELED:
         return "downloadsCmd_retry";
-      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+      case DownloadsCommon.DOWNLOAD_PAUSED:
         return "downloadsCmd_pauseResume";
-      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+      case DownloadsCommon.DOWNLOAD_FINISHED:
         return "downloadsCmd_open";
-      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
+      case DownloadsCommon.DOWNLOAD_BLOCKED_PARENTAL:
         return "downloadsCmd_openReferrer";
-      case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
+      case DownloadsCommon.DOWNLOAD_DIRTY:
         return "downloadsCmd_showBlockedInfo";
     }
     return "";

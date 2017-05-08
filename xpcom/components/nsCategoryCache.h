@@ -21,6 +21,7 @@
 #include "nsInterfaceHashtable.h"
 
 #include "nsXPCOM.h"
+#include "MainThreadUtils.h"
 
 class nsCategoryObserver final : public nsIObserver
 {
@@ -30,6 +31,7 @@ public:
   explicit nsCategoryObserver(const char* aCategory);
 
   void ListenerDied();
+  void SetListener(void(aCallback)(void*), void* aClosure);
   nsInterfaceHashtable<nsCStringHashKey, nsISupports>& GetHash()
   {
     return mHash;
@@ -42,6 +44,8 @@ private:
 
   nsInterfaceHashtable<nsCStringHashKey, nsISupports> mHash;
   nsCString mCategory;
+  void(*mCallback)(void*);
+  void *mClosure;
   bool mObserversRemoved;
 };
 
@@ -59,9 +63,11 @@ public:
   explicit nsCategoryCache(const char* aCategory)
     : mCategoryName(aCategory)
   {
+    MOZ_ASSERT(NS_IsMainThread());
   }
   ~nsCategoryCache()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     if (mObserver) {
       mObserver->ListenerDied();
     }
@@ -69,12 +75,42 @@ public:
 
   void GetEntries(nsCOMArray<T>& aResult)
   {
+    MOZ_ASSERT(NS_IsMainThread());
+    LazyInit();
+
+    AddEntries(aResult);
+  }
+
+  /**
+   * This function returns an nsCOMArray of interface pointers to the cached
+   * category enries for the requested category.  This was added in order to be
+   * used in call sites where the overhead of excessive allocations can be
+   * unacceptable.  See bug 1360971 for an example.
+   */
+  const nsCOMArray<T>& GetCachedEntries()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    LazyInit();
+
+    if (mCachedEntries.IsEmpty()) {
+      AddEntries(mCachedEntries);
+    }
+    return mCachedEntries;
+  }
+
+private:
+  void LazyInit()
+  {
     // Lazy initialization, so that services in this category can't
     // cause reentrant getService (bug 386376)
     if (!mObserver) {
       mObserver = new nsCategoryObserver(mCategoryName.get());
+      mObserver->SetListener(nsCategoryCache<T>::OnCategoryChanged, this);
     }
+  }
 
+  void AddEntries(nsCOMArray<T>& aResult)
+  {
     for (auto iter = mObserver->GetHash().Iter(); !iter.Done(); iter.Next()) {
       nsISupports* entry = iter.UserData();
       nsCOMPtr<T> service = do_QueryInterface(entry);
@@ -84,12 +120,20 @@ public:
     }
   }
 
+  static void OnCategoryChanged(void* aClosure)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    auto self = static_cast<nsCategoryCache<T>*>(aClosure);
+    self->mCachedEntries.Clear();
+  }
+
 private:
   // Not to be implemented
   nsCategoryCache(const nsCategoryCache<T>&);
 
   nsCString mCategoryName;
   RefPtr<nsCategoryObserver> mObserver;
+  nsCOMArray<T> mCachedEntries;
 };
 
 #endif
