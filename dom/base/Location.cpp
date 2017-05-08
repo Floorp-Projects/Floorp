@@ -283,33 +283,23 @@ Location::SetURI(nsIURI* aURI, bool aReplace)
   return NS_OK;
 }
 
-void
-Location::GetHash(nsAString& aHash,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetHash(nsAString& aHash)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aHash.SetLength(0);
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv) || !uri) {
+    return rv;
   }
 
   nsAutoCString ref;
   nsAutoString unicodeRef;
 
-  aRv = uri->GetRef(ref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  rv = uri->GetRef(ref);
 
-  if (!ref.IsEmpty()) {
+  if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
     aHash.Assign(char16_t('#'));
     AppendUTF8toUTF16(ref, aHash);
   }
@@ -322,42 +312,29 @@ Location::GetHash(nsAString& aHash,
   } else {
     mCachedHash = aHash;
   }
+
+  return rv;
 }
 
-void
-Location::SetHash(const nsAString& aHash,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetHash(const nsAString& aHash)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   NS_ConvertUTF16toUTF8 hash(aHash);
   if (hash.IsEmpty() || hash.First() != char16_t('#')) {
     hash.Insert(char16_t('#'), 0);
   }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri), &hash);
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri), &hash);
+  if (NS_FAILED(rv) || !uri) {
+    return rv;
   }
 
-  aRv = SetURI(uri);
+  return SetURI(uri);
 }
 
-void
-Location::GetHost(nsAString& aHost,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetHost(nsAString& aHost)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aHost.Truncate();
 
   nsCOMPtr<nsIURI> uri;
@@ -374,42 +351,30 @@ Location::GetHost(nsAString& aHost,
       AppendUTF8toUTF16(hostport, aHost);
     }
   }
+
+  return NS_OK;
 }
 
-void
-Location::SetHost(const nsAString& aHost,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetHost(const nsAString& aHost)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    return rv;
   }
 
-  aRv = uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  rv = uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  aRv = SetURI(uri);
+  return SetURI(uri);
 }
 
-void
-Location::GetHostname(nsAString& aHostname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetHostname(nsAString& aHostname)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aHostname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
@@ -417,85 +382,79 @@ Location::GetHostname(nsAString& aHostname,
   if (uri) {
     nsContentUtils::GetHostOrIPv6WithBrackets(uri, aHostname);
   }
+
+  return NS_OK;
 }
 
-void
-Location::SetHostname(const nsAString& aHostname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetHostname(const nsAString& aHostname)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
-  }
-
-  aRv = uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aRv = SetURI(uri);
-}
-
-nsresult
-Location::GetHrefInternal(nsAString& aHref)
-{
-  aHref.Truncate();
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
     return rv;
   }
 
-  nsAutoCString uriString;
-  rv = uri->GetSpec(uriString);
+  rv = uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  AppendUTF8toUTF16(uriString, aHref);
-  return NS_OK;
+  return SetURI(uri);
 }
 
-void
-Location::SetHref(const nsAString& aHref,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetHref(nsAString& aHref)
 {
+  aHref.Truncate();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult result;
+
+  result = GetURI(getter_AddRefs(uri));
+
+  if (uri) {
+    nsAutoCString uriString;
+
+    result = uri->GetSpec(uriString);
+
+    if (NS_SUCCEEDED(result)) {
+      AppendUTF8toUTF16(uriString, aHref);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+Location::SetHref(const nsAString& aHref)
+{
+  nsAutoString oldHref;
+  nsresult rv = NS_OK;
+
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
-    aRv = SetHrefWithContext(cx, aHref, false);
-    return;
+    rv = SetHrefWithContext(cx, aHref, false);
+  } else {
+    rv = GetHref(oldHref);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIURI> oldUri;
+
+      rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+
+      if (oldUri) {
+        rv = SetHrefWithBase(aHref, oldUri, false);
+      }
+    }
   }
 
-  nsAutoString oldHref;
-  aRv = GetHrefInternal(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> oldUri;
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aRv = SetHrefWithBase(aHref, oldUri, false);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  return rv;
 }
 
 nsresult
 Location::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                             bool aReplace)
+                               bool aReplace)
 {
   nsCOMPtr<nsIURI> base;
 
@@ -511,7 +470,7 @@ Location::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
 
 nsresult
 Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                          bool aReplace)
+                            bool aReplace)
 {
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
@@ -527,12 +486,13 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
   if (newUri) {
     /* Check with the scriptContext if it is currently processing a script tag.
      * If so, this must be a <script> tag with a location.href in it.
-     * we want to do a replace load, in such a situation.
+     * we want to do a replace load, in such a situation. 
      * In other cases, for example if a event handler or a JS timer
      * had a location.href in it, we want to do a normal load,
      * so that the new url will be appended to Session History.
      * This solution is tricky. Hopefully it isn't going to bite
      * anywhere else. This is part of solution for bug # 39938, 72197
+     * 
      */
     bool inScriptTag = false;
     nsIScriptContext* scriptContext = nullptr;
@@ -558,125 +518,96 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
   return result;
 }
 
-void
-Location::GetOrigin(nsAString& aOrigin,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetOrigin(nsAString& aOrigin)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetURI(getter_AddRefs(uri), true);
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
-  }
+  nsresult rv = GetURI(getter_AddRefs(uri), true);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_OK);
 
   nsAutoString origin;
-  aRv = nsContentUtils::GetUTFOrigin(uri, origin);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aOrigin = origin;
+  return NS_OK;
 }
 
-void
-Location::GetPathname(nsAString& aPathname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetPathname(nsAString& aPathname)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aPathname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult result = GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(result) || !uri) {
+    return result;
   }
 
   nsAutoCString file;
 
-  aRv = uri->GetFilePath(file);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  result = uri->GetFilePath(file);
+
+  if (NS_SUCCEEDED(result)) {
+    AppendUTF8toUTF16(file, aPathname);
   }
 
-  AppendUTF8toUTF16(file, aPathname);
+  return result;
 }
 
-void
-Location::SetPathname(const nsAString& aPathname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetPathname(const nsAString& aPathname)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    return rv;
   }
 
   if (NS_SUCCEEDED(uri->SetFilePath(NS_ConvertUTF16toUTF8(aPathname)))) {
-    aRv = SetURI(uri);
+    return SetURI(uri);
   }
+
+  return NS_OK;
 }
 
-void
-Location::GetPort(nsAString& aPort,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetPort(nsAString& aPort)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aPort.SetLength(0);
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetURI(getter_AddRefs(uri), true);
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult result = NS_OK;
+
+  result = GetURI(getter_AddRefs(uri), true);
+
+  if (uri) {
+    int32_t port;
+    result = uri->GetPort(&port);
+
+    if (NS_SUCCEEDED(result) && -1 != port) {
+      nsAutoString portStr;
+      portStr.AppendInt(port);
+      aPort.Append(portStr);
+    }
+
+    // Don't propagate this exception to caller
+    result = NS_OK;
   }
 
-  int32_t port;
-  nsresult result = uri->GetPort(&port);
-
-  // Don't propagate this exception to caller
-  if (NS_SUCCEEDED(result) && -1 != port) {
-    nsAutoString portStr;
-    portStr.AppendInt(port);
-    aPort.Append(portStr);
-  }
+  return result;
 }
 
-void
-Location::SetPort(const nsAString& aPort,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetPort(const nsAString& aPort)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed() || !uri)) {
-    return;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    return rv;
   }
 
   // perhaps use nsReadingIterators at some point?
@@ -693,57 +624,45 @@ Location::SetPort(const nsAString& aPort,
     }
   }
 
-  aRv = uri->SetPort(port);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  rv = uri->SetPort(port);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  aRv = SetURI(uri);
+  return SetURI(uri);
 }
 
-void
-Location::GetProtocol(nsAString& aProtocol,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetProtocol(nsAString& aProtocol)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aProtocol.SetLength(0);
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult result = NS_OK;
+
+  result = GetURI(getter_AddRefs(uri));
+
+  if (uri) {
+    nsAutoCString protocol;
+
+    result = uri->GetScheme(protocol);
+
+    if (NS_SUCCEEDED(result)) {
+      CopyASCIItoUTF16(protocol, aProtocol);
+      aProtocol.Append(char16_t(':'));
+    }
   }
 
-  nsAutoCString protocol;
-
-  aRv = uri->GetScheme(protocol);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  CopyASCIItoUTF16(protocol, aProtocol);
-  aProtocol.Append(char16_t(':'));
+  return result;
 }
 
-void
-Location::SetProtocol(const nsAString& aProtocol,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetProtocol(const nsAString& aProtocol)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !uri) {
-    return;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    return rv;
   }
 
   nsAString::const_iterator start, end;
@@ -752,18 +671,16 @@ Location::SetProtocol(const nsAString& aProtocol,
   nsAString::const_iterator iter(start);
   Unused << FindCharInReadable(':', iter, end);
 
-  nsresult rv = uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  rv = uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Oh, I wish nsStandardURL returned NS_ERROR_MALFORMED_URI for _all_ the
     // malformed cases, not just some of them!
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
-
   nsAutoCString newSpec;
-  aRv = uri->GetSpec(newSpec);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  rv = uri->GetSpec(newSpec);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   // We may want a new URI class for the new URI, so recreate it:
   rv = NS_NewURI(getter_AddRefs(uri), newSpec);
@@ -771,41 +688,32 @@ Location::SetProtocol(const nsAString& aProtocol,
     if (rv == NS_ERROR_MALFORMED_URI) {
       rv = NS_ERROR_DOM_SYNTAX_ERR;
     }
-
-    aRv.Throw(rv);
-    return;
+    return rv;
   }
 
   bool isHttp;
-  aRv = uri->SchemeIs("http", &isHttp);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  rv = uri->SchemeIs("http", &isHttp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   bool isHttps;
-  aRv = uri->SchemeIs("https", &isHttps);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  rv = uri->SchemeIs("https", &isHttps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (!isHttp && !isHttps) {
     // No-op, per spec.
-    return;
+    return NS_OK;
   }
 
-  aRv = SetURI(uri);
+  return SetURI(uri);
 }
 
-void
-Location::GetSearch(nsAString& aSearch,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
+NS_IMETHODIMP
+Location::GetSearch(nsAString& aSearch)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   aSearch.SetLength(0);
 
   nsCOMPtr<nsIURI> uri;
@@ -825,36 +733,44 @@ Location::GetSearch(nsAString& aSearch,
       AppendUTF8toUTF16(search, aSearch);
     }
   }
+
+  return NS_OK;
 }
 
-void
-Location::SetSearch(const nsAString& aSearch,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
+NS_IMETHODIMP
+Location::SetSearch(const nsAString& aSearch)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
+  nsresult rv = SetSearchInternal(aSearch);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
-  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-  if (NS_WARN_IF(aRv.Failed()) || !url) {
-    return;
-  }
-
-  aRv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aRv = SetURI(uri);
+  return NS_OK;
 }
 
 nsresult
+Location::SetSearchInternal(const nsAString& aSearch)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !url)) {
+    return rv;
+  }
+
+  rv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return SetURI(uri);
+}
+
+NS_IMETHODIMP
 Location::Reload(bool aForceget)
 {
+  nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   nsCOMPtr<nsPIDOMWindowOuter> window = docShell ? docShell->GetWindow()
@@ -879,89 +795,85 @@ Location::Reload(bool aForceget)
     return NS_OK;
   }
 
-  if (!webNav) {
-    return NS_ERROR_FAILURE;
-  }
+  if (webNav) {
+    uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
-  uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
-
-  if (aForceget) {
-    reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
-                  nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
-  }
-
-  nsresult rv = webNav->Reload(reloadFlags);
-  if (rv == NS_BINDING_ABORTED) {
-    // This happens when we attempt to reload a POST result and the user says
-    // no at the "do you want to reload?" prompt.  Don't propagate this one
-    // back to callers.
-    rv = NS_OK;
+    if (aForceget) {
+      reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
+                    nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
+    }
+    rv = webNav->Reload(reloadFlags);
+    if (rv == NS_BINDING_ABORTED) {
+      // This happens when we attempt to reload a POST result and the user says
+      // no at the "do you want to reload?" prompt.  Don't propagate this one
+      // back to callers.
+      rv = NS_OK;
+    }
+  } else {
+    rv = NS_ERROR_FAILURE;
   }
 
   return rv;
 }
 
-void
-Location::Replace(const nsAString& aUrl,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
+NS_IMETHODIMP
+Location::Replace(const nsAString& aUrl)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
+  nsresult rv = NS_OK;
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
-    aRv = SetHrefWithContext(cx, aUrl, true);
-    return;
+    return SetHrefWithContext(cx, aUrl, true);
   }
 
   nsAutoString oldHref;
-  aRv = GetHrefInternal(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+
+  rv = GetHref(oldHref);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> oldUri;
 
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aRv = SetHrefWithBase(aUrl, oldUri, true);
+  return SetHrefWithBase(aUrl, oldUri, true);
 }
 
-void
-Location::Assign(const nsAString& aUrl,
-                 nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aRv)
+NS_IMETHODIMP
+Location::Assign(const nsAString& aUrl)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
-    aRv = SetHrefWithContext(cx, aUrl, false);
-    return;
+    return SetHrefWithContext(cx, aUrl, false);
   }
 
   nsAutoString oldHref;
-  aRv = GetHrefInternal(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  nsresult result = NS_OK;
+
+  result = GetHref(oldHref);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> oldUri;
+
+    result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+
+    if (oldUri) {
+      result = SetHrefWithBase(aUrl, oldUri, false);
+    }
   }
 
-  nsCOMPtr<nsIURI> oldUri;
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  return result;
+}
 
-  if (oldUri) {
-    aRv = SetHrefWithBase(aUrl, oldUri, false);
-  }
+NS_IMETHODIMP
+Location::ToString(nsAString& aReturn)
+{
+  return GetHref(aReturn);
+}
+
+NS_IMETHODIMP
+Location::ValueOf(nsIDOMLocation** aReturn)
+{
+  nsCOMPtr<nsIDOMLocation> loc(this);
+  loc.forget(aReturn);
+  return NS_OK;
 }
 
 nsresult
