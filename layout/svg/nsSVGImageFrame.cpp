@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
 #include "nsContainerFrame.h"
+#include "nsIDOMMutationEvent.h"
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
@@ -226,10 +227,15 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
       return NS_OK;
     }
   }
-  if ((aNameSpaceID == kNameSpaceID_XLink ||
-       aNameSpaceID == kNameSpaceID_None) &&
-      aAttribute == nsGkAtoms::href) {
-    SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
+
+  // Currently our SMIL implementation does not modify the DOM attributes. Once
+  // we implement the SVG 2 SMIL behaviour this can be removed
+  // SVGImageElement::AfterSetAttr's implementation will be sufficient.
+  if (aModType == nsIDOMMutationEvent::SMIL &&
+      aAttribute == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_XLink ||
+       aNameSpaceID == kNameSpaceID_None)) {
+    SVGImageElement* element = static_cast<SVGImageElement*>(mContent);
 
     bool hrefIsSet =
       element->mStringAttributes[SVGImageElement::HREF].IsExplicitlySet() ||
