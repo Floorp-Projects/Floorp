@@ -87,19 +87,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Location)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
-void
-Location::SetDocShell(nsIDocShell *aDocShell)
-{
-   mDocShell = do_GetWeakReference(aDocShell);
-}
-
-nsIDocShell *
-Location::GetDocShell()
-{
-  nsCOMPtr<nsIDocShell> docshell(do_QueryReferent(mDocShell));
-  return docshell;
-}
-
 nsresult
 Location::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 {
@@ -210,8 +197,12 @@ Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
 {
   *aURI = nullptr;
 
-  nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+  if (!mDocShell) {
+    return NS_OK;
+  }
+
+  nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell, &rv));
   if (NS_FAILED(rv)) {
     return rv;
@@ -896,9 +887,10 @@ Location::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   // this happens, try falling back on the current document associated with the
   // docshell. If that fails, just return null and hope that the caller passed
   // an absolute URI.
-  if (!doc && GetDocShell()) {
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+  if (!doc && docShell) {
     nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
-      do_QueryInterface(GetDocShell()->GetScriptGlobalObject());
+      do_QueryInterface(docShell->GetScriptGlobalObject());
     if (docShellWin) {
       doc = docShellWin->GetDoc();
     }
