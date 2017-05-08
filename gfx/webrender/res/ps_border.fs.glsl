@@ -410,7 +410,7 @@ vec4 draw_complete_border(vec2 local_pos, float distance_from_mix_line, float di
 void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     float alpha = 0.0;
-    vec2 local_pos = init_transform_fs(vLocalPos, vLocalRect, alpha);
+    vec2 local_pos = init_transform_fs(vLocalPos, alpha);
 #else
     float alpha = 1.0;
     vec2 local_pos = vLocalPos;
@@ -421,9 +421,9 @@ void main(void) {
     float distance_from_mix_line = (local_pos.x - vPieceRect.x) * vPieceRect.w -
                                    (local_pos.y - vPieceRect.y) * vPieceRect.z;
     distance_from_mix_line /= vPieceRectHypotenuseLength;
-    float distance_from_middle = (local_pos.x - vBorderRect.p0.x) +
-                                 (local_pos.y - vBorderRect.p0.y) -
-                                 0.5 * (vBorderRect.size.x + vBorderRect.size.y);
+    float distance_from_middle = (local_pos.x - vBorderRect.x) +
+                                 (local_pos.y - vBorderRect.y) -
+                                 0.5 * (vBorderRect.z + vBorderRect.w);
 #else
     float distance_from_mix_line = vDistanceFromMixLine;
     float distance_from_middle = vDistanceFromMiddle;

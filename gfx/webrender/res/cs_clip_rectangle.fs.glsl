@@ -36,7 +36,7 @@ float rounded_rect(vec2 pos) {
 
 void main(void) {
     float alpha = 1.f;
-    vec2 local_pos = init_transform_fs(vPos, vLocalRect, alpha);
+    vec2 local_pos = init_transform_fs(vPos, alpha);
 
     float clip_alpha = rounded_rect(local_pos);
 

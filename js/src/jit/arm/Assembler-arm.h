@@ -1317,7 +1317,7 @@ class Assembler : public AssemblerShared
     uint32_t spewProbe(Label* l);
     uint32_t spewDefine(Label* l);
     void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void spew(const char* fmt, va_list args);
+    void spew(const char* fmt, va_list args) MOZ_FORMAT_PRINTF(2, 0);
 #endif
 
   public:
