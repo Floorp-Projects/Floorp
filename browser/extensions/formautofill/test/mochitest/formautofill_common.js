@@ -21,33 +21,33 @@ function checkMenuEntries(expectedValues) {
   }
 }
 
-function addProfile(profile) {
+function addAddress(address) {
   return new Promise(resolve => {
-    formFillChromeScript.sendAsyncMessage("FormAutofillTest:AddProfile", {profile});
-    formFillChromeScript.addMessageListener("FormAutofillTest:ProfileAdded", function onAdded(data) {
-      formFillChromeScript.removeMessageListener("FormAutofillTest:ProfileAdded", onAdded);
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:AddAddress", {address});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressAdded", function onAdded(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressAdded", onAdded);
 
       resolve();
     });
   });
 }
 
-function removeProfile(guid) {
+function removeAddress(guid) {
   return new Promise(resolve => {
-    formFillChromeScript.sendAsyncMessage("FormAutofillTest:RemoveProfile", {guid});
-    formFillChromeScript.addMessageListener("FormAutofillTest:ProfileRemoved", function onDeleted(data) {
-      formFillChromeScript.removeMessageListener("FormAutofillTest:ProfileRemoved", onDeleted);
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:RemoveAddress", {guid});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressRemoved", function onDeleted(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressRemoved", onDeleted);
 
       resolve();
     });
   });
 }
 
-function updateProfile(guid, profile) {
+function updateAddress(guid, address) {
   return new Promise(resolve => {
-    formFillChromeScript.sendAsyncMessage("FormAutofillTest:UpdateProfile", {profile, guid});
-    formFillChromeScript.addMessageListener("FormAutofillTest:ProfileUpdated", function onUpdated(data) {
-      formFillChromeScript.removeMessageListener("FormAutofillTest:ProfileUpdated", onUpdated);
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:UpdateAddress", {address, guid});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressUpdated", function onUpdated(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressUpdated", onUpdated);
 
       resolve();
     });
