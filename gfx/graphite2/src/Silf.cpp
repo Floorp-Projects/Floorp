@@ -155,8 +155,8 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
     be::skip<uint32>(p, be::read<uint8>(p));    // don't use scriptTag array.
     if (e.test(p + sizeof(uint16) + sizeof(uint32) >= silf_end, E_BADSCRIPTTAGS)) { releaseBuffers(); return face.error(e); }
     m_gEndLine  = be::read<uint16>(p);          // lbGID
-    const byte * o_passes = p,
-               * const passes_start = silf_start + be::read<uint32>(p);
+    const byte * o_passes = p;
+    uint32 passes_start = be::read<uint32>(p);
 
     const size_t num_attrs = face.glyphs().numAttrs();
     if (e.test(m_aPseudo   >= num_attrs, E_BADAPSEUDO)
@@ -164,7 +164,7 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
         || e.test(m_aBidi  >= num_attrs, E_BADABIDI)
         || e.test(m_aMirror>= num_attrs, E_BADAMIRROR)
         || e.test(m_aCollision && m_aCollision >= num_attrs - 5, E_BADACOLLISION)
-        || e.test(m_numPasses > 128, E_BADNUMPASSES) || e.test(passes_start >= silf_end, E_BADPASSESSTART)
+        || e.test(m_numPasses > 128, E_BADNUMPASSES) || e.test(passes_start >= lSilf, E_BADPASSESSTART)
         || e.test(m_pPass < m_sPass, E_BADPASSBOUND) || e.test(m_pPass > m_numPasses, E_BADPPASS) || e.test(m_sPass > m_numPasses, E_BADSPASS)
         || e.test(m_jPass < m_pPass, E_BADJPASSBOUND) || e.test(m_jPass > m_numPasses, E_BADJPASS)
         || e.test((m_bPass != 0xFF && (m_bPass < m_jPass || m_bPass > m_numPasses)), E_BADBPASS)
@@ -174,11 +174,11 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
         return face.error(e);
     }
     be::skip<uint32>(p, m_numPasses);
-    if (e.test(p + sizeof(uint16) >= passes_start, E_BADPASSESSTART)) { releaseBuffers(); return face.error(e); }
+    if (e.test(unsigned(p - silf_start) + sizeof(uint16) >= passes_start, E_BADPASSESSTART)) { releaseBuffers(); return face.error(e); }
     m_numPseudo = be::read<uint16>(p);
     be::skip<uint16>(p, 3); // searchPseudo, pseudoSelector, pseudoShift
     m_pseudos = new Pseudo[m_numPseudo];
-    if (e.test(p + m_numPseudo*(sizeof(uint32) + sizeof(uint16)) >= passes_start, E_BADNUMPSEUDO)
+    if (e.test(unsigned(p - silf_start) + m_numPseudo*(sizeof(uint32) + sizeof(uint16)) >= passes_start, E_BADNUMPSEUDO)
         || e.test(!m_pseudos, E_OUTOFMEM))
     {
         releaseBuffers(); return face.error(e);
@@ -189,20 +189,20 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
         m_pseudos[i].gid = be::read<uint16>(p);
     }
 
-    const size_t clen = readClassMap(p, passes_start - p, version, e);
+    const size_t clen = readClassMap(p, passes_start + silf_start - p, version, e);
     m_passes = new Pass[m_numPasses];
-    if (e || e.test(p + clen > passes_start, E_BADPASSESSTART)
+    if (e || e.test(clen > unsigned(passes_start + silf_start - p), E_BADPASSESSTART)
           || e.test(!m_passes, E_OUTOFMEM))
     { releaseBuffers(); return face.error(e); }
 
     for (size_t i = 0; i < m_numPasses; ++i)
     {
-        const byte * const pass_start = silf_start + be::read<uint32>(o_passes),
-                   * const pass_end = silf_start + be::peek<uint32>(o_passes);
+        uint32 pass_start = be::read<uint32>(o_passes);
+        uint32 pass_end = be::peek<uint32>(o_passes);
         face.error_context((face.error_context() & 0xFF00) + EC_ASILF + (i << 16));
         if (e.test(pass_start > pass_end, E_BADPASSSTART) 
                 || e.test(pass_start < passes_start, E_BADPASSSTART)
-                || e.test(pass_end > silf_end, E_BADPASSEND)) {
+                || e.test(pass_end > lSilf, E_BADPASSEND)) {
             releaseBuffers(); return face.error(e);
         }
 
@@ -213,7 +213,7 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, Face& face,
         else pt = PASS_TYPE_LINEBREAK;
 
         m_passes[i].init(this);
-        if (!m_passes[i].readPass(pass_start, pass_end - pass_start, pass_start - silf_start, face, pt,
+        if (!m_passes[i].readPass(silf_start + pass_start, pass_end - pass_start, pass_start, face, pt,
             version, e))
         {
             releaseBuffers();
@@ -293,7 +293,8 @@ size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version, Error 
         if (e.test(*o + 4 > max_off, E_HIGHCLASSOFFSET)                        // LookupClass doesn't stretch over max_off
          || e.test(lookup[0] == 0                                                   // A LookupClass with no looks is a suspicious thing ...
                     || lookup[0] * 2 + *o + 4 > max_off                             // numIDs lookup pairs fits within (start of LookupClass' lookups array, max_off]
-                    || lookup[3] + lookup[1] != lookup[0], E_BADCLASSLOOKUPINFO))   // rangeShift:   numIDs  - searchRange
+                    || lookup[3] + lookup[1] != lookup[0], E_BADCLASSLOOKUPINFO)    // rangeShift:   numIDs  - searchRange
+         || e.test(((o[1] - *o) & 1) != 0, ERROROFFSET))                         // glyphs are in pairs so difference must be even.
             return ERROROFFSET;
     }
 
