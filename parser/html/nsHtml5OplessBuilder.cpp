@@ -6,8 +6,8 @@
 
 #include "nsHtml5OplessBuilder.h"
 
-#include "nsScriptLoader.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "nsIDocShell.h"
 #include "nsIHTMLDocument.h"
 

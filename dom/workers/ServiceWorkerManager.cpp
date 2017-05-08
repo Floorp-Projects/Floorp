@@ -22,7 +22,6 @@
 #include "nsITimer.h"
 #include "nsIUploadChannel2.h"
 #include "nsPIDOMWindow.h"
-#include "nsScriptLoader.h"
 #include "nsServiceManagerUtils.h"
 #include "nsDebug.h"
 #include "nsISupportsPrimitives.h"
@@ -51,6 +50,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
