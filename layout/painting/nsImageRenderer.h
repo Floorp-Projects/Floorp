@@ -14,6 +14,7 @@ class gfxDrawable;
 namespace mozilla {
 
 namespace layers {
+class StackingContextHelper;
 class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
 } // namespace layers
@@ -208,6 +209,7 @@ public:
    */
   DrawResult BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                 mozilla::wr::DisplayListBuilder& aBuilder,
+                                                const mozilla::layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                 const nsRect&        aDest,
@@ -292,6 +294,7 @@ private:
    */
   DrawResult BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                         mozilla::wr::DisplayListBuilder& aBuilder,
+                                        const mozilla::layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                         const nsRect&        aDirtyRect,

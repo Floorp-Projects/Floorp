@@ -29,6 +29,7 @@
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
 
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -1027,6 +1028,7 @@ nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
 
 void
 nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                                  const layers::StackingContextHelper& aSc,
                                                   layers::WebRenderDisplayItemLayer* aLayer,
                                                   const nsRect& aDest,
                                                   const nsRect& aFillArea,
@@ -1047,9 +1049,12 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
 
   nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
 
+  nsPoint firstTile = nsPoint(FindTileStart(aFillArea.x, aDest.x, aRepeatSize.width),
+                              FindTileStart(aFillArea.y, aDest.y, aRepeatSize.height));
+
   // Translate the parameters into device coordinates
   LayoutDeviceRect clipBounds = LayoutDevicePixel::FromAppUnits(aFillArea, appUnitsPerDevPixel);
-  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(aDest, appUnitsPerDevPixel);
+  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(nsRect(firstTile, aDest.Size()), appUnitsPerDevPixel);
   LayoutDeviceSize tileRepeat = LayoutDevicePixel::FromAppUnits(aRepeatSize, appUnitsPerDevPixel);
 
   // Calculate the bounds of the gradient display item, which starts at the first
@@ -1062,9 +1067,10 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // Make the rects relative to the parent stacking context
-  LayerRect layerClipBounds = aLayer->RelativeToParent(clipBounds);
-  LayerRect layerFirstTileBounds = aLayer->RelativeToParent(firstTileBounds);
-  LayerRect layerGradientBounds = aLayer->RelativeToParent(gradientBounds);
+  WrRect wrClipBounds = aSc.ToRelativeWrRect(clipBounds);
+  LayerSize layerFirstTileSize = ViewAs<LayerPixel>(firstTileBounds.Size(),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  WrRect wrGradientBounds = aSc.ToRelativeWrRect(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
@@ -1080,26 +1086,26 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
 
     aBuilder.PushLinearGradient(
-      mozilla::wr::ToWrRect(layerGradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
+      wrGradientBounds,
+      aBuilder.BuildClipRegion(wrClipBounds),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrPoint(lineEnd),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(layerFirstTileBounds.Size()),
+      mozilla::wr::ToWrSize(layerFirstTileSize),
       mozilla::wr::ToWrSize(tileSpacing));
   } else {
     gradientRadius.width *= srcTransform.width;
     gradientRadius.height *= srcTransform.height;
 
     aBuilder.PushRadialGradient(
-      mozilla::wr::ToWrRect(layerGradientBounds),
-      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(layerClipBounds)),
+      wrGradientBounds,
+      aBuilder.BuildClipRegion(wrClipBounds),
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrSize(gradientRadius),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(layerFirstTileBounds.Size()),
+      mozilla::wr::ToWrSize(layerFirstTileSize),
       mozilla::wr::ToWrSize(tileSpacing));
   }
 }

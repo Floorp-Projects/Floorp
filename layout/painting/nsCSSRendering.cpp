@@ -61,6 +61,7 @@
 #include "nsRubyTextContainerFrame.h"
 #include <algorithm>
 #include "SVGImageContext.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1943,7 +1944,8 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
 }
 
 bool
-nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& aPresCtx,
+nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aManager,
+                                                                nsPresContext& aPresCtx,
                                                                 nsIFrame *aFrame,
                                                                 const nsStyleBackground* aBackgroundStyle,
                                                                 int32_t aLayer)
@@ -1967,14 +1969,29 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& a
     }
   }
 
+  const nsStyleImage* styleImage = &aBackgroundStyle->mImage.mLayers[aLayer].mImage;
+
+  // We only support image with image container.
+  if (!styleImage->IsEmpty() && styleImage->GetType() == eStyleImageType_Image) {
+    imgRequestProxy* requestProxy = styleImage->GetImageData();
+    if (requestProxy) {
+      nsCOMPtr<imgIContainer> srcImage;
+      requestProxy->GetImage(getter_AddRefs(srcImage));
+      if (srcImage && !srcImage->IsImageContainerAvailable(aManager, imgIContainer::FLAG_NONE)) {
+        return false;
+      }
+    }
+  }
+
   // We only support painting gradients and image for a single style image layer
-  return aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Gradient ||
-         aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Image;
+  return styleImage->GetType() == eStyleImageType_Gradient ||
+         styleImage->GetType() == eStyleImageType_Image;
 }
 
 DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                              mozilla::wr::DisplayListBuilder& aBuilder,
+                                                             const mozilla::layers::StackingContextHelper& aSc,
                                                              nsTArray<WebRenderParentCommand>& aParentCommands,
                                                              mozilla::layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -2000,7 +2017,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     sc = aParams.frame->StyleContext();
   }
 
-  return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aParentCommands, aLayer,
+  return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aSc, aParentCommands, aLayer,
                                                             sc, *aParams.frame->StyleBorder());
 }
 
@@ -2716,12 +2733,14 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
 DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                    mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                   const mozilla::layers::StackingContextHelper& aSc,
                                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
                                                                    mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                    nsStyleContext *aBackgroundSC,
                                                                    const nsStyleBorder& aBorder)
 {
-  MOZ_ASSERT(CanBuildWebRenderDisplayItemsForStyleImageLayer(aParams.presCtx,
+  MOZ_ASSERT(CanBuildWebRenderDisplayItemsForStyleImageLayer(aLayer->WrManager(),
+                                                             aParams.presCtx,
                                                              aParams.frame,
                                                              aBackgroundSC->StyleBackground(),
                                                              aParams.layer));
@@ -2761,7 +2780,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
 
   if (!state.mFillArea.IsEmpty()) {
     return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
-                                     aBuilder, aParentCommands, aLayer,
+                                     aBuilder, aSc, aParentCommands, aLayer,
                                      state.mDestArea, state.mFillArea,
                                      state.mAnchor + paintBorderArea.TopLeft(),
                                      clipState.mDirtyRectInAppUnits,

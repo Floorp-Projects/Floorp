@@ -35,14 +35,11 @@ public:
 
 protected:
   virtual ~WebRenderCanvasLayer();
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   const StackingContextHelper& aSc) override;
 
 protected:
   wr::MaybeExternalImageId mExternalImageId;

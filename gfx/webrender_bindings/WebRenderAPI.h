@@ -197,6 +197,19 @@ public:
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
+  void PushYCbCrPlanarImage(const WrRect& aBounds,
+                            const WrClipRegion& aClip,
+                            wr::ImageKey aImageChannel0,
+                            wr::ImageKey aImageChannel1,
+                            wr::ImageKey aImageChannel2,
+                            WrYuvColorSpace aColorSpace);
+
+  void PushNV12Image(const WrRect& aBounds,
+                     const WrClipRegion& aClip,
+                     wr::ImageKey aImageChannel0,
+                     wr::ImageKey aImageChannel1,
+                     WrYuvColorSpace aColorSpace);
+
   void PushIFrame(const WrRect& aBounds,
                   const WrClipRegion& aClip,
                   wr::PipelineId aPipeline);

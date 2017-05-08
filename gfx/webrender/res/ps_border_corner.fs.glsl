@@ -54,11 +54,6 @@ float sdEllipse( vec2 p, in vec2 ab ) {
     return length(r - p ) * sign(p.y-r.y);
 }
 
-float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
-    vec2 dir_to_p0 = p0 - p;
-    return dot(normalize(perp_dir), dir_to_p0);
-}
-
 float distance_to_ellipse(vec2 p, vec2 radii) {
     // sdEllipse fails on exact circles, so handle equal
     // radii here. The branch coherency should make this
@@ -74,7 +69,7 @@ void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
     alpha = 0.0;
-    vec2 local_pos = init_transform_fs(vLocalPos, vLocalRect, alpha);
+    vec2 local_pos = init_transform_fs(vLocalPos, alpha);
 #else
     vec2 local_pos = vLocalPos;
 #endif

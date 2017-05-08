@@ -36,10 +36,6 @@ protected:
       WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
     }
   }
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
 
   wr::MaybeExternalImageId mExternalImageId;
 
@@ -51,14 +47,16 @@ public:
   }
 
   Layer* GetLayer() override { return this; }
-  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   const StackingContextHelper& aSc) override;
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<ImageClient> mImageClient;
 
 private:
   bool SetupExternalImages();
   bool UpdateImageClient();
-  void CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder);
+  void CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder,
+                                  const StackingContextHelper& aSc);
 };
 
 } // namespace layers

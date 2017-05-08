@@ -28,15 +28,16 @@ public:
 
   Maybe<wr::ImageKey> SendImageContainer(ImageContainer* aContainer,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands);
-  bool PushItemAsImage(wr::DisplayListBuilder& aBuilder,
-                       nsTArray<layers::WebRenderParentCommand>& aParentCommands);
+  bool PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
+                           const StackingContextHelper& aSc);
 
 protected:
   virtual ~WebRenderDisplayItemLayer();
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   const StackingContextHelper& aHelper) override;
 
 private:
   wr::BuiltDisplayList mBuiltDisplayList;

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use gpu_store::GpuStoreAddress;
 use internal_types::{HardwareCompositeOp, LowLevelFilterOp};
 use mask_cache::{MaskBounds, MaskCacheInfo};
 use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
@@ -9,7 +10,7 @@ use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
 use webrender_traits::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use webrender_traits::MixBlendMode;
+use webrender_traits::{MixBlendMode};
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
@@ -51,9 +52,10 @@ pub enum RenderTaskLocation {
 
 #[derive(Debug, Clone)]
 pub enum AlphaRenderItem {
-    Primitive(ClipScrollGroupIndex, PrimitiveIndex, i32),
+    Primitive(Option<ClipScrollGroupIndex>, PrimitiveIndex, i32),
     Blend(StackingContextIndex, RenderTaskId, LowLevelFilterOp, i32),
     Composite(StackingContextIndex, RenderTaskId, RenderTaskId, MixBlendMode, i32),
+    SplitComposite(StackingContextIndex, RenderTaskId, GpuStoreAddress, i32),
     HardwareComposite(StackingContextIndex, RenderTaskId, HardwareCompositeOp, i32),
 }
 
@@ -155,6 +157,12 @@ impl RenderTask {
         }
     }
 
+    pub fn new_dynamic_alpha_batch(task_index: RenderTaskIndex,
+                                   rect: &DeviceIntRect) -> RenderTask {
+        let location = RenderTaskLocation::Dynamic(None, rect.size);
+        Self::new_alpha_batch(task_index, rect.origin, location)
+    }
+
     pub fn new_prim_cache(key: PrimitiveCacheKey,
                           size: DeviceIntSize,
                           prim_index: PrimitiveIndex) -> RenderTask {
@@ -236,7 +244,7 @@ impl RenderTask {
         if inner_rect.is_some() && clips.len() == 1 {
             let (_, ref clip_info) = clips[0];
             if clip_info.image.is_none() &&
-               clip_info.effective_clip_count == 1 &&
+               clip_info.effective_complex_clip_count == 1 &&
                clip_info.is_aligned {
                 geometry_kind = MaskGeometryKind::CornersOnly;
             }

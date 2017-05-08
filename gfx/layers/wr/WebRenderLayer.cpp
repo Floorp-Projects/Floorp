@@ -40,58 +40,19 @@ WebRenderLayer::GetImageKey()
   return key;
 }
 
-LayerRect
-WebRenderLayer::ParentBounds()
-{
-  // Walk up to find the parent stacking context. This will be created by the
-  // parent layer which must be a ContainerLayer if it exists.
-  if (Layer* parent = GetLayer()->GetParent()) {
-    return ToWebRenderLayer(parent)->Bounds();
-  }
-  return LayerRect();
-}
-
-LayerRect
-WebRenderLayer::RelativeToParent(const LayerRect& aRect)
-{
-  return aRect - ParentBounds().TopLeft();
-}
-
-LayerRect
-WebRenderLayer::RelativeToParent(const LayoutDeviceRect& aRect)
-{
-  return RelativeToParent(ViewAs<LayerPixel>(
-      aRect, PixelCastJustification::WebRenderHasUnitResolution));
-}
-
-LayerPoint
-WebRenderLayer::GetOffsetToParent()
-{
-  return ParentBounds().TopLeft();
-}
-
-gfx::Rect
-WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
-{
-  IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();
-  Rect transformed = GetLayer()->GetTransform().TransformBounds(IntRectToRect(bounds));
-  return transformed - ParentBounds().ToUnknownRect().TopLeft();
-}
-
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
+WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper* aUnapplySc)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
 
-    // The size of mask layer is transformed, and we may set the layer transform
-    // to wr stacking context. So we should apply inverse transform for mask layer
-    // and reverse the offset of the stacking context.
+    // If |this| layer is pushing a stacking context, that should be passed in
+    // as |aUnapplySc|. We need to unapply the transform from that stacking
+    // context because the mask layer (according to WR) is outside that stacking
+    // context.
     gfx::Matrix4x4 transform = maskLayer->GetLayer()->GetTransform();
-    if (aUnapplyLayerTransform) {
-      gfx::Rect bounds = IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect());
-      transform = transform.PreTranslate(-bounds.x, -bounds.y, 0);
-      transform = transform * GetLayer()->GetTransform().Inverse();
+    if (aUnapplySc) {
+      transform = transform * aUnapplySc->TransformToParentSC();
     }
 
     return maskLayer->RenderMaskLayer(transform);

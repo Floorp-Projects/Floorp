@@ -13,6 +13,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
@@ -30,6 +31,7 @@
 #include "nsCounterManager.h"
 #include "nsBidiUtils.h"
 #include "CounterStyleManager.h"
+#include "UnitTransforms.h"
 
 #include "imgIContainer.h"
 #include "ImageLayers.h"
@@ -223,6 +225,7 @@ public:
   void
   CreateWebRenderCommands(nsDisplayItem* aItem,
                           wr::DisplayListBuilder& aBuilder,
+                          const layers::StackingContextHelper& aSc,
                           nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                           layers::WebRenderDisplayItemLayer* aLayer);
 
@@ -269,19 +272,22 @@ public:
 private:
   void
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
-                                 wr::DisplayListBuilder& aBuilder,
+                                  wr::DisplayListBuilder& aBuilder,
+                                  const layers::StackingContextHelper& aSc,
                                   nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
 private:
@@ -312,16 +318,17 @@ private:
 void
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                         wr::DisplayListBuilder& aBuilder,
+                                        const layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (IsImageType()) {
-    CreateWebRenderCommandsForImage(aItem, aBuilder, aParentCommands, aLayer);
+    CreateWebRenderCommandsForImage(aItem, aBuilder, aSc, aParentCommands, aLayer);
   } else if (IsPathType()) {
-    CreateWebRenderCommandsForPath(aItem, aBuilder, aParentCommands, aLayer);
+    CreateWebRenderCommandsForPath(aItem, aBuilder, aSc, aParentCommands, aLayer);
   } else {
     MOZ_ASSERT(IsTextType());
-    CreateWebRenderCommandsForText(aItem, aBuilder, aLayer);
+    CreateWebRenderCommandsForText(aItem, aBuilder, aSc, aLayer);
   }
 }
 
@@ -430,6 +437,7 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
 void
 BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                                 wr::DisplayListBuilder& aBuilder,
+                                                const layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -458,12 +466,11 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
-  LayerRect destRectTransformed = aLayer->RelativeToParent(destRect);
-  LayerIntRect dest = RoundedToInt(destRectTransformed);
+  WrRect dest = aSc.ToRelativeWrRectRounded(destRect);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
 
-  aBuilder.PushImage(wr::ToWrRect(dest),
+  aBuilder.PushImage(dest,
                      clipRegion,
                      WrImageRendering::Auto,
                      key.value());
@@ -472,13 +479,14 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 void
 BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
+                                               const layers::StackingContextHelper& aSc,
                                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsPathType());
   MOZ_ASSERT(aLayer->GetDisplayItem() == aItem);
 
-  if (!aLayer->PushItemAsImage(aBuilder, aParentCommands)) {
+  if (!aLayer->PushItemAsBlobImage(aBuilder, aSc)) {
     NS_WARNING("Fail to create WebRender commands for Bullet path.");
   }
 }
@@ -486,6 +494,7 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
 void
 BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
+                                               const layers::StackingContextHelper& aSc,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsTextType());
@@ -496,12 +505,12 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
-  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
-      aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
-  gfx::Rect destRectTransformed = aLayer->RelativeToParent(destRect).ToUnknownRect();
+  LayerRect destRect = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(
+          aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
 
-  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
-                                destRectTransformed, destRectTransformed);
+  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, destRect, destRect);
 }
 
 class nsDisplayBullet final : public nsDisplayItem {
@@ -534,6 +543,7 @@ public:
                                              const ContainerLayerParameters& aParameters) override;
 
   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                        layers::WebRenderDisplayItemLayer* aLayer) override;
 
@@ -643,13 +653,14 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                          layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (!mBulletRenderer)
     return;
 
-  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aParentCommands, aLayer);
+  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aSc, aParentCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
