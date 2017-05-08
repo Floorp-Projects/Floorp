@@ -130,6 +130,7 @@ def make_task_description(config, jobs):
              'docker-worker:relengapi-proxy:tooltool.download.public',
              'project:releng:signing:format:dmg'],
             'worker': {'implementation': 'docker-worker',
+                       'os': 'linux',
                        'docker-image': {"in-tree": "desktop-build"},
                        'caches': [{
                                    'type': 'persistent',

@@ -27,6 +27,7 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
+            os: linux
             docker-image: {in-tree: android-gradle-build}
             env:
                 GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle-online"
@@ -72,6 +73,7 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
+            os: linux
             docker-image: {in-tree: desktop-build}
             env:
                 GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
@@ -118,6 +120,7 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
+            os: linux
             docker-image: {in-tree: desktop-build}
             env:
                 GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
@@ -186,6 +189,7 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
+            os: linux
             docker-image: {in-tree: desktop-build}
             env:
                 GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
@@ -235,6 +239,7 @@ jobs:
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
+            os: linux
             docker-image: {in-tree: desktop-build}
             env:
                 GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
