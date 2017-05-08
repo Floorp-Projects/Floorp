@@ -906,11 +906,6 @@ Location::Replace(const nsAString& aUrl,
                   nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv)
 {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
     aRv = SetHrefWithContext(cx, aUrl, true);
     return;
