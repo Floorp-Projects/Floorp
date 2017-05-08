@@ -29,13 +29,15 @@ namespace dom {
 static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
 static bool sScriptSettingsTLSInitialized;
 
-class ScriptSettingsStack {
+class ScriptSettingsStack
+{
 public:
   static ScriptSettingsStackEntry* Top() {
     return sScriptSettingsTLS.get();
   }
 
-  static void Push(ScriptSettingsStackEntry *aEntry) {
+  static void Push(ScriptSettingsStackEntry* aEntry)
+  {
     MOZ_ASSERT(!aEntry->mOlder);
     // Whenever JSAPI use is disabled, the next stack entry pushed must
     // not be an AutoIncumbentScript.
@@ -50,13 +52,15 @@ public:
     sScriptSettingsTLS.set(aEntry);
   }
 
-  static void Pop(ScriptSettingsStackEntry *aEntry) {
+  static void Pop(ScriptSettingsStackEntry* aEntry)
+  {
     MOZ_ASSERT(aEntry == Top());
     sScriptSettingsTLS.set(aEntry->mOlder);
   }
 
-  static nsIGlobalObject* IncumbentGlobal() {
-    ScriptSettingsStackEntry *entry = Top();
+  static nsIGlobalObject* IncumbentGlobal()
+  {
+    ScriptSettingsStackEntry* entry = Top();
     while (entry) {
       if (entry->IsIncumbentCandidate()) {
         return entry->mGlobalObject;
@@ -66,8 +70,9 @@ public:
     return nullptr;
   }
 
-  static ScriptSettingsStackEntry* EntryPoint() {
-    ScriptSettingsStackEntry *entry = Top();
+  static ScriptSettingsStackEntry* EntryPoint()
+  {
+    ScriptSettingsStackEntry* entry = Top();
     while (entry) {
       if (entry->IsEntryCandidate()) {
         return entry;
@@ -77,8 +82,9 @@ public:
     return nullptr;
   }
 
-  static nsIGlobalObject* EntryGlobal() {
-    ScriptSettingsStackEntry *entry = EntryPoint();
+  static nsIGlobalObject* EntryGlobal()
+  {
+    ScriptSettingsStackEntry* entry = EntryPoint();
     if (!entry) {
       return nullptr;
     }
@@ -86,8 +92,9 @@ public:
   }
 
 #ifdef DEBUG
-  static ScriptSettingsStackEntry* TopNonIncumbentScript() {
-    ScriptSettingsStackEntry *entry = Top();
+  static ScriptSettingsStackEntry* TopNonIncumbentScript()
+  {
+    ScriptSettingsStackEntry* entry = Top();
     while (entry) {
       if (!entry->IsIncumbentScript()) {
         return entry;
@@ -141,7 +148,7 @@ ScriptSettingsInitialized()
   return sScriptSettingsTLSInitialized;
 }
 
-ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
+ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
                                                    Type aType)
   : mGlobalObject(aGlobal)
   , mType(aType)
@@ -227,7 +234,7 @@ GetIncumbentGlobal()
   // manipulated the stack. If it's null, that means that there
   // must be no entry global on the stack, and therefore no incumbent
   // global either.
-  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
+  JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
     MOZ_ASSERT(ScriptSettingsStack::EntryGlobal() == nullptr);
     return nullptr;
@@ -237,7 +244,7 @@ GetIncumbentGlobal()
   // override in place, the JS engine will lie to us and pretend that
   // there's nothing on the JS stack, which will cause us to check the
   // incumbent script stack below.
-  if (JSObject *global = JS::GetScriptedCallerGlobal(cx)) {
+  if (JSObject* global = JS::GetScriptedCallerGlobal(cx)) {
     return ClampToSubject(xpc::NativeGlobal(global));
   }
 
@@ -249,12 +256,12 @@ GetIncumbentGlobal()
 nsIGlobalObject*
 GetCurrentGlobal()
 {
-  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
+  JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
     return nullptr;
   }
 
-  JSObject *global = JS::CurrentGlobalOrNull(cx);
+  JSObject* global = JS::CurrentGlobalOrNull(cx);
   if (!global) {
     return nullptr;
   }
@@ -266,7 +273,7 @@ nsIPrincipal*
 GetWebIDLCallerPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  ScriptSettingsStackEntry *entry = ScriptSettingsStack::EntryPoint();
+  ScriptSettingsStackEntry* entry = ScriptSettingsStack::EntryPoint();
 
   // If we have an entry point that is not NoJSAPI, we know it must be an
   // AutoEntryScript.
@@ -658,7 +665,7 @@ AutoJSAPI::IsStackTop() const
 #endif // DEBUG
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
-                                 const char *aReason,
+                                 const char* aReason,
                                  bool aIsMainThread)
   : AutoJSAPI(aGlobalObject, aIsMainThread, eEntryScript)
   , mWebIDLCallerPrincipal(nullptr)
@@ -674,7 +681,7 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
 }
 
 AutoEntryScript::AutoEntryScript(JSObject* aObject,
-                                 const char *aReason,
+                                 const char* aReason,
                                  bool aIsMainThread)
   : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread)
 {
