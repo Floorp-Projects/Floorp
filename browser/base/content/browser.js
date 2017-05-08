@@ -224,38 +224,54 @@ if (AppConstants.platform != "macosx") {
   ["gNavigatorBundle",    "bundle_browser"]
 ].forEach(function(elementGlobal) {
   var [name, id] = elementGlobal;
-  window.__defineGetter__(name, function() {
-    var element = document.getElementById(id);
-    if (!element)
-      return null;
-    delete window[name];
-    return window[name] = element;
-  });
-  window.__defineSetter__(name, function(val) {
-    delete window[name];
-    return window[name] = val;
+  Object.defineProperty(window, name, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      var element = document.getElementById(id);
+      if (!element)
+        return null;
+      delete window[name];
+      return window[name] = element;
+    },
+    set(val) {
+      delete window[name];
+      return window[name] = val;
+    },
   });
 });
 
 // Smart getter for the findbar.  If you don't wish to force the creation of
 // the findbar, check gFindBarInitialized first.
 
-this.__defineGetter__("gFindBar", function() {
-  return window.gBrowser.getFindBar();
+Object.defineProperty(this, "gFindBar", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return window.gBrowser.getFindBar();
+  },
 });
 
-this.__defineGetter__("gFindBarInitialized", function() {
-  return window.gBrowser.isFindBarInitialized();
+Object.defineProperty(this, "gFindBarInitialized", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return window.gBrowser.isFindBarInitialized();
+  },
 });
 
-this.__defineGetter__("AddonManager", function() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
-  return this.AddonManager = tmp.AddonManager;
-});
-this.__defineSetter__("AddonManager", function(val) {
-  delete this.AddonManager;
-  return this.AddonManager = val;
+Object.defineProperty(this, "AddonManager", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    let tmp = {};
+    Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
+    return this.AddonManager = tmp.AddonManager;
+  },
+  set(val) {
+    delete this.AddonManager;
+    return this.AddonManager = val;
+  },
 });
 
 
