@@ -723,6 +723,18 @@ typedef ovrResult (OVR_PFN* pfn_ovr_GetMirrorTextureBufferGL)(ovrSession session
 #define OVR_KEY_EYE_HEIGHT "EyeHeight" // float meters
 #define OVR_DEFAULT_EYE_HEIGHT 1.675f
 
+#if !defined(OVR_SUCCESS)
+#define OVR_SUCCESS(result) (result >= 0)
+#endif
+
+#if !defined(OVR_UNQUALIFIED_SUCCESS)
+#define OVR_UNQUALIFIED_SUCCESS(result) (result == ovrSuccess)
+#endif
+
+#if !defined(OVR_FAILURE)
+#define OVR_FAILURE(result) (!OVR_SUCCESS(result))
+#endif
+
 #ifdef __cplusplus
 }
 #endif

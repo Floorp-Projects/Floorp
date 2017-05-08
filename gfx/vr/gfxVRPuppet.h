@@ -20,23 +20,21 @@ class VRDisplayPuppet : public VRDisplayHost
 public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);
   virtual void NotifyVSync() override;
-  virtual VRHMDSensorState GetSensorState() override;
   void SetSensorState(const VRHMDSensorState& aSensorState);
   void ZeroSensor() override;
 
 protected:
+  virtual VRHMDSensorState GetSensorState() override;
   virtual void StartPresentation() override;
   virtual void StopPresentation() override;
 #if defined(XP_WIN)
-  virtual void SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
+  virtual bool SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
                            const IntSize& aSize,
-                           const VRHMDSensorState& aSensorState,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
 #else
-  virtual void SubmitFrame(mozilla::layers::TextureSourceOGL* aSource,
+  virtual bool SubmitFrame(mozilla::layers::TextureSourceOGL* aSource,
                            const IntSize& aSize,
-                           const VRHMDSensorState& aSensorState,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect);
 #endif // XP_WIN
@@ -47,8 +45,6 @@ public:
 protected:
   virtual ~VRDisplayPuppet();
   void Destroy();
-
-  VRHMDSensorState GetSensorState(double timeOffset);
 
   bool mIsPresenting;
 
@@ -70,7 +66,6 @@ private:
 #endif
 
   VRHMDSensorState mSensorState;
-  uint32_t mFrameNum;
 };
 
 class VRControllerPuppet : public VRControllerHost
