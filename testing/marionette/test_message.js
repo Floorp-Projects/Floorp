@@ -150,20 +150,51 @@ add_test(function test_Response_send() {
   run_next_test();
 });
 
-add_test(function test_Response_sendError() {
-  let err = new WebDriverError();
-  let resp = new Response(42, r => {
-    equal(err.toJSON().error, r.error.error);
-    equal(null, r.body);
-    equal(false, r.sent);
-  });
-
-  resp.sendError(err);
-  equal(true, resp.sent);
+add_test(function test_Response_sendError_sent() {
+  let resp = new Response(42, r => equal(false, r.sent));
+  resp.sendError(new WebDriverError());
+  ok(resp.sent);
   Assert.throws(() => resp.send(), /already been sent/);
 
-  resp.sent = false;
-  Assert.throws(() => resp.sendError(new Error()));
+  run_next_test();
+});
+
+add_test(function test_Response_sendError_body() {
+  let resp = new Response(42, r => equal(null, r.body));
+  resp.sendError(new WebDriverError());
+
+  run_next_test();
+});
+
+add_test(function test_Response_sendError_errorSerialisation() {
+  let err1 = new WebDriverError();
+  let resp1 = new Response(42);
+  resp1.sendError(err1);
+  equal(err1.status, resp1.error.error);
+  deepEqual(err1.toJSON(), resp1.error);
+
+  let err2 = new InvalidArgumentError();
+  let resp2 = new Response(43);
+  resp2.sendError(err2);
+  equal(err2.status, resp2.error.error);
+  deepEqual(err2.toJSON(), resp2.error);
+
+  run_next_test();
+});
+
+add_test(function test_Response_sendError_wrapInternalError() {
+  let err = new ReferenceError("foo");
+
+  // errors that originate from JavaScript (i.e. Marionette implementation
+  // issues) should be converted to UnknownError for transport
+  let resp = new Response(42, r => {
+    equal("unknown error", r.error.error);
+    equal(false, resp.sent);
+  });
+
+  // they should also throw after being sent
+  Assert.throws(() => resp.sendError(err), /foo/);
+  equal(true, resp.sent);
 
   run_next_test();
 });

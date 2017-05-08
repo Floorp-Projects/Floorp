@@ -96,15 +96,24 @@ error.isWebDriverError = function (obj) {
 };
 
 /**
- * Wraps any error as a WebDriverError.  If the given error is already in
- * the WebDriverError prototype chain, this function returns it
- * unmodified.
+ * Ensures error instance is a WebDriverError.
+ *
+ * If the given error is already in the WebDriverError prototype
+ * chain, |err| is returned unmodified.  If it is not, it is wrapped
+ * in UnknownError.
+ *
+ * @param {Error} err
+ *     Error to conditionally turn into a WebDriverError.
+ *
+ * @return {WebDriverError}
+ *     If |err| is a WebDriverError, it is returned unmodified.
+ *     Otherwise an UnknownError type is returned.
  */
 error.wrap = function (err) {
   if (error.isWebDriverError(err)) {
     return err;
   }
-  return new WebDriverError(err);
+  return new UnknownError(err);
 };
 
 /**
