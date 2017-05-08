@@ -20,9 +20,9 @@ using namespace mozilla::dom;
 
 NS_IMETHODIMP
 ScriptElement::ScriptAvailable(nsresult aResult,
-                               nsIScriptElement* aElement,
+                               nsIScriptElement *aElement,
                                bool aIsInline,
-                               nsIURI* aURI,
+                               nsIURI *aURI,
                                int32_t aLineNo)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
@@ -54,7 +54,7 @@ ScriptElement::FireErrorEvent()
 
 NS_IMETHODIMP
 ScriptElement::ScriptEvaluated(nsresult aResult,
-                               nsIScriptElement* aElement,
+                               nsIScriptElement *aElement,
                                bool aIsInline)
 {
   nsresult rv = NS_OK;
@@ -78,7 +78,7 @@ ScriptElement::ScriptEvaluated(nsresult aResult,
 }
 
 void
-ScriptElement::CharacterDataChanged(nsIDocument* aDocument,
+ScriptElement::CharacterDataChanged(nsIDocument *aDocument,
                                     nsIContent* aContent,
                                     CharacterDataChangeInfo* aInfo)
 {
@@ -106,7 +106,7 @@ ScriptElement::ContentAppended(nsIDocument* aDocument,
 }
 
 void
-ScriptElement::ContentInserted(nsIDocument* aDocument,
+ScriptElement::ContentInserted(nsIDocument *aDocument,
                                nsIContent* aContainer,
                                nsIContent* aChild,
                                int32_t aIndexInContainer)

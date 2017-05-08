@@ -36,7 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleScript)
 
-ModuleScript::ModuleScript(ScriptLoader* aLoader, nsIURI* aBaseURL,
+ModuleScript::ModuleScript(ScriptLoader *aLoader, nsIURI* aBaseURL,
                            JS::Handle<JSObject*> aModuleRecord)
  : mLoader(aLoader),
    mBaseURL(aBaseURL),
