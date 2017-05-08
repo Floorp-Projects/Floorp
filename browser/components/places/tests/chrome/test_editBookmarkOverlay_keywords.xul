@@ -58,7 +58,7 @@
             resolve({ property, value });
           },
           QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
-        });
+        }, false);
       });
     }
 
