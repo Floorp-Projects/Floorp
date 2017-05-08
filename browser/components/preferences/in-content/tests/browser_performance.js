@@ -1,8 +1,13 @@
-SpecialPowers.pushPrefEnv({set: [
-  ["browser.preferences.defaultPerformanceSettings.enabled", true],
-  ["dom.ipc.processCount", 4],
-  ["layers.acceleration.disabled", false],
-]});
+const DEFAULT_HW_ACCEL_PREF = Services.prefs.getDefaultBranch(null).getBoolPref("layers.acceleration.disabled");
+const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("dom.ipc.processCount");
+
+add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [
+    ["layers.acceleration.disabled", DEFAULT_HW_ACCEL_PREF],
+    ["dom.ipc.processCount", DEFAULT_PROCESS_COUNT],
+    ["browser.preferences.defaultPerformanceSettings.enabled", true],
+  ]});
+});
 
 add_task(function*() {
   let prefs = yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
@@ -25,18 +30,20 @@ add_task(function*() {
   ok(!useRecommendedPerformanceSettings.checked, "checkbox should not be checked after clicking on checkbox");
 
   let allowHWAccel = doc.querySelector("#allowHWAccel");
-  is(Services.prefs.getBoolPref("layers.acceleration.disabled"), false,
-    "pref value should be false before clicking on checkbox");
-  ok(allowHWAccel.checked, "checkbox should be checked");
+  let allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");
+  is(allowHWAccelPref, DEFAULT_HW_ACCEL_PREF,
+    "pref value should be the default value before clicking on checkbox");
+  is(allowHWAccel.checked, !DEFAULT_HW_ACCEL_PREF, "checkbox should show the invert of the default value");
 
   let contentProcessCount = doc.querySelector("#contentProcessCount");
-  is(Services.prefs.getIntPref("dom.ipc.processCount"), 4, "default pref value should be default value");
-  is(contentProcessCount.selectedItem.value, 4, "selected item should be the default one");
+  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "default pref value should be default value");
+  is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT, "selected item should be the default one");
 
   allowHWAccel.click();
-  is(Services.prefs.getBoolPref("layers.acceleration.disabled"), true,
-    "pref value should be true after clicking on checkbox");
-  ok(!allowHWAccel.checked, "checkbox should not be checked");
+  allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");
+  is(allowHWAccelPref, !DEFAULT_HW_ACCEL_PREF,
+    "pref value should be opposite of the default value after clicking on checkbox");
+  is(allowHWAccel.checked, !allowHWAccelPref, "checkbox should show the invert of the current value");
 
   contentProcessCount.value = 7;
   contentProcessCount.doCommand();
@@ -44,14 +51,15 @@ add_task(function*() {
   is(contentProcessCount.selectedItem.value, 7, "selected item should be 7");
 
   allowHWAccel.click();
-  is(Services.prefs.getBoolPref("layers.acceleration.disabled"), false,
-    "pref value should be false after clicking on checkbox");
-  ok(allowHWAccel.checked, "checkbox should not be checked");
+  allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");
+  is(allowHWAccelPref, DEFAULT_HW_ACCEL_PREF,
+    "pref value should be the default value after clicking on checkbox");
+  is(allowHWAccel.checked, !allowHWAccelPref, "checkbox should show the invert of the current value");
 
-  contentProcessCount.value = 4;
+  contentProcessCount.value = DEFAULT_PROCESS_COUNT;
   contentProcessCount.doCommand();
-  is(Services.prefs.getIntPref("dom.ipc.processCount"), 4, "pref value should be default value");
-  is(contentProcessCount.selectedItem.value, 4, "selected item should be default one");
+  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "pref value should be default value");
+  is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT, "selected item should be default one");
 
   is(performanceSettings.hidden, false, "performance settings section should be still shown");
 
