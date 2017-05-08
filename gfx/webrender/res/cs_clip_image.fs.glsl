@@ -4,7 +4,7 @@
 
 void main(void) {
     float alpha = 1.f;
-    vec2 local_pos = init_transform_fs(vPos, vLocalRect, alpha);
+    vec2 local_pos = init_transform_fs(vPos, alpha);
 
     bool repeat_mask = false; //TODO
     vec2 clamped_mask_uv = repeat_mask ? fract(vClipMaskUv.xy) :

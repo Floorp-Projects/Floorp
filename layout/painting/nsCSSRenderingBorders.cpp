@@ -28,6 +28,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include <algorithm>
 
@@ -3551,17 +3552,18 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                             const layers::StackingContextHelper& aSc,
                                              layers::WebRenderDisplayItemLayer* aLayer,
                                              gfx::Rect aClipRect)
 {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
-  LayerRect transformedRect = aLayer->RelativeToParent(outerRect);
+  WrRect transformedRect = aSc.ToRelativeWrRect(outerRect);
   WrBorderSide side[4];
   NS_FOR_CSS_SIDES(i) {
     side[i] = wr::ToWrBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
   }
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(transformedRect));
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(transformedRect);
   if (!aClipRect.IsEmpty()) {
     clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect));
   }
@@ -3569,7 +3571,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
                                                      LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
-  aBuilder.PushBorder(wr::ToWrRect(transformedRect),
+  aBuilder.PushBorder(transformedRect,
                       clipRegion,
                       wr::ToWrBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       side[0], side[1], side[2], side[3],

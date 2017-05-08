@@ -52,6 +52,7 @@ mod debug_colors;
 mod debug_font_data;
 mod debug_render;
 mod device;
+mod ellipse;
 mod frame;
 mod frame_builder;
 mod freelist;
@@ -132,6 +133,7 @@ extern crate webrender_traits;
 extern crate offscreen_gl_context;
 extern crate byteorder;
 extern crate threadpool;
+extern crate plane_split;
 
 #[cfg(any(target_os="macos", target_os="windows"))]
 extern crate gamma_lut;

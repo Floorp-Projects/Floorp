@@ -44,6 +44,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
@@ -101,12 +102,13 @@ nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayColumnRule::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                             const StackingContextHelper& aSc,
                                              nsTArray<WebRenderParentCommand>& aParentCommands,
                                              WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(!mBorderRenderers.IsEmpty());
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-      iter->CreateWebRenderCommands(aBuilder, aLayer);
+      iter->CreateWebRenderCommands(aBuilder, aSc, aLayer);
   }
 }
 

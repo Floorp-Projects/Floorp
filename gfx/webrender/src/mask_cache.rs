@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use border::BorderCornerClipSource;
 use gpu_store::GpuStoreAddress;
 use prim_store::{ClipData, GpuBlock32, PrimitiveStore};
 use prim_store::{CLIP_DATA_GPU_SIZE, MASK_DATA_GPU_SIZE};
@@ -47,12 +48,19 @@ pub enum ClipSource {
     // for clip/scroll nodes, but false for primitives, where
     // the clip rect is handled in local space.
     Region(ClipRegion, RegionMode),
+
+    // TODO(gw): This currently only handles dashed style
+    // clips, where the border style is dashed for both
+    // adjacent border edges. Expand to handle dotted style
+    // and different styles per edge.
+    BorderCorner(BorderCornerClipSource),
 }
 
 impl ClipSource {
     pub fn image_mask(&self) -> Option<ImageMask> {
         match *self {
-            ClipSource::Complex(..) => None,
+            ClipSource::Complex(..) |
+            ClipSource::BorderCorner{..} => None,
             ClipSource::Region(ref region, _) => region.image_mask,
         }
     }
@@ -112,9 +120,10 @@ pub enum MaskBounds {
 
 #[derive(Clone, Debug)]
 pub struct MaskCacheInfo {
-    pub clip_range: ClipAddressRange,
-    pub effective_clip_count: usize,
+    pub complex_clip_range: ClipAddressRange,
+    pub effective_complex_clip_count: usize,
     pub image: Option<(ImageMask, GpuStoreAddress)>,
+    pub border_corners: Vec<(BorderCornerClipSource, GpuStoreAddress)>,
     pub bounds: Option<MaskBounds>,
     pub is_aligned: bool,
 }
@@ -130,42 +139,50 @@ impl MaskCacheInfo {
         }
 
         let mut image = None;
-        let mut clip_count = 0;
+        let mut border_corners = Vec::new();
+        let mut complex_clip_count = 0;
 
         // Work out how much clip data space we need to allocate
         // and if we have an image mask.
         for clip in clips {
             match *clip {
                 ClipSource::Complex(..) => {
-                    clip_count += 1;
-                },
+                    complex_clip_count += 1;
+                }
                 ClipSource::Region(ref region, region_mode) => {
                     if let Some(info) = region.image_mask {
                         debug_assert!(image.is_none());     // TODO(gw): Support >1 image mask!
                         image = Some((info, clip_store.alloc(MASK_DATA_GPU_SIZE)));
                     }
 
-                    clip_count += region.complex.length;
+                    complex_clip_count += region.complex.length;
                     if region_mode == RegionMode::IncludeRect {
-                        clip_count += 1;
+                        complex_clip_count += 1;
                     }
-                },
+                }
+                ClipSource::BorderCorner(ref source) => {
+                    // One block for the corner header, plus one
+                    // block per dash to clip out.
+                    let gpu_address = clip_store.alloc(1 + source.dash_count);
+                    border_corners.push((source.clone(), gpu_address));
+                }
             }
         }
 
-        let clip_range = ClipAddressRange {
-            start: if clip_count > 0 {
-                clip_store.alloc(CLIP_DATA_GPU_SIZE * clip_count)
+        let complex_clip_range = ClipAddressRange {
+            start: if complex_clip_count > 0 {
+                clip_store.alloc(CLIP_DATA_GPU_SIZE * complex_clip_count)
             } else {
                 GpuStoreAddress(0)
             },
-            item_count: clip_count,
+            item_count: complex_clip_count,
         };
 
         Some(MaskCacheInfo {
-            clip_range: clip_range,
-            effective_clip_count: clip_range.item_count,
+            complex_clip_range: complex_clip_range,
+            effective_complex_clip_count: complex_clip_range.item_count,
             image: image,
+            border_corners: border_corners,
             bounds: None,
             is_aligned: true,
         })
@@ -186,8 +203,9 @@ impl MaskCacheInfo {
                                                      LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP)));
             let mut local_inner: Option<LayerRect> = None;
             let mut has_clip_out = false;
+            let mut has_border_clip = false;
 
-            self.effective_clip_count = 0;
+            self.effective_complex_clip_count = 0;
             self.is_aligned = is_aligned;
 
             for source in sources {
@@ -198,9 +216,9 @@ impl MaskCacheInfo {
                         if mode == ClipMode::ClipOut {
                             has_clip_out = true;
                         }
-                        debug_assert!(self.effective_clip_count < self.clip_range.item_count);
-                        let address = self.clip_range.start + self.effective_clip_count * CLIP_DATA_GPU_SIZE;
-                        self.effective_clip_count += 1;
+                        debug_assert!(self.effective_complex_clip_count < self.complex_clip_range.item_count);
+                        let address = self.complex_clip_range.start + self.effective_complex_clip_count * CLIP_DATA_GPU_SIZE;
+                        self.effective_complex_clip_count += 1;
 
                         let slice = clip_store.get_slice_mut(address, CLIP_DATA_GPU_SIZE);
                         let data = ClipData::uniform(rect, radius, mode);
@@ -223,17 +241,17 @@ impl MaskCacheInfo {
                         let clips = aux_lists.complex_clip_regions(&region.complex);
                         if !self.is_aligned && region_mode == RegionMode::IncludeRect {
                             // we have an extra clip rect coming from the transformed layer
-                            debug_assert!(self.effective_clip_count < self.clip_range.item_count);
-                            let address = self.clip_range.start + self.effective_clip_count * CLIP_DATA_GPU_SIZE;
-                            self.effective_clip_count += 1;
+                            debug_assert!(self.effective_complex_clip_count < self.complex_clip_range.item_count);
+                            let address = self.complex_clip_range.start + self.effective_complex_clip_count * CLIP_DATA_GPU_SIZE;
+                            self.effective_complex_clip_count += 1;
 
                             let slice = clip_store.get_slice_mut(address, CLIP_DATA_GPU_SIZE);
                             PrimitiveStore::populate_clip_data(slice, ClipData::uniform(region.main, 0.0, ClipMode::Clip));
                         }
 
-                        debug_assert!(self.effective_clip_count + clips.len() <= self.clip_range.item_count);
-                        let address = self.clip_range.start + self.effective_clip_count * CLIP_DATA_GPU_SIZE;
-                        self.effective_clip_count += clips.len();
+                        debug_assert!(self.effective_complex_clip_count + clips.len() <= self.complex_clip_range.item_count);
+                        let address = self.complex_clip_range.start + self.effective_complex_clip_count * CLIP_DATA_GPU_SIZE;
+                        self.effective_complex_clip_count += clips.len();
 
                         let slice = clip_store.get_slice_mut(address, CLIP_DATA_GPU_SIZE * clips.len());
                         for (clip, chunk) in clips.iter().zip(slice.chunks_mut(CLIP_DATA_GPU_SIZE)) {
@@ -244,12 +262,20 @@ impl MaskCacheInfo {
                                                                        .and_then(|ref inner| r.intersection(inner)));
                         }
                     }
+                    ClipSource::BorderCorner{..} => {}
                 }
+            }
+
+            for &(ref source, gpu_address) in &self.border_corners {
+                has_border_clip = true;
+                let slice = clip_store.get_slice_mut(gpu_address,
+                                                     1 + source.dash_count);
+                source.populate_gpu_data(slice);
             }
 
             // Work out the type of mask geometry we have, based on the
             // list of clip sources above.
-            if has_clip_out {
+            if has_clip_out || has_border_clip {
                 // For clip-out, the mask rect is not known.
                 self.bounds = Some(MaskBounds::None);
             } else {
@@ -288,10 +314,12 @@ impl MaskCacheInfo {
         }
     }
 
-    /// Check if this `MaskCacheInfo` actually carries any masks. `effective_clip_count`
+    /// Check if this `MaskCacheInfo` actually carries any masks. `effective_complex_clip_count`
     /// can change during the `update` call depending on the transformation, so the mask may
     /// appear to be empty.
     pub fn is_masking(&self) -> bool {
-        self.image.is_some() || self.effective_clip_count != 0
+        self.image.is_some() ||
+        self.effective_complex_clip_count != 0 ||
+        !self.border_corners.is_empty()
     }
 }

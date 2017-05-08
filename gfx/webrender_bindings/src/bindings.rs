@@ -2,7 +2,6 @@ use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
-use std::sync::Arc;
 use std::collections::HashMap;
 use gleam::gl;
 
@@ -35,12 +34,12 @@ type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 type WrEpoch = Epoch;
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
@@ -555,8 +554,8 @@ struct WrExternalImage {
     size: usize,
 }
 
-type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId) -> WrExternalImage;
-type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId);
+type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8) -> WrExternalImage;
+type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
@@ -568,9 +567,9 @@ pub struct WrExternalImageHandler {
 impl ExternalImageHandler for WrExternalImageHandler {
     fn lock(&mut self,
             id: ExternalImageId,
-            _channel_index: u8)
+            channel_index: u8)
             -> ExternalImage {
-        let image = (self.lock_func)(self.external_image_obj, id.into());
+        let image = (self.lock_func)(self.external_image_obj, id.into(), channel_index);
 
         match image.image_type {
             WrExternalImageType::NativeTexture => {
@@ -596,14 +595,14 @@ impl ExternalImageHandler for WrExternalImageHandler {
 
     fn unlock(&mut self,
               id: ExternalImageId,
-              _channel_index: u8) {
-        (self.unlock_func)(self.external_image_obj, id.into());
+              channel_index: u8) {
+        (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
     }
 }
 
 /// cbindgen:field-names=[mHandle]
-/// cbindgen:struct-gen-op-lt=true
-/// cbindgen:struct-gen-op-lte=true
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrWindowId(u64);
@@ -662,6 +661,7 @@ pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
     v.to_vec();
 }
 
+/// cbindgen:derive-eq=false
 #[repr(C)]
 #[derive(Debug)]
 pub struct WrTransformProperty {
@@ -809,7 +809,7 @@ pub extern "C" fn wr_renderer_current_epoch(renderer: &mut WrRenderer,
     return false;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut WrRenderer) {
     Box::from_raw(renderer);
@@ -841,7 +841,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
     Box::from_raw(pipeline_epochs);
@@ -910,7 +910,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     return true;
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(api: *mut WrAPI) {
     let api = Box::from_raw(api);
@@ -1104,7 +1104,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
     api.generate_frame(Some(properties));
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI,
                                              evt: usize) {
@@ -1182,7 +1182,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
     Box::into_raw(state)
 }
 
-/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_state_delete(state: *mut WrState) {
     assert!(unsafe { is_in_main_thread() });
@@ -1340,29 +1340,40 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                      key);
 }
 
+/// Push a 3 planar yuv image.
 #[no_mangle]
-pub extern "C" fn wr_dp_push_yuv_image(state: &mut WrState,
-                                       bounds: WrRect,
-                                       clip: WrClipRegion,
-                                       image_keys: *const WrImageKey,
-                                       key_num: u8,
-                                       color_space: WrYuvColorSpace) {
+pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
+                                              bounds: WrRect,
+                                              clip: WrClipRegion,
+                                              image_key_0: WrImageKey,
+                                              image_key_1: WrImageKey,
+                                              image_key_2: WrImageKey,
+                                              color_space: WrYuvColorSpace) {
     assert!(unsafe { is_in_main_thread() });
-    assert!(key_num == 3);
-    unsafe {
-        for key_index in 0..key_num {
-            assert!(!image_keys.offset(key_index as isize).is_null());
-        }
-    }
-    let key_slice = make_slice(image_keys, key_num as usize);
 
     state.frame_builder
          .dl_builder
          .push_yuv_image(bounds.into(),
                          clip.into(),
-                         key_slice[0],
-                         key_slice[1],
-                         key_slice[2],
+                         YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
+                         color_space);
+}
+
+/// PUsh a 2 planar NV12 image.
+#[no_mangle]
+pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
+                                            bounds: WrRect,
+                                            clip: WrClipRegion,
+                                            image_key_0: WrImageKey,
+                                            image_key_1: WrImageKey,
+                                            color_space: WrYuvColorSpace) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder
+         .dl_builder
+         .push_yuv_image(bounds.into(),
+                         clip.into(),
+                         YuvData::NV12(image_key_0, image_key_1),
                          color_space);
 }
 
@@ -1626,43 +1637,33 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 }
 
 struct Moz2dImageRenderer {
-    images: HashMap<WrImageKey, BlobImageResult>,
+    images: HashMap<ImageKey, BlobImageData>,
+
+    // The images rendered in the current frame (not kept here between frames)
+    rendered_images: HashMap<BlobImageRequest, BlobImageResult>,
 }
 
 impl BlobImageRenderer for Moz2dImageRenderer {
-    fn request_blob_image(&mut self,
-                          key: WrImageKey,
-                          data: Arc<BlobImageData>,
-                          descriptor: &BlobImageDescriptor,
-                          _dirty_rect: Option<DeviceUintRect>) {
-        let result = self.render_blob_image(data, descriptor);
-        self.images.insert(key, result);
+    fn add(&mut self, key: ImageKey, data: BlobImageData, _tiling: Option<TileSize>) {
+        self.images.insert(key, data);
     }
 
-    fn resolve_blob_image(&mut self,
-                          key: WrImageKey)
-                          -> BlobImageResult {
-        return match self.images.remove(&key) {
-                   Some(result) => result,
-                   None => Err(BlobImageError::InvalidKey),
-               };
-    }
-}
-
-impl Moz2dImageRenderer {
-    fn new() -> Self {
-        Moz2dImageRenderer {
-            images: HashMap::new(),
-        }
+    fn update(&mut self, key: ImageKey, data: BlobImageData) {
+        self.images.insert(key, data);
     }
 
-    fn render_blob_image(&mut self,
-                         data: Arc<BlobImageData>,
-                         descriptor: &BlobImageDescriptor)
-                         -> BlobImageResult {
-        let mut output = Vec::with_capacity((descriptor.width * descriptor.height *
-                                             descriptor.format.bytes_per_pixel().unwrap()) as
-                                            usize);
+    fn delete(&mut self, key: ImageKey) {
+        self.images.remove(&key);
+    }
+
+    fn request(&mut self,
+               request: BlobImageRequest,
+               descriptor: &BlobImageDescriptor,
+               _dirty_rect: Option<DeviceUintRect>,
+               _images: &ImageStore) {
+        let data = self.images.get(&request.key).unwrap();
+        let buf_size = (descriptor.width * descriptor.height * descriptor.format.bytes_per_pixel().unwrap()) as usize;
+        let mut output = vec![255u8; buf_size];
 
         unsafe {
             if wr_moz2d_render_cb(WrByteSlice::new(&data[..]),
@@ -1670,24 +1671,38 @@ impl Moz2dImageRenderer {
                                   descriptor.height,
                                   descriptor.format,
                                   MutByteSlice::new(output.as_mut_slice())) {
-                return Ok(RasterizedBlobImage {
+                self.rendered_images.insert(request,
+                                            Ok(RasterizedBlobImage {
                               width: descriptor.width,
                               height: descriptor.height,
                               data: output,
-                          });
+                          }));
             }
         }
-
-        Err(BlobImageError::Other("unimplemented!".to_string()))
+    }
+    fn resolve(&mut self, request: BlobImageRequest) -> BlobImageResult {
+        self.rendered_images.remove(&request).unwrap_or(Err(BlobImageError::InvalidKey))
     }
 }
 
+impl Moz2dImageRenderer {
+    fn new() -> Self {
+        Moz2dImageRenderer {
+            images: HashMap::new(),
+            rendered_images: HashMap::new()
+        }
+    }
+}
+
+// TODO: nical
+// Update for the new blob image interface changes.
+//
 extern "C" {
-    // TODO: figure out the API for tiled blob images.
-    fn wr_moz2d_render_cb(blob: WrByteSlice,
-                          width: u32,
-                          height: u32,
-                          format: WrImageFormat,
-                          output: MutByteSlice)
-                          -> bool;
+     // TODO: figure out the API for tiled blob images.
+     fn wr_moz2d_render_cb(blob: WrByteSlice,
+                           width: u32,
+                           height: u32,
+                           format: WrImageFormat,
+                           output: MutByteSlice)
+                           -> bool;
 }

@@ -12,7 +12,8 @@
 //! The terms "layer" and "stacking context" can be used interchangeably
 //! in the context of coordinate systems.
 
-use euclid::{TypedMatrix4D, TypedRect, TypedPoint2D, TypedSize2D, TypedPoint4D, Length};
+use euclid::{Length, TypedMatrix4D, TypedRect, TypedSize2D};
+use euclid::{TypedPoint2D, TypedPoint3D, TypedPoint4D};
 
 /// Geometry in the coordinate system of the render target (screen or intermediate
 /// surface) in physical pixels.
@@ -71,6 +72,7 @@ pub struct WorldPixel;
 pub type WorldRect = TypedRect<f32, WorldPixel>;
 pub type WorldPoint = TypedPoint2D<f32, WorldPixel>;
 pub type WorldSize = TypedSize2D<f32, WorldPixel>;
+pub type WorldPoint3D = TypedPoint3D<f32, WorldPixel>;
 pub type WorldPoint4D = TypedPoint4D<f32, WorldPixel>;
 
 /// Offset in number of tiles.
