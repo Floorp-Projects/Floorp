@@ -111,12 +111,18 @@ FileReader::FileReader(nsIGlobalObject* aGlobal,
   , mReadyState(EMPTY)
   , mTotal(0)
   , mTransferred(0)
-  , mTarget(do_GetCurrentThread())
   , mBusyCount(0)
   , mWorkerPrivate(aWorkerPrivate)
 {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(NS_IsMainThread() == !mWorkerPrivate);
+
+  if (NS_IsMainThread()) {
+    mTarget = aGlobal->EventTargetFor(TaskCategory::Other);
+  } else {
+    mTarget = do_GetCurrentThread();
+  }
+
   SetDOMStringToNull(mResult);
 }
 
