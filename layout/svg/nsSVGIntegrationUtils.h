@@ -40,7 +40,6 @@ class nsSVGIntegrationUtils final
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntRect IntRect;
-  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 public:

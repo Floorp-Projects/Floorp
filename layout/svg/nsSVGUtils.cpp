@@ -1505,11 +1505,9 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                  nsSVGEffects::FillProperty());
 
   if (ps) {
-    RefPtr<gfxPattern> pattern;
-    Tie(aImgParams.result, pattern) =
+    RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mFill, fillOpacity, nullptr,
-                                aImgParams.imageFlags);
+                                &nsStyleSVG::mFill, fillOpacity, aImgParams);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1521,16 +1519,14 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     switch (style->mFill.Type()) {
     case eStyleSVGPaintType_ContextFill:
-      Tie(aImgParams.result, pattern) =
+      pattern =
         aContextPaint->GetFillPattern(dt, fillOpacity,
-                                      aContext->CurrentMatrix(),
-                                      aImgParams.imageFlags);
+                                      aContext->CurrentMatrix(), aImgParams);
       break;
     case eStyleSVGPaintType_ContextStroke:
-      Tie(aImgParams.result, pattern) =
+      pattern =
         aContextPaint->GetStrokePattern(dt, fillOpacity,
-                                        aContext->CurrentMatrix(),
-                                        aImgParams.imageFlags);
+                                        aContext->CurrentMatrix(), aImgParams);
       break;
     default:
       ;
@@ -1585,11 +1581,9 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  nsSVGEffects::StrokeProperty());
 
   if (ps) {
-    RefPtr<gfxPattern> pattern;
-    Tie(aImgParams.result, pattern) =
+    RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mStroke, strokeOpacity, nullptr,
-                                aImgParams.imageFlags);
+                                &nsStyleSVG::mStroke, strokeOpacity, aImgParams);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1601,16 +1595,14 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     switch (style->mStroke.Type()) {
     case eStyleSVGPaintType_ContextFill:
-      Tie(aImgParams.result, pattern) =
+      pattern =
         aContextPaint->GetFillPattern(dt, strokeOpacity,
-                                      aContext->CurrentMatrix(),
-                                      aImgParams.imageFlags);
+                                      aContext->CurrentMatrix(), aImgParams);
       break;
     case eStyleSVGPaintType_ContextStroke:
-      Tie(aImgParams.result, pattern) =
+      pattern =
         aContextPaint->GetStrokePattern(dt, strokeOpacity,
-                                        aContext->CurrentMatrix(),
-                                        aImgParams.imageFlags);
+                                        aContext->CurrentMatrix(), aImgParams);
       break;
     default:
       ;
