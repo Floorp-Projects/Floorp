@@ -20,6 +20,7 @@ from taskgraph.util.schema import (
     validate_schema,
     Schema,
 )
+from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
     Any,
@@ -82,12 +83,9 @@ job_description_schema = Schema({
 
     Required('worker-type'): task_description_schema['worker-type'],
 
-    # for `worker`, all we need is the implementation; the rest will be verified
-    # by the task description schema
-    Required('worker'): {
-        Required('implementation'): basestring,
-        Extra: object,
-    },
+    # This object will be passed through to the task description, with additions
+    # provided by the job's run-using function
+    Optional('worker'): dict,
 })
 
 transforms = TransformSequence()
@@ -114,7 +112,7 @@ def rewrite_when_to_optimization(config, jobs):
             '{}/**'.format(config.path),
             'taskcluster/taskgraph/**',
         ])
-        if 'in-tree' in job['worker'].get('docker-image', {}):
+        if 'in-tree' in job.get('worker', {}).get('docker-image', {}):
             files_changed.append('taskcluster/docker/{}/**'.format(
                 job['worker']['docker-image']['in-tree']))
 
@@ -137,6 +135,14 @@ def make_task_description(config, jobs):
             job['label'] = '{}-{}'.format(config.kind, job['name'])
         if job['name']:
             del job['name']
+
+        impl, os = worker_type_implementation(job['worker-type'])
+        worker = job.setdefault('worker', {})
+        assert 'implementation' not in worker
+        worker['implementation'] = impl
+        if os:
+            worker['os'] = os
+
         taskdesc = copy.deepcopy(job)
 
         # fill in some empty defaults to make run implementations easier
@@ -148,7 +154,7 @@ def make_task_description(config, jobs):
 
         # give the function for job.run.using on this worker implementation a
         # chance to set up the task description.
-        configure_taskdesc_for_run(config, job, taskdesc)
+        configure_taskdesc_for_run(config, job, taskdesc, impl)
         del taskdesc['run']
 
         # yield only the task description, discarding the job description
@@ -176,7 +182,7 @@ def run_job_using(worker_implementation, run_using, schema=None):
     return wrap
 
 
-def configure_taskdesc_for_run(config, job, taskdesc):
+def configure_taskdesc_for_run(config, job, taskdesc, worker_implementation):
     """
     Run the appropriate function for this job against the given task
     description.
@@ -188,7 +194,6 @@ def configure_taskdesc_for_run(config, job, taskdesc):
     if run_using not in registry:
         raise Exception("no functions for run.using {!r}".format(run_using))
 
-    worker_implementation = job['worker']['implementation']
     if worker_implementation not in registry[run_using]:
         raise Exception("no functions for run.using {!r} on {!r}".format(
             run_using, worker_implementation))

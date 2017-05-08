@@ -11,7 +11,6 @@ win32-clang-cl:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        implementation: generic-worker
         max-run-time: 36000
     run:
         using: toolchain-script
@@ -29,7 +28,6 @@ win64-clang-cl:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        implementation: generic-worker
         max-run-time: 36000
     run:
         using: toolchain-script
@@ -50,7 +48,6 @@ win32-clang-tidy:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        implementation: generic-worker
         max-run-time: 36000
     run:
         using: toolchain-script
@@ -71,7 +68,6 @@ win64-clang-tidy:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        implementation: generic-worker
         max-run-time: 36000
     run:
         using: toolchain-script
