@@ -1729,6 +1729,12 @@ Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut aCSSValue,
 }
 
 void
+Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut aCSSValue, nsIAtom* aAtom)
+{
+  aCSSValue->SetAtomIdentValue(already_AddRefed<nsIAtom>(aAtom));
+}
+
+void
 Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
@@ -1790,6 +1796,17 @@ void
 Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
 {
   aFont->mLanguage = aSource->mLanguage;
+}
+
+void
+Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
+                                   RawGeckoPresContextBorrowed aPresContext)
+{
+  const nsFont* defaultVariableFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                 aFont->mLanguage);
+  nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
+                               aFont->mGenericID, defaultVariableFont);
 }
 
 void

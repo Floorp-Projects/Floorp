@@ -69,7 +69,6 @@ static const char contentSandboxRules[] = R"(
     (require-all (file-mode #o0004)
       (require-any (subpath "/Library/Filesystems/NetFSPlugins")
         (subpath "/System")
-        (subpath "/private/var/db/dyld")
         (subpath "/usr/lib")
         (subpath "/usr/share"))))
 
@@ -77,7 +76,10 @@ static const char contentSandboxRules[] = R"(
     (literal "/etc")
     (literal "/tmp")
     (literal "/var")
-    (literal "/private/etc/localtime"))
+    (literal "/private/etc/localtime")
+    (literal "/home")
+    (literal "/net")
+    (regex "^/private/tmp/KSInstallAction\."))
 
   ; Allow read access to standard special files.
   (allow file-read*
@@ -110,8 +112,6 @@ static const char contentSandboxRules[] = R"(
 
     (define container-path appPath)
     (define appdir-path appDir)
-    (define var-folders-re "^/private/var/folders/[^/][^/]")
-    (define var-folders2-re (string-append var-folders-re "/[^/]+/[^/]"))
 
     (define (home-regex home-relative-regex)
       (resolving-regex (string-append "^" (regex-quote home-path) home-relative-regex)))
@@ -122,11 +122,6 @@ static const char contentSandboxRules[] = R"(
 
     (define (profile-subpath profile-relative-subpath)
       (resolving-subpath (string-append profileDir profile-relative-subpath)))
-
-    (define (var-folders-regex var-folders-relative-regex)
-      (resolving-regex (string-append var-folders-re var-folders-relative-regex)))
-    (define (var-folders2-regex var-folders2-relative-regex)
-      (resolving-regex (string-append var-folders2-re var-folders2-relative-regex)))
 
     (define (allow-shared-preferences-read domain)
           (begin
@@ -145,13 +140,6 @@ static const char contentSandboxRules[] = R"(
         (ipc-posix-name-regex "^/tmp/com.apple.csseed:")
         (ipc-posix-name-regex "^CFPBS:")
         (ipc-posix-name-regex "^AudioIO"))
-
-    (allow file-read-metadata
-        (literal "/home")
-        (literal "/net")
-        (regex "^/private/tmp/KSInstallAction\.")
-        (var-folders-regex "/")
-        (home-subpath "/Library"))
 
     (allow signal (target self))
     (allow job-creation (literal "/Library/CoreMediaIO/Plug-Ins/DAL"))
@@ -229,18 +217,24 @@ static const char contentSandboxRules[] = R"(
         (literal appPath)
         (literal appBinaryPath))
 
+    (allow file-read-metadata (home-subpath "/Library"))
+
+    (allow file-read-metadata
+      (literal "/private/var")
+      (subpath "/private/var/folders"))
+
+  ; bug 1303987
+    (if (string=? isDebugBuild "TRUE")
+        (allow file-write* (subpath "/private/var")))
+
+  ; bug 1324610
+    (allow network-outbound (literal "/private/var/run/cupsd"))
+
     (allow-shared-list "org.mozilla.plugincontainer")
 
   ; the following rule should be removed when microphone access
   ; is brokered through the content process
     (allow device-microphone)
-
-    (allow file* (var-folders2-regex "/com\.apple\.IntlDataCache\.le$"))
-    (allow file-read*
-        (var-folders2-regex "/com\.apple\.IconServices/")
-        (var-folders2-regex "/[^/]+\.mozrunner/extensions/[^/]+/chrome/[^/]+/content/[^/]+\.j(s|ar)$"))
-
-    (allow file-write* (var-folders2-regex "/org\.chromium\.[a-zA-Z0-9]*$"))
 
   ; Per-user and system-wide Extensions dir
     (allow file-read*
@@ -281,6 +275,7 @@ static const char contentSandboxRules[] = R"(
 
   ; level 3: global read access permitted, no global write access,
   ;          no read access to the home directory,
+  ;          no read access to /private/var (but read-metadata allowed above),
   ;          read access permitted to $PROFILE/{extensions,chrome}
     (if (string=? sandbox-level-3 "TRUE")
       (if (string=? hasFilePrivileges "TRUE")
@@ -292,12 +287,18 @@ static const char contentSandboxRules[] = R"(
           (begin
             (allow file-read* (require-all
                 (require-not (subpath home-path))
-                (require-not (subpath profileDir))))
+                (require-not (subpath profileDir))
+                (require-not (subpath "/private/var"))))
+            (allow file-read* (literal "/private/var/run/cupsd"))
             (allow file-read*
                 (profile-subpath "/extensions")
                 (profile-subpath "/chrome")))
           ; we don't have a profile dir
-          (allow file-read* (require-not (subpath home-path))))))
+          (begin
+            (allow file-read* (require-all
+              (require-not (subpath home-path))
+              (require-not (subpath "/private/var"))))
+            (allow file-read* (literal "/private/var/run/cupsd"))))))
 
   ; accelerated graphics
     (allow-shared-preferences-read "com.apple.opengl")
@@ -325,13 +326,6 @@ static const char contentSandboxRules[] = R"(
         (subpath appTempDir))
     (allow file-write*
         (subpath appTempDir))
-
-  ; bug 1324610
-    (allow network-outbound (literal "/private/var/run/cupsd"))
-
-  ; bug 1303987
-    (if (string=? isDebugBuild "TRUE")
-        (allow file-write* (var-folders-regex "/")))
   )
 )";
 

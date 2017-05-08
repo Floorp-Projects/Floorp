@@ -134,7 +134,7 @@ to mochitest command.
   * font-feature-settings property servo/servo#15975
     * test_inherit_storage.html `font-feature-settings` [2]
     * test_initial_storage.html `font-feature-settings` [1]
-    * test_value_storage.html `font-feature-settings` [118]
+    * test_value_storage.html `font-feature-settings` [40]
   * image-orientation property bug 1341758
     * test_value_storage.html `image-orientation` [40]
 * Stylesheet cloning is somehow busted bug 1348481
@@ -159,8 +159,6 @@ to mochitest command.
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
-  * SVG-only values of pointer-events not recognized
-    * test_value_storage.html `pointer-events` [1]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
     * test_computed_style.html `css-color-4` [2]
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
@@ -207,7 +205,6 @@ to mochitest command.
   * ... `font-size: var(--a)` [3]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
-  * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]

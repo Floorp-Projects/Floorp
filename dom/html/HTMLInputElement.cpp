@@ -22,6 +22,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsIRadioVisitor.h"
 #include "nsIPhonetic.h"
+#include "InputType.h"
 
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/Telemetry.h"
@@ -50,7 +51,6 @@
 #include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
-#include "nsIIOService.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsDateTimeControlFrame.h"
@@ -85,8 +85,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "nsIFile.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"
 #include "nsIMIMEService.h"
@@ -128,14 +126,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
-
-// This must come outside of any namespace, or else it won't overload with the
-// double based version in nsMathUtils.h
-inline mozilla::Decimal
-NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y)
-{
-  return (x - y * (x / y).floor());
-}
 
 namespace mozilla {
 namespace dom {
@@ -1182,6 +1172,9 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   mInputData.mState =
     nsTextEditorState::Construct(this, &sCachedTextEditorState);
 
+  void* memory = mInputTypeMem;
+  mInputType = InputType::Create(this, mType, memory);
+
   if (!gUploadLastDir)
     HTMLInputElement::InitUploadLastDir();
 
@@ -1215,6 +1208,11 @@ HTMLInputElement::FreeData()
     UnbindFromFrame(nullptr);
     ReleaseTextEditorState(mInputData.mState);
     mInputData.mState = nullptr;
+  }
+
+  if (mInputType) {
+    mInputType->DropReference();
+    mInputType = nullptr;
   }
 }
 
@@ -1457,9 +1455,9 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
         UpdateBarredFromConstraintValidation();
       }
-    } else if (MinOrMaxLengthApplies() && aName == nsGkAtoms::maxlength) {
+    } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
-    } else if (MinOrMaxLengthApplies() && aName == nsGkAtoms::minlength) {
+    } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
     } else if (aName == nsGkAtoms::pattern && mDoneCreating) {
       UpdatePatternMismatchValidityState();
@@ -1467,26 +1465,10 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {
       UpdateHasRange();
-      if (mType == NS_FORM_INPUT_RANGE) {
-        // The value may need to change when @max changes since the value may
-        // have been invalid and can now change to a valid value, or vice
-        // versa. For example, consider:
-        // <input type=range value=-1 max=1 step=3>. The valid range is 0 to 1
-        // while the nearest valid steps are -1 and 2 (the max value having
-        // prevented there being a valid step in range). Changing @max to/from
-        // 1 and a number greater than on equal to 3 should change whether we
-        // have a step mismatch or not.
-        // The value may also need to change between a value that results in
-        // a step mismatch and a value that results in overflow. For example,
-        // if @max in the example above were to change from 1 to -1.
-        nsAutoString value;
-        GetNonFileValueInternal(value);
-        nsresult rv =
-          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      // Validity state must be updated *after* the SetValueInternal call above
-      // or else the following assert will not be valid.
+      nsresult rv = mInputType->MinMaxStepAttrChanged();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Validity state must be updated *after* the UpdateValueDueToAttrChange
+      // call above or else the following assert will not be valid.
       // We don't assert the state of underflow during creation since
       // DoneCreatingElement sanitizes.
       UpdateRangeOverflowValidityState();
@@ -1496,14 +1478,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                  "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::min) {
       UpdateHasRange();
-      if (mType == NS_FORM_INPUT_RANGE) {
-        // See @max comment
-        nsAutoString value;
-        GetNonFileValueInternal(value);
-        nsresult rv =
-          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      nsresult rv = mInputType->MinMaxStepAttrChanged();
+      NS_ENSURE_SUCCESS(rv, rv);
       // See corresponding @max comment
       UpdateRangeUnderflowValidityState();
       UpdateStepMismatchValidityState();
@@ -1512,14 +1488,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                  !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::step) {
-      if (mType == NS_FORM_INPUT_RANGE) {
-        // See @max comment
-        nsAutoString value;
-        GetNonFileValueInternal(value);
-        nsresult rv =
-          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      nsresult rv = mInputType->MinMaxStepAttrChanged();
+      NS_ENSURE_SUCCESS(rv, rv);
       // See corresponding @max comment
       UpdateStepMismatchValidityState();
       MOZ_ASSERT(!mDoneCreating ||
@@ -5242,6 +5212,8 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
   // We already have a copy of the value, lets free it and changes the type.
   FreeData();
   mType = aNewType;
+  void* memory = mInputTypeMem;
+  mInputType = InputType::Create(this, mType, memory);
 
   if (IsSingleLineTextControl()) {
 
@@ -7372,17 +7344,6 @@ HTMLInputElement::PlaceholderApplies() const
 }
 
 bool
-HTMLInputElement::DoesPatternApply() const
-{
-  // TODO: temporary until bug 773205 is fixed.
-  if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
-    return false;
-  }
-
-  return IsSingleLineTextControl(false);
-}
-
-bool
 HTMLInputElement::DoesMinMaxApply() const
 {
   switch (mType)
@@ -7509,42 +7470,22 @@ bool
 HTMLInputElement::IsTooLong()
 {
   if (!mValueChanged ||
-      !mLastValueChangeWasInteractive ||
-      !MinOrMaxLengthApplies() ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength)) {
+      !mLastValueChangeWasInteractive) {
     return false;
   }
 
-  int32_t maxLength = MaxLength();
-
-  // Maxlength of -1 means parsing error.
-  if (maxLength == -1) {
-    return false;
-  }
-
-  return InputTextLength(CallerType::System) > maxLength;
+  return mInputType->IsTooLong();
 }
 
 bool
 HTMLInputElement::IsTooShort()
 {
   if (!mValueChanged ||
-      !mLastValueChangeWasInteractive ||
-      !MinOrMaxLengthApplies() ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::minlength)) {
+      !mLastValueChangeWasInteractive) {
     return false;
   }
 
-  int32_t minLength = MinLength();
-
-  // Minlength of -1 means parsing error.
-  if (minLength == -1) {
-    return false;
-  }
-
-  int32_t textLength = InputTextLength(CallerType::System);
-
-  return textLength && textLength < minLength;
+  return mInputType->IsTooShort();
 }
 
 bool
@@ -7553,251 +7494,43 @@ HTMLInputElement::IsValueMissing() const
   // Should use UpdateValueMissingValidityStateForRadio() for type radio.
   MOZ_ASSERT(mType != NS_FORM_INPUT_RADIO);
 
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) ||
-      !DoesRequiredApply()) {
-    return false;
-  }
-
-  if (!IsMutable()) {
-    return false;
-  }
-
-  switch (GetValueMode()) {
-    case VALUE_MODE_VALUE:
-      return IsValueEmpty();
-
-    case VALUE_MODE_FILENAME:
-      return GetFilesOrDirectoriesInternal().IsEmpty();
-
-    case VALUE_MODE_DEFAULT_ON:
-      // This should not be used for type radio.
-      // See the MOZ_ASSERT at the beginning of the method.
-      return !mChecked;
-
-    case VALUE_MODE_DEFAULT:
-    default:
-      return false;
-  }
+  return mInputType->IsValueMissing();
 }
 
 bool
 HTMLInputElement::HasTypeMismatch() const
 {
-  if (mType != NS_FORM_INPUT_EMAIL && mType != NS_FORM_INPUT_URL) {
-    return false;
-  }
-
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-
-  if (value.IsEmpty()) {
-    return false;
-  }
-
-  if (mType == NS_FORM_INPUT_EMAIL) {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)
-             ? !IsValidEmailAddressList(value) : !IsValidEmailAddress(value);
-  } else if (mType == NS_FORM_INPUT_URL) {
-    /**
-     * TODO:
-     * The URL is not checked as the HTML5 specifications want it to be because
-     * there is no code to check for a valid URI/IRI according to 3986 and 3987
-     * RFC's at the moment, see bug 561586.
-     *
-     * RFC 3987 (IRI) implementation: bug 42899
-     *
-     * HTML5 specifications:
-     * http://dev.w3.org/html5/spec/infrastructure.html#valid-url
-     */
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-    nsCOMPtr<nsIURI> uri;
-
-    return !NS_SUCCEEDED(ioService->NewURI(NS_ConvertUTF16toUTF8(value), nullptr,
-                                           nullptr, getter_AddRefs(uri)));
-  }
-
-  return false;
+  return mInputType->HasTypeMismatch();
 }
 
 bool
 HTMLInputElement::HasPatternMismatch() const
 {
-  if (!DoesPatternApply() ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::pattern)) {
-    return false;
-  }
-
-  nsAutoString pattern;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern);
-
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-
-  if (value.IsEmpty()) {
-    return false;
-  }
-
-  nsIDocument* doc = OwnerDoc();
-
-  return !nsContentUtils::IsPatternMatching(value, pattern, doc);
+  return mInputType->HasPatternMismatch();
 }
 
 bool
 HTMLInputElement::IsRangeOverflow() const
 {
-  if (!DoesMinMaxApply()) {
-    return false;
-  }
-
-  Decimal maximum = GetMaximum();
-  if (maximum.isNaN()) {
-    return false;
-  }
-
-  Decimal value = GetValueAsDecimal();
-  if (value.isNaN()) {
-    return false;
-  }
-
-  return value > maximum;
+  return mInputType->IsRangeOverflow();
 }
 
 bool
 HTMLInputElement::IsRangeUnderflow() const
 {
-  if (!DoesMinMaxApply()) {
-    return false;
-  }
-
-  Decimal minimum = GetMinimum();
-  if (minimum.isNaN()) {
-    return false;
-  }
-
-  Decimal value = GetValueAsDecimal();
-  if (value.isNaN()) {
-    return false;
-  }
-
-  return value < minimum;
+  return mInputType->IsRangeUnderflow();
 }
 
 bool
 HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const
 {
-  if (!DoesStepApply()) {
-    return false;
-  }
-
-  Decimal value = GetValueAsDecimal();
-  if (value.isNaN()) {
-    if (aUseZeroIfValueNaN) {
-      value = Decimal(0);
-    } else {
-      // The element can't suffer from step mismatch if it's value isn't a number.
-      return false;
-    }
-  }
-
-  Decimal step = GetStep();
-  if (step == kStepAny) {
-    return false;
-  }
-
-  // Value has to be an integral multiple of step.
-  return NS_floorModulo(value - GetStepBase(), step) != Decimal(0);
-}
-
-/**
- * Takes aEmail and attempts to convert everything after the first "@"
- * character (if anything) to punycode before returning the complete result via
- * the aEncodedEmail out-param. The aIndexOfAt out-param is set to the index of
- * the "@" character.
- *
- * If no "@" is found in aEmail, aEncodedEmail is simply set to aEmail and
- * the aIndexOfAt out-param is set to kNotFound.
- *
- * Returns true in all cases unless an attempt to punycode encode fails. If
- * false is returned, aEncodedEmail has not been set.
- *
- * This function exists because ConvertUTF8toACE() splits on ".", meaning that
- * for 'user.name@sld.tld' it would treat "name@sld" as a label. We want to
- * encode the domain part only.
- */
-static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
-                                       nsAutoCString& aEncodedEmail,
-                                       uint32_t* aIndexOfAt)
-{
-  nsAutoCString value = NS_ConvertUTF16toUTF8(aEmail);
-  *aIndexOfAt = (uint32_t)value.FindChar('@');
-
-  if (*aIndexOfAt == (uint32_t)kNotFound ||
-      *aIndexOfAt == value.Length() - 1) {
-    aEncodedEmail = value;
-    return true;
-  }
-
-  nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
-  if (!idnSrv) {
-    NS_ERROR("nsIIDNService isn't present!");
-    return false;
-  }
-
-  uint32_t indexOfDomain = *aIndexOfAt + 1;
-
-  const nsDependentCSubstring domain = Substring(value, indexOfDomain);
-  bool ace;
-  if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
-    nsAutoCString domainACE;
-    if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
-      return false;
-    }
-    value.Replace(indexOfDomain, domain.Length(), domainACE);
-  }
-
-  aEncodedEmail = value;
-  return true;
+  return mInputType->HasStepMismatch(aUseZeroIfValueNaN);
 }
 
 bool
 HTMLInputElement::HasBadInput() const
 {
-  if (mType == NS_FORM_INPUT_NUMBER) {
-    nsAutoString value;
-    GetNonFileValueInternal(value);
-    if (!value.IsEmpty()) {
-      // The input can't be bad, otherwise it would have been sanitized to the
-      // empty string.
-      NS_ASSERTION(!GetValueAsDecimal().isNaN(), "Should have sanitized");
-      return false;
-    }
-    nsNumberControlFrame* numberControlFrame =
-      do_QueryFrame(GetPrimaryFrame());
-    if (numberControlFrame &&
-        !numberControlFrame->AnonTextControlIsEmpty()) {
-      // The input the user entered failed to parse as a number.
-      return true;
-    }
-    return false;
-  }
-  if (mType == NS_FORM_INPUT_EMAIL) {
-    // With regards to suffering from bad input the spec says that only the
-    // punycode conversion works, so we don't care whether the email address is
-    // valid or not here. (If the email address is invalid then we will be
-    // suffering from a type mismatch.)
-    nsAutoString value;
-    nsAutoCString unused;
-    uint32_t unused2;
-    GetNonFileValueInternal(value);
-    HTMLSplitOnSpacesTokenizer tokenizer(value, ',');
-    while (tokenizer.hasMoreTokens()) {
-      if (!PunycodeEncodeEmailAddress(tokenizer.nextToken(), unused, &unused2)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  return false;
+  return mInputType->HasBadInput();
 }
 
 void
@@ -8190,88 +7923,6 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
   }
 
   return rv;
-}
-
-//static
-bool
-HTMLInputElement::IsValidEmailAddressList(const nsAString& aValue)
-{
-  HTMLSplitOnSpacesTokenizer tokenizer(aValue, ',');
-
-  while (tokenizer.hasMoreTokens()) {
-    if (!IsValidEmailAddress(tokenizer.nextToken())) {
-      return false;
-    }
-  }
-
-  return !tokenizer.separatorAfterCurrentToken();
-}
-
-//static
-bool
-HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
-{
-  // Email addresses can't be empty and can't end with a '.' or '-'.
-  if (aValue.IsEmpty() || aValue.Last() == '.' || aValue.Last() == '-') {
-    return false;
-  }
-
-  uint32_t atPos;
-  nsAutoCString value;
-  if (!PunycodeEncodeEmailAddress(aValue, value, &atPos) ||
-      atPos == (uint32_t)kNotFound || atPos == 0 || atPos == value.Length() - 1) {
-    // Could not encode, or "@" was not found, or it was at the start or end
-    // of the input - in all cases, not a valid email address.
-    return false;
-  }
-
-  uint32_t length = value.Length();
-  uint32_t i = 0;
-
-  // Parsing the username.
-  for (; i < atPos; ++i) {
-    char16_t c = value[i];
-
-    // The username characters have to be in this list to be valid.
-    if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
-          c == '.' || c == '!' || c == '#' || c == '$' || c == '%' ||
-          c == '&' || c == '\''|| c == '*' || c == '+' || c == '-' ||
-          c == '/' || c == '=' || c == '?' || c == '^' || c == '_' ||
-          c == '`' || c == '{' || c == '|' || c == '}' || c == '~' )) {
-      return false;
-    }
-  }
-
-  // Skip the '@'.
-  ++i;
-
-  // The domain name can't begin with a dot or a dash.
-  if (value[i] == '.' || value[i] == '-') {
-    return false;
-  }
-
-  // Parsing the domain name.
-  for (; i < length; ++i) {
-    char16_t c = value[i];
-
-    if (c == '.') {
-      // A dot can't follow a dot or a dash.
-      if (value[i-1] == '.' || value[i-1] == '-') {
-        return false;
-      }
-    } else if (c == '-'){
-      // A dash can't follow a dot.
-      if (value[i-1] == '.') {
-        return false;
-      }
-    } else if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
-                 c == '-')) {
-      // The domain characters have to be in this list to be valid.
-      return false;
-    }
-  }
-
-  return true;
 }
 
 NS_IMETHODIMP_(bool)

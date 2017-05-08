@@ -185,7 +185,7 @@ add_task(function* () {
   // Find the menu entries for sideloaded extensions
   yield PanelUI.show();
 
-  let addons = document.getElementById("PanelUI-footer-addons");
+  let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 4, "Have 4 menu entries for sideloaded extensions");
 
   // Click the first sideloaded extension
@@ -226,7 +226,7 @@ add_task(function* () {
   // Should still have 3 entries in the hamburger menu
   yield PanelUI.show();
 
-  addons = document.getElementById("PanelUI-footer-addons");
+  addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 3, "Have 3 menu entries for sideloaded extensions");
 
   // Click the second sideloaded extension and wait for the notification
@@ -260,7 +260,7 @@ add_task(function* () {
   // Should still have 2 entries in the hamburger menu
   yield PanelUI.show();
 
-  addons = document.getElementById("PanelUI-footer-addons");
+  addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 2, "Have 2 menu entries for sideloaded extensions");
 
   // Close the hamburger menu and go directly to the addons manager
@@ -299,7 +299,7 @@ add_task(function* () {
   // Should still have 1 entry in the hamburger menu
   yield PanelUI.show();
 
-  addons = document.getElementById("PanelUI-footer-addons");
+  addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 1, "Have 1 menu entry for sideloaded extensions");
 
   // Close the hamburger menu and go to the detail page for this addon

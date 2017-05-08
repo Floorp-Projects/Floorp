@@ -8,10 +8,10 @@
 HTTP(..) != font-features-turkish.html font-features-ref.html
 
 # check that disabling ligatures causes a change
-fails-if(stylo) HTTP(..) != font-features-noliga.html font-features-ref.html
+HTTP(..) != font-features-noliga.html font-features-ref.html
 
 # check that enabling optional ligatures causes a change
-fails-if(stylo) HTTP(..) != font-features-hlig.html font-features-ref.html
+HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
 HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
@@ -25,12 +25,12 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 
 # compare feature specified within @font-face to same feature in style rule
 fails-if(stylo) HTTP(..) == font-features-hlig-2.html font-features-hlig.html
-fails-if(stylo) HTTP(..) == font-features-hlig-4.html font-features-hlig.html
+HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
 HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
 
 # check that feature in style rule overrides @font-face
-fails-if(stylo) HTTP(..) == font-features-hlig-3.html font-features-noliga.html
+HTTP(..) == font-features-hlig-3.html font-features-noliga.html
 
 # compare font-language-override rendering to lang-tagged rendering
 HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html
@@ -43,18 +43,18 @@ HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html
 
 # check that last value wins if a feature is repeated
 HTTP(..) == font-features-order-1.html font-features-ref.html
-fails-if(stylo) HTTP(..) == font-features-order-2.html font-features-noliga.html
+HTTP(..) == font-features-order-2.html font-features-noliga.html
 
 # check priority of feature settings vs. font-variant subproperty
-fails-if(stylo) HTTP(..) == font-features-order-3.html font-features-noliga.html
+HTTP(..) == font-features-order-3.html font-features-noliga.html
 HTTP(..) == font-features-order-4.html font-features-noliga.html
-fails-if(stylo) HTTP(..) == font-features-order-5.html font-features-hlig.html
+HTTP(..) == font-features-order-5.html font-features-hlig.html
 
 # check priority involving feature settings and font-variant-alternates
 fails-if(stylo) HTTP(..) == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-fails-if(stylo) HTTP(..) == annotations.html annotations-ref.html
+HTTP(..) == annotations.html annotations-ref.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
@@ -72,27 +72,27 @@ HTTP(..) != font-kerning-auto.html font-kerning-none.html
 HTTP(..) == font-kerning-auto.html font-kerning-normal.html
 HTTP(..) == font-kerning-normal.html font-kerning-kern.html
 HTTP(..) == font-kerning-none.html font-kerning-nokern.html
-fails-if(stylo) HTTP(..) == font-kerning-1.html font-kerning-none.html
-fails-if(stylo) HTTP(..) == font-kerning-2.html font-kerning-normal.html
+HTTP(..) == font-kerning-1.html font-kerning-none.html
+HTTP(..) == font-kerning-2.html font-kerning-normal.html
 fails-if(stylo) HTTP(..) == font-kerning-3.html font-kerning-none.html
 HTTP(..) != font-kerning-table-none.html font-kerning-table-normal.html
 
 # sanity check for kerning - with no spaces, kerning should occur
 HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-default.html
-fails-if(stylo) HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
+HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
 
 # OpenType features should work across inter-word spaces
 HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html
-fails-if(stylo) HTTP(..) == spacelookups.html spacelookups-ref.html
+HTTP(..) == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
 HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
 random-if(!winWidget&&!cocoaWidget) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
 random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) fails-if(stylo) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
 random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) fails-if(stylo) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering

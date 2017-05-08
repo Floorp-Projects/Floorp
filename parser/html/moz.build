@@ -16,8 +16,6 @@ EXPORTS += [
     'nsAHtml5TreeBuilderState.h',
     'nsAHtml5TreeOpSink.h',
     'nsHtml5ArrayCopy.h',
-    'nsHtml5AtomList.h',
-    'nsHtml5Atoms.h',
     'nsHtml5AtomTable.h',
     'nsHtml5AttributeEntry.h',
     'nsHtml5AttributeName.h',
@@ -36,6 +34,7 @@ EXPORTS += [
     'nsHtml5OwningUTF16Buffer.h',
     'nsHtml5Parser.h',
     'nsHtml5PlainTextUtils.h',
+    'nsHtml5Portability.h',
     'nsHtml5RefPtr.h',
     'nsHtml5Speculation.h',
     'nsHtml5SpeculativeLoad.h',
@@ -56,7 +55,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsHtml5Atom.cpp',
-    'nsHtml5Atoms.cpp',
     'nsHtml5AtomTable.cpp',
     'nsHtml5AttributeName.cpp',
     'nsHtml5DependentUTF16Buffer.cpp',

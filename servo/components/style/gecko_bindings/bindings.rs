@@ -1140,6 +1140,10 @@ extern "C" {
                                             unit: nsCSSUnit);
 }
 extern "C" {
+    pub fn Gecko_CSSValue_SetAtomIdent(css_value: nsCSSValueBorrowedMut,
+                                       atom: *mut nsIAtom);
+}
+extern "C" {
     pub fn Gecko_CSSValue_SetArray(css_value: nsCSSValueBorrowedMut,
                                    len: i32);
 }
@@ -1172,6 +1176,11 @@ extern "C" {
 extern "C" {
     pub fn Gecko_nsStyleFont_CopyLangFrom(aFont: *mut nsStyleFont,
                                           aSource: *const nsStyleFont);
+}
+extern "C" {
+    pub fn Gecko_nsStyleFont_FixupNoneGeneric(font: *mut nsStyleFont,
+                                              pres_context:
+                                                  RawGeckoPresContextBorrowed);
 }
 extern "C" {
     pub fn Gecko_GetBaseSize(lang: *mut nsIAtom) -> FontSizePrefs;
@@ -1589,19 +1598,16 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleSet_AppendStyleSheet(set: RawServoStyleSetBorrowed,
                                            sheet: RawServoStyleSheetBorrowed,
-                                           unique_id: u32,
-                                           flush: bool);
+                                           unique_id: u32, flush: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_PrependStyleSheet(set: RawServoStyleSetBorrowed,
                                             sheet: RawServoStyleSheetBorrowed,
-                                            unique_id: u32,
-                                            flush: bool);
+                                            unique_id: u32, flush: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_RemoveStyleSheet(set: RawServoStyleSetBorrowed,
-                                           unique_id: u32,
-                                           flush: bool);
+                                           unique_id: u32, flush: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_InsertStyleSheetBefore(set:

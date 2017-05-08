@@ -38,18 +38,19 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
 class nsHtml5StreamParser;
 
-class nsHtml5Tokenizer;
-class nsHtml5TreeBuilder;
 class nsHtml5AttributeName;
 class nsHtml5ElementName;
+class nsHtml5Tokenizer;
+class nsHtml5TreeBuilder;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -62,6 +63,62 @@ class nsHtml5MetaScanner
     static staticJArray<char16_t,int32_t> CONTENT;
     static staticJArray<char16_t,int32_t> HTTP_EQUIV;
     static staticJArray<char16_t,int32_t> CONTENT_TYPE;
+    static const int32_t NO = 0;
+
+    static const int32_t M = 1;
+
+    static const int32_t E = 2;
+
+    static const int32_t T = 3;
+
+    static const int32_t A = 4;
+
+    static const int32_t DATA = 0;
+
+    static const int32_t TAG_OPEN = 1;
+
+    static const int32_t SCAN_UNTIL_GT = 2;
+
+    static const int32_t TAG_NAME = 3;
+
+    static const int32_t BEFORE_ATTRIBUTE_NAME = 4;
+
+    static const int32_t ATTRIBUTE_NAME = 5;
+
+    static const int32_t AFTER_ATTRIBUTE_NAME = 6;
+
+    static const int32_t BEFORE_ATTRIBUTE_VALUE = 7;
+
+    static const int32_t ATTRIBUTE_VALUE_DOUBLE_QUOTED = 8;
+
+    static const int32_t ATTRIBUTE_VALUE_SINGLE_QUOTED = 9;
+
+    static const int32_t ATTRIBUTE_VALUE_UNQUOTED = 10;
+
+    static const int32_t AFTER_ATTRIBUTE_VALUE_QUOTED = 11;
+
+    static const int32_t MARKUP_DECLARATION_OPEN = 13;
+
+    static const int32_t MARKUP_DECLARATION_HYPHEN = 14;
+
+    static const int32_t COMMENT_START = 15;
+
+    static const int32_t COMMENT_START_DASH = 16;
+
+    static const int32_t COMMENT = 17;
+
+    static const int32_t COMMENT_END_DASH = 18;
+
+    static const int32_t COMMENT_END = 19;
+
+    static const int32_t SELF_CLOSING_START_TAG = 20;
+
+    static const int32_t HTTP_EQUIV_NOT_SEEN = 0;
+
+    static const int32_t HTTP_EQUIV_CONTENT_TYPE = 1;
+
+    static const int32_t HTTP_EQUIV_OTHER = 2;
+
   protected:
     nsHtml5ByteReadable* readable;
   private:
@@ -106,36 +163,6 @@ class nsHtml5MetaScanner
 
 #include "nsHtml5MetaScannerHSupplement.h"
 };
-
-#define NS_HTML5META_SCANNER_NO 0
-#define NS_HTML5META_SCANNER_M 1
-#define NS_HTML5META_SCANNER_E 2
-#define NS_HTML5META_SCANNER_T 3
-#define NS_HTML5META_SCANNER_A 4
-#define NS_HTML5META_SCANNER_DATA 0
-#define NS_HTML5META_SCANNER_TAG_OPEN 1
-#define NS_HTML5META_SCANNER_SCAN_UNTIL_GT 2
-#define NS_HTML5META_SCANNER_TAG_NAME 3
-#define NS_HTML5META_SCANNER_BEFORE_ATTRIBUTE_NAME 4
-#define NS_HTML5META_SCANNER_ATTRIBUTE_NAME 5
-#define NS_HTML5META_SCANNER_AFTER_ATTRIBUTE_NAME 6
-#define NS_HTML5META_SCANNER_BEFORE_ATTRIBUTE_VALUE 7
-#define NS_HTML5META_SCANNER_ATTRIBUTE_VALUE_DOUBLE_QUOTED 8
-#define NS_HTML5META_SCANNER_ATTRIBUTE_VALUE_SINGLE_QUOTED 9
-#define NS_HTML5META_SCANNER_ATTRIBUTE_VALUE_UNQUOTED 10
-#define NS_HTML5META_SCANNER_AFTER_ATTRIBUTE_VALUE_QUOTED 11
-#define NS_HTML5META_SCANNER_MARKUP_DECLARATION_OPEN 13
-#define NS_HTML5META_SCANNER_MARKUP_DECLARATION_HYPHEN 14
-#define NS_HTML5META_SCANNER_COMMENT_START 15
-#define NS_HTML5META_SCANNER_COMMENT_START_DASH 16
-#define NS_HTML5META_SCANNER_COMMENT 17
-#define NS_HTML5META_SCANNER_COMMENT_END_DASH 18
-#define NS_HTML5META_SCANNER_COMMENT_END 19
-#define NS_HTML5META_SCANNER_SELF_CLOSING_START_TAG 20
-#define NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN 0
-#define NS_HTML5META_SCANNER_HTTP_EQUIV_CONTENT_TYPE 1
-#define NS_HTML5META_SCANNER_HTTP_EQUIV_OTHER 2
-
 
 #endif
 
