@@ -31,7 +31,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
     private static final String LOGTAG = "GeckoTextSelection";
     private static final int SHUTDOWN_DELAY_MS = 250;
 
-    private final Context context;
+    private final GeckoApp geckoApp;
     private final ActionModePresenter presenter;
 
     private int selectionID; // Unique ID provided for each selection action.
@@ -56,19 +56,19 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
     };
     private ActionModeTimerTask mActionModeTimerTask;
 
-    ActionBarTextSelection(@NonNull final Context context,
+    ActionBarTextSelection(@NonNull final GeckoApp geckoApp,
                            @Nullable final ActionModePresenter presenter) {
-        this.context = context;
+        this.geckoApp = geckoApp;
         this.presenter = presenter;
     }
 
     @Override
     public void create() {
         // Only register listeners if we have valid start/middle/end handles
-        if (context == null) {
+        if (geckoApp == null) {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one context is null");
         } else {
-            GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+            geckoApp.getAppEventDispatcher().registerUiThreadListener(this,
                     "TextSelection:ActionbarInit",
                     "TextSelection:ActionbarStatus",
                     "TextSelection:ActionbarUninit");
@@ -83,10 +83,10 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
 
     @Override
     public void destroy() {
-        if (context == null) {
+        if (geckoApp == null) {
             Log.e(LOGTAG, "Do not unregister TextSelection:* listeners since context is null");
         } else {
-            GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+            geckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
                     "TextSelection:ActionbarInit",
                     "TextSelection:ActionbarStatus",
                     "TextSelection:ActionbarUninit");
@@ -184,7 +184,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
                 menuitem.setShowAsAction(actionEnum);
 
                 final String iconString = obj.getString("icon", "");
-                ResourceDrawableUtils.getDrawable(context, iconString,
+                ResourceDrawableUtils.getDrawable(geckoApp, iconString,
                         new ResourceDrawableUtils.BitmapLoader() {
                     @Override
                     public void onBitmapFound(Drawable d) {
@@ -208,7 +208,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             final GeckoBundle obj = mItems[item.getItemId()];
             final GeckoBundle data = new GeckoBundle(1);
             data.putString("id", obj.getString("id", ""));
-            GeckoApp.getEventDispatcher().dispatch("TextSelection:Action", data);
+            geckoApp.getAppEventDispatcher().dispatch("TextSelection:Action", data);
             return true;
         }
 
@@ -220,7 +220,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
 
             final GeckoBundle data = new GeckoBundle(1);
             data.putInt("selectionID", selectionID);
-            GeckoApp.getEventDispatcher().dispatch("TextSelection:End", data);
+            geckoApp.getAppEventDispatcher().dispatch("TextSelection:End", data);
         }
     }
 }
