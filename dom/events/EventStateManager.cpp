@@ -3868,13 +3868,7 @@ public:
 /*static*/ bool
 EventStateManager::IsHandlingUserInput()
 {
-  if (sUserInputEventDepth <= 0) {
-    return false;
-  }
-
-  TimeDuration timeout = nsContentUtils::HandlingUserInputTimeout();
-  return timeout <= TimeDuration(0) ||
-         (TimeStamp::Now() - sHandlingInputStart) <= timeout;
+  return sUserInputEventDepth > 0;
 }
 
 static void
