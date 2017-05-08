@@ -568,6 +568,7 @@ function* withSnippetsMap(setupFn, testFn, testArgs = null, parentFn = null) {
           document.addEventListener("AboutHomeLoadSnippets", function() {
             let updateSnippets;
             if (args.setupFnSource) {
+              // eslint-disable-next-line no-eval
               updateSnippets = eval(`(() => (${args.setupFnSource}))()`);
             }
 
