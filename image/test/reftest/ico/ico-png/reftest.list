@@ -25,5 +25,5 @@
 == wrapper.html?xcrn0g04.ico about:blank
 
 # Test ICO PNG transparency
-fails-if(stylo) == transparent-png.ico transparent-png.png
+== transparent-png.ico transparent-png.png
 
