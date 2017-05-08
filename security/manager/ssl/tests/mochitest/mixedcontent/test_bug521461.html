@@ -21,7 +21,7 @@
     window.location = "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/nocontent.sjs";
     window.setTimeout(function() {
       isSecurityState("insecure", "location.href doesn't effect the security state");
-      is(document.body.innerHTML, "This is an unsecure page!", "Document has not changed content");
+      is(document.body.innerHTML, "This is an unsecure page!\n", "Document has not changed content");
       finish();
     }, 1000);
   }
@@ -29,7 +29,7 @@
   function afterNavigationTest()
   {
     isSecurityState("insecure", "still not secure after navigation");
-    is(document.body.innerHTML, "This is an unsecure page!", "Document has not changed content");
+    is(document.body.innerHTML, "This is an unsecure page!\n", "Document has not changed content");
     finish();
   }
 
