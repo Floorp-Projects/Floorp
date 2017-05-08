@@ -491,9 +491,14 @@ public:
     RefPtr<MediaDecoder::SeekPromise> x =
       mPendingSeek.mPromise.Ensure(__func__);
 
-    mMaster->ResetDecode();
-    mMaster->StopMediaSink();
-    mMaster->mReader->ReleaseResources();
+    // No need to call ResetDecode() and StopMediaSink() here.
+    // We will do them during seeking when exiting dormant.
+
+    // Ignore WAIT_FOR_DATA since we won't decode in dormant.
+    mMaster->mAudioWaitRequest.DisconnectIfExists();
+    mMaster->mVideoWaitRequest.DisconnectIfExists();
+
+    MaybeReleaseResources();
   }
 
   void Exit() override
@@ -520,7 +525,50 @@ public:
 
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override;
 
+  void HandleAudioDecoded(AudioData*) override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleVideoDecoded(VideoData*, TimeStamp) override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleWaitingForAudio() override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleWaitingForVideo() override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleAudioCanceled() override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleVideoCanceled() override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleEndOfAudio() override
+  {
+    MaybeReleaseResources();
+  }
+  void HandleEndOfVideo() override
+  {
+    MaybeReleaseResources();
+  }
+
 private:
+  void MaybeReleaseResources()
+  {
+    if (!mMaster->mAudioDataRequest.Exists() &&
+        !mMaster->mVideoDataRequest.Exists()) {
+      // Release decoders only when they are idle. Otherwise it might cause
+      // decode error later when resetting decoders during seeking.
+      mMaster->mReader->ReleaseResources();
+    }
+  }
+
   SeekJob mPendingSeek;
 };
 
