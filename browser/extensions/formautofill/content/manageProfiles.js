@@ -25,23 +25,23 @@ ManageProfileDialog.prototype = {
 
   /**
    * Count the number of "formautofill-storage-changed" events epected to
-   * receive to prevent repeatedly loading profiles.
+   * receive to prevent repeatedly loading addresses.
    * @type {number}
    */
   _pendingChangeCount: 0,
 
   /**
-   * Get the selected options on the profiles element.
+   * Get the selected options on the addresses element.
    *
    * @returns {array<DOMElement>}
    */
   get _selectedOptions() {
-    return Array.from(this._elements.profiles.selectedOptions);
+    return Array.from(this._elements.addresses.selectedOptions);
   },
 
   init() {
     this._elements = {
-      profiles: document.getElementById("profiles"),
+      addresses: document.getElementById("profiles"),
       controlsContainer: document.getElementById("controls-container"),
       remove: document.getElementById("remove"),
       add: document.getElementById("add"),
@@ -57,84 +57,84 @@ ManageProfileDialog.prototype = {
   },
 
   /**
-   * Load profiles and render them.
+   * Load addresses and render them.
    *
    * @returns {promise}
    */
-  loadProfiles() {
-    return this.getProfiles().then(profiles => {
-      log.debug("profiles:", profiles);
+  loadAddresses() {
+    return this.getAddresses().then(addresses => {
+      log.debug("addresses:", addresses);
       // Sort by last modified time starting with most recent
-      profiles.sort((a, b) => b.timeLastModified - a.timeLastModified);
-      this.renderProfileElements(profiles);
+      addresses.sort((a, b) => b.timeLastModified - a.timeLastModified);
+      this.renderAddressElements(addresses);
       this.updateButtonsStates(this._selectedOptions.length);
     });
   },
 
   /**
-   * Get profiles from storage.
+   * Get addresses from storage.
    *
    * @returns {promise}
    */
-  getProfiles() {
+  getAddresses() {
     return new Promise(resolve => {
-      Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
-        Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
+      Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
+        Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
         resolve(result.data);
       });
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetProfiles", {});
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {});
     });
   },
 
   /**
-   * Render the profiles onto the page while maintaining selected options if
+   * Render the addresses onto the page while maintaining selected options if
    * they still exist.
    *
-   * @param  {array<object>} profiles
+   * @param  {array<object>} addresses
    */
-  renderProfileElements(profiles) {
+  renderAddressElements(addresses) {
     let selectedGuids = this._selectedOptions.map(option => option.value);
-    this.clearProfileElements();
-    for (let profile of profiles) {
-      let option = new Option(this.getProfileLabel(profile),
-                              profile.guid,
+    this.clearAddressElements();
+    for (let address of addresses) {
+      let option = new Option(this.getAddressLabel(address),
+                              address.guid,
                               false,
-                              selectedGuids.includes(profile.guid));
-      option.profile = profile;
-      this._elements.profiles.appendChild(option);
+                              selectedGuids.includes(address.guid));
+      option.address = address;
+      this._elements.addresses.appendChild(option);
     }
   },
 
   /**
-   * Remove all existing profile elements.
+   * Remove all existing address elements.
    */
-  clearProfileElements() {
-    let parent = this._elements.profiles;
+  clearAddressElements() {
+    let parent = this._elements.addresses;
     while (parent.lastChild) {
       parent.removeChild(parent.lastChild);
     }
   },
 
   /**
-   * Remove profiles by guids.
+   * Remove addresses by guids.
    * Keep track of the number of "formautofill-storage-changed" events to
-   * ignore before loading profiles.
+   * ignore before loading addresses.
    *
    * @param  {array<string>} guids
    */
-  removeProfiles(guids) {
+  removeAddresses(guids) {
     this._pendingChangeCount += guids.length - 1;
-    Services.cpmm.sendAsyncMessage("FormAutofill:RemoveProfiles", {guids});
+    Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses", {guids});
   },
 
   /**
-   * Get profile display label. It should display up to two pieces of
+   * Get address display label. It should display up to two pieces of
    * information, separated by a comma.
    *
-   * @param  {object} profile
+   * @param  {object} address
    * @returns {string}
    */
-  getProfileLabel(profile) {
+  getAddressLabel(address) {
     // TODO: Implement a smarter way for deciding what to display
     //       as option text. Possibly improve the algorithm in
     //       ProfileAutoCompleteResult.jsm and reuse it here.
@@ -152,7 +152,7 @@ ManageProfileDialog.prototype = {
 
     let parts = [];
     for (const fieldName of fieldOrder) {
-      let string = profile[fieldName];
+      let string = address[fieldName];
       if (string) {
         parts.push(string);
       }
@@ -164,14 +164,14 @@ ManageProfileDialog.prototype = {
   },
 
   /**
-   * Open the edit profile dialog to create/edit a profile.
+   * Open the edit address dialog to create/edit an address.
    *
-   * @param  {object} profile [optional]
+   * @param  {object} address [optional]
    */
-  openEditDialog(profile) {
+  openEditDialog(address) {
     window.openDialog(EDIT_PROFILE_URL, null,
                       "chrome,centerscreen,modal,width=600,height=450",
-                      profile);
+                      address);
   },
 
   /**
@@ -203,7 +203,7 @@ ManageProfileDialog.prototype = {
     switch (event.type) {
       case "DOMContentLoaded": {
         this.init();
-        this.loadProfiles();
+        this.loadAddresses();
         break;
       }
       case "click": {
@@ -228,11 +228,11 @@ ManageProfileDialog.prototype = {
    */
   handleClick(event) {
     if (event.target == this._elements.remove) {
-      this.removeProfiles(this._selectedOptions.map(option => option.value));
+      this.removeAddresses(this._selectedOptions.map(option => option.value));
     } else if (event.target == this._elements.add) {
       this.openEditDialog();
     } else if (event.target == this._elements.edit) {
-      this.openEditDialog(this._selectedOptions[0].profile);
+      this.openEditDialog(this._selectedOptions[0].address);
     }
   },
 
@@ -243,7 +243,7 @@ ManageProfileDialog.prototype = {
           this._pendingChangeCount -= 1;
           return;
         }
-        this.loadProfiles();
+        this.loadAddresses();
       }
     }
   },
@@ -253,7 +253,7 @@ ManageProfileDialog.prototype = {
    */
   attachEventListeners() {
     window.addEventListener("unload", this, {once: true});
-    this._elements.profiles.addEventListener("change", this);
+    this._elements.addresses.addEventListener("change", this);
     this._elements.controlsContainer.addEventListener("click", this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
   },
@@ -262,7 +262,7 @@ ManageProfileDialog.prototype = {
    * Remove event listener
    */
   detachEventListeners() {
-    this._elements.profiles.removeEventListener("change", this);
+    this._elements.addresses.removeEventListener("change", this);
     this._elements.controlsContainer.removeEventListener("click", this);
     Services.obs.removeObserver(this, "formautofill-storage-changed");
   },

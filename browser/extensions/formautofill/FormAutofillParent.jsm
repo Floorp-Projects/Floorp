@@ -76,9 +76,9 @@ FormAutofillParent.prototype = {
     this._profileStore.initialize();
 
     Services.obs.addObserver(this, "advanced-pane-loaded");
-    Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
-    Services.ppmm.addMessageListener("FormAutofill:SaveProfile", this);
-    Services.ppmm.addMessageListener("FormAutofill:RemoveProfiles", this);
+    Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
+    Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
+    Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this);
@@ -182,19 +182,19 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
-      case "FormAutofill:GetProfiles": {
-        this._getProfiles(data, target);
+      case "FormAutofill:GetAddresses": {
+        this._getAddresses(data, target);
         break;
       }
-      case "FormAutofill:SaveProfile": {
+      case "FormAutofill:SaveAddress": {
         if (data.guid) {
-          this.getProfileStore().update(data.guid, data.profile);
+          this.getProfileStore().update(data.guid, data.address);
         } else {
-          this.getProfileStore().add(data.profile);
+          this.getProfileStore().add(data.address);
         }
         break;
       }
-      case "FormAutofill:RemoveProfiles": {
+      case "FormAutofill:RemoveAddresses": {
         data.guids.forEach(guid => this.getProfileStore().remove(guid));
         break;
       }
@@ -223,34 +223,35 @@ FormAutofillParent.prototype = {
       this._profileStore = null;
     }
 
-    Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
-    Services.ppmm.removeMessageListener("FormAutofill:SaveProfile", this);
-    Services.ppmm.removeMessageListener("FormAutofill:RemoveProfiles", this);
+    Services.ppmm.removeMessageListener("FormAutofill:GetAddresses", this);
+    Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
+    Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
   },
 
   /**
-   * Get the profile data from profile store and return profiles back to content process.
+   * Get the address data from profile store and return addresses back to content
+   * process.
    *
    * @private
    * @param  {string} data.searchString
-   *         The typed string for filtering out the matched profile.
+   *         The typed string for filtering out the matched address.
    * @param  {string} data.info
    *         The input autocomplete property's information.
    * @param  {nsIFrameMessageManager} target
    *         Content's message manager.
    */
-  _getProfiles({searchString, info}, target) {
-    let profiles = [];
+  _getAddresses({searchString, info}, target) {
+    let addresses = [];
 
     if (info && info.fieldName) {
-      profiles = this._profileStore.getByFilter({searchString, info});
+      addresses = this._profileStore.getByFilter({searchString, info});
     } else {
-      profiles = this._profileStore.getAll();
+      addresses = this._profileStore.getAll();
     }
 
-    target.sendAsyncMessage("FormAutofill:Profiles", profiles);
+    target.sendAsyncMessage("FormAutofill:Addresses", addresses);
   },
 
   _updateSavedFieldNames() {
@@ -260,9 +261,9 @@ FormAutofillParent.prototype = {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
-    this._profileStore.getAll().forEach((profile) => {
-      Object.keys(profile).forEach((fieldName) => {
-        if (!profile[fieldName]) {
+    this._profileStore.getAll().forEach((address) => {
+      Object.keys(address).forEach((fieldName) => {
+        if (!address[fieldName]) {
           return;
         }
         Services.ppmm.initialProcessData.autofillSavedFieldNames.add(fieldName);
