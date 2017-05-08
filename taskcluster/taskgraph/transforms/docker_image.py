@@ -94,6 +94,7 @@ def fill_template(config, tasks):
             # this image..
             'worker': {
                 'implementation': 'docker-worker',
+                'os': 'linux',
                 'docker-image': docker_image('image_builder'),
                 'caches': [{
                     'type': 'persistent',

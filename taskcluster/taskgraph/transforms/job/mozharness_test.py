@@ -41,12 +41,34 @@ mozharness_test_run_schema = Schema({
 })
 
 
+def test_packages_url(taskdesc):
+    """Account for different platforms that name their test packages differently"""
+    build_platform = taskdesc['attributes']['build_platform']
+    build_type = taskdesc['attributes']['build_type']
+
+    if build_platform == 'macosx64' and build_type == 'opt':
+        target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac')
+    else:
+        target = 'target'
+
+    return get_artifact_url(
+        '<build>', 'public/build/{}.test_packages.json'.format(target))
+
+
 @run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_docker(config, job, taskdesc):
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
+
+    # apply some defaults
+    worker['docker-image'] = test['docker-image']
+    worker['allow-ptrace'] = True  # required for all tests, for crashreporter
+    worker['loopback-video'] = test['loopback-video']
+    worker['loopback-audio'] = test['loopback-audio']
+    worker['max-run-time'] = test['max-run-time']
+    worker['retry-exit-status'] = test['retry-exit-status']
 
     artifacts = [
         # (artifact name prefix, in-image path)
@@ -56,8 +78,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
     ]
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-    test_packages_url = get_artifact_url('<build>',
-                                         'public/build/target.test_packages.json')
     mozharness_url = get_artifact_url('<build>',
                                       'public/build/mozharness.zip')
 
@@ -81,6 +101,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
         'ENABLE_E10S': str(bool(test.get('e10s'))).lower(),
+        'MOZ_AUTOMATION': '1',
     }
 
     if mozharness.get('mochitest-flavor'):
@@ -140,7 +161,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         command.append("--no-read-buildbot-config")
     command.extend([
         {"task-reference": "--installer-url=" + installer_url},
-        {"task-reference": "--test-packages-url=" + test_packages_url},
+        {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
     ])
     command.extend(mozharness.get('extra-options', []))
 
@@ -170,6 +191,10 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     mozharness = test['mozharness']
     worker = taskdesc['worker']
 
+    is_macosx = worker['os'] == 'macosx'
+    is_windows = worker['os'] == 'windows'
+    assert is_macosx or is_windows
+
     artifacts = [
         {
             'name': 'public/logs',
@@ -186,18 +211,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'type': 'directory'
         })
 
-    build_platform = taskdesc['attributes']['build_platform']
-    build_type = taskdesc['attributes']['build_type']
-
-    if build_platform == 'macosx64' and build_type == 'opt':
-        target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac')
-    else:
-        target = 'target'
-
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-
-    test_packages_url = get_artifact_url(
-        '<build>', 'public/build/{}.test_packages.json'.format(target))
 
     taskdesc['scopes'].extend(
         ['generic-worker:os-group:{}'.format(group) for group in test['os-groups']])
@@ -210,9 +224,12 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     worker['max-run-time'] = test['max-run-time']
     worker['artifacts'] = artifacts
 
+    env = worker.setdefault('env', {})
+    env['MOZ_AUTOMATION'] = '1'
+
     # this list will get cleaned up / reduced / removed in bug 1354088
-    if build_platform.startswith('macosx'):
-        worker['env'] = {
+    if is_macosx:
+        env.update({
             'IDLEIZER_DISABLE_SHUTDOWN': 'true',
             'LANG': 'en_US.UTF-8',
             'LC_ALL': 'en_US.UTF-8',
@@ -225,38 +242,32 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'SHELL': '/bin/bash',
             'XPCOM_DEBUG_BREAK': 'warn',
             'XPC_FLAGS': '0x0',
-            'XPC_SERVICE_NAME': '0'
-        }
+            'XPC_SERVICE_NAME': '0',
+        })
 
-    if build_platform.startswith('macosx'):
+    if is_macosx:
         mh_command = [
             'python2.7',
             '-u',
             'mozharness/scripts/' + mozharness['script']
         ]
-    elif build_platform.startswith('win'):
+    elif is_windows:
         mh_command = [
             'c:\\mozilla-build\\python\\python.exe',
             '-u',
             'mozharness\\scripts\\' + normpath(mozharness['script'])
         ]
-    else:
-        mh_command = [
-            'python',
-            '-u',
-            'mozharness/scripts/' + mozharness['script']
-        ]
 
     for mh_config in mozharness['config']:
         cfg_path = 'mozharness/configs/' + mh_config
-        if build_platform.startswith('win'):
+        if is_windows:
             cfg_path = normpath(cfg_path)
         mh_command.extend(['--cfg', cfg_path])
     mh_command.extend(mozharness.get('extra-options', []))
     if mozharness.get('no-read-buildbot-config'):
         mh_command.append('--no-read-buildbot-config')
     mh_command.extend(['--installer-url', installer_url])
-    mh_command.extend(['--test-packages-url', test_packages_url])
+    mh_command.extend(['--test-packages-url', test_packages_url(taskdesc)])
     if mozharness.get('download-symbols'):
         if isinstance(mozharness['download-symbols'], basestring):
             mh_command.extend(['--download-symbols', mozharness['download-symbols']])
@@ -289,11 +300,11 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         'format': 'zip'
     }]
 
-    if build_platform.startswith('win'):
+    if is_windows:
         worker['command'] = [
             {'task-reference': ' '.join(mh_command)}
         ]
-    else:
+    else:  # is_macosx
         mh_command_task_ref = []
         for token in mh_command:
             mh_command_task_ref.append({'task-reference': token})
@@ -309,14 +320,9 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     worker = taskdesc['worker']
     is_talos = test['suite'] == 'talos'
 
-    build_platform = taskdesc['attributes']['build_platform']
-    build_type = taskdesc['attributes']['build_type']
-    target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac') \
-        if build_platform == 'macosx64' and build_type == 'opt' else 'target'
+    assert worker['os'] == 'macosx'
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-    test_packages_url = get_artifact_url('<build>',
-                                         'public/build/{}.test_packages.json'.format(target))
     mozharness_url = get_artifact_url('<build>',
                                       'public/build/mozharness.zip')
 
@@ -347,6 +353,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         "NO_FAIL_ON_TEST_ERRORS": '1',
         "MOZ_HIDE_RESULTS_TABLE": '1',
         "MOZ_NODE_PATH": "/usr/local/bin/node",
+        'MOZ_AUTOMATION': '1',
     }
     # talos tests don't need Xvfb
     if is_talos:
@@ -362,7 +369,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         command.append("--no-read-buildbot-config")
     command.extend([
         {"task-reference": "--installer-url=" + installer_url},
-        {"task-reference": "--test-packages-url=" + test_packages_url},
+        {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
     ])
     if mozharness.get('include-blob-upload-branch'):
         command.append('--blob-upload-branch=' + config.params['project'])
