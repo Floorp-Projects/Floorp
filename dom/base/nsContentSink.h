@@ -36,16 +36,13 @@ class nsIAtom;
 class nsIChannel;
 class nsIContent;
 class nsNodeInfoManager;
+class nsScriptLoader;
 class nsIApplicationCache;
 
 namespace mozilla {
 namespace css {
 class Loader;
 } // namespace css
-
-namespace dom {
-class ScriptLoader;
-} // namespace dom
 } // namespace mozilla
 
 #ifdef DEBUG
@@ -279,7 +276,7 @@ protected:
   nsCOMPtr<nsIDocShell>         mDocShell;
   RefPtr<mozilla::css::Loader> mCSSLoader;
   RefPtr<nsNodeInfoManager>   mNodeInfoManager;
-  RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
+  RefPtr<nsScriptLoader>      mScriptLoader;
 
   // back off timer notification after count
   int32_t mBackoffCount;

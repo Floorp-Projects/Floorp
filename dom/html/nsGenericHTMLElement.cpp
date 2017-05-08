@@ -49,6 +49,7 @@
 #include "nsIDocShell.h"
 #include "nsNameSpaceManager.h"
 #include "nsError.h"
+#include "nsScriptLoader.h"
 #include "nsIPrincipal.h"
 #include "nsContainerFrame.h"
 #include "nsStyleUtil.h"
@@ -90,7 +91,6 @@
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/BloomFilter.h"
-#include "mozilla/dom/ScriptLoader.h"
 
 #include "nsVariant.h"
 #include "nsDOMTokenList.h"

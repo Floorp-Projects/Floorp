@@ -28,6 +28,7 @@
 #include "nsIFragmentContentSink.h"
 #include "nsStreamUtils.h"
 #include "nsHTMLTokenizer.h"
+#include "nsScriptLoader.h"
 #include "nsDataHashtable.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
@@ -39,7 +40,6 @@
 #include "nsIHTMLContentSink.h"
 
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/BinarySearch.h"
 
 using namespace mozilla;

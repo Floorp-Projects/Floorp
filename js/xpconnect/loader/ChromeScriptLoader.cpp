@@ -9,6 +9,7 @@
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
+#include "nsScriptLoader.h"
 #include "nsThreadUtils.h"
 
 #include "jsapi.h"
@@ -17,7 +18,6 @@
 
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/SystemGroup.h"
 #include "nsCycleCollectionParticipant.h"
@@ -241,7 +241,7 @@ AsyncScriptCompiler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         return NS_OK;
     }
 
-    nsresult rv = ScriptLoader::ConvertToUTF16(
+    nsresult rv = nsScriptLoader::ConvertToUTF16(
         nullptr, aBuf, aLength, mCharset, nullptr, mScriptText, mScriptLength);
     if (NS_FAILED(rv)) {
         Reject(cx, "Unable to decode script");

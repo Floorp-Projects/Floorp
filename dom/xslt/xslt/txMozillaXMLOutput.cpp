@@ -7,6 +7,7 @@
 
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
+#include "nsScriptLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
@@ -30,7 +31,6 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/ScriptLoader.h"
 #include "nsContentUtils.h"
 #include "txXMLUtils.h"
 #include "nsContentSink.h"
@@ -230,7 +230,7 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
         MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
                    nsIDocument::READYSTATE_LOADING, "Bad readyState");
         mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
-        ScriptLoader* loader = mDocument->ScriptLoader();
+        nsScriptLoader* loader = mDocument->ScriptLoader();
         if (loader) {
             loader->ParsingComplete(false);
         }
@@ -419,7 +419,7 @@ txMozillaXMLOutput::startDocument()
     }
 
     if (mCreatingNewDocument) {
-        ScriptLoader* loader = mDocument->ScriptLoader();
+        nsScriptLoader* loader = mDocument->ScriptLoader();
         if (loader) {
             loader->BeginDeferringScripts();
         }
@@ -860,7 +860,7 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, int32_t aNsID
     }
 
     // Set up script loader of the result document.
-    ScriptLoader *loader = mDocument->ScriptLoader();
+    nsScriptLoader *loader = mDocument->ScriptLoader();
     if (mNotifier) {
         loader->AddObserver(mNotifier);
     }

@@ -10,7 +10,7 @@
 #include "nsSVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGString.h"
-#include "mozilla/dom/ScriptElement.h"
+#include "nsScriptElement.h"
 
 class nsIDocument;
 
@@ -24,7 +24,7 @@ namespace dom {
 typedef nsSVGElement SVGScriptElementBase;
 
 class SVGScriptElement final : public SVGScriptElementBase,
-                               public ScriptElement
+                               public nsScriptElement
 {
 protected:
   friend nsresult (::NS_NewSVGScriptElement(nsIContent **aResult,
@@ -47,7 +47,7 @@ public:
   virtual void FreezeUriAsyncDefer() override;
   virtual CORSMode GetCORSMode() const override;
 
-  // ScriptElement
+  // nsScriptElement
   virtual bool HasScriptContent() override;
 
   // nsIContent specializations:

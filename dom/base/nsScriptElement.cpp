@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScriptElement.h"
-#include "ScriptLoader.h"
+#include "nsScriptElement.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"
+#include "nsScriptLoader.h"
 #include "nsIParser.h"
 #include "nsGkAtoms.h"
 #include "nsContentSink.h"
@@ -19,11 +19,11 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMETHODIMP
-ScriptElement::ScriptAvailable(nsresult aResult,
-                               nsIScriptElement *aElement,
-                               bool aIsInline,
-                               nsIURI *aURI,
-                               int32_t aLineNo)
+nsScriptElement::ScriptAvailable(nsresult aResult,
+                                 nsIScriptElement *aElement,
+                                 bool aIsInline,
+                                 nsIURI *aURI,
+                                 int32_t aLineNo)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
@@ -40,7 +40,7 @@ ScriptElement::ScriptAvailable(nsresult aResult,
 }
 
 /* virtual */ nsresult
-ScriptElement::FireErrorEvent()
+nsScriptElement::FireErrorEvent()
 {
   nsCOMPtr<nsIContent> cont =
     do_QueryInterface((nsIScriptElement*) this);
@@ -53,9 +53,9 @@ ScriptElement::FireErrorEvent()
 }
 
 NS_IMETHODIMP
-ScriptElement::ScriptEvaluated(nsresult aResult,
-                               nsIScriptElement *aElement,
-                               bool aIsInline)
+nsScriptElement::ScriptEvaluated(nsresult aResult,
+                                 nsIScriptElement *aElement,
+                                 bool aIsInline)
 {
   nsresult rv = NS_OK;
   if (!aIsInline) {
@@ -78,44 +78,44 @@ ScriptElement::ScriptEvaluated(nsresult aResult,
 }
 
 void
-ScriptElement::CharacterDataChanged(nsIDocument *aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo)
+nsScriptElement::CharacterDataChanged(nsIDocument *aDocument,
+                                      nsIContent* aContent,
+                                      CharacterDataChangeInfo* aInfo)
 {
   MaybeProcessScript();
 }
 
 void
-ScriptElement::AttributeChanged(nsIDocument* aDocument,
-                                Element* aElement,
-                                int32_t aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                int32_t aModType,
-                                const nsAttrValue* aOldValue)
+nsScriptElement::AttributeChanged(nsIDocument* aDocument,
+                                  Element* aElement,
+                                  int32_t aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  int32_t aModType,
+                                  const nsAttrValue* aOldValue)
 {
   MaybeProcessScript();
 }
 
 void
-ScriptElement::ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aFirstNewContent,
-                               int32_t aNewIndexInContainer)
+nsScriptElement::ContentAppended(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aFirstNewContent,
+                                 int32_t aNewIndexInContainer)
 {
   MaybeProcessScript();
 }
 
 void
-ScriptElement::ContentInserted(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               int32_t aIndexInContainer)
+nsScriptElement::ContentInserted(nsIDocument *aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aChild,
+                                 int32_t aIndexInContainer)
 {
   MaybeProcessScript();
 }
 
 bool
-ScriptElement::MaybeProcessScript()
+nsScriptElement::MaybeProcessScript()
 {
   nsCOMPtr<nsIContent> cont =
     do_QueryInterface((nsIScriptElement*) this);
@@ -145,6 +145,6 @@ ScriptElement::MaybeProcessScript()
     }
   }
 
-  RefPtr<ScriptLoader> loader = ownerDoc->ScriptLoader();
+  RefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
   return loader->ProcessScriptElement(this);
 }
