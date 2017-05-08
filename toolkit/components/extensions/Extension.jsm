@@ -1085,9 +1085,9 @@ this.Extension = class extends ExtensionData {
   }
 
   hasPermission(perm, includeOptional = false) {
-    let match = /^manifest:(.*)/.exec(perm);
-    if (match) {
-      return this.manifest[match[1]] != null;
+    let manifest_ = "manifest:";
+    if (perm.startsWith(manifest_)) {
+      return this.manifest[perm.substr(manifest_.length)] != null;
     }
 
     if (this.permissions.has(perm)) {

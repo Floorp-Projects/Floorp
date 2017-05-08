@@ -425,6 +425,7 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
   // Advanced to the correct frame, the composited frame is now valid to be drawn.
   if (*currentFrameEndTime > aTime) {
     aState.mCompositedFrameInvalid = false;
+    ret.mDirtyRect = IntRect(IntPoint(0,0), mSize);
   }
 
   MOZ_ASSERT(!aState.mIsCurrentlyDecoded || !aState.mCompositedFrameInvalid);

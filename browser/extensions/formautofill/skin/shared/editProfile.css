@@ -52,15 +52,15 @@ button {
   width: 15em;
 }
 
-#first-name-container,
-#middle-name-container,
+#given-name-container,
+#additional-name-container,
 #address-level1-container,
 #postal-code-container,
 #country-container {
   flex: 0 1 50%;
 }
 
-#last-name-container,
+#family-name-container,
 #organization-container,
 #street-address-container,
 #address-level2-container,
@@ -74,7 +74,7 @@ button {
   justify-content: end;
 }
 
-#last-name,
+#family-name,
 #organization,
 #address-level2,
 #tel{
@@ -85,11 +85,4 @@ button {
 #street-address,
 #email {
   flex: 1 0 auto;
-}
-
-#first-name-container,
-#middle-name-container,
-#last-name-container {
-  /* Hide until we support names */
-  display: none;
 }

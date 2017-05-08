@@ -3489,10 +3489,7 @@ var PrintPreviewListener = {
   _lastRequestedPrintPreviewTab: null,
 
   _createPPBrowser() {
-    if (!this._tabBeforePrintPreview) {
-      this._tabBeforePrintPreview = gBrowser.selectedTab;
-    }
-    let browser = this._tabBeforePrintPreview.linkedBrowser;
+    let browser = this.getSourceBrowser();
     let preferredRemoteType = browser.remoteType;
     return gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
@@ -3519,7 +3516,7 @@ var PrintPreviewListener = {
     return gBrowser.getBrowserForTab(this._simplifiedPrintPreviewTab);
   },
   createSimplifiedBrowser() {
-    let browser = this._tabBeforePrintPreview.linkedBrowser;
+    let browser = this.getSourceBrowser();
     this._simplifyPageTab = gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
       sameProcessAsFrameLoader: browser.frameLoader
@@ -3527,8 +3524,10 @@ var PrintPreviewListener = {
     return this.getSimplifiedSourceBrowser();
   },
   getSourceBrowser() {
-    return this._tabBeforePrintPreview ?
-      this._tabBeforePrintPreview.linkedBrowser : gBrowser.selectedBrowser;
+    if (!this._tabBeforePrintPreview) {
+      this._tabBeforePrintPreview = gBrowser.selectedTab;
+    }
+    return this._tabBeforePrintPreview.linkedBrowser;
   },
   getSimplifiedSourceBrowser() {
     return this._simplifyPageTab ?

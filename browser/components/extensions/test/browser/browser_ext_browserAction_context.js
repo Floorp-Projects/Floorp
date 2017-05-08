@@ -124,7 +124,9 @@ function* runTests(options) {
   }
 
   let awaitFinish = new Promise(resolve => {
-    extension.onMessage("nextTest", (expecting, testsRemaining) => {
+    extension.onMessage("nextTest", async (expecting, testsRemaining) => {
+      await promiseAnimationFrame();
+
       checkDetails(expecting);
 
       if (testsRemaining) {

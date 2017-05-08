@@ -322,6 +322,21 @@ config = {
             'win64-debug': {
                 'update_channel': 'default',
             },
+            'linux-devedition': {
+                "update_channel": "aurora-dev",
+            },
+            'linux64-devedition': {
+                "update_channel": "aurora-dev",
+            },
+            'macosx64-devedition': {
+                "update_channel": "aurora-dev",
+            },
+            'win32-devedition': {
+                "update_channel": "aurora-dev",
+            },
+            'win64-devedition': {
+                "update_channel": "aurora-dev",
+            },
         },
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },

@@ -290,6 +290,8 @@ private:
 #define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(45)
 // Element is filled by Autofill feature.
 #define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(50)
+// Element is filled with preview data by Autofill feature.
+#define NS_EVENT_STATE_AUTOFILL_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(51)
 
 // Event state that is used for values that need to be parsed but do nothing.
 #define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)
@@ -308,7 +310,8 @@ private:
 // document (e.g. in BindToTree and UnbindFromTree), if that is an
 // appropriate thing to do for your state bit.
 #define MANUALLY_MANAGED_STATES (             \
-  NS_EVENT_STATE_AUTOFILL                     \
+  NS_EVENT_STATE_AUTOFILL |                   \
+  NS_EVENT_STATE_AUTOFILL_PREVIEW             \
 )
 
 // Event states that are managed externally to an element (by the
