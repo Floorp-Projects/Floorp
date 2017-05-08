@@ -35,11 +35,11 @@
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIDOMLocation.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIAppStartup.h"
+#include "mozilla/dom/Location.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -967,7 +967,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                             break;
                         }
                         // Get location.
-                        nsCOMPtr<nsIDOMLocation> location = internalContent->GetLocation();
+                        RefPtr<dom::Location> location = internalContent->Location();
                         if ( !location ) {
                             break;
                         }
