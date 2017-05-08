@@ -277,7 +277,7 @@ public abstract class GeckoApp
                 // always restore about:home only tabs then we'd never open the homepage.
                 // See bug 1261008.
 
-                if (sessionTab.isSelected()) {
+                if (!loadingExternalURL && sessionTab.isSelected()) {
                     // Unfortunately this tab is the selected tab. Let's just try to select
                     // the first tab. If we haven't restored any tabs so far then remember
                     // to select the next tab that gets restored.
