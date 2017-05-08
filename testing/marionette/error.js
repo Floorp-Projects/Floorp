@@ -12,6 +12,7 @@ const ERRORS = new Set([
   "ElementNotInteractableError",
   "InsecureCertificateError",
   "InvalidArgumentError",
+  "InvalidCookieDomainError",
   "InvalidElementStateError",
   "InvalidSelectorError",
   "InvalidSessionIDError",
@@ -314,6 +315,13 @@ class InvalidArgumentError extends WebDriverError {
   constructor (message) {
     super(message);
     this.status = "invalid argument";
+  }
+}
+
+class InvalidCookieDomainError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "invalid cookie domain";
   }
 }
 
