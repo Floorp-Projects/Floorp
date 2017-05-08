@@ -12,6 +12,10 @@
 #include "WAVDecoder.h"
 #include "mozilla/Logging.h"
 
+#ifdef MOZ_AV1
+#include "AOMDecoder.h"
+#endif
+
 namespace mozilla {
 
 bool
@@ -21,6 +25,9 @@ AgnosticDecoderModule::SupportsMimeType(
 {
   bool supports =
     VPXDecoder::IsVPX(aMimeType)
+#ifdef MOZ_AV1
+    || AOMDecoder::IsAV1(aMimeType)
+#endif
     || OpusDataDecoder::IsOpus(aMimeType)
     || VorbisDataDecoder::IsVorbis(aMimeType)
     || WaveDataDecoder::IsWave(aMimeType)
@@ -37,7 +44,13 @@ AgnosticDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 
   if (VPXDecoder::IsVPX(aParams.mConfig.mMimeType)) {
     m = new VPXDecoder(aParams);
-  } else if (TheoraDecoder::IsTheora(aParams.mConfig.mMimeType)) {
+  }
+#ifdef MOZ_AV1
+  else if (AOMDecoder::IsAV1(aParams.mConfig.mMimeType)) {
+    m = new AOMDecoder(aParams);
+  }
+#endif
+  else if (TheoraDecoder::IsTheora(aParams.mConfig.mMimeType)) {
     m = new TheoraDecoder(aParams);
   }
 

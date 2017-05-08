@@ -13,8 +13,8 @@ asserts-if(Android,0-8) HTTP(..) == fallback-to-system-1.html fallback-to-system
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
 fails-if(!stylo) HTTP(..) == name-override-1.html name-override-1-ref.html
-fails-if(stylo) HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
-fails-if(stylo) HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
+HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
+HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
 random-if(winWidget||gtkWidget) HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
@@ -58,7 +58,7 @@ HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
 HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
 HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
 HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
-fails-if(stylo) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
+HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
 
 # unicode-range
 HTTP(..) == unicoderange-1.html unicoderange-1-ref.html

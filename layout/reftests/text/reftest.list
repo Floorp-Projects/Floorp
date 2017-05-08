@@ -59,7 +59,7 @@ HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
 fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 fuzzy-if(Android,231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
-fails-if(stylo) == swash-1.html swash-1-ref.html
+== swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 # Tests for text-align-last
@@ -155,7 +155,7 @@ fails-if(stylo) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
-fails-if(stylo) == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
+== 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
 # Test for bug 575695, 'kern' table support
@@ -173,7 +173,7 @@ fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallbac
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
 fails-if(!cocoaWidget&&!Android&&!stylo) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
-fails-if(stylo) == arabic-marks-1.html arabic-marks-1-ref.html
+== arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
 HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
@@ -209,7 +209,7 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html grap
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
 fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html graphite-03-notref.html
-pref(gfx.font_rendering.graphite.enabled,true) fails-if(stylo) HTTP(..) != graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-02.html graphite-02-ref.html
 # test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well
@@ -225,13 +225,13 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html 
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ur.html
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
-fails-if(stylo) HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
-fails-if(stylo) HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
+HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
+HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
 HTTP(..) == graphite-05-simple.html graphite-05-ref.html
 HTTP(..) == graphite-05-multipass.html graphite-05-ref.html
 HTTP(..) == graphite-05-lang.html graphite-05-ref.html
 HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
-fails-if(stylo) HTTP(..) == graphite-05-feat.html graphite-05-ref.html
+HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping
@@ -304,7 +304,7 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.h
 == auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
 == auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
 == auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
-fails-if(stylo) == auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
+== auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
 == auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
 == auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
 == auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html

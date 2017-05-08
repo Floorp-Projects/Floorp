@@ -62,7 +62,7 @@ nsHtml5Tokenizer::EnsureBufferSpace(int32_t aLength)
 void
 nsHtml5Tokenizer::StartPlainText()
 {
-  stateSave = NS_HTML5TOKENIZER_PLAINTEXT;
+  stateSave = nsHtml5Tokenizer::PLAINTEXT;
 }
 
 void

@@ -214,10 +214,6 @@ var whitelist = new Set([
   // Bug 1348533
   {file: "chrome://mozapps/skin/downloads/buttons.png", platforms: ["macosx"]},
   {file: "chrome://mozapps/skin/downloads/downloadButtons.png", platforms: ["linux", "win"]},
-  // Bug 1348555
-  {file: "chrome://mozapps/skin/extensions/dictionaryGeneric-16.png"},
-  {file: "chrome://mozapps/skin/extensions/search.png", platforms: ["macosx"]},
-  {file: "chrome://mozapps/skin/extensions/themeGeneric-16.png"},
   // Bug 1348556
   {file: "chrome://mozapps/skin/plugins/pluginBlocked.png"},
   // Bug 1348558
@@ -235,8 +231,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/Manifest.jsm"},
   // Bug 1351089
   {file: "resource://gre/modules/PresentationDeviceInfoManager.jsm"},
-  // Bug 1351658
-  {file: "resource://gre/modules/PropertyListUtils.jsm", platforms: ["linux", "win"]},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
   // Bug 1351637
