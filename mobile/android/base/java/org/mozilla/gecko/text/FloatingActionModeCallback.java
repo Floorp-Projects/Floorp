@@ -54,7 +54,7 @@ public class FloatingActionModeCallback extends ActionMode.Callback2 {
 
         final GeckoBundle data = new GeckoBundle(1);
         data.putString("id", action.getId());
-        GeckoApp.getEventDispatcher().dispatch("TextSelection:Action", data);
+        textSelection.geckoApp.getAppEventDispatcher().dispatch("TextSelection:Action", data);
 
         return true;
     }
