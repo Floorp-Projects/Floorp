@@ -54,6 +54,7 @@ use gecko::values::convert_rgba_to_nscolor;
 use gecko::values::GeckoStyleCoordConvertible;
 use gecko::values::round_border_to_device_pixels;
 use logical_geometry::WritingMode;
+use media_queries::Device;
 use properties::animated_properties::TransitionProperty;
 use properties::longhands;
 use properties::{Importance, LonghandId};
@@ -1374,12 +1375,20 @@ fn static_assert() {
         }
     }
 
+    pub fn fixup_none_generic(&mut self, device: &Device) {
+        unsafe {
+            bindings::Gecko_nsStyleFont_FixupNoneGeneric(&mut self.gecko, &*device.pres_context)
+        }
+    }
+
     pub fn set_font_family(&mut self, v: longhands::font_family::computed_value::T) {
         use properties::longhands::font_family::computed_value::FontFamily;
         use gecko_bindings::structs::FontFamilyType;
 
         let list = &mut self.gecko.mFont.fontlist;
         unsafe { Gecko_FontFamilyList_Clear(list); }
+
+        self.gecko.mGenericID = structs::kGenericFont_NONE;
 
         for family in &v.0 {
             match *family {
@@ -1428,6 +1437,7 @@ fn static_assert() {
 
     pub fn copy_font_family_from(&mut self, other: &Self) {
         unsafe { Gecko_CopyFontFamilyFrom(&mut self.gecko.mFont, &other.gecko.mFont); }
+        self.gecko.mGenericID = other.gecko.mGenericID;
     }
 
     // FIXME(bholley): Gecko has two different sizes, one of which (mSize) is the
@@ -4142,7 +4152,7 @@ clip-path
                             let mut array = unsafe { &mut **self.gecko.mContents[i].mContent.mCounters.as_mut() };
                             array[0].set_string(&name);
                             // When we support <custom-ident> values for list-style-type this will need to be updated
-                            array[1].set_ident(&style.to_css_string());
+                            array[1].set_atom_ident(style.to_css_string().into());
                         }
                         ContentItem::Counters(name, sep, style) => {
                             unsafe {
@@ -4153,7 +4163,7 @@ clip-path
                             array[0].set_string(&name);
                             array[1].set_string(&sep);
                             // When we support <custom-ident> values for list-style-type this will need to be updated
-                            array[2].set_ident(&style.to_css_string());
+                            array[2].set_atom_ident(style.to_css_string().into());
                         }
                         ContentItem::Url(url) => {
                             unsafe { bindings::Gecko_SetContentDataImage(&mut self.gecko.mContents[i], url.for_ffi()) }

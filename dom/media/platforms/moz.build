@@ -60,6 +60,14 @@ if CONFIG['MOZ_FFMPEG']:
         'ffmpeg',
     ]
 
+if CONFIG['MOZ_AV1']:
+    EXPORTS += [
+        'agnostic/AOMDecoder.h',
+    ]
+    UNIFIED_SOURCES += [
+        'agnostic/AOMDecoder.cpp',
+    ]
+
 if CONFIG['MOZ_APPLEMEDIA']:
   EXPORTS += [
       'apple/AppleDecoderModule.h',

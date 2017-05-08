@@ -304,9 +304,11 @@ public:
                                    uint32_t aLineNumber,
                                    uint32_t aLineOffset);
 
-  bool ParseCounterStyleName(const nsAString& aBuffer,
-                             nsIURI* aURL,
-                             nsAString& aName);
+  /**
+   * Parses a string as a counter-style name. Returns nullptr if fails.
+   */
+  already_AddRefed<nsIAtom> ParseCounterStyleName(const nsAString& aBuffer,
+                                                  nsIURI* aURL);
 
   bool ParseCounterDescriptor(nsCSSCounterDesc aDescID,
                               const nsAString& aBuffer,

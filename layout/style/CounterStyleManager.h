@@ -159,7 +159,7 @@ public:
     return mCacheTable.Count() == 2;
   }
 
-  CounterStyle* BuildCounterStyle(const nsSubstring& aName);
+  CounterStyle* BuildCounterStyle(nsIAtom* aName);
 
   static CounterStyle* GetBuiltinStyle(int32_t aStyle);
   static CounterStyle* GetNoneStyle()
@@ -183,7 +183,7 @@ public:
 
 private:
   nsPresContext* mPresContext;
-  nsRefPtrHashtable<nsStringHashKey, CounterStyle> mCacheTable;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, CounterStyle> mCacheTable;
 };
 
 } // namespace mozilla

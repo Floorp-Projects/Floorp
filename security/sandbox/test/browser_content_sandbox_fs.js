@@ -318,6 +318,66 @@ function* testFileAccess() {
     }
   }
 
+  // Should we enable this /var test on Linux? Once we are running
+  // with read access restrictions on Linux, this todo will fail and
+  // should then be removed.
+  if (isLinux()) {
+    todo(level >= minHomeReadSandboxLevel(), "enable /var test on Linux?");
+  }
+  if (isMac()) {
+    let varDir = GetDir("/var");
+
+    // Mac sandbox rules use /private/var because /var is a symlink
+    // to /private/var on OS X. Make sure that hasn't changed.
+    varDir.normalize();
+    Assert.ok(varDir.path === '/private/var', '/var resolves to /private/var');
+
+    tests.push({
+      desc:     "/var",
+      ok:       false,
+      browser:  webBrowser,
+      file:     varDir,
+      minLevel: minHomeReadSandboxLevel(),
+    });
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc:     "/var",
+        ok:       true,
+        browser:  fileBrowser,
+        file:     varDir,
+        minLevel: 0,
+      });
+    }
+  }
+
+  if (isMac()) {
+    // Test if we can read from $TMPDIR because we expect it
+    // to be within /private/var. Reading from it should be
+    // prevented in a 'web' process.
+    let macTempDir = GetDirFromEnvVariable('TMPDIR');
+
+    macTempDir.normalize();
+    Assert.ok(macTempDir.path.startsWith('/private/var'),
+      '$TMPDIR is in /private/var');
+
+    tests.push({
+      desc:     `$TMPDIR (${macTempDir.path})`,
+      ok:       false,
+      browser:  webBrowser,
+      file:     macTempDir,
+      minLevel: minHomeReadSandboxLevel(),
+    });
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc:     `$TMPDIR (${macTempDir.path})`,
+        ok:       true,
+        browser:  fileBrowser,
+        file:     macTempDir,
+        minLevel: 0,
+      });
+    }
+  }
+
   let extensionsDir = GetProfileEntry("extensions");
   if (extensionsDir.exists() && extensionsDir.isDirectory()) {
     tests.push({
