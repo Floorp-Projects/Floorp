@@ -142,6 +142,12 @@ this.main = (function() {
       // Not in a page/tab context, ignore
       return;
     }
+    if (!urlEnabled(tab.url)) {
+      senderror.showError({
+        popupMessage: "UNSHOOTABLE_PAGE"
+      });
+      return;
+    }
     catcher.watchPromise(
       toggleSelector(tab)
         .then(() => sendEvent("start-shot", "context-menu")));
@@ -184,29 +190,6 @@ this.main = (function() {
     domain = domain.toLowerCase();
     return badDomains.includes(domain);
   }
-
-  function enableButton(tabId) {
-    browser.browserAction.enable(tabId);
-    // We have to manually toggle the icon state, because disabled toolbar
-    // buttons aren't automatically dimmed for WebExtensions on Windows or
-    // Linux (bug 1204609).
-    setIconActive(false, tabId);
-  }
-
-  function disableButton(tabId) {
-    browser.browserAction.disable(tabId);
-    setIconActive(true, tabId);
-  }
-
-  browser.tabs.onUpdated.addListener(catcher.watchFunction((id, info, tab) => {
-    if (info.url) {
-      if (urlEnabled(info.url)) {
-        enableButton(tab.id);
-      } else if (hasSeenOnboarding) {
-        disableButton(tab.id);
-      }
-    }
-  }, true));
 
   communication.register("sendEvent", (sender, ...args) => {
     catcher.watchPromise(sendEvent(...args));

@@ -1082,6 +1082,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PresentationConnectionAvailableEvent.webidl',
     'PresentationConnectionCloseEvent.webidl',
     'ProgressEvent.webidl',
+    'PromiseRejectionEvent.webidl',
     'RecordErrorEvent.webidl',
     'ScrollViewChangeEvent.webidl',
     'StyleRuleChangeEvent.webidl',

@@ -292,7 +292,6 @@ bool nsContentUtils::sIsUserTimingLoggingEnabled = false;
 bool nsContentUtils::sIsExperimentalAutocompleteEnabled = false;
 bool nsContentUtils::sIsWebComponentsEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
-bool nsContentUtils::sPrivacyResistFingerprinting = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
@@ -631,9 +630,6 @@ nsContentUtils::Init()
   Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
                                "dom.webcomponents.customelements.enabled", false);
 
-  Preferences::AddBoolVarCache(&sPrivacyResistFingerprinting,
-                               "privacy.resistFingerprinting", false);
-
   Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
                               "privacy.window.maxInnerWidth",
                               1000);
@@ -685,6 +681,8 @@ nsContentUtils::Init()
                                "dom.requestIdleCallback.enabled", false);
 
   Element::InitCCCallbacks();
+
+  Unused << nsRFPService::GetOrCreate();
 
   nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
     do_GetService("@mozilla.org/uuid-generator;1", &rv);
@@ -2232,7 +2230,7 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::ShouldResistFingerprinting()
 {
-  return sPrivacyResistFingerprinting;
+  return nsRFPService::IsResistFingerprintingEnabled();
 }
 
 bool
@@ -2242,7 +2240,7 @@ nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell)
     return false;
   }
   bool isChrome = nsContentUtils::IsChromeDoc(aDocShell->GetDocument());
-  return !isChrome && sPrivacyResistFingerprinting;
+  return !isChrome && nsRFPService::IsResistFingerprintingEnabled();
 }
 
 /* static */
@@ -8839,6 +8837,25 @@ nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
     }
   }
   return referrerPolicy;
+}
+
+// static
+bool
+nsContentUtils::PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.promise_rejection_events.enabled", false);
+  }
+
+  using namespace workers;
+
+  // Otherwise, check the pref via the WorkerPrivate
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->PromiseRejectionEventsEnabled();
 }
 
 // static
