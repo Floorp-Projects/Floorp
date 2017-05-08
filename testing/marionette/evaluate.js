@@ -265,7 +265,7 @@ evaluate.toJSON = function (obj, seenEls) {
   }
 
   // HTMLElement
-  else if ("nodeType" in obj && obj.nodeType == 1) {
+  else if ("nodeType" in obj && obj.nodeType == obj.ELEMENT_NODE) {
     let uuid = seenEls.add(obj);
     return element.makeWebElement(uuid);
   }
