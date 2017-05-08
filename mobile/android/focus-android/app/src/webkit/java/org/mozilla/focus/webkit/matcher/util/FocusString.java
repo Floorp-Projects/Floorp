@@ -22,6 +22,10 @@ public abstract class FocusString {
         this.string = string;
         this.offsetStart = offsetStart;
         this.offsetEnd = offsetEnd;
+
+        if (offsetStart > offsetEnd || offsetStart < 0 || offsetEnd < 0) {
+            throw new StringIndexOutOfBoundsException("Cannot create negative-length String");
+        }
     }
 
     public static FocusString create(final String string) {
@@ -61,6 +65,10 @@ public abstract class FocusString {
 
         @Override
         public char charAt(int position) {
+            if (position > length()) {
+                throw new StringIndexOutOfBoundsException();
+            }
+
             return string.charAt(position + offsetStart);
         }
 
@@ -83,6 +91,10 @@ public abstract class FocusString {
 
         @Override
         public char charAt(int position) {
+            if (position > length()) {
+                throw new StringIndexOutOfBoundsException();
+            }
+
             return string.charAt(length() - 1 - position + offsetStart);
         }
 
