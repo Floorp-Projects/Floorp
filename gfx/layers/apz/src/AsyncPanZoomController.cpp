@@ -1427,6 +1427,10 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
       }
 
       UpdateSharedCompositorFrameMetrics();
+
+    } else {
+      // Trigger a repaint request after scrolling.
+      RequestContentRepaint();
     }
 
     // We did a ScrollBy call above even if we didn't do a scale, so we
