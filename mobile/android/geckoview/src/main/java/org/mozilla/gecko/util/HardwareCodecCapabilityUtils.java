@@ -41,8 +41,12 @@ public final class HardwareCodecCapabilityUtils {
   };
   private static final String[] adaptivePlaybackBlacklist =
   {
-    "GT-I9300", // S3 (I9300 / I9300I)
-    "SCH-I535"  // S3
+    "GT-I9300",         // S3 (I9300 / I9300I)
+    "SCH-I535",         // S3
+    "SGH-M919",         // S4
+    "GT-I9505",         // S4
+    "SGH-I337",         // S4
+    "SAMSUNG-SGH-I337"  // S4
   };
 
   @WrapForJNI
@@ -92,11 +96,8 @@ public final class HardwareCodecCapabilityUtils {
   // See Bug1360626 and
   // https://codereview.chromium.org/1869103002 for details.
   private static boolean isAdaptivePlaybackBlacklisted(String aMimeType) {
+    Log.d(LOGTAG, "The device ModelID is " + Build.MODEL);
     if (!aMimeType.equals("video/avc") && !aMimeType.equals("video/avc1")) {
-      return false;
-    }
-
-    if (!Build.VERSION.RELEASE.equals("4.4.2")) {
       return false;
     }
 
