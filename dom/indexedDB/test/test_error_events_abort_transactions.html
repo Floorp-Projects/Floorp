@@ -14,6 +14,7 @@
       SimpleTest.waitForExplicitFinish();
 
       function messageListener(event) {
+        // eslint-disable-next-line no-eval
         eval(event.data);
       }
 

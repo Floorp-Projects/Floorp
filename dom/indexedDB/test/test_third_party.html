@@ -70,6 +70,7 @@
     }
 
     function messageListener(event) {
+      // eslint-disable-next-line no-eval
       let message = eval(event.data);
 
       is(message.source, "iframe", "Good source");
