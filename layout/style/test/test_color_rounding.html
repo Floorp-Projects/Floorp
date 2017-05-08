@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test rounding of CSS color valus</title>
+  <link rel="author" title="Manish Goregaokar" href="mailto:mgoregaokar@mozilla.com">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+</head>
+<body>
+<div id="colordiv"></div>
+<script>
+
+function do_test(color, computed, reason) {
+    test(function() {
+        var element = document.getElementById('colordiv');
+        // assume this works; this way we clear any previous state
+        element.style.color = "red";
+        element.style.color = color;
+        assert_equals(getComputedStyle(element).color, computed);
+    }, `${reason}: ${color}`);
+}
+
+do_test("rgb(10%, 10%, 10%, 10%)", "rgba(26, 26, 26, 0.1)", "rgb percent-to-int should round");
+do_test("rgb(10%, 10%, 10%)", "rgb(26, 26, 26)", "rgb percent-to-int should round");
+do_test("hsl(0, 0%, 90%)", "rgb(230, 230, 230)", "hsl-to rgb should round");
+do_test("hsla(0, 0%, 90%, 10%)", "rgba(230, 230, 230, 0.1)", "hsl-to rgb should round");
+do_test("rgb(100%, 100%, 0%)", "rgb(255, 255, 0)", "handling of extrema");
+do_test("rgba(100%, 100%, 100%, 100%)", "rgb(255, 255, 255)", "handling of extrema");
+do_test("rgba(100%, 100%, 100%, 0%)", "rgba(255, 255, 255, 0)", "handling of extrema");
+do_test("rgb(255.5, 260, 500, 50)", "rgb(255, 255, 255)", "out of bounds should be handled");
+do_test("rgb(254.5, 254.55, 254.45)", "rgb(255, 255, 254)", "number values should be rounded");
+do_test("rgb(99.8%, 99.9%, 99.7%)", "rgb(254, 255, 254)", "percentage values should be rounded");
+
+</script>
+</body>
+</html>
