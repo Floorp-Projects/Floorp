@@ -11,8 +11,8 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/Matrix.h"
-#include "mozilla/layers/UpdateImageHelper.h"
 #include "UnitTransforms.h"
 
 namespace mozilla {
@@ -130,29 +130,9 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
 }
 
 bool
-WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
-                                           const StackingContextHelper& aSc,
-                                           nsTArray<layers::WebRenderParentCommand>& aParentCommands)
+WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
+                                               const StackingContextHelper& aSc)
 {
-  if (!mImageContainer) {
-    mImageContainer = LayerManager::CreateImageContainer();
-  }
-
-  if (!mImageClient) {
-    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
-                                                  WrBridge(),
-                                                  TextureFlags::DEFAULT);
-    if (!mImageClient) {
-      return false;
-    }
-    mImageClient->Connect();
-  }
-
-  if (mExternalImageId.isNothing()) {
-    MOZ_ASSERT(mImageClient);
-    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
-  }
-
   const int32_t appUnitsPerDevPixel = mItem->Frame()->PresContext()->AppUnitsPerDevPixel();
 
   bool snap;
@@ -163,40 +143,38 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
   LayerRect imageRect;
   imageRect.SizeTo(LayerSize(imageSize));
 
-  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize.ToUnknownSize());
+  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+  RefPtr<gfx::DrawTarget> dummyDt =
+    gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, imageSize.ToUnknownSize(), gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt);
   LayerPoint offset = ViewAs<LayerPixel>(
       LayoutDevicePoint::FromAppUnits(mItem->ToReferenceFrame(), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
   {
-    RefPtr<gfx::DrawTarget> target = helper.GetDrawTarget();
-    if (!target) {
-      return false;
-    }
-
-    target->ClearRect(imageRect.ToUnknownRect());
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset.ToUnknownPoint());
+    dt->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
     MOZ_ASSERT(context);
 
     nsRenderingContext ctx(context);
     mItem->Paint(mBuilder, &ctx);
   }
 
-  if (!helper.UpdateImage()) {
-    return false;
-  }
+  wr::ByteBuffer bytes;
+  bytes.Allocate(recorder->RecordingSize());
+  DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
+  MOZ_ASSERT(ok);
 
   WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
   WrImageKey key = GetImageKey();
-  aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                mExternalImageId.value(),
-                                key));
+  WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
+  WrManager()->AddImageKeyForDiscard(key);
+
   aBuilder.PushImage(dest,
                      clipRegion,
-                     WrImageRendering::Auto,
+                     wr::ImageRendering::Auto,
                      key);
-
   return true;
 }
 
