@@ -7,7 +7,6 @@
 with Files('*'):
     BUG_COMPONENT = ('Firefox', 'Downloads Panel')
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 JAR_MANIFESTS += ['jar.mn']
