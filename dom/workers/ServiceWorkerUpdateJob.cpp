@@ -318,14 +318,9 @@ ServiceWorkerUpdateJob::Update()
 
   RefPtr<CompareCallback> callback = new CompareCallback(this);
 
-  nsresult rv =
-    serviceWorkerScriptCache::Compare(mRegistration, mPrincipal, cacheName,
-                                      NS_ConvertUTF8toUTF16(mScriptSpec),
-                                      callback, mLoadGroup);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailUpdateJob(rv);
-    return;
-  }
+  serviceWorkerScriptCache::Compare(mRegistration, mPrincipal, cacheName,
+                                    NS_ConvertUTF8toUTF16(mScriptSpec),
+                                    callback, mLoadGroup);
 }
 
 nsLoadFlags

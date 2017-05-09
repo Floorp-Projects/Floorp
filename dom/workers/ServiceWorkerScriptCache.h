@@ -53,7 +53,7 @@ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
 
-nsresult
+void
 Compare(ServiceWorkerRegistrationInfo* aRegistration,
         nsIPrincipal* aPrincipal, const nsAString& aCacheName,
         const nsAString& aURL, CompareCallback* aCallback, nsILoadGroup* aLoadGroup);
