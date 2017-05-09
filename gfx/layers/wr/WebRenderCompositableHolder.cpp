@@ -15,7 +15,9 @@ using namespace gfx;
 
 namespace layers {
 
-WebRenderCompositableHolder::WebRenderCompositableHolder()
+WebRenderCompositableHolder::WebRenderCompositableHolder(uint32_t aIdNamespace)
+ : mIdNamespace(aIdNamespace)
+ , mResourceId(0)
 {
   MOZ_COUNT_CTOR(WebRenderCompositableHolder);
 }
