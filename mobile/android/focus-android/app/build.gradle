@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'jacoco-android'
+apply plugin: 'pmd'
 
 
 android {
@@ -313,6 +314,10 @@ task stringsCleanUpdate()  {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+// Static Analysis: findbugs and pmd
+// -------------------------------------------------------------------------------------------------
+
 findbugs {
     ignoreFailures = false
 
@@ -339,6 +344,27 @@ task findbugs(type: FindBugs, dependsOn: "assemble", group: 'verification') {
     }
 }
 
+pmd {
+    toolVersion = '5.5.2'
+    ignoreFailures = true
+    ruleSetFiles = files("${project.rootDir}/quality/pmd-rules.xml")
+    ruleSets = []
+}
+
+task pmd(type: Pmd, group: 'verification') {
+    source 'src'
+    include '**/*.java'
+    exclude('**/gen/**', '**/debug/**')
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+        html {
+            destination "$projectDir.absolutePath/build/reports/pmd/pmd.html"
+        }
+    }
+}
+
 afterEvaluate {
-    check.dependsOn 'findbugs'
+    check.dependsOn 'findbugs', 'pmd'
 }
