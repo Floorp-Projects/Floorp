@@ -2886,19 +2886,6 @@ public:
    */
   static CSSPoint GetCumulativeApzCallbackTransform(nsIFrame* aFrame);
 
-  /**
-   * Compute a rect to pre-render in cases where we want to render more of
-   * something than what is visible (usually to support async transformation).
-   * @param aDirtyRect the area that's visible
-   * @param aOverflow the total size of the thing we're rendering
-   * @param aPrerenderSize how large of an area we're willing to render
-   * @return A rectangle that includes |aDirtyRect|, is clamped to |aOverflow|,
-   *         and is no larger than |aPrerenderSize|.
-   */
-  static nsRect ComputePartialPrerenderArea(const nsRect& aDirtyRect,
-                                            const nsRect& aOverflow,
-                                            const nsSize& aPrerenderSize);
-
   /*
    * Returns whether the given document supports being rendered with a
    * Servo-backed style system.  This checks whether Stylo is enabled

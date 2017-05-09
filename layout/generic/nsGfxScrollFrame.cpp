@@ -3093,33 +3093,13 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
       appendToTopFlags |= APPEND_SCROLLBAR_CONTAINER;
     }
 
-    // The display port doesn't necessarily include the scrollbars.
-    bool thumbGetsLayer = (scrollTargetId != FrameMetrics::NULL_SCROLL_ID);
-    bool isRcdRsf = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-    nsRect dirty = aDirtyRect;
-    if (isRcdRsf || thumbGetsLayer) {
-      nsRect overflow = scrollParts[i]->GetVisualOverflowRectRelativeToParent();
-      if (isRcdRsf) {
-        // For the root content document's root scroll frame (RCD-RSF), include
-        // all of the scrollbars. We only do this for the RCD-RSF, which is
-        // zoomable, and where the scrollbar sizes are bounded by the widget.
-        dirty = overflow;
-      } else {
-        // For subframes, we still try to prerender parts of the scrollbar that
-        // are not currently visible, because they might be brought into view
-        // by async scrolling, but we bound the area to render by the size of
-        // the root reference frame (because subframe scrollbars can be
-        // arbitrary large).
-        nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
-        gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(mOuter);
-        if (scale.width != 0 && scale.height != 0) {
-          refSize.width /= scale.width;
-          refSize.height /= scale.height;
-        }
-        dirty = nsLayoutUtils::ComputePartialPrerenderArea(dirty, overflow, refSize);
-      }
-    }
-
+    // The display port doesn't necessarily include the scrollbars, so just
+    // include all of the scrollbars if we are in a RCD-RSF. We only do
+    // this for the root scrollframe of the root content document, which is
+    // zoomable, and where the scrollbar sizes are bounded by the widget.
+    nsRect dirty = mIsRoot && mOuter->PresContext()->IsRootContentDocument()
+                   ? scrollParts[i]->GetVisualOverflowRectRelativeToParent()
+                   : aDirtyRect;
     nsDisplayListBuilder::AutoBuildingDisplayList
       buildingForChild(aBuilder, scrollParts[i],
                        dirty + mOuter->GetOffsetTo(scrollParts[i]), true);
