@@ -10,7 +10,7 @@ interface nsIInputStream;
  * This interface provides crytographic hashing algorithms.
  */
 
-[scriptable, uuid(1e5b7c43-4688-45ce-92e1-77ed931e3bbe)]
+[builtinclass, scriptable, uuid(1e5b7c43-4688-45ce-92e1-77ed931e3bbe)]
 interface nsICryptoHash : nsISupports
 {
     /**

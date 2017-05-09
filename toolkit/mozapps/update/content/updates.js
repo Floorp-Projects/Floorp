@@ -329,6 +329,7 @@ var gUpdates = {
     for (var i = 0; i < pages.length; ++i) {
       var page = pages[i];
       if (page.localName == "wizardpage")
+        // eslint-disable-next-line no-eval
         this._pages[page.pageid] = eval(page.getAttribute("object"));
     }
 

@@ -35,6 +35,15 @@ impl RegexSet {
         self.items.push(format!("^{}$", string.as_ref()));
         self.set = None;
     }
+    
+    /// Returns slice of String from its field 'items'
+    pub fn get_items(&self) -> &[String] {
+        &self.items[..]
+    }
+    /// Returns reference of its field 'set'
+    pub fn get_set(&self) -> Option<&RxSet> {
+        self.set.as_ref()
+    }
 
     /// Construct a RegexSet from the set of entries we've accumulated.
     ///

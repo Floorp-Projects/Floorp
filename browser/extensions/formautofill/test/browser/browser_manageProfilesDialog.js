@@ -1,16 +1,16 @@
 "use strict";
 
 const TEST_SELECTORS = {
-  selProfiles: "#profiles",
+  selAddresses: "#profiles",
   btnRemove: "#remove",
   btnAdd: "#add",
   btnEdit: "#edit",
 };
 
-function waitForProfiles() {
+function waitForAddresses() {
   return new Promise(resolve => {
-    Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
-      Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
+    Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
       // Wait for the next tick for elements to get rendered.
       SimpleTest.executeSoon(resolve.bind(null, result.data));
     });
@@ -18,21 +18,21 @@ function waitForProfiles() {
 }
 
 registerCleanupFunction(function* () {
-  let profiles = yield getProfiles();
-  if (profiles.length) {
-    yield removeProfiles(profiles.map(profile => profile.guid));
+  let addresses = yield getAddresses();
+  if (addresses.length) {
+    yield removeAddresses(addresses.map(address => address.guid));
   }
 });
 
 add_task(function* test_manageProfilesInitialState() {
   yield BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_PROFILES_DIALOG_URL}, function* (browser) {
     yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
-      let selProfiles = content.document.querySelector(args.selProfiles);
+      let selAddresses = content.document.querySelector(args.selAddresses);
       let btnRemove = content.document.querySelector(args.btnRemove);
       let btnEdit = content.document.querySelector(args.btnEdit);
       let btnAdd = content.document.querySelector(args.btnAdd);
 
-      is(selProfiles.length, 0, "No profile");
+      is(selAddresses.length, 0, "No address");
       is(btnAdd.disabled, false, "Add button enabled");
       is(btnRemove.disabled, true, "Remove button disabled");
       is(btnEdit.disabled, true, "Edit button disabled");
@@ -41,50 +41,50 @@ add_task(function* test_manageProfilesInitialState() {
 });
 
 add_task(function* test_removingSingleAndMultipleProfiles() {
-  yield saveProfile(TEST_PROFILE_1);
-  yield saveProfile(TEST_PROFILE_2);
-  yield saveProfile(TEST_PROFILE_3);
+  yield saveAddress(TEST_ADDRESS_1);
+  yield saveAddress(TEST_ADDRESS_2);
+  yield saveAddress(TEST_ADDRESS_3);
 
   let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
-  yield waitForProfiles();
+  yield waitForAddresses();
 
-  let selProfiles = win.document.querySelector(TEST_SELECTORS.selProfiles);
+  let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
   let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
 
-  is(selProfiles.length, 3, "Three profiles");
+  is(selAddresses.length, 3, "Three addresses");
 
-  EventUtils.synthesizeMouseAtCenter(selProfiles.children[0], {}, win);
+  EventUtils.synthesizeMouseAtCenter(selAddresses.children[0], {}, win);
   is(btnRemove.disabled, false, "Remove button enabled");
   is(btnEdit.disabled, false, "Edit button enabled");
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
-  yield waitForProfiles();
-  is(selProfiles.length, 2, "Two profiles left");
+  yield waitForAddresses();
+  is(selAddresses.length, 2, "Two addresses left");
 
-  EventUtils.synthesizeMouseAtCenter(selProfiles.children[0], {}, win);
-  EventUtils.synthesizeMouseAtCenter(selProfiles.children[1],
+  EventUtils.synthesizeMouseAtCenter(selAddresses.children[0], {}, win);
+  EventUtils.synthesizeMouseAtCenter(selAddresses.children[1],
                                      {shiftKey: true}, win);
   is(btnEdit.disabled, true, "Edit button disabled when multi-select");
 
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
-  yield waitForProfiles();
-  is(selProfiles.length, 0, "All profiles are removed");
+  yield waitForAddresses();
+  is(selAddresses.length, 0, "All addresses are removed");
 
   win.close();
 });
 
 add_task(function* test_profilesDialogWatchesStorageChanges() {
   let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
-  yield waitForProfiles();
+  yield waitForAddresses();
 
-  let selProfiles = win.document.querySelector(TEST_SELECTORS.selProfiles);
+  let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
 
-  yield saveProfile(TEST_PROFILE_1);
-  let profiles = yield waitForProfiles();
-  is(selProfiles.length, 1, "One profile is shown");
+  yield saveAddress(TEST_ADDRESS_1);
+  let addresses = yield waitForAddresses();
+  is(selAddresses.length, 1, "One address is shown");
 
-  yield removeProfiles([profiles[0].guid]);
-  yield waitForProfiles();
-  is(selProfiles.length, 0, "Profile is removed");
+  yield removeAddresses([addresses[0].guid]);
+  yield waitForAddresses();
+  is(selAddresses.length, 0, "Address is removed");
   win.close();
 });

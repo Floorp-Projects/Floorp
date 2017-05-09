@@ -28,11 +28,6 @@
       <stack id="downloads-indicator-icon">
         <vbox id="downloads-indicator-progress-icon"/>
       </stack>
-      <vbox id="downloads-indicator-progress-area" pack="center">
-        <description id="downloads-indicator-counter"/>
-        <progressmeter id="downloads-indicator-progress" class="plain"
-                       min="0" max="100"/>
-      </vbox>
     </stack>
   </toolbarbutton>
 </overlay>

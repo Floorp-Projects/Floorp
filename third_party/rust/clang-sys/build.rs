@@ -12,7 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Finds and links to the required `libclang` libraries.
+//! Finds the required `libclang` libraries and links to them.
+//!
+//! # Environment Variables
+//!
+//! This build script can make use of several environment variables to help it find the required
+//! static or dynamic libraries.
+//!
+//! * LLVM_CONFIG_PATH - provides a path to an `llvm-config` executable
+//! * LIBCLANG_PATH - provides a path to a directory containing a `libclang` shared library
+//! * LIBCLANG_STATIC_PATH - provides a path to a directory containing LLVM and Clang static libraries
+
+#![allow(unused_attributes)]
 
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
@@ -21,17 +32,12 @@
 extern crate glob;
 
 use std::env;
-use std::fs;
+use std::fs::{self, File};
+use std::io::{Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command};
 
 use glob::{MatchOptions};
-
-// Environment variables:
-//
-// * LLVM_CONFIG_PATH - provides a path to an `llvm-config` executable
-// * LIBCLANG_PATH - provides a path to a directory containing a `libclang` shared library
-// * LIBCLANG_STATIC_PATH - provides a path to a directory containing LLVM and Clang static libraries
 
 /// Returns a path to one of the supplied files if such a file can be found in the supplied directory.
 fn contains<D: AsRef<Path>>(directory: D, files: &[String]) -> Option<PathBuf> {
@@ -46,8 +52,18 @@ fn run(command: &str, arguments: &[&str]) -> Option<String> {
 }
 
 /// Runs `llvm-config`, returning the output if the command was successfully executed.
-fn run_llvm_config(arguments: &[&str]) -> Option<String> {
-    run(&env::var("LLVM_CONFIG_PATH").unwrap_or("llvm-config".into()), arguments)
+fn run_llvm_config(arguments: &[&str]) -> Result<String, String> {
+    match run(&env::var("LLVM_CONFIG_PATH").unwrap_or_else(|_| "llvm-config".into()), arguments) {
+        Some(output) => Ok(output),
+        None => {
+            let message = format!(
+                "couldn't execute `llvm-config {}`, set the LLVM_CONFIG_PATH environment variable \
+                to a path to a valid `llvm-config` executable",
+                arguments.join(" "),
+            );
+            Err(message)
+        },
+    }
 }
 
 /// Backup search directory globs for FreeBSD and Linux.
@@ -76,13 +92,58 @@ const SEARCH_WINDOWS: &'static [&'static str] = &[
     "C:\\MSYS*\\MinGW*\\lib",
 ];
 
+/// Indicates the type of library being searched for.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum Library {
+    Dynamic,
+    Static,
+}
+
+impl Library {
+    /// Checks whether the supplied file is a valid library for the architecture.
+    fn check(&self, file: &PathBuf) -> Result<(), String> {
+        if cfg!(any(target_os="freebsd", target_os="linux")) {
+            if *self == Library::Static {
+                return Ok(());
+            }
+            let mut file = try!(File::open(file).map_err(|e| e.to_string()));
+            let mut elf = [0; 5];
+            try!(file.read_exact(&mut elf).map_err(|e| e.to_string()));
+            if elf[..4] != [127, 69, 76, 70] {
+                return Err("invalid ELF header".into());
+            }
+            if cfg!(target_pointer_width="32") && elf[4] != 1 {
+                return Err("invalid ELF class (64-bit)".into());
+            }
+            if cfg!(target_pointer_width="64") && elf[4] != 2 {
+                return Err("invalid ELF class (32-bit)".into());
+            }
+            Ok(())
+        } else {
+            Ok(())
+        }
+    }
+}
+
 /// Searches for a library, returning the directory it can be found in if the search was successful.
-fn find(files: &[String], env: &str) -> Result<PathBuf, String> {
+fn find(library: Library, files: &[String], env: &str) -> Result<PathBuf, String> {
+    let mut skipped = vec![];
+
+    /// Attempts to return the supplied file.
+    macro_rules! try_file {
+        ($file:expr) => ({
+            match library.check(&$file) {
+                Ok(_) => return Ok($file),
+                Err(message) => skipped.push(format!("({}: {})", $file.display(), message)),
+            }
+        });
+    }
+
     /// Searches the supplied directory and, on Windows, any relevant sibling directories.
     macro_rules! search_directory {
         ($directory:ident) => {
             if let Some(file) = contains(&$directory, files) {
-                return Ok(file);
+                try_file!(file);
             }
 
             // On Windows, `libclang.dll` is usually found in the LLVM `bin` directory while
@@ -92,7 +153,7 @@ fn find(files: &[String], env: &str) -> Result<PathBuf, String> {
             if cfg!(target_os="windows") && $directory.ends_with("lib") {
                 let sibling = $directory.parent().unwrap().join("bin");
                 if let Some(file) = contains(&sibling, files) {
-                    return Ok(file);
+                    try_file!(file);
                 }
             }
         }
@@ -105,15 +166,15 @@ fn find(files: &[String], env: &str) -> Result<PathBuf, String> {
 
     // Search the `bin` and `lib` subdirectories in the directory returned by
     // `llvm-config --prefix` if `llvm-config` is available.
-    if let Some(output) = run_llvm_config(&["--prefix"]) {
+    if let Ok(output) = run_llvm_config(&["--prefix"]) {
         let directory = Path::new(output.lines().next().unwrap()).to_path_buf();
         let bin = directory.join("bin");
         if let Some(file) = contains(&bin, files) {
-            return Ok(file);
+            try_file!(file);
         }
         let lib = directory.join("lib");
         if let Some(file) = contains(&lib, files) {
-            return Ok(file);
+            try_file!(file);
         }
     }
 
@@ -139,10 +200,11 @@ fn find(files: &[String], env: &str) -> Result<PathBuf, String> {
     }
 
     let message = format!(
-        "couldn't find any of {}, set the {} environment variable to a path where one of these \
-         files can be found",
+        "couldn't find any of [{}], set the {} environment variable to a path where one of these \
+         files can be found (skipped: [{}])",
         files.iter().map(|f| format!("'{}'", f)).collect::<Vec<_>>().join(", "),
         env,
+        skipped.join(", "),
     );
     Err(message)
 }
@@ -150,14 +212,19 @@ fn find(files: &[String], env: &str) -> Result<PathBuf, String> {
 /// Searches for a `libclang` shared library, returning the path to such a shared library if the
 /// search was successful.
 pub fn find_shared_library() -> Result<PathBuf, String> {
-    let mut files = vec![];
+    let mut files = vec![format!("{}clang{}", env::consts::DLL_PREFIX, env::consts::DLL_SUFFIX)];
+    if cfg!(target_os="linux") {
+        // Some Linux distributions don't create a `libclang.so` symlink.
+        //
+        // FIXME: We should improve our detection and selection of versioned libraries.
+        files.push("libclang.so.1".into());
+    }
     if cfg!(target_os="windows") {
         // The official LLVM build uses `libclang.dll` on Windows instead of `clang.dll`. However,
         // unofficial builds such as MinGW use `clang.dll`.
         files.push("libclang.dll".into());
     }
-    files.push(format!("{}clang{}", env::consts::DLL_PREFIX, env::consts::DLL_SUFFIX));
-    find(&files, "LIBCLANG_PATH")
+    find(Library::Dynamic, &files, "LIBCLANG_PATH")
 }
 
 /// Returns the name of an LLVM or Clang library from a path to such a library.
@@ -167,10 +234,7 @@ fn get_library_name(path: &Path) -> Option<String> {
 
 /// Returns the LLVM libraries required to link to `libclang` statically.
 fn get_llvm_libraries() -> Vec<String> {
-    run_llvm_config(&["--libs"]).expect(
-        "couldn't execute `llvm-config --libs`, set the LLVM_CONFIG_PATH environment variable to a \
-         path to an `llvm-config` executable"
-    ).split_whitespace().filter_map(|p| {
+    run_llvm_config(&["--libs"]).unwrap().split_whitespace().filter_map(|p| {
         // Depending on the version of `llvm-config` in use, listed libraries may be in one of two
         // forms, a full path to the library or simply prefixed with `-l`.
         if p.starts_with("-l") {
@@ -211,16 +275,19 @@ fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
 /// Find and link to `libclang` statically.
 #[cfg_attr(feature="runtime", allow(dead_code))]
 fn link_static() {
-    let file = find(&["libclang.a".into()], "LIBCLANG_STATIC_PATH").unwrap();
+    let file = find(Library::Static, &["libclang.a".into()], "LIBCLANG_STATIC_PATH").unwrap();
     let directory = file.parent().unwrap();
     print!("cargo:rustc-flags=");
 
-    // Specify required LLVM and Clang static libraries.
+    // Specify required Clang static libraries.
     print!("-L {} ", directory.display());
-    for library in get_llvm_libraries() {
+    for library in get_clang_libraries(directory) {
         print!("-l static={} ", library);
     }
-    for library in get_clang_libraries(&directory) {
+
+    // Specify required LLVM static libraries.
+    print!("-L {} ", run_llvm_config(&["--libdir"]).unwrap().trim_right());
+    for library in get_llvm_libraries() {
         print!("-l static={} ", library);
     }
 

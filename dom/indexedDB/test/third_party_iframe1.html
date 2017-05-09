@@ -8,6 +8,7 @@
 
   <script type="text/javascript">
     function messageListener(event) {
+      // eslint-disable-next-line no-eval
       let message = eval(event.data);
 
       if (message.source == "parent") {

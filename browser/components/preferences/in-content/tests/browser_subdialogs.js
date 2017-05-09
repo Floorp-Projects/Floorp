@@ -24,6 +24,7 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
     yield ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
     let result;
     if (args.domcontentloadedFnStr) {
+      // eslint-disable-next-line no-eval
       result = eval(args.domcontentloadedFnStr);
     }
 

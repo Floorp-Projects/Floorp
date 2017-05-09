@@ -12,8 +12,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-                                  "resource://gre/modules/Deprecated.jsm");
 
 function isAutocompleteDisabled(aField) {
     if (aField.autocomplete !== "") {

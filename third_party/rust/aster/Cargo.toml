@@ -1,6 +1,6 @@
 [package]
 name = "aster"
-version = "0.38.0"
+version = "0.41.0"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "A libsyntax ast builder"
@@ -12,9 +12,9 @@ with-syntex = ["syntex_syntax"]
 unstable-testing = ["clippy", "compiletest_rs"]
 
 [dependencies]
-syntex_syntax = { version = "^0.54.0", optional = true }
+syntex_syntax = { version = "0.58", optional = true }
 clippy = { version = "0.*", optional = true }
-compiletest_rs = { version = "^0.2.0", optional = true }
+compiletest_rs = { version = "0.2", optional = true }
 
 [[test]]
 name = "test"

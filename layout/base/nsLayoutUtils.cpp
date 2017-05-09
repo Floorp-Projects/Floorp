@@ -9230,7 +9230,7 @@ nsLayoutUtils::ComputePartialPrerenderArea(const nsRect& aDirtyRect,
 nsLayoutUtils::SupportsServoStyleBackend(nsIDocument* aDocument)
 {
   return StyloEnabled() &&
-         aDocument->IsHTMLOrXHTML() &&
+         (aDocument->IsHTMLOrXHTML() || aDocument->IsSVGDocument()) &&
          static_cast<nsDocument*>(aDocument)->IsContentDocument();
 }
 

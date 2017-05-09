@@ -120,8 +120,6 @@ to mochitest command.
 * Some issue with font-feature-settings:
   * test_inherit_computation.html `value for 'font'` [8]
 * Unimplemented prefixed properties:
-  * -moz-transform: need different parsing rules servo/servo#16003
-    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [70]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391

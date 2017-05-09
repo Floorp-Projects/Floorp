@@ -909,7 +909,7 @@ impl<F> ItemTraitBuilder<F>
         self.builder.build_item_kind(self.id, ast::ItemKind::Trait(
             self.unsafety,
             self.generics,
-            P::from_vec(self.bounds),
+            self.bounds,
             self.items,
         ))
     }
@@ -1123,7 +1123,7 @@ impl<F> ItemTraitTypeBuilder<F>
 
     pub fn build_option_ty(self, ty: Option<P<ast::Ty>>) -> F::Result {
         let bounds = P::from_vec(self.bounds);
-        let node = ast::TraitItemKind::Type(bounds, ty);
+        let node = ast::TraitItemKind::Type(bounds.into_vec(), ty);
         self.builder.build_item(node)
     }
 

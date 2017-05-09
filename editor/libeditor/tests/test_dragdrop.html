@@ -48,7 +48,7 @@ function doTest()
 
   // -------- Test dragging text from an <input>
   input.setSelectionRange(1, 4);
-  result = synthesizeDragStart(input, [[{type: "text/plain", data: "rag"}]], window, 25, 6);
+  result = synthesizeDragStart(input, [[{type: "text/plain", data: "rag"}]], window, 25, 8);
   is(result, null, "Test dragging input");
 
   // -------- Test dragging text from a <textarea>
