@@ -116,6 +116,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
         }
 
         // Allow more specific assertions to be tested in `extraTest`.
+        // eslint-disable-next-line no-eval
         extraTest = eval(extraTest);
         extraTest(lastMaskNode, lastOutlineNode, rects);
 

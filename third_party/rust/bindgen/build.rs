@@ -10,6 +10,7 @@ mod codegen {
 
         quasi_codegen::expand(&src, &dst).unwrap();
         println!("cargo:rerun-if-changed=src/codegen/mod.rs");
+        println!("cargo:rerun-if-changed=src/codegen/error.rs");
         println!("cargo:rerun-if-changed=src/codegen/helpers.rs");
         println!("cargo:rerun-if-changed=src/codegen/struct_layout.rs");
     }
@@ -27,13 +28,19 @@ mod testgen {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
         let mut dst = File::create(Path::new(&out_dir).join("tests.rs")).unwrap();
 
-        println!("cargo:rerun-if-changed=tests/headers");
         let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
         let headers_dir = manifest_dir.join("tests").join("headers");
 
-        let entries = fs::read_dir(headers_dir)
-            .expect("Couldn't read headers dir")
-            .map(|result| result.expect("Couldn't read header file"));
+        let headers = match fs::read_dir(headers_dir) {
+            Ok(dir) => dir,
+            // We may not have headers directory after packaging.
+            Err(..) => return,
+        };
+
+        let entries =
+            headers.map(|result| result.expect("Couldn't read header file"));
+
+        println!("cargo:rerun-if-changed=tests/headers");
 
         for entry in entries {
             match entry.path().extension().and_then(OsStr::to_str) {

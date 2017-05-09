@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Form autofill test: simple form profile autofill
+Form autofill test: simple form address autofill
 
 <script>
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
@@ -63,23 +63,23 @@ function checkAutoCompleteInputFilled(element, expectedvalue) {
   });
 }
 
-function checkFormFilled(profile) {
+function checkFormFilled(address) {
   let promises = [];
-  for (let prop in profile) {
+  for (let prop in address) {
     let element = document.getElementById(prop);
     if (document.activeElement == element) {
-      promises.push(checkAutoCompleteInputFilled(element, profile[prop]));
+      promises.push(checkAutoCompleteInputFilled(element, address[prop]));
     } else {
-      promises.push(checkInputFilled(element, profile[prop]));
+      promises.push(checkInputFilled(element, address[prop]));
     }
   }
   doKey("return");
   return Promise.all(promises);
 }
 
-function* setupProfileStorage() {
-  yield addProfile(MOCK_STORAGE[0]);
-  yield addProfile(MOCK_STORAGE[1]);
+function* setupAddressStorage() {
+  yield addAddress(MOCK_STORAGE[0]);
+  yield addAddress(MOCK_STORAGE[1]);
 }
 
 function* setupFormHistory() {
@@ -99,33 +99,33 @@ add_task(function* history_only_menu_checking() {
   checkMenuEntries(["1-234-567-890"]);
 });
 
-// Form with both history and profile storage.
+// Form with both history and address storage.
 add_task(function* check_menu_when_both_existed() {
-  yield setupProfileStorage();
+  yield setupAddressStorage();
 
   setInput("#organization", "");
   doKey("down");
   yield expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(profile =>
-    JSON.stringify({primary: profile.organization, secondary: profile["street-address"]})
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ));
 
   setInput("#street-address", "");
   doKey("down");
   yield expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(profile =>
-    JSON.stringify({primary: profile["street-address"], secondary: profile.organization})
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address["street-address"], secondary: address.organization})
   ));
 
   setInput("#tel", "");
   doKey("down");
   yield expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(profile =>
-    JSON.stringify({primary: profile.tel, secondary: profile["street-address"]})
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.tel, secondary: address["street-address"]})
   ));
 });
 
-// Display history search result if no matched data in profiles.
+// Display history search result if no matched data in addresses.
 add_task(function* check_fallback_for_mismatched_field() {
   setInput("#country", "");
   doKey("down");
@@ -133,19 +133,19 @@ add_task(function* check_fallback_for_mismatched_field() {
   checkMenuEntries(["US"]);
 });
 
-// Autofill the profile from dropdown menu.
+// Autofill the address from dropdown menu.
 add_task(function* check_fields_after_form_autofill() {
   setInput("#organization", "Moz");
   doKey("down");
   yield expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(profile =>
-    JSON.stringify({primary: profile.organization, secondary: profile["street-address"]})
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ).slice(1));
   doKey("down");
   yield checkFormFilled(MOCK_STORAGE[1]);
 });
 
-// Fallback to history search after autofill profile.
+// Fallback to history search after autofill address.
 add_task(function* check_fallback_after_form_autofill() {
   setInput("#tel", "");
   doKey("down");

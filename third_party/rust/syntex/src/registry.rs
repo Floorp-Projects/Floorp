@@ -221,7 +221,7 @@ impl Registry {
 
         try!(pprust::print_crate(
             sess.codemap(),
-            &sess.span_diagnostic,
+            &sess,
             &krate,
             src_name,
             &mut rdr,

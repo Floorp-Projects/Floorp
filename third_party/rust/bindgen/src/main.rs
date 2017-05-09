@@ -1,19 +1,25 @@
 extern crate bindgen;
+#[cfg(feature="logging")]
 extern crate env_logger;
 #[macro_use]
+#[cfg(feature="logging")]
 extern crate log;
 extern crate clang_sys;
 extern crate clap;
-extern crate rustc_serialize;
 
 use bindgen::clang_version;
 use std::env;
 use std::panic;
 
+#[macro_use]
+#[cfg(not(feature="logging"))]
+mod log_stubs;
+
 mod options;
 use options::builder_from_flags;
 
 pub fn main() {
+    #[cfg(feature="logging")]
     log::set_logger(|max_log_level| {
             use env_logger::Logger;
             let env_logger = Logger::new();

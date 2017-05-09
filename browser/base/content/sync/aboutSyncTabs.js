@@ -17,19 +17,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 
-if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
-  XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
-                                    "resource://gre/modules/CloudSync.jsm");
-}
-
 var RemoteTabViewer = {
   _tabsList: null,
 
   init() {
     Services.obs.addObserver(this, "weave:service:login:finish");
     Services.obs.addObserver(this, "weave:engine:sync:finish");
-
-    Services.obs.addObserver(this, "cloudsync:tabs:update");
 
     this._tabsList = document.getElementById("tabsList");
 
@@ -39,8 +32,6 @@ var RemoteTabViewer = {
   uninit() {
     Services.obs.removeObserver(this, "weave:service:login:finish");
     Services.obs.removeObserver(this, "weave:engine:sync:finish");
-
-    Services.obs.removeObserver(this, "cloudsync:tabs:update");
   },
 
   createItem(attrs) {
@@ -178,18 +169,9 @@ var RemoteTabViewer = {
       //        or tell the appropriate condition. (bug 583344)
     }
 
-    let complete = () => {
-      this._waitingForBuildList = false;
-      if (this._buildListRequested) {
-        CommonUtils.nextTick(this.buildList, this);
-      }
-    }
-
-    if (CloudSync && CloudSync.ready && CloudSync().tabsReady && CloudSync().tabs.hasRemoteTabs()) {
-      this._generateCloudSyncTabList()
-          .then(complete, complete);
-    } else {
-      complete();
+    this._waitingForBuildList = false;
+    if (this._buildListRequested) {
+      CommonUtils.nextTick(this.buildList, this);
     }
   },
 
@@ -244,36 +226,6 @@ var RemoteTabViewer = {
         list.appendChild(tab);
       }, this);
     }
-  },
-
-  _generateCloudSyncTabList() {
-    let updateTabList = remoteTabs => {
-      let list = this._tabsList;
-
-      for (let client of remoteTabs) {
-        let clientAttrs = {
-          type: "client",
-          clientName: client.name,
-        };
-
-        let clientEnt = this.createItem(clientAttrs);
-        list.appendChild(clientEnt);
-
-        for (let tab of client.tabs) {
-          let tabAttrs = {
-            type: "tab",
-            title: tab.title,
-            url: tab.url,
-            icon: this.getIcon(tab.icon),
-          };
-          let tabEnt = this.createItem(tabAttrs);
-          list.appendChild(tabEnt);
-        }
-      }
-    };
-
-    return CloudSync().tabs.getRemoteTabs()
-                           .then(updateTabList, Promise.reject.bind(Promise));
   },
 
   adjustContextMenu(event) {
@@ -334,9 +286,6 @@ var RemoteTabViewer = {
           // forcing a new sync of the tabs engine.
           this.buildList(false);
         }
-        break;
-      case "cloudsync:tabs:update":
-        this.buildList(false);
         break;
     }
   },

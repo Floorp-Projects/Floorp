@@ -57,7 +57,6 @@ var whitelist = new Set([
   {file: "chrome://global/locale/printjoboptions.dtd",
    platforms: ["macosx", "win"]},
 
-  // services/cloudsync/CloudSyncLocal.jsm
   {file: "chrome://weave/locale/errors.properties"},
 
   // devtools/client/inspector/bin/dev-server.js

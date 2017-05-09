@@ -129,11 +129,6 @@ devtools/client/webconsole/webconsole-connection-proxy.js
 devtools/client/webconsole/webconsole.js
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
-devtools/server/actors/webconsole.js
-devtools/server/actors/object.js
-devtools/server/actors/script.js
-devtools/server/actors/styleeditor.js
-devtools/server/actors/stylesheets.js
 devtools/server/tests/browser/storage-*.html
 !devtools/server/tests/browser/storage-unsecured-iframe.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html

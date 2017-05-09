@@ -1,7 +1,7 @@
 extern crate winapi;
 extern crate kernel32;
 
-use util::cstr_cow_from_bytes;
+use util::{ensure_compatible_types, cstr_cow_from_bytes};
 
 use std::ffi::{OsStr, OsString};
 use std::{fmt, io, marker, mem, ptr};
@@ -68,6 +68,7 @@ impl Library {
     /// Pointer to a value of arbitrary type is returned. Using a value with wrong type is
     /// undefined.
     pub unsafe fn get<T>(&self, symbol: &[u8]) -> ::Result<Symbol<T>> {
+        ensure_compatible_types::<T, winapi::FARPROC>();
         let symbol = try!(cstr_cow_from_bytes(symbol));
         with_get_last_error(|| {
             let symbol = kernel32::GetProcAddress(self.0, symbol.as_ptr());
@@ -91,6 +92,7 @@ impl Library {
     /// Pointer to a value of arbitrary type is returned. Using a value with wrong type is
     /// undefined.
     pub unsafe fn get_ordinal<T>(&self, ordinal: winapi::WORD) -> ::Result<Symbol<T>> {
+        ensure_compatible_types::<T, winapi::FARPROC>();
         with_get_last_error(|| {
             let ordinal = ordinal as usize as *mut _;
             let symbol = kernel32::GetProcAddress(self.0, ordinal);

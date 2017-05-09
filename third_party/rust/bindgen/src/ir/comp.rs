@@ -6,7 +6,7 @@ use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use super::item::Item;
 use super::layout::Layout;
 use super::traversal::{EdgeKind, Trace, Tracer};
-use super::ty::{TemplateDeclaration, Type};
+use super::template::TemplateParameters;
 use clang;
 use parse::{ClangItemParser, ParseError};
 use std::cell::Cell;
@@ -26,6 +26,10 @@ pub enum MethodKind {
     /// A constructor. We represent it as method for convenience, to avoid code
     /// duplication.
     Constructor,
+    /// A destructor.
+    Destructor,
+    /// A virtual destructor.
+    VirtualDestructor,
     /// A static method.
     Static,
     /// A normal method.
@@ -61,6 +65,12 @@ impl Method {
         self.kind
     }
 
+    /// Is this a destructor method?
+    pub fn is_destructor(&self) -> bool {
+        self.kind == MethodKind::Destructor ||
+        self.kind == MethodKind::VirtualDestructor
+    }
+
     /// Is this a constructor?
     pub fn is_constructor(&self) -> bool {
         self.kind == MethodKind::Constructor
@@ -68,7 +78,8 @@ impl Method {
 
     /// Is this a virtual method?
     pub fn is_virtual(&self) -> bool {
-        self.kind == MethodKind::Virtual
+        self.kind == MethodKind::Virtual ||
+        self.kind == MethodKind::VirtualDestructor
     }
 
     /// Is this a static method?
@@ -238,10 +249,11 @@ pub struct CompInfo {
     /// The members of this struct or union.
     fields: Vec<Field>,
 
-    /// The template parameters of this class. These are non-concrete, and
-    /// should always be a Type(TypeKind::Named(name)), but still they need to
-    /// be registered with an unique type id in the context.
-    template_args: Vec<ItemId>,
+    /// The abstract template parameters of this class. These are NOT concrete
+    /// template arguments, and should always be a
+    /// Type(TypeKind::Named(name)). For concrete template arguments, see the
+    /// TypeKind::TemplateInstantiation.
+    template_params: Vec<ItemId>,
 
     /// The method declarations inside this class, if in C++ mode.
     methods: Vec<Method>,
@@ -249,11 +261,12 @@ pub struct CompInfo {
     /// The different constructors this struct or class contains.
     constructors: Vec<ItemId>,
 
+    /// The destructor of this type. The bool represents whether this destructor
+    /// is virtual.
+    destructor: Option<(bool, ItemId)>,
+
     /// Vector of classes this one inherits from.
     base_members: Vec<Base>,
-
-    /// The parent reference template if any.
-    ref_template: Option<ItemId>,
 
     /// The inner types that were declared inside this class, in something like:
     ///
@@ -320,11 +333,11 @@ impl CompInfo {
         CompInfo {
             kind: kind,
             fields: vec![],
-            template_args: vec![],
+            template_params: vec![],
             methods: vec![],
             constructors: vec![],
+            destructor: None,
             base_members: vec![],
-            ref_template: None,
             inner_types: vec![],
             inner_vars: vec![],
             has_vtable: false,
@@ -345,9 +358,7 @@ impl CompInfo {
         !self.has_vtable(ctx) && self.fields.is_empty() &&
         self.base_members.iter().all(|base| {
             ctx.resolve_type(base.ty).canonical_type(ctx).is_unsized(ctx)
-        }) &&
-        self.ref_template
-            .map_or(true, |template| ctx.resolve_type(template).is_unsized(ctx))
+        })
     }
 
     /// Does this compound type have a destructor?
@@ -364,16 +375,6 @@ impl CompInfo {
                              match self.kind {
             CompKind::Union => false,
             CompKind::Struct => {
-                // NB: We can't rely on a type with type parameters
-                // not having destructor.
-                //
-                // This is unfortunate, but...
-                self.ref_template.as_ref().map_or(false, |t| {
-                    ctx.resolve_type(*t).has_destructor(ctx)
-                }) ||
-                self.template_args.iter().any(|t| {
-                    ctx.resolve_type(*t).has_destructor(ctx)
-                }) ||
                 self.base_members.iter().any(|base| {
                     ctx.resolve_type(base.ty).has_destructor(ctx)
                 }) ||
@@ -389,16 +390,6 @@ impl CompInfo {
         has_destructor
     }
 
-    /// Is this type a template specialization?
-    pub fn is_template_specialization(&self) -> bool {
-        self.ref_template.is_some()
-    }
-
-    /// Get the template declaration this specialization is specializing.
-    pub fn specialized_template(&self) -> Option<ItemId> {
-        self.ref_template
-    }
-
     /// Compute the layout of this type.
     ///
     /// This is called as a fallback under some circumstances where LLVM doesn't
@@ -411,7 +402,7 @@ impl CompInfo {
         use std::cmp;
         // We can't do better than clang here, sorry.
         if self.kind == CompKind::Struct {
-            return None
+            return None;
         }
 
         let mut max_size = 0;
@@ -434,12 +425,6 @@ impl CompInfo {
         &self.fields
     }
 
-    /// Get this type's set of free template arguments. Empty if this is not a
-    /// template.
-    pub fn template_args(&self) -> &[ItemId] {
-        &self.template_args
-    }
-
     /// Does this type have any template parameters that aren't types
     /// (e.g. int)?
     pub fn has_non_type_template_params(&self) -> bool {
@@ -452,9 +437,6 @@ impl CompInfo {
         self.base_members().iter().any(|base| {
             ctx.resolve_type(base.ty)
                 .has_vtable(ctx)
-        }) ||
-        self.ref_template.map_or(false, |template| {
-            ctx.resolve_type(template).has_vtable(ctx)
         })
     }
 
@@ -466,6 +448,11 @@ impl CompInfo {
     /// Get this type's set of constructors.
     pub fn constructors(&self) -> &[ItemId] {
         &self.constructors
+    }
+
+    /// Get this type's destructor.
+    pub fn destructor(&self) -> Option<(bool, ItemId)> {
+        self.destructor
     }
 
     /// What kind of compound type is this?
@@ -485,10 +472,9 @@ impl CompInfo {
                    ctx: &mut BindgenContext)
                    -> Result<Self, ParseError> {
         use clang_sys::*;
-        // Sigh... For class templates we want the location, for
-        // specialisations, we want the declaration...  So just try both.
-        //
-        // TODO: Yeah, this code reads really bad.
+        assert!(ty.template_args().is_none(),
+                "We handle template instantiations elsewhere");
+
         let mut cursor = ty.declaration();
         let mut kind = Self::kind_from_cursor(&cursor);
         if kind.is_err() {
@@ -510,44 +496,23 @@ impl CompInfo {
                 CXCursor_ClassDecl => !cur.is_definition(),
                 _ => false,
             });
-        ci.template_args = match ty.template_args() {
-            // In forward declarations and not specializations, etc, they are in
-            // the ast, we'll meet them in CXCursor_TemplateTypeParameter
-            None => vec![],
-            Some(arg_types) => {
-                let num_arg_types = arg_types.len();
-                let mut specialization = true;
-
-                let args = arg_types.filter(|t| t.kind() != CXType_Invalid)
-                    .filter_map(|t| if t.spelling()
-                        .starts_with("type-parameter") {
-                        specialization = false;
-                        None
-                    } else {
-                        Some(Item::from_ty_or_ref(t, None, None, ctx))
-                    })
-                    .collect::<Vec<_>>();
-
-                if specialization && args.len() != num_arg_types {
-                    ci.has_non_type_template_params = true;
-                    warn!("warning: Template parameter is not a type");
-                }
-
-                if specialization { args } else { vec![] }
-            }
-        };
-
-        ci.ref_template = cursor.specialized()
-            .and_then(|c| Item::parse(c, None, ctx).ok());
 
         let mut maybe_anonymous_struct_field = None;
         cursor.visit(|cur| {
             if cur.kind() != CXCursor_FieldDecl {
-                if let Some((ty, _, offset)) =
+                if let Some((ty, clang_ty, offset)) =
                     maybe_anonymous_struct_field.take() {
-                    let field =
-                        Field::new(None, ty, None, None, None, false, offset);
-                    ci.fields.push(field);
+                    if cur.kind() == CXCursor_TypedefDecl &&
+                       cur.typedef_type().unwrap().canonical_type() == clang_ty {
+                        // Typedefs of anonymous structs appear later in the ast
+                        // than the struct itself, that would otherwise be an
+                        // anonymous field. Detect that case here, and do
+                        // nothing.
+                    } else {
+                        let field =
+                            Field::new(None, ty, None, None, None, false, offset);
+                        ci.fields.push(field);
+                    }
                 }
             }
 
@@ -576,7 +541,7 @@ impl CompInfo {
 
                     let bit_width = cur.bit_width();
                     let field_type = Item::from_ty_or_ref(cur.cur_type(),
-                                                          Some(cur),
+                                                          cur,
                                                           Some(potential_id),
                                                           ctx);
 
@@ -616,17 +581,27 @@ impl CompInfo {
                 }
                 CXCursor_EnumDecl |
                 CXCursor_TypeAliasDecl |
+                CXCursor_TypeAliasTemplateDecl |
                 CXCursor_TypedefDecl |
                 CXCursor_StructDecl |
                 CXCursor_UnionDecl |
                 CXCursor_ClassTemplate |
                 CXCursor_ClassDecl => {
                     // We can find non-semantic children here, clang uses a
-                    // StructDecl to note incomplete structs that hasn't been
-                    // forward-declared before, see:
+                    // StructDecl to note incomplete structs that haven't been
+                    // forward-declared before, see [1].
                     //
-                    // https://github.com/servo/rust-bindgen/issues/482
-                    if cur.semantic_parent() != cursor {
+                    // Also, clang seems to scope struct definitions inside
+                    // unions, and other named struct definitions inside other
+                    // structs to the whole translation unit.
+                    //
+                    // Let's just assume that if the cursor we've found is a
+                    // definition, it's a valid inner type.
+                    //
+                    // [1]: https://github.com/servo/rust-bindgen/issues/482
+                    let is_inner_struct = cur.semantic_parent() == cursor ||
+                                          cur.is_definition();
+                    if !is_inner_struct {
                         return CXChildVisit_Continue;
                     }
 
@@ -649,17 +624,10 @@ impl CompInfo {
                     ci.packed = true;
                 }
                 CXCursor_TemplateTypeParameter => {
-                    // Yes! You can arrive here with an empty template parameter
-                    // name! Awesome, isn't it?
-                    //
-                    // see tests/headers/empty_template_param_name.hpp
-                    if cur.spelling().is_empty() {
-                        return CXChildVisit_Continue;
-                    }
-
-                    let param =
-                        Item::named_type(cur.spelling(), potential_id, ctx);
-                    ci.template_args.push(param);
+                    let param = Item::named_type(None, cur, ctx)
+                        .expect("Item::named_type should't fail when pointing \
+                                 at a TemplateTypeParameter");
+                    ci.template_params.push(param);
                 }
                 CXCursor_CXXBaseSpecifier => {
                     let is_virtual_base = cur.is_virtual_base();
@@ -671,10 +639,8 @@ impl CompInfo {
                         BaseKind::Normal
                     };
 
-                    let type_id = Item::from_ty_or_ref(cur.cur_type(),
-                                                       Some(cur),
-                                                       None,
-                                                       ctx);
+                    let type_id =
+                        Item::from_ty_or_ref(cur.cur_type(), cur, None, ctx);
                     ci.base_members.push(Base {
                         ty: type_id,
                         kind: kind,
@@ -700,7 +666,7 @@ impl CompInfo {
                     // Methods of template functions not only use to be inlined,
                     // but also instantiated, and we wouldn't be able to call
                     // them, so just bail out.
-                    if !ci.template_args.is_empty() {
+                    if !ci.template_params.is_empty() {
                         return CXChildVisit_Continue;
                     }
 
@@ -718,8 +684,9 @@ impl CompInfo {
                         CXCursor_Constructor => {
                             ci.constructors.push(signature);
                         }
-                        // TODO(emilio): Bind the destructor?
-                        CXCursor_Destructor => {}
+                        CXCursor_Destructor => {
+                            ci.destructor = Some((is_virtual, signature));
+                        }
                         CXCursor_CXXMethod => {
                             let is_const = cur.method_is_const();
                             let method_kind = if is_static {
@@ -767,7 +734,7 @@ impl CompInfo {
                 _ => {
                     warn!("unhandled comp member `{}` (kind {:?}) in `{}` ({})",
                           cur.spelling(),
-                          cur.kind(),
+                          clang::kind_to_str(cur.kind()),
                           cursor.spelling(),
                           cur.location());
                 }
@@ -776,7 +743,8 @@ impl CompInfo {
         });
 
         if let Some((ty, _, offset)) = maybe_anonymous_struct_field {
-            let field = Field::new(None, ty, None, None, None, false, offset);
+            let field =
+                Field::new(None, ty, None, None, None, false, offset);
             ci.fields.push(field);
         }
 
@@ -802,25 +770,6 @@ impl CompInfo {
                 warn!("Unknown kind for comp type: {:?}", cursor);
                 return Err(ParseError::Continue);
             }
-        })
-    }
-
-    /// Do any of the types that participate in this type's "signature" use the
-    /// named type `ty`?
-    ///
-    /// See also documentation for `ir::Item::signature_contains_named_type`.
-    pub fn signature_contains_named_type(&self,
-                                         ctx: &BindgenContext,
-                                         ty: &Type)
-                                         -> bool {
-        // We don't generate these, so rather don't make the codegen step to
-        // think we got it covered.
-        if self.has_non_type_template_params() {
-            return false;
-        }
-        self.template_args.iter().any(|arg| {
-            ctx.resolve_type(*arg)
-                .signature_contains_named_type(ctx, ty)
         })
     }
 
@@ -870,12 +819,14 @@ impl CompInfo {
     }
 }
 
-impl TemplateDeclaration for CompInfo {
-    fn template_params(&self, _ctx: &BindgenContext) -> Option<Vec<ItemId>> {
-        if self.template_args.is_empty() {
+impl TemplateParameters for CompInfo {
+    fn self_template_params(&self,
+                            _ctx: &BindgenContext)
+                            -> Option<Vec<ItemId>> {
+        if self.template_params.is_empty() {
             None
         } else {
-            Some(self.template_args.clone())
+            Some(self.template_params.clone())
         }
     }
 }
@@ -914,13 +865,9 @@ impl CanDeriveDebug for CompInfo {
             self.base_members
                 .iter()
                 .all(|base| base.ty.can_derive_debug(ctx, ())) &&
-            self.template_args
-                .iter()
-                .all(|id| id.can_derive_debug(ctx, ())) &&
             self.fields
                 .iter()
-                .all(|f| f.can_derive_debug(ctx, ())) &&
-            self.ref_template.map_or(true, |id| id.can_derive_debug(ctx, ()))
+                .all(|f| f.can_derive_debug(ctx, ()))
         };
 
         self.detect_derive_debug_cycle.set(false);
@@ -950,7 +897,7 @@ impl CanDeriveDefault for CompInfo {
 
             return layout.unwrap_or_else(Layout::zero)
                 .opaque()
-                .can_derive_debug(ctx, ());
+                .can_derive_default(ctx, ());
         }
 
         self.detect_derive_default_cycle.set(true);
@@ -960,14 +907,9 @@ impl CanDeriveDefault for CompInfo {
                                  self.base_members
             .iter()
             .all(|base| base.ty.can_derive_default(ctx, ())) &&
-                                 self.template_args
-            .iter()
-            .all(|id| id.can_derive_default(ctx, ())) &&
                                  self.fields
             .iter()
-            .all(|f| f.can_derive_default(ctx, ())) &&
-                                 self.ref_template
-            .map_or(true, |id| id.can_derive_default(ctx, ()));
+            .all(|f| f.can_derive_default(ctx, ()));
 
         self.detect_derive_default_cycle.set(false);
 
@@ -1002,17 +944,12 @@ impl<'a> CanDeriveCopy<'a> for CompInfo {
             }
 
             // https://github.com/rust-lang/rust/issues/36640
-            if !self.template_args.is_empty() || self.ref_template.is_some() ||
-               !item.applicable_template_args(ctx).is_empty() {
+            if !self.template_params.is_empty() ||
+               item.used_template_params(ctx).is_some() {
                 return false;
             }
         }
 
-        // With template args, use a safe subset of the types,
-        // since copyability depends on the types itself.
-        self.ref_template
-            .as_ref()
-            .map_or(true, |t| t.can_derive_copy(ctx, ())) &&
         self.base_members
             .iter()
             .all(|base| base.ty.can_derive_copy(ctx, ())) &&
@@ -1033,49 +970,40 @@ impl Trace for CompInfo {
     fn trace<T>(&self, context: &BindgenContext, tracer: &mut T, item: &Item)
         where T: Tracer,
     {
-        // TODO: We should properly distinguish template instantiations from
-        // template declarations at the type level. Why are some template
-        // instantiations represented here instead of as
-        // TypeKind::TemplateInstantiation?
-        if let Some(template) = self.specialized_template() {
-            // This is an instantiation of a template declaration with concrete
-            // template type arguments.
-            tracer.visit(template);
-            let args = item.applicable_template_args(context);
-            for a in args {
-                tracer.visit(a);
-            }
-        } else {
-            let params = item.applicable_template_args(context);
-            // This is a template declaration with abstract template type
-            // parameters.
-            for p in params {
-                tracer.visit_kind(p, EdgeKind::TemplateParameterDefinition);
-            }
-        }
-
-        for base in self.base_members() {
-            tracer.visit(base.ty);
-        }
-
-        for field in self.fields() {
-            tracer.visit(field.ty());
+        let params = item.all_template_params(context).unwrap_or(vec![]);
+        for p in params {
+            tracer.visit_kind(p, EdgeKind::TemplateParameterDefinition);
         }
 
         for &ty in self.inner_types() {
-            tracer.visit(ty);
+            tracer.visit_kind(ty, EdgeKind::InnerType);
+        }
+
+        // We unconditionally trace `CompInfo`'s template parameters and inner
+        // types for the the usage analysis. However, we don't want to continue
+        // tracing anything else, if this type is marked opaque.
+        if item.is_opaque(context) {
+            return;
+        }
+
+        for base in self.base_members() {
+            tracer.visit_kind(base.ty, EdgeKind::BaseMember);
+        }
+
+        for field in self.fields() {
+            tracer.visit_kind(field.ty(), EdgeKind::Field);
         }
 
         for &var in self.inner_vars() {
-            tracer.visit(var);
+            tracer.visit_kind(var, EdgeKind::InnerVar);
         }
 
         for method in self.methods() {
-            tracer.visit(method.signature);
+            tracer.visit_kind(method.signature, EdgeKind::Method);
         }
 
         for &ctor in self.constructors() {
-            tracer.visit(ctor);
+            tracer.visit_kind(ctor, EdgeKind::Constructor);
         }
     }
 }

@@ -1,7 +1,7 @@
 environment:
   matrix:
-    - LLVM_VERSION: 3.9
-      CLANG_VERSION: clang_3_9
+    - LLVM_VERSION: 4.0.0
+      CLANG_VERSION: clang_4_0
 
 install:
   - .\ci\install.bat

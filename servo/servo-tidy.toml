@@ -20,6 +20,7 @@ rand = [
   "parking_lot_core",
   "phf_generator",
   "rayon",
+  "rayon-core",
   "servo_rand",
   "servo-websocket",
   "tempdir",
@@ -31,7 +32,10 @@ num = []
 
 [ignore]
 # Ignored packages with duplicated versions
-packages = ["bitflags"]
+packages = [
+  "bitflags",
+  "libloading", # Conflicting version is only used at build-time by geckolib.
+]
 # Files that are ignored for all tidy and lint checks.
 files = [
   # Helper macro where actually a pseudo-element per line makes sense.

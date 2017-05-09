@@ -1110,6 +1110,7 @@ impl<I, F> Invoke<P<ast::Expr>> for ExprStructFieldBuilder<I, F>
             expr: expr,
             span: self.builder.span,
             is_shorthand: false,
+            attrs: Vec::new().into(),
         };
         self.builder.fields.push(field);
         self.builder
@@ -1904,7 +1905,7 @@ impl<F: Invoke<P<ast::Expr>>> ExprSliceBuilder<F>
     }
 
     pub fn build(self) -> F::Result {
-        self.builder.build_expr_kind(ast::ExprKind::Vec(self.exprs))
+        self.builder.build_expr_kind(ast::ExprKind::Array(self.exprs))
     }
 }
 
