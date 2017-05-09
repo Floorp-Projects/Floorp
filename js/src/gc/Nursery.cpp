@@ -304,11 +304,11 @@ js::Nursery::allocate(size_t size)
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
     MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_, position() >= currentStartPosition_);
-    MOZ_ASSERT(position() % gc::CellSize == 0);
-    MOZ_ASSERT(size % gc::CellSize == 0);
+    MOZ_ASSERT(position() % CellAlignBytes == 0);
+    MOZ_ASSERT(size % CellAlignBytes == 0);
 
 #ifdef JS_GC_ZEAL
-    static const size_t CanarySize = (sizeof(Nursery::Canary) + CellSize - 1) & ~CellMask;
+    static const size_t CanarySize = (sizeof(Nursery::Canary) + CellAlignBytes - 1) & ~CellAlignMask;
     if (runtime()->gc.hasZealMode(ZealMode::CheckNursery))
         size += CanarySize;
 #endif
@@ -1017,8 +1017,8 @@ js::Nursery::updateNumChunksLocked(unsigned newCount,
 void
 js::Nursery::queueSweepAction(SweepThunk thunk, void* data)
 {
-    static_assert(sizeof(SweepAction) % CellSize == 0,
-                  "SweepAction size must be a multiple of cell size");
+    static_assert(sizeof(SweepAction) % CellAlignBytes == 0,
+                  "SweepAction size must be a multiple of cell alignment");
 
     MOZ_ASSERT(isEnabled());
 

@@ -237,7 +237,7 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     // We use a fake cell pointer for this: it might not point to the beginning
     // of a cell, but will point into the right arena and will have the right
     // alignment.
-    Cell* cell = reinterpret_cast<Cell*>(uintptr_t(listp) & ~CellMask);
+    Cell* cell = reinterpret_cast<Cell*>(uintptr_t(listp) & ~CellAlignMask);
     AllocKind kind = TenuredCell::fromPointer(cell)->getAllocKind();
     MOZ_ASSERT_IF(listpPointsIntoShape, IsShapeAllocKind(kind));
     MOZ_ASSERT_IF(!listpPointsIntoShape, IsObjectAllocKind(kind));
