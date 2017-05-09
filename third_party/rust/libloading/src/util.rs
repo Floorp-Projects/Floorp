@@ -47,3 +47,15 @@ pub fn cstr_cow_from_bytes<'a>(slice: &'a [u8]) -> Result<Cow<'a, CStr>, NullErr
         Some(_) => Cow::Owned(try!(CString::new(slice))),
     })
 }
+
+#[inline]
+pub fn ensure_compatible_types<T, E>() {
+    #[cold]
+    #[inline(never)]
+    fn dopanic() {
+        panic!("value of requested type cannot be dynamically loaded");
+    }
+    if ::std::mem::size_of::<T>() != ::std::mem::size_of::<E>() {
+        dopanic()
+    }
+}

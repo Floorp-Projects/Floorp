@@ -12,7 +12,7 @@ WINDOWS = {
 
 OSX = {
     'package_filename': 'clang.tar.bz2',
-    'package_sha512sum': 'cfde9a0f7f59823200f94422b4adb9a2fb5d4d07f240bbd1142c792434f6a1cbb4096d25c9853d77008fc40db0d827daa7003e78016f51241f621d6040ccc635',
+    'package_sha512sum': '0e1a556b65d6398fa812b9ceb5ce5e2dec3eda77d4a032a818182b34fc8ce602412f42388bb1fda6bea265d35c1dde3847a730b264fec01cd7e3dcfd39941660',
 }
 
 LINUX = {

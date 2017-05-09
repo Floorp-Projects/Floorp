@@ -51,7 +51,7 @@ impl<F> TyParamBuilder<F>
             callback: callback,
             span: ty_param.span,
             id: ty_param.ident,
-            bounds: ty_param.bounds.into_vec(),
+            bounds: ty_param.bounds,
             default: ty_param.default,
         }
     }
@@ -104,7 +104,7 @@ impl<F> TyParamBuilder<F>
             attrs: ast::ThinVec::new(),
             ident: self.id,
             id: ast::DUMMY_NODE_ID,
-            bounds: P::from_vec(self.bounds),
+            bounds: self.bounds,
             default: self.default,
             span: self.span,
         })

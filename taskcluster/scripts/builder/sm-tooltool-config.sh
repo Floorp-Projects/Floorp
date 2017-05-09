@@ -47,4 +47,4 @@ BROWSER_PLATFORM=$PLATFORM_OS$BITS
 : ${TOOLTOOL_CHECKOUT:=$WORK}
 export TOOLTOOL_CHECKOUT
 
-(cd $TOOLTOOL_CHECKOUT && python ${SRCDIR}/python/mozbuild/mozbuild/action/tooltool.py --url $TOOLTOOL_SERVER -m $SRCDIR/$TOOLTOOL_MANIFEST fetch ${TOOLTOOL_CACHE:+ -c $TOOLTOOL_CACHE})
+(cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain -v --tooltool-url $TOOLTOOL_SERVER --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST ${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE})

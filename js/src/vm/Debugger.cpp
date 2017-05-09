@@ -6039,7 +6039,12 @@ class FlowGraphSummary {
             if (FlowsIntoNext(prevOp))
                 addEdge(prevLineno, prevColumn, r.frontOffset());
 
-            if (BytecodeIsJumpTarget(op)) {
+            // If we visit the branch target before we visit the
+            // branch op itself, just reuse the previous location.
+            // This is reasonable for the time being because this
+            // situation can currently only arise from loop heads,
+            // where this assumption holds.
+            if (BytecodeIsJumpTarget(op) && !entries_[r.frontOffset()].hasNoEdges()) {
                 lineno = entries_[r.frontOffset()].lineno();
                 column = entries_[r.frontOffset()].column();
             }

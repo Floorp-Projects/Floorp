@@ -73,7 +73,7 @@ public:
     bool MFBT_API print(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
 
     /* The Vprintf-like interface.  */
-    bool MFBT_API vprint(const char* format, va_list);
+    bool MFBT_API vprint(const char* format, va_list) MOZ_FORMAT_PRINTF(2, 0);
 
 protected:
     MFBT_API PrintfTarget();
@@ -140,7 +140,7 @@ class MOZ_STACK_CLASS SprintfState final : private mozilla::PrintfTarget, privat
         this->free_(mBase);
     }
 
-    bool vprint(const char* format, va_list ap_list) {
+    bool vprint(const char* format, va_list ap_list) MOZ_FORMAT_PRINTF(2, 0) {
         // The "" here has a single \0 character, which is what we're
         // trying to append.
         return mozilla::PrintfTarget::vprint(format, ap_list) && append("", 1);
@@ -234,6 +234,7 @@ SmprintfPolicyPointer<AllocPolicy> SmprintfAppend(SmprintfPolicyPointer<AllocPol
 ** va_list forms of the above.
 */
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+MOZ_FORMAT_PRINTF(1, 0)
 SmprintfPolicyPointer<AllocPolicy> Vsmprintf(const char* fmt, va_list ap)
 {
     SprintfState<AllocPolicy> ss(nullptr);
@@ -243,6 +244,7 @@ SmprintfPolicyPointer<AllocPolicy> Vsmprintf(const char* fmt, va_list ap)
 }
 
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+MOZ_FORMAT_PRINTF(2, 0)
 SmprintfPolicyPointer<AllocPolicy> VsmprintfAppend(SmprintfPolicyPointer<AllocPolicy>&& last,
                                                    const char* fmt, va_list ap)
 {

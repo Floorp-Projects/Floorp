@@ -2,7 +2,8 @@
 
 use super::context::BindgenContext;
 use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
-use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
+use super::ty::{RUST_DERIVE_IN_ARRAY_LIMIT, Type, TypeKind};
+use clang;
 use std::{cmp, mem};
 
 /// A type that represents the struct layout of a type.
@@ -20,7 +21,8 @@ pub struct Layout {
 fn test_layout_for_size() {
     let ptr_size = mem::size_of::<*mut ()>();
     assert_eq!(Layout::for_size(ptr_size), Layout::new(ptr_size, ptr_size));
-    assert_eq!(Layout::for_size(3 * ptr_size), Layout::new(3 * ptr_size, ptr_size));
+    assert_eq!(Layout::for_size(3 * ptr_size),
+               Layout::new(3 * ptr_size, ptr_size));
 }
 
 impl Layout {
@@ -38,7 +40,8 @@ impl Layout {
     /// alignment possible.
     pub fn for_size(size: usize) -> Self {
         let mut next_align = 2;
-        while size % next_align == 0 && next_align <= 2 * mem::size_of::<*mut ()>() {
+        while size % next_align == 0 &&
+              next_align <= mem::size_of::<*mut ()>() {
             next_align *= 2;
         }
         Layout {
@@ -65,9 +68,17 @@ impl Layout {
 }
 
 /// When we are treating a type as opaque, it is just a blob with a `Layout`.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Opaque(pub Layout);
 
 impl Opaque {
+    /// Construct a new opaque type from the given clang type.
+    pub fn from_clang_ty(ty: &clang::Type) -> Type {
+        let layout = Layout::new(ty.size(), ty.align());
+        let ty_kind = TypeKind::Opaque;
+        Type::new(None, Some(layout), ty_kind, false)
+    }
+
     /// Return the known rust type we should use to create a correctly-aligned
     /// field with this layout.
     pub fn known_rust_type_for_array(&self) -> Option<&'static str> {

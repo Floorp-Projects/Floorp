@@ -1,6 +1,6 @@
 [package]
 name = "libloading"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Simonas Kazlauskas <libloading@kazlauskas.me>"]
 build = "build.rs"
 description = "A safer binding to platform’s dynamic library loading utilities"
@@ -15,6 +15,3 @@ lazy_static = "0.2"
 [target.'cfg(windows)'.dependencies]
 winapi = "0.2"
 kernel32-sys = "0.2"
-
-[build-dependencies]
-target_build_utils = "0.3"

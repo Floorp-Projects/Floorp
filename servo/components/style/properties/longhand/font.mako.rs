@@ -695,7 +695,7 @@ ${helpers.single_keyword_system("font-variant-caps",
             #[inline]
             fn to_computed_value(&self, cx: &Context) -> computed_value::T {
                 use gecko_bindings::bindings::Gecko_GetBaseSize;
-                use gecko_bindings::structs;
+                use gecko_bindings::structs::{self, nsIAtom};
                 use values::specified::length::au_to_int_px;
                 // Data from nsRuleNode.cpp in Gecko
                 // Mapping from base size and HTML size to pixels
@@ -721,7 +721,7 @@ ${helpers.single_keyword_system("font-variant-caps",
                 // XXXManishearth handle quirks mode
 
                 let ref gecko_font = cx.style().get_font().gecko();
-                let base_size = unsafe { Atom::with(gecko_font.mLanguage.raw(), &mut |atom| {
+                let base_size = unsafe { Atom::with(gecko_font.mLanguage.raw::<nsIAtom>(), &mut |atom| {
                     cx.font_metrics_provider.get_size(atom, gecko_font.mGenericID).0
                 }) };
 
@@ -2081,7 +2081,7 @@ ${helpers.single_keyword_system("font-variant-position",
 
     #[inline]
     pub fn get_initial_value() -> computed_value::T {
-        ::gecko_bindings::structs::NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER
+        ::gecko_bindings::structs::NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER as f32
     }
 
     pub fn parse(_context: &ParserContext, _input: &mut Parser) -> Result<SpecifiedValue, ()> {

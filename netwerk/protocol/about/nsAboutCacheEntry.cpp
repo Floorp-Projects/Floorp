@@ -427,7 +427,13 @@ nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
 
     // Expiration Time
     entry->GetExpirationTime(&u);
-    if (u < 0xFFFFFFFF) {
+
+    // Bug - 633747.
+    // When expiration time is 0, we show 1970-01-01 01:00:00 which is confusing.
+    // So we check if time is 0, then we show a message, "Expired Immediately"
+    if (u == 0) {
+        APPEND_ROW("expires", "Expired Immediately");
+    } else if (u < 0xFFFFFFFF) {
         PrintTimeString(timeBuf, sizeof(timeBuf), u);
         APPEND_ROW("expires", timeBuf);
     } else {

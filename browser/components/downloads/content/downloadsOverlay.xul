@@ -154,23 +154,6 @@
                         accesskey="&downloadsHistory.accesskey;"
                         flex="1"
                         oncommand="DownloadsPanel.showDownloadsHistory();"/>
-                <toolbarseparator id="downloadsFooterButtonsSplitter"
-                        class="downloadsDropmarkerSplitter"/>
-                <button id="downloadsFooterDropmarker"
-                        class="downloadsPanelFooterButton downloadsDropmarker"
-                        type="menu">
-                  <menupopup id="downloadSubPanel"
-                             onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
-                             onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);"
-                             position="after_end">
-                    <menuitem id="downloadsDropdownItemClearList"
-                              command="downloadsCmd_clearList"
-                              label="&cmd.clearList2.label;"/>
-                    <menuitem id="downloadsDropdownItemOpenDownloadsFolder"
-                              oncommand="DownloadsPanel.openDownloadsFolder();"
-                              label="&openDownloadsFolder.label;"/>
-                  </menupopup>
-                </button>
               </hbox>
             </stack>
           </vbox>

@@ -20,12 +20,14 @@ dbg.onDebuggerStatement = function (frame) {
   };
 };
 
-function testOne(loopKind) {
-  let body = "var array = [2, 4, 6];\ndebugger;\nfor (let iter " +
+function testOne(decl, loopKind) {
+  let body = "var array = [2, 4, 6];\ndebugger;\nfor (" + decl + " iter " +
       loopKind + " array) {\n  print(iter);\n}\n";
   g.eval(body);
   assertEq(log, "12121212");
 }
 
-testOne("in");
-testOne("of");
+for (let decl of ["", "var", "let"]) {
+  testOne(decl, "in");
+  testOne(decl, "of");
+}

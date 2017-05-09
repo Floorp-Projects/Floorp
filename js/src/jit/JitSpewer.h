@@ -183,9 +183,9 @@ void JitSpewCont(JitSpewChannel channel, const char* fmt, ...) MOZ_FORMAT_PRINTF
 void JitSpewFin(JitSpewChannel channel);
 void JitSpewHeader(JitSpewChannel channel);
 bool JitSpewEnabled(JitSpewChannel channel);
-void JitSpewVA(JitSpewChannel channel, const char* fmt, va_list ap);
-void JitSpewStartVA(JitSpewChannel channel, const char* fmt, va_list ap);
-void JitSpewContVA(JitSpewChannel channel, const char* fmt, va_list ap);
+void JitSpewVA(JitSpewChannel channel, const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+void JitSpewStartVA(JitSpewChannel channel, const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+void JitSpewContVA(JitSpewChannel channel, const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
 void JitSpewDef(JitSpewChannel channel, const char* str, MDefinition* def);
 
 void EnableChannel(JitSpewChannel channel);
@@ -253,7 +253,8 @@ static inline void JitSpewHeader(JitSpewChannel channel)
 { }
 static inline bool JitSpewEnabled(JitSpewChannel channel)
 { return false; }
-static inline void JitSpewVA(JitSpewChannel channel, const char* fmt, va_list ap)
+static inline MOZ_FORMAT_PRINTF(2, 0)
+void JitSpewVA(JitSpewChannel channel, const char* fmt, va_list ap)
 { }
 static inline void JitSpewDef(JitSpewChannel channel, const char* str, MDefinition* def)
 { }

@@ -18,6 +18,7 @@
 #ifdef __cplusplus
 
 template <size_t N>
+MOZ_FORMAT_PRINTF(2, 0)
 int VsprintfLiteral(char (&buffer)[N], const char* format, va_list args)
 {
     MOZ_ASSERT(format != buffer);

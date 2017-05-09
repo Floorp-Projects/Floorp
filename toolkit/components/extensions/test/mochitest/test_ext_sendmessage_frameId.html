@@ -1,0 +1,46 @@
+<!doctype html>
+<head>
+  <title>Test sendMessage frameId</title>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(async function test_sendMessage_frameId() {
+  const html = `<!doctype html><meta charset="utf-8"><script src="script.js"><\/script>`;
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.runtime.onMessage.addListener((msg, sender) => {
+        browser.test.sendMessage(msg, sender);
+      });
+      browser.tabs.create({url: "tab.html"});
+    },
+    files: {
+      "iframe.html": html,
+      "tab.html": `${html}<iframe src="iframe.html"></iframe>`,
+      "script.js": () => {
+        browser.runtime.sendMessage(window.top === window ? "tab" : "iframe");
+      },
+    },
+  });
+
+  await extension.startup();
+
+  const tab = await extension.awaitMessage("tab");
+  ok(tab.url.endsWith("tab.html"), "Got the message from the tab");
+  is(tab.frameId, 0, "And sender.frameId is zero");
+
+  const iframe = await extension.awaitMessage("iframe");
+  ok(iframe.url.endsWith("iframe.html"), "Got the message from the iframe");
+  is(typeof iframe.frameId, "number", "With sender.frameId of type number");
+  ok(iframe.frameId > 0, "And sender.frameId greater than zero");
+
+  await extension.unload();
+});
+
+</script>

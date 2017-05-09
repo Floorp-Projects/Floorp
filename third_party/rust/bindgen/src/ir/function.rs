@@ -1,12 +1,15 @@
 //! Intermediate representation for C/C++ functions and methods.
 
 use super::context::{BindgenContext, ItemId};
+use super::dot::DotAttributes;
 use super::item::Item;
-use super::traversal::{Trace, Tracer};
+use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::TypeKind;
 use clang;
 use clang_sys::CXCallingConv;
+use ir::derive::CanDeriveDebug;
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
+use std::io;
 use syntax::abi;
 
 /// A function declaration, with a signature, arguments, and argument names.
@@ -59,6 +62,23 @@ impl Function {
     }
 }
 
+impl DotAttributes for Function {
+    fn dot_attributes<W>(&self,
+                         _ctx: &BindgenContext,
+                         out: &mut W)
+                         -> io::Result<()>
+        where W: io::Write,
+    {
+        if let Some(ref mangled) = self.mangled_name {
+            try!(writeln!(out,
+                          "<tr><td>mangled name</td><td>{}</td></tr>",
+                          mangled));
+        }
+
+        Ok(())
+    }
+}
+
 /// A function signature.
 #[derive(Debug)]
 pub struct FunctionSig {
@@ -91,12 +111,25 @@ fn get_abi(cc: CXCallingConv) -> Option<abi::Abi> {
 }
 
 /// Get the mangled name for the cursor's referent.
-pub fn cursor_mangling(cursor: &clang::Cursor) -> Option<String> {
+pub fn cursor_mangling(ctx: &BindgenContext,
+                       cursor: &clang::Cursor)
+                       -> Option<String> {
+    use clang_sys;
+    if !ctx.options().enable_mangling {
+        return None;
+    }
+
     // We early return here because libclang may crash in some case
     // if we pass in a variable inside a partial specialized template.
     // See servo/rust-bindgen#67, and servo/rust-bindgen#462.
     if cursor.is_in_non_fully_specialized_template() {
         return None;
+    }
+
+    if let Ok(mut manglings) = cursor.cxx_manglings() {
+        if let Some(m) = manglings.pop() {
+            return Some(m);
+        }
     }
 
     let mut mangling = cursor.mangling();
@@ -105,8 +138,38 @@ pub fn cursor_mangling(cursor: &clang::Cursor) -> Option<String> {
     }
 
     // Try to undo backend linkage munging (prepended _, generally)
+    //
+    // TODO(emilio): This is wrong when the target system is not the host
+    // system. See https://github.com/servo/rust-bindgen/issues/593
     if cfg!(target_os = "macos") {
         mangling.remove(0);
+    }
+
+    if cursor.kind() == clang_sys::CXCursor_Destructor {
+        // With old (3.8-) libclang versions, and the Itanium ABI, clang returns
+        // the "destructor group 0" symbol, which means that it'll try to free
+        // memory, which definitely isn't what we want.
+        //
+        // Explicitly force the destructor group 1 symbol.
+        //
+        // See http://refspecs.linuxbase.org/cxxabi-1.83.html#mangling-special
+        // for the reference, and http://stackoverflow.com/a/6614369/1091587 for
+        // a more friendly explanation.
+        //
+        // We don't need to do this for constructors since clang seems to always
+        // have returned the C1 constructor.
+        //
+        // FIXME(emilio): Can a legit symbol in other ABIs end with this string?
+        // I don't think so, but if it can this would become a linker error
+        // anyway, not an invalid free at runtime.
+        //
+        // TODO(emilio, #611): Use cpp_demangle if this becomes nastier with
+        // time.
+        if mangling.ends_with("D0Ev") {
+            let new_len = mangling.len() - 4;
+            mangling.truncate(new_len);
+            mangling.push_str("D1Ev");
+        }
     }
 
     Some(mangling)
@@ -156,7 +219,8 @@ impl FunctionSig {
             CXCursor_FunctionDecl |
             CXCursor_Constructor |
             CXCursor_CXXMethod |
-            CXCursor_ObjCInstanceMethodDecl => {
+            CXCursor_ObjCInstanceMethodDecl |
+            CXCursor_ObjCClassMethodDecl => {
                 // For CXCursor_FunctionDecl, cursor.args() is the reliable way
                 // to get parameter names and types.
                 cursor.args()
@@ -167,8 +231,7 @@ impl FunctionSig {
                         let name = arg.spelling();
                         let name =
                             if name.is_empty() { None } else { Some(name) };
-                        let ty =
-                            Item::from_ty_or_ref(arg_ty, Some(*arg), None, ctx);
+                        let ty = Item::from_ty_or_ref(arg_ty, *arg, None, ctx);
                         (name, ty)
                     })
                     .collect()
@@ -179,10 +242,8 @@ impl FunctionSig {
                 let mut args = vec![];
                 cursor.visit(|c| {
                     if c.kind() == CXCursor_ParmDecl {
-                        let ty = Item::from_ty_or_ref(c.cur_type(),
-                                                      Some(c),
-                                                      None,
-                                                      ctx);
+                        let ty =
+                            Item::from_ty_or_ref(c.cur_type(), c, None, ctx);
                         let name = c.spelling();
                         let name =
                             if name.is_empty() { None } else { Some(name) };
@@ -196,13 +257,14 @@ impl FunctionSig {
 
         let is_method = cursor.kind() == CXCursor_CXXMethod;
         let is_constructor = cursor.kind() == CXCursor_Constructor;
-        if (is_constructor || is_method) &&
+        let is_destructor = cursor.kind() == CXCursor_Destructor;
+        if (is_constructor || is_destructor || is_method) &&
            cursor.lexical_parent() != cursor.semantic_parent() {
             // Only parse constructors once.
             return Err(ParseError::Continue);
         }
 
-        if is_method || is_constructor {
+        if is_method || is_constructor || is_destructor {
             let is_const = is_method && cursor.method_is_const();
             let is_virtual = is_method && cursor.method_is_virtual();
             let is_static = is_method && cursor.method_is_static();
@@ -220,17 +282,20 @@ impl FunctionSig {
             }
         }
 
-        let ty_ret_type = if cursor.kind() == CXCursor_ObjCInstanceMethodDecl {
-            try!(cursor.ret_type().ok_or(ParseError::Continue))
+        let ty_ret_type = if cursor.kind() == CXCursor_ObjCInstanceMethodDecl ||
+                             cursor.kind() == CXCursor_ObjCClassMethodDecl {
+            try!(ty.ret_type()
+                   .or_else(|| cursor.ret_type())
+                   .ok_or(ParseError::Continue))
         } else {
             try!(ty.ret_type().ok_or(ParseError::Continue))
         };
-        let ret = Item::from_ty_or_ref(ty_ret_type, None, None, ctx);
+        let ret = Item::from_ty_or_ref(ty_ret_type, cursor, None, ctx);
         let abi = get_abi(ty.call_conv());
 
         if abi.is_none() {
-            assert_eq!(cursor.kind(),
-                       CXCursor_ObjCInstanceMethodDecl,
+            assert!(cursor.kind() == CXCursor_ObjCInstanceMethodDecl ||
+                    cursor.kind() == CXCursor_ObjCClassMethodDecl,
                        "Invalid ABI for function signature")
         }
 
@@ -267,9 +332,9 @@ impl ClangSubItemParser for Function {
              -> Result<ParseResult<Self>, ParseError> {
         use clang_sys::*;
         match cursor.kind() {
-            // FIXME(emilio): Generate destructors properly.
             CXCursor_FunctionDecl |
             CXCursor_Constructor |
+            CXCursor_Destructor |
             CXCursor_CXXMethod => {}
             _ => return Err(ParseError::Continue),
         };
@@ -285,7 +350,8 @@ impl ClangSubItemParser for Function {
             return Err(ParseError::Continue);
         }
 
-        if cursor.is_inlined_function() {
+        if !context.options().generate_inline_functions &&
+            cursor.is_inlined_function() {
             return Err(ParseError::Continue);
         }
 
@@ -296,15 +362,27 @@ impl ClangSubItemParser for Function {
         }
 
         // Grab the signature using Item::from_ty.
-        let sig = try!(Item::from_ty(&cursor.cur_type(),
-                                     Some(cursor),
-                                     None,
-                                     context));
+        let sig =
+            try!(Item::from_ty(&cursor.cur_type(), cursor, None, context));
 
-        let name = cursor.spelling();
+        let mut name = cursor.spelling();
         assert!(!name.is_empty(), "Empty function name?");
 
-        let mut mangled_name = cursor_mangling(&cursor);
+        if cursor.kind() == CXCursor_Destructor {
+            // Remove the leading `~`. The alternative to this is special-casing
+            // code-generation for destructor functions, which seems less than
+            // ideal.
+            if name.starts_with('~') {
+                name.remove(0);
+            }
+
+            // Add a suffix to avoid colliding with constructors. This would be
+            // technically fine (since we handle duplicated functions/methods),
+            // but seems easy enough to handle it here.
+            name.push_str("_destructor");
+        }
+
+        let mut mangled_name = cursor_mangling(context, &cursor);
         if mangled_name.as_ref() == Some(&name) {
             mangled_name = None;
         }
@@ -322,10 +400,34 @@ impl Trace for FunctionSig {
     fn trace<T>(&self, _: &BindgenContext, tracer: &mut T, _: &())
         where T: Tracer,
     {
-        tracer.visit(self.return_type());
+        tracer.visit_kind(self.return_type(), EdgeKind::FunctionReturn);
 
         for &(_, ty) in self.argument_types() {
-            tracer.visit(ty);
+            tracer.visit_kind(ty, EdgeKind::FunctionParameter);
+        }
+    }
+}
+
+// Function pointers follow special rules, see:
+//
+// https://github.com/servo/rust-bindgen/issues/547,
+// https://github.com/rust-lang/rust/issues/38848,
+// and https://github.com/rust-lang/rust/issues/40158
+//
+// Note that copy is always derived, so we don't need to implement it.
+impl CanDeriveDebug for FunctionSig {
+    type Extra = ();
+
+    fn can_derive_debug(&self, _ctx: &BindgenContext, _: ()) -> bool {
+        const RUST_DERIVE_FUNPTR_LIMIT: usize = 12;
+        if self.argument_types.len() > RUST_DERIVE_FUNPTR_LIMIT {
+            return false;
+        }
+
+        match self.abi {
+            Some(abi::Abi::C) |
+            None => true,
+            _ => false,
         }
     }
 }

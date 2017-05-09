@@ -32,7 +32,7 @@ f.remove();
 // Check that location is now null.  If it's not, the test needs changing
 // (e.g. to use window.close() so that it's null).
 is("location" in win, true, "Should still have a location property");
-is(win.location, null, "There should be no location object now");
+ok(!!win.location, "Location should not be null");
 
 // Just set the location.  This should not crash but throw an exception.
 var noException;
@@ -47,8 +47,7 @@ todo(noException, "Shouldn't throw when setting location.");
 
 // And check that we didn't override the slot in the process.
 is(typeof(win.location), "object", "Location should not have become a string");
-is(win.location, null,
-   "There should be no location object for real after the set");
+ok(!!win.location, "Location should not be null");
 
 </script>
 </pre>

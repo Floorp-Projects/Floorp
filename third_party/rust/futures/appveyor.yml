@@ -1,0 +1,19 @@
+environment:
+  matrix:
+  - TARGET: x86_64-pc-windows-msvc
+install:
+  - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -V
+  - cargo -V
+
+build: false
+
+test_script:
+  - cargo build
+  - cargo build --no-default-features
+  - cargo test
+  - cargo test --no-default-features --features use_std
+  - cargo test --manifest-path futures-cpupool/Cargo.toml

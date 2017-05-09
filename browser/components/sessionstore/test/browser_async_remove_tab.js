@@ -38,6 +38,7 @@ function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
     let shistory = webNavigation.sessionHistory;
 
     // Evaluate the snippet that the changes the location.
+    // eslint-disable-next-line no-eval
     eval(codeSnippet);
 
     return new Promise(resolve => {

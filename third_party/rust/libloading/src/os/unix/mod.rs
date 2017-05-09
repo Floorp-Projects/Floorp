@@ -1,4 +1,4 @@
-use util::cstr_cow_from_bytes;
+use util::{ensure_compatible_types, cstr_cow_from_bytes};
 
 use std::ffi::{CStr, OsStr};
 use std::{fmt, io, marker, mem, ptr};
@@ -147,6 +147,7 @@ impl Library {
     /// OS X uses some sort of lazy initialization scheme, which makes loading TLS variables
     /// impossible. Using a TLS variable loaded this way on OS X is undefined behaviour.
     pub unsafe fn get<T>(&self, symbol: &[u8]) -> ::Result<Symbol<T>> {
+        ensure_compatible_types::<T, *mut raw::c_void>();
         let symbol = try!(cstr_cow_from_bytes(symbol));
         // `dlsym` may return nullptr in two cases: when a symbol genuinely points to a null
         // pointer or the symbol cannot be found. In order to detect this case a double dlerror
