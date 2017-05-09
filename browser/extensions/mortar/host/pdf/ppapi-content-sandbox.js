@@ -44,6 +44,19 @@ function mapValue(v, instance) {
   return instance.rt.toPP_Var(v, instance);
 }
 
+function getFileName(url) {
+  let filename = "document.pdf";
+  let regex = /[^\/#\?]+\.pdf$/i;
+
+  let result = regex.exec(url.hash) ||
+               regex.exec(url.search) ||
+               regex.exec(url.pathname);
+  if (result) {
+    filename = result[0];
+  }
+  return filename;
+}
+
 dump("<>>>>>>>>>>>>>>>>>>>> AHA <<<<<<<<<<<<<<<<<<<<<>\n");
 dump(`pluginElement: ${pluginElement.toSource()}\n`);
 dump(`pluginElement.frameLoader: ${pluginElement.frameLoader.toSource()}\n`);
@@ -116,7 +129,11 @@ mm.addMessageListener("ppapipdf.js:setHash", ({ data }) => {
   }
 });
 
-mm.addMessageListener("ppapipdf.js:getPrintSettings", () => {
+mm.addMessageListener("ppapipdf.js:getPrintSettings", ({ data }) => {
+  // Set the title to pdf file name for the default print to file name.
+  let url = new containerWindow.URL(data.url);
+  containerWindow.document.title = getFileName(url);
+
   let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].
               getService(Ci.nsIPrintSettingsService);
   printSettings = PSSVC.globalPrintSettings;
@@ -207,16 +224,7 @@ mm.addMessageListener("ppapipdf.js:openLink", ({data}) => {
 
 mm.addMessageListener("ppapipdf.js:save", () => {
   let url = containerWindow.document.location;
-  let filename = "document.pdf";
-  let regex = /[^\/#\?]+\.pdf$/i;
-
-  let result = regex.exec(url.hash) ||
-               regex.exec(url.search) ||
-               regex.exec(url.pathname);
-  if (result) {
-    filename = result[0];
-  }
-
+  let filename = getFileName(url);
   let originalUri = NetUtil.newURI(url.href);
   let extHelperAppSvc =
         Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
