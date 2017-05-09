@@ -1081,6 +1081,9 @@ OpIter<Policy>::readBrTable(Uint32Vector* depths, uint32_t* defaultDepth,
     if (!readVarU32(&tableLength))
         return fail("unable to read br_table table length");
 
+    if (tableLength > MaxBrTableElems)
+        return fail("br_table too big");
+
     if (!popWithType(ValType::I32, index))
         return false;
 
