@@ -580,6 +580,8 @@ protected:
 
   void SetTimerEventTarget(nsITimer* aTimer);
 
+  nsresult DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable);
+
   already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
 
   nsCOMPtr<nsISupports> mContext;
