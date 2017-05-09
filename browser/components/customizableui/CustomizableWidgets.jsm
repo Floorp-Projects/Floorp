@@ -1153,7 +1153,7 @@ let preferencesButton = {
   defaultArea: CustomizableUI.AREA_PANEL,
   onCommand(aEvent) {
     let win = aEvent.target.ownerGlobal;
-    win.openPreferences();
+    win.openPreferences(undefined, {origin: "preferencesButton"});
   }
 };
 if (AppConstants.platform == "win") {

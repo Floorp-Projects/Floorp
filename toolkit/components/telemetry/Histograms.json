@@ -6391,6 +6391,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Count how often each preference category is opened."
   },
+  "FX_PREFERENCES_OPENED_VIA": {
+    "bug_numbers": [1330315],
+    "alert_emails": ["jaws@mozilla.com"],
+    "expires_in_version": "59",
+    "kind": "categorical",
+    "labels": ["aboutHome", "aboutTelemetry", "browserMedia", "commandLine", "commandLineLegacy", "ContainersCommand", "contentSearch", "dataReporting", "doorhanger", "devDisconnectedAlert", "experimentsOpenPref", "fxa", "fxaSignedin", "fxaError", "offlineApps", "prefserviceDefaults", "preferencesButton", "paneSync", "storagePressure", "translationInfobar", "UITour", "menubar", "notifOpenSettings", "other"],
+    "releaseChannelCollection": "opt-out",
+    "description":"Count how the Preferences are opened."
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
