@@ -1,0 +1,29 @@
+[package]
+name = "futures"
+version = "0.1.13"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+keywords = ["futures", "async", "future"]
+repository = "https://github.com/alexcrichton/futures-rs"
+homepage = "https://github.com/alexcrichton/futures-rs"
+documentation = "https://docs.rs/futures"
+description = """
+An implementation of futures and streams featuring zero allocations,
+composability, and iterator-like interfaces.
+"""
+categories = ["asynchronous"]
+
+[badges]
+travis-ci = { repository = "alexcrichton/futures-rs" }
+appveyor = { repository = "alexcrichton/futures-rs" }
+
+[dependencies]
+
+[features]
+use_std = []
+with-deprecated = []
+default = ["use_std", "with-deprecated"]
+
+[workspace]
+members = ["futures-cpupool"]
