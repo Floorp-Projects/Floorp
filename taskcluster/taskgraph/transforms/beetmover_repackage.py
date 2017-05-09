@@ -34,7 +34,7 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "target.awsy.tests.zip",
     "target.test_packages.json",
     "target.txt",
-    "target.web-platform.tests.zip",
+    "target.web-platform.tests.tar.gz",
     "target.xpcshell.tests.zip",
     "target_info.txt",
     "target.jsshell.zip",
