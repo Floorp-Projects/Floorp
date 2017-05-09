@@ -39,10 +39,9 @@ namespace net {
 #define SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN 1
 #define SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL 2
 
-#define HTTP_AUTH_DIALOG_TOP_LEVEL_DOC 0
-#define HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE 1
-#define HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE 2
-#define HTTP_AUTH_DIALOG_XHR 3
+#define HTTP_AUTH_DIALOG_TOP_LEVEL_DOC 29
+#define HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE 30
+#define HTTP_AUTH_DIALOG_SAME_ORIGIN_XHR 31
 
 #define HTTP_AUTH_BASIC_INSECURE 0
 #define HTTP_AUTH_BASIC_SECURE 1
@@ -95,6 +94,8 @@ nsHttpChannelAuthProvider::~nsHttpChannelAuthProvider()
 uint32_t nsHttpChannelAuthProvider::sAuthAllowPref =
     SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL;
 
+bool nsHttpChannelAuthProvider::sImgCrossOriginAuthAllowPref = true;
+
 void
 nsHttpChannelAuthProvider::InitializePrefs()
 {
@@ -102,6 +103,9 @@ nsHttpChannelAuthProvider::InitializePrefs()
   mozilla::Preferences::AddUintVarCache(&sAuthAllowPref,
                                         "network.auth.subresource-http-auth-allow",
                                         SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL);
+  mozilla::Preferences::AddBoolVarCache(&sImgCrossOriginAuthAllowPref,
+                                        "network.auth.subresource-img-cross-origin-http-auth-allow",
+                                        true);
 }
 
 NS_IMETHODIMP
@@ -912,8 +916,8 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
             // BlockPrompt will set mCrossOrigin parameter as well.
             if (BlockPrompt()) {
                 LOG(("nsHttpChannelAuthProvider::GetCredentialsForChallenge: "
-                     "Prompt is blocked [this=%p pref=%d]\n",
-                      this, sAuthAllowPref));
+                     "Prompt is blocked [this=%p pref=%d img-pref=%d]\n",
+                      this, sAuthAllowPref, sImgCrossOriginAuthAllowPref));
                 return NS_ERROR_ABORT;
             }
 
@@ -1014,17 +1018,19 @@ nsHttpChannelAuthProvider::BlockPrompt()
 
     if (gHttpHandler->IsTelemetryEnabled()) {
         if (topDoc) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
                                   HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
-        } else if (xhr) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_XHR);
         } else if (!mCrossOrigin) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
+            if (xhr) {
+                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
+                                      HTTP_AUTH_DIALOG_SAME_ORIGIN_XHR);
+            } else {
+                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
+                                      HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
+            }
         } else {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE);
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
+                                  loadInfo->GetExternalContentPolicyType());
         }
     }
 
@@ -1038,7 +1044,16 @@ nsHttpChannelAuthProvider::BlockPrompt()
         // the sub-resources only if they are not cross-origin.
         return !topDoc && !xhr && mCrossOrigin;
     case SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL:
-        // Allow the http-authentication dialog.
+        // Allow the http-authentication dialog for subresources.
+        // If pref network.auth.subresource-img-cross-origin-http-auth-allow
+        // is set, http-authentication dialog for image subresources is
+        // blocked.
+        if (!sImgCrossOriginAuthAllowPref &&
+            loadInfo &&
+            ((loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGE) ||
+             (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGESET))) {
+            return true;
+        }
         return false;
     default:
         // This is an invalid value.
