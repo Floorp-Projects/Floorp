@@ -237,7 +237,6 @@ bool
 AOMDecoder::IsKeyframe(Span<const uint8_t> aBuffer) {
   aom_codec_stream_info_t info;
   PodZero(&info);
-  info.sz = sizeof(info);
 
   auto res = aom_codec_peek_stream_info(aom_codec_av1_dx(),
                                         aBuffer.Elements(),
@@ -256,7 +255,6 @@ nsIntSize
 AOMDecoder::GetFrameSize(Span<const uint8_t> aBuffer) {
   aom_codec_stream_info_t info;
   PodZero(&info);
-  info.sz = sizeof(info);
 
   auto res = aom_codec_peek_stream_info(aom_codec_av1_dx(),
                                         aBuffer.Elements(),
