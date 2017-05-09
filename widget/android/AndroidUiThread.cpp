@@ -20,6 +20,7 @@ namespace {
 class AndroidUiThread;
 
 StaticRefPtr<AndroidUiThread> sThread;
+static bool sThreadDestroyed;
 static MessageLoop* sMessageLoop;
 static Atomic<Monitor*> sMessageLoopAccessMonitor;
 
@@ -46,6 +47,14 @@ public:
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) override;
   nsresult DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs) override;
+
+  static int64_t RunDelayedTasksIfValid() {
+    if (!AndroidBridge::Bridge() ||
+        sThreadDestroyed) {
+      return -1;
+    }
+    return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
+  }
 
 private:
   ~AndroidUiThread()
@@ -118,6 +127,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
+    MOZ_ASSERT(!sThreadDestroyed);
     MOZ_ASSERT(sMessageLoopAccessMonitor);
     MonitorAutoLock lock(*sMessageLoopAccessMonitor);
     sThread = new AndroidUiThread();
@@ -135,6 +145,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
+    MOZ_ASSERT(!sThreadDestroyed);
     MOZ_ASSERT(sMessageLoopAccessMonitor);
     MonitorAutoLock lock(*sMessageLoopAccessMonitor);
 
@@ -144,6 +155,7 @@ public:
     nsThreadManager::get().UnregisterCurrentThread(*sThread);
     sThread = nullptr;
     mDestroyed = true;
+    sThreadDestroyed = true;
     lock.NotifyAll();
     return NS_OK;
   }
@@ -171,6 +183,7 @@ CreateAndroidUiThread()
   MOZ_ASSERT(!sThread);
   MOZ_ASSERT(!sMessageLoopAccessMonitor);
   sMessageLoopAccessMonitor = new Monitor("AndroidUiThreadMessageLoopAccessMonitor");
+  sThreadDestroyed = false;
   RefPtr<CreateOnUiThread> runnable = new CreateOnUiThread;
   AndroidBridge::Bridge()->PostTaskToUiThread(do_AddRef(runnable), 0);
 }
