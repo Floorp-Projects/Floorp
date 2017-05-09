@@ -1569,6 +1569,7 @@ class irregexp::RegExpCompiler
     inline void DecrementRecursionDepth() { recursion_depth_--; }
 
     void SetRegExpTooBig() { reg_exp_too_big_ = true; }
+    inline bool isRegExpTooBig() { return reg_exp_too_big_; }
 
     inline bool ignore_case() { return ignore_case_; }
     inline bool latin1() { return latin1_; }
@@ -1584,6 +1585,8 @@ class irregexp::RegExpCompiler
     LifoAlloc* alloc() const { return alloc_; }
 
     static const int kNoRegister = -1;
+
+    bool CheckOverRecursed();
 
   private:
     EndNode* accept_;
@@ -1771,6 +1774,13 @@ irregexp::CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompile
             node = loop_node;
         }
     }
+
+    if (compiler.isRegExpTooBig()) {
+        MOZ_ASSERT(compiler.cx()->isExceptionPending()); // over recursed
+        JS_ReportErrorASCII(cx, "regexp too big");
+        return RegExpCode();
+    }
+
     if (is_latin1) {
         node = node->FilterLATIN1(RegExpCompiler::kMaxRecursion, ignore_case, unicode);
         // Do it again to propagate the new nodes to places where they were not
@@ -1884,6 +1894,9 @@ RegExpCharacterClass::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
 RegExpNode*
 RegExpDisjunction::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
 {
+    if (!compiler->CheckOverRecursed())
+        return on_success;
+
     const RegExpTreeVector& alternatives = this->alternatives();
     size_t length = alternatives.length();
     ChoiceNode* result = compiler->alloc()->newInfallible<ChoiceNode>(compiler->alloc(), length);
@@ -1976,6 +1989,9 @@ RegExpQuantifier::ToNode(int min,
 
     if (max == 0)
         return on_success;  // This can happen due to recursion.
+
+    if (!compiler->CheckOverRecursed())
+        return on_success;
 
     bool body_can_be_empty = (body->min_match() == 0);
     int body_start_reg = RegExpCompiler::kNoRegister;
@@ -2161,6 +2177,9 @@ RegExpLookahead::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
     int register_start =
         register_of_first_capture + capture_from_ * registers_per_capture;
 
+    if (!compiler->CheckOverRecursed())
+        return on_success;
+
     if (is_positive()) {
         RegExpNode* bodyNode =
             body()->ToNode(compiler,
@@ -2214,6 +2233,9 @@ RegExpCapture::ToNode(RegExpTree* body,
                       RegExpCompiler* compiler,
                       RegExpNode* on_success)
 {
+    if (!compiler->CheckOverRecursed())
+        return on_success;
+
     int start_reg = RegExpCapture::StartRegister(index);
     int end_reg = RegExpCapture::EndRegister(index);
     RegExpNode* store_end = ActionNode::StorePosition(end_reg, true, on_success);
@@ -2224,6 +2246,9 @@ RegExpCapture::ToNode(RegExpTree* body,
 RegExpNode*
 RegExpAlternative::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
 {
+    if (!compiler->CheckOverRecursed())
+        return on_success;
+
     const RegExpTreeVector& children = nodes();
     RegExpNode* current = on_success;
     for (int i = children.length() - 1; i >= 0; i--)
@@ -2497,14 +2522,20 @@ BoyerMooreLookahead::EmitSkipInstructions(RegExpMacroAssembler* masm)
 }
 
 bool
-BoyerMooreLookahead::CheckOverRecursed()
+RegExpCompiler::CheckOverRecursed()
 {
-    if (!CheckRecursionLimit(compiler()->cx())) {
-        compiler()->SetRegExpTooBig();
+    if (!CheckRecursionLimit(cx())) {
+        SetRegExpTooBig();
         return false;
     }
 
     return true;
+}
+
+bool
+BoyerMooreLookahead::CheckOverRecursed()
+{
+    return compiler()->CheckOverRecursed();
 }
 
 // -------------------------------------------------------------------
