@@ -128,7 +128,7 @@ fails-if(gtkWidget&&!stylo) random-if(winWidget) == semantics-1.xhtml semantics-
 == mathbackground-4.xml mathbackground-4-ref.xml
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
-== mstyle-3.xhtml mstyle-3-ref.xhtml
+fuzzy-if(OSX,16,8) == mstyle-3.xhtml mstyle-3-ref.xhtml
 == mstyle-4.xhtml mstyle-4-ref.xhtml
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
