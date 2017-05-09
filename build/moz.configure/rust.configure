@@ -97,8 +97,6 @@ def rust_compiler(rustc_info, cargo_info):
 
     return True
 
-set_config('MOZ_RUST', rust_compiler)
-
 @template
 def rust_triple_alias(host_or_target):
     """Template defining the alias used for rustc's --target flag.
@@ -233,6 +231,5 @@ def rust_target_env_name(triple):
 set_config('RUST_TARGET_ENV_NAME', rust_target_env_name)
 
 # Until we remove all the other Rust checks in old-configure.
-add_old_configure_assignment('MOZ_RUST', rust_compiler)
 add_old_configure_assignment('RUSTC', rustc)
 add_old_configure_assignment('RUST_TARGET', rust_target_triple)
