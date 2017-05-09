@@ -119,6 +119,7 @@ module.exports = {
 
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
+    "no-eval": "error",
 
     // No labels
     "no-labels": "error",

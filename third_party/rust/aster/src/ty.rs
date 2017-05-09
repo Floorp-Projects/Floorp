@@ -199,13 +199,6 @@ impl<F> TyBuilder<F>
         TyBuilder::with_callback(TyIteratorBuilder(self)).span(span)
     }
 
-    pub fn object_sum(self) -> TyBuilder<TyObjectSumBuilder<F>> {
-        let span = self.span;
-        TyBuilder::with_callback(TyObjectSumBuilder {
-            builder: self,
-        }).span(span)
-    }
-
     pub fn impl_trait(self) -> TyImplTraitTyBuilder<F> {
         TyImplTraitTyBuilder { builder: self, bounds: Vec::new() }
     }
@@ -454,91 +447,6 @@ impl<F> Invoke<P<ast::Ty>> for TyIteratorBuilder<F>
 
 //////////////////////////////////////////////////////////////////////////////
 
-pub struct TyObjectSumBuilder<F> {
-    builder: TyBuilder<F>,
-}
-
-impl<F> Invoke<P<ast::Ty>> for TyObjectSumBuilder<F>
-    where F: Invoke<P<ast::Ty>>,
-{
-    type Result = TyObjectSumTyBuilder<F>;
-
-    fn invoke(self, ty: P<ast::Ty>) -> Self::Result {
-        TyObjectSumTyBuilder {
-            builder: self.builder,
-            ty: ty,
-            bounds: Vec::new(),
-        }
-    }
-}
-
-pub struct TyObjectSumTyBuilder<F> {
-    builder: TyBuilder<F>,
-    ty: P<ast::Ty>,
-    bounds: Vec<ast::TyParamBound>,
-}
-
-impl<F> TyObjectSumTyBuilder<F>
-    where F: Invoke<P<ast::Ty>>,
-{
-    pub fn with_bounds<I>(mut self, iter: I) -> Self
-        where I: Iterator<Item=ast::TyParamBound>,
-    {
-        self.bounds.extend(iter);
-        self
-    }
-
-    pub fn with_bound(mut self, bound: ast::TyParamBound) -> Self {
-        self.bounds.push(bound);
-        self
-    }
-
-    pub fn bound(self) -> TyParamBoundBuilder<Self> {
-        TyParamBoundBuilder::with_callback(self)
-    }
-
-    pub fn with_generics(self, generics: ast::Generics) -> Self {
-        self.with_lifetimes(
-            generics.lifetimes.into_iter()
-                .map(|def| def.lifetime)
-        )
-    }
-
-    pub fn with_lifetimes<I, L>(mut self, lifetimes: I) -> Self
-        where I: Iterator<Item=L>,
-              L: IntoLifetime,
-    {
-        for lifetime in lifetimes {
-            self = self.lifetime(lifetime);
-        }
-
-        self
-    }
-
-    pub fn lifetime<L>(self, lifetime: L) -> Self
-        where L: IntoLifetime,
-    {
-        self.bound().lifetime(lifetime)
-    }
-
-    pub fn build(self) -> F::Result {
-        let bounds = P::from_vec(self.bounds);
-        self.builder.build_ty_kind(ast::TyKind::ObjectSum(self.ty, bounds))
-    }
-}
-
-impl<F> Invoke<ast::TyParamBound> for TyObjectSumTyBuilder<F>
-    where F: Invoke<P<ast::Ty>>,
-{
-    type Result = Self;
-
-    fn invoke(self, bound: ast::TyParamBound) -> Self {
-        self.with_bound(bound)
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
 pub struct TyImplTraitTyBuilder<F> {
     builder: TyBuilder<F>,
     bounds: Vec<ast::TyParamBound>,
@@ -588,8 +496,7 @@ impl<F> TyImplTraitTyBuilder<F>
     }
 
     pub fn build(self) -> F::Result {
-        let bounds = P::from_vec(self.bounds);
-        self.builder.build_ty_kind(ast::TyKind::ImplTrait(bounds))
+        self.builder.build_ty_kind(ast::TyKind::ImplTrait(self.bounds))
     }
 }
 

@@ -13,10 +13,14 @@ name = "bindgen"
 readme = "README.md"
 repository = "https://github.com/servo/rust-bindgen"
 documentation = "https://docs.rs/bindgen"
-version = "0.22.0"
+version = "0.24.0"
 build = "build.rs"
 
-exclude = ["tests/headers", "tests/expectations", "bindgen-integration", "ci"]
+exclude = [
+  "bindgen-integration",
+  "ci",
+  "tests/**",
+]
 
 [badges]
 travis-ci = { repository = "servo/rust-bindgen" }
@@ -27,6 +31,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "bindgen"
 path = "src/main.rs"
+doc = false
 
 [dev-dependencies]
 diff = "0.1"
@@ -34,22 +39,21 @@ clap = "2"
 shlex = "0.1"
 
 [build-dependencies]
-quasi_codegen = "0.29"
+quasi_codegen = "0.32"
 
 [dependencies]
 cexpr = "0.2"
 cfg-if = "0.1.0"
-clang-sys = { version = "0.14", features = ["runtime", "clang_3_9"] }
+clang-sys = { version = "0.16.0", features = ["runtime", "clang_3_9"] }
 lazy_static = "0.2.1"
-rustc-serialize = "0.3.19"
-syntex_syntax = "0.54"
+syntex_syntax = "0.58"
 regex = "0.2"
 # This kinda sucks: https://github.com/rust-lang/cargo/issues/1982
 clap = "2"
 
 [dependencies.aster]
 features = ["with-syntex"]
-version = "0.38"
+version = "0.41"
 
 [dependencies.env_logger]
 optional = true
@@ -61,13 +65,15 @@ version = "0.3"
 
 [dependencies.quasi]
 features = ["with-syntex"]
-version = "0.29"
+version = "0.32"
 
 [features]
-assert_no_dangling_items = []
 default = ["logging"]
-testing_only_llvm_stable = []
 logging = ["env_logger", "log"]
 static = []
-# This feature only exists for CI -- don't use it!
-docs_ = []
+
+# These features only exist for CI testing -- don't use them if you're not hacking
+# on bindgen!
+testing_only_docs = []
+testing_only_extra_assertions = []
+testing_only_llvm_stable = []

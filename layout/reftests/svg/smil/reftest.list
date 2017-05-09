@@ -75,15 +75,15 @@ include event/reftest.list
 == anim-indefinite-to-4.svg        anim-standard-ref.svg
 
 fails-if(!stylo) == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
-== anim-fillopacity-1none.svg anim-standard-ref.svg
-== anim-fillopacity-1css.svg  anim-standard-ref.svg
-== anim-fillopacity-1xml.svg  anim-standard-ref.svg
+fails-if(stylo) == anim-fillopacity-1none.svg anim-standard-ref.svg
+fails-if(stylo) == anim-fillopacity-1css.svg  anim-standard-ref.svg
+fails-if(stylo) == anim-fillopacity-1xml.svg  anim-standard-ref.svg
 
-fuzzy-if(skiaContent,1,3600) == anim-opacity-01.svg lime.svg
+fuzzy-if(skiaContent,1,3600) skip-if(stylo) == anim-opacity-01.svg lime.svg
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
-== anim-height-done-2.svg lime.svg
+skip-if(stylo) == anim-height-done-2.svg lime.svg
 == anim-height-interp-1.svg anim-height-interp-1-ref.svg
 == anim-height-interp-2.svg anim-height-interp-2-ref.svg
 == anim-height-interp-3.svg anim-height-interp-3-ref.svg
@@ -156,23 +156,23 @@ skip-if(stylo) == anim-view-01.svg#view lime.svg
 == anim-use-href-01.svg lime.svg
 
 # animate the class attribute
-== anim-class-01.svg lime.svg
-== anim-class-02.svg lime.svg
-== anim-class-03.svg lime.svg
-== anim-class-04.svg anim-class-04-ref.svg
+fails-if(stylo) == anim-class-01.svg lime.svg
+fails-if(stylo) == anim-class-02.svg lime.svg
+fails-if(stylo) == anim-class-03.svg lime.svg
+fails-if(stylo) == anim-class-04.svg anim-class-04-ref.svg
 
 # animate with some paint server values
-== anim-paintserver-1.svg anim-paintserver-1-ref.svg
+fails-if(stylo) == anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
 # animate attributes on text content children
 == anim-text-attr-01.svg anim-text-attr-01-ref.svg
 
 # animate where the base value is non-interpolatable but will be replaced anyway
-== anim-fill-overpaintserver-1.svg lime.svg
-== anim-fill-overpaintserver-2.svg lime.svg
+fails-if(stylo) == anim-fill-overpaintserver-1.svg lime.svg
+fails-if(stylo) == anim-fill-overpaintserver-2.svg lime.svg
 
 # animate where we fallback from 'additive' animation to non-additive
-== anim-additive-fallback-1.svg anim-standard-ref.svg
+fails-if(stylo) == anim-additive-fallback-1.svg anim-standard-ref.svg
 
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
@@ -181,9 +181,9 @@ skip-if(stylo) == anim-view-01.svg#view lime.svg
 == anim-remove-5.svg anim-standard-ref.svg
 == anim-remove-6.svg anim-standard-ref.svg
 == anim-remove-7.svg anim-standard-ref.svg
-== anim-remove-8css.svg anim-standard-ref.svg
+skip-if(stylo) == anim-remove-8css.svg anim-standard-ref.svg
 == anim-remove-8xml.svg anim-standard-ref.svg
-== anim-remove-9.svg anim-standard-ref.svg
+fails-if(stylo) == anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
 == anim-retarget-3.svg anim-standard-ref.svg
@@ -194,7 +194,7 @@ skip-if(stylo) == anim-view-01.svg#view lime.svg
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails-if(!stylo) == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
-== anim-strokewidth-1xml.svg anim-standard-ref.svg
+skip-if(stylo) == anim-strokewidth-1xml.svg anim-standard-ref.svg
 
 == anim-targethref-1.svg anim-standard-ref.svg
 == anim-targethref-2.svg anim-standard-ref.svg
@@ -248,35 +248,35 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == freeze-applied-late-4.svg anim-standard-ref.svg
 == frozen-to-anim-1.svg lime.svg
 
-== inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
-== inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
+fails-if(stylo) == inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
+fails-if(stylo) == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
-== mapped-attr-long-url-1.svg lime.svg
-== mapped-attr-long-url-2.svg lime.svg
+fails-if(stylo) == mapped-attr-long-url-1.svg lime.svg
+fails-if(stylo) == mapped-attr-long-url-2.svg lime.svg
 
 == min-1.svg lime.svg
 
-== smil-transitions-interaction-1a.svg lime.svg
-== smil-transitions-interaction-1b.svg lime.svg
-== smil-transitions-interaction-2a.svg lime.svg
-== smil-transitions-interaction-2b.svg lime.svg
+fails-if(stylo) == smil-transitions-interaction-1a.svg lime.svg
+fails-if(stylo) == smil-transitions-interaction-1b.svg lime.svg
+fails-if(stylo) == smil-transitions-interaction-2a.svg lime.svg
+fails-if(stylo) == smil-transitions-interaction-2b.svg lime.svg
 == smil-transitions-interaction-3a.svg lime.svg
 == smil-transitions-interaction-3b.svg lime.svg
-== smil-transitions-interaction-4a.svg lime.svg
-== smil-transitions-interaction-4b.svg lime.svg
+skip-if(stylo) == smil-transitions-interaction-4a.svg lime.svg
+skip-if(stylo) == smil-transitions-interaction-4b.svg lime.svg
 
 # Test filtering of excessive times
 == filtered-instance-time-1.svg anim-standard-ref.svg
 
 # Test animation using defs element
-== anim-defs-gradient-property.svg lime.svg
+fails-if(stylo) == anim-defs-gradient-property.svg lime.svg
 == anim-defs-gradient-attribute.svg lime.svg
-== anim-defs-fill.svg lime.svg
+fails-if(stylo) == anim-defs-fill.svg lime.svg
 == anim-defs-width.svg lime.svg
 
 # Test animation that changes 'display' attribute
-== anim-display.svg lime.svg
-== anim-display-in-g-element.svg lime.svg
+fails-if(stylo) == anim-display.svg lime.svg
+fails-if(stylo) == anim-display-in-g-element.svg lime.svg
 
 # Test animation that change 'display' style value to 'none'
 == anim-change-display-none-for-ancestor-elem.html lime.html

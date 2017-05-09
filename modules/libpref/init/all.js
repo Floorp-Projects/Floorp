@@ -2398,6 +2398,7 @@ pref("security.ssl.enable_ocsp_must_staple", true);
 
 // Insecure Form Field Warning
 pref("security.insecure_field_warning.contextual.enabled", false);
+pref("security.insecure_field_warning.ignore_local_ip_address", true);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);

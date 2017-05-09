@@ -585,6 +585,35 @@ nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
     return net_ExtractURLScheme(inURI, scheme);
 }
 
+NS_IMETHODIMP
+nsIOService::HostnameIsLocalIPAddress(nsIURI *aURI, bool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_ARG_POINTER(innerURI);
+
+  nsAutoCString host;
+  nsresult rv = innerURI->GetAsciiHost(host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aResult = false;
+
+  PRNetAddr addr;
+  PRStatus result = PR_StringToNetAddr(host.get(), &addr);
+  if (result == PR_SUCCESS) {
+    NetAddr netAddr;
+    PRNetAddrToNetAddr(&addr, &netAddr);
+    if (IsIPAddrLocal(&netAddr)) {
+      *aResult = true;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsIOService::GetProtocolFlags(const char* scheme, uint32_t *flags)
 {

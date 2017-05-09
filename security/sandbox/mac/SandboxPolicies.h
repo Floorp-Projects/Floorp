@@ -49,7 +49,7 @@ static const char widevinePluginSandboxRulesAddend[] = R"(
 static const char contentSandboxRules[] = R"(
   (version 1)
 
-      (define should-log (param "SHOULD_LOG"))
+  (define should-log (param "SHOULD_LOG"))
   (define sandbox-level-1 (param "SANDBOX_LEVEL_1"))
   (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
@@ -62,7 +62,7 @@ static const char contentSandboxRules[] = R"(
   (define profileDir (param "PROFILE_DIR"))
   (define home-path (param "HOME_PATH"))
   (define hasFilePrivileges (param "HAS_FILE_PRIVILEGES"))
-  (define isDebugBuild (param "DEBUG_BUILD"))
+  (define debugWriteDir (param "DEBUG_WRITE_DIR"))
 
   ; Allow read access to standard system paths.
   (allow file-read*
@@ -224,8 +224,8 @@ static const char contentSandboxRules[] = R"(
       (subpath "/private/var/folders"))
 
   ; bug 1303987
-    (if (string=? isDebugBuild "TRUE")
-        (allow file-write* (subpath "/private/var")))
+    (if (string? debugWriteDir)
+      (allow file-write* (subpath debugWriteDir)))
 
   ; bug 1324610
     (allow network-outbound (literal "/private/var/run/cupsd"))
@@ -322,10 +322,9 @@ static const char contentSandboxRules[] = R"(
         (iokit-user-client-class "Gen6DVDContext"))
 
   ; bug 1237847
-    (allow file-read*
+    (allow file-read* file-write*
         (subpath appTempDir))
-    (allow file-write*
-        (subpath appTempDir))
+
   )
 )";
 

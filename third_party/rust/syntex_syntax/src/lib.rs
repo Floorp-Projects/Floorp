@@ -20,11 +20,9 @@
        html_favicon_url = "https://doc.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/nightly/",
        test(attr(deny(warnings))))]
-#![cfg_attr(not(stage0), deny(warnings))]
+#![deny(warnings)]
 
 extern crate rustc_serialize;
-extern crate term;
-extern crate libc;
 #[macro_use] extern crate log;
 #[macro_use] extern crate bitflags;
 extern crate syntex_errors as errors;
@@ -76,6 +74,9 @@ pub mod util {
 
     mod thin_vec;
     pub use self::thin_vec::ThinVec;
+
+    mod rc_slice;
+    pub use self::rc_slice::RcSlice;
 }
 
 pub mod json;
@@ -118,7 +119,6 @@ pub mod ext {
     pub mod expand;
     pub mod placeholders;
     pub mod hygiene;
-    pub mod proc_macro_shim;
     pub mod quote;
     pub mod source_util;
 

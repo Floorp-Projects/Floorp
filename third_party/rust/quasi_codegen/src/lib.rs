@@ -510,10 +510,10 @@ fn statements_mk_tt(tt: &TokenTree, matcher: bool) -> Result<QuoteStmts, ()> {
                 idents: vec![],
             })
         },
-        TokenTree::Delimited(_, ref delimed) => {
+        TokenTree::Delimited(sp, ref delimed) => {
             let delimited = try!(statements_mk_tts(&delimed.tts[..], matcher));
-            let open = try!(statements_mk_tt(&delimed.open_tt(), matcher)).stmts.into_iter();
-            let close = try!(statements_mk_tt(&delimed.close_tt(), matcher)).stmts.into_iter();
+            let open = try!(statements_mk_tt(&delimed.open_tt(sp), matcher)).stmts.into_iter();
+            let close = try!(statements_mk_tt(&delimed.close_tt(sp), matcher)).stmts.into_iter();
             Ok(QuoteStmts {
                 stmts: open.chain(delimited.stmts.into_iter()).chain(close).collect(),
                 idents: delimited.idents,

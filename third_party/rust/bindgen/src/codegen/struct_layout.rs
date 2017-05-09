@@ -167,17 +167,20 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
             None => return None,
         };
 
-        if let TypeKind::Array(inner, len) = *field_ty.canonical_type(self.ctx).kind() {
+        if let TypeKind::Array(inner, len) =
+            *field_ty.canonical_type(self.ctx).kind() {
             // FIXME(emilio): As an _ultra_ hack, we correct the layout returned
             // by arrays of structs that have a bigger alignment than what we
             // can support.
             //
             // This means that the structs in the array are super-unsafe to
             // access, since they won't be properly aligned, but *shrug*.
-            if let Some(layout) = self.ctx.resolve_type(inner).layout(self.ctx) {
+            if let Some(layout) = self.ctx
+                .resolve_type(inner)
+                .layout(self.ctx) {
                 if layout.align > mem::size_of::<*mut ()>() {
-                    field_layout.size =
-                        align_to(layout.size, layout.align) * len;
+                    field_layout.size = align_to(layout.size, layout.align) *
+                                        len;
                     field_layout.align = mem::size_of::<*mut ()>();
                 }
             }
@@ -197,7 +200,8 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
             };
 
             // Otherwise the padding is useless.
-            let need_padding = padding_bytes >= field_layout.align;
+            let need_padding = padding_bytes >= field_layout.align ||
+                               field_layout.align > mem::size_of::<*mut ()>();
 
             self.latest_offset += padding_bytes;
 
@@ -206,14 +210,16 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
                    self.latest_offset);
 
             debug!("align field {} to {}/{} with {} padding bytes {:?}",
-                field_name,
-                self.latest_offset,
-                field_offset.unwrap_or(0) / 8,
-                padding_bytes,
-                field_layout);
+                   field_name,
+                   self.latest_offset,
+                   field_offset.unwrap_or(0) / 8,
+                   padding_bytes,
+                   field_layout);
 
             if need_padding && padding_bytes != 0 {
-                Some(Layout::new(padding_bytes, field_layout.align))
+                Some(Layout::new(padding_bytes,
+                                 cmp::min(field_layout.align,
+                                          mem::size_of::<*mut ()>())))
             } else {
                 None
             }
@@ -221,7 +227,8 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
 
         self.latest_offset += field_layout.size;
         self.latest_field_layout = Some(field_layout);
-        self.max_field_align = cmp::max(self.max_field_align, field_layout.align);
+        self.max_field_align = cmp::max(self.max_field_align,
+                                        field_layout.align);
         self.last_field_was_bitfield = false;
 
         debug!("Offset: {}: {} -> {}",
@@ -232,11 +239,15 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         padding_layout.map(|layout| self.padding_field(layout))
     }
 
-    pub fn pad_struct(&mut self, name: &str, layout: Layout) -> Option<ast::StructField> {
+    pub fn pad_struct(&mut self,
+                      name: &str,
+                      layout: Layout)
+                      -> Option<ast::StructField> {
         if layout.size < self.latest_offset {
             error!("Calculated wrong layout for {}, too more {} bytes",
-                   name, self.latest_offset - layout.size);
-            return None
+                   name,
+                   self.latest_offset - layout.size);
+            return None;
         }
 
         let padding_bytes = layout.size - self.latest_offset;
@@ -248,19 +259,21 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         // regardless, because bitfields don't respect alignment as strictly as
         // other fields.
         if padding_bytes > 0 &&
-            (padding_bytes >= layout.align ||
-             (self.last_field_was_bitfield &&
-                padding_bytes >= self.latest_field_layout.unwrap().align) ||
-             layout.align > mem::size_of::<*mut ()>()) {
+           (padding_bytes >= layout.align ||
+            (self.last_field_was_bitfield &&
+             padding_bytes >= self.latest_field_layout.unwrap().align) ||
+            layout.align > mem::size_of::<*mut ()>()) {
             let layout = if self.comp.packed() {
                 Layout::new(padding_bytes, 1)
             } else if self.last_field_was_bitfield ||
-                      layout.align > mem::size_of::<*mut ()>() {
+                                   layout.align > mem::size_of::<*mut ()>() {
                 // We've already given up on alignment here.
                 Layout::for_size(padding_bytes)
             } else {
                 Layout::new(padding_bytes, layout.align)
             };
+
+            debug!("pad bytes to struct {}, {:?}", name, layout);
 
             Some(self.padding_field(layout))
         } else {
@@ -314,12 +327,14 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
 
         // If it was, we may or may not need to align, depending on what the
         // current field alignment and the bitfield size and alignment are.
-        debug!("align_to_bitfield? {}: {:?} {:?}", self.last_field_was_bitfield,
-               layout, new_field_layout);
+        debug!("align_to_bitfield? {}: {:?} {:?}",
+               self.last_field_was_bitfield,
+               layout,
+               new_field_layout);
 
         if self.last_field_was_bitfield &&
-            new_field_layout.align <= layout.size % layout.align &&
-            new_field_layout.size <= layout.size % layout.align {
+           new_field_layout.align <= layout.size % layout.align &&
+           new_field_layout.size <= layout.size % layout.align {
             // The new field will be coalesced into some of the remaining bits.
             //
             // FIXME(emilio): I think this may not catch everything?

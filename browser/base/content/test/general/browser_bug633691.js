@@ -16,8 +16,10 @@ add_task(function* test() {
 
       yield loadError;
 
+      /* eslint-disable no-eval */
       let is_hidden = eval(`(() => ${is_hidden_})()`);
       let is_element_hidden = eval(`(() => ${is_element_hidden_})()`);
+      /* eslint-enable no-eval */
       let doc = content.document.getElementsByTagName("iframe")[0].contentDocument;
       let aP = doc.getElementById("badCertAdvancedPanel");
       ok(aP, "Advanced content should exist");

@@ -37,6 +37,7 @@
 
 use ir::context::BindgenContext;
 use ir::item::{Item, ItemAncestors, ItemCanonicalName};
+use ir::template::TemplateParameters;
 use std::io;
 
 // Like `canonical_path`, except we always take namespaces into account, ignore
@@ -83,9 +84,9 @@ pub fn generate_dummy_uses<W>(ctx: &mut BindgenContext,
                         // these.
                         !ty.is_builtin_or_named() &&
                         // And finally, we won't be creating any dummy
-                        // specializations, so ignore template declarations and
-                        // partial specializations.
-                        item.applicable_template_args(ctx).is_empty()
+                        // instantiations, so ignore template declarations and
+                        // instantiations.
+                        item.all_template_params(ctx).is_none()
                 } else {
                     false
                 }

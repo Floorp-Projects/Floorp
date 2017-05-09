@@ -8,11 +8,12 @@ Rayon is a data-parallelism library for Rust. It is extremely
 lightweight and makes it easy to convert a sequential computation into
 a parallel one. It also guarantees data-race freedom. (You may also
 enjoy [this blog post][blog] about Rayon, which gives more background
-and details about how it works.) Rayon is
+and details about how it works, or [this video][video], from the Rust Belt Rust conference.) Rayon is
 [available on crates.io](https://crates.io/crates/rayon), and
 [API Documentation is available on docs.rs](https://docs.rs/rayon/).
 
 [blog]: http://smallcultfollowing.com/babysteps/blog/2015/12/18/rayon-data-parallelism-in-rust/
+[video]: https://www.youtube.com/watch?v=gof_OEv71Aw
 
 You can use Rayon in two ways. Which way you will want will depend on
 what you are doing:
@@ -43,15 +44,17 @@ parallel.
 
 ```
 > cd rayon-demo
-> cargo run --release -- nbody visualize
+> cargo +nightly run --release -- nbody visualize
 ```
 
 For more information on demos, try:
 
 ```
 > cd rayon-demo
-> cargo run --release -- --help
+> cargo +nightly run --release -- --help
 ```
+
+**Note:** While Rayon is usable as a library with the stable compiler, running demos or executing tests requires nightly Rust.
 
 ### Parallel Iterators
 
@@ -187,15 +190,15 @@ and dynamically ascertain how much parallelism is available and
 exploit it. The idea is very simple: we always have a pool of worker
 threads available, waiting for some work to do. When you call `join`
 the first time, we shift over into that pool of threads. But if you
-call `join(a, b)` from a worker thread W, then W will place `b` into a
-central queue, advertising that this is work that other worker threads
-might help out with. W will then start executing `a`. While W is busy
-with `a`, other threads might come along and take `b` from the
-queue. That is called *stealing* `b`. Once `a` is done, W checks
-whether `b` was stolen by another thread and, if not, executes `b`
-itself. If `b` *was* stolen, then W can just wait for the other thread
-to finish.  (In fact, it can do even better: it can go try to find
-other work to steal in the meantime.)
+call `join(a, b)` from a worker thread W, then W will place `b` into
+its work queue, advertising that this is work that other worker
+threads might help out with. W will then start executing `a`.
+
+While W is busy with `a`, other threads might come along and take `b`
+from its queue. That is called *stealing* `b`. Once `a` is done, W
+checks whether `b` was stolen by another thread and, if not, executes
+`b` itself. If W runs out of jobs in its own queue, it will look
+through the other threads' queues and try to steal work from them.
 
 This technique is not new. It was first introduced by the
 [Cilk project][cilk], done at MIT in the late nineties. The name Rayon
@@ -220,7 +223,7 @@ serve a common purpose:
 2. A `RefCell` is kind of like a "single-threaded read-write lock"; it
    can be used with any sort of type `T`. To gain access to the data
    inside, you call `borrow` or `borrow_mut`. Dynamic checks are done
-   to ensure that you have either readers or writers but not both.
+   to ensure that you have either readers or one writer but not both.
 
 While there are threadsafe types that offer similar APIs, caution is
 warranted because, in a threadsafe setting, other threads may
@@ -393,6 +396,6 @@ interjected into our execution!
 ## License
 
 Rayon is distributed under the terms of both the MIT license and the
-Apache License (Version 2.0). See [LICENSE-APACHE](LICENSE-APACHE) for
+Apache License (Version 2.0). See [LICENSE-APACHE](LICENSE-APACHE) and
 [LICENSE-MIT](LICENSE-MIT) for details. Opening a pull requests is
 assumed to signal agreement with these licensing terms.

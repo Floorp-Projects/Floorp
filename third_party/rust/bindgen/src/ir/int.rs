@@ -6,11 +6,17 @@ pub enum IntKind {
     /// A `bool`.
     Bool,
 
-    /// A `char`.
-    Char,
+    /// A `signed char`.
+    SChar,
 
     /// An `unsigned char`.
     UChar,
+
+    /// A platform-dependent `char` type, with the signedness support.
+    Char {
+        /// Whether the char is signed for the target platform.
+        is_signed: bool,
+    },
 
     /// A `short`.
     Short,
@@ -84,8 +90,10 @@ impl IntKind {
             Bool | UChar | UShort | UInt | ULong | ULongLong | U8 | U16 |
             U32 | U64 | U128 => false,
 
-            Char | Short | Int | Long | LongLong | I8 | I16 | I32 | I64 |
+            SChar | Short | Int | Long | LongLong | I8 | I16 | I32 | I64 |
             I128 => true,
+
+            Char { is_signed } => is_signed,
 
             Custom { is_signed, .. } => is_signed,
         }
@@ -97,7 +105,7 @@ impl IntKind {
     pub fn known_size(&self) -> Option<usize> {
         use self::IntKind::*;
         Some(match *self {
-            Bool | UChar | Char | U8 | I8 => 1,
+            Bool | UChar | SChar | U8 | I8 | Char { .. } => 1,
             U16 | I16 => 2,
             U32 | I32 => 4,
             U64 | I64 => 8,

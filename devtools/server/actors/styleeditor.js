@@ -5,12 +5,10 @@
 "use strict";
 
 const {Cc, Ci} = require("chrome");
-const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
-const {Arg, method, RetVal} = protocol;
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {oldStyleSheetSpec, styleEditorSpec} = require("devtools/shared/specs/styleeditor");
 
@@ -18,18 +16,17 @@ loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css
 
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
-var TRANSITION_RULE = "\
-:root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
-transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
-transition-delay: 0ms !important;\
-transition-timing-function: ease-out !important;\
-transition-property: all !important;\
-}";
-
-var LOAD_ERROR = "error-load";
+var TRANSITION_RULE = ":root.moz-styleeditor-transitioning, " +
+                      ":root.moz-styleeditor-transitioning * {\n" +
+                        "transition-duration: " + TRANSITION_DURATION_MS +
+                          "ms !important;\n" +
+                        "transition-delay: 0ms !important;\n" +
+                        "transition-timing-function: ease-out !important;\n" +
+                        "transition-property: all !important;\n" +
+                      "}";
 
 var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
-  toString: function() {
+  toString: function () {
     return "[OldStyleSheetActor " + this.actorID + "]";
   },
 
@@ -59,8 +56,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
    *
    * @return number
    */
-  get styleSheetIndex()
-  {
+  get styleSheetIndex() {
     if (this._styleSheetIndex == -1) {
       for (let i = 0; i < this.document.styleSheets.length; i++) {
         if (this.document.styleSheets[i] == this.rawSheet) {
@@ -72,14 +68,14 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
     return this._styleSheetIndex;
   },
 
-  initialize: function (aStyleSheet, aParentActor, aWindow) {
+  initialize: function (styleSheet, parentActor, window) {
     protocol.Actor.prototype.initialize.call(this, null);
 
-    this.rawSheet = aStyleSheet;
-    this.parentActor = aParentActor;
+    this.rawSheet = styleSheet;
+    this.parentActor = parentActor;
     this.conn = this.parentActor.conn;
 
-    this._window = aWindow;
+    this._window = window;
 
     // text and index are unknown until source load
     this.text = null;
@@ -133,8 +129,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
 
     try {
       form.ruleCount = this.rawSheet.cssRules.length;
-    }
-    catch (e) {
+    } catch (e) {
       // stylesheet had an @import rule that wasn't loaded yet
     }
     return form;
@@ -210,8 +205,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
    * defined in <http://www.w3.org/TR/CSS2/syndata.html#charset>.
    * Note that some of the algorithm is implemented in DevToolsUtils.fetch.
    */
-  _getCSSCharset: function ()
-  {
+  _getCSSCharset: function () {
     let sheet = this.rawSheet;
     if (sheet) {
       // Do we have a @charset rule in the stylesheet?
@@ -265,8 +259,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
 
     if (transition) {
       this._insertTransistionRule();
-    }
-    else {
+    } else {
       this._notifyStyleApplied();
     }
   },
@@ -296,8 +289,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
     * This cleans up class and rule added for transition effect and then
     * notifies that the style has been applied.
     */
-  _onTransitionEnd: function ()
-  {
+  _onTransitionEnd: function () {
     if (--this._transitionRefCount == 0) {
       this.document.documentElement.classList.remove(TRANSITION_CLASS);
       this.rawSheet.deleteRule(this.rawSheet.cssRules.length - 1);
@@ -313,7 +305,7 @@ exports.OldStyleSheetActor = OldStyleSheetActor;
  * Creates a StyleEditorActor. StyleEditorActor provides remote access to the
  * stylesheets of a document.
  */
-var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(styleEditorSpec, {
+var StyleEditorActor = protocol.ActorClassWithSpec(styleEditorSpec, {
   /**
    * The window we work with, taken from the parent actor.
    */
@@ -328,8 +320,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
     return this.window.document;
   },
 
-  form: function ()
-  {
+  form: function () {
     return { actor: this.actorID };
   },
 
@@ -345,8 +336,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
   /**
    * Destroy the current StyleEditorActor instance.
    */
-  destroy: function ()
-  {
+  destroy: function () {
     this._sheets.clear();
   },
 
@@ -362,8 +352,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
     // https://bugzilla.mozilla.org/show_bug.cgi?id=839103 is fixed
     if (this.document.readyState == "complete") {
       this._onDocumentLoaded();
-    }
-    else {
+    } else {
       this.window.addEventListener("load", this._onDocumentLoaded);
     }
     return {};
@@ -379,7 +368,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
     }
 
     let documents = [this.document];
-    var forms = [];
+    let forms = [];
     for (let doc of documents) {
       let sheetForms = this._addStyleSheets(doc.styleSheets);
       forms = forms.concat(sheetForms);
@@ -401,8 +390,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
    * @return {[object]}
    *         Array of actors for each StyleSheetActor created
    */
-  _addStyleSheets: function (styleSheets)
-  {
+  _addStyleSheets: function (styleSheets) {
     let sheets = [];
     for (let i = 0; i < styleSheets.length; i++) {
       let styleSheet = styleSheets[i];
@@ -425,8 +413,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
    * @return {StyleSheetActor}
    *         The actor for this style sheet
    */
-  _createStyleSheetActor: function (styleSheet)
-  {
+  _createStyleSheetActor: function (styleSheet) {
     if (this._sheets.has(styleSheet)) {
       return this._sheets.get(styleSheet);
     }
@@ -447,9 +434,9 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
    *         All the imported stylesheets
    */
   _getImported: function (styleSheet) {
-   let imported = [];
+    let imported = [];
 
-   for (let i = 0; i < styleSheet.cssRules.length; i++) {
+    for (let i = 0; i < styleSheet.cssRules.length; i++) {
       let rule = styleSheet.cssRules[i];
       if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
         // Associated styleSheet may be null if it has already been seen due to
@@ -461,8 +448,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
 
         // recurse imports in this stylesheet as well
         imported = imported.concat(this._getImported(rule.styleSheet));
-      }
-      else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+      } else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
         // @import rules must precede all others except @charset
         break;
       }
@@ -510,19 +496,3 @@ XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
 
 exports.StyleEditorActor = StyleEditorActor;
 
-/**
- * Normalize multiple relative paths towards the base paths on the right.
- */
-function normalize(...aURLs) {
-  let base = Services.io.newURI(aURLs.pop());
-  let url;
-  while ((url = aURLs.pop())) {
-    base = Services.io.newURI(url, null, base);
-  }
-  return base.spec;
-}
-
-function dirname(aPath) {
-  return Services.io.newURI(
-    ".", null, Services.io.newURI(aPath)).spec;
-}

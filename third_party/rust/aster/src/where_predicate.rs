@@ -53,13 +53,13 @@ impl<F> WherePredicateBuilder<F>
         }
     }
 
-    pub fn eq<P>(self, path: P) -> WhereEqPredicateBuilder<F>
+    pub fn eq<P>(self, p: P) -> WhereEqPredicateBuilder<F>
         where P: IntoPath,
     {
         WhereEqPredicateBuilder {
             callback: self.callback,
             span: self.span,
-            path: path.into_path(),
+            lhs: TyBuilder::new().build_path(p.into_path()),
         }
     }
 }
@@ -240,7 +240,7 @@ impl<F> WhereBoundPredicateTyBoundsBuilder<F>
             span: self.span,
             bound_lifetimes: self.bound_lifetimes,
             bounded_ty: self.ty,
-            bounds: P::from_vec(self.bounds),
+            bounds: self.bounds,
         };
 
         self.callback.invoke(ast::WherePredicate::BoundPredicate(predicate))
@@ -302,7 +302,7 @@ impl<F> WhereRegionPredicateBuilder<F>
 pub struct WhereEqPredicateBuilder<F> {
     callback: F,
     span: Span,
-    path: ast::Path,
+    lhs: P<ast::Ty>,
 }
 
 impl<F> WhereEqPredicateBuilder<F>
@@ -314,13 +314,13 @@ impl<F> WhereEqPredicateBuilder<F>
     }
 
     pub fn build_ty(self, ty: P<ast::Ty>) -> F::Result {
-        let WhereEqPredicateBuilder { callback, span, path } = self;
+        let WhereEqPredicateBuilder { callback, span, lhs } = self;
 
         let predicate = ast::WhereEqPredicate {
             id: ast::DUMMY_NODE_ID,
             span: span,
-            path: path,
-            ty: ty,
+            lhs_ty: lhs,
+            rhs_ty: ty,
         };
 
         callback.invoke(ast::WherePredicate::EqPredicate(predicate))

@@ -178,12 +178,12 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
       params.push_back("HAS_FILE_PRIVILEGES");
       params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
-      params.push_back("DEBUG_BUILD");
 #ifdef DEBUG
-      params.push_back("TRUE");
-#else
-      params.push_back("FALSE");
-#endif
+      if (!aInfo.debugWriteDir.empty()) {
+        params.push_back("DEBUG_WRITE_DIR");
+        params.push_back(aInfo.debugWriteDir.c_str());
+      }
+#endif // DEBUG
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");

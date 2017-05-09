@@ -110,6 +110,43 @@ using UniqueProfilerBacktrace =
 
 #else   // defined(MOZ_GECKO_PROFILER)
 
+#if defined(__GNUC__) || defined(_MSC_VER)
+# define PROFILER_FUNCTION_NAME __FUNCTION__
+#else
+  // From C99, supported by some C++ compilers. Just the raw function name.
+# define PROFILER_FUNCTION_NAME __func__
+#endif
+
+#define PROFILER_FUNC(decl, rv)  decl;
+#define PROFILER_FUNC_VOID(decl) void decl;
+
+// we want the class and function name but can't easily get that using preprocessor macros
+// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
+
+#define PROFILER_LABEL(name_space, info, category) \
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::SamplerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
+                                            __LINE__)
+
+#define PROFILER_LABEL_FUNC(category) \
+  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
+  mozilla::SamplerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(PROFILER_FUNCTION_NAME, category, \
+                                            __LINE__)
+
+#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) \
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::SamplerStackFrameDynamicRAII \
+  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
+                                            __LINE__, str)
+
+#define PROFILER_MARKER(info) profiler_add_marker(info)
+#define PROFILER_MARKER_PAYLOAD(info, payload) \
+  profiler_add_marker(info, payload)
+
+#endif  // defined(MOZ_GECKO_PROFILER)
+
 // Higher-order macro containing all the feature info in one place. Define
 // |macro| appropriately to extract the relevant parts. Note that the number
 // values are used internally only and so can be changed without consequence.
@@ -167,43 +204,6 @@ struct ProfilerFeature
 
   #undef DECLARE
 };
-
-#if defined(__GNUC__) || defined(_MSC_VER)
-# define PROFILER_FUNCTION_NAME __FUNCTION__
-#else
-  // From C99, supported by some C++ compilers. Just the raw function name.
-# define PROFILER_FUNCTION_NAME __func__
-#endif
-
-#define PROFILER_FUNC(decl, rv)  decl;
-#define PROFILER_FUNC_VOID(decl) void decl;
-
-// we want the class and function name but can't easily get that using preprocessor macros
-// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
-
-#define PROFILER_LABEL(name_space, info, category) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::SamplerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
-                                            __LINE__)
-
-#define PROFILER_LABEL_FUNC(category) \
-  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
-  mozilla::SamplerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(PROFILER_FUNCTION_NAME, category, \
-                                            __LINE__)
-
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::SamplerStackFrameDynamicRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
-                                            __LINE__, str)
-
-#define PROFILER_MARKER(info) profiler_add_marker(info)
-#define PROFILER_MARKER_PAYLOAD(info, payload) \
-  profiler_add_marker(info, payload)
-
-#endif  // defined(MOZ_GECKO_PROFILER)
 
 // These functions are defined whether the profiler is enabled or not.
 

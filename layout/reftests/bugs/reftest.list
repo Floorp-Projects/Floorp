@@ -206,7 +206,7 @@ fuzzy-if(skiaContent,1,5) == 212563-2.html 212563-2-ref.html
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
-fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1-ref.svg
+fuzzy-if(skiaContent,1,4) fails-if(stylo) == 220165-1.svg 220165-1-ref.svg
 == 223809-1.html 223809-1-ref.html
 == 228856-1.html 228856-1-ref.html
 == 228856-2.html 228856-2-ref.html
@@ -1353,7 +1353,7 @@ fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
 == 490173-1.html 490173-1-ref.html
 == 490173-2.html 490173-2-ref.html
 == 490176-1.html 490176-1-ref.html
-== 490177-1.svg 490177-1-ref.svg
+fails-if(stylo) == 490177-1.svg 490177-1-ref.svg
 == 490182-1a.html 490182-1-ref.html
 == 490182-1b.html 490182-1-ref.html
 pref(browser.display.focus_ring_width,1) == 491180-1.html 491180-1-ref.html

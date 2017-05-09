@@ -12,8 +12,8 @@ const TEST_STORE_FILE_NAME = "test-profile.json";
 const COMPUTE_TESTCASES = [
   // Empty
   {
-    description: "Empty profile",
-    profile: {
+    description: "Empty address",
+    address: {
     },
     expectedResult: {
     },
@@ -22,7 +22,7 @@ const COMPUTE_TESTCASES = [
   // Name
   {
     description: "Has split names",
-    profile: {
+    address: {
       "given-name": "Timothy",
       "additional-name": "John",
       "family-name": "Berners-Lee",
@@ -38,7 +38,7 @@ const COMPUTE_TESTCASES = [
   // Address
   {
     description: "\"street-address\" with single line",
-    profile: {
+    address: {
       "street-address": "single line",
     },
     expectedResult: {
@@ -48,7 +48,7 @@ const COMPUTE_TESTCASES = [
   },
   {
     description: "\"street-address\" with multiple lines",
-    profile: {
+    address: {
       "street-address": "line1\nline2\nline3",
     },
     expectedResult: {
@@ -60,7 +60,7 @@ const COMPUTE_TESTCASES = [
   },
   {
     description: "\"street-address\" with multiple lines but line2 is omitted",
-    profile: {
+    address: {
       "street-address": "line1\n\nline3",
     },
     expectedResult: {
@@ -72,7 +72,7 @@ const COMPUTE_TESTCASES = [
   },
   {
     description: "\"street-address\" with 4 lines",
-    profile: {
+    address: {
       "street-address": "line1\nline2\nline3\nline4",
     },
     expectedResult: {
@@ -87,8 +87,8 @@ const COMPUTE_TESTCASES = [
 const NORMALIZE_TESTCASES = [
   // Empty
   {
-    description: "Empty profile",
-    profile: {
+    description: "Empty address",
+    address: {
     },
     expectedResult: {
     },
@@ -97,7 +97,7 @@ const NORMALIZE_TESTCASES = [
   // Name
   {
     description: "Has \"name\", and the split names are omitted",
-    profile: {
+    address: {
       "name": "Timothy John Berners-Lee",
     },
     expectedResult: {
@@ -108,7 +108,7 @@ const NORMALIZE_TESTCASES = [
   },
   {
     description: "Has both \"name\" and split names",
-    profile: {
+    address: {
       "name": "John Doe",
       "given-name": "Timothy",
       "additional-name": "John",
@@ -122,7 +122,7 @@ const NORMALIZE_TESTCASES = [
   },
   {
     description: "Has \"name\", and some of split names are omitted",
-    profile: {
+    address: {
       "name": "John Doe",
       "given-name": "Timothy",
     },
@@ -136,7 +136,7 @@ const NORMALIZE_TESTCASES = [
   // Address
   {
     description: "Has \"address-line1~3\" and \"street-address\" is omitted",
-    profile: {
+    address: {
       "address-line1": "line1",
       "address-line2": "line2",
       "address-line3": "line3",
@@ -147,7 +147,7 @@ const NORMALIZE_TESTCASES = [
   },
   {
     description: "Has both \"address-line1~3\" and \"street-address\"",
-    profile: {
+    address: {
       "street-address": "street address",
       "address-line1": "line1",
       "address-line2": "line2",
@@ -159,7 +159,7 @@ const NORMALIZE_TESTCASES = [
   },
   {
     description: "Has \"address-line2~3\" and single-line \"street-address\"",
-    profile: {
+    address: {
       "street-address": "street address",
       "address-line2": "line2",
       "address-line3": "line3",
@@ -170,7 +170,7 @@ const NORMALIZE_TESTCASES = [
   },
   {
     description: "Has \"address-line2~3\" and multiple-line \"street-address\"",
-    profile: {
+    address: {
       "street-address": "street address\nstreet address line 2",
       "address-line2": "line2",
       "address-line3": "line3",
@@ -181,9 +181,9 @@ const NORMALIZE_TESTCASES = [
   },
 ];
 
-let do_check_profile_matches = (expectedProfile, profile) => {
-  for (let key in expectedProfile) {
-    do_check_eq(expectedProfile[key], profile[key] || "");
+let do_check_record_matches = (expectedRecord, record) => {
+  for (let key in expectedRecord) {
+    do_check_eq(expectedRecord[key], record[key] || "");
   }
 };
 
@@ -193,36 +193,36 @@ add_task(function* test_computeFields() {
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  COMPUTE_TESTCASES.forEach(testcase => profileStorage.add(testcase.profile));
+  COMPUTE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
+  let addresses = profileStorage.getAll();
 
-  for (let i in profiles) {
+  for (let i in addresses) {
     do_print("Verify testcase: " + COMPUTE_TESTCASES[i].description);
-    do_check_profile_matches(COMPUTE_TESTCASES[i].expectedResult, profiles[i]);
+    do_check_record_matches(COMPUTE_TESTCASES[i].expectedResult, addresses[i]);
   }
 });
 
-add_task(function* test_normalizeProfile() {
+add_task(function* test_normalizeFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  NORMALIZE_TESTCASES.forEach(testcase => profileStorage.add(testcase.profile));
+  NORMALIZE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
+  let addresses = profileStorage.getAll();
 
-  for (let i in profiles) {
+  for (let i in addresses) {
     do_print("Verify testcase: " + NORMALIZE_TESTCASES[i].description);
-    do_check_profile_matches(NORMALIZE_TESTCASES[i].expectedResult, profiles[i]);
+    do_check_record_matches(NORMALIZE_TESTCASES[i].expectedResult, addresses[i]);
   }
 });

@@ -8,19 +8,19 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 var ParentUtils = {
-  cleanUpProfile() {
-    Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
-      Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
+  cleanUpAddress() {
+    Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
 
-      let profiles = result.data;
-      Services.cpmm.sendAsyncMessage("FormAutofill:RemoveProfiles",
-                                     {guids: profiles.map(profile => profile.guid)});
+      let addresses = result.data;
+      Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses",
+                                     {guids: addresses.map(address => address.guid)});
     });
 
-    Services.cpmm.sendAsyncMessage("FormAutofill:GetProfiles", {searchString: ""});
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {searchString: ""});
   },
 
-  updateProfile(type, chromeMsg, msgData, contentMsg) {
+  updateAddress(type, chromeMsg, msgData, contentMsg) {
     Services.cpmm.sendAsyncMessage(chromeMsg, msgData);
     Services.obs.addObserver(function observer(subject, topic, data) {
       if (data != type) {
@@ -39,23 +39,23 @@ var ParentUtils = {
 
   cleanup() {
     Services.obs.removeObserver(this, "formautofill-storage-changed");
-    this.cleanUpProfile();
+    this.cleanUpAddress();
   },
 };
 
-ParentUtils.cleanUpProfile();
+ParentUtils.cleanUpAddress();
 Services.obs.addObserver(ParentUtils, "formautofill-storage-changed");
 
-addMessageListener("FormAutofillTest:AddProfile", (msg) => {
-  ParentUtils.updateProfile("add", "FormAutofill:SaveProfile", msg, "FormAutofillTest:ProfileAdded");
+addMessageListener("FormAutofillTest:AddAddress", (msg) => {
+  ParentUtils.updateAddress("add", "FormAutofill:SaveAddress", msg, "FormAutofillTest:AddressAdded");
 });
 
-addMessageListener("FormAutofillTest:RemoveProfile", (msg) => {
-  ParentUtils.updateProfile("remove", "FormAutofill:Removefile", msg, "FormAutofillTest:ProfileRemoved");
+addMessageListener("FormAutofillTest:RemoveAddress", (msg) => {
+  ParentUtils.updateAddress("remove", "FormAutofill:RemoveAddress", msg, "FormAutofillTest:AddressRemoved");
 });
 
-addMessageListener("FormAutofillTest:UpdateProfile", (msg) => {
-  ParentUtils.updateProfile("update", "FormAutofill:SaveProfile", msg, "FormAutofillTest:ProfileUpdated");
+addMessageListener("FormAutofillTest:UpdateAddress", (msg) => {
+  ParentUtils.updateAddress("update", "FormAutofill:SaveAddress", msg, "FormAutofillTest:AddressUpdated");
 });
 
 addMessageListener("cleanup", () => {

@@ -192,13 +192,13 @@
 }
 
 .tab-close-button {
-  margin-inline-start: 2px;
+  margin-inline-start: 1px;
   margin-inline-end: -2px;
   padding: 0;
 }
 
 .tab-icon-sound {
-  margin-inline-start: 4px;
+  margin-inline-start: 1px;
   width: 16px;
   height: 16px;
   padding: 0;
