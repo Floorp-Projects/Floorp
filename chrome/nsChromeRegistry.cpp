@@ -509,7 +509,7 @@ nsChromeRegistry::ReloadChrome()
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryInterface(protoWindow);
           if (domWindow) {
-            Location* location = domWindow->Location();
+            Location* location = domWindow->GetLocation();
             if (location) {
               rv = location->Reload(false);
               if (NS_FAILED(rv)) return rv;
