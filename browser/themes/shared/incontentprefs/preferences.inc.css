@@ -609,3 +609,24 @@ description > html|a {
   color: var(--in-content-category-text);
   text-decoration: none;
 }
+
+.search-tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 0 10px;
+  bottom: 100%;
+  background-color: #ffe352;
+}
+
+.search-tooltip::before {
+  position: absolute;
+  content: "";
+  border: 6px solid transparent;
+  border-top-color: #ffe352;
+  top: 100%;
+  offset-inline-start: calc(50% - 6px);
+}
+
+.search-tooltip-parent {
+  position: relative;
+}
