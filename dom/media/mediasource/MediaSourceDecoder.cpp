@@ -353,6 +353,16 @@ MediaSourceDecoder::ClampIntervalToEnd(const TimeInterval& aInterval)
                       aInterval.mFuzz);
 }
 
+void
+MediaSourceDecoder::NotifyInitDataArrived()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mDemuxer) {
+    mDemuxer->NotifyInitDataArrived();
+  }
+}
+
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 

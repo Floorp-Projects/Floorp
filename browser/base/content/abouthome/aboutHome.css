@@ -358,22 +358,22 @@ body[narrow] #restorePreviousSession::before {
   display: block;
   position: relative; /* pin wordmark to edge of document, not of viewport */
   -moz-box-ordinal-group: 0;
-  opacity: .5;
+  opacity: .2;
   transition: opacity 150ms;
 }
 
 #aboutMozilla:hover {
-  opacity: 1;
+  opacity: .6;
 }
 
 #aboutMozilla::before {
-  content: url("chrome://browser/content/abouthome/mozilla.png");
+  content: url("chrome://browser/content/abouthome/mozilla.svg");
   display: block;
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 69px;
-  height: 19px;
+  width: 70px;
+  height: 20px;
 }
 
 /* [HiDPI]
@@ -445,10 +445,6 @@ body[narrow] #restorePreviousSession::before {
   #restorePreviousSession:dir(rtl)::before {
     transform: scale(-0.5, 0.5) translateX(24px);
     transform-origin: top center;
-  }
-
-  #aboutMozilla::before {
-    content: url("chrome://browser/content/abouthome/mozilla@2x.png");
   }
 }
 
