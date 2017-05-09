@@ -210,18 +210,18 @@ NS_IMPL_ISUPPORTS(nsPrintEngine, nsIWebProgressListener,
 //---------------------------------------------------
 //-- nsPrintEngine Class Impl
 //---------------------------------------------------
-nsPrintEngine::nsPrintEngine() :
-  mIsCreatingPrintPreview(false),
-  mIsDoingPrinting(false),
-  mIsDoingPrintPreview(false),
-  mProgressDialogIsShown(false),
-  mScreenDPI(115.0f),
-  mPagePrintTimer(nullptr),
-  mDebugFile(nullptr),
-  mLoadCounter(0),
-  mDidLoadDataForPrinting(false),
-  mIsDestroying(false),
-  mDisallowSelectionPrint(false)
+nsPrintEngine::nsPrintEngine()
+  : mIsCreatingPrintPreview(false)
+  , mIsDoingPrinting(false)
+  , mIsDoingPrintPreview(false)
+  , mProgressDialogIsShown(false)
+  , mScreenDPI(115.0f)
+  , mPagePrintTimer(nullptr)
+  , mDebugFile(nullptr)
+  , mLoadCounter(0)
+  , mDidLoadDataForPrinting(false)
+  , mIsDestroying(false)
+  , mDisallowSelectionPrint(false)
 {
 }
 
@@ -431,10 +431,8 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
     mProgressDialogIsShown = false;
   }
 
-  mPrt = mozilla::MakeUnique<nsPrintData>(aIsPrintPreview
-                                          ? nsPrintData::eIsPrintPreview
-                                          : nsPrintData::eIsPrinting);
-  NS_ENSURE_TRUE(mPrt, NS_ERROR_OUT_OF_MEMORY);
+  mPrt = new nsPrintData(aIsPrintPreview ? nsPrintData::eIsPrintPreview :
+                                           nsPrintData::eIsPrinting);
 
   // if they don't pass in a PrintSettings, then get the Global PS
   mPrt->mPrintSettings = aPrintSettings;
