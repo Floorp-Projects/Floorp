@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<audio id="testAudio"                     src="audio.ogg" loop></audio>
+<video id="testMediaWithSilentAudioTrack" src="silent_audio_track.webm" loop></audio>
+<video id="testMediaWithoutAudioTrack"    src="no_audio_track.webm" loop></audio>
+<script type="application/javascript" src="robocop_head.js"></script>
+<script type="text/javascript">
+var audio = document.getElementById("testAudio");
+var mediaWithSilentAudioTrack = document.getElementById("testMediaWithSilentAudioTrack");
+var mediaWithoutAudioTrack = document.getElementById("testMediaWithoutAudioTrack");
+
+let test = {
+  play_audio : function() {
+    audio.play();
+  },
+
+  pause_audio : function() {
+    audio.pause();
+  },
+
+  adjust_audio_volume : function(volume) {
+    audio.volume = volume;
+  },
+
+  adjust_audio_muted : function(muted) {
+    audio.muted = muted;
+  },
+
+  finish_test: function() {
+    java.disconnect();
+  },
+
+  play_media_with_silent_audio_track: function() {
+    mediaWithSilentAudioTrack.play();
+  },
+
+  pause_media_with_silent_audio_track: function() {
+    mediaWithSilentAudioTrack.pause();
+  },
+
+  play_media_without_audio_track: function() {
+    mediaWithoutAudioTrack.play();
+  },
+
+  pause_media_without_audio_track: function() {
+    mediaWithoutAudioTrack.pause();
+  },
+};
+
+var java = new JavaBridge(test);
+
+</script>
