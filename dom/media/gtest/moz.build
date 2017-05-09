@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
     'TestMozPromise.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
-    # 'TestMP4Reader.cpp', disabled so we can turn check tests back on (bug 1175752)
     'TestRust.cpp',
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
@@ -43,7 +42,6 @@ TEST_HARNESS_FILES.gtest += [
     '../test/vp9cake.webm',
     'dash_dashinit.mp4',
     'id3v2header.mp3',
-    'mediasource_test.mp4',
     'negative_duration.mp4',
     'noise.mp3',
     'noise_vbr.mp3',
