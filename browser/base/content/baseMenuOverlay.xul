@@ -22,7 +22,7 @@
      used as they only apply to Cocoa widget builds. All version of Firefox
      through Firefox 2 will use Carbon widgets. -->
     <menupopup id="menu_ToolsPopup">
-        <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences();"/>
+        <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined, {origin: 'commandLineLegacy'});"/>
         <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
         <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
         <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
