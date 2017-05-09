@@ -550,6 +550,18 @@ def photon_animations(value):
 set_config('MOZ_PHOTON_ANIMATIONS', photon_animations)
 set_define('MOZ_PHOTON_ANIMATIONS', photon_animations)
 
+option(env='MOZ_PHOTON_THEME',
+       help='Enable Photon theme',
+       default=is_nightly)
+
+@depends('MOZ_PHOTON_THEME')
+def photon_theme(value):
+    if value:
+        return bool(value)
+
+set_config('MOZ_PHOTON_THEME', photon_theme)
+set_define('MOZ_PHOTON_THEME', photon_theme)
+
 @depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
 def check_places_and_android_history(places, android_history):
     if places and android_history:
