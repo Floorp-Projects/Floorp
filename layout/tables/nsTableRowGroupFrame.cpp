@@ -595,7 +595,7 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
   if (numRows <= 0)
     return;
 
-  AutoTArray<RowInfo, 10> rowInfo;
+  AutoTArray<RowInfo, 32> rowInfo;
   if (!rowInfo.AppendElements(numRows)) {
     return;
   }
