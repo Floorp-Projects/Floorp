@@ -1098,6 +1098,9 @@ js::UnwindEnvironmentToTryPc(JSScript* script, JSTryNote* tn)
     if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
         pc -= JSOP_TRY_LENGTH;
         MOZ_ASSERT(*pc == JSOP_TRY);
+    } else if (tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE) {
+        pc -= JSOP_TRY_DESTRUCTURING_ITERCLOSE_LENGTH;
+        MOZ_ASSERT(*pc == JSOP_TRY_DESTRUCTURING_ITERCLOSE);
     }
     return pc;
 }
@@ -1938,7 +1941,7 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED220)
+CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
 CASE(JSOP_UNUSED221)
 CASE(JSOP_UNUSED222)
 CASE(JSOP_UNUSED223)
