@@ -1048,6 +1048,11 @@ private:
       return false;
     }
 
+    // No audio track
+    if (!mOwner->HasAudio()) {
+      return false;
+    }
+
     // A loop always is playing
     if (mOwner->HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
       return true;
@@ -7100,6 +7105,7 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
   const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
   if (aInfo.HasAudio() != oldHasAudio) {
+    UpdateAudioChannelPlayingState();
     NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
   }
