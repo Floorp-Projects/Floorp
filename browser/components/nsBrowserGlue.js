@@ -1070,7 +1070,7 @@ BrowserGlue.prototype = {
 
       const skipDefaultBrowserCheck =
         Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheckOnFirstRun") &&
-        !Services.prefs.getBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun");
+        Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheck");
 
       const usePromptLimit = !AppConstants.RELEASE_OR_BETA;
       let promptCount =
@@ -1104,7 +1104,7 @@ BrowserGlue.prototype = {
       // browser has been run a few times.
       if (willPrompt) {
         if (skipDefaultBrowserCheck) {
-          Services.prefs.setBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true);
+          Services.prefs.setBoolPref("browser.shell.skipDefaultBrowserCheck", false);
           willPrompt = false;
         } else {
           promptCount++;
@@ -1667,7 +1667,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 45;
+    const UI_VERSION = 44;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -1959,13 +1959,6 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("browser.tabs.animate");
       Services.prefs.clearUserPref("browser.fullscreen.animate");
       Services.prefs.clearUserPref("alerts.disableSlidingEffect");
-    }
-
-    if (currentUIVersion < 45) {
-      const LEGACY_PREF = "browser.shell.skipDefaultBrowserCheck";
-      Services.prefs.setBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun",
-                                 !Services.prefs.getBoolPref(LEGACY_PREF));
-      Services.prefs.clearUserPref(LEGACY_PREF);
     }
 
     // Update the migration version.
