@@ -3726,7 +3726,8 @@ WebCryptoTask::CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
 }
 
 WebCryptoTask::WebCryptoTask()
-  : mEarlyRv(NS_OK)
+  : CancelableRunnable("WebCryptoTask")
+  , mEarlyRv(NS_OK)
   , mEarlyComplete(false)
   , mOriginalThread(nullptr)
   , mReleasedNSSResources(false)

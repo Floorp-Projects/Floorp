@@ -473,7 +473,8 @@ class mozInlineSpellResume : public Runnable
 public:
   mozInlineSpellResume(UniquePtr<mozInlineSpellStatus>&& aStatus,
                        uint32_t aDisabledAsyncToken)
-    : mDisabledAsyncToken(aDisabledAsyncToken)
+    : Runnable("mozInlineSpellResume")
+    , mDisabledAsyncToken(aDisabledAsyncToken)
     , mStatus(Move(aStatus))
   {
   }

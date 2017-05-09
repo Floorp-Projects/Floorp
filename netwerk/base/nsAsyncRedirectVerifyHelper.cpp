@@ -23,7 +23,8 @@ static LazyLogModule gRedirectLog("nsRedirect");
 
 NS_IMPL_ISUPPORTS(nsAsyncRedirectVerifyHelper,
                   nsIAsyncVerifyRedirectCallback,
-                  nsIRunnable)
+                  nsIRunnable,
+                  nsINamed)
 
 class nsAsyncVerifyRedirectCallbackEvent : public Runnable {
 public:
@@ -225,6 +226,19 @@ nsAsyncRedirectVerifyHelper::InitCallback()
     // Invoke the callback if we are done
     if (mExpectedCallbacks == 0)
         ExplicitCallback(mResult);
+}
+
+NS_IMETHODIMP
+nsAsyncRedirectVerifyHelper::GetName(nsACString& aName)
+{
+    aName.AssignASCII("nsAsyncRedirectVerifyHelper");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAsyncRedirectVerifyHelper::SetName(const char* aName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
