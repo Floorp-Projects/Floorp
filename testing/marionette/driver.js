@@ -82,6 +82,18 @@ this.Context.fromString = function (s) {
 };
 
 /**
+* Helper function for converting an nsISimpleEnumerator to
+* a javascript iterator
+* @param{nsISimpleEnumerator} enumerator
+*    enumerator to convert
+*/
+function* enumeratorIterator (enumerator) {
+  while (enumerator.hasMoreElements()) {
+    yield enumerator.getNext();
+  }
+}
+
+/**
  * Implements (parts of) the W3C WebDriver protocol.  GeckoDriver lives
  * in chrome space and mediates calls to the message listener of the current
  * browsing context's content frame message listener via ListenerProxy.
@@ -185,13 +197,17 @@ Object.defineProperty(GeckoDriver.prototype, "timeouts", {
   },
 });
 
+Object.defineProperty(GeckoDriver.prototype, "windows", {
+  get: function () {
+    return enumeratorIterator(Services.wm.getEnumerator(null));
+  }
+});
+
 Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
   get: function () {
     let hs = [];
-    let winEn = Services.wm.getEnumerator(null);
 
-    while (winEn.hasMoreElements()) {
-      let win = winEn.getNext();
+    for (let win of this.windows) {
       let tabBrowser = browser.getTabBrowser(win);
 
       // Only return handles for browser windows
@@ -212,10 +228,9 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
 Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
   get: function () {
     let hs = [];
-    let winEn = Services.wm.getEnumerator(null);
 
-    while (winEn.hasMoreElements()) {
-      hs.push(getOuterWindowId(winEn.getNext()));
+    for (let win of this.windows) {
+      hs.push(getOuterWindowId(win));
     }
 
     return hs;
@@ -2488,9 +2503,8 @@ GeckoDriver.prototype.close = function (cmd, resp) {
 
   let nwins = 0;
 
-  let winEn = Services.wm.getEnumerator(null);
-  while (winEn.hasMoreElements()) {
-    let win = winEn.getNext();
+  for (let win of this.windows) {
+    // For browser windows count the tabs. Otherwise take the window itself.
     let tabbrowser = browser.getTabBrowser(win);
 
     if (tabbrowser) {
@@ -2528,10 +2542,8 @@ GeckoDriver.prototype.closeChromeWindow = function (cmd, resp) {
 
   let nwins = 0;
 
-  let winEn = Services.wm.getEnumerator(null);
-  while (winEn.hasMoreElements()) {
+  for (let _ of this.windows) {
     nwins++;
-    winEn.getNext();
   }
 
   // If there is only 1 window left, do not close it. Instead return a faked
@@ -2566,9 +2578,7 @@ GeckoDriver.prototype.deleteSession = function (cmd, resp) {
       }
     }
 
-    let winEn = Services.wm.getEnumerator(null);
-    while (winEn.hasMoreElements()) {
-      let win = winEn.getNext();
+    for (let win of this.windows) {
       if (win.messageManager) {
         win.messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
       } else {
