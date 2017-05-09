@@ -538,18 +538,6 @@ project_flag('MOZ_ANDROID_HISTORY',
              help='Enable Android History instead of Places',
              set_as_define=True)
 
-option(env='MOZ_PHOTON_ANIMATIONS',
-       help='Enable Photon UI animations',
-       default=delayed_getattr(milestone, 'is_nightly'))
-
-@depends('MOZ_PHOTON_ANIMATIONS')
-def photon_animations(value):
-    if value:
-        return bool(value)
-
-set_config('MOZ_PHOTON_ANIMATIONS', photon_animations)
-set_define('MOZ_PHOTON_ANIMATIONS', photon_animations)
-
 @depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
 def check_places_and_android_history(places, android_history):
     if places and android_history:
