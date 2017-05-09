@@ -1553,6 +1553,15 @@ nsSocketTransport::InitiateSocket()
         }
         SOCKET_LOG(("Using TCP Fast Open."));
         rv = mFastOpenCallback->StartFastOpen();
+        if (NS_FAILED(rv)) {
+            if (NS_SUCCEEDED(mCondition)) {
+                mCondition = rv;
+            }
+            mFastOpenCallback = nullptr;
+            MutexAutoLock lock(mLock);
+            mFDFastOpenInProgress = false;
+            return rv;
+        }
         status = PR_FAILURE;
         connectCalled = false;
         bool fastOpenNotSupported = false;
