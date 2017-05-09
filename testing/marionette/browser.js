@@ -126,6 +126,8 @@ browser.Context = class {
   get contentBrowser() {
     if (this.tab) {
       return browser.getBrowserForTab(this.tab);
+    } else if (this.tabBrowser && this.driver.isReftestBrowser(this.tabBrowser)) {
+      return this.tabBrowser;
     }
 
     return null;
@@ -138,7 +140,7 @@ browser.Context = class {
    */
   get curFrameId() {
     let rv = null;
-    if (this.tab) {
+     if (this.tab || this.driver.isReftestBrowser(this.contentBrowser) ) {
       rv = this.getIdForBrowser(this.contentBrowser);
     }
     return rv;
