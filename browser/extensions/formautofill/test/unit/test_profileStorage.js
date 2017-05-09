@@ -143,11 +143,6 @@ add_task(function* test_getByFilter() {
   filter = {info: {fieldName: "street-address"}, searchString: ".*"};
   profiles = profileStorage.getByFilter(filter);
   do_check_eq(profiles.length, 0);
-
-  // Prevent broken while searching the property that is not existed.
-  filter = {info: {fieldName: "tel"}, searchString: "1"};
-  profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 0);
 });
 
 add_task(function* test_add() {
