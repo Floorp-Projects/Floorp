@@ -6,9 +6,13 @@ from __future__ import absolute_import
 
 import bz2
 import gzip
+import io
 import stat
 import tarfile
 
+from .files import (
+    BaseFile,
+)
 
 # 2016-01-01T00:00:00+0000
 DEFAULT_MTIME = 1451606400
@@ -18,22 +22,26 @@ def create_tar_from_files(fp, files):
     """Create a tar file deterministically.
 
     Receives a dict mapping names of files in the archive to local filesystem
-    paths.
+    paths or ``mozpack.files.BaseFile`` instances.
 
     The files will be archived and written to the passed file handle opened
     for writing.
 
     Only regular files can be written.
 
-    FUTURE accept mozpack.files classes for writing
     FUTURE accept a filename argument (or create APIs to write files)
     """
     with tarfile.open(name='', mode='w', fileobj=fp, dereference=True) as tf:
-        for archive_path, fs_path in sorted(files.items()):
-            ti = tf.gettarinfo(fs_path, archive_path)
+        for archive_path, f in sorted(files.items()):
+            if isinstance(f, BaseFile):
+                ti = tarfile.TarInfo(archive_path)
+                ti.mode = f.mode or 0644
+                ti.type = tarfile.REGTYPE
+            else:
+                ti = tf.gettarinfo(f, archive_path)
 
             if not ti.isreg():
-                raise ValueError('not a regular file: %s' % fs_path)
+                raise ValueError('not a regular file: %s' % f)
 
             # Disallow setuid and setgid bits. This is an arbitrary restriction.
             # However, since we set uid/gid to root:root, setuid and setgid
@@ -41,7 +49,7 @@ def create_tar_from_files(fp, files):
             # uncompressed as root.
             if ti.mode & (stat.S_ISUID | stat.S_ISGID):
                 raise ValueError('cannot add file with setuid or setgid set: '
-                                 '%s' % fs_path)
+                                 '%s' % f)
 
             # Set uid, gid, username, and group as deterministic values.
             ti.uid = 0
@@ -52,8 +60,14 @@ def create_tar_from_files(fp, files):
             # Set mtime to a constant value.
             ti.mtime = DEFAULT_MTIME
 
-            with open(fs_path, 'rb') as fh:
-                tf.addfile(ti, fh)
+            if isinstance(f, BaseFile):
+                ti.size = f.size()
+                # tarfile wants to pass a size argument to read(). So just
+                # wrap/buffer in a proper file object interface.
+                tf.addfile(ti, f.open())
+            else:
+                with open(f, 'rb') as fh:
+                    tf.addfile(ti, fh)
 
 
 def create_tar_gz_from_files(fp, files, filename=None, compresslevel=9):
