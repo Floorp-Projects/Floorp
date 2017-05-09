@@ -234,21 +234,21 @@ public class MainActivity extends AppCompatActivity {
         final FragmentManager fragmentManager = getSupportFragmentManager();
 
         final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
-        if (urlInputFragment != null && urlInputFragment.isVisible()) {
-            if (urlInputFragment.onBackPressed()) {
-                // The URL input fragment has handled the back press. It does its own animations so
-                // we do not try to remove it from outside.
-                return;
-            }
+        if (urlInputFragment != null &&
+                urlInputFragment.isVisible() &&
+                urlInputFragment.onBackPressed()) {
+            // The URL input fragment has handled the back press. It does its own animations so
+            // we do not try to remove it from outside.
+            return;
         }
 
         final BrowserFragment browserFragment = (BrowserFragment) fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
-        if (browserFragment != null && browserFragment.isVisible()) {
-            if (browserFragment.onBackPressed()) {
-                // The Browser fragment handles back presses on its own because it might just go back
-                // in the browsing history.
-                return;
-            }
+        if (browserFragment != null &&
+                browserFragment.isVisible() &&
+                browserFragment.onBackPressed()) {
+            // The Browser fragment handles back presses on its own because it might just go back
+            // in the browsing history.
+            return;
         }
 
         super.onBackPressed();

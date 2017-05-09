@@ -258,11 +258,10 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         final FocusString revhost = FocusString.create(resourceHost).reverse();
 
         for (final Map.Entry<String, Trie> category : categories.entrySet()) {
-            if (enabledCategories.contains(category.getKey())) {
-                if (category.getValue().findNode(revhost) != null) {
-                    previouslyMatched.add(resourceURLString);
-                    return true;
-                }
+            if (enabledCategories.contains(category.getKey()) &&
+                    category.getValue().findNode(revhost) != null) {
+                previouslyMatched.add(resourceURLString);
+                return true;
             }
         }
 
