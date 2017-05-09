@@ -543,12 +543,19 @@ class RustLibrary(StaticLibrary):
                                      basename.replace('-', '_'),
                                      context.config.rust_lib_suffix)
         self.dependencies = dependencies
+        self.features = features
+        self.target_dir = target_dir
+        # Skip setting properties below which depend on cargo
+        # when we don't have a compile environment. The required
+        # config keys won't be available, but the instance variables
+        # that we don't set should never be accessed by the actual
+        # build in that case.
+        if not context.config.substs.get('COMPILE_ENVIRONMENT'):
+            return
         build_dir = mozpath.join(target_dir,
                                  cargo_output_directory(context, self.TARGET_SUBST_VAR))
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
-        self.features = features
-        self.target_dir = target_dir
 
 
 class SharedLibrary(Library):
