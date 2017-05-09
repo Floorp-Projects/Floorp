@@ -4,6 +4,7 @@
 
 #include "nsIRequest.idl"
 
+interface nsIEventTarget;
 interface nsIInputStream;
 interface nsIStreamListener;
 
@@ -51,13 +52,16 @@ interface nsIInputStreamPump : nsIRequest
      *        pass 0 to specify the default value.
      * @param aCloseWhenDone
      *        if true, the input stream will be closed after it has been read.
+     * @param aMainThreadTarget
+     *        a labeled main therad event target.
      */
     void init(in nsIInputStream aStream,
               in long long      aStreamPos,
               in long long      aStreamLen,
               in unsigned long  aSegmentSize,
               in unsigned long  aSegmentCount,
-              in boolean        aCloseWhenDone);
+              in boolean        aCloseWhenDone,
+              [optional] in nsIEventTarget aMainThreadTarget);
 
     /**
      * asyncRead causes the input stream to be read in chunks and delivered
