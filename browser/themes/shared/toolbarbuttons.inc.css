@@ -8,7 +8,13 @@
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 
 :root {
+  --toolbarbutton-vertical-inner-padding: 3px;
   --toolbarbutton-disabled-opacity: 0.4;
+
+  --backbutton-urlbar-overlap: 6px;
+
+  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
+  --forwardbutton-width: 25px;
 }
 
 toolbar:-moz-lwtheme {
@@ -50,14 +56,9 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
-:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
-  max-width: 16px;
-}
-
-:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon) > .toolbarbutton-icon,
-:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
+:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  max-width: 18px;
+  max-width: 16px;
 }
 
 #TabsToolbar .toolbarbutton-1,
@@ -142,7 +143,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
-  padding: var(--toolbarbutton-vertical-inner-padding) 6px;
+  padding: var(--toolbarbutton-vertical-inner-padding) 7px;
   background-origin: padding-box !important;
   background-clip: padding-box !important;
   border: 1px solid transparent;
@@ -174,12 +175,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   border-inline-end-style: none;
 }
 
-#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon)) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon)) > .toolbarbutton-badge-stack,
-#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@, .toolbarbutton-legacy-addon)) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px) 7px;
-}
-
 #nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button):not(#new-tab-button) > .toolbarbutton-icon,
@@ -209,7 +204,13 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text {
-  padding: var(--toolbarbutton-vertical-text-padding) 6px;
+  padding-top: var(--toolbarbutton-vertical-text-padding);
+  padding-bottom: 0;
+  /* To make the hover feedback line up with sibling buttons, it needs the same
+   * height (16px) + padding (2 * 3px) + border (2 * 1px), but as a minimum
+   * because otherwise an increase in text sizes would break things.
+   */
+  min-height: calc(18px + 2 * var(--toolbarbutton-vertical-inner-padding));
 }
 
 #nav-bar .toolbaritem-combined-buttons {
@@ -300,8 +301,8 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #forward-button > .toolbarbutton-icon {
   border-left-style: none !important;
   border-radius: 0 !important;
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 3px) !important;
-  padding-right: 3px !important;
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px) !important;
+  padding-right: 4px !important;
   max-width: calc(var(--forwardbutton-width) + var(--backbutton-urlbar-overlap)) !important;
 }
 
@@ -343,22 +344,11 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 #back-button > .toolbarbutton-icon {
   border-radius: 10000px !important;
-  padding: 6px !important;
-  max-width: 32px !important; /* icon width + horizontal padding + border */
+  padding: 7px !important;
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
-}
-
-/* zoom control text (reset) button special case: */
-
-#nav-bar #zoom-reset-button > .toolbarbutton-text {
-  /* To make this line up with the icons, it needs the same height (18px) +
-   * padding (2 * 2px) + border (2 * 1px), but as a minimum because otherwise
-   * increase in text sizes would break things...
-   */
-  min-height: 24px;
 }
 
 /* bookmarks menu-button */

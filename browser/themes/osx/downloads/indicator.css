@@ -7,8 +7,8 @@
 /*** Status and progress indicator ***/
 
 #downloads-indicator-anchor {
-  min-width: 18px;
-  min-height: 18px;
+  min-width: 16px;
+  min-height: 16px;
 }
 
 #downloads-animation-container {
@@ -34,7 +34,7 @@
   background: var(--downloads-indicator-image) center no-repeat;
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill);
-  background-size: 18px;
+  background-size: 16px;
 }
 
 toolbar[brighttext] #downloads-indicator-icon {
