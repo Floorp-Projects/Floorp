@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver import By, Wait
+import types
+
+from marionette_driver import By, errors
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
@@ -24,15 +26,30 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         super(TestWindowHandles, self).tearDown()
 
+    def assert_window_handles(self):
+        try:
+            self.assertIsInstance(self.marionette.current_chrome_window_handle, types.StringTypes)
+            self.assertIsInstance(self.marionette.current_window_handle, types.StringTypes)
+        except errors.NoSuchWindowException:
+            pass
+
+        for handle in self.marionette.chrome_window_handles:
+            self.assertIsInstance(handle, types.StringTypes)
+
+        for handle in self.marionette.window_handles:
+            self.assertIsInstance(handle, types.StringTypes)
+
     def test_chrome_window_handles_with_scopes(self):
         # Open a browser and a non-browser (about window) chrome window
         self.open_window(
             trigger=lambda: self.marionette.execute_script("window.open();"))
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
 
         self.open_window(
             trigger=lambda: self.marionette.find_element(By.ID, "aboutName").click())
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 2)
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
 
@@ -53,11 +70,13 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         # We open a new window but are actually interested in the new tab
         new_win = self.open_window(trigger=open_with_link)
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
 
         # Check that the new tab has the correct page loaded
         self.marionette.switch_to_window(new_win)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_chrome_window_handle, new_win)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.empty_page)
@@ -70,9 +89,11 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         # Close the opened window and carry on in our original tab.
         self.marionette.close()
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows))
 
         self.marionette.switch_to_window(self.start_window)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.test_page)
@@ -84,10 +105,12 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
                 link.click()
 
         new_tab = self.open_tab(trigger=open_with_link)
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
         self.marionette.switch_to_window(new_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.empty_page)
@@ -99,12 +122,14 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
             self.assertEqual(self.marionette.get_url(), other_page)
 
         self.marionette.switch_to_window(self.start_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.test_page)
 
         self.marionette.switch_to_window(new_tab)
         self.marionette.close()
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
 
         self.marionette.switch_to_window(self.start_tab)
@@ -118,11 +143,13 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         # We open a new window but are actually interested in the new tab
         new_tab = self.open_tab(trigger=open_with_link)
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
         # Check that the new tab has the correct page loaded
         self.marionette.switch_to_window(new_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.empty_page)
@@ -135,9 +162,11 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         # Close the opened window and carry on in our original tab.
         self.marionette.close()
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
 
         self.marionette.switch_to_window(self.start_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.test_page)
@@ -149,13 +178,16 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
                 link.click()
 
         new_tab = self.open_tab(trigger=open_with_link)
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
         self.marionette.close()
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
 
         self.marionette.switch_to_window(new_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.empty_page)
@@ -180,6 +212,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
             menu_new_tab.click()
 
         new_tab = self.open_tab(trigger=open_with_menu)
+        self.assert_window_handles()
 
         # We still have the default tab set as our window handle. This
         # get_url command should be sent immediately, and not be forever-queued.
@@ -190,10 +223,17 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
         self.marionette.switch_to_window(new_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
 
         self.marionette.close()
+        self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
 
         self.marionette.switch_to_window(self.start_tab)
+        self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+
+    def test_window_handles_after_closing_last_window(self):
+        self.close_all_windows()
+        self.assertEqual(self.marionette.close_chrome_window(), [])
