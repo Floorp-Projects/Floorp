@@ -611,7 +611,8 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   if (RefPtr<Location> location = mWindow->Location()) {
     nsAutoString locationAStr;
-    location->ToString(locationAStr);
+    res = location->ToString(locationAStr);
+    NS_ENSURE_SUCCESS(res, res);
 
     CopyUTF16toUTF8(locationAStr, locationCStr);
   }

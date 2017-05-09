@@ -9637,15 +9637,14 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   }
 
   case eCSSUnit_Inherit:
-    svg->mContextProps.Clear();
-    svg->mContextProps.AppendElements(parentSVG->mContextProps);
+  case eCSSUnit_Unset:
+    svg->mContextProps = parentSVG->mContextProps;
     svg->mContextPropsBits = parentSVG->mContextPropsBits;
     conditions.SetUncacheable();
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_None:
-  case eCSSUnit_Unset:
     svg->mContextProps.Clear();
     svg->mContextPropsBits = 0;
     break;

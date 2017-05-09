@@ -2112,11 +2112,13 @@
     "n_values": 4,
     "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
   },
-  "HTTP_AUTH_DIALOG_STATS": {
-    "expires_in_version": "never",
+  "HTTP_AUTH_DIALOG_STATS_2": {
+    "expires_in_version": "61",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1357835],
     "kind": "enumerated",
-    "n_values": 4,
-    "description": "Stats about what kind of resource requested http authentication. (0=top-level doc, 1=same origin subresources, 2=cross-origin subresources, 3=xhr)"
+    "n_values": 32,
+    "description": "Stats about what kind of resource requested http authentication. (29=top-level doc, 30=same origin subresources, 31=same origin xhr, (nsIContentPolicy type)=cross-origin subresources per nsIContentPolicy type)"
   },
   "HTTP_AUTH_TYPE_STATS": {
     "alert_emails": ["rbarnes@mozilla.com"],

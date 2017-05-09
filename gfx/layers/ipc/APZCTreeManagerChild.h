@@ -55,9 +55,6 @@ public:
   CancelAnimation(const ScrollableLayerGuid &aGuid) override;
 
   void
-  AdjustScrollForSurfaceShift(const ScreenPoint& aShift) override;
-
-  void
   SetDPI(float aDpiValue) override;
 
   void

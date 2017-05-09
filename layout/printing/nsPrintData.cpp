@@ -72,7 +72,8 @@ nsPrintData::~nsPrintData()
     mPrintSettings->GetIsCancelled(&isCancelled);
 
     nsresult rv = NS_OK;
-    if (mType == eIsPrinting) {
+    if (mType == eIsPrinting &&
+        mPrintDC->IsCurrentlyPrintingDocument()) {
       if (!isCancelled && !mIsAborted) {
         rv = mPrintDC->EndDocument();
       } else {

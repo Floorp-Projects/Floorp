@@ -25,6 +25,7 @@
 #if defined(DEBUG)
 #include "vm/EnvironmentObject.h"
 #endif
+#include "vm/JSONPrinter.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
@@ -121,6 +122,11 @@ js::Nursery::Nursery(JSRuntime* rt)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
+#ifdef MOZ_GECKO_PROFILER
+  , trackTimings_(true)
+#else
+  , trackTimings_(false)
+#endif
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
@@ -164,6 +170,7 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
             exit(0);
         }
         enableProfiling_ = true;
+        trackTimings_ = true;
         profileThreshold_ = TimeDuration::FromMicroseconds(atoi(env));
     }
 
@@ -297,11 +304,11 @@ js::Nursery::allocate(size_t size)
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
     MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_, position() >= currentStartPosition_);
-    MOZ_ASSERT(position() % gc::CellSize == 0);
-    MOZ_ASSERT(size % gc::CellSize == 0);
+    MOZ_ASSERT(position() % CellAlignBytes == 0);
+    MOZ_ASSERT(size % CellAlignBytes == 0);
 
 #ifdef JS_GC_ZEAL
-    static const size_t CanarySize = (sizeof(Nursery::Canary) + CellSize - 1) & ~CellMask;
+    static const size_t CanarySize = (sizeof(Nursery::Canary) + CellAlignBytes - 1) & ~CellAlignMask;
     if (runtime()->gc.hasZealMode(ZealMode::CheckNursery))
         size += CanarySize;
 #endif
@@ -483,6 +490,30 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
 {
 }
 
+void
+js::Nursery::renderProfileJSON(JSONPrinter& json) const
+{
+    if (!isEnabled()) {
+        json.beginObject();
+        json.property("status", "nursery disabled");
+        json.endObject();
+        return;
+    }
+
+    json.beginObject();
+#define EXTRACT_NAME(name, text) #name,
+    static const char* names[] = {
+FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
+#undef EXTRACT_NAME
+    "" };
+
+    size_t i = 0;
+    for (auto time : profileDurations_)
+        json.property(names[i++], time.ToMicroseconds());
+
+    json.endObject();
+}
+
 /* static */ void
 js::Nursery::printProfileHeader()
 {
@@ -514,7 +545,7 @@ js::Nursery::printTotalProfileTimes()
 void
 js::Nursery::maybeClearProfileDurations()
 {
-    if (enableProfiling_) {
+    if (trackTimings_) {
         for (auto& duration : profileDurations_)
             duration = mozilla::TimeDuration();
     }
@@ -536,14 +567,14 @@ js::Nursery::endProfile(ProfileKey key)
 inline void
 js::Nursery::maybeStartProfile(ProfileKey key)
 {
-    if (enableProfiling_)
+    if (trackTimings_)
         startProfile(key);
 }
 
 inline void
 js::Nursery::maybeEndProfile(ProfileKey key)
 {
-    if (enableProfiling_)
+    if (trackTimings_)
         endProfile(key);
 }
 
@@ -986,8 +1017,8 @@ js::Nursery::updateNumChunksLocked(unsigned newCount,
 void
 js::Nursery::queueSweepAction(SweepThunk thunk, void* data)
 {
-    static_assert(sizeof(SweepAction) % CellSize == 0,
-                  "SweepAction size must be a multiple of cell size");
+    static_assert(sizeof(SweepAction) % CellAlignBytes == 0,
+                  "SweepAction size must be a multiple of cell alignment");
 
     MOZ_ASSERT(isEnabled());
 
