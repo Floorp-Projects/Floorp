@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include IPCBlob;
+
+namespace mozilla {
+namespace ipc {
+
+// IndexedDB and FileHandle do not know all the Blob/File properties when they
+// create a IPCBlob. For this reason, they need to use this simple protocol.
+// When the information is known, they send a __delete__ message with the
+// pending data.
+
+// This contains any extra bit for making a File out of a Blob.
+struct PendingIPCFileData
+{
+  nsString name;
+  int64_t lastModified;
+};
+
+// Union for blob vs file.
+union PendingIPCFileUnion
+{
+  // For Blob.
+  void_t;
+
+  // For File.
+  PendingIPCFileData;
+};
+
+struct PendingIPCBlobData
+{
+  nsString type;
+  uint64_t size;
+
+  PendingIPCFileUnion file;
+};
+
+protocol PPendingIPCBlob
+{
+  manager PBackground;
+
+parent:
+  async __delete__(PendingIPCBlobData aData);
+};
+
+} // namespace dom
+} // namespace mozilla
