@@ -556,7 +556,8 @@ NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
 
 class ScriptLoaderHolder;
 
-class ScriptLoaderRunnable final : public nsIRunnable
+class ScriptLoaderRunnable final : public nsIRunnable,
+                                   public nsINamed
 {
   friend class ScriptExecutorRunnable;
   friend class ScriptLoaderHolder;
@@ -609,6 +610,19 @@ private:
     }
 
     return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignASCII("ScriptLoaderRunnable");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  SetName(const char* aName) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   void
@@ -1334,7 +1348,7 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
 
 class MOZ_STACK_CLASS ScriptLoaderHolder final : public WorkerHolder
 {
