@@ -18,16 +18,11 @@
   --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
 
-  --backbutton-urlbar-overlap: 6px;
   --backbutton-border-color: rgba(0,0,0,0.2);
   --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
                                            rgba(255,255,255,0.7)) repeat-x;
 
-  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
-  --forwardbutton-width: 26px;
-
-  --toolbarbutton-vertical-inner-padding: 2px;
-  --toolbarbutton-vertical-text-padding: 4px;
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px);
 
   --toolbarbutton-border-radius: 3px;
 
