@@ -109,6 +109,7 @@ class OutputHandler(object):
         # need to return processed messages to appease remoteautomation.py
         if not line.strip():
             return []
+        line = line.decode('utf-8', errors='replace')
 
         try:
             data = json.loads(line)

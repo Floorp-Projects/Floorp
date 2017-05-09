@@ -121,7 +121,7 @@ impl<F> PatBuilder<F>
     }
 
     pub fn build_range(self, lhs: P<ast::Expr>, rhs: P<ast::Expr>) -> F::Result {
-        self.build_pat_kind(ast::PatKind::Range(lhs, rhs))
+        self.build_pat_kind(ast::PatKind::Range(lhs, rhs, ast::RangeEnd::Included))
     }
 
     pub fn range(self) -> ExprBuilder<PatRangeBuilder<F>> {
@@ -432,6 +432,7 @@ impl<F> PatStructPathBuilder<F>
             ident: id,
             pat: pat,
             is_shorthand: true,
+            attrs: Vec::new().into(),
         })
     }
 
@@ -446,6 +447,7 @@ impl<F> PatStructPathBuilder<F>
             ident: id,
             pat: pat,
             is_shorthand: true,
+            attrs: Vec::new().into(),
         })
     }
 
@@ -475,6 +477,7 @@ impl<F> Invoke<P<ast::Pat>> for PatStructFieldBuilder<F>
             ident: self.id,
             pat: pat,
             is_shorthand: false,
+            attrs: Vec::new().into(),
         })
     }
 }

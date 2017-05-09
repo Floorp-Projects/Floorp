@@ -285,6 +285,10 @@ this.browserAction = class extends ExtensionAPI {
 
 
       case "popupshowing":
+        if (!global.actionContextMenu) {
+          break;
+        }
+
         const menu = event.target;
         const trigger = menu.triggerNode;
         const node = window.document.getElementById(this.id);
@@ -601,4 +605,3 @@ this.browserAction = class extends ExtensionAPI {
 };
 
 global.browserActionFor = this.browserAction.for;
-

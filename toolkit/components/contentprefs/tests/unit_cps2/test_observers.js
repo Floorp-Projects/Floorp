@@ -9,8 +9,10 @@ function run_test() {
   for (var i = 0; i < tests.length; i++) {
     // Generate two wrappers of each test function that invoke the original test with an
     // appropriate privacy context.
+    /* eslint-disable no-eval */
     var pub = eval("var f = function* " + tests[i].name + "() { yield tests[" + i + "](privateLoadContext); }; f");
     var priv = eval("var f = function* " + tests[i].name + "_private() { yield tests[" + i + "](privateLoadContext); }; f");
+    /* eslint-enable no-eval */
     allTests.push(pub);
     allTests.push(priv);
   }

@@ -10,7 +10,7 @@
  */
 add_task(function* test_height_reduced_after_removal() {
   yield task_addDownloads([
-    { state: nsIDM.DOWNLOAD_FINISHED },
+    { state: DownloadsCommon.DOWNLOAD_FINISHED },
   ]);
 
   yield task_openPanel();

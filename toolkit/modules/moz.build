@@ -306,8 +306,7 @@ for var in ('ANDROID_PACKAGE_NAME',
 for var in ('MOZ_TOOLKIT_SEARCH',
             'MOZ_SYSTEM_NSS',
             'MOZ_UPDATER',
-            'MOZ_SWITCHBOARD',
-            'MOZ_SERVICES_CLOUDSYNC'):
+            'MOZ_SWITCHBOARD'):
     if CONFIG[var]:
         DEFINES[var] = True
 

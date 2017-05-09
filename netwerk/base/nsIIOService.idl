@@ -176,6 +176,14 @@ interface nsIIOService : nsISupports
      * @throws NS_ERROR_MALFORMED_URI if URL string is not of the right form.
      */
     ACString extractScheme(in AUTF8String urlString);
+
+    /**
+     * Checks if a URI host is a local IPv4 or IPv6 address literal.
+     *
+     * @param nsIURI the URI that contains the hostname to check
+     * @return true if the URI hostname is a local IP address
+     */
+    boolean hostnameIsLocalIPAddress(in nsIURI aURI);
 };
 
 %{C++

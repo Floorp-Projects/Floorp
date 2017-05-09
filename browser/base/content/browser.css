@@ -12,6 +12,7 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
+  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
 }
 
 :root:-moz-lwtheme {
@@ -193,8 +194,9 @@ tabbrowser {
   pointer-events: none; /* avoid blocking dragover events on scroll buttons */
 }
 
+.tabbrowser-tab[tabdrop-samewindow],
 .tabbrowser-tabs[movingtab] > .tabbrowser-tab[fadein]:not([selected]) {
-  transition: transform 200ms ease-out;
+  transition: transform 200ms var(--animation-easing-function);
 }
 
 .new-tab-popup,
@@ -995,17 +997,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 
 toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-indicator-anchor {
   display: none;
-}
-
-#downloads-button.withProgressBar:-moz-any([progress], [counter], [paused]) #downloads-indicator-icon,
-#downloads-button:not(:-moz-any([progress], [counter], [paused])) #downloads-indicator-progress-area {
-  visibility: hidden;
-}
-
-/* Hide elements for another type of progressmeter if it's not in use. */
-#downloads-button.withProgressBar #downloads-indicator-progress-icon,
-#downloads-button:not(.withProgressBar) #downloads-indicator-progress-area {
-  visibility: hidden;
 }
 
 /* Combobox dropdown renderer */

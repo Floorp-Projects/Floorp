@@ -12,6 +12,13 @@
 
 #![no_std]
 
+#![cfg_attr(feature = "i128", feature(i128_type))]
+
+// When compiled for the rustc compiler itself we want to make sure that this is
+// an unstable crate.
+#![cfg_attr(rustbuild, feature(staged_api))]
+#![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
+
 #[cfg(test)]
 #[macro_use]
 extern crate std;
@@ -21,6 +28,11 @@ extern crate std;
 #[allow(private_in_public)]
 #[doc(hidden)]
 pub use core as __core;
+
+#[cfg(feature = "i128")]
+pub type __BitFlagsWidth = u128;
+#[cfg(not(feature = "i128"))]
+pub type __BitFlagsWidth = u64;
 
 /// The `bitflags!` macro generates a `struct` that holds a set of C-style
 /// bitmask flags. It is useful for creating typesafe wrappers for C APIs.
@@ -231,12 +243,12 @@ macro_rules! bitflags {
                     // private, which prevents us from using it to define
                     // public constants.
                     pub struct $BitFlags {
-                        bits: u64,
+                        bits: $crate::__BitFlagsWidth,
                     }
                     mod real_flags {
                         use super::$BitFlags;
                         $($(#[$Flag_attr])* pub const $Flag: $BitFlags = $BitFlags {
-                            bits: super::super::$Flag.bits as u64
+                            bits: super::super::$Flag.bits as $crate::__BitFlagsWidth
                         };)+
                     }
                     // Now we define the "undefined" versions of the flags.
@@ -245,7 +257,7 @@ macro_rules! bitflags {
                     $(const $Flag: $BitFlags = $BitFlags { bits: 0 };)+
 
                     #[inline]
-                    pub fn fmt(self_: u64,
+                    pub fn fmt(self_: $crate::__BitFlagsWidth,
                                f: &mut $crate::__core::fmt::Formatter)
                                -> $crate::__core::fmt::Result {
                         // Now we import the real values for the flags.
@@ -255,7 +267,8 @@ macro_rules! bitflags {
                         let mut first = true;
                         $(
                             // $Flag.bits == 0 means that $Flag doesn't exist
-                            if $Flag.bits != 0 && self_ & $Flag.bits as u64 == $Flag.bits as u64 {
+                            if $Flag.bits != 0 && self_ & $Flag.bits as $crate::__BitFlagsWidth ==
+                                $Flag.bits as $crate::__BitFlagsWidth {
                                 if !first {
                                     try!(f.write_str(" | "));
                                 }
@@ -266,7 +279,7 @@ macro_rules! bitflags {
                         Ok(())
                     }
                 }
-                dummy::fmt(self.bits as u64, f)
+                dummy::fmt(self.bits as $crate::__BitFlagsWidth, f)
             }
         }
 
@@ -285,18 +298,18 @@ macro_rules! bitflags {
                 #[allow(dead_code)]
                 mod dummy {
                     pub struct $BitFlags {
-                        bits: u64,
+                        bits: $crate::__BitFlagsWidth,
                     }
                     mod real_flags {
                         use super::$BitFlags;
                         $($(#[$Flag_attr])* pub const $Flag: $BitFlags = $BitFlags {
-                            bits: super::super::$Flag.bits as u64
+                            bits: super::super::$Flag.bits as $crate::__BitFlagsWidth
                         };)+
                     }
                     $(const $Flag: $BitFlags = $BitFlags { bits: 0 };)+
 
                     #[inline]
-                    pub fn all() -> u64 {
+                    pub fn all() -> $crate::__BitFlagsWidth {
                         use self::real_flags::*;
                         $($Flag.bits)|+
                     }
@@ -368,6 +381,16 @@ macro_rules! bitflags {
             #[inline]
             pub fn toggle(&mut self, other: $BitFlags) {
                 self.bits ^= other.bits;
+            }
+
+            /// Inserts or removes the specified flags depending on the passed value.
+            #[inline]
+            pub fn set(&mut self, other: $BitFlags, value: bool) {
+                if value {
+                    self.insert(other);
+                } else {
+                    self.remove(other);
+                }
             }
         }
 
@@ -668,6 +691,15 @@ mod tests {
         let mut m4 = AnotherSetOfFlags::empty();
         m4.toggle(AnotherSetOfFlags::empty());
         assert_eq!(m4, AnotherSetOfFlags::empty());
+    }
+
+    #[test]
+    fn test_set() {
+        let mut e1 = FlagA | FlagC;
+        e1.set(FlagB, true);
+        e1.set(FlagC, false);
+
+        assert_eq!(e1, FlagA | FlagB);
     }
 
     #[test]

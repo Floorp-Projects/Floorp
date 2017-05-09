@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -31,11 +32,19 @@ public class FindInPageBar extends LinearLayout
     /* package */ CustomEditText mFindText;
     private TextView mStatusText;
     private boolean mInflated;
+    private GeckoApp geckoApp;
 
     public FindInPageBar(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         setFocusable(true);
+
+        while (context instanceof ContextWrapper) {
+            if (context instanceof GeckoApp) {
+                geckoApp = (GeckoApp) context;
+            }
+            context = ((ContextWrapper) context).getBaseContext();
+        }
     }
 
     public void inflateContent() {
@@ -79,7 +88,7 @@ public class FindInPageBar extends LinearLayout
 
         // handleMessage() receives response message and determines initial state of softInput
 
-        GeckoApp.getEventDispatcher().dispatch("TextSelection:Get", null, new EventCallback() {
+        geckoApp.getAppEventDispatcher().dispatch("TextSelection:Get", null, new EventCallback() {
             @Override
             public void sendSuccess(final Object result) {
                 onTextSelectionData((String) result);

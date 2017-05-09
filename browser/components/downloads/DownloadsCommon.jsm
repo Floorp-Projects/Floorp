@@ -71,17 +71,11 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-const nsIDM = Ci.nsIDownloadManager;
-
 const kDownloadsStringBundleUrl =
   "chrome://browser/locale/downloads/downloads.properties";
 
 const kDownloadsStringsRequiringFormatting = {
   sizeWithUnits: true,
-  shortTimeLeftSeconds: true,
-  shortTimeLeftMinutes: true,
-  shortTimeLeftHours: true,
-  shortTimeLeftDays: true,
   statusSeparator: true,
   statusSeparatorBeforeNumber: true,
   fileExecutableSecurityWarning: true
@@ -128,7 +122,6 @@ var PrefObserver = {
 PrefObserver.register({
   // prefName: defaultValue
   animateNotifications: true,
-  showPanelDropmarker: true,
 });
 
 
@@ -139,17 +132,23 @@ PrefObserver.register({
  * and provides shared methods for all the instances of the user interface.
  */
 this.DownloadsCommon = {
+  // The following legacy constants are still returned by stateOfDownload, but
+  // individual properties of the Download object should normally be used.
+  DOWNLOAD_NOTSTARTED: -1,
+  DOWNLOAD_DOWNLOADING: 0,
+  DOWNLOAD_FINISHED: 1,
+  DOWNLOAD_FAILED: 2,
+  DOWNLOAD_CANCELED: 3,
+  DOWNLOAD_PAUSED: 4,
+  DOWNLOAD_BLOCKED_PARENTAL: 6,
+  DOWNLOAD_DIRTY: 8,
+  DOWNLOAD_BLOCKED_POLICY: 9,
+
+  // The following are the possible values of the "attention" property.
   ATTENTION_NONE: "",
   ATTENTION_SUCCESS: "success",
   ATTENTION_WARNING: "warning",
   ATTENTION_SEVERE: "severe",
-
-  /**
-   * This can be used by add-on experiments as a killswitch for the new style
-   * progress indication. This will be removed in bug 1329109 after the new
-   * indicator is released.
-   **/
-  arrowStyledIndicator: true,
 
   /**
    * Returns an object whose keys are the string names from the downloads string
@@ -187,48 +186,11 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Generates a very short string representing the given time left.
-   *
-   * @param aSeconds
-   *        Value to be formatted.  It represents the number of seconds, it must
-   *        be positive but does not need to be an integer.
-   *
-   * @return Formatted string, for example "30s" or "2h".  The returned value is
-   *         maximum three characters long, at least in English.
-   */
-  formatTimeLeft(aSeconds) {
-    // Decide what text to show for the time
-    let seconds = Math.round(aSeconds);
-    if (!seconds) {
-      return "";
-    } else if (seconds <= 30) {
-      return DownloadsCommon.strings["shortTimeLeftSeconds"](seconds);
-    }
-    let minutes = Math.round(aSeconds / 60);
-    if (minutes < 60) {
-      return DownloadsCommon.strings["shortTimeLeftMinutes"](minutes);
-    }
-    let hours = Math.round(minutes / 60);
-    if (hours < 48) { // two days
-      return DownloadsCommon.strings["shortTimeLeftHours"](hours);
-    }
-    let days = Math.round(hours / 24);
-    return DownloadsCommon.strings["shortTimeLeftDays"](Math.min(days, 99));
-  },
-
-  /**
    * Indicates whether we should show visual notification on the indicator
    * when a download event is triggered.
    */
   get animateNotifications() {
     return PrefObserver.animateNotifications;
-  },
-
-  /**
-   * Indicates whether we should show the dropmarker in the Downloads Panel.
-   */
-  get showPanelDropmarker() {
-    return PrefObserver.showPanelDropmarker;
   },
 
   /**
@@ -297,27 +259,27 @@ this.DownloadsCommon = {
   stateOfDownload(download) {
     // Collapse state using the correct priority.
     if (!download.stopped) {
-      return nsIDM.DOWNLOAD_DOWNLOADING;
+      return DownloadsCommon.DOWNLOAD_DOWNLOADING;
     }
     if (download.succeeded) {
-      return nsIDM.DOWNLOAD_FINISHED;
+      return DownloadsCommon.DOWNLOAD_FINISHED;
     }
     if (download.error) {
       if (download.error.becauseBlockedByParentalControls) {
-        return nsIDM.DOWNLOAD_BLOCKED_PARENTAL;
+        return DownloadsCommon.DOWNLOAD_BLOCKED_PARENTAL;
       }
       if (download.error.becauseBlockedByReputationCheck) {
-        return nsIDM.DOWNLOAD_DIRTY;
+        return DownloadsCommon.DOWNLOAD_DIRTY;
       }
-      return nsIDM.DOWNLOAD_FAILED;
+      return DownloadsCommon.DOWNLOAD_FAILED;
     }
     if (download.canceled) {
       if (download.hasPartialData) {
-        return nsIDM.DOWNLOAD_PAUSED;
+        return DownloadsCommon.DOWNLOAD_PAUSED;
       }
-      return nsIDM.DOWNLOAD_CANCELED;
+      return DownloadsCommon.DOWNLOAD_CANCELED;
     }
-    return nsIDM.DOWNLOAD_NOTSTARTED;
+    return DownloadsCommon.DOWNLOAD_NOTSTARTED;
   },
 
   /**
@@ -1199,10 +1161,6 @@ DownloadsIndicatorDataCtor.prototype = {
         this.attention = DownloadsCommon.ATTENTION_WARNING;
       }
     }
-
-    // Since the state of a download changed, reset the estimated time left.
-    this._lastRawTimeLeft = -1;
-    this._lastTimeLeft = -1;
   },
 
   onDownloadChanged(download) {
@@ -1219,9 +1177,7 @@ DownloadsIndicatorDataCtor.prototype = {
   // The following properties are updated by _refreshProperties and are then
   // propagated to the views.  See _refreshProperties for details.
   _hasDownloads: false,
-  _counter: "",
   _percentComplete: -1,
-  _paused: false,
 
   /**
    * Indicates whether the download indicators should be highlighted.
@@ -1266,9 +1222,7 @@ DownloadsIndicatorDataCtor.prototype = {
    */
   _updateView(aView) {
     aView.hasDownloads = this._hasDownloads;
-    aView.counter = this._counter;
     aView.percentComplete = this._percentComplete;
-    aView.paused = this._paused;
     aView.attention = this._attentionSuppressed ? DownloadsCommon.ATTENTION_NONE
                                                 : this._attention;
   },
@@ -1279,22 +1233,6 @@ DownloadsIndicatorDataCtor.prototype = {
    * Number of download items that are available to be displayed.
    */
   _itemCount: 0,
-
-  /**
-   * Floating point value indicating the last number of seconds estimated until
-   * the longest download will finish.  We need to store this value so that we
-   * don't continuously apply smoothing if the actual download state has not
-   * changed.  This is set to -1 if the previous value is unknown.
-   */
-  _lastRawTimeLeft: -1,
-
-  /**
-   * Last number of seconds estimated until all in-progress downloads with a
-   * known size and speed will finish.  This value is stored to allow smoothing
-   * in case of small variations.  This is set to -1 if the previous value is
-   * unknown.
-   */
-  _lastTimeLeft: -1,
 
   /**
    * A generator function for the Download objects this summary is currently
@@ -1322,27 +1260,7 @@ DownloadsIndicatorDataCtor.prototype = {
     // Determine if the indicator should be shown or get attention.
     this._hasDownloads = (this._itemCount > 0);
 
-    // If all downloads are paused, show the progress indicator as paused.
-    this._paused = summary.numActive > 0 &&
-                   summary.numActive == summary.numPaused;
-
     this._percentComplete = summary.percentComplete;
-
-    // Display the estimated time left, if present.
-    if (summary.rawTimeLeft == -1) {
-      // There are no downloads with a known time left.
-      this._lastRawTimeLeft = -1;
-      this._lastTimeLeft = -1;
-      this._counter = "";
-    } else {
-      // Compute the new time left only if state actually changed.
-      if (this._lastRawTimeLeft != summary.rawTimeLeft) {
-        this._lastRawTimeLeft = summary.rawTimeLeft;
-        this._lastTimeLeft = DownloadsCommon.smoothSeconds(summary.rawTimeLeft,
-                                                           this._lastTimeLeft);
-      }
-      this._counter = DownloadsCommon.formatTimeLeft(this._lastTimeLeft);
-    }
   }
 };
 

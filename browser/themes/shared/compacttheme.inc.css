@@ -178,12 +178,6 @@ toolbar:-moz-lwtheme-darktext {
   text-shadow: var(--toolbarbutton-text-shadow);
 }
 
-/* Using toolbar[brighttext] instead of important to override linux */
-toolbar[brighttext] #downloads-indicator-counter {
-  text-shadow: var(--toolbarbutton-text-shadow);
-  color: var(--chrome-color);
-}
-
 #TabsToolbar {
   text-shadow: none !important;
 }

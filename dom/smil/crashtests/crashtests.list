@@ -1,6 +1,6 @@
 load 483584-1.svg
-load 483584-2.svg
-load 523188-1.svg
+skip-if(stylo) load 483584-2.svg
+skip-if(stylo) load 523188-1.svg
 load 525099-1.svg
 load 526536-1.svg
 load 526875-1.svg

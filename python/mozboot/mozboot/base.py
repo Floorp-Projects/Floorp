@@ -289,7 +289,7 @@ class BaseBootstrapper(object):
         try:
             package_url = TOOLTOOL_API + package_sha512sum
             downloaded_filename = os.path.join(download_path, package_sha512sum)
-            print('Downloading clang package from %s', package_url)
+            print('Downloading clang package from', package_url)
             self.http_download_and_save(package_url, downloaded_filename,
                                         package_sha512sum, 'sha512')
 

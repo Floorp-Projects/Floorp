@@ -13,6 +13,7 @@
 #define LibFuzzerTestHarness_h__
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "prenv.h"
 #include "nsComponentManagerUtils.h"
@@ -41,7 +42,7 @@ static uint32_t gFailCount = 0;
  * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void fail(const char* msg, ...)
+MOZ_FORMAT_PRINTF(1, 2) void fail(const char* msg, ...)
 {
   va_list ap;
 
@@ -60,7 +61,7 @@ void fail(const char* msg, ...)
  * "TEST-PASS " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void passed(const char* msg, ...)
+MOZ_FORMAT_PRINTF(1, 2) void passed(const char* msg, ...)
 {
   va_list ap;
 

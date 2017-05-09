@@ -2218,3 +2218,12 @@ class Marionette(object):
         should be equivalent to the user pressing the the maximize button
         """
         return self._send_message("maximizeWindow")
+
+    def fullscreen(self):
+        """ Synchronously sets the user agent window to full screen as if the user
+        had done "View > Enter Full Screen",  or restores it if it is already
+        in full screen.
+
+        :returns: dictionary representation of current window width and height
+        """
+        return self._send_message("fullscreen")

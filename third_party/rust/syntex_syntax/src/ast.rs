@@ -202,11 +202,11 @@ pub struct AngleBracketedParameterData {
     /// The lifetime parameters for this path segment.
     pub lifetimes: Vec<Lifetime>,
     /// The type parameters for this path segment, if present.
-    pub types: P<[P<Ty>]>,
+    pub types: Vec<P<Ty>>,
     /// Bindings (equality constraints) on associated types, if present.
     ///
     /// E.g., `Foo<A=Bar>`.
-    pub bindings: P<[TypeBinding]>,
+    pub bindings: Vec<TypeBinding>,
 }
 
 impl Into<Option<P<PathParameters>>> for AngleBracketedParameterData {
@@ -295,7 +295,7 @@ pub enum TraitBoundModifier {
     Maybe,
 }
 
-pub type TyParamBounds = P<[TyParamBound]>;
+pub type TyParamBounds = Vec<TyParamBound>;
 
 #[derive(Clone, PartialEq, Eq, RustcEncodable, RustcDecodable, Hash, Debug)]
 pub struct TyParam {
@@ -312,7 +312,7 @@ pub struct TyParam {
 #[derive(Clone, PartialEq, Eq, RustcEncodable, RustcDecodable, Hash, Debug)]
 pub struct Generics {
     pub lifetimes: Vec<LifetimeDef>,
-    pub ty_params: P<[TyParam]>,
+    pub ty_params: Vec<TyParam>,
     pub where_clause: WhereClause,
     pub span: Span,
 }
@@ -342,7 +342,7 @@ impl Default for Generics {
     fn default() ->  Generics {
         Generics {
             lifetimes: Vec::new(),
-            ty_params: P::new(),
+            ty_params: Vec::new(),
             where_clause: WhereClause {
                 id: DUMMY_NODE_ID,
                 predicates: Vec::new(),
@@ -401,8 +401,8 @@ pub struct WhereRegionPredicate {
 pub struct WhereEqPredicate {
     pub id: NodeId,
     pub span: Span,
-    pub path: Path,
-    pub ty: P<Ty>,
+    pub lhs_ty: P<Ty>,
+    pub rhs_ty: P<Ty>,
 }
 
 /// The set of MetaItems that define the compilation environment of the crate,
@@ -536,12 +536,19 @@ pub struct FieldPat {
     /// The pattern the field is destructured to
     pub pat: P<Pat>,
     pub is_shorthand: bool,
+    pub attrs: ThinVec<Attribute>,
 }
 
 #[derive(Clone, PartialEq, Eq, RustcEncodable, RustcDecodable, Hash, Debug, Copy)]
 pub enum BindingMode {
     ByRef(Mutability),
     ByValue(Mutability),
+}
+
+#[derive(Clone, PartialEq, Eq, RustcEncodable, RustcDecodable, Hash, Debug)]
+pub enum RangeEnd {
+    Included,
+    Excluded,
 }
 
 #[derive(Clone, PartialEq, Eq, RustcEncodable, RustcDecodable, Hash, Debug)]
@@ -580,8 +587,8 @@ pub enum PatKind {
     Ref(P<Pat>, Mutability),
     /// A literal
     Lit(P<Expr>),
-    /// A range pattern, e.g. `1...2`
-    Range(P<Expr>, P<Expr>),
+    /// A range pattern, e.g. `1...2` or `1..2`
+    Range(P<Expr>, P<Expr>, RangeEnd),
     /// `[a, b, ..i, y, z]` is represented as:
     ///     `PatKind::Slice(box [a, b], Some(i), box [y, z])`
     Slice(Vec<P<Pat>>, Option<P<Pat>>, Vec<P<Pat>>),
@@ -813,6 +820,7 @@ pub struct Field {
     pub expr: P<Expr>,
     pub span: Span,
     pub is_shorthand: bool,
+    pub attrs: ThinVec<Attribute>,
 }
 
 pub type SpannedIdent = Spanned<Ident>;
@@ -860,7 +868,7 @@ pub enum ExprKind {
     /// First expr is the place; second expr is the value.
     InPlace(P<Expr>, P<Expr>),
     /// An array (`[a, b, c, d]`)
-    Vec(Vec<P<Expr>>),
+    Array(Vec<P<Expr>>),
     /// A function call
     ///
     /// The first field resolves to the function itself,
@@ -1353,11 +1361,11 @@ pub enum TyKind {
     ///
     /// Type parameters are stored in the Path itself
     Path(Option<QSelf>, Path),
-    /// Something like `A+B`. Note that `B` must always be a path.
-    ObjectSum(P<Ty>, TyParamBounds),
-    /// A type like `for<'a> Foo<&'a Bar>`
-    PolyTraitRef(TyParamBounds),
-    /// An `impl TraitA+TraitB` type.
+    /// A trait object type `Bound1 + Bound2 + Bound3`
+    /// where `Bound` is a trait or a lifetime.
+    TraitObject(TyParamBounds),
+    /// An `impl Bound1 + Bound2 + Bound3` type
+    /// where `Bound` is a trait or a lifetime.
     ImplTrait(TyParamBounds),
     /// No-op; kept solely so that we can pretty-print faithfully
     Paren(P<Ty>),

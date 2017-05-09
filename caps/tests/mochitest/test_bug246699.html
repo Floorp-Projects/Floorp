@@ -21,35 +21,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=246699
  ** Test for Bug 246699
  ** (should produce stack information for caps errors)
  **/
-function isError(e)
-{
+function isError(e) {
   return e.constructor.name === "Error" || e.constructor.name === "TypeError";
 }
 
-function hasStack(e)
-{
+function hasStack(e) {
   return isError(e) && /inciteCaps/.test(e.stack);
 }
 
-function inciteCaps(f)
-{
+function inciteCaps(f) {
     try {
         f();
         return "operation succeeded";
-    } catch (e if hasStack(e)) {
-        return "denied-stack";
     } catch (e) {
+        if (hasStack(e)) {
+          return "denied-stack";
+        }
         return "unexpected: " + e;
     }
 }
 
-function tryChromeLoad()
-{
+function tryChromeLoad() {
     window.frames[0].location = "chrome://global/content/mozilla.xhtml";
 }
 
-function tryComponentsClasses()
-{
+function tryComponentsClasses() {
     return SpecialPowers.Components.classes["@mozilla.org/dummy;1"];
 }
 

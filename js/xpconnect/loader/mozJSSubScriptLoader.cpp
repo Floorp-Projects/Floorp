@@ -15,7 +15,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
-#include "nsScriptLoader.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 
@@ -27,6 +26,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/scache/StartupCache.h"
@@ -148,8 +148,8 @@ PrepareScript(nsIURI* uri,
         size_t scriptLength = 0;
 
         nsresult rv =
-            nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf), len,
-                                           charset, nullptr, scriptBuf, scriptLength);
+            ScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf), len,
+                                         charset, nullptr, scriptBuf, scriptLength);
 
         JS::SourceBufferHolder srcBuf(scriptBuf, scriptLength,
                                       JS::SourceBufferHolder::GiveOwnership);
@@ -858,9 +858,9 @@ ScriptPrecompiler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     // Convert data to char16_t* and prepare to call CompileOffThread.
     nsAutoString hintCharset;
     nsresult rv =
-        nsScriptLoader::ConvertToUTF16(mChannel, aString, aLength,
-                                       hintCharset, nullptr,
-                                       mScriptBuf, mScriptLength);
+        ScriptLoader::ConvertToUTF16(mChannel, aString, aLength,
+                                     hintCharset, nullptr,
+                                     mScriptBuf, mScriptLength);
 
     NS_ENSURE_SUCCESS(rv, NS_OK);
 

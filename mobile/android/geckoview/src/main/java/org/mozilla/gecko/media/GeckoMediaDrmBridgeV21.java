@@ -9,7 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import android.media.NotProvisionedException;
 import android.util.Log;
 
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ProxySelector;
 
 public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     protected final String LOGTAG;
@@ -453,10 +455,10 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                URL finalURL = new URL(mURL + "&signedRequest=" + URLEncoder.encode(new String(mDrmRequest), "UTF-8"));
-                HttpURLConnection urlConnection = (HttpURLConnection) finalURL.openConnection();
+                URI finalURI = new URI(mURL + "&signedRequest=" + URLEncoder.encode(new String(mDrmRequest), "UTF-8"));
+                HttpURLConnection urlConnection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(finalURI);
                 urlConnection.setRequestMethod("POST");
-                if (DEBUG) Log.d(LOGTAG, "Provisioning, posting url =" + finalURL.toString());
+                if (DEBUG) Log.d(LOGTAG, "Provisioning, posting url =" + finalURI.toString());
 
                 // Add data
                 urlConnection.setRequestProperty("Accept", "*/*");
@@ -485,6 +487,8 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 }
             } catch (IOException e) {
                 Log.e(LOGTAG, "Got exception during posting provisioning request ...", e);
+            } catch (URISyntaxException e) {
+                Log.e(LOGTAG, "Got exception during creating uri ...", e);
             }
             return null;
         }

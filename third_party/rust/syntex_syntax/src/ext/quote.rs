@@ -230,9 +230,7 @@ pub mod rt {
             }
             r.push(TokenTree::Delimited(self.span, Rc::new(tokenstream::Delimited {
                 delim: token::Bracket,
-                open_span: self.span,
                 tts: self.value.to_tokens(cx),
-                close_span: self.span,
             })));
             r
         }
@@ -249,9 +247,7 @@ pub mod rt {
         fn to_tokens(&self, _cx: &ExtCtxt) -> Vec<TokenTree> {
             vec![TokenTree::Delimited(DUMMY_SP, Rc::new(tokenstream::Delimited {
                 delim: token::Paren,
-                open_span: DUMMY_SP,
                 tts: vec![],
-                close_span: DUMMY_SP,
             }))]
         }
     }
@@ -387,7 +383,7 @@ pub fn parse_arm_panic(parser: &mut Parser) -> Arm {
 }
 
 pub fn parse_ty_panic(parser: &mut Parser) -> P<Ty> {
-    panictry!(parser.parse_ty())
+    panictry!(parser.parse_ty_no_plus())
 }
 
 pub fn parse_stmt_panic(parser: &mut Parser) -> Option<Stmt> {
@@ -756,11 +752,11 @@ fn statements_mk_tt(cx: &ExtCtxt, tt: &TokenTree, matcher: bool) -> Vec<ast::Stm
                                     vec![e_tok]);
             vec![cx.stmt_expr(e_push)]
         },
-        TokenTree::Delimited(_, ref delimed) => {
-            statements_mk_tt(cx, &delimed.open_tt(), matcher).into_iter()
+        TokenTree::Delimited(span, ref delimed) => {
+            statements_mk_tt(cx, &delimed.open_tt(span), matcher).into_iter()
                 .chain(delimed.tts.iter()
                                   .flat_map(|tt| statements_mk_tt(cx, tt, matcher)))
-                .chain(statements_mk_tt(cx, &delimed.close_tt(), matcher))
+                .chain(statements_mk_tt(cx, &delimed.close_tt(span), matcher))
                 .collect()
         },
         TokenTree::Sequence(sp, ref seq) => {

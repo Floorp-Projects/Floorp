@@ -6,6 +6,7 @@
 
 use cexpr;
 use clang_sys::*;
+use regex;
 use std::{mem, ptr, slice};
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -76,6 +77,36 @@ impl Cursor {
         }
     }
 
+    /// Gets the C++ manglings for this cursor, or an error if the function is
+    /// not loaded or the manglings are not available.
+    pub fn cxx_manglings(&self) -> Result<Vec<String>, ()> {
+        use clang_sys::*;
+        if !clang_Cursor_getCXXManglings::is_loaded() {
+            return Err(());
+        }
+        unsafe {
+            let manglings = clang_Cursor_getCXXManglings(self.x);
+            if manglings.is_null() {
+                return Err(());
+            }
+            let count = (*manglings).Count as usize;
+
+            let mut result = Vec::with_capacity(count);
+            for i in 0..count {
+                let string_ptr = (*manglings).Strings.offset(i as isize);
+                result.push(cxstring_to_string_leaky(*string_ptr));
+            }
+            clang_disposeStringSet(manglings);
+            Ok(result)
+        }
+    }
+
+    /// Returns whether the cursor refers to a built-in definition.
+    pub fn is_builtin(&self) -> bool {
+        let (file, _, _, _) = self.location().location();
+        file.name().is_none()
+    }
+
     /// Get the `Cursor` for this cursor's referent's lexical parent.
     ///
     /// The lexical parent is the parent of the definition. The semantic parent
@@ -126,11 +157,11 @@ impl Cursor {
     }
 
     /// Return the number of template arguments used by this cursor's referent,
-    /// if the referent is either a template specialization or declaration.
-    /// Returns `None` otherwise.
+    /// if the referent is either a template instantiation. Returns `None`
+    /// otherwise.
     ///
-    /// NOTE: This may not return `Some` for some non-fully specialized
-    /// templates, see #193 and #194.
+    /// NOTE: This may not return `Some` for partial template specializations,
+    /// see #193 and #194.
     pub fn num_template_args(&self) -> Option<u32> {
         // XXX: `clang_Type_getNumTemplateArguments` is sort of reliable, while
         // `clang_Cursor_getNumTemplateArguments` is totally unreliable.
@@ -208,7 +239,7 @@ impl Cursor {
 
     /// Get the kind of referent this cursor is pointing to.
     pub fn kind(&self) -> CXCursorKind {
-        unsafe { clang_getCursorKind(self.x) }
+        self.x.kind
     }
 
     /// Returns true is the cursor is a definition
@@ -302,7 +333,11 @@ impl Cursor {
                 x: clang_getCursorDefinition(self.x),
             };
 
-            if ret.is_valid() { Some(ret) } else { None }
+            if ret.is_valid() && ret.kind() != CXCursor_NoDeclFound {
+                Some(ret)
+            } else {
+                None
+            }
         }
     }
 
@@ -331,8 +366,9 @@ impl Cursor {
         }
     }
 
-    /// Given that this cursor points to a template specialization, get a cursor
-    /// pointing to the template definition that is being specialized.
+    /// Given that this cursor points to either a template specialization or a
+    /// template instantiation, get a cursor pointing to the template definition
+    /// that is being specialized.
     pub fn specialized(&self) -> Option<Cursor> {
         unsafe {
             let ret = Cursor {
@@ -588,6 +624,17 @@ impl Cursor {
     }
 }
 
+/// Checks whether the name looks like an identifier, i.e. is alphanumeric
+/// (including '_') and does not start with a digit.
+pub fn is_valid_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    let first_valid = chars.next()
+        .map(|c| c.is_alphabetic() || c == '_')
+        .unwrap_or(false);
+
+    first_valid && chars.all(|c| c.is_alphanumeric() || c == '_')
+}
+
 extern "C" fn visit_children<Visitor>(cur: CXCursor,
                                       _parent: CXCursor,
                                       data: CXClientData)
@@ -633,9 +680,10 @@ impl Eq for Type {}
 impl fmt::Debug for Type {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt,
-               "Type({}, kind: {}, decl: {:?}, canon: {:?})",
+               "Type({}, kind: {}, cconv: {}, decl: {:?}, canon: {:?})",
                self.spelling(),
                type_to_str(self.kind()),
+               self.call_conv(),
                self.declaration(),
                self.declaration().canonical())
     }
@@ -716,7 +764,16 @@ impl Type {
 
     /// Get a raw display name for this type.
     pub fn spelling(&self) -> String {
-        unsafe { cxstring_into_string(clang_getTypeSpelling(self.x)) }
+        let s = unsafe { cxstring_into_string(clang_getTypeSpelling(self.x)) };
+        // Clang 5.0 introduced changes in the spelling API so it returned the
+        // full qualified name. Let's undo that here.
+        if s.split("::").all(|s| is_valid_identifier(s)) {
+            if let Some(s) = s.split("::").last() {
+                return s.to_owned();
+            }
+        }
+
+        s
     }
 
     /// Is this type const qualified?
@@ -875,7 +932,11 @@ impl Type {
     pub fn named(&self) -> Type {
         unsafe {
             Type {
-                x: clang_Type_getNamedType(self.x),
+                x: if clang_Type_getNamedType::is_loaded() {
+                    clang_Type_getNamedType(self.x)
+                } else {
+                    self.x
+                },
             }
         }
     }
@@ -890,8 +951,8 @@ impl Type {
         self.is_valid() && self.kind() != CXType_Unexposed
     }
 
-    /// Is this type a fully specialized template?
-    pub fn is_fully_specialized_template(&self) -> bool {
+    /// Is this type a fully instantiated template?
+    pub fn is_fully_instantiated_template(&self) -> bool {
         // Yep, the spelling of this containing type-parameter is extremely
         // nasty... But can happen in <type_traits>. Unfortunately I couldn't
         // reduce it enough :(
@@ -902,6 +963,30 @@ impl Type {
             CXCursor_TemplateTemplateParameter => false,
             _ => true,
         }
+    }
+
+    /// Is this type an associated template type? Eg `T::Associated` in
+    /// this example:
+    ///
+    /// ```c++
+    /// template <typename T>
+    /// class Foo {
+    ///     typename T::Associated member;
+    /// };
+    /// ```
+    pub fn is_associated_type(&self) -> bool {
+        // This is terrible :(
+        fn hacky_parse_associated_type<S: AsRef<str>>(spelling: S) -> bool {
+            lazy_static! {
+                static ref ASSOC_TYPE_RE: regex::Regex =
+                    regex::Regex::new(r"typename type\-parameter\-\d+\-\d+::.+").unwrap();
+            }
+            ASSOC_TYPE_RE.is_match(spelling.as_ref())
+        }
+
+        self.kind() == CXType_Unexposed &&
+        (hacky_parse_associated_type(self.spelling()) ||
+         hacky_parse_associated_type(self.canonical_type().spelling()))
     }
 }
 
@@ -1107,16 +1192,18 @@ impl File {
     }
 }
 
-fn cxstring_into_string(s: CXString) -> String {
+fn cxstring_to_string_leaky(s: CXString) -> String {
     if s.data.is_null() {
         return "".to_owned();
     }
-    unsafe {
-        let c_str = CStr::from_ptr(clang_getCString(s) as *const _);
-        let ret = c_str.to_string_lossy().into_owned();
-        clang_disposeString(s);
-        ret
-    }
+    let c_str = unsafe { CStr::from_ptr(clang_getCString(s) as *const _) };
+    c_str.to_string_lossy().into_owned()
+}
+
+fn cxstring_into_string(s: CXString) -> String {
+    let ret = cxstring_to_string_leaky(s);
+    unsafe { clang_disposeString(s) };
+    ret
 }
 
 /// An `Index` is an environment for a set of translation units that will
@@ -1368,7 +1455,9 @@ impl Drop for Diagnostic {
 /// A file which has not been saved to disk.
 pub struct UnsavedFile {
     x: CXUnsavedFile,
-    name: CString,
+    /// The name of the unsaved file. Kept here to avoid leaving dangling pointers in
+    /// `CXUnsavedFile`.
+    pub name: CString,
     contents: CString,
 }
 
@@ -1387,6 +1476,15 @@ impl UnsavedFile {
             name: name,
             contents: contents,
         }
+    }
+}
+
+impl fmt::Debug for UnsavedFile {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt,
+               "UnsavedFile(name: {:?}, contents: {:?})",
+               self.name,
+               self.contents)
     }
 }
 
@@ -1498,6 +1596,13 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
                              &specialized);
             }
         }
+
+        if let Some(parent) = c.fallible_semantic_parent() {
+            println!("");
+            print_cursor(depth,
+                         String::from(prefix) + "semantic-parent.",
+                         &parent);
+        }
     }
 
     fn print_type<S: AsRef<str>>(depth: isize, prefix: S, ty: &Type) {
@@ -1508,6 +1613,8 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
         if kind == CXType_Invalid {
             return;
         }
+
+        print_indent(depth, format!(" {}cconv = {}", prefix, ty.call_conv()));
 
         print_indent(depth,
                      format!(" {}spelling = \"{}\"", prefix, ty.spelling()));

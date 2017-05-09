@@ -25,10 +25,10 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
-#include "nsScriptLoader.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/ScriptLoader.h"
 
 using namespace mozilla::dom;
 

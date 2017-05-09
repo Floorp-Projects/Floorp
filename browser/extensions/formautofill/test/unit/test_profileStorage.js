@@ -9,7 +9,7 @@ Cu.import("resource://formautofill/ProfileStorage.jsm");
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const TEST_PROFILE_1 = {
+const TEST_ADDRESS_1 = {
   "given-name": "Timothy",
   "additional-name": "John",
   "family-name": "Berners-Lee",
@@ -23,36 +23,36 @@ const TEST_PROFILE_1 = {
   email: "timbl@w3.org",
 };
 
-const TEST_PROFILE_2 = {
+const TEST_ADDRESS_2 = {
   "street-address": "Some Address",
   country: "US",
 };
 
-const TEST_PROFILE_3 = {
+const TEST_ADDRESS_3 = {
   "street-address": "Other Address",
   "postal-code": "12345",
 };
 
-const TEST_PROFILE_WITH_INVALID_FIELD = {
+const TEST_ADDRESS_WITH_INVALID_FIELD = {
   "street-address": "Another Address",
   invalidField: "INVALID",
 };
 
-let prepareTestProfiles = Task.async(function* (path) {
+let prepareTestRecords = Task.async(function* (path) {
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  profileStorage.add(TEST_PROFILE_1);
+  profileStorage.add(TEST_ADDRESS_1);
   yield onChanged;
-  profileStorage.add(TEST_PROFILE_2);
+  profileStorage.add(TEST_ADDRESS_2);
   yield profileStorage._saveImmediately();
 });
 
-let do_check_profile_matches = (profileWithMeta, profile) => {
-  for (let key in profile) {
-    do_check_eq(profileWithMeta[key], profile[key]);
+let do_check_record_matches = (recordWithMeta, record) => {
+  for (let key in record) {
+    do_check_eq(recordWithMeta[key], record[key]);
   }
 };
 
@@ -62,7 +62,7 @@ add_task(function* test_initialize() {
   yield profileStorage.initialize();
 
   do_check_eq(profileStorage._store.data.version, 1);
-  do_check_eq(profileStorage._store.data.profiles.length, 0);
+  do_check_eq(profileStorage._store.data.addresses.length, 0);
 
   let data = profileStorage._store.data;
 
@@ -76,150 +76,150 @@ add_task(function* test_initialize() {
 
 add_task(function* test_getAll() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
+  let addresses = profileStorage.getAll();
 
-  do_check_eq(profiles.length, 2);
-  do_check_profile_matches(profiles[0], TEST_PROFILE_1);
-  do_check_profile_matches(profiles[1], TEST_PROFILE_2);
+  do_check_eq(addresses.length, 2);
+  do_check_record_matches(addresses[0], TEST_ADDRESS_1);
+  do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
   // Modifying output shouldn't affect the storage.
-  profiles[0].organization = "test";
-  do_check_profile_matches(profileStorage.getAll()[0], TEST_PROFILE_1);
+  addresses[0].organization = "test";
+  do_check_record_matches(profileStorage.getAll()[0], TEST_ADDRESS_1);
 });
 
 add_task(function* test_get() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
-  let guid = profiles[0].guid;
+  let addresses = profileStorage.getAll();
+  let guid = addresses[0].guid;
 
-  let profile = profileStorage.get(guid);
-  do_check_profile_matches(profile, TEST_PROFILE_1);
+  let address = profileStorage.get(guid);
+  do_check_record_matches(address, TEST_ADDRESS_1);
 
   // Modifying output shouldn't affect the storage.
-  profile.organization = "test";
-  do_check_profile_matches(profileStorage.get(guid), TEST_PROFILE_1);
+  address.organization = "test";
+  do_check_record_matches(profileStorage.get(guid), TEST_ADDRESS_1);
 
   Assert.throws(() => profileStorage.get("INVALID_GUID"),
-    /No matching profile\./);
+    /No matching record\./);
 });
 
 add_task(function* test_getByFilter() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
   let filter = {info: {fieldName: "street-address"}, searchString: "Some"};
-  let profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 1);
-  do_check_profile_matches(profiles[0], TEST_PROFILE_2);
+  let addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 1);
+  do_check_record_matches(addresses[0], TEST_ADDRESS_2);
 
   filter = {info: {fieldName: "country"}, searchString: "u"};
-  profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 2);
-  do_check_profile_matches(profiles[0], TEST_PROFILE_1);
-  do_check_profile_matches(profiles[1], TEST_PROFILE_2);
+  addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 2);
+  do_check_record_matches(addresses[0], TEST_ADDRESS_1);
+  do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
   filter = {info: {fieldName: "street-address"}, searchString: "test"};
-  profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 0);
+  addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 0);
 
   filter = {info: {fieldName: "street-address"}, searchString: ""};
-  profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 2);
+  addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 2);
 
   // Check if the filtering logic is free from searching special chars.
   filter = {info: {fieldName: "street-address"}, searchString: ".*"};
-  profiles = profileStorage.getByFilter(filter);
-  do_check_eq(profiles.length, 0);
+  addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 0);
 });
 
 add_task(function* test_add() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
+  let addresses = profileStorage.getAll();
 
-  do_check_eq(profiles.length, 2);
+  do_check_eq(addresses.length, 2);
 
-  do_check_profile_matches(profiles[0], TEST_PROFILE_1);
-  do_check_profile_matches(profiles[1], TEST_PROFILE_2);
+  do_check_record_matches(addresses[0], TEST_ADDRESS_1);
+  do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
-  do_check_neq(profiles[0].guid, undefined);
-  do_check_neq(profiles[0].timeCreated, undefined);
-  do_check_eq(profiles[0].timeLastModified, profiles[0].timeCreated);
-  do_check_eq(profiles[0].timeLastUsed, 0);
-  do_check_eq(profiles[0].timesUsed, 0);
+  do_check_neq(addresses[0].guid, undefined);
+  do_check_neq(addresses[0].timeCreated, undefined);
+  do_check_eq(addresses[0].timeLastModified, addresses[0].timeCreated);
+  do_check_eq(addresses[0].timeLastUsed, 0);
+  do_check_eq(addresses[0].timesUsed, 0);
 
-  Assert.throws(() => profileStorage.add(TEST_PROFILE_WITH_INVALID_FIELD),
+  Assert.throws(() => profileStorage.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
 });
 
 add_task(function* test_update() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
-  let guid = profiles[1].guid;
-  let timeLastModified = profiles[1].timeLastModified;
+  let addresses = profileStorage.getAll();
+  let guid = addresses[1].guid;
+  let timeLastModified = addresses[1].timeLastModified;
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "update");
 
-  do_check_neq(profiles[1].country, undefined);
+  do_check_neq(addresses[1].country, undefined);
 
-  profileStorage.update(guid, TEST_PROFILE_3);
+  profileStorage.update(guid, TEST_ADDRESS_3);
   yield onChanged;
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profile = profileStorage.get(guid);
+  let address = profileStorage.get(guid);
 
-  do_check_eq(profile.country, undefined);
-  do_check_neq(profile.timeLastModified, timeLastModified);
-  do_check_profile_matches(profile, TEST_PROFILE_3);
+  do_check_eq(address.country, undefined);
+  do_check_neq(address.timeLastModified, timeLastModified);
+  do_check_record_matches(address, TEST_ADDRESS_3);
 
   Assert.throws(
-    () => profileStorage.update("INVALID_GUID", TEST_PROFILE_3),
-    /No matching profile\./
+    () => profileStorage.update("INVALID_GUID", TEST_ADDRESS_3),
+    /No matching record\./
   );
 
   Assert.throws(
-    () => profileStorage.update(guid, TEST_PROFILE_WITH_INVALID_FIELD),
+    () => profileStorage.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./
   );
 });
 
 add_task(function* test_notifyUsed() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
-  let guid = profiles[1].guid;
-  let timeLastUsed = profiles[1].timeLastUsed;
-  let timesUsed = profiles[1].timesUsed;
+  let addresses = profileStorage.getAll();
+  let guid = addresses[1].guid;
+  let timeLastUsed = addresses[1].timeLastUsed;
+  let timesUsed = addresses[1].timesUsed;
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "notifyUsed");
@@ -231,29 +231,29 @@ add_task(function* test_notifyUsed() {
   profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profile = profileStorage.get(guid);
+  let address = profileStorage.get(guid);
 
-  do_check_eq(profile.timesUsed, timesUsed + 1);
-  do_check_neq(profile.timeLastUsed, timeLastUsed);
+  do_check_eq(address.timesUsed, timesUsed + 1);
+  do_check_neq(address.timeLastUsed, timeLastUsed);
 
   Assert.throws(() => profileStorage.notifyUsed("INVALID_GUID"),
-    /No matching profile\./);
+    /No matching record\./);
 });
 
 add_task(function* test_remove() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestProfiles(path);
+  yield prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let profiles = profileStorage.getAll();
-  let guid = profiles[1].guid;
+  let addresses = profileStorage.getAll();
+  let guid = addresses[1].guid;
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "remove");
 
-  do_check_eq(profiles.length, 2);
+  do_check_eq(addresses.length, 2);
 
   profileStorage.remove(guid);
   yield onChanged;
@@ -262,9 +262,9 @@ add_task(function* test_remove() {
   profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  profiles = profileStorage.getAll();
+  addresses = profileStorage.getAll();
 
-  do_check_eq(profiles.length, 1);
+  do_check_eq(addresses.length, 1);
 
-  Assert.throws(() => profileStorage.get(guid), /No matching profile\./);
+  Assert.throws(() => profileStorage.get(guid), /No matching record\./);
 });

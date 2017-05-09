@@ -314,8 +314,8 @@ impl<F> PathSegmentBuilder<F>
         } else {
             let data = ast::AngleBracketedParameterData {
                 lifetimes: self.lifetimes,
-                types: P::from_vec(self.tys),
-                bindings: P::from_vec(self.bindings),
+                types: self.tys,
+                bindings: self.bindings,
             };
 
             Some(P(ast::PathParameters::AngleBracketed(data)))

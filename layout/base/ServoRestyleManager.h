@@ -123,10 +123,12 @@ private:
                             ServoStyleSet* aStyleSet,
                             nsStyleChangeList& aChangeList);
 
+  struct TextPostTraversalState;
   void ProcessPostTraversalForText(nsIContent* aTextNode,
                                    nsStyleContext* aParentContext,
                                    ServoStyleSet* aStyleSet,
-                                   nsStyleChangeList& aChangeList);
+                                   nsStyleChangeList& aChangeList,
+                                   TextPostTraversalState& aState);
 
   inline ServoStyleSet* StyleSet() const
   {
