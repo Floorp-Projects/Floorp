@@ -442,11 +442,12 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, JitCode* stubCode, ICStub* firstMoni
 }
 
 bool
-ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
+ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space,
+                                             ICStubCompiler::Engine engine)
 {
     MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
-    ICTypeMonitor_Fallback::Compiler compiler(cx, this);
+    ICTypeMonitor_Fallback::Compiler compiler(cx, engine, this);
     ICTypeMonitor_Fallback* stub = compiler.getStub(space);
     if (!stub)
         return false;
@@ -455,10 +456,10 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
 }
 
 bool
-ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
+ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, SharedStubInfo* stub,
                                                 HandleValue val)
 {
-    return fallbackMonitorStub_->addMonitorStubForValue(cx, frame, val);
+    return fallbackMonitorStub_->addMonitorStubForValue(cx, stub, val);
 }
 
 bool
@@ -2011,10 +2012,12 @@ static bool
 DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_,
                   MutableHandleValue val, MutableHandleValue res)
 {
+    SharedStubInfo info(cx, frame, stub_->icEntry());
+    HandleScript script = info.innerScript();
+
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetProp_Fallback*> stub(frame, stub_);
 
-    RootedScript script(cx, frame->script());
     jsbytecode* pc = stub_->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", CodeName[op]);
@@ -2066,7 +2069,7 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, res))
+    if (!stub->addMonitorStubForValue(cx, &info, res))
         return false;
 
     if (attached)
@@ -2173,7 +2176,7 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 //
 
 bool
-ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame, HandleValue val)
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, SharedStubInfo* info, HandleValue val)
 {
     bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
     MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
@@ -2200,10 +2203,9 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
             }
         }
 
-        ICTypeMonitor_PrimitiveSet::Compiler compiler(cx, existingStub, type);
-        ICStub* stub = existingStub
-                       ? compiler.updateStub()
-                       : compiler.getStub(compiler.getStubSpace(frame->script()));
+        ICTypeMonitor_PrimitiveSet::Compiler compiler(cx, info->engine(), existingStub, type);
+        ICStub* stub = existingStub ? compiler.updateStub()
+                                    : compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
         if (!stub) {
             ReportOutOfMemory(cx);
             return false;
@@ -2230,7 +2232,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
         }
 
         ICTypeMonitor_SingleObject::Compiler compiler(cx, obj);
-        ICStub* stub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        ICStub* stub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
         if (!stub) {
             ReportOutOfMemory(cx);
             return false;
@@ -2254,7 +2256,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
         }
 
         ICTypeMonitor_ObjectGroup::Compiler compiler(cx, group);
-        ICStub* stub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        ICStub* stub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
         if (!stub) {
             ReportOutOfMemory(cx);
             return false;
@@ -2291,10 +2293,11 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
 }
 
 static bool
-DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallback* stub,
+DoTypeMonitorFallback(JSContext* cx, void* payload, ICTypeMonitor_Fallback* stub,
                       HandleValue value, MutableHandleValue res)
 {
-    JSScript* script = frame->script();
+    SharedStubInfo info(cx, payload, stub->icEntry());
+    HandleScript script = info.innerScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
     TypeFallbackICSpew(cx, stub, "TypeMonitor");
 
@@ -2313,7 +2316,7 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         // In derived class constructors (including nested arrows/eval), the
         // |this| argument or GETALIASEDVAR can return the magic TDZ value.
         MOZ_ASSERT(value.isMagic(JS_UNINITIALIZED_LEXICAL));
-        MOZ_ASSERT(frame->isFunctionFrame() || frame->isEvalFrame());
+        MOZ_ASSERT(info.frame()->isFunctionFrame() || info.frame()->isEvalFrame());
         MOZ_ASSERT(stub->monitorsThis() ||
                    *GetNextPc(pc) == JSOP_CHECKTHIS ||
                    *GetNextPc(pc) == JSOP_CHECKRETURN);
@@ -2337,7 +2340,7 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
             TypeScript::Monitor(cx, script, pc, value);
     }
 
-    if (!stub->invalid() && !stub->addMonitorStubForValue(cx, frame, value))
+    if (!stub->invalid() && !stub->addMonitorStubForValue(cx, &info, value))
         return false;
 
     // Copy input value to res.
@@ -2345,7 +2348,7 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
     return true;
 }
 
-typedef bool (*DoTypeMonitorFallbackFn)(JSContext*, BaselineFrame*, ICTypeMonitor_Fallback*,
+typedef bool (*DoTypeMonitorFallbackFn)(JSContext*, void*, ICTypeMonitor_Fallback*,
                                         HandleValue, MutableHandleValue);
 static const VMFunction DoTypeMonitorFallbackInfo =
     FunctionInfo<DoTypeMonitorFallbackFn>(DoTypeMonitorFallback, "DoTypeMonitorFallback",
@@ -2361,7 +2364,7 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.pushValue(R0);
     masm.push(ICStubReg);
-    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoTypeMonitorFallbackInfo, masm);
 }
