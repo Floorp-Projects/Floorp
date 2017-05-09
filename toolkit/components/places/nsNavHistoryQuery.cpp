@@ -56,12 +56,9 @@ static nsresult ParseQueryBooleanString(const nsCString& aString,
                                         bool* aValue);
 
 // query getters
-typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQueryGetter, nsINavHistoryQuery,
-                             GetOnlyBookmarked, (bool*));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QueryGetter, nsINavHistoryQuery,
-                             GetBeginTimeReference, (uint32_t*));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QueryGetter, nsINavHistoryQuery,
-                             GetBeginTime, (int64_t*));
+typedef decltype(&nsINavHistoryQuery::GetOnlyBookmarked) BoolQueryGetter;
+typedef decltype(&nsINavHistoryQuery::GetBeginTimeReference) Uint32QueryGetter;
+typedef decltype(&nsINavHistoryQuery::GetBeginTime) Int64QueryGetter;
 static void AppendBoolKeyValueIfTrue(nsACString& aString,
                                      const nsCString& aName,
                                      nsINavHistoryQuery* aQuery,
@@ -76,12 +73,9 @@ static void AppendInt64KeyValueIfNonzero(nsACString& aString,
                                          Int64QueryGetter getter);
 
 // query setters
-typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQuerySetter, nsINavHistoryQuery,
-                             SetOnlyBookmarked, (bool));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QuerySetter, nsINavHistoryQuery,
-                             SetBeginTimeReference, (uint32_t));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QuerySetter, nsINavHistoryQuery,
-                             SetBeginTime, (int64_t));
+typedef decltype(&nsINavHistoryQuery::SetOnlyBookmarked) BoolQuerySetter;
+typedef decltype(&nsINavHistoryQuery::SetBeginTimeReference) Uint32QuerySetter;
+typedef decltype(&nsINavHistoryQuery::SetBeginTime) Int64QuerySetter;
 static void SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                             BoolQuerySetter setter);
 static void SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
@@ -90,15 +84,9 @@ static void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery
                              Int64QuerySetter setter);
 
 // options setters
-typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
-                             nsINavHistoryQueryOptions,
-                             SetExpandQueries, (bool));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
-                             nsINavHistoryQueryOptions,
-                             SetMaxResults, (uint32_t));
-typedef NS_STDCALL_FUNCPROTO(nsresult, Uint16OptionsSetter,
-                             nsINavHistoryQueryOptions,
-                             SetResultType, (uint16_t));
+typedef decltype(&nsINavHistoryQueryOptions::SetExpandQueries) BoolOptionsSetter;
+typedef decltype(&nsINavHistoryQueryOptions::SetMaxResults) Uint32OptionsSetter;
+typedef decltype(&nsINavHistoryQueryOptions::SetResultType) Uint16OptionsSetter;
 static void SetOptionsKeyBool(const nsCString& aValue,
                               nsINavHistoryQueryOptions* aOptions,
                               BoolOptionsSetter setter);
