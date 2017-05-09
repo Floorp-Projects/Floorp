@@ -30,6 +30,7 @@
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
 #include "nsCSSRules.h"
+#include "nsCSSCounterStyleRule.h"
 #include "nsCSSFontFaceRule.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "nsTArray.h"
