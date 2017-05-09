@@ -85,17 +85,8 @@ enum RDFContentSinkParseMode {
     eRDFContentSinkParseMode_Date
 };
 
-typedef
-NS_STDCALL_FUNCPROTO(nsresult,
-                     nsContainerTestFn,
-                     nsIRDFContainerUtils, IsAlt,
-                     (nsIRDFDataSource*, nsIRDFResource*, bool*));
-
-typedef
-NS_STDCALL_FUNCPROTO(nsresult,
-                     nsMakeContainerFn,
-                     nsIRDFContainerUtils, MakeAlt,
-                     (nsIRDFDataSource*, nsIRDFResource*, nsIRDFContainer**));
+typedef decltype(&nsIRDFContainerUtils::IsAlt) nsContainerTestFn;
+typedef decltype(&nsIRDFContainerUtils::MakeAlt) nsMakeContainerFn;
 
 class RDFContentSinkImpl : public nsIRDFContentSink,
                            public nsIExpatSink
