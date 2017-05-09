@@ -48,6 +48,7 @@
  *       timeLastUsed,         // in ms
  *       timeLastModified,     // in ms
  *       timesUsed
+ *       _sync: { ... optional sync metadata },
  *     }
  *   ],
  *   creditCards: [
@@ -74,9 +75,24 @@
  *       timeLastUsed,         // in ms
  *       timeLastModified,     // in ms
  *       timesUsed
+ *       _sync: { ... optional sync metadata },
  *     }
  *   ]
  * }
+ *
+ * Sync Metadata:
+ *
+ * Records may also have a _sync field, which consists of:
+ * {
+ *   changeCounter, // integer - the number of changes made since a last sync.
+ * }
+ *
+ * Records with such a field have previously been synced. Records without such
+ * a field are yet to be synced, so are treated specially in some cases (eg,
+ * they don't need a tombstone, de-duping logic treats them as special etc).
+ * Records without the field are always considered "dirty" from Sync's POV
+ * (meaning they will be synced on the next sync), at which time they will gain
+ * this new field.
  */
 
 "use strict";
@@ -230,16 +246,63 @@ class AutofillRecords {
    *
    * @param {Object} record
    *        The new record for saving.
+   * @param {boolean} [options.sourceSync = false]
+   *        Did sync generate this addition?
    * @returns {string}
    *          The GUID of the newly added item..
    */
-  add(record) {
+  add(record, {sourceSync = false} = {}) {
     this.log.debug("add:", record);
+
+    if (sourceSync) {
+      // Remove tombstones for incoming items that were changed on another
+      // device. Local deletions always lose to avoid data loss.
+      let index = this._findIndexByGUID(record.guid, {
+        includeDeleted: true,
+      });
+      if (index > -1) {
+        let existing = this._store.data[this._collectionName][index];
+        if (existing.deleted) {
+          this._store.data[this._collectionName].splice(index, 1);
+        } else {
+          throw new Error(`Record ${record.guid} already exists`);
+        }
+      }
+      let recordToSave = Object.assign({}, record, {
+        // `timeLastUsed` and `timesUsed` are always local.
+        timeLastUsed: 0,
+        timesUsed: 0,
+      });
+      return this._saveRecord(recordToSave, {sourceSync});
+    }
+
+    if (record.deleted) {
+      return this._saveRecord(record, {sourceSync});
+    }
+
+    let recordToSave = this._clone(record);
+    this._normalizeRecord(recordToSave);
+
+    recordToSave.guid = this._generateGUID();
+    recordToSave.version = this.version;
+
+    // Metadata
+    let now = Date.now();
+    recordToSave.timeCreated = now;
+    recordToSave.timeLastModified = now;
+    recordToSave.timeLastUsed = 0;
+    recordToSave.timesUsed = 0;
+
+    return this._saveRecord(recordToSave);
+  }
+
+  _saveRecord(record, {sourceSync = false} = {}) {
+    if (!record.guid) {
+      throw new Error("Record missing GUID");
+    }
+
     let recordToSave;
     if (record.deleted) {
-      if (!record.guid) {
-        throw new Error("you must specify the GUID when creating a tombstone");
-      }
       if (this._findByGUID(record.guid, {includeDeleted: true})) {
         throw new Error("a record with this GUID already exists");
       }
@@ -249,32 +312,31 @@ class AutofillRecords {
         deleted: true,
       };
     } else {
-      recordToSave = this._clone(record);
-      this._normalizeRecord(recordToSave);
+      recordToSave = record;
+    }
 
-      let guid;
-      while (!guid || this._findByGUID(guid)) {
-        guid = gUUIDGenerator.generateUUID().toString()
-                             .replace(/[{}-]/g, "").substring(0, 12);
-      }
-      recordToSave.guid = guid;
-      recordToSave.version = this.version;
-
-      // Metadata
-      let now = Date.now();
-      recordToSave.timeCreated = now;
-      recordToSave.timeLastModified = now;
-      recordToSave.timeLastUsed = 0;
-      recordToSave.timesUsed = 0;
+    if (sourceSync) {
+      let sync = this._getSyncMetaData(recordToSave, true);
+      sync.changeCounter = 0;
     }
 
     this._computeFields(recordToSave);
 
     this._store.data[this._collectionName].push(recordToSave);
+
     this._store.saveSoon();
 
-    Services.obs.notifyObservers(null, "formautofill-storage-changed", "add");
+    Services.obs.notifyObservers({wrappedJSObject: {sourceSync}}, "formautofill-storage-changed", "add");
     return recordToSave.guid;
+  }
+
+  _generateGUID() {
+    let guid;
+    while (!guid || this._findByGUID(guid)) {
+      guid = gUUIDGenerator.generateUUID().toString()
+                           .replace(/[{}-]/g, "").substring(0, 12);
+    }
+    return guid;
   }
 
   /**
@@ -304,6 +366,10 @@ class AutofillRecords {
     }
 
     recordFound.timeLastModified = Date.now();
+    let syncMetadata = this._getSyncMetaData(recordFound);
+    if (syncMetadata) {
+      syncMetadata.changeCounter += 1;
+    }
 
     this._stripComputedFields(recordFound);
     this._computeFields(recordFound);
@@ -313,7 +379,7 @@ class AutofillRecords {
   }
 
   /**
-   * Notifies the stroage of the use of the specified record, so we can update
+   * Notifies the storage of the use of the specified record, so we can update
    * the metadata accordingly.
    *
    * @param  {string} guid
@@ -339,24 +405,44 @@ class AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which record to remove.
+   * @param  {boolean} [options.sourceSync = false]
+   *         Did Sync generate this removal?
    */
-  remove(guid) {
+  remove(guid, {sourceSync = false} = {}) {
     this.log.debug("remove:", guid);
 
-    let index = this._findIndexByGUID(guid);
-    if (index == -1) {
-      this.log.warn("attempting to remove non-existing entry", guid);
-      return;
+    if (sourceSync) {
+      this._removeSyncedRecord(guid);
+    } else {
+      let index = this._findIndexByGUID(guid, {includeDeleted: false});
+      if (index == -1) {
+        this.log.warn("attempting to remove non-existing entry", guid);
+        return;
+      }
+      let existing = this._store.data[this._collectionName][index];
+      if (existing.deleted) {
+        return; // already a tombstone - don't touch it.
+      }
+      let existingSync = this._getSyncMetaData(existing);
+      if (existingSync) {
+        // existing sync metadata means it has been synced. This means we must
+        // leave a tombstone behind.
+        this._store.data[this._collectionName][index] = {
+          guid,
+          timeLastModified: Date.now(),
+          deleted: true,
+          _sync: existingSync,
+        };
+        existingSync.changeCounter++;
+      } else {
+        // If there's no sync meta-data, this record has never been synced, so
+        // we can delete it.
+        this._store.data[this._collectionName].splice(index, 1);
+      }
     }
-    // replace the record with a tombstone.
-    this._store.data[this._collectionName][index] = {
-      guid,
-      timeLastModified: Date.now(),
-      deleted: true,
-    };
-    this._store.saveSoon();
 
-    Services.obs.notifyObservers(null, "formautofill-storage-changed", "remove");
+    this._store.saveSoon();
+    Services.obs.notifyObservers({wrappedJSObject: {sourceSync}}, "formautofill-storage-changed", "remove");
   }
 
   /**
@@ -365,20 +451,20 @@ class AutofillRecords {
    * @param   {string} guid
    *          Indicates which record to retrieve.
    * @param   {boolean} [options.rawData = false]
-   *          Returns a raw record without modifications and the computed fields.
+   *          Returns a raw record without modifications and the computed fields
+   *          (this includes private fields)
    * @returns {Object}
    *          A clone of the record.
    */
   get(guid, {rawData = false} = {}) {
     this.log.debug("get:", guid, rawData);
-
     let recordFound = this._findByGUID(guid);
     if (!recordFound) {
       return null;
     }
 
     // The record is cloned to avoid accidental modifications from outside.
-    let clonedRecord = this._clone(recordFound);
+    let clonedRecord = this._clone(recordFound, {rawData});
     if (rawData) {
       this._stripComputedFields(clonedRecord);
     } else {
@@ -402,7 +488,7 @@ class AutofillRecords {
 
     let records = this._store.data[this._collectionName].filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
-    let clonedRecords = records.map(this._clone);
+    let clonedRecords = records.map(r => this._clone(r, {rawData}));
     clonedRecords.forEach(record => {
       if (rawData) {
         this._stripComputedFields(record);
@@ -440,8 +526,191 @@ class AutofillRecords {
     return result;
   }
 
-  _clone(record) {
-    return Object.assign({}, record);
+  /**
+   * Functions intended to be used in the support of Sync.
+   */
+
+  _removeSyncedRecord(guid) {
+    let index = this._findIndexByGUID(guid, {includeDeleted: true});
+    if (index == -1) {
+      // Removing a record we don't know about. It may have been synced and
+      // removed by another device before we saw it. Store the tombstone in
+      // case the server is later wiped and we need to reupload everything.
+      let tombstone = {
+        guid,
+        timeLastModified: Date.now(),
+        deleted: true,
+      };
+
+      let sync = this._getSyncMetaData(tombstone, true);
+      sync.changeCounter = 0;
+      this._store.data[this._collectionName].push(tombstone);
+      return;
+    }
+
+    let existing = this._store.data[this._collectionName][index];
+    let sync = this._getSyncMetaData(existing, true);
+    if (sync.changeCounter > 0) {
+      // Deleting a record with unsynced local changes. To avoid potential
+      // data loss, we ignore the deletion in favor of the changed record.
+      this.log.info("Ignoring deletion for record with local changes",
+                    existing);
+      return;
+    }
+
+    if (existing.deleted) {
+      this.log.info("Ignoring deletion for tombstone", existing);
+      return;
+    }
+
+    // Removing a record that's not changed locally, and that's not already
+    // deleted. Replace the record with a synced tombstone.
+    this._store.data[this._collectionName][index] = {
+      guid,
+      timeLastModified: Date.now(),
+      deleted: true,
+      _sync: sync,
+    };
+  }
+
+  /**
+   * Provide an object that describes the changes to sync.
+   *
+   * This is called at the start of the sync process to determine what needs
+   * to be updated on the server. As the server is updated, sync will update
+   * entries in the returned object, and when sync is complete it will pass
+   * the object to pushSyncChanges, which will apply the changes to the store.
+   *
+   * @returns {object}
+   *          An object describing the changes to sync.
+   */
+  pullSyncChanges() {
+    let changes = {};
+
+    let profiles = this._store.data[this._collectionName];
+    for (let profile of profiles) {
+      let sync = this._getSyncMetaData(profile, true);
+      if (sync.changeCounter < 1) {
+        if (sync.changeCounter != 0) {
+          this.log.error("negative change counter", profile);
+        }
+        continue;
+      }
+      changes[profile.guid] = {
+        profile,
+        counter: sync.changeCounter,
+        modified: profile.timeLastModified,
+        synced: false,
+      };
+    }
+    this._store.saveSoon();
+
+    return changes;
+  }
+
+  /**
+   * Apply the metadata changes made by Sync.
+   *
+   * This is called with metadata about what was synced - see pullSyncChanges.
+   *
+   * @param {object} changes
+   *        The possibly modified object obtained via pullSyncChanges.
+   */
+  pushSyncChanges(changes) {
+    for (let [guid, {counter, synced}] of Object.entries(changes)) {
+      if (!synced) {
+        continue;
+      }
+      let recordFound = this._findByGUID(guid, {includeDeleted: true});
+      if (!recordFound) {
+        this.log.warn("No profile found to persist changes for guid " + guid);
+        continue;
+      }
+      let sync = this._getSyncMetaData(recordFound, true);
+      sync.changeCounter = Math.max(0, sync.changeCounter - counter);
+    }
+    this._store.saveSoon();
+  }
+
+  /**
+   * Reset all sync metadata for all items.
+   *
+   * This is called when Sync is disconnected from this device. All sync
+   * metadata for all items is removed.
+   */
+  resetSync() {
+    for (let record of this._store.data[this._collectionName]) {
+      delete record._sync;
+    }
+    // XXX - we should probably also delete all tombstones?
+    this.log.info("All sync metadata was reset");
+  }
+
+  /**
+   * Changes the GUID of an item. This should be called only by Sync. There
+   * must be an existing record with oldID and it must never have been synced
+   * or an error will be thrown. There must be no existing record with newID.
+   *
+   * No tombstone will be created for the old GUID - we check it hasn't
+   * been synced, so no tombstone is necessary.
+   *
+   * @param   {string} oldID
+   *          GUID of the existing item to change the GUID of.
+   * @param   {string} newID
+   *          The new GUID for the item.
+   */
+  changeGUID(oldID, newID) {
+    this.log.debug("changeGUID: ", oldID, newID);
+    if (oldID == newID) {
+      throw new Error("changeGUID: old and new IDs are the same");
+    }
+    if (this._findIndexByGUID(newID) >= 0) {
+      throw new Error("changeGUID: record with destination id exists already");
+    }
+
+    let index = this._findIndexByGUID(oldID);
+    let profile = this._store.data[this._collectionName][index];
+    if (!profile) {
+      throw new Error("changeGUID: no source record");
+    }
+    if (this._getSyncMetaData(profile)) {
+      throw new Error("changeGUID: existing record has already been synced");
+    }
+
+    profile.guid = newID;
+
+    this._store.saveSoon();
+  }
+
+  // Used to get, and optionally create, sync metadata. Brand new records will
+  // *not* have sync meta-data - it will be created when they are first
+  // synced.
+  _getSyncMetaData(record, forceCreate = false) {
+    if (!record._sync && forceCreate) {
+      // create default metadata and indicate we need to save.
+      record._sync = {
+        changeCounter: 1,
+      };
+      this._store.saveSoon();
+    }
+    return record._sync;
+  }
+
+  /**
+   * Internal helper functions.
+   */
+
+  _clone(record, {rawData = false} = {}) {
+    let result = Object.assign({}, record);
+    if (rawData) {
+      return result;
+    }
+    for (let key of Object.keys(result)) {
+      if (key.startsWith("_")) {
+        delete result[key];
+      }
+    }
+    return result;
   }
 
   _findByGUID(guid, {includeDeleted = false} = {}) {
