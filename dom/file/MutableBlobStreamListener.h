@@ -10,6 +10,8 @@
 #include "nsIStreamListener.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace dom {
 
@@ -24,7 +26,8 @@ public:
   MutableBlobStreamListener(MutableBlobStorage::MutableBlobStorageType aType,
                             nsISupports* aParent,
                             const nsACString& aContentType,
-                            MutableBlobStorageCallback* aCallback);
+                            MutableBlobStorageCallback* aCallback,
+                            nsIEventTarget* aEventTarget = nullptr);
 
 private:
   ~MutableBlobStreamListener();
@@ -40,6 +43,7 @@ private:
   nsCOMPtr<nsISupports> mParent;
   MutableBlobStorage::MutableBlobStorageType mStorageType;
   nsCString mContentType;
+  nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 } // namespace dom
