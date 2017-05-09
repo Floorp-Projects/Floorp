@@ -6874,7 +6874,7 @@ nsIDocument::GetLocation() const
   }
 
   nsGlobalWindow* window = nsGlobalWindow::Cast(w);
-  RefPtr<Location> loc = window->Location();
+  RefPtr<Location> loc = window->GetLocation();
   return loc.forget();
 }
 
