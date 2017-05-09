@@ -117,6 +117,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="edad04eb-ea16-42f3-a4a7-20dded33cc37" id="@safesearchscoutee">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i436" id="/(\{7aeae561-714b-45f6-ace3-4a8aed6e227b\})|(\{01e86e69-a2f8-48a0-b068-83869bdba3d0\})|(\{77f5fe49-12e3-4cf5-abb4-d993a0164d9e\})/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -178,6 +182,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3fd71895-7fc6-4f3f-aa22-1cbb0c5fd922" id="/^({95E84BD3-3604-4AAC-B2CA-D9AC3E55B64B}|{E3605470-291B-44EB-8648-745EE356599A}|{95E5E0AD-65F9-4FFC-A2A2-0008DCF6ED25}|{FF20459C-DA6E-41A7-80BC-8F4FEFD9C575}|{6E727987-C8EA-44DA-8749-310C0FBE3C3E}|{12E8A6C2-B125-479F-AB3C-13B8757C7F04}|{EB6628CF-0675-4DAE-95CE-EFFA23169743})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
