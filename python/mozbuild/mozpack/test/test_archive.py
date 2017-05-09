@@ -18,6 +18,9 @@ from mozpack.archive import (
     create_tar_gz_from_files,
     create_tar_bz2_from_files,
 )
+from mozpack.files import (
+    GeneratedFile,
+)
 
 from mozunit import main
 
@@ -41,19 +44,22 @@ class TestArchive(unittest.TestCase):
     def _create_files(self, root):
         files = {}
         for i in range(10):
-            p = os.path.join(root, b'file%d' % i)
+            p = os.path.join(root, b'file%02d' % i)
             with open(p, 'wb') as fh:
-                fh.write(b'file%d' % i)
+                fh.write(b'file%02d' % i)
             # Need to set permissions or umask may influence testing.
             os.chmod(p, MODE_STANDARD)
-            files[b'file%d' % i] = p
+            files[b'file%02d' % i] = p
+
+        for i in range(10):
+            files[b'file%02d' % (i + 10)] = GeneratedFile('file%02d' % (i + 10))
 
         return files
 
     def _verify_basic_tarfile(self, tf):
-        self.assertEqual(len(tf.getmembers()), 10)
+        self.assertEqual(len(tf.getmembers()), 20)
 
-        names = ['file%d' % i for i in range(10)]
+        names = ['file%02d' % i for i in range(20)]
         self.assertEqual(tf.getnames(), names)
 
         for ti in tf.getmembers():
@@ -106,7 +112,7 @@ class TestArchive(unittest.TestCase):
                 create_tar_from_files(fh, files)
 
             # Output should be deterministic.
-            self.assertEqual(file_hash(tp), 'cd16cee6f13391abd94dfa435d2633b61ed727f1')
+            self.assertEqual(file_hash(tp), '01cd314e277f060e98c7de6c8ea57f96b3a2065c')
 
             with tarfile.open(tp, 'r') as tf:
                 self._verify_basic_tarfile(tf)
@@ -144,7 +150,7 @@ class TestArchive(unittest.TestCase):
             with open(gp, 'wb') as fh:
                 create_tar_gz_from_files(fh, files)
 
-            self.assertEqual(file_hash(gp), 'acb602239c1aeb625da5e69336775609516d60f5')
+            self.assertEqual(file_hash(gp), '7c4da5adc5088cdf00911d5daf9a67b15de714b7')
 
             with tarfile.open(gp, 'r:gz') as tf:
                 self._verify_basic_tarfile(tf)
@@ -161,7 +167,7 @@ class TestArchive(unittest.TestCase):
             with open(gp, 'wb') as fh:
                 create_tar_gz_from_files(fh, files, filename='foobar', compresslevel=1)
 
-            self.assertEqual(file_hash(gp), 'fd099f96480cc1100f37baa8e89a6b820dbbcbd3')
+            self.assertEqual(file_hash(gp), '1cc8b96f0262350977c2e9d61f40a1fa76f35c52')
 
             with tarfile.open(gp, 'r:gz') as tf:
                 self._verify_basic_tarfile(tf)
@@ -178,7 +184,7 @@ class TestArchive(unittest.TestCase):
             with open(bp, 'wb') as fh:
                 create_tar_bz2_from_files(fh, files)
 
-            self.assertEqual(file_hash(bp), '1827ad00dfe7acf857b7a1c95ce100361e3f6eea')
+            self.assertEqual(file_hash(bp), 'eb5096d2fbb71df7b3d690001a6f2e82a5aad6a7')
 
             with tarfile.open(bp, 'r:bz2') as tf:
                 self._verify_basic_tarfile(tf)
