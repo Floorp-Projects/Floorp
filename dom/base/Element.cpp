@@ -53,6 +53,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/dom/AnimatableBinding.h"
+#include "mozilla/dom/HTMLDivElement.h"
+#include "mozilla/dom/HTMLSpanElement.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -154,6 +156,36 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+//
+// Verify sizes of elements on 64-bit platforms. This should catch most memory
+// regressions, and is easy to verify locally since most developers are on
+// 64-bit machines. We use a template rather than a direct static assert so
+// that the error message actually displays the sizes.
+//
+
+// We need different numbers on debug and opt to deal with the owning thread
+// pointer that comes with the non-threadsafe refcount on FragmentOrElement.
+#if defined(DEBUG) || defined(MOZ_ASAN)
+#define EXTRA_DOM_ELEMENT_BYTES 8
+#else
+#define EXTRA_DOM_ELEMENT_BYTES 0
+#endif
+
+#define ASSERT_ELEMENT_SIZE(type, opt_size) \
+template<int a, int b> struct Check##type##Size \
+{ \
+  static_assert(sizeof(void*) != 8 || a == b, "DOM size changed"); \
+}; \
+Check##type##Size<sizeof(type), opt_size + EXTRA_DOM_ELEMENT_BYTES> g##type##CES;
+
+// Note that mozjemalloc uses a 16 byte quantum, so 128 is a bin/bucket size.
+ASSERT_ELEMENT_SIZE(Element, 120);
+ASSERT_ELEMENT_SIZE(HTMLDivElement, 128);
+ASSERT_ELEMENT_SIZE(HTMLSpanElement, 128);
+
+#undef ASSERT_ELEMENT_SIZE
+#undef EXTRA_DOM_ELEMENT_BYTES
 
 nsIAtom*
 nsIContent::DoGetID() const
