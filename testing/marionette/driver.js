@@ -367,16 +367,22 @@ GeckoDriver.prototype.getCurrentWindow = function (forcedContext = undefined) {
     case Context.CONTENT:
       if (this.curFrame !== null) {
         win = this.curFrame;
-
       } else if (this.curBrowser !== null && this.curBrowser.contentBrowser) {
-          win = this.curBrowser.window;
+        win = this.curBrowser.window;
       }
-
       break;
   }
 
   return win;
 };
+
+GeckoDriver.prototype.isReftestBrowser = function (element) {
+  return this._reftest &&
+    element &&
+    element.tagName === "xul:browser" &&
+    element.parentElement &&
+    element.parentElement.id === "reftest";
+}
 
 GeckoDriver.prototype.addFrameCloseListener = function (action) {
   let win = this.getCurrentWindow();
