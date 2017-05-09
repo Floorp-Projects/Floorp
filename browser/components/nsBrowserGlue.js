@@ -215,6 +215,8 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 // Maximum interval between backups.  If the last backup is older than these
 // days we will try to create a new one more aggressively.
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
+// Seconds of idle time before reporting media telemetry.
+const MEDIA_TELEMETRY_IDLE_TIME_SEC = 20;
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -558,6 +560,10 @@ BrowserGlue.prototype = {
     if (this._bookmarksBackupIdleTime) {
       this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
       delete this._bookmarksBackupIdleTime;
+    }
+    if (this._mediaTelemetryIdleObserver) {
+      this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver, MEDIA_TELEMETRY_IDLE_TIME_SEC);
+      delete this._mediaTelemetryIdleObserver;
     }
     if (this._isPlacesInitObserver)
       os.removeObserver(this, "places-init-complete");
@@ -970,6 +976,27 @@ BrowserGlue.prototype = {
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
+
+    this._mediaTelemetryIdleObserver = {
+      browserGlue: this,
+      observe(aSubject, aTopic, aData) {
+        if (aTopic != "idle") {
+          return;
+        }
+        this.browserGlue._sendMediaTelemetry();
+      }
+    };
+    this._idleService.addIdleObserver(this._mediaTelemetryIdleObserver,
+                                      MEDIA_TELEMETRY_IDLE_TIME_SEC);
+  },
+
+  _sendMediaTelemetry() {
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+    v.reportCanPlayTelemetry();
+    this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver,
+                                         MEDIA_TELEMETRY_IDLE_TIME_SEC);
+    delete this._mediaTelemetryIdleObserver;
   },
 
   /**
