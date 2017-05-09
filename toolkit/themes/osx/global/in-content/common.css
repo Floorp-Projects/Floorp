@@ -28,6 +28,11 @@ html|button {
   margin-right: 4px;
 }
 
+xul|button[dlgtype="help"] {
+  -moz-appearance: none;
+  width: auto;
+}
+
 xul|caption {
   padding-inline-start: 0;
 }

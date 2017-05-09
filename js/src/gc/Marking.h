@@ -79,7 +79,7 @@ class MarkStack
 
     static const uintptr_t TagMask = 7;
     static_assert(TagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
-    static_assert(TagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
+    static_assert(TagMask <= gc::CellAlignMask, "The tag mask must be embeddable in a Cell*.");
 
     class TaggedPtr
     {
