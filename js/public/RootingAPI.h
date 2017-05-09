@@ -727,7 +727,7 @@ class alignas(8) DispatchWrapper
 
     using TraceFn = void (*)(JSTracer*, T*, const char*);
     TraceFn tracer;
-    alignas(gc::CellSize) T storage;
+    alignas(gc::CellAlignBytes) T storage;
 
   public:
     template <typename U>

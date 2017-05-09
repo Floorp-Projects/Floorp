@@ -590,7 +590,7 @@ CheckHeapTracer::CheckHeapTracer(JSRuntime* rt)
 inline static bool
 IsValidGCThingPointer(Cell* cell)
 {
-    return (uintptr_t(cell) & CellMask) == 0;
+    return (uintptr_t(cell) & CellAlignMask) == 0;
 }
 
 void
