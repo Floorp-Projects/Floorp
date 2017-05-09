@@ -77,7 +77,7 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
             task.attributes['profile'] = False
 
         # If the developer wants test talos jobs to be rebuilt N times we add that value here
-        if options.talos_trigger_tests > 1 and 'talos_suite' in task.attributes:
+        if options.talos_trigger_tests > 1 and task.attributes.get('unittest_suite') == 'talos':
             task.attributes['task_duplicates'] = options.talos_trigger_tests
             task.attributes['profile'] = options.profile
 
