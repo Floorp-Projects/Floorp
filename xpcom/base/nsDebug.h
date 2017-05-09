@@ -393,7 +393,7 @@ void printf_stderr(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 /**
  * Same as printf_stderr, but taking va_list instead of varargs
  */
-void vprintf_stderr(const char* aFmt, va_list aArgs);
+void vprintf_stderr(const char* aFmt, va_list aArgs) MOZ_FORMAT_PRINTF(1, 0);
 
 /**
  * fprintf_stderr is like fprintf, except that if its file argument

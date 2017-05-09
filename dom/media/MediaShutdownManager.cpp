@@ -13,8 +13,11 @@
 
 namespace mozilla {
 
+#undef LOGW
+
 extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
+#define LOGW(...) NS_WARNING(nsPrintfCString(__VA_ARGS__).get())
 
 NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIAsyncShutdownBlocker)
 
@@ -74,7 +77,8 @@ MediaShutdownManager::InitStatics()
     sInstance, NS_LITERAL_STRING(__FILE__), __LINE__,
     NS_LITERAL_STRING("MediaShutdownManager shutdown"));
   if (NS_FAILED(rv)) {
-    MOZ_CRASH_UNSAFE_PRINTF("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
+    LOGW("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
+    sInstance = nullptr;
   }
 }
 
@@ -95,6 +99,9 @@ nsresult
 MediaShutdownManager::Register(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   if (mIsDoingXPCOMShutDown) {
     return NS_ERROR_ABORT;
   }
@@ -162,3 +169,6 @@ MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*)
 }
 
 } // namespace mozilla
+
+// avoid redefined macro in unified build
+#undef LOGW

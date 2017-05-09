@@ -17,13 +17,15 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.util.zip.GZIPOutputStream;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.util.ProxySelector;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -408,8 +410,8 @@ public class CrashReporter extends AppCompatActivity
 
         Log.i(LOGTAG, "server url: " + spec);
         try {
-            URL url = new URL(spec);
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            URI uri = new URI(spec);
+            HttpURLConnection conn = (HttpURLConnection)ProxySelector.openConnectionWithProxy(uri);
             conn.setRequestMethod("POST");
             String boundary = generateBoundary();
             conn.setDoOutput(true);
@@ -498,6 +500,8 @@ public class CrashReporter extends AppCompatActivity
             }
         } catch (IOException e) {
             Log.e(LOGTAG, "exception during send: ", e);
+        } catch (URISyntaxException e) {
+            Log.e(LOGTAG, "exception during new URI: ", e);
         }
 
         doFinish();

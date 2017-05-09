@@ -2,7 +2,6 @@ use std::iter::IntoIterator;
 
 use syntax::ast;
 use syntax::codemap::{DUMMY_SP, Span};
-use syntax::ptr::P;
 
 use ident::ToIdent;
 use invoke::{Invoke, Identity};
@@ -50,7 +49,7 @@ impl<F> GenericsBuilder<F>
             callback: callback,
             span: DUMMY_SP,
             lifetimes: generics.lifetimes,
-            ty_params: generics.ty_params.into_vec(),
+            ty_params: generics.ty_params,
             predicates: generics.where_clause.predicates,
         }
     }
@@ -200,7 +199,7 @@ impl<F> GenericsBuilder<F>
 
     pub fn strip_ty_params(mut self) -> Self {
         for ty_param in &mut self.ty_params {
-            ty_param.bounds = P::new();
+            ty_param.bounds = vec![];
         }
         self
     }
@@ -213,7 +212,7 @@ impl<F> GenericsBuilder<F>
     pub fn build(self) -> F::Result {
         self.callback.invoke(ast::Generics {
             lifetimes: self.lifetimes,
-            ty_params: P::from_vec(self.ty_params),
+            ty_params: self.ty_params,
             where_clause: ast::WhereClause {
                 id: ast::DUMMY_NODE_ID,
                 predicates: self.predicates,

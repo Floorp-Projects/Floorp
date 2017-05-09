@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
     "resource://testing-common/httpd.js");
 
-const nsIDM = Ci.nsIDownloadManager;
-
 var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
 gTestTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
@@ -163,11 +161,12 @@ function* task_addDownloads(aItems) {
       target: {
         path: gTestTargetFile.path,
       },
-      succeeded: item.state == nsIDM.DOWNLOAD_FINISHED,
-      canceled: item.state == nsIDM.DOWNLOAD_CANCELED ||
-                item.state == nsIDM.DOWNLOAD_PAUSED,
-      error: item.state == nsIDM.DOWNLOAD_FAILED ? new Error("Failed.") : null,
-      hasPartialData: item.state == nsIDM.DOWNLOAD_PAUSED,
+      succeeded: item.state == DownloadsCommon.DOWNLOAD_FINISHED,
+      canceled: item.state == DownloadsCommon.DOWNLOAD_CANCELED ||
+                item.state == DownloadsCommon.DOWNLOAD_PAUSED,
+      error: item.state == DownloadsCommon.DOWNLOAD_FAILED ?
+             new Error("Failed.") : null,
+      hasPartialData: item.state == DownloadsCommon.DOWNLOAD_PAUSED,
       hasBlockedData: item.hasBlockedData || false,
       startTime: new Date(startTimeMs++),
     };

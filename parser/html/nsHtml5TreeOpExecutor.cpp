@@ -7,10 +7,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/nsCSPService.h"
+#include "mozilla/dom/ScriptLoader.h"
 
 #include "nsError.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsScriptLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShellTreeItem.h"
@@ -953,8 +953,8 @@ nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
     return;
   }
   mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin,
-                                        aIntegrity, aScriptFromHead,
-                                        mSpeculationReferrerPolicy);
+                                           aIntegrity, aScriptFromHead,
+                                           mSpeculationReferrerPolicy);
 }
 
 void

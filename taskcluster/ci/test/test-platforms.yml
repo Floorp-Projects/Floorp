@@ -178,11 +178,11 @@ macosx64/debug:
     test-sets:
         - macosx64-tests-debug
 
-# macosx64/opt:
-#     build-platform: macosx64/opt
-#     test-sets:
-#         - macosx64-tests-talos
-#         - macosx64-tests-debug
+macosx64/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx64-tests-talos
+        - macosx64-tests-debug
 
 ##
 # Android platforms (matching /android.*/)

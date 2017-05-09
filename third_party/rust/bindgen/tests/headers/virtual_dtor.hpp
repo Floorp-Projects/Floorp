@@ -1,3 +1,0 @@
-struct nsSlots {
-    virtual ~nsSlots();
-};

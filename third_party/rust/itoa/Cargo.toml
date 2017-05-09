@@ -1,9 +1,0 @@
-[package]
-name = "itoa"
-version = "0.3.1"
-authors = ["David Tolnay <dtolnay@gmail.com>"]
-license = "MIT/Apache-2.0"
-description = "Fast functions for printing integer primitives to an io::Write"
-repository = "https://github.com/dtolnay/itoa"
-documentation = "https://github.com/dtolnay/itoa"
-categories = ["value-formatting"]

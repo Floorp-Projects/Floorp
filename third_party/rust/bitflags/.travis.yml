@@ -4,21 +4,21 @@ rust:
   - beta
   - nightly
 sudo: false
+before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - cargo doc
-after_success: |
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  [ $TRAVIS_RUST_VERSION = nightly ] &&
-  echo '<meta http-equiv=refresh content=0;url=bitflags/index.html>' > target/doc/index.html &&
-  pip install ghp-import --user $USER &&
-  $HOME/.local/bin/ghp-import -n target/doc &&
-  git push -qf https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+  - travis-cargo --only nightly test
+  - cargo doc --no-deps
+after_success:
+  - travis-cargo --only nightly doc-upload
 env:
   global:
-    secure: d+l63TtlF6cfFVDGauYRexgx4lBww4ORqqK4Vt75nWbiCbjZYsKXbcTUdhAr193nIVGiNW50A8SekM01F3EngHwHwr6u5kFleOggm+HA0kkBVeX+k2A4WCVVfYI+gth+zk99WaF8h46MA0evhx6FYDoqeyl9oqmVifI4kaqhMwc=
+    secure: "DoZ8g8iPs+X3xEEucke0Ae02JbkQ1qd1SSv/L2aQqxULmREtRcbzRauhiT+ToQO5Ft1Lul8uck14nPfs4gMr/O3jFFBhEBVpSlbkJx7eNL3kwUdp95UNroA8I43xPN/nccJaHDN6TMTD3+uajTQTje2SyzOQP+1gvdKg17kguvE="
+
+
+
 notifications:
   email:
     on_success: never

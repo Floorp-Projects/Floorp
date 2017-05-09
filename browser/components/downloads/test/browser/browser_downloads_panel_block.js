@@ -139,7 +139,7 @@ function promisePanelHidden() {
 
 function makeDownload(verdict) {
   return {
-    state: nsIDM.DOWNLOAD_DIRTY,
+    state: DownloadsCommon.DOWNLOAD_DIRTY,
     hasBlockedData: true,
     errorObj: {
       result: Components.results.NS_ERROR_FAILURE,

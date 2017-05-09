@@ -360,12 +360,6 @@ pref("browser.download.folderList", 1);
 pref("browser.download.manager.addToRecentDocs", true);
 pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
-#ifdef RELEASE_OR_BETA
-pref("browser.download.showPanelDropmarker", false);
-#else
-pref("browser.download.showPanelDropmarker", true);
-#endif
-
 // This allows disabling the animated notifications shown by
 // the Downloads Indicator when a download starts or completes.
 pref("browser.download.animateNotifications", true);
@@ -1158,7 +1152,6 @@ pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
 pref("services.sync.prefs.sync.extensions.personas.current", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
 pref("services.sync.prefs.sync.intl.accept_languages", true);
-pref("services.sync.prefs.sync.javascript.enabled", true);
 pref("services.sync.prefs.sync.layout.spellcheckDefault", true);
 pref("services.sync.prefs.sync.lightweightThemes.selectedThemeID", true);
 pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);

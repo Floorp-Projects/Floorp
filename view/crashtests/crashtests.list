@@ -3,7 +3,7 @@ load 64049-1.html
 load 281743-1.html
 skip-if(stylo) load 323497-1.html # bug 1361235
 pref(layout.css.moz-appearance.enabled,true) load 382756-1.xul
-load 387745-1.svg
+skip-if(stylo) load 387745-1.svg # bug 1363000
 load 399852.html
 skip-if(stylo) load 429315-1.html # bug 1361235
 load 507563-1.html

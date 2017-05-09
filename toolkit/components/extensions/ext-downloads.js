@@ -74,7 +74,7 @@ class DownloadItem {
       this.download.hasPartialData && !this.download.error;
   }
   get error() {
-    if (!this.download.stopped || this.download.succeeded) {
+    if (!this.download.startTime || !this.download.stopped || this.download.succeeded) {
       return null;
     }
     // TODO store this instead of calculating it
@@ -126,7 +126,7 @@ class DownloadItem {
   // field changed by comparing item.fieldname with item.prechange.fieldname.
   // After all handlers have been invoked, this gets called to store the
   // current values of all fields ahead of the next event.
-  _change() {
+  _storePrechange() {
     for (let field of DOWNLOAD_ITEM_CHANGE_FIELDS) {
       this.prechange[field] = this[field];
     }
@@ -156,6 +156,7 @@ const DownloadMap = {
           onDownloadAdded(download) {
             const item = self.newFromDownload(download, null);
             self.emit("create", item);
+            item._storePrechange();
           },
 
           onDownloadRemoved(download) {
@@ -172,12 +173,8 @@ const DownloadMap = {
             if (item == null) {
               Cu.reportError("Got onDownloadChanged for unknown download object");
             } else {
-              // We get the first one of these when the download is started.
-              // In this case, don't emit anything, just initialize prechange.
-              if (Object.keys(item.prechange).length > 0) {
-                self.emit("change", item);
-              }
-              item._change();
+              self.emit("change", item);
+              item._storePrechange();
             }
           },
         }).then(() => list.getAll())

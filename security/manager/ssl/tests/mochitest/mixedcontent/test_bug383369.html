@@ -44,8 +44,6 @@
       prefBranch.setCharPref("dir", profileDir.path);
       prefBranch.setBoolPref("useDownloadDir", true);
       prefBranch.setIntPref("folderList", 2);
-      prefBranch.setBoolPref("manager.closeWhenDone", true);
-      prefBranch.setBoolPref("manager.showWhenStarting", false);
 
       const { Downloads } =
         Cu.import("resource://gre/modules/Downloads.jsm", {});
@@ -84,8 +82,7 @@
                     .getService(Ci.nsIPrefService);
       let prefBranch = prefs.getBranch("browser.download.");
 
-      const prefKeys = ["dir", "useDownloadDir", "folderList",
-                        "manager.closeWhenDone", "manager.showWhenStarting"];
+      const prefKeys = ["dir", "useDownloadDir", "folderList"];
       for (let prefKey of prefKeys) {
         if (prefBranch.prefHasUserValue(prefKey)) {
           prefBranch.clearUserPref(prefKey);

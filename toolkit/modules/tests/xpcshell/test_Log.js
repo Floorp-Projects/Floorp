@@ -502,6 +502,7 @@ add_task(function* test_log_err_only() {
    * is formatted correctly.
    */
   try {
+    // eslint-disable-next-line no-eval
     eval("javascript syntax error");
   } catch (e) {
     log.error(e);
@@ -576,6 +577,7 @@ add_task(function* format_errors() {
   // Test that JS-generated Errors are recognized and formatted.
   try {
     yield Promise.resolve();  // Scrambles the stack
+    // eslint-disable-next-line no-eval
     eval("javascript syntax error");
   } catch (e) {
     str = pFormat.format(e);

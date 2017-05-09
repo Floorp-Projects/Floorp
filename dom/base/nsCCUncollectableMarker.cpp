@@ -29,6 +29,7 @@
 #include "nsInProcessTabChildGlobal.h"
 #include "nsFrameLoader.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ProcessGlobal.h"

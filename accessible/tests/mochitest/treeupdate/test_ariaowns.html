@@ -676,6 +676,58 @@
       }
     }
 
+    /**
+     * Put ARIA owned child back when ARIA owner removed.
+     */
+    function test10_removeARIAOwner()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getAccessible('t10_owner'))
+      ];
+
+      this.invoke = () => {
+        let tree =
+          { SECTION: [ // t10_container
+            { SECTION: [ // t10_owner
+              { ENTRY: [] } // t10_child
+            ] }
+          ] };
+        testAccessibleTree('t10_container', tree);
+
+        getNode('t10_owner').remove();
+      }
+
+      this.getID = () => {
+        return 'Put aria owned child back when aria owner removed';
+      }
+    }
+
+    function test10_finishTest()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, 't10_container')
+      ];
+
+      this.invoke = () => {
+        // trigger a tree update.
+        getNode('t10_container').append(document.createElement('p'));
+      }
+
+      this.finalCheck = () => {
+        let tree =
+          { SECTION: [ // t10_container
+            // { ENTRY: [] }, // t10_child
+            { PARAGRAPH: [] }
+          ] };
+        testAccessibleTree('t10_container', tree);
+        todo(false, 'Input accessible has be moved back in the tree');
+      }
+
+      this.getID = () => {
+        return `Put aria owned child back when aria owner removed (finish test)`;
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Test
     ////////////////////////////////////////////////////////////////////////////
@@ -727,6 +779,9 @@
       gQueue.push(new test9_prepare());
       gQueue.push(new test9_setARIAOwns());
       gQueue.push(new test9_finish());
+
+      gQueue.push(new test10_removeARIAOwner());
+      gQueue.push(new test10_finishTest());
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -792,6 +847,11 @@
   </div>
 
   <iframe id="t9_container"></iframe>
+
+  <div id="t10_container">
+    <div id="t10_owner" aria-owns="t10_child"></div>
+    <input id="t10_child">
+  </div>
 </body>
 
 </html>

@@ -8,10 +8,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Weave",
   "resource://services-sync/main.js");
-if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
-  XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
-                                    "resource://gre/modules/CloudSync.jsm");
-}
 
 const MIN_STATUS_ANIMATION_DURATION = 1600;
 
@@ -223,9 +219,7 @@ var gSync = {
     document.getElementById("sync-setup-state").hidden = true;
     document.getElementById("sync-syncnow-state").hidden = true;
 
-    if (CloudSync && CloudSync.ready && CloudSync().adapters.count) {
-      document.getElementById("sync-syncnow-state").hidden = false;
-    } else if (status == UIState.STATUS_LOGIN_FAILED) {
+    if (status == UIState.STATUS_LOGIN_FAILED) {
       // unhiding this element makes the menubar show the login failure state.
       document.getElementById("sync-reauth-state").hidden = false;
     } else if (status == UIState.STATUS_NOT_CONFIGURED ||

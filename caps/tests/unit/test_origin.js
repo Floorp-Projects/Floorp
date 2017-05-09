@@ -25,10 +25,10 @@ function checkOriginAttributes(prin, attrs, suffix) {
   attrs = attrs || {};
   do_check_eq(prin.originAttributes.appId, attrs.appId || 0);
   do_check_eq(prin.originAttributes.inIsolatedMozBrowser, attrs.inIsolatedMozBrowser || false);
-  do_check_eq(prin.originSuffix, suffix || '');
-  do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), suffix || '');
+  do_check_eq(prin.originSuffix, suffix || "");
+  do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), suffix || "");
   do_check_true(ChromeUtils.originAttributesMatchPattern(prin.originAttributes, attrs));
-  if (!prin.isNullPrincipal && !prin.origin.startsWith('[')) {
+  if (!prin.isNullPrincipal && !prin.origin.startsWith("[")) {
     do_check_true(ssm.createCodebasePrincipalFromOrigin(prin.origin).equals(prin));
   } else {
     checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
@@ -55,33 +55,33 @@ function printAttrs(name, attrs) {
 
 function checkValues(attrs, values) {
   values = values || {};
-  //printAttrs("attrs", attrs);
-  //printAttrs("values", values);
+  // printAttrs("attrs", attrs);
+  // printAttrs("values", values);
   do_check_eq(attrs.appId, values.appId || 0);
   do_check_eq(attrs.userContextId, values.userContextId || 0);
   do_check_eq(attrs.inIsolatedMozBrowser, values.inIsolatedMozBrowser || false);
-  do_check_eq(attrs.privateBrowsingId, values.privateBrowsingId || '');
-  do_check_eq(attrs.firstPartyDomain, values.firstPartyDomain || '');
+  do_check_eq(attrs.privateBrowsingId, values.privateBrowsingId || "");
+  do_check_eq(attrs.firstPartyDomain, values.firstPartyDomain || "");
 }
 
 function run_test() {
   // Attributeless origins.
-  do_check_eq(ssm.getSystemPrincipal().origin, '[System Principal]');
+  do_check_eq(ssm.getSystemPrincipal().origin, "[System Principal]");
   checkOriginAttributes(ssm.getSystemPrincipal());
-  var exampleOrg = ssm.createCodebasePrincipal(makeURI('http://example.org'), {});
-  do_check_eq(exampleOrg.origin, 'http://example.org');
+  var exampleOrg = ssm.createCodebasePrincipal(makeURI("http://example.org"), {});
+  do_check_eq(exampleOrg.origin, "http://example.org");
   checkOriginAttributes(exampleOrg);
-  var exampleCom = ssm.createCodebasePrincipal(makeURI('https://www.example.com:123'), {});
-  do_check_eq(exampleCom.origin, 'https://www.example.com:123');
+  var exampleCom = ssm.createCodebasePrincipal(makeURI("https://www.example.com:123"), {});
+  do_check_eq(exampleCom.origin, "https://www.example.com:123");
   checkOriginAttributes(exampleCom);
   var nullPrin = Cu.getObjectPrincipal(new Cu.Sandbox(null));
   do_check_true(/^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(nullPrin.origin));
   checkOriginAttributes(nullPrin);
-  var ipv6Prin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]:123'), {});
-  do_check_eq(ipv6Prin.origin, 'https://[2001:db8::ff00:42:8329]:123');
+  var ipv6Prin = ssm.createCodebasePrincipal(makeURI("https://[2001:db8::ff00:42:8329]:123"), {});
+  do_check_eq(ipv6Prin.origin, "https://[2001:db8::ff00:42:8329]:123");
   checkOriginAttributes(ipv6Prin);
-  var ipv6NPPrin = ssm.createCodebasePrincipal(makeURI('https://[2001:db8::ff00:42:8329]'), {});
-  do_check_eq(ipv6NPPrin.origin, 'https://[2001:db8::ff00:42:8329]');
+  var ipv6NPPrin = ssm.createCodebasePrincipal(makeURI("https://[2001:db8::ff00:42:8329]"), {});
+  do_check_eq(ipv6NPPrin.origin, "https://[2001:db8::ff00:42:8329]");
   checkOriginAttributes(ipv6NPPrin);
   var ep = Cu.getObjectPrincipal(Cu.Sandbox([exampleCom, nullPrin, exampleOrg]));
   checkOriginAttributes(ep);
@@ -92,42 +92,42 @@ function run_test() {
   do_check_eq(ep.origin, `[Expanded Principal [${exampleOrg.origin}, ${exampleCom.origin}, ${nullPrin.origin}]]`);
 
   // Make sure createCodebasePrincipal does what the rest of gecko does.
-  do_check_true(exampleOrg.equals(Cu.getObjectPrincipal(new Cu.Sandbox('http://example.org'))));
+  do_check_true(exampleOrg.equals(Cu.getObjectPrincipal(new Cu.Sandbox("http://example.org"))));
 
   //
   // Test origin attributes.
   //
 
   // Just app.
-  var exampleOrg_app = ssm.createCodebasePrincipal(makeURI('http://example.org'), {appId: 42});
+  var exampleOrg_app = ssm.createCodebasePrincipal(makeURI("http://example.org"), {appId: 42});
   var nullPrin_app = ssm.createNullPrincipal({appId: 42});
-  checkOriginAttributes(exampleOrg_app, {appId: 42}, '^appId=42');
-  checkOriginAttributes(nullPrin_app, {appId: 42}, '^appId=42');
-  do_check_eq(exampleOrg_app.origin, 'http://example.org^appId=42');
+  checkOriginAttributes(exampleOrg_app, {appId: 42}, "^appId=42");
+  checkOriginAttributes(nullPrin_app, {appId: 42}, "^appId=42");
+  do_check_eq(exampleOrg_app.origin, "http://example.org^appId=42");
 
   // Just browser.
-  var exampleOrg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inIsolatedMozBrowser: true});
+  var exampleOrg_browser = ssm.createCodebasePrincipal(makeURI("http://example.org"), {inIsolatedMozBrowser: true});
   var nullPrin_browser = ssm.createNullPrincipal({inIsolatedMozBrowser: true});
-  checkOriginAttributes(exampleOrg_browser, {inIsolatedMozBrowser: true}, '^inBrowser=1');
-  checkOriginAttributes(nullPrin_browser, {inIsolatedMozBrowser: true}, '^inBrowser=1');
-  do_check_eq(exampleOrg_browser.origin, 'http://example.org^inBrowser=1');
+  checkOriginAttributes(exampleOrg_browser, {inIsolatedMozBrowser: true}, "^inBrowser=1");
+  checkOriginAttributes(nullPrin_browser, {inIsolatedMozBrowser: true}, "^inBrowser=1");
+  do_check_eq(exampleOrg_browser.origin, "http://example.org^inBrowser=1");
 
   // App and browser.
-  var exampleOrg_appBrowser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inIsolatedMozBrowser: true, appId: 42});
+  var exampleOrg_appBrowser = ssm.createCodebasePrincipal(makeURI("http://example.org"), {inIsolatedMozBrowser: true, appId: 42});
   var nullPrin_appBrowser = ssm.createNullPrincipal({inIsolatedMozBrowser: true, appId: 42});
-  checkOriginAttributes(exampleOrg_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
-  checkOriginAttributes(nullPrin_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
-  do_check_eq(exampleOrg_appBrowser.origin, 'http://example.org^appId=42&inBrowser=1');
+  checkOriginAttributes(exampleOrg_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, "^appId=42&inBrowser=1");
+  checkOriginAttributes(nullPrin_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, "^appId=42&inBrowser=1");
+  do_check_eq(exampleOrg_appBrowser.origin, "http://example.org^appId=42&inBrowser=1");
 
   // App and browser, different domain.
-  var exampleCom_appBrowser = ssm.createCodebasePrincipal(makeURI('https://www.example.com:123'), {appId: 42, inIsolatedMozBrowser: true});
-  checkOriginAttributes(exampleCom_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
-  do_check_eq(exampleCom_appBrowser.origin, 'https://www.example.com:123^appId=42&inBrowser=1');
+  var exampleCom_appBrowser = ssm.createCodebasePrincipal(makeURI("https://www.example.com:123"), {appId: 42, inIsolatedMozBrowser: true});
+  checkOriginAttributes(exampleCom_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, "^appId=42&inBrowser=1");
+  do_check_eq(exampleCom_appBrowser.origin, "https://www.example.com:123^appId=42&inBrowser=1");
 
   // First party Uri
-  var exampleOrg_firstPartyDomain = ssm.createCodebasePrincipal(makeURI('http://example.org'), {firstPartyDomain: 'example.org'});
-  checkOriginAttributes(exampleOrg_firstPartyDomain, { firstPartyDomain: "example.org" }, '^firstPartyDomain=example.org');
-  do_check_eq(exampleOrg_firstPartyDomain.origin, 'http://example.org^firstPartyDomain=example.org');
+  var exampleOrg_firstPartyDomain = ssm.createCodebasePrincipal(makeURI("http://example.org"), {firstPartyDomain: "example.org"});
+  checkOriginAttributes(exampleOrg_firstPartyDomain, { firstPartyDomain: "example.org" }, "^firstPartyDomain=example.org");
+  do_check_eq(exampleOrg_firstPartyDomain.origin, "http://example.org^firstPartyDomain=example.org");
 
   // Make sure we don't crash when serializing principals with UNKNOWN_APP_ID.
   try {
@@ -136,7 +136,7 @@ function run_test() {
     let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
     pipe.init(false, false, 0, 0xffffffff, null);
     binaryStream.setOutputStream(pipe.outputStream);
-    binaryStream.writeCompoundObject(simplePrin, Ci.nsISupports, true);
+    binaryStream.writeCompoundObject(simplePrin, Ci.nsISupports, true); // eslint-disable-line no-undef
     binaryStream.close();
   } catch (e) {
     do_check_true(true);
@@ -144,24 +144,24 @@ function run_test() {
 
 
   // Just userContext.
-  var exampleOrg_userContext = ssm.createCodebasePrincipal(makeURI('http://example.org'), {userContextId: 42});
-  checkOriginAttributes(exampleOrg_userContext, { userContextId: 42 }, '^userContextId=42');
-  do_check_eq(exampleOrg_userContext.origin, 'http://example.org^userContextId=42');
+  var exampleOrg_userContext = ssm.createCodebasePrincipal(makeURI("http://example.org"), {userContextId: 42});
+  checkOriginAttributes(exampleOrg_userContext, { userContextId: 42 }, "^userContextId=42");
+  do_check_eq(exampleOrg_userContext.origin, "http://example.org^userContextId=42");
 
   // UserContext and App.
-  var exampleOrg_userContextApp = ssm.createCodebasePrincipal(makeURI('http://example.org'), {appId: 24, userContextId: 42});
+  var exampleOrg_userContextApp = ssm.createCodebasePrincipal(makeURI("http://example.org"), {appId: 24, userContextId: 42});
   var nullPrin_userContextApp = ssm.createNullPrincipal({appId: 24, userContextId: 42});
-  checkOriginAttributes(exampleOrg_userContextApp, {appId: 24, userContextId: 42}, '^appId=24&userContextId=42');
-  checkOriginAttributes(nullPrin_userContextApp, {appId: 24, userContextId: 42}, '^appId=24&userContextId=42');
-  do_check_eq(exampleOrg_userContextApp.origin, 'http://example.org^appId=24&userContextId=42');
+  checkOriginAttributes(exampleOrg_userContextApp, {appId: 24, userContextId: 42}, "^appId=24&userContextId=42");
+  checkOriginAttributes(nullPrin_userContextApp, {appId: 24, userContextId: 42}, "^appId=24&userContextId=42");
+  do_check_eq(exampleOrg_userContextApp.origin, "http://example.org^appId=24&userContextId=42");
 
   checkSandboxOriginAttributes(null, {});
-  checkSandboxOriginAttributes('http://example.org', {});
-  checkSandboxOriginAttributes('http://example.org', {}, {originAttributes: {}});
-  checkSandboxOriginAttributes('http://example.org', {appId: 42}, {originAttributes: {appId: 42}});
-  checkSandboxOriginAttributes(['http://example.org'], {});
-  checkSandboxOriginAttributes(['http://example.org'], {}, {originAttributes: {}});
-  checkSandboxOriginAttributes(['http://example.org'], {appId: 42}, {originAttributes: {appId: 42}});
+  checkSandboxOriginAttributes("http://example.org", {});
+  checkSandboxOriginAttributes("http://example.org", {}, {originAttributes: {}});
+  checkSandboxOriginAttributes("http://example.org", {appId: 42}, {originAttributes: {appId: 42}});
+  checkSandboxOriginAttributes(["http://example.org"], {});
+  checkSandboxOriginAttributes(["http://example.org"], {}, {originAttributes: {}});
+  checkSandboxOriginAttributes(["http://example.org"], {appId: 42}, {originAttributes: {appId: 42}});
 
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
@@ -177,15 +177,15 @@ function run_test() {
 
   // Check Principal kinds.
   function checkKind(prin, kind) {
-    do_check_eq(prin.isNullPrincipal, kind == 'nullPrincipal');
-    do_check_eq(prin.isCodebasePrincipal, kind == 'codebasePrincipal');
-    do_check_eq(prin.isExpandedPrincipal, kind == 'expandedPrincipal');
-    do_check_eq(prin.isSystemPrincipal, kind == 'systemPrincipal');
+    do_check_eq(prin.isNullPrincipal, kind == "nullPrincipal");
+    do_check_eq(prin.isCodebasePrincipal, kind == "codebasePrincipal");
+    do_check_eq(prin.isExpandedPrincipal, kind == "expandedPrincipal");
+    do_check_eq(prin.isSystemPrincipal, kind == "systemPrincipal");
   }
-  checkKind(ssm.createNullPrincipal({}), 'nullPrincipal');
-  checkKind(ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {}), 'codebasePrincipal');
-  checkKind(Cu.getObjectPrincipal(Cu.Sandbox([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})])), 'expandedPrincipal');
-  checkKind(ssm.getSystemPrincipal(), 'systemPrincipal');
+  checkKind(ssm.createNullPrincipal({}), "nullPrincipal");
+  checkKind(ssm.createCodebasePrincipal(makeURI("http://www.example.com"), {}), "codebasePrincipal");
+  checkKind(Cu.getObjectPrincipal(Cu.Sandbox([ssm.createCodebasePrincipal(makeURI("http://www.example.com"), {})])), "expandedPrincipal");
+  checkKind(ssm.getSystemPrincipal(), "systemPrincipal");
 
   //
   // Test Origin Attribute Manipulation
@@ -260,7 +260,7 @@ function run_test() {
     let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
     checkValues(orig, t[1]);
     let mod = orig;
-    mod['userContextId'] = 0;
+    mod["userContextId"] = 0;
     checkValues(mod, t[2]);
     do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
   });
@@ -281,12 +281,12 @@ function run_test() {
     let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
     checkValues(orig, t[1]);
     let mod = orig;
-    mod['firstPartyDomain'] = "";
+    mod["firstPartyDomain"] = "";
     checkValues(mod, t[2]);
     do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
   });
 
-  var fileURI = makeURI('file:///foo/bar').QueryInterface(Ci.nsIFileURL);
+  var fileURI = makeURI("file:///foo/bar").QueryInterface(Ci.nsIFileURL);
   var fileTests = [
     [true, fileURI.spec],
     [false, "file://UNIVERSAL_FILE_URI_ORIGIN"],
@@ -298,7 +298,7 @@ function run_test() {
   });
   Services.prefs.clearUserPref("security.fileuri.strict_origin_policy");
 
-  var aboutBlankURI = makeURI('about:blank');
+  var aboutBlankURI = makeURI("about:blank");
   var aboutBlankPrin = ssm.createCodebasePrincipal(aboutBlankURI, {});
   do_check_true(/^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(aboutBlankPrin.origin));
 }

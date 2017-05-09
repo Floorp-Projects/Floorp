@@ -491,7 +491,13 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
 
     // Expires time
     mBuffer.AppendLiteral("    <td>");
-    if (aExpirationTime < 0xFFFFFFFF) {
+
+    // Bug - 633747.
+    // When expiration time is 0, we show 1970-01-01 01:00:00 which is confusing.
+    // So we check if time is 0, then we show a message, "Expired Immediately"
+    if (aExpirationTime == 0) {
+        mBuffer.AppendLiteral("Expired Immediately");
+    } else if (aExpirationTime < 0xFFFFFFFF) {
         PrintTimeString(buf, sizeof(buf), aExpirationTime);
         mBuffer.Append(buf);
     } else {

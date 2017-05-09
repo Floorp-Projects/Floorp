@@ -15,11 +15,11 @@ module.exports = {
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/use-default-preference-values": "error",
     "mozilla/use-ownerGlobal": "error",
-
     // No (!foo in bar) or (!object instanceof Class)
     "no-unsafe-negation": "error",
     // No eval() and no strings in the first param of setTimeout or setInterval
     "no-implied-eval": "error",
+    "no-eval": "error",
   },
   "env": {
     "es6": true

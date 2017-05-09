@@ -11,17 +11,16 @@
 pub use self::AnnNode::*;
 
 use abi::{self, Abi};
-use ast::{self, BlockCheckMode, PatKind};
+use ast::{self, BlockCheckMode, PatKind, RangeEnd};
 use ast::{SelfKind, RegionTyParamBound, TraitTyParamBound, TraitBoundModifier};
 use ast::Attribute;
 use util::parser::AssocOp;
 use attr;
 use codemap::{self, CodeMap};
 use syntax_pos::{self, BytePos};
-use errors;
 use parse::token::{self, BinOpToken, Token};
 use parse::lexer::comments;
-use parse;
+use parse::{self, ParseSess};
 use print::pp::{self, break_offset, word, space, zerobreak, hardbreak};
 use print::pp::{Breaks, eof};
 use print::pp::Breaks::{Consistent, Inconsistent};
@@ -99,20 +98,15 @@ pub const DEFAULT_COLUMNS: usize = 78;
 /// it can scan the input text for comments and literals to
 /// copy forward.
 pub fn print_crate<'a>(cm: &'a CodeMap,
-                       span_diagnostic: &errors::Handler,
+                       sess: &ParseSess,
                        krate: &ast::Crate,
                        filename: String,
                        input: &mut Read,
                        out: Box<Write+'a>,
                        ann: &'a PpAnn,
                        is_expanded: bool) -> io::Result<()> {
-    let mut s = State::new_from_input(cm,
-                                      span_diagnostic,
-                                      filename,
-                                      input,
-                                      out,
-                                      ann,
-                                      is_expanded);
+    let mut s = State::new_from_input(cm, sess, filename, input, out, ann, is_expanded);
+
     if is_expanded && !std_inject::injected_crate_name(krate).is_none() {
         // We need to print `#![no_std]` (and its feature gate) so that
         // compiling pretty-printed source won't inject libstd again.
@@ -138,16 +132,13 @@ pub fn print_crate<'a>(cm: &'a CodeMap,
 
 impl<'a> State<'a> {
     pub fn new_from_input(cm: &'a CodeMap,
-                          span_diagnostic: &errors::Handler,
+                          sess: &ParseSess,
                           filename: String,
                           input: &mut Read,
                           out: Box<Write+'a>,
                           ann: &'a PpAnn,
                           is_expanded: bool) -> State<'a> {
-        let (cmnts, lits) = comments::gather_comments_and_literals(
-            span_diagnostic,
-            filename,
-            input);
+        let (cmnts, lits) = comments::gather_comments_and_literals(sess, filename, input);
 
         State::new(
             cm,
@@ -1007,7 +998,7 @@ impl<'a> State<'a> {
             ast::TyKind::BareFn(ref f) => {
                 let generics = ast::Generics {
                     lifetimes: f.lifetimes.clone(),
-                    ty_params: P::new(),
+                    ty_params: Vec::new(),
                     where_clause: ast::WhereClause {
                         id: ast::DUMMY_NODE_ID,
                         predicates: Vec::new(),
@@ -1026,11 +1017,7 @@ impl<'a> State<'a> {
             ast::TyKind::Path(Some(ref qself), ref path) => {
                 try!(self.print_qpath(path, qself, false))
             }
-            ast::TyKind::ObjectSum(ref ty, ref bounds) => {
-                try!(self.print_type(&ty));
-                try!(self.print_bounds("+", &bounds[..]));
-            }
-            ast::TyKind::PolyTraitRef(ref bounds) => {
+            ast::TyKind::TraitObject(ref bounds) => {
                 try!(self.print_bounds("", &bounds[..]));
             }
             ast::TyKind::ImplTrait(ref bounds) => {
@@ -2016,7 +2003,7 @@ impl<'a> State<'a> {
             ast::ExprKind::InPlace(ref place, ref expr) => {
                 try!(self.print_expr_in_place(place, expr));
             }
-            ast::ExprKind::Vec(ref exprs) => {
+            ast::ExprKind::Array(ref exprs) => {
                 try!(self.print_expr_vec(&exprs[..], attrs));
             }
             ast::ExprKind::Repeat(ref element, ref count) => {
@@ -2555,10 +2542,13 @@ impl<'a> State<'a> {
                 try!(self.print_pat(&inner));
             }
             PatKind::Lit(ref e) => try!(self.print_expr(&**e)),
-            PatKind::Range(ref begin, ref end) => {
+            PatKind::Range(ref begin, ref end, ref end_kind) => {
                 try!(self.print_expr(&begin));
                 try!(space(&mut self.s));
-                try!(word(&mut self.s, "..."));
+                match *end_kind {
+                    RangeEnd::Included => try!(word(&mut self.s, "...")),
+                    RangeEnd::Excluded => try!(word(&mut self.s, "..")),
+                }
                 try!(self.print_expr(&end));
             }
             PatKind::Slice(ref before, ref slice, ref after) => {
@@ -2847,11 +2837,13 @@ impl<'a> State<'a> {
                                                                                ..}) => {
                     try!(self.print_lifetime_bounds(lifetime, bounds));
                 }
-                ast::WherePredicate::EqPredicate(ast::WhereEqPredicate{ref path, ref ty, ..}) => {
-                    try!(self.print_path(path, false, 0, false));
+                ast::WherePredicate::EqPredicate(ast::WhereEqPredicate{ref lhs_ty,
+                                                                       ref rhs_ty,
+                                                                       ..}) => {
+                    try!(self.print_type(lhs_ty));
                     try!(space(&mut self.s));
                     try!(self.word_space("="));
-                    try!(self.print_type(&ty));
+                    try!(self.print_type(rhs_ty));
                 }
             }
         }
@@ -2973,7 +2965,7 @@ impl<'a> State<'a> {
         }
         let generics = ast::Generics {
             lifetimes: Vec::new(),
-            ty_params: P::new(),
+            ty_params: Vec::new(),
             where_clause: ast::WhereClause {
                 id: ast::DUMMY_NODE_ID,
                 predicates: Vec::new(),

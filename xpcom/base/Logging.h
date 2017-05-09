@@ -119,7 +119,7 @@ public:
   /**
    * Print a log message for this module.
    */
-  void Printv(LogLevel aLevel, const char* aFmt, va_list aArgs) const;
+  void Printv(LogLevel aLevel, const char* aFmt, va_list aArgs) const MOZ_FORMAT_PRINTF(3, 0);
 
   /**
    * Retrieves the module name.

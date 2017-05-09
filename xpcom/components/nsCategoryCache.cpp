@@ -15,8 +15,11 @@
 
 nsCategoryObserver::nsCategoryObserver(const char* aCategory)
   : mCategory(aCategory)
+  , mCallback(nullptr)
+  , mClosure(nullptr)
   , mObserversRemoved(false)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // First, enumerate the currently existing entries
   nsCOMPtr<nsICategoryManager> catMan =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
@@ -69,14 +72,31 @@ NS_IMPL_ISUPPORTS(nsCategoryObserver, nsIObserver)
 void
 nsCategoryObserver::ListenerDied()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   RemoveObservers();
+  mCallback = nullptr;
+  mClosure = nullptr;
+}
+
+void
+nsCategoryObserver::SetListener(void(aCallback)(void*), void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mCallback = aCallback;
+  mClosure = aClosure;
 }
 
 void
 nsCategoryObserver::RemoveObservers()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mObserversRemoved) {
     return;
+  }
+
+  if (mCallback) {
+    mCallback(mClosure);
   }
 
   mObserversRemoved = true;
@@ -94,6 +114,8 @@ NS_IMETHODIMP
 nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mHash.Clear();
     RemoveObservers();
@@ -138,10 +160,19 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     if (service) {
       mHash.Put(str, service);
     }
+    if (mCallback) {
+      mCallback(mClosure);
+    }
   } else if (strcmp(aTopic, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID) == 0) {
     mHash.Remove(str);
+    if (mCallback) {
+      mCallback(mClosure);
+    }
   } else if (strcmp(aTopic, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID) == 0) {
     mHash.Clear();
+    if (mCallback) {
+      mCallback(mClosure);
+    }
   }
   return NS_OK;
 }

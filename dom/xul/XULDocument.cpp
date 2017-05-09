@@ -3344,10 +3344,10 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                             !mOffThreadCompileStringBuf),
                    "XULDocument can't load multiple scripts at once");
 
-        rv = nsScriptLoader::ConvertToUTF16(channel, string, stringLen,
-                                            EmptyString(), this,
-                                            mOffThreadCompileStringBuf,
-                                            mOffThreadCompileStringLength);
+        rv = ScriptLoader::ConvertToUTF16(channel, string, stringLen,
+                                          EmptyString(), this,
+                                          mOffThreadCompileStringBuf,
+                                          mOffThreadCompileStringLength);
         if (NS_SUCCEEDED(rv)) {
             // Attempt to give ownership of the buffer to the JS engine.  If
             // we hit offthread compilation, however, we will have to take it

@@ -11,12 +11,14 @@ import android.support.annotation.Nullable;
 import org.mozilla.gecko.feeds.parser.Feed;
 import org.mozilla.gecko.feeds.parser.SimpleFeedParser;
 import org.mozilla.gecko.util.IOUtils;
+import org.mozilla.gecko.util.ProxySelector;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import ch.boye.httpclientandroidlib.util.TextUtils;
 
@@ -63,7 +65,7 @@ public class FeedFetcher {
         InputStream stream = null;
 
         try {
-            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(new URI(url));
             connection.setInstanceFollowRedirects(true);
             connection.setConnectTimeout(CONNECT_TIMEOUT);
             connection.setReadTimeout(READ_TIMEOUT);
@@ -99,6 +101,8 @@ public class FeedFetcher {
         } catch (IOException e) {
             return null;
         } catch (SimpleFeedParser.ParserException e) {
+            return null;
+        } catch (URISyntaxException e) {
             return null;
         } finally {
             if (connection != null) {

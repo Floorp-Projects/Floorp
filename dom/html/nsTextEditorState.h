@@ -240,7 +240,7 @@ public:
    * @param aMaxLength the value of the max length attr
    * @returns false if attr not defined
    */
-  bool GetMaxLength(int32_t* aMaxLength);
+  int32_t GetMaxLength();
 
   void ClearValueCache() { mCachedValue.Truncate(); }
 

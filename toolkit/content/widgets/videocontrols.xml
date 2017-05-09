@@ -519,7 +519,10 @@
       _delayShowThrobberWhileResumingVideoDecoder() {
           this._showThrobberTimer = setTimeout(() => {
               this.statusIcon.setAttribute("type", "throbber");
-              this.setupStatusFader();
+              // Show the throbber immediatelly since we have waited for SHOW_THROBBER_TIMEOUT_MS.
+              // We don't want to wait for another transition-delay(750ms) and the
+              // transition-duration(300ms).
+              this.setupStatusFader(true);
           }, this.SHOW_THROBBER_TIMEOUT_MS);
       },
       _cancelShowThrobberWhileResumingVideoDecoder() {

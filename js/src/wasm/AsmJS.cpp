@@ -2268,7 +2268,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return failOffset(pn->pn_pos.begin, str);
     }
 
-    bool failfVAOffset(uint32_t offset, const char* fmt, va_list ap) {
+    bool failfVAOffset(uint32_t offset, const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(3, 0) {
         MOZ_ASSERT(!hasAlreadyFailed());
         MOZ_ASSERT(errorOffset_ == UINT32_MAX);
         MOZ_ASSERT(fmt);

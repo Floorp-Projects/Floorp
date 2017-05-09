@@ -789,8 +789,21 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *newConn,
     // Cancel any other pending connections - their associated transactions
     // are in the pending queue and will be dispatched onto this new connection
     for (int32_t index = ent->mHalfOpens.Length() - 1; index >= 0; --index) {
+        nsHalfOpenSocket *half = ent->mHalfOpens[index];
         LOG(("UpdateCoalescingForNewConn() forcing halfopen abandon %p\n",
-             ent->mHalfOpens[index]));
+             half));
+
+        RefPtr<nsHalfOpenSocket> deleteProtector;
+        if (half->IsFastOpenBackupHalfOpen()) {
+            LOG(("UpdateCoalescingForNewConn() halfOpen %p is in Fast Open "
+                 "state.\n", half));
+            // Hold pointer to halfOpen because it might go away if
+            // BackupSocketTransport has not ben started yet.
+            // On the other hand we want to call Abandon if
+            // BackupSocketTransport was started to clean up everything.
+            deleteProtector = half;
+            half->CancelFastOpenConnection();
+        }
         ent->mHalfOpens[index]->Abandon();
     }
 
@@ -2840,6 +2853,11 @@ nsHttpConnectionMgr::TimeoutTick()
                 index--;
 
                 nsHalfOpenSocket *half = ent->mHalfOpens[index];
+                if (half->IsFastOpenBackupHalfOpen()) {
+                    // this transport belongs to a fast open connection.
+                    // It will be canceled through that connection.
+                    continue;
+                }
                 double delta = half->Duration(currentTime);
                 // If the socket has timed out, close it so the waiting
                 // transaction will get the proper signal.
@@ -3600,7 +3618,42 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::SetFastOpenStatus(uint8_t tfoStatus)
 {
     mConnectionNegotiatingFastOpen->SetFastOpenStatus(tfoStatus);
-    mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
+    if (mConnectionNegotiatingFastOpen->Transaction()->QueryHttpTransaction()) {
+        mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
+    }
+}
+
+void
+nsHttpConnectionMgr::
+nsHalfOpenSocket::CancelFastOpenConnection()
+{
+    // This must be called on a halfOpenSocket that has
+    // mConnectionNegotiatingFastOpen.
+    if (!mConnectionNegotiatingFastOpen) {
+        return;
+    }
+
+    // This function will cancel the mConnectionNegotiatingFastOpen connection
+    // and return transaction to the pending queue.
+    mSocketTransport->SetFastOpenCallback(nullptr);
+    RefPtr<nsAHttpTransaction> trans =
+        mConnectionNegotiatingFastOpen->CloseConnectionFastOpenTakesTooLongOrError(true);
+    mConnectionNegotiatingFastOpen = nullptr;
+    mSocketTransport = nullptr;
+    mStreamOut = nullptr;
+    mStreamIn = nullptr;
+
+    if (trans && trans->QueryHttpTransaction()) {
+        RefPtr<PendingTransactionInfo> pendingTransInfo =
+            new PendingTransactionInfo(trans->QueryHttpTransaction());
+
+        if (trans->Caps() & NS_HTTP_URGENT_START) {
+            gHttpHandler->ConnMgr()->InsertTransactionSorted(mEnt->mUrgentStartQ,
+                                                             pendingTransInfo);
+        } else {
+            mEnt->InsertTransaction(pendingTransInfo);
+        }
+    }
 }
 
 void

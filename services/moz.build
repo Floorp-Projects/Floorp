@@ -20,6 +20,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
 
 if CONFIG['MOZ_SERVICES_SYNC']:
     DIRS += ['sync']
-
-if CONFIG['MOZ_SERVICES_CLOUDSYNC']:
-    DIRS += ['cloudsync']

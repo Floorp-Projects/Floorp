@@ -38,6 +38,7 @@ FeedListener.prototype = {
       do_print("Testing feed " + this.testcase.file.path);
       Assert.ok(isIID(feed, Ci.nsIFeed), "Has feed interface");
 
+      // eslint-disable-next-line no-eval
       if (!eval(this.testcase.expect)) {
         Assert.ok(false, "expect failed for " + this.testcase.desc);
       } else {

@@ -1575,8 +1575,8 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
              *           .      outside of the tab     .  v
              * ----------------------------------------------
              *
-             * To draw the gap, we use gtk_paint_box_gap(), see comment in
-             * moz_gtk_tabpanels_paint(). This box_gap is made 3 * gap_height tall,
+             * To draw the gap, we use gtk_render_frame_gap(), see comment in
+             * moz_gtk_tabpanels_paint(). This gap is made 3 * gap_height tall,
              * which should suffice to ensure that the only visible border is the
              * pierced one.  If the tab is in the middle, we make the box_gap begin
              * a bit to the left of the tab and end a bit to the right, adjusting
@@ -1605,6 +1605,9 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
                     gap_loffset = initial_gap;
             }
 
+            GtkStyleContext* panelStyle =
+                ClaimStyleContext(MOZ_GTK_TABPANELS, direction);
+
             if (isBottomTab) {
                 /* Draw the tab on bottom */
                 focusRect.y += gap_voffset;
@@ -1614,20 +1617,18 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
                                      tabRect.x, tabRect.y + gap_voffset, tabRect.width,
                                      tabRect.height - gap_voffset, GTK_POS_TOP);
 
-                gtk_style_context_remove_region(style, GTK_STYLE_REGION_TAB);
-
                 backRect.y += (gap_voffset - gap_height);
                 backRect.height = gap_height;
 
                 /* Draw the gap; erase with background color before painting in
                  * case theme does not */
-                gtk_render_background(style, cr, backRect.x, backRect.y,
+                gtk_render_background(panelStyle, cr, backRect.x, backRect.y,
                                      backRect.width, backRect.height);
                 cairo_save(cr);
                 cairo_rectangle(cr, backRect.x, backRect.y, backRect.width, backRect.height);
                 cairo_clip(cr);
 
-                gtk_render_frame_gap(style, cr,
+                gtk_render_frame_gap(panelStyle, cr,
                                      tabRect.x - gap_loffset,
                                      tabRect.y + gap_voffset - 3 * gap_height,
                                      tabRect.width + gap_loffset + gap_roffset,
@@ -1641,21 +1642,19 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
                                      tabRect.x, tabRect.y, tabRect.width,
                                      tabRect.height - gap_voffset, GTK_POS_BOTTOM);
 
-                gtk_style_context_remove_region(style, GTK_STYLE_REGION_TAB);
-
                 backRect.y += (tabRect.height - gap_voffset);
                 backRect.height = gap_height;
 
                 /* Draw the gap; erase with background color before painting in
                  * case theme does not */
-                gtk_render_background(style, cr, backRect.x, backRect.y,
+                gtk_render_background(panelStyle, cr, backRect.x, backRect.y,
                                       backRect.width, backRect.height);
 
                 cairo_save(cr);
                 cairo_rectangle(cr, backRect.x, backRect.y, backRect.width, backRect.height);
                 cairo_clip(cr);
 
-                gtk_render_frame_gap(style, cr,
+                gtk_render_frame_gap(panelStyle, cr,
                                      tabRect.x - gap_loffset,
                                      tabRect.y + tabRect.height - gap_voffset,
                                      tabRect.width + gap_loffset + gap_roffset,

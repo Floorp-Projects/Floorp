@@ -49,8 +49,8 @@ fn wrong_name_fails() {
 fn missing_symbol_fails() {
     let lib = Library::new(LIBPATH).unwrap();
     unsafe {
-        lib.get::<Symbol<()>>(b"test_does_not_exist").err().unwrap();
-        lib.get::<Symbol<()>>(b"test_does_not_exist\0").err().unwrap();
+        lib.get::<*mut ()>(b"test_does_not_exist").err().unwrap();
+        lib.get::<*mut ()>(b"test_does_not_exist\0").err().unwrap();
     }
 }
 
@@ -58,7 +58,28 @@ fn missing_symbol_fails() {
 fn interior_null_fails() {
     let lib = Library::new(LIBPATH).unwrap();
     unsafe {
-        lib.get::<Symbol<()>>(b"test_does\0_not_exist").err().unwrap();
-        lib.get::<Symbol<()>>(b"test\0_does_not_exist\0").err().unwrap();
+        lib.get::<*mut ()>(b"test_does\0_not_exist").err().unwrap();
+        lib.get::<*mut ()>(b"test\0_does_not_exist\0").err().unwrap();
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_incompatible_type() {
+    let lib = Library::new(LIBPATH).unwrap();
+    unsafe {
+        let _ = lib.get::<()>(b"test_identity_u32\0");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_incompatible_type_named_fn() {
+    unsafe fn get<'a, T>(l: &'a Library, _: T) -> libloading::Result<Symbol<'a, T>> {
+        l.get::<T>(b"test_identity_u32\0")
+    }
+    let lib = Library::new(LIBPATH).unwrap();
+    unsafe {
+        let _ = get(&lib, test_incompatible_type_named_fn);
     }
 }
