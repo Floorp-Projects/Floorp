@@ -1932,26 +1932,6 @@ HTMLSelectElement::SetOpenInParentProcess(bool aVal)
   }
 }
 
-void
-HTMLSelectElement::GetPreviewValue(nsAString& aValue)
-{
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    comboFrame->GetPreviewText(aValue);
-  }
-}
-
-void
-HTMLSelectElement::SetPreviewValue(const nsAString& aValue)
-{
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    comboFrame->SetPreviewText(aValue);
-  }
-}
-
 JSObject*
 HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
