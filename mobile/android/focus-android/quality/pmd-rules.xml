@@ -9,6 +9,12 @@
   Focus Android Ruleset
   </description>
 
+
+  <rule ref="rulesets/java/basic.xml"/>
+  <rule ref="rulesets/java/braces.xml"/>
+  <rule ref="rulesets/java/clone.xml"/>
+  <rule ref="rulesets/java/codesize.xml"/>
+
   <!-- We'll use the entire 'strings' ruleset -->
   <rule ref="rulesets/java/strings.xml"/>
 
@@ -30,10 +36,5 @@
     <properties>
         <property name="reportLevel" value="5"/>
     </properties>
-  </rule>
-
-  <!-- Note we want everything from braces.xml except WhileLoopsMustUseBraces -->
-  <rule ref="rulesets/java/braces.xml">
-    <exclude name="WhileLoopsMustUseBraces"/>
   </rule>
 </ruleset>
