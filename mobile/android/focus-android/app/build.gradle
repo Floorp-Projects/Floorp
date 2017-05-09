@@ -322,7 +322,7 @@ findbugs {
     // TODO: boost this to low once low priority issues are fixed.
     reportLevel = "medium"
 
-    excludeFilter = new File("${project.rootDir}/findbugs/exclude.xml")
+    excludeFilter = new File("${project.rootDir}/quality/findbugs-exclude.xml")
 }
 
 task findbugs(type: FindBugs, dependsOn: "assemble", group: 'verification') {
