@@ -171,7 +171,7 @@ def make_s3_uploader_task(parent_task):
         "workerType": worker_type,
         "created": {'relative-datestamp': '0 seconds'},
         "deadline": parent_task.task['deadline'],
-        "routes": [],
+        "routes": parent_task.task['routes'],
         "payload": {},
         "metadata": {
             "name": "Buildbot/mozharness S3 uploader",
@@ -180,6 +180,7 @@ def make_s3_uploader_task(parent_task):
             "source": "http://hg.mozilla.org/build/mozharness/",
         }
     }
+    parent_task.task['routes'] = []
     label = 's3-uploader-{}'.format(parent_task.label)
     dependencies = {}
     task = Task(kind='misc', label=label, attributes={}, task=task_def,
