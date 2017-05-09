@@ -45,7 +45,7 @@ struct nsFlowAreaRect {
     , mHasFloats(aHasFloats) {}
 };
 
-#define NS_FLOAT_MANAGER_CACHE_SIZE 4
+#define NS_FLOAT_MANAGER_CACHE_SIZE 64
 
 /**
  * nsFloatManager is responsible for implementing CSS's rules for
