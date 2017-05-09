@@ -74,15 +74,12 @@ void
 nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
 {
   tokenizer = self;
-  stackNodes = jArray<nsHtml5StackNode*,int32_t>::newJArray(64);
   stack = jArray<nsHtml5StackNode*,int32_t>::newJArray(64);
   templateModeStack = jArray<int32_t,int32_t>::newJArray(64);
   listOfActiveFormattingElements = jArray<nsHtml5StackNode*,int32_t>::newJArray(64);
   needToDropLF = false;
   originalMode = INITIAL;
   templateModePtr = -1;
-  stackNodesIdx = 0;
-  numStackNodes = 0;
   currentPtr = -1;
   listPtr = -1;
   formPointer = nullptr;
@@ -106,7 +103,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
         elementName = nsHtml5ElementName::ELT_FOREIGNOBJECT;
       }
       nsHtml5StackNode* node =
-        createStackNode(elementName, elementName->getCamelCaseName(), elt);
+        new nsHtml5StackNode(elementName, elementName->getCamelCaseName(), elt);
       currentPtr++;
       stack[currentPtr] = node;
       tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::DATA,
@@ -122,14 +119,14 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
         elementName = nsHtml5ElementName::ELT_ANNOTATION_XML;
       }
       nsHtml5StackNode* node =
-        createStackNode(elementName, elt, elementName->getName(), false);
+        new nsHtml5StackNode(elementName, elt, elementName->getName(), false);
       currentPtr++;
       stack[currentPtr] = node;
       tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::DATA,
                                               contextName);
       mode = FRAMESET_OK;
     } else {
-      nsHtml5StackNode* node = createStackNode(nsHtml5ElementName::ELT_HTML, elt);
+      nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HTML, elt);
       currentPtr++;
       stack[currentPtr] = node;
       if (nsGkAtoms::_template == contextName) {
@@ -170,7 +167,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
                                             tokenizer->emptyAttributes(),
                                             nullptr);
       nsHtml5StackNode* node =
-        createStackNode(nsHtml5ElementName::ELT_SVG, nsGkAtoms::svg, elt);
+        new nsHtml5StackNode(nsHtml5ElementName::ELT_SVG, nsGkAtoms::svg, elt);
       currentPtr++;
       stack[currentPtr] = node;
     }
@@ -611,7 +608,7 @@ nsHtml5TreeBuilder::endTokenization()
   templateModeStack = nullptr;
   if (stack) {
     while (currentPtr > -1) {
-      stack[currentPtr]->release(this);
+      stack[currentPtr]->release();
       currentPtr--;
     }
     stack = nullptr;
@@ -619,20 +616,11 @@ nsHtml5TreeBuilder::endTokenization()
   if (listOfActiveFormattingElements) {
     while (listPtr > -1) {
       if (listOfActiveFormattingElements[listPtr]) {
-        listOfActiveFormattingElements[listPtr]->release(this);
+        listOfActiveFormattingElements[listPtr]->release();
       }
       listPtr--;
     }
     listOfActiveFormattingElements = nullptr;
-  }
-  if (stackNodes) {
-    for (int32_t i = 0; i < numStackNodes; i++) {
-      MOZ_ASSERT(stackNodes[i]->isUnused());
-      delete stackNodes[i];
-    }
-    numStackNodes = 0;
-    stackNodesIdx = 0;
-    stackNodes = nullptr;
   }
   charBuffer = nullptr;
   end();
@@ -1193,7 +1181,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 if (activeAPos != -1) {
                   removeFromListOfActiveFormattingElements(activeAPos);
                 }
-                activeA->release(this);
+                activeA->release();
               }
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushFormattingElementMayFoster(elementName, attributes);
@@ -3603,7 +3591,7 @@ nsHtml5TreeBuilder::clearTheListOfActiveFormattingElementsUpToTheLastMarker()
       --listPtr;
       return;
     }
-    listOfActiveFormattingElements[listPtr]->release(this);
+    listOfActiveFormattingElements[listPtr]->release();
     --listPtr;
   }
 }
@@ -3615,7 +3603,7 @@ nsHtml5TreeBuilder::removeFromStack(int32_t pos)
     pop();
   } else {
 
-    stack[pos]->release(this);
+    stack[pos]->release();
     nsHtml5ArrayCopy::arraycopy(stack, pos + 1, pos, currentPtr - pos);
     MOZ_ASSERT(debugOnlyClearLastStackSlot());
     currentPtr--;
@@ -3636,7 +3624,7 @@ nsHtml5TreeBuilder::removeFromStack(nsHtml5StackNode* node)
       return;
     }
 
-    node->release(this);
+    node->release();
     nsHtml5ArrayCopy::arraycopy(stack, pos + 1, pos, currentPtr - pos);
     currentPtr--;
   }
@@ -3646,7 +3634,7 @@ void
 nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(int32_t pos)
 {
   MOZ_ASSERT(!!listOfActiveFormattingElements[pos]);
-  listOfActiveFormattingElements[pos]->release(this);
+  listOfActiveFormattingElements[pos]->release();
   if (pos == listPtr) {
     MOZ_ASSERT(debugOnlyClearLastListSlot());
     listPtr--;
@@ -3758,13 +3746,13 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       MOZ_ASSERT(node == listOfActiveFormattingElements[nodeListPos]);
       MOZ_ASSERT(node == stack[nodePos]);
       nsIContentHandle* clone = createElement(kNameSpaceID_XHTML, node->name, node->attributes->cloneAttributes(nullptr), commonAncestor->node);
-      nsHtml5StackNode* newNode = createStackNode(node->getFlags(), node->ns, node->name, clone, node->popName, node->attributes);
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->getFlags(), node->ns, node->name, clone, node->popName, node->attributes);
       node->dropAttributes();
       stack[nodePos] = newNode;
       newNode->retain();
       listOfActiveFormattingElements[nodeListPos] = newNode;
-      node->release(this);
-      node->release(this);
+      node->release();
+      node->release();
       node = newNode;
       detachFromParent(lastNode->node);
       appendElement(lastNode->node, node->node);
@@ -3779,7 +3767,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       appendElement(lastNode->node, commonAncestor->node);
     }
     nsIContentHandle* clone = createElement(kNameSpaceID_XHTML, formattingElt->name, formattingElt->attributes->cloneAttributes(nullptr), furthestBlock->node);
-    nsHtml5StackNode* formattingClone = createStackNode(formattingElt->getFlags(), formattingElt->ns, formattingElt->name, clone, formattingElt->popName, formattingElt->attributes);
+    nsHtml5StackNode* formattingClone = new nsHtml5StackNode(formattingElt->getFlags(), formattingElt->ns, formattingElt->name, clone, formattingElt->popName, formattingElt->attributes);
     formattingElt->dropAttributes();
     appendChildrenToNewParent(furthestBlock->node, clone);
     appendElement(clone, furthestBlock->node);
@@ -3910,7 +3898,7 @@ nsHtml5TreeBuilder::pushHeadPointerOntoStack()
   MOZ_ASSERT(!!headPointer);
   MOZ_ASSERT(mode == AFTER_HEAD);
 
-  silentPush(createStackNode(nsHtml5ElementName::ELT_HEAD, headPointer));
+  silentPush(new nsHtml5StackNode(nsHtml5ElementName::ELT_HEAD, headPointer));
 }
 
 void 
@@ -3947,91 +3935,13 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
       clone = createElement(kNameSpaceID_XHTML, entry->name, entry->attributes->cloneAttributes(nullptr), currentNode->node);
       appendElement(clone, currentNode->node);
     }
-    nsHtml5StackNode* entryClone = createStackNode(entry->getFlags(), entry->ns, entry->name, clone, entry->popName, entry->attributes);
+    nsHtml5StackNode* entryClone = new nsHtml5StackNode(entry->getFlags(), entry->ns, entry->name, clone, entry->popName, entry->attributes);
     entry->dropAttributes();
     push(entryClone);
     listOfActiveFormattingElements[entryPos] = entryClone;
-    entry->release(this);
+    entry->release();
     entryClone->retain();
   }
-}
-
-void 
-nsHtml5TreeBuilder::notifyUnusedStackNode(int32_t idxInStackNodes)
-{
-  if (idxInStackNodes < stackNodesIdx) {
-    stackNodesIdx = idxInStackNodes;
-  }
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::getUnusedStackNode()
-{
-  while (stackNodesIdx < numStackNodes) {
-    if (stackNodes[stackNodesIdx]->isUnused()) {
-      return stackNodes[stackNodesIdx++];
-    }
-    stackNodesIdx++;
-  }
-  if (stackNodesIdx < stackNodes.length) {
-    stackNodes[stackNodesIdx] = new nsHtml5StackNode(stackNodesIdx);
-    numStackNodes++;
-    return stackNodes[stackNodesIdx++];
-  }
-  jArray<nsHtml5StackNode*,int32_t> newStack = jArray<nsHtml5StackNode*,int32_t>::newJArray(stackNodes.length + 64);
-  nsHtml5ArrayCopy::arraycopy(stackNodes, newStack, stackNodes.length);
-  stackNodes = newStack;
-  stackNodes[stackNodesIdx] = new nsHtml5StackNode(stackNodesIdx);
-  numStackNodes++;
-  return stackNodes[stackNodesIdx++];
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(int32_t flags, int32_t ns, nsIAtom* name, nsIContentHandle* node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(flags, ns, name, node, popName, attributes);
-  return instance;
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(nsHtml5ElementName* elementName, nsIContentHandle* node)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(elementName, node);
-  return instance;
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsHtml5HtmlAttributes* attributes)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(elementName, node, attributes);
-  return instance;
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsIAtom* popName)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(elementName, node, popName);
-  return instance;
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(nsHtml5ElementName* elementName, nsIAtom* popName, nsIContentHandle* node)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(elementName, popName, node);
-  return instance;
-}
-
-nsHtml5StackNode* 
-nsHtml5TreeBuilder::createStackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsIAtom* popName, bool markAsIntegrationPoint)
-{
-  nsHtml5StackNode* instance = getUnusedStackNode();
-  instance->setValues(elementName, node, popName, markAsIntegrationPoint);
-  return instance;
 }
 
 void 
@@ -4091,7 +4001,7 @@ nsHtml5TreeBuilder::pop()
   MOZ_ASSERT(debugOnlyClearLastStackSlot());
   currentPtr--;
   elementPopped(node->ns, node->popName, node->node);
-  node->release(this);
+  node->release();
 }
 
 void 
@@ -4100,7 +4010,7 @@ nsHtml5TreeBuilder::silentPop()
   nsHtml5StackNode* node = stack[currentPtr];
   MOZ_ASSERT(debugOnlyClearLastStackSlot());
   currentPtr--;
-  node->release(this);
+  node->release();
 }
 
 void 
@@ -4111,14 +4021,14 @@ nsHtml5TreeBuilder::popOnEof()
   currentPtr--;
   markMalformedIfScript(node->node);
   elementPopped(node->ns, node->popName, node->node);
-  node->release(this);
+  node->release();
 }
 
 void 
 nsHtml5TreeBuilder::appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes)
 {
   nsIContentHandle* elt = createHtmlElementSetAsRoot(attributes);
-  nsHtml5StackNode* node = createStackNode(nsHtml5ElementName::ELT_HTML, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HTML, elt);
   push(node);
 }
 
@@ -4136,7 +4046,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes*
     createElement(kNameSpaceID_XHTML, nsGkAtoms::head, attributes, currentNode);
   appendElement(elt, currentNode);
   headPointer = elt;
-  nsHtml5StackNode* node = createStackNode(nsHtml5ElementName::ELT_HEAD, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HEAD, elt);
   push(node);
 }
 
@@ -4169,7 +4079,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormElementMayFoster(nsHtml5HtmlAt
   if (!isTemplateContents()) {
     formPointer = elt;
   }
-  nsHtml5StackNode* node = createStackNode(nsHtml5ElementName::ELT_FORM, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_FORM, elt);
   push(node);
 }
 
@@ -4188,7 +4098,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormattingElementMayFoster(nsHtml5
       kNameSpaceID_XHTML, elementName->getName(), attributes, current->node);
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, elt, clone);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, clone);
   push(node);
   append(node);
   node->retain();
@@ -4204,7 +4114,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElement(nsHtml5ElementName* elemen
   if (nsHtml5ElementName::ELT_TEMPLATE == elementName) {
     elt = getDocumentFragmentForTemplate(elt);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt);
   push(node);
 }
 
@@ -4221,7 +4131,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementNam
     elt = createElement(kNameSpaceID_XHTML, popName, attributes, current->node);
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, elt, popName);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, popName);
   push(node);
 }
 
@@ -4242,7 +4152,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFosterMathML(nsHtml5Elem
     elt = createElement(kNameSpaceID_MathML, popName, attributes, current->node);
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, elt, popName, markAsHtmlIntegrationPoint);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, popName, markAsHtmlIntegrationPoint);
   push(node);
 }
 
@@ -4270,7 +4180,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFosterSVG(nsHtml5Element
     elt = createElement(kNameSpaceID_SVG, popName, attributes, current->node);
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, popName, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, popName, elt);
   push(node);
 }
 
@@ -4292,7 +4202,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementNam
                         current->node);
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = createStackNode(elementName, elt);
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt);
   push(node);
 }
 
@@ -4498,7 +4408,7 @@ nsHtml5TreeBuilder::newSnapshot()
   for (int32_t i = 0; i < listCopy.length; i++) {
     nsHtml5StackNode* node = listOfActiveFormattingElements[i];
     if (node) {
-      nsHtml5StackNode* newNode = createStackNode(node->getFlags(), node->ns, node->name, node->node, node->popName, node->attributes->cloneAttributes(nullptr));
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->getFlags(), node->ns, node->name, node->node, node->popName, node->attributes->cloneAttributes(nullptr));
       listCopy[i] = newNode;
     } else {
       listCopy[i] = nullptr;
@@ -4509,7 +4419,7 @@ nsHtml5TreeBuilder::newSnapshot()
     nsHtml5StackNode* node = stack[i];
     int32_t listIndex = findInListOfActiveFormattingElements(node);
     if (listIndex == -1) {
-      nsHtml5StackNode* newNode = createStackNode(node->getFlags(), node->ns, node->name, node->node, node->popName, nullptr);
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->getFlags(), node->ns, node->name, node->node, node->popName, nullptr);
       stackCopy[i] = newNode;
     } else {
       stackCopy[i] = listCopy[listIndex];
@@ -4518,7 +4428,7 @@ nsHtml5TreeBuilder::newSnapshot()
   }
   jArray<int32_t,int32_t> templateModeStackCopy = jArray<int32_t,int32_t>::newJArray(templateModePtr + 1);
   nsHtml5ArrayCopy::arraycopy(templateModeStack, templateModeStackCopy, templateModeStackCopy.length);
-  return new nsHtml5StateSnapshot(this, stackCopy, listCopy, templateModeStackCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, needToDropLF, quirks);
+  return new nsHtml5StateSnapshot(stackCopy, listCopy, templateModeStackCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, needToDropLF, quirks);
 }
 
 bool 
@@ -4567,7 +4477,7 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
   int32_t templateModeStackLen = snapshot->getTemplateModeStackLength();
   for (int32_t i = 0; i <= listPtr; i++) {
     if (listOfActiveFormattingElements[i]) {
-      listOfActiveFormattingElements[i]->release(this);
+      listOfActiveFormattingElements[i]->release();
     }
   }
   if (listOfActiveFormattingElements.length < listLen) {
@@ -4575,7 +4485,7 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
   }
   listPtr = listLen - 1;
   for (int32_t i = 0; i <= currentPtr; i++) {
-    stack[i]->release(this);
+    stack[i]->release();
   }
   if (stack.length < stackLen) {
     stack = jArray<nsHtml5StackNode*,int32_t>::newJArray(stackLen);
@@ -4588,7 +4498,7 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
   for (int32_t i = 0; i < listLen; i++) {
     nsHtml5StackNode* node = listCopy[i];
     if (node) {
-      nsHtml5StackNode* newNode = createStackNode(node->getFlags(), node->ns, nsHtml5Portability::newLocalFromLocal(node->name, interner), node->node, nsHtml5Portability::newLocalFromLocal(node->popName, interner), node->attributes->cloneAttributes(nullptr));
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->getFlags(), node->ns, nsHtml5Portability::newLocalFromLocal(node->name, interner), node->node, nsHtml5Portability::newLocalFromLocal(node->popName, interner), node->attributes->cloneAttributes(nullptr));
       listOfActiveFormattingElements[i] = newNode;
     } else {
       listOfActiveFormattingElements[i] = nullptr;
@@ -4598,7 +4508,7 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
     nsHtml5StackNode* node = stackCopy[i];
     int32_t listIndex = findInArray(node, listCopy);
     if (listIndex == -1) {
-      nsHtml5StackNode* newNode = createStackNode(node->getFlags(), node->ns, nsHtml5Portability::newLocalFromLocal(node->name, interner), node->node, nsHtml5Portability::newLocalFromLocal(node->popName, interner), nullptr);
+      nsHtml5StackNode* newNode = new nsHtml5StackNode(node->getFlags(), node->ns, nsHtml5Portability::newLocalFromLocal(node->name, interner), node->node, nsHtml5Portability::newLocalFromLocal(node->popName, interner), nullptr);
       stack[i] = newNode;
     } else {
       stack[i] = listOfActiveFormattingElements[listIndex];

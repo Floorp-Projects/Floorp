@@ -425,15 +425,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     private int templateModePtr = -1;
 
-    private @Auto StackNode<T>[] stackNodes;
-
-    /**
-     * Index of the earliest possible unused or empty element in stackNodes.
-     */
-    private int stackNodesIdx = -1;
-
-    private int numStackNodes = 0;
-
     private @Auto StackNode<T>[] stack;
 
     private int currentPtr = -1;
@@ -592,15 +583,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     @SuppressWarnings("unchecked") public final void startTokenization(Tokenizer self) throws SAXException {
         tokenizer = self;
-        stackNodes = new StackNode[64];
         stack = new StackNode[64];
         templateModeStack = new int[64];
         listOfActiveFormattingElements = new StackNode[64];
         needToDropLF = false;
         originalMode = INITIAL;
         templateModePtr = -1;
-        stackNodesIdx = 0;
-        numStackNodes = 0;
         currentPtr = -1;
         listPtr = -1;
         formPointer = null;
@@ -643,7 +631,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     elementName = ElementName.FOREIGNOBJECT;
                 }
                 // This is the SVG variant of the StackNode constructor.
-                StackNode<T> node = createStackNode(elementName,
+                StackNode<T> node = new StackNode<T>(elementName,
                         elementName.getCamelCaseName(), elt
                         // [NOCPP[
                         , errorHandler == null ? null
@@ -674,7 +662,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     // is resolved.
                 }
                 // This is the MathML variant of the StackNode constructor.
-                StackNode<T> node = createStackNode(elementName, elt,
+                StackNode<T> node = new StackNode<T>(elementName, elt,
                         elementName.getName(), false
                         // [NOCPP[
                         , errorHandler == null ? null
@@ -689,7 +677,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 // ends up being allowed as HTML frameset in the fragment case.
                 mode = FRAMESET_OK;
             } else { // html
-                StackNode<T> node = createStackNode(ElementName.HTML, elt
+                StackNode<T> node = new StackNode<T>(ElementName.HTML, elt
                 // [NOCPP[
                         , errorHandler == null ? null
                                 : new TaintableLocatorImpl(tokenizer)
@@ -732,7 +720,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             // CPPONLY: T elt = createElement("http://www.w3.org/2000/svg",
             // CPPONLY: "svg",
             // CPPONLY: tokenizer.emptyAttributes(), null);
-            // CPPONLY: StackNode<T> node = createStackNode(ElementName.SVG,
+            // CPPONLY: StackNode<T> node = new StackNode<T>(ElementName.SVG,
             // CPPONLY: "svg",
             // CPPONLY: elt);
             // CPPONLY: currentPtr++;
@@ -1635,7 +1623,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         templateModeStack = null;
         if (stack != null) {
             while (currentPtr > -1) {
-                stack[currentPtr].release(this);
+                stack[currentPtr].release();
                 currentPtr--;
             }
             stack = null;
@@ -1643,20 +1631,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (listOfActiveFormattingElements != null) {
             while (listPtr > -1) {
                 if (listOfActiveFormattingElements[listPtr] != null) {
-                    listOfActiveFormattingElements[listPtr].release(this);
+                    listOfActiveFormattingElements[listPtr].release();
                 }
                 listPtr--;
             }
             listOfActiveFormattingElements = null;
-        }
-        if (stackNodes != null) {
-            for (int i = 0; i < numStackNodes; i++) {
-                assert stackNodes[i].isUnused();
-                Portability.delete(stackNodes[i]);
-            }
-            numStackNodes = 0;
-            stackNodesIdx = 0;
-            stackNodes = null;
         }
         // [NOCPP[
         idLocations.clear();
@@ -2239,7 +2218,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     if (activeAPos != -1) {
                                         removeFromListOfActiveFormattingElements(activeAPos);
                                     }
-                                    activeA.release(this);
+                                    activeA.release();
                                 }
                                 reconstructTheActiveFormattingElements();
                                 appendToCurrentNodeAndPushFormattingElementMayFoster(
@@ -4636,7 +4615,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 --listPtr;
                 return;
             }
-            listOfActiveFormattingElements[listPtr].release(this);
+            listOfActiveFormattingElements[listPtr].release();
             --listPtr;
         }
     }
@@ -4651,7 +4630,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             pop();
         } else {
             fatal();
-            stack[pos].release(this);
+            stack[pos].release();
             System.arraycopy(stack, pos + 1, stack, pos, currentPtr - pos);
             assert debugOnlyClearLastStackSlot();
             currentPtr--;
@@ -4671,7 +4650,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 return;
             }
             fatal();
-            node.release(this);
+            node.release();
             System.arraycopy(stack, pos + 1, stack, pos, currentPtr - pos);
             currentPtr--;
         }
@@ -4679,7 +4658,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void removeFromListOfActiveFormattingElements(int pos) {
         assert listOfActiveFormattingElements[pos] != null;
-        listOfActiveFormattingElements[pos].release(this);
+        listOfActiveFormattingElements[pos].release();
         if (pos == listPtr) {
             assert debugOnlyClearLastListSlot();
             listPtr--;
@@ -4825,7 +4804,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 assert node == stack[nodePos];
                 T clone = createElement("http://www.w3.org/1999/xhtml",
                         node.name, node.attributes.cloneAttributes(null), commonAncestor.node);
-                StackNode<T> newNode = createStackNode(node.getFlags(), node.ns,
+                StackNode<T> newNode = new StackNode<T>(node.getFlags(), node.ns,
                         node.name, clone, node.popName, node.attributes
                         // [NOCPP[
                         , node.getLocator()
@@ -4835,8 +4814,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stack[nodePos] = newNode;
                 newNode.retain(); // retain for list
                 listOfActiveFormattingElements[nodeListPos] = newNode;
-                node.release(this); // release from stack
-                node.release(this); // release from list
+                node.release(); // release from stack
+                node.release(); // release from list
                 node = newNode;
                 // } XXX AAA CHANGE
                 detachFromParent(lastNode.node);
@@ -4854,7 +4833,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             T clone = createElement("http://www.w3.org/1999/xhtml",
                     formattingElt.name,
                     formattingElt.attributes.cloneAttributes(null), furthestBlock.node);
-            StackNode<T> formattingClone = createStackNode(
+            StackNode<T> formattingClone = new StackNode<T>(
                     formattingElt.getFlags(), formattingElt.ns,
                     formattingElt.name, clone, formattingElt.popName,
                     formattingElt.attributes
@@ -4997,7 +4976,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         assert headPointer != null;
         assert mode == AFTER_HEAD;
         fatal();
-        silentPush(createStackNode(ElementName.HEAD, headPointer
+        silentPush(new StackNode<T>(ElementName.HEAD, headPointer
         // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5044,7 +5023,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 appendElement(clone, currentNode.node);
             }
 
-            StackNode<T> entryClone = createStackNode(entry.getFlags(),
+            StackNode<T> entryClone = new StackNode<T>(entry.getFlags(),
                     entry.ns, entry.name, clone, entry.popName,
                     entry.attributes
                     // [NOCPP[
@@ -5058,130 +5037,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             // stack takes ownership of the local variable
             listOfActiveFormattingElements[entryPos] = entryClone;
             // overwriting the old entry on the list, so release & retain
-            entry.release(this);
+            entry.release();
             entryClone.retain();
         }
-    }
-
-    void notifyUnusedStackNode(int idxInStackNodes) {
-        // stackNodesIdx is the earliest possible index of a stack node that might be unused,
-        // so update the index if necessary.
-        if (idxInStackNodes < stackNodesIdx) {
-            stackNodesIdx = idxInStackNodes;
-        }
-    }
-
-    private StackNode<T> getUnusedStackNode() {
-        // Search for an unused stack node.
-        while (stackNodesIdx < numStackNodes) {
-            if (stackNodes[stackNodesIdx].isUnused()) {
-                return stackNodes[stackNodesIdx++];
-            }
-            stackNodesIdx++;
-        }
-
-        if (stackNodesIdx < stackNodes.length) {
-            // No unused stack nodes, but there is still space in the storage array.
-            stackNodes[stackNodesIdx] = new StackNode<T>(stackNodesIdx);
-            numStackNodes++;
-            return stackNodes[stackNodesIdx++];
-        }
-
-        // Could not find an unused stack node and storage array is full.
-        StackNode<T>[] newStack = new StackNode[stackNodes.length + 64];
-        System.arraycopy(stackNodes, 0, newStack, 0, stackNodes.length);
-        stackNodes = newStack;
-
-        // Create a new stack node and return it.
-        stackNodes[stackNodesIdx] = new StackNode<T>(stackNodesIdx);
-        numStackNodes++;
-        return stackNodes[stackNodesIdx++];
-    }
-
-    private StackNode<T> createStackNode(int flags, @NsUri String ns, @Local String name, T node,
-            @Local String popName, HtmlAttributes attributes
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(flags, ns, name, node, popName, attributes
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
-    }
-
-    private StackNode<T> createStackNode(ElementName elementName, T node
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(elementName, node
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
-    }
-
-    private StackNode<T> createStackNode(ElementName elementName, T node, HtmlAttributes attributes
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(elementName, node, attributes
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
-    }
-
-    private StackNode<T> createStackNode(ElementName elementName, T node, @Local String popName
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(elementName, node, popName
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
-    }
-
-    private StackNode<T> createStackNode(ElementName elementName, @Local String popName, T node
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(elementName, popName, node
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
-    }
-
-    private StackNode<T> createStackNode(ElementName elementName, T node, @Local String popName,
-            boolean markAsIntegrationPoint
-            // [NOCPP[
-            , TaintableLocatorImpl locator
-            // ]NOCPP]
-    ) {
-        StackNode<T> instance = getUnusedStackNode();
-        instance.setValues(elementName, node, popName, markAsIntegrationPoint
-                // [NOCPP[
-                , locator
-                // ]NOCPP]
-        );
-        return instance;
     }
 
     private void insertIntoFosterParent(T child) throws SAXException {
@@ -5235,14 +5093,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         assert debugOnlyClearLastStackSlot();
         currentPtr--;
         elementPopped(node.ns, node.popName, node.node);
-        node.release(this);
+        node.release();
     }
 
     private void silentPop() throws SAXException {
         StackNode<T> node = stack[currentPtr];
         assert debugOnlyClearLastStackSlot();
         currentPtr--;
-        node.release(this);
+        node.release();
     }
 
     private void popOnEof() throws SAXException {
@@ -5251,7 +5109,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         currentPtr--;
         markMalformedIfScript(node.node);
         elementPopped(node.ns, node.popName, node.node);
-        node.release(this);
+        node.release();
     }
 
     // [NOCPP[
@@ -5353,7 +5211,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
         T elt = createHtmlElementSetAsRoot(attributes);
-        StackNode<T> node = createStackNode(ElementName.HTML,
+        StackNode<T> node = new StackNode<T>(ElementName.HTML,
                 elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
@@ -5375,7 +5233,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         T elt = createElement("http://www.w3.org/1999/xhtml", "head", attributes, currentNode);
         appendElement(elt, currentNode);
         headPointer = elt;
-        StackNode<T> node = createStackNode(ElementName.HEAD,
+        StackNode<T> node = new StackNode<T>(ElementName.HEAD,
                 elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
@@ -5414,7 +5272,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             formPointer = elt;
         }
 
-        StackNode<T> node = createStackNode(ElementName.FORM,
+        StackNode<T> node = new StackNode<T>(ElementName.FORM,
                 elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
@@ -5442,7 +5300,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             elt = createElement("http://www.w3.org/1999/xhtml", elementName.getName(), attributes, current.node);
             appendElement(elt, current.node);
         }
-        StackNode<T> node = createStackNode(elementName, elt, clone
+        StackNode<T> node = new StackNode<T>(elementName, elt, clone
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5465,7 +5323,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (ElementName.TEMPLATE == elementName) {
             elt = getDocumentFragmentForTemplate(elt);
         }
-        StackNode<T> node = createStackNode(elementName, elt
+        StackNode<T> node = new StackNode<T>(elementName, elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5492,7 +5350,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             elt = createElement("http://www.w3.org/1999/xhtml", popName, attributes, current.node);
             appendElement(elt, current.node);
         }
-        StackNode<T> node = createStackNode(elementName, elt, popName
+        StackNode<T> node = new StackNode<T>(elementName, elt, popName
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5526,7 +5384,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             elt  = createElement("http://www.w3.org/1998/Math/MathML", popName, attributes, current.node);
             appendElement(elt, current.node);
         }
-        StackNode<T> node = createStackNode(elementName, elt, popName,
+        StackNode<T> node = new StackNode<T>(elementName, elt, popName,
                 markAsHtmlIntegrationPoint
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
@@ -5575,7 +5433,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             elt = createElement("http://www.w3.org/2000/svg", popName, attributes, current.node);
             appendElement(elt, current.node);
         }
-        StackNode<T> node = createStackNode(elementName, popName, elt
+        StackNode<T> node = new StackNode<T>(elementName, popName, elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5602,7 +5460,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     attributes, formOwner, current.node);
             appendElement(elt, current.node);
         }
-        StackNode<T> node = createStackNode(elementName, elt
+        StackNode<T> node = new StackNode<T>(elementName, elt
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -6085,7 +5943,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         for (int i = 0; i < listCopy.length; i++) {
             StackNode<T> node = listOfActiveFormattingElements[i];
             if (node != null) {
-                StackNode<T> newNode = createStackNode(node.getFlags(), node.ns,
+                StackNode<T> newNode = new StackNode<T>(node.getFlags(), node.ns,
                         node.name, node.node, node.popName,
                         node.attributes.cloneAttributes(null)
                         // [NOCPP[
@@ -6102,7 +5960,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             StackNode<T> node = stack[i];
             int listIndex = findInListOfActiveFormattingElements(node);
             if (listIndex == -1) {
-                StackNode<T> newNode = createStackNode(node.getFlags(), node.ns,
+                StackNode<T> newNode = new StackNode<T>(node.getFlags(), node.ns,
                         node.name, node.node, node.popName,
                         null
                         // [NOCPP[
@@ -6118,7 +5976,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         int[] templateModeStackCopy = new int[templateModePtr + 1];
         System.arraycopy(templateModeStack, 0, templateModeStackCopy, 0,
                 templateModeStackCopy.length);
-        return new StateSnapshot<T>(this, stackCopy, listCopy, templateModeStackCopy, formPointer,
+        return new StateSnapshot<T>(stackCopy, listCopy, templateModeStackCopy, formPointer,
                 headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk,
                 needToDropLF, quirks);
     }
@@ -6182,7 +6040,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
         for (int i = 0; i <= listPtr; i++) {
             if (listOfActiveFormattingElements[i] != null) {
-                listOfActiveFormattingElements[i].release(this);
+                listOfActiveFormattingElements[i].release();
             }
         }
         if (listOfActiveFormattingElements.length < listLen) {
@@ -6191,7 +6049,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         listPtr = listLen - 1;
 
         for (int i = 0; i <= currentPtr; i++) {
-            stack[i].release(this);
+            stack[i].release();
         }
         if (stack.length < stackLen) {
             stack = new StackNode[stackLen];
@@ -6206,7 +6064,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         for (int i = 0; i < listLen; i++) {
             StackNode<T> node = listCopy[i];
             if (node != null) {
-                StackNode<T> newNode = createStackNode(node.getFlags(), node.ns,
+                StackNode<T> newNode = new StackNode<T>(node.getFlags(), node.ns,
                         Portability.newLocalFromLocal(node.name, interner), node.node,
                         Portability.newLocalFromLocal(node.popName, interner),
                         node.attributes.cloneAttributes(null)
@@ -6223,7 +6081,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             StackNode<T> node = stackCopy[i];
             int listIndex = findInArray(node, listCopy);
             if (listIndex == -1) {
-                StackNode<T> newNode = createStackNode(node.getFlags(), node.ns,
+                StackNode<T> newNode = new StackNode<T>(node.getFlags(), node.ns,
                         Portability.newLocalFromLocal(node.name, interner), node.node,
                         Portability.newLocalFromLocal(node.popName, interner),
                         null

@@ -28,27 +28,24 @@ import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NsUri;
 
 final class StackNode<T> {
-    // Index where this stack node is stored in the tree builder's list of stack nodes.
-    final int idxInTreeBuilder;
+    final int flags;
 
-    int flags;
+    final @Local String name;
 
-    @Local String name;
+    final @Local String popName;
 
-    @Local String popName;
+    final @NsUri String ns;
 
-    @NsUri String ns;
-
-    T node;
+    final T node;
 
     // Only used on the list of formatting elements
     HtmlAttributes attributes;
 
-    private int refcount = 0;
+    private int refcount = 1;
 
     // [NOCPP[
 
-    private TaintableLocatorImpl locator;
+    private final TaintableLocatorImpl locator;
 
     public TaintableLocatorImpl getLocator() {
         return locator;
@@ -88,14 +85,9 @@ final class StackNode<T> {
 
     // ]NOCPP]
 
-    StackNode(int idxInTreeBuilder) {
-        this.idxInTreeBuilder = idxInTreeBuilder;
-        this.refcount = 0;
-    }
-
     /**
-     * Setter for copying. This doesn't take another <code>StackNode</code>
-     * because in C++ the caller is responsible for reobtaining the local names
+     * Constructor for copying. This doesn't take another <code>StackNode</code>
+     * because in C++ the caller is reponsible for reobtaining the local names
      * from another interner.
      *
      * @param flags
@@ -105,13 +97,12 @@ final class StackNode<T> {
      * @param popName
      * @param attributes
      */
-    void setValues(int flags, @NsUri String ns, @Local String name, T node,
+    StackNode(int flags, @NsUri String ns, @Local String name, T node,
             @Local String popName, HtmlAttributes attributes
             // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = flags;
         this.name = name;
         this.popName = popName;
@@ -130,12 +121,11 @@ final class StackNode<T> {
      * @param elementName
      * @param node
      */
-    void setValues(ElementName elementName, T node
-            // [NOCPP[
+    StackNode(ElementName elementName, T node
+    // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = elementName.getFlags();
         this.name = elementName.getName();
         this.popName = elementName.getName();
@@ -150,18 +140,17 @@ final class StackNode<T> {
     }
 
     /**
-     * Setter for HTML formatting elements.
+     * Constructor for HTML formatting elements.
      *
      * @param elementName
      * @param node
      * @param attributes
      */
-    void setValues(ElementName elementName, T node, HtmlAttributes attributes
-            // [NOCPP[
+    StackNode(ElementName elementName, T node, HtmlAttributes attributes
+    // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = elementName.getFlags();
         this.name = elementName.getName();
         this.popName = elementName.getName();
@@ -176,18 +165,17 @@ final class StackNode<T> {
     }
 
     /**
-     * The common-case HTML setter.
+     * The common-case HTML constructor.
      *
      * @param elementName
      * @param node
      * @param popName
      */
-    void setValues(ElementName elementName, T node, @Local String popName
-            // [NOCPP[
+    StackNode(ElementName elementName, T node, @Local String popName
+    // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = elementName.getFlags();
         this.name = elementName.getName();
         this.popName = popName;
@@ -201,8 +189,8 @@ final class StackNode<T> {
     }
 
     /**
-     * Setter for SVG elements. Note that the order of the arguments is
-     * what distinguishes this from the HTML setter. This is ugly, but
+     * Constructor for SVG elements. Note that the order of the arguments is
+     * what distinguishes this from the HTML constructor. This is ugly, but
      * AFAICT the least disruptive way to make this work with Java's generics
      * and without unnecessary branches. :-(
      *
@@ -210,12 +198,11 @@ final class StackNode<T> {
      * @param popName
      * @param node
      */
-    void setValues(ElementName elementName, @Local String popName, T node
-            // [NOCPP[
+    StackNode(ElementName elementName, @Local String popName, T node
+    // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = prepareSvgFlags(elementName.getFlags());
         this.name = elementName.getName();
         this.popName = popName;
@@ -229,20 +216,19 @@ final class StackNode<T> {
     }
 
     /**
-     * Setter for MathML.
+     * Constructor for MathML.
      *
      * @param elementName
      * @param node
      * @param popName
      * @param markAsIntegrationPoint
      */
-    void setValues(ElementName elementName, T node, @Local String popName,
+    StackNode(ElementName elementName, T node, @Local String popName,
             boolean markAsIntegrationPoint
             // [NOCPP[
             , TaintableLocatorImpl locator
-            // ]NOCPP]
+    // ]NOCPP]
     ) {
-        assert isUnused();
         this.flags = prepareMathFlags(elementName.getFlags(),
                 markAsIntegrationPoint);
         this.name = elementName.getName();
@@ -279,7 +265,7 @@ final class StackNode<T> {
     }
 
     @SuppressWarnings("unused") private void destructor() {
-        // The translator adds refcount debug code here.
+        Portability.delete(attributes);
     }
 
     public void dropAttributes() {
@@ -300,16 +286,10 @@ final class StackNode<T> {
         refcount++;
     }
 
-    public void release(TreeBuilder<T> owningTreeBuilder) {
+    public void release() {
         refcount--;
-        assert refcount >= 0;
         if (refcount == 0) {
-            Portability.delete(attributes);
-            owningTreeBuilder.notifyUnusedStackNode(idxInTreeBuilder);
+            Portability.delete(this);
         }
-    }
-
-    boolean isUnused() {
-        return refcount == 0;
     }
 }

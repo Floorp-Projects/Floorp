@@ -220,9 +220,6 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
 nsHtml5StreamParser::~nsHtml5StreamParser()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  // mSpeculations may contain StateSnapshot holding StackNodes that we
-  // want to free when the tokenizer ends, so clear the speculations first.
-  mSpeculations.Clear();
   mTokenizer->end();
 #ifdef DEBUG
   {
