@@ -28,7 +28,7 @@ class WebRenderCompositableHolder final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderCompositableHolder)
 
-  explicit WebRenderCompositableHolder();
+  explicit WebRenderCompositableHolder(uint32_t aIdNamespace);
 
 protected:
   ~WebRenderCompositableHolder();
@@ -59,6 +59,16 @@ public:
     return mCompositeUntilTime;
   }
 
+  uint32_t GetNextResourceId() { return ++mResourceId; }
+  uint32_t GetNamespace() { return mIdNamespace; }
+  WrImageKey GetImageKey()
+  {
+    WrImageKey key;
+    key.mNamespace = GetNamespace();
+    key.mHandle = GetNextResourceId();
+    return key;
+  }
+
 private:
 
   struct ForwardingTextureHost {
@@ -75,6 +85,8 @@ private:
     std::queue<ForwardingTextureHost> mTextureHosts;
   };
 
+  uint32_t mIdNamespace;
+  uint32_t mResourceId;
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
 
   // Render time for the current composition.

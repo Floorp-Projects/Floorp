@@ -119,7 +119,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
-  , mIdNameSpace(++sIdNameSpace)
+  , mIdNameSpace(AllocIdNameSpace())
   , mPaused(false)
   , mDestroyed(false)
 {
