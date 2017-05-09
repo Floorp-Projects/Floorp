@@ -729,8 +729,9 @@ AddonsTracker.prototype = {
       return;
     }
 
-    this.addChangedID(addon.guid, date.getTime() / 1000);
-    this.score += SCORE_INCREMENT_XLARGE;
+    if (this.addChangedID(addon.guid, date.getTime() / 1000)) {
+      this.score += SCORE_INCREMENT_XLARGE;
+    }
   },
 
   startTracking() {

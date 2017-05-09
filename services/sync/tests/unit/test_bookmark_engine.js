@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -13,14 +12,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
-
-Service.engineManager.register(BookmarksEngine);
-
-async function assertChildGuids(folderGuid, expectedChildGuids, message) {
-  let tree = await PlacesUtils.promiseBookmarksTree(folderGuid);
-  let childGuids = tree.children.map(child => child.guid);
-  deepEqual(childGuids, expectedChildGuids, message);
-}
 
 async function fetchAllSyncIds() {
   let db = await PlacesUtils.promiseDBConnection();
@@ -91,159 +82,6 @@ add_task(async function test_delete_invalid_roots_from_server() {
 
     deepEqual(collection.keys().sort(), ["menu", "mobile", "toolbar", "unfiled", newBmk.id].sort(),
       "Should remove Places root and reading list items from server; upload local roots");
-  } finally {
-    store.wipe();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await promiseStopServer(server);
-    Svc.Obs.notify("weave:engine:stop-tracking");
-  }
-});
-
-add_task(async function test_change_during_sync() {
-  _("Ensure that we track changes made during a sync.");
-
-  let engine  = new BookmarksEngine(Service);
-  let store   = engine._store;
-  let server = serverForFoo(engine);
-  await SyncTestingInfrastructure(server);
-
-  let collection = server.user("foo").collection("bookmarks");
-
-  let bz_id = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.bookmarksMenuFolderId, Utils.makeURI("https://bugzilla.mozilla.org/"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Bugzilla");
-  let bz_guid = await PlacesUtils.promiseItemGuid(bz_id);
-    _(`Bugzilla GUID: ${bz_guid}`);
-
-  await PlacesTestUtils.markBookmarksAsSynced();
-  enableValidationPrefs();
-
-  Svc.Obs.notify("weave:engine:start-tracking");
-
-  try {
-    let folder1_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
-    let folder1_guid = store.GUIDForId(folder1_id);
-    _(`Folder GUID: ${folder1_guid}`);
-
-    let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
-      folder1_id, Utils.makeURI("http://getthunderbird.com/"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
-    let bmk1_guid = store.GUIDForId(bmk1_id);
-    _(`Thunderbird GUID: ${bmk1_guid}`);
-
-    // Sync is synchronous, so, to simulate a bookmark change made during a
-    // sync, we create a server record that adds a bookmark as a side effect.
-    let bmk2_guid = "get-firefox1"; // New child of Folder 1, created remotely.
-    let bmk3_id = -1; // New child of Folder 1, created locally during sync.
-    let folder2_guid = "folder2-1111"; // New folder, created remotely.
-    let tagQuery_guid = "tag-query111"; // New tag query child of Folder 2, created remotely.
-    let bmk4_guid = "example-org1"; // New tagged child of Folder 2, created remotely.
-    {
-      // An existing record changed on the server that should not trigger
-      // another sync when applied.
-      let bzBmk = new Bookmark("bookmarks", bz_guid);
-      bzBmk.bmkUri      = "https://bugzilla.mozilla.org/";
-      bzBmk.description = "New description";
-      bzBmk.title       = "Bugzilla";
-      bzBmk.tags        = ["new", "tags"];
-      bzBmk.parentName  = "Bookmarks Toolbar";
-      bzBmk.parentid    = "toolbar";
-      collection.insert(bz_guid, encryptPayload(bzBmk.cleartext));
-
-      let remoteFolder = new BookmarkFolder("bookmarks", folder2_guid);
-      remoteFolder.title      = "Folder 2";
-      remoteFolder.children   = [bmk4_guid, tagQuery_guid];
-      remoteFolder.parentName = "Bookmarks Menu";
-      remoteFolder.parentid   = "menu";
-      collection.insert(folder2_guid, encryptPayload(remoteFolder.cleartext));
-
-      let localFxBmk = new Bookmark("bookmarks", bmk2_guid);
-      localFxBmk.bmkUri        = "http://getfirefox.com/";
-      localFxBmk.description   = "Firefox is awesome.";
-      localFxBmk.title         = "Get Firefox!";
-      localFxBmk.tags          = ["firefox", "awesome", "browser"];
-      localFxBmk.keyword       = "awesome";
-      localFxBmk.loadInSidebar = false;
-      localFxBmk.parentName    = "Folder 1";
-      localFxBmk.parentid      = folder1_guid;
-      let remoteFxBmk = collection.insert(bmk2_guid, encryptPayload(localFxBmk.cleartext));
-      remoteFxBmk.get = function get() {
-        _("Inserting bookmark into local store");
-        bmk3_id = PlacesUtils.bookmarks.insertBookmark(
-          folder1_id, Utils.makeURI("https://mozilla.org/"),
-          PlacesUtils.bookmarks.DEFAULT_INDEX, "Mozilla");
-
-        return ServerWBO.prototype.get.apply(this, arguments);
-      };
-
-      // A tag query referencing a nonexistent tag folder, which we should
-      // create locally when applying the record.
-      let localTagQuery = new BookmarkQuery("bookmarks", tagQuery_guid);
-      localTagQuery.bmkUri     = "place:type=7&folder=999";
-      localTagQuery.title      = "Taggy tags";
-      localTagQuery.folderName = "taggy";
-      localTagQuery.parentName = "Folder 2";
-      localTagQuery.parentid   = folder2_guid;
-      collection.insert(tagQuery_guid, encryptPayload(localTagQuery.cleartext));
-
-      // A bookmark that should appear in the results for the tag query.
-      let localTaggedBmk = new Bookmark("bookmarks", bmk4_guid);
-      localTaggedBmk.bmkUri     = "https://example.org";
-      localTaggedBmk.title      = "Tagged bookmark";
-      localTaggedBmk.tags       = ["taggy"];
-      localTaggedBmk.parentName = "Folder 2";
-      localTaggedBmk.parentid   = folder2_guid;
-      collection.insert(bmk4_guid, encryptPayload(localTaggedBmk.cleartext));
-    }
-
-    await assertChildGuids(folder1_guid, [bmk1_guid], "Folder should have 1 child before first sync");
-
-    _("Perform first sync");
-    {
-      let changes = engine.pullNewChanges();
-      deepEqual(Object.keys(changes).sort(), [folder1_guid, bmk1_guid, "toolbar"].sort(),
-        "Should track bookmark and folder created before first sync");
-      await sync_engine_and_validate_telem(engine, false);
-    }
-
-    let bmk2_id = store.idForGUID(bmk2_guid);
-    let bmk3_guid = store.GUIDForId(bmk3_id);
-    _(`Mozilla GUID: ${bmk3_guid}`);
-    {
-      equal(store.GUIDForId(bmk2_id), bmk2_guid,
-        "Remote bookmark should be applied during first sync");
-      ok(bmk3_id > -1,
-        "Bookmark created during first sync should exist locally");
-      ok(!collection.wbo(bmk3_guid),
-        "Bookmark created during first sync shouldn't be uploaded yet");
-
-      await assertChildGuids(folder1_guid, [bmk1_guid, bmk3_guid, bmk2_guid],
-        "Folder 1 should have 3 children after first sync");
-      await assertChildGuids(folder2_guid, [bmk4_guid, tagQuery_guid],
-        "Folder 2 should have 2 children after first sync");
-      let taggedURIs = PlacesUtils.tagging.getURIsForTag("taggy");
-      equal(taggedURIs.length, 1, "Should have 1 tagged URI");
-      equal(taggedURIs[0].spec, "https://example.org/",
-        "Synced tagged bookmark should appear in tagged URI list");
-    }
-
-    _("Perform second sync");
-    {
-      let changes = engine.pullNewChanges();
-      deepEqual(Object.keys(changes).sort(), [bmk3_guid, folder1_guid].sort(),
-        "Should track bookmark added during last sync and its parent");
-      await sync_engine_and_validate_telem(engine, false);
-
-      ok(collection.wbo(bmk3_guid),
-        "Bookmark created during first sync should be uploaded during second sync");
-
-      await assertChildGuids(folder1_guid, [bmk1_guid, bmk3_guid, bmk2_guid],
-        "Folder 1 should have same children after second sync");
-      await assertChildGuids(folder2_guid, [bmk4_guid, tagQuery_guid],
-        "Folder 2 should have same children after second sync");
-    }
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
