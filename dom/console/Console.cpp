@@ -1120,12 +1120,6 @@ Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
   StringMethod(aGlobal, aLabel, MethodCount, NS_LITERAL_STRING("count"));
 }
 
-/* static */ void
-Console::NoopMethod(const GlobalObject& aGlobal)
-{
-  // Nothing to do.
-}
-
 namespace {
 
 nsresult
