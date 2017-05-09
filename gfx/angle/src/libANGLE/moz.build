@@ -331,6 +331,7 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp',
     ]
 
+CXXFLAGS += CONFIG['SSE2_FLAGS']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
