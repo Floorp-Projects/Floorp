@@ -581,6 +581,7 @@ XPCJSContext::InterruptCallback(JSContext* cx)
 
 XPCJSContext::~XPCJSContext()
 {
+    MOZ_COUNT_DTOR_INHERITED(XPCJSContext, CycleCollectedJSContext);
     // Elsewhere we abort immediately if XPCJSContext initialization fails.
     // Therefore the context must be non-null.
     MOZ_ASSERT(MaybeContext());
@@ -620,6 +621,7 @@ XPCJSContext::XPCJSContext()
    mTimeoutAccumulated(false),
    mPendingResult(NS_OK)
 {
+    MOZ_COUNT_CTOR_INHERITED(XPCJSContext, CycleCollectedJSContext);
     MOZ_RELEASE_ASSERT(!gTlsContext.get());
     gTlsContext.set(this);
 }
