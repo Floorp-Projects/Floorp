@@ -46,7 +46,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     public static final String ACTION_PAUSE_BY_AUDIO_FOCUS  = "action_pause_audio_focus";
     public static final String ACTION_START_AUDIO_DUCK      = "action_start_audio_duck";
     public static final String ACTION_STOP_AUDIO_DUCK       = "action_stop_audio_duck";
-    private static final int MEDIA_CONTROL_ID = 1;
     private static final String MEDIA_CONTROL_PREF = "dom.audiochannel.mediaControl";
 
     // This is maximum volume level difference when audio ducking. The number is arbitrary.
@@ -366,7 +365,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
         if (isNeedToRemoveControlInterface(mMediaState)) {
             stopForeground(false);
-            NotificationManagerCompat.from(this).cancel(MEDIA_CONTROL_ID);
+            NotificationManagerCompat.from(this).cancel(R.id.mediaControlNotification);
             return;
         }
 
@@ -414,11 +413,11 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             .build();
 
         if (isPlaying) {
-            startForeground(MEDIA_CONTROL_ID, notification);
+            startForeground(R.id.mediaControlNotification, notification);
         } else {
             stopForeground(false);
             NotificationManagerCompat.from(this)
-                .notify(MEDIA_CONTROL_ID, notification);
+                .notify(R.id.mediaControlNotification, notification);
         }
     }
 
