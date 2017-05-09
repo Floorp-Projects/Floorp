@@ -17,6 +17,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/css/URLMatchingFunction.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
@@ -124,19 +125,18 @@ public:
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
-                                    nsMediaQueryResultCacheKey& aKey) override;
+                                  nsMediaQueryResultCacheKey& aKey) override;
 
   bool UseForPresentation(nsPresContext* aPresContext);
 
-  enum Function {
-    eURL,
-    eURLPrefix,
-    eDomain,
-    eRegExp
-  };
+  static bool UseForPresentation(nsIDocument* aDoc,
+                                 nsIURI* aDocURI,
+                                 const nsACString& aDocURISpec,
+                                 const nsACString& aPattern,
+                                 URLMatchingFunction aUrlMatchingFunction);
 
   struct URL {
-    Function func;
+    URLMatchingFunction func;
     nsCString url;
     URL *next;
 

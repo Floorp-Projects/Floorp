@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_SHOW */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 addAccessibleTask(`

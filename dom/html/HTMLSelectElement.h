@@ -443,6 +443,9 @@ public:
   bool OpenInParentProcess();
   void SetOpenInParentProcess(bool aVal);
 
+  void GetPreviewValue(nsAString& aValue);
+  void SetPreviewValue(const nsAString& aValue);
+
 protected:
   virtual ~HTMLSelectElement();
 

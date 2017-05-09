@@ -130,7 +130,6 @@ public:
                    const char* url,
                    uint32_t postDataLen,
                    const char* postData,
-                   bool isFile,
                    const char* target,
                    nsNPAPIPluginStreamListener* streamListener,
                    const char* altHost,
@@ -144,7 +143,6 @@ public:
                                        uint32_t inPostDataLen,
                                        char **outPostData,
                                        uint32_t *outPostDataLen);
-  nsresult CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile);
   nsresult NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
 
   void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, bool isVisible);

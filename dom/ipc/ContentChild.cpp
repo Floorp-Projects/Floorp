@@ -524,7 +524,7 @@ ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
 {
   mLookAndFeelCache = aLookAndFeelIntCache;
   InitXPCOM(aXPCOMInit, aInitialData);
-  InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
+  InitGraphicsDeviceData();
 
 #ifdef NS_PRINTING
   // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
@@ -955,11 +955,11 @@ ContentChild::AppendProcessId(nsACString& aName)
 }
 
 void
-ContentChild::InitGraphicsDeviceData(const ContentDeviceData& aData)
+ContentChild::InitGraphicsDeviceData()
 {
   // Initialize the graphics platform. This may contact the parent process
   // to read device preferences.
-  gfxPlatform::InitChild(aData);
+  gfxPlatform::GetPlatform();
 }
 
 void

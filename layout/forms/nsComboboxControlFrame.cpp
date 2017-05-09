@@ -832,22 +832,12 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Make sure the displayed text is the same as the selected option, bug 297389.
-  int32_t selectedIndex;
-  nsAutoString selectedOptionText;
   if (!mDroppedDown) {
-    selectedIndex = mListControlFrame->GetSelectedIndex();
+    mDisplayedIndex = mListControlFrame->GetSelectedIndex();
   }
-  else {
-    // In dropped down mode the "selected index" is the hovered menu item,
-    // we want the last selected item which is |mDisplayedIndex| in this case.
-    selectedIndex = mDisplayedIndex;
-  }
-  if (selectedIndex != -1) {
-    mListControlFrame->GetOptionText(selectedIndex, selectedOptionText);
-  }
-  if (mDisplayedOptionText != selectedOptionText) {
-    RedisplayText(selectedIndex);
-  }
+  // In dropped down mode the "selected index" is the hovered menu item,
+  // we want the last selected item which is |mDisplayedIndex| in this case.
+  RedisplayText();
 
   // First reflow our dropdown so that we know how tall we should be.
   ReflowDropdown(aPresContext, aReflowInput);
@@ -969,30 +959,45 @@ nsComboboxControlFrame::GetDropDown()
 
 ///////////////////////////////////////////////////////////////
 
+void
+nsComboboxControlFrame::SetPreviewText(const nsAString& aValue)
+{
+  nsAutoString previewValue(aValue);
+  nsContentUtils::RemoveNewlines(previewValue);
+
+  mPreviewText = previewValue;
+  RedisplayText();
+}
+
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplaySelectedText()
 {
   nsAutoScriptBlocker scriptBlocker;
-  return RedisplayText(mListControlFrame->GetSelectedIndex());
+  mDisplayedIndex = mListControlFrame->GetSelectedIndex();
+  return RedisplayText();
 }
 
+
 nsresult
-nsComboboxControlFrame::RedisplayText(int32_t aIndex)
+nsComboboxControlFrame::RedisplayText()
 {
+  nsString previousText(mDisplayedOptionTextOrPreview);
   // Get the text to display
-  if (aIndex != -1) {
-    mListControlFrame->GetOptionText(aIndex, mDisplayedOptionText);
+  if (!mPreviewText.IsEmpty()) {
+    mDisplayedOptionTextOrPreview = mPreviewText;
+  } else if (mDisplayedIndex != -1) {
+    mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionTextOrPreview);
   } else {
-    mDisplayedOptionText.Truncate();
+    mDisplayedOptionTextOrPreview.Truncate();
   }
-  mDisplayedIndex = aIndex;
 
   REFLOW_DEBUG_MSG2("RedisplayText \"%s\"\n",
-                    NS_LossyConvertUTF16toASCII(mDisplayedOptionText).get());
+                    NS_LossyConvertUTF16toASCII(mDisplayedOptionTextOrPreview).get());
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
-  if (mDisplayContent) {
+  if (mDisplayContent &&
+      !previousText.Equals(mDisplayedOptionTextOrPreview)) {
     // Don't call ActuallyDisplayText(true) directly here since that
     // could cause recursive frame construction. See bug 283117 and the comment in
     // HandleRedisplayTextEvent() below.
@@ -1046,13 +1051,13 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
 void
 nsComboboxControlFrame::ActuallyDisplayText(bool aNotify)
 {
-  if (mDisplayedOptionText.IsEmpty()) {
+  if (mDisplayedOptionTextOrPreview.IsEmpty()) {
     // Have to use a non-breaking space for line-block-size calculations
     // to be right
     static const char16_t space = 0xA0;
     mDisplayContent->SetText(&space, 1, aNotify);
   } else {
-    mDisplayContent->SetText(mDisplayedOptionText, aNotify);
+    mDisplayContent->SetText(mDisplayedOptionTextOrPreview, aNotify);
   }
 }
 
@@ -1096,12 +1101,13 @@ nsComboboxControlFrame::RemoveOption(int32_t aIndex)
       --mDisplayedIndex;
     } else if (aIndex == mDisplayedIndex) {
       mDisplayedIndex = 0; // IE6 compat
-      RedisplayText(mDisplayedIndex);
+      RedisplayText();
     }
   }
   else {
     // If we removed the last option, we need to blank things out
-    RedisplayText(-1);
+    mDisplayedIndex = -1;
+    RedisplayText();
   }
 
   if (!weakThis.IsAlive())
@@ -1115,7 +1121,8 @@ NS_IMETHODIMP
 nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex)
 {
   nsAutoScriptBlocker scriptBlocker;
-  RedisplayText(aNewIndex);
+  mDisplayedIndex = aNewIndex;
+  RedisplayText();
   NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
 
   nsISelectControlFrame* listFrame = do_QueryFrame(mDropdownFrame);
@@ -1221,7 +1228,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // set the value of the text node
   mDisplayedIndex = mListControlFrame->GetSelectedIndex();
   if (mDisplayedIndex != -1) {
-    mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionText);
+    mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionTextOrPreview);
   }
   ActuallyDisplayText(false);
 
@@ -1630,7 +1637,8 @@ nsComboboxControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected)
   } else {
     if (aSelected) {
       nsAutoScriptBlocker blocker;
-      RedisplayText(aIndex);
+      mDisplayedIndex = aIndex;
+      RedisplayText();
     } else {
       AutoWeakFrame weakFrame(this);
       RedisplaySelectedText();
