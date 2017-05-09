@@ -648,15 +648,17 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
     ->Then(
       mMainThread,
       __func__,
-      [dir, self]() -> void {
+      [dir, self](bool aVal) {
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
               NS_ConvertUTF16toUTF8(dir).get()));
         MOZ_ASSERT(NS_IsMainThread());
         self->UpdateContentProcessGMPCapabilities();
+        return GenericPromise::CreateAndResolve(aVal, __func__);
       },
-      [dir]() -> void {
+      [dir](nsresult aResult) {
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s failed",
               NS_ConvertUTF16toUTF8(dir).get()));
+        return GenericPromise::CreateAndReject(aResult, __func__);
       });
 }
 
@@ -874,15 +876,17 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
 
   RefPtr<GeckoMediaPluginServiceParent> self(this);
   return gmp->Init(this, directory)->Then(thread, __func__,
-    [gmp, self, dir]() -> void {
+    [gmp, self, dir](bool aVal) {
       LOGD(("%s::%s: %s Succeeded", __CLASS__, __FUNCTION__, dir.get()));
       {
         MutexAutoLock lock(self->mMutex);
         self->mPlugins.AppendElement(gmp);
       }
+      return GenericPromise::CreateAndResolve(aVal, __func__);
     },
-    [dir]() -> void {
+    [dir](nsresult aResult) {
       LOGD(("%s::%s: %s Failed", __CLASS__, __FUNCTION__, dir.get()));
+      return GenericPromise::CreateAndReject(aResult, __func__);
     });
 }
 

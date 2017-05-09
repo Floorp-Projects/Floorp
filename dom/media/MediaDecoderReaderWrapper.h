@@ -90,8 +90,8 @@ public:
 
 private:
   ~MediaDecoderReaderWrapper();
-  void OnMetadataRead(MetadataHolder* aMetadata);
-  void OnMetadataNotRead() {}
+  RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder* aMetadata);
+  RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
 
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaDecoderReader> mReader;
