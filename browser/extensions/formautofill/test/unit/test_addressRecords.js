@@ -124,6 +124,10 @@ add_task(async function test_initialize() {
   profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   Assert.deepEqual(profileStorage._store.data, data);
+  for (let {_sync} of profileStorage._store.data.addresses) {
+    Assert.ok(_sync);
+    Assert.equal(_sync.changeCounter, 1);
+  }
 });
 
 add_task(async function test_getAll() {
@@ -150,6 +154,13 @@ add_task(async function test_getAll() {
   // Modifying output shouldn't affect the storage.
   addresses[0].organization = "test";
   do_check_record_matches(profileStorage.addresses.getAll()[0], TEST_ADDRESS_1);
+
+  // Test with rawData.
+  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which is what we are checking.
+  addresses = profileStorage.addresses.getAll({rawData: true});
+  Assert.ok(addresses[0]._sync && addresses[1]._sync);
+  Assert.equal(addresses[0]._sync.changeCounter, 1);
+  Assert.equal(addresses[1]._sync.changeCounter, 1);
 });
 
 add_task(async function test_get() {
@@ -173,6 +184,11 @@ add_task(async function test_get() {
   do_check_record_matches(profileStorage.addresses.get(guid), TEST_ADDRESS_1);
 
   do_check_eq(profileStorage.addresses.get("INVALID_GUID"), null);
+
+  // rawData should include _sync, which should have a value of 1
+  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which is what we are checking.
+  let {_sync} = profileStorage.addresses.get(guid, {rawData: true});
+  do_check_eq(_sync.changeCounter, 1);
 });
 
 add_task(async function test_getByFilter() {
@@ -248,11 +264,14 @@ add_task(async function test_update() {
   await onChanged;
   await profileStorage._saveImmediately();
 
-  let address = profileStorage.addresses.get(guid);
+  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
+
+  let address = profileStorage.addresses.get(guid, {rawData: true});
 
   do_check_eq(address.country, undefined);
   do_check_neq(address.timeLastModified, timeLastModified);
   do_check_record_matches(address, TEST_ADDRESS_3);
+  do_check_eq(address._sync.changeCounter, 1);
 
   Assert.throws(
     () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
@@ -279,7 +298,6 @@ add_task(async function test_notifyUsed() {
 
   profileStorage.addresses.notifyUsed(guid);
   await onChanged;
-  await profileStorage._saveImmediately();
 
   let address = profileStorage.addresses.get(guid);
 
@@ -304,7 +322,6 @@ add_task(async function test_remove() {
 
   profileStorage.addresses.remove(guid);
   await onChanged;
-  await profileStorage._saveImmediately();
 
   addresses = profileStorage.addresses.getAll();
 
