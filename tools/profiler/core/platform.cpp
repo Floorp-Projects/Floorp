@@ -44,7 +44,7 @@
 #include "GeckoTaskTracer.h"
 #endif
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
 # include "FennecJNINatives.h"
 # include "FennecJNIWrappers.h"
 #endif
@@ -88,7 +88,7 @@ using namespace mozilla;
 
 mozilla::LazyLogModule gProfilerLog("prof");
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
 class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
 private:
@@ -258,7 +258,7 @@ private:
     // Filter out any features unavailable in this platform/configuration.
     aFeatures &= profiler_get_available_features();
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
     if (!mozilla::jni::IsFennec()) {
       aFeatures &= ~ProfilerFeature::Java;
     }
@@ -1459,7 +1459,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   }
 }
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
 static void
 BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 {
@@ -1564,7 +1564,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                        CorePS::ProcessStartTime(aLock), aSinceTime);
     }
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
     if (ActivePS::FeatureJava(aLock)) {
       java::GeckoJavaSampler::Pause();
 
@@ -2010,7 +2010,7 @@ profiler_init(void* aStackTop)
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
   uint32_t features =
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
                       ProfilerFeature::Java |
 #endif
                       ProfilerFeature::JS |
@@ -2043,7 +2043,7 @@ profiler_init(void* aStackTop)
     mozilla::tasktracer::InitTaskTracer();
 #endif
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
     if (mozilla::jni::IsFennec()) {
       GeckoJavaSampler::Init();
     }
@@ -2262,7 +2262,7 @@ profiler_get_available_features()
   #undef ADD_FEATURE
 
   // Now remove features not supported on this platform/configuration.
-#if !defined(PROFILE_JAVA)
+#if !defined(GP_OS_android)
   ProfilerFeature::ClearJava(features);
 #endif
 #if !defined(HAVE_NATIVE_UNWIND)
@@ -2360,7 +2360,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   }
 #endif
 
-#if defined(PROFILE_JAVA)
+#if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
     int javaInterval = interval;
     // Java sampling doesn't accurately keep up with 1ms sampling.

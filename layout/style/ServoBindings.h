@@ -41,6 +41,7 @@ namespace mozilla {
   struct StyleTransition;
   namespace css {
     struct URLValue;
+    struct ImageValue;
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
@@ -273,6 +274,7 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 // background-image style.
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
 void Gecko_SetImageElement(nsStyleImage* image, nsIAtom* atom);

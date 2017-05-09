@@ -2028,6 +2028,13 @@ pref("network.generic-ntlm-auth.workstation", "WORKSTATION");
 //   2 - allow the cross-origin authentication as well.
 pref("network.auth.subresource-http-auth-allow", 2);
 
+// Sub-resources HTTP-authentication for cross-origin images:
+// true - it is allowed to present http auth. dialog for cross-origin images.
+// false - it is not allowed.
+// If network.auth.subresource-http-auth-allow has values 0 or 1 this pref does not
+// have any effect.
+pref("network.auth.subresource-img-cross-origin-http-auth-allow", true);
+
 // This preference controls whether to allow sending default credentials (SSO) to
 // NTLM/Negotiate servers allowed in the "trusted uri" list when navigating them
 // in a Private Browsing window.

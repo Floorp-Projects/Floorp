@@ -186,6 +186,7 @@ private:
     // authentication credentials dialogs for sub-resources and cross-origin
     // sub-resources.
     static uint32_t                   sAuthAllowPref;
+    static bool                       sImgCrossOriginAuthAllowPref;
     nsCOMPtr<nsICancelable>           mGenerateCredentialsCancelable;
 };
 

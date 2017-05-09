@@ -12,10 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "PlatformMacros.h"
 
-#if defined(GP_OS_android) && !defined(MOZ_WIDGET_GONK)
-#define USE_FAULTY_LIB
-#endif
-
 // A (nearly-) RAII class that maps an object in and then unmaps it on
 // destruction.  This base class version uses the "normal" POSIX
 // functions: open, fstat, close, mmap, munmap.
@@ -65,7 +61,7 @@ private:
   void  operator delete[](void*);
 };
 
-#if defined(USE_FAULTY_LIB)
+#if defined(GP_OS_android)
 // This is a variant of AutoObjectMapperPOSIX suitable for use in
 // conjunction with faulty.lib on Android.  How it behaves depends on
 // the name of the file to be mapped.  There are three possible cases:
@@ -113,6 +109,6 @@ private:
   void  operator delete[](void*);
 };
 
-#endif // defined(USE_FAULTY_LIB)
+#endif // defined(GP_OS_android)
 
 #endif // AutoObjectMapper_h

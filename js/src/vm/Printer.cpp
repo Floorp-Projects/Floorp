@@ -150,16 +150,20 @@ Sprinter::checkInvariants() const
     MOZ_ASSERT(base[size - 1] == 0);
 }
 
-const char*
-Sprinter::string() const
+char*
+Sprinter::release()
 {
-    return base;
-}
+    checkInvariants();
+    if (hadOOM_)
+        return nullptr;
 
-const char*
-Sprinter::stringEnd() const
-{
-    return base + offset;
+    char* str = base;
+    base = nullptr;
+    offset = size = 0;
+#ifdef DEBUG
+    initialized = false;
+#endif
+    return str;
 }
 
 char*
@@ -547,20 +551,6 @@ LSprinter::put(const char* s, size_t len)
 
     MOZ_ASSERT(len <= INT_MAX);
     return true;
-}
-
-void
-LSprinter::reportOutOfMemory()
-{
-    if (hadOOM_)
-        return;
-    hadOOM_ = true;
-}
-
-bool
-LSprinter::hadOutOfMemory() const
-{
-    return hadOOM_;
 }
 
 } // namespace js

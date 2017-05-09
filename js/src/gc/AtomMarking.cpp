@@ -48,7 +48,7 @@ void
 AtomMarkingRuntime::registerArena(Arena* arena)
 {
     MOZ_ASSERT(arena->getThingSize() != 0);
-    MOZ_ASSERT(arena->getThingSize() % CellSize == 0);
+    MOZ_ASSERT(arena->getThingSize() % CellAlignBytes == 0);
     MOZ_ASSERT(arena->zone->isAtomsZone());
     MOZ_ASSERT(arena->zone->runtimeFromAnyThread()->currentThreadHasExclusiveAccess());
 

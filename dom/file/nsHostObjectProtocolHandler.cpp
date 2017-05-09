@@ -17,6 +17,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SystemGroup.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -424,6 +425,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
 NS_IMPL_ISUPPORTS(BlobURLsReporter, nsIMemoryReporter)
 
 class ReleasingTimerHolder final : public nsITimerCallback
+                                 , public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS
@@ -438,6 +440,9 @@ public:
     if (!holder->mTimer) {
       return;
     }
+
+    MOZ_ALWAYS_SUCCEEDS(holder->mTimer->SetTarget(
+      SystemGroup::EventTargetFor(TaskCategory::Other)));
 
     nsresult rv = holder->mTimer->InitWithCallback(holder, RELEASING_TIMER,
                                                    nsITimer::TYPE_ONE_SHOT);
@@ -457,6 +462,20 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ReleasingTimerHolder");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  SetName(const char* aName) override
+  {
+    MOZ_CRASH("The name shall never be set!");
+    return NS_OK;
+  }
+
 private:
   explicit ReleasingTimerHolder(nsTArray<nsWeakPtr>&& aArray)
     : mURIs(aArray)
@@ -469,7 +488,7 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback)
+NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback, nsINamed)
 
 } // namespace mozilla
 

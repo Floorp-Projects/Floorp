@@ -1945,7 +1945,7 @@ MarkStack::TaggedPtr::TaggedPtr(Tag tag, Cell* ptr)
   : bits(tag | uintptr_t(ptr))
 {
     MOZ_ASSERT(tag <= LastTag);
-    MOZ_ASSERT((uintptr_t(ptr) & CellMask) == 0);
+    MOZ_ASSERT((uintptr_t(ptr) & CellAlignMask) == 0);
 }
 
 inline MarkStack::Tag
@@ -2735,9 +2735,9 @@ template <typename T>
 static void
 TraceBufferedCells(TenuringTracer& mover, Arena* arena, ArenaCellSet* cells)
 {
-    for (size_t i = 0; i < ArenaCellCount; i++) {
+    for (size_t i = 0; i < MaxArenaCellIndex; i++) {
         if (cells->hasCell(i)) {
-            auto cell = reinterpret_cast<T*>(uintptr_t(arena) + CellSize * i);
+            auto cell = reinterpret_cast<T*>(uintptr_t(arena) + ArenaCellIndexBytes * i);
             TraceWholeCell(mover, cell);
         }
     }

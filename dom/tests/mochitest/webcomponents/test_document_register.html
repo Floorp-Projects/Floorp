@@ -103,51 +103,11 @@ function startTest() {
   is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
   is(extendedButton.type, "submit", "Created element should be a button with type of \"submit\"");
 
-  // document.createElementNS with different namespace than definition.
-  try {
-    var svgButton = document.createElementNS("http://www.w3.org/2000/svg", "button", {is: "x-extended-button"});
-    ok(false, "An exception should've been thrown");
-  } catch(err) {
-    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
-  }
-
-  // document.createElementNS with no namespace.
-  try {
-    var noNamespaceButton = document.createElementNS("", "button", {is: "x-extended-button"});
-    ok(false, "An exception should've been thrown");
-  } catch(err) {
-    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
-  }
-
-  // document.createElement with non-existant extended type.
-  try {
-    var normalButton = document.createElement("button", {is: "x-non-existant"});
-    ok(false, "An exception should've been thrown");
-  } catch(err) {
-    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
-  }
-
-  // document.createElement with exteneded type that does not match with local name of element.
-  try {
-    var normalDiv = document.createElement("div", {is: "x-extended-button"});
-    ok(false, "An exception should've been thrown");
-  } catch(err) {
-    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
-  }
-
   // Custom element constructor.
   var constructedButton = new buttonConstructor();
   is(constructedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
   is(constructedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
   is(constructedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
-
-  // document.createElement with different namespace than definition for extended element.
-  try {
-    var htmlText = document.createElement("text", {is: "x-extended-text"});
-    ok(false, "An exception should've been thrown");
-  } catch(err) {
-    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
-  }
 
   // Try creating an element with a custom element name, but not in the html namespace.
   var htmlNamespaceProto = Object.create(HTMLElement.prototype);

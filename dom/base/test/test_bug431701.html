@@ -28,13 +28,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=431701
 SimpleTest.waitForExplicitFinish();
 
 var docSources = [
-  "data:text/html,<html></html>",
-  "data:text/html;charset=UTF-8,<html></html>",
-  "data:text/html;charset=ISO-8859-1,<html></html>",
-  "data:text/xml,<html></html>",
-  "data:text/xml,<?xml version='1.0'?><html></html>",
-  "data:text/xml,<?xml version='1.0' encoding='UTF-8'?><html></html>",
-  "data:text/xml,<?xml version='1.0' encoding='ISO-8859-1'?><html></html>",
+  "iframe1_bug431701.html",
+  "iframe2_bug431701.html",
+  "iframe3_bug431701.html",
+  "iframe4_bug431701.xml",
+  "iframe5_bug431701.xml",
+  "iframe6_bug431701.xml",
+  "iframe7_bug431701.xml",
 ];
 
 for (var i = 0; i < docSources.length; ++i) {

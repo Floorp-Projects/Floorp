@@ -10,6 +10,8 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/VRServiceTestBinding.h"
 
+#include "gfxVR.h"
+
 namespace mozilla {
 namespace dom {
 
