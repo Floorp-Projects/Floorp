@@ -239,11 +239,7 @@ public:
 
     static int64_t RunUiThreadCallback()
     {
-        if (!AndroidBridge::Bridge()) {
-            return -1;
-        }
-
-        return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
+        return AndroidUiThread::RunDelayedTasksIfValid();
     }
 };
 
