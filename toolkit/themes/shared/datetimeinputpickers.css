@@ -12,7 +12,8 @@
   --colon-width: 2rem;
   --day-period-spacing-width: 1rem;
   --calendar-width: 23.1rem;
-  --date-picker-item-height: 2.4rem;
+  --date-picker-item-height: 2.5rem;
+  --date-picker-item-width: 3.3rem;
 
   --border: 0.1rem solid #D6D6D6;
   --border-radius: 0.3rem;
@@ -20,6 +21,8 @@
 
   --font-color: #191919;
   --fill-color: #EBEBEB;
+
+  --today-fill-color: rgb(212, 212, 212);
 
   --selected-font-color: #FFFFFF;
   --selected-fill-color: #0996F8;
@@ -29,10 +32,16 @@
   --button-font-color-active: #191919;
   --button-fill-color-active: #D4D4D4;
 
-  --weekday-font-color: #6C6C6C;
-  --weekday-outside-font-color: #6C6C6C;
-  --weekend-font-color: #DA4E44;
-  --weekend-outside-font-color: #FF988F;
+  --weekday-header-font-color: #6C6C6C;
+  --weekend-header-font-color: rgb(218, 78, 68);
+
+  --weekend-font-color: rgb(218, 78, 68);
+  --weekday-outside-font-color: rgb(153, 153, 153);
+  --weekend-outside-font-color: rgb(255, 152, 143);
+
+  --weekday-disabled-font-color: rgba(25, 25, 25, 0.2);
+  --weekend-disabled-font-color: rgba(218, 78, 68, 0.2);
+  --disabled-fill-color: rgba(235, 235, 235, 0.8);
 
   --disabled-opacity: 0.2;
 }
@@ -199,11 +208,11 @@ button.month-year.active::after {
 }
 
 .week-header > div {
-  color: var(--weekday-font-color);
+  color: var(--weekday-header-font-color);
 }
 
 .week-header > div.weekend {
-  color: var(--weekend-font-color);
+  color: var(--weekend-header-font-color);
 }
 
 .days-viewport {
@@ -224,22 +233,43 @@ button.month-year.active::after {
   align-items: center;
   display: flex;
   height: var(--date-picker-item-height);
-  margin: 0.05rem 0.15rem;
   position: relative;
   justify-content: center;
-  width: 3rem;
+  width: var(--date-picker-item-width);
 }
 
-.days-view > div.outside {
+.days-view > .outside {
   color: var(--weekday-outside-font-color);
 }
 
-.days-view > div.weekend {
+.days-view > .weekend {
   color: var(--weekend-font-color);
 }
 
-.days-view > div.weekend.outside {
+.days-view > .weekend.outside {
   color: var(--weekend-outside-font-color);
+}
+
+.days-view > .out-of-range {
+  color: var(--weekday-disabled-font-color);
+  background: var(--disabled-fill-color);
+}
+
+.days-view > .out-of-range.weekend {
+  color: var(--weekend-disabled-font-color);
+}
+
+.days-view > .out-of-range::before {
+  display: none;
+}
+
+.days-view > div:hover::before,
+.days-view > .select::before,
+.days-view > .today::before {
+  top: 5%;
+  bottom: 5%;
+  left: 5%;
+  right: 5%;
 }
 
 #time-picker,
@@ -309,10 +339,6 @@ button.month-year.active::after {
   border-radius: var(--border-radius);
   content: "";
   position: absolute;
-  top: 0%;
-  bottom: 0%;
-  left: 0%;
-  right: 0%;
   z-index: -10;
 }
 

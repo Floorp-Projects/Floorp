@@ -29,9 +29,9 @@
   background: var(--downloads-indicator-image) center no-repeat;
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill);
-  width: 18px;
-  height: 18px;
-  background-size: 18px;
+  width: 16px;
+  height: 16px;
+  background-size: 16px;
 }
 
 toolbar[brighttext] #downloads-button[cui-areatype="toolbar"]:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon {

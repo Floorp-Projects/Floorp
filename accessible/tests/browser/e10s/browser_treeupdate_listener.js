@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_REORDER */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 addAccessibleTask('<span id="parent"><span id="child"></span></span>',

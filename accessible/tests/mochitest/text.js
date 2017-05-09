@@ -261,8 +261,8 @@ function testWordCount(aElement, aCount, aToDoFlag)
   var offset = 0;
   var wordCount = 0;
   while (true) {
-    var text = acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
-                                   startOffsetObj, endOffsetObj);
+    acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
+                        startOffsetObj, endOffsetObj);
     if (offset >= length)
       break;
 
