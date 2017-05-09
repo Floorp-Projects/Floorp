@@ -27,7 +27,7 @@ add_task(async function test_ui_state_signedin() {
   gSync.updateAllUI(state);
 
   checkFxABadge(false);
-  let statusBarTooltip = gSync.panelUIStatus.getAttribute("signedinTooltiptext");
+  let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   let lastSyncTooltip = gSync.formatLastSyncDate(new Date(state.lastSync));
   checkPanelUIStatusBar({
     label: "Foo Bar",
@@ -75,8 +75,8 @@ add_task(async function test_ui_state_unconfigured() {
   gSync.updateAllUI(state);
 
   checkFxABadge(false);
-  let signedOffLabel = gSync.panelUIStatus.getAttribute("defaultlabel");
-  let statusBarTooltip = gSync.panelUIStatus.getAttribute("signedinTooltiptext");
+  let signedOffLabel = gSync.appMenuStatus.getAttribute("defaultlabel");
+  let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   checkPanelUIStatusBar({
     label: signedOffLabel,
     tooltip: statusBarTooltip
@@ -96,7 +96,7 @@ add_task(async function test_ui_state_unverified() {
   gSync.updateAllUI(state);
 
   checkFxABadge(true);
-  let expectedLabel = gSync.panelUIStatus.getAttribute("unverifiedlabel");
+  let expectedLabel = gSync.appMenuStatus.getAttribute("unverifiedlabel");
   let tooltipText = gSync.fxaStrings.formatStringFromName("verifyDescription", [state.email], 1);
   checkPanelUIStatusBar({
     label: expectedLabel,
@@ -119,7 +119,7 @@ add_task(async function test_ui_state_loginFailed() {
   gSync.updateAllUI(state);
 
   checkFxABadge(true);
-  let expectedLabel = gSync.panelUIStatus.getAttribute("errorlabel");
+  let expectedLabel = gSync.appMenuStatus.getAttribute("errorlabel");
   let tooltipText = gSync.fxaStrings.formatStringFromName("reconnectDescription", [state.email], 1);
   checkPanelUIStatusBar({
     label: expectedLabel,
@@ -160,26 +160,27 @@ function checkFxABadge(shouldBeShown) {
 }
 
 function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
-  let labelNode = document.getElementById("PanelUI-fxa-label");
-  let tooltipNode = document.getElementById("PanelUI-fxa-status");
-  let statusNode = document.getElementById("PanelUI-footer-fxa");
-  let avatar = document.getElementById("PanelUI-fxa-avatar");
+  let prefix = gPhotonStructure ? "appMenu" : "PanelUI"
+  let labelNode = document.getElementById(`${prefix}-fxa-label`);
+  let tooltipNode = document.getElementById(`${prefix}-fxa-status`);
+  let statusNode = document.getElementById(`${prefix}-fxa-container`);
+  let avatar = document.getElementById(`${prefix}-fxa-avatar`);
 
-  is(labelNode.getAttribute("label"), label, "panelUI-fxa label has the right value");
-  is(tooltipNode.getAttribute("tooltiptext"), tooltip, "panelUI-fxa tooltip has the right value");
+  is(labelNode.getAttribute("label"), label, "fxa label has the right value");
+  is(tooltipNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
   if (fxastatus) {
-    is(statusNode.getAttribute("fxastatus"), fxastatus, "panelUI-fxa fxastatus has the right value");
+    is(statusNode.getAttribute("fxastatus"), fxastatus, "fxa fxastatus has the right value");
   } else {
-    ok(!statusNode.hasAttribute("fxastatus"), "panelUI-fxa fxastatus is unset")
+    ok(!statusNode.hasAttribute("fxastatus"), "fxastatus is unset")
   }
   if (avatarURL) {
-    is(avatar.style.listStyleImage, `url("${avatarURL}")`, "panelUI-fxa avatar URL is set");
+    is(avatar.style.listStyleImage, `url("${avatarURL}")`, "fxa avatar URL is set");
   } else {
-    ok(!statusNode.style.listStyleImage, "panelUI-fxa avatar URL is unset");
+    ok(!statusNode.style.listStyleImage, "fxa avatar URL is unset");
   }
 
   if (syncing != undefined && syncNowTooltip != undefined) {
-    checkSyncNowButton("PanelUI-fxa-icon", syncing, syncNowTooltip);
+    checkSyncNowButton(`${prefix}-fxa-icon`, syncing, syncNowTooltip);
   }
 }
 
