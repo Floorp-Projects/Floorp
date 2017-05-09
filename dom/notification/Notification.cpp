@@ -790,25 +790,6 @@ NotificationTelemetryService::RecordDNDSupported()
     Telemetry::ALERTS_SERVICE_DND_SUPPORTED_FLAG, true);
 }
 
-nsresult
-NotificationTelemetryService::RecordSender(nsIPrincipal* aPrincipal)
-{
-  if (!Telemetry::CanRecordBase() || !Telemetry::CanRecordExtended() ||
-      !nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
-    return NS_OK;
-  }
-  nsAutoString origin;
-  nsresult rv = Notification::GetOrigin(aPrincipal, origin);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!mOrigins.Contains(origin)) {
-    mOrigins.PutEntry(origin);
-    Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_SENDERS, 1);
-  }
-  return NS_OK;
-}
-
 // Observer that the alert service calls to do common tasks and/or dispatch to the
 // specific observer for the context e.g. main thread, worker, or service worker.
 class NotificationObserver final : public nsIObserver
@@ -1399,10 +1380,6 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
       // Record whether "do not disturb" is supported after the first
       // notification, to account for falling back to XUL alerts.
       telemetry->RecordDNDSupported();
-      if (!mInPrivateBrowsing) {
-        // Ignore senders in private windows.
-        Unused << NS_WARN_IF(NS_FAILED(telemetry->RecordSender(mPrincipal)));
-      }
     }
     Unused << NS_WARN_IF(NS_FAILED(AdjustPushQuota(aTopic)));
 
