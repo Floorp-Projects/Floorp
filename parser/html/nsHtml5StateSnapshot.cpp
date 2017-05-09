@@ -55,9 +55,8 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(nsHtml5TreeBuilder* treeBuilder, jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContentHandle* formPointer, nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks)
-  : treeBuilder(treeBuilder),
-    stack(stack),
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContentHandle* formPointer, nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks)
+  : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     templateModeStack(templateModeStack),
     formPointer(formPointer),
@@ -161,11 +160,11 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
 {
   MOZ_COUNT_DTOR(nsHtml5StateSnapshot);
   for (int32_t i = 0; i < stack.length; i++) {
-    stack[i]->release(treeBuilder);
+    stack[i]->release();
   }
   for (int32_t i = 0; i < listOfActiveFormattingElements.length; i++) {
     if (listOfActiveFormattingElements[i]) {
-      listOfActiveFormattingElements[i]->release(treeBuilder);
+      listOfActiveFormattingElements[i]->release();
     }
   }
 }
