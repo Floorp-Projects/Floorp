@@ -694,13 +694,8 @@ FreeOp::isDefaultFreeOp() const
 JSObject*
 JSRuntime::getIncumbentGlobal(JSContext* cx)
 {
-    // If the embedding didn't set a callback for getting the incumbent
-    // global, the currently active global is used.
-    if (!cx->getIncumbentGlobalCallback) {
-        if (!cx->compartment())
-            return nullptr;
-        return cx->global();
-    }
+    MOZ_ASSERT(cx->getIncumbentGlobalCallback,
+               "Must set a callback using SetGetIncumbentGlobalCallback before using Promises");
 
     return cx->getIncumbentGlobalCallback(cx);
 }

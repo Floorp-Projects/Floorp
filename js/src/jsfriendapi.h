@@ -382,24 +382,6 @@ SetSourceHook(JSContext* cx, mozilla::UniquePtr<SourceHook> hook);
 extern JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
 ForgetSourceHook(JSContext* cx);
 
-/**
- * Use the runtime's internal handling of job queues for Promise jobs.
- *
- * Most embeddings, notably web browsers, will have their own task scheduling
- * systems and need to integrate handling of Promise jobs into that, so they
- * will want to manage job queues themselves. For basic embeddings such as the
- * JS shell that don't have an event loop of their own, it's easier to have
- * SpiderMonkey handle job queues internally.
- *
- * Note that the embedding still has to trigger processing of job queues at
- * right time(s), such as after evaluation of a script has run to completion.
- */
-extern JS_FRIEND_API(bool)
-UseInternalJobQueues(JSContext* cx);
-
-extern JS_FRIEND_API(void)
-RunJobs(JSContext* cx);
-
 extern JS_FRIEND_API(JS::Zone*)
 GetCompartmentZone(JSCompartment* comp);
 
