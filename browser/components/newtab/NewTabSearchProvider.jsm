@@ -72,7 +72,7 @@ SearchProvider.prototype = {
 
   manageEngines(browser) {
     const browserWin = browser.ownerGlobal;
-    browserWin.openPreferences("paneGeneral");
+    browserWin.openPreferences("paneGeneral", { origin: "contentSearch" });
   },
 
   asyncGetState: Task.async(function*() {

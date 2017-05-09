@@ -415,7 +415,7 @@ this.ContentSearch = {
 
   _onMessageManageEngines(msg, data) {
     let browserWin = msg.target.ownerGlobal;
-    browserWin.openPreferences("paneGeneral");
+    browserWin.openPreferences("paneGeneral", {origin: "contentSearch"});
   },
 
   _onMessageGetSuggestions: Task.async(function* (msg, data) {
