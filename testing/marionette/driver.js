@@ -1396,22 +1396,40 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
     switchTo = cmd.parameters.name;
   }
 
-  let byNameOrId = function (name, windowId) {
-    return switchTo === name || switchTo === windowId;
+  let byNameOrId = function (win, windowId) {
+    return switchTo === win.name || switchTo === windowId;
   };
 
-  let found;
-  let winEn = Services.wm.getEnumerator(null);
-  while (winEn.hasMoreElements()) {
-    let win = winEn.getNext();
+  let found = this.findWindow(this.windows, byNameOrId);
+
+  if (found) {
+      yield this.setWindowHandle(found, focus);
+  } else {
+    throw new NoSuchWindowError(`Unable to locate window: ${switchTo}`);
+  }
+};
+
+/**
+ * Find a specific window according to some filter function.
+ *
+ * @param {Iterable.<Window>} winIterable
+ *     Iterable that emits Windows.
+ * @param {function(Window, number): boolean} filter
+ *     A callback function taking two arguments; the window and
+ *     the outerId of the window, and returning a boolean indicating
+ *     whether the window is the target.
+ *
+ * @return {Object}
+ *     A window handle object containing the window and some
+ *     associated metadata.
+ */
+GeckoDriver.prototype.findWindow = function (winIterable, filter) {
+  for (let win of winIterable) {
     let outerId = getOuterWindowId(win);
     let tabBrowser = browser.getTabBrowser(win);
-
-    if (byNameOrId(win.name, outerId)) {
+    if (filter(win, outerId)) {
       // In case the wanted window is a chrome window, we are done.
-      found = {win: win, outerId: outerId, hasTabBrowser: !!tabBrowser};
-      break;
-
+      return {win: win, outerId: outerId, hasTabBrowser: !!tabBrowser};
     } else if (tabBrowser) {
       // Otherwise check if the chrome window has a tab browser, and that it
       // contains a tab with the wanted window handle.
@@ -1419,48 +1437,59 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
         let contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
         let contentWindowId = this.getIdForBrowser(contentBrowser);
 
-        if (byNameOrId(win.name, contentWindowId)) {
-          found = {
+        if (filter(win, contentWindowId)) {
+          return {
             win: win,
             outerId: outerId,
             hasTabBrowser: true,
             tabIndex: i,
           };
-          break;
         }
       }
     }
   }
+  return null;
+};
 
-  if (found) {
-    if (!(found.outerId in this.browsers)) {
-      // Initialise Marionette if the current chrome window has not been seen
-      // before. Also register the initial tab, if one exists.
-      let registerBrowsers, browserListening;
+/**
+ * Switch the marionette window to a given window. If the browser in
+ * the window is unregistered, registers that browser and waits for
+ * the registration is complete. If |focus| is true then set the focus
+ * on the window.
+ *
+ * @param {Object} winProperties
+ *     Object containing window properties such as returned from
+ *     GeckoDriver#findWindow
+ * @param {boolean=} focus
+ *     A boolean value which determines whether to focus the window.
+ *     Defaults to true.
+ */
+GeckoDriver.prototype.setWindowHandle = function* (winProperties, focus = true) {
+  if (!(winProperties.outerId in this.browsers)) {
+    // Initialise Marionette if the current chrome window has not been seen
+    // before. Also register the initial tab, if one exists.
+    let registerBrowsers, browserListening;
 
-      if (found.hasTabBrowser) {
-        registerBrowsers = this.registerPromise();
-        browserListening = this.listeningPromise();
-      }
-
-      this.startBrowser(found.win, false /* isNewSession */);
-
-      if (registerBrowsers && browserListening) {
-        yield registerBrowsers;
-        yield browserListening;
-      }
-
-    } else {
-      // Otherwise switch to the known chrome window, and activate the tab
-      // if it's a content browser.
-      this.curBrowser = this.browsers[found.outerId];
-
-      if ("tabIndex" in found) {
-        this.curBrowser.switchToTab(found.tabIndex, found.win, focus);
-      }
+    if (winProperties.hasTabBrowser) {
+      registerBrowsers = this.registerPromise();
+      browserListening = this.listeningPromise();
     }
+
+    this.startBrowser(winProperties.win, false /* isNewSession */);
+
+    if (registerBrowsers && browserListening) {
+      yield registerBrowsers;
+      yield browserListening;
+    }
+
   } else {
-    throw new NoSuchWindowError(`Unable to locate window: ${switchTo}`);
+    // Otherwise switch to the known chrome window, and activate the tab
+    // if it's a content browser.
+    this.curBrowser = this.browsers[winProperties.outerId];
+
+    if ("tabIndex" in winProperties) {
+      this.curBrowser.switchToTab(winProperties.tabIndex, winProperties.win, focus);
+    }
   }
 };
 
