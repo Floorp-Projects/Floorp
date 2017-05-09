@@ -76,7 +76,14 @@ public final class TestHelper {
     static UiObject lockIcon = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/lock")
             .description("Secure connection"));
-
+    static UiObject notificationBarDeleteItem = TestHelper.mDevice.findObject(new UiSelector()
+            .text("Erase browsing history")
+            .resourceId("android:id/text")
+            .enabled(true));
+    static UiObject FocusInRecentApps = TestHelper.mDevice.findObject(new UiSelector()
+            .text("Focus (Dev)")
+            .resourceId("com.android.systemui:id/title")
+            .enabled(true));
 
     /********* Main View Menu Item Locators ***********/
     static UiObject RightsItem = mDevice.findObject(new UiSelector()
@@ -112,9 +119,9 @@ public final class TestHelper {
     static void pressEnterKey() {
         mDevice.pressKeyCode(KEYCODE_ENTER);
     }
-    static void pressBackKey() {
-        mDevice.pressBack();
-    }
+    static void pressBackKey() {mDevice.pressBack();}
+    static void pressHomeKey() {mDevice.pressHome();}
+    static void openNotification() {mDevice.openNotification();}
 
     static void swipeDownNotificationBar () {
         int dHeight = mDevice.getDisplayHeight();

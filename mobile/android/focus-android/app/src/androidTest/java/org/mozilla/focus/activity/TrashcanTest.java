@@ -6,11 +6,15 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.Until;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,6 +22,8 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test erases URL and checks for message
@@ -67,6 +73,83 @@ public class TrashcanTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
+        assertTrue(TestHelper.urlBar.exists());
+    }
+
+    @Test
+    public void systemBarTest() throws InterruptedException, UiObjectNotFoundException {
+
+        // Initialize UiDevice instance
+        final long waitingTime = TestHelper.waitingTime;
+
+        /* Wait for app to load, and take the First View screenshot */
+        TestHelper.firstViewBtn.waitForExists(waitingTime);
+        TestHelper.firstViewBtn.click();
+
+        // Open a webpage
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+        TestHelper.webView.waitForExists(waitingTime);
+
+        // Pull down system bar and select delete browsing history
+        TestHelper.openNotification();
+        TestHelper.notificationBarDeleteItem.waitForExists(waitingTime);
+        TestHelper.notificationBarDeleteItem.click();
+        TestHelper.erasedMsg.waitForExists(waitingTime);
+        assertTrue(TestHelper.erasedMsg.exists());
+        assertTrue(TestHelper.urlBar.exists());
+    }
+
+    @Test
+    public void systemBarHomeViewTest() throws InterruptedException, UiObjectNotFoundException, RemoteException {
+
+        // Initialize UiDevice instance
+        final long waitingTime = TestHelper.waitingTime;
+        final int LAUNCH_TIMEOUT = 5000;
+        final String FOCUS_DEBUG_APP = "org.mozilla.focus.debug";
+
+
+        /* Wait for app to load, and take the First View screenshot */
+        TestHelper.firstViewBtn.waitForExists(waitingTime);
+        TestHelper.firstViewBtn.click();
+
+        // Open a webpage
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+        TestHelper.webView.waitForExists(waitingTime);
+
+        // Switch out of Focus, pull down system bar and select delete browsing history
+        TestHelper.pressHomeKey();
+        TestHelper.openNotification();
+        TestHelper.notificationBarDeleteItem.waitForExists(waitingTime);
+        TestHelper.notificationBarDeleteItem.click();
+
+        // Wait for launcher
+        final String launcherPackage = TestHelper.mDevice.getLauncherPackageName();
+        assertThat(launcherPackage, notNullValue());
+        TestHelper.mDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)),
+                LAUNCH_TIMEOUT);
+
+        // Launch the app
+        Context context = InstrumentationRegistry.getInstrumentation()
+                .getTargetContext()
+                .getApplicationContext();
+        final Intent intent = context.getPackageManager()
+                .getLaunchIntentForPackage(FOCUS_DEBUG_APP);
+        context.startActivity(intent);
+
+        // Verify that it's on the main view, not showing the previous browsing session
+        TestHelper.urlBar.waitForExists(waitingTime);
         assertTrue(TestHelper.urlBar.exists());
     }
 }
