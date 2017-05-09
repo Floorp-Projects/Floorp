@@ -144,10 +144,15 @@ using namespace videocapturemodule;
 
     _captureVideoDataOutput.videoSettings = newSettings;
 
-    if ([_captureDevice lockForConfiguration:NULL] == YES) {
-      _captureDevice.activeFormat = bestFormat;
-      _captureDevice.activeVideoMinFrameDuration = bestFrameRateRange.minFrameDuration;
-      [_captureDevice unlockForConfiguration];
+    AVCaptureConnection* captureConnection =
+      [_captureVideoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+
+    if ([captureConnection isVideoMinFrameDurationSupported]) {
+      [captureConnection setVideoMinFrameDuration:bestFrameRateRange.minFrameDuration];
+    }
+
+    if ([captureConnection isVideoMaxFrameDurationSupported]) {
+      [captureConnection setVideoMaxFrameDuration:bestFrameRateRange.maxFrameDuration];
     }
   }
 }
