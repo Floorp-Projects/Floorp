@@ -108,6 +108,10 @@ crashtest:
                             - remove_executables.py
                 extra-options:
                     - --reftest-suite=crashtest
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 external-media-tests-base:
     description: "External Media Test run"
@@ -360,6 +364,10 @@ jsreftest:
         files-changed:
             - js/src/**
             - js/public/**
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 marionette:
     description: "Marionette unittest run"
@@ -776,7 +784,6 @@ mochitest-gpu:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics']
             default: built-projects
     e10s:
         by-test-platform:
@@ -812,6 +819,10 @@ mochitest-gpu:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 mochitest-jetpack:
     description: "Mochitest jetpack run"
@@ -956,7 +967,6 @@ mochitest-webgl:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics', 'mozilla-central']
             default: built-projects
     chunks:
         by-test-platform:
@@ -1005,6 +1015,10 @@ mochitest-webgl:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=mochitest-gl
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 reftest:
     description: "Reftest run"
@@ -1014,7 +1028,6 @@ reftest:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics', 'mozilla-central']
             default: built-projects
     instance-size:
         by-test-platform:
@@ -1063,6 +1076,10 @@ reftest:
                             - remove_executables.py
                 extra-options:
                     - --reftest-suite=reftest
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 reftest-no-accel:
     description: "Reftest not accelerated run"
@@ -1072,7 +1089,7 @@ reftest-no-accel:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics', 'mozilla-central']
+            linux64-qr/.*: ['graphics']
             default: built-projects
     chunks:
         by-test-platform:
