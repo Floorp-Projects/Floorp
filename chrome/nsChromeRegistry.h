@@ -18,7 +18,6 @@
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsXULAppAPI.h"
-#include "nsIXPConnect.h"
 
 #include "mozilla/FileLocation.h"
 
@@ -113,14 +112,11 @@ public:
     { }
 
     nsIURI* GetManifestURI();
-    nsIXPConnect* GetXPConnect();
-
     already_AddRefed<nsIURI> ResolveURI(const char* uri);
 
     NSLocationType mType;
     mozilla::FileLocation mFile;
     nsCOMPtr<nsIURI> mManifestURI;
-    nsCOMPtr<nsIXPConnect> mXPConnect;
   };
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
