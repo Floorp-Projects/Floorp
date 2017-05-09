@@ -64,7 +64,6 @@ public:
   nsresult Init();
   void RecordDNDSupported();
   void RecordPermissions();
-  nsresult RecordSender(nsIPrincipal* aPrincipal);
 
 private:
   virtual ~NotificationTelemetryService();
@@ -73,7 +72,6 @@ private:
                                  uint32_t* aCapability);
 
   bool mDNDRecorded;
-  nsTHashtable<nsStringHashKey> mOrigins;
 };
 
 /*
