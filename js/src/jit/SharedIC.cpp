@@ -456,9 +456,9 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
 
 bool
 ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
-                                                StackTypeSet* types, HandleValue val)
+                                                HandleValue val)
 {
-    return fallbackMonitorStub_->addMonitorStubForValue(cx, frame, types, val);
+    return fallbackMonitorStub_->addMonitorStubForValue(cx, frame, val);
 }
 
 bool
@@ -2059,15 +2059,14 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
     if (!ComputeGetPropResult(cx, frame, op, name, val, res))
         return false;
 
-    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-    TypeScript::Monitor(cx, script, pc, types, res);
+    TypeScript::Monitor(cx, script, pc, res);
 
     // Check if debug mode toggling made the stub invalid.
     if (stub.invalid())
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, types, res))
+    if (!stub->addMonitorStubForValue(cx, frame, res))
         return false;
 
     if (attached)
@@ -2174,11 +2173,8 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 //
 
 bool
-ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
-                                               StackTypeSet* types, HandleValue val)
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* frame, HandleValue val)
 {
-    MOZ_ASSERT(types);
-
     bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
     MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
 
@@ -2323,29 +2319,25 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
                    *GetNextPc(pc) == JSOP_CHECKRETURN);
     }
 
-    StackTypeSet* types;
     uint32_t argument;
     if (stub->monitorsThis()) {
         MOZ_ASSERT(pc == script->code());
-        types = TypeScript::ThisTypes(script);
-        if (MOZ_UNLIKELY(value.isMagic(JS_UNINITIALIZED_LEXICAL)))
+        if (value.isMagic(JS_UNINITIALIZED_LEXICAL))
             TypeScript::SetThis(cx, script, TypeSet::UnknownType());
         else
             TypeScript::SetThis(cx, script, value);
     } else if (stub->monitorsArgument(&argument)) {
         MOZ_ASSERT(pc == script->code());
         MOZ_ASSERT(!value.isMagic(JS_UNINITIALIZED_LEXICAL));
-        types = TypeScript::ArgTypes(script, argument);
         TypeScript::SetArgument(cx, script, argument, value);
     } else {
-        types = TypeScript::BytecodeTypes(script, pc);
-        if (MOZ_UNLIKELY(value.isMagic(JS_UNINITIALIZED_LEXICAL)))
+        if (value.isMagic(JS_UNINITIALIZED_LEXICAL))
             TypeScript::Monitor(cx, script, pc, TypeSet::UnknownType());
         else
-            TypeScript::Monitor(cx, script, pc, types, value);
+            TypeScript::Monitor(cx, script, pc, value);
     }
 
-    if (!stub->invalid() && !stub->addMonitorStubForValue(cx, frame, types, value))
+    if (!stub->invalid() && !stub->addMonitorStubForValue(cx, frame, value))
         return false;
 
     // Copy input value to res.
