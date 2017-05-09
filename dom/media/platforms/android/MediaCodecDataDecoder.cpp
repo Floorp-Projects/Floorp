@@ -467,7 +467,11 @@ MediaCodecDataDecoder::PeekNextSample()
   MonitorAutoLock lock(mMonitor);
 
   if (mState == ModuleState::kFlushing) {
-    mDecoder->Flush();
+    // Flush MediaCodec only when there is input in progress to works around a bug
+    // in some Android 4.2.2 devices. See bug 1362969.
+    if (!mDurations.empty()) {
+      mDecoder->Flush();
+    }
     ClearQueue();
     SetState(ModuleState::kDecoding);
     lock.Notify();
