@@ -165,6 +165,10 @@ public:
   void UpdateAPZ();
   const WebRenderScrollData& GetScrollData() const;
 
+  static uint32_t AllocIdNameSpace() {
+    return ++sIdNameSpace;
+  }
+
 private:
   virtual ~WebRenderBridgeParent();
 
