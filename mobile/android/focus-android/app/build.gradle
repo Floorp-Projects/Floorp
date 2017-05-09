@@ -354,7 +354,10 @@ pmd {
 task pmd(type: Pmd, group: 'verification') {
     source 'src'
     include '**/*.java'
-    exclude('**/gen/**', '**/debug/**')
+    exclude('**/gen/**',
+            '**/debug/**',
+            '**/androidTest/**',
+            '**/test**/**')
 
     reports {
         xml.enabled = false
