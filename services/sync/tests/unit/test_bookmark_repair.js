@@ -3,7 +3,6 @@
 
 // Tests the bookmark repair requestor and responder end-to-end (ie, without
 // many mocks)
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-sync/bookmark_repair.js");
