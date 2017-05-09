@@ -15,8 +15,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
-#include "nsIEditor.h"                  // for nsIEditor::EDirection, etc.
-#include "nsIEditorIMESupport.h"        // for NS_DECL_NSIEDITORIMESUPPORT, etc.
+#include "nsIEditor.h"                  // for nsIEditor, etc.
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc.
 #include "nsIPhonetic.h"                // for NS_DECL_NSIPHONETIC, etc.
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
@@ -145,7 +144,7 @@ struct IMEState;
  * delegate the actual commands to the editor independent of the XPFE
  * implementation.
  */
-class EditorBase : public nsIEditorIMESupport
+class EditorBase : public nsIEditor
                  , public nsSupportsWeakReference
                  , public nsIPhonetic
 {
@@ -196,9 +195,6 @@ public:
 
   // nsIEditor methods
   NS_DECL_NSIEDITOR
-
-  // nsIEditorIMESupport methods
-  NS_DECL_NSIEDITORIMESUPPORT
 
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
