@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
+  <style>
+    circle {
+      fill: #4d4d4d;
+    }
+  </style>
+  
+  <g>
+    <circle cx="2" cy="8" r="2"/>
+    <circle cx="7" cy="8" r="2"/>
+    <circle cx="12" cy="8" r="2"/>
+  </g>
+</svg>
