@@ -190,6 +190,12 @@ public:
     nsresult GetClientRect(nsRect& aRect);
 
     /**
+     * Returns true if we're currently between BeginDocument() and
+     * EndDocument() calls.
+     */
+    bool IsCurrentlyPrintingDocument() const { return mIsCurrentlyPrintingDoc; }
+
+    /**
      * Inform the output device that output of a document is beginning
      * Used for print related device contexts. Must be matched 1:1 with
      * EndDocument() or AbortDocument().
@@ -305,6 +311,7 @@ private:
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
     RefPtr<PrintTarget>            mPrintTarget;
+    bool                           mIsCurrentlyPrintingDoc;
 #ifdef DEBUG
     bool mIsInitialized;
 #endif

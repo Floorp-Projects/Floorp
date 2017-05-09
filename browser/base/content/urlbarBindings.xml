@@ -189,9 +189,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               }
             }
           } else {
-            let originalUrl = ReaderMode.getOriginalUrl(aValue);
+            let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(aValue);
             if (originalUrl) {
-              returnValue = originalUrl;
+              returnValue = originalUrl.spec;
             }
           }
 
@@ -825,15 +825,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           // Avoid copying 'about:reader?url=', and always provide the original URI:
-          let readerOriginalURL = ReaderMode.getOriginalUrl(uri.spec);
-          if (readerOriginalURL) {
-            uri = uriFixup.createFixupURI(readerOriginalURL, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+          // Reader mode ensures we call createExposableURI itself.
+          let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(uri.spec);
+          if (readerStrippedURI) {
+            uri = readerStrippedURI;
+          } else {
+            // Only copy exposable URIs
+            try {
+              uri = uriFixup.createExposableURI(uri);
+            } catch (ex) {}
           }
-
-          // Only copy exposable URIs
-          try {
-            uri = uriFixup.createExposableURI(uri);
-          } catch (ex) {}
 
           // If the entire URL is selected, just use the actual loaded URI,
           // unless we want a decoded URI, or it's a data: or javascript: URI,

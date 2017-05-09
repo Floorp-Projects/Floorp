@@ -520,7 +520,7 @@ private:
 
   bool mAttemptingEarlyData;
   // The ID(s) of the stream(s) that we are getting 0RTT data from.
-  nsTArray<uint32_t> m0RTTStreams;
+  nsTArray<WeakPtr<Http2Stream>> m0RTTStreams;
 
   bool RealJoinConnection(const nsACString &hostname, int32_t port, bool jk);
   bool TestOriginFrame(const nsACString &name, int32_t port);

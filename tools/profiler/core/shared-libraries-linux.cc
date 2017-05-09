@@ -23,52 +23,21 @@
 
 #include "common/linux/file_id.h"
 #include <algorithm>
-
-
-// There are three different configuration cases:
-//
-// (1) GP_OS_linux
-//       Use dl_iterate_phdr for almost everything and /proc/self/{exe,maps}
-//       to identify the main executable name.
-//
-// (2) GP_OS_android non-GONK
-//       If dl_iterate_phdr doesn't exist, give up immediately.  Otherwise use
-//       dl_iterate_phdr for almost all info and /proc/self/maps to get the
-//       mapping for /dev/ashmem/dalvik-jit-code-cache.
-//
-// (3) GP_OS_android GONK
-//       Use /proc/self/maps for everything.
-
-#undef CONFIG_CASE_1
-#undef CONFIG_CASE_2
-#undef CONFIG_CASE_3
+#include <dlfcn.h>
+#include <features.h>
+#include <sys/types.h>
 
 #if defined(GP_OS_linux)
-# define CONFIG_CASE_1 1
-# include <link.h> // dl_phdr_info
-# include <features.h>
-# include <dlfcn.h>
-# include <sys/types.h>
-
-#elif defined(GP_OS_android) && !defined(MOZ_WIDGET_GONK)
-# define CONFIG_CASE_2 1
+# include <link.h>      // dl_phdr_info
+#elif defined(GP_OS_android)
 # include "ElfLoader.h" // dl_phdr_info
-# include <features.h>
-# include <dlfcn.h>
-# include <sys/types.h>
 extern "C" MOZ_EXPORT __attribute__((weak))
 int dl_iterate_phdr(
           int (*callback)(struct dl_phdr_info *info, size_t size, void *data),
           void *data);
-
-#elif defined(GP_OS_android) && defined(MOZ_WIDGET_GONK)
-# define CONFIG_CASE_3 1
-  // No config-specific includes.
-
 #else
 # error "Unexpected configuration"
 #endif
-
 
 // Get the breakpad Id for the binary file pointed by bin_name
 static std::string getId(const char *bin_name)
@@ -107,8 +76,6 @@ SharedLibraryAtPath(const char* path, unsigned long libStart,
                        "", "");
 }
 
-// Config cases (1) and (2) use dl_iterate_phdr.
-#if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
 static int
 dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 {
@@ -137,14 +104,12 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 
   return 0;
 }
-#endif // config cases (1) and (2)
-
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo info;
 
-#if defined(CONFIG_CASE_1)
+#if defined(GP_OS_linux)
   // We need to find the name of the executable (exeName, exeNameLen) and the
   // address of its executable section (exeExeAddr) in the running image.
   char exeName[PATH_MAX];
@@ -165,7 +130,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   unsigned long exeExeAddr = 0;
 #endif
 
-#if defined(CONFIG_CASE_2)
+#if defined(GP_OS_android)
   // If dl_iterate_phdr doesn't exist, we give up immediately.
   if (!dl_iterate_phdr) {
     // On ARM Android, dl_iterate_phdr is provided by the custom linker.
@@ -176,9 +141,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   }
 #endif
 
-  // Read info from /proc/self/maps.  We do this for all config cases, but only
-  // in case (3) are we building the module list from that information.  For
-  // cases (1) and (2) we're just collecting some auxiliary information.
+  // Read info from /proc/self/maps. We ignore most of it.
   pid_t pid = getpid();
   char path[PATH_MAX];
   SprintfLiteral(path, "/proc/%d/maps", pid);
@@ -204,49 +167,30 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       continue;
     }
 
-#if defined(CONFIG_CASE_1)
+#if defined(GP_OS_linux)
     // Try to establish the main executable's load address.
     if (exeNameLen > 0 && strcmp(modulePath, exeName) == 0) {
       exeExeAddr = start;
     }
-    continue;
-    // NOTREACHED
-#elif defined(CONFIG_CASE_2)
+#elif defined(GP_OS_android)
     // Use /proc/pid/maps to get the dalvik-jit section since it has no
     // associated phdrs.
-    if (0 != strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
-      continue;
-    }
-    // Otherwise proceed to the tail of the loop, so as to record the entry.
-#elif defined(CONFIG_CASE_3)
-    if (strcmp(perm, "r-xp") != 0) {
-      // Ignore entries that are writable and/or shared.
-      // At least one graphics driver uses short-lived "rwxs" mappings
-      // (see bug 926734 comment 5), so just checking for 'x' isn't enough.
-      continue;
-    }
-    // Record all other entries.
-#endif
-
-#if !defined(CONFIG_CASE_1)
-    // This section has to be conditionalised so as to avoid compiler warnings
-    // about dead code in case (1).
-    info.AddSharedLibrary(SharedLibraryAtPath(modulePath, start, end, offset));
-    if (info.GetSize() > 10000) {
-      LOG("SharedLibraryInfo::GetInfoForSelf(): "
-          "implausibly large number of mappings acquired");
-      break;
+    if (0 == strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
+      info.AddSharedLibrary(SharedLibraryAtPath(modulePath, start, end,
+                                                offset));
+      if (info.GetSize() > 10000) {
+        LOG("SharedLibraryInfo::GetInfoForSelf(): "
+            "implausibly large number of mappings acquired");
+        break;
+      }
     }
 #endif
   }
 
-#if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
-  // For config cases (1) and (2), we collect the bulk of the library info using
-  // dl_iterate_phdr.
+  // We collect the bulk of the library info using dl_iterate_phdr.
   dl_iterate_phdr(dl_iterate_callback, &info);
-#endif
 
-#if defined(CONFIG_CASE_1)
+#if defined(GP_OS_linux)
   // Make another pass over the information we just harvested from
   // dl_iterate_phdr.  If we see a nameless object mapped at what we earlier
   // established to be the main executable's load address, attach the

@@ -2210,19 +2210,24 @@ nsDocumentViewer::Hide(void)
     mPresShell->CaptureHistoryState(getter_AddRefs(layoutState));
   }
 
-  DestroyPresShell();
+  {
+    // Do not run ScriptRunners queued by DestroyPresShell() in the intermediate
+    // state before we're done destroying PresShell, PresContext, ViewManager, etc.
+    nsAutoScriptBlocker scriptBlocker;
+    DestroyPresShell();
 
-  DestroyPresContext();
+    DestroyPresContext();
 
-  mViewManager   = nullptr;
-  mWindow        = nullptr;
-  mDeviceContext = nullptr;
-  mParentWidget  = nullptr;
+    mViewManager   = nullptr;
+    mWindow        = nullptr;
+    mDeviceContext = nullptr;
+    mParentWidget  = nullptr;
 
-  nsCOMPtr<nsIBaseWindow> base_win(mContainer);
+    nsCOMPtr<nsIBaseWindow> base_win(mContainer);
 
-  if (base_win && !mAttachedToParent) {
-    base_win->SetParentWidget(nullptr);
+    if (base_win && !mAttachedToParent) {
+      base_win->SetParentWidget(nullptr);
+    }
   }
 
   return NS_OK;

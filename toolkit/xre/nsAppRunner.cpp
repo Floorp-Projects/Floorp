@@ -4927,10 +4927,20 @@ XRE_IsGPUProcess()
   return XRE_GetProcessType() == GeckoProcessType_GPU;
 }
 
+/**
+ * Returns true in the e10s parent process and in the main process when e10s
+ * is disabled.
+ */
 bool
 XRE_IsParentProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
+bool
+XRE_IsE10sParentProcess()
+{
+  return XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
 }
 
 bool

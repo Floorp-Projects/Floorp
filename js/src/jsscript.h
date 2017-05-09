@@ -976,7 +976,7 @@ class JSScript : public js::gc::TenuredCell
     // Unique Method ID passed to the VTune profiler, or 0 if unset.
     // Allows attribution of different jitcode to the same source script.
     uint32_t        vtuneMethodId_;
-    // Extra padding to maintain JSScript as a multiple of gc::CellSize.
+    // Extra padding to maintain JSScript as a multiple of gc::CellAlignBytes.
     uint32_t        __vtune_unused_padding_;
 #endif
 
@@ -2052,8 +2052,8 @@ class JSScript : public js::gc::TenuredCell
 };
 
 /* If this fails, add/remove padding within JSScript. */
-static_assert(sizeof(JSScript) % js::gc::CellSize == 0,
-              "Size of JSScript must be an integral multiple of js::gc::CellSize");
+static_assert(sizeof(JSScript) % js::gc::CellAlignBytes == 0,
+              "Size of JSScript must be an integral multiple of js::gc::CellAlignBytes");
 
 namespace js {
 
@@ -2395,8 +2395,8 @@ class LazyScript : public gc::TenuredCell
 };
 
 /* If this fails, add/remove padding within LazyScript. */
-static_assert(sizeof(LazyScript) % js::gc::CellSize == 0,
-              "Size of LazyScript must be an integral multiple of js::gc::CellSize");
+static_assert(sizeof(LazyScript) % js::gc::CellAlignBytes == 0,
+              "Size of LazyScript must be an integral multiple of js::gc::CellAlignBytes");
 
 struct ScriptAndCounts
 {

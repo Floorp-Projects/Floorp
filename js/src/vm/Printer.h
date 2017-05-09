@@ -47,9 +47,7 @@ class GenericPrinter
     bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
     bool vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
 
-    // Report that a string operation failed to get the memory it requested. The
-    // first call to this function calls JS_ReportOutOfMemory, and sets this
-    // Sprinter's outOfMemory flag; subsequent calls do nothing.
+    // Report that a string operation failed to get the memory it requested.
     virtual void reportOutOfMemory();
 
     // Return true if this Sprinter ran out of memory.
@@ -96,8 +94,10 @@ class Sprinter final : public GenericPrinter
 
     void checkInvariants() const;
 
-    const char* string() const;
-    const char* stringEnd() const;
+    const char* string() const { return base; }
+    const char* stringEnd() const { return base + offset; }
+    char* release();
+
     // Returns the string at offset |off|.
     char* stringAt(ptrdiff_t off) const;
     // Returns the char at offset |off|.
@@ -195,14 +195,6 @@ class LSprinter final : public GenericPrinter
     // return true on success, false on failure.
     virtual bool put(const char* s, size_t len) override;
     using GenericPrinter::put; // pick up |inline bool put(const char* s);|
-
-    // Report that a string operation failed to get the memory it requested. The
-    // first call to this function calls JS_ReportOutOfMemory, and sets this
-    // Sprinter's outOfMemory flag; subsequent calls do nothing.
-    virtual void reportOutOfMemory() override;
-
-    // Return true if this Sprinter ran out of memory.
-    virtual bool hadOutOfMemory() const override;
 };
 
 // Map escaped code to the letter/symbol escaped with a backslash.

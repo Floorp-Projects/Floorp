@@ -103,9 +103,6 @@ public:
   RecvCancelAnimation(const ScrollableLayerGuid& aGuid) override;
 
   mozilla::ipc::IPCResult
-  RecvAdjustScrollForSurfaceShift(const ScreenPoint& aShift) override;
-
-  mozilla::ipc::IPCResult
   RecvSetDPI(const float& aDpiValue) override;
 
   mozilla::ipc::IPCResult

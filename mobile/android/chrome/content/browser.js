@@ -4530,14 +4530,7 @@ Tab.prototype = {
   },
 
   _stripAboutReaderURL: function (originalURI) {
-    try {
-      let strippedURL = ReaderMode.getOriginalUrl(originalURI.spec);
-      if(strippedURL){
-        // Continue to create exposable uri if original uri is stripped.
-        originalURI = URIFixup.createExposableURI(Services.io.newURI(strippedURL));
-      }
-    } catch (ex) { }
-    return originalURI;
+    return ReaderMode.getOriginalUrlObjectForDisplay(originalURI.spec) || originalURI;
   },
 
   // Properties used to cache security state used to update the UI
