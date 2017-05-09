@@ -1183,6 +1183,8 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
   return req.forget();
 }
 
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
+
 void
 Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 {

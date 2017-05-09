@@ -1225,3 +1225,8 @@ tabmodalprompt {
   overflow: hidden;
   text-shadow: none;
 }
+
+.button-highlightable-text:not([highlightable="true"]),
+.button-text[highlightable="true"] {
+  display: none;
+}

@@ -460,7 +460,7 @@ public:
       return false;
     }
 
-    return NS_SUCCEEDED(NS_DispatchToCurrentThread(this));
+    return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(this));
   }
 
 private:

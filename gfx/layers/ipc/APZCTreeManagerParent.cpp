@@ -223,13 +223,6 @@ APZCTreeManagerParent::RecvCancelAnimation(const ScrollableLayerGuid& aGuid)
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerParent::RecvAdjustScrollForSurfaceShift(const ScreenPoint& aShift)
-{
-  mTreeManager->AdjustScrollForSurfaceShift(aShift);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetDPI(const float& aDpiValue)
 {
   mTreeManager->SetDPI(aDpiValue);

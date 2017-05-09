@@ -290,6 +290,10 @@ var gSearchResultsPane = {
         valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
       }
 
+      if (nodeObject.tagName == "button" && (labelResult || valueResult)) {
+        nodeObject.setAttribute("highlightable", "true");
+      }
+
       matchesFound = matchesFound || complexTextNodesResult || labelResult || valueResult;
     }
 

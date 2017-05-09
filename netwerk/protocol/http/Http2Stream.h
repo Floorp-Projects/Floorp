@@ -32,8 +32,10 @@ class Http2Decompressor;
 class Http2Stream
   : public nsAHttpSegmentReader
   , public nsAHttpSegmentWriter
+  , public SupportsWeakPtr<Http2Stream>
 {
 public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Http2Stream)
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 

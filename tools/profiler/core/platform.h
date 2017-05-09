@@ -69,10 +69,6 @@ static inline pid_t gettid()
 #endif
 #endif
 
-#if defined(GP_OS_android) && !defined(MOZ_WIDGET_GONK)
-#define PROFILE_JAVA
-#endif
-
 extern mozilla::LazyLogModule gProfilerLog;
 
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for

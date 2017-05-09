@@ -408,6 +408,8 @@ class TestFormatters(unittest.TestCase):
             self.assertTrue(is_resource(base, 'greprefs.js'))
             self.assertTrue(is_resource(base, 'hyphenation/foo'))
             self.assertTrue(is_resource(base, 'update.locale'))
+            self.assertTrue(
+                is_resource(base, 'jsloader/resource/gre/modules/foo.jsm'))
             self.assertFalse(is_resource(base, 'foo'))
             self.assertFalse(is_resource(base, 'foo/bar/greprefs.js'))
             self.assertTrue(is_resource(base, 'defaults/messenger/foo.dat'))

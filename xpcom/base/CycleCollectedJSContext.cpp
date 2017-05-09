@@ -26,6 +26,7 @@
 #include "jsprf.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
+#include "js/Utility.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -44,6 +45,10 @@
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=353334
 <p id="display">
 <iframe id="one"></iframe>
 <object id="two" data="about:blank"></object>
-<iframe id="three" src="data:text/html,<body>test</body>"></iframe>
-<object id="four" data="data:text/html,<body>test</body>"></object>
+<iframe id="three" srcdoc="<body>test</body>"></iframe>
+<object id="four" data="object_bug353334.html"></object>
 <iframe id="five" src="javascript:parent.x"></iframe>
 <object id="six" data="javascript:x"></object>
 </p>

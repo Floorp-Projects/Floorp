@@ -2827,6 +2827,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
 void
 XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mFlagSynchronous);
 
   if (mSuspendedDoc) {
@@ -2835,7 +2836,7 @@ XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume()
   }
 
   if (mResumeTimeoutRunnable) {
-    NS_DispatchToCurrentThread(mResumeTimeoutRunnable);
+    DispatchToMainThread(mResumeTimeoutRunnable.forget());
     mResumeTimeoutRunnable = nullptr;
   }
 }
@@ -2843,6 +2844,8 @@ XMLHttpRequestMainThread::UnsuppressEventHandlingAndResume()
 nsresult
 XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
   // Step 1
@@ -3026,11 +3029,9 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
     } else {
       // Defer the actual sending of async events just in case listeners
       // are attached after the send() method is called.
-      NS_DispatchToCurrentThread(
-        NewRunnableMethod<ProgressEventType>(this,
-          &XMLHttpRequestMainThread::CloseRequestWithError,
-          ProgressEventType::error));
-      return NS_OK;
+      return DispatchToMainThread(NewRunnableMethod<ProgressEventType>(this,
+                 &XMLHttpRequestMainThread::CloseRequestWithError,
+                 ProgressEventType::error));
     }
   }
 
@@ -3125,6 +3126,19 @@ XMLHttpRequestMainThread::SetTimerEventTarget(nsITimer* aTimer)
     nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(TaskCategory::Other);
     aTimer->SetTarget(target);
   }
+}
+
+nsresult
+XMLHttpRequestMainThread::DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable)
+{
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(TaskCategory::Other);
+    MOZ_ASSERT(target);
+
+    return target->Dispatch(Move(aRunnable), NS_DISPATCH_NORMAL);
+  }
+
+  return NS_DispatchToMainThread(Move(aRunnable));
 }
 
 void

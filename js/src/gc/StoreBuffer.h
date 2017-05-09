@@ -450,7 +450,7 @@ class ArenaCellSet
     ArenaCellSet* next;
 
     // Bit vector for each possible cell start position.
-    BitArray<ArenaCellCount> bits;
+    BitArray<MaxArenaCellIndex> bits;
 
   public:
     explicit ArenaCellSet(Arena* arena);

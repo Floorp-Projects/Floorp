@@ -1517,13 +1517,13 @@ nsCookieService::TryInitDB(bool aRecreateDB)
 
   rv = mDefaultDBState->dbConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_cookies "
-    "WHERE name = :name AND host = :host AND path = :path"),
+    "WHERE name = :name AND host = :host AND path = :path AND originAttributes = :originAttributes"),
     getter_AddRefs(mDefaultDBState->stmtDelete));
   NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   rv = mDefaultDBState->dbConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_cookies SET lastAccessed = :lastAccessed "
-    "WHERE name = :name AND host = :host AND path = :path"),
+    "WHERE name = :name AND host = :host AND path = :path AND originAttributes = :originAttributes"),
     getter_AddRefs(mDefaultDBState->stmtUpdate));
   NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
@@ -5004,6 +5004,12 @@ nsCookieService::RemoveCookieFromList(const nsListIter              &aIter,
                                       aIter.Cookie()->Path());
     NS_ASSERT_SUCCESS(rv);
 
+    nsAutoCString suffix;
+    aIter.Cookie()->OriginAttributesRef().CreateSuffix(suffix);
+    rv = params->BindUTF8StringByName(
+      NS_LITERAL_CSTRING("originAttributes"), suffix);
+    NS_ASSERT_SUCCESS(rv);
+
     rv = paramsArray->AddParams(params);
     NS_ASSERT_SUCCESS(rv);
 
@@ -5181,6 +5187,12 @@ nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
 
     rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
                                       aCookie->Path());
+    NS_ASSERT_SUCCESS(rv);
+
+    nsAutoCString suffix;
+    aCookie->OriginAttributesRef().CreateSuffix(suffix);
+    rv = params->BindUTF8StringByName(
+      NS_LITERAL_CSTRING("originAttributes"), suffix);
     NS_ASSERT_SUCCESS(rv);
 
     // Add our bound parameters to the array.

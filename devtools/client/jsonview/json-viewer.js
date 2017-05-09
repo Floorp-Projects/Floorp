@@ -95,14 +95,6 @@ define(function (require, exports, module) {
   let content = document.getElementById("content");
   let theApp = render(MainTabbedArea(input), content);
 
-  let onResize = event => {
-    window.document.body.style.height = window.innerHeight + "px";
-    window.document.body.style.width = window.innerWidth + "px";
-  };
-
-  window.addEventListener("resize", onResize);
-  onResize();
-
   // Send notification event to the window. Can be useful for
   // tests as well as extensions.
   let event = new CustomEvent("JSONViewInitialized", {});

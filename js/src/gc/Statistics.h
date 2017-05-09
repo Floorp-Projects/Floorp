@@ -20,6 +20,7 @@
 
 #include "js/GCAPI.h"
 #include "js/Vector.h"
+#include "vm/JSONPrinter.h"
 
 using mozilla::Maybe;
 
@@ -251,7 +252,7 @@ struct Statistics
     void reset(gc::AbortReason reason) {
         MOZ_ASSERT(reason != gc::AbortReason::None);
         if (!aborted)
-            slices.back().resetReason = reason;
+            slices_.back().resetReason = reason;
     }
 
     void nonincremental(gc::AbortReason reason) {
@@ -271,7 +272,7 @@ struct Statistics
         counts[s]++;
     }
 
-    uint32_t getCount(Stat s) {
+    uint32_t getCount(Stat s) const {
         return uint32_t(counts[s]);
     }
 
@@ -283,8 +284,7 @@ struct Statistics
 
     UniqueChars formatCompactSliceMessage() const;
     UniqueChars formatCompactSummaryMessage() const;
-    UniqueChars formatJsonMessage(uint64_t timestamp);
-    UniqueChars formatDetailedMessage();
+    UniqueChars formatDetailedMessage() const;
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
     JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
@@ -328,19 +328,35 @@ struct Statistics
     };
 
     typedef Vector<SliceData, 8, SystemAllocPolicy> SliceDataVector;
-    typedef SliceDataVector::ConstRange SliceRange;
 
-    SliceRange sliceRange() const { return slices.all(); }
-    size_t slicesLength() const { return slices.length(); }
+    const SliceDataVector& slices() const { return slices_; }
 
-    /* Occasionally print header lines for profiling information. */
+    TimeStamp start() const {
+        return slices_[0].start;
+    }
+
+    TimeStamp end() const {
+        return slices_.back().end;
+    }
+
+    // Occasionally print header lines for profiling information.
     void maybePrintProfileHeaders();
 
-    /* Print header line for profile times. */
+    // Print header line for profile times.
     void printProfileHeader();
 
-    /* Print total profile times on shutdown. */
+    // Print total profile times on shutdown.
     void printTotalProfileTimes();
+
+    // Return JSON for a whole major GC, optionally including detailed
+    // per-slice data.
+    UniqueChars renderJsonMessage(uint64_t timestamp, bool includeSlices = true) const;
+
+    // Return JSON for the timings of just the given slice.
+    UniqueChars renderJsonSlice(size_t sliceNum) const;
+
+    // Return JSON for the previous nursery collection.
+    UniqueChars renderNurseryJson(JSRuntime* rt) const;
 
   private:
     JSRuntime* runtime;
@@ -354,7 +370,7 @@ struct Statistics
 
     gc::AbortReason nonincrementalReason_;
 
-    SliceDataVector slices;
+    SliceDataVector slices_;
 
     /* Most recent time when the given phase started. */
     EnumeratedArray<Phase, PHASE_LIMIT, TimeStamp> phaseStartTimes;
@@ -376,6 +392,10 @@ struct Statistics
 
     /* Allocated space before the GC started. */
     size_t preBytes;
+
+    /* GC numbers as of the beginning of the collection. */
+    uint64_t startingMinorGCNumber;
+    uint64_t startingMajorGCNumber;
 
     /* Records the maximum GC pause in an API-controlled interval (in us). */
     mutable TimeDuration maxPauseInInterval;
@@ -432,19 +452,20 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void recordPhaseEnd(Phase phase);
 
     void gcDuration(TimeDuration* total, TimeDuration* maxPause) const;
-    void sccDurations(TimeDuration* total, TimeDuration* maxPause);
+    void sccDurations(TimeDuration* total, TimeDuration* maxPause) const;
     void printStats();
 
     UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
 
-    UniqueChars formatDetailedDescription();
-    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes);
-    UniqueChars formatDetailedTotals();
+    UniqueChars formatDetailedDescription() const;
+    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice) const;
+    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
+    UniqueChars formatDetailedTotals() const;
 
-    UniqueChars formatJsonDescription(uint64_t timestamp);
-    UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes);
+    void formatJsonDescription(uint64_t timestamp, JSONPrinter&) const;
+    void formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter&) const;
+    void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter&) const;
+    void formatJsonSlice(size_t sliceNum, JSONPrinter&) const;
 
     double computeMMU(TimeDuration resolution) const;
 

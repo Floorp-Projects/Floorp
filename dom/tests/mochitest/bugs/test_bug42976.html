@@ -12,12 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=42976
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=42976">Mozilla Bug 42976</a>
 <p id="display"></p>
 <div id="content">
-    <iframe id=specialtest src="data:text/html,<meta http-equiv='Content-Language' content='ja-JP'><base href='http://www.mozilla.org'><p>asdf"></iframe>;
-    <iframe id=htmlquirks src="data:text/html;charset=ISO-8859-2,<html><body><div></div></body></html>"></iframe>
-    <iframe id=htmlstd src="data:text/html;charset=ISO-8859-3,<!DOCTYPE html><html><body><div></div></body></html>"></iframe>
-    <iframe id=textplain src="data:text/plain;charset=ISO-8859-4,asdf%0Azxcv%0A"></iframe>
-    <iframe id=xhtmlstd src="data:application/xhtml+xml;charset=ISO-8859-5,<!DOCTYPE html><html xmlns='http://www.w3.org/1999/xhtml'><body><div></div></body></html>"></iframe>
-    <iframe id=xmlstd src="data:image/svg+xml;charset=ISO-8859-6,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width='300' height='300'><text x='60' y='150' fill='blue'>Hello, World!</text><text x='60' y='250' fill='blue'>Hello, World!</text></svg>"></iframe>
+    <iframe id=specialtest srcdoc="<meta http-equiv='Content-Language' content='ja-JP'><base href='http://www.mozilla.org'><p>asdf"></iframe>;
+    <iframe id=htmlquirks srcdoc="<html><meta charset=ISO-8859-2><body><div></div></body></html>"></iframe>
+    <iframe id=htmlstd srcdoc="<!DOCTYPE html><html><meta charset=ISO-8859-3><body><div></div></body></html>"></iframe>
+    <iframe id=textplain srcdoc="<meta charset=ISO-8859-4>asdf%0Azxcv%0A"></iframe>
+    <iframe id=xhtmlstd srcdoc="<!DOCTYPE html><html xmlns='http://www.w3.org/1999/xhtml'><meta charset=ISO-8859-5><body><div></div></body></html>"></iframe>
+    <iframe id=xmlstd srcdoc="<meta charset=ISO-8859-6><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width='300' height='300'><text x='60' y='150' fill='blue'>Hello, World!</text><text x='60' y='250' fill='blue'>Hello, World!</text></svg>"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
