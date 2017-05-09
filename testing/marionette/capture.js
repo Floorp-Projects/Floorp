@@ -122,7 +122,9 @@ capture.canvas = function (win, left, top, width, height,
 
   ctx.scale(scale, scale);
   ctx.drawWindow(win, left, top, width, height, BG_COLOUR, flags);
-  ctx = capture.highlight_(ctx, highlights, top, left);
+  if (highlights.length) {
+    ctx = capture.highlight_(ctx, highlights, top, left);
+  }
 
   return canvas;
 };
