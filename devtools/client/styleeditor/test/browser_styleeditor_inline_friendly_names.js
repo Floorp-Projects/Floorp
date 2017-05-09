@@ -46,17 +46,15 @@ function testIndentifierGeneration(ui) {
 }
 
 function saveFirstInlineStyleSheet(ui) {
-  let deferred = defer();
-  let editor = ui.editors[0];
+  return new Promise(resolve => {
+    let editor = ui.editors[0];
+    let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
 
-  let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
-
-  editor.saveToFile(destFile, function (file) {
-    ok(file, "File was correctly saved.");
-    deferred.resolve();
+    editor.saveToFile(destFile, function (file) {
+      ok(file, "File was correctly saved.");
+      resolve();
+    });
   });
-
-  return deferred.promise;
 }
 
 function testFriendlyNamesAfterSave(ui) {
