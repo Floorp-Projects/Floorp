@@ -24,31 +24,6 @@ var gSync = {
     UIState.ON_UPDATE
   ],
 
-  get panelUIFooter() {
-    delete this.panelUIFooter;
-    return this.panelUIFooter = document.getElementById("PanelUI-footer-fxa");
-  },
-
-  get panelUIStatus() {
-    delete this.panelUIStatus;
-    return this.panelUIStatus = document.getElementById("PanelUI-fxa-status");
-  },
-
-  get panelUIAvatar() {
-    delete this.panelUIAvatar;
-    return this.panelUIAvatar = document.getElementById("PanelUI-fxa-avatar");
-  },
-
-  get panelUILabel() {
-    delete this.panelUILabel;
-    return this.panelUILabel = document.getElementById("PanelUI-fxa-label");
-  },
-
-  get panelUIIcon() {
-    delete this.panelUIIcon;
-    return this.panelUIIcon = document.getElementById("PanelUI-fxa-icon");
-  },
-
   get fxaStrings() {
     delete this.fxaStrings;
     return this.fxaStrings = Services.strings.createBundle(
@@ -74,21 +49,21 @@ var gSync = {
            .sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  init() {
-    // Bail out if we're already initialized or for pop-up windows.
-    if (this._initialized || !window.toolbar.visible) {
-      return;
+  _generateNodeGetters(usePhoton) {
+    let prefix = usePhoton ? "appMenu-" : "PanelUI-";
+    for (let k of ["Status", "Avatar", "Label", "Container"]) {
+      let prop = "appMenu" + k;
+      let suffix = k.toLowerCase();
+      delete this[prop];
+      this.__defineGetter__(prop, function() {
+        delete this[prop];
+        return this[prop] = document.getElementById(prefix + "fxa-" + suffix);
+      });
     }
+  },
 
-    for (let topic of this._obs) {
-      Services.obs.addObserver(this, topic, true);
-    }
-
-    // initial label for the sync buttons.
-    let broadcaster = document.getElementById("sync-status");
-    broadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncnow.label"));
-
-    // Update the UI
+  _maybeUpdateUIState() {
+    // Update the UI.
     if (UIState.isReady()) {
       const state = UIState.get();
       // If we are not configured, the UI is already in the right state when
@@ -99,6 +74,32 @@ var gSync = {
     }
 
     this.maybeMoveSyncedTabsButton();
+  },
+
+  init() {
+    // Bail out if we're already initialized or for pop-up windows.
+    if (this._initialized || !window.toolbar.visible) {
+      return;
+    }
+
+    for (let topic of this._obs) {
+      Services.obs.addObserver(this, topic, true);
+    }
+
+    // Use this getter not because 'lazy' but because of the observer,
+    // which lets us easily update our UI according to the pref flip
+    XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
+      "browser.photon.structure.enabled", (pref, old, newValue) => {
+      this._generateNodeGetters(newValue);
+      this._maybeUpdateUIState();
+    });
+    this._generateNodeGetters(this.gPhotonStructure);
+
+    // initial label for the sync buttons.
+    let broadcaster = document.getElementById("sync-status");
+    broadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncnow.label"));
+
+    this._maybeUpdateUIState();
 
     EnsureFxAccountsWebChannel();
 
@@ -150,16 +151,16 @@ var gSync = {
   },
 
   updatePanelPopup(state) {
-    let defaultLabel = this.panelUIStatus.getAttribute("defaultlabel");
+    let defaultLabel = this.appMenuStatus.getAttribute("defaultlabel");
     // The localization string is for the signed in text, but it's the default text as well
-    let defaultTooltiptext = this.panelUIStatus.getAttribute("signedinTooltiptext");
+    let defaultTooltiptext = this.appMenuStatus.getAttribute("signedinTooltiptext");
 
     const status = state.status;
     // Reset the status bar to its original state.
-    this.panelUILabel.setAttribute("label", defaultLabel);
-    this.panelUIStatus.setAttribute("tooltiptext", defaultTooltiptext);
-    this.panelUIFooter.removeAttribute("fxastatus");
-    this.panelUIAvatar.style.removeProperty("list-style-image");
+    this.appMenuLabel.setAttribute("label", defaultLabel);
+    this.appMenuStatus.setAttribute("tooltiptext", defaultTooltiptext);
+    this.appMenuContainer.removeAttribute("fxastatus");
+    this.appMenuAvatar.style.removeProperty("list-style-image");
 
     if (status == UIState.STATUS_NOT_CONFIGURED) {
       return;
@@ -168,34 +169,34 @@ var gSync = {
     // At this point we consider sync to be configured (but still can be in an error state).
     if (status == UIState.STATUS_LOGIN_FAILED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email], 1);
-      let errorLabel = this.panelUIStatus.getAttribute("errorlabel");
-      this.panelUIFooter.setAttribute("fxastatus", "login-failed");
-      this.panelUILabel.setAttribute("label", errorLabel);
-      this.panelUIStatus.setAttribute("tooltiptext", tooltipDescription);
+      let errorLabel = this.appMenuStatus.getAttribute("errorlabel");
+      this.appMenuContainer.setAttribute("fxastatus", "login-failed");
+      this.appMenuLabel.setAttribute("label", errorLabel);
+      this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName("verifyDescription", [state.email], 1);
-      let unverifiedLabel = this.panelUIStatus.getAttribute("unverifiedlabel");
-      this.panelUIFooter.setAttribute("fxastatus", "unverified");
-      this.panelUILabel.setAttribute("label", unverifiedLabel);
-      this.panelUIStatus.setAttribute("tooltiptext", tooltipDescription);
+      let unverifiedLabel = this.appMenuStatus.getAttribute("unverifiedlabel");
+      this.appMenuContainer.setAttribute("fxastatus", "unverified");
+      this.appMenuLabel.setAttribute("label", unverifiedLabel);
+      this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     }
 
     // At this point we consider sync to be logged-in.
-    this.panelUIFooter.setAttribute("fxastatus", "signedin");
-    this.panelUILabel.setAttribute("label", state.displayName || state.email);
+    this.appMenuContainer.setAttribute("fxastatus", "signedin");
+    this.appMenuLabel.setAttribute("label", state.displayName || state.email);
 
     if (state.avatarURL) {
       let bgImage = "url(\"" + state.avatarURL + "\")";
-      this.panelUIAvatar.style.listStyleImage = bgImage;
+      this.appMenuAvatar.style.listStyleImage = bgImage;
 
       let img = new Image();
       img.onerror = () => {
         // Clear the image if it has trouble loading. Since this callback is asynchronous
         // we check to make sure the image is still the same before we clear it.
-        if (this.panelUIAvatar.style.listStyleImage === bgImage) {
-          this.panelUIAvatar.style.removeProperty("list-style-image");
+        if (this.appMenuAvatar.style.listStyleImage === bgImage) {
+          this.appMenuAvatar.style.removeProperty("list-style-image");
         }
       };
       img.src = state.avatarURL;
@@ -239,12 +240,12 @@ var gSync = {
   },
 
   onMenuPanelCommand() {
-    switch (this.panelUIFooter.getAttribute("fxastatus")) {
+    switch (this.appMenuContainer.getAttribute("fxastatus")) {
     case "signedin":
       this.openPrefs("menupanel", "fxaSignedin");
       break;
     case "error":
-      if (this.panelUIFooter.getAttribute("fxastatus") == "unverified") {
+      if (this.appMenuContainer.getAttribute("fxastatus") == "unverified") {
         this.openPrefs("menupanel", "fxaError");
       } else {
         this.openSignInAgainPage("menupanel");

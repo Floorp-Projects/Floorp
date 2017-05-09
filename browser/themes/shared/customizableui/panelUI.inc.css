@@ -22,6 +22,10 @@
 
 :root {
   --panel-ui-exit-subview-gutter-width: 38px;
+  --appmenu-yellow-warning-border-color: hsl(45, 100%, 77%);
+  --appmenu-yellow-warning-color: #FFEFBF;
+  --appmenu-yellow-warning-hover-color: #FFE8A2;
+  --appmenu-yellow-warning-active-color: #FFE38F;
 }
 
 #PanelUI-popup #PanelUI-contents:empty {
@@ -489,9 +493,9 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .panel-wide-item,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .toolbarbutton-1:not([panel-multiview-anchor="true"]),
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > .panel-banner-item,
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-avatar,
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-label,
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-icon,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-fxa-container > #PanelUI-fxa-status > #PanelUI-fxa-avatar,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-fxa-container > #PanelUI-fxa-status > #PanelUI-fxa-label,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-fxa-container > #PanelUI-fxa-icon,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-footer-inner > toolbarseparator,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-customize,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-help:not([panel-multiview-anchor="true"]) {
@@ -589,17 +593,17 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin: 0;
 }
 
-#main-window[customizing] #PanelUI-footer-fxa {
+#main-window[customizing] #PanelUI-fxa-container {
   display: none;
 }
 
-#PanelUI-footer-fxa:not([fxastatus="signedin"]) > toolbarseparator,
-#PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-icon {
+#PanelUI-fxa-container:not([fxastatus="signedin"]) > toolbarseparator,
+#PanelUI-fxa-container:not([fxastatus="signedin"]) > #PanelUI-fxa-icon {
   display: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status::after,
-#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status::after {
+#PanelUI-fxa-container[fxastatus="login-failed"] > #PanelUI-fxa-status::after,
+#PanelUI-fxa-container[fxastatus="unverified"] > #PanelUI-fxa-status::after {
   content: url(chrome://browser/skin/warning.svg);
   filter: drop-shadow(0 1px 0 hsla(206,50%,10%,.15));
   width: 47px;
@@ -620,9 +624,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 .addon-banner-item {
-  background-color: #FFEFBF;
+  background-color: var(--appmenu-yellow-warning-color);
   /* Force border to override `.addon-banner-item` selector below */
-  border-top: 1px solid hsl(45, 100%, 77%) !important;
+  border-top: 1px solid var(--appmenu-yellow-warning-border-color) !important;
   display: flex;
   flex: 1 1 0%;
   width: calc(@menuPanelWidth@ + 30px);
@@ -631,11 +635,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 .addon-banner-item:hover {
-  background-color: #FFE8A2;
+  background-color: var(--appmenu-yellow-warning-hover-color);
 }
 
 .addon-banner-item:active {
-  background-color: #FFE38F;
+  background-color: var(--appmenu-yellow-warning-active-color);
 }
 
 .addon-banner-item > .toolbarbutton-icon {
@@ -654,18 +658,18 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-inner,
-#PanelUI-footer-fxa:not([hidden]) {
+#PanelUI-fxa-container:not([hidden]) {
   display: flex;
   border-top: 1px solid var(--panel-separator-color);
 }
 
 #PanelUI-multiView[viewtype="subview"] #PanelUI-footer-inner,
-#PanelUI-multiView[viewtype="subview"] #PanelUI-footer-fxa {
+#PanelUI-multiView[viewtype="subview"] #PanelUI-fxa-container {
   position: relative;
 }
 
 #PanelUI-footer-inner > toolbarseparator,
-#PanelUI-footer-fxa > toolbarseparator {
+#PanelUI-fxa-container > toolbarseparator {
   border: 0;
   border-left: 1px solid var(--panel-separator-color);
   margin: 7px 0 7px;
@@ -673,7 +677,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-inner:hover > toolbarseparator,
-#PanelUI-footer-fxa:hover > toolbarseparator {
+#PanelUI-fxa-container:hover > toolbarseparator {
   margin: 0;
 }
 
@@ -710,9 +714,116 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   padding-inline-start: 10px;
 }
 
-
 .panel-banner-item > .toolbarbutton-text {
   width: 0; /* Fancy cropping solution for flexbox. */
+}
+
+/* FxAccount indicator bits. */
+#appMenu-fxa-label,
+#appMenu-fxa-icon {
+  padding: 4px;
+  -moz-appearance: none;
+  box-shadow: none;
+  border-radius: 0;
+  border: 0 none;
+  -moz-box-orient: horizontal;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
+}
+
+#appMenu-fxa-label {
+  -moz-box-flex: 1;
+  padding-inline-start: 12px;
+  margin: 0;
+}
+
+#appMenu-fxa-icon {
+  margin: 0 10px;
+}
+
+#appMenu-fxa-icon > .toolbarbutton-text {
+  display: none;
+}
+
+#appMenu-fxa-icon[syncstatus="active"] {
+  list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
+}
+
+#appMenu-fxa-avatar {
+  pointer-events: none;
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #appMenu-fxa-label,
+  #appMenu-fxa-icon {
+    list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  #appMenu-fxa-icon[syncstatus="active"] {
+    list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
+  }
+}
+
+#appMenu-fxa-container {
+  -moz-box-orient: horizontal;
+}
+
+/* Handle different UI states. */
+#appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-label > .toolbarbutton-icon,
+#appMenu-fxa-container:not([fxastatus="signedin"]) > toolbarseparator,
+#appMenu-fxa-container:not([fxastatus="signedin"]) > #appMenu-fxa-icon,
+#appMenu-fxa-container:not([fxastatus="signedin"]) > #appMenu-fxa-status > #appMenu-fxa-avatar {
+  display: none;
+}
+
+#appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-label {
+  /* 12px space before the avatar, then 16px for the avatar */
+  padding-inline-start: 28px;
+  margin-inline-start: -28px;
+}
+#appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status {
+  margin-inline-end: 10px;
+}
+
+#appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-avatar {
+  margin-inline-start: 12px;
+}
+
+#appMenu-fxa-container[fxastatus="signedin"] > toolbarseparator {
+  -moz-appearance: none;
+  height: 24px;
+  margin: 0;
+  border: 0 none;
+  width: 1px;
+  /* Use background: rather than background-color: to override background-image
+   * styles on OS X */
+  background: var(--arrowpanel-dimmed);
+}
+
+/* Error states */
+#appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status > #appMenu-fxa-label,
+#appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status > #appMenu-fxa-label {
+  list-style-image: url(chrome://browser/skin/warning.svg);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#appMenu-fxa-container[fxastatus="login-failed"],
+#appMenu-fxa-container[fxastatus="unverified"] {
+  background-color: var(--appmenu-yellow-warning-color);
+  border-top: 1px solid var(--appmenu-yellow-warning-border-color);
+  border-bottom: 1px solid var(--appmenu-yellow-warning-border-color);
+}
+
+#appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover,
+#appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover {
+  background-color: var(--appmenu-yellow-warning-hover-color);
+}
+
+#appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover:active,
+#appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover:active {
+  background-color: var(--appmenu-yellow-warning-active-color);
 }
 
 #PanelUI-help,
@@ -757,7 +868,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-inline-start-style: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
+#PanelUI-fxa-container[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
   padding-inline-start: 0px;
 }
 
@@ -919,8 +1030,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#PanelUI-footer-fxa[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label > .toolbarbutton-icon,
-#PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
+#PanelUI-fxa-container[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label > .toolbarbutton-icon,
+#PanelUI-fxa-container:not([fxastatus="signedin"]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   display: none;
 }
 
@@ -938,7 +1049,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin-inline-end: 0;
 }
 
-#PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
+#PanelUI-fxa-container > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
 }
 
@@ -989,19 +1100,19 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   outline: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="login-failed"],
-#PanelUI-footer-fxa[fxastatus="unverified"] {
+#PanelUI-fxa-container[fxastatus="login-failed"],
+#PanelUI-fxa-container[fxastatus="unverified"] {
   background-color: hsl(42,94%,88%);
   border-top: 1px solid hsl(42,94%,70%);
 }
 
-#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status:hover,
-#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status:hover {
+#PanelUI-fxa-container[fxastatus="login-failed"] > #PanelUI-fxa-status:hover,
+#PanelUI-fxa-container[fxastatus="unverified"] > #PanelUI-fxa-status:hover {
   background-color: hsl(42,94%,85%);
 }
 
-#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status:hover:active,
-#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status:hover:active {
+#PanelUI-fxa-container[fxastatus="login-failed"] > #PanelUI-fxa-status:hover:active,
+#PanelUI-fxa-container[fxastatus="unverified"] > #PanelUI-fxa-status:hover:active {
   background-color: hsl(42,94%,82%);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
@@ -1321,6 +1432,10 @@ menuitem.panel-subview-footer@menuStateActive@,
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
+#appMenu-fxa-avatar,
+#appMenu-fxa-label > .toolbarbutton-icon,
+#appMenu-fxa-icon > .toolbarbutton-icon,
+#PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon,
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,
 #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
@@ -1559,11 +1674,6 @@ toolbaritem[overflowedItem=true],
 
 menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
-}
-
-#PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
 }
 
 .panel-mainview[panelid=customizationui-widget-panel],
