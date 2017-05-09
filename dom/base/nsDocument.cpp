@@ -220,6 +220,7 @@
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/TimeoutManager.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -12744,6 +12745,9 @@ MarkDocumentTreeToBeInSyncOperation(nsIDocument* aDoc, void* aData)
     static_cast<nsCOMArray<nsIDocument>*>(aData);
   if (aDoc) {
     aDoc->SetIsInSyncOperation(true);
+    if (nsCOMPtr<nsPIDOMWindowInner> window = aDoc->GetInnerWindow()) {
+      window->TimeoutManager().BeginSyncOperation();
+    }
     documents->AppendObject(aDoc);
     aDoc->EnumerateSubDocuments(MarkDocumentTreeToBeInSyncOperation, aData);
   }
@@ -12767,6 +12771,9 @@ nsAutoSyncOperation::nsAutoSyncOperation(nsIDocument* aDoc)
 nsAutoSyncOperation::~nsAutoSyncOperation()
 {
   for (int32_t i = 0; i < mDocuments.Count(); ++i) {
+    if (nsCOMPtr<nsPIDOMWindowInner> window = mDocuments[i]->GetInnerWindow()) {
+      window->TimeoutManager().EndSyncOperation();
+    }
     mDocuments[i]->SetIsInSyncOperation(false);
   }
   nsContentUtils::SetMicroTaskLevel(mMicroTaskLevel);
