@@ -440,7 +440,7 @@ this.ReaderMode = {
     if (this.parseNodeLimit) {
       let numTags = doc.getElementsByTagName("*").length;
       if (numTags > this.parseNodeLimit) {
-        this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
+        this.log("Aborting parse for " + doc.baseURIObject.spec + "; " + numTags + " elements found");
         histogram.add(PARSE_ERROR_TOO_MANY_ELEMENTS);
         return null;
       }
