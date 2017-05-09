@@ -1208,8 +1208,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 
   public:
     MOZ_MUST_USE bool initMonitoringChain(JSContext* cx, ICStubSpace* space);
-    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
-                                             StackTypeSet* types, HandleValue val);
+    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame, HandleValue val);
 
     inline ICTypeMonitor_Fallback* fallbackMonitorStub() const {
         return fallbackMonitorStub_;
@@ -1469,8 +1468,7 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Create a new monitor stub for the type of the given value, and
     // add it to this chain.
-    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
-                                             StackTypeSet* types, HandleValue val);
+    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame, HandleValue val);
 
     void resetMonitorStubChain(Zone* zone);
 
