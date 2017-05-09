@@ -10683,14 +10683,6 @@
     "n_values": 10,
     "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
   },
-  "WEB_NOTIFICATION_PERMISSION_REMOVED": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1219030],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Number of removed web notifications permissions (0 = remove deny, 1 = remove allow)."
-  },
   "WEB_NOTIFICATION_SENDERS": {
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
