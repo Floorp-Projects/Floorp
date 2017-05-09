@@ -156,39 +156,38 @@ function testState(testCases, index, sourceEditor, popup, panelWindow) {
 }
 
 function checkState(testCases, index, sourceEditor, popup) {
-  let deferred = defer();
-  executeSoon(() => {
-    let [, details] = testCases[index];
-    details = details || {};
-    let {total, current, inserted} = details;
+  return new Promise(resolve => {
+    executeSoon(() => {
+      let [, details] = testCases[index];
+      details = details || {};
+      let {total, current, inserted} = details;
 
-    if (total != undefined) {
-      ok(popup.isOpen, "Popup is open for index " + index);
-      is(total, popup.itemCount,
-         "Correct total suggestions for index " + index);
-      is(current, popup.selectedIndex,
-         "Correct index is selected for index " + index);
-      if (inserted) {
-        let { text } = popup.getItemAtIndex(current);
-        let { line, ch } = sourceEditor.getCursor();
-        let lineText = sourceEditor.getText(line);
-        is(lineText.substring(ch - text.length, ch), text,
-           "Current suggestion from the popup is inserted into the editor.");
+      if (total != undefined) {
+        ok(popup.isOpen, "Popup is open for index " + index);
+        is(total, popup.itemCount,
+           "Correct total suggestions for index " + index);
+        is(current, popup.selectedIndex,
+           "Correct index is selected for index " + index);
+        if (inserted) {
+          let { text } = popup.getItemAtIndex(current);
+          let { line, ch } = sourceEditor.getCursor();
+          let lineText = sourceEditor.getText(line);
+          is(lineText.substring(ch - text.length, ch), text,
+             "Current suggestion from the popup is inserted into the editor.");
+        }
+      } else {
+        ok(!popup.isOpen, "Popup is closed for index " + index);
+        if (inserted) {
+          let { text } = popup.getItemAtIndex(current);
+          let { line, ch } = sourceEditor.getCursor();
+          let lineText = sourceEditor.getText(line);
+          is(lineText.substring(ch - text.length, ch), text,
+             "Current suggestion from the popup is inserted into the editor.");
+        }
       }
-    } else {
-      ok(!popup.isOpen, "Popup is closed for index " + index);
-      if (inserted) {
-        let { text } = popup.getItemAtIndex(current);
-        let { line, ch } = sourceEditor.getCursor();
-        let lineText = sourceEditor.getText(line);
-        is(lineText.substring(ch - text.length, ch), text,
-           "Current suggestion from the popup is inserted into the editor.");
-      }
-    }
-    deferred.resolve();
+      resolve();
+    });
   });
-
-  return deferred.promise;
 }
 
 /**

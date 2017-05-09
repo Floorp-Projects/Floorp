@@ -14,7 +14,6 @@ const Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
 const {console} = require("resource://gre/modules/Console.jsm");
 const Services = require("Services");
@@ -479,15 +478,17 @@ StyleSheetEditor.prototype = {
    *         Promise that will resolve with the editor.
    */
   getSourceEditor: function () {
-    let deferred = defer();
+    let self = this;
 
     if (this.sourceEditor) {
-      return promise.resolve(this);
+      return Promise.resolve(this);
     }
-    this.on("source-editor-load", () => {
-      deferred.resolve(this);
+
+    return new Promise(resolve => {
+      this.on("source-editor-load", () => {
+        resolve(self);
+      });
     });
-    return deferred.promise;
   },
 
   /**

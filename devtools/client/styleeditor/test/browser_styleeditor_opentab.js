@@ -22,20 +22,20 @@ add_task(function* () {
   is(ui._contextMenuStyleSheet.href, url, "Correct URL for sheet");
 
   let originalOpenUILinkIn = ui._window.openUILinkIn;
-  let tabOpenedDefer = defer();
+  let tabOpenedDefer = new Promise(resolve => {
+    ui._window.openUILinkIn = newUrl => {
+      // Reset the actual openUILinkIn function before proceeding.
+      ui._window.openUILinkIn = originalOpenUILinkIn;
 
-  ui._window.openUILinkIn = newUrl => {
-    // Reset the actual openUILinkIn function before proceeding.
-    ui._window.openUILinkIn = originalOpenUILinkIn;
-
-    is(newUrl, url, "The correct tab has been opened");
-    tabOpenedDefer.resolve();
-  };
+      is(newUrl, url, "The correct tab has been opened");
+      resolve();
+    };
+  });
 
   ui._openLinkNewTabItem.click();
 
   info(`Waiting for a tab to open - ${url}`);
-  yield tabOpenedDefer.promise;
+  yield tabOpenedDefer;
 
   yield rightClickInlineStyleSheet(ui, ui.editors[1]);
   is(ui._openLinkNewTabItem.getAttribute("disabled"), "true",
@@ -49,71 +49,65 @@ add_task(function* () {
 });
 
 function onPopupShow(contextMenu) {
-  let deferred = defer();
-  contextMenu.addEventListener("popupshown", function () {
-    deferred.resolve();
-  }, {once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    contextMenu.addEventListener("popupshown", function () {
+      resolve();
+    }, {once: true});
+  });
 }
 
 function onPopupHide(contextMenu) {
-  let deferred = defer();
-  contextMenu.addEventListener("popuphidden", function () {
-    deferred.resolve();
-  }, {once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    contextMenu.addEventListener("popuphidden", function () {
+      resolve();
+    }, {once: true});
+  });
 }
 
 function rightClickStyleSheet(ui, editor) {
-  let deferred = defer();
-
-  onPopupShow(ui._contextMenu).then(()=> {
-    onPopupHide(ui._contextMenu).then(() => {
-      deferred.resolve();
+  return new Promise(resolve => {
+    onPopupShow(ui._contextMenu).then(()=> {
+      onPopupHide(ui._contextMenu).then(() => {
+        resolve();
+      });
+      ui._contextMenu.hidePopup();
     });
-    ui._contextMenu.hidePopup();
+
+    EventUtils.synthesizeMouseAtCenter(
+      editor.summary.querySelector(".stylesheet-name"),
+      {button: 2, type: "contextmenu"},
+      ui._window);
   });
-
-  EventUtils.synthesizeMouseAtCenter(
-    editor.summary.querySelector(".stylesheet-name"),
-    {button: 2, type: "contextmenu"},
-    ui._window);
-
-  return deferred.promise;
 }
 
 function rightClickInlineStyleSheet(ui, editor) {
-  let deferred = defer();
-
-  onPopupShow(ui._contextMenu).then(()=> {
-    onPopupHide(ui._contextMenu).then(() => {
-      deferred.resolve();
+  return new Promise(resolve => {
+    onPopupShow(ui._contextMenu).then(()=> {
+      onPopupHide(ui._contextMenu).then(() => {
+        resolve();
+      });
+      ui._contextMenu.hidePopup();
     });
-    ui._contextMenu.hidePopup();
+
+    EventUtils.synthesizeMouseAtCenter(
+      editor.summary.querySelector(".stylesheet-name"),
+      {button: 2, type: "contextmenu"},
+      ui._window);
   });
-
-  EventUtils.synthesizeMouseAtCenter(
-    editor.summary.querySelector(".stylesheet-name"),
-    {button: 2, type: "contextmenu"},
-    ui._window);
-
-  return deferred.promise;
 }
 
 function rightClickNoStyleSheet(ui) {
-  let deferred = defer();
-
-  onPopupShow(ui._contextMenu).then(()=> {
-    onPopupHide(ui._contextMenu).then(() => {
-      deferred.resolve();
+  return new Promise(resolve => {
+    onPopupShow(ui._contextMenu).then(()=> {
+      onPopupHide(ui._contextMenu).then(() => {
+        resolve();
+      });
+      ui._contextMenu.hidePopup();
     });
-    ui._contextMenu.hidePopup();
+
+    EventUtils.synthesizeMouseAtCenter(
+      ui._panelDoc.querySelector("#splitview-tpl-summary-stylesheet"),
+      {button: 2, type: "contextmenu"},
+      ui._window);
   });
-
-  EventUtils.synthesizeMouseAtCenter(
-    ui._panelDoc.querySelector("#splitview-tpl-summary-stylesheet"),
-    {button: 2, type: "contextmenu"},
-    ui._window);
-
-  return deferred.promise;
 }

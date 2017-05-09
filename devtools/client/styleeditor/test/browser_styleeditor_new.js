@@ -27,37 +27,34 @@ add_task(function* () {
 
 function createNew(ui, panelWindow) {
   info("Creating a new stylesheet now");
-  let deferred = defer();
 
-  ui.once("editor-added", (ev, editor) => {
-    editor.getSourceEditor().then(deferred.resolve);
+  return new Promise(resolve => {
+    ui.once("editor-added", (ev, editor) => {
+      editor.getSourceEditor().then(resolve);
+    });
+
+    waitForFocus(function () {
+      // create a new style sheet
+      let newButton = panelWindow.document
+        .querySelector(".style-editor-newButton");
+      ok(newButton, "'new' button exists");
+
+      EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
+    }, panelWindow);
   });
-
-  waitForFocus(function () {
-    // create a new style sheet
-    let newButton = panelWindow.document
-      .querySelector(".style-editor-newButton");
-    ok(newButton, "'new' button exists");
-
-    EventUtils.synthesizeMouseAtCenter(newButton, {}, panelWindow);
-  }, panelWindow);
-
-  return deferred.promise;
 }
 
 function onPropertyChange(editor) {
-  let deferred = defer();
-
-  editor.styleSheet.on("property-change", function onProp(property) {
-    // wait for text to be entered fully
-    let text = editor.sourceEditor.getText();
-    if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
-      editor.styleSheet.off("property-change", onProp);
-      deferred.resolve();
-    }
+  return new Promise(resolve => {
+    editor.styleSheet.on("property-change", function onProp(property) {
+      // wait for text to be entered fully
+      let text = editor.sourceEditor.getText();
+      if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
+        editor.styleSheet.off("property-change", onProp);
+        resolve();
+      }
+    });
   });
-
-  return deferred.promise;
 }
 
 function* testInitialState(editor) {
@@ -83,18 +80,16 @@ function* testInitialState(editor) {
 }
 
 function typeInEditor(editor, panelWindow) {
-  let deferred = defer();
+  return new Promise(resolve => {
+    waitForFocus(function () {
+      for (let c of TESTCASE_CSS_SOURCE) {
+        EventUtils.synthesizeKey(c, {}, panelWindow);
+      }
+      ok(editor.unsaved, "new editor has unsaved flag");
 
-  waitForFocus(function () {
-    for (let c of TESTCASE_CSS_SOURCE) {
-      EventUtils.synthesizeKey(c, {}, panelWindow);
-    }
-    ok(editor.unsaved, "new editor has unsaved flag");
-
-    deferred.resolve();
-  }, panelWindow);
-
-  return deferred.promise;
+      resolve();
+    }, panelWindow);
+  });
 }
 
 function testUpdated(editor, originalHref) {
