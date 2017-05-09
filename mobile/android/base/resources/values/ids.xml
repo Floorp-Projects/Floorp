@@ -22,5 +22,6 @@
     <item type="id" name="actionbar"/>
     <item type="id" name="action_button"/>
     <item type="id" name="page_progress"/>
+    <item type="id" name="mediaControlNotification"/>
 
 </resources>

@@ -53,15 +53,21 @@ abstract class MediaPlaybackTest extends BaseTest {
                     getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                 StatusBarNotification[] sbns = notificationManager.getActiveNotifications();
                 // Ensure the UI has been changed.
-                if (sbns.length == 1 &&
-                    sbns[0].getNotification().actions.length == 1) {
-                    if (sbns[0].getNotification().actions[0].icon != mPrevIcon) {
-                        mPrevIcon = sbns[0].getNotification().actions[0].icon ;
+                boolean findCorrectNotification = false;
+                for (int idx = 0; idx < sbns.length; idx++) {
+                    if (sbns[idx].getId() != R.id.mediaControlNotification) {
+                       continue;
+                    }
+                    findCorrectNotification = true;
+                    if (sbns[idx].getNotification().actions.length == 1 &&
+                        sbns[idx].getNotification().actions[0].icon != mPrevIcon) {
+                        mPrevIcon = sbns[idx].getNotification().actions[0].icon;
                         return true;
                     }
                 }
+
                 // The notification was cleared.
-                else if (mPrevIcon != 0 && sbns.length == 0) {
+                if (!findCorrectNotification && mPrevIcon != 0) {
                     mPrevIcon = 0;
                     return true;
                 }
@@ -187,8 +193,16 @@ abstract class MediaPlaybackTest extends BaseTest {
             getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
         StatusBarNotification[] sbns = notificationManager.getActiveNotifications();
-        mAsserter.is(sbns.length, 1,
-                     "Should only have one notification in system's status bar.");
+        boolean findCorrectNotification = false;
+        for (int idx = 0; idx < sbns.length; idx++) {
+            if (sbns[idx].getId() == R.id.mediaControlNotification) {
+                findCorrectNotification = true;
+                break;
+            }
+        }
+        mAsserter.ok(findCorrectNotification,
+                     "Showing correct notification in system's status bar.",
+                     "Check system notification");
 
         Notification notification = sbns[0].getNotification();
         mAsserter.is(notification.icon,
@@ -217,8 +231,17 @@ abstract class MediaPlaybackTest extends BaseTest {
         NotificationManager notificationManager = (NotificationManager)
             getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         StatusBarNotification[] sbns = notificationManager.getActiveNotifications();
-        mAsserter.is(sbns.length, 0,
-                     "Should not have notification in system's status bar.");
+
+        boolean findCorrectNotification = false;
+        for (int idx = 0; idx < sbns.length; idx++) {
+            if (sbns[idx].getId() == R.id.mediaControlNotification) {
+                findCorrectNotification = true;
+                break;
+            }
+        }
+        mAsserter.ok(!findCorrectNotification,
+                     "Should not have notification in system's status bar.",
+                     "Check system notification.");
     }
 
     /**
