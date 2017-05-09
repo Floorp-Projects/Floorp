@@ -27,8 +27,6 @@ import nu.validator.htmlparser.annotation.Auto;
 
 public class StateSnapshot<T> implements TreeBuilderState<T> {
 
-    private final TreeBuilder<T> treeBuilder;
-
     private final @Auto StackNode<T>[] stack;
 
     private final @Auto StackNode<T>[] listOfActiveFormattingElements;
@@ -64,11 +62,10 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
      * @param needToDropLF
      * @param quirks
      */
-    StateSnapshot(TreeBuilder<T> treeBuilder, StackNode<T>[] stack,
+    StateSnapshot(StackNode<T>[] stack,
             StackNode<T>[] listOfActiveFormattingElements, int[] templateModeStack, T formPointer,
             T headPointer, T deepTreeSurrogateParent, int mode, int originalMode,
             boolean framesetOk, boolean needToDropLF, boolean quirks) {
-        this.treeBuilder = treeBuilder;
         this.stack = stack;
         this.listOfActiveFormattingElements = listOfActiveFormattingElements;
         this.templateModeStack = templateModeStack;
@@ -196,11 +193,11 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
 
     @SuppressWarnings("unused") private void destructor() {
         for (int i = 0; i < stack.length; i++) {
-            stack[i].release(treeBuilder);
+            stack[i].release();
         }
         for (int i = 0; i < listOfActiveFormattingElements.length; i++) {
             if (listOfActiveFormattingElements[i] != null) {
-                listOfActiveFormattingElements[i].release(treeBuilder);
+                listOfActiveFormattingElements[i].release();                
             }
         }
     }
