@@ -4,7 +4,12 @@
 
 include protocol PBackgroundFileRequest;
 include protocol PBackgroundMutableFile;
-include protocol PBlob;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PIPCBlobInputStream; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+
+include IPCBlob;
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +33,7 @@ struct FileRequestStringData
 
 struct FileRequestBlobData
 {
-  PBlob blob;
+  IPCBlob blob;
 };
 
 union FileRequestData
