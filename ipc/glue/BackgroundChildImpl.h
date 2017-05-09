@@ -82,6 +82,12 @@ protected:
   virtual bool
   DeallocPMemoryStreamChild(PMemoryStreamChild* aActor) override;
 
+  virtual PPendingIPCBlobChild*
+  AllocPPendingIPCBlobChild(const IPCBlob& aBlob) override;
+
+  virtual bool
+  DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor) override;
+
   virtual PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID,
                                 const uint64_t& aSize) override;

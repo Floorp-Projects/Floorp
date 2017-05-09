@@ -30,6 +30,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/MemoryStreamParent.h"
+#include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -281,6 +282,23 @@ BackgroundParentImpl::AllocPMemoryStreamParent(const uint64_t& aSize)
 
 bool
 BackgroundParentImpl::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+PPendingIPCBlobParent*
+BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob)
+{
+  MOZ_CRASH("PPendingIPCBlobParent actors should be manually constructed!");
+}
+
+bool
+BackgroundParentImpl::DeallocPPendingIPCBlobParent(PPendingIPCBlobParent* aActor)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
