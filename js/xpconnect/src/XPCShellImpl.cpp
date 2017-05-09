@@ -13,7 +13,6 @@
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
 #include "nsString.h"
@@ -120,8 +119,6 @@ public:
 };
 #endif
 
-static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
-
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
@@ -151,10 +148,6 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
 #else
     JS::AutoFilename filename;
     if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
-        nsresult rv;
-        nsCOMPtr<nsIXPConnect> xpc =
-            do_GetService(kXPConnectServiceContractID, &rv);
-
 #if defined(XP_WIN)
         // convert from the system codepage to UTF-16
         int bufferSize = MultiByteToWideChar(CP_ACP, 0, filename.get(),
@@ -182,10 +175,8 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
         nsCOMPtr<nsIFile> location;
-        if (NS_SUCCEEDED(rv)) {
-            rv = NS_NewLocalFile(filenameString,
-                                 false, getter_AddRefs(location));
-        }
+        nsresult rv = NS_NewLocalFile(filenameString,
+                                      false, getter_AddRefs(location));
 
         if (!location && gWorkingDirectory) {
             // could be a relative path, try appending it to the cwd
@@ -204,8 +195,10 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
                 !symlink)
                 location->Normalize();
             RootedObject locationObj(cx);
-            rv = xpc->WrapNative(cx, &args.thisv().toObject(), location,
-                                 NS_GET_IID(nsIFile), locationObj.address());
+            rv = nsXPConnect::XPConnect()->WrapNative(cx, &args.thisv().toObject(),
+                                                      location,
+                                                      NS_GET_IID(nsIFile),
+                                                      locationObj.address());
             if (NS_SUCCEEDED(rv) && locationObj) {
                 args.rval().setObject(*locationObj);
             }
@@ -427,9 +420,7 @@ DumpXPC(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if (xpc)
-        xpc->DebugDump(int16_t(depth));
+    nsXPConnect::XPConnect()->DebugDump(int16_t(depth));
     args.rval().setUndefined();
     return true;
 }
@@ -1405,12 +1396,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         argv++;
         ProcessArgsForCompartment(cx, argv, argc);
 
-        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-        if (!xpc) {
-            printf("failed to get nsXPConnect service!\n");
-            return 1;
-        }
-
         nsCOMPtr<nsIPrincipal> systemprincipal;
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
@@ -1454,12 +1439,13 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
         options.behaviors().setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        rv = xpc->InitClassesWithNewWrappedGlobal(cx,
-                                                  static_cast<nsIGlobalObject*>(backstagePass),
-                                                  systemprincipal,
-                                                  0,
-                                                  options,
-                                                  getter_AddRefs(holder));
+        rv = nsXPConnect::XPConnect()->
+            InitClassesWithNewWrappedGlobal(cx,
+                                            static_cast<nsIGlobalObject*>(backstagePass),
+                                            systemprincipal,
+                                            0,
+                                            options,
+                                            getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
 
