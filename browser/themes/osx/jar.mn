@@ -87,8 +87,6 @@ browser.jar:
   skin/classic/browser/places/history@2x.png                (places/history@2x.png)
   skin/classic/browser/places/toolbar.png                   (places/toolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
-  skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
-  skin/classic/browser/places/folderDropArrow@2x.png        (places/folderDropArrow@2x.png)
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/starred48@2x.png              (places/starred48@2x.png)
