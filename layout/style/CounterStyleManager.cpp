@@ -12,7 +12,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Types.h"
 #include "mozilla/WritingModes.h"
-#include "nsCSSRules.h"
+#include "nsCSSCounterStyleRule.h"
 #include "nsString.h"
 #include "nsStyleSet.h"
 #include "nsTArray.h"
