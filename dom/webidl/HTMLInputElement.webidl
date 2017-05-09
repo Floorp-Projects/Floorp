@@ -217,14 +217,7 @@ partial interface HTMLInputElement {
   void chooseDirectory();
 };
 
-[NoInterfaceObject]
-interface MozPhonetic {
-  [Pure, ChromeOnly]
-  readonly attribute DOMString phonetic;
-};
-
 HTMLInputElement implements MozImageLoadingContent;
-HTMLInputElement implements MozPhonetic;
 
 // Webkit/Blink
 partial interface HTMLInputElement {
