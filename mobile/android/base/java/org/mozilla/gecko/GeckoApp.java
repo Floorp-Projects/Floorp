@@ -183,6 +183,10 @@ public abstract class GeckoApp
     // after a version upgrade.
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
+    // Length of time in ms during which crashes are classified as startup crashes
+    // for crash loop detection purposes.
+    private static final int STARTUP_PHASE_DURATION_MS = 30 * 1000;
+
     private static boolean sAlreadyLoaded;
 
     protected boolean mIgnoreLastSelectedTab;
@@ -743,6 +747,14 @@ public abstract class GeckoApp
             }
 
             ((GeckoApplication) getApplicationContext()).onDelayedStartup();
+
+            // Reset the crash loop counter if we remain alive for at least half a minute.
+            ThreadUtils.postDelayedToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    getSharedPreferences().edit().putInt(PREFS_CRASHED_COUNT, 0).apply();
+                }
+            }, STARTUP_PHASE_DURATION_MS);
 
         } else if ("Gecko:Exited".equals(event)) {
             // Gecko thread exited first; let GeckoApp die too.

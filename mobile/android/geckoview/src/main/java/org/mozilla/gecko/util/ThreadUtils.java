@@ -115,6 +115,10 @@ public final class ThreadUtils {
         GeckoBackgroundThread.post(runnable);
     }
 
+    public static void postDelayedToBackgroundThread(Runnable runnable, long timeout) {
+        GeckoBackgroundThread.postDelayed(runnable, timeout);
+    }
+
     public static void assertOnUiThread(final AssertBehavior assertBehavior) {
         assertOnThread(getUiThread(), assertBehavior);
     }
