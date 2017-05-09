@@ -128,7 +128,6 @@ using namespace widget;
 EditorBase::EditorBase()
   : mPlaceHolderName(nullptr)
   , mSelState(nullptr)
-  , mPhonetic(nullptr)
   , mModCount(0)
   , mFlags(0)
   , mUpdateCount(0)
@@ -160,8 +159,6 @@ EditorBase::~EditorBase()
   // If this editor is still hiding the caret, we need to restore it.
   HideCaret(false);
   mTxnMgr = nullptr;
-
-  delete mPhonetic;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(EditorBase)
@@ -201,7 +198,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditorBase)
- NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
  NS_INTERFACE_MAP_ENTRY(nsIEditor)
  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditor)
@@ -2088,9 +2084,6 @@ EditorBase::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
   if (!EnsureComposition(aCompositionEvent)) {
     return NS_OK;
   }
-  if (mPhonetic) {
-    mPhonetic->Truncate(0);
-  }
   return NS_OK;
 }
 
@@ -2124,18 +2117,6 @@ EditorBase::EndIMEComposition()
 
   // notify editor observers of action
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-}
-
-NS_IMETHODIMP
-EditorBase::GetPhonetic(nsAString& aPhonetic)
-{
-  if (mPhonetic) {
-    aPhonetic = *mPhonetic;
-  } else {
-    aPhonetic.Truncate(0);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2522,22 +2503,6 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
       mIMETextNode = &aTextNode;
       mIMETextOffset = aOffset;
     }
-    // Modify mPhonetic with raw text input clauses.
-    const TextRangeArray* ranges = mComposition->GetRanges();
-    for (uint32_t i = 0; i < (ranges ? ranges->Length() : 0); ++i) {
-      const TextRange& textRange = ranges->ElementAt(i);
-      if (!textRange.Length() ||
-          textRange.mRangeType != TextRangeType::eRawClause) {
-        continue;
-      }
-      if (!mPhonetic) {
-        mPhonetic = new nsString();
-      }
-      nsAutoString stringToInsert(aStringToInsert);
-      stringToInsert.Mid(*mPhonetic,
-                         textRange.mStartOffset, textRange.Length());
-    }
-
     transaction = CreateTxnForComposition(aStringToInsert);
     isIMETransaction = true;
     // All characters of the composition string will be replaced with
