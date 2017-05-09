@@ -63,7 +63,7 @@ def Libxul(name):
 
     # This option should go away in bug 1290972, but we need to wait until
     # Rust 1.12 has been released.
-    if CONFIG['MOZ_RUST'] and CONFIG['OS_ARCH'] == 'Darwin':
+    if CONFIG['OS_ARCH'] == 'Darwin':
         LDFLAGS += ['-Wl,-no_compact_unwind']
 
 Libxul('xul')
@@ -351,5 +351,4 @@ USE_LIBS += ['StaticXULComponentsEnd']
 # The above library needs to be last for C++ purposes.  This library,
 # however, is entirely composed of Rust code, and needs to come after
 # all the C++ code so any possible C++ -> Rust calls can be resolved.
-if CONFIG['MOZ_RUST']:
-    USE_LIBS += ['gkrust']
+USE_LIBS += ['gkrust']

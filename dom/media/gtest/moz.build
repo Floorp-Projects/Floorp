@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
     # 'TestMP4Reader.cpp', disabled so we can turn check tests back on (bug 1175752)
+    'TestRust.cpp',
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
     'TestVideoUtils.cpp',
@@ -35,10 +36,6 @@ if CONFIG['MOZ_WEBM_ENCODER']:
         'TestVideoTrackEncoder.cpp',
         'TestWebMWriter.cpp',
     ]
-
-if CONFIG['MOZ_RUST']:
-    UNIFIED_SOURCES += ['TestRust.cpp',]
-
 
 TEST_HARNESS_FILES.gtest += [
     '../test/gizmo-frag.mp4',
