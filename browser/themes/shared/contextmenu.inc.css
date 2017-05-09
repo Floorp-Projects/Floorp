@@ -12,32 +12,32 @@
   width: 16px;
   height: 16px;
   margin: 7px;
-  filter: url(chrome://global/skin/filters.svg#fill);
+  -moz-context-properties: fill;
   fill: currentColor;
 }
 
 #context-back {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#back");
+  list-style-image: url("chrome://browser/skin/back.svg");
 }
 
 #context-forward {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#forward");
+  list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
 #context-reload {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#reload");
+  list-style-image: url("chrome://browser/skin/reload.svg");
 }
 
 #context-stop {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#stop");
+  list-style-image: url("chrome://browser/skin/stop.svg");
 }
 
 #context-bookmarkpage {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmark");
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 
 #context-bookmarkpage[starred=true] {
-  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmarked");
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
 #context-back:-moz-locale-dir(rtl),
