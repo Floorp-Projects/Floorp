@@ -45,7 +45,7 @@ function openEditor(editor) {
 }
 
 function listenForStyleChange(sheet) {
-  let deferred = defer();
-  sheet.on("style-applied", deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    sheet.on("style-applied", resolve);
+  });
 }
