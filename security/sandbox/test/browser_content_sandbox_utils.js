@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);
@@ -10,9 +11,9 @@ const environment = Cc["@mozilla.org/process/environment;1"]
  * Utility functions for the browser content sandbox tests.
  */
 
-function isMac() { return Services.appinfo.OS == "Darwin" }
-function isWin() { return Services.appinfo.OS == "WINNT" }
-function isLinux() { return Services.appinfo.OS == "Linux" }
+function isMac() { return Services.appinfo.OS == "Darwin"; }
+function isWin() { return Services.appinfo.OS == "WINNT"; }
+function isLinux() { return Services.appinfo.OS == "Linux"; }
 
 function isNightly() {
   let version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].
@@ -79,7 +80,7 @@ function GetProfileEntry(name) {
 }
 
 function GetDir(path) {
-  let dir = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsILocalFile);
+  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
   dir.initWithPath(path);
   Assert.ok(dir.isDirectory(), `${path} is a directory`);
   return (dir);
