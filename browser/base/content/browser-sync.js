@@ -241,17 +241,17 @@ var gSync = {
   onMenuPanelCommand() {
     switch (this.panelUIFooter.getAttribute("fxastatus")) {
     case "signedin":
-      this.openPrefs("menupanel");
+      this.openPrefs("menupanel", "fxaSignedin");
       break;
     case "error":
       if (this.panelUIFooter.getAttribute("fxastatus") == "unverified") {
-        this.openPrefs("menupanel");
+        this.openPrefs("menupanel", "fxaError");
       } else {
         this.openSignInAgainPage("menupanel");
       }
       break;
     default:
-      this.openPrefs("menupanel");
+      this.openPrefs("menupanel", "fxa");
       break;
     }
 
@@ -439,8 +439,8 @@ var gSync = {
     Services.obs.notifyObservers(null, "cloudsync:user-sync");
   },
 
-  openPrefs(entryPoint = "syncbutton") {
-    window.openPreferences("paneSync", { urlParams: { entrypoint: entryPoint } });
+  openPrefs(entryPoint = "syncbutton", origin = undefined) {
+    window.openPreferences("paneSync", { origin, urlParams: { entrypoint: entryPoint } });
   },
 
   openSyncedTabsPanel() {

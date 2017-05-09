@@ -715,6 +715,12 @@ function openAboutDialog() {
 }
 
 function openPreferences(paneID, extraArgs) {
+  let histogram = Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA");
+  if (extraArgs && extraArgs.origin) {
+    histogram.add(extraArgs.origin);
+  } else {
+    histogram.add("other");
+  }
   function switchToAdvancedSubPane(doc) {
     if (extraArgs && extraArgs["advancedTab"]) {
       let advancedPaneTabs = doc.getElementById("advancedPrefs");
@@ -780,8 +786,8 @@ function openPreferences(paneID, extraArgs) {
   }
 }
 
-function openAdvancedPreferences(tabID) {
-  openPreferences("paneAdvanced", { "advancedTab": tabID });
+function openAdvancedPreferences(tabID, origin) {
+  openPreferences("paneAdvanced", { "advancedTab": tabID, origin });
 }
 
 /**
