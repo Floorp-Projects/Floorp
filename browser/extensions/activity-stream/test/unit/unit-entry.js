@@ -13,7 +13,8 @@ overrider.set({
     utils: {
       import: overrider.sandbox.spy(),
       importGlobalProperties: overrider.sandbox.spy(),
-      reportError: overrider.sandbox.spy()
+      reportError: overrider.sandbox.spy(),
+      now: () => window.performance.now()
     }
   },
   XPCOMUtils: {
@@ -21,9 +22,14 @@ overrider.set({
     defineLazyServiceGetter: overrider.sandbox.spy(),
     generateQI: overrider.sandbox.stub().returns(() => {})
   },
-  console: {log: overrider.sandbox.spy()},
   dump: overrider.sandbox.spy(),
+  fetch: overrider.sandbox.stub(),
   Services: {
+    locale: {getRequestedLocale: overrider.sandbox.stub()},
+    mm: {
+      addMessageListener: overrider.sandbox.spy((msg, cb) => cb()),
+      removeMessageListener: overrider.sandbox.spy()
+    },
     obs: {
       addObserver: overrider.sandbox.spy(),
       removeObserver: overrider.sandbox.spy()
