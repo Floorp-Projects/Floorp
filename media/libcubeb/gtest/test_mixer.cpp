@@ -8,6 +8,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb_mixer.h"
 #include "common.h"
+#include <memory>
 #include <vector>
 
 using std::vector;
@@ -133,7 +134,11 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     }
   }
 
-  cubeb_downmix_float(in.data(), inframes, out.data(), in_params.channels, out_params.channels, in_params.layout, out_params.layout);
+  // Create a mixer for downmix only.
+  std::unique_ptr<cubeb_mixer, decltype(&cubeb_mixer_destroy)>
+    mixer(cubeb_mixer_create(in_params.format, CUBEB_MIXER_DIRECTION_DOWNMIX), cubeb_mixer_destroy);
+
+  cubeb_mixer_mix(mixer.get(), in.data(), inframes, out.data(), &in_params, &out_params);
 
   uint32_t in_layout_mask = 0;
   for (unsigned int i = 0 ; i < in_params.channels; ++i) {
