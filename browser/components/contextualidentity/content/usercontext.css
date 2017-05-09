@@ -72,10 +72,43 @@
   -moz-box-align: center;
 }
 
-.tabbrowser-tab[usercontextid] {
-  background-image: linear-gradient(to right, transparent 20%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 80%);
-  background-size: auto 2px;
-  background-repeat: no-repeat;
+/* Special styles run through a pseudo-class off of these elements so they need
+   to be relatively positioned.
+   These styles address both regular and compact themes, special cases are
+   addressed below. */
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-background-middle {
+  position: relative;
+}
+
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-background-middle::after,
+.tabbrowser-tab[usercontextid]:-moz-lwtheme > .tab-stack > .tab-content::after {
+  background-color: var(--identity-tab-color);
+  bottom: 0;
+  content: '';
+  height: 2px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+}
+
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-background-middle::after {
+  background-color: var(--identity-tab-color);
+  border-radius: 2px 2px 0 0;
+  bottom: 1px;
+  height: 3px;
+}
+
+.tabbrowser-tab[usercontextid]:not([visuallyselected="true"]) > .tab-stack > .tab-background > .tab-background-middle::after {
+  bottom: 2px;
+  height: 2px;
+}
+
+/* Width of normal pinned middle is 4px so the element becomes 16px.
+   Changing the position to -150% makes the larger middle element centered below the favicon. */
+.tabbrowser-tab[usercontextid][pinned="true"] > .tab-stack > .tab-background > .tab-background-middle::after {
+  left: -150%;
+  width: 400%;
 }
 
 .userContext-icon,
