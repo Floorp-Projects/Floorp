@@ -15,13 +15,13 @@
     "unpack": true
   },
   {
-    "version": "sccache rev 7a3847276d05deb564cb84a16b8c551b690aaa3e",
+    "version": "sccache rev d3aa1116844b50c03015266d2f48235509fa7deb",
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "sccache2.tar.bz2",
     "unpack": true,
-    "digest": "09c6b9407978a4ffa0638b412cde9517ebbdb9c8e8449f4dc6745f4da5c8025e29b4c99dfa1ddb84623d0dde8a3aac513f73e92fdb3a148e4c9a4e7931907964",
-    "size": 1628305
+    "digest": "6c6727b239318187acf7d8bf4ceb7f669a7a680c1cb2bc3ceac8b198cdb562f91e3d046efe3c867c1e7d4c61af8d094c3da3b90ea77034d54677fd0ae44eacce",
+    "size": 1638872
   },
   {
     "version": "Visual Studio 2015 Update 3 14.0.25425.01 / SDK 10.0.14393.0",
