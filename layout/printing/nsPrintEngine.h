@@ -265,13 +265,19 @@ protected:
   nsWeakPtr               mContainer;
   float                   mScreenDPI;
 
-  mozilla::UniquePtr<nsPrintData> mPrt;
+  // We are the primary owner of our nsPrintData member vars.  These vars
+  // are refcounted so that functions (e.g. nsPrintData methods) can create
+  // temporary owning references when they need to fire a callback that
+  // could conceivably destroy this nsPrintEngine owner object and all its
+  // member-data.
+  RefPtr<nsPrintData> mPrt;
+
   nsPagePrintTimer*       mPagePrintTimer;
   WeakFrame               mPageSeqFrame;
 
   // Print Preview
-  mozilla::UniquePtr<nsPrintData> mPrtPreview;
-  mozilla::UniquePtr<nsPrintData> mOldPrtPreview;
+  RefPtr<nsPrintData> mPrtPreview;
+  RefPtr<nsPrintData> mOldPrtPreview;
 
   nsCOMPtr<nsIDocument>   mDocument;
 
