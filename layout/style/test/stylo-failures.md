@@ -81,7 +81,6 @@ to mochitest command.
   * test_counter_descriptor_storage.html [1]
   * test_counter_style.html [5]
   * test_rule_insertion.html `@counter-style` and bug 1361994 (CSSOM support for @-moz-document) [22]
-  * ... `cjk-decimal` [1]
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
@@ -220,7 +219,7 @@ to mochitest command.
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * insertRule / deleteRule don't work bug 1336863 and bug 1361994 (CSSOM support for @-moz-document)
-  * test_rule_insertion.html [71]
+  * test_rule_insertion.html [94]
 * CSSOM support for @-moz-document bug 1361994
   * test_rule_serialization.html [1]
   * test_condition_text.html: also \@supports [1]
