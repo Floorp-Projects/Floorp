@@ -116,9 +116,9 @@
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
   box-shadow: none;
-  border: 1px solid -moz-dialog;
+  border: 2px solid -moz-dialog;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -9px 0 0 !important;
+  margin: -8px 0 0 !important;
   margin-inline-end: -6px !important;
   min-width: 16px;
   min-height: 16px;
@@ -1850,6 +1850,14 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-panic-actionlist-newwindow {
     background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 128, 32, 96);
+  }
+
+  #PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+  #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+  #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+    border: 1px solid -moz-dialog;
+    /* "!important" is necessary to override the rule in toolbarbutton.css */
+    margin: -9px 0 0 !important;
   }
 }
 
