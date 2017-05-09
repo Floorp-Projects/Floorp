@@ -3313,6 +3313,22 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::
 }
 
 void
+js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
+                      TypeSet::Type type)
+{
+    assertSameCompartment(cx, script, type);
+
+    AutoEnterAnalysis enter(cx);
+
+    MOZ_ASSERT(types == TypeScript::BytecodeTypes(script, pc));
+    MOZ_ASSERT(!types->hasType(type));
+
+    InferSpew(ISpewOps, "bytecodeType: %p %05" PRIuSIZE ": %s",
+              script, script->pcToOffset(pc), TypeSet::TypeString(type));
+    types->addType(cx, type);
+}
+
+void
 js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, const js::Value& rval)
 {
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
