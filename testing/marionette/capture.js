@@ -92,13 +92,17 @@ capture.viewport = function (win, highlights = []) {
  *     highlight them in the screenshot.
  * @param {HTMLCanvasElement=} canvas
  *     Optional canvas to reuse for the screenshot.
+ * @param {number=} flags
+ *     Optional integer representing flags to pass to drawWindow; these
+ *     are defined on CanvasRenderingContext2D.
  *
  * @return {HTMLCanvasElement}
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
-capture.canvas = function (win, left, top, width, height, {highlights = [], canvas = null} = {}) {
-  let scale = win.devicePixelRatio;
+capture.canvas = function (win, left, top, width, height,
+    {highlights = [], canvas = null, flags = null} = {}) {
+    let scale = win.devicePixelRatio;
 
   if (canvas === null) {
     canvas = win.document.createElementNS(XHTML_NS, "canvas");
@@ -107,12 +111,14 @@ capture.canvas = function (win, left, top, width, height, {highlights = [], canv
   }
 
   let ctx = canvas.getContext(CONTEXT_2D);
-  let flags = ctx.DRAWWINDOW_DRAW_CARET;
-      // Disabled in bug 1243415 for webplatform-test failures due to out of view elements.
-      // Needs https://github.com/w3c/web-platform-tests/issues/4383 fixed.
-      // ctx.DRAWWINDOW_DRAW_VIEW;
-      // Bug 1009762 - Crash in [@ mozilla::gl::ReadPixelsIntoDataSurface]
-      // ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+  if (flags === null) {
+    flags = ctx.DRAWWINDOW_DRAW_CARET;
+    // Disabled in bug 1243415 for webplatform-test failures due to out of view elements.
+    // Needs https://github.com/w3c/web-platform-tests/issues/4383 fixed.
+    // ctx.DRAWWINDOW_DRAW_VIEW;
+    // Bug 1009762 - Crash in [@ mozilla::gl::ReadPixelsIntoDataSurface]
+    // ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+   }
 
   ctx.scale(scale, scale);
   ctx.drawWindow(win, left, top, width, height, BG_COLOUR, flags);
