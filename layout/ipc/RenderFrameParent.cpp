@@ -146,7 +146,6 @@ void
 RenderFrameParent::Destroy()
 {
   mFrameLoaderDestroyed = true;
-  mLayerManager = nullptr;
 }
 
 already_AddRefed<Layer>
@@ -207,35 +206,18 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-LayerManager*
-RenderFrameParent::AttachLayerManager()
-{
-  RefPtr<LayerManager> lm;
-
-  if (mFrameLoader) {
-    nsIContent* content = mFrameLoader->GetOwnerContent();
-    if (content) {
-      lm = nsContentUtils::LayerManagerForContent(content);
-    }
-  }
-
-  // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->GetCompositorBridgeChild() && lm != mLayerManager) {
-    mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
-    FrameLayerBuilder::InvalidateAllLayers(lm);
-  }
-
-  mLayerManager = lm.forget();
-  return mLayerManager;
-}
-
 void
 RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 {
   MOZ_ASSERT(!mFrameLoader || mFrameLoader->GetOwnerContent() == aContent,
              "Don't build new map if owner is same!");
 
-  Unused << AttachLayerManager();
+  RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
+  // Perhaps the document containing this frame currently has no presentation?
+  if (lm && lm->GetCompositorBridgeChild()) {
+    mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    FrameLayerBuilder::InvalidateAllLayers(lm);
+  }
 }
 
 void
@@ -250,7 +232,6 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
   }
 
   mFrameLoader = nullptr;
-  mLayerManager = nullptr;
 }
 
 mozilla::ipc::IPCResult
