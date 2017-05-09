@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
+  <style>
+    path {
+      fill-rule: evenodd;
+      fill:#4d4d4d;
+    }
+  </style>
+  <path d="M382,20.007A1,1,0,0,1,383,19h14a1,1,0,0,1,1,1.007V31.993A1,1,0,0,1,397,33H383a1,1,0,0,1-1-1.007V20.007ZM384,23h12v8H384V23Zm0.5-3a0.5,0.5,0,1,1-.5.5A0.5,0.5,0,0,1,384.5,20Zm2,0a0.5,0.5,0,1,1-.5.5A0.5,0.5,0,0,1,386.5,20Zm2,0a0.5,0.5,0,1,1-.5.5A0.5,0.5,0,0,1,388.5,20Z" transform="translate(-382 -18)"/>
+</svg>
