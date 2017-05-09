@@ -13072,5 +13072,15 @@
     "n_buckets": 100,
     "bug_numbers": [1345540],
     "description": "Time (ms) for the APZ handled wheel event spent in handlers."
+  },
+  "TIME_BETWEEN_UNLABELED_RUNNABLES_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 30,
+    "bug_numbers": [1351021],
+    "description": "Every time we run an unlabeled runnable, this histogram records the time (in ms) since the last unlabeled runnable ran."
   }
 }
