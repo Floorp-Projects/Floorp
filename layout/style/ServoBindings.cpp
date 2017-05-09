@@ -1896,6 +1896,14 @@ Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed aCSSValue, int32_t aIndex)
   return &aCSSValue->GetArrayValue()->Item(aIndex);
 }
 
+void
+Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut aCSSValue,
+                       nsCSSValueBorrowed aXValue, nsCSSValueBorrowed aYValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  aCSSValue->SetPairValue(*aXValue, *aYValue);
+}
+
 
 bool
 Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id)
