@@ -2550,10 +2550,10 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
     *countRead += earlyDataUsed;
   }
 
-  if (mAttemptingEarlyData && !m0RTTStreams.Contains(stream->StreamID())) {
+  if (mAttemptingEarlyData && !m0RTTStreams.Contains(stream)) {
     LOG3(("Http2Session::ReadSegmentsAgain adding stream %d to m0RTTStreams\n",
           stream->StreamID()));
-    m0RTTStreams.AppendElement(stream->StreamID());
+    m0RTTStreams.AppendElement(stream);
   }
 
   // Not every permutation of stream->ReadSegents produces data (and therefore
@@ -3121,9 +3121,8 @@ Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged)
         aRestart, aAlpnChanged));
 
   for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
-    Http2Stream *stream = mStreamIDHash.Get(m0RTTStreams[i]);
-    if (stream) {
-      stream->Finish0RTT(aRestart, aAlpnChanged);
+    if (m0RTTStreams[i]) {
+      m0RTTStreams[i]->Finish0RTT(aRestart, aAlpnChanged);
     }
   }
 
@@ -3166,9 +3165,8 @@ Http2Session::SetFastOpenStatus(uint8_t aStatus)
         aStatus, this));
 
   for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
-    Http2Stream *stream = mStreamIDHash.Get(m0RTTStreams[i]);
-    if (stream) {
-      stream->Transaction()->SetFastOpenStatus(aStatus);
+    if (m0RTTStreams[i]) {
+      m0RTTStreams[i]->Transaction()->SetFastOpenStatus(aStatus);
     }
   }
 }
