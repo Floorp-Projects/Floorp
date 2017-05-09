@@ -238,7 +238,7 @@ pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", false);
 #else
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
 #endif
-pref("browser.shell.skipDefaultBrowserCheck", true);
+pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", false);
 pref("browser.shell.defaultBrowserCheckCount", 0);
 pref("browser.defaultbrowser.notificationbar", false);
 
