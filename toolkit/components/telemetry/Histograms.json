@@ -6007,16 +6007,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible. This probe is similar to FX_TAB_SWITCH_SPINNER_VISIBLE_MS, but is for truly degenerate cases."
   },
-  "FX_TAB_SWITCH_SPINNER_TYPE": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "60",
-    "kind": "categorical",
-    "bug_numbers": [1301104],
-    "alert_emails": ["mconley@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "Firefox: If the spinner interstitial displays during tab switching, record if the tab being switched to has been seen (content was visible) before. If not, record if the tab is 'old' (> 1000ms since creation) or 'new'.",
-    "labels": ["seen", "unseenOld", "unseenNew"]
-  },
   "FX_TAB_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
