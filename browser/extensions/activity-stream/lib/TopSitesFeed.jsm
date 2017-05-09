@@ -58,6 +58,10 @@ this.TopSitesFeed = class TopSitesFeed {
       this.getScreenshot(link.url);
     }
   }
+  openNewWindow(action, isPrivate = false) {
+    const win = action._target.browser.ownerGlobal;
+    win.openLinkIn(action.data.url, "window", {private: isPrivate});
+  }
   onAction(action) {
     let realRows;
     switch (action.type) {
@@ -73,6 +77,13 @@ this.TopSitesFeed = class TopSitesFeed {
           this.refresh(action);
         }
         break;
+      case at.OPEN_NEW_WINDOW:
+        this.openNewWindow(action);
+        break;
+      case at.OPEN_PRIVATE_WINDOW: {
+        this.openNewWindow(action, true);
+        break;
+      }
     }
   }
 };
