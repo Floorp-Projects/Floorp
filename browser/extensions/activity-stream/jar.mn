@@ -9,6 +9,7 @@
   content/vendor/Redux.jsm (./vendor/Redux.jsm)
   content/vendor/react.js (./vendor/react.js)
   content/vendor/react-dom.js (./vendor/react-dom.js)
+  content/vendor/react-intl.js (./vendor/react-intl.js)
   content/vendor/redux.js (./vendor/redux.js)
   content/vendor/react-redux.js (./vendor/react-redux.js)
   content/data/ (./data/*)
