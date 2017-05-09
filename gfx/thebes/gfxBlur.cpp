@@ -75,7 +75,12 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
   // Check if the backend has an accelerated DrawSurfaceWithShadow.
   // Currently, only D2D1.1 supports this.
   // Otherwise, DrawSurfaceWithShadow only supports square blurs without spread.
+  // When blurring small draw targets such as short spans text, the cost of
+  // creating and flushing an accelerated draw target may exceed the speedup
+  // gained from the faster blur, so we also make sure the blurred data exceeds
+  // a sufficient number of pixels to offset this cost.
   if (aBlurRadius.IsSquare() && aSpreadRadius.IsEmpty() &&
+      blurDataSize >= 8192 &&
       backend == BackendType::DIRECT2D1_1) {
     mAccelerated = true;
     mDrawTarget =
