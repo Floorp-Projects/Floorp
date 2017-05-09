@@ -175,6 +175,9 @@
   skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
+#ifndef XP_LINUX
+  skin/classic/browser/places/arrow-down.svg                   (../shared/places/arrow-down.svg)
+#endif
   skin/classic/browser/places/bookmarks-notification-finish.png (../shared/places/bookmarks-notification-finish.png)
   skin/classic/browser/places/bookmarks-notification-finish@2x.png (../shared/places/bookmarks-notification-finish@2x.png)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)
