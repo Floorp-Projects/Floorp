@@ -11,6 +11,7 @@
 
 #include "GeckoProfiler.h"
 
+#include "js/Utility.h"
 #include "gfxASurface.h"
 
 namespace mozilla {
@@ -234,5 +235,66 @@ private:
   uint64_t mGpuTimeStart;
   uint64_t mGpuTimeEnd;
 };
+
+class GCSliceMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  GCSliceMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                       const mozilla::TimeStamp& aEndTime,
+                       JS::UniqueChars&& aTimingJSON)
+   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
+     mTimingJSON(mozilla::Move(aTimingJSON))
+  {}
+
+  virtual ~GCSliceMarkerPayload() {}
+
+  void StreamPayload(SpliceableJSONWriter& aWriter,
+                     const mozilla::TimeStamp& aStartTime,
+                     UniqueStacks& aUniqueStacks) override;
+
+private:
+  JS::UniqueChars mTimingJSON;
+};
+
+class GCMajorMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  GCMajorMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                       const mozilla::TimeStamp& aEndTime,
+                       JS::UniqueChars&& aTimingJSON)
+   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
+     mTimingJSON(mozilla::Move(aTimingJSON))
+  {}
+
+  virtual ~GCMajorMarkerPayload() {}
+
+  void StreamPayload(SpliceableJSONWriter& aWriter,
+                     const mozilla::TimeStamp& aStartTime,
+                     UniqueStacks& aUniqueStacks) override;
+
+private:
+  JS::UniqueChars mTimingJSON;
+};
+
+class GCMinorMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  GCMinorMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                       const mozilla::TimeStamp& aEndTime,
+                       JS::UniqueChars&& aTimingData)
+   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
+     mTimingData(mozilla::Move(aTimingData))
+  {}
+
+  virtual ~GCMinorMarkerPayload() {};
+
+  void StreamPayload(SpliceableJSONWriter& aWriter,
+                     const mozilla::TimeStamp& aStartTime,
+                     UniqueStacks& aUniqueStacks) override;
+
+private:
+  JS::UniqueChars mTimingData;
+};
+
 
 #endif // PROFILER_MARKERS_H

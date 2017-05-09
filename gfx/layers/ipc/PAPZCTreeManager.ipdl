@@ -68,8 +68,6 @@ parent:
 
   async CancelAnimation(ScrollableLayerGuid aGuid);
 
-  async AdjustScrollForSurfaceShift(ScreenPoint aShift);
-
   async SetDPI(float aDpiValue);
 
   async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aValues);

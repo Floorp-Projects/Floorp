@@ -1463,20 +1463,6 @@ private:
   void UpdatePossiblyStaleDocumentState();
   static bool CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
 
-  /**
-   * Check if the passed custom element name, aOptions.mIs, is a registered
-   * custom element type or not, then return the custom element name for future
-   * usage.
-   *
-   * If there is no existing custom element definition for this name, throw a
-   * NotFoundError.
-   */
-  const nsString* CheckCustomElementName(
-    const mozilla::dom::ElementCreationOptions& aOptions,
-    const nsAString& aLocalName,
-    uint32_t aNamespaceID,
-    ErrorResult& rv);
-
 public:
   virtual already_AddRefed<mozilla::dom::CustomElementRegistry>
     GetCustomElementRegistry() override;

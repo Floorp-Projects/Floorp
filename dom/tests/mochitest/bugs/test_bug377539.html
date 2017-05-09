@@ -23,7 +23,7 @@ var sw;
 var child_sw = -1;
 
 function test(){
-        var t = '<div style="display: none;"><iframe onload="doChecks()" src="data:text/html,<body><scr'+'ipt>try {parent.child_sw=screen.width}catch(e){}</scr'+'ipt>"></iframe></div>';
+        var t = '<div style="display: none;"><iframe onload="doChecks()" srcdoc="<body><scr'+'ipt>try {parent.child_sw=screen.width}catch(e){}</scr'+'ipt>"></iframe></div>';
         var div = document.createElement('div');
         div.innerHTML = t;
         document.getElementsByTagName('body')[0].appendChild(div);

@@ -6,6 +6,10 @@
 /******************************************************************************/
 /* General */
 
+html, body, #content {
+  height: 100%;
+}
+
 body {
   color: var(--theme-body-color);
   background-color: var(--theme-body-background);
@@ -16,10 +20,6 @@ body {
 
 *:focus {
   outline: none !important;
-}
-
-#content {
-  height: 100%;
 }
 
 pre {

@@ -1046,6 +1046,15 @@ nsSocketTransport::SendStatus(nsresult status)
         switch (status) {
         case NS_NET_STATUS_SENDING_TO:
             progress = mOutput.ByteCount();
+            // If Fast Open is used, we buffer some data in TCPFastOpenLayer,
+            // This data can  be only tls data or application data as well.
+            // socketTransport should send status only if it really has sent
+            // application data. socketTransport cannot query transaction for
+            // that info but it can know if transaction has send data if 
+            // mOutput.ByteCount() is > 0.
+            if (progress == 0) {
+                return;
+            }
             break;
         case NS_NET_STATUS_RECEIVING_FROM:
             progress = mInput.ByteCount();
@@ -1714,7 +1723,8 @@ nsSocketTransport::RecoverFromError()
     bool tryAgain = false;
     if (mFDFastOpenInProgress &&
         ((mCondition == NS_ERROR_CONNECTION_REFUSED) ||
-         (mCondition == NS_ERROR_NET_TIMEOUT))) {
+         (mCondition == NS_ERROR_NET_TIMEOUT) ||
+         (mCondition == NS_ERROR_PROXY_CONNECTION_REFUSED))) {
         // TCP Fast Open can be blocked by middle boxes so we will retry
         // without it.
         tryAgain = true;

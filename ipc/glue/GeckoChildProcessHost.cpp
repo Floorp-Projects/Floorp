@@ -746,6 +746,11 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (mProcessType == GeckoProcessType_Content) {
     // disable IM module to avoid sandbox violation
     newEnvVars["GTK_IM_MODULE"] = "gtk-im-context-simple";
+
+    // Disable ATK accessibility code in content processes because it conflicts
+    // with the sandbox, and we proxy that information through the main process
+    // anyway.
+    newEnvVars["NO_AT_BRIDGE"] = "1";
   }
 #endif
 

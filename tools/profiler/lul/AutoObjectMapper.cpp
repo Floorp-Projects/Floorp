@@ -16,7 +16,7 @@
 #include "PlatformMacros.h"
 #include "AutoObjectMapper.h"
 
-#if defined(USE_FAULTY_LIB)
+#if defined(GP_OS_android)
 # include <dlfcn.h>
 # include "mozilla/Types.h"
   // FIXME move these out of mozglue/linker/ElfLoader.h into their
@@ -108,7 +108,7 @@ bool AutoObjectMapperPOSIX::Map(/*OUT*/void** start, /*OUT*/size_t* length,
 }
 
 
-#if defined(USE_FAULTY_LIB)
+#if defined(GP_OS_android)
 // A helper function for AutoObjectMapperFaultyLib::Map.  Finds out
 // where the installation's lib directory is, since we'll have to look
 // in there to get hold of libmozglue.so.  Returned C string is heap
@@ -204,4 +204,4 @@ bool AutoObjectMapperFaultyLib::Map(/*OUT*/void** start, /*OUT*/size_t* length,
   }
 }
 
-#endif // defined(USE_FAULTY_LIB)
+#endif // defined(GP_OS_android)

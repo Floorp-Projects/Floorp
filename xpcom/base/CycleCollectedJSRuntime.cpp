@@ -828,6 +828,22 @@ CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
 
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    if (aProgress == JS::GC_CYCLE_END) {
+      auto payload = new GCSliceMarkerPayload(aDesc.lastSliceStart(aContext),
+                                              aDesc.lastSliceEnd(aContext),
+                                              aDesc.sliceToJSON(aContext));
+      PROFILER_MARKER_PAYLOAD("GCSlice", payload);
+    } else if (aProgress == JS::GC_SLICE_END) {
+      auto payload = new GCMajorMarkerPayload(aDesc.startTime(aContext),
+                                              aDesc.endTime(aContext),
+                                              aDesc.summaryToJSON(aContext));
+      PROFILER_MARKER_PAYLOAD("GCMajor", payload);
+    }
+  }
+#endif
+
   if (aProgress == JS::GC_CYCLE_END) {
     JS::gcreason::Reason reason = aDesc.reason_;
     Unused <<
@@ -905,6 +921,20 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
       MakeUnique<MinorGCMarker>(aProgress, aReason));
     timelines->AddMarkerForAllObservedDocShells(abstractMarker);
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
+    self->mLatestNurseryCollectionStart = TimeStamp::Now();
+  } else if ((aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) &&
+             profiler_is_active())
+  {
+    PROFILER_MARKER_PAYLOAD(
+      "GCMinor",
+      new GCMinorMarkerPayload(self->mLatestNurseryCollectionStart,
+                               TimeStamp::Now(),
+                               JS::MinorGcToJSON(aContext)));
+  }
+#endif
 
   if (self->mPrevGCNurseryCollectionCallback) {
     self->mPrevGCNurseryCollectionCallback(aContext, aProgress, aReason);

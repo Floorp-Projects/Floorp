@@ -167,15 +167,24 @@ IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
 mozilla::ipc::IPCResult
 IPCBlobInputStreamChild::RecvStreamReady(const OptionalIPCStream& aStream)
 {
-  MOZ_ASSERT(!mPendingOperations.IsEmpty());
-
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
 
-  RefPtr<StreamReadyRunnable> runnable =
-    new StreamReadyRunnable(mPendingOperations[0].mStream, stream);
-  mPendingOperations[0].mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  RefPtr<IPCBlobInputStream> pendingStream;
+  nsCOMPtr<nsIEventTarget> eventTarget;
 
-  mPendingOperations.RemoveElementAt(0);
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mPendingOperations.IsEmpty());
+
+    pendingStream = mPendingOperations[0].mStream;
+    eventTarget = mPendingOperations[0].mEventTarget;
+
+    mPendingOperations.RemoveElementAt(0);
+  }
+
+  RefPtr<StreamReadyRunnable> runnable =
+    new StreamReadyRunnable(pendingStream, stream);
+  eventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
   return IPC_OK();
 }

@@ -157,14 +157,6 @@ public:
    */
   virtual void CancelAnimation(const ScrollableLayerGuid &aGuid) = 0;
 
-  /**
-   * Adjusts the root APZC to compensate for a shift in the surface. See the
-   * documentation on AsyncPanZoomController::AdjustScrollForSurfaceShift for
-   * some more details. This is only currently needed due to surface shifts
-   * caused by the dynamic toolbar on Android.
-   */
-  virtual void AdjustScrollForSurfaceShift(const ScreenPoint& aShift) = 0;
-
   virtual void SetDPI(float aDpiValue) = 0;
 
   /**
