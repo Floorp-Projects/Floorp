@@ -5,6 +5,7 @@
 #ifndef __FFmpegLibWrapper_h__
 #define __FFmpegLibWrapper_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
 struct AVCodec;
