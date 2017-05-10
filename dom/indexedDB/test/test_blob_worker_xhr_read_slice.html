@@ -78,8 +78,8 @@
         var slicedBlob = blob.slice(0, 3, "text/plain");
         var blobUrl = URL.createObjectURL(slicedBlob);
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', blobUrl, true);
-        xhr.responseType = 'text';
+        xhr.open("GET", blobUrl, true);
+        xhr.responseType = "text";
         xhr.onload = function() {
           postMessage({ data: xhr.response });
           URL.revokeObjectURL(blobUrl);

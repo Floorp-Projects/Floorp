@@ -76,8 +76,8 @@
         var blob = event.data;
         var blobUrl = URL.createObjectURL(blob);
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', blobUrl, true);
-        xhr.responseType = 'text';
+        xhr.open("GET", blobUrl, true);
+        xhr.responseType = "text";
         xhr.onload = function() {
           postMessage({ data: xhr.response });
           URL.revokeObjectURL(blobUrl);
