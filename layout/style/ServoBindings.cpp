@@ -60,6 +60,10 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
 
+#if defined(MOZ_MEMORY)
+# include "mozmemory.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -2033,6 +2037,16 @@ Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed aPresContext,
 
   return css::DocumentRule::UseForPresentation(doc, docURI, docURISpec,
                                                *aPattern, aURLMatchingFunction);
+}
+
+void
+Gecko_SetJemallocThreadLocalArena(bool enabled)
+{
+#if defined(MOZ_MEMORY)
+  // At this point we convert |enabled| from a plain C++ bool to a
+  // |jemalloc_bool|, so be on the safe side.
+  jemalloc_thread_local_arena(!!enabled);
+#endif
 }
 
 #include "nsStyleStructList.h"

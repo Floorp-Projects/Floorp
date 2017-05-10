@@ -504,6 +504,9 @@ bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
                                            const nsACString* aPattern,
                                            mozilla::css::URLMatchingFunction aURLMatchingFunction);
 
+// Allocator hinting.
+void Gecko_SetJemallocThreadLocalArena(bool enabled);
+
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC

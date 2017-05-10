@@ -3048,6 +3048,11 @@ chunk_dealloc(void *chunk, size_t size)
  * Begin arena.
  */
 
+MOZ_JEMALLOC_API void
+jemalloc_thread_local_arena_impl(bool enabled)
+{
+}
+
 /*
  * Choose an arena based on a per-thread value (fast-path code, calls slow-path
  * code if necessary).
