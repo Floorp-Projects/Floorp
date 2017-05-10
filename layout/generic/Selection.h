@@ -30,6 +30,7 @@ class nsIHTMLEditor;
 class nsFrameSelection;
 class nsPIDOMWindowOuter;
 struct SelectionDetails;
+struct SelectionCustomColors;
 class nsCopySupport;
 class nsHTMLCopyEncoder;
 
@@ -251,6 +252,12 @@ public:
                       int16_t aVPercent, int16_t aHPercent,
                       mozilla::ErrorResult& aRv);
 
+  void SetColors(const nsAString& aForeColor, const nsAString& aBackColor,
+                 const nsAString& aAltForeColor, const nsAString& aAltBackColor,
+                 mozilla::ErrorResult& aRv);
+
+  void ResetColors(mozilla::ErrorResult& aRv);
+
   // Non-JS callers should use the following methods.
   void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
   void CollapseToStart(mozilla::ErrorResult& aRv);
@@ -283,6 +290,8 @@ public:
   {
     mSelectionType = aSelectionType;
   }
+
+  SelectionCustomColors* GetCustomColors() const { return mCustomColors.get(); }
 
   nsresult NotifySelectionListeners(bool aCalledByJS);
   nsresult NotifySelectionListeners();
@@ -418,9 +427,11 @@ private:
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
   nsCOMArray<nsISelectionListener> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
-  CachedOffsetForFrame *mCachedOffsetForFrame;
+  CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;
   SelectionType mSelectionType;
+  UniquePtr<SelectionCustomColors> mCustomColors;
+
   /**
    * True if the current selection operation was initiated by user action.
    * It determines whether we exclude -moz-user-select:none nodes or not,

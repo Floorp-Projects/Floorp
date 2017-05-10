@@ -3490,6 +3490,7 @@ Selection::Selection()
   : mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
+  , mCustomColors(nullptr)
   , mUserInitiated(false)
   , mCalledByJS(false)
   , mSelectionChangeBlockerCount(0)
@@ -3501,6 +3502,7 @@ Selection::Selection(nsFrameSelection* aList)
   , mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
+  , mCustomColors(nullptr)
   , mUserInitiated(false)
   , mCalledByJS(false)
   , mSelectionChangeBlockerCount(0)
@@ -6819,6 +6821,102 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   frameSelection->InvalidateDesiredPos();
   
   return NS_OK;
+}
+
+NS_IMETHODIMP
+Selection::SetColors(const nsAString& aForegroundColor,
+                     const nsAString& aBackgroundColor,
+                     const nsAString& aAltForegroundColor,
+                     const nsAString& aAltBackgroundColor)
+{
+  ErrorResult result;
+  SetColors(aForegroundColor, aBackgroundColor,
+            aAltForegroundColor, aAltBackgroundColor, result);
+  return result.StealNSResult();
+}
+
+void
+Selection::SetColors(const nsAString& aForegroundColor,
+                     const nsAString& aBackgroundColor,
+                     const nsAString& aAltForegroundColor,
+                     const nsAString& aAltBackgroundColor,
+                     ErrorResult& aRv)
+{
+  if (mSelectionType != SelectionType::eFind) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  mCustomColors.reset(new SelectionCustomColors);
+
+  NS_NAMED_LITERAL_STRING(currentColorStr, "currentColor");
+  NS_NAMED_LITERAL_STRING(transparentStr, "transparent");
+
+  if (!aForegroundColor.Equals(currentColorStr)) {
+    nscolor foregroundColor;
+    nsAttrValue aForegroundColorValue;
+    aForegroundColorValue.ParseColor(aForegroundColor);
+    if (!aForegroundColorValue.GetColorValue(foregroundColor)) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+    mCustomColors->mForegroundColor = Some(foregroundColor);
+  } else {
+    mCustomColors->mForegroundColor = Nothing();
+  }
+
+  if (!aBackgroundColor.Equals(transparentStr)) {
+    nscolor backgroundColor;
+    nsAttrValue aBackgroundColorValue;
+    aBackgroundColorValue.ParseColor(aBackgroundColor);
+    if (!aBackgroundColorValue.GetColorValue(backgroundColor)) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+    mCustomColors->mBackgroundColor = Some(backgroundColor);
+  } else {
+    mCustomColors->mBackgroundColor = Nothing();
+  }
+
+  if (!aAltForegroundColor.Equals(currentColorStr)) {
+    nscolor altForegroundColor;
+    nsAttrValue aAltForegroundColorValue;
+    aAltForegroundColorValue.ParseColor(aAltForegroundColor);
+    if (!aAltForegroundColorValue.GetColorValue(altForegroundColor)) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+    mCustomColors->mAltForegroundColor = Some(altForegroundColor);
+  } else {
+    mCustomColors->mAltForegroundColor = Nothing();
+  }
+
+  if (!aAltBackgroundColor.Equals(transparentStr)) {
+    nscolor altBackgroundColor;
+    nsAttrValue aAltBackgroundColorValue;
+    aAltBackgroundColorValue.ParseColor(aAltBackgroundColor);
+    if (!aAltBackgroundColorValue.GetColorValue(altBackgroundColor)) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+    mCustomColors->mAltBackgroundColor = Some(altBackgroundColor);
+  } else {
+    mCustomColors->mAltBackgroundColor = Nothing();
+  }
+}
+
+NS_IMETHODIMP
+Selection::ResetColors()
+{
+  ErrorResult result;
+  ResetColors(result);
+  return result.StealNSResult();
+}
+
+void
+Selection::ResetColors(ErrorResult& aRv)
+{
+  mCustomColors = nullptr;
 }
 
 NS_IMETHODIMP_(nsDirection)
