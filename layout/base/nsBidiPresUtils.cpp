@@ -746,6 +746,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 #ifdef DEBUG
     bpd.mCurrentBlock = block;
 #endif
+    block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     nsBlockInFlowLineIterator it(block, block->LinesBegin());
     bpd.mPrevFrame = nullptr;
     TraverseFrames(&it, block->PrincipalChildList().FirstChild(), &bpd);
