@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>
+    Testcase with only one of [html,body] being scrollable,
+    after html's "overflow" is reset dynamically.
+  </title>
+  <style>
+    html {
+      overflow: scroll;
+    }
+    body {
+      overflow: scroll;
+    }
+  </style>
+  <script>
+    function doTest() {
+      document.documentElement.style.overflow = "visible";
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</head>
+<body>
+</body>
+</html>

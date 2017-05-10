@@ -86,3 +86,13 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2420) == frame-scrolling-attr-2.htm
 == fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=100&innerBottom=200&scrollBefore=999
 == fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=100&innerBottom=200&scrollBefore=999
 != fractional-scroll-area-invalidation.html about:blank
+
+# Tests for "overflow" styles that may be propagated to the viewport:
+== propagated-overflow-style-1a.html propagated-overflow-style-1-ref.html
+== propagated-overflow-style-1b.html propagated-overflow-style-1-ref.html
+== propagated-overflow-style-1c.html propagated-overflow-style-1-ref.html
+== propagated-overflow-style-2a.html propagated-overflow-style-2-ref.html
+== propagated-overflow-style-2b.html propagated-overflow-style-2-ref.html
+== propagated-overflow-style-2c.html propagated-overflow-style-2-ref.html
+== propagated-overflow-style-2d.html propagated-overflow-style-2-ref.html
+== propagated-overflow-style-2e.html propagated-overflow-style-2-ref.html
