@@ -38,7 +38,7 @@ var innerWidthMax = (isWin8 ? 125 : 100);
 var isExecuted = false;
 
 function test() {
-  var w = window.open('data:text/html,null', null, 'width=300,height=300');
+  var w = window.open('file_empty.html', null, 'width=300,height=300');
 
   SimpleTest.waitForFocus(function() {
     w.onresize = function() {
