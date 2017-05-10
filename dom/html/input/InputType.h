@@ -74,6 +74,20 @@ public:
   virtual bool ConvertStringToNumber(nsAString& aValue,
                                      mozilla::Decimal& aResultValue) const;
 
+  /**
+   * Convert a Decimal to a string in a type specific way, ie convert a timestamp
+   * to a date string if type=date or append the number string representing the
+   * value if type=number.
+   *
+   * @param aValue the Decimal to be converted
+   * @param aResultString [out] the string representing the Decimal
+   * @return whether the function succeeded, it will fail if the current input's
+   *         type is not supported or the number can't be converted to a string
+   *         as expected by the type.
+   */
+  virtual bool ConvertNumberToString(mozilla::Decimal aValue,
+                                     nsAString& aResultString) const;
+
 protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
     : mInputElement(aInputElement)
@@ -195,6 +209,19 @@ protected:
    * week.
    */
   double DaysSinceEpochFromWeek(uint32_t aYear, uint32_t aWeek) const;
+
+  /**
+   * This methods returns the day of the week given a date. If @isoWeek is true,
+   * 7=Sunday, otherwise, 0=Sunday.
+   */
+  uint32_t DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay,
+                     bool isoWeek) const;
+
+  /**
+   * This methods returns the maximum number of week in a given year, the
+   * result is either 52 or 53.
+   */
+  uint32_t MaximumWeekInYear(uint32_t aYear) const;
 
   mozilla::dom::HTMLInputElement* mInputElement;
 };
