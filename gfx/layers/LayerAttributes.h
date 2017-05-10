@@ -17,6 +17,28 @@ template <typename T> struct ParamTraits;
 namespace mozilla {
 namespace layers {
 
+// Data stored for scroll thumb container layers.
+struct ScrollThumbData {
+  ScrollThumbData()
+    : mDirection(ScrollDirection::NONE), mThumbRatio(0.0f) {}
+  ScrollThumbData(ScrollDirection aDirection, float aThumbRatio)
+    : mDirection(aDirection), mThumbRatio(aThumbRatio) {}
+
+  ScrollDirection mDirection;
+  // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
+  // pixels of the scrollframe's parent's space) to the scroll position (in the
+  // CSS pixels of the scrollframe's space).
+  float mThumbRatio;
+
+  bool operator==(const ScrollThumbData& aOther) const {
+    return mDirection == aOther.mDirection &&
+           mThumbRatio == aOther.mThumbRatio;
+  }
+  bool operator!=(const ScrollThumbData& aOther) const {
+    return !(*this == aOther);
+  }
+};
+
 // Infrequently changing layer attributes that require no special
 // serialization work.
 class SimpleLayerAttributes final
@@ -31,8 +53,6 @@ public:
      mOpacity(1.0f),
      mIsFixedPosition(false),
      mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID),
-     mScrollbarDirection(ScrollDirection::NONE),
-     mScrollbarThumbRatio(0.0f),
      mIsScrollbarContainer(false),
      mMixBlendMode(gfx::CompositionOp::OP_OVER),
      mForceIsolatedGroup(false)
@@ -73,16 +93,14 @@ public:
     mIsFixedPosition = aFixedPosition;
     return true;
   }
-  bool SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir, float aThumbRatio) {
+  bool SetScrollThumbData(FrameMetrics::ViewID aScrollId, const ScrollThumbData& aThumbData) {
     if (mScrollbarTargetContainerId == aScrollId &&
-        mScrollbarDirection == aDir &&
-        mScrollbarThumbRatio == aThumbRatio)
+        mThumbData == aThumbData)
     {
       return false;
     }
     mScrollbarTargetContainerId = aScrollId;
-    mScrollbarDirection = aDir;
-    mScrollbarThumbRatio = aThumbRatio;
+    mThumbData = aThumbData;
     return true;
   }
   bool SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId) {
@@ -172,7 +190,7 @@ public:
     if (mScrollbarTargetContainerId != aOther.mScrollbarTargetContainerId) {
       return false;
     }
-    if (mScrollbarDirection != aOther.mScrollbarDirection) {
+    if (mThumbData != aOther.mThumbData) {
       return false;
     }
     if (FixedPositionScrollContainerId() != aOther.FixedPositionScrollContainerId()) {
@@ -206,11 +224,8 @@ public:
   FrameMetrics::ViewID ScrollbarTargetContainerId() const {
     return mScrollbarTargetContainerId;
   }
-  ScrollDirection ScrollbarDirection() const {
-    return mScrollbarDirection;
-  }
-  float ScrollbarThumbRatio() const {
-    return mScrollbarThumbRatio;
+  const ScrollThumbData& ThumbData() const {
+    return mThumbData;
   }
   float IsScrollbarContainer() const {
     return mIsScrollbarContainer;
@@ -264,8 +279,7 @@ public:
            mOpacity == aOther.mOpacity &&
            mIsFixedPosition == aOther.mIsFixedPosition &&
            mScrollbarTargetContainerId == aOther.mScrollbarTargetContainerId &&
-           mScrollbarDirection == aOther.mScrollbarDirection &&
-           mScrollbarThumbRatio == aOther.mScrollbarThumbRatio &&
+           mThumbData == aOther.mThumbData &&
            mIsScrollbarContainer == aOther.mIsScrollbarContainer &&
            mMixBlendMode == aOther.mMixBlendMode &&
            mForceIsolatedGroup == aOther.mForceIsolatedGroup;
@@ -281,11 +295,7 @@ private:
   float mOpacity;
   bool mIsFixedPosition;
   uint64_t mScrollbarTargetContainerId;
-  ScrollDirection mScrollbarDirection;
-  // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
-  // pixels of the scrollframe's parent's space) to the scroll position (in the
-  // CSS pixels of the scrollframe's space).
-  float mScrollbarThumbRatio;
+  ScrollThumbData mThumbData;
   bool mIsScrollbarContainer;
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
