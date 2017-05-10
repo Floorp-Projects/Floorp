@@ -565,9 +565,10 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     '''
     assert host_or_target in (host, target)
     assert language in ('C', 'C++')
-    assert language == 'C' or c_compiler
-    assert host_or_target == target or other_compiler
-    assert language == 'C' or host_or_target == target or other_c_compiler
+    assert language == 'C' or c_compiler is not None
+    assert host_or_target == target or other_compiler is not None
+    assert language == 'C' or host_or_target == target or \
+        other_c_compiler is not None
 
     host_or_target_str = {
         host: 'host',
@@ -619,7 +620,10 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # executable, when cross compiling with clang, default to the same compiler
     # as the target compiler, resetting flags.
     if host_or_target == host:
-        args = (c_compiler, other_c_compiler) if other_c_compiler else ()
+        if other_c_compiler is not None:
+            args = (c_compiler, other_c_compiler)
+        else:
+            args = ()
 
         @depends(provided_compiler, other_compiler, cross_compiling, *args)
         def provided_compiler(value, other_compiler, cross_compiling, *args):
