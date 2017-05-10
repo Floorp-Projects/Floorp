@@ -295,11 +295,20 @@ this.geckoProfiler = class extends ExtensionAPI {
 
         async getProfile() {
           if (!Services.profiler.IsActive()) {
-            throw new Error("The profiler is stopped. " +
+            throw new ExtensionError("The profiler is stopped. " +
               "You need to start the profiler before you can capture a profile.");
           }
 
           return Services.profiler.getProfileDataAsync();
+        },
+
+        async getProfileAsArrayBuffer() {
+          if (!Services.profiler.IsActive()) {
+            throw new ExtensionError("The profiler is stopped. " +
+              "You need to start the profiler before you can capture a profile.");
+          }
+
+          return Services.profiler.getProfileDataAsArrayBuffer();
         },
 
         async getSymbols(debugName, breakpadId) {
