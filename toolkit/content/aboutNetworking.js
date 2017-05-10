@@ -21,13 +21,15 @@ const gRequestNetworkingData = {
   "http": gDashboard.requestHttpConnections,
   "sockets": gDashboard.requestSockets,
   "dns": gDashboard.requestDNSInfo,
-  "websockets": gDashboard.requestWebsocketConnections
+  "websockets": gDashboard.requestWebsocketConnections,
+  "rcwn": gDashboard.requestRcwnStats,
 };
 const gDashboardCallbacks = {
   "http": displayHttp,
   "sockets": displaySockets,
   "dns": displayDns,
-  "websockets": displayWebsockets
+  "websockets": displayWebsockets,
+  "rcwn": displayRcwnStats,
 };
 
 const REFRESH_INTERVAL_MS = 3000;
@@ -122,6 +124,18 @@ function displayWebsockets(data) {
   }
 
   parent.replaceChild(new_cont, cont);
+}
+
+function displayRcwnStats(data) {
+  let status = Services.prefs.getBoolPref("network.http.rcwn.enabled");
+  let cacheWon = data.rcwnCacheWonCount;
+  let netWon = data.rcwnNetWonCount;
+  let total = data.totalNetworkRequests;
+
+  document.getElementById("rcwn_status").innerText = status;
+  document.getElementById("total_req_count").innerText = total;
+  document.getElementById("rcwn_cache_won_count").innerText = cacheWon;
+  document.getElementById("rcwn_cache_net_count").innerText = netWon;
 }
 
 function requestAllNetworkingData() {
