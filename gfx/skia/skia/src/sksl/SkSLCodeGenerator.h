@@ -4,11 +4,13 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
+ 
 #ifndef SKSL_CODEGENERATOR
 #define SKSL_CODEGENERATOR
 
 #include "ir/SkSLProgram.h"
+#include <vector>
+#include <iostream>
 
 namespace SkSL {
 
@@ -18,20 +20,9 @@ namespace SkSL {
  */
 class CodeGenerator {
 public:
-    CodeGenerator(const Program* program, ErrorReporter* errors, OutputStream* out)
-    : fProgram(*program)
-    , fErrors(*errors)
-    , fOut(out) {}
-
     virtual ~CodeGenerator() {}
-
-    virtual bool generateCode() = 0;
-
-protected:
-
-    const Program& fProgram;
-    ErrorReporter& fErrors;
-    OutputStream* fOut;
+    
+    virtual void generateCode(const Program& program, std::ostream& out) = 0;
 };
 
 } // namespace

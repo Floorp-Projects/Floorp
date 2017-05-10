@@ -43,7 +43,7 @@ public:
      *  must faithfully represent the current contents, even if the surface
      *  is changed after this called (e.g. it is drawn to via its canvas).
      */
-    virtual sk_sp<SkImage> onNewImageSnapshot() = 0;
+    virtual sk_sp<SkImage> onNewImageSnapshot(SkBudgeted, SkCopyPixelsMode) = 0;
 
     /**
      *  Default implementation:
@@ -81,7 +81,7 @@ public:
     virtual void onPrepareForExternalIO() {}
 
     inline SkCanvas* getCachedCanvas();
-    inline sk_sp<SkImage> refCachedImage();
+    inline sk_sp<SkImage> refCachedImage(SkBudgeted, ForceUnique);
 
     bool hasCachedImage() const { return fCachedImage != nullptr; }
 
@@ -89,8 +89,8 @@ public:
     uint32_t newGenerationID();
 
 private:
-    std::unique_ptr<SkCanvas>   fCachedCanvas;
-    sk_sp<SkImage>              fCachedImage;
+    SkCanvas*   fCachedCanvas;
+    SkImage*    fCachedImage;
 
     void aboutToDraw(ContentChangeMode mode);
 
@@ -106,23 +106,31 @@ private:
 
 SkCanvas* SkSurface_Base::getCachedCanvas() {
     if (nullptr == fCachedCanvas) {
-        fCachedCanvas = std::unique_ptr<SkCanvas>(this->onNewCanvas());
+        fCachedCanvas = this->onNewCanvas();
         if (fCachedCanvas) {
             fCachedCanvas->setSurfaceBase(this);
         }
     }
-    return fCachedCanvas.get();
+    return fCachedCanvas;
 }
 
-sk_sp<SkImage> SkSurface_Base::refCachedImage() {
-    if (fCachedImage) {
-        return fCachedImage;
+sk_sp<SkImage> SkSurface_Base::refCachedImage(SkBudgeted budgeted, ForceUnique unique) {
+    SkImage* snap = fCachedImage;
+    if (kYes_ForceUnique == unique && snap && !snap->unique()) {
+        snap = nullptr;
     }
-
-    fCachedImage = this->onNewImageSnapshot();
-
+    if (snap) {
+        return sk_ref_sp(snap);
+    }
+    SkCopyPixelsMode cpm = (kYes_ForceUnique == unique) ? kAlways_SkCopyPixelsMode :
+                                                          kIfMutable_SkCopyPixelsMode;
+    snap = this->onNewImageSnapshot(budgeted, cpm).release();
+    if (kNo_ForceUnique == unique) {
+        SkASSERT(!fCachedImage);
+        fCachedImage = SkSafeRef(snap);
+    }
     SkASSERT(!fCachedCanvas || fCachedCanvas->getSurfaceBase() == this);
-    return fCachedImage;
+    return sk_sp<SkImage>(snap);
 }
 
 #endif

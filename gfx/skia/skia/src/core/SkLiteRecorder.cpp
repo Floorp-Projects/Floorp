@@ -10,11 +10,11 @@
 #include "SkSurface.h"
 
 SkLiteRecorder::SkLiteRecorder()
-    : INHERITED(1, 1)
+    : SkCanvas({0,0,1,1}, SkCanvas::kConservativeRasterClip_InitFlag)
     , fDL(nullptr) {}
 
-void SkLiteRecorder::reset(SkLiteDL* dl, const SkIRect& bounds) {
-    this->resetForNextPicture(bounds);
+void SkLiteRecorder::reset(SkLiteDL* dl) {
+    this->resetForNextPicture(dl->getBounds().roundOut());
     fDL = dl;
 }
 
@@ -25,7 +25,7 @@ sk_sp<SkSurface> SkLiteRecorder::onNewSurface(const SkImageInfo&, const SkSurfac
 #ifdef SK_SUPPORT_LEGACY_DRAWFILTER
 SkDrawFilter* SkLiteRecorder::setDrawFilter(SkDrawFilter* df) {
     fDL->setDrawFilter(df);
-    return this->INHERITED::setDrawFilter(df);
+    return SkCanvas::setDrawFilter(df);
 }
 #endif
 
@@ -40,21 +40,21 @@ void SkLiteRecorder::didConcat   (const SkMatrix& matrix)   { fDL->   concat(mat
 void SkLiteRecorder::didSetMatrix(const SkMatrix& matrix)   { fDL->setMatrix(matrix); }
 void SkLiteRecorder::didTranslate(SkScalar dx, SkScalar dy) { fDL->translate(dx, dy); }
 
-void SkLiteRecorder::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle style) {
+void SkLiteRecorder::onClipRect(const SkRect& rect, ClipOp op, ClipEdgeStyle style) {
     fDL->clipRect(rect, op, style==kSoft_ClipEdgeStyle);
-    this->INHERITED::onClipRect(rect, op, style);
+    SkCanvas::onClipRect(rect, op, style);
 }
-void SkLiteRecorder::onClipRRect(const SkRRect& rrect, SkClipOp op, ClipEdgeStyle style) {
+void SkLiteRecorder::onClipRRect(const SkRRect& rrect, ClipOp op, ClipEdgeStyle style) {
     fDL->clipRRect(rrect, op, style==kSoft_ClipEdgeStyle);
-    this->INHERITED::onClipRRect(rrect, op, style);
+    SkCanvas::onClipRRect(rrect, op, style);
 }
-void SkLiteRecorder::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle style) {
+void SkLiteRecorder::onClipPath(const SkPath& path, ClipOp op, ClipEdgeStyle style) {
     fDL->clipPath(path, op, style==kSoft_ClipEdgeStyle);
-    this->INHERITED::onClipPath(path, op, style);
+    SkCanvas::onClipPath(path, op, style);
 }
-void SkLiteRecorder::onClipRegion(const SkRegion& region, SkClipOp op) {
+void SkLiteRecorder::onClipRegion(const SkRegion& region, ClipOp op) {
     fDL->clipRegion(region, op);
-    this->INHERITED::onClipRegion(region, op);
+    SkCanvas::onClipRegion(region, op);
 }
 
 void SkLiteRecorder::onDrawPaint(const SkPaint& paint) {
@@ -171,27 +171,31 @@ void SkLiteRecorder::onDrawImageLattice(const SkImage* img,
 
 void SkLiteRecorder::onDrawPatch(const SkPoint cubics[12],
                                  const SkColor colors[4], const SkPoint texCoords[4],
-                                 SkBlendMode bmode, const SkPaint& paint) {
-    fDL->drawPatch(cubics, colors, texCoords, bmode, paint);
+                                 SkXfermode* xfermode, const SkPaint& paint) {
+    fDL->drawPatch(cubics, colors, texCoords, xfermode, paint);
 }
 void SkLiteRecorder::onDrawPoints(SkCanvas::PointMode mode,
                                   size_t count, const SkPoint pts[],
                                   const SkPaint& paint) {
     fDL->drawPoints(mode, count, pts, paint);
 }
-void SkLiteRecorder::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode,
-                                          const SkPaint& paint) {
-    fDL->drawVertices(vertices, mode, paint);
+void SkLiteRecorder::onDrawVertices(SkCanvas::VertexMode mode,
+                                    int count, const SkPoint vertices[],
+                                    const SkPoint texs[], const SkColor colors[],
+                                    SkXfermode* xfermode,
+                                    const uint16_t indices[], int indexCount,
+                                    const SkPaint& paint) {
+    fDL->drawVertices(mode, count, vertices, texs, colors, xfermode, indices, indexCount, paint);
 }
 void SkLiteRecorder::onDrawAtlas(const SkImage* atlas,
                                  const SkRSXform xforms[],
                                  const SkRect texs[],
                                  const SkColor colors[],
                                  int count,
-                                 SkBlendMode bmode,
+                                 SkXfermode::Mode xfermode,
                                  const SkRect* cull,
                                  const SkPaint* paint) {
-    fDL->drawAtlas(atlas, xforms, texs, colors, count, bmode, cull, paint);
+    fDL->drawAtlas(atlas, xforms, texs, colors, count, xfermode, cull, paint);
 }
 
 void SkLiteRecorder::didTranslateZ(SkScalar dz) {

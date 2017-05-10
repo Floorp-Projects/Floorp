@@ -42,7 +42,6 @@ protected:
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source,
                                         const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
     void flatten(SkWriteBuffer&) const override;
 
     SkISize radius() const { return fRadius; }
@@ -62,6 +61,16 @@ public:
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDilateImageFilter)
+
+#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
+    static SkImageFilter* Create(int radiusX, int radiusY,
+                                 SkImageFilter* input = nullptr,
+                                 const CropRect* cropRect = nullptr) {
+        return Make(radiusX, radiusY,
+                    sk_ref_sp<SkImageFilter>(input),
+                    cropRect).release();
+    }
+#endif
 
 protected:
     Op op() const override { return kDilate_Op; }
@@ -84,6 +93,16 @@ public:
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkErodeImageFilter)
+
+#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
+    static SkImageFilter* Create(int radiusX, int radiusY,
+                                 SkImageFilter* input = nullptr,
+                                 const CropRect* cropRect = nullptr) {
+        return Make(radiusX, radiusY,
+                    sk_ref_sp<SkImageFilter>(input),
+                    cropRect).release();
+    }
+#endif
 
 protected:
     Op op() const override { return kErode_Op; }

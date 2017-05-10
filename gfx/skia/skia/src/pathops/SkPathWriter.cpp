@@ -48,26 +48,23 @@ void SkPathWriter::cubicTo(const SkPoint& pt1, const SkPoint& pt2, const SkOpPtT
     fCurrent.cubicTo(pt1, pt2, pt3->fPt);
 }
 
-bool SkPathWriter::deferredLine(const SkOpPtT* pt) {
+void SkPathWriter::deferredLine(const SkOpPtT* pt) {
     SkASSERT(fFirstPtT);
     SkASSERT(fDefer[0]);
     if (fDefer[0] == pt) {
         // FIXME: why we're adding a degenerate line? Caller should have preflighted this.
-        return true;
+        return;
     }
     if (pt->contains(fDefer[0])) {
         // FIXME: why we're adding a degenerate line?
-        return true;
+        return;
     }
-    if (this->matchedLast(pt)) {
-        return false;
-    }
+    SkASSERT(!this->matchedLast(pt));
     if (fDefer[1] && this->changedSlopes(pt)) {
         this->lineTo();
         fDefer[0] = fDefer[1];
     }
     fDefer[1] = pt;
-    return true;
 }
 
 void SkPathWriter::deferredMove(const SkOpPtT* pt) {
@@ -306,7 +303,7 @@ void SkPathWriter::assemble() {
                         first ? SkPath::kAppend_AddPathMode : SkPath::kExtend_AddPathMode);
             } else {
                 SkASSERT(!first);
-                fPathPtr->reversePathTo(contour);
+                fPathPtr->reverseAddPath(contour);
             }
             if (first) {
                 first = false;

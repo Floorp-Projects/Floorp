@@ -8,7 +8,7 @@
 #ifndef GrGlyph_DEFINED
 #define GrGlyph_DEFINED
 
-#include "GrDrawOpAtlas.h"
+#include "GrBatchAtlas.h"
 #include "GrRect.h"
 #include "GrTypes.h"
 
@@ -32,7 +32,7 @@ struct GrGlyph {
 
     typedef uint32_t PackedID;
 
-    GrDrawOpAtlas::AtlasID fID;
+    GrBatchAtlas::AtlasID fID;
     SkPath*               fPath;
     PackedID              fPackedID;
     GrMaskFormat          fMaskFormat;
@@ -41,13 +41,13 @@ struct GrGlyph {
     bool                  fTooLargeForAtlas;
 
     void init(GrGlyph::PackedID packed, const SkIRect& bounds, GrMaskFormat format) {
-        fID = GrDrawOpAtlas::kInvalidAtlasID;
+        fID = GrBatchAtlas::kInvalidAtlasID;
         fPath = nullptr;
         fPackedID = packed;
         fBounds.set(bounds);
         fMaskFormat = format;
         fAtlasLocation.set(0, 0);
-        fTooLargeForAtlas = GrDrawOpAtlas::GlyphTooLargeForAtlas(bounds.width(), bounds.height());
+        fTooLargeForAtlas = GrBatchAtlas::GlyphTooLargeForAtlas(bounds.width(), bounds.height());
     }
 
     void reset() {

@@ -10,7 +10,6 @@
 
 #include "GrPathRenderer.h"
 
-#include "GrContextOptions.h"
 #include "SkTypes.h"
 #include "SkTArray.h"
 
@@ -25,18 +24,23 @@ class GrContext;
 class GrPathRendererChain : public SkNoncopyable {
 public:
     struct Options {
-        using GpuPathRenderers = GrContextOptions::GpuPathRenderers;
+        bool fDisableDistanceFieldRenderer = false;
         bool fAllowPathMaskCaching = false;
-        GpuPathRenderers fGpuPathRenderers = GpuPathRenderers::kAll;
+        bool fDisableAllPathRenderers = false;
     };
     GrPathRendererChain(GrContext* context, const Options&);
 
+    ~GrPathRendererChain();
+
     /** Documents how the caller plans to use a GrPathRenderer to draw a path. It affects the PR
         returned by getPathRenderer */
-    enum class DrawType {
-        kColor,            // draw to the color buffer, no AA
-        kStencil,          // draw just to the stencil buffer
-        kStencilAndColor,  // draw the stencil and color buffer, no AA
+    enum DrawType {
+        kColor_DrawType,                    // draw to the color buffer, no AA
+        kColorAntiAlias_DrawType,           // draw to color buffer, with partial coverage AA
+        kStencilOnly_DrawType,              // draw just to the stencil buffer
+        kStencilAndColor_DrawType,          // draw the stencil and color buffer, no AA
+        kStencilAndColorAntiAlias_DrawType  // draw the stencil and color buffer, with partial
+                                            // coverage AA.
     };
 
     /** Returns a GrPathRenderer compatible with the request if one is available. If the caller
@@ -48,10 +52,13 @@ public:
                                     GrPathRenderer::StencilSupport* stencilSupport);
 
 private:
+    // takes a ref and unrefs in destructor
+    GrPathRenderer* addPathRenderer(GrPathRenderer* pr);
+
     enum {
         kPreAllocCount = 8,
     };
-    SkSTArray<kPreAllocCount, sk_sp<GrPathRenderer>>    fChain;
+    SkSTArray<kPreAllocCount, GrPathRenderer*, true>    fChain;
 };
 
 #endif

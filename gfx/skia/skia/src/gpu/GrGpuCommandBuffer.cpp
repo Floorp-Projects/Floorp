@@ -14,37 +14,36 @@
 #include "GrRenderTarget.h"
 #include "SkRect.h"
 
-void GrGpuCommandBuffer::submit() {
+void GrGpuCommandBuffer::submit(const SkIRect& bounds) {
     this->gpu()->handleDirtyContext();
-    this->onSubmit();
+    this->onSubmit(bounds);
 }
 
-void GrGpuCommandBuffer::clear(GrRenderTarget* rt, const GrFixedClip& clip, GrColor color) {
-#ifdef SK_DEBUG
+void GrGpuCommandBuffer::clear(const GrFixedClip& clip, GrColor color, GrRenderTarget* rt) {
     SkASSERT(rt);
     SkASSERT(!clip.scissorEnabled() ||
              (SkIRect::MakeWH(rt->width(), rt->height()).contains(clip.scissorRect()) &&
               SkIRect::MakeWH(rt->width(), rt->height()) != clip.scissorRect()));
-#endif
     this->onClear(rt, clip, color);
 }
 
-void GrGpuCommandBuffer::clearStencilClip(GrRenderTarget* rt, const GrFixedClip& clip,
-                                          bool insideStencilMask) {
+void GrGpuCommandBuffer::clearStencilClip(const GrFixedClip& clip,
+                                          bool insideStencilMask,
+                                          GrRenderTarget* rt) {
+    SkASSERT(rt);
     this->onClearStencilClip(rt, clip, insideStencilMask);
 }
+
 
 bool GrGpuCommandBuffer::draw(const GrPipeline& pipeline,
                               const GrPrimitiveProcessor& primProc,
                               const GrMesh* mesh,
-                              int meshCount,
-                              const SkRect& bounds) {
-    SkASSERT(pipeline.isInitialized());
+                              int meshCount) {
     if (primProc.numAttribs() > this->gpu()->caps()->maxVertexAttributes()) {
         this->gpu()->stats()->incNumFailedDraws();
         return false;
     }
-    this->onDraw(pipeline, primProc, mesh, meshCount, bounds);
+    this->onDraw(pipeline, primProc, mesh, meshCount);
     return true;
 }
 

@@ -25,8 +25,3 @@ SkFlattenable* SkValidatingDeserializeFlattenable(const void* data, size_t size,
     SkValidatingReadBuffer buffer(data, size);
     return buffer.readFlattenable(type);
 }
-
-sk_sp<SkImageFilter> SkValidatingDeserializeImageFilter(const void* data, size_t size) {
-    return sk_sp<SkImageFilter>((SkImageFilter*)SkValidatingDeserializeFlattenable(
-                                data, size, SkImageFilter::GetFlattenableType()));
-}

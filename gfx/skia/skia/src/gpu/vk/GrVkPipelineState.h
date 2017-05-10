@@ -74,9 +74,8 @@ public:
         static bool Build(Desc*,
                           const GrPrimitiveProcessor&,
                           const GrPipeline&,
-                          const GrStencilSettings&,
                           GrPrimitiveType primitiveType,
-                          const GrShaderCaps&);
+                          const GrGLSLCaps&);
     private:
         typedef GrProgramDesc INHERITED;
     };
@@ -141,10 +140,8 @@ private:
 
     void writeUniformBuffers(const GrVkGpu* gpu);
 
-    void writeSamplers(
-            GrVkGpu* gpu,
-            const SkTArray<const GrResourceIOProcessor::TextureSampler*>& textureBindings,
-            bool allowSRGBInputs);
+    void writeSamplers(GrVkGpu* gpu, const SkTArray<const GrTextureAccess*>& textureBindings,
+                       bool allowSRGBInputs);
 
     /**
     * We use the RT's size and origin to adjust from Skia device space to vulkan normalized device
@@ -183,7 +180,7 @@ private:
     };
 
     // Helper for setData() that sets the view matrix and loads the render target height uniform
-    void setRenderTargetState(const GrRenderTarget*);
+    void setRenderTargetState(const GrPipeline&);
 
     // GrVkResources
     GrVkPipeline* fPipeline;
@@ -210,8 +207,8 @@ private:
     int fStartDS;
     int fDSCount;
 
-    std::unique_ptr<GrVkUniformBuffer> fVertexUniformBuffer;
-    std::unique_ptr<GrVkUniformBuffer> fFragmentUniformBuffer;
+    SkAutoTDelete<GrVkUniformBuffer> fVertexUniformBuffer;
+    SkAutoTDelete<GrVkUniformBuffer> fFragmentUniformBuffer;
 
     // GrVkResources used for sampling textures
     SkTDArray<GrVkSampler*> fSamplers;
@@ -223,8 +220,8 @@ private:
     BuiltinUniformHandles fBuiltinUniformHandles;
 
     // Processors in the GrVkPipelineState
-    std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
-    std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
+    SkAutoTDelete<GrGLSLPrimitiveProcessor> fGeometryProcessor;
+    SkAutoTDelete<GrGLSLXferProcessor> fXferProcessor;
     GrGLSLFragProcs fFragmentProcessors;
 
     Desc fDesc;

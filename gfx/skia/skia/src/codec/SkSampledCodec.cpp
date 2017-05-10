@@ -26,7 +26,7 @@ SkISize SkSampledCodec::accountForNativeScaling(int* sampleSizePtr, int* nativeS
     }
 
     // Only JPEG supports native downsampling.
-    if (this->codec()->getEncodedFormat() == SkEncodedImageFormat::kJPEG) {
+    if (this->codec()->getEncodedFormat() == kJPEG_SkEncodedFormat) {
         // See if libjpeg supports this scale directly
         switch (sampleSize) {
             case 2:
@@ -75,7 +75,6 @@ SkCodec::Result SkSampledCodec::onGetAndroidPixels(const SkImageInfo& info, void
     // Create an Options struct for the codec.
     SkCodec::Options codecOptions;
     codecOptions.fZeroInitialized = options.fZeroInitialized;
-    codecOptions.fPremulBehavior = SkTransferFunctionBehavior::kIgnore;
 
     SkIRect* subset = options.fSubset;
     if (!subset || subset->size() == this->codec()->getInfo().dimensions()) {
@@ -172,7 +171,6 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
     // Create options struct for the codec.
     SkCodec::Options sampledOptions;
     sampledOptions.fZeroInitialized = options.fZeroInitialized;
-    sampledOptions.fPremulBehavior = SkTransferFunctionBehavior::kIgnore;
 
     // FIXME: This was already called by onGetAndroidPixels. Can we reduce that?
     int sampleSize = options.fSampleSize;
@@ -188,7 +186,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
         // We will need to know about subsetting in the y-dimension in order to use the
         // scanline decoder.
         // Update the subset to account for scaling done by this->codec().
-        const SkIRect* subsetPtr = options.fSubset;
+        SkIRect* subsetPtr = options.fSubset;
 
         // Do the divide ourselves, instead of calling get_scaled_dimension. If
         // X and Y are 0, they should remain 0, rather than being upgraded to 1
@@ -212,7 +210,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
 
     const int samplingOffsetY = get_start_coord(sampleY);
     const int startY = samplingOffsetY + subsetY;
-    const int dstHeight = info.height();
+    int dstHeight = info.height();
 
     const SkImageInfo nativeInfo = info.makeWH(nativeSize.width(), nativeSize.height());
 
@@ -220,15 +218,22 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
         // Although startScanlineDecode expects the bottom and top to match the
         // SkImageInfo, startIncrementalDecode uses them to determine which rows to
         // decode.
-        SkCodec::Options incrementalOptions = sampledOptions;
+        // Note: We *could* use "subsetY" and "subsetHeight" (calculated above) for
+        // incrementalSubset, but this code gives us a tighter bounds on the subset,
+        // meaning that we can start with the first row actually needed by the output,
+        // and stop when we've decoded the last row needed by the output.
         SkIRect incrementalSubset;
+        incrementalSubset.fTop = startY;
+        incrementalSubset.fBottom = startY + (dstHeight - 1) * sampleY + 1;
         if (sampledOptions.fSubset) {
-            incrementalSubset.fTop = subsetY;
-            incrementalSubset.fBottom = subsetY + subsetHeight;
             incrementalSubset.fLeft = sampledOptions.fSubset->fLeft;
             incrementalSubset.fRight = sampledOptions.fSubset->fRight;
-            incrementalOptions.fSubset = &incrementalSubset;
+        } else {
+            incrementalSubset.fLeft = 0;
+            incrementalSubset.fRight = nativeSize.width();
         }
+        SkCodec::Options incrementalOptions = sampledOptions;
+        incrementalOptions.fSubset = &incrementalSubset;
         const SkCodec::Result startResult = this->codec()->startIncrementalDecode(nativeInfo,
                 pixels, rowBytes, &incrementalOptions, options.fColorPtr, options.fColorCount);
         if (SkCodec::kSuccess == startResult) {
@@ -253,9 +258,10 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
             }
             SkASSERT(incResult == SkCodec::kIncompleteInput);
 
-            SkASSERT(rowsDecoded <= info.height());
+            // Count the rows that we decoded, and also did not skip.
+            const int trueRowsDecoded = (rowsDecoded + sampleY - 1) / sampleY;
             this->codec()->fillIncompleteImage(info, pixels, rowBytes, options.fZeroInitialized,
-                                               info.height(), rowsDecoded);
+                                               info.height(), trueRowsDecoded);
             return SkCodec::kIncompleteInput;
         } else if (startResult != SkCodec::kUnimplemented) {
             return startResult;
@@ -306,6 +312,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
             }
             return SkCodec::kSuccess;
         }
+        case SkCodec::kOutOfOrder_SkScanlineOrder:
         case SkCodec::kBottomUp_SkScanlineOrder: {
             // Note that these modes do not support subsetting.
             SkASSERT(0 == subsetY && nativeSize.height() == subsetHeight);

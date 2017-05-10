@@ -14,12 +14,12 @@ class SkPDFDevice;
 class SkPDFCanvas : public SkCanvas {
 public:
     SkPDFCanvas(const sk_sp<SkPDFDevice>&);
-    ~SkPDFCanvas() override;
+    ~SkPDFCanvas();
 
 protected:
-    void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
-    void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
-    void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
+    void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;
+    void onClipPath(const SkPath&, ClipOp, ClipEdgeStyle) override;
 
     void onDrawBitmapNine(const SkBitmap&, const SkIRect&, const SkRect&,
                           const SkPaint*) override;

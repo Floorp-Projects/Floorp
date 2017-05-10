@@ -9,18 +9,13 @@
 #define SkPipe_DEFINED
 
 #include "SkData.h"
-#include "SkImage.h"
-#include "SkPicture.h"
 
 class SkCanvas;
-class SkImageDeserializer;
-class SkImageSerializer;
-class SkTypeface;
-class SkTypefaceDeserializer;
+class SkImage;
+class SkPicture;
 class SkTypefaceSerializer;
+class SkTypefaceDeserializer;
 class SkWStream;
-
-struct SkRect;
 
 class SkPipeSerializer {
 public:
@@ -29,7 +24,6 @@ public:
 
     // Ownership is not transferred, so caller must ceep the serializer alive
     void setTypefaceSerializer(SkTypefaceSerializer*);
-    void setImageSerializer(SkImageSerializer*);
 
     void resetCache();
 
@@ -54,7 +48,6 @@ public:
 
     // Ownership is not transferred, so caller must ceep the deserializer alive
     void setTypefaceDeserializer(SkTypefaceDeserializer*);
-    void setImageDeserializer(SkImageDeserializer*);
 
     sk_sp<SkImage> readImage(const SkData* data) {
         if (!data) {
@@ -88,14 +81,6 @@ public:
 
     virtual sk_sp<SkData> serialize(SkTypeface*) = 0;
 };
-
-class SkImageSerializer {
-public:
-    virtual ~SkImageSerializer() {}
-
-    virtual sk_sp<SkData> serialize(SkImage*) = 0;
-};
-
 
 class SkTypefaceDeserializer {
 public:

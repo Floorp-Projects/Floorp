@@ -40,7 +40,7 @@ static bool font_name_is_local(const char* fontName, SkFontStyle style) {
 static int whitelist_name_index(const SkTypeface* tf) {
 
     SkString fontNameStr;
-    sk_sp<SkTypeface::LocalizedStrings> nameIter(
+    SkAutoTUnref<SkTypeface::LocalizedStrings> nameIter(
         SkOTUtils::LocalizedStrings_NameTable::CreateForFamilyNames(*tf));
     SkTypeface::LocalizedString familyNameLocalized;
     while (nameIter->next(&familyNameLocalized)) {
@@ -53,7 +53,7 @@ static int whitelist_name_index(const SkTypeface* tf) {
         }
     }
 #if WHITELIST_DEBUG
-    sk_sp<SkTypeface::LocalizedStrings> debugIter(
+    SkAutoTUnref<SkTypeface::LocalizedStrings> debugIter(
         SkOTUtils::LocalizedStrings_NameTable::CreateForFamilyNames(*tf));
     while (debugIter->next(&familyNameLocalized)) {
         SkDebugf("no match fontName=\"%s\"\n", familyNameLocalized.fString.c_str());
