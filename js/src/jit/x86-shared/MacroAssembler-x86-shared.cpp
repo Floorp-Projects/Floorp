@@ -642,12 +642,6 @@ MacroAssembler::PopFlags()
     implicitPop(sizeof(intptr_t));
 }
 
-void
-MacroAssembler::PopStackPtr()
-{
-    Pop(StackPointer);
-}
-
 // ===============================================================
 // Simple call functions.
 
