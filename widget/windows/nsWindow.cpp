@@ -8371,3 +8371,9 @@ nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData*
   aInitData->widgetKey() = reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this));
   aInitData->transparencyMode() = mTransparencyMode;
 }
+
+bool
+nsWindow::SynchronouslyRepaintOnResize()
+{
+  return !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
+}
