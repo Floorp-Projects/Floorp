@@ -10,6 +10,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from file.js */
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const READ_WRITE = "readwrite";
@@ -75,7 +77,7 @@
       let objectStore = db.transaction([objectStoreName], READ_WRITE)
                           .objectStore(objectStoreName);
 
-      request = objectStore.add(refResult, 2);
+      let request = objectStore.add(refResult, 2);
       request.onsuccess = grabEventAndContinueHandler;
       event = yield undefined;
 

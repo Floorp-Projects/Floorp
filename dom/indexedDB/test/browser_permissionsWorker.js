@@ -1,3 +1,5 @@
+/* eslint-env worker */
+
 onmessage = function(e) {
   var request = indexedDB.open(e.data, { version: 1,
                                          storage: "persistent" });

@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// testSteps is expected to be defined by the file including this file.
+/* global testSteps */
+
 var testGenerator = testSteps();
 
 var testResult;

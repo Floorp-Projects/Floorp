@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// testSteps is expected to be defined by the test using this file.
+/* global testSteps:false */
+
 var testGenerator = testSteps();
 // The test js is shared between xpcshell (which has no SpecialPowers object)
 // and content mochitests (where the |Components| object is accessible only as
@@ -188,7 +191,7 @@ function* testHarnessSteps() {
   } else if (testScriptFilename) {
     todo(false,
          "Skipping test in a worker because it is explicitly disabled: " +
-         disableWorkerTest);
+         window.disableWorkerTest);
   } else {
     todo(false,
          "Skipping test in a worker because it's not structured properly");

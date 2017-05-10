@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
@@ -71,6 +72,7 @@
     info("Sending slice to a worker");
 
     function workerScript() {
+      /* eslint-env worker */
       onmessage = function(event) {
         var blob = event.data;
         var xhr = new XMLHttpRequest();
