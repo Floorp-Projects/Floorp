@@ -255,7 +255,7 @@ add_task(async function test() {
   do_check_false(content.success);
 
   // Check some headers of the 404 response
-  do_check_eq(content.headers.connection, "keep-alive");
+  do_check_eq(content.headers.connection, "close");
   do_check_eq(content.headers.server, "httpd.js");
   do_check_eq(content.headers["content-length"], 14);
 

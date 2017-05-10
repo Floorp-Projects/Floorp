@@ -650,8 +650,6 @@ Tester.prototype = {
                                   TabDestroyObserver.wait());
 
         barrier.wait().then(() => {
-          // Close all active HTTP connections.
-          Services.obs.notifyObservers(null, "net:prune-all-connections", null);
           // Simulate memory pressure so that we're forced to free more resources
           // and thus get rid of more false leaks like already terminated workers.
           Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");

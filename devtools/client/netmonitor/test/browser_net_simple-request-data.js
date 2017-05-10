@@ -158,9 +158,9 @@ function test() {
 
       ok(requestItem.responseHeaders,
         "There should be a responseHeaders data available.");
-      is(requestItem.responseHeaders.headers.length, 11,
+      is(requestItem.responseHeaders.headers.length, 10,
         "The responseHeaders data has an incorrect |headers| property.");
-      is(requestItem.responseHeaders.headersSize, 360,
+      is(requestItem.responseHeaders.headersSize, 330,
         "The responseHeaders data has an incorrect |headersSize| property.");
 
       verifyRequestItemTarget(
@@ -211,7 +211,7 @@ function test() {
         "The status data has an incorrect value.");
       is(requestItem.statusText, "Och Aye",
         "The statusText data has an incorrect value.");
-      is(requestItem.headersSize, 360,
+      is(requestItem.headersSize, 330,
         "The headersSize data has an incorrect value.");
 
       verifyRequestItemTarget(

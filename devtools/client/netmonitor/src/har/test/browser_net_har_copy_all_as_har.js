@@ -45,7 +45,7 @@ add_task(function* () {
   is(entry.request.headers.length, 9, "Check number of request headers");
   is(entry.response.status, 200, "Check response status");
   is(entry.response.statusText, "OK", "Check response status text");
-  is(entry.response.headers.length, 7, "Check number of response headers");
+  is(entry.response.headers.length, 6, "Check number of response headers");
   is(entry.response.content.mimeType, // eslint-disable-line
     "text/html", "Check response content type"); // eslint-disable-line
   isnot(entry.response.content.text, undefined, // eslint-disable-line
