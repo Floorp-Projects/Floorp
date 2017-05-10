@@ -575,8 +575,8 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   // If we were already tracking aSheet, the newUniqueID will be the same
   // as the oldUniqueID. In that case, Servo will remove aSheet from its
   // original position as part of the call to Servo_StyleSet_AppendStyleSheet.
-  uint32_t oldUniqueID = RemoveSheetOfType(aType, aSheet);
-  uint32_t newUniqueID = AppendSheetOfType(aType, aSheet, oldUniqueID);
+  uint64_t oldUniqueID = RemoveSheetOfType(aType, aSheet);
+  uint64_t newUniqueID = AppendSheetOfType(aType, aSheet, oldUniqueID);
 
   if (mRawSet) {
     // Maintain a mirrored list of sheets on the servo side.
@@ -601,8 +601,8 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   // If we were already tracking aSheet, the newUniqueID will be the same
   // as the oldUniqueID. In that case, Servo will remove aSheet from its
   // original position as part of the call to Servo_StyleSet_PrependStyleSheet.
-  uint32_t oldUniqueID = RemoveSheetOfType(aType, aSheet);
-  uint32_t newUniqueID = PrependSheetOfType(aType, aSheet, oldUniqueID);
+  uint64_t oldUniqueID = RemoveSheetOfType(aType, aSheet);
+  uint64_t newUniqueID = PrependSheetOfType(aType, aSheet, oldUniqueID);
 
   if (mRawSet) {
     // Maintain a mirrored list of sheets on the servo side.
@@ -622,7 +622,7 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
 
-  uint32_t uniqueID = RemoveSheetOfType(aType, aSheet);
+  uint64_t uniqueID = RemoveSheetOfType(aType, aSheet);
   if (mRawSet && uniqueID) {
     // Maintain a mirrored list of sheets on the servo side.
     Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), uniqueID);
@@ -653,7 +653,7 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
 
   // Add in all the new sheets.
   for (auto& sheet : aNewSheets) {
-    uint32_t uniqueID = AppendSheetOfType(aType, sheet);
+    uint64_t uniqueID = AppendSheetOfType(aType, sheet);
     if (mRawSet) {
       MOZ_ASSERT(sheet->RawSheet(), "Raw sheet should be in place before replacement.");
       Servo_StyleSet_AppendStyleSheet(mRawSet.get(),
@@ -677,7 +677,7 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   MOZ_ASSERT(aNewSheet->RawSheet(), "Raw sheet should be in place before insertion.");
   MOZ_ASSERT(aReferenceSheet->RawSheet(), "Reference sheet should have a raw sheet.");
 
-  uint32_t beforeUniqueID = FindSheetOfType(aType, aReferenceSheet);
+  uint64_t beforeUniqueID = FindSheetOfType(aType, aReferenceSheet);
   if (beforeUniqueID == 0) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -685,8 +685,8 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   // If we were already tracking aNewSheet, the newUniqueID will be the same
   // as the oldUniqueID. In that case, Servo will remove aNewSheet from its
   // original position as part of the call to Servo_StyleSet_InsertStyleSheetBefore.
-  uint32_t oldUniqueID = RemoveSheetOfType(aType, aNewSheet);
-  uint32_t newUniqueID = InsertSheetOfType(aType,
+  uint64_t oldUniqueID = RemoveSheetOfType(aType, aNewSheet);
+  uint64_t newUniqueID = InsertSheetOfType(aType,
                                            aNewSheet,
                                            beforeUniqueID,
                                            oldUniqueID);
@@ -733,15 +733,15 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 
   RefPtr<StyleSheet> strong(aSheet);
 
-  uint32_t oldUniqueID = RemoveSheetOfType(SheetType::Doc, aSheet);
+  uint64_t oldUniqueID = RemoveSheetOfType(SheetType::Doc, aSheet);
 
   size_t index =
     aDocument->FindDocStyleSheetInsertionPoint(mEntries[SheetType::Doc], aSheet);
 
   if (index < mEntries[SheetType::Doc].Length()) {
     // This case is insert before.
-    uint32_t beforeUniqueID = mEntries[SheetType::Doc][index].uniqueID;
-    uint32_t newUniqueID = InsertSheetOfType(SheetType::Doc,
+    uint64_t beforeUniqueID = mEntries[SheetType::Doc][index].uniqueID;
+    uint64_t newUniqueID = InsertSheetOfType(SheetType::Doc,
                                              aSheet,
                                              beforeUniqueID,
                                              oldUniqueID);
@@ -756,7 +756,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
     }
   } else {
     // This case is append.
-    uint32_t newUniqueID = AppendSheetOfType(SheetType::Doc,
+    uint64_t newUniqueID = AppendSheetOfType(SheetType::Doc,
                                              aSheet,
                                              oldUniqueID);
 
@@ -1073,7 +1073,7 @@ ServoStyleSet::RebuildStylist()
   mStylistMayNeedRebuild = false;
 }
 
-uint32_t
+uint64_t
 ServoStyleSet::FindSheetOfType(SheetType aType,
                                ServoStyleSheet* aSheet)
 {
@@ -1085,10 +1085,10 @@ ServoStyleSet::FindSheetOfType(SheetType aType,
   return 0;
 }
 
-uint32_t
+uint64_t
 ServoStyleSet::PrependSheetOfType(SheetType aType,
                                   ServoStyleSheet* aSheet,
-                                  uint32_t aReuseUniqueID)
+                                  uint64_t aReuseUniqueID)
 {
   Entry* entry = mEntries[aType].InsertElementAt(0);
   entry->uniqueID = aReuseUniqueID ? aReuseUniqueID : ++mUniqueIDCounter;
@@ -1096,10 +1096,10 @@ ServoStyleSet::PrependSheetOfType(SheetType aType,
   return entry->uniqueID;
 }
 
-uint32_t
+uint64_t
 ServoStyleSet::AppendSheetOfType(SheetType aType,
                                  ServoStyleSheet* aSheet,
-                                 uint32_t aReuseUniqueID)
+                                 uint64_t aReuseUniqueID)
 {
   Entry* entry = mEntries[aType].AppendElement();
   entry->uniqueID = aReuseUniqueID ? aReuseUniqueID : ++mUniqueIDCounter;
@@ -1107,11 +1107,11 @@ ServoStyleSet::AppendSheetOfType(SheetType aType,
   return entry->uniqueID;
 }
 
-uint32_t
+uint64_t
 ServoStyleSet::InsertSheetOfType(SheetType aType,
                                  ServoStyleSheet* aSheet,
-                                 uint32_t aBeforeUniqueID,
-                                 uint32_t aReuseUniqueID)
+                                 uint64_t aBeforeUniqueID,
+                                 uint64_t aReuseUniqueID)
 {
   for (uint32_t i = 0; i < mEntries[aType].Length(); ++i) {
     if (mEntries[aType][i].uniqueID == aBeforeUniqueID) {
@@ -1124,13 +1124,13 @@ ServoStyleSet::InsertSheetOfType(SheetType aType,
   return 0;
 }
 
-uint32_t
+uint64_t
 ServoStyleSet::RemoveSheetOfType(SheetType aType,
                                  ServoStyleSheet* aSheet)
 {
   for (uint32_t i = 0; i < mEntries[aType].Length(); ++i) {
     if (mEntries[aType][i].sheet == aSheet) {
-      uint32_t uniqueID = mEntries[aType][i].uniqueID;
+      uint64_t uniqueID = mEntries[aType][i].uniqueID;
       mEntries[aType].RemoveElementAt(i);
       return uniqueID;
     }
