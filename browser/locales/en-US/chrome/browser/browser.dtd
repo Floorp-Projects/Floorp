@@ -729,6 +729,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.connectionFile "This page is stored on your computer.">
 <!ENTITY identity.connectionVerified2 "You are securely connected to this site, owned by:">
 <!ENTITY identity.connectionInternal "This is a secure &brandShortName; page.">
+<!ENTITY identity.extensionPage "This page is loaded from an extension.">
 <!ENTITY identity.insecureLoginForms2 "Logins entered on this page could be compromised.">
 
 <!-- Strings for connection state warnings. -->
