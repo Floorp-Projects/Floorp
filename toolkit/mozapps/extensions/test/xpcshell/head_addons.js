@@ -71,7 +71,6 @@ const {
   createTempWebExtensionFile,
   createUpdateRDF,
   getFileForAddon,
-  manuallyInstall,
   manuallyUninstall,
   promiseAddonEvent,
   promiseCompleteAllInstalls,
@@ -89,6 +88,11 @@ const {
   setExtensionModifiedTime,
   writeFilesToZip
 } = AddonTestUtils;
+
+function manuallyInstall(...args) {
+  return AddonTestUtils.awaitPromise(
+    AddonTestUtils.manuallyInstall(...args));
+}
 
 // WebExtension wrapper for ease of testing
 ExtensionTestUtils.init(this);

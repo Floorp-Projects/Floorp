@@ -3086,6 +3086,17 @@ this.AddonManagerPrivate = {
                                .addonIsActive(addonId);
   },
 
+  /**
+   * Gets an array of add-ons which were side-loaded prior to the last
+   * startup, and are currently disabled.
+   *
+   * @returns {Promise<Array<Addon>>}
+   */
+  getNewSideloads() {
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .getNewSideloads();
+  },
+
   get browserUpdated() {
     return gBrowserUpdated;
   },
