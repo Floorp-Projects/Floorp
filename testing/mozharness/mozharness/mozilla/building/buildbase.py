@@ -2153,24 +2153,6 @@ or run without that action (ie: --no-{action})"
             self.fatal('type: "%s" is unknown for sendchange type. valid '
                        'strings are "unittest" or "talos"' % test_type)
 
-    def generate_balrog_properties(self):
-        """Generate and upload balrog properties file, if appropriate.
-
-        Wrapper around generate_balrog_props
-        """
-        # generate balrog props as artifacts
-        if not self.config.get('taskcluster_nightly'):
-            return
-
-        # grab any props available from this or previous unclobbered runs
-        self.generate_build_props(console_output=False,
-                                  halt_on_failure=False)
-
-        env = self.query_mach_build_env(multiLocale=False)
-        props_path = os.path.join(env["UPLOAD_PATH"],
-                                  'balrog_props.json')
-        self.generate_balrog_props(props_path)
-
     def update(self):
         """ submit balrog update steps. """
         if self.config.get('forced_artifact_build'):
@@ -2183,6 +2165,14 @@ or run without that action (ie: --no-{action})"
         # grab any props available from this or previous unclobbered runs
         self.generate_build_props(console_output=False,
                                   halt_on_failure=False)
+
+        # generate balrog props as artifacts
+        if self.config.get('taskcluster_nightly'):
+            env = self.query_mach_build_env(multiLocale=False)
+            props_path = os.path.join(env["UPLOAD_PATH"],
+                    'balrog_props.json')
+            self.generate_balrog_props(props_path)
+            return
 
         if self.config.get('skip_balrog_uploads'):
             self.info("Funsize will submit to balrog, skipping submission here.")
