@@ -95,6 +95,90 @@ const gTestcases = [
     expectReflow: true,
   },
 
+  // * Changing 'overflow' on <body> should cause reflow,
+  // but not frame reconstruction
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: visible",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: visible",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // * Changing 'overflow' on <html> should cause reflow,
+  // but not frame reconstruction
+  {
+    elem: document.documentElement,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "overflow: visible",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // * Setting 'overflow' on arbitrary node should cause reflow as well as
+  // frame reconstruction
+  {
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: auto",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: visible",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
   // * Changing 'display' should cause frame construction and reflow.
   {
     beforeStyle: "display: inline",
@@ -135,23 +219,35 @@ function runOneTest(aTestcase)
     return;
   }
 
+  // Figure out which element we'll be tweaking (defaulting to gElem)
+  let elem = aTestcase.elem ?
+    aTestcase.elem : gElem;
+
+  // Verify that 'style' attribute is unset (avoid causing ourselves trouble):
+  if (elem.hasAttribute("style")) {
+    ok(false,
+       "test element has 'style' attribute already set! We're going to stomp " +
+       "on whatever's there when we clean up...");
+  }
+
   // Set the "before" style, and compose the first part of the message
   // to be used in our "is"/"isnot" invocations:
   let msgPrefix = "Changing style ";
   if (aTestcase.beforeStyle) {
-    gElem.setAttribute("style", aTestcase.beforeStyle);
+    elem.setAttribute("style", aTestcase.beforeStyle);
     msgPrefix += "from '" + aTestcase.beforeStyle + "' ";
   }
   msgPrefix += "to '" + aTestcase.afterStyle + "' ";
+  msgPrefix += "on " + elem.nodeName + " ";
 
   // Establish initial counts:
-  let unusedVal = gElem.offsetHeight; // flush layout
+  let unusedVal = elem.offsetHeight; // flush layout
   let origFramesConstructed = gUtils.framesConstructed;
   let origFramesReflowed = gUtils.framesReflowed;
 
   // Make the change and flush:
-  gElem.setAttribute("style", aTestcase.afterStyle);
-  unusedVal = gElem.offsetHeight; // flush layout
+  elem.setAttribute("style", aTestcase.afterStyle);
+  unusedVal = elem.offsetHeight; // flush layout
 
   // Make our is/isnot assertions about whether things should have changed:
   checkFinalCount(gUtils.framesConstructed, origFramesConstructed,
@@ -162,7 +258,7 @@ function runOneTest(aTestcase)
                   "reflow");
 
   // Clean up!
-  gElem.removeAttribute("style");
+  elem.removeAttribute("style");
 }
 
 gTestcases.forEach(runOneTest);
