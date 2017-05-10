@@ -60,7 +60,6 @@ public:
   FILE                        *mDebugFilePtr;    // a file where information can go to when printing
 
   mozilla::UniquePtr<nsPrintObject> mPrintObject;
-  nsPrintObject* mSelectedPO; // This is a non-owning pointer.
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
