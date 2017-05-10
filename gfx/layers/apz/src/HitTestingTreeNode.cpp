@@ -105,10 +105,8 @@ HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
 bool
 HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const
 {
-  return ((mScrollThumbData.mDirection == ScrollDirection::HORIZONTAL &&
-           aDragMetrics.mDirection == AsyncDragMetrics::HORIZONTAL) ||
-          (mScrollThumbData.mDirection == ScrollDirection::VERTICAL &&
-           aDragMetrics.mDirection == AsyncDragMetrics::VERTICAL)) &&
+  return IsScrollThumbNode() &&
+         mScrollThumbData.mDirection == aDragMetrics.mDirection &&
          mScrollViewId == aDragMetrics.mViewId;
 }
 
