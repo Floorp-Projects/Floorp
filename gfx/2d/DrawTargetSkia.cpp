@@ -268,6 +268,7 @@ DrawTargetSkia::DrawTargetSkia()
   , mColorSpace(nullptr)
   , mCanvasData(nullptr)
   , mCGSize(0, 0)
+  , mNeedLayer(false)
 #endif
 {
 }
@@ -1093,8 +1094,11 @@ SetupCGGlyphs(CGContextRef aCGContext,
 CGContextRef
 DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
 {
-  bool needLayer = !mCanvas->isClipEmpty() && !mCanvas->isClipRect();
-  if (needLayer) {
+  // Since we can't replay Skia clips, we have to use a layer if we have a complex clip.
+  // After saving a layer, the SkCanvas queries for needing a layer change so save if we
+  // pushed a layer.
+  mNeedLayer = !mCanvas->isClipEmpty() && !mCanvas->isClipRect();
+  if (mNeedLayer) {
     SkPaint paint;
     paint.setBlendMode(SkBlendMode::kSrc);
     SkCanvas::SaveLayerRec rec(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
@@ -1111,7 +1115,7 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
     return nullptr;
   }
 
-  if (!needLayer && (data == mCanvasData) && mCG && (mCGSize == size)) {
+  if (!mNeedLayer && (data == mCanvasData) && mCG && (mCGSize == size)) {
     // If our canvas data still points to the same data,
     // we can reuse the CG Context
     CGContextSaveGState(mCG);
@@ -1147,7 +1151,7 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
                                       NULL, /* Callback when released */
                                       NULL);
   if (!mCG) {
-    if (needLayer) {
+    if (mNeedLayer) {
       mCanvas->restore();
     }
     ReleaseBits(mCanvasData);
@@ -1171,8 +1175,7 @@ DrawTargetSkia::ReturnCGContext(CGContextRef aCGContext)
   ReleaseBits(mCanvasData);
   CGContextRestoreGState(aCGContext);
 
-  bool needLayer = !mCanvas->isClipEmpty() && !mCanvas->isClipRect();
-  if (needLayer) {
+  if (mNeedLayer) {
     // A layer was used for clipping and is about to be popped by the restore.
     // Make sure the CG context referencing it is released first so the popped
     // layer doesn't accidentally get used.
