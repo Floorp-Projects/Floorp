@@ -7,6 +7,7 @@
 const isOSX = (Services.appinfo.OS === "Darwin");
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/",

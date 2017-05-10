@@ -8,6 +8,7 @@ var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, function*() {
     info("Check cut button existence and functionality");
 
