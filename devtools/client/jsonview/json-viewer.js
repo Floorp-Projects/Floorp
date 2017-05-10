@@ -15,7 +15,6 @@ define(function (require, exports, module) {
   const headers = document.getElementById("headers");
 
   let jsonData;
-  let prettyURL;
 
   try {
     jsonData = JSON.parse(json.textContent);
@@ -46,10 +45,7 @@ define(function (require, exports, module) {
     },
 
     onSaveJson: function () {
-      if (input.prettified && !prettyURL) {
-        prettyURL = URL.createObjectURL(new Blob([input.jsonPretty]));
-      }
-      dispatchEvent("save", input.prettified ? prettyURL : null);
+      dispatchEvent("save", input.prettified ? input.jsonPretty : input.jsonText);
     },
 
     onCopyHeaders: function () {
