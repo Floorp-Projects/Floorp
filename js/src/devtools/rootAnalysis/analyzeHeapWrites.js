@@ -416,7 +416,7 @@ function ignoreContents(entry)
             /nsAC?String::Replace/,
             /nsAC?String::Trim/,
             /nsAC?String::Truncate/,
-            /nsString::StripChars/,
+            /nsAString::StripTaggedASCII/,
             /nsAC?String::operator=/,
             /nsAutoString::nsAutoString/,
             /nsFixedCString::nsFixedCString/,
