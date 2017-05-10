@@ -9,8 +9,9 @@
 
 BEGIN_WORKERS_NAMESPACE
 
-WorkerHolder::WorkerHolder()
+WorkerHolder::WorkerHolder(Behavior aBehavior)
   : mWorkerPrivate(nullptr)
+  , mBehavior(aBehavior)
 {
 }
 
@@ -43,6 +44,12 @@ WorkerHolder::ReleaseWorker()
   MOZ_ASSERT(mWorkerPrivate);
 
   ReleaseWorkerInternal();
+}
+
+WorkerHolder::Behavior
+WorkerHolder::GetBehavior() const
+{
+  return mBehavior;
 }
 
 void
