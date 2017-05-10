@@ -84,7 +84,7 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [12]
+  * ... `'content`: various value as list-style-type in counter functions [2]
   * test_html_attribute_computed_values.html `list-style-type` [8]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
