@@ -34,6 +34,9 @@ class SystemGroup
 
   static void InitStatic();
   static void Shutdown();
+
+  // Returns true if SystemGroup has been initialized.
+  static bool Initialized();
 };
 
 } // namespace mozilla
