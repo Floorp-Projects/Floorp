@@ -538,13 +538,13 @@ NetworkResponseListener.prototype = {
     }
 
     let channel = this.httpActivity.channel;
-    let openResponse = this.owner.openResponses.get(channel.channelId);
+    let openResponse = this.owner.openResponses.get(channel);
     if (!openResponse) {
       return;
     }
     this._foundOpenResponse = true;
 
-    this.owner.openResponses.delete(channel.channelId);
+    this.owner.openResponses.delete(channel);
 
     this.httpActivity.owner.addResponseHeaders(openResponse.headers);
     this.httpActivity.owner.addResponseCookies(openResponse.cookies);
@@ -886,7 +886,7 @@ NetworkMonitor.prototype = {
     response.httpVersion = "HTTP/" + httpVersionMaj.value + "." +
                                      httpVersionMin.value;
 
-    this.openResponses.set(channel.channelId, response);
+    this.openResponses.set(channel, response);
 
     if (topic === "http-on-examine-cached-response") {
       // Service worker requests emits cached-reponse notification on non-e10s,
@@ -1170,7 +1170,7 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object, or null if it is not found.
    */
   _findActivityObject: function (channel) {
-    return this.openRequests.get(channel.channelId) || null;
+    return this.openRequests.get(channel) || null;
   },
 
   /**
@@ -1212,7 +1212,7 @@ NetworkMonitor.prototype = {
         owner: null,
       };
 
-      this.openRequests.set(channel.channelId, httpActivity);
+      this.openRequests.set(channel, httpActivity);
     }
 
     return httpActivity;
@@ -1363,7 +1363,7 @@ NetworkMonitor.prototype = {
   _onTransactionClose: function (httpActivity) {
     let result = this._setupHarTimings(httpActivity);
     httpActivity.owner.addEventTimings(result.total, result.timings);
-    this.openRequests.delete(httpActivity.channel.channelId);
+    this.openRequests.delete(httpActivity.channel);
   },
 
   /**
