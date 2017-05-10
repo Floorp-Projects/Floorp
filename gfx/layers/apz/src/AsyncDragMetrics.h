@@ -8,6 +8,7 @@
 #define mozilla_layers_DragMetrics_h
 
 #include "FrameMetrics.h"
+#include "LayersTypes.h"
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -21,27 +22,20 @@ class AsyncDragMetrics {
   friend struct IPC::ParamTraits<mozilla::layers::AsyncDragMetrics>;
 
 public:
-  enum DragDirection {
-    NONE,
-    VERTICAL,
-    HORIZONTAL,
-    SENTINEL,
-  };
-
   // IPC constructor
   AsyncDragMetrics()
     : mViewId(0)
     , mPresShellId(0)
     , mDragStartSequenceNumber(0)
     , mScrollbarDragOffset(0)
-    , mDirection(NONE)
+    , mDirection(ScrollDirection::NONE)
   {}
 
   AsyncDragMetrics(const FrameMetrics::ViewID& aViewId,
                    uint32_t aPresShellId,
                    uint64_t aDragStartSequenceNumber,
                    CSSCoord aScrollbarDragOffset,
-                   DragDirection aDirection)
+                   ScrollDirection aDirection)
     : mViewId(aViewId)
     , mPresShellId(aPresShellId)
     , mDragStartSequenceNumber(aDragStartSequenceNumber)
@@ -53,7 +47,7 @@ public:
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
   CSSCoord mScrollbarDragOffset;
-  DragDirection mDirection;
+  ScrollDirection mDirection;
 };
 
 }

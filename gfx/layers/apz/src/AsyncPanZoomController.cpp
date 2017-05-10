@@ -833,8 +833,8 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const PointTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const PointTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -842,8 +842,8 @@ static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, cons
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -851,8 +851,8 @@ static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, cons
 }
 
 template <typename Units>
-static IntCoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const IntRectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static IntCoordTyped<Units> GetAxisStart(ScrollDirection aDir, const IntRectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -860,8 +860,8 @@ static IntCoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, c
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisEnd(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisEnd(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x + aValue.width;
   } else {
     return aValue.y + aValue.height;
@@ -869,8 +869,8 @@ static CoordTyped<Units> GetAxisEnd(AsyncDragMetrics::DragDirection aDir, const 
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisLength(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisLength(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.width;
   } else {
     return aValue.height;
@@ -878,8 +878,8 @@ static CoordTyped<Units> GetAxisLength(AsyncDragMetrics::DragDirection aDir, con
 }
 
 template <typename FromUnits, typename ToUnits>
-static float GetAxisScale(AsyncDragMetrics::DragDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static float GetAxisScale(ScrollDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.xScale;
   } else {
     return aValue.yScale;
@@ -936,7 +936,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   scrollPosition = std::min(scrollPosition, maxScrollPosition);
 
   CSSPoint scrollOffset = mFrameMetrics.GetScrollOffset();
-  if (aDragMetrics.mDirection == AsyncDragMetrics::HORIZONTAL) {
+  if (aDragMetrics.mDirection == ScrollDirection::HORIZONTAL) {
     scrollOffset.x = scrollPosition;
   } else {
     scrollOffset.y = scrollPosition;
