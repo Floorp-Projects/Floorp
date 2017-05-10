@@ -27,7 +27,6 @@
 #include "FramePropertyTable.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/SmallPointerArray.h"
 #include "mozilla/WritingModes.h"
 #include "nsDirection.h"
 #include "nsFrameList.h"
@@ -99,7 +98,6 @@ class EventStates;
 struct ReflowInput;
 class ReflowOutput;
 class ServoStyleSet;
-class DisplayItemData;
 
 namespace layers {
 class Layer;
@@ -601,7 +599,6 @@ public:
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
-  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemArray;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
@@ -3721,11 +3718,7 @@ public:
                             nscoord             aBoxSizingToMarginEdge,
                             const nsStyleCoord& aCoord,
                             ComputeSizeFlags    aFlags = eDefault);
-
-  DisplayItemArray& DisplayItemData() { return mDisplayItemData; }
-
 protected:
-
   /**
    * Reparent this frame's view if it has one.
    */
@@ -3741,7 +3734,6 @@ private:
   nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
-  DisplayItemArray mDisplayItemData;
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect);
 
