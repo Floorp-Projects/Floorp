@@ -20,6 +20,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 protected:
   explicit NumericInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)

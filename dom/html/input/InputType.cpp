@@ -216,6 +216,15 @@ InputType::ConvertStringToNumber(nsAString& aValue,
 }
 
 bool
+InputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                 nsAString& aResultString) const
+{
+  NS_WARNING("InputType::ConvertNumberToString called");
+
+  return false;
+}
+
+bool
 InputType::ParseDate(const nsAString& aValue, uint32_t* aYear, uint32_t* aMonth,
                      uint32_t* aDay) const
 {
@@ -270,4 +279,19 @@ InputType::DaysSinceEpochFromWeek(uint32_t aYear, uint32_t aWeek) const
 {
   // see comment in InputType::ParseDate().
   return mInputElement->DaysSinceEpochFromWeek(aYear, aWeek);
+}
+
+uint32_t
+InputType::DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay,
+                     bool isoWeek) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->DayOfWeek(aYear, aMonth, aDay, isoWeek);
+}
+
+uint32_t
+InputType::MaximumWeekInYear(uint32_t aYear) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->MaximumWeekInYear(aYear);
 }
