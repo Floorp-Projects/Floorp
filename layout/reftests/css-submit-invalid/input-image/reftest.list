@@ -1,16 +1,16 @@
-fails-if(stylo) == static-valid.html valid-ref.html
-fails-if(stylo) == dynamic-valid.html valid-ref.html
-fails-if(stylo) == static-invalid.html invalid-ref.html
-fails-if(stylo) == dynamic-invalid.html invalid-ref.html
-fails-if(stylo) == dynamic-invalid-barred.html invalid-barred-ref.html
-fails-if(stylo) == dynamic-invalid-barred-2.html invalid-barred-ref.html
-fails-if(stylo) == dynamic-invalid-not-barred.html invalid-ref.html
-fails-if(stylo) == static-invalid-barred.html invalid-barred-ref.html
+== static-valid.html valid-ref.html
+== dynamic-valid.html valid-ref.html
+== static-invalid.html invalid-ref.html
+== dynamic-invalid.html invalid-ref.html
+== dynamic-invalid-barred.html invalid-barred-ref.html
+== dynamic-invalid-barred-2.html invalid-barred-ref.html
+== dynamic-invalid-not-barred.html invalid-ref.html
+== static-invalid-barred.html invalid-barred-ref.html
 == remove-invalid-element.html valid-ref-2.html
-fails-if(stylo) == add-invalid-element.html invalid-ref-2.html
-fails-if(stylo) == add-submit-control.html invalid-ref.html
-fails-if(stylo) == remove-submit-control.html valid-ref-3.html
-fails-if(stylo) == change-type-submit-control.html invalid-ref.html
-fails-if(stylo) == change-type-not-submit-control.html valid-ref-4.html
+== add-invalid-element.html invalid-ref-2.html
+== add-submit-control.html invalid-ref.html
+== remove-submit-control.html valid-ref-3.html
+== change-type-submit-control.html invalid-ref.html
+== change-type-not-submit-control.html valid-ref-4.html
 == self-invalid.html about:blank
-fails-if(stylo) == remove-form.html invalid-ref-3.html
+== remove-form.html invalid-ref-3.html
