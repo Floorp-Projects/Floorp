@@ -155,15 +155,14 @@
   visibility: collapse;
 }
 
-/* CONNECTION ICON */
+/* CONNECTION ICON, EXTENSION ICON */
 
-#connection-icon {
+#connection-icon, #extension-icon {
   width: 16px;
   height: 16px;
   margin-inline-start: 2px;
   visibility: collapse;
 }
-
 
 /* REMOTE CONTROL ICON */
 
