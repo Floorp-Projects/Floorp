@@ -27,7 +27,7 @@ browser.jar:
         content/browser/abouthome/settings.png        (content/abouthome/settings.png)
         content/browser/abouthome/restore.png         (content/abouthome/restore.png)
         content/browser/abouthome/restore-large.png   (content/abouthome/restore-large.png)
-        content/browser/abouthome/mozilla.png         (content/abouthome/mozilla.png)
+        content/browser/abouthome/mozilla.svg         (content/abouthome/mozilla.svg)
         content/browser/abouthome/snippet1@2x.png      (content/abouthome/snippet1@2x.png)
         content/browser/abouthome/snippet2@2x.png      (content/abouthome/snippet2@2x.png)
         content/browser/abouthome/downloads@2x.png     (content/abouthome/downloads@2x.png)
@@ -38,7 +38,6 @@ browser.jar:
         content/browser/abouthome/settings@2x.png      (content/abouthome/settings@2x.png)
         content/browser/abouthome/restore@2x.png       (content/abouthome/restore@2x.png)
         content/browser/abouthome/restore-large@2x.png (content/abouthome/restore-large@2x.png)
-        content/browser/abouthome/mozilla@2x.png       (content/abouthome/mozilla@2x.png)
 
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
 
