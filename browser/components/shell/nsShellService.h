@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define PREF_CHECKDEFAULTBROWSER "browser.shell.checkDefaultBrowser"
-#define PREF_SKIPDEFAULTBROWSERCHECK "browser.shell.skipDefaultBrowserCheck"
 #define PREF_DEFAULTBROWSERCHECKCOUNT "browser.shell.defaultBrowserCheckCount"
 
 #define SHELLSERVICE_PROPERTIES "chrome://browser/locale/shellservice.properties"
