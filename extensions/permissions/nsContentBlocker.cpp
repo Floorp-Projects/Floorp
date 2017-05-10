@@ -267,6 +267,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  bool *aFromPrefs)
 {
   *aFromPrefs = false;
+  nsresult rv;
 
   if (!*kTypeString[aContentType - 1]) {
     // Disallow internal content policy types, they should not be used here.
@@ -282,11 +283,16 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
   // default prefs.
   // Don't forget the aContentType ranges from 1..8, while the
   // array is indexed 0..7
-  uint32_t permission;
-  nsresult rv = mPermissionManager->TestPermission(aCurrentURI, 
-                                                   kTypeString[aContentType - 1],
-                                                   &permission);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // All permissions tested by this method are preload permissions, so don't
+  // bother actually checking with the permission manager unless we have a
+  // preload permission.
+  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+  if (mPermissionManager->GetHasPreloadPermissions()) {
+    rv = mPermissionManager->TestPermission(aCurrentURI,
+                                            kTypeString[aContentType - 1],
+                                            &permission);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // If there is nothing on the list, use the default.
   if (!permission) {
