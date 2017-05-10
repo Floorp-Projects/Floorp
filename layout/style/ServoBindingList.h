@@ -143,7 +143,8 @@ SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    nsCSSPropertyID property, const nsACString* value,
-                   RawGeckoURLExtraData* data)
+                   RawGeckoURLExtraData* data,
+                   mozilla::LengthParsingMode length_parsing_mode)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
