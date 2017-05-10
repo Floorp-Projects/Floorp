@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nsASCIIMask.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
@@ -1087,6 +1088,53 @@ TEST(Strings, Split)
   }
   EXPECT_EQ(counter, (size_t)2);
 }
+
+constexpr bool TestSomeChars(char c)
+{
+  return c == 'a' || c == 'c' || c == 'e' || c == '7' ||
+         c == 'G' || c == 'Z' || c == '\b' || c == '?';
+}
+TEST(Strings,ASCIIMask)
+{
+  const ASCIIMaskArray& maskCRLF = mozilla::ASCIIMask::MaskCRLF();
+  EXPECT_TRUE(maskCRLF['\n'] && mozilla::ASCIIMask::IsMasked(maskCRLF, '\n'));
+  EXPECT_TRUE(maskCRLF['\r'] && mozilla::ASCIIMask::IsMasked(maskCRLF, '\r'));
+  EXPECT_FALSE(maskCRLF['g'] || mozilla::ASCIIMask::IsMasked(maskCRLF, 'g'));
+  EXPECT_FALSE(maskCRLF[' '] || mozilla::ASCIIMask::IsMasked(maskCRLF, ' '));
+  EXPECT_FALSE(maskCRLF['\0'] || mozilla::ASCIIMask::IsMasked(maskCRLF, '\0'));
+  EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
+
+  const ASCIIMaskArray& mask0to9 = mozilla::ASCIIMask::Mask0to9();
+  EXPECT_TRUE(mask0to9['9'] && mozilla::ASCIIMask::IsMasked(mask0to9, '9'));
+  EXPECT_TRUE(mask0to9['0'] && mozilla::ASCIIMask::IsMasked(mask0to9, '0'));
+  EXPECT_TRUE(mask0to9['4'] && mozilla::ASCIIMask::IsMasked(mask0to9, '4'));
+  EXPECT_FALSE(mask0to9['g'] || mozilla::ASCIIMask::IsMasked(mask0to9, 'g'));
+  EXPECT_FALSE(mask0to9[' '] || mozilla::ASCIIMask::IsMasked(mask0to9, ' '));
+  EXPECT_FALSE(mask0to9['\n'] || mozilla::ASCIIMask::IsMasked(mask0to9, '\n'));
+  EXPECT_FALSE(mask0to9['\0'] || mozilla::ASCIIMask::IsMasked(mask0to9, '\0'));
+  EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
+
+  const ASCIIMaskArray& maskWS = mozilla::ASCIIMask::MaskWhitespace();
+  EXPECT_TRUE(maskWS[' '] && mozilla::ASCIIMask::IsMasked(maskWS, ' '));
+  EXPECT_TRUE(maskWS['\t'] && mozilla::ASCIIMask::IsMasked(maskWS, '\t'));
+  EXPECT_FALSE(maskWS['8'] || mozilla::ASCIIMask::IsMasked(maskWS, '8'));
+  EXPECT_FALSE(maskWS['\0'] || mozilla::ASCIIMask::IsMasked(maskWS, '\0'));
+  EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
+
+  constexpr ASCIIMaskArray maskSome = mozilla::CreateASCIIMask(TestSomeChars);
+  EXPECT_TRUE(maskSome['a'] && mozilla::ASCIIMask::IsMasked(maskSome, 'a'));
+  EXPECT_TRUE(maskSome['c'] && mozilla::ASCIIMask::IsMasked(maskSome, 'c'));
+  EXPECT_TRUE(maskSome['e'] && mozilla::ASCIIMask::IsMasked(maskSome, 'e'));
+  EXPECT_TRUE(maskSome['7'] && mozilla::ASCIIMask::IsMasked(maskSome, '7'));
+  EXPECT_TRUE(maskSome['G'] && mozilla::ASCIIMask::IsMasked(maskSome, 'G'));
+  EXPECT_TRUE(maskSome['Z'] && mozilla::ASCIIMask::IsMasked(maskSome, 'Z'));
+  EXPECT_TRUE(maskSome['\b'] && mozilla::ASCIIMask::IsMasked(maskSome, '\b'));
+  EXPECT_TRUE(maskSome['?'] && mozilla::ASCIIMask::IsMasked(maskSome, '?'));
+  EXPECT_FALSE(maskSome['8'] || mozilla::ASCIIMask::IsMasked(maskSome, '8'));
+  EXPECT_FALSE(maskSome['\0'] || mozilla::ASCIIMask::IsMasked(maskSome, '\0'));
+  EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
+}
+
 
 template <typename T> void
 CompressWhitespaceHelper()
