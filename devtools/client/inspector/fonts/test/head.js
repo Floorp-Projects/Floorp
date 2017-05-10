@@ -61,8 +61,8 @@ var openFontInspectorForURL = Task.async(function* (url) {
 function* updatePreviewText(view, text) {
   info(`Changing the preview text to '${text}'`);
 
-  let doc = view.chromeDoc;
-  let input = doc.getElementById("font-preview-text-input");
+  let doc = view.document;
+  let input = doc.querySelector("#sidebar-panel-fontinspector .devtools-textinput");
   let update = view.inspector.once("fontinspector-updated");
 
   info("Focusing the input field.");
