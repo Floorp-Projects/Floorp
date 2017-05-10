@@ -147,7 +147,6 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 , mCompositor(aCompositor)
 , mInTransaction(false)
 , mIsCompositorReady(false)
-, mGeometryChanged(true)
 #if defined(MOZ_WIDGET_ANDROID)
 , mScreenPixelsTarget(nullptr)
 #endif // defined(MOZ_WIDGET_ANDROID)
@@ -435,9 +434,6 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     MOZ_ASSERT(!aTimeStamp.IsNull());
     UpdateAndRender();
     mCompositor->FlushPendingNotifyNotUsed();
-  } else {
-    // Modified the layer tree.
-    mGeometryChanged = true;
   }
 
   mCompositor->ClearTargetContext();
@@ -468,7 +464,7 @@ LayerManagerComposite::UpdateAndRender()
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
     // ContainerLayers.
-    nsIntRegion changed = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr, &mGeometryChanged);
+    nsIntRegion changed = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr);
 
     if (mTarget) {
       // Since we're composing to an external target, we're not going to use
@@ -516,7 +512,6 @@ LayerManagerComposite::UpdateAndRender()
 #if defined(MOZ_WIDGET_ANDROID)
   RenderToPresentationSurface();
 #endif
-  mGeometryChanged = false;
   mWindowOverlayChanged = false;
 
   // Update cached layer tree information.
