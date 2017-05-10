@@ -164,6 +164,7 @@ FT_Library Factory::mFTLibrary = nullptr;
 #endif
 
 #ifdef WIN32
+static uint32_t mDeviceSeq = 0;
 ID3D11Device *Factory::mD3D11Device = nullptr;
 ID2D1Device *Factory::mD2D1Device = nullptr;
 IDWriteFactory *Factory::mDWriteFactory = nullptr;
@@ -676,6 +677,8 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 
     mD3D11Device = nullptr;
     return false;
+  } else {
+    mDeviceSeq++;
   }
 
   return true;
@@ -691,6 +694,12 @@ ID2D1Device*
 Factory::GetD2D1Device()
 {
   return mD2D1Device;
+}
+
+uint32_t
+Factory::GetD2D1DeviceSeq()
+{
+  return mDeviceSeq;
 }
 
 IDWriteFactory*
