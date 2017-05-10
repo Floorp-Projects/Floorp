@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "GrShaderCaps.h"
+#include "GrGLSL.h"
+#include "GrGLSLCaps.h"
 #include "SkString.h"
-#include "../private/GrGLSL.h"
 
 bool GrGLSLSupportsNamedFragmentShaderOutputs(GrGLSLGeneration gen) {
     switch (gen) {
@@ -18,7 +18,6 @@ bool GrGLSLSupportsNamedFragmentShaderOutputs(GrGLSLGeneration gen) {
         case k150_GrGLSLGeneration:
         case k330_GrGLSLGeneration:
         case k400_GrGLSLGeneration:
-        case k420_GrGLSLGeneration:
         case k310es_GrGLSLGeneration:
         case k320es_GrGLSLGeneration:
             return true;
@@ -27,9 +26,9 @@ bool GrGLSLSupportsNamedFragmentShaderOutputs(GrGLSLGeneration gen) {
 }
 
 void GrGLSLAppendDefaultFloatPrecisionDeclaration(GrSLPrecision p,
-                                                  const GrShaderCaps& shaderCaps,
+                                                  const GrGLSLCaps& glslCaps,
                                                   SkString* out) {
-    if (shaderCaps.usesPrecisionModifiers()) {
+    if (glslCaps.usesPrecisionModifiers()) {
         switch (p) {
             case kHigh_GrSLPrecision:
                 out->append("precision highp float;\n");

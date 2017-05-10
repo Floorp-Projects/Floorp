@@ -5,9 +5,6 @@
  * found in the LICENSE file.
  */
 
-#ifndef SkFrontBufferedStream_DEFINED
-#define SkFrontBufferedStream_DEFINED
-
 #include "SkTypes.h"
 
 class SkStream;
@@ -38,4 +35,3 @@ public:
      */
     static SkStreamRewindable* Create(SkStream* stream, size_t minBufferSize);
 };
-#endif  // SkFrontBufferedStream_DEFINED

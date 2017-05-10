@@ -26,6 +26,13 @@ public:
                                      const SkImageFilter::CropRect* cropRect = nullptr);
 
 
+#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
+    static SkImageFilter* Create(const SkRegion& region, SkScalar innerMin,
+                                 SkScalar outerMax, SkImageFilter* input = nullptr) {
+        return Make(region, innerMin, outerMax, sk_ref_sp<SkImageFilter>(input)).release();
+    }
+#endif
+
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP();
 };
 

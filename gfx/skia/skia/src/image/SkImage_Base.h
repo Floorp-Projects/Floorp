@@ -14,12 +14,11 @@
 
 #if SK_SUPPORT_GPU
     #include "GrTexture.h"
-    #include "GrTextureProxy.h"
 #endif
 
 #include <new>
 
-class GrSamplerParams;
+class GrTextureParams;
 class SkImageCacherator;
 
 enum {
@@ -41,35 +40,23 @@ public:
 
     virtual const SkBitmap* onPeekBitmap() const { return nullptr; }
 
-    virtual bool onReadYUV8Planes(const SkISize sizes[3], void* const planes[3],
-                                  const size_t rowBytes[3], SkYUVColorSpace colorSpace) const;
-
+    // Default impl calls onDraw
     virtual bool onReadPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
-                              int srcX, int srcY, CachingHint) const = 0;
+                              int srcX, int srcY, CachingHint) const;
 
-    // MDB TODO: this entry point needs to go away
     virtual GrTexture* peekTexture() const { return nullptr; }
 #if SK_SUPPORT_GPU
-    virtual GrTextureProxy* peekProxy() const { return nullptr; }
-    virtual sk_sp<GrTextureProxy> asTextureProxyRef() const { return nullptr; }
-    virtual sk_sp<GrTextureProxy> asTextureProxyRef(GrContext*, const GrSamplerParams&,
-                                                    SkColorSpace*, sk_sp<SkColorSpace>*,
-                                                    SkScalar scaleAdjust[2]) const = 0;
-    virtual sk_sp<GrTextureProxy> refPinnedTextureProxy(uint32_t* uniqueID) const {
-        return nullptr;
-    }
-    virtual GrBackendObject onGetTextureHandle(bool flushPendingGrContextIO,
-                                               GrSurfaceOrigin* origin) const {
-        return 0;
-    }
-    virtual GrTexture* onGetTexture() const { return nullptr; }
+    virtual sk_sp<GrTexture> refPinnedTexture(uint32_t* uniqueID) const { return nullptr; }
 #endif
     virtual SkImageCacherator* peekCacherator() const { return nullptr; }
 
     // return a read-only copy of the pixels. We promise to not modify them,
     // but only inspect them (or encode them).
-    virtual bool getROPixels(SkBitmap*, SkColorSpace* dstColorSpace,
-                             CachingHint = kAllow_CachingHint) const = 0;
+    virtual bool getROPixels(SkBitmap*, CachingHint = kAllow_CachingHint) const = 0;
+
+    // Caller must call unref when they are done.
+    virtual GrTexture* asTextureRef(GrContext*, const GrTextureParams&,
+                                    SkSourceGammaTreatment) const = 0;
 
     virtual sk_sp<SkImage> onMakeSubset(const SkIRect&) const = 0;
 
@@ -86,10 +73,8 @@ public:
         fAddedToCache.store(true);
     }
 
-    virtual bool onPinAsTexture(GrContext*) const { return false; }
+    virtual void onPinAsTexture(GrContext*) const {}
     virtual void onUnpinAsTexture(GrContext*) const {}
-
-    virtual sk_sp<SkImage> onMakeColorSpace(sk_sp<SkColorSpace>) const = 0;
 
 private:
     // Set true by caches when they cache content that's derived from the current pixels.

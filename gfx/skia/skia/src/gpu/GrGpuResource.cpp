@@ -43,17 +43,6 @@ void GrGpuResource::registerWithCacheWrapped() {
     get_resource_cache(fGpu)->resourceAccess().insertResource(this);
 }
 
-void GrGpuResource::detachFromCache() {
-    if (this->wasDestroyed()) {
-        return;
-    }
-    if (fUniqueKey.isValid()) {
-        this->removeUniqueKey();
-    }
-    this->removeScratchKey();
-    this->makeUnbudgeted();
-}
-
 GrGpuResource::~GrGpuResource() {
     // The cache should have released or destroyed this resource.
     SkASSERT(this->wasDestroyed());
@@ -81,7 +70,7 @@ void GrGpuResource::abandon() {
 void GrGpuResource::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const {
     // Dump resource as "skia/gpu_resources/resource_#".
     SkString dumpName("skia/gpu_resources/resource_");
-    dumpName.appendU32(this->uniqueID().asUInt());
+    dumpName.appendS32(this->uniqueID());
 
     traceMemoryDump->dumpNumericValue(dumpName.c_str(), "size", "bytes", this->gpuMemorySize());
 

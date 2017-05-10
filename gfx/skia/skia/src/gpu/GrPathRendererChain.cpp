@@ -9,60 +9,61 @@
 #include "GrPathRendererChain.h"
 
 #include "GrCaps.h"
-#include "GrShaderCaps.h"
 #include "gl/GrGLCaps.h"
+#include "glsl/GrGLSLCaps.h"
 #include "GrContext.h"
 #include "GrGpu.h"
 
-#include "ops/GrAAConvexPathRenderer.h"
-#include "ops/GrAAHairLinePathRenderer.h"
-#include "ops/GrAALinearizingConvexPathRenderer.h"
-#include "ops/GrSmallPathRenderer.h"
-#include "ops/GrDashLinePathRenderer.h"
-#include "ops/GrDefaultPathRenderer.h"
-#include "ops/GrMSAAPathRenderer.h"
-#include "ops/GrStencilAndCoverPathRenderer.h"
-#include "ops/GrTessellatingPathRenderer.h"
+#include "batches/GrAAConvexPathRenderer.h"
+#include "batches/GrAADistanceFieldPathRenderer.h"
+#include "batches/GrAAHairLinePathRenderer.h"
+#include "batches/GrAALinearizingConvexPathRenderer.h"
+#include "batches/GrDashLinePathRenderer.h"
+#include "batches/GrDefaultPathRenderer.h"
+#include "batches/GrMSAAPathRenderer.h"
+#include "batches/GrPLSPathRenderer.h"
+#include "batches/GrStencilAndCoverPathRenderer.h"
+#include "batches/GrTessellatingPathRenderer.h"
 
 GrPathRendererChain::GrPathRendererChain(GrContext* context, const Options& options) {
-    using GpuPathRenderers = GrContextOptions::GpuPathRenderers;
-    const GrCaps& caps = *context->caps();
-    if (options.fGpuPathRenderers & GpuPathRenderers::kDashLine) {
-        fChain.push_back(sk_make_sp<GrDashLinePathRenderer>());
-    }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kStencilAndCover) {
-        sk_sp<GrPathRenderer> pr(
-            GrStencilAndCoverPathRenderer::Create(context->resourceProvider(), caps));
-        if (pr) {
-            fChain.push_back(std::move(pr));
+    if (!options.fDisableAllPathRenderers) {
+        const GrCaps& caps = *context->caps();
+        this->addPathRenderer(new GrDashLinePathRenderer)->unref();
+
+        if (GrPathRenderer* pr = GrStencilAndCoverPathRenderer::Create(context->resourceProvider(),
+                                                                       caps)) {
+            this->addPathRenderer(pr)->unref();
         }
-    }
-#ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    if (options.fGpuPathRenderers & GpuPathRenderers::kMSAA) {
+    #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
         if (caps.sampleShadingSupport()) {
-            fChain.push_back(sk_make_sp<GrMSAAPathRenderer>());
+            this->addPathRenderer(new GrMSAAPathRenderer)->unref();
         }
+    #endif
+        this->addPathRenderer(new GrAAHairLinePathRenderer)->unref();
+        this->addPathRenderer(new GrAAConvexPathRenderer)->unref();
+        this->addPathRenderer(new GrAALinearizingConvexPathRenderer)->unref();
+        if (caps.shaderCaps()->plsPathRenderingSupport()) {
+            this->addPathRenderer(new GrPLSPathRenderer)->unref();
+        }
+        if (!options.fDisableDistanceFieldRenderer) {
+            this->addPathRenderer(new GrAADistanceFieldPathRenderer)->unref();
+        }
+        this->addPathRenderer(new GrTessellatingPathRenderer)->unref();
+        this->addPathRenderer(new GrDefaultPathRenderer(caps.twoSidedStencilSupport(),
+                                                        caps.stencilWrapOpsSupport()))->unref();
     }
-#endif
-    if (options.fGpuPathRenderers & GpuPathRenderers::kAAHairline) {
-        fChain.push_back(sk_make_sp<GrAAHairLinePathRenderer>());
+}
+
+GrPathRendererChain::~GrPathRendererChain() {
+    for (int i = 0; i < fChain.count(); ++i) {
+        fChain[i]->unref();
     }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kAAConvex) {
-        fChain.push_back(sk_make_sp<GrAAConvexPathRenderer>());
-    }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kAALinearizing) {
-        fChain.push_back(sk_make_sp<GrAALinearizingConvexPathRenderer>());
-    }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kSmall) {
-        fChain.push_back(sk_make_sp<GrSmallPathRenderer>());
-    }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kTessellating) {
-        fChain.push_back(sk_make_sp<GrTessellatingPathRenderer>());
-    }
-    if (options.fGpuPathRenderers & GpuPathRenderers::kDefault) {
-        fChain.push_back(sk_make_sp<GrDefaultPathRenderer>(caps.twoSidedStencilSupport(),
-                                                           caps.stencilWrapOpsSupport()));
-    }
+}
+
+GrPathRenderer* GrPathRendererChain::addPathRenderer(GrPathRenderer* pr) {
+    fChain.push_back() = pr;
+    pr->ref();
+    return pr;
 }
 
 GrPathRenderer* GrPathRendererChain::getPathRenderer(
@@ -74,9 +75,10 @@ GrPathRenderer* GrPathRendererChain::getPathRenderer(
     GR_STATIC_ASSERT(GrPathRenderer::kStencilOnly_StencilSupport <
                      GrPathRenderer::kNoRestriction_StencilSupport);
     GrPathRenderer::StencilSupport minStencilSupport;
-    if (DrawType::kStencil == drawType) {
+    if (kStencilOnly_DrawType == drawType) {
         minStencilSupport = GrPathRenderer::kStencilOnly_StencilSupport;
-    } else if (DrawType::kStencilAndColor == drawType) {
+    } else if (kStencilAndColor_DrawType == drawType ||
+               kStencilAndColorAntiAlias_DrawType == drawType) {
         minStencilSupport = GrPathRenderer::kNoRestriction_StencilSupport;
     } else {
         minStencilSupport = GrPathRenderer::kNoSupport_StencilSupport;
@@ -98,7 +100,7 @@ GrPathRenderer* GrPathRendererChain::getPathRenderer(
                     *stencilSupport = support;
                 }
             }
-            return fChain[i].get();
+            return fChain[i];
         }
     }
     return nullptr;

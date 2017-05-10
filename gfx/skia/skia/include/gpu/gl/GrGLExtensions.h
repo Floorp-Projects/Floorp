@@ -68,7 +68,7 @@ public:
 
 private:
     bool                                fInitialized;
-    std::unique_ptr<SkTArray<SkString>> fStrings;
+    SkAutoTDelete<SkTArray<SkString> >  fStrings;
 };
 
 #endif

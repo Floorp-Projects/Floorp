@@ -7,9 +7,7 @@
 
 #include "GrTextureStripAtlas.h"
 #include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrResourceProvider.h"
-#include "GrSurfaceContext.h"
+#include "GrTexture.h"
 #include "SkGr.h"
 #include "SkPixelRef.h"
 #include "SkTSearch.h"
@@ -75,6 +73,7 @@ GrTextureStripAtlas::GrTextureStripAtlas(GrTextureStripAtlas::Desc desc)
     , fLockedRows(0)
     , fDesc(desc)
     , fNumRows(desc.fHeight / desc.fRowHeight)
+    , fTexture(nullptr)
     , fRows(new AtlasRow[fNumRows])
     , fLRUFront(nullptr)
     , fLRUBack(nullptr) {
@@ -86,16 +85,16 @@ GrTextureStripAtlas::GrTextureStripAtlas(GrTextureStripAtlas::Desc desc)
 
 GrTextureStripAtlas::~GrTextureStripAtlas() { delete[] fRows; }
 
-int GrTextureStripAtlas::lockRow(const SkBitmap& bitmap) {
+int GrTextureStripAtlas::lockRow(const SkBitmap& data) {
     VALIDATE;
     if (0 == fLockedRows) {
         this->lockTexture();
-        if (!fTexContext) {
+        if (!fTexture) {
             return -1;
         }
     }
 
-    int key = bitmap.getGenerationID();
+    int key = data.getGenerationID();
     int rowNumber = -1;
     int index = this->searchByKey(key);
 
@@ -122,7 +121,7 @@ int GrTextureStripAtlas::lockRow(const SkBitmap& bitmap) {
 
         if (nullptr == row) {
             // force a flush, which should unlock all the rows; then try again
-            fDesc.fContext->contextPriv().flush(nullptr); // tighten this up?
+            fDesc.fContext->flush();
             row = this->getLRU();
             if (nullptr == row) {
                 --fLockedRows;
@@ -153,25 +152,21 @@ int GrTextureStripAtlas::lockRow(const SkBitmap& bitmap) {
         fKeyTable.insert(index, 1, &row);
         rowNumber = static_cast<int>(row - fRows);
 
-        SkAutoLockPixels lock(bitmap);
-
-        SkASSERT(bitmap.width() == fDesc.fWidth);
-        SkASSERT(bitmap.height() == fDesc.fRowHeight);
+        SkAutoLockPixels lock(data);
 
         // Pass in the kDontFlush flag, since we know we're writing to a part of this texture
         // that is not currently in use
-        fTexContext->writePixels(bitmap.info(), bitmap.getPixels(), bitmap.rowBytes(),
-                                 0, rowNumber * fDesc.fRowHeight,
-                                 GrContextPriv::kDontFlush_PixelOpsFlag);
+        fTexture->writePixels(0,  rowNumber * fDesc.fRowHeight,
+                              fDesc.fWidth, fDesc.fRowHeight,
+                              SkImageInfo2GrPixelConfig(data.info(), *this->getContext()->caps()),
+                              data.getPixels(),
+                              data.rowBytes(),
+                              GrContext::kDontFlush_PixelOpsFlag);
     }
 
     SkASSERT(rowNumber >= 0);
     VALIDATE;
     return rowNumber;
-}
-
-sk_sp<GrTextureProxy> GrTextureStripAtlas::asTextureProxyRef() const {
-    return fTexContext->asTextureProxyRef();
 }
 
 void GrTextureStripAtlas::unlockRow(int row) {
@@ -196,10 +191,10 @@ GrTextureStripAtlas::AtlasRow* GrTextureStripAtlas::getLRU() {
 
 void GrTextureStripAtlas::lockTexture() {
     GrSurfaceDesc texDesc;
-    texDesc.fOrigin = kTopLeft_GrSurfaceOrigin;
     texDesc.fWidth = fDesc.fWidth;
     texDesc.fHeight = fDesc.fHeight;
     texDesc.fConfig = fDesc.fConfig;
+    texDesc.fIsMipMapped = false;
 
     static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
     GrUniqueKey key;
@@ -207,29 +202,29 @@ void GrTextureStripAtlas::lockTexture() {
     builder[0] = static_cast<uint32_t>(fCacheKey);
     builder.finish();
 
-    sk_sp<GrTextureProxy> proxy = fDesc.fContext->resourceProvider()->findProxyByUniqueKey(key);
-    if (!proxy) {
-        proxy = GrSurfaceProxy::MakeDeferred(fDesc.fContext->resourceProvider(),
-                                             texDesc, SkBackingFit::kExact,
-                                             SkBudgeted::kYes,
-                                             GrResourceProvider::kNoPendingIO_Flag);
-        if (!proxy) {
+    fTexture = fDesc.fContext->textureProvider()->findAndRefTextureByUniqueKey(key);
+    if (nullptr == fTexture) {
+        fTexture = fDesc.fContext->textureProvider()->createTexture(texDesc, SkBudgeted::kYes,
+                                                                    nullptr, 0);
+        if (!fTexture) {
             return;
         }
 
-        fDesc.fContext->resourceProvider()->assignUniqueKeyToProxy(key, proxy.get());
+        // We will be issuing writes to the surface using kDontFlush_PixelOpsFlag, so we
+        // need to make sure any existing IO is flushed
+        fDesc.fContext->flushSurfaceIO(fTexture);
+        fDesc.fContext->textureProvider()->assignUniqueKeyToTexture(key, fTexture);
         // This is a new texture, so all of our cache info is now invalid
         this->initLRU();
         fKeyTable.rewind();
     }
-    SkASSERT(proxy);
-    fTexContext = fDesc.fContext->contextPriv().makeWrappedSurfaceContext(std::move(proxy),
-                                                                          nullptr);
+    SkASSERT(fTexture);
 }
 
 void GrTextureStripAtlas::unlockTexture() {
-    SkASSERT(fTexContext && 0 == fLockedRows);
-    fTexContext.reset();
+    SkASSERT(fTexture && 0 == fLockedRows);
+    fTexture->unref();
+    fTexture = nullptr;
 }
 
 void GrTextureStripAtlas::initLRU() {
@@ -353,9 +348,9 @@ void GrTextureStripAtlas::validate() {
     // If we have locked rows, we should have a locked texture, otherwise
     // it should be unlocked
     if (fLockedRows == 0) {
-        SkASSERT(!fTexContext);
+        SkASSERT(nullptr == fTexture);
     } else {
-        SkASSERT(fTexContext);
+        SkASSERT(fTexture);
     }
 }
 #endif

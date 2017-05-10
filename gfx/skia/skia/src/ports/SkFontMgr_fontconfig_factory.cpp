@@ -9,6 +9,6 @@
 #include "SkFontMgr_fontconfig.h"
 #include "SkTypes.h"
 
-sk_sp<SkFontMgr> SkFontMgr::Factory() {
+SkFontMgr* SkFontMgr::Factory() {
     return SkFontMgr_New_FontConfig(nullptr);
 }

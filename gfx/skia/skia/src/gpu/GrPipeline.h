@@ -10,25 +10,40 @@
 
 #include "GrColor.h"
 #include "GrFragmentProcessor.h"
+#include "GrGpu.h"
 #include "GrNonAtomicRef.h"
 #include "GrPendingProgramElement.h"
-#include "GrProcessorSet.h"
+#include "GrPrimitiveProcessor.h"
+#include "GrProcOptInfo.h"
 #include "GrProgramDesc.h"
 #include "GrScissorState.h"
-#include "GrUserStencilSettings.h"
+#include "GrStencilSettings.h"
 #include "GrWindowRectsState.h"
 #include "SkMatrix.h"
 #include "SkRefCnt.h"
+
 #include "effects/GrCoverageSetOpXP.h"
 #include "effects/GrDisableColorXP.h"
 #include "effects/GrPorterDuffXferProcessor.h"
 #include "effects/GrSimpleTextureEffect.h"
 
-class GrAppliedClip;
+class GrBatch;
+class GrDrawContext;
 class GrDeviceCoordTexture;
-class GrOp;
 class GrPipelineBuilder;
-class GrRenderTargetContext;
+
+struct GrBatchToXPOverrides {
+    GrBatchToXPOverrides()
+    : fUsePLSDstRead(false) {}
+
+    bool fUsePLSDstRead;
+};
+
+struct GrPipelineOptimizations {
+    GrProcOptInfo fColorPOI;
+    GrProcOptInfo fCoveragePOI;
+    GrBatchToXPOverrides fOverrides;
+};
 
 /**
  * Class that holds an optimized version of a GrPipelineBuilder. It is meant to be an immutable
@@ -39,48 +54,19 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     /// @name Creation
 
-    enum Flags {
-        /**
-         * Perform HW anti-aliasing. This means either HW FSAA, if supported by the render target,
-         * or smooth-line rendering if a line primitive is drawn and line smoothing is supported by
-         * the 3D API.
-         */
-        kHWAntialias_Flag = 0x1,
-
-        /**
-         * Modifies the vertex shader so that vertices will be positioned at pixel centers.
-         */
-        kSnapVerticesToPixelCenters_Flag = 0x2,
-    };
-
-    struct InitArgs {
-        uint32_t fFlags = 0;
-        GrDrawFace fDrawFace = GrDrawFace::kBoth;
-        const GrProcessorSet* fProcessors = nullptr;  // Must be finalized
-        const GrUserStencilSettings* fUserStencil = &GrUserStencilSettings::kUnused;
-        const GrAppliedClip* fAppliedClip = nullptr;
-        GrRenderTarget* fRenderTarget = nullptr;
-        const GrCaps* fCaps = nullptr;
+    struct CreateArgs {
+        const GrPipelineBuilder*    fPipelineBuilder;
+        GrDrawContext*              fDrawContext;
+        const GrCaps*               fCaps;
+        GrPipelineOptimizations     fOpts;
+        const GrScissorState*       fScissor;
+        const GrWindowRectsState*   fWindowRectsState;
+        bool                        fHasStencilClip;
         GrXferProcessor::DstTexture fDstTexture;
     };
 
-    /**
-     * A Default constructed pipeline is unusable until init() is called.
-     **/
-    GrPipeline() = default;
-
-    /**
-     * Creates a simple pipeline with default settings and no processors. The provided blend mode
-     * must be "Porter Duff" (<= kLastCoeffMode). This pipeline is initialized without requiring
-     * a call to init().
-     **/
-    GrPipeline(GrRenderTarget*, SkBlendMode);
-
-    /** (Re)initializes a pipeline. After initialization the pipeline can be used. */
-    void init(const InitArgs&);
-
-    /** True if the pipeline has been initialized. */
-    bool isInitialized() const { return SkToBool(fRenderTarget.get()); }
+    /** Creates a pipeline into a pre-allocated buffer */
+    static GrPipeline* CreateAt(void* memory, const CreateArgs&, GrXPOverridesForBatch*);
 
     /// @}
 
@@ -96,9 +82,9 @@ public:
     static bool AreEqual(const GrPipeline& a, const GrPipeline& b);
 
     /**
-     * Allows a GrOp subclass to determine whether two GrOp instances can combine. This is a
-     * stricter test than isEqual because it also considers blend barriers when the two ops'
-     * bounds overlap
+     * Allows a GrBatch subclass to determine whether two GrBatches can combine. This is a stricter
+     * test than isEqual because it also considers blend barriers when the two batches' bounds
+     * overlap
      */
     static bool CanCombine(const GrPipeline& a, const SkRect& aBounds,
                            const GrPipeline& b, const SkRect& bBounds,
@@ -120,8 +106,8 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     /// @name GrFragmentProcessors
 
-    // Make the renderTarget's GrOpList (if it exists) be dependent on any
-    // GrOpLists in this pipeline
+    // Make the renderTarget's drawTarget (if it exists) be dependent on any
+    // drawTargets in this pipeline
     void addDependenciesTo(GrRenderTarget* rt) const;
 
     int numColorFragmentProcessors() const { return fNumColorProcessors; }
@@ -131,24 +117,13 @@ public:
     int numFragmentProcessors() const { return fFragmentProcessors.count(); }
 
     const GrXferProcessor& getXferProcessor() const {
-        if (fXferProcessor) {
+        if (fXferProcessor.get()) {
             return *fXferProcessor.get();
         } else {
             // A null xp member means the common src-over case. GrXferProcessor's ref'ing
             // mechanism is not thread safe so we do not hold a ref on this global.
             return GrPorterDuffXPFactory::SimpleSrcOverXP();
         }
-    }
-
-    /**
-     * If the GrXferProcessor uses a texture to access the dst color, then this returns that
-     * texture and the offset to the dst contents within that texture.
-     */
-    GrTexture* dstTexture(SkIPoint* offset = nullptr) const {
-        if (offset) {
-            *offset = fDstTextureOffset;
-        }
-        return fDstTexture.get();
     }
 
     const GrFragmentProcessor& getColorFragmentProcessor(int idx) const {
@@ -174,16 +149,14 @@ public:
      */
     GrRenderTarget* getRenderTarget() const { return fRenderTarget.get(); }
 
-    const GrUserStencilSettings* getUserStencil() const { return fUserStencilSettings; }
+    const GrStencilSettings& getStencil() const { return fStencilSettings; }
 
     const GrScissorState& getScissorState() const { return fScissorState; }
 
     const GrWindowRectsState& getWindowRectsState() const { return fWindowRectsState; }
 
-    bool isHWAntialiasState() const { return SkToBool(fFlags & kHWAntialias_Flag); }
-    bool snapVerticesToPixelCenters() const {
-        return SkToBool(fFlags & kSnapVerticesToPixelCenters_Flag);
-    }
+    bool isHWAntialiasState() const { return SkToBool(fFlags & kHWAA_Flag); }
+    bool snapVerticesToPixelCenters() const { return SkToBool(fFlags & kSnapVertices_Flag); }
     bool getDisableOutputConversionToSRGB() const {
         return SkToBool(fFlags & kDisableOutputConversionToSRGB_Flag);
     }
@@ -196,15 +169,9 @@ public:
     bool hasStencilClip() const {
         return SkToBool(fFlags & kHasStencilClip_Flag);
     }
-    bool isStencilEnabled() const {
-        return SkToBool(fFlags & kStencilEnabled_Flag);
-    }
 
     GrXferBarrierType xferBarrierType(const GrCaps& caps) const {
-        if (fDstTexture.get() && fDstTexture.get() == fRenderTarget.get()->asTexture()) {
-            return kTexture_GrXferBarrierType;
-        }
-        return this->getXferProcessor().xferBarrierType(caps);
+        return this->getXferProcessor().xferBarrierType(fRenderTarget.get(), caps);
     }
 
     /**
@@ -212,36 +179,59 @@ public:
      * or both faces.
      * @return the current draw face(s).
      */
-    GrDrawFace getDrawFace() const { return static_cast<GrDrawFace>(fDrawFace); }
+    GrDrawFace getDrawFace() const { return fDrawFace; }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    bool ignoresCoverage() const { return fIgnoresCoverage; }
 
 private:
-    /** This is a continuation of the public "Flags" enum. */
-    enum PrivateFlags {
+    GrPipeline() { /** Initialized in factory function*/ }
+
+    /**
+     * Alter the program desc and inputs (attribs and processors) based on the blend optimization.
+     */
+    void adjustProgramFromOptimizations(const GrPipelineBuilder& ds,
+                                        GrXferProcessor::OptFlags,
+                                        const GrProcOptInfo& colorPOI,
+                                        const GrProcOptInfo& coveragePOI,
+                                        int* firstColorProcessorIdx,
+                                        int* firstCoverageProcessorIdx);
+
+    /**
+     * Calculates the primary and secondary output types of the shader. For certain output types
+     * the function may adjust the blend coefficients. After this function is called the src and dst
+     * blend coeffs will represent those used by backend API.
+     */
+    void setOutputStateInfo(const GrPipelineBuilder& ds, GrXferProcessor::OptFlags,
+                            const GrCaps&);
+
+    enum Flags {
+        kHWAA_Flag                          = 0x1,
+        kSnapVertices_Flag                  = 0x2,
         kDisableOutputConversionToSRGB_Flag = 0x4,
-        kAllowSRGBInputs_Flag = 0x8,
-        kUsesDistanceVectorField_Flag = 0x10,
-        kHasStencilClip_Flag = 0x20,
-        kStencilEnabled_Flag = 0x40,
+        kAllowSRGBInputs_Flag               = 0x8,
+        kUsesDistanceVectorField_Flag       = 0x10,
+        kHasStencilClip_Flag                = 0x20,
     };
 
-    using RenderTarget = GrPendingIOResource<GrRenderTarget, kWrite_GrIOType>;
-    using DstTexture = GrPendingIOResource<GrTexture, kRead_GrIOType>;
-    using PendingFragmentProcessor = GrPendingProgramElement<const GrFragmentProcessor>;
-    using FragmentProcessorArray = SkAutoSTArray<8, PendingFragmentProcessor>;
-
-    DstTexture fDstTexture;
-    SkIPoint fDstTextureOffset;
-    RenderTarget fRenderTarget;
-    GrScissorState fScissorState;
-    GrWindowRectsState fWindowRectsState;
-    const GrUserStencilSettings* fUserStencilSettings;
-    uint16_t fDrawFace;
-    uint16_t fFlags;
-    sk_sp<const GrXferProcessor> fXferProcessor;
-    FragmentProcessorArray fFragmentProcessors;
+    typedef GrPendingIOResource<GrRenderTarget, kWrite_GrIOType> RenderTarget;
+    typedef GrPendingProgramElement<const GrFragmentProcessor> PendingFragmentProcessor;
+    typedef SkAutoSTArray<8, PendingFragmentProcessor> FragmentProcessorArray;
+    typedef GrPendingProgramElement<const GrXferProcessor> ProgramXferProcessor;
+    RenderTarget                        fRenderTarget;
+    GrScissorState                      fScissorState;
+    GrWindowRectsState                  fWindowRectsState;
+    GrStencilSettings                   fStencilSettings;
+    GrDrawFace                          fDrawFace;
+    uint32_t                            fFlags;
+    ProgramXferProcessor                fXferProcessor;
+    FragmentProcessorArray              fFragmentProcessors;
+    bool                                fIgnoresCoverage;
 
     // This value is also the index in fFragmentProcessors where coverage processors begin.
-    int fNumColorProcessors;
+    int                                 fNumColorProcessors;
 
     typedef SkRefCnt INHERITED;
 };

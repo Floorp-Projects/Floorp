@@ -8,11 +8,9 @@
 #ifndef SkEvent_DEFINED
 #define SkEvent_DEFINED
 
+#include "SkDOM.h"
 #include "SkMetaData.h"
 #include "SkString.h"
-
-class SkDOM;
-struct SkDOMNode;
 
 #include "../private/SkLeanWindows.h"
 
@@ -182,7 +180,7 @@ public:
     const SkMetaData& getMetaData() const { return fMeta; }
 
     /** Call this to initialize the event from the specified XML node */
-    void inflate(const SkDOM&, const SkDOMNode*);
+    void inflate(const SkDOM&, const SkDOM::Node*);
 
     SkDEBUGCODE(void dump(const char title[] = NULL);)
 
