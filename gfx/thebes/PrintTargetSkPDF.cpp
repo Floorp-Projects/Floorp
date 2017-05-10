@@ -67,7 +67,7 @@ PrintTargetSkPDF::BeginPrinting(const nsAString& aTitle,
 nsresult
 PrintTargetSkPDF::BeginPage()
 {
-  mPageCanvas = sk_ref_sp(mPDFDoc->beginPage(mSize.width, mSize.height));
+  mPageCanvas = mPDFDoc->beginPage(mSize.width, mSize.height);
 
   return !mPageCanvas ? NS_ERROR_FAILURE : PrintTarget::BeginPage();
 }
@@ -113,7 +113,7 @@ PrintTargetSkPDF::MakeDrawTarget(const IntSize& aSize,
   if (!mPageCanvas) {
     return nullptr;
   }
-  mPageDT = Factory::CreateDrawTargetWithSkCanvas(mPageCanvas.get());
+  mPageDT = Factory::CreateDrawTargetWithSkCanvas(mPageCanvas);
   if (!mPageDT) {
     mPageCanvas = nullptr;
     return nullptr;
@@ -133,12 +133,12 @@ PrintTargetSkPDF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
     if (!mRefPDFDoc) {
       return nullptr;
     }
-    mRefCanvas = sk_ref_sp(mRefPDFDoc->beginPage(mSize.width, mSize.height));
+    mRefCanvas = mRefPDFDoc->beginPage(mSize.width, mSize.height);
     if (!mRefCanvas) {
       return nullptr;
     }
     RefPtr<DrawTarget> dt =
-      Factory::CreateDrawTargetWithSkCanvas(mRefCanvas.get());
+      Factory::CreateDrawTargetWithSkCanvas(mRefCanvas);
     if (!dt) {
       return nullptr;
     }
