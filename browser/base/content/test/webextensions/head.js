@@ -218,7 +218,7 @@ function checkNotification(panel, checkIcon, permissions) {
   let header = document.getElementById("addon-webext-perm-intro");
 
   if (checkIcon instanceof RegExp) {
-    ok(checkIcon.test(icon), "Notification icon is correct");
+    ok(checkIcon.test(icon), `Notification icon is correct ${JSON.stringify(icon)} ~= ${checkIcon}`);
   } else if (typeof checkIcon == "function") {
     ok(checkIcon(icon), "Notification icon is correct");
   } else {
