@@ -19,7 +19,7 @@
 #include "SkImageEncoder.h"
 #include "SkResourceCache.h"
 
-#if defined(SK_ARM_HAS_NEON) || defined(SK_ARM_HAS_OPTIONAL_NEON)
+#if defined(SK_ARM_HAS_NEON)
 // These are defined in src/opts/SkBitmapProcState_arm_neon.cpp
 extern const SkBitmapProcState::SampleProc32 gSkBitmapProcStateSample32_neon[];
 extern void  S16_D16_filter_DX_neon(const SkBitmapProcState&, const uint32_t*, int, uint16_t*);
@@ -37,22 +37,10 @@ extern void Clamp_S32_opaque_D32_nofilter_DX_shaderproc(const void*, int, int, u
 #include "SkBitmapProcState_procs.h"
 
 SkBitmapProcInfo::SkBitmapProcInfo(const SkBitmapProvider& provider,
-                                   SkShader::TileMode tmx, SkShader::TileMode tmy,
-                                   SkSourceGammaTreatment treatment)
+                                   SkShader::TileMode tmx, SkShader::TileMode tmy)
     : fProvider(provider)
     , fTileModeX(tmx)
     , fTileModeY(tmy)
-    , fSrcGammaTreatment(treatment)
-    , fBMState(nullptr)
-{}
-
-SkBitmapProcInfo::SkBitmapProcInfo(const SkBitmap& bm,
-                                   SkShader::TileMode tmx, SkShader::TileMode tmy,
-                                   SkSourceGammaTreatment treatment)
-    : fProvider(SkBitmapProvider(bm))
-    , fTileModeX(tmx)
-    , fTileModeY(tmy)
-    , fSrcGammaTreatment(treatment)
     , fBMState(nullptr)
 {}
 
@@ -62,9 +50,9 @@ SkBitmapProcInfo::~SkBitmapProcInfo() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// true iff the matrix contains, at most, scale and translate elements
+// true iff the matrix has a scale and no more than an optional translate.
 static bool matrix_only_scale_translate(const SkMatrix& m) {
-    return m.getType() <= (SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask);
+    return (m.getType() & ~SkMatrix::kTranslate_Mask) == SkMatrix::kScale_Mask;
 }
 
 /**
@@ -74,44 +62,32 @@ static bool matrix_only_scale_translate(const SkMatrix& m) {
 static bool just_trans_clamp(const SkMatrix& matrix, const SkPixmap& pixmap) {
     SkASSERT(matrix_only_scale_translate(matrix));
 
-    if (matrix.getType() & SkMatrix::kScale_Mask) {
-        SkRect dst;
-        SkRect src = SkRect::Make(pixmap.bounds());
+    SkRect dst;
+    SkRect src = SkRect::Make(pixmap.bounds());
 
-        // Can't call mapRect(), since that will fix up inverted rectangles,
-        // e.g. when scale is negative, and we don't want to return true for
-        // those.
-        matrix.mapPoints(SkTCast<SkPoint*>(&dst),
-                         SkTCast<const SkPoint*>(&src),
-                         2);
+    // Can't call mapRect(), since that will fix up inverted rectangles,
+    // e.g. when scale is negative, and we don't want to return true for
+    // those.
+    matrix.mapPoints(SkTCast<SkPoint*>(&dst),
+                     SkTCast<const SkPoint*>(&src),
+                     2);
 
-        // Now round all 4 edges to device space, and then compare the device
-        // width/height to the original. Note: we must map all 4 and subtract
-        // rather than map the "width" and compare, since we care about the
-        // phase (in pixel space) that any translate in the matrix might impart.
-        SkIRect idst;
-        dst.round(&idst);
-        return idst.width() == pixmap.width() && idst.height() == pixmap.height();
-    }
-    // if we got here, we're either kTranslate_Mask or identity
-    return true;
+    // Now round all 4 edges to device space, and then compare the device
+    // width/height to the original. Note: we must map all 4 and subtract
+    // rather than map the "width" and compare, since we care about the
+    // phase (in pixel space) that any translate in the matrix might impart.
+    SkIRect idst;
+    dst.round(&idst);
+    return idst.width() == pixmap.width() && idst.height() == pixmap.height();
 }
 
 static bool just_trans_general(const SkMatrix& matrix) {
     SkASSERT(matrix_only_scale_translate(matrix));
 
-    if (matrix.getType() & SkMatrix::kScale_Mask) {
-        const SkScalar tol = SK_Scalar1 / 32768;
+    const SkScalar tol = SK_Scalar1 / 32768;
 
-        if (!SkScalarNearlyZero(matrix[SkMatrix::kMScaleX] - SK_Scalar1, tol)) {
-            return false;
-        }
-        if (!SkScalarNearlyZero(matrix[SkMatrix::kMScaleY] - SK_Scalar1, tol)) {
-            return false;
-        }
-    }
-    // if we got here, treat us as either kTranslate_Mask or identity
-    return true;
+    return SkScalarNearlyZero(matrix[SkMatrix::kMScaleX] - SK_Scalar1, tol)
+        && SkScalarNearlyZero(matrix[SkMatrix::kMScaleY] - SK_Scalar1, tol);
 }
 
 static bool valid_for_filtering(unsigned dimension) {
@@ -133,7 +109,7 @@ bool SkBitmapProcInfo::init(const SkMatrix& inv, const SkPaint& paint) {
         allow_ignore_fractional_translate = false;
     }
 
-    SkDefaultBitmapController controller(fSrcGammaTreatment);
+    SkDefaultBitmapController controller(SkDefaultBitmapController::CanShadeHQ::kNo);
     fBMState = controller.requestBitmap(fProvider, inv, paint.getFilterQuality(),
                                         fBMStateStorage.get(), fBMStateStorage.size());
     // Note : we allow the controller to return an empty (zero-dimension) result. Should we?
@@ -158,7 +134,9 @@ bool SkBitmapProcInfo::init(const SkMatrix& inv, const SkPaint& paint) {
     // We don't do this if we're either trivial (can ignore the matrix) or clamping
     // in both X and Y since clamping to width,height is just as easy as to 0xFFFF.
 
-    if (!(clampClamp || trivialMatrix)) {
+    // Note that we cannot ignore the matrix when allow_ignore_fractional_translate is false.
+
+    if (!(clampClamp || (trivialMatrix && allow_ignore_fractional_translate))) {
         fInvMatrix.postIDiv(fPixmap.width(), fPixmap.height());
     }
 
@@ -300,7 +278,7 @@ bool SkBitmapProcState::chooseScanlineProcs(bool trivialMatrix, bool clampClamp)
                 return false;
         }
 
-#if !defined(SK_ARM_HAS_NEON) || defined(SK_ARM_HAS_OPTIONAL_NEON)
+#if !defined(SK_ARM_HAS_NEON)
         static const SampleProc32 gSkBitmapProcStateSample32[] = {
             S32_opaque_D32_nofilter_DXDY,
             S32_alpha_D32_nofilter_DXDY,

@@ -12,6 +12,8 @@
 #include "SkRefCnt.h"
 #include "SkScalar.h"
 
+#include <memory.h>
+
 class SkStream;
 class SkStreamRewindable;
 class SkStreamSeekable;
@@ -187,21 +189,31 @@ public:
         @return true on success
     */
     virtual bool write(const void* buffer, size_t size) = 0;
-    virtual void newline();
     virtual void flush();
 
     virtual size_t bytesWritten() const = 0;
 
     // helpers
 
-    bool    write8(U8CPU);
-    bool    write16(U16CPU);
-    bool    write32(uint32_t);
+    bool write8(U8CPU value)   {
+        uint8_t v = SkToU8(value);
+        return this->write(&v, 1);
+    }
+    bool write16(U16CPU value) {
+        uint16_t v = SkToU16(value);
+        return this->write(&v, 2);
+    }
+    bool write32(uint32_t v) {
+        return this->write(&v, 4);
+    }
 
-    bool    writeText(const char text[]) {
+    bool writeText(const char text[]) {
         SkASSERT(text);
         return this->write(text, strlen(text));
     }
+
+    bool newline() { return this->write("\n", strlen("\n")); }
+
     bool    writeDecAsText(int32_t);
     bool    writeBigDecAsText(int64_t, int minDigits = 0);
     bool    writeHexAsText(uint32_t, int minDigits = 0);
@@ -220,9 +232,20 @@ public:
     static int SizeOfPackedUInt(size_t value);
 };
 
+class SK_API SkNullWStream : public SkWStream {
+public:
+    SkNullWStream() : fBytesWritten(0) {}
+
+    bool write(const void*, size_t n) override { fBytesWritten += n; return true; }
+    void flush() override {}
+    size_t bytesWritten() const override { return fBytesWritten; }
+
+private:
+    size_t fBytesWritten;
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkString.h"
 #include <stdio.h>
 
 /** A stream that wraps a C FILE* file stream. */
@@ -231,28 +254,20 @@ public:
     /** Initialize the stream by calling sk_fopen on the specified path.
      *  This internal stream will be closed in the destructor.
      */
-    explicit SkFILEStream(const char path[] = NULL);
+    explicit SkFILEStream(const char path[] = nullptr);
 
-    enum Ownership {
-        kCallerPasses_Ownership,
-        kCallerRetains_Ownership
-    };
     /** Initialize the stream with an existing C file stream.
-     *  While this stream exists, it assumes exclusive access to the C file stream.
-     *  The C file stream will be closed in the destructor unless the caller specifies
-     *  kCallerRetains_Ownership.
+     *  The C file stream will be closed in the destructor.
      */
-    explicit SkFILEStream(FILE* file, Ownership ownership = kCallerPasses_Ownership);
+    explicit SkFILEStream(FILE* file);
 
-    virtual ~SkFILEStream();
+    ~SkFILEStream() override;
 
     /** Returns true if the current path could be opened. */
-    bool isValid() const { return fFILE != NULL; }
+    bool isValid() const { return fFILE != nullptr; }
 
-    /** Close the current file, and open a new file with the specified path.
-     *  If path is NULL, just close the current file.
-     */
-    void setPath(const char path[]);
+    /** Close this SkFILEStream. */
+    void close();
 
     size_t read(void* buffer, size_t size) override;
     bool isAtEnd() const override;
@@ -270,11 +285,14 @@ public:
     const void* getMemoryBase() override;
 
 private:
-    FILE*       fFILE;
-    SkString    fName;
-    Ownership   fOwnership;
-    // fData is lazilly initialized when needed.
-    mutable sk_sp<SkData> fData;
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset);
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset, size_t originalOffset);
+
+    std::shared_ptr<FILE> fFILE;
+    // My own council will I keep on sizes and offsets.
+    size_t fSize;
+    size_t fOffset;
+    size_t fOriginalOffset;
 
     typedef SkStreamAsset INHERITED;
 };
@@ -288,14 +306,6 @@ public:
 
     /** If copyData is true, the stream makes a private copy of the data. */
     SkMemoryStream(const void* data, size_t length, bool copyData = false);
-
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
-    /** Use the specified data as the memory for this stream.
-     *  The stream will call ref() on the data (assuming it is not NULL).
-     *  DEPRECATED
-     */
-    SkMemoryStream(SkData*);
-#endif
 
     /** Creates the stream to read from the specified data */
     SkMemoryStream(sk_sp<SkData>);
@@ -314,22 +324,6 @@ public:
 
     sk_sp<SkData> asData() const { return fData; }
     void setData(sk_sp<SkData>);
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
-    /** Return the stream's data in a SkData.
-     *  The caller must call unref() when it is finished using the data.
-     */
-    SkData* copyToData() const { return asData().release(); }
-
-    /**
-     *  Use the specified data as the memory for this stream.
-     *  The stream will call ref() on the data (assuming it is not NULL).
-     *  The function returns the data parameter as a convenience.
-     */
-    SkData* setData(SkData* data) {
-        this->setData(sk_ref_sp(data));
-        return data;
-    }
-#endif
 
     void skipToAlign4();
     const void* getAtPos();
@@ -363,7 +357,7 @@ private:
 class SK_API SkFILEWStream : public SkWStream {
 public:
     SkFILEWStream(const char path[]);
-    virtual ~SkFILEWStream();
+    ~SkFILEWStream() override;
 
     /** Returns true if the current path could be opened.
     */
@@ -380,52 +374,28 @@ private:
     typedef SkWStream INHERITED;
 };
 
-class SK_API SkMemoryWStream : public SkWStream {
-public:
-    SkMemoryWStream(void* buffer, size_t size);
-    bool write(const void* buffer, size_t size) override;
-    size_t bytesWritten() const override { return fBytesWritten; }
-
-private:
-    char*   fBuffer;
-    size_t  fMaxLength;
-    size_t  fBytesWritten;
-
-    typedef SkWStream INHERITED;
-};
-
 class SK_API SkDynamicMemoryWStream : public SkWStream {
 public:
     SkDynamicMemoryWStream();
-    virtual ~SkDynamicMemoryWStream();
+    ~SkDynamicMemoryWStream() override;
 
     bool write(const void* buffer, size_t size) override;
-    size_t bytesWritten() const override { return fBytesWritten; }
-    // random access write
-    // modifies stream and returns true if offset + size is less than or equal to getOffset()
-    bool write(const void* buffer, size_t offset, size_t size);
-    bool read(void* buffer, size_t offset, size_t size);
-    size_t getOffset() const { return fBytesWritten; }
+    size_t bytesWritten() const override;
 
-    // copy what has been written to the stream into dst
+    bool read(void* buffer, size_t offset, size_t size);
+
+    /** More efficient version of read(dst, 0, bytesWritten()). */
     void copyTo(void* dst) const;
     void writeToStream(SkWStream* dst) const;
 
-    sk_sp<SkData> snapshotAsData() const;
-    // Return the contents as SkData, and then reset the stream.
+    /** Equivalent to copyTo() followed by reset(), but may save memory use. */
+    void copyToAndReset(void* dst);
+
+    /** Return the contents as SkData, and then reset the stream. */
     sk_sp<SkData> detachAsData();
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
-    /**
-     *  Return a copy of the data written so far. This call is responsible for
-     *  calling unref() when they are finished with the data.
-     */
-    SkData* copyToData() const {
-        return snapshotAsData().release();
-    }
-#endif
 
     /** Reset, returning a reader stream with the current content. */
-    SkStreamAsset* detachAsStream();
+    std::unique_ptr<SkStreamAsset> detachAsStream();
 
     /** Reset the stream to its original, empty, state. */
     void reset();
@@ -434,10 +404,13 @@ private:
     struct Block;
     Block*  fHead;
     Block*  fTail;
-    size_t  fBytesWritten;
-    mutable sk_sp<SkData> fCopy;  // is invalidated if we write after it is created
+    size_t  fBytesWrittenBeforeTail;
 
-    void invalidateCopy();
+#ifdef SK_DEBUG
+    void validate() const;
+#else
+    void validate() const {}
+#endif
 
     // For access to the Block type.
     friend class SkBlockMemoryStream;
@@ -445,23 +418,5 @@ private:
 
     typedef SkWStream INHERITED;
 };
-
-
-class SK_API SkDebugWStream : public SkWStream {
-public:
-    SkDebugWStream() : fBytesWritten(0) {}
-
-    // overrides
-    bool write(const void* buffer, size_t size) override;
-    void newline() override;
-    size_t bytesWritten() const override { return fBytesWritten; }
-
-private:
-    size_t fBytesWritten;
-    typedef SkWStream INHERITED;
-};
-
-// for now
-typedef SkFILEStream SkURLStream;
 
 #endif

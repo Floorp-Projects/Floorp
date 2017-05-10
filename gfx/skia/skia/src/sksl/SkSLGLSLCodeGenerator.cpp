@@ -4,16 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
-#include "SkSLGLSLCodeGenerator.h"
 
-#include "string.h"
+#include "SkSLGLSLCodeGenerator.h"
 
 #include "GLSL.std.450.h"
 
+#include "SkSLCompiler.h"
 #include "ir/SkSLExpressionStatement.h"
 #include "ir/SkSLExtension.h"
 #include "ir/SkSLIndexExpression.h"
+#include "ir/SkSLModifiersDeclaration.h"
 #include "ir/SkSLVariableReference.h"
 
 namespace SkSL {
@@ -24,24 +24,24 @@ void GLSLCodeGenerator::write(const char* s) {
     }
     if (fAtLineStart) {
         for (int i = 0; i < fIndentation; i++) {
-            *fOut << "    ";
+            fOut->writeText("    ");
         }
     }
-    *fOut << s;
+    fOut->writeText(s);
     fAtLineStart = false;
 }
 
 void GLSLCodeGenerator::writeLine(const char* s) {
     this->write(s);
-    *fOut << "\n";
+    fOut->write8('\n');
     fAtLineStart = true;
 }
 
-void GLSLCodeGenerator::write(const std::string& s) {
+void GLSLCodeGenerator::write(const String& s) {
     this->write(s.c_str());
 }
 
-void GLSLCodeGenerator::writeLine(const std::string& s) {
+void GLSLCodeGenerator::writeLine(const String& s) {
     this->writeLine(s.c_str());
 }
 
@@ -66,13 +66,13 @@ void GLSLCodeGenerator::writeType(const Type& type) {
         this->writeLine("struct " + type.name() + " {");
         fIndentation++;
         for (const auto& f : type.fields()) {
-            this->writeModifiers(f.fModifiers);
+            this->writeModifiers(f.fModifiers, false);
             // sizes (which must be static in structs) are part of the type name here
             this->writeType(*f.fType);
             this->writeLine(" " + f.fName + ";");
         }
         fIndentation--;
-        this->writeLine("}");
+        this->write("}");
     } else {
         this->write(type.name());
     }
@@ -124,8 +124,127 @@ void GLSLCodeGenerator::writeExpression(const Expression& expr, Precedence paren
     }
 }
 
+static bool is_abs(Expression& expr) {
+    if (expr.fKind != Expression::kFunctionCall_Kind) {
+        return false;
+    }
+    return ((FunctionCall&) expr).fFunction.fName == "abs";
+}
+
+// turns min(abs(x), y) into ((tmpVar1 = abs(x)) < (tmpVar2 = y) ? tmpVar1 : tmpVar2) to avoid a
+// Tegra3 compiler bug.
+void GLSLCodeGenerator::writeMinAbsHack(Expression& absExpr, Expression& otherExpr) {
+    ASSERT(!fProgram.fSettings.fCaps->canUseMinAndAbsTogether());
+    String tmpVar1 = "minAbsHackVar" + to_string(fVarCount++);
+    String tmpVar2 = "minAbsHackVar" + to_string(fVarCount++);
+    this->fFunctionHeader += "    " + absExpr.fType.name() + " " + tmpVar1 + ";\n";
+    this->fFunctionHeader += "    " + otherExpr.fType.name() + " " + tmpVar2 + ";\n";
+    this->write("((" + tmpVar1 + " = ");
+    this->writeExpression(absExpr, kTopLevel_Precedence);
+    this->write(") < (" + tmpVar2 + " = ");
+    this->writeExpression(otherExpr, kAssignment_Precedence);
+    this->write(") ? " + tmpVar1 + " : " + tmpVar2 + ")");
+}
+
 void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
-    this->write(c.fFunction.fName + "(");
+    if (!fProgram.fSettings.fCaps->canUseMinAndAbsTogether() && c.fFunction.fName == "min" &&
+        c.fFunction.fBuiltin) {
+        ASSERT(c.fArguments.size() == 2);
+        if (is_abs(*c.fArguments[0])) {
+            this->writeMinAbsHack(*c.fArguments[0], *c.fArguments[1]);
+            return;
+        }
+        if (is_abs(*c.fArguments[1])) {
+            // note that this violates the GLSL left-to-right evaluation semantics. I doubt it will
+            // ever end up mattering, but it's worth calling out.
+            this->writeMinAbsHack(*c.fArguments[1], *c.fArguments[0]);
+            return;
+        }
+    }
+    if (fProgram.fSettings.fCaps->mustForceNegatedAtanParamToFloat() &&
+        c.fFunction.fName == "atan" &&
+        c.fFunction.fBuiltin && c.fArguments.size() == 2 &&
+        c.fArguments[1]->fKind == Expression::kPrefix_Kind) {
+        const PrefixExpression& p = (PrefixExpression&) *c.fArguments[1];
+        if (p.fOperator == Token::MINUS) {
+            this->write("atan(");
+            this->writeExpression(*c.fArguments[0], kSequence_Precedence);
+            this->write(", -1.0 * ");
+            this->writeExpression(*p.fOperand, kMultiplicative_Precedence);
+            this->write(")");
+            return;
+        }
+    }
+    if (!fFoundDerivatives && (c.fFunction.fName == "dFdx" || c.fFunction.fName == "dFdy") &&
+        c.fFunction.fBuiltin && fProgram.fSettings.fCaps->shaderDerivativeExtensionString()) {
+        ASSERT(fProgram.fSettings.fCaps->shaderDerivativeSupport());
+        fHeader.writeText("#extension ");
+        fHeader.writeText(fProgram.fSettings.fCaps->shaderDerivativeExtensionString());
+        fHeader.writeText(" : require\n");
+        fFoundDerivatives = true;
+    }
+    if (c.fFunction.fName == "texture" && c.fFunction.fBuiltin) {
+        const char* dim = "";
+        bool proj = false;
+        switch (c.fArguments[0]->fType.dimensions()) {
+            case SpvDim1D:
+                dim = "1D";
+                if (c.fArguments[1]->fType == *fContext.fFloat_Type) {
+                    proj = false;
+                } else {
+                    ASSERT(c.fArguments[1]->fType == *fContext.fVec2_Type);
+                    proj = true;
+                }
+                break;
+            case SpvDim2D:
+                dim = "2D";
+                if (c.fArguments[1]->fType == *fContext.fVec2_Type) {
+                    proj = false;
+                } else {
+                    ASSERT(c.fArguments[1]->fType == *fContext.fVec3_Type);
+                    proj = true;
+                }
+                break;
+            case SpvDim3D:
+                dim = "3D";
+                if (c.fArguments[1]->fType == *fContext.fVec3_Type) {
+                    proj = false;
+                } else {
+                    ASSERT(c.fArguments[1]->fType == *fContext.fVec4_Type);
+                    proj = true;
+                }
+                break;
+            case SpvDimCube:
+                dim = "Cube";
+                proj = false;
+                break;
+            case SpvDimRect:
+                dim = "Rect";
+                proj = false;
+                break;
+            case SpvDimBuffer:
+                ASSERT(false); // doesn't exist
+                dim = "Buffer";
+                proj = false;
+                break;
+            case SpvDimSubpassData:
+                ASSERT(false); // doesn't exist
+                dim = "SubpassData";
+                proj = false;
+                break;
+        }
+        this->write("texture");
+        if (fProgram.fSettings.fCaps->generation() < k130_GrGLSLGeneration) {
+            this->write(dim);
+        }
+        if (proj) {
+            this->write("Proj");
+        }
+
+    } else {
+        this->write(c.fFunction.fName);
+    }
+    this->write("(");
     const char* separator = "";
     for (const auto& arg : c.fArguments) {
         this->write(separator);
@@ -146,8 +265,80 @@ void GLSLCodeGenerator::writeConstructor(const Constructor& c) {
     this->write(")");
 }
 
+void GLSLCodeGenerator::writeFragCoord() {
+    // We only declare "gl_FragCoord" when we're in the case where we want to use layout qualifiers
+    // to reverse y. Otherwise it isn't necessary and whether the "in" qualifier appears in the
+    // declaration varies in earlier GLSL specs. So it is simpler to omit it.
+    if (!fProgram.fSettings.fFlipY) {
+        this->write("gl_FragCoord");
+    } else if (const char* extension =
+               fProgram.fSettings.fCaps->fragCoordConventionsExtensionString()) {
+        if (!fSetupFragPositionGlobal) {
+            if (fProgram.fSettings.fCaps->generation() < k150_GrGLSLGeneration) {
+                fHeader.writeText("#extension ");
+                fHeader.writeText(extension);
+                fHeader.writeText(" : require\n");
+            }
+            fHeader.writeText("layout(origin_upper_left) in vec4 gl_FragCoord;\n");
+            fSetupFragPositionGlobal = true;
+        }
+        this->write("gl_FragCoord");
+    } else {
+        if (!fSetupFragPositionGlobal) {
+            // The Adreno compiler seems to be very touchy about access to "gl_FragCoord".
+            // Accessing glFragCoord.zw can cause a program to fail to link. Additionally,
+            // depending on the surrounding code, accessing .xy with a uniform involved can
+            // do the same thing. Copying gl_FragCoord.xy into a temp vec2 beforehand
+            // (and only accessing .xy) seems to "fix" things.
+            const char* precision = fProgram.fSettings.fCaps->usesPrecisionModifiers() ? "highp "
+                                                                                       : "";
+            fHeader.writeText("uniform ");
+            fHeader.writeText(precision);
+            fHeader.writeText("float " SKSL_RTHEIGHT_NAME ";\n");
+            fSetupFragPositionGlobal = true;
+        }
+        if (!fSetupFragPositionLocal) {
+            const char* precision = fProgram.fSettings.fCaps->usesPrecisionModifiers() ? "highp "
+                                                                                       : "";
+            fFunctionHeader += precision;
+            fFunctionHeader += "    vec2 _sktmpCoord = gl_FragCoord.xy;\n";
+            fFunctionHeader += precision;
+            fFunctionHeader += "    vec4 sk_FragCoord = vec4(_sktmpCoord.x, " SKSL_RTHEIGHT_NAME
+                               " - _sktmpCoord.y, 1.0, 1.0);\n";
+            fSetupFragPositionLocal = true;
+        }
+        this->write("sk_FragCoord");
+    }
+}
+
+
 void GLSLCodeGenerator::writeVariableReference(const VariableReference& ref) {
-    this->write(ref.fVariable.fName);
+    switch (ref.fVariable.fModifiers.fLayout.fBuiltin) {
+        case SK_FRAGCOLOR_BUILTIN:
+            if (fProgram.fSettings.fCaps->mustDeclareFragmentShaderOutput()) {
+                this->write("sk_FragColor");
+            } else {
+                this->write("gl_FragColor");
+            }
+            break;
+        case SK_FRAGCOORD_BUILTIN:
+            this->writeFragCoord();
+            break;
+        case SK_VERTEXID_BUILTIN:
+            this->write("gl_VertexID");
+            break;
+        case SK_CLIPDISTANCE_BUILTIN:
+            this->write("gl_ClipDistance");
+            break;
+        case SK_IN_BUILTIN:
+            this->write("gl_in");
+            break;
+        case SK_INVOCATIONID_BUILTIN:
+            this->write("gl_InvocationID");
+            break;
+        default:
+            this->write(ref.fVariable.fName);
+    }
 }
 
 void GLSLCodeGenerator::writeIndexExpression(const IndexExpression& expr) {
@@ -162,7 +353,13 @@ void GLSLCodeGenerator::writeFieldAccess(const FieldAccess& f) {
         this->writeExpression(*f.fBase, kPostfix_Precedence);
         this->write(".");
     }
-    this->write(f.fBase->fType.fields()[f.fFieldIndex].fName);
+    switch (f.fBase->fType.fields()[f.fFieldIndex].fModifiers.fLayout.fBuiltin) {
+        case SK_CLIPDISTANCE_BUILTIN:
+            this->write("gl_ClipDistance");
+            break;
+        default:
+            this->write(f.fBase->fType.fields()[f.fFieldIndex].fName);
+    }
 }
 
 void GLSLCodeGenerator::writeSwizzle(const Swizzle& swizzle) {
@@ -212,7 +409,7 @@ static GLSLCodeGenerator::Precedence get_binary_precedence(Token::Kind op) {
     }
 }
 
-void GLSLCodeGenerator::writeBinaryExpression(const BinaryExpression& b, 
+void GLSLCodeGenerator::writeBinaryExpression(const BinaryExpression& b,
                                               Precedence parentPrecedence) {
     Precedence precedence = get_binary_precedence(b.fOperator);
     if (precedence >= parentPrecedence) {
@@ -226,7 +423,7 @@ void GLSLCodeGenerator::writeBinaryExpression(const BinaryExpression& b,
     }
 }
 
-void GLSLCodeGenerator::writeTernaryExpression(const TernaryExpression& t, 
+void GLSLCodeGenerator::writeTernaryExpression(const TernaryExpression& t,
                                                Precedence parentPrecedence) {
     if (kTernary_Precedence >= parentPrecedence) {
         this->write("(");
@@ -241,7 +438,7 @@ void GLSLCodeGenerator::writeTernaryExpression(const TernaryExpression& t,
     }
 }
 
-void GLSLCodeGenerator::writePrefixExpression(const PrefixExpression& p, 
+void GLSLCodeGenerator::writePrefixExpression(const PrefixExpression& p,
                                               Precedence parentPrecedence) {
     if (kPrefix_Precedence >= parentPrecedence) {
         this->write("(");
@@ -253,7 +450,7 @@ void GLSLCodeGenerator::writePrefixExpression(const PrefixExpression& p,
     }
 }
 
-void GLSLCodeGenerator::writePostfixExpression(const PostfixExpression& p, 
+void GLSLCodeGenerator::writePostfixExpression(const PostfixExpression& p,
                                                Precedence parentPrecedence) {
     if (kPostfix_Precedence >= parentPrecedence) {
         this->write("(");
@@ -270,7 +467,11 @@ void GLSLCodeGenerator::writeBoolLiteral(const BoolLiteral& b) {
 }
 
 void GLSLCodeGenerator::writeIntLiteral(const IntLiteral& i) {
-    this->write(to_string(i.fValue));
+    if (i.fType == *fContext.fUInt_Type) {
+        this->write(to_string(i.fValue & 0xffffffff) + "u");
+    } else {
+        this->write(to_string((int32_t) i.fValue));
+    }
 }
 
 void GLSLCodeGenerator::writeFloatLiteral(const FloatLiteral& f) {
@@ -284,53 +485,167 @@ void GLSLCodeGenerator::writeFunction(const FunctionDefinition& f) {
     for (const auto& param : f.fDeclaration.fParameters) {
         this->write(separator);
         separator = ", ";
-        this->writeModifiers(param->fModifiers);
-        this->writeType(param->fType);
+        this->writeModifiers(param->fModifiers, false);
+        std::vector<int> sizes;
+        const Type* type = &param->fType;
+        while (type->kind() == Type::kArray_Kind) {
+            sizes.push_back(type->columns());
+            type = &type->componentType();
+        }
+        this->writeType(*type);
         this->write(" " + param->fName);
+        for (int s : sizes) {
+            if (s <= 0) {
+                this->write("[]");
+            } else {
+                this->write("[" + to_string(s) + "]");
+            }
+        }
     }
-    this->write(") ");
-    this->writeBlock(*f.fBody);
-    this->writeLine();
+    this->writeLine(") {");
+
+    fFunctionHeader = "";
+    OutputStream* oldOut = fOut;
+    StringStream buffer;
+    fOut = &buffer;
+    fIndentation++;
+    for (const auto& s : f.fBody->fStatements) {
+        this->writeStatement(*s);
+        this->writeLine();
+    }
+    fIndentation--;
+    this->writeLine("}");
+
+    fOut = oldOut;
+    this->write(fFunctionHeader);
+    this->write(String(buffer.data(), buffer.size()));
 }
 
-void GLSLCodeGenerator::writeModifiers(const Modifiers& modifiers) {
-    this->write(modifiers.description());
+void GLSLCodeGenerator::writeModifiers(const Modifiers& modifiers,
+                                       bool globalContext) {
+    if (modifiers.fFlags & Modifiers::kFlat_Flag) {
+        this->write("flat ");
+    }
+    if (modifiers.fFlags & Modifiers::kNoPerspective_Flag) {
+        this->write("noperspective ");
+    }
+    String layout = modifiers.fLayout.description();
+    if (layout.size()) {
+        this->write(layout + " ");
+    }
+    if (modifiers.fFlags & Modifiers::kReadOnly_Flag) {
+        this->write("readonly ");
+    }
+    if (modifiers.fFlags & Modifiers::kWriteOnly_Flag) {
+        this->write("writeonly ");
+    }
+    if (modifiers.fFlags & Modifiers::kCoherent_Flag) {
+        this->write("coherent ");
+    }
+    if (modifiers.fFlags & Modifiers::kVolatile_Flag) {
+        this->write("volatile ");
+    }
+    if (modifiers.fFlags & Modifiers::kRestrict_Flag) {
+        this->write("restrict ");
+    }
+    if ((modifiers.fFlags & Modifiers::kIn_Flag) &&
+        (modifiers.fFlags & Modifiers::kOut_Flag)) {
+        this->write("inout ");
+    } else if (modifiers.fFlags & Modifiers::kIn_Flag) {
+        if (globalContext &&
+            fProgram.fSettings.fCaps->generation() < GrGLSLGeneration::k130_GrGLSLGeneration) {
+            this->write(fProgramKind == Program::kVertex_Kind ? "attribute "
+                                                              : "varying ");
+        } else {
+            this->write("in ");
+        }
+    } else if (modifiers.fFlags & Modifiers::kOut_Flag) {
+        if (globalContext &&
+            fProgram.fSettings.fCaps->generation() < GrGLSLGeneration::k130_GrGLSLGeneration) {
+            this->write("varying ");
+        } else {
+            this->write("out ");
+        }
+    }
+    if (modifiers.fFlags & Modifiers::kUniform_Flag) {
+        this->write("uniform ");
+    }
+    if (modifiers.fFlags & Modifiers::kConst_Flag) {
+        this->write("const ");
+    }
+    if (fProgram.fSettings.fCaps->usesPrecisionModifiers()) {
+        if (modifiers.fFlags & Modifiers::kLowp_Flag) {
+            this->write("lowp ");
+        }
+        if (modifiers.fFlags & Modifiers::kMediump_Flag) {
+            this->write("mediump ");
+        }
+        if (modifiers.fFlags & Modifiers::kHighp_Flag) {
+            this->write("highp ");
+        }
+    }
 }
 
 void GLSLCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf) {
-    if (intf.fVariable.fName == "gl_PerVertex") {
+    if (intf.fTypeName == "sk_PerVertex") {
         return;
     }
-    this->writeModifiers(intf.fVariable.fModifiers);
-    this->writeLine(intf.fVariable.fType.name() + " {");
+    this->writeModifiers(intf.fVariable.fModifiers, true);
+    this->writeLine(intf.fTypeName + " {");
     fIndentation++;
-    for (const auto& f : intf.fVariable.fType.fields()) {
-        this->writeModifiers(f.fModifiers);
+    const Type* structType = &intf.fVariable.fType;
+    while (structType->kind() == Type::kArray_Kind) {
+        structType = &structType->componentType();
+    }
+    for (const auto& f : structType->fields()) {
+        this->writeModifiers(f.fModifiers, false);
         this->writeType(*f.fType);
         this->writeLine(" " + f.fName + ";");
     }
     fIndentation--;
-    this->writeLine("};");
+    this->write("}");
+    if (intf.fInstanceName.size()) {
+        this->write(" ");
+        this->write(intf.fInstanceName);
+        for (const auto& size : intf.fSizes) {
+            this->write("[");
+            if (size) {
+                this->writeExpression(*size, kTopLevel_Precedence);
+            }
+            this->write("]");
+        }
+    }
+    this->writeLine(";");
 }
 
-void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl) {
+void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool global) {
     ASSERT(decl.fVars.size() > 0);
-    this->writeModifiers(decl.fVars[0].fVar->fModifiers);
+    this->writeModifiers(decl.fVars[0].fVar->fModifiers, global);
     this->writeType(decl.fBaseType);
-    std::string separator = " ";
+    String separator(" ");
     for (const auto& var : decl.fVars) {
         ASSERT(var.fVar->fModifiers == decl.fVars[0].fVar->fModifiers);
         this->write(separator);
-        separator = ", ";
+        separator = String(", ");
         this->write(var.fVar->fName);
         for (const auto& size : var.fSizes) {
             this->write("[");
-            this->writeExpression(*size, kTopLevel_Precedence);
+            if (size) {
+                this->writeExpression(*size, kTopLevel_Precedence);
+            }
             this->write("]");
         }
         if (var.fValue) {
             this->write(" = ");
             this->writeExpression(*var.fValue, kTopLevel_Precedence);
+        }
+        if (!fFoundImageDecl && var.fVar->fType == *fContext.fImage2D_Type) {
+            if (fProgram.fSettings.fCaps->imageLoadStoreExtensionString()) {
+                fHeader.writeText("#extension ");
+                fHeader.writeText(fProgram.fSettings.fCaps->imageLoadStoreExtensionString());
+                fHeader.writeText(" : require\n");
+            }
+            fFoundImageDecl = true;
         }
     }
     this->write(";");
@@ -345,11 +660,11 @@ void GLSLCodeGenerator::writeStatement(const Statement& s) {
             this->writeExpression(*((ExpressionStatement&) s).fExpression, kTopLevel_Precedence);
             this->write(";");
             break;
-        case Statement::kReturn_Kind: 
+        case Statement::kReturn_Kind:
             this->writeReturnStatement((ReturnStatement&) s);
             break;
         case Statement::kVarDeclarations_Kind:
-            this->writeVarDeclarations(*((VarDeclarationsStatement&) s).fDeclaration);
+            this->writeVarDeclarations(*((VarDeclarationsStatement&) s).fDeclaration, false);
             break;
         case Statement::kIf_Kind:
             this->writeIfStatement((IfStatement&) s);
@@ -362,6 +677,9 @@ void GLSLCodeGenerator::writeStatement(const Statement& s) {
             break;
         case Statement::kDo_Kind:
             this->writeDoStatement((DoStatement&) s);
+            break;
+        case Statement::kSwitch_Kind:
+            this->writeSwitchStatement((SwitchStatement&) s);
             break;
         case Statement::kBreak_Kind:
             this->write("break;");
@@ -432,6 +750,30 @@ void GLSLCodeGenerator::writeDoStatement(const DoStatement& d) {
     this->write(");");
 }
 
+void GLSLCodeGenerator::writeSwitchStatement(const SwitchStatement& s) {
+    this->write("switch (");
+    this->writeExpression(*s.fValue, kTopLevel_Precedence);
+    this->writeLine(") {");
+    fIndentation++;
+    for (const auto& c : s.fCases) {
+        if (c->fValue) {
+            this->write("case ");
+            this->writeExpression(*c->fValue, kTopLevel_Precedence);
+            this->writeLine(":");
+        } else {
+            this->writeLine("default:");
+        }
+        fIndentation++;
+        for (const auto& stmt : c->fStatements) {
+            this->writeStatement(*stmt);
+            this->writeLine();
+        }
+        fIndentation--;
+    }
+    fIndentation--;
+    this->write("}");
+}
+
 void GLSLCodeGenerator::writeReturnStatement(const ReturnStatement& r) {
     this->write("return");
     if (r.fExpression) {
@@ -441,25 +783,57 @@ void GLSLCodeGenerator::writeReturnStatement(const ReturnStatement& r) {
     this->write(";");
 }
 
-void GLSLCodeGenerator::generateCode(const Program& program, std::ostream& out) {
-    ASSERT(fOut == nullptr);
-    fOut = &out;
-    this->write("#version " + to_string(fCaps.fVersion));
-    if (fCaps.fStandard == GLCaps::kGLES_Standard) {
-        this->write(" es");
-    }
+bool GLSLCodeGenerator::generateCode() {
+    OutputStream* rawOut = fOut;
+    fOut = &fHeader;
+    fProgramKind = fProgram.fKind;
+    this->write(fProgram.fSettings.fCaps->versionDeclString());
     this->writeLine();
-    for (const auto& e : program.fElements) {
+    for (const auto& e : fProgram.fElements) {
+        if (e->fKind == ProgramElement::kExtension_Kind) {
+            this->writeExtension((Extension&) *e);
+        }
+    }
+    StringStream body;
+    fOut = &body;
+    if (fProgram.fSettings.fCaps->usesPrecisionModifiers()) {
+        this->write("precision ");
+        switch (fProgram.fDefaultPrecision) {
+            case Modifiers::kLowp_Flag:
+                this->write("lowp");
+                break;
+            case Modifiers::kMediump_Flag:
+                this->write("mediump");
+                break;
+            case Modifiers::kHighp_Flag:
+                this->write("highp");
+                break;
+            default:
+                ASSERT(false);
+                this->write("<error>");
+        }
+        this->writeLine(" float;");
+    }
+    for (const auto& e : fProgram.fElements) {
         switch (e->fKind) {
             case ProgramElement::kExtension_Kind:
-                this->writeExtension((Extension&) *e);
                 break;
             case ProgramElement::kVar_Kind: {
                 VarDeclarations& decl = (VarDeclarations&) *e;
-                if (decl.fVars.size() > 0 && 
-                    decl.fVars[0].fVar->fModifiers.fLayout.fBuiltin == -1) {
-                    this->writeVarDeclarations(decl);
-                    this->writeLine();
+                if (decl.fVars.size() > 0) {
+                    int builtin = decl.fVars[0].fVar->fModifiers.fLayout.fBuiltin;
+                    if (builtin == -1) {
+                        // normal var
+                        this->writeVarDeclarations(decl, true);
+                        this->writeLine();
+                    } else if (builtin == SK_FRAGCOLOR_BUILTIN &&
+                               fProgram.fSettings.fCaps->mustDeclareFragmentShaderOutput()) {
+                        this->write("out ");
+                        if (fProgram.fSettings.fCaps->usesPrecisionModifiers()) {
+                            this->write("mediump ");
+                        }
+                        this->writeLine("vec4 sk_FragColor;");
+                    }
                 }
                 break;
             }
@@ -469,12 +843,20 @@ void GLSLCodeGenerator::generateCode(const Program& program, std::ostream& out) 
             case ProgramElement::kFunction_Kind:
                 this->writeFunction((FunctionDefinition&) *e);
                 break;
+            case ProgramElement::kModifiers_Kind:
+                this->writeModifiers(((ModifiersDeclaration&) *e).fModifiers, true);
+                this->writeLine(";");
+                break;
             default:
                 printf("%s\n", e->description().c_str());
                 ABORT("unsupported program element");
         }
     }
     fOut = nullptr;
+
+    write_stringstream(fHeader, *rawOut);
+    write_stringstream(body, *rawOut);
+    return true;
 }
 
 }

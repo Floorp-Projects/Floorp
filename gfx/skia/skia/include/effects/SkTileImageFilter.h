@@ -28,17 +28,12 @@ public:
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkTileImageFilter)
 
-#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
-    static SkImageFilter* Create(const SkRect& src, const SkRect& dst, SkImageFilter* input) {
-        return Make(src, dst, sk_ref_sp<SkImageFilter>(input)).release();
-    }
-#endif
-
 protected:
     void flatten(SkWriteBuffer& buffer) const override;
 
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
+    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
 
 private:
     SkTileImageFilter(const SkRect& srcRect, const SkRect& dstRect, sk_sp<SkImageFilter> input)

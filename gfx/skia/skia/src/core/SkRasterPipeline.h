@@ -8,9 +8,11 @@
 #ifndef SkRasterPipeline_DEFINED
 #define SkRasterPipeline_DEFINED
 
+#include "SkImageInfo.h"
 #include "SkNx.h"
 #include "SkTArray.h"
 #include "SkTypes.h"
+#include <vector>
 
 /**
  * SkRasterPipeline provides a cheap way to chain together a pixel processing pipeline.
@@ -53,105 +55,88 @@
 // TODO: There may be a better place to stuff tail, e.g. in the bottom alignment bits of
 // the Stage*.  This mostly matters on 64-bit Windows where every register is precious.
 
+#define SK_RASTER_PIPELINE_STAGES(M)                             \
+    M(move_src_dst) M(move_dst_src) M(swap)                      \
+    M(clamp_0) M(clamp_1) M(clamp_a)                             \
+    M(unpremul) M(premul)                                        \
+    M(set_rgb) M(swap_rb)                                        \
+    M(from_srgb) M(to_srgb)                                      \
+    M(from_2dot2) M(to_2dot2)                                    \
+    M(constant_color) M(seed_shader)                             \
+    M(load_a8)   M(store_a8)                                     \
+    M(load_g8)                                                   \
+    M(load_565)  M(store_565)                                    \
+    M(load_4444) M(store_4444)                                   \
+    M(load_f16)  M(store_f16)                                    \
+    M(load_f32)  M(store_f32)                                    \
+    M(load_8888) M(store_8888)                                   \
+    M(load_u16_be) M(load_rgb_u16_be) M(store_u16_be)            \
+    M(load_tables_u16_be) M(load_tables_rgb_u16_be)              \
+    M(load_tables)                                               \
+    M(scale_u8) M(scale_1_float)                                 \
+    M(lerp_u8) M(lerp_565) M(lerp_1_float)                       \
+    M(dstatop) M(dstin) M(dstout) M(dstover)                     \
+    M(srcatop) M(srcin) M(srcout) M(srcover)                     \
+    M(clear) M(modulate) M(multiply) M(plus_) M(screen) M(xor_)  \
+    M(colorburn) M(colordodge) M(darken) M(difference)           \
+    M(exclusion) M(hardlight) M(lighten) M(overlay) M(softlight) \
+    M(luminance_to_alpha)                                        \
+    M(matrix_2x3) M(matrix_3x4) M(matrix_4x5)                    \
+    M(matrix_perspective)                                        \
+    M(parametric_r) M(parametric_g) M(parametric_b)              \
+    M(parametric_a)                                              \
+    M(table_r) M(table_g) M(table_b) M(table_a)                  \
+    M(color_lookup_table) M(lab_to_xyz)                          \
+    M(clamp_x) M(mirror_x) M(repeat_x)                           \
+    M(clamp_y) M(mirror_y) M(repeat_y)                           \
+    M(gather_a8) M(gather_g8) M(gather_i8)                       \
+    M(gather_565) M(gather_4444) M(gather_8888) M(gather_f16)    \
+    M(bilinear_nx) M(bilinear_px) M(bilinear_ny) M(bilinear_py)  \
+    M(bicubic_n3x) M(bicubic_n1x) M(bicubic_p1x) M(bicubic_p3x)  \
+    M(bicubic_n3y) M(bicubic_n1y) M(bicubic_p1y) M(bicubic_p3y)  \
+    M(save_xy) M(accumulate)                                     \
+    M(linear_gradient)                                           \
+    M(linear_gradient_2stops)                                    \
+    M(byte_tables) M(byte_tables_rgb)                            \
+    M(shader_adapter)                                            \
+    M(rgb_to_hsl)                                                \
+    M(hsl_to_rgb)
+
 class SkRasterPipeline {
 public:
-    struct Stage;
-    using Fn = void(SK_VECTORCALL *)(Stage*, size_t, size_t, Sk4f,Sk4f,Sk4f,Sk4f,
-                                                             Sk4f,Sk4f,Sk4f,Sk4f);
-    struct Stage {
-        template <typename T>
-        T ctx() { return static_cast<T>(fCtx); }
-
-        void SK_VECTORCALL next(size_t x, size_t tail, Sk4f v0, Sk4f v1, Sk4f v2, Sk4f v3,
-                                                       Sk4f v4, Sk4f v5, Sk4f v6, Sk4f v7) {
-            // Stages are logically a pipeline, and physically are contiguous in an array.
-            // To get to the next stage, we just increment our pointer to the next array element.
-            fNext(this+1, x,tail, v0,v1,v2,v3, v4,v5,v6,v7);
-        }
-
-        // It makes next() a good bit cheaper if we hold the next function to call here,
-        // rather than logically simpler choice of the function implementing this stage.
-        Fn fNext;
-        void* fCtx;
-    };
-
-
     SkRasterPipeline();
 
-    // Run the pipeline constructed with append(), walking x through [x,x+n),
-    // generally in 4-pixel steps, with perhaps one jagged tail step.
-    void run(size_t x, size_t n);
-    void run(size_t n) { this->run(0, n); }
-
     enum StockStage {
-        store_565,
-        store_srgb,
-        store_f16,
-
-        load_s_565,
-        load_s_srgb,
-        load_s_f16,
-
-        load_d_565,
-        load_d_srgb,
-        load_d_f16,
-
-        scale_u8,
-
-        lerp_u8,
-        lerp_565,
-        lerp_constant_float,
-
-        constant_color,
-
-        dst,
-        dstatop,
-        dstin,
-        dstout,
-        dstover,
-        srcatop,
-        srcin,
-        srcout,
-        srcover,
-        clear,
-        modulate,
-        multiply,
-        plus_,
-        screen,
-        xor_,
-        colorburn,
-        colordodge,
-        darken,
-        difference,
-        exclusion,
-        hardlight,
-        lighten,
-        overlay,
-        softlight,
-
-        kNumStockStages,
+    #define M(stage) stage,
+        SK_RASTER_PIPELINE_STAGES(M)
+    #undef M
     };
     void append(StockStage, void* = nullptr);
     void append(StockStage stage, const void* ctx) { this->append(stage, const_cast<void*>(ctx)); }
 
-
     // Append all stages to this pipeline.
     void extend(const SkRasterPipeline&);
 
+    // Runs the pipeline walking x through [x,x+n).
+    void run(size_t x, size_t n) const;
+
+    void dump() const;
+
+    struct Stage {
+        StockStage stage;
+        void*        ctx;
+    };
+
+    // Conversion from sRGB can be subtly tricky when premultiplication is involved.
+    // Use these helpers to keep things sane.
+    void append_from_srgb(SkAlphaType);
+
+    bool empty() const { return fStages.empty(); }
+
 private:
-    using Stages = SkSTArray<10, Stage, /*MEM_COPY=*/true>;
+    bool run_with_jumper(size_t x, size_t n) const;
 
-    void append(Fn body, Fn tail, void*);
-
-    // This no-op default makes fBodyStart and fTailStart unconditionally safe to call,
-    // and is always the last stage's fNext as a sort of safety net to make sure even a
-    // buggy pipeline can't walk off its own end.
-    static void SK_VECTORCALL JustReturn(Stage*, size_t, size_t, Sk4f,Sk4f,Sk4f,Sk4f,
-                                                                 Sk4f,Sk4f,Sk4f,Sk4f);
-    Stages fBody,
-           fTail;
-    Fn fBodyStart = &JustReturn,
-       fTailStart = &JustReturn;
+    std::vector<Stage> fStages;
 };
 
 #endif//SkRasterPipeline_DEFINED

@@ -17,8 +17,8 @@ class SkOpSpanBase;
 
 class SkCoincidentSpans {
 public:
-    const SkOpPtT* coinPtTEnd() const { return fCoinPtTEnd; }
-    const SkOpPtT* coinPtTStart() const { return fCoinPtTStart; }
+    const SkOpPtT* coinPtTEnd() const;
+    const SkOpPtT* coinPtTStart() const;
 
     // These return non-const pointers so that, as copies, they can be added
     // to a new span pair
@@ -67,27 +67,27 @@ public:
     SkCoincidentSpans* next() { return fNext; }
     const SkCoincidentSpans* next() const { return fNext; }
     SkCoincidentSpans** nextPtr() { return &fNext; }
-    const SkOpPtT* oppPtTStart() const { return fOppPtTStart; }
-    const SkOpPtT* oppPtTEnd() const { return fOppPtTEnd; }
+    const SkOpPtT* oppPtTStart() const;
+    const SkOpPtT* oppPtTEnd() const;
     // These return non-const pointers so that, as copies, they can be added
     // to a new span pair
     SkOpPtT* oppPtTStartWritable() const { return const_cast<SkOpPtT*>(fOppPtTStart); }
     SkOpPtT* oppPtTEndWritable() const { return const_cast<SkOpPtT*>(fOppPtTEnd); }
-    bool ordered() const;
+    bool ordered(bool* result) const;
 
     void set(SkCoincidentSpans* next, const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
             const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd);
 
     void setCoinPtTEnd(const SkOpPtT* ptT) {
         SkOPASSERT(ptT == ptT->span()->ptT());
-        SkASSERT(!fCoinPtTStart || ptT->fT != fCoinPtTStart->fT);
+        SkOPASSERT(!fCoinPtTStart || ptT->fT != fCoinPtTStart->fT);
         SkASSERT(!fCoinPtTStart || fCoinPtTStart->segment() == ptT->segment());
         fCoinPtTEnd = ptT;
         ptT->setCoincident();
     }
 
     void setCoinPtTStart(const SkOpPtT* ptT) {
-        SkASSERT(ptT == ptT->span()->ptT());
+        SkOPASSERT(ptT == ptT->span()->ptT());
         SkOPASSERT(!fCoinPtTEnd || ptT->fT != fCoinPtTEnd->fT);
         SkASSERT(!fCoinPtTEnd || fCoinPtTEnd->segment() == ptT->segment());
         fCoinPtTStart = ptT;
@@ -108,8 +108,8 @@ public:
     }
 
     void setOppPtTStart(const SkOpPtT* ptT) {
-        SkASSERT(ptT == ptT->span()->ptT());
-        SkASSERT(!fOppPtTEnd || ptT->fT != fOppPtTEnd->fT);
+        SkOPASSERT(ptT == ptT->span()->ptT());
+        SkOPASSERT(!fOppPtTEnd || ptT->fT != fOppPtTEnd->fT);
         SkASSERT(!fOppPtTEnd || fOppPtTEnd->segment() == ptT->segment());
         fOppPtTStart = ptT;
         ptT->setCoincident();
@@ -150,7 +150,7 @@ public:
     bool addEndMovedSpans(DEBUG_COIN_DECLARE_ONLY_PARAMS());
     bool addExpanded(DEBUG_COIN_DECLARE_ONLY_PARAMS());
     bool addMissing(bool* added  DEBUG_COIN_DECLARE_PARAMS());
-    void apply(DEBUG_COIN_DECLARE_ONLY_PARAMS());
+    bool apply(DEBUG_COIN_DECLARE_ONLY_PARAMS());
     bool contains(const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
                   const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) const;
     void correctEnds(DEBUG_COIN_DECLARE_ONLY_PARAMS());
@@ -212,7 +212,7 @@ public:
     bool expand(DEBUG_COIN_DECLARE_ONLY_PARAMS());
     bool extend(const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd, const SkOpPtT* oppPtTStart,
                 const SkOpPtT* oppPtTEnd);
-    void findOverlaps(SkOpCoincidence*  DEBUG_COIN_DECLARE_PARAMS()) const;
+    bool findOverlaps(SkOpCoincidence*  DEBUG_COIN_DECLARE_PARAMS()) const;
     void fixUp(SkOpPtT* deleted, const SkOpPtT* kept);
 
     SkOpGlobalState* globalState() {
@@ -227,7 +227,7 @@ public:
         return !fHead && !fTop;
     }
 
-    void mark(DEBUG_COIN_DECLARE_ONLY_PARAMS());
+    bool mark(DEBUG_COIN_DECLARE_ONLY_PARAMS());
     void markCollapsed(SkOpPtT* );
 
     static bool Ordered(const SkOpPtT* coinPtTStart, const SkOpPtT* oppPtTStart) {
