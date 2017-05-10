@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  getCryptoParams,
+  getCryptoParamsFromHeaders,
   PushCrypto,
 } = Cu.import('resource://gre/modules/PushCrypto.jsm', {});
 
@@ -9,7 +9,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_crypto_getCryptoParams() {
+add_task(async function test_crypto_getCryptoParamsFromHeaders() {
   // These headers should parse correctly.
   let shouldParse = [{
     desc: 'aesgcm with multiple keys',
@@ -19,10 +19,9 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'keyid=p256dh;salt=upk1yFkp1xI',
     },
     params: {
-      dh: 'Iy1Je2Kv11A',
+      senderKey: 'Iy1Je2Kv11A',
       salt: 'upk1yFkp1xI',
       rs: 4096,
-      padSize: 2,
     },
   }, {
     desc: 'aesgcm with quoted key param',
@@ -32,10 +31,9 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'salt=C11AvAsp6Gc',
     },
     params: {
-      dh: 'byfHbUffc-k',
+      senderKey: 'byfHbUffc-k',
       salt: 'C11AvAsp6Gc',
       rs: 4096,
-      padSize: 2,
     },
   }, {
     desc: 'aesgcm with Crypto-Key and rs = 24',
@@ -45,10 +43,9 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'salt=H7U7wcIoIKs; rs=24',
     },
     params: {
-      dh: 'ybuT4VDz-Bg',
+      senderKey: 'ybuT4VDz-Bg',
       salt: 'H7U7wcIoIKs',
       rs: 24,
-      padSize: 2,
     },
   }, {
     desc: 'aesgcm128 with Encryption-Key and rs = 2',
@@ -58,10 +55,9 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'keyid=legacy; salt=YngI8B7YapM; rs=2',
     },
     params: {
-      dh: 'LqrDQuVl9lY',
+      senderKey: 'LqrDQuVl9lY',
       salt: 'YngI8B7YapM',
       rs: 2,
-      padSize: 1,
     },
   }, {
     desc: 'aesgcm128 with Encryption-Key',
@@ -71,15 +67,25 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'keyid=v2; salt=khtpyXhpDKM',
     },
     params: {
-      dh: 'VA6wmY1IpiE',
+      senderKey: 'VA6wmY1IpiE',
       salt: 'khtpyXhpDKM',
       rs: 4096,
-      padSize: 1,
     }
   }];
   for (let test of shouldParse) {
-    let params = getCryptoParams(test.headers);
-    deepEqual(params, test.params, test.desc);
+    let params = getCryptoParamsFromHeaders(test.headers);
+    let senderKey = ChromeUtils.base64URLDecode(test.params.senderKey, {
+      padding: 'reject',
+    });
+    let salt = ChromeUtils.base64URLDecode(test.params.salt, {
+      padding: 'reject',
+    });
+    deepEqual(new Uint8Array(params.senderKey), new Uint8Array(senderKey),
+      "Sender key should match for " + test.desc);
+    deepEqual(new Uint8Array(params.salt), new Uint8Array(salt),
+      "Salt should match for " + test.desc);
+    equal(params.rs, test.params.rs,
+      "Record size should match for " + test.desc);
   }
 
   // These headers should be rejected.
@@ -103,13 +109,6 @@ add_task(function* test_crypto_getCryptoParams() {
       encryption: 'dh=Esao8aTBfIk;rs=bad',
     },
   }, {
-    desc: 'Insufficiently large record size',
-    headers: {
-      encoding: 'aesgcm',
-      crypto_key: 'dh=fK0EXaw5IU8',
-      encryption: 'salt=orbLLmlbJfM;rs=1',
-    },
-  }, {
     desc: 'aesgcm with Encryption-Key',
     headers: {
       encoding: 'aesgcm',
@@ -118,7 +117,7 @@ add_task(function* test_crypto_getCryptoParams() {
     },
   }];
   for (let test of shouldThrow) {
-    throws(() => getCryptoParams(test.headers), test.desc);
+    throws(() => getCryptoParamsFromHeaders(test.headers), test.desc);
   }
 });
 
