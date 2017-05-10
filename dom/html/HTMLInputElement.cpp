@@ -1816,108 +1816,6 @@ HTMLInputElement::StringToDecimal(const nsAString& aValue)
   return Decimal::fromString(stdString);
 }
 
-bool
-HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
-                                        Decimal& aResultValue) const
-{
-  MOZ_ASSERT(DoesValueAsNumberApply(),
-             "ConvertStringToNumber only applies if .valueAsNumber applies");
-
-  switch (mType) {
-    case NS_FORM_INPUT_NUMBER:
-    case NS_FORM_INPUT_RANGE:
-      {
-        aResultValue = StringToDecimal(aValue);
-        if (!aResultValue.isFinite()) {
-          return false;
-        }
-        return true;
-      }
-    case NS_FORM_INPUT_DATE:
-      {
-        uint32_t year, month, day;
-        if (!ParseDate(aValue, &year, &month, &day)) {
-          return false;
-        }
-
-        JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day));
-        if (!time.isValid()) {
-          return false;
-        }
-
-        aResultValue = Decimal::fromDouble(time.toDouble());
-        return true;
-      }
-    case NS_FORM_INPUT_TIME:
-      uint32_t milliseconds;
-      if (!ParseTime(aValue, &milliseconds)) {
-        return false;
-      }
-
-      aResultValue = Decimal(int32_t(milliseconds));
-      return true;
-    case NS_FORM_INPUT_MONTH:
-      {
-        uint32_t year, month;
-        if (!ParseMonth(aValue, &year, &month)) {
-          return false;
-        }
-
-        if (year < kMinimumYear || year > kMaximumYear) {
-          return false;
-        }
-
-        // Maximum valid month is 275760-09.
-        if (year == kMaximumYear && month > kMaximumMonthInMaximumYear) {
-          return false;
-        }
-
-        int32_t months = MonthsSinceJan1970(year, month);
-        aResultValue = Decimal(int32_t(months));
-        return true;
-      }
-    case NS_FORM_INPUT_WEEK:
-      {
-        uint32_t year, week;
-        if (!ParseWeek(aValue, &year, &week)) {
-          return false;
-        }
-
-        if (year < kMinimumYear || year > kMaximumYear) {
-          return false;
-        }
-
-        // Maximum week is 275760-W37, the week of 275760-09-13.
-        if (year == kMaximumYear && week > kMaximumWeekInMaximumYear) {
-          return false;
-        }
-
-        double days = DaysSinceEpochFromWeek(year, week);
-        aResultValue = Decimal::fromDouble(days * kMsPerDay);
-        return true;
-      }
-    case NS_FORM_INPUT_DATETIME_LOCAL:
-      {
-        uint32_t year, month, day, timeInMs;
-        if (!ParseDateTimeLocal(aValue, &year, &month, &day, &timeInMs)) {
-          return false;
-        }
-
-        JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day,
-                                                         timeInMs));
-        if (!time.isValid()) {
-          return false;
-        }
-
-        aResultValue = Decimal::fromDouble(time.toDouble());
-        return true;
-      }
-    default:
-      MOZ_ASSERT(false, "Unrecognized input type");
-      return false;
-  }
-}
-
 Decimal
 HTMLInputElement::GetValueAsDecimal() const
 {
@@ -1926,8 +1824,8 @@ HTMLInputElement::GetValueAsDecimal() const
 
   GetNonFileValueInternal(stringValue);
 
-  return !ConvertStringToNumber(stringValue, decimalValue) ? Decimal::nan()
-                                                           : decimalValue;
+  return !mInputType->ConvertStringToNumber(stringValue, decimalValue) ?
+    Decimal::nan() : decimalValue;
 }
 
 void
@@ -2370,7 +2268,7 @@ HTMLInputElement::GetMinimum() const
   GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
 
   Decimal min;
-  return ConvertStringToNumber(minStr, min) ? min : defaultMinimum;
+  return mInputType->ConvertStringToNumber(minStr, min) ? min : defaultMinimum;
 }
 
 Decimal
@@ -2391,7 +2289,7 @@ HTMLInputElement::GetMaximum() const
   GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
 
   Decimal max;
-  return ConvertStringToNumber(maxStr, max) ? max : defaultMaximum;
+  return mInputType->ConvertStringToNumber(maxStr, max) ? max : defaultMaximum;
 }
 
 Decimal
@@ -2408,14 +2306,14 @@ HTMLInputElement::GetStepBase() const
   // attribute", not "the minimum".
   nsAutoString minStr;
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr) &&
-      ConvertStringToNumber(minStr, stepBase)) {
+      mInputType->ConvertStringToNumber(minStr, stepBase)) {
     return stepBase;
   }
 
   // If @min is not a double, we should use @value.
   nsAutoString valueStr;
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::value, valueStr) &&
-      ConvertStringToNumber(valueStr, stepBase)) {
+      mInputType->ConvertStringToNumber(valueStr, stepBase)) {
     return stepBase;
   }
 
@@ -5344,7 +5242,7 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
     case NS_FORM_INPUT_NUMBER:
       {
         Decimal value;
-        bool ok = ConvertStringToNumber(aValue, value);
+        bool ok = mInputType->ConvertStringToNumber(aValue, value);
         if (!ok) {
           aValue.Truncate();
         }
@@ -5363,7 +5261,7 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
         bool needSanitization = false;
 
         Decimal value;
-        bool ok = ConvertStringToNumber(aValue, value);
+        bool ok = mInputType->ConvertStringToNumber(aValue, value);
         if (!ok) {
           needSanitization = true;
           // Set value to midway between minimum and maximum.

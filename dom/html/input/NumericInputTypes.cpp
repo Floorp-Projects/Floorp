@@ -71,6 +71,17 @@ NumericInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
   return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
 }
 
+bool
+NumericInputTypeBase::ConvertStringToNumber(nsAString& aValue,
+  mozilla::Decimal& aResultValue) const
+{
+  aResultValue = mozilla::dom::HTMLInputElement::StringToDecimal(aValue);
+  if (!aResultValue.isFinite()) {
+    return false;
+  }
+  return true;
+}
+
 /* input type=numer */
 
 bool
