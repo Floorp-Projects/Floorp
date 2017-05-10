@@ -11,6 +11,7 @@ var newTab = null;
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Subscribe button functionality");
 
   // add the Subscribe button to the panel

@@ -11,6 +11,7 @@ function isFullscreenSizeMode() {
 
 // Observers should be disabled when in customization mode.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   // Open and close the panel to make sure that the
   // area is generated before getting a child of the area.
   let shownPanelPromise = promisePanelShown(window);

@@ -4,6 +4,7 @@
 
 // Entering then exiting customization mode should reenable the Help and Exit buttons.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield startCustomizing();
   let helpButton = document.getElementById("PanelUI-help");
   let quitButton = document.getElementById("PanelUI-quit");

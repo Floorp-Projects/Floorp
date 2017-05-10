@@ -717,11 +717,15 @@ def milestone(build_env, _):
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta)
 
+@depends(milestone)
+def is_nightly(milestone):
+    return milestone.is_nightly
+
 set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
-set_config('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
-set_define('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
+set_config('NIGHTLY_BUILD', is_nightly)
+set_define('NIGHTLY_BUILD', is_nightly)
 add_old_configure_assignment('NIGHTLY_BUILD',
-                             delayed_getattr(milestone, 'is_nightly'))
+                             is_nightly)
 set_config('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
 set_define('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
 add_old_configure_assignment('RELEASE_OR_BETA',

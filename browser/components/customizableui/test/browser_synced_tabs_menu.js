@@ -39,6 +39,7 @@ let mockedInternal = {
 
 
 add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
 

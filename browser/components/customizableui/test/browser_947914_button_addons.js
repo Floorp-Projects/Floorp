@@ -8,6 +8,7 @@ var initialLocation = gBrowser.currentURI.spec;
 var newTab = null;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check addons button existence and functionality");
 
   yield PanelUI.show();
