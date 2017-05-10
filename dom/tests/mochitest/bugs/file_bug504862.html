@@ -9,7 +9,7 @@ if (location.toString().match(/^http:\/\/mochi.test:8888/)) {
             "dialog did not get the right arguments.");
 
   // Load a different url, and test that it sees the arguments (since it's same origin).
-  window.location="data:text/html,<html><body onload=\"opener.is(window.dialogArguments, 'my args', 'subsequent dialog document did not get the right arguments.'); close();\">';";
+  window.location="file2_bug504862.html";
 } else {
   // Post a message containing our arguments to the opener to test
   // that this cross origing dialog does *not* see the passed in
