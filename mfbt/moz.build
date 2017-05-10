@@ -83,6 +83,7 @@ EXPORTS.mozilla = [
     'SegmentedVector.h',
     'SHA1.h',
     'SizePrintfMacros.h',
+    'SmallPointerArray.h',
     'Span.h',
     'SplayTree.h',
     'Sprintf.h',
