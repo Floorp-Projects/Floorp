@@ -9,9 +9,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 /* import-globals-from ../../../../../testing/modules/sinon-1.16.1.js */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
 
-const TEST_HOST = "example.com";
-const TEST_ORIGIN = "http://" + TEST_HOST;
-const TEST_BASE_URL = TEST_ORIGIN + "/browser/browser/components/preferences/in-content-old/tests/";
+const TEST_QUOTA_USAGE_HOST = "example.com";
+const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
+const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content-old/tests/site_data_test.html";
+const TEST_OFFLINE_HOST = "example.org";
+const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
+const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content-old/tests/offline/offline.html";
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
@@ -36,78 +39,41 @@ const mockOfflineAppCacheHelper = {
 };
 
 const mockSiteDataManager = {
-  sites: new Map([
-    [
-      "https://account.xyz.com/",
-      {
-        usage: 1024 * 200,
-        host: "account.xyz.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://shopping.xyz.com/",
-      {
-        usage: 1024 * 100,
-        host: "shopping.xyz.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ],
-    [
-      "https://video.bar.com/",
-      {
-        usage: 1024 * 20,
-        host: "video.bar.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://music.bar.com/",
-      {
-        usage: 1024 * 10,
-        host: "music.bar.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ],
-    [
-      "https://books.foo.com/",
-      {
-        usage: 1024 * 2,
-        host: "books.foo.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://news.foo.com/",
-      {
-        usage: 1024,
-        host: "news.foo.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ]
-  ]),
 
-  _originalGetSites: null,
+  _originalGetQuotaUsage: null,
+  _originalRemoveQuotaUsage: null,
 
-  getSites() {
-    let list = [];
-    this.sites.forEach((data, origin) => {
-      list.push({
-        usage: data.usage,
-        status: data.status,
-        uri: NetUtil.newURI(origin)
+  _getQuotaUsage() {
+    let results = [];
+    this.fakeSites.forEach(site => {
+      results.push({
+        origin: site.principal.origin,
+        usage: site.usage,
+        persisted: site.persisted
       });
     });
-    return Promise.resolve(list);
+    SiteDataManager._getQuotaUsagePromise = Promise.resolve(results);
+    return SiteDataManager._getQuotaUsagePromise;
+  },
+
+  _removeQuotaUsage(site) {
+    var target = site.principals[0].URI.host;
+    this.fakeSites = this.fakeSites.filter(fakeSite => {
+      return fakeSite.principal.URI.host != target;
+    });
   },
 
   register() {
-    this._originalGetSites = SiteDataManager.getSites;
-    SiteDataManager.getSites = this.getSites.bind(this);
+    this._originalGetQuotaUsage = SiteDataManager._getQuotaUsage;
+    SiteDataManager._getQuotaUsage = this._getQuotaUsage.bind(this);
+    this._originalRemoveQuotaUsage = SiteDataManager._removeQuotaUsage;
+    SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
+    this.fakeSites = null;
   },
 
   unregister() {
-    SiteDataManager.getSites = this._originalGetSites;
+    SiteDataManager._getQuotaUsage = this._originalGetQuotaUsage;
+    SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }
 };
 
@@ -115,12 +81,6 @@ function addPersistentStoragePerm(origin) {
   let uri = NetUtil.newURI(origin);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   Services.perms.addFromPrincipal(principal, "persistent-storage", Ci.nsIPermissionManager.ALLOW_ACTION);
-}
-
-function removePersistentStoragePerm(origin) {
-  let uri = NetUtil.newURI(origin);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  Services.perms.removeFromPrincipal(principal, "persistent-storage");
 }
 
 function getPersistentStoragePermStatus(origin) {
@@ -203,17 +163,16 @@ function promiseCookiesCleared() {
   });
 }
 
-function assertSitesListed(doc, origins) {
+function assertSitesListed(doc, hosts) {
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
   let removeBtn = frameDoc.getElementById("removeSelected");
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let sitesList = frameDoc.getElementById("sitesList");
   let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
-  is(totalSitesNumber, origins.length, "Should list the right sites number");
-  origins.forEach(origin => {
-    let site = sitesList.querySelector(`richlistitem[data-origin="${origin}"]`);
-    let host = site.getAttribute("host");
-    ok(origin.includes(host), `Should list the site of ${origin}`);
+  is(totalSitesNumber, hosts.length, "Should list the right sites number");
+  hosts.forEach(host => {
+    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
+    ok(site, `Should list the site of ${host}`);
   });
   is(removeBtn.disabled, false, "Should enable the removeSelected button");
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
@@ -224,6 +183,107 @@ registerCleanupFunction(function() {
   delete window.setImmediate;
   delete window.clearImmediate;
   mockOfflineAppCacheHelper.unregister();
+});
+
+// Test grouping and listing sites across scheme, port and origin attributes by host
+add_task(function *() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  const quotaUsage = 1024;
+  mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com^userContextId=1"),
+      persisted: true
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com:123"),
+      persisted: false
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://account.xyz.com"),
+      persisted: false
+    },
+  ];
+
+  let updatedPromise = promiseSitesUpdated();
+  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield updatedPromise;
+  yield openSettingsDialog();
+  let dialogFrame = gBrowser.selectedBrowser.contentDocument.getElementById("dialogFrame");
+  let frameDoc = dialogFrame.contentDocument;
+
+  let siteItems = frameDoc.getElementsByTagName("richlistitem");
+  is(siteItems.length, 1, "Should group sites across scheme, port and origin attributes");
+
+  let expected = "account.xyz.com";
+  let hostCol = siteItems[0].getAttribute("host");
+  is(hostCol, expected, "Should group and list sites by host");
+
+  let prefStrBundle = frameDoc.getElementById("bundlePreferences");
+  expected = prefStrBundle.getFormattedString("siteUsage",
+    DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
+  let usageCol = siteItems[0].getAttribute("usage");
+  is(usageCol, expected, "Should sum up usages across scheme, port and origin attributes");
+
+  expected = prefStrBundle.getString("persistent");
+  let statusCol = siteItems[0].getAttribute("status");
+  is(statusCol, expected, "Should mark persisted status across scheme, port and origin attributes");
+
+  mockSiteDataManager.unregister();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test listing site using quota usage or site using appcache
+add_task(function *() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+
+  // Open a test site which would save into appcache
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Open a test site which would save into quota manager
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  let updatedPromise = promiseSitesUpdated();
+  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield updatedPromise;
+  yield openSettingsDialog();
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let dialogFrame = doc.getElementById("dialogFrame");
+  let frameDoc = dialogFrame.contentDocument;
+
+  let siteItems = frameDoc.getElementsByTagName("richlistitem");
+  is(siteItems.length, 2, "Should list sites using quota usage or appcache");
+
+  let appcacheSite = frameDoc.querySelector(`richlistitem[host="${TEST_OFFLINE_HOST}"]`);
+  ok(appcacheSite, "Should list site using appcache");
+
+  let qoutaUsageSite = frameDoc.querySelector(`richlistitem[host="${TEST_QUOTA_USAGE_HOST}"]`);
+  ok(qoutaUsageSite, "Should list site using quota usage");
+
+  // Always remember to clean up
+  OfflineAppCacheHelper.clear();
+  yield new Promise(resolve => {
+    let principal = Services.scriptSecurityManager
+                            .createCodebasePrincipalFromOrigin(TEST_QUOTA_USAGE_ORIGIN);
+    let request = Services.qms.clearStoragesForPrincipal(principal, null, true);
+    request.callback = resolve;
+  });
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test buttons are disabled and loading message shown while updating sites
@@ -271,11 +331,12 @@ add_task(function *() {
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+// Test the function of the "Clear All Data" button
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  addPersistentStoragePerm(TEST_ORIGIN);
+  addPersistentStoragePerm(TEST_QUOTA_USAGE_ORIGIN);
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_BASE_URL + "site_data_test.html");
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
   yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
@@ -283,7 +344,7 @@ add_task(function* () {
 
   // Test the initial states
   let cacheUsage = yield cacheUsageGetter.get();
-  let quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
+  let quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
   let totalUsage = yield SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
@@ -298,11 +359,11 @@ add_task(function* () {
   yield cancelPromise;
 
   // Test the items are not removed
-  let status = getPersistentStoragePermStatus(TEST_ORIGIN);
+  let status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.ALLOW_ACTION, "Should not remove permission");
 
   cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
+  quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
   totalUsage = yield SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
@@ -326,13 +387,13 @@ add_task(function* () {
 
   ok(mockOfflineAppCacheHelper.clear.calledOnce, "Should clear app cache");
 
-  status = getPersistentStoragePermStatus(TEST_ORIGIN);
+  status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Should remove permission");
 
   cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
+  quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
   totalUsage = yield SiteDataManager.getTotalUsage();
-  is(cacheUsage, 0, "The cahce usage should be removed");
+  is(cacheUsage, 0, "The cache usage should be removed");
   is(quotaUsage, 0, "The quota usage should be removed");
   is(totalUsage, 0, "The total usage should be removed");
   // Test accepting "Clear All Data" ends
@@ -340,10 +401,31 @@ add_task(function* () {
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+// Test sorting
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-
   mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024 * 2,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://books.foo.com"),
+      persisted: false
+    },
+    {
+      usage: 1024 * 3,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+  ];
+
   let updatePromise = promiseSitesUpdated();
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
   yield updatePromise;
@@ -356,22 +438,9 @@ add_task(function* () {
   let usageCol = frameDoc.getElementById("usageCol");
   let statusCol = frameDoc.getElementById("statusCol");
   let sitesList = frameDoc.getElementById("sitesList");
-  let mockSites = mockSiteDataManager.sites;
 
   // Test default sorting
-  assertSortByHost("ascending");
-
-  // Test sorting on the host column
-  hostCol.click();
-  assertSortByHost("descending");
-  hostCol.click();
-  assertSortByHost("ascending");
-
-  // Test sorting on the permission status column
-  statusCol.click();
-  assertSortByStatus("ascending");
-  statusCol.click();
-  assertSortByStatus("descending");
+  assertSortByUsage("descending");
 
   // Test sorting on the usage column
   usageCol.click();
@@ -379,17 +448,27 @@ add_task(function* () {
   usageCol.click();
   assertSortByUsage("descending");
 
+  // Test sorting on the host column
+  hostCol.click();
+  assertSortByHost("ascending");
+  hostCol.click();
+  assertSortByHost("descending");
+
+  // Test sorting on the permission status column
+  statusCol.click();
+  assertSortByStatus("ascending");
+  statusCol.click();
+  assertSortByStatus("descending");
+
   mockSiteDataManager.unregister();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByHost(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
-      let result = a.host.localeCompare(b.host);
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let result = aHost.localeCompare(bHost);
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
       } else {
@@ -401,11 +480,16 @@ add_task(function* () {
   function assertSortByStatus(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
-      let result = a.status - b.status;
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = 0;
+      if (a.persisted && !b.persisted) {
+        result = 1;
+      } else if (!a.persisted && b.persisted) {
+        result = -1;
+      }
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
       } else {
@@ -417,10 +501,10 @@ add_task(function* () {
   function assertSortByUsage(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
       let result = a.usage - b.usage;
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
@@ -429,12 +513,44 @@ add_task(function* () {
       }
     }
   }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
 });
 
+// Test search on the host column
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-
   mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      persisted: false
+    },
+  ];
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
+
   let updatePromise = promiseSitesUpdated();
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
   yield updatePromise;
@@ -443,19 +559,18 @@ add_task(function* () {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
   let searchBox = frameDoc.getElementById("searchBox");
-  let mockOrigins = Array.from(mockSiteDataManager.sites.keys());
 
   searchBox.value = "xyz";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins.filter(o => o.includes("xyz")));
+  assertSitesListed(doc, fakeHosts.filter(host => host.includes("xyz")));
 
   searchBox.value = "bar";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins.filter(o => o.includes("bar")));
+  assertSitesListed(doc, fakeHosts.filter(host => host.includes("bar")));
 
   searchBox.value = "";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins);
+  assertSitesListed(doc, fakeHosts);
 
   mockSiteDataManager.unregister();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -464,15 +579,34 @@ add_task(function* () {
 // Test selecting and removing all sites one by one
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  let fakeOrigins = [
-    "https://news.foo.com/",
-    "https://mails.bar.com/",
-    "https://videos.xyz.com/",
-    "https://books.foo.com/",
-    "https://account.bar.com/",
-    "https://shopping.xyz.com/"
+  mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      persisted: false
+    },
   ];
-  fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSitesUpdated();
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
@@ -486,7 +620,7 @@ add_task(function* () {
   let settingsDialogClosePromise = null;
 
   // Test the initial state
-  assertAllSitesListed();
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
@@ -497,7 +631,7 @@ add_task(function* () {
   cancelBtn.doCommand();
   yield settingsDialogClosePromise;
   yield openSettingsDialog();
-  assertAllSitesListed();
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but cancelling save
   let cancelPromise = promiseAlertDialogOpen("cancel");
@@ -510,7 +644,7 @@ add_task(function* () {
   yield cancelPromise;
   yield settingsDialogClosePromise;
   yield openSettingsDialog();
-  assertAllSitesListed();
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
   let acceptPromise = promiseAlertDialogOpen("accept");
@@ -527,8 +661,7 @@ add_task(function* () {
   yield openSettingsDialog();
   assertAllSitesNotListed();
 
-  // Always clean up the fake origins
-  fakeOrigins.forEach(origin => removePersistentStoragePerm(origin));
+  mockSiteDataManager.unregister();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeAllSitesOneByOne() {
@@ -540,17 +673,6 @@ add_task(function* () {
       sites[i].click();
       removeBtn.doCommand();
     }
-  }
-
-  function assertAllSitesListed() {
-    frameDoc = doc.getElementById("dialogFrame").contentDocument;
-    let removeBtn = frameDoc.getElementById("removeSelected");
-    let removeAllBtn = frameDoc.getElementById("removeAll");
-    let sitesList = frameDoc.getElementById("sitesList");
-    let sites = sitesList.getElementsByTagName("richlistitem");
-    is(sites.length, fakeOrigins.length, "Should list all sites");
-    is(removeBtn.disabled, false, "Should enable the removeSelected button");
-    is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
   }
 
   function assertAllSitesNotListed() {
@@ -568,15 +690,34 @@ add_task(function* () {
 // Test selecting and removing partial sites
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  let fakeOrigins = [
-    "https://news.foo.com/",
-    "https://mails.bar.com/",
-    "https://videos.xyz.com/",
-    "https://books.foo.com/",
-    "https://account.bar.com/",
-    "https://shopping.xyz.com/"
+  mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      persisted: false
+    },
   ];
-  fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSitesUpdated();
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
@@ -591,76 +732,95 @@ add_task(function* () {
   let settingsDialogClosePromise = null;
 
   // Test the initial state
-  assertSitesListed(doc, fakeOrigins);
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = doc.getElementById("dialogFrame").contentDocument;
   cancelBtn = frameDoc.getElementById("cancel");
-  removeSelectedSite(fakeOrigins.slice(0, 4));
-  assertSitesListed(doc, fakeOrigins.slice(4));
+  removeSelectedSite(fakeHosts.slice(0, 2));
+  assertSitesListed(doc, fakeHosts.slice(2));
   cancelBtn.doCommand();
   yield settingsDialogClosePromise;
   yield openSettingsDialog();
-  assertSitesListed(doc, fakeOrigins);
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but canceling save
   removeDialogOpenPromise = promiseWindowDialogOpen("cancel", REMOVE_DIALOG_URL);
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = doc.getElementById("dialogFrame").contentDocument;
   saveBtn = frameDoc.getElementById("save");
-  removeSelectedSite(fakeOrigins.slice(0, 4));
-  assertSitesListed(doc, fakeOrigins.slice(4));
+  removeSelectedSite(fakeHosts.slice(0, 2));
+  assertSitesListed(doc, fakeHosts.slice(2));
   saveBtn.doCommand();
   yield removeDialogOpenPromise;
   yield settingsDialogClosePromise;
   yield openSettingsDialog();
-  assertSitesListed(doc, fakeOrigins);
+  assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
   removeDialogOpenPromise = promiseWindowDialogOpen("accept", REMOVE_DIALOG_URL);
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = doc.getElementById("dialogFrame").contentDocument;
   saveBtn = frameDoc.getElementById("save");
-  removeSelectedSite(fakeOrigins.slice(0, 4));
-  assertSitesListed(doc, fakeOrigins.slice(4));
+  removeSelectedSite(fakeHosts.slice(0, 2));
+  assertSitesListed(doc, fakeHosts.slice(2));
   saveBtn.doCommand();
   yield removeDialogOpenPromise;
   yield settingsDialogClosePromise;
   yield openSettingsDialog();
-  assertSitesListed(doc, fakeOrigins.slice(4));
+  assertSitesListed(doc, fakeHosts.slice(2));
 
-  // Always clean up the fake origins
-  fakeOrigins.forEach(origin => removePersistentStoragePerm(origin));
+  mockSiteDataManager.unregister();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  function removeSelectedSite(origins) {
+  function removeSelectedSite(hosts) {
     frameDoc = doc.getElementById("dialogFrame").contentDocument;
     let removeBtn = frameDoc.getElementById("removeSelected");
     let sitesList = frameDoc.getElementById("sitesList");
-    origins.forEach(origin => {
-      let site = sitesList.querySelector(`richlistitem[data-origin="${origin}"]`);
+    hosts.forEach(host => {
+      let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         site.click();
         removeBtn.doCommand();
       } else {
-        ok(false, `Should not select and remove inexisted site of ${origin}`);
+        ok(false, `Should not select and remove inexistent site of ${host}`);
       }
     });
   }
 });
 
+// Test searching and then removing only visible sites
 add_task(function* () {
   yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  let fakeOrigins = [
-    "https://news.foo.com/",
-    "https://books.foo.com/",
-    "https://mails.bar.com/",
-    "https://account.bar.com/",
-    "https://videos.xyz.com/",
-    "https://shopping.xyz.com/"
+  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      persisted: false
+    },
   ];
-  fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSitesUpdated();
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
@@ -671,9 +831,9 @@ add_task(function* () {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
   let searchBox = frameDoc.getElementById("searchBox");
-  searchBox.value = "foo";
+  searchBox.value = "xyz";
   searchBox.doCommand();
-  assertSitesListed(doc, fakeOrigins.slice(0, 2));
+  assertSitesListed(doc, fakeHosts.filter(host => host.includes("xyz")));
 
   // Test only removing all visible sites listed
   updatePromise = promiseSitesUpdated();
@@ -687,9 +847,8 @@ add_task(function* () {
   yield settingsDialogClosePromise;
   yield updatePromise;
   yield openSettingsDialog();
-  assertSitesListed(doc, fakeOrigins.slice(2));
+  assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
 
-  // Always clean up the fake origins
-  fakeOrigins.forEach(origin => removePersistentStoragePerm(origin));
+  mockSiteDataManager.unregister();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

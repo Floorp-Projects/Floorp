@@ -100,8 +100,12 @@ let gSiteDataSettings = {
 
       case "statusCol":
         sortFunc = (a, b) => {
-          return a.persisted && !b.persisted ? 1 :
-                 !a.persisted && b.persisted ? -1 : 0;
+          if (a.persisted && !b.persisted) {
+            return 1;
+          } else if (!a.persisted && b.persisted) {
+            return -1;
+          }
+          return 0;
         };
         break;
 

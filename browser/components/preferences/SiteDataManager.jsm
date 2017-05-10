@@ -71,7 +71,7 @@ this.SiteDataManager = {
             }
           }
           this._updateAppCache();
-          Services.obs.notifyObservers(null, "sitedatamanager:sites-updated", null);
+          Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
         });
   },
 
