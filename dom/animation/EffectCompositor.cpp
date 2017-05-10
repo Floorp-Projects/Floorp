@@ -688,19 +688,6 @@ EffectCompositor::MaybeUpdateCascadeResults(dom::Element* aElement,
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
 
-/* static */ void
-EffectCompositor::UpdateCascadeResults(Element* aElement,
-                                       CSSPseudoElementType aPseudoType,
-                                       nsStyleContext* aStyleContext)
-{
-  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
-  if (!effects) {
-    return;
-  }
-
-  UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
-}
-
 /* static */ Maybe<NonOwningAnimationTarget>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 {
