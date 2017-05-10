@@ -80,7 +80,7 @@ static void anp_getTotalMatrix(ANPCanvas* canvas, ANPMatrix* matrix) {
 static bool anp_getLocalClipBounds(ANPCanvas* canvas, ANPRectF* r,
                                    bool antialias) {
     SkRect bounds;
-    if (canvas->skcanvas->getClipBounds(&bounds)) {
+    if (canvas->skcanvas->getLocalClipBounds(&bounds)) {
         SkANP::SetRect(r, bounds);
         return true;
     }
@@ -89,7 +89,7 @@ static bool anp_getLocalClipBounds(ANPCanvas* canvas, ANPRectF* r,
 
 static bool anp_getDeviceClipBounds(ANPCanvas* canvas, ANPRectI* r) {
     SkIRect bounds;
-    if (canvas->skcanvas->getClipDeviceBounds(&bounds)) {
+    if (canvas->skcanvas->getDeviceClipBounds(&bounds)) {
         SkANP::SetRect(r, bounds);
         return true;
     }
