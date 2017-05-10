@@ -1167,17 +1167,6 @@ protected:
   nsIRadioGroupContainer* GetRadioGroupContainer() const;
 
   /**
-   * Convert a string to a Decimal number in a type specific way,
-   * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#concept-input-value-string-number
-   * ie parse a date string to a timestamp if type=date,
-   * or parse a number string to its value if type=number.
-   * @param aValue the string to be parsed.
-   * @param aResultValue the number as a Decimal.
-   * @result whether the parsing was successful.
-   */
-  bool ConvertStringToNumber(nsAString& aValue, Decimal& aResultValue) const;
-
-  /**
    * Convert a Decimal to a string in a type specific way, ie convert a timestamp
    * to a date string if type=date or append the number string representing the
    * value if type=number.

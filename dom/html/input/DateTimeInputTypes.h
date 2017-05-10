@@ -25,6 +25,17 @@ protected:
   {}
 
   bool IsMutable() const override;
+
+  // Minimum year limited by HTML standard, year >= 1.
+  static const double kMinimumYear;
+  // Maximum year limited by ECMAScript date object range, year <= 275760.
+  static const double kMaximumYear;
+  // Maximum valid month is 275760-09.
+  static const double kMaximumMonthInMaximumYear;
+  // Maximum valid week is 275760-W37.
+  static const double kMaximumWeekInMaximumYear;
+  // Milliseconds in a day.
+  static const double kMsPerDay;
 };
 
 // input type=date
@@ -36,6 +47,9 @@ public:
   {
     return new (aMemory) DateInputType(aInputElement);
   }
+
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
 
 private:
   explicit DateInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -53,6 +67,9 @@ public:
     return new (aMemory) TimeInputType(aInputElement);
   }
 
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
+
 private:
   explicit TimeInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : DateTimeInputTypeBase(aInputElement)
@@ -68,6 +85,9 @@ public:
   {
     return new (aMemory) WeekInputType(aInputElement);
   }
+
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
 
 private:
   explicit WeekInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -85,6 +105,9 @@ public:
     return new (aMemory) MonthInputType(aInputElement);
   }
 
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
+
 private:
   explicit MonthInputType(mozilla::dom::HTMLInputElement* aInputElement)
     : DateTimeInputTypeBase(aInputElement)
@@ -100,6 +123,9 @@ public:
   {
     return new (aMemory) DateTimeLocalInputType(aInputElement);
   }
+
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
 
 private:
   explicit DateTimeLocalInputType(mozilla::dom::HTMLInputElement* aInputElement)
