@@ -6,7 +6,14 @@
 
 #include "DateTimeInputTypes.h"
 
+#include "js/Date.h"
 #include "mozilla/dom/HTMLInputElement.h"
+
+const double DateTimeInputTypeBase::kMinimumYear = 1;
+const double DateTimeInputTypeBase::kMaximumYear = 275760;
+const double DateTimeInputTypeBase::kMaximumMonthInMaximumYear = 9;
+const double DateTimeInputTypeBase::kMaximumWeekInMaximumYear = 37;
+const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
 
 bool
 DateTimeInputTypeBase::IsMutable() const
@@ -81,4 +88,110 @@ DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
 
   // Value has to be an integral multiple of step.
   return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+}
+
+// input type=date
+
+bool
+DateInputType::ConvertStringToNumber(nsAString& aValue,
+                                     mozilla::Decimal& aResultValue) const
+{
+  uint32_t year, month, day;
+  if (!ParseDate(aValue, &year, &month, &day)) {
+    return false;
+  }
+
+  JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day));
+  if (!time.isValid()) {
+    return false;
+  }
+
+  aResultValue = mozilla::Decimal::fromDouble(time.toDouble());
+  return true;
+}
+
+// input type=time
+
+bool
+TimeInputType::ConvertStringToNumber(nsAString& aValue,
+                                     mozilla::Decimal& aResultValue) const
+{
+  uint32_t milliseconds;
+  if (!ParseTime(aValue, &milliseconds)) {
+    return false;
+  }
+
+  aResultValue = mozilla::Decimal(int32_t(milliseconds));
+  return true;
+}
+
+// input type=week
+
+bool
+WeekInputType::ConvertStringToNumber(nsAString& aValue,
+                                     mozilla::Decimal& aResultValue) const
+{
+  uint32_t year, week;
+  if (!ParseWeek(aValue, &year, &week)) {
+    return false;
+  }
+
+  if (year < kMinimumYear || year > kMaximumYear) {
+    return false;
+  }
+
+  // Maximum week is 275760-W37, the week of 275760-09-13.
+  if (year == kMaximumYear && week > kMaximumWeekInMaximumYear) {
+    return false;
+  }
+
+  double days = DaysSinceEpochFromWeek(year, week);
+  aResultValue = mozilla::Decimal::fromDouble(days * kMsPerDay);
+  return true;
+}
+
+// input type=month
+
+bool
+MonthInputType::ConvertStringToNumber(nsAString& aValue,
+                                      mozilla::Decimal& aResultValue) const
+{
+  uint32_t year, month;
+  if (!ParseMonth(aValue, &year, &month)) {
+    return false;
+  }
+
+  if (year < kMinimumYear || year > kMaximumYear) {
+    return false;
+  }
+
+  // Maximum valid month is 275760-09.
+  if (year == kMaximumYear && month > kMaximumMonthInMaximumYear) {
+    return false;
+  }
+
+  int32_t months = MonthsSinceJan1970(year, month);
+  aResultValue = mozilla::Decimal(int32_t(months));
+  return true;
+}
+
+// input type=datetime-local
+
+bool
+DateTimeLocalInputType::ConvertStringToNumber(
+  nsAString& aValue, mozilla::Decimal& aResultValue) const
+{
+  uint32_t year, month, day, timeInMs;
+  if (!ParseDateTimeLocal(aValue, &year, &month, &day, &timeInMs)) {
+    return false;
+  }
+
+  JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day,
+                                                   timeInMs));
+  if (!time.isValid()) {
+    return false;
+  }
+
+  aResultValue = mozilla::Decimal::fromDouble(time.toDouble());
+  return true;
 }
