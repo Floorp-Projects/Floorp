@@ -54,18 +54,18 @@ typedef uint8_t XBLBindingSerializeDetails;
 #define XBLBinding_Serialize_ReadOnly 0x80
 
 // Appears at the end of the list of insertion points to indicate that there
-// are no more. 
+// are no more.
 #define XBLBinding_Serialize_NoMoreInsertionPoints 0xFFFFFFFF
 
 // When serializing content nodes, a single-byte namespace id is written out
 // first. The special values below can appear in place of a namespace id.
 
-// Indicates that this is not one of the built-in namespaces defined in 
+// Indicates that this is not one of the built-in namespaces defined in
 // nsNameSpaceManager.h. The string form will be serialized immediately
 // following.
 #define XBLBinding_Serialize_CustomNamespace 0xFE
 
-// Flags to indicate a non-element node. Otherwise, it is an element. 
+// Flags to indicate a non-element node. Otherwise, it is an element.
 #define XBLBinding_Serialize_TextNode 0xFB
 #define XBLBinding_Serialize_CDATANode 0xFC
 #define XBLBinding_Serialize_CommentNode 0xFD
