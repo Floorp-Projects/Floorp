@@ -518,7 +518,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       // if the parameter spans across multiple lines we have to strip out the
       //     line continuation -- jht 4/29/98 
       nsAutoCString tempStr(valueStart, valueEnd - valueStart);
-      tempStr.StripChars("\r\n");
+      tempStr.StripCRLF();
       char *res = ToNewCString(tempStr);
       NS_ENSURE_TRUE(res, NS_ERROR_OUT_OF_MEMORY);
       
@@ -761,7 +761,7 @@ internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
     nsAutoCString temp(aResult);
     temp.ReplaceSubstring("\n\t", " ");
     temp.ReplaceSubstring("\r\t", " ");
-    temp.StripChars("\r\n");
+    temp.StripCRLF();
     aResult = temp;
   }
 

@@ -1135,7 +1135,6 @@ TEST(Strings,ASCIIMask)
   EXPECT_FALSE(mozilla::ASCIIMask::IsMasked(maskCRLF, 14324));
 }
 
-
 template <typename T> void
 CompressWhitespaceHelper()
 {
@@ -1225,6 +1224,67 @@ TEST(Strings, CompressWhitespaceW)
   EXPECT_TRUE(str == result);
 }
 
+template <typename T> void
+StripCRLFHelper()
+{
+  T s;
+  s.AssignLiteral("abcabcabc");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("abcabcabc"));
+
+  s.AssignLiteral("   \n\rabcabcabc\r\n");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("   abcabcabc"));
+
+  s.AssignLiteral("   \n\rabc   abc   abc\r\n");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("   abc   abc   abc"));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("   abc   abc   abc"));
+
+  s.AssignLiteral("   \n\rabc\r  \nabc\n   \rabc\r\n");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("   abc  abc   abc"));
+
+  s.AssignLiteral("   \n\rabc\r   abc\n   abc\r\n");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("   abc   abc   abc"));
+
+  s.AssignLiteral("  \r\n  ");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("    "));
+
+  s.AssignLiteral("  \r\n  \t");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("    \t"));
+
+  s.AssignLiteral("\n  \r\n  \t");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral("    \t"));
+
+  s.AssignLiteral("");
+  s.StripCRLF();
+  EXPECT_TRUE(s.EqualsLiteral(""));
+}
+
+TEST(Strings, StripCRLF)
+{
+  StripCRLFHelper<nsCString>();
+}
+
+TEST(Strings, StripCRLFW)
+{
+  StripCRLFHelper<nsString>();
+
+  nsString str, result;
+  str.AssignLiteral(u"\u263A    is\r\n   ;-)");
+  result.AssignLiteral(u"\u263A    is   ;-)");
+  str.StripCRLF();
+  EXPECT_TRUE(str == result);
+}
+
 #define TestExample1 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
 
 #define TestExample2 "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda       est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
@@ -1280,6 +1340,38 @@ MOZ_GTEST_BENCH(Strings, PerfCompressWhitespace, [] {
       test3.CompressWhitespace();
       test4.CompressWhitespace();
       test5.CompressWhitespace();
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfStripCRLF, [] {
+    nsCString test1(TestExample1);
+    nsCString test2(TestExample2);
+    nsCString test3(TestExample3);
+    nsCString test4(TestExample4);
+    nsCString test5(TestExample5);
+    for (int i = 0; i < 20000; i++) {
+      test1.StripCRLF();
+      test2.StripCRLF();
+      test3.StripCRLF();
+      test4.StripCRLF();
+      test5.StripCRLF();
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfStripCharsCRLF, [] {
+    // This is the unoptimized (original) version of
+    // stripping \r\n using StripChars.
+    nsCString test1(TestExample1);
+    nsCString test2(TestExample2);
+    nsCString test3(TestExample3);
+    nsCString test4(TestExample4);
+    nsCString test5(TestExample5);
+    for (int i = 0; i < 20000; i++) {
+      test1.StripChars("\r\n");
+      test2.StripChars("\r\n");
+      test3.StripChars("\r\n");
+      test4.StripChars("\r\n");
+      test5.StripChars("\r\n");
     }
 });
 
