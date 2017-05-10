@@ -90,6 +90,29 @@ DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
   return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
 }
 
+bool
+DateTimeInputTypeBase::GetTimeFromMs(double aValue, uint16_t* aHours,
+                                     uint16_t* aMinutes, uint16_t* aSeconds,
+                                     uint16_t* aMilliseconds) const {
+  MOZ_ASSERT(aValue >= 0 && aValue < kMsPerDay,
+             "aValue must be milliseconds within a day!");
+
+  uint32_t value = floor(aValue);
+
+  *aMilliseconds = value % 1000;
+  value /= 1000;
+
+  *aSeconds = value % 60;
+  value /= 60;
+
+  *aMinutes = value % 60;
+  value /= 60;
+
+  *aHours = value;
+
+  return true;
+}
+
 // input type=date
 
 bool
@@ -110,6 +133,29 @@ DateInputType::ConvertStringToNumber(nsAString& aValue,
   return true;
 }
 
+bool
+DateInputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                     nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  // The specs (and our JS APIs) require |aValue| to be truncated.
+  aValue = aValue.floor();
+
+  double year = JS::YearFromTime(aValue.toDouble());
+  double month = JS::MonthFromTime(aValue.toDouble());
+  double day = JS::DayFromTime(aValue.toDouble());
+
+  if (mozilla::IsNaN(year) || mozilla::IsNaN(month) || mozilla::IsNaN(day)) {
+    return false;
+  }
+
+  aResultString.AppendPrintf("%04.0f-%02.0f-%02.0f", year, month + 1, day);
+  return true;
+}
+
 // input type=time
 
 bool
@@ -122,6 +168,39 @@ TimeInputType::ConvertStringToNumber(nsAString& aValue,
   }
 
   aResultValue = mozilla::Decimal(int32_t(milliseconds));
+  return true;
+}
+
+bool
+TimeInputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                     nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  aValue = aValue.floor();
+  // Per spec, we need to truncate |aValue| and we should only represent
+  // times inside a day [00:00, 24:00[, which means that we should do a
+  // modulo on |aValue| using the number of milliseconds in a day (86400000).
+  uint32_t value =
+    NS_floorModulo(aValue, mozilla::Decimal::fromDouble(kMsPerDay)).toDouble();
+
+  uint16_t milliseconds, seconds, minutes, hours;
+  if (!GetTimeFromMs(value, &hours, &minutes, &seconds, &milliseconds)) {
+    return false;
+  }
+
+  if (milliseconds != 0) {
+    aResultString.AppendPrintf("%02d:%02d:%02d.%03d",
+                               hours, minutes, seconds, milliseconds);
+  } else if (seconds != 0) {
+    aResultString.AppendPrintf("%02d:%02d:%02d",
+                               hours, minutes, seconds);
+  } else {
+    aResultString.AppendPrintf("%02d:%02d", hours, minutes);
+  }
+
   return true;
 }
 
@@ -150,6 +229,48 @@ WeekInputType::ConvertStringToNumber(nsAString& aValue,
   return true;
 }
 
+bool
+WeekInputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                     nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  aValue = aValue.floor();
+
+  // Based on ISO 8601 date.
+  double year = JS::YearFromTime(aValue.toDouble());
+  double month = JS::MonthFromTime(aValue.toDouble());
+  double day = JS::DayFromTime(aValue.toDouble());
+  // Adding 1 since day starts from 0.
+  double dayInYear = JS::DayWithinYear(aValue.toDouble(), year) + 1;
+
+  // Adding 1 since month starts from 0.
+  uint32_t isoWeekday = DayOfWeek(year, month + 1, day, true);
+  // Target on Wednesday since ISO 8601 states that week 1 is the week
+  // with the first Thursday of that year.
+  uint32_t week = (dayInYear - isoWeekday + 10) / 7;
+
+  if (week < 1) {
+    year--;
+    if (year < 1) {
+      return false;
+    }
+    week = MaximumWeekInYear(year);
+  } else if (week > MaximumWeekInYear(year)) {
+    year++;
+    if (year > kMaximumYear ||
+        (year == kMaximumYear && week > kMaximumWeekInMaximumYear)) {
+      return false;
+    }
+    week = 1;
+  }
+
+  aResultString.AppendPrintf("%04.0f-W%02d", year, week);
+  return true;
+}
+
 // input type=month
 
 bool
@@ -175,6 +296,35 @@ MonthInputType::ConvertStringToNumber(nsAString& aValue,
   return true;
 }
 
+bool
+MonthInputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                      nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  aValue = aValue.floor();
+
+  double month = NS_floorModulo(aValue, mozilla::Decimal(12)).toDouble();
+  month = (month < 0 ? month + 12 : month);
+
+  double year = 1970 + (aValue.toDouble() - month) / 12;
+
+  // Maximum valid month is 275760-09.
+  if (year < kMinimumYear || year > kMaximumYear) {
+    return false;
+  }
+
+  if (year == kMaximumYear && month > 8) {
+    return false;
+  }
+
+  aResultString.AppendPrintf("%04.0f-%02.0f", year, month + 1);
+  return true;
+
+}
+
 // input type=datetime-local
 
 bool
@@ -193,5 +343,47 @@ DateTimeLocalInputType::ConvertStringToNumber(
   }
 
   aResultValue = mozilla::Decimal::fromDouble(time.toDouble());
+  return true;
+}
+
+bool
+DateTimeLocalInputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                              nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  aValue = aValue.floor();
+
+  uint32_t timeValue =
+    NS_floorModulo(aValue, mozilla::Decimal::fromDouble(kMsPerDay)).toDouble();
+
+  uint16_t milliseconds, seconds, minutes, hours;
+  if (!GetTimeFromMs(timeValue, &hours, &minutes, &seconds, &milliseconds)) {
+    return false;
+  }
+
+  double year = JS::YearFromTime(aValue.toDouble());
+  double month = JS::MonthFromTime(aValue.toDouble());
+  double day = JS::DayFromTime(aValue.toDouble());
+
+  if (mozilla::IsNaN(year) || mozilla::IsNaN(month) || mozilla::IsNaN(day)) {
+    return false;
+  }
+
+  if (milliseconds != 0) {
+    aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d:%02d.%03d",
+                               year, month + 1, day, hours, minutes,
+                               seconds, milliseconds);
+  } else if (seconds != 0) {
+    aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d:%02d",
+                               year, month + 1, day, hours, minutes,
+                               seconds);
+  } else {
+    aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d",
+                               year, month + 1, day, hours, minutes);
+  }
+
   return true;
 }

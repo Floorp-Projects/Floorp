@@ -26,6 +26,13 @@ protected:
 
   bool IsMutable() const override;
 
+  /**
+   * This method converts aValue (milliseconds within a day) to hours, minutes,
+   * seconds and milliseconds.
+   */
+  bool GetTimeFromMs(double aValue, uint16_t* aHours, uint16_t* aMinutes,
+                     uint16_t* aSeconds, uint16_t* aMilliseconds) const;
+
   // Minimum year limited by HTML standard, year >= 1.
   static const double kMinimumYear;
   // Maximum year limited by ECMAScript date object range, year <= 275760.
@@ -50,6 +57,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 private:
   explicit DateInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -69,6 +78,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 private:
   explicit TimeInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -88,6 +99,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 private:
   explicit WeekInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -107,6 +120,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 private:
   explicit MonthInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -126,6 +141,8 @@ public:
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
 
 private:
   explicit DateTimeLocalInputType(mozilla::dom::HTMLInputElement* aInputElement)

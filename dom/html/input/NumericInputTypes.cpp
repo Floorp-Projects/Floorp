@@ -82,6 +82,22 @@ NumericInputTypeBase::ConvertStringToNumber(nsAString& aValue,
   return true;
 }
 
+bool
+NumericInputTypeBase::ConvertNumberToString(mozilla::Decimal aValue,
+                                            nsAString& aResultString) const
+{
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+
+  char buf[32];
+  bool ok = aValue.toString(buf, mozilla::ArrayLength(buf));
+  aResultString.AssignASCII(buf);
+  MOZ_ASSERT(ok, "buf not big enough");
+
+  return ok;
+}
+
 /* input type=numer */
 
 bool
