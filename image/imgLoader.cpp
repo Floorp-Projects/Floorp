@@ -1962,6 +1962,7 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
 
     if (MOZ_UNLIKELY(entry->GetInUse())) {
       gfxCriticalNoteOnce << "RemoveFromCache(entry) removing inuse cache entry";
+      MOZ_RELEASE_ASSERT(false);
     }
 
     cache.Remove(key);
