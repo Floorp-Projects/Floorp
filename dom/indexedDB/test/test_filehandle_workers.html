@@ -108,6 +108,7 @@
           request = objectStore.get(42);
           request.onsuccess = function(event) {
             try {
+              // eslint-disable-next-line no-unused-vars
               let result = request.result;
               postMessage("error");
             }

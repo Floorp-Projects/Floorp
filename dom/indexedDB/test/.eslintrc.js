@@ -12,9 +12,6 @@ module.exports = {
   ],
   "rules": {
     "brace-style": "off",
-    "consistent-return": "off",
-    "no-native-reassign": "off",
     "no-shadow": "off",
-    "no-unused-vars": "off",
   }
 };
