@@ -19,7 +19,7 @@ interface nsIHttpServerIdentity;
 /**
  * An interface which represents an HTTP server.
  */
-[scriptable, uuid(07a990e9-8c49-4fe5-b794-c2dc9654c0df)]
+[scriptable, uuid(cea8812e-faa6-4013-9396-f9936cbb74ec)]
 interface nsIHttpServer : nsISupports
 {
   /**
@@ -218,16 +218,6 @@ interface nsIHttpServer : nsISupports
    * saved state.  The value may be null.
    */
   void setObjectState(in AString key, in nsISupports value);
-
-  /**
-   * Configures use of keep-alive connections, wherein the same network
-   * connection may be used to receive and respond to multiple requests.
-   * If true, keep-alive connections will be used when possible. If false,
-   * keep-alive connections will not be used, and responses will include a
-   * "Connection: close" header.
-   * Defaults to true.
-   */
-  attribute boolean keepAliveEnabled;
 };
 
 /**
@@ -486,7 +476,7 @@ interface nsIHttpRequest : nsISupports
 /**
  * Represents an HTTP response, as described in RFC 2616, section 6.
  */
-[scriptable, uuid(3116c0dc-dd5f-4864-8ebd-fd5359e0b963)]
+[scriptable, uuid(1acd16c2-dc59-42fa-9160-4f26c43c1c21)]
 interface nsIHttpResponse : nsISupports
 {
   /**
@@ -627,12 +617,4 @@ interface nsIHttpResponse : nsISupports
    *   if processAsync() or seizePower() has not already been properly called
    */
   void finish();
-
-  /**
-   * Signals that this response's connection will be closed after the response
-   * has been sent out.
-   * If not called, the default behavior is to reuse the connection for next
-   * HTTP transaction when nsIHttpServer.keepAliveEnabled is true.
-   */
-  void closeConnection();
 };

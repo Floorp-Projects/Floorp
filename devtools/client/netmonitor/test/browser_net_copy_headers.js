@@ -57,8 +57,7 @@ add_task(function* () {
     "last-modified: Sun, 3 May 2015 11:11:11 GMT",
     "content-type: text/html",
     "content-length: 465",
-    "connection: keep-alive",
-    "keep-alive: timeout=120",
+    "connection: close",
     "server: httpd.js",
     "date: Sun, 3 May 2015 11:11:11 GMT"
   ].join("\n");
