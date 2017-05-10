@@ -96,10 +96,6 @@ panelmultiview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
-photonpanelmultiview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#photonpanelmultiview");
-}
-
 panelview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelview");
   -moz-box-orient: vertical;
@@ -112,10 +108,6 @@ panelview {
 panelview:not([mainview]):not([current]) {
   transition: visibility 0s linear var(--panelui-subview-transition-duration);
   visibility: collapse;
-}
-
-panelview:not([title]) > .panel-header {
-  display: none;
 }
 
 tabbrowser {

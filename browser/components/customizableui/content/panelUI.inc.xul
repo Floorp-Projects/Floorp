@@ -497,7 +497,7 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
+  <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
     <panelview id="appMenu-mainView" class="cui-widget-panelview PanelUI-subView">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
@@ -577,5 +577,5 @@
                        />
       </vbox>
     </panelview>
-  </photonpanelmultiview>
+  </panelmultiview>
 </panel>

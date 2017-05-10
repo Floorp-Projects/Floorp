@@ -3,11 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE bindings [
-  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
-  %browserDTD;
-]>
-
 <bindings id="browserPanelUIBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -19,7 +14,7 @@
     </resources>
     <content>
       <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
-        <xul:stack anonid="viewStack" xbl:inherits="viewtype,transitioning" class="panel-viewstack">
+        <xul:stack anonid="viewStack" xbl:inherits="viewtype,transitioning" viewtype="main" class="panel-viewstack">
           <xul:vbox anonid="mainViewContainer" class="panel-mainview" xbl:inherits="viewtype"/>
 
           <!-- Used to capture click events over the PanelUI-mainView if we're in
@@ -51,33 +46,11 @@
      </implementation>
   </binding>
 
-  <binding id="photonpanelmultiview" extends="chrome://browser/content/customizableui/panelUI.xml#panelmultiview">
-    <content>
-      <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
-        <xul:stack anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
-          <children includes="panelview"/>
-        </xul:stack>
-      </xul:box>
-    </content>
-  </binding>
-
   <binding id="panelview">
-    <content>
-      <xul:box class="panel-header" anonid="header">
-        <xul:toolbarbutton class="subviewbutton subviewbutton-iconic subviewbutton-back"
-                           tooltip="&backCmd.label;"
-                           onclick="document.getBindingParent(this).panelMultiView.goBack()"/>
-        <xul:label xbl:inherits="value=title"/>
-      </xul:box>
-      <children/>
-    </content>
     <implementation>
-      <property name="header"
-                readonly="true"
-                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'header');"/>
       <property name="panelMultiView" readonly="true">
         <getter><![CDATA[
-          if (!this.parentNode.localName.endsWith("panelmultiview")) {
+          if (this.parentNode.localName != "panelmultiview") {
             return document.getBindingParent(this.parentNode);
           }
 
