@@ -469,7 +469,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, reftest_internal=False,
                  reftest_screenshot="unexpected",
-                 **kwargs):
+                 queue_metadata=None, **kwargs):
         """Marionette-based executor for reftests"""
         RefTestExecutor.__init__(self,
                                  browser,
@@ -487,6 +487,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
         self.close_after_done = close_after_done
         self.has_window = False
         self.original_pref_values = {}
+        self.queue_metadata = queue_metadata
 
         with open(os.path.join(here, "reftest.js")) as f:
             self.script = f.read()
