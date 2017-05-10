@@ -301,6 +301,16 @@ PushRetAddr(MacroAssembler& masm, unsigned entry)
 }
 
 static void
+LoadActivation(MacroAssembler& masm, Register dest)
+{
+    // WasmCall pushes a WasmActivation and an inactive JitActivation. The
+    // JitActivation only becomes active when calling into JS from wasm.
+    masm.loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+    masm.loadPtr(Address(dest, JSContext::offsetOfActivation()), dest);
+    masm.loadPtr(Address(dest, Activation::offsetOfPrev()), dest);
+}
+
+static void
 GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                          uint32_t* entry)
 {
@@ -326,15 +336,13 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     }
 
     if (!reason.isNone()) {
+        // Native callers expect the native ABI, which assume that nonvolatile
+        // registers are preserved.
         Register scratch = ABINonArgReg0;
-
-        // Native callers expect the native ABI, which assume that non-saved
-        // registers are preserved. Explicitly preserve the scratch register
-        // in that case.
         if (reason.isNative() && !scratch.volatile_())
             masm.Push(scratch);
 
-        masm.loadWasmActivationFromTls(scratch);
+        LoadActivation(masm, scratch);
         masm.wasmAssertNonExitInvariants(scratch);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
         masm.store32(Imm32(reason.raw()), exitReason);
@@ -357,13 +365,12 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.addToStackPtr(Imm32(framePushed));
 
     if (!reason.isNone()) {
-        Register scratch = ABINonArgReturnReg0;
-
         // See comment in GenerateCallablePrologue.
+        Register scratch = ABINonArgReturnReg0;
         if (reason.isNative() && !scratch.volatile_())
             masm.Push(scratch);
 
-        masm.loadWasmActivationFromTls(scratch);
+        LoadActivation(masm, scratch);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(ImmWord(0), exitFP);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
@@ -962,4 +969,34 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
     MOZ_RELEASE_ASSERT(&instance->code() == code);
     return instance;
+}
+
+WasmActivation*
+wasm::MaybeActiveActivation(JSContext* cx)
+{
+    // WasmCall pushes both an outer WasmActivation and an inner JitActivation
+    // that only becomes active when calling JIT code.
+    Activation* act = cx->activation();
+    while (act && act->isJit() && !act->asJit()->isActive())
+        act = act->prev();
+    if (!act || !act->isWasm())
+        return nullptr;
+    return act->asWasm();
+}
+
+bool
+wasm::InCompiledCode(void* pc)
+{
+    JSContext* cx = TlsContext.get();
+    if (!cx)
+        return false;
+
+    MOZ_RELEASE_ASSERT(!cx->handlingSegFault);
+
+    if (cx->compartment()->wasm.lookupCode(pc))
+        return true;
+
+    const CodeRange* codeRange;
+    uint8_t* codeBase;
+    return LookupBuiltinThunk(pc, &codeRange, &codeBase);
 }

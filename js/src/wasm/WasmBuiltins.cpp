@@ -61,10 +61,22 @@ __aeabi_uidivmod(int, int);
 }
 #endif
 
+// This utility function can only be called for builtins that are called
+// directly from wasm code. Note that WasmCall pushes both an outer
+// WasmActivation and an inner JitActivation that becomes active when calling
+// JIT code.
+static WasmActivation*
+CallingActivation()
+{
+    Activation* act = TlsContext.get()->activation();
+    MOZ_ASSERT(!act->asJit()->isActive(), "WasmCall pushes an inactive JitActivation");
+    return act->prev()->asWasm();
+}
+
 static void*
 WasmHandleExecutionInterrupt()
 {
-    WasmActivation* activation = JSContext::innermostWasmActivation();
+    WasmActivation* activation = CallingActivation();
     MOZ_ASSERT(activation->interrupted());
 
     if (!CheckForInterrupt(activation->cx())) {
@@ -86,7 +98,7 @@ WasmHandleExecutionInterrupt()
 static bool
 WasmHandleDebugTrap()
 {
-    WasmActivation* activation = JSContext::innermostWasmActivation();
+    WasmActivation* activation = CallingActivation();
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
@@ -154,10 +166,8 @@ WasmHandleDebugTrap()
 static void*
 WasmHandleThrow()
 {
-    JSContext* cx = TlsContext.get();
-
-    WasmActivation* activation = cx->wasmActivationStack();
-    MOZ_ASSERT(activation);
+    WasmActivation* activation = CallingActivation();
+    JSContext* cx = activation->cx();
 
     // FrameIterator iterates down wasm frames in the activation starting at
     // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
@@ -215,7 +225,7 @@ WasmHandleThrow()
 static void
 WasmReportTrap(int32_t trapIndex)
 {
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
+    JSContext* cx = TlsContext.get();
 
     MOZ_ASSERT(trapIndex < int32_t(Trap::Limit) && trapIndex >= 0);
     Trap trap = Trap(trapIndex);
@@ -259,21 +269,21 @@ WasmReportTrap(int32_t trapIndex)
 static void
 WasmReportOutOfBounds()
 {
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
+    JSContext* cx = TlsContext.get();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
 }
 
 static void
 WasmReportUnalignedAccess()
 {
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
+    JSContext* cx = TlsContext.get();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
 }
 
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
+    JSContext* cx = TlsContext.get();
 
     int32_t i32;
     if (!ToInt32(cx, val, &i32))
@@ -286,7 +296,7 @@ CoerceInPlace_ToInt32(MutableHandleValue val)
 static int32_t
 CoerceInPlace_ToNumber(MutableHandleValue val)
 {
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
+    JSContext* cx = TlsContext.get();
 
     double dbl;
     if (!ToNumber(cx, val, &dbl))
