@@ -140,6 +140,8 @@ bool SkOpAngle::after(SkOpAngle* test) {
         int trGap = (rh->fSectorStart - fSectorStart + 32) & 0x1f;
         trOrder = trGap > 20 ? 0 : trGap > 11 ? -1 : 1;
     }
+    this->alignmentSameSide(lh, &ltOrder);
+    this->alignmentSameSide(rh, &trOrder);
     if (lrOrder >= 0 && ltOrder >= 0 && trOrder >= 0) {
         return COMPARE_RESULT(7, lrOrder ? (ltOrder & trOrder) : (ltOrder | trOrder));
     }
@@ -152,7 +154,7 @@ bool SkOpAngle::after(SkOpAngle* test) {
         // FIXME : once this is verified to work, remove one opposite angle call
         SkDEBUGCODE(bool lrOpposite = lh->oppositePlanes(rh));
         bool ltOpposite = lh->oppositePlanes(this);
-        SkASSERT(lrOpposite != ltOpposite);
+        SkOPASSERT(lrOpposite != ltOpposite);
         return COMPARE_RESULT(8, ltOpposite);
     } else if (ltOrder == 1 && trOrder == 0) {
         SkASSERT(lrOrder < 0);
@@ -160,9 +162,9 @@ bool SkOpAngle::after(SkOpAngle* test) {
         return COMPARE_RESULT(9, trOpposite);
     } else if (lrOrder == 1 && trOrder == 1) {
         SkASSERT(ltOrder < 0);
-        SkDEBUGCODE(bool trOpposite = oppositePlanes(rh));
+//        SkDEBUGCODE(bool trOpposite = oppositePlanes(rh));
         bool lrOpposite = lh->oppositePlanes(rh);
-        SkASSERT(lrOpposite != trOpposite);
+//        SkASSERT(lrOpposite != trOpposite);
         return COMPARE_RESULT(10, lrOpposite);
     }
     if (lrOrder < 0) {
@@ -210,6 +212,40 @@ int SkOpAngle::allOnOneSide(const SkOpAngle* test) {
     }
     fUnorderable = true;
     return -1;
+}
+
+// To sort the angles, all curves are translated to have the same starting point.
+// If the curve's control point in its original position is on one side of a compared line,
+// and translated is on the opposite side, reverse the previously computed order.
+void SkOpAngle::alignmentSameSide(const SkOpAngle* test, int* order) const {
+    if (*order < 0) {
+        return;
+    }
+    if (fPart.isCurve()) {
+        // This should support all curve types, but only bug that requires this has lines
+        // Turning on for curves causes existing tests to fail
+        return;
+    }
+    if (test->fPart.isCurve()) {
+        return;
+    }
+    const SkDPoint& xOrigin = test->fPart.fCurve.fLine[0];
+    const SkDPoint& oOrigin = test->fOriginalCurvePart.fLine[0];
+    if (xOrigin == oOrigin) {
+        return;
+    }
+    int iMax = SkPathOpsVerbToPoints(this->segment()->verb());
+    SkDVector xLine = test->fPart.fCurve.fLine[1] - xOrigin;
+    SkDVector oLine = test->fOriginalCurvePart.fLine[1] - oOrigin;
+    for (int index = 1; index <= iMax; ++index) {
+        const SkDPoint& testPt = fPart.fCurve[index];
+        double xCross = oLine.crossCheck(testPt - xOrigin);
+        double oCross = xLine.crossCheck(testPt - oOrigin);
+        if (oCross * xCross < 0) {
+            *order ^= 1;
+            break;
+        }
+    }
 }
 
 bool SkOpAngle::checkCrossesZero() const {
@@ -320,7 +356,7 @@ recomputeSector:
     return !fUnorderable;
 }
 
-int SkOpAngle::convexHullOverlaps(const SkOpAngle* rh) const {
+int SkOpAngle::convexHullOverlaps(const SkOpAngle* rh) {
     const SkDVector* sweep = this->fPart.fSweep;
     const SkDVector* tweep = rh->fPart.fSweep;
     double s0xs1 = sweep[0].crossCheck(sweep[1]);
@@ -593,20 +629,20 @@ SkOpGlobalState* SkOpAngle::globalState() const {
 
 // OPTIMIZE: if this loops to only one other angle, after first compare fails, insert on other side
 // OPTIMIZE: return where insertion succeeded. Then, start next insertion on opposite side
-void SkOpAngle::insert(SkOpAngle* angle) {
+bool SkOpAngle::insert(SkOpAngle* angle) {
     if (angle->fNext) {
         if (loopCount() >= angle->loopCount()) {
             if (!merge(angle)) {
-                return;
+                return true;
             }
         } else if (fNext) {
             if (!angle->merge(this)) {
-                return;
+                return true;
             }
         } else {
             angle->insert(this);
         }
-        return;
+        return true;
     }
     bool singleton = nullptr == fNext;
     if (singleton) {
@@ -622,20 +658,27 @@ void SkOpAngle::insert(SkOpAngle* angle) {
             angle->fNext = this;
         }
         debugValidateNext();
-        return;
+        return true;
     }
     SkOpAngle* last = this;
+    bool flipAmbiguity = false;
     do {
         SkASSERT(last->fNext == next);
-        if (angle->after(last)) {
+        if (angle->after(last) ^ (angle->tangentsAmbiguous() & flipAmbiguity)) {
             last->fNext = angle;
             angle->fNext = next;
             debugValidateNext();
-            return;
+            return true;
         }
         last = next;
+        if (last == this) {
+            FAIL_IF(flipAmbiguity);
+            // We're in a loop. If a sort was ambiguous, flip it to end the loop.
+            flipAmbiguity = true;
+        }
         next = next->fNext;
     } while (true);
+    return true;
 }
 
 SkOpSpanBase* SkOpAngle::lastMarked() const {
@@ -815,7 +858,7 @@ void SkOpAngle::set(SkOpSpanBase* start, SkOpSpanBase* end) {
     fComputedEnd = fEnd = end;
     SkASSERT(start != end);
     fNext = nullptr;
-    fComputeSector = fComputedSector = fCheckCoincidence = false;
+    fComputeSector = fComputedSector = fCheckCoincidence = fTangentsAmbiguous = false;
     setSpans();
     setSector();
     SkDEBUGCODE(fID = start ? start->globalState()->nextAngleID() : -1);
@@ -966,7 +1009,7 @@ SkOpSpan* SkOpAngle::starter() {
     return fStart->starter(fEnd);
 }
 
-bool SkOpAngle::tangentsDiverge(const SkOpAngle* rh, double s0xt0) const {
+bool SkOpAngle::tangentsDiverge(const SkOpAngle* rh, double s0xt0) {
     if (s0xt0 == 0) {
         return false;
     }
@@ -991,5 +1034,6 @@ bool SkOpAngle::tangentsDiverge(const SkOpAngle* rh, double s0xt0) const {
     double tDist = tweep[0].length() * m;
     bool useS = fabs(sDist) < fabs(tDist);
     double mFactor = fabs(useS ? this->distEndRatio(sDist) : rh->distEndRatio(tDist));
+    fTangentsAmbiguous = mFactor >= 50 && mFactor < 200;
     return mFactor < 50;   // empirically found limit
 }

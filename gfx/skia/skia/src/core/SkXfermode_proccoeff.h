@@ -8,7 +8,6 @@
 #ifndef SkXfermode_proccoeff_DEFINED
 #define SkXfermode_proccoeff_DEFINED
 
-#include "SkXfermode.h"
 #include "SkReadBuffer.h"
 #include "SkWriteBuffer.h"
 
@@ -23,7 +22,7 @@ struct ProcCoeff {
 
 class SK_API SkProcCoeffXfermode : public SkXfermode {
 public:
-    SkProcCoeffXfermode(const ProcCoeff& rec, Mode mode) {
+    SkProcCoeffXfermode(const ProcCoeff& rec, SkBlendMode mode) {
         fMode = mode;
         fProc = rec.fProc;
         // these may be valid, or may be CANNOT_USE_COEFF
@@ -47,24 +46,22 @@ public:
 #if SK_SUPPORT_GPU
     sk_sp<GrFragmentProcessor> makeFragmentProcessorForImageFilter(
                                                         sk_sp<GrFragmentProcessor>) const override;
-    sk_sp<GrXPFactory> asXPFactory() const override;
+    const GrXPFactory* asXPFactory() const override;
 #endif
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkProcCoeffXfermode)
 
-    bool onAppendStages(SkRasterPipeline*) const override;
-
 protected:
     void flatten(SkWriteBuffer& buffer) const override;
 
-    Mode getMode() const { return fMode; }
+    SkBlendMode getMode() const { return fMode; }
 
     SkXfermodeProc getProc() const { return fProc; }
 
 private:
     SkXfermodeProc  fProc;
-    Mode            fMode;
+    SkBlendMode     fMode;
     Coeff           fSrcCoeff, fDstCoeff;
 
     friend class SkXfermode;

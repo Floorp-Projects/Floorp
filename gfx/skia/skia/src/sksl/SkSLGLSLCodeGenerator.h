@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_GLSLCODEGENERATOR
 #define SKSL_GLSLCODEGENERATOR
 
@@ -33,24 +33,17 @@
 #include "ir/SkSLProgramElement.h"
 #include "ir/SkSLReturnStatement.h"
 #include "ir/SkSLStatement.h"
+#include "ir/SkSLSwitchStatement.h"
 #include "ir/SkSLSwizzle.h"
 #include "ir/SkSLTernaryExpression.h"
-#include "ir/SkSLVarDeclaration.h"
-#include "ir/SkSLVarDeclarationStatement.h"
+#include "ir/SkSLVarDeclarations.h"
+#include "ir/SkSLVarDeclarationsStatement.h"
 #include "ir/SkSLVariableReference.h"
 #include "ir/SkSLWhileStatement.h"
 
 namespace SkSL {
 
 #define kLast_Capability SpvCapabilityMultiViewport
-
-struct GLCaps {
-    int fVersion;
-    enum {
-        kGL_Standard,
-        kGLES_Standard
-    } fStandard;
-};
 
 /**
  * Converts a Program into GLSL code.
@@ -78,13 +71,12 @@ public:
         kTopLevel_Precedence       = 18
     };
 
-    GLSLCodeGenerator(const Context* context, GLCaps caps)
-    : fContext(*context)
-    , fCaps(caps)
-    , fIndentation(0)
-    , fAtLineStart(true) {}
+    GLSLCodeGenerator(const Context* context, const Program* program, ErrorReporter* errors,
+                      OutputStream* out)
+    : INHERITED(program, errors, out)
+    , fContext(*context) {}
 
-    void generateCode(const Program& program, std::ostream& out) override;
+    virtual bool generateCode() override;
 
 private:
     void write(const char* s);
@@ -93,9 +85,9 @@ private:
 
     void writeLine(const char* s);
 
-    void write(const std::string& s);
+    void write(const String& s);
 
-    void writeLine(const std::string& s);
+    void writeLine(const String& s);
 
     void writeType(const Type& type);
 
@@ -104,24 +96,28 @@ private:
     void writeInterfaceBlock(const InterfaceBlock& intf);
 
     void writeFunctionStart(const FunctionDeclaration& f);
-    
+
     void writeFunctionDeclaration(const FunctionDeclaration& f);
 
     void writeFunction(const FunctionDefinition& f);
 
     void writeLayout(const Layout& layout);
 
-    void writeModifiers(const Modifiers& modifiers);
-    
+    void writeModifiers(const Modifiers& modifiers, bool globalContext);
+
     void writeGlobalVars(const VarDeclaration& vs);
 
-    void writeVarDeclarations(const VarDeclarations& decl);
+    void writeVarDeclarations(const VarDeclarations& decl, bool global);
+
+    void writeFragCoord();
 
     void writeVariableReference(const VariableReference& ref);
 
     void writeExpression(const Expression& expr, Precedence parentPrecedence);
-    
+
     void writeIntrinsicCall(const FunctionCall& c);
+
+    void writeMinAbsHack(Expression& absExpr, Expression& otherExpr);
 
     void writeFunctionCall(const FunctionCall& c);
 
@@ -159,17 +155,28 @@ private:
 
     void writeDoStatement(const DoStatement& d);
 
+    void writeSwitchStatement(const SwitchStatement& s);
+
     void writeReturnStatement(const ReturnStatement& r);
 
     const Context& fContext;
-    const GLCaps fCaps;
-    std::ostream* fOut;
-    int fIndentation;
-    bool fAtLineStart;
-    // Keeps track of which struct types we have written. Given that we are unlikely to ever write 
-    // more than one or two structs per shader, a simple linear search will be faster than anything 
+    StringStream fHeader;
+    String fFunctionHeader;
+    Program::Kind fProgramKind;
+    int fVarCount = 0;
+    int fIndentation = 0;
+    bool fAtLineStart = false;
+    // Keeps track of which struct types we have written. Given that we are unlikely to ever write
+    // more than one or two structs per shader, a simple linear search will be faster than anything
     // fancier.
     std::vector<const Type*> fWrittenStructs;
+    // true if we have run into usages of dFdx / dFdy
+    bool fFoundDerivatives = false;
+    bool fFoundImageDecl = false;
+    bool fSetupFragPositionGlobal = false;
+    bool fSetupFragPositionLocal = false;
+
+    typedef CodeGenerator INHERITED;
 };
 
 }

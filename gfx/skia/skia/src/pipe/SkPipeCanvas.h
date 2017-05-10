@@ -8,9 +8,9 @@
 #ifndef SkPipeCanvas_DEFINED
 #define SkPipeCanvas_DEFINED
 
-#include "SkCanvas.h"
 #include "SkDeduper.h"
 #include "SkImage.h"
+#include "SkNoDrawCanvas.h"
 #include "SkPipe.h"
 #include "SkTypeface.h"
 #include "SkWriteBuffer.h"
@@ -63,6 +63,7 @@ public:
     void setCanvas(SkPipeCanvas* canvas) { fPipeCanvas = canvas; }
     void setStream(SkWStream* stream) { fStream = stream; }
     void setTypefaceSerializer(SkTypefaceSerializer* tfs) { fTFSerializer = tfs; }
+    void setImageSerializer(SkImageSerializer* ims) { fIMSerializer = ims; }
 
     // returns 0 if not found
     int findImage(SkImage* image) const { return fImages.find(image->uniqueID()); }
@@ -78,6 +79,7 @@ private:
     SkWStream*              fStream = nullptr;
 
     SkTypefaceSerializer*   fTFSerializer = nullptr;
+    SkImageSerializer*      fIMSerializer = nullptr;
 
     // All our keys (at the moment) are 32bit uniqueIDs
     SkTIndexSet<uint32_t>   fImages;
@@ -87,7 +89,7 @@ private:
 };
 
 
-class SkPipeCanvas : public SkCanvas {
+class SkPipeCanvas : public SkNoDrawCanvas {
 public:
     SkPipeCanvas(const SkRect& cull, SkPipeDeduper*, SkWStream*);
     ~SkPipeCanvas() override;
@@ -103,7 +105,7 @@ protected:
     void onDrawArc(const SkRect&, SkScalar startAngle, SkScalar sweepAngle, bool useCenter,
                    const SkPaint&) override;
     void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[],
-                     int count, SkXfermode::Mode, const SkRect* cull, const SkPaint*) override;
+                     int count, SkBlendMode, const SkRect* cull, const SkPaint*) override;
     void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
     void onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
                     const SkPaint&) override;
@@ -117,7 +119,7 @@ protected:
     void onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
                            const SkRect* cull, const SkPaint& paint) override;
     void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4],
-                     SkXfermode*, const SkPaint&) override;
+                     SkBlendMode, const SkPaint&) override;
 
     void onDrawPaint(const SkPaint&) override;
     void onDrawPoints(PointMode, size_t count, const SkPoint pts[], const SkPaint&) override;
@@ -134,16 +136,12 @@ protected:
                          const SkPaint*) override;
     void onDrawImageLattice(const SkImage*, const Lattice& lattice, const SkRect& dst,
                             const SkPaint*) override;
-    void onDrawVertices(VertexMode vmode, int vertexCount,
-                              const SkPoint vertices[], const SkPoint texs[],
-                              const SkColor colors[], SkXfermode* xmode,
-                              const uint16_t indices[], int indexCount,
-                              const SkPaint&) override;
+    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
-    void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipPath(const SkPath&, ClipOp, ClipEdgeStyle) override;
-    void onClipRegion(const SkRegion&, ClipOp) override;
+    void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRegion(const SkRegion&, SkClipOp) override;
 
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
     void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
@@ -163,7 +161,7 @@ private:
 
     friend class SkPipeWriter;
 
-    typedef SkCanvas INHERITED;
+    typedef SkNoDrawCanvas INHERITED;
 };
 
 

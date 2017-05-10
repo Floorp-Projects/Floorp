@@ -87,7 +87,6 @@ private:
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "SkGr.h"
-#include "SkGrPriv.h"
 #include "SkImage_Base.h"
 #include "GrInvariantOutput.h"
 #include "SkSpecialImage.h"
@@ -176,13 +175,14 @@ public:
             fragBuilder->codeAppendf("%s = vec4(vec3(closestDistHere / 2.0),1);", args.fOutputColor);
         }
 
-        static void GenKey(const GrProcessor& proc, const GrGLSLCaps&,
+        static void GenKey(const GrProcessor& proc, const GrShaderCaps&,
                            GrProcessorKeyBuilder* b) {
             b->add32(0); // nothing to add here
         }
 
     protected:
-        void onSetData(const GrGLSLProgramDataManager& pdman, const GrProcessor& proc) override {
+        void onSetData(const GrGLSLProgramDataManager& pdman,
+                       const GrFragmentProcessor& proc) override {
             const RadialShadowMapFP &radialShadowMapFP = proc.cast<RadialShadowMapFP>();
 
             const SkVector3& lightPos = radialShadowMapFP.lightPos();
@@ -213,15 +213,12 @@ public:
         GrGLSLProgramDataManager::UniformHandle fHeightUni;
     };
 
-    void onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override {
+    void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
         GLSLRadialShadowMapFP::GenKey(*this, caps, b);
     }
 
     const char* name() const override { return "RadialShadowMapFP"; }
 
-    void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
-        inout->mulByUnknownFourComponents();
-    }
     const SkVector3& lightPos() const {
         return fLightPos;
     }

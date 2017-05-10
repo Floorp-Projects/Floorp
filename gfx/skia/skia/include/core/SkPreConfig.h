@@ -84,7 +84,7 @@
       defined(__s390__) || \
       (defined(__sh__) && defined(__BIG_ENDIAN__)) || \
       (defined(__ia64) && defined(__BIG_ENDIAN__))
-        #define SK_CPU_BENDIAN
+         #define SK_CPU_BENDIAN
     #else
         #define SK_CPU_LENDIAN
     #endif
