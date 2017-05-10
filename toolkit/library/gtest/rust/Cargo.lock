@@ -1044,6 +1044,7 @@ name = "webrender_traits"
 version = "0.36.0"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",

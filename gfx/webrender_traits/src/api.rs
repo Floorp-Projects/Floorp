@@ -8,7 +8,7 @@ use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use {AuxiliaryLists, AuxiliaryListsDescriptor, BuiltDisplayList, BuiltDisplayListDescriptor};
+use {BuiltDisplayList, BuiltDisplayListDescriptor};
 use {ClipId, ColorF, DeviceIntPoint, DeviceIntSize, DeviceUintRect, DeviceUintSize, FontKey};
 use {GlyphDimensions, GlyphKey, ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize};
 use {LayoutTransform, NativeFontHandle, WorldPoint};
@@ -33,14 +33,12 @@ pub enum ApiMsg {
     CloneApi(MsgSender<IdNamespace>),
     /// Supplies a new frame to WebRender.
     ///
-    /// After receiving this message, WebRender will read the display list, followed by the
-    /// auxiliary lists, from the payload channel.
+    /// After receiving this message, WebRender will read the display list from the payload channel.
     SetDisplayList(Option<ColorF>,
                    Epoch,
                    PipelineId,
                    LayoutSize,
                    BuiltDisplayListDescriptor,
-                   AuxiliaryListsDescriptor,
                    bool),
     SetPageZoom(ZoomFactor),
     SetPinchZoom(ZoomFactor),
@@ -294,7 +292,6 @@ impl RenderApi {
     /// * `viewport_size`: The size of the viewport for this frame.
     /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
     /// * `display_list`: The root Display list used in this frame.
-    /// * `auxiliary_lists`: Various items that the display lists and stacking contexts reference.
     /// * `preserve_frame_state`: If a previous frame exists which matches this pipeline
     ///                           id, this setting determines if frame state (such as scrolling
     ///                           position) should be preserved for this new display list.
@@ -304,16 +301,14 @@ impl RenderApi {
                             background_color: Option<ColorF>,
                             epoch: Epoch,
                             viewport_size: LayoutSize,
-                            (pipeline_id, display_list, auxiliary_lists): (PipelineId, BuiltDisplayList, AuxiliaryLists),
+                            (pipeline_id, display_list): (PipelineId, BuiltDisplayList),
                             preserve_frame_state: bool) {
         let (dl_data, dl_desc) = display_list.into_data();
-        let (aux_data, aux_desc) = auxiliary_lists.into_data();
         let msg = ApiMsg::SetDisplayList(background_color,
                                              epoch,
                                              pipeline_id,
                                              viewport_size,
                                              dl_desc,
-                                             aux_desc,
                                              preserve_frame_state);
         self.api_sender.send(msg).unwrap();
 
@@ -321,7 +316,6 @@ impl RenderApi {
             epoch: epoch,
             pipeline_id: pipeline_id,
             display_list_data: dl_data,
-            auxiliary_lists_data: aux_data
         }).unwrap();
     }
 

@@ -18,7 +18,7 @@ use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
 use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
 use webrender_traits::{DeviceIntPoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize, LayerPoint};
-use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
+use webrender_traits::{ApiMsg, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use webrender_traits::channel::{PayloadSenderHelperMethods, PayloadReceiverHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
 use webrender_traits::{BlobImageRenderer, VRCompositorCommand, VRCompositorHandler};
@@ -181,63 +181,57 @@ impl RenderBackend {
                                                pipeline_id,
                                                viewport_size,
                                                display_list_descriptor,
-                                               auxiliary_lists_descriptor,
                                                preserve_frame_state) => {
                             profile_scope!("SetDisplayList");
-                            let mut leftover_auxiliary_data = vec![];
-                            let mut auxiliary_data;
+                            let mut leftover_data = vec![];
+                            let mut data;
                             loop {
-                                auxiliary_data = self.payload_rx.recv_payload().unwrap();
+                                data = self.payload_rx.recv_payload().unwrap();
                                 {
-                                    if auxiliary_data.epoch == epoch &&
-                                       auxiliary_data.pipeline_id == pipeline_id {
+                                    if data.epoch == epoch &&
+                                       data.pipeline_id == pipeline_id {
                                         break
                                     }
                                 }
-                                leftover_auxiliary_data.push(auxiliary_data)
+                                leftover_data.push(data)
                             }
-                            for leftover_auxiliary_data in leftover_auxiliary_data {
-                                self.payload_tx.send_payload(leftover_auxiliary_data).unwrap()
+                            for leftover_data in leftover_data {
+                                self.payload_tx.send_payload(leftover_data).unwrap()
                             }
                             if let Some(ref mut r) = self.recorder {
-                                r.write_payload(frame_counter, &auxiliary_data.to_data());
+                                r.write_payload(frame_counter, &data.to_data());
                             }
 
                             let built_display_list =
-                                BuiltDisplayList::from_data(auxiliary_data.display_list_data,
+                                BuiltDisplayList::from_data(data.display_list_data,
                                                             display_list_descriptor);
-                            let auxiliary_lists =
-                                AuxiliaryLists::from_data(auxiliary_data.auxiliary_lists_data,
-                                                          auxiliary_lists_descriptor);
 
                             if !preserve_frame_state {
                                 self.discard_frame_state_for_pipeline(pipeline_id);
                             }
-                            
+
                             let display_list_len = built_display_list.data().len();
-                            let aux_list_len = auxiliary_lists.data().len();
                             let (builder_start_time, builder_finish_time) = built_display_list.times();
 
                             let display_list_received_time = precise_time_ns();
-                            
+
                             profile_counters.total_time.profile(|| {
                                 self.scene.set_display_list(pipeline_id,
                                                             epoch,
                                                             built_display_list,
                                                             background_color,
-                                                            viewport_size,
-                                                            auxiliary_lists);
+                                                            viewport_size);
                                 self.build_scene();
                             });
 
-                            // Note: this isn't quite right as auxiliary values will be 
+                            // Note: this isn't quite right as auxiliary values will be
                             // pulled out somewhere in the prim_store, but aux values are
                             // really simple and cheap to access, so it's not a big deal.
                             let display_list_consumed_time = precise_time_ns();
 
-                            profile_counters.ipc.set(builder_start_time, builder_finish_time, 
+                            profile_counters.ipc.set(builder_start_time, builder_finish_time,
                                                      display_list_received_time, display_list_consumed_time,
-                                                     display_list_len + aux_list_len);
+                                                     display_list_len);
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
                             profile_scope!("SetRootPipeline");
@@ -491,7 +485,7 @@ impl RenderBackend {
         let pan = LayerPoint::new(self.pan.x as f32 / accumulated_scale_factor,
                                   self.pan.y as f32 / accumulated_scale_factor);
         let frame = self.frame.build(&mut self.resource_cache,
-                                     &self.scene.pipeline_auxiliary_lists,
+                                     &self.scene.display_lists,
                                      accumulated_scale_factor,
                                      pan,
                                      texture_cache_profile);
