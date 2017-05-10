@@ -133,6 +133,10 @@ public class DownloadContentService extends IntentService {
                 action = new SyncAction();
                 break;
 
+            case ACTION_CLEANUP_FILES:
+                action = new CleanupAction();
+                break;
+
             default:
                 Log.e(LOGTAG, "Unknown action: " + intent.getAction());
                 return;
