@@ -6,52 +6,45 @@
  */
 
 #include "SkImage_Base.h"
-#include "SkImageGenerator.h"
 #include "SkCanvas.h"
+#include "SkMakeUnique.h"
 #include "SkMatrix.h"
 #include "SkPaint.h"
 #include "SkPicture.h"
+#include "SkPictureImageGenerator.h"
 #include "SkSurface.h"
-#include "SkTLazy.h"
 
-class SkPictureImageGenerator : SkImageGenerator {
-public:
-    static SkImageGenerator* Create(const SkISize&, const SkPicture*, const SkMatrix*,
-                                    const SkPaint*);
-
-protected:
-    bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, SkPMColor ctable[],
-                     int* ctableCount) override;
-    bool onComputeScaledDimensions(SkScalar scale, SupportedSizes*) override;
-    bool onGenerateScaledPixels(const SkISize&, const SkIPoint&, const SkPixmap&) override;
-
-#if SK_SUPPORT_GPU
-    GrTexture* onGenerateTexture(GrContext*, const SkIRect*) override;
-#endif
-
-private:
-    SkPictureImageGenerator(const SkISize&, const SkPicture*, const SkMatrix*, const SkPaint*);
-
-    SkAutoTUnref<const SkPicture> fPicture;
-    SkMatrix                      fMatrix;
-    SkTLazy<SkPaint>              fPaint;
-
-    typedef SkImageGenerator INHERITED;
-};
-
-SkImageGenerator* SkPictureImageGenerator::Create(const SkISize& size, const SkPicture* picture,
-                                const SkMatrix* matrix, const SkPaint* paint) {
+std::unique_ptr<SkImageGenerator>
+SkPictureImageGenerator::Make(const SkISize& size, sk_sp<SkPicture> picture, const SkMatrix* matrix,
+                              const SkPaint* paint, SkImage::BitDepth bitDepth,
+                              sk_sp<SkColorSpace> colorSpace) {
     if (!picture || size.isEmpty()) {
         return nullptr;
     }
 
-    return new SkPictureImageGenerator(size, picture, matrix, paint);
+    if (SkImage::BitDepth::kF16 == bitDepth && (!colorSpace || !colorSpace->gammaIsLinear())) {
+        return nullptr;
+    }
+
+    if (colorSpace && (!colorSpace->gammaCloseToSRGB() && !colorSpace->gammaIsLinear())) {
+        return nullptr;
+    }
+
+    SkColorType colorType = kN32_SkColorType;
+    if (SkImage::BitDepth::kF16 == bitDepth) {
+        colorType = kRGBA_F16_SkColorType;
+    }
+
+    SkImageInfo info = SkImageInfo::Make(size.width(), size.height(), colorType,
+                                         kPremul_SkAlphaType, std::move(colorSpace));
+    return std::unique_ptr<SkImageGenerator>(
+                             new SkPictureImageGenerator(info, std::move(picture), matrix, paint));
 }
 
-SkPictureImageGenerator::SkPictureImageGenerator(const SkISize& size, const SkPicture* picture,
+SkPictureImageGenerator::SkPictureImageGenerator(const SkImageInfo& info, sk_sp<SkPicture> picture,
                                                  const SkMatrix* matrix, const SkPaint* paint)
-    : INHERITED(SkImageInfo::MakeN32Premul(size))
-    , fPicture(SkRef(picture)) {
+    : INHERITED(info)
+    , fPicture(std::move(picture)) {
 
     if (matrix) {
         fMatrix = *matrix;
@@ -66,7 +59,7 @@ SkPictureImageGenerator::SkPictureImageGenerator(const SkISize& size, const SkPi
 
 bool SkPictureImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
                                           SkPMColor ctable[], int* ctableCount) {
-    if (info != getInfo() || ctable || ctableCount) {
+    if (ctable || ctableCount) {
         return false;
     }
 
@@ -77,83 +70,51 @@ bool SkPictureImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels,
 
     bitmap.eraseColor(SK_ColorTRANSPARENT);
     SkCanvas canvas(bitmap, SkSurfaceProps(0, kUnknown_SkPixelGeometry));
-    canvas.drawPicture(fPicture, &fMatrix, fPaint.getMaybeNull());
+    canvas.drawPicture(fPicture.get(), &fMatrix, fPaint.getMaybeNull());
 
-    return true;
-}
-
-bool SkPictureImageGenerator::onComputeScaledDimensions(SkScalar scale,
-                                                        SupportedSizes* sizes) {
-    SkASSERT(scale > 0 && scale <= 1);
-    const int w = this->getInfo().width();
-    const int h = this->getInfo().height();
-    const int sw = SkScalarRoundToInt(scale * w);
-    const int sh = SkScalarRoundToInt(scale * h);
-    if (sw > 0 && sh > 0) {
-        sizes->fSizes[0].set(sw, sh);
-        sizes->fSizes[1].set(sw, sh);
-        return true;
-    }
-    return false;
-}
-
-bool SkPictureImageGenerator::onGenerateScaledPixels(const SkISize& scaledSize,
-                                                     const SkIPoint& scaledOrigin,
-                                                     const SkPixmap& scaledPixels) {
-    int w = scaledSize.width();
-    int h = scaledSize.height();
-
-    const SkScalar scaleX = SkIntToScalar(w) / this->getInfo().width();
-    const SkScalar scaleY = SkIntToScalar(h) / this->getInfo().height();
-    SkMatrix matrix = SkMatrix::MakeScale(scaleX, scaleY);
-    matrix.postTranslate(-SkIntToScalar(scaledOrigin.x()), -SkIntToScalar(scaledOrigin.y()));
-
-    SkBitmap bitmap;
-    if (!bitmap.installPixels(scaledPixels)) {
-        return false;
-    }
-
-    bitmap.eraseColor(SK_ColorTRANSPARENT);
-    SkCanvas canvas(bitmap, SkSurfaceProps(0, kUnknown_SkPixelGeometry));
-    matrix.preConcat(fMatrix);
-    canvas.drawPicture(fPicture, &matrix, fPaint.getMaybeNull());
     return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkImageGenerator* SkImageGenerator::NewFromPicture(const SkISize& size, const SkPicture* picture,
-                                                   const SkMatrix* matrix, const SkPaint* paint) {
-    return SkPictureImageGenerator::Create(size, picture, matrix, paint);
+std::unique_ptr<SkImageGenerator>
+SkImageGenerator::MakeFromPicture(const SkISize& size, sk_sp<SkPicture> picture,
+                                  const SkMatrix* matrix, const SkPaint* paint,
+                                  SkImage::BitDepth bitDepth, sk_sp<SkColorSpace> colorSpace) {
+    // Check this here (rather than in SkPictureImageGenerator::Create) so SkPictureShader
+    // has a private entry point to create legacy picture backed images.
+    if (!colorSpace) {
+        return nullptr;
+    }
+
+    return SkPictureImageGenerator::Make(size, std::move(picture), matrix, paint, bitDepth,
+                                         std::move(colorSpace));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
-#include "GrTexture.h"
-
-GrTexture* SkPictureImageGenerator::onGenerateTexture(GrContext* ctx, const SkIRect* subset) {
-    const SkImageInfo& info = this->getInfo();
-    SkImageInfo surfaceInfo = subset ? info.makeWH(subset->width(), subset->height()) : info;
+sk_sp<GrTextureProxy> SkPictureImageGenerator::onGenerateTexture(GrContext* ctx,
+                                                                 const SkImageInfo& info,
+                                                                 const SkIPoint& origin) {
+    SkASSERT(ctx);
 
     //
     // TODO: respect the usage, by possibly creating a different (pow2) surface
     //
-    sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx, SkBudgeted::kYes, surfaceInfo));
+    sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx, SkBudgeted::kYes, info));
     if (!surface) {
         return nullptr;
     }
 
     SkMatrix matrix = fMatrix;
-    if (subset) {
-        matrix.postTranslate(-subset->x(), -subset->y());
-    }
+    matrix.postTranslate(-origin.x(), -origin.y());
     surface->getCanvas()->clear(0); // does NewRenderTarget promise to do this for us?
-    surface->getCanvas()->drawPicture(fPicture, &matrix, fPaint.getMaybeNull());
+    surface->getCanvas()->drawPicture(fPicture.get(), &matrix, fPaint.getMaybeNull());
     sk_sp<SkImage> image(surface->makeImageSnapshot());
     if (!image) {
         return nullptr;
     }
-    return SkSafeRef(as_IB(image)->peekTexture());
+    return as_IB(image)->asTextureProxyRef();
 }
 #endif

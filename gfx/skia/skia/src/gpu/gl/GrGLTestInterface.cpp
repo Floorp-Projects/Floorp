@@ -119,6 +119,7 @@ GrGLTestInterface::GrGLTestInterface() {
     fFunctions.fMapTexSubImage2D = bind_to_member(this, &GrGLTestInterface::mapTexSubImage2D);
     fFunctions.fMinSampleShading = bind_to_member(this, &GrGLTestInterface::minSampleShading);
     fFunctions.fPixelStorei = bind_to_member(this, &GrGLTestInterface::pixelStorei);
+    fFunctions.fPolygonMode = bind_to_member(this, &GrGLTestInterface::polygonMode);
     fFunctions.fPopGroupMarker = bind_to_member(this, &GrGLTestInterface::popGroupMarker);
     fFunctions.fPushGroupMarker = bind_to_member(this, &GrGLTestInterface::pushGroupMarker);
     fFunctions.fQueryCounter = bind_to_member(this, &GrGLTestInterface::queryCounter);
@@ -314,6 +315,7 @@ GrGLTestInterface::GrGLTestInterface() {
     fFunctions.fTextureBuffer = bind_to_member(this, &GrGLTestInterface::textureBuffer);
     fFunctions.fFenceSync = bind_to_member(this, &GrGLTestInterface::fenceSync);
     fFunctions.fClientWaitSync = bind_to_member(this, &GrGLTestInterface::clientWaitSync);
+    fFunctions.fWaitSync = bind_to_member(this, &GrGLTestInterface::waitSync);
     fFunctions.fDeleteSync = bind_to_member(this, &GrGLTestInterface::deleteSync);
     fFunctions.fDebugMessageControl = bind_to_member(this, &GrGLTestInterface::debugMessageControl);
     fFunctions.fDebugMessageInsert = bind_to_member(this, &GrGLTestInterface::debugMessageInsert);

@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_BLOCK
 #define SKSL_BLOCK
 
@@ -20,21 +20,23 @@ struct Block : public Statement {
     Block(Position position, std::vector<std::unique_ptr<Statement>> statements,
           const std::shared_ptr<SymbolTable> symbols)
     : INHERITED(position, kBlock_Kind)
-    , fStatements(std::move(statements))
-    , fSymbols(std::move(symbols)) {}
+    , fSymbols(std::move(symbols))
+    , fStatements(std::move(statements)) {}
 
-    std::string description() const override {
-        std::string result = "{";
+    String description() const override {
+        String result("{");
         for (size_t i = 0; i < fStatements.size(); i++) {
             result += "\n";
             result += fStatements[i]->description();
         }
         result += "\n}\n";
-        return result;        
+        return result;
     }
 
-    const std::vector<std::unique_ptr<Statement>> fStatements;
+    // it's important to keep fStatements defined after (and thus destroyed before) fSymbols,
+    // because destroying statements can modify reference counts in symbols
     const std::shared_ptr<SymbolTable> fSymbols;
+    const std::vector<std::unique_ptr<Statement>> fStatements;
 
     typedef Statement INHERITED;
 };

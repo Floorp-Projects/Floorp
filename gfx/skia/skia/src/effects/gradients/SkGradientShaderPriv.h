@@ -10,15 +10,17 @@
 
 #include "SkGradientBitmapCache.h"
 #include "SkGradientShader.h"
+
+#include "SkArenaAlloc.h"
+#include "SkAutoMalloc.h"
 #include "SkClampRange.h"
 #include "SkColorPriv.h"
 #include "SkColorSpace.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkMallocPixelRef.h"
-#include "SkUtils.h"
-#include "SkShader.h"
 #include "SkOnce.h"
+#include "SkReadBuffer.h"
+#include "SkShader.h"
+#include "SkUtils.h"
+#include "SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
     #define GR_GL_USE_ACCURATE_HARD_STOP_GRADIENTS 1
@@ -116,7 +118,7 @@ public:
     };
 
     SkGradientShaderBase(const Descriptor& desc, const SkMatrix& ptsToUnit);
-    virtual ~SkGradientShaderBase();
+    ~SkGradientShaderBase() override;
 
     // The cache is initialized on-demand when getCache32 is called.
     class GradientShaderCache : public SkRefCnt {
@@ -126,7 +128,7 @@ public:
 
         const SkPMColor*    getCache32();
 
-        SkMallocPixelRef* getCache32PixelRef() const { return fCache32PixelRef; }
+        SkPixelRef* getCache32PixelRef() const { return fCache32PixelRef.get(); }
 
         unsigned getAlpha() const { return fCacheAlpha; }
         bool getDither() const { return fCacheDither; }
@@ -135,7 +137,7 @@ public:
         // Working pointer. If it's nullptr, we need to recompute the cache values.
         SkPMColor*  fCache32;
 
-        SkMallocPixelRef* fCache32PixelRef;
+        sk_sp<SkPixelRef> fCache32PixelRef;
         const unsigned    fCacheAlpha;        // The alpha value we used when we computed the cache.
                                               // Larger than 8bits so we can store uninitialized
                                               // value.
@@ -167,7 +169,7 @@ public:
         uint8_t     fFlags;
         bool        fDither;
 
-        SkAutoTUnref<GradientShaderCache> fCache;
+        sk_sp<GradientShaderCache> fCache;
 
     private:
         typedef SkShader::Context INHERITED;
@@ -235,10 +237,9 @@ protected:
                                    int count);
 
     template <typename T, typename... Args>
-    static Context* CheckedCreateContext(void* storage, Args&&... args) {
-        auto* ctx = new (storage) T(std::forward<Args>(args)...);
+    static Context* CheckedMakeContext(SkArenaAlloc* alloc, Args&&... args) {
+        auto* ctx = alloc->make<T>(std::forward<Args>(args)...);
         if (!ctx->isValid()) {
-            ctx->~T();
             return nullptr;
         }
         return ctx;
@@ -267,9 +268,9 @@ public:
 private:
     bool                fColorsAreOpaque;
 
-    GradientShaderCache* refCache(U8CPU alpha, bool dither) const;
-    mutable SkMutex                           fCacheMutex;
-    mutable SkAutoTUnref<GradientShaderCache> fCache;
+    sk_sp<GradientShaderCache> refCache(U8CPU alpha, bool dither) const;
+    mutable SkMutex                    fCacheMutex;
+    mutable sk_sp<GradientShaderCache> fCache;
 
     void initCommon();
 
@@ -293,6 +294,7 @@ static inline int next_dither_toggle(int toggle) {
 #include "GrColorSpaceXform.h"
 #include "GrCoordTransform.h"
 #include "GrFragmentProcessor.h"
+#include "glsl/GrGLSLColorSpaceXformHelper.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLProgramDataManager.h"
 
@@ -350,9 +352,7 @@ public:
 
     class GLSLProcessor;
 
-    GrGradientEffect(const CreateArgs&);
-
-    virtual ~GrGradientEffect();
+    ~GrGradientEffect() override;
 
     bool useAtlas() const { return SkToBool(-1 != fRow); }
     SkScalar getYCoord() const { return fYCoord; }
@@ -363,7 +363,7 @@ public:
         kTexture_ColorType,
 
 #if GR_GL_USE_ACCURATE_HARD_STOP_GRADIENTS
-        kHardStopCentered_ColorType,   // 0, 0.5, 0.5, 1
+        kSingleHardStop_ColorType,     // 0, t, t, 1
         kHardStopLeftEdged_ColorType,  // 0, 0, 1
         kHardStopRightEdged_ColorType, // 0, 1, 1
 #endif
@@ -400,26 +400,38 @@ public:
     }
 
 protected:
-    /** Populates a pair of arrays with colors and stop info to construct a random gradient.
-        The function decides whether stop values should be used or not. The return value indicates
-        the number of colors, which will be capped by kMaxRandomGradientColors. colors should be
-        sized to be at least kMaxRandomGradientColors. stops is a pointer to an array of at least
-        size kMaxRandomGradientColors. It may be updated to nullptr, indicating that nullptr should
-        be passed to the gradient factory rather than the array.
-    */
-    static const int kMaxRandomGradientColors = 4;
-    static int RandomGradientParams(SkRandom* r,
-                                    SkColor colors[kMaxRandomGradientColors],
-                                    SkScalar** stops,
-                                    SkShader::TileMode* tm);
+    GrGradientEffect(const CreateArgs&, bool isOpaque);
+
+    #if GR_TEST_UTILS
+    /** Helper struct that stores (and populates) parameters to construct a random gradient.
+        If fUseColors4f is true, then the SkColor4f factory should be called, with fColors4f and
+        fColorSpace. Otherwise, the SkColor factory should be called, with fColors. fColorCount
+        will be the number of color stops in either case, and fColors and fStops can be passed to
+        the gradient factory. (The constructor may decide not to use stops, in which case fStops
+        will be nullptr). */
+    struct RandomGradientParams {
+        static const int kMaxRandomGradientColors = 5;
+
+        RandomGradientParams(SkRandom* r);
+
+        bool fUseColors4f;
+        SkColor fColors[kMaxRandomGradientColors];
+        SkColor4f fColors4f[kMaxRandomGradientColors];
+        sk_sp<SkColorSpace> fColorSpace;
+        SkScalar fStopStorage[kMaxRandomGradientColors];
+        SkShader::TileMode fTileMode;
+        int fColorCount;
+        SkScalar* fStops;
+    };
+    #endif
 
     bool onIsEqual(const GrFragmentProcessor&) const override;
-
-    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     const GrCoordTransform& getCoordTransform() const { return fCoordTransform; }
 
 private:
+    static OptimizationFlags OptFlags(bool isOpaque);
+
     // If we're in legacy mode, then fColors will be populated. If we're gamma-correct, then
     // fColors4f and fColorSpaceXform will be populated.
     SkTDArray<SkColor>       fColors;
@@ -431,7 +443,7 @@ private:
     SkShader::TileMode       fTileMode;
 
     GrCoordTransform fCoordTransform;
-    GrTextureAccess fTextureAccess;
+    TextureSampler fTextureSampler;
     SkScalar fYCoord;
     GrTextureStripAtlas* fAtlas;
     int fRow;
@@ -453,7 +465,7 @@ public:
     }
 
 protected:
-    void onSetData(const GrGLSLProgramDataManager&, const GrProcessor&) override;
+    void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
 
 protected:
     /**
@@ -473,7 +485,7 @@ protected:
     // of hard stop gradients
     void emitColor(GrGLSLFPFragmentBuilder* fragBuilder,
                    GrGLSLUniformHandler* uniformHandler,
-                   const GrGLSLCaps* caps,
+                   const GrShaderCaps* shaderCaps,
                    const GrGradientEffect&,
                    const char* gradientTValue,
                    const char* outputColor,
@@ -506,8 +518,9 @@ private:
 
     SkScalar fCachedYCoord;
     GrGLSLProgramDataManager::UniformHandle fColorsUni;
+    GrGLSLProgramDataManager::UniformHandle fHardStopT;
     GrGLSLProgramDataManager::UniformHandle fFSYUni;
-    GrGLSLProgramDataManager::UniformHandle fColorSpaceXformUni;
+    GrGLSLColorSpaceXformHelper             fColorSpaceHelper;
 
     typedef GrGLSLFragmentProcessor INHERITED;
 };

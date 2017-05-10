@@ -22,10 +22,7 @@
 #include "SkUtils.h"
 
 #include <dwrite.h>
-
-#if SK_HAS_DWRITE_2_H
 #include <dwrite_2.h>
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +48,7 @@ public:
         return S_OK;
     }
 
-    SkAutoTDelete<SkStreamAsset> fStream;
+    std::unique_ptr<SkStreamAsset> fStream;
 
 private:
     StreamFontFileLoader(SkStreamAsset* stream) : fStream(stream), fRefCount(1) { }
@@ -266,23 +263,19 @@ public:
     SkFontMgr_DirectWrite(IDWriteFactory* factory, IDWriteFontCollection* fontCollection,
                           IDWriteFontFallback* fallback, WCHAR* localeName, int localeNameLength)
         : fFactory(SkRefComPtr(factory))
-#if SK_HAS_DWRITE_2_H
         , fFontFallback(SkSafeRefComPtr(fallback))
-#endif
         , fFontCollection(SkRefComPtr(fontCollection))
         , fLocaleName(localeNameLength)
     {
-#if SK_HAS_DWRITE_2_H
         if (!SUCCEEDED(fFactory->QueryInterface(&fFactory2))) {
             // IUnknown::QueryInterface states that if it fails, punk will be set to nullptr.
             // http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx
             SkASSERT_RELEASE(nullptr == fFactory2.get());
         }
         if (fFontFallback.get()) {
-            // factory must be provied if fallback is non-null, else the fallback will not be used.
+            // factory must be provided if fallback is non-null, else the fallback will not be used.
             SkASSERT(fFactory2.get());
         }
-#endif
         memcpy(fLocaleName.get(), localeName, localeNameLength * sizeof(WCHAR));
     }
 
@@ -313,10 +306,8 @@ private:
                                              IDWriteFontFamily* fontFamily) const;
 
     SkTScopedComPtr<IDWriteFactory> fFactory;
-#if SK_HAS_DWRITE_2_H
     SkTScopedComPtr<IDWriteFactory2> fFactory2;
     SkTScopedComPtr<IDWriteFontFallback> fFontFallback;
-#endif
     SkTScopedComPtr<IDWriteFontCollection> fFontCollection;
     SkSMallocWCHAR fLocaleName;
     mutable SkMutex fTFCacheMutex;
@@ -340,7 +331,7 @@ public:
     SkTypeface* matchStyle(const SkFontStyle& pattern) override;
 
 private:
-    SkAutoTUnref<const SkFontMgr_DirectWrite> fFontMgr;
+    sk_sp<const SkFontMgr_DirectWrite> fFontMgr;
     SkTScopedComPtr<IDWriteFontFamily> fFontFamily;
 };
 
@@ -509,7 +500,7 @@ SkFontStyleSet* SkFontMgr_DirectWrite::onMatchFamily(const char familyName[]) co
 
 SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyle(const char familyName[],
                                                       const SkFontStyle& fontstyle) const {
-    SkAutoTUnref<SkFontStyleSet> sset(this->matchFamily(familyName));
+    sk_sp<SkFontStyleSet> sset(this->matchFamily(familyName));
     return sset->matchStyle(fontstyle);
 }
 
@@ -634,7 +625,7 @@ public:
 
 protected:
     ULONG fRefCount;
-    SkAutoTUnref<const SkFontMgr_DirectWrite> fOuter;
+    sk_sp<const SkFontMgr_DirectWrite> fOuter;
     UINT32 fCharacter;
     SkTypeface* fResolvedTypeface;
 };
@@ -768,7 +759,6 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
         dwBcp47 = &dwBcp47Local;
     }
 
-#if SK_HAS_DWRITE_2_H
     if (fFactory2.get()) {
         SkTScopedComPtr<IDWriteFontFallback> systemFontFallback;
         IDWriteFontFallback* fontFallback = fFontFallback.get();
@@ -811,9 +801,6 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
         HRNM(font->GetFontFamily(&fontFamily), "Could not get family from font.");
         return this->createTypefaceFromDWriteFont(fontFace.get(), font.get(), fontFamily.get());
     }
-#else
-#  pragma message("No dwrite_2.h is available, font fallback may be affected.")
-#endif
 
     SkTScopedComPtr<IDWriteTextFormat> fallbackFormat;
     HRNM(fFactory->CreateTextFormat(dwFamilyName ? dwFamilyName : L"",
@@ -951,10 +938,7 @@ HRESULT SkFontMgr_DirectWrite::getByFamilyName(const WCHAR wideFamilyName[],
 HRESULT SkFontMgr_DirectWrite::getDefaultFontFamily(IDWriteFontFamily** fontFamily) const {
     NONCLIENTMETRICSW metrics;
     metrics.cbSize = sizeof(metrics);
-    if (0 == SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
-                                   sizeof(metrics),
-                                   &metrics,
-                                   0)) {
+    if (0 == SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(metrics), &metrics, 0)) {
         return E_UNEXPECTED;
     }
     HRM(this->getByFamilyName(metrics.lfMessageFont.lfFaceName, fontFamily),
@@ -974,7 +958,7 @@ SkTypeface* SkFontMgr_DirectWrite::onLegacyCreateTypeface(const char familyName[
 
     if (nullptr == fontFamily.get()) {
         // No family with given name, try default.
-        HRNM(this->getDefaultFontFamily(&fontFamily), "Could not get default font family.");
+        this->getDefaultFontFamily(&fontFamily);
     }
 
     if (nullptr == fontFamily.get()) {
@@ -1043,14 +1027,14 @@ SkTypeface* SkFontStyleSet_DirectWrite::matchStyle(const SkFontStyle& pattern) {
 ////////////////////////////////////////////////////////////////////////////////
 #include "SkTypeface_win.h"
 
-SK_API SkFontMgr* SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
-                                            IDWriteFontCollection* collection) {
+SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
+                                                  IDWriteFontCollection* collection) {
     return SkFontMgr_New_DirectWrite(factory, collection, nullptr);
 }
 
-SK_API SkFontMgr* SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
-                                            IDWriteFontCollection* collection,
-                                            IDWriteFontFallback* fallback) {
+SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
+                                                  IDWriteFontCollection* collection,
+                                                  IDWriteFontFallback* fallback) {
     if (nullptr == factory) {
         factory = sk_get_dwrite_factory();
         if (nullptr == factory) {
@@ -1081,15 +1065,16 @@ SK_API SkFontMgr* SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
         };
     }
 
-    return new SkFontMgr_DirectWrite(factory, collection, fallback, localeName, localeNameLen);
+    return sk_make_sp<SkFontMgr_DirectWrite>(factory, collection, fallback,
+                                             localeName, localeNameLen);
 }
 
 #include "SkFontMgr_indirect.h"
-SK_API SkFontMgr* SkFontMgr_New_DirectWriteRenderer(SkRemotableFontMgr* proxy) {
-    SkAutoTUnref<SkFontMgr> impl(SkFontMgr_New_DirectWrite());
-    if (impl.get() == nullptr) {
+SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWriteRenderer(sk_sp<SkRemotableFontMgr> proxy) {
+    sk_sp<SkFontMgr> impl(SkFontMgr_New_DirectWrite());
+    if (!impl) {
         return nullptr;
     }
-    return new SkFontMgr_Indirect(impl.get(), proxy);
+    return sk_make_sp<SkFontMgr_Indirect>(std::move(impl), std::move(proxy));
 }
 #endif//defined(SK_BUILD_FOR_WIN32)

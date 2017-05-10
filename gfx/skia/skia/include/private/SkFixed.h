@@ -9,7 +9,7 @@
 #define SkFixed_DEFINED
 
 #include "SkScalar.h"
-#include "math.h"
+#include "SkSafe_math.h"
 
 #include "SkTypes.h"
 
@@ -69,9 +69,15 @@ typedef int32_t             SkFixed;
 #define SkFixedCeilToInt(x)     (((x) + SK_Fixed1 - 1) >> 16)
 #define SkFixedFloorToInt(x)    ((x) >> 16)
 
-#define SkFixedRoundToFixed(x)  (((x) + SK_FixedHalf) & 0xFFFF0000)
-#define SkFixedCeilToFixed(x)   (((x) + SK_Fixed1 - 1) & 0xFFFF0000)
-#define SkFixedFloorToFixed(x)  ((x) & 0xFFFF0000)
+static inline SkFixed SkFixedRoundToFixed(SkFixed x) {
+    return (x + SK_FixedHalf) & 0xFFFF0000;
+}
+static inline SkFixed SkFixedCeilToFixed(SkFixed x) {
+    return (x + SK_Fixed1 - 1) & 0xFFFF0000;
+}
+static inline SkFixed SkFixedFloorToFixed(SkFixed x) {
+    return x & 0xFFFF0000;
+}
 
 #define SkFixedAbs(x)       SkAbs32(x)
 #define SkFixedAve(a, b)    (((a) + (b)) >> 1)
@@ -132,27 +138,22 @@ inline SkFixed SkFixedMul_longlong(SkFixed a, SkFixed b) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if SK_SCALAR_IS_FLOAT
-
 #define SkFixedToScalar(x)          SkFixedToFloat(x)
 #define SkScalarToFixed(x)          SkFloatToFixed(x)
-
-#else   // SK_SCALAR_IS_DOUBLE
-
-#define SkFixedToScalar(x)          SkFixedToDouble(x)
-#define SkScalarToFixed(x)          SkDoubleToFixed(x)
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
 typedef int64_t SkFixed3232;   // 32.32
+
+#define SkFixed3232Max            (0x7FFFFFFFFFFFFFFFLL)
+#define SkFixed3232Min            (-SkFixed3232Max)
 
 #define SkIntToFixed3232(x)       (SkLeftShift((SkFixed3232)(x), 32))
 #define SkFixed3232ToInt(x)       ((int)((x) >> 32))
 #define SkFixedToFixed3232(x)     (SkLeftShift((SkFixed3232)(x), 16))
 #define SkFixed3232ToFixed(x)     ((SkFixed)((x) >> 16))
 #define SkFloatToFixed3232(x)     ((SkFixed3232)((x) * (65536.0f * 65536.0f)))
+#define SkFixed3232ToFloat(x)     (x * (1 / (65536.0f * 65536.0f)))
 
 #define SkScalarToFixed3232(x)    SkFloatToFixed3232(x)
 

@@ -8,7 +8,7 @@
 #include "GrFixedClip.h"
 
 #include "GrAppliedClip.h"
-#include "GrDrawContext.h"
+#include "GrRenderTargetContext.h"
 
 bool GrFixedClip::quickContains(const SkRect& rect) const {
     if (fWindowRectsState.enabled()) {
@@ -29,7 +29,7 @@ void GrFixedClip::getConservativeBounds(int w, int h, SkIRect* devResult, bool* 
     }
 }
 
-bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, bool* aa) const {
+bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const {
     if (fWindowRectsState.enabled()) {
         return false;
     }
@@ -39,23 +39,24 @@ bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, bool* aa) const {
             return false;
         }
         rr->setRect(rect);
-        *aa = false;
+        *aa = GrAA::kNo;
         return true;
     }
     return false;
 };
 
-bool GrFixedClip::apply(GrContext*, GrDrawContext* dc, bool, bool, GrAppliedClip* out) const {
+bool GrFixedClip::apply(GrContext*, GrRenderTargetContext* rtc, bool, bool, GrAppliedClip* out,
+                        SkRect* bounds) const {
     if (fScissorState.enabled()) {
-        SkIRect tightScissor = SkIRect::MakeWH(dc->width(), dc->height());
+        SkIRect tightScissor = SkIRect::MakeWH(rtc->width(), rtc->height());
         if (!tightScissor.intersect(fScissorState.rect())) {
             return false;
         }
-        if (IsOutsideClip(tightScissor, out->clippedDrawBounds())) {
+        if (IsOutsideClip(tightScissor, *bounds)) {
             return false;
         }
-        if (!IsInsideClip(fScissorState.rect(), out->clippedDrawBounds())) {
-            out->addScissor(tightScissor);
+        if (!IsInsideClip(fScissorState.rect(), *bounds)) {
+            out->addScissor(tightScissor, bounds);
         }
     }
 

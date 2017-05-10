@@ -12,7 +12,7 @@
 #include <limits>
 
 //////////////////////////////////////////////////////////////////////////////
-SkPathRef::Editor::Editor(SkAutoTUnref<SkPathRef>* pathRef,
+SkPathRef::Editor::Editor(sk_sp<SkPathRef>* pathRef,
                           int incReserveVerbs,
                           int incReservePoints)
 {
@@ -23,7 +23,7 @@ SkPathRef::Editor::Editor(SkAutoTUnref<SkPathRef>* pathRef,
         copy->copy(**pathRef, incReserveVerbs, incReservePoints);
         pathRef->reset(copy);
     }
-    fPathRef = *pathRef;
+    fPathRef = pathRef->get();
     fPathRef->callGenIDChangeListeners();
     fPathRef->fGenerationID = 0;
     SkDEBUGCODE(sk_atomic_inc(&fPathRef->fEditorsAttached);)
@@ -111,12 +111,12 @@ static void transform_dir_and_start(const SkMatrix& matrix, bool isRRect, bool* 
     }
 }
 
-void SkPathRef::CreateTransformedCopy(SkAutoTUnref<SkPathRef>* dst,
+void SkPathRef::CreateTransformedCopy(sk_sp<SkPathRef>* dst,
                                       const SkPathRef& src,
                                       const SkMatrix& matrix) {
     SkDEBUGCODE(src.validate();)
     if (matrix.isIdentity()) {
-        if (*dst != &src) {
+        if (dst->get() != &src) {
             src.ref();
             dst->reset(const_cast<SkPathRef*>(&src));
             SkDEBUGCODE((*dst)->validate();)
@@ -128,7 +128,7 @@ void SkPathRef::CreateTransformedCopy(SkAutoTUnref<SkPathRef>* dst,
         dst->reset(new SkPathRef);
     }
 
-    if (*dst != &src) {
+    if (dst->get() != &src) {
         (*dst)->resetToSize(src.fVerbCnt, src.fPointCnt, src.fConicWeights.count());
         sk_careful_memcpy((*dst)->verbsMemWritable(), src.verbsMemBegin(),
                            src.fVerbCnt * sizeof(uint8_t));
@@ -192,12 +192,43 @@ void SkPathRef::CreateTransformedCopy(SkAutoTUnref<SkPathRef>* dst,
     SkDEBUGCODE((*dst)->validate();)
 }
 
+// Given the verb array, deduce the required number of pts and conics,
+// or if an invalid verb is encountered, return false.
+static bool deduce_pts_conics(const uint8_t verbs[], int vCount, int* ptCountPtr,
+                              int* conicCountPtr) {
+    int ptCount = 0;
+    int conicCount = 0;
+    for (int i = 0; i < vCount; ++i) {
+        switch (verbs[i]) {
+            case SkPath::kMove_Verb:
+            case SkPath::kLine_Verb:
+                ptCount += 1;
+                break;
+            case SkPath::kConic_Verb:
+                conicCount += 1;
+                // fall-through
+            case SkPath::kQuad_Verb:
+                ptCount += 2;
+                break;
+            case SkPath::kCubic_Verb:
+                ptCount += 3;
+                break;
+            case SkPath::kClose_Verb:
+                break;
+            default:
+                return false;
+        }
+    }
+    *ptCountPtr = ptCount;
+    *conicCountPtr = conicCount;
+    return true;
+}
+
 SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
-    SkPathRef* ref = new SkPathRef;
+    std::unique_ptr<SkPathRef> ref(new SkPathRef);
 
     int32_t packed;
     if (!buffer->readS32(&packed)) {
-        delete ref;
         return nullptr;
     }
 
@@ -205,6 +236,10 @@ SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
     uint8_t segmentMask = (packed >> kSegmentMask_SerializationShift) & 0xF;
     bool isOval  = (packed >> kIsOval_SerializationShift) & 1;
     bool isRRect  = (packed >> kIsRRect_SerializationShift) & 1;
+    if (isOval && isRRect) {
+        // Fuzzing generates data with both oval and rrect flags set; abort early in this case/
+        return nullptr;
+    }
     bool rrectOrOvalIsCCW = (packed >> kRRectOrOvalIsCCW_SerializationShift) & 1;
     unsigned rrectOrOvalStartIdx = (packed >> kRRectOrOvalStartIdx_SerializationShift) & 0x7;
 
@@ -221,7 +256,6 @@ SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
             static_cast<size_t>(maxPtrDiff) ||
         !buffer->readS32(&conicCount) ||
         conicCount < 0) {
-        delete ref;
         return nullptr;
     }
 
@@ -234,9 +268,23 @@ SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
         !buffer->read(ref->fPoints, pointCount * sizeof(SkPoint)) ||
         !buffer->read(ref->fConicWeights.begin(), conicCount * sizeof(SkScalar)) ||
         !buffer->read(&ref->fBounds, sizeof(SkRect))) {
-        delete ref;
         return nullptr;
     }
+
+    // Check that the verbs are valid, and imply the correct number of pts and conics
+    {
+        int pCount, cCount;
+        if (!deduce_pts_conics(ref->verbsMemBegin(), ref->countVerbs(), &pCount, &cCount) ||
+            pCount != ref->countPoints() || cCount != ref->fConicWeights.count()) {
+            return nullptr;
+        }
+        // Check that the bounds match the serialized bounds.
+        SkRect bounds;
+        if (ComputePtBounds(&bounds, *ref) != SkToBool(ref->fIsFinite) || bounds != ref->fBounds) {
+            return nullptr;
+        }
+    }
+    
     ref->fBoundsIsDirty = false;
 
     // resetToSize clears fSegmentMask and fIsOval
@@ -245,10 +293,10 @@ SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
     ref->fIsRRect = isRRect;
     ref->fRRectOrOvalIsCCW = rrectOrOvalIsCCW;
     ref->fRRectOrOvalStartIdx = rrectOrOvalStartIdx;
-    return ref;
+    return ref.release();
 }
 
-void SkPathRef::Rewind(SkAutoTUnref<SkPathRef>* pathRef) {
+void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
     if ((*pathRef)->unique()) {
         SkDEBUGCODE((*pathRef)->validate();)
         (*pathRef)->callGenIDChangeListeners();

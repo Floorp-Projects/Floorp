@@ -45,12 +45,10 @@ void SkSweepGradient::flatten(SkWriteBuffer& buffer) const {
     buffer.writePoint(fCenter);
 }
 
-size_t SkSweepGradient::onContextSize(const ContextRec&) const {
-    return sizeof(SweepGradientContext);
-}
-
-SkShader::Context* SkSweepGradient::onCreateContext(const ContextRec& rec, void* storage) const {
-    return CheckedCreateContext<SweepGradientContext>(storage, *this, rec);
+SkShader::Context* SkSweepGradient::onMakeContext(
+    const ContextRec& rec, SkArenaAlloc* alloc) const
+{
+    return CheckedMakeContext<SweepGradientContext>(alloc, *this, rec);
 }
 
 SkSweepGradient::SweepGradientContext::SweepGradientContext(
@@ -122,8 +120,8 @@ void SkSweepGradient::SweepGradientContext::shadeSpan(int x, int y, SkPMColor* S
 #if SK_SUPPORT_GPU
 
 #include "SkGr.h"
+#include "GrShaderCaps.h"
 #include "gl/GrGLContext.h"
-#include "glsl/GrGLSLCaps.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 
 class GrSweepGradient : public GrGradientEffect {
@@ -133,19 +131,18 @@ public:
     static sk_sp<GrFragmentProcessor> Make(const CreateArgs& args) {
         return sk_sp<GrFragmentProcessor>(new GrSweepGradient(args));
     }
-    virtual ~GrSweepGradient() { }
+    ~GrSweepGradient() override {}
 
     const char* name() const override { return "Sweep Gradient"; }
 
 private:
-    GrSweepGradient(const CreateArgs& args)
-    : INHERITED(args) {
+    GrSweepGradient(const CreateArgs& args) : INHERITED(args, args.fShader->colorsAreOpaque()) {
         this->initClassID<GrSweepGradient>();
     }
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    virtual void onGetGLSLProcessorKey(const GrGLSLCaps& caps,
+    virtual void onGetGLSLProcessorKey(const GrShaderCaps& caps,
                                        GrProcessorKeyBuilder* b) const override;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
@@ -158,11 +155,11 @@ private:
 class GrSweepGradient::GLSLSweepProcessor : public GrGradientEffect::GLSLProcessor {
 public:
     GLSLSweepProcessor(const GrProcessor&) {}
-    virtual ~GLSLSweepProcessor() { }
+    ~GLSLSweepProcessor() override {}
 
     virtual void emitCode(EmitArgs&) override;
 
-    static void GenKey(const GrProcessor& processor, const GrGLSLCaps&, GrProcessorKeyBuilder* b) {
+    static void GenKey(const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
         b->add32(GenBaseGradientKey(processor));
     }
 
@@ -177,7 +174,7 @@ GrGLSLFragmentProcessor* GrSweepGradient::onCreateGLSLInstance() const {
     return new GrSweepGradient::GLSLSweepProcessor(*this);
 }
 
-void GrSweepGradient::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
+void GrSweepGradient::onGetGLSLProcessorKey(const GrShaderCaps& caps,
                                             GrProcessorKeyBuilder* b) const {
     GrSweepGradient::GLSLSweepProcessor::GenKey(*this, caps, b);
 }
@@ -187,24 +184,22 @@ void GrSweepGradient::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSweepGradient);
 
+#if GR_TEST_UTILS
 sk_sp<GrFragmentProcessor> GrSweepGradient::TestCreate(GrProcessorTestData* d) {
     SkPoint center = {d->fRandom->nextUScalar1(), d->fRandom->nextUScalar1()};
 
-    SkColor colors[kMaxRandomGradientColors];
-    SkScalar stopsArray[kMaxRandomGradientColors];
-    SkScalar* stops = stopsArray;
-    SkShader::TileMode tmIgnored;
-    int colorCount = RandomGradientParams(d->fRandom, colors, &stops, &tmIgnored);
-    sk_sp<SkShader> shader(SkGradientShader::MakeSweep(center.fX, center.fY,  colors, stops,
-                                                       colorCount));
-    SkMatrix viewMatrix = GrTest::TestMatrix(d->fRandom);
-    auto dstColorSpace = GrTest::TestColorSpace(d->fRandom);
-    sk_sp<GrFragmentProcessor> fp = shader->asFragmentProcessor(SkShader::AsFPArgs(
-        d->fContext, &viewMatrix, NULL, kNone_SkFilterQuality, dstColorSpace.get(),
-        SkSourceGammaTreatment::kRespect));
+    RandomGradientParams params(d->fRandom);
+    auto shader = params.fUseColors4f ?
+        SkGradientShader::MakeSweep(center.fX, center.fY, params.fColors4f, params.fColorSpace,
+                                    params.fStops, params.fColorCount) :
+        SkGradientShader::MakeSweep(center.fX, center.fY,  params.fColors,
+                                    params.fStops, params.fColorCount);
+    GrTest::TestAsFPArgs asFPArgs(d);
+    sk_sp<GrFragmentProcessor> fp = shader->asFragmentProcessor(asFPArgs.args());
     GrAlwaysAssert(fp);
     return fp;
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////
 
@@ -214,18 +209,21 @@ void GrSweepGradient::GLSLSweepProcessor::emitCode(EmitArgs& args) {
     SkString coords2D = args.fFragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
     SkString t;
     // 0.1591549430918 is 1/(2*pi), used since atan returns values [-pi, pi]
-    // On Intel GPU there is an issue where it reads the second arguement to atan "- %s.x" as an int
-    // thus must us -1.0 * %s.x to work correctly
-    if (args.fGLSLCaps->mustForceNegatedAtanParamToFloat()){
-        t.printf("(atan(- %s.y, -1.0 * %s.x) * 0.1591549430918 + 0.5)",
-                 coords2D.c_str(), coords2D.c_str());
+    if (args.fShaderCaps->atan2ImplementedAsAtanYOverX()) {
+        // On some devices they incorrectly implement atan2(y,x) as atan(y/x). In actuality it is
+        // atan2(y,x) = 2 * atan(y / (sqrt(x^2 + y^2) + x)). So to work around this we pass in
+        // (sqrt(x^2 + y^2) + x) as the second parameter to atan2 in these cases. We let the device
+        // handle the undefined behavior of the second paramenter being 0 instead of doing the
+        // divide ourselves and using atan instead.
+        t.printf("(2.0 * atan(- %s.y, length(%s) - %s.x) * 0.1591549430918 + 0.5)",
+                 coords2D.c_str(), coords2D.c_str(), coords2D.c_str());
     } else {
         t.printf("(atan(- %s.y, - %s.x) * 0.1591549430918 + 0.5)",
                  coords2D.c_str(), coords2D.c_str());
     }
     this->emitColor(args.fFragBuilder,
                     args.fUniformHandler,
-                    args.fGLSLCaps,
+                    args.fShaderCaps,
                     ge, t.c_str(),
                     args.fOutputColor,
                     args.fInputColor,

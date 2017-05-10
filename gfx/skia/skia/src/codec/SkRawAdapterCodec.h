@@ -10,7 +10,7 @@
 
 #include "SkAndroidCodec.h"
 #include "SkCodec.h"
-#include "SkEncodedFormat.h"
+#include "SkEncodedImageFormat.h"
 #include "SkRawCodec.h"
 #include "SkStream.h"
 #include "SkTypes.h"
@@ -24,7 +24,7 @@ public:
 
     explicit SkRawAdapterCodec(SkRawCodec*);
 
-    virtual ~SkRawAdapterCodec() {}
+    ~SkRawAdapterCodec() override {}
 
 protected:
 
