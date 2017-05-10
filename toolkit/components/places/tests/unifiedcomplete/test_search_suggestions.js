@@ -650,3 +650,434 @@ add_task(function* avoid_url_suggestions() {
 
   yield cleanUpSuggestions();
 });
+
+add_task(function* avoid_http_url_suggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  setSuggestionsFn(searchStr => {
+    let suffixes = ["ed", "ing"];
+    return suffixes.map(s => searchStr + s);
+  });
+
+  yield check_autocomplete({
+    search: "htt",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("htt", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "htted",
+          searchQuery: "htt",
+          searchSuggestion: "htted",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "htting",
+          searchQuery: "htt",
+          searchSuggestion: "htting",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("ftp", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "ftped",
+          searchQuery: "ftp",
+          searchSuggestion: "ftped",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "ftping",
+          searchQuery: "ftp",
+          searchSuggestion: "ftping",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("http", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "httped",
+          searchQuery: "http",
+          searchSuggestion: "httped",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "httping",
+          searchQuery: "http",
+          searchSuggestion: "httping",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("https", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "httpsed",
+          searchQuery: "https",
+          searchSuggestion: "httpsed",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "httpsing",
+          searchQuery: "https",
+          searchSuggestion: "httpsing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://http/", input: "http:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://http/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://https/", input: "https:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://https/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://ftp/", input: "ftp:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://ftp/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://http/", input: "http:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://http/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://https/", input: "https:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://https/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://ftp/", input: "ftp:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://ftp/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("http://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("https://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("ftp://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://www",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://www/", input: "http://www" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://www/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "wwwed",
+          searchQuery: "www",
+          searchSuggestion: "wwwed",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "wwwing",
+          searchQuery: "www",
+          searchSuggestion: "wwwing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://www",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "https://www/", input: "https://www" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "https://www/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "wwwed",
+          searchQuery: "www",
+          searchSuggestion: "wwwed",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "wwwing",
+          searchQuery: "www",
+          searchSuggestion: "wwwing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://test/", input: "http://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://test/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "tested",
+          searchQuery: "test",
+          searchSuggestion: "tested",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "testing",
+          searchQuery: "test",
+          searchSuggestion: "testing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "https://test/", input: "https://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "https://test/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "tested",
+          searchQuery: "test",
+          searchSuggestion: "tested",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "testing",
+          searchQuery: "test",
+          searchSuggestion: "testing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "ftp://test/", input: "ftp://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "ftp://test/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "tested",
+          searchQuery: "test",
+          searchSuggestion: "tested",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "testing",
+          searchQuery: "test",
+          searchSuggestion: "testing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://www.test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://www.test/", input: "http://www.test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://www.test/",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "tested",
+          searchQuery: "test",
+          searchSuggestion: "tested",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "testing",
+          searchQuery: "test",
+          searchSuggestion: "testing",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield cleanUpSuggestions();
+});
