@@ -35,9 +35,9 @@ class Code;
 class CodeRange;
 class DebugFrame;
 class DebugState;
+class Frame;
 class Instance;
 class SigIdDesc;
-struct Frame;
 struct FuncOffsets;
 struct CallableOffsets;
 
@@ -59,7 +59,7 @@ class FrameIterator
     const Code* code_;
     const CallSite* callsite_;
     const CodeRange* codeRange_;
-    Frame* fp_;
+    uint8_t* fp_;
     Unwind unwind_;
     void** unwoundAddressOfReturnAddress_;
 
@@ -143,7 +143,7 @@ class ProfilingFrameIterator
     const WasmActivation* activation_;
     const Code* code_;
     const CodeRange* codeRange_;
-    Frame* callerFP_;
+    void* callerFP_;
     void* callerPC_;
     void* stackAddress_;
     ExitReason exitReason_;
