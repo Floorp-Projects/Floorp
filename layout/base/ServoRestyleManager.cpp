@@ -631,6 +631,11 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
 
+  nsChangeHint hint = aElement->GetAttributeChangeHint(aAttribute, aModType);
+  if (hint) {
+    PostRestyleEvent(aElement, nsRestyleHint(0), hint);
+  }
+
   if (aAttribute == nsGkAtoms::style) {
     PostRestyleEvent(aElement, eRestyle_StyleAttribute, nsChangeHint(0));
   }
