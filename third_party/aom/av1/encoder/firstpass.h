@@ -177,10 +177,17 @@ void av1_twopass_postencode_update(struct AV1_COMP *cpi);
 // Post encode update of the rate control parameters for 2-pass
 void av1_twopass_postencode_update(struct AV1_COMP *cpi);
 
-void av1_init_subsampling(struct AV1_COMP *cpi);
+void av1_calculate_next_scaled_size(const struct AV1_COMP *cpi,
+                                    int *scaled_frame_width,
+                                    int *scaled_frame_height);
 
-void av1_calculate_coded_size(struct AV1_COMP *cpi, int *scaled_frame_width,
-                              int *scaled_frame_height);
+#if CONFIG_FRAME_SUPERRES
+// This is the size after superress scaling, which could be 1:1.
+// Superres scaling happens after regular downscaling.
+// TODO(afergs): Limit overall reduction to 1/2 of the original size
+void av1_calculate_superres_size(const struct AV1_COMP *cpi, int *encoded_width,
+                                 int *encoded_height);
+#endif  // CONFIG_FRAME_SUPERRES
 
 #if CONFIG_EXT_REFS
 static INLINE int get_number_of_extra_arfs(int interval, int arf_pending) {

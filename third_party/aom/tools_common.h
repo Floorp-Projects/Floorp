@@ -19,7 +19,7 @@
 #include "aom/aom_integer.h"
 #include "aom_ports/msvc.h"
 
-#if CONFIG_ENCODERS
+#if CONFIG_AV1_ENCODER
 #include "./y4minput.h"
 #endif
 
@@ -100,7 +100,7 @@ struct AvxInputContext {
   int only_i420;
   uint32_t fourcc;
   struct AvxRational framerate;
-#if CONFIG_ENCODERS
+#if CONFIG_AV1_ENCODER
   y4m_input y4m;
 #endif
 };

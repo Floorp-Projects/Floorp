@@ -31,17 +31,16 @@ namespace {
 typedef void (*AvxPredFunc)(uint8_t *dst, ptrdiff_t y_stride,
                             const uint8_t *above, const uint8_t *left);
 
-#if CONFIG_ALT_INTRA
-const int kNumAv1IntraFuncs = 14;
-#else
-const int kNumAv1IntraFuncs = 13;
-#endif  // CONFIG_ALT_INTRA
+const int kNumAv1IntraFuncs = INTRA_MODES + 3;  // 4 DC predictor variants.
 const char *kAv1IntraPredNames[kNumAv1IntraFuncs] = {
-  "DC_PRED",    "DC_LEFT_PRED", "DC_TOP_PRED", "DC_128_PRED", "V_PRED",
-  "H_PRED",     "D45_PRED",     "D135_PRED",   "D117_PRED",   "D153_PRED",
-  "D207_PRED",  "D63_PRED",     "TM_PRED",
+  "DC_PRED",       "DC_LEFT_PRED",  "DC_TOP_PRED", "DC_128_PRED", "V_PRED",
+  "H_PRED",        "D45_PRED",      "D135_PRED",   "D117_PRED",   "D153_PRED",
+  "D207_PRED",     "D63_PRED",      "TM_PRED",
 #if CONFIG_ALT_INTRA
-  "SMOOTH_PRED"
+  "SMOOTH_PRED",
+#if CONFIG_SMOOTH_HV
+  "SMOOTH_V_PRED", "SMOOTH_H_PRED",
+#endif  // CONFIG_SMOOTH_HV
 #endif  // CONFIG_ALT_INTRA
 };
 
@@ -104,7 +103,11 @@ void TestIntraPred4(AvxPredFunc const *pred_funcs) {
     "b852f42e6c4991d415400332d567872f",
 #if CONFIG_ALT_INTRA
     "828c49a4248993cce4876fa26eab697f",
-    "718c8cee9011f92ef31f77a9a7560010"
+    "718c8cee9011f92ef31f77a9a7560010",
+#if CONFIG_SMOOTH_HV
+    "b37eeadbbd9e3bdff023a5097b59213a",
+    "d6fb9c659d82c78f0d0c891da6cba87f",
+#endif  // CONFIG_SMOOTH_HV
 #else
     "309a618577b27c648f9c5ee45252bc8f",
 #endif  // CONFIG_ALT_INTRA
@@ -129,7 +132,11 @@ void TestIntraPred8(AvxPredFunc const *pred_funcs) {
     "7a09adb0fa6c2bf889a99dd816622feb",
 #if CONFIG_ALT_INTRA
     "f6ade499c626d38eb70661184b79bc57",
-    "1ad5b106c79b792e514ba25e87139b5e"
+    "1ad5b106c79b792e514ba25e87139b5e",
+#if CONFIG_SMOOTH_HV
+    "fe0d359b91a1d8141483d2e032f1b75f",
+    "0cfd7603ced02829d1ce18b6795d73d0",
+#endif  // CONFIG_SMOOTH_HV
 #else
     "815b75c8e0d91cc1ae766dc5d3e445a3",
 #endif  // CONFIG_ALT_INTRA
@@ -154,7 +161,11 @@ void TestIntraPred16(AvxPredFunc const *pred_funcs) {
     "f7063ccbc29f87303d5c3d0555b08944",
 #if CONFIG_ALT_INTRA
     "7adcaaa3554eb71a81fc48cb9043984b",
-    "c0acea4397c1b4d54a21bbcec5731dff"
+    "c0acea4397c1b4d54a21bbcec5731dff",
+#if CONFIG_SMOOTH_HV
+    "f15b8712f0f064e98a7d804d3074afa7",
+    "01a09cdb8edd06d840c84643032fc02f",
+#endif  // CONFIG_SMOOTH_HV
 #else
     "b8a41aa968ec108af447af4217cba91b",
 #endif  // CONFIG_ALT_INTRA
@@ -179,7 +190,11 @@ void TestIntraPred32(AvxPredFunc const *pred_funcs) {
     "d520125ebd512c63c301bf67fea8e059",
 #if CONFIG_ALT_INTRA
     "297e8fbb5d33c29b12b228fa9d7c40a4",
-    "31b9296d70dd82238c87173e6d5e65fd"
+    "31b9296d70dd82238c87173e6d5e65fd",
+#if CONFIG_SMOOTH_HV
+    "f1041f77a34e86aaf30ea779ba84a2e8",
+    "83e2b744a6a3d82321744442b1db945c",
+#endif  // CONFIG_SMOOTH_HV
 #else
     "9e1370c6d42e08d357d9612c93a71cfc",
 #endif  // CONFIG_ALT_INTRA
@@ -193,11 +208,12 @@ void TestIntraPred32(AvxPredFunc const *pred_funcs) {
 // Defines a test case for |arch| (e.g., C, SSE2, ...) passing the predictors
 // to |test_func|. The test name is 'arch.test_func', e.g., C.TestIntraPred4.
 #define INTRA_PRED_TEST(arch, test_func, dc, dc_left, dc_top, dc_128, v, h, \
-                        d45e, d135, d117, d153, d207e, d63e, tm, smooth)    \
+                        d45e, d135, d117, d153, d207e, d63e, tm, smooth,    \
+                        smooth_v, smooth_h)                                 \
   TEST(arch, test_func) {                                                   \
     static const AvxPredFunc aom_intra_pred[] = {                           \
-      dc,   dc_left, dc_top, dc_128, v,    h,  d45e,                        \
-      d135, d117,    d153,   d207e,  d63e, tm, smooth                       \
+      dc,   dc_left, dc_top, dc_128, v,  h,      d45e,     d135,            \
+      d117, d153,    d207e,  d63e,   tm, smooth, smooth_v, smooth_h         \
     };                                                                      \
     test_func(aom_intra_pred);                                              \
   }
@@ -208,9 +224,18 @@ void TestIntraPred32(AvxPredFunc const *pred_funcs) {
 #if CONFIG_ALT_INTRA
 #define tm_pred_func aom_paeth_predictor_4x4_c
 #define smooth_pred_func aom_smooth_predictor_4x4_c
+#if CONFIG_SMOOTH_HV
+#define smooth_v_pred_func aom_smooth_v_predictor_4x4_c
+#define smooth_h_pred_func aom_smooth_h_predictor_4x4_c
+#else
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
+#endif  // CONFIG_SMOOTH_HV
 #else
 #define tm_pred_func aom_tm_predictor_4x4_c
 #define smooth_pred_func NULL
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
 #endif  // CONFIG_ALT_INTRA
 
 INTRA_PRED_TEST(C, TestIntraPred4, aom_dc_predictor_4x4_c,
@@ -219,10 +244,13 @@ INTRA_PRED_TEST(C, TestIntraPred4, aom_dc_predictor_4x4_c,
                 aom_h_predictor_4x4_c, aom_d45e_predictor_4x4_c,
                 aom_d135_predictor_4x4_c, aom_d117_predictor_4x4_c,
                 aom_d153_predictor_4x4_c, aom_d207e_predictor_4x4_c,
-                aom_d63e_predictor_4x4_c, tm_pred_func, smooth_pred_func)
+                aom_d63e_predictor_4x4_c, tm_pred_func, smooth_pred_func,
+                smooth_v_pred_func, smooth_h_pred_func)
 
 #undef tm_pred_func
 #undef smooth_pred_func
+#undef smooth_v_pred_func
+#undef smooth_h_pred_func
 
 #if HAVE_SSE2
 #if CONFIG_ALT_INTRA
@@ -235,7 +263,7 @@ INTRA_PRED_TEST(SSE2, TestIntraPred4, aom_dc_predictor_4x4_sse2,
                 aom_dc_left_predictor_4x4_sse2, aom_dc_top_predictor_4x4_sse2,
                 aom_dc_128_predictor_4x4_sse2, aom_v_predictor_4x4_sse2,
                 aom_h_predictor_4x4_sse2, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 
 #undef tm_pred_func
 #endif  // HAVE_SSE2
@@ -243,7 +271,7 @@ INTRA_PRED_TEST(SSE2, TestIntraPred4, aom_dc_predictor_4x4_sse2,
 #if HAVE_SSSE3
 INTRA_PRED_TEST(SSSE3, TestIntraPred4, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                 NULL, NULL, aom_d153_predictor_4x4_ssse3, NULL,
-                aom_d63e_predictor_4x4_ssse3, NULL, NULL)
+                aom_d63e_predictor_4x4_ssse3, NULL, NULL, NULL, NULL)
 #endif  // HAVE_SSSE3
 
 #if HAVE_DSPR2
@@ -254,7 +282,7 @@ INTRA_PRED_TEST(SSSE3, TestIntraPred4, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 #endif  // CONFIG_ALT_INTRA
 INTRA_PRED_TEST(DSPR2, TestIntraPred4, aom_dc_predictor_4x4_dspr2, NULL, NULL,
                 NULL, NULL, aom_h_predictor_4x4_dspr2, NULL, NULL, NULL, NULL,
-                NULL, NULL, tm_pred_func, NULL)
+                NULL, NULL, tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_DSPR2
 
@@ -268,7 +296,7 @@ INTRA_PRED_TEST(NEON, TestIntraPred4, aom_dc_predictor_4x4_neon,
                 aom_dc_left_predictor_4x4_neon, aom_dc_top_predictor_4x4_neon,
                 aom_dc_128_predictor_4x4_neon, aom_v_predictor_4x4_neon,
                 aom_h_predictor_4x4_neon, NULL, aom_d135_predictor_4x4_neon,
-                NULL, NULL, NULL, NULL, tm_pred_func, NULL)
+                NULL, NULL, NULL, NULL, tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_NEON
 
@@ -282,7 +310,7 @@ INTRA_PRED_TEST(MSA, TestIntraPred4, aom_dc_predictor_4x4_msa,
                 aom_dc_left_predictor_4x4_msa, aom_dc_top_predictor_4x4_msa,
                 aom_dc_128_predictor_4x4_msa, aom_v_predictor_4x4_msa,
                 aom_h_predictor_4x4_msa, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_MSA
 
@@ -292,9 +320,18 @@ INTRA_PRED_TEST(MSA, TestIntraPred4, aom_dc_predictor_4x4_msa,
 #if CONFIG_ALT_INTRA
 #define tm_pred_func aom_paeth_predictor_8x8_c
 #define smooth_pred_func aom_smooth_predictor_8x8_c
+#if CONFIG_SMOOTH_HV
+#define smooth_v_pred_func aom_smooth_v_predictor_8x8_c
+#define smooth_h_pred_func aom_smooth_h_predictor_8x8_c
+#else
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
+#endif  // CONFIG_SMOOTH_HV
 #else
 #define tm_pred_func aom_tm_predictor_8x8_c
 #define smooth_pred_func NULL
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
 #endif  // CONFIG_ALT_INTRA
 INTRA_PRED_TEST(C, TestIntraPred8, aom_dc_predictor_8x8_c,
                 aom_dc_left_predictor_8x8_c, aom_dc_top_predictor_8x8_c,
@@ -302,9 +339,12 @@ INTRA_PRED_TEST(C, TestIntraPred8, aom_dc_predictor_8x8_c,
                 aom_h_predictor_8x8_c, aom_d45e_predictor_8x8_c,
                 aom_d135_predictor_8x8_c, aom_d117_predictor_8x8_c,
                 aom_d153_predictor_8x8_c, aom_d207e_predictor_8x8_c,
-                aom_d63e_predictor_8x8_c, tm_pred_func, smooth_pred_func)
+                aom_d63e_predictor_8x8_c, tm_pred_func, smooth_pred_func,
+                smooth_v_pred_func, smooth_h_pred_func)
 #undef tm_pred_func
 #undef smooth_pred_func
+#undef smooth_v_pred_func
+#undef smooth_h_pred_func
 
 #if HAVE_SSE2
 #if CONFIG_ALT_INTRA
@@ -316,14 +356,14 @@ INTRA_PRED_TEST(SSE2, TestIntraPred8, aom_dc_predictor_8x8_sse2,
                 aom_dc_left_predictor_8x8_sse2, aom_dc_top_predictor_8x8_sse2,
                 aom_dc_128_predictor_8x8_sse2, aom_v_predictor_8x8_sse2,
                 aom_h_predictor_8x8_sse2, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_SSE2
 
 #if HAVE_SSSE3
 INTRA_PRED_TEST(SSSE3, TestIntraPred8, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                 NULL, NULL, aom_d153_predictor_8x8_ssse3, NULL, NULL, NULL,
-                NULL)
+                NULL, NULL, NULL)
 #endif  // HAVE_SSSE3
 
 #if HAVE_DSPR2
@@ -334,7 +374,7 @@ INTRA_PRED_TEST(SSSE3, TestIntraPred8, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 #endif  // CONFIG_ALT_INTRA
 INTRA_PRED_TEST(DSPR2, TestIntraPred8, aom_dc_predictor_8x8_dspr2, NULL, NULL,
                 NULL, NULL, aom_h_predictor_8x8_dspr2, NULL, NULL, NULL, NULL,
-                NULL, NULL, tm_pred_func, NULL)
+                NULL, NULL, tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_DSPR2
 
@@ -348,7 +388,7 @@ INTRA_PRED_TEST(NEON, TestIntraPred8, aom_dc_predictor_8x8_neon,
                 aom_dc_left_predictor_8x8_neon, aom_dc_top_predictor_8x8_neon,
                 aom_dc_128_predictor_8x8_neon, aom_v_predictor_8x8_neon,
                 aom_h_predictor_8x8_neon, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_NEON
 
@@ -362,7 +402,7 @@ INTRA_PRED_TEST(MSA, TestIntraPred8, aom_dc_predictor_8x8_msa,
                 aom_dc_left_predictor_8x8_msa, aom_dc_top_predictor_8x8_msa,
                 aom_dc_128_predictor_8x8_msa, aom_v_predictor_8x8_msa,
                 aom_h_predictor_8x8_msa, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_MSA
 
@@ -372,9 +412,18 @@ INTRA_PRED_TEST(MSA, TestIntraPred8, aom_dc_predictor_8x8_msa,
 #if CONFIG_ALT_INTRA
 #define tm_pred_func aom_paeth_predictor_16x16_c
 #define smooth_pred_func aom_smooth_predictor_16x16_c
+#if CONFIG_SMOOTH_HV
+#define smooth_v_pred_func aom_smooth_v_predictor_16x16_c
+#define smooth_h_pred_func aom_smooth_h_predictor_16x16_c
+#else
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
+#endif  // CONFIG_SMOOTH_HV
 #else
 #define tm_pred_func aom_tm_predictor_16x16_c
 #define smooth_pred_func NULL
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
 #endif  // CONFIG_ALT_INTRA
 INTRA_PRED_TEST(C, TestIntraPred16, aom_dc_predictor_16x16_c,
                 aom_dc_left_predictor_16x16_c, aom_dc_top_predictor_16x16_c,
@@ -382,9 +431,12 @@ INTRA_PRED_TEST(C, TestIntraPred16, aom_dc_predictor_16x16_c,
                 aom_h_predictor_16x16_c, aom_d45e_predictor_16x16_c,
                 aom_d135_predictor_16x16_c, aom_d117_predictor_16x16_c,
                 aom_d153_predictor_16x16_c, aom_d207e_predictor_16x16_c,
-                aom_d63e_predictor_16x16_c, tm_pred_func, smooth_pred_func)
+                aom_d63e_predictor_16x16_c, tm_pred_func, smooth_pred_func,
+                smooth_v_pred_func, smooth_h_pred_func)
 #undef tm_pred_func
 #undef smooth_pred_func
+#undef smooth_v_pred_func
+#undef smooth_h_pred_func
 
 #if HAVE_SSE2
 #if CONFIG_ALT_INTRA
@@ -397,20 +449,20 @@ INTRA_PRED_TEST(SSE2, TestIntraPred16, aom_dc_predictor_16x16_sse2,
                 aom_dc_top_predictor_16x16_sse2,
                 aom_dc_128_predictor_16x16_sse2, aom_v_predictor_16x16_sse2,
                 aom_h_predictor_16x16_sse2, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_SSE2
 
 #if HAVE_SSSE3
 INTRA_PRED_TEST(SSSE3, TestIntraPred16, NULL, NULL, NULL, NULL, NULL, NULL,
                 NULL, NULL, NULL, aom_d153_predictor_16x16_ssse3, NULL, NULL,
-                NULL, NULL)
+                NULL, NULL, NULL, NULL)
 #endif  // HAVE_SSSE3
 
 #if HAVE_DSPR2
 INTRA_PRED_TEST(DSPR2, TestIntraPred16, aom_dc_predictor_16x16_dspr2, NULL,
                 NULL, NULL, NULL, aom_h_predictor_16x16_dspr2, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL)
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 #endif  // HAVE_DSPR2
 
 #if HAVE_NEON
@@ -424,7 +476,7 @@ INTRA_PRED_TEST(NEON, TestIntraPred16, aom_dc_predictor_16x16_neon,
                 aom_dc_top_predictor_16x16_neon,
                 aom_dc_128_predictor_16x16_neon, aom_v_predictor_16x16_neon,
                 aom_h_predictor_16x16_neon, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_NEON
 
@@ -438,7 +490,7 @@ INTRA_PRED_TEST(MSA, TestIntraPred16, aom_dc_predictor_16x16_msa,
                 aom_dc_left_predictor_16x16_msa, aom_dc_top_predictor_16x16_msa,
                 aom_dc_128_predictor_16x16_msa, aom_v_predictor_16x16_msa,
                 aom_h_predictor_16x16_msa, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_MSA
 
@@ -448,9 +500,18 @@ INTRA_PRED_TEST(MSA, TestIntraPred16, aom_dc_predictor_16x16_msa,
 #if CONFIG_ALT_INTRA
 #define tm_pred_func aom_paeth_predictor_32x32_c
 #define smooth_pred_func aom_smooth_predictor_32x32_c
+#if CONFIG_SMOOTH_HV
+#define smooth_v_pred_func aom_smooth_v_predictor_32x32_c
+#define smooth_h_pred_func aom_smooth_h_predictor_32x32_c
+#else
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
+#endif  // CONFIG_SMOOTH_HV
 #else
 #define tm_pred_func aom_tm_predictor_32x32_c
 #define smooth_pred_func NULL
+#define smooth_v_pred_func NULL
+#define smooth_h_pred_func NULL
 #endif  // CONFIG_ALT_INTRA
 INTRA_PRED_TEST(C, TestIntraPred32, aom_dc_predictor_32x32_c,
                 aom_dc_left_predictor_32x32_c, aom_dc_top_predictor_32x32_c,
@@ -458,9 +519,12 @@ INTRA_PRED_TEST(C, TestIntraPred32, aom_dc_predictor_32x32_c,
                 aom_h_predictor_32x32_c, aom_d45e_predictor_32x32_c,
                 aom_d135_predictor_32x32_c, aom_d117_predictor_32x32_c,
                 aom_d153_predictor_32x32_c, aom_d207e_predictor_32x32_c,
-                aom_d63e_predictor_32x32_c, tm_pred_func, smooth_pred_func)
+                aom_d63e_predictor_32x32_c, tm_pred_func, smooth_pred_func,
+                smooth_v_pred_func, smooth_h_pred_func)
 #undef tm_pred_func
 #undef smooth_pred_func
+#undef smooth_v_pred_func
+#undef smooth_h_pred_func
 
 #if HAVE_SSE2
 #if CONFIG_ALT_INTRA
@@ -473,14 +537,14 @@ INTRA_PRED_TEST(SSE2, TestIntraPred32, aom_dc_predictor_32x32_sse2,
                 aom_dc_top_predictor_32x32_sse2,
                 aom_dc_128_predictor_32x32_sse2, aom_v_predictor_32x32_sse2,
                 aom_h_predictor_32x32_sse2, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_SSE2
 
 #if HAVE_SSSE3
 INTRA_PRED_TEST(SSSE3, TestIntraPred32, NULL, NULL, NULL, NULL, NULL, NULL,
                 NULL, NULL, NULL, aom_d153_predictor_32x32_ssse3, NULL, NULL,
-                NULL, NULL)
+                NULL, NULL, NULL, NULL)
 #endif  // HAVE_SSSE3
 
 #if HAVE_NEON
@@ -494,7 +558,7 @@ INTRA_PRED_TEST(NEON, TestIntraPred32, aom_dc_predictor_32x32_neon,
                 aom_dc_top_predictor_32x32_neon,
                 aom_dc_128_predictor_32x32_neon, aom_v_predictor_32x32_neon,
                 aom_h_predictor_32x32_neon, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_NEON
 
@@ -508,7 +572,7 @@ INTRA_PRED_TEST(MSA, TestIntraPred32, aom_dc_predictor_32x32_msa,
                 aom_dc_left_predictor_32x32_msa, aom_dc_top_predictor_32x32_msa,
                 aom_dc_128_predictor_32x32_msa, aom_v_predictor_32x32_msa,
                 aom_h_predictor_32x32_msa, NULL, NULL, NULL, NULL, NULL, NULL,
-                tm_pred_func, NULL)
+                tm_pred_func, NULL, NULL, NULL)
 #undef tm_pred_func
 #endif  // HAVE_MSA
 

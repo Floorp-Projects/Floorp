@@ -49,7 +49,7 @@ void highbd_fht32x32_ref(const int16_t *in, int32_t *out, int stride,
 }
 #endif  // CONFIG_HIGHBITDEPTH
 
-#if HAVE_AVX2
+#if HAVE_SSE2 || HAVE_AVX2
 void dummy_inv_txfm(const tran_low_t *in, uint8_t *out, int stride,
                     int tx_type) {
   (void)in;

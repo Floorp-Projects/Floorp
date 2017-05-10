@@ -100,9 +100,7 @@ typedef enum {
 
 typedef struct {
   int_mv mv[2];
-#if CONFIG_REF_MV
   int_mv pred_mv[2];
-#endif
   MV_REFERENCE_FRAME ref_frame[2];
 } MV_REF;
 
@@ -163,12 +161,6 @@ typedef struct AV1Common {
   int last_width;
   int last_height;
 
-#if CONFIG_FRAME_SUPERRES
-  // The numerator of the superres scale, the denominator is fixed
-  uint8_t superres_scale_numerator;
-  int superres_width, superres_height;
-#endif  // CONFIG_FRAME_SUPERRES
-
   // TODO(jkoleszar): this implies chroma ss right now, but could vary per
   // plane. Revisit as part of the future change to YV12_BUFFER_CONFIG to
   // support additional planes.
@@ -216,9 +208,17 @@ typedef struct AV1Common {
 
   int allow_high_precision_mv;
 
-#if CONFIG_PALETTE
+#if CONFIG_PALETTE || CONFIG_INTRABC
   int allow_screen_content_tools;
-#endif  // CONFIG_PALETTE
+#endif  // CONFIG_PALETTE || CONFIG_INTRABC
+#if CONFIG_EXT_INTER
+#if CONFIG_INTERINTRA
+  int allow_interintra_compound;
+#endif  // CONFIG_INTERINTRA
+#if CONFIG_WEDGE || CONFIG_COMPOUND_SEGMENT
+  int allow_masked_compound;
+#endif  // CONFIG_WEDGE || CONFIG_COMPOUND_SEGMENT
+#endif  // CONFIG_EXT_INTER
 
   // Flag signaling which frame contexts should be reset to default values.
   RESET_FRAME_CONTEXT_MODE reset_frame_context;
@@ -242,15 +242,15 @@ typedef struct AV1Common {
 
 #if CONFIG_AOM_QM
   // Global quant matrix tables
-  qm_val_t *giqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES];
-  qm_val_t *gqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES];
+  qm_val_t *giqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
+  qm_val_t *gqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
 
   // Local quant matrix tables for each frame
-  qm_val_t *y_iqmatrix[MAX_SEGMENTS][2][TX_SIZES];
-  qm_val_t *uv_iqmatrix[MAX_SEGMENTS][2][TX_SIZES];
+  qm_val_t *y_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  qm_val_t *uv_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
   // Encoder
-  qm_val_t *y_qmatrix[MAX_SEGMENTS][2][TX_SIZES];
-  qm_val_t *uv_qmatrix[MAX_SEGMENTS][2][TX_SIZES];
+  qm_val_t *y_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  qm_val_t *uv_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
 
   int using_qmatrix;
   int min_qmlevel;
@@ -299,6 +299,10 @@ typedef struct AV1Common {
   InterpFilter interp_filter;
 
   loop_filter_info_n lf_info;
+#if CONFIG_FRAME_SUPERRES
+  // The numerator of the superres scale; the denominator is fixed.
+  uint8_t superres_scale_numerator;
+#endif  // CONFIG_FRAME_SUPERRES
 #if CONFIG_LOOP_RESTORATION
   RestorationInfo rst_info[MAX_MB_PLANE];
   RestorationInternal rst_internal;
@@ -331,20 +335,9 @@ typedef struct AV1Common {
 
   FRAME_CONTEXT *fc;              /* this frame entropy */
   FRAME_CONTEXT *frame_contexts;  // FRAME_CONTEXTS
+  FRAME_CONTEXT *pre_fc;          // Context referenced in this frame
   unsigned int frame_context_idx; /* Context to use/update */
   FRAME_COUNTS counts;
-
-#if CONFIG_SUBFRAME_PROB_UPDATE
-  // The initial probabilities for a frame, before any subframe backward update,
-  // and after forward update.
-  av1_coeff_probs_model starting_coef_probs[TX_SIZES][PLANE_TYPES];
-  // Number of subframe backward updates already done
-  uint8_t coef_probs_update_idx;
-  // Signal if the backward update is subframe or end-of-frame
-  uint8_t partial_prob_update;
-  // Frame level flag to turn on/off subframe backward update
-  uint8_t do_subframe_update;
-#endif  // CONFIG_SUBFRAME_PROB_UPDATE
 
   unsigned int current_video_frame;
   BITSTREAM_PROFILE profile;
@@ -393,7 +386,8 @@ typedef struct AV1Common {
   ENTROPY_CONTEXT *above_context[MAX_MB_PLANE];
 #if CONFIG_VAR_TX
   TXFM_CONTEXT *above_txfm_context;
-  TXFM_CONTEXT left_txfm_context[MAX_MIB_SIZE];
+  TXFM_CONTEXT *top_txfm_context[MAX_MB_PLANE];
+  TXFM_CONTEXT left_txfm_context[MAX_MB_PLANE][2 * MAX_MIB_SIZE];
 #endif
   int above_context_alloc_cols;
 
@@ -576,17 +570,20 @@ static INLINE void av1_init_macroblockd(AV1_COMMON *cm, MACROBLOCKD *xd,
 
 static INLINE void set_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col) {
   int i;
+  int row_offset = mi_row;
+  int col_offset = mi_col;
   for (i = 0; i < MAX_MB_PLANE; ++i) {
     struct macroblockd_plane *const pd = &xd->plane[i];
 #if CONFIG_CHROMA_SUB8X8
     if (xd->mi[0]->mbmi.sb_type < BLOCK_8X8) {
       // Offset the buffer pointer
-      if (pd->subsampling_y && (mi_row & 0x01)) mi_row -= 1;
-      if (pd->subsampling_x && (mi_col & 0x01)) mi_col -= 1;
+      if (pd->subsampling_y && (mi_row & 0x01)) row_offset = mi_row - 1;
+      if (pd->subsampling_x && (mi_col & 0x01)) col_offset = mi_col - 1;
     }
 #endif
-    int above_idx = mi_col * 2;
-    int left_idx = (mi_row * 2) & MAX_MIB_MASK_2;
+    int above_idx = col_offset << (MI_SIZE_LOG2 - tx_size_wide_log2[0]);
+    int left_idx = (row_offset & MAX_MIB_MASK)
+                   << (MI_SIZE_LOG2 - tx_size_high_log2[0]);
     pd->above_context = &xd->above_context[i][above_idx >> pd->subsampling_x];
     pd->left_context = &xd->left_context[i][left_idx >> pd->subsampling_y];
   }
@@ -668,14 +665,12 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
 
   xd->n8_h = bh;
   xd->n8_w = bw;
-#if CONFIG_REF_MV
   xd->is_sec_rect = 0;
   if (xd->n8_w < xd->n8_h)
     if (mi_col & (xd->n8_h - 1)) xd->is_sec_rect = 1;
 
   if (xd->n8_w > xd->n8_h)
     if (mi_row & (xd->n8_w - 1)) xd->is_sec_rect = 1;
-#endif  // CONFIG_REF_MV
 }
 
 static INLINE const aom_prob *get_y_mode_probs(const AV1_COMMON *cm,
@@ -688,7 +683,6 @@ static INLINE const aom_prob *get_y_mode_probs(const AV1_COMMON *cm,
   return cm->kf_y_prob[above][left];
 }
 
-#if CONFIG_EC_MULTISYMBOL
 static INLINE aom_cdf_prob *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx,
                                            const MODE_INFO *mi,
                                            const MODE_INFO *above_mi,
@@ -698,7 +692,6 @@ static INLINE aom_cdf_prob *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx,
   const PREDICTION_MODE left = av1_left_block_mode(mi, left_mi, block);
   return tile_ctx->kf_y_cdf[above][left];
 }
-#endif
 
 static INLINE void update_partition_context(MACROBLOCKD *xd, int mi_row,
                                             int mi_col, BLOCK_SIZE subsize,
@@ -873,8 +866,8 @@ static INLINE void av1_zero_above_context(AV1_COMMON *const cm,
   const int width = mi_col_end - mi_col_start;
   const int aligned_width = ALIGN_POWER_OF_TWO(width, cm->mib_size_log2);
 
-  const int offset_y = 2 * mi_col_start;
-  const int width_y = 2 * aligned_width;
+  const int offset_y = mi_col_start << (MI_SIZE_LOG2 - tx_size_wide_log2[0]);
+  const int width_y = aligned_width << (MI_SIZE_LOG2 - tx_size_wide_log2[0]);
   const int offset_uv = offset_y >> cm->subsampling_x;
   const int width_uv = width_y >> cm->subsampling_x;
 
@@ -885,7 +878,8 @@ static INLINE void av1_zero_above_context(AV1_COMMON *const cm,
   av1_zero_array(cm->above_seg_context + mi_col_start, aligned_width);
 
 #if CONFIG_VAR_TX
-  av1_zero_array(cm->above_txfm_context + mi_col_start, aligned_width);
+  av1_zero_array(cm->above_txfm_context + (mi_col_start << TX_UNIT_WIDE_LOG2),
+                 aligned_width << TX_UNIT_WIDE_LOG2);
 #endif  // CONFIG_VAR_TX
 }
 
@@ -899,7 +893,7 @@ static INLINE void av1_zero_left_context(MACROBLOCKD *const xd) {
 
 #if CONFIG_VAR_TX
 static INLINE TX_SIZE get_min_tx_size(TX_SIZE tx_size) {
-  if (tx_size >= TX_SIZES_ALL) assert(0);
+  assert(tx_size < TX_SIZES_ALL);
   return txsize_sqr_map[tx_size];
 }
 
@@ -918,21 +912,36 @@ static INLINE void set_txfm_ctxs(TX_SIZE tx_size, int n8_w, int n8_h, int skip,
     bh = n8_h * MI_SIZE;
   }
 
-  set_txfm_ctx(xd->above_txfm_context, bw, n8_w);
-  set_txfm_ctx(xd->left_txfm_context, bh, n8_h);
+  set_txfm_ctx(xd->above_txfm_context, bw, n8_w << TX_UNIT_WIDE_LOG2);
+  set_txfm_ctx(xd->left_txfm_context, bh, n8_h << TX_UNIT_HIGH_LOG2);
 }
 
 static INLINE void txfm_partition_update(TXFM_CONTEXT *above_ctx,
                                          TXFM_CONTEXT *left_ctx,
                                          TX_SIZE tx_size, TX_SIZE txb_size) {
   BLOCK_SIZE bsize = txsize_to_bsize[txb_size];
-  int bh = mi_size_high[bsize];
-  int bw = mi_size_wide[bsize];
+  int bh = mi_size_high[bsize] << TX_UNIT_HIGH_LOG2;
+  int bw = mi_size_wide[bsize] << TX_UNIT_WIDE_LOG2;
   uint8_t txw = tx_size_wide[tx_size];
   uint8_t txh = tx_size_high[tx_size];
   int i;
   for (i = 0; i < bh; ++i) left_ctx[i] = txh;
   for (i = 0; i < bw; ++i) above_ctx[i] = txw;
+}
+
+static INLINE TX_SIZE get_sqr_tx_size(int tx_dim) {
+  TX_SIZE tx_size;
+  switch (tx_dim) {
+#if CONFIG_EXT_PARTITION
+    case 128:
+#endif
+    case 64:
+    case 32: tx_size = TX_32X32; break;
+    case 16: tx_size = TX_16X16; break;
+    case 8: tx_size = TX_8X8; break;
+    default: tx_size = TX_4X4;
+  }
+  return tx_size;
 }
 
 static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx,
@@ -942,22 +951,13 @@ static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx,
   const uint8_t txh = tx_size_high[tx_size];
   const int above = *above_ctx < txw;
   const int left = *left_ctx < txh;
-  TX_SIZE max_tx_size = max_txsize_lookup[bsize];
   int category = TXFM_PARTITION_CONTEXTS - 1;
 
   // dummy return, not used by others.
   if (tx_size <= TX_4X4) return 0;
 
-  switch (AOMMAX(block_size_wide[bsize], block_size_high[bsize])) {
-#if CONFIG_EXT_PARTITION
-    case 128:
-#endif
-    case 64:
-    case 32: max_tx_size = TX_32X32; break;
-    case 16: max_tx_size = TX_16X16; break;
-    case 8: max_tx_size = TX_8X8; break;
-    default: assert(0);
-  }
+  TX_SIZE max_tx_size =
+      get_sqr_tx_size(AOMMAX(block_size_wide[bsize], block_size_high[bsize]));
 
   if (max_tx_size >= TX_8X8) {
     category = (tx_size != max_tx_size && max_tx_size > TX_8X8) +

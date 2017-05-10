@@ -27,17 +27,17 @@
 #endif
 
 #include "aom/aom_decoder.h"
-#include "aom/aomdx.h"
-
-#include "../tools_common.h"
-#include "../video_reader.h"
 #include "./aom_config.h"
-// #include "av1/av1_dx_iface.c"
-#include "../av1/common/onyxc_int.h"
 #if CONFIG_ACCOUNTING
 #include "../av1/decoder/accounting.h"
 #endif
 #include "../av1/decoder/inspection.h"
+#include "aom/aomdx.h"
+
+#include "../tools_common.h"
+#include "../video_reader.h"
+// #include "av1/av1_dx_iface.c"
+#include "../av1/common/onyxc_int.h"
 
 #include "../video_common.h"
 
@@ -56,7 +56,8 @@ typedef enum {
   REFERENCE_FRAME_LAYER = 1 << 8,
   MOTION_VECTORS_LAYER = 1 << 9,
   UV_MODE_LAYER = 1 << 10,
-  ALL_LAYERS = (1 << 11) - 1
+  CFL_LAYER = 1 << 11,
+  ALL_LAYERS = (1 << 12) - 1
 } LayerType;
 
 static LayerType layers = 0;
@@ -86,6 +87,10 @@ static const arg_def_t dump_skip_arg = ARG_DEF("s", "skip", 0, "Dump Skip");
 static const arg_def_t dump_filter_arg =
     ARG_DEF("f", "filter", 0, "Dump Filter");
 static const arg_def_t dump_cdef_arg = ARG_DEF("c", "cdef", 0, "Dump CDEF");
+#if CONFIG_CFL
+static const arg_def_t dump_cfl_arg =
+    ARG_DEF("cfl", "chroma_from_luma", 0, "Dump Chroma from Luma Alphas");
+#endif
 static const arg_def_t dump_reference_frame_arg =
     ARG_DEF("r", "referenceFrame", 0, "Dump Reference Frame");
 static const arg_def_t usage_arg = ARG_DEF("h", "help", 0, "Help");
@@ -105,6 +110,9 @@ static const arg_def_t *main_args[] = { &limit_arg,
                                         &dump_filter_arg,
 #if CONFIG_CDEF
                                         &dump_cdef_arg,
+#endif
+#if CONFIG_CFL
+                                        &dump_cfl_arg,
 #endif
                                         &dump_reference_frame_arg,
                                         &dump_motion_vectors_arg,
@@ -145,7 +153,7 @@ const map_entry block_size_map[] = {
 };
 
 const map_entry tx_size_map[] = {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   ENUM(TX_2X2),
 #endif
   ENUM(TX_4X4),   ENUM(TX_8X8),   ENUM(TX_16X16), ENUM(TX_32X32),
@@ -177,28 +185,39 @@ const map_entry tx_type_map[] = { ENUM(DCT_DCT),
 #endif
                                   LAST_ENUM };
 
-const map_entry prediction_mode_map[] = {
-  ENUM(DC_PRED),        ENUM(V_PRED),
-  ENUM(H_PRED),         ENUM(D45_PRED),
-  ENUM(D135_PRED),      ENUM(D117_PRED),
-  ENUM(D153_PRED),      ENUM(D207_PRED),
-  ENUM(D63_PRED),
+const map_entry prediction_mode_map[] = { ENUM(DC_PRED),
+                                          ENUM(V_PRED),
+                                          ENUM(H_PRED),
+                                          ENUM(D45_PRED),
+                                          ENUM(D135_PRED),
+                                          ENUM(D117_PRED),
+                                          ENUM(D153_PRED),
+                                          ENUM(D207_PRED),
+                                          ENUM(D63_PRED),
 #if CONFIG_ALT_INTRA
-  ENUM(SMOOTH_PRED),
-#endif
-  ENUM(TM_PRED),        ENUM(NEARESTMV),
-  ENUM(NEARMV),         ENUM(ZEROMV),
-  ENUM(NEWMV),
+                                          ENUM(SMOOTH_PRED),
+#if CONFIG_SMOOTH_HV
+                                          ENUM(SMOOTH_V_PRED),
+                                          ENUM(SMOOTH_H_PRED),
+#endif  // CONFIG_SMOOTH_HV
+#endif  // CONFIG_ALT_INTRA
+                                          ENUM(TM_PRED),
+                                          ENUM(NEARESTMV),
+                                          ENUM(NEARMV),
+                                          ENUM(ZEROMV),
+                                          ENUM(NEWMV),
 #if CONFIG_EXT_INTER
-  ENUM(NEWFROMNEARMV),  ENUM(NEAREST_NEARESTMV),
-  ENUM(NEAREST_NEARMV), ENUM(NEAR_NEARESTMV),
-  ENUM(NEAR_NEARMV),    ENUM(NEAREST_NEWMV),
-  ENUM(NEW_NEARESTMV),  ENUM(NEAR_NEWMV),
-  ENUM(NEW_NEARMV),     ENUM(ZERO_ZEROMV),
-  ENUM(NEW_NEWMV),
+                                          ENUM(NEAREST_NEARESTMV),
+                                          ENUM(NEAR_NEARMV),
+                                          ENUM(NEAREST_NEWMV),
+                                          ENUM(NEW_NEARESTMV),
+                                          ENUM(NEAR_NEWMV),
+                                          ENUM(NEW_NEARMV),
+                                          ENUM(ZERO_ZEROMV),
+                                          ENUM(NEW_NEWMV),
 #endif
-  ENUM(INTRA_INVALID),  LAST_ENUM
-};
+                                          ENUM(INTRA_INVALID),
+                                          LAST_ENUM };
 
 #define NO_SKIP 0
 #define SKIP 1
@@ -489,6 +508,14 @@ void inspect(void *pbi, void *data) {
                           offsetof(insp_mi_data, cdef_strength));
   }
 #endif
+#if CONFIG_CFL
+  if (layers & CFL_LAYER) {
+    buf += put_block_info(buf, NULL, "cfl_alpha_idx",
+                          offsetof(insp_mi_data, cfl_alpha_idx));
+    buf += put_block_info(buf, NULL, "cfl_alpha_sign",
+                          offsetof(insp_mi_data, cfl_alpha_sign));
+  }
+#endif
   if (layers & MOTION_VECTORS_LAYER) {
     buf += put_motion_vectors(buf);
   }
@@ -620,6 +647,10 @@ static void parse_args(char **argv) {
 #if CONFIG_CDEF
     else if (arg_match(&arg, &dump_cdef_arg, argi))
       layers |= CDEF_LAYER;
+#endif
+#if CONFIG_CFL
+    else if (arg_match(&arg, &dump_cfl_arg, argi))
+      layers |= CFL_LAYER;
 #endif
     else if (arg_match(&arg, &dump_reference_frame_arg, argi))
       layers |= REFERENCE_FRAME_LAYER;

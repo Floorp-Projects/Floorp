@@ -169,7 +169,7 @@ uint8_t av1_read_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
       sign = aom_read_bit(r, ACCT_STR);
     }
 
-    ctx = get_level_ctx(tcoeffs, scan[c], bwl);
+    ctx = get_br_ctx(tcoeffs, scan[c], bwl);
 
     if (cm->fc->coeff_lps[tx_size][plane_type][ctx] == 0) exit(0);
 

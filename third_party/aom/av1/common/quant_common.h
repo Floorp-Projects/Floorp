@@ -29,11 +29,11 @@ extern "C" {
 // Total number of QM sets stored
 #define QM_LEVEL_BITS 4
 #define NUM_QM_LEVELS (1 << QM_LEVEL_BITS)
-/* Offset into the list of QMs. Actual number of levels used is
-   (NUM_QM_LEVELS-AOM_QM_OFFSET)
-   Lower value of AOM_QM_OFFSET implies more heavily weighted matrices.*/
-#define DEFAULT_QM_FIRST (NUM_QM_LEVELS / 2)
-#define DEFAULT_QM_LAST (NUM_QM_LEVELS - 1)
+/* Range of QMS is between first and last value, with offset applied to inter
+ * blocks*/
+#define DEFAULT_QM_FIRST 5
+#define DEFAULT_QM_LAST 9
+#define DEFAULT_QM_INTER_OFFSET 0
 #endif
 
 struct AV1Common;
@@ -54,9 +54,9 @@ static INLINE int aom_get_qmlevel(int qindex, int first, int last) {
 }
 void aom_qm_init(struct AV1Common *cm);
 qm_val_t *aom_iqmatrix(struct AV1Common *cm, int qindex, int comp,
-                       int log2sizem2, int is_intra);
+                       TX_SIZE tx_size, int is_intra);
 qm_val_t *aom_qmatrix(struct AV1Common *cm, int qindex, int comp,
-                      int log2sizem2, int is_intra);
+                      TX_SIZE tx_size, int is_intra);
 #endif
 
 #if CONFIG_NEW_QUANT

@@ -77,14 +77,15 @@ static INLINE void transpose_16x16(const __m128i *in, __m128i *out) {
 
 // Note:
 //  rounding = 1 << (bit - 1)
-static INLINE __m128i half_btf_sse4_1(__m128i w0, __m128i n0, __m128i w1,
-                                      __m128i n1, __m128i rounding, int bit) {
+static INLINE __m128i half_btf_sse4_1(const __m128i *w0, const __m128i *n0,
+                                      const __m128i *w1, const __m128i *n1,
+                                      const __m128i *rounding, int bit) {
   __m128i x, y;
 
-  x = _mm_mullo_epi32(w0, n0);
-  y = _mm_mullo_epi32(w1, n1);
+  x = _mm_mullo_epi32(*w0, *n0);
+  y = _mm_mullo_epi32(*w1, *n1);
   x = _mm_add_epi32(x, y);
-  x = _mm_add_epi32(x, rounding);
+  x = _mm_add_epi32(x, *rounding);
   x = _mm_srai_epi32(x, bit);
   return x;
 }

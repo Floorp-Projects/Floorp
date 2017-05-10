@@ -179,15 +179,15 @@ void av1_foreach_transformed_block(const MACROBLOCKD *const xd,
 #endif
 
 #if CONFIG_DAALA_DIST
-void av1_foreach_8x8_transformed_block_in_plane(
-    const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
+void av1_foreach_8x8_transformed_block_in_yplane(
+    const MACROBLOCKD *const xd, BLOCK_SIZE bsize,
     foreach_transformed_block_visitor visit,
     foreach_transformed_block_visitor mi_visit, void *arg) {
-  const struct macroblockd_plane *const pd = &xd->plane[plane];
+  const struct macroblockd_plane *const pd = &xd->plane[0];
   // block and transform sizes, in number of 4x4 blocks log 2 ("*_b")
   // 4x4=0, 8x8=2, 16x16=4, 32x32=6, 64x64=8
   // transform size varies per plane, look it up in a common way.
-  const TX_SIZE tx_size = get_tx_size(plane, xd);
+  const TX_SIZE tx_size = get_tx_size(0, xd);
   const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
   const uint8_t txw_unit = tx_size_wide_unit[tx_size];
   const uint8_t txh_unit = tx_size_high_unit[tx_size];
@@ -197,18 +197,24 @@ void av1_foreach_8x8_transformed_block_in_plane(
   // If mb_to_right_edge is < 0 we are in a situation in which
   // the current block size extends into the UMV and we won't
   // visit the sub blocks that are wholly within the UMV.
-  const int max_blocks_wide = max_block_wide(xd, plane_bsize, plane);
-  const int max_blocks_high = max_block_high(xd, plane_bsize, plane);
+  const int max_blocks_wide = max_block_wide(xd, plane_bsize, 0);
+  const int max_blocks_high = max_block_high(xd, plane_bsize, 0);
+  const int skip_check_r = tx_size_high[tx_size] == 8 ? 1 : 0;
+  const int skip_check_c = tx_size_wide[tx_size] == 8 ? 1 : 0;
+
+  assert(plane_bsize >= BLOCK_8X8);
+  assert(tx_size == TX_4X4 || tx_size == TX_4X8 || tx_size == TX_8X4);
 
   // Keep track of the row and column of the blocks we use so that we know
   // if we are in the unrestricted motion border.
   for (r = 0; r < max_blocks_high; r += txh_unit) {
     // Skip visiting the sub blocks that are wholly within the UMV.
     for (c = 0; c < max_blocks_wide; c += txw_unit) {
-      visit(plane, i, r, c, plane_bsize, tx_size, arg);
-      // Call whenever each 8x8 block is done
-      if ((r & 1) && (c & 1))
-        mi_visit(plane, i, r - 1, c - 1, plane_bsize, TX_8X8, arg);
+      visit(0, i, r, c, plane_bsize, tx_size, arg);
+      // Call whenever each 8x8 tx block is done
+      if (((r & txh_unit) || skip_check_r) && ((c & txw_unit) || skip_check_c))
+        mi_visit(0, i, r - (1 - skip_check_r) * txh_unit,
+                 c - (1 - skip_check_c) * txw_unit, plane_bsize, tx_size, arg);
       i += step;
     }
   }
@@ -258,6 +264,36 @@ void av1_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
   }
 }
 #endif
+
+void av1_reset_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col,
+                            BLOCK_SIZE bsize) {
+  int i;
+  int nplanes;
+#if CONFIG_CB4X4
+  int chroma_ref;
+  chroma_ref =
+      is_chroma_reference(mi_row, mi_col, bsize, xd->plane[1].subsampling_x,
+                          xd->plane[1].subsampling_y);
+  nplanes = 1 + (MAX_MB_PLANE - 1) * chroma_ref;
+#else
+  (void)mi_row;
+  (void)mi_col;
+  nplanes = MAX_MB_PLANE;
+#endif
+  for (i = 0; i < nplanes; i++) {
+    struct macroblockd_plane *const pd = &xd->plane[i];
+#if CONFIG_CHROMA_2X2 || !CONFIG_CB4X4
+    const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
+#else
+    const BLOCK_SIZE plane_bsize =
+        AOMMAX(BLOCK_4X4, get_plane_block_size(bsize, pd));
+#endif
+    const int txs_wide = block_size_wide[plane_bsize] >> tx_size_wide_log2[0];
+    const int txs_high = block_size_high[plane_bsize] >> tx_size_high_log2[0];
+    memset(pd->above_context, 0, sizeof(ENTROPY_CONTEXT) * txs_wide);
+    memset(pd->left_context, 0, sizeof(ENTROPY_CONTEXT) * txs_high);
+  }
+}
 
 void av1_setup_block_planes(MACROBLOCKD *xd, int ss_x, int ss_y) {
   int i;
