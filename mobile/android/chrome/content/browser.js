@@ -5573,7 +5573,7 @@ var XPInstallObserver = {
     }];
 
     let message = Strings.browser.GetStringFromName("notificationRestart.normal");
-    NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 });
+    NativeWindow.doorhanger.show(message, "addon-app-restart", buttons, BrowserApp.selectedTab.id, { persistence: -1 }, "ADDON");
   },
 
   hideRestartPrompt: function() {
