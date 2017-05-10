@@ -57,6 +57,10 @@ class SandboxDependsFunction(object):
                                  'with another @depends function.')
         return self._or(other).sandboxed
 
+    def __nonzero__(self):
+        raise ConfigureError(
+            'Cannot do boolean operations on @depends functions.')
+
 
 class DependsFunction(object):
     __slots__ = (

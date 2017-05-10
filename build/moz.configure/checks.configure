@@ -95,7 +95,7 @@ def checking(what, callback=None):
 @imports(_from='mozbuild.shellutil', _import='quote')
 def check_prog(var, progs, what=None, input=None, allow_missing=False,
                paths=None):
-    if input:
+    if input is not None:
         # Wrap input with type checking and normalization.
         @depends(input)
         def input(value):
