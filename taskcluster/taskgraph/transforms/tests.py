@@ -147,7 +147,7 @@ test_description_schema = Schema({
     # Whether the test can run using a software GL implementation on Linux
     # using the GL compositor. May not be used with "legacy" sized instances
     # due to poor LLVMPipe performance (bug 1296086).  Defaults to true for
-    # linux platforms and false otherwise
+    # unit tests on linux platforms and false otherwise
     Optional('allow-software-gl-layers'): bool,
 
     # The worker implementation for this test, as dictated by policy and by the
@@ -188,7 +188,8 @@ test_description_schema = Schema({
     Required('checkout', default=False): bool,
 
     # Wheter to perform a machine reboot after test is done
-    Optional('reboot', default=True): bool,
+    Optional('reboot', default=False):
+        Any(False, 'always', 'on-exception', 'on-failure'),
 
     # What to run
     Required('mozharness'): optionally_keyed_by(
@@ -328,8 +329,8 @@ def set_defaults(config, tests):
             test['mozharness']['set-moz-node-path'] = True
             test.setdefault('e10s', 'both')
 
-        # software-gl-layers is only meaningful on linux, where it defaults to True
-        if test['test-platform'].startswith('linux'):
+        # software-gl-layers is only meaningful on linux unittests, where it defaults to True
+        if test['test-platform'].startswith('linux') and test['suite'] != 'talos':
             test.setdefault('allow-software-gl-layers', True)
         else:
             test['allow-software-gl-layers'] = False
@@ -352,6 +353,28 @@ def set_defaults(config, tests):
         test.setdefault('max-run-time', 3600)
         test.setdefault('reboot', True)
         test['mozharness'].setdefault('extra-options', [])
+        yield test
+
+
+@transforms.add
+def setup_talos(config, tests):
+    """Add options that are specific to talos jobs (identified by suite=talos)"""
+    for test in tests:
+        if test['suite'] != 'talos':
+            yield test
+            continue
+
+        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+        extra_options.append('--add-option')
+        extra_options.append('--webServer,localhost')
+        extra_options.append('--use-talos-json')
+
+        # Per https://bugzilla.mozilla.org/show_bug.cgi?id=1357753#c3, branch
+        # name is only required for try
+        if config.params['project'] == 'try':
+            extra_options.append('--branch-name')
+            extra_options.append('Try')
+
         yield test
 
 
@@ -415,7 +438,10 @@ def set_worker_implementation(config, tests):
             else:
                 test['worker-implementation'] = 'generic-worker'
         elif test.get('suite', '') == 'talos':
-            test['worker-implementation'] = 'buildbot-bridge'
+            if config.config['args'].taskcluster_worker:
+                test['worker-implementation'] = 'native-engine'
+            else:
+                test['worker-implementation'] = 'buildbot-bridge'
         elif test_platform.startswith('win'):
             test['worker-implementation'] = 'generic-worker'
         else:
@@ -801,10 +827,14 @@ def make_job_description(config, tests):
         worker = jobdesc['worker'] = {}
         implementation = worker['implementation'] = test['worker-implementation']
 
+        # TODO: need some better way to express this...
         if implementation == 'buildbot-bridge':
             jobdesc['worker-type'] = 'buildbot-bridge/buildbot-bridge'
         elif implementation == 'native-engine':
-            jobdesc['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
+            if test['test-platform'].startswith('linux'):
+                jobdesc['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
+            else:
+                jobdesc['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
         elif implementation == 'generic-worker':
             test_platform = test['test-platform'].split('/')[0]
             jobdesc['worker-type'] = WORKER_TYPE[test_platform]
