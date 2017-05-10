@@ -184,7 +184,9 @@ class FirefoxBrowser(Browser):
                                       "dom.disable_open_during_load": False,
                                       "network.dns.localDomains": ",".join(hostnames),
                                       "network.proxy.type": 0,
-                                      "places.history.enabled": False})
+                                      "places.history.enabled": False,
+                                      "dom.send_after_paint_to_content": True,
+                                      "layout.interruptible-reflow.enabled": False})
         if self.e10s:
             self.profile.set_preferences({"browser.tabs.remote.autostart": True})
 
