@@ -35,8 +35,6 @@ Distance(const nsReadingIterator<char>& aStart,
 
 void LossyCopyUTF16toASCII(const nsAString& aSource, nsACString& aDest);
 void CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest);
-MOZ_MUST_USE bool CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
-                                   const mozilla::fallible_t&);
 
 void LossyCopyUTF16toASCII(const char16ptr_t aSource, nsACString& aDest);
 void CopyASCIItoUTF16(const char* aSource, nsAString& aDest);
